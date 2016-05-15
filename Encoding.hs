@@ -1,6 +1,8 @@
+module Encoding where
 
-import Data.Array.Unboxed
 import Data.Array.IArray
+import Data.Array.Unboxed
+import Data.Bits
 import Data.Word
 import Data.Int
 
@@ -28,7 +30,7 @@ data ElementSize
     | TwoBytes
     | FourBytes
     | EightBytes
-    | Pointer
+    | PointerSize
     | InlineComposite
     deriving(Show, Enum, Eq)
 
@@ -44,17 +46,16 @@ class Cerialize a where
     -- TODO: Either?
     parse :: Address -> Maybe a
 
-dropLow :: Word64 -> Int -> Word64
-dropLow n bits = n .&. (compliment (1 shiftL
+-- dropLow :: Word64 -> Int -> Word64
+-- dropLow n bits = n .&. (compliment (1 shiftL
 
 instance Cerialize Pointer where
     parse (Address (Message segs) idx segn) =
         --if (segn > len segs)
-        let word = (segs ! segn) ! idx
-        case word .|. 0x3 of
-            0 -> Struct ((word :: Int32) `shfitR` 2)
-                        (word `shiftR` 32) :: Word16
-                        (word `shiftR` 48) :: Word16
+        let word = (segs ! segn) ! idx in case word .|. 0x3 of
+            0 -> Struct ((word :: Int32) `shiftR` 2)
+                        ((word `shiftR` 32) :: Word16)
+                        ((word `shiftR` 48) :: Word16)
             1 -> List ((word :: Int32) `shiftR` 2)
                       (toEnum ((word `shiftR` 32) `mod` 8))
                       (word `shiftR` 35) :: Word32

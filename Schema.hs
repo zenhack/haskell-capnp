@@ -1,3 +1,4 @@
+module Schema where
 
 import PrimTypes (List, AnyPointer)
 import Encoding
