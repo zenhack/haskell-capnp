@@ -2,10 +2,11 @@ module Encoding where
 
 import Data.Array (Array)
 import Data.Array.Unboxed (UArray)
-import Data.Array.IArray ((!))
+import Data.Array.IArray ((!), bounds)
 import Data.Bits
 import Data.Word
 import Data.Int
+import Control.Monad (when)
 
 data Message = Message (Array Word64 Segment)
 
@@ -42,21 +43,29 @@ data Address = Address
     }
 
 
+data CerializationError
+    = SegmentIndexOutOfBounds
+    | WordIndexOutOfBounds
+
+
 class Cerialize a where
     -- TODO: output
-    -- TODO: Either?
-    parse :: Address -> Maybe a
+    parse :: Address -> Either CerializationError a
 
 -- dropLow :: Word64 -> Int -> Word64
 -- dropLow n bits = n .&. (compliment (1 shiftL
 
 instance Cerialize Pointer where
-    parse (Address (Message segs) idx segn) = Just $
-        --if (segn > len segs)
-        let
-            Segment words = segs  ! segn
-            word          = words ! idx
-        in case word .|. 0x3 of
+    parse (Address (Message segs) idx segn) = do
+        -- XXX: there's got to be a better way to do this:
+        let ulen = snd . bounds
+        let alen = snd . bounds
+
+        when (segn >= alen segs) $ Left SegmentIndexOutOfBounds
+        let Segment words = segs  ! segn
+        when (idx >= ulen words) $ Left WordIndexOutOfBounds
+        let word = words ! idx
+        Right $ case word .|. 0x3 of
             0 -> Struct ((fromIntegral word :: Int32) `shiftR` 2)
                         (fromIntegral (word `shiftR` 32) :: Word16)
                         (fromIntegral (word `shiftR` 48) :: Word16)
