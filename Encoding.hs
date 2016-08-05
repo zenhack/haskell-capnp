@@ -1,12 +1,13 @@
 module Encoding where
 
-import Data.Array.IArray
-import Data.Array.Unboxed
+import Data.Array (Array)
+import Data.Array.Unboxed (UArray)
+import Data.Array.IArray ((!))
 import Data.Bits
 import Data.Word
 import Data.Int
 
-data Message = Message (IArray Word64 Segment)
+data Message = Message (Array Word64 Segment)
 
 data Segment = Segment (UArray Word64 Word64)
 
@@ -50,15 +51,18 @@ class Cerialize a where
 -- dropLow n bits = n .&. (compliment (1 shiftL
 
 instance Cerialize Pointer where
-    parse (Address (Message segs) idx segn) =
+    parse (Address (Message segs) idx segn) = Just $
         --if (segn > len segs)
-        let word = (segs ! segn) ! idx in case word .|. 0x3 of
-            0 -> Struct ((word :: Int32) `shiftR` 2)
-                        ((word `shiftR` 32) :: Word16)
-                        ((word `shiftR` 48) :: Word16)
-            1 -> List ((word :: Int32) `shiftR` 2)
-                      (toEnum ((word `shiftR` 32) `mod` 8))
-                      (word `shiftR` 35) :: Word32
+        let
+            Segment words = segs  ! segn
+            word          = words ! idx
+        in case word .|. 0x3 of
+            0 -> Struct ((fromIntegral word :: Int32) `shiftR` 2)
+                        (fromIntegral (word `shiftR` 32) :: Word16)
+                        (fromIntegral (word `shiftR` 48) :: Word16)
+            1 -> List ((fromIntegral word :: Int32) `shiftR` 2)
+                      (toEnum $ fromIntegral ((word `shiftR` 32) `mod` 8))
+                      (fromIntegral (word `shiftR` 35) :: Word32)
             2 -> error "Far pointer, not supported yet."
 {-
             2 -> Far ((word :: Int32) `shiftR` 2)
@@ -68,4 +72,4 @@ instance Cerialize Pointer where
                         then TwoWords
                         else OneWord
 -}
-            3 -> Capability (word `shiftR` 32)
+            3 -> Capability $ fromIntegral (word `shiftR` 32)

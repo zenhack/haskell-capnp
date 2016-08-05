@@ -1,7 +1,6 @@
 module Schema where
 
 import PrimTypes (List, AnyPointer)
-import Encoding
 import Data.Text (Text)
 import Data.Word
 import Data.Int
