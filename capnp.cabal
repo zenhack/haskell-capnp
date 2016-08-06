@@ -17,7 +17,9 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Schema, Encoding, PrimTypes, SchemaEncoding
+--  exposed-modules:     Schema, Encoding, PrimTypes, SchemaEncoding
+  exposed-modules:
+    Data.CapNProto.LowLevel
   -- other-modules:
   -- other-extensions:
   build-depends:

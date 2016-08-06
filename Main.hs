@@ -1,7 +1,7 @@
 module Main where
 
 import qualified Data.ByteString.Lazy as B
-import Encoding
+import Data.CapNProto.LowLevel
 import Data.Binary.Get
 
 main :: IO ()
