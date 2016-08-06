@@ -7,5 +7,5 @@ import Data.Binary.Get
 main :: IO ()
 main = do
     contents <- B.getContents
-    let msg = runGet getMessage contents
+    let msg = runGet (getMessage defaultMaxMessageLen) contents
     print msg

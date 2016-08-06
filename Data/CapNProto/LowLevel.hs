@@ -1,6 +1,8 @@
+{-# LANGUAGE DoAndIfThenElse #-}
 module Data.CapNProto.LowLevel
     ( Message
     , getMessage
+    , defaultMaxMessageLen
     )
 where
 
@@ -72,6 +74,13 @@ data BoundsError
         !Word32 -- ^ index provided
         !Word32 -- ^ num words
     | PointerDepthExceeded
+    | MessageSizeExceeded
+    deriving(Show)
+
+
+defaultMaxMessageLen :: Word32
+-- 64 MiB; this is what the C++ implementation does.
+defaultMaxMessageLen = 64 `shiftL` 20
 
 
 checkBounds :: Address -> Either BoundsError ()
@@ -138,19 +147,35 @@ parsePointer word =
 -}
 
 
--- | read in a message formatted as described at
--- https://capnproto.org/encoding.html#serialization-over-a-stream
-getMessage :: Get Message
-getMessage = do
+-- | @getMessage maxLen@ reads in a message formatted as described at
+-- https://capnproto.org/encoding.html#serialization-over-a-stream.
+-- If the total length of the message in 64-bit words is greater than
+-- @maxLen@, this will return @Left MessageSizeExceeded@, otherwise it
+-- will return a @Right@ carrying the message.
+getMessage :: Word32 -> Get (Either BoundsError Message)
+getMessage maxLen = do
     numSegs <- (1+) <$> getWord32le
-    segLengths <- getMany getWord32le numSegs
-    when (needsPadding numSegs) (void getWord32le)
-    segs <- forM segLengths $ \len ->
-        Segment <$> toArray UA.array len <$> getMany getWord64le len
-    return $ Message $ toArray A.array numSegs segs
+    let paddingLen = (numSegs + 1) `mod` 2
+    let numHeaderWords = (1 + numSegs + paddingLen) `div` 2
+    if numHeaderWords `safeGt` maxLen then
+        return $ Left MessageSizeExceeded
+    else do
+      segLengths <- getMany getWord32le numSegs
+      if (sum $ numSegs:segLengths) `safeGt` maxLen then
+           return $ Left MessageSizeExceeded
+      else do
+        void (getMany getWord32le paddingLen)
+        segs <- forM segLengths $ \len ->
+                     Segment <$> toArray UA.array len <$> getMany getWord64le len
+        return $ Right $ Message $ toArray A.array numSegs segs
   where
-    needsPadding n = (n + 1) `mod` 2 == 1
     toArray arrayFn len lst = arrayFn (0, len-1) $ zip [0,1..] lst
+    safeGt :: (Integral a) => a -> a -> Bool
+    -- We can't risk overflow here, otherwise an attacker could e.g.
+    -- specify (2**32 - 1) segments, and we'd overflow and treat this
+    -- as an acceptable length. Instead we use Integer to avoid the possibility
+    -- of overflow:
+    safeGt l r = (fromIntegral l :: Integer) > (fromIntegral r :: Integer)
 
 
 -- This is defined inside Data.Binary, but annoyingly not exported:
