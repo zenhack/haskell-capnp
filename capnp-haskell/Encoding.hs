@@ -14,8 +14,10 @@ import Data.Int
 import Control.Monad (when, forM)
 
 data Message = Message (Array Word32 Segment)
+             deriving(Show)
 
 data Segment = Segment (UArray Word32 Word64)
+             deriving(Show)
 
 data Pointer
     = Struct !Int32 !Word16 !Word16
