@@ -52,9 +52,6 @@ class Cerialize a where
     -- TODO: output
     parse :: Address -> Either CerializationError a
 
--- dropLow :: Word64 -> Int -> Word64
--- dropLow n bits = n .&. (compliment (1 shiftL
-
 instance Cerialize Pointer where
     parse (Address (Message segs) idx segn) = do
         -- XXX: there's got to be a better way to do this:
