@@ -104,9 +104,9 @@ getMessage = do
     segLengths <- getMany getWord32le numSegs
     _padding <- getMany getWord8 $ neededPadding numSegs
     segs <- forM segLengths $ \len ->
-        Segment <$> (UA.array (0, len) <$> zip [0,1..] <$> getMany getWord64le len)
+        Segment <$> (UA.array (0, len-1) <$> zip [0,1..] <$> getMany getWord64le len)
     let _ = segs :: [Segment]
-    return $ Message $ A.array (0, numSegs) $ zip [0,1..] segs
+    return $ Message $ A.array (0, numSegs-1) $ zip [0,1..] segs
   where
     neededPadding n = case n `mod` 4 of
         0 -> 0
