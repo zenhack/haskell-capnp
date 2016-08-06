@@ -1,16 +1,21 @@
 module Encoding where
 
+import Data.Binary
+import Data.Binary.Get
 import Data.Array (Array)
+import qualified Data.Array as A
 import Data.Array.Unboxed (UArray)
+import qualified Data.Array.Unboxed as UA
 import Data.Array.IArray ((!), bounds)
+import qualified Data.Array.IArray as IA
 import Data.Bits
 import Data.Word
 import Data.Int
-import Control.Monad (when)
+import Control.Monad (when, forM)
 
-data Message = Message (Array Word64 Segment)
+data Message = Message (Array Word32 Segment)
 
-data Segment = Segment (UArray Word64 Word64)
+data Segment = Segment (UArray Word32 Word64)
 
 data Pointer
     = Struct !Int32 !Word16 !Word16
@@ -38,8 +43,8 @@ data ElementSize
 
 data Address = Address
     { msg :: !Message
-    , index :: !Word64
-    , segnum :: !Word64
+    , index :: !Word32
+    , segnum :: !Word32
     }
 
 
@@ -79,3 +84,28 @@ instance Cerialize Pointer where
                         else OneWord
 -}
             3 -> Capability $ fromIntegral (word `shiftR` 32)
+
+
+-- This is defined inside Data.Binary, but annoyingly not exported:
+getMany :: (Eq n, Num n) => Get a -> n -> Get [a]
+getMany g n = do getMany' [] n
+  where
+    getMany' xs 0 = return $ reverse $! xs
+    getMany' xs n' = do
+        x <- g
+        x `seq` getMany' (x:xs) (n' - 1)
+
+
+getMessage :: Get Message
+getMessage = do
+    numSegs <- getWord32le
+    segLengths <- getMany getWord32le numSegs
+    _padding <- getMany getWord8 $ neededPadding numSegs
+    segs <- forM segLengths $ \len ->
+        Segment <$> (UA.array (0, len) <$> zip [0,1..] <$> getMany getWord64le len)
+    let _ = segs :: [Segment]
+    return $ Message $ A.array (0, numSegs) $ zip [0,1..] segs
+  where
+    neededPadding n = case n `mod` 4 of
+        0 -> 0
+        n' -> 4 - n'
