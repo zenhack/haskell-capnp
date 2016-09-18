@@ -3,6 +3,7 @@ module Data.CapNProto.LowLevel
     ( Message
     , getMessage
     , defaultMaxMessageLen
+    , BoundsError(..)
     )
 where
 
