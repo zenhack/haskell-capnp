@@ -1,9 +1,13 @@
 {-# LANGUAGE DoAndIfThenElse #-}
 module Data.CapNProto.LowLevel
     ( Message
+    , BoundsError(..)
+    , ElementSize(..)
+    , View(..)
+    , getRootView
     , getMessage
     , defaultMaxMessageLen
-    , BoundsError(..)
+    , defaultMaxPointerDepth
     )
 where
 
@@ -31,6 +35,18 @@ data Segment
     = Segment !(UArray Word32 Word64)
     deriving(Show, Eq)
 
+data View
+    = StructView
+        !Word16 -- ^ Number of data words
+        !(Word16 -> Either BoundsError Word64) -- ^ get word at index
+        !Word16 -- ^ Number of pointers
+        !(Word16 -> Either BoundsError View) -- ^ get view of pointer at index
+    | ListView
+        !Word32 -- ^ length of list
+        !ElementSize -- ^ size of elements
+        !(Word32 -> Either BoundsError View) -- ^ get element at index
+    | CapabilityView
+        !Word32 -- ^ capability index
 
 -- | An absolute address in a CapNProto message.
 data Address = Address
@@ -79,9 +95,54 @@ data BoundsError
     deriving(Show)
 
 
-defaultMaxMessageLen :: Word32
+deref :: Address -> Either BoundsError Word64
+deref addr@(Address depthLimit (Message segs) wordsIdx segIdx) = do
+    checkBounds addr
+    let (Segment seg) = segs ! segIdx
+    return (seg ! wordsIdx)
+
+
+-- | @getRootView msg maxDepth@ is a view of the root struct
+-- pointer of the messag, with a depth limit of maxDepth.
+getRootView :: Message -> Word32 -> Either BoundsError View
+getRootView msg maxDepth = do
+    -- TODO: check if this is a struct view, and if not, complain.
+    getView (Address maxDepth msg 0 0)
+
+getView :: Address -> Either BoundsError View
+getView addr = do
+    ptr <- parsePointer <$> (deref addr)
+    case ptr of
+        Far _ _ _ -> pointerSeek addr ptr >>= getView
+        Struct off dataSz ptrSz -> return $ StructView
+            dataSz (\idx -> do
+                checkFieldBounds dataSz idx
+                addrSeek addr (fromIntegral idx) >>= deref)
+            ptrSz (\idx -> do
+                checkFieldBounds ptrSz idx
+                addrSeek addr (fromIntegral $ dataSz + idx) >>= getView)
+--        List off eltSz len ->
+    where
+        checkFieldBounds :: Word16 -> Word16 -> Either BoundsError ()
+        checkFieldBounds cap idx =
+            if (idx >= cap) then
+                Left $ WordsBoundError (fromIntegral idx) (fromIntegral cap)
+            else
+                Right ()
+
+
+addrSeek :: Address -> Word32 -> Either BoundsError Address
+addrSeek (Address maxDepth (Message segs) wordIdx segIdx) shift = do
+    let ret = Address maxDepth (Message segs) (wordIdx + shift) segIdx
+    checkBounds ret
+    return ret
+
+
+
+defaultMaxMessageLen, defaultMaxPointerDepth :: Word32
 -- 64 MiB; this is what the C++ implementation does.
 defaultMaxMessageLen = 64 `shiftL` 20
+defaultMaxPointerDepth = 64
 
 
 checkBounds :: Address -> Either BoundsError ()
