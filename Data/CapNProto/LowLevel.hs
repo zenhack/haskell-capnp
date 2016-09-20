@@ -204,10 +204,11 @@ followPtr
 
 
 
+-- | @bitRange word lo hi@ is the unsigned integer represented by the
+-- bits of @word@ in the range [lo, hi)
 bitRange :: (Integral a => Word64 -> Int -> Int -> a)
-bitRange word lo hi = fromIntegral $ (.&.)
-    (word `shiftR` lo)
-    ((1 `shiftL` hi) - 1)
+bitRange word lo hi = fromIntegral $
+    (word .&. ((1 `shiftL` hi) - 1)) `shiftR` lo
 
 
 parsePointer :: Word64 -> Pointer
