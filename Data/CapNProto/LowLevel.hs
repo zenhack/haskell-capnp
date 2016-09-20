@@ -48,6 +48,18 @@ data View
     | CapabilityView
         !Word32 -- ^ capability index
 
+instance Show View where
+    show (StructView dataSz getData ptrSz getPtr) = concat
+        [ "StructView "
+        , show dataSz, " "
+        , show ptrSz, " "
+        , show $ getList dataSz getData
+        , " "
+        , show $ getList ptrSz getPtr
+        ]
+      where
+        getList sz get = map get $ takeWhile (\i -> i < sz) [0,1..]
+
 -- | An absolute address in a CapNProto message.
 data Address = Address
     !Word32 -- ^ Remaining pointer depth; when this hits zero we get an error.
@@ -56,6 +68,7 @@ data Address = Address
     !Message -- ^ The message
     !Word32 -- ^ word index
     !Word32 -- ^ segment index
+    deriving(Show)
 
 
 -- | A (relative) pointer, as stored in the CapNProto messages themselves.
