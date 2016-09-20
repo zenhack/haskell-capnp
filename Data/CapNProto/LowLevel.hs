@@ -125,17 +125,18 @@ getRootView msg maxDepth = do
 getView :: Address -> Either BoundsError View
 getView addr = do
     ptr <- parsePointer <$> (deref addr)
+    addr' <- pointerSeek addr ptr
     case ptr of
-        Far _ _ _ -> pointerSeek addr ptr >>= getView
-        Struct off dataSz ptrSz -> return $ StructView
-            dataSz (\idx -> do
-                checkFieldBounds dataSz idx
-                addrSeek addr (fromIntegral idx) >>= deref)
-            ptrSz (\idx -> do
-                checkFieldBounds ptrSz idx
-                addrSeek addr (fromIntegral $ dataSz + idx) >>= getView)
+        Far _ _ _ -> getView addr'
+        Struct _ dataSz ptrSz -> do
+            return $ StructView
+                dataSz (atIndex addr' dataSz 0 deref)
+                ptrSz (atIndex addr' ptrSz dataSz getView)
 --        List off eltSz len ->
     where
+        atIndex structAddr sz off bindTo idx = do
+            checkFieldBounds sz idx
+            addrSeek structAddr (fromIntegral $ off + idx) >>= bindTo
         checkFieldBounds :: Word16 -> Word16 -> Either BoundsError ()
         checkFieldBounds cap idx =
             if (idx >= cap) then
@@ -144,9 +145,10 @@ getView addr = do
                 Right ()
 
 
-addrSeek :: Address -> Word32 -> Either BoundsError Address
+addrSeek :: Address -> Int32 -> Either BoundsError Address
 addrSeek (Address maxDepth (Message segs) wordIdx segIdx) shift = do
-    let ret = Address maxDepth (Message segs) (wordIdx + shift) segIdx
+    let newIdx = fromIntegral wordIdx + shift
+    let ret = Address maxDepth (Message segs) (fromIntegral newIdx) segIdx
     checkBounds ret
     return ret
 
