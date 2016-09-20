@@ -11,6 +11,14 @@ module Data.CapNProto.LowLevel
     )
 where
 
+-- Note on the comments in this file: most functions that return
+-- @Either BoundsError foo@ are documented as if they never fail;
+-- unless otherwise stated the possibility of a BoundsError is
+-- implied.
+--
+-- Functions which both take and return an Address decrement the
+-- depth limit, unless otherwise specified.
+
 import Control.Monad (forM, void, when)
 import Data.Array (Array)
 import qualified Data.Array as A
@@ -108,8 +116,9 @@ data BoundsError
     deriving(Show)
 
 
-deref :: Address -> Either BoundsError Word64
-deref addr@(Address depthLimit (Message segs) wordsIdx segIdx) = do
+-- | @loadAddr addr@ returns the word at the word at @addr@
+loadAddr :: Address -> Either BoundsError Word64
+loadAddr addr@(Address depthLimit (Message segs) wordsIdx segIdx) = do
     checkBounds addr
     let (Segment seg) = segs ! segIdx
     return (seg ! wordsIdx)
@@ -124,27 +133,35 @@ getRootView msg maxDepth = do
 
 getView :: Address -> Either BoundsError View
 getView addr = do
-    ptr <- parsePointer <$> (deref addr)
-    addr' <- pointerSeek addr ptr
+    ptr <- parsePointer <$> loadAddr addr
+    addr' <- followPtr addr ptr
     case ptr of
         Far _ _ _ -> getView addr'
         Struct _ dataSz ptrSz -> do
+            let dataAddr = addr'
+            ptrsAddr <- addrSeek dataAddr (fromIntegral dataSz)
             return $ StructView
-                dataSz (atIndex addr' dataSz 0 deref)
-                ptrSz (atIndex addr' ptrSz dataSz getView)
+                dataSz (\i -> atIndex dataAddr dataSz i >>= loadAddr)
+                ptrSz  (\i -> atIndex ptrsAddr ptrSz  i >>= getView)
 --        List off eltSz len ->
-    where
-        atIndex structAddr sz off bindTo idx = do
-            checkFieldBounds sz idx
-            addrSeek structAddr (fromIntegral $ off + idx) >>= bindTo
-        checkFieldBounds :: Word16 -> Word16 -> Either BoundsError ()
-        checkFieldBounds cap idx =
-            if (idx >= cap) then
-                Left $ WordsBoundError (fromIntegral idx) (fromIntegral cap)
-            else
-                Right ()
 
 
+-- | @atIndex base sz idx@ indexes into the region of a segment starting at
+-- address @base@, extending for @sz@ words. It returns the address of the
+-- indexed element.
+atIndex base sz idx = do
+    checkFieldBounds sz idx
+    addrSeek base (fromIntegral idx)
+  where
+    checkFieldBounds :: Word16 -> Word16 -> Either BoundsError ()
+    checkFieldBounds cap idx =
+        if (idx >= cap) then
+            Left $ WordsBoundError (fromIntegral idx) (fromIntegral cap)
+        else
+            Right ()
+
+
+-- | @addrSeek addr shift@ seeks
 addrSeek :: Address -> Int32 -> Either BoundsError Address
 addrSeek (Address maxDepth (Message segs) wordIdx segIdx) shift = do
     let newIdx = fromIntegral wordIdx + shift
@@ -171,8 +188,10 @@ checkBounds (Address depth (Message segs) wordsIdx segIdx) = do
     Right ()
 
 
-pointerSeek :: Address -> Pointer -> Either BoundsError Address
-pointerSeek
+-- | @followPtr addr ptr@ follows @ptr@ relative to @addr@, returning
+-- the new address.
+followPtr :: Address -> Pointer -> Either BoundsError Address
+followPtr
         (Address depth (Message segs) wordIdx segIdx)
         (Struct off dataSz ptrsSz) = do
     let result = Address
