@@ -86,10 +86,10 @@ data LandingSize = OneWord | TwoWords
 data BoundsError
     = SegmentsBoundError -- ^ bad index into segments array
         !Word32 -- ^ index provided
-        !Word32 -- ^ num segments
+        !Word32 -- ^ max legal index
     | WordsBoundError -- ^ bad index into word array
         !Word32 -- ^ index provided
-        !Word32 -- ^ num words
+        !Word32 -- ^ max legal index
     | PointerDepthExceeded
     | MessageSizeExceeded
     deriving(Show)
@@ -148,11 +148,11 @@ defaultMaxPointerDepth = 64
 checkBounds :: Address -> Either BoundsError ()
 checkBounds (Address depth (Message segs) wordsIdx segIdx) = do
     when (depth == 0) $ Left PointerDepthExceeded
-    let (_, segsLen) = bounds segs
-    when (segIdx >= segsLen) $ Left (SegmentsBoundError segIdx segsLen)
+    let (_, segsMax) = bounds segs
+    when (segIdx > segsMax) $ Left (SegmentsBoundError segIdx segsMax)
     let Segment words = segs ! segIdx
-    let (_, wordsLen) = bounds words
-    when (wordsIdx >= wordsLen) $ Left (WordsBoundError wordsIdx wordsLen)
+    let (_, wordsMax) = bounds words
+    when (wordsIdx > wordsMax) $ Left (WordsBoundError wordsIdx wordsMax)
     Right ()
 
 
@@ -163,7 +163,7 @@ pointerSeek
     let result = Address
             (depth - 1)
             (Message segs)
-            (fromIntegral (fromIntegral wordIdx + off))
+            (fromIntegral (fromIntegral wordIdx + off + 1))
             segIdx
     checkBounds result
     return result
