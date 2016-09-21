@@ -189,18 +189,20 @@ checkBounds (Address depth (Message segs) wordsIdx segIdx) = do
 
 
 -- | @followPtr addr ptr@ follows @ptr@ relative to @addr@, returning
--- the new address.
+-- the new address. If @ptr@ points to a capability, returns @addr@.
+-- XXX: This doesn't make a ton of sense; there isn't really a sensible
+-- Address to return, since a capability pointer doesn't point to data.
 followPtr :: Address -> Pointer -> Either BoundsError Address
-followPtr
-        (Address depth (Message segs) wordIdx segIdx)
-        (Struct off dataSz ptrsSz) = do
-    let result = Address
-            (depth - 1)
-            (Message segs)
-            (fromIntegral (fromIntegral wordIdx + off + 1))
-            segIdx
-    checkBounds result
-    return result
+followPtr addr@(Address depth (Message segs) wordIdx segIdx) ptr = case ptr of
+    Struct off dataSz ptrsSz -> do
+        let result = Address
+                (depth - 1)
+                (Message segs)
+                (fromIntegral (fromIntegral wordIdx + off + 1))
+                segIdx
+        checkBounds result
+        return result
+    Capability _ -> Right addr
 
 
 
