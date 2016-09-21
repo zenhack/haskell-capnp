@@ -12,8 +12,8 @@ module Data.CapNProto.LowLevel
 where
 
 -- Note on the comments in this file: most functions that return
--- @Either BoundsError foo@ are documented as if they never fail;
--- unless otherwise stated the possibility of a BoundsError is
+-- @Either ParseError foo@ are documented as if they never fail;
+-- unless otherwise stated the possibility of a ParseError is
 -- implied.
 --
 -- Functions which both take and return an Address decrement the
@@ -46,25 +46,30 @@ data Segment
 data View
     = StructView
         !Word16 -- ^ Number of data words
-        !(Word16 -> Either BoundsError Word64) -- ^ get word at index
+        !(Word16 -> Either ParseError Word64) -- ^ get word at index
         !Word16 -- ^ Number of pointers
-        !(Word16 -> Either BoundsError View) -- ^ get view of pointer at index
+        !(Word16 -> Either ParseError View) -- ^ get view of pointer at index
     | ListView
         !Word32 -- ^ length of list
-        !ElementSize -- ^ size of elements
-        !(Word32 -> Either BoundsError View) -- ^ get element at index
+        !(Word32 -> Either ParseError View) -- ^ get element at index
     | CapabilityView
         !Word32 -- ^ capability index
 
 instance Show View where
-    show (StructView dataSz getData ptrSz getPtr) = concat
-        [ "StructView "
-        , show dataSz, " "
-        , show ptrSz, " "
-        , show $ getList dataSz getData
-        , " "
-        , show $ getList ptrSz getPtr
-        ]
+    show view = case view of
+        StructView dataSz getData ptrSz getPtr -> concat
+            [ "StructView "
+            , show dataSz, " "
+            , show ptrSz, " "
+            , show $ getList dataSz getData
+            , " "
+            , show $ getList ptrSz getPtr
+            ]
+        ListView len get -> concat
+            [ "ListView "
+            , show len, " "
+            , show $ getList len get
+            ]
       where
         getList sz get = map get $ takeWhile (\i -> i < sz) [0,1..]
 
@@ -106,7 +111,11 @@ data LandingSize = OneWord | TwoWords
 
 
 data BoundsError
-    = SegmentsBoundError -- ^ bad index into segments array
+    = IndexBoundsError -- ^ bad index into data structure
+        -- TODO: specify type, and fold Segments/Words into this.
+        !Word32 -- ^ index provided
+        !Word32 -- ^ number of elements in structure.
+    | SegmentsBoundError -- ^ bad index into segments array
         !Word32 -- ^ index provided
         !Word32 -- ^ max legal index
     | WordsBoundError -- ^ bad index into word array
@@ -117,8 +126,20 @@ data BoundsError
     deriving(Show)
 
 
+data ParseError
+    = BoundsError !BoundsError
+    | LengthInconsistency
+        -- ^ List pointers with element size "InlineComposite" specify
+        -- the size in two ways -- the element size in words * number of
+        -- elements and the word count. This error indicates a disagreement,
+        !Word32 -- ^ Specified length in words
+        !Word32 -- ^ Specified size of an element
+        !Word32 -- ^ Specified number of elemnets.
+    deriving(Show)
+
+
 -- | @loadAddr addr@ returns the word at the word at @addr@
-loadAddr :: Address -> Either BoundsError Word64
+loadAddr :: Address -> Either ParseError Word64
 loadAddr addr = do
     checkBounds addr
     let (Message segs) = message addr
@@ -128,47 +149,76 @@ loadAddr addr = do
 
 -- | @getRootView msg maxDepth@ is a view of the root struct
 -- pointer of the messag, with a depth limit of maxDepth.
-getRootView :: Message -> Word32 -> Either BoundsError View
+getRootView :: Message -> Word32 -> Either ParseError View
 getRootView msg maxDepth = do
     -- TODO: check if this is a struct view, and if not, complain.
     getView (Address maxDepth msg 0 0)
 
-getView :: Address -> Either BoundsError View
+getView :: Address -> Either ParseError View
 getView addr = do
     ptr <- parsePointer <$> loadAddr addr
     addr' <- followPtr addr ptr
+    makeView addr' ptr
+
+makeView :: Address -> Pointer -> Either ParseError View
+makeView addr ptr =
     case ptr of
-        Far _ _ _ -> getView addr'
+        Far _ _ _ -> getView addr
+        Capability cap -> return $ CapabilityView cap
         Struct _ dataSz ptrSz -> do
-            let dataAddr = addr'
+            let dataAddr = addr
             ptrsAddr <- addrSeek dataAddr (fromIntegral dataSz)
             return $ StructView
                 dataSz (\i -> atIndex dataAddr dataSz i >>= loadAddr)
                 ptrSz  (\i -> atIndex ptrsAddr ptrSz  i >>= getView)
+        list@(List off eltSz eltCount) -> getListView addr off eltSz eltCount
+
+
+getListView :: Address -> Int32 -> ElementSize -> Word32 -> Either ParseError View
+getListView addr off InlineComposite wordCount = do
+    eltTag <- parsePointer <$> loadAddr addr
+    case eltTag of
+        Struct eltCount dataSz ptrSz -> do
+            let eltSize = fromIntegral dataSz + fromIntegral ptrSz
+            let eltCount' = fromIntegral eltCount :: Word32
+            if (eltSize * eltCount') /= wordCount then
+                Left $ LengthInconsistency wordCount eltSize eltCount'
+            else do
+                baseAddr <- addrSeek addr 1
+                return $ ListView eltCount' (\i ->
+                    if i >= eltCount' then
+                        Left $ BoundsError $ IndexBoundsError i eltCount'
+                    else do
+                        eltAddr <- addrSeek
+                            baseAddr
+                            (fromIntegral i * fromIntegral eltSize)
+                        makeView eltAddr eltTag)
 
 
 -- | @atIndex base sz idx@ indexes into the region of a segment starting at
 -- address @base@, extending for @sz@ words. It returns the address of the
 -- indexed element.
+atIndex :: Address -> Word16 -> Word16 -> Either ParseError Address
 atIndex base sz idx = do
     checkFieldBounds sz idx
     addrSeek base (fromIntegral idx)
   where
-    checkFieldBounds :: Word16 -> Word16 -> Either BoundsError ()
+    checkFieldBounds :: Word16 -> Word16 -> Either ParseError ()
     checkFieldBounds cap idx =
         if (idx >= cap) then
-            Left $ WordsBoundError (fromIntegral idx) (fromIntegral cap)
+            Left $ BoundsError $ WordsBoundError (fromIntegral idx)
+                                                 (fromIntegral cap)
         else
             Right ()
 
 
 -- | @decrDepthLimit addr@ is @addr@ with the depth limit decreased by one.
-decrDepthLimit :: Address -> Either BoundsError Address
+decrDepthLimit :: Address -> Either ParseError Address
 decrDepthLimit addr = checkBounds $ addr { depthLimit = depthLimit addr - 1 }
 
 
 -- | @addrSeek addr shift@ seeks @shift@ words from @addr@.
-addrSeek :: Address -> Int32 -> Either BoundsError Address
+addrSeek :: Address -> Int32 -> Either ParseError Address
 addrSeek addr shift = checkBounds $
     addr { wordIdx = fromIntegral $ fromIntegral (wordIdx addr) + shift }
 
@@ -183,14 +233,14 @@ defaultMaxPointerDepth = 64
 -- | @checkBounds addr@ verifies that addr is within the legal boundaries
 -- of its message. For convienience, in the case of success it returns
 -- @addr@.
-checkBounds :: Address -> Either BoundsError Address
+checkBounds :: Address -> Either ParseError Address
 checkBounds addr@(Address depth (Message segs) wordsIdx segIdx) = do
-    when (depth == 0) $ Left PointerDepthExceeded
+    when (depth == 0) $ Left $ BoundsError $ PointerDepthExceeded
     let (_, segsMax) = bounds segs
-    when (segIdx > segsMax) $ Left (SegmentsBoundError segIdx segsMax)
+    when (segIdx > segsMax) $ Left $ BoundsError (SegmentsBoundError segIdx segsMax)
     let Segment words = segs ! segIdx
     let (_, wordsMax) = bounds words
-    when (wordsIdx > wordsMax) $ Left (WordsBoundError wordsIdx wordsMax)
+    when (wordsIdx > wordsMax) $ Left $ BoundsError (WordsBoundError wordsIdx wordsMax)
     Right addr
 
 
@@ -199,7 +249,7 @@ checkBounds addr@(Address depth (Message segs) wordsIdx segIdx) = do
 -- @decrDepthLimit addr@. XXX: This doesn't make a ton of sense; there
 -- isn't really a sensible Address to return, since a capability pointer
 -- doesn't point to data.
-followPtr :: Address -> Pointer -> Either BoundsError Address
+followPtr :: Address -> Pointer -> Either ParseError Address
 followPtr addr ptr = decrDepthLimit =<< case ptr of
     Struct off dataSz ptrsSz -> addrSeek addr (off + 1)
     List off _ _ -> addrSeek addr (off + 1)
@@ -237,17 +287,17 @@ parsePointer word =
 -- If the total length of the message in 64-bit words is greater than
 -- @maxLen@, this will return @Left MessageSizeExceeded@, otherwise it
 -- will return a @Right@ carrying the message.
-getMessage :: Word32 -> Get (Either BoundsError Message)
+getMessage :: Word32 -> Get (Either ParseError Message)
 getMessage maxLen = do
     numSegs <- (1+) <$> getWord32le
     let paddingLen = (numSegs + 1) `mod` 2
     let numHeaderWords = (1 + numSegs + paddingLen) `div` 2
     if numHeaderWords `safeGt` maxLen then
-        return $ Left MessageSizeExceeded
+        return $ Left $ BoundsError MessageSizeExceeded
     else do
       segLengths <- getMany getWord32le numSegs
       if (sum $ numSegs:segLengths) `safeGt` maxLen then
-           return $ Left MessageSizeExceeded
+           return $ Left $ BoundsError MessageSizeExceeded
       else do
         void (getMany getWord32le paddingLen)
         segs <- forM segLengths $ \len ->
