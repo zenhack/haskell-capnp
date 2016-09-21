@@ -165,10 +165,8 @@ atIndex base sz idx = do
 
 -- | @addrSeek addr shift@ seeks
 addrSeek :: Address -> Int32 -> Either BoundsError Address
-addrSeek addr shift = do
-    let ret = addr { wordIdx = fromIntegral $ fromIntegral (wordIdx addr) + shift }
-    checkBounds ret
-    return ret
+addrSeek addr shift = checkBounds $
+    addr { wordIdx = fromIntegral $ fromIntegral (wordIdx addr) + shift }
 
 
 
@@ -178,15 +176,18 @@ defaultMaxMessageLen = 64 `shiftL` 20
 defaultMaxPointerDepth = 64
 
 
-checkBounds :: Address -> Either BoundsError ()
-checkBounds (Address depth (Message segs) wordsIdx segIdx) = do
+-- | @checkBounds addr@ verifies that addr is within the legal boundaries
+-- of its message. For convienience, in the case of success it returns
+-- @addr@.
+checkBounds :: Address -> Either BoundsError Address
+checkBounds addr@(Address depth (Message segs) wordsIdx segIdx) = do
     when (depth == 0) $ Left PointerDepthExceeded
     let (_, segsMax) = bounds segs
     when (segIdx > segsMax) $ Left (SegmentsBoundError segIdx segsMax)
     let Segment words = segs ! segIdx
     let (_, wordsMax) = bounds words
     when (wordsIdx > wordsMax) $ Left (WordsBoundError wordsIdx wordsMax)
-    Right ()
+    Right addr
 
 
 -- | @followPtr addr ptr@ follows @ptr@ relative to @addr@, returning
@@ -195,13 +196,11 @@ checkBounds (Address depth (Message segs) wordsIdx segIdx) = do
 -- Address to return, since a capability pointer doesn't point to data.
 followPtr :: Address -> Pointer -> Either BoundsError Address
 followPtr addr ptr = case ptr of
-    Struct off dataSz ptrsSz -> do
-        let ret = addr { depthLimit = depthLimit addr - 1
+    Struct off dataSz ptrsSz ->
+        checkBounds $ addr { depthLimit = depthLimit addr - 1
                        , wordIdx = fromIntegral $
                             fromIntegral (wordIdx addr) + off + 1
                        }
-        checkBounds ret
-        return ret
     Capability _ -> Right addr
 
 
