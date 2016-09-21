@@ -70,13 +70,14 @@ instance Show View where
 
 -- | An absolute address in a CapNProto message.
 data Address = Address
-    !Word32 -- ^ Remaining pointer depth; when this hits zero we get an error.
-            -- See https://capnproto.org/encoding.html#security-considerations
-            -- for reasoning
-    !Message -- ^ The message
-    !Word32 -- ^ word index
-    !Word32 -- ^ segment index
-    deriving(Show)
+    { depthLimit :: !Word32
+      -- ^ Remaining pointer depth; when this hits zero we get an error.
+      -- See https://capnproto.org/encoding.html#security-considerations
+      -- for reasoning
+    , message :: !Message -- ^ The message
+    , wordIdx :: !Word32 -- ^ word index
+    , segIdx  :: !Word32 -- ^ segment index
+    } deriving(Show)
 
 
 -- | A (relative) pointer, as stored in the CapNProto messages themselves.
@@ -118,10 +119,11 @@ data BoundsError
 
 -- | @loadAddr addr@ returns the word at the word at @addr@
 loadAddr :: Address -> Either BoundsError Word64
-loadAddr addr@(Address depthLimit (Message segs) wordsIdx segIdx) = do
+loadAddr addr = do
     checkBounds addr
-    let (Segment seg) = segs ! segIdx
-    return (seg ! wordsIdx)
+    let (Message segs) = message addr
+    let (Segment seg) = segs ! segIdx addr
+    return (seg ! wordIdx addr)
 
 
 -- | @getRootView msg maxDepth@ is a view of the root struct
@@ -163,9 +165,8 @@ atIndex base sz idx = do
 
 -- | @addrSeek addr shift@ seeks
 addrSeek :: Address -> Int32 -> Either BoundsError Address
-addrSeek (Address maxDepth (Message segs) wordIdx segIdx) shift = do
-    let newIdx = fromIntegral wordIdx + shift
-    let ret = Address maxDepth (Message segs) (fromIntegral newIdx) segIdx
+addrSeek addr shift = do
+    let ret = addr { wordIdx = fromIntegral $ fromIntegral (wordIdx addr) + shift }
     checkBounds ret
     return ret
 
@@ -193,15 +194,14 @@ checkBounds (Address depth (Message segs) wordsIdx segIdx) = do
 -- XXX: This doesn't make a ton of sense; there isn't really a sensible
 -- Address to return, since a capability pointer doesn't point to data.
 followPtr :: Address -> Pointer -> Either BoundsError Address
-followPtr addr@(Address depth (Message segs) wordIdx segIdx) ptr = case ptr of
+followPtr addr ptr = case ptr of
     Struct off dataSz ptrsSz -> do
-        let result = Address
-                (depth - 1)
-                (Message segs)
-                (fromIntegral (fromIntegral wordIdx + off + 1))
-                segIdx
-        checkBounds result
-        return result
+        let ret = addr { depthLimit = depthLimit addr - 1
+                       , wordIdx = fromIntegral $
+                            fromIntegral (wordIdx addr) + off + 1
+                       }
+        checkBounds ret
+        return ret
     Capability _ -> Right addr
 
 
