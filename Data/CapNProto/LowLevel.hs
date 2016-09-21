@@ -162,7 +162,12 @@ atIndex base sz idx = do
             Right ()
 
 
--- | @addrSeek addr shift@ seeks
+-- | @decrDepthLimit addr@ is @addr@ with the depth limit decreased by one.
+decrDepthLimit :: Address -> Either BoundsError Address
+decrDepthLimit addr = checkBounds $ addr { depthLimit = depthLimit addr - 1 }
+
+
+-- | @addrSeek addr shift@ seeks @shift@ words from @addr@.
 addrSeek :: Address -> Int32 -> Either BoundsError Address
 addrSeek addr shift = checkBounds $
     addr { wordIdx = fromIntegral $ fromIntegral (wordIdx addr) + shift }
@@ -190,17 +195,15 @@ checkBounds addr@(Address depth (Message segs) wordsIdx segIdx) = do
 
 
 -- | @followPtr addr ptr@ follows @ptr@ relative to @addr@, returning
--- the new address. If @ptr@ points to a capability, returns @addr@.
--- XXX: This doesn't make a ton of sense; there isn't really a sensible
--- Address to return, since a capability pointer doesn't point to data.
+-- the new address. If @ptr@ points to a capability, returns
+-- @decrDepthLimit addr@. XXX: This doesn't make a ton of sense; there
+-- isn't really a sensible Address to return, since a capability pointer
+-- doesn't point to data.
 followPtr :: Address -> Pointer -> Either BoundsError Address
-followPtr addr ptr = case ptr of
-    Struct off dataSz ptrsSz ->
-        checkBounds $ addr { depthLimit = depthLimit addr - 1
-                       , wordIdx = fromIntegral $
-                            fromIntegral (wordIdx addr) + off + 1
-                       }
-    Capability _ -> Right addr
+followPtr addr ptr = decrDepthLimit =<< case ptr of
+    Struct off dataSz ptrsSz -> addrSeek addr (off + 1)
+    List off _ _ -> addrSeek addr (off + 1)
+    Capability _ -> return addr
 
 
 
