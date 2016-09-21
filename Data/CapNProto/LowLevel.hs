@@ -145,7 +145,6 @@ getView addr = do
             return $ StructView
                 dataSz (\i -> atIndex dataAddr dataSz i >>= loadAddr)
                 ptrSz  (\i -> atIndex ptrsAddr ptrSz  i >>= getView)
---        List off eltSz len ->
 
 
 -- | @atIndex base sz idx@ indexes into the region of a segment starting at
@@ -228,21 +227,6 @@ parsePointer word =
             (bitRange word 3 32)
             (bitRange word 32 64)
         3 -> Capability (bitRange word 32 64)
-{-
-        0 -> Struct ((fromIntegral word :: Int32) `shiftR` 2)
-                    (fromIntegral (word `shiftR` 32) :: Word16)
-                    (fromIntegral (word `shiftR` 48) :: Word16)
-        1 -> List ((fromIntegral word :: Int32) `shiftR` 2)
-                  (toEnum $ fromIntegral ((word `shiftR` 32) `mod` 8))
-                  (fromIntegral (word `shiftR` 35) :: Word32)
-        2 -> Far ((word :: Int32) `shiftR` 2)
-                 landingSize
-              where landingSize =
-                if testBit word 3
-                    then TwoWords
-                    else OneWord
-        3 -> Capability $ fromIntegral (word `shiftR` 32)
--}
 
 
 -- | @getMessage maxLen@ reads in a message formatted as described at
