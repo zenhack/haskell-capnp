@@ -135,6 +135,8 @@ data ParseError
         !Word32 -- ^ Specified length in words
         !Word32 -- ^ Specified size of an element
         !Word32 -- ^ Specified number of elemnets.
+    | RootIsNotStruct !View -- The message's root struct pointer is not
+                            -- actually a pointer to a struct.
     deriving(Show)
 
 
@@ -152,7 +154,12 @@ loadAddr addr = do
 getRootView :: Message -> Word32 -> Either ParseError View
 getRootView msg maxDepth = do
     -- TODO: check if this is a struct view, and if not, complain.
-    getView (Address maxDepth msg 0 0)
+    view <- getView (Address maxDepth msg 0 0)
+    case view of
+        StructView _ _ _ _ -> Right view
+        _ -> Left (RootIsNotStruct view)
+
+
 
 getView :: Address -> Either ParseError View
 getView addr = do
