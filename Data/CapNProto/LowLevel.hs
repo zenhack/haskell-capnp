@@ -5,7 +5,6 @@ module Data.CapNProto.LowLevel
     , ElementSize(..)
     , View(..)
     , getRootView
-    , getMessage
     , defaultMaxMessageLen
     , defaultMaxPointerDepth
     )
@@ -25,12 +24,6 @@ import qualified Data.Array as A
 import Data.Array.Unboxed (UArray)
 import qualified Data.Array.Unboxed as UA
 import Data.Array.IArray (bounds, (!))
-import Data.Binary.Get
-    ( Get
-    , getWord32le
-    , getWord64le
-    , getWord8
-    )
 import Data.Bits
 import Data.Int
 import Data.Word
@@ -287,44 +280,3 @@ parsePointer word =
             (bitRange word 3 32)
             (bitRange word 32 64)
         3 -> Capability (bitRange word 32 64)
-
-
--- | @getMessage maxLen@ reads in a message formatted as described at
--- https://capnproto.org/encoding.html#serialization-over-a-stream.
--- If the total length of the message in 64-bit words is greater than
--- @maxLen@, this will return @Left MessageSizeExceeded@, otherwise it
--- will return a @Right@ carrying the message.
-getMessage :: Word32 -> Get (Either ParseError Message)
-getMessage maxLen = do
-    numSegs <- (1+) <$> getWord32le
-    let paddingLen = (numSegs + 1) `mod` 2
-    let numHeaderWords = (1 + numSegs + paddingLen) `div` 2
-    if numHeaderWords `safeGt` maxLen then
-        return $ Left $ BoundsError MessageSizeExceeded
-    else do
-      segLengths <- getMany getWord32le numSegs
-      if (sum $ numSegs:segLengths) `safeGt` maxLen then
-           return $ Left $ BoundsError MessageSizeExceeded
-      else do
-        void (getMany getWord32le paddingLen)
-        segs <- forM segLengths $ \len ->
-                     Segment <$> toArray UA.array len <$> getMany getWord64le len
-        return $ Right $ Message $ toArray A.array numSegs segs
-  where
-    toArray arrayFn len lst = arrayFn (0, len-1) $ zip [0,1..] lst
-    safeGt :: (Integral a) => a -> a -> Bool
-    -- We can't risk overflow here, otherwise an attacker could e.g.
-    -- specify (2**32 - 1) segments, and we'd overflow and treat this
-    -- as an acceptable length. Instead we use Integer to avoid the possibility
-    -- of overflow:
-    safeGt l r = (fromIntegral l :: Integer) > (fromIntegral r :: Integer)
-
-
--- This is defined inside Data.Binary, but annoyingly not exported:
-getMany :: (Eq n, Num n) => Get a -> n -> Get [a]
-getMany g n = do getMany' [] n
-  where
-    getMany' xs 0 = return $ reverse $! xs
-    getMany' xs n' = do
-        x <- g
-        x `seq` getMany' (x:xs) (n' - 1)
