@@ -4,14 +4,13 @@ import qualified Data.ByteString as B
 import Data.Word
 import Data.Int
 import Data.Vector ((!))
-import qualified Data.Vector as BV
-import qualified Data.Vector.Unboxed as UV
+import qualified Data.Vector as V
 
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Exception (ArrayException(IndexOutOfBounds))
 
 type Segment = B.ByteString
-type Message = BV.Vector Segment
+type Message = V.Vector Segment
 
 data Address = Address
     !Int -- ^ Segment number
@@ -47,6 +46,6 @@ followPtr :: (MonadThrow m) => Message -> Address -> Pointer -> m PointerDest
 followPtr msg addr@(Address segnum wordidx) _
     | segnum < 0
       || wordidx < 0
-      || segnum >= BV.length msg
+      || segnum >= V.length msg
       || wordidx >= B.length (msg ! segnum)
       = throwM $ IndexOutOfBounds (show addr)
