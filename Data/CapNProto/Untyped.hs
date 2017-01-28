@@ -1,5 +1,6 @@
 module Data.CapNProto.Untyped where
 
+import qualified Data.ByteString as B
 import Data.Word
 import Data.Int
 import Data.Vector ((!))
@@ -9,7 +10,7 @@ import qualified Data.Vector.Unboxed as UV
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Exception (ArrayException(IndexOutOfBounds))
 
-type Segment = UV.Vector Word64
+type Segment = B.ByteString
 type Message = BV.Vector Segment
 
 data Address = Address
@@ -47,5 +48,5 @@ followPtr msg addr@(Address segnum wordidx) _
     | segnum < 0
       || wordidx < 0
       || segnum >= BV.length msg
-      || wordidx >= UV.length (msg ! segnum)
+      || wordidx >= B.length (msg ! segnum)
       = throwM $ IndexOutOfBounds (show addr)
