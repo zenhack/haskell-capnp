@@ -47,5 +47,5 @@ followPtr msg addr@(Address segnum wordidx) _
     | segnum < 0
       || wordidx < 0
       || segnum >= V.length msg
-      || wordidx >= B.length (msg ! segnum)
+      || wordidx `div` 8 >= B.length (msg ! segnum)
       = throwM $ IndexOutOfBounds (show addr)
