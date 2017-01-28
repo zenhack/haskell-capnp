@@ -34,7 +34,6 @@ library
     bytes,
     vector,
     exceptions,
-    transformers,
     mtl,
     quota
   -- hs-source-dirs:
