@@ -19,9 +19,11 @@ cabal-version:       >=1.10
 library
 --  exposed-modules:     Schema, Encoding, PrimTypes, SchemaEncoding
   exposed-modules:
-    Data.CapNProto.LowLevel,
-    Data.CapNProto.Untyped,
-    Data.CapNProto.Stream
+    Data.CapNProto.Address,
+    Data.CapNProto.Bits,
+    Data.CapNProto.Pointer,
+    Data.CapNProto.Stream,
+    Data.CapNProto.Untyped
   -- other-modules:
   -- other-extensions:
   default-extensions:
@@ -54,4 +56,15 @@ executable capnpc-haskell
     vector,
     mtl,
     quota
+  default-language:    Haskell2010
+
+test-suite the-test-suite
+  type: exitcode-stdio-1.0
+  main-is: TestMain.hs
+  build-depends:
+    base >=4.8 && <5.0,
+    capnp,
+    QuickCheck,
+    test-framework,
+    test-framework-quickcheck2
   default-language:    Haskell2010

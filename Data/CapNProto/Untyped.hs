@@ -1,51 +1,44 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Data.CapNProto.Untyped where
 
-import qualified Data.ByteString as B
+import Prelude hiding (lookup, length)
 import Data.Word
-import Data.Int
-import Data.Vector ((!))
-import qualified Data.Vector as V
+import Data.CapNProto.Address (WordAddr(..))
+import Control.Monad.Catch (MonadThrow)
 
-import Control.Monad.Catch (MonadThrow, throwM)
-import Control.Exception (ArrayException(IndexOutOfBounds))
+-- This is a WIP, still thinking about the design of this.
+-- The idea is to have a series of types that abstract out
+-- the "cursor".
 
-type Segment = B.ByteString
-type Message = V.Vector Segment
+data Struct l c m = Struct (m (l m Word64, l m (Ptr l c m)))
 
-data Address = Address
-    !Int -- ^ Segment number
-    !Int -- ^ Word index in segment
-    deriving(Show)
+data Ptr l c m
+    = StructPtr (m (Struct l c m))
+    | CapPtr (m c)
+--    | FarPtr (m (Ptr l c m))
+    | ListPtr (m (ListPtr l c m))
 
-data Pointer
-    = Struct !Int32 !Word16 !Word16
-    | Capability !Word32
-    | List !Int32 !ElementSize
-    | Far LandingSize Int32 Word32
-    deriving(Show)
+data ListPtr l c m
+    = List0  (l m ())
+    | List1  (l m Bool)
+    | List8  (l m Word8)
+    | List16 (l m Word16)
+    | List32 (l m Word32)
+    | List64 (l m Word64)
+    | ListP
+        Bool -- true iff this is really a composite
+        (l m (Ptr l c m))
 
-data PointerDest
-    = WordDest Address
-    | CapDest Word32
-    deriving(Show)
+class MonadThrow m => List l m e where
+    length :: l m e -> m Int
+    lookup :: Int -> l m e -> m e
+    slice  :: Int -> Int -> l m e -> m (l m e)
 
-data LandingSize = OneWord | TwoWords deriving(Show, Enum)
+class (MonadThrow m, List l m e) => MList l m e where
+    write :: l m e -> Int -> e -> m ()
 
-data ElementSize
-    = Bit
-    | Byte
-    | TwoBytes
-    | FourBytes
-    | EightBytesVal
-    | EightBytesPtr
-    | Composite
-    deriving(Show, Enum)
-
-
-followPtr :: (MonadThrow m) => Message -> Address -> Pointer -> m PointerDest
-followPtr msg addr@(Address segnum wordidx) _
-    | segnum < 0
-      || wordidx < 0
-      || segnum >= V.length msg
-      || wordidx `div` 8 >= B.length (msg ! segnum)
-      = throwM $ IndexOutOfBounds (show addr)
+getWord :: (MonadThrow m, List msg m (seg m Word64), List seg m Word64)
+    => WordAddr -> msg m (seg m Word64) -> m Word64
+getWord (WordAt segIdx wordIdx) msg = do
+    seg <- lookup segIdx msg
+    lookup wordIdx seg

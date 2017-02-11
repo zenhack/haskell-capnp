@@ -8,7 +8,9 @@ https://capnproto.org/encoding.html#serialization-over-a-stream
 
 -}
 module Data.CapNProto.Stream
-    ( getMessage
+    ( Segment
+    , Message
+    , getMessage
     , putMessage
     , StreamReader(..)
     , StreamWriter(..)
@@ -17,7 +19,6 @@ module Data.CapNProto.Stream
 
 import Data.Bits (shiftL, (.|.))
 import qualified Data.ByteString as B
-import Data.CapNProto.Untyped (Segment, Message)
 import Data.Word (Word32)
 import Control.Monad (when, void)
 import Control.Monad.Catch (MonadThrow, throwM, Exception)
@@ -27,6 +28,9 @@ import qualified Data.Vector as BV
 
 data BoundsError = BoundsError deriving(Show)
 instance Exception BoundsError
+
+type Message = BV.Vector Segment
+type Segment = B.ByteString
 
 class (Monad m) => StreamReader m where
     getWord32le   :: m Word32

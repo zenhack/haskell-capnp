@@ -1,0 +1,101 @@
+module Data.CapNProto.Pointer where
+
+import Data.CapNProto.Bits
+import Data.Bits
+import Data.Int
+import Data.Word
+
+-- | A Ptr represents the information in a capnproto pointer.
+data Ptr
+    = StructPtr
+        !Int32 -- ^ Offset in words from the end of the pointer
+               -- to the start of the data section.
+        !Word16 -- ^ Size of data section in words
+        !Word16 -- ^ Size of pointer section in words.
+    | ListPtr
+        !Int32 -- ^ Offset in words from the end of the pointer
+               -- to the start of the list.
+        !EltSpec -- ^ combination of C and D in the encoding spec; see
+    | FarPtr
+        !Bool -- ^ True iff landing pad is two words
+        !Word32 -- ^ Words from the start of the targement segment
+                -- to the start of the landing pad.
+        !Word32 -- ID of the target segment.
+    | CapPtr !Word32
+    deriving(Show, Eq)
+
+
+-- | The element size field in a list pointer.
+data ElementSize
+    = Sz0
+    | Sz1
+    | Sz8
+    | Sz16
+    | Sz32
+    | Sz64
+    | SzPtr
+    deriving(Show, Eq, Enum)
+
+-- | A combination C and D fields in a list pointer, i.e. the element
+--   size, and either the number of elements in the list, or the
+--   total number of *words* in the list (if size is composite).
+data EltSpec
+    -- | A normal (non-composite) element type (C /= 7).
+    = EltNormal
+        !ElementSize -- ^ size of the elements of a list.
+        !Word32 -- ^ length of the list in elements
+    -- | composite element (C == 7).
+    | EltComposite
+        !Int32 -- ^ length of the list in words
+    deriving(Show, Eq)
+
+
+-- | @parsePtr word@ parses word as a capnproto pointer.
+parsePtr :: Word64 -> Ptr
+parsePtr word =
+    case bitRange word 0 2 of
+        0 -> StructPtr
+            (i30 (lo word))
+            (bitRange word 32 48)
+            (bitRange word 48 64)
+        1 -> ListPtr
+            (i30 (lo word))
+            (parseEltSpec word)
+        2 -> FarPtr
+            (toEnum (bitRange word 2 3))
+            (bitRange word 3 32)
+            (bitRange word 32 64)
+        3 -> CapPtr (bitRange word 32 64)
+
+serializePtr :: Ptr -> Word64
+serializePtr (StructPtr off dataSz ptrSz) =
+    -- 0 .|.
+    (fromLo (fromI30 off)) .|.
+    (fromIntegral dataSz `shiftL` 32) .|.
+    (fromIntegral ptrSz `shiftL` 48)
+serializePtr (ListPtr off eltSpec) = -- eltSz numElts) =
+    1 .|.
+    (fromLo (fromI30 off)) .|.
+    (serializeEltSpec eltSpec)
+serializePtr (FarPtr twoWords off segId) =
+    2 .|.
+    (fromIntegral (fromEnum twoWords) `shiftL` 2) .|.
+    (fromIntegral off `shiftL` 3) .|.
+    (fromIntegral segId `shiftL` 32)
+serializePtr (CapPtr index) =
+    3 .|.
+    -- (fromIntegral 0 `shiftL` 2) .|.
+    (fromIntegral index `shiftL` 32)
+
+parseEltSpec :: Word64 -> EltSpec
+parseEltSpec word = case bitRange word 32 35 of
+    7 -> EltComposite (i29 (hi word))
+    sz -> EltNormal (toEnum sz) (bitRange word 35 64)
+
+serializeEltSpec :: EltSpec -> Word64
+serializeEltSpec (EltNormal sz len) =
+    (fromIntegral (fromEnum sz) `shiftL` 32) .|.
+    (fromIntegral len `shiftL` 35)
+serializeEltSpec (EltComposite words) =
+    (7 `shiftL` 32) .|.
+    (fromHi (fromI29 words))
