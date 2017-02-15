@@ -7,21 +7,25 @@ import Data.Word
 
 -- | A Ptr represents the information in a capnproto pointer.
 data Ptr
-    = StructPtr
-        !Int32 -- ^ Offset in words from the end of the pointer
-               -- to the start of the data section.
-        !Word16 -- ^ Size of data section in words
-        !Word16 -- ^ Size of pointer section in words.
-    | ListPtr
-        !Int32 -- ^ Offset in words from the end of the pointer
-               -- to the start of the list.
-        !EltSpec -- ^ combination of C and D in the encoding spec; see
-    | FarPtr
-        !Bool -- ^ True iff landing pad is two words
-        !Word32 -- ^ Words from the start of the targement segment
-                -- to the start of the landing pad.
-        !Word32 -- ID of the target segment.
+    = StructPtr !Int32 !Word16 !Word16
+        -- ^ @StructPtr off dataSz ptrSz@ is a pointer to a struct
+        -- at offset @off@ in words from the end of the pointer, with
+        -- a data section of size @dataSz@ words, and a pointer section
+        -- of size @ptrSz@ words.
+    | ListPtr !Int32 !EltSpec
+        -- ^ @ListPtr off eltSpec@ is a pointer to a list starting at
+        -- offset @off@ in words from the end of the pointer. @eltSpec@
+        -- encodes the C and D fields in the encoding spec; see 'EltSpec'
+        -- for details
+    | FarPtr !Bool !Word32 !Word32
+        -- ^ @FarPtr twoWords off segment@ is a far pointer, whose landing
+        -- pad is:
+        --
+        -- * two words iff @twoWords@,
+        -- * @off@ words from the start of the target segment, and
+        -- * in segment id @segment@.
     | CapPtr !Word32
+        -- ^ @CapPtr id@ is a pointer to the capability with the id @id@.
     deriving(Show, Eq)
 
 
@@ -40,13 +44,13 @@ data ElementSize
 --   size, and either the number of elements in the list, or the
 --   total number of *words* in the list (if size is composite).
 data EltSpec
-    -- | A normal (non-composite) element type (C /= 7).
-    = EltNormal
-        !ElementSize -- ^ size of the elements of a list.
-        !Word32 -- ^ length of the list in elements
-    -- | composite element (C == 7).
-    | EltComposite
-        !Int32 -- ^ length of the list in words
+    = EltNormal !ElementSize !Word32
+        -- ^ @EltNormal size len@ is a normal (non-composite) element type
+        -- (C /= 7). @size@ is the size of the elements, and @len@ is the
+        -- number of elements in the list.
+    | EltComposite !Int32
+        -- ^ @EltComposite len@ is a composite element (C == 7). @len@ is the
+        -- length of the list in words.
     deriving(Show, Eq)
 
 
