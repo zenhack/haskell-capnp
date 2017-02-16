@@ -103,3 +103,30 @@ serializeEltSpec (EltNormal sz len) =
 serializeEltSpec (EltComposite words) =
     (7 `shiftL` 32) .|.
     (fromHi (fromI29 words))
+
+
+-- targetSize tries to determine the size in words of the object that its
+-- argument points to, returning Nothing if it is unable. This allways works
+-- for everything but far pointers (since the information is not available
+-- without following the pointer) and capability pointers (since capabilities
+-- do not have a defined size).
+targetSize :: Ptr -> Maybe Int
+targetSize (ListPtr _ (EltNormal sz len)) =
+    case sz of
+        Sz0 -> Just 0
+        Sz1 -> compactedListSize len 64
+        Sz8 -> compactedListSize len 8
+        Sz16 -> compactedListSize len 4
+        Sz32 -> compactedListSize len 2
+        Sz64 -> Just (fromIntegral len)
+        SzPtr -> Just (fromIntegral len)
+targetSize (ListPtr _ (EltComposite size)) = Just (fromIntegral size)
+targetSize (StructPtr _ dataSz ptrSz) = Just $ fromIntegral $ dataSz + ptrSz
+targetSize (CapPtr _) = Nothing
+targetSize (FarPtr _ _ _) = Nothing
+
+-- Helper for targetSize
+compactedListSize :: Word32 -> Int -> Maybe Int
+compactedListSize len modulus
+    | fromIntegral len `mod` modulus == 0 = Just $ fromIntegral len `div` modulus
+    | otherwise = Just $ (fromIntegral len `div` modulus) + 1

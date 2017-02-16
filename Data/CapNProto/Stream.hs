@@ -17,17 +17,16 @@ module Data.CapNProto.Stream
     , QuotaStreamReader(..)
     ) where
 
+import Prelude hiding (length, lookup)
+import Data.CapNProto.List
 import Data.Bits (shiftL, (.|.))
 import qualified Data.ByteString as B
-import Data.Word (Word32)
+import Data.Word (Word32, Word64)
 import Control.Monad (when, void)
 import Control.Monad.Catch (MonadThrow, throwM, Exception)
 import Control.Monad.Quota (MonadQuota(..))
 import Control.Monad.Trans (MonadTrans(..))
 import qualified Data.Vector as BV
-
-data BoundsError = BoundsError deriving(Show)
-instance Exception BoundsError
 
 type Message = BV.Vector Segment
 type Segment = B.ByteString
@@ -42,7 +41,7 @@ class (Monad m) => StreamReader m where
             (b0 `shiftL`  0) .|.
             (b1 `shiftL`  8) .|.
             (b2 `shiftL` 16) .|.
-            (b3 `shiftL` 32)
+            (b3 `shiftL` 24)
 
 class StreamWriter m where
     putWord32le :: Word32 -> m ()
@@ -95,7 +94,8 @@ getMessage = do
     -- integer.
     fromWord :: MonadThrow m => Word32 -> m Int
     fromWord n
-        | (fromIntegral n :: Int) < 0 = throwM BoundsError
+        | (fromIntegral n :: Int) < 0 =
+            throwM $ BoundsError (fromIntegral n) (maxBound :: Int)
         | otherwise = return $ fromIntegral n
 
 -- | Write out a Cap'n Proto message.
@@ -105,3 +105,32 @@ putMessage msg = do
     BV.mapM_ (putWord32le . fromIntegral . (`div` 8) . B.length) msg
     when (BV.length msg `mod` 2 == 0) (putWord32le 0)
     BV.mapM_ putByteString msg
+
+
+listMessage :: (Monad m, MonadQuota m, MonadThrow m)
+    => Message -> List m (List m Word64)
+listMessage msg = List
+    { length = return $ BV.length msg
+    , lookup = \i -> do checkBounds i (BV.length msg)
+                        listSegment <$> BV.indexM msg i
+    }
+
+listSegment :: (Monad m, MonadQuota m, MonadThrow m)
+    => B.ByteString -> List m Word64
+listSegment bs = List
+    { length = return $ B.length bs `div` 8
+    , lookup = \i -> do invoice 8
+                        checkBounds i (B.length bs `div` 8)
+                        let i' = i * 8
+                        let indicies = fromIntegral <$> (+i') <$> take 8 [0,1..]
+                        let [b0,b1,b2,b3,b4,b5,b6,b7] = fromIntegral <$> B.index bs <$> indicies
+                        return $
+                            (b0 `shiftL`  0) .|.
+                            (b1 `shiftL`  8) .|.
+                            (b2 `shiftL` 16) .|.
+                            (b3 `shiftL` 24) .|.
+                            (b4 `shiftL` 32) .|.
+                            (b5 `shiftL` 40) .|.
+                            (b6 `shiftL` 48) .|.
+                            (b7 `shiftL` 56)
+    }
