@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, RecordWildCards #-}
 {-|
 Module: Data.CapNProto.Untyped
 Description: Utilities for manipulating capnproto messages with no schema.
@@ -57,9 +57,9 @@ instance Exception IllegalMessageError
 
 
 getWord :: (Monad m) => Message m -> WordAddr -> m Word64
-getWord list (WordAt seg off) = do
-    segment <- lookup list seg
-    lookup segment off
+getWord list WordAt{..} = do
+    segment <- lookup list segIndex
+    lookup segment wordIndex
 
 
 -- | @getNearPtr msg addr@ treats the word at @addr@ as a pointer,
@@ -84,17 +84,17 @@ getRootStruct msg = do
 
 getStruct :: (Monad m, MonadThrow m, MonadQuota m)
     => Message m -> WordAddr -> Word16 -> Word16 -> m (Struct m)
-getStruct msg (WordAt seg off) dataSz ptrSz = return $ Struct $ do
-    segment <- lookup msg seg
+getStruct msg addr@WordAt{..} dataSz ptrSz = return $ Struct $ do
+    segment <- lookup msg segIndex
     return $
         ( slice segment
-                off
-                (off + fromIntegral dataSz)
+                wordIndex
+                (wordIndex + fromIntegral dataSz)
         , List { length = return (fromIntegral ptrSz)
                , lookup = \i -> do
                     checkBounds i (fromIntegral ptrSz)
-                    let ptrOff = off + 1 + fromIntegral dataSz + i
-                    getPtr msg (WordAt seg ptrOff)
+                    let ptrOff = wordIndex + 1 + fromIntegral dataSz + i
+                    getPtr msg $ addr { wordIndex = ptrOff }
                }
         )
 

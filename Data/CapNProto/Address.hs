@@ -9,10 +9,10 @@ import qualified Data.CapNProto.Pointer as P
 import Control.Monad.Catch (MonadThrow, throwM)
 
 -- | The address of a word within a message
-data WordAddr = WordAt !Int !Int
-    -- ^ @WordAt segment off@ is the word at offset @off@ from the
-    -- start of segment number @segment@.
-    deriving(Show, Eq)
+data WordAddr = WordAt
+    { segIndex :: !Int -- ^ Segment number
+    , wordIndex :: !Int -- ^ offset in words from the start of the segment.
+    } deriving(Show, Eq)
 
 -- | The "address" of a capability
 data CapAddr
