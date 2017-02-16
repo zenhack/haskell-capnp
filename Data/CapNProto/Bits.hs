@@ -1,6 +1,6 @@
 {-|
-
-Utilities for bitwhacking useful for capnproto.
+Module: Data.CapNProto.Bits
+Description: Utilities for bitwhacking useful for capnproto.
 -}
 module Data.CapNProto.Bits where
 

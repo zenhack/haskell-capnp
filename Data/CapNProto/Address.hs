@@ -1,3 +1,7 @@
+{-|
+Module: Data.CapNProto.Address
+Description: Utilities for manipulating addresses within capnproto messages.
+-}
 module Data.CapNProto.Address where
 
 import Data.Word
