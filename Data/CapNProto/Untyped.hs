@@ -143,7 +143,6 @@ getLandingPad msg addr@(WordAt seg off) = do
                                                 (fromIntegral off'))
                                         eltSpec
             tagPtr -> throwM $ ErrorIllegalTagWord tagPtr
-            _ -> error "Not implemented"
         ptr -> throwM $ ErrorIllegalLandingPad ptr
 
 
