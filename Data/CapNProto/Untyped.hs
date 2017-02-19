@@ -101,46 +101,51 @@ getStruct msg addr@WordAt{..} dataSz ptrSz = return $ Struct $ do
 
 getPtr :: (Monad m, MonadThrow m, MonadQuota m)
     => Message m -> WordAddr -> m (Ptr m)
-getPtr msg addr@(WordAt seg off) = do
+getPtr msg addr@WordAt{..} = do
     word <- getWord msg addr
     case P.parsePtr word of
-        P.StructPtr off' dataSz ptrSz -> return $ StructPtr $
-            getStruct msg (WordAt seg (off + 1 + fromIntegral off')) dataSz ptrSz
+        P.StructPtr off dataSz ptrSz -> return $ StructPtr $ getStruct
+            msg
+            (addr { wordIndex = wordIndex + 1 + fromIntegral off })
+            dataSz ptrSz
         P.CapPtr cap -> return (CapPtr (return cap))
-        P.ListPtr off' eltSpec ->
+        P.ListPtr off eltSpec ->
             return $ ListPtr $ getListPtr
-                                msg
-                                (WordAt (fromIntegral seg)
-                                        (off + 1 + fromIntegral off'))
-                                eltSpec
-        P.FarPtr False seg' off' ->
+                msg
+                (addr { wordIndex = wordIndex + 1 + fromIntegral off })
+                eltSpec
+        P.FarPtr False seg off ->
             return $ FarPtr $ getPtr
                                 msg
-                                (WordAt (fromIntegral seg')
-                                        (fromIntegral off'))
-        P.FarPtr True seg' off' ->
+                                (WordAt { segIndex = fromIntegral seg
+                                        , wordIndex = fromIntegral off
+                                        })
+        P.FarPtr True seg off ->
             return $ FarPtr $ getLandingPad
                                 msg
-                                (WordAt (fromIntegral seg')
-                                        (fromIntegral off'))
+                                (WordAt { segIndex = fromIntegral seg
+                                        , wordIndex = fromIntegral off
+                                        })
 
 
 getLandingPad :: (Monad m, MonadThrow m, MonadQuota m)
     => Message m -> WordAddr -> m (Ptr m)
-getLandingPad msg addr@(WordAt seg off) = do
+getLandingPad msg addr@WordAt{..} = do
     landing <- getWord msg addr
-    tagWord <- getWord msg (WordAt seg (off + 1))
+    tagWord <- getWord msg (addr { wordIndex = wordIndex + 1 })
     case P.parsePtr landing of
-        P.FarPtr False off' seg' -> case P.parsePtr tagWord of
+        P.FarPtr False off seg -> case P.parsePtr tagWord of
             P.StructPtr _ dataSz ptrSz ->
-                return $ StructPtr $ getStruct msg (WordAt (fromIntegral seg')
-                                                           (fromIntegral off'))
+                return $ StructPtr $ getStruct msg (WordAt { segIndex = fromIntegral seg
+                                                           , wordIndex = fromIntegral off
+                                                           })
                                                    dataSz ptrSz
             P.ListPtr _ eltSpec ->
                 return $ ListPtr $ getListPtr
                                         msg
-                                        (WordAt (fromIntegral seg')
-                                                (fromIntegral off'))
+                                        (WordAt { segIndex = fromIntegral seg
+                                                , wordIndex = fromIntegral off
+                                                })
                                         eltSpec
             tagPtr -> throwM $ ErrorIllegalTagWord tagPtr
         ptr -> throwM $ ErrorIllegalLandingPad ptr
@@ -148,7 +153,7 @@ getLandingPad msg addr@(WordAt seg off) = do
 
 getCompositeList :: (Monad m, MonadThrow m, MonadQuota m)
     => Message m -> WordAddr -> Int -> m (List m (Ptr m))
-getCompositeList msg addr@(WordAt seg off) totalLen = do
+getCompositeList msg addr@WordAt{..} totalLen = do
     ptr <- P.parsePtr <$> getWord msg addr
     case ptr of
         P.StructPtr _ dataSz ptrSz -> do
@@ -161,8 +166,8 @@ getCompositeList msg addr@(WordAt seg off) totalLen = do
                                     getStruct
                                         msg
                                         (WordAt
-                                            seg
-                                            (off + 1 + eltSz * i))
+                                            segIndex
+                                            (wordIndex + 1 + eltSz * i))
                                         dataSz
                                         ptrSz
                           }
@@ -180,13 +185,13 @@ getListPtr _ _ (EltNormal Sz0 count) = recurse $ return $ List0 $ List
         invoice 1
         return ()
     }
-getListPtr msg (WordAt seg off) (EltNormal Sz64 count) = recurse $ do
-    segment <- lookup msg seg
-    return $ List64 $ slice segment off (fromIntegral count)
-getListPtr msg addr@(WordAt seg off) (EltNormal SzPtr count) =
+getListPtr msg WordAt{..} (EltNormal Sz64 count) = recurse $ do
+    segment <- lookup msg segIndex
+    return $ List64 $ slice segment wordIndex (fromIntegral count)
+getListPtr msg addr@WordAt{..} (EltNormal SzPtr count) =
     recurse $ return $ ListP False $
         List { length = return $ fromIntegral count
              , lookup = \i -> do
                    checkBounds i (fromIntegral count)
-                   getPtr msg (WordAt seg (off + i))
+                   getPtr msg (addr { wordIndex = wordIndex + 1 })
              }
