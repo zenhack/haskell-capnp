@@ -11,3 +11,11 @@ data BoundsError = BoundsError
     } deriving(Show, Eq)
 
 instance Exception BoundsError
+
+-- | A @RecursionLimitError@ is an exception indicating that
+-- the recursion depth limit was exceeded.
+data RecursionLimitError
+    = RecursionLimitError
+    deriving(Show, Eq)
+
+instance Exception RecursionLimitError

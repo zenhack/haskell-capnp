@@ -7,7 +7,8 @@ This module implements the encoding described at:
 https://capnproto.org/encoding.html#serialization-over-a-stream
 
 -}
-module Data.CapNProto.Stream
+module Data.CapNProto.Stream where
+{-
     ( Segment
     , Message
     , getMessage
@@ -134,3 +135,4 @@ listSegment bs = List
                             (b6 `shiftL` 48) .|.
                             (b7 `shiftL` 56)
     }
+-}
