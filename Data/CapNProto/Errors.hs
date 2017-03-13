@@ -1,3 +1,7 @@
+{-|
+Module: Data.CapNProto.Errors
+Description: Exception types used by haskell-capnp
+-}
 module Data.CapNProto.Errors where
 
 import Control.Monad.Catch (Exception)
