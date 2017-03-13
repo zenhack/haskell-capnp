@@ -22,7 +22,6 @@ library
     Data.CapNProto.Address,
     Data.CapNProto.Bits,
     Data.CapNProto.Pointer,
-    Data.CapNProto.Stream,
     Data.CapNProto.Untyped
   -- other-modules:
   -- other-extensions:
