@@ -5,9 +5,13 @@ import Control.Monad.Quota (QuotaT(..), Quota(..))
 import Control.Monad.State (MonadState, put, get, StateT(..))
 import Data.Bits (shiftL, (.|.))
 import qualified Data.ByteString.Lazy as L
-import qualified Data.CapNProto.Message.Vector as V
+import qualified Data.CapNProto.Message as M
 import Data.Word (Word8, Word32, Word64)
+import qualified Data.Vector as B
+import qualified Data.Vector.Unboxed as U
 
+
+type Message = B.Vector (U.Vector Word64)
 
 main :: IO ()
 main = do
@@ -15,13 +19,13 @@ main = do
     msg <- runStateT (runQuotaT monadStack (Quota 8192)) contents
     print msg
   where
-    monadStack :: QuotaT (StateT [Word8] IO) V.Message
+    monadStack :: QuotaT (StateT [Word8] IO) Message
     monadStack = do
            QuotaT $ \q ->
                 return ( StateT $ \s -> return ((), s) :: IO ((), [Word8])
                        , q
                        )
-           V.readMessage read64 read32
+           M.readMessage read64 read32
 
 -- The rest of this ought to go somewhere else (or, better yet, we should just
 -- use something from some library I haven't found yet):

@@ -39,9 +39,9 @@ data ListOf a
 data Struct
 
 index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => Int -> ListOf a -> msg -> m (PtrTo a)
+    => Int -> ListOf a -> msg (seg Word64) -> m (PtrTo a)
 get :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => PtrTo a -> msg -> m a
+    => PtrTo a -> msg (seg Word64) -> m a
 dataSection :: (MonadQuota m, MonadThrow m) => Struct -> m (ListOf Word64)
 ptrSection  :: (MonadQuota m, MonadThrow m) => Struct -> m (ListOf Ptr)
 
