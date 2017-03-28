@@ -5,7 +5,13 @@ Description: Utilities for manipulating capnproto messages with no schema.
 The types and functions in this module know about things like structs and
 lists, but are not schema aware.
 -}
-module Data.CapNProto.Untyped where
+module Data.CapNProto.Untyped
+    ( Ptr(..), List(..)
+    , Struct, PtrTo, ListOf
+    , dataSection, ptrSection
+    , get, index
+    )
+  where
 
 -- Just mocking up the API for now.
 
@@ -29,9 +35,10 @@ data List
     = List0 (ListOf ())
     | List1 (ListOf Bool)
     | List8 (ListOf Word8)
-    -- ...
+    | List16 (ListOf Word16)
+    | List32 (ListOf Word32)
     | List64 (ListOf Word64)
-    | ListPtr
+    | ListPtr (ListOf Ptr)
     | ListStruct (ListOf Struct)
 
 data PtrTo a
