@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs, KindSignatures, RecordWildCards #-}
 {-|
 Module: Data.CapNProto.Untyped
 Description: Utilities for manipulating capnproto messages with no schema.
@@ -20,40 +21,75 @@ module Data.CapNProto.Untyped
 -- * Enforce the binding from value to message somehow? Have a couple ideas
 --   of how to do this.
 
-import Control.Monad.Catch (MonadThrow)
-import Control.Monad.Quota (MonadQuota)
+import Control.Monad.Catch (MonadThrow, throwM)
+import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
+import Data.CapNProto.Address (WordAddr(..))
+import qualified Data.CapNProto.Errors as E
 import Data.Word
 
-data Ptr
+data Ptr msg seg
     = PtrCap Word32
-    | PtrFar (PtrTo Ptr)
-    | PtrList (PtrTo List)
-    | PtrStruct (PtrTo Struct)
+    | PtrFar (PtrTo msg seg (Ptr msg seg))
+    | PtrList (PtrTo msg seg (List msg seg))
+    | PtrStruct (PtrTo msg seg (Struct msg seg))
 
-data List
-    = List0 (ListOf ())
-    | List1 (ListOf Bool)
-    | List8 (ListOf Word8)
-    | List16 (ListOf Word16)
-    | List32 (ListOf Word32)
-    | List64 (ListOf Word64)
-    | ListPtr (ListOf Ptr)
-    | ListStruct (ListOf Struct)
+data List msg seg
+    = List0 (ListOf msg seg ())
+    | List1 (ListOf msg seg Bool)
+    | List8 (ListOf msg seg Word8)
+    | List16 (ListOf msg seg Word16)
+    | List32 (ListOf msg seg Word32)
+    | List64 (ListOf msg seg Word64)
+    | ListPtr (ListOf msg seg (Ptr msg seg))
+    | ListStruct (ListOf msg seg (Struct msg seg))
 
-data PtrTo a
-data ListOf a
-data Struct
+data PtrTo msg seg a where
+    PtrToVoid :: PtrTo msg seg ()
+    PtrToStruct
+        :: msg (seg Word64)
+        -> Struct msg seg
+        -> PtrTo msg seg (Struct msg seg)
+
+data ListOf msg seg a where
+    ListOfVoid
+        :: Int -- number of elements
+        -> ListOf msg seg ()
+    ListOfStruct
+        :: msg (seg Word64)
+        -> Struct msg seg -- First element. data/ptr sizes are the same for
+                          -- all elements.
+        -> Int -- Number of elements
+        -> ListOf msg seg (Struct msg seg)
+
+data Struct msg seg
+    = Struct
+        (msg (seg Word64))
+        WordAddr -- Start of struct
+        Word16 -- Data section size.
+        Word16 -- Pointer section size.
 
 index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => Int -> ListOf a -> msg (seg Word64) -> m (PtrTo a)
+    => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
 get :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => PtrTo a -> msg (seg Word64) -> m a
-dataSection :: (MonadQuota m, MonadThrow m) => Struct -> m (ListOf Word64)
-ptrSection  :: (MonadQuota m, MonadThrow m) => Struct -> m (ListOf Ptr)
+    => PtrTo msg seg a -> m a
+dataSection :: (MonadQuota m, MonadThrow m)
+    => Struct msg seg -> m (ListOf msg seg Word64)
+ptrSection  :: (MonadQuota m, MonadThrow m)
+    => Struct msg seg -> m (ListOf msg seg (Ptr msg seg))
 
+get PtrToVoid = return ()
+get (PtrToStruct msg struct) = return struct
 
-index = undefined
-get = undefined
+index i (ListOfVoid len)
+    | i < len = invoice 1 >> return PtrToVoid
+    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+index i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
+    | i < len = do
+        let offset = i * (fromIntegral $ dataSz + ptrSz)
+        let addr' = addr { wordIndex = wordIndex + offset }
+        return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
+    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len }
+
 dataSection = undefined
 ptrSection = undefined
