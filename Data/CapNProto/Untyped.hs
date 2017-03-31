@@ -26,6 +26,7 @@ import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
 import Data.CapNProto.Address (WordAddr(..))
 import qualified Data.CapNProto.Errors as E
+import Data.Bits
 import Data.Word
 
 data Ptr msg seg
@@ -46,10 +47,17 @@ data List msg seg
 
 data PtrTo msg seg a where
     PtrToVoid :: PtrTo msg seg ()
+    PtrToBool :: AbsWord msg seg -> PtrTo msg seg Bool
+    PtrToWord8 :: AbsWord msg seg -> PtrTo msg seg Word8
+    PtrToWord16 :: AbsWord msg seg -> PtrTo msg seg Word16
+    PtrToWord32 :: AbsWord msg seg -> PtrTo msg seg Word32
+    PtrToWord64 :: msg (seg Word64) -> WordAddr -> PtrTo msg seg Word64
     PtrToStruct
         :: msg (seg Word64)
         -> Struct msg seg
         -> PtrTo msg seg (Struct msg seg)
+
+data AbsWord msg seg = AbsWord (msg (seg Word64)) WordAddr Int
 
 data ListOf msg seg a where
     ListOfVoid
@@ -79,7 +87,20 @@ ptrSection  :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg (Ptr msg seg))
 
 get PtrToVoid = return ()
+get (PtrToBool (AbsWord msg addr shift)) = do
+    word <- M.getWord addr msg
+    return $ ((word `shiftR` shift) .&. 1) == 1
+get (PtrToWord8 absWord) = getSubWord absWord
+get (PtrToWord16 absWord) = getSubWord absWord
+get (PtrToWord32 absWord) = getSubWord absWord
+get (PtrToWord64 msg addr) = M.getWord addr msg
 get (PtrToStruct msg struct) = return struct
+
+getSubWord :: (MonadQuota m, MonadThrow m, M.Message msg seg, Integral a)
+    => AbsWord msg seg -> m a
+getSubWord (AbsWord msg addr shift) = do
+    word <- M.getWord addr msg
+    return $ fromIntegral $ word `shiftR` shift
 
 index i (ListOfVoid len)
     | i < len = invoice 1 >> return PtrToVoid
