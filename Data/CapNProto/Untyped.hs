@@ -10,7 +10,7 @@ module Data.CapNProto.Untyped
     ( Ptr(..), List(..)
     , Struct, PtrTo, ListOf
     , dataSection, ptrSection
-    , get, index
+    , get, index, length
     )
   where
 
@@ -27,6 +27,8 @@ import Data.CapNProto.Address (WordAddr(..))
 import qualified Data.CapNProto.Errors as E
 import Data.Bits
 import Data.Word
+
+import Prelude hiding (length)
 
 data Ptr msg seg
     = PtrCap Word32
@@ -79,6 +81,8 @@ data Struct msg seg
 
 index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
+length :: (MonadQuota m, MonadThrow m, M.Message msg seg)
+    => ListOf msg seg a -> m Int
 get :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => PtrTo msg seg a -> m a
 dataSection :: (MonadQuota m, MonadThrow m)
@@ -123,5 +127,6 @@ index i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
         return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
     | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len }
 
+length = undefined
 dataSection = undefined
 ptrSection = undefined
