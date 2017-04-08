@@ -14,8 +14,6 @@ module Data.CapNProto.Untyped
     )
   where
 
--- Just mocking up the API for now.
-
 -- Questions:
 --
 -- * Enforce the binding from value to message somehow? Have a couple ideas
@@ -24,6 +22,7 @@ module Data.CapNProto.Untyped
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
+import qualified Data.CapNProto.Pointer as P
 import Data.CapNProto.Address (WordAddr(..))
 import qualified Data.CapNProto.Errors as E
 import Data.Bits
@@ -52,6 +51,7 @@ data PtrTo msg seg a where
     PtrToWord16 :: AbsWord msg seg -> PtrTo msg seg Word16
     PtrToWord32 :: AbsWord msg seg -> PtrTo msg seg Word32
     PtrToWord64 :: msg (seg Word64) -> WordAddr -> PtrTo msg seg Word64
+    PtrToPtr :: msg (seg Word64) -> WordAddr -> PtrTo msg seg (Ptr msg seg)
     PtrToStruct
         :: msg (seg Word64)
         -> Struct msg seg
@@ -94,6 +94,17 @@ get (PtrToWord8 absWord) = getSubWord absWord
 get (PtrToWord16 absWord) = getSubWord absWord
 get (PtrToWord32 absWord) = getSubWord absWord
 get (PtrToWord64 msg addr) = M.getWord addr msg
+get (PtrToPtr msg addr@WordAt{..}) = do
+    word <- M.getWord addr msg
+    case P.parsePtr word of
+        P.StructPtr offset dataSz ptrSz ->
+            return $ PtrStruct $ PtrToStruct msg $ Struct
+                msg
+                addr { wordIndex = wordIndex + 1 + fromIntegral offset }
+                dataSz
+                ptrSz
+        P.CapPtr cap -> return $ PtrCap cap
+        _ -> undefined
 get (PtrToStruct msg struct) = return struct
 
 getSubWord :: (MonadQuota m, MonadThrow m, M.Message msg seg, Integral a)
