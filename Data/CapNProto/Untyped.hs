@@ -11,6 +11,7 @@ module Data.CapNProto.Untyped
     , Struct, PtrTo, ListOf
     , dataSection, ptrSection
     , get, index, length
+    , rootPtr
     )
   where
 
@@ -89,6 +90,8 @@ dataSection :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg Word64)
 ptrSection  :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg (Ptr msg seg))
+rootPtr :: (MonadQuota m, MonadThrow m, M.Message msg seg)
+    => msg (seg Word64) -> m (Ptr msg seg)
 
 get PtrToVoid = return ()
 get (PtrToBool (AbsWord msg addr shift)) = do
@@ -131,3 +134,5 @@ length (ListOfVoid len) = return len
 length (ListOfStruct _ _ len) = return len
 dataSection = undefined
 ptrSection = undefined
+
+rootPtr msg = get (PtrToPtr msg (WordAt 0 0))
