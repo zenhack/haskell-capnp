@@ -127,6 +127,7 @@ index i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
         return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
     | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len }
 
-length = undefined
+length (ListOfVoid len) = return len
+length (ListOfStruct _ _ len) = return len
 dataSection = undefined
 ptrSection = undefined
