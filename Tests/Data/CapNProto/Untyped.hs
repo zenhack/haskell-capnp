@@ -8,6 +8,9 @@ import Tests.Util
 import Control.Monad.Quota
 import Data.CapNProto.Untyped
 
+import qualified Data.Vector as B
+import qualified Data.Vector.Unboxed as U
+
 untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
     [ ( TestMessage { schemaName = "misc", typeName = "A", constName = "misc"}
       , 128

@@ -8,6 +8,8 @@ import Test.Framework (testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (oneof, Gen)
+import Test.HUnit (assertEqual, Test(TestCase, TestList))
+import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 
 instance Arbitrary EltSpec where
@@ -50,9 +52,23 @@ instance Arbitrary Ptr where
                       , CapPtr <$> arbitrary
                       ]
 
-ptrTests = testGroup "Pointer Tests" $
+ptrTests = testGroup "Pointer Tests" [ptrProps, parsePtrExamples]
+
+ptrProps = testGroup "Pointer Properties" $
     [ testProperty "parseEltSpec . serializeEltSpec == id"
         (\spec -> parseEltSpec (serializeEltSpec spec) == spec)
     , testProperty "parsePtr . serializePtr == id"
         (\ptr -> parsePtr (serializePtr ptr) == ptr)
     ]
+
+
+parsePtrExamples = testGroup "parsePtr Examples" $ hUnitTestToTests $ TestList $
+    map parseExample
+        [ (0x0000000200000000, StructPtr 0 2 0)
+        ]
+  where
+    parseExample (word, expected) = TestCase $ do
+        assertEqual
+            (concat ["parsePtr ", show word, " == ", show expected])
+            expected
+            (parsePtr word)

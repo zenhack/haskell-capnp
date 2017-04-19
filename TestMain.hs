@@ -4,10 +4,12 @@ module Main where
 import Tests.Util
 
 import Test.Framework (defaultMain)
+import Tests.Data.CapNProto.Bits (bitsTests)
 import Tests.Data.CapNProto.Pointer (ptrTests)
 import Tests.Data.CapNProto.Untyped (untypedTests)
 
 main :: IO ()
-main = defaultMain [ ptrTests
+main = defaultMain [ bitsTests
+                   , ptrTests
                    , untypedTests
                    ]
