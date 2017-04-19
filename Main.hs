@@ -18,4 +18,4 @@ main = do
     contents <- L.getContents
     print $ L.length contents
     print contents
-    print =<< getMessage contents 8192
+    print (getMessage contents 8192)

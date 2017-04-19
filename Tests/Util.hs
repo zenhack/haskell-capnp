@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Tests.Util where
 
+import Control.Monad.Catch(throwM)
 import GHC.IO.Handle (hSetBinaryMode)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Vector as B
@@ -21,7 +22,9 @@ getTestMessage :: TestMessage
                 -> IO Message
 getTestMessage testMessage quota = do
     contents <- encode testMessage
-    getMessage contents quota
+    case getMessage contents quota of
+        Left e -> throwM e
+        Right (msg,_) -> return msg
 
 encode :: TestMessage -> IO L.ByteString
 encode TestMessage{..} = do
