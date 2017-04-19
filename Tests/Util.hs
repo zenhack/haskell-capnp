@@ -32,7 +32,7 @@ encode TestMessage{..} = do
                     input
   where
     schemaFile name = "testdata/schema/" ++ name ++ ".capnp"
-    constFile name = "testdata/constant/" ++ name ++ ".capnp"
+    constFile name = "testdata/constants/" ++ name ++ ".capnp"
 
 interactProcess :: String -> [String] -> L.ByteString -> IO L.ByteString
 interactProcess cmd args inBytes = do

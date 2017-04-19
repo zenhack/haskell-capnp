@@ -72,6 +72,8 @@ test-suite the-test-suite
     quota,
     vector,
     mtl,
+    HUnit,
     test-framework,
-    test-framework-quickcheck2
+    test-framework-quickcheck2,
+    test-framework-hunit
   default-language:    Haskell2010

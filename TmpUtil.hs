@@ -35,6 +35,10 @@ getMessage contents quota = do
 read32 :: (MonadState [Word8] m, MonadThrow m) => m Word32
 read32 = do
     bytes <- get
+    -- During tests, we seem to get as far as evaluating bytes in
+    -- the condition of the case, but no further, as determined by
+    -- placing calls to error. This is very strange, and still being
+    -- debugged.
     case bytes of
         (a:b:c:d:bytes') -> do
             put bytes'
