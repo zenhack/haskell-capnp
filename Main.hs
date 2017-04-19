@@ -16,4 +16,6 @@ import TmpUtil (getMessage)
 main :: IO ()
 main = do
     contents <- L.getContents
+    print $ L.length contents
+    print contents
     print =<< getMessage contents 8192
