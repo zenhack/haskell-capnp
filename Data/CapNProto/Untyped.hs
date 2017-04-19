@@ -72,6 +72,17 @@ data ListOf msg seg a where
                           -- all elements.
         -> Int -- Number of elements
         -> ListOf msg seg (Struct msg seg)
+    ListOfWord64
+        :: msg (seg Word64)
+        -> WordAddr -- Start of list
+        -> Int -- length, in elements
+        -> ListOf msg seg Word64
+    ListOfPtr
+        -- arguments are the same as with Word64
+        :: msg (seg Word64)
+        -> WordAddr
+        -> Int
+        -> ListOf msg seg (Ptr msg seg)
 
 data Struct msg seg
     = Struct
@@ -128,11 +139,23 @@ index i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
         let offset = i * (fromIntegral $ dataSz + ptrSz)
         let addr' = addr { wordIndex = wordIndex + offset }
         return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
-    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len }
+    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+index i (ListOfWord64 msg addr@WordAt{..} len)
+    | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
+    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+
 
 length (ListOfVoid len) = return len
 length (ListOfStruct _ _ len) = return len
-dataSection = undefined
-ptrSection = undefined
+length (ListOfWord64 _ _ len) = return len
+length (ListOfPtr _ _ len) = return len
+
+dataSection (Struct msg addr dataSz _) =
+    return $ ListOfWord64 msg addr (fromIntegral dataSz)
+ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
+    return $ ListOfPtr
+        msg
+        addr { wordIndex = wordIndex + fromIntegral dataSz }
+        (fromIntegral ptrSz)
 
 rootPtr msg = get (PtrToPtr msg (WordAt 0 0))
