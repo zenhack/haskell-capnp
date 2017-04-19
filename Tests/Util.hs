@@ -1,11 +1,29 @@
+{-# LANGUAGE RecordWildCards #-}
 module Tests.Util where
 
-import qualified Data.ByteString.Lazy as L
-import System.Process
 import GHC.IO.Handle (hSetBinaryMode)
+import qualified Data.ByteString.Lazy as L
+import qualified Data.Vector as B
+import qualified Data.Vector.Unboxed as U
+import System.Process
 
-encode :: String -> String -> String -> IO L.ByteString
-encode schemaName constName typeName = do
+import TmpUtil(getMessage, Message)
+
+data TestMessage = TestMessage
+    { schemaName :: String
+    , typeName :: String
+    , constName :: String
+    } deriving(Show)
+
+getTestMessage :: TestMessage
+                -> Int -- Max message size
+                -> IO Message
+getTestMessage testMessage quota = do
+    contents <- encode testMessage
+    getMessage contents quota
+
+encode :: TestMessage -> IO L.ByteString
+encode TestMessage{..} = do
     input <- L.readFile (constFile constName)
     interactProcess "capnp" [ "encode"
                             , schemaFile schemaName
