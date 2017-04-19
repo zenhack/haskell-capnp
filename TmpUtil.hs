@@ -20,7 +20,7 @@ type Message = B.Vector (U.Vector Word64)
 
 getMessage :: MonadThrow m => L.ByteString -> Int -> m Message
 getMessage contents quota = do
-    ((msg, _), _) <- runStateT (runQuotaT monadStack (Quota 8192))
+    ((msg, _), _) <- runStateT (runQuotaT monadStack (Quota quota))
                                (L.unpack contents)
     return msg
   where
