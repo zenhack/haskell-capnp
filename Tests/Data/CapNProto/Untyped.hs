@@ -15,10 +15,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
     [ ( TestMessage { schemaName = "misc", typeName = "A", constName = "misc"}
       , 128
       , \(PtrStruct _) -> return ()
-      , ((), Quota 72) -- the quota value is almost certainly wrong; I picked
-                       -- an arbitrary value, which I'll fix once the test is
-                       -- actually getting that far, but right now it's just
-                       -- hanging.
+      , ((), Quota 127)
       )
     ]
   where

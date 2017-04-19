@@ -5,6 +5,7 @@ import GHC.IO.Handle (hSetBinaryMode)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Vector as B
 import qualified Data.Vector.Unboxed as U
+import System.IO
 import System.Process
 
 import TmpUtil(getMessage, Message)
@@ -24,23 +25,17 @@ getTestMessage testMessage quota = do
 
 encode :: TestMessage -> IO L.ByteString
 encode TestMessage{..} = do
-    input <- L.readFile (constFile constName)
-    interactProcess "capnp" [ "encode"
-                            , schemaFile schemaName
-                            , typeName
-                            ]
-                    input
+    hInput <- openFile (constFile constName) ReadMode
+    hSetBinaryMode hInput True
+    let p = (proc "capnp" [ "encode"
+                          , schemaFile schemaName
+                          , typeName
+                          ]) { std_in = UseHandle hInput
+                             , std_out = CreatePipe
+                             }
+    (Nothing, Just hout, Nothing, _) <- createProcess p
+    hSetBinaryMode hout True
+    L.hGetContents hout
   where
     schemaFile name = "testdata/schema/" ++ name ++ ".capnp"
     constFile name = "testdata/constants/" ++ name ++ ".capnp"
-
-interactProcess :: String -> [String] -> L.ByteString -> IO L.ByteString
-interactProcess cmd args inBytes = do
-    let p = (proc cmd args) { std_in = CreatePipe
-                            , std_out = CreatePipe
-                            }
-    (Just hin, Just hout, Nothing, _) <- createProcess p
-    hSetBinaryMode hin True
-    hSetBinaryMode hout True
-    L.hPut hin inBytes
-    L.hGetContents hout
