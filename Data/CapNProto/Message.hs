@@ -51,7 +51,8 @@ readMessage :: (MonadQuota m, MonadThrow m, Message msg seg, Vector msg Word32)
     -- type.
 readMessage read64 read32 = do
     invoice 1
-    numSegs <- read32
+    numSegs' <- read32
+    let numSegs = numSegs' + 1
     invoice (fromIntegral numSegs `div` 2)
     segSizes <- V.replicateM (fromIntegral numSegs) read32
     when (numSegs `mod` 2 == 0) $ void read32
