@@ -18,7 +18,7 @@ import qualified Data.Vector.Unboxed as U
 untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
     [ ( TestMessage { schemaName = "misc", typeName = "A", constName = "misc"}
       , 128
-      , \(PtrStruct root) -> do
+      , \(Just (PtrStruct root)) -> do
             s <- get root
             words <- dataSection s
             2 <- length words

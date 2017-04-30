@@ -33,9 +33,11 @@ import Prelude hiding (length)
 
 data Ptr msg seg
     = PtrCap Word32
-    | PtrFar (PtrTo msg seg (Ptr msg seg))
+    | PtrFar (PtrTo msg seg (Ptr' msg seg))
     | PtrList (PtrTo msg seg (List msg seg))
     | PtrStruct (PtrTo msg seg (Struct msg seg))
+
+type Ptr' msg seg = Maybe (Ptr msg seg)
 
 data List msg seg
     = List0 (ListOf msg seg ())
@@ -54,7 +56,7 @@ data PtrTo msg seg a where
     PtrToWord16 :: AbsWord msg seg -> PtrTo msg seg Word16
     PtrToWord32 :: AbsWord msg seg -> PtrTo msg seg Word32
     PtrToWord64 :: msg (seg Word64) -> WordAddr -> PtrTo msg seg Word64
-    PtrToPtr :: msg (seg Word64) -> WordAddr -> PtrTo msg seg (Ptr msg seg)
+    PtrToPtr :: msg (seg Word64) -> WordAddr -> PtrTo msg seg (Ptr' msg seg)
     PtrToStruct
         :: msg (seg Word64)
         -> Struct msg seg
@@ -102,7 +104,7 @@ dataSection :: (MonadQuota m, MonadThrow m)
 ptrSection  :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg (Ptr msg seg))
 rootPtr :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => msg (seg Word64) -> m (Ptr msg seg)
+    => msg (seg Word64) -> m (Ptr' msg seg)
 
 get PtrToVoid = return ()
 get (PtrToBool (AbsWord msg addr shift)) = do
@@ -114,14 +116,14 @@ get (PtrToWord32 absWord) = getSubWord absWord
 get (PtrToWord64 msg addr) = M.getWord addr msg
 get (PtrToPtr msg addr@WordAt{..}) = do
     word <- M.getWord addr msg
-    case P.parsePtr word of
+    return $ flip fmap (P.parsePtr word) $ \p -> case p of
         P.StructPtr offset dataSz ptrSz ->
-            return $ PtrStruct $ PtrToStruct msg $ Struct
+            PtrStruct $ PtrToStruct msg $ Struct
                 msg
                 addr { wordIndex = wordIndex + 1 + fromIntegral offset }
                 dataSz
                 ptrSz
-        P.CapPtr cap -> return $ PtrCap cap
+        P.CapPtr cap -> PtrCap cap
         _ -> undefined
 get (PtrToStruct msg struct) = return struct
 

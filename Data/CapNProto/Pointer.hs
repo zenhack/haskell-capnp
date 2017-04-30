@@ -54,9 +54,11 @@ data EltSpec
     deriving(Show, Eq)
 
 
--- | @parsePtr word@ parses word as a capnproto pointer.
-parsePtr :: Word64 -> Ptr
-parsePtr word =
+-- | @parsePtr word@ parses word as a capnproto pointer. A null pointer is
+-- parsed as @Nothing@.
+parsePtr :: Word64 -> Maybe Ptr
+parsePtr 0 = Nothing
+parsePtr word = Just $
     case bitRange word 0 2 of
         0 -> StructPtr
             (i30 (lo word))
@@ -71,22 +73,26 @@ parsePtr word =
             (bitRange word 32 64)
         3 -> CapPtr (bitRange word 32 64)
 
-serializePtr :: Ptr -> Word64
-serializePtr (StructPtr off dataSz ptrSz) =
+serializePtr :: Maybe Ptr -> Word64
+serializePtr Nothing = 0
+serializePtr (Just p) = serializePtr' p
+
+serializePtr' :: Ptr -> Word64
+serializePtr' (StructPtr off dataSz ptrSz) =
     -- 0 .|.
     (fromLo (fromI30 off)) .|.
     (fromIntegral dataSz `shiftL` 32) .|.
     (fromIntegral ptrSz `shiftL` 48)
-serializePtr (ListPtr off eltSpec) = -- eltSz numElts) =
+serializePtr' (ListPtr off eltSpec) = -- eltSz numElts) =
     1 .|.
     (fromLo (fromI30 off)) .|.
     (serializeEltSpec eltSpec)
-serializePtr (FarPtr twoWords off segId) =
+serializePtr' (FarPtr twoWords off segId) =
     2 .|.
     (fromIntegral (fromEnum twoWords) `shiftL` 2) .|.
     (fromIntegral off `shiftL` 3) .|.
     (fromIntegral segId `shiftL` 32)
-serializePtr (CapPtr index) =
+serializePtr' (CapPtr index) =
     3 .|.
     -- (fromIntegral 0 `shiftL` 2) .|.
     (fromIntegral index `shiftL` 32)

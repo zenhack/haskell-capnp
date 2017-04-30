@@ -64,7 +64,7 @@ ptrProps = testGroup "Pointer Properties" $
 
 parsePtrExamples = testGroup "parsePtr Examples" $ hUnitTestToTests $ TestList $
     map parseExample
-        [ (0x0000000200000000, StructPtr 0 2 0)
+        [ (0x0000000200000000, Just $ StructPtr 0 2 0)
         ]
   where
     parseExample (word, expected) = TestCase $ do
