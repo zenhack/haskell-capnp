@@ -1,7 +1,7 @@
 module TmpUtil where
 
--- This stuff really ought to be pulled from some library, but I haven't yet
--- found the time to choose something appropriate.
+-- This module should get named something else; When I did this I didn't have
+-- the spoons to figure out where to put it.
 
 import Control.Monad.Catch(MonadThrow, throwM, Exception, SomeException)
 import Control.Monad.Catch.Pure(CatchT(..))
