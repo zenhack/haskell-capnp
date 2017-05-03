@@ -15,11 +15,6 @@ module Data.CapNProto.Untyped
     )
   where
 
--- Questions:
---
--- * Enforce the binding from value to message somehow? Have a couple ideas
---   of how to do this.
-
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
