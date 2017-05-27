@@ -16,7 +16,16 @@ import qualified Data.Vector as B
 import qualified Data.Vector.Unboxed as U
 
 untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
-    [ ( TestMessage { schemaName = "misc", typeName = "A", constName = "misc"}
+    [ ( unlines
+            [ "@0xaa6fda3b444d262c;"
+            , ""
+            , "struct A {"
+            , "   a @0 :UInt64;"
+            , "   b @1 :Bool;"
+            , "}"
+            ]
+      , "A"
+      , "( a = 72, b = true )"
       , 128
       , \(Just (PtrStruct root)) -> do
             s <- get root
@@ -31,7 +40,8 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
       )
     ]
   where
-    tst (testMessage, quota, m, expected) = TestCase $ do
+    tst (schema, typename, value, quota, m, expected) = TestCase $ do
+        let testMessage = TestMessage schema typename value
         msg <- getTestMessage testMessage quota
         actual <- runQuotaT (rootPtr msg >>= m) (Quota quota)
         assertEqual (show testMessage) actual expected
