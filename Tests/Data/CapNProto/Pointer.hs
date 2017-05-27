@@ -57,8 +57,15 @@ ptrTests = testGroup "Pointer Tests" [ptrProps, parsePtrExamples]
 ptrProps = testGroup "Pointer Properties" $
     [ testProperty "parseEltSpec . serializeEltSpec == id"
         (\spec -> parseEltSpec (serializeEltSpec spec) == spec)
-    , testProperty "parsePtr . serializePtr == id"
-        (\ptr -> parsePtr (serializePtr ptr) == ptr)
+    , testProperty "parsePtr . serializePtr == id" $ \ptr ->
+        case ptr of
+            (Just (StructPtr 0 0 0)) -> True -- we skip this one, since it's
+                                             -- the same bits as a null, so this
+                                             -- shouldn't hold. TODO: the name
+                                             -- of this test is a bit misleading
+                                             -- because of this case; should fix
+                                             -- that.
+            _ -> parsePtr (serializePtr ptr) == ptr
     ]
 
 
