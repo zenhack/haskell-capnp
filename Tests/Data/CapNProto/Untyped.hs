@@ -72,4 +72,4 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
         let testMessage = TestMessage schema typename value
         msg <- getTestMessage testMessage quota
         actual <- runQuotaT (rootPtr msg >>= m) (Quota quota)
-        assertEqual (show testMessage) actual expected
+        assertEqual (show testMessage) expected actual
