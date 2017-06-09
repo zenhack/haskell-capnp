@@ -19,10 +19,12 @@ cabal-version:       >=1.10
 library
 --  exposed-modules:     Schema, Encoding, PrimTypes, SchemaEncoding
   exposed-modules:
+    Data.CapNProto.Errors,
     Data.CapNProto.Address,
     Data.CapNProto.Bits,
     Data.CapNProto.Pointer,
-    Data.CapNProto.Untyped
+    Data.CapNProto.Untyped,
+    Data.CapNProto.Message
   -- other-modules:
   -- other-extensions:
   default-extensions:
