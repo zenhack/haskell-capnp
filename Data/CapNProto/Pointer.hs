@@ -1,3 +1,9 @@
+{- |
+Module: Data.CapNProto.Pointer
+Description: Support for parsing/serializing capnproto pointers
+
+This module provides support for parsing and serializing capnproto pointers.
+-}
 module Data.CapNProto.Pointer where
 
 import Data.CapNProto.Bits
@@ -12,6 +18,9 @@ data Ptr
         -- at offset @off@ in words from the end of the pointer, with
         -- a data section of size @dataSz@ words, and a pointer section
         -- of size @ptrSz@ words.
+        --
+        -- Note that the value @StructPtr 0 0 0@ is illegal, since
+        -- its encoding is reserved for the "null" pointer.
     | ListPtr !Int32 !EltSpec
         -- ^ @ListPtr off eltSpec@ is a pointer to a list starting at
         -- offset @off@ in words from the end of the pointer. @eltSpec@
@@ -40,7 +49,7 @@ data ElementSize
     | SzPtr
     deriving(Show, Eq, Enum)
 
--- | A combination C and D fields in a list pointer, i.e. the element
+-- | A combination of the C and D fields in a list pointer, i.e. the element
 --   size, and either the number of elements in the list, or the
 --   total number of *words* in the list (if size is composite).
 data EltSpec
@@ -73,6 +82,8 @@ parsePtr word = Just $
             (bitRange word 32 64)
         3 -> CapPtr (bitRange word 32 64)
 
+-- | @serializePtr ptr@ serializes the pointer  as a Word64, translating
+-- @Nothing@ to a null pointer.
 serializePtr :: Maybe Ptr -> Word64
 serializePtr Nothing = 0
 serializePtr (Just p) = serializePtr' p
