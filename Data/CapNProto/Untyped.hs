@@ -5,6 +5,10 @@ Description: Utilities for manipulating capnproto messages with no schema.
 
 The types and functions in this module know about things like structs and
 lists, but are not schema aware.
+
+Each of the data types exported by this module is parametrized over at least
+@msg@ and @seg@ types; these are the type of the message containing the value,
+and are not explicitly called out in every location.
 -}
 module Data.CapNProto.Untyped
     ( Ptr(..), List(..)
@@ -14,6 +18,11 @@ module Data.CapNProto.Untyped
     , rootPtr
     )
   where
+
+-- TODO: clear up exactly where we're doing the quota deduction, and document
+-- it. Right now, we *mostly* do it it @get@ by virtue of M.getWord, but this
+-- doesn't cover elements of void lists. For those, we currently do the invoice
+-- in index. Need to make this clear & consistent.
 
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.Quota (MonadQuota, invoice)
@@ -26,12 +35,14 @@ import Data.Word
 
 import Prelude hiding (length)
 
+-- | A pointer to a value (of arbitrary type) in a message.
 data Ptr msg seg
     = PtrCap Word32
     | PtrFar (PtrTo msg seg (Maybe (Ptr msg seg)))
     | PtrList (PtrTo msg seg (List msg seg))
     | PtrStruct (PtrTo msg seg (Struct msg seg))
 
+-- | A list of values (of arbitrary type) in a message.
 data List msg seg
     = List0 (ListOf msg seg ())
     | List1 (ListOf msg seg Bool)
@@ -42,6 +53,7 @@ data List msg seg
     | ListPtr (ListOf msg seg (Ptr msg seg))
     | ListStruct (ListOf msg seg (Struct msg seg))
 
+-- | A Pointer to a value of type 'a' inside a message.
 data PtrTo msg seg a where
     PtrToVoid :: PtrTo msg seg ()
     PtrToBool :: AbsWord msg seg -> PtrTo msg seg Bool
@@ -57,6 +69,7 @@ data PtrTo msg seg a where
 
 data AbsWord msg seg = AbsWord (msg (seg Word64)) WordAddr Int
 
+-- | A list of values of type 'a' in a message.
 data ListOf msg seg a where
     ListOfVoid
         :: Int -- number of elements
@@ -79,6 +92,7 @@ data ListOf msg seg a where
         -> Int
         -> ListOf msg seg (Ptr msg seg)
 
+-- | A struct value in a message.
 data Struct msg seg
     = Struct
         (msg (seg Word64))
@@ -86,16 +100,27 @@ data Struct msg seg
         Word16 -- Data section size.
         Word16 -- Pointer section size.
 
+-- | @index i list@ returns a pointer to the ith element in @list@
 index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
+
+-- | Returns the length of a list
 length :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => ListOf msg seg a -> m Int
+
+-- | Returns the value pointed to by a pointer
 get :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => PtrTo msg seg a -> m a
+
+-- | Returns the data section of a struct, as a list of Word64
 dataSection :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg Word64)
+
+-- | Returns the pointer section of a struct, as a list of Ptr
 ptrSection  :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg (Ptr msg seg))
+
+-- | Returns the root pointer of a message.
 rootPtr :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => msg (seg Word64) -> m (Maybe (Ptr msg seg))
 
