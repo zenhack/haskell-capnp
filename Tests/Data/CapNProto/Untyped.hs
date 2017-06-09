@@ -1,11 +1,13 @@
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
 module Tests.Data.CapNProto.Untyped where
 
 
+import qualified Data.ByteString as BS
+import Data.ReinterpretCast (wordToDouble)
 import Text.Heredoc (here, there)
 import Prelude hiding (length)
 
-import Control.Monad (void)
+import Control.Monad (void, forM_, when)
 
 import Test.HUnit (assertEqual, Test(TestCase, TestList))
 import Test.Framework (testGroup)
@@ -48,22 +50,55 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             homes = [],
             rating = 7,
             canFly = true,
-            capacity = 1,
+            capacity = 5173,
             maxSpeed = 12.0,
         )))|]
       , 128
       , \(Just (PtrStruct root)) -> do
             s <- get root
-            words <- dataSection s
+            aircraftWords <- dataSection s
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
-            1 <- length words
-            3 <- get =<< index 0 words -- tag for F16
-            ptrs <- ptrSection s
-            1 <- length ptrs
-            Just (PtrStruct _) <- get =<< index 0 ptrs
+            1 <- length aircraftWords
+            3 <- get =<< index 0 aircraftWords -- tag for F16
+            aircraftPtrSec <- ptrSection s
+            1 <- length aircraftPtrSec
+            Just (PtrStruct f16Ptr) <- get =<< index 0 aircraftPtrSec
+            f16 <- get f16Ptr
+            0 <- length =<< dataSection f16
+            f16PtrSec <- ptrSection f16
+            1 <- length f16PtrSec
+            Just (PtrStruct basePtr) <- get =<< index 0 f16PtrSec
+            base <- get basePtr
+            baseWords <- dataSection base
+            basePtrSec <- ptrSection base
+            4 <- length baseWords -- Except canFly, each field is 1 word, and
+                                  -- canFly is aligned such that it ends up
+                                  -- consuming a whole word.
+            2 <- length basePtrSec -- name, homes
+
+            -- Walk the data section:
+            7 <- get =<< index 0 baseWords -- rating
+            1 <- get =<< index 1 baseWords -- canFly
+            5173 <- get =<< index 2 baseWords -- capacity
+            12.0 <- wordToDouble <$> (get =<< index 3 baseWords)
+
+            -- ...and the pointer section:
+            -- FIXME: we don't implement get for list pointers yet
+            {-
+            Just (PtrList namePtr) <- get =<< index 0 basePtrSec
+            List8 name <- get namePtr
+            3 <- length name
+            forM_ (zip [0..2] (BS.unpack "bob")) $ \(i, c) -> do
+                c' <- get =<< index i name
+                when (c /= c') $ error (show c ++ " /= " ++ show c')
+            Just (PtrList homesPtr) <- get =<< index 1 basePtrSec
+            ListPtr homes <- get homesPtr
+            0 <- length homes
+            -}
+
             return ()
-      , ((), Quota 125)
+      , ((), Quota 120)
       )
     ]
   where

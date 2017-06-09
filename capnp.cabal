@@ -84,5 +84,6 @@ test-suite the-test-suite
     test-framework-hunit,
     directory,
     resourcet,
-    heredoc
+    heredoc,
+    reinterpret-cast
   default-language:    Haskell2010
