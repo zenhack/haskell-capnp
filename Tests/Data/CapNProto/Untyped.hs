@@ -58,8 +58,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
             1 <- length words
-            -- tag for F16
-            3 <- get =<< index 0 words
+            3 <- get =<< index 0 words -- tag for F16
             ptrs <- ptrSection s
             1 <- length ptrs
             Just (PtrStruct _) <- get =<< index 0 ptrs
