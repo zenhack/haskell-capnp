@@ -1,5 +1,8 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Tests.Data.CapNProto.Untyped where
 
+
+import Text.Heredoc(here)
 import Prelude hiding (length)
 
 import Control.Monad (void)
@@ -16,14 +19,12 @@ import qualified Data.Vector as B
 import qualified Data.Vector.Unboxed as U
 
 untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
-    [ ( unlines
-            [ "@0xaa6fda3b444d262c;"
-            , ""
-            , "struct A {"
-            , "   a @0 :UInt64;"
-            , "   b @1 :Bool;"
-            , "}"
-            ]
+    [ ( [here|@0xaa6fda3b444d262c;
+               struct A {
+                  a @0 :UInt64;
+                  b @1 :Bool;
+               }
+            |]
       , "A"
       , "( a = 72, b = true )"
       , 128

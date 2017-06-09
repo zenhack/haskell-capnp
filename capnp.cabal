@@ -83,5 +83,6 @@ test-suite the-test-suite
     transformers,
     test-framework-hunit,
     directory,
-    resourcet
+    resourcet,
+    heredoc
   default-language:    Haskell2010
