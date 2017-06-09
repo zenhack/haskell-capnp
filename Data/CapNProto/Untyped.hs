@@ -90,7 +90,7 @@ data ListOf msg seg a where
         :: msg (seg Word64)
         -> WordAddr
         -> Int
-        -> ListOf msg seg (Ptr msg seg)
+        -> ListOf msg seg (Maybe (Ptr msg seg))
 
 -- | A struct value in a message.
 data Struct msg seg
@@ -117,8 +117,8 @@ dataSection :: (MonadQuota m, MonadThrow m)
     => Struct msg seg -> m (ListOf msg seg Word64)
 
 -- | Returns the pointer section of a struct, as a list of Ptr
-ptrSection  :: (MonadQuota m, MonadThrow m)
-    => Struct msg seg -> m (ListOf msg seg (Ptr msg seg))
+ptrSection :: (MonadQuota m, MonadThrow m)
+    => Struct msg seg -> m (ListOf msg seg (Maybe (Ptr msg seg)))
 
 -- | Returns the root pointer of a message.
 rootPtr :: (MonadQuota m, MonadThrow m, M.Message msg seg)
@@ -162,6 +162,9 @@ index i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
     | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
 index i (ListOfWord64 msg addr@WordAt{..} len)
     | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
+    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+index i (ListOfPtr msg addr@WordAt{..} len)
+    | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + i }
     | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
 
 

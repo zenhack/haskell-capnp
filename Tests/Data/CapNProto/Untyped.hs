@@ -62,11 +62,9 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             3 <- get =<< index 0 words
             ptrs <- ptrSection s
             1 <- length ptrs
-            -- FIXME: this fails because we haven't yet implemented indexing
-            -- into ListOfPtr:
-            -- PtrStruct _ <- get =<< index 0 ptrs
+            Just (PtrStruct _) <- get =<< index 0 ptrs
             return ()
-      , ((), Quota 126)
+      , ((), Quota 125)
       )
     ]
   where
