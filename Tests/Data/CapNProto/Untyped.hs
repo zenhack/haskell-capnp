@@ -2,7 +2,7 @@
 module Tests.Data.CapNProto.Untyped where
 
 
-import Text.Heredoc(here)
+import Text.Heredoc (here, there)
 import Prelude hiding (length)
 
 import Control.Monad (void)
@@ -17,6 +17,8 @@ import Data.CapNProto.Untyped
 
 import qualified Data.Vector as B
 import qualified Data.Vector.Unboxed as U
+
+aircraftSchema = [there|testdata/aircraft.capnp|]
 
 untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
     [ ( [here|@0xaa6fda3b444d262c;
@@ -38,6 +40,33 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             0 <- length ptrs
             return ()
       , ((), Quota 125)
+      )
+    , ( aircraftSchema
+      , "Aircraft"
+      , [here|(f16 = (base = (
+            name = "bob",
+            homes = [],
+            rating = 7,
+            canFly = true,
+            capacity = 1,
+            maxSpeed = 12.0,
+        )))|]
+      , 128
+      , \(Just (PtrStruct root)) -> do
+            s <- get root
+            words <- dataSection s
+            -- Aircraft just has the union tag, nothing else in it's data
+            -- section.
+            1 <- length words
+            -- tag for F16
+            3 <- get =<< index 0 words
+            ptrs <- ptrSection s
+            1 <- length ptrs
+            -- FIXME: this fails because we haven't yet implemented indexing
+            -- into ListOfPtr:
+            -- PtrStruct _ <- get =<< index 0 ptrs
+            return ()
+      , ((), Quota 126)
       )
     ]
   where
