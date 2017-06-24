@@ -19,11 +19,6 @@ module Data.CapNProto.Untyped
     )
   where
 
--- TODO: clear up exactly where we're doing the quota deduction, and document
--- it. Right now, we *mostly* do it it @get@ by virtue of M.getWord, but this
--- doesn't cover elements of void lists. For those, we currently do the invoice
--- in index. Need to make this clear & consistent.
-
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
@@ -100,7 +95,8 @@ data Struct msg seg
         Word16 -- Data section size.
         Word16 -- Pointer section size.
 
--- | @index i list@ returns a pointer to the ith element in @list@
+-- | @index i list@ returns a pointer to the ith element in @list@. Deducts
+-- 1 from the quota
 index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
 
@@ -108,7 +104,7 @@ index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
 length :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => ListOf msg seg a -> m Int
 
--- | Returns the value pointed to by a pointer
+-- | Returns the value pointed to by a pointer. Deducts 1 from the quota.
 get :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => PtrTo msg seg a -> m a
 
@@ -124,26 +120,30 @@ ptrSection :: (MonadQuota m, MonadThrow m)
 rootPtr :: (MonadQuota m, MonadThrow m, M.Message msg seg)
     => msg (seg Word64) -> m (Maybe (Ptr msg seg))
 
-get PtrToVoid = return ()
-get (PtrToBool (AbsWord msg addr shift)) = do
-    word <- M.getWord addr msg
-    return $ ((word `shiftR` shift) .&. 1) == 1
-get (PtrToWord8 absWord) = getSubWord absWord
-get (PtrToWord16 absWord) = getSubWord absWord
-get (PtrToWord32 absWord) = getSubWord absWord
-get (PtrToWord64 msg addr) = M.getWord addr msg
-get (PtrToPtr msg addr@WordAt{..}) = do
-    word <- M.getWord addr msg
-    return $ flip fmap (P.parsePtr word) $ \p -> case p of
-        P.StructPtr offset dataSz ptrSz ->
-            PtrStruct $ PtrToStruct msg $ Struct
-                msg
-                addr { wordIndex = wordIndex + 1 + fromIntegral offset }
-                dataSz
-                ptrSz
-        P.CapPtr cap -> PtrCap cap
-        _ -> undefined
-get (PtrToStruct msg struct) = return struct
+get ptr = invoice 1 >> get' ptr
+  where
+    get' :: (MonadQuota m, MonadThrow m, M.Message msg seg)
+        => PtrTo msg seg a -> m a
+    get' PtrToVoid = return ()
+    get' (PtrToBool (AbsWord msg addr shift)) = do
+        word <- M.getWord addr msg
+        return $ ((word `shiftR` shift) .&. 1) == 1
+    get' (PtrToWord8 absWord) = getSubWord absWord
+    get' (PtrToWord16 absWord) = getSubWord absWord
+    get' (PtrToWord32 absWord) = getSubWord absWord
+    get' (PtrToWord64 msg addr) = M.getWord addr msg
+    get' (PtrToPtr msg addr@WordAt{..}) = do
+        word <- M.getWord addr msg
+        return $ flip fmap (P.parsePtr word) $ \p -> case p of
+            P.StructPtr offset dataSz ptrSz ->
+                PtrStruct $ PtrToStruct msg $ Struct
+                    msg
+                    addr { wordIndex = wordIndex + 1 + fromIntegral offset }
+                    dataSz
+                    ptrSz
+            P.CapPtr cap -> PtrCap cap
+            _ -> undefined
+    get' (PtrToStruct msg struct) = return struct
 
 getSubWord :: (MonadQuota m, MonadThrow m, M.Message msg seg, Integral a)
     => AbsWord msg seg -> m a
@@ -151,21 +151,25 @@ getSubWord (AbsWord msg addr shift) = do
     word <- M.getWord addr msg
     return $ fromIntegral $ word `shiftR` shift
 
-index i (ListOfVoid len)
-    | i < len = invoice 1 >> return PtrToVoid
-    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1 }
-index i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
-    | i < len = do
-        let offset = i * (fromIntegral $ dataSz + ptrSz)
-        let addr' = addr { wordIndex = wordIndex + offset }
-        return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
-    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
-index i (ListOfWord64 msg addr@WordAt{..} len)
-    | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
-    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
-index i (ListOfPtr msg addr@WordAt{..} len)
-    | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + i }
-    | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+index i list = invoice 1 >> index' i list
+  where
+    index' :: (MonadQuota m, MonadThrow m, M.Message msg seg)
+        => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
+    index' i (ListOfVoid len)
+        | i < len = return PtrToVoid
+        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+    index' i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
+        | i < len = do
+            let offset = i * (fromIntegral $ dataSz + ptrSz)
+            let addr' = addr { wordIndex = wordIndex + offset }
+            return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
+        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' i (ListOfWord64 msg addr@WordAt{..} len)
+        | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
+        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' i (ListOfPtr msg addr@WordAt{..} len)
+        | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + i }
+        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
 
 
 length (ListOfVoid len) = return len

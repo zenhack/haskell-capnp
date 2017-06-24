@@ -41,7 +41,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             ptrs <- ptrSection s
             0 <- length ptrs
             return ()
-      , ((), Quota 125)
+      , ((), Quota 122)
       )
     , ( aircraftSchema
       , "Aircraft"
@@ -98,7 +98,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -}
 
             return ()
-      , ((), Quota 120)
+      , ((), Quota 110)
       )
     ]
   where

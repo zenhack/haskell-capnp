@@ -28,13 +28,11 @@ checkBounds :: (MonadThrow m, Vector v a) => v a -> Int -> m ()
 checkBounds vec i = when (i < 0 || i >= V.length vec) $
     throwM $ BoundsError { index = i, maxIndex = V.length vec }
 
--- | @getWord addr@ returns the word at @addr@ within @msg@. It deducts
--- 1 from the quota, and throws a @BoundsError@ if the address is out of
--- bounds.
-getWord :: (Message msg seg, MonadThrow m, MonadQuota m)
+-- | @getWord addr@ returns the word at @addr@ within @msg@. It throws a
+-- @BoundsError@ if the address is out of bounds.
+getWord :: (Message msg seg, MonadThrow m)
     => WordAddr -> msg (seg Word64) -> m Word64
 getWord WordAt{..} msg = do
-    invoice 1
     checkBounds msg segIndex
     let seg = msg ! segIndex
     checkBounds seg wordIndex
