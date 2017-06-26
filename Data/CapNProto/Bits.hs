@@ -40,3 +40,12 @@ fromI29 w = fromI32 (w `shiftL` 3)
 bitRange :: (Integral a => Word64 -> Int -> Int -> a)
 bitRange word lo hi = fromIntegral $
     (word .&. ((1 `shiftL` hi) - 1)) `shiftR` lo
+
+-- | @replaceBits new orig shift@ replaces the bits [shift, shift+N) in
+-- @orig@ with the N bit integer @new@.
+replaceBits :: (Bounded a, Integral a, Bits a)
+    => a -> Word64 -> Int -> Word64
+replaceBits new orig shift =
+    (orig .&. mask) .|. (fromIntegral new `shiftL` shift)
+  where
+    mask = complement $ fromIntegral (maxBound `asTypeOf` new) `shiftL` shift
