@@ -8,46 +8,77 @@ module Data.CapNProto.Message where
 
 import Control.Monad (when, void)
 import Control.Monad.Catch (MonadThrow, throwM)
-import Control.Monad.Quota (MonadQuota, invoice)
-import Data.Vector.Generic (Vector, (!))
-import qualified Data.Vector.Generic as V
-import qualified Data.Vector.Unboxed as U
-import qualified Data.Vector as B
+import Control.Monad.Quota (MonadQuota, invoice, evalQuotaT, Quota(..))
+import Control.Monad.State (evalStateT, get, put)
+import Control.Monad.Trans.Class (MonadTrans(..))
+import qualified Data.Vector as V
 import Data.CapNProto.Address (WordAddr(..))
 import Data.CapNProto.Errors (BoundsError(..))
+import Data.CapNProto.Blob as B
+import Data.CapNProto.Bits (lo, hi)
 import Data.Word (Word64, Word32)
 
--- | A CapNProto message
-class (Vector msg (seg Word64), Vector seg Word64) => Message msg seg
+import Control.Monad.State (MonadState)
 
-instance Message B.Vector U.Vector
+newtype Message a = Message (V.Vector a) deriving(Show)
 
--- | @checkBounds arr i@ verifies that @i@ is a legal index into @arr@,
--- calling throwing a @BoundsError@ if not.
-checkBounds :: (MonadThrow m, Vector v a) => v a -> Int -> m ()
-checkBounds vec i = when (i < 0 || i >= V.length vec) $
-    throwM $ BoundsError { index = i, maxIndex = V.length vec }
+-- | @getSegment msg i@ gets the ith segment of a message. Throws a
+-- 'BoundsError' if @i@ is out of bounds.
+getSegment :: (MonadThrow m) => Message a -> Int -> m a
+getSegment (Message segs) i = do
+    when (i < 0 || i >= V.length segs) $
+        throwM $ BoundsError { index = i, maxIndex = V.length segs }
+    segs `V.indexM` i
 
 -- | @getWord addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
-getWord :: (Message msg seg, MonadThrow m)
-    => WordAddr -> msg (seg Word64) -> m Word64
-getWord WordAt{..} msg = do
-    checkBounds msg segIndex
-    let seg = msg ! segIndex
-    checkBounds seg wordIndex
-    return $ seg ! wordIndex
+getWord :: (B.Blob m seg, MonadThrow m)
+    => WordAddr -> Message seg -> m Word64
+getWord WordAt{..} (Message segs) = do
+    seg <- segs `V.indexM` segIndex
+    seg `B.index` wordIndex
 
--- | @readMessage read64 read32@ reads in a message using read64 to
--- read 64-bit words and read32 to read 32-bit words. Per the spec,
--- words are little-endian. It decucts the size of the message (in
--- 64-bit words) from the quota.
-readMessage :: (MonadQuota m, MonadThrow m, Message msg seg, Vector msg Word32)
-    => m Word64 -> m Word32 -> m (msg (seg Word64))
-    -- TODO: having the @Vector msg Word32@ constraint above feels clumbsy;
-    -- it's due to an implementation detail that I'd rather not expose int he
-    -- type.
-readMessage read64 read32 = do
+-- | @decode blob@ decodes a message from the blob. words are assumed to be
+-- little-endian; this is used in parsing the message header.
+--
+-- The segments will not be copied; the resulting message will be a view into
+-- the original blob.
+decode :: (Blob m b, MonadThrow m) => b -> m (Message (BlobSlice b))
+decode blob = do
+    -- Note: we use the quota to avoid needing to do bounds checking here;
+    -- since readMessage invoices the quota before reading, we can rely on it
+    -- not to read past the end of the blob.
+    blobLen <- B.length blob
+    flip evalStateT (Nothing, 0) $ flip evalQuotaT (Quota blobLen) $
+        readMessage read32 readSegment
+  where
+    bIndex b i = lift $ lift $ B.index b i
+    read32 = do
+        (cur, idx) <- get
+        case cur of
+            Just n -> do
+                put (Nothing, idx)
+                return n
+            Nothing -> do
+                word <- bIndex blob idx
+                put (Just $ hi word, idx + 1)
+                return (lo word)
+    readSegment len = do
+        (_, idx) <- get
+        return BlobSlice { blob = blob
+                         , offset = idx
+                         , sliceLen = len
+                         }
+
+-- | @readMessage read64 readSegment@ reads in a message using the
+-- monadic context, which should manage the current read position
+-- into a message. read32 should read a 32-bit little-endian integer,
+-- and @readSegment n@ should read a blob of @n@ 64-bit words.
+-- The size of the message (in 64-bit words) is deducted from the quota,
+-- which can be used to set the maximum message size.
+readMessage :: (MonadQuota m, MonadThrow m)
+    => m Word32 -> (Int -> m b) -> m (Message b)
+readMessage read32 readSegment = do
     invoice 1
     numSegs' <- read32
     let numSegs = numSegs' + 1
@@ -55,16 +86,16 @@ readMessage read64 read32 = do
     segSizes <- V.replicateM (fromIntegral numSegs) read32
     when (numSegs `mod` 2 == 0) $ void read32
     V.mapM_ (invoice . fromIntegral) segSizes
-    V.mapM (readSegment . fromIntegral) segSizes
-  where
-    readSegment size = V.replicateM size read64
+    Message <$> V.mapM (readSegment . fromIntegral) segSizes
 
--- | @writeMesage write64 write32@ writes out the message
-writeMessage :: (Monad m, Message msg seg)
-    => (msg (seg Word64)) -> (Word64 -> m ()) -> (Word32 -> m ()) -> m ()
-writeMessage msg write64 write32 = do
+-- | @writeMesage write32 writeSegment@ writes out the message. @write32@
+-- should write a 32-bit word in little-endian format to the output stream.
+-- @writeSegment@ should write a blob.
+writeMessage :: (Monad m, Blob m b)
+    => Message b -> (Word32 -> m ()) -> (b -> m ()) -> m ()
+writeMessage (Message msg) write32 writeSegment = do
     let numSegs = V.length msg
-    write32 (fromIntegral numSegs)
-    V.forM_ msg $ \seg -> write32 $ fromIntegral $ V.length $ seg
+    write32 (fromIntegral numSegs - 1)
+    V.forM_ msg $ \seg -> write32 =<< fromIntegral <$> B.length seg
     when (numSegs `mod` 2 == 0) $ write32 0
-    V.forM_ msg $ \seg -> V.mapM_ write64 seg
+    V.forM_ msg writeSegment

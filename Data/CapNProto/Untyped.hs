@@ -25,105 +25,103 @@ import qualified Data.CapNProto.Message as M
 import qualified Data.CapNProto.Pointer as P
 import Data.CapNProto.Address (WordAddr(..))
 import qualified Data.CapNProto.Errors as E
+import Data.CapNProto.Blob (Blob)
 import Data.Bits
 import Data.Word
 
 import Prelude hiding (length)
 
 -- | A pointer to a value (of arbitrary type) in a message.
-data Ptr msg seg
+data Ptr b
     = PtrCap Word32
-    | PtrFar (PtrTo msg seg (Maybe (Ptr msg seg)))
-    | PtrList (PtrTo msg seg (List msg seg))
-    | PtrStruct (PtrTo msg seg (Struct msg seg))
+    | PtrFar (PtrTo b (Maybe (Ptr b)))
+    | PtrList (PtrTo b (List b))
+    | PtrStruct (PtrTo b (Struct b))
 
 -- | A list of values (of arbitrary type) in a message.
-data List msg seg
-    = List0 (ListOf msg seg ())
-    | List1 (ListOf msg seg Bool)
-    | List8 (ListOf msg seg Word8)
-    | List16 (ListOf msg seg Word16)
-    | List32 (ListOf msg seg Word32)
-    | List64 (ListOf msg seg Word64)
-    | ListPtr (ListOf msg seg (Ptr msg seg))
-    | ListStruct (ListOf msg seg (Struct msg seg))
+data List b
+    = List0 (ListOf b ())
+    | List1 (ListOf b Bool)
+    | List8 (ListOf b Word8)
+    | List16 (ListOf b Word16)
+    | List32 (ListOf b Word32)
+    | List64 (ListOf b Word64)
+    | ListPtr (ListOf b (Ptr b))
+    | ListStruct (ListOf b (Struct b))
 
 -- | A Pointer to a value of type 'a' inside a message.
-data PtrTo msg seg a where
-    PtrToVoid :: PtrTo msg seg ()
-    PtrToBool :: AbsWord msg seg -> PtrTo msg seg Bool
-    PtrToWord8 :: AbsWord msg seg -> PtrTo msg seg Word8
-    PtrToWord16 :: AbsWord msg seg -> PtrTo msg seg Word16
-    PtrToWord32 :: AbsWord msg seg -> PtrTo msg seg Word32
-    PtrToWord64 :: msg (seg Word64) -> WordAddr -> PtrTo msg seg Word64
-    PtrToPtr :: msg (seg Word64) -> WordAddr -> PtrTo msg seg (Maybe (Ptr msg seg))
+data PtrTo b a where
+    PtrToVoid :: PtrTo b ()
+    PtrToBool :: AbsWord b -> PtrTo b Bool
+    PtrToWord8 :: AbsWord b -> PtrTo b Word8
+    PtrToWord16 :: AbsWord b -> PtrTo b Word16
+    PtrToWord32 :: AbsWord b -> PtrTo b Word32
+    PtrToWord64 :: M.Message b -> WordAddr -> PtrTo b Word64
+    PtrToPtr :: M.Message b -> WordAddr -> PtrTo b (Maybe (Ptr b))
     PtrToStruct
-        :: msg (seg Word64)
-        -> Struct msg seg
-        -> PtrTo msg seg (Struct msg seg)
+        :: M.Message b
+        -> Struct b
+        -> PtrTo b (Struct b)
 
-data AbsWord msg seg = AbsWord (msg (seg Word64)) WordAddr Int
+data AbsWord b = AbsWord (M.Message b) WordAddr Int
 
 -- | A list of values of type 'a' in a message.
-data ListOf msg seg a where
+data ListOf b a where
     ListOfVoid
         :: Int -- number of elements
-        -> ListOf msg seg ()
+        -> ListOf b ()
     ListOfStruct
-        :: msg (seg Word64)
-        -> Struct msg seg -- First element. data/ptr sizes are the same for
-                          -- all elements.
+        :: M.Message b
+        -> Struct b -- First element. data/ptr sizes are the same for
+                    -- all elements.
         -> Int -- Number of elements
-        -> ListOf msg seg (Struct msg seg)
+        -> ListOf b (Struct b)
     ListOfWord64
-        :: msg (seg Word64)
+        :: M.Message b
         -> WordAddr -- Start of list
         -> Int -- length, in elements
-        -> ListOf msg seg Word64
+        -> ListOf b Word64
     ListOfPtr
         -- arguments are the same as with Word64
-        :: msg (seg Word64)
+        :: M.Message b
         -> WordAddr
         -> Int
-        -> ListOf msg seg (Maybe (Ptr msg seg))
+        -> ListOf b (Maybe (Ptr b))
 
 -- | A struct value in a message.
-data Struct msg seg
+data Struct b
     = Struct
-        (msg (seg Word64))
+        (M.Message b)
         WordAddr -- Start of struct
         Word16 -- Data section size.
         Word16 -- Pointer section size.
 
 -- | @index i list@ returns a pointer to the ith element in @list@. Deducts
 -- 1 from the quota
-index :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
+index :: (MonadQuota m, MonadThrow m, Blob m b)
+    => Int -> ListOf b a -> m (PtrTo b a)
 
 -- | Returns the length of a list
-length :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => ListOf msg seg a -> m Int
+length :: (MonadQuota m, MonadThrow m, Blob m b) => ListOf b a -> m Int
 
 -- | Returns the value pointed to by a pointer. Deducts 1 from the quota.
-get :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => PtrTo msg seg a -> m a
+get :: (MonadQuota m, MonadThrow m, Blob m b) => PtrTo b a -> m a
 
 -- | Returns the data section of a struct, as a list of Word64
-dataSection :: (MonadQuota m, MonadThrow m)
-    => Struct msg seg -> m (ListOf msg seg Word64)
+dataSection :: (MonadQuota m, MonadThrow m, Blob m b)
+    => Struct b -> m (ListOf b Word64)
 
 -- | Returns the pointer section of a struct, as a list of Ptr
-ptrSection :: (MonadQuota m, MonadThrow m)
-    => Struct msg seg -> m (ListOf msg seg (Maybe (Ptr msg seg)))
+ptrSection :: (MonadQuota m, MonadThrow m, Blob m b)
+    => Struct b -> m (ListOf b (Maybe (Ptr b)))
 
 -- | Returns the root pointer of a message.
-rootPtr :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-    => msg (seg Word64) -> m (Maybe (Ptr msg seg))
+rootPtr :: (MonadQuota m, MonadThrow m, Blob m b)
+    => M.Message b -> m (Maybe (Ptr b))
 
 get ptr = invoice 1 >> get' ptr
   where
-    get' :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-        => PtrTo msg seg a -> m a
+    get' :: (MonadQuota m, MonadThrow m, Blob m b) => PtrTo b a -> m a
     get' PtrToVoid = return ()
     get' (PtrToBool (AbsWord msg addr shift)) = do
         word <- M.getWord addr msg
@@ -145,16 +143,15 @@ get ptr = invoice 1 >> get' ptr
             _ -> undefined
     get' (PtrToStruct msg struct) = return struct
 
-getSubWord :: (MonadQuota m, MonadThrow m, M.Message msg seg, Integral a)
-    => AbsWord msg seg -> m a
+getSubWord :: (MonadQuota m, MonadThrow m, Integral a, Blob m b)
+    => AbsWord b -> m a
 getSubWord (AbsWord msg addr shift) = do
     word <- M.getWord addr msg
     return $ fromIntegral $ word `shiftR` shift
 
 index i list = invoice 1 >> index' i list
   where
-    index' :: (MonadQuota m, MonadThrow m, M.Message msg seg)
-        => Int -> ListOf msg seg a ->  m (PtrTo msg seg a)
+    index' :: (MonadQuota m, MonadThrow m) => Int -> ListOf b a -> m (PtrTo b a)
     index' i (ListOfVoid len)
         | i < len = return PtrToVoid
         | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1 }

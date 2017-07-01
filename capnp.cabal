@@ -41,6 +41,7 @@ library
     exceptions,
     mtl,
     primitive,
+    transformers,
     quota
   -- hs-source-dirs:
   default-language:    Haskell2010
@@ -71,7 +72,6 @@ test-suite the-test-suite
     Tests.Data.CapNProto.Untyped,
     Tests.Data.CapNProto.Pointer,
     Tests.Data.CapNProto.Bits,
-    TmpUtil,
     Tests.Util
   default-extensions:
     FlexibleContexts

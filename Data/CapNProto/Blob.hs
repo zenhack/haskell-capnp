@@ -24,7 +24,7 @@ data BlobSlice a = BlobSlice
     { blob :: a
     , offset :: Int
     , sliceLen :: Int
-    }
+    } deriving(Show)
 
 
 instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where

@@ -8,23 +8,22 @@ import Control.Monad.Catch (throwM)
 import Control.Monad.Trans.Resource (runResourceT, allocate)
 import Control.Monad.Trans (lift)
 import GHC.IO.Handle (hSetBinaryMode)
-import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString as BS
 import qualified Data.Vector as B
 import qualified Data.Vector.Unboxed as U
 import System.IO
 import System.Process
 import System.Directory (removeFile)
 
-import TmpUtil(getMessage, Message)
+import Data.CapNProto.Blob (BlobSlice)
+import qualified Data.CapNProto.Message as M
 
 getTestMessage :: TestMessage
                 -> Int -- Max message size
-                -> IO Message
+                -> IO (M.Message (BlobSlice BS.ByteString))
 getTestMessage testMessage quota = do
     contents <- encode testMessage
-    case getMessage contents quota of
-        Left e -> throwM e
-        Right (msg,_) -> return msg
+    M.decode contents
 
 
 data TestMessage = TestMessage
@@ -40,8 +39,7 @@ encode TestMessage{..} = runResourceT $ do
     (_, valuePath) <- allocate
         (writeTempFile "value.capnp" msgValue)
         removeFile
-    contents <- lift $ runCapnp schemaPath valuePath msgType
-    seq (L.length contents) (return contents)
+    lift $ runCapnp schemaPath valuePath msgType
   where
     writeTempFile template contents = runResourceT $ do
         (_, (path, hndl)) <- allocate
@@ -59,4 +57,4 @@ encode TestMessage{..} = runResourceT $ do
                                  }
         (Nothing, Just hout, Nothing, _) <- createProcess p
         hSetBinaryMode hout True
-        L.hGetContents hout
+        BS.hGetContents hout
