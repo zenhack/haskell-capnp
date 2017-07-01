@@ -84,9 +84,10 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             12.0 <- wordToDouble <$> (get =<< index 3 baseWords)
 
             -- ...and the pointer section:
+            Just (PtrList namePtr) <- get =<< index 0 basePtrSec
+
             -- FIXME: we don't implement get for list pointers yet
             {-
-            Just (PtrList namePtr) <- get =<< index 0 basePtrSec
             List8 name <- get namePtr
             3 <- length name
             forM_ (zip [0..2] (BS.unpack "bob")) $ \(i, c) -> do
@@ -98,7 +99,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -}
 
             return ()
-      , ((), Quota 110)
+      , ((), Quota 108)
       )
     ]
   where

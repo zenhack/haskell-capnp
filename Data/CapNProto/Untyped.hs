@@ -23,7 +23,7 @@ import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
 import qualified Data.CapNProto.Pointer as P
-import Data.CapNProto.Address (WordAddr(..))
+import Data.CapNProto.Address (Addr(WordAddr), WordAddr(..), resolvePtr)
 import qualified Data.CapNProto.Errors as E
 import Data.CapNProto.Blob (Blob)
 import Data.Bits
@@ -62,6 +62,16 @@ data PtrTo b a where
         :: M.Message b
         -> Struct b
         -> PtrTo b (Struct b)
+    PtrToListComposite
+        :: M.Message b
+        -> WordAddr -- address of the list's *tag*
+        -> Int -- size of the list in words.
+        -> PtrTo b (List b)
+    PtrToListNormal
+        :: M.Message b
+        -> WordAddr -- address of the start of the list
+        -> Int -- Number of elements
+        -> PtrTo b (List b)
 
 data AbsWord b = AbsWord (M.Message b) WordAddr Int
 
@@ -140,8 +150,22 @@ get ptr = invoice 1 >> get' ptr
                     dataSz
                     ptrSz
             P.CapPtr cap -> PtrCap cap
+            P.ListPtr _ (P.EltComposite len) -> PtrList $
+                PtrToListComposite
+                    msg
+                    (asWordAddr $ resolvePtr addr p)
+                    (fromIntegral len)
+            P.ListPtr _ (P.EltNormal _ len) -> PtrList $
+                PtrToListNormal
+                    msg
+                    (asWordAddr $ resolvePtr addr p)
+                    (fromIntegral len)
             _ -> undefined
     get' (PtrToStruct msg struct) = return struct
+    -- an unsafe downcast Addr -> WordAddr; we use this in a couple places
+    -- where we *know* it's a word address.
+    asWordAddr (WordAddr addr) = addr
+    asWordAddr _ = error ("Pointer is not a word address!")
 
 getSubWord :: (MonadQuota m, MonadThrow m, Integral a, Blob m b)
     => AbsWord b -> m a
