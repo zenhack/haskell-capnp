@@ -20,13 +20,13 @@ library
 --  exposed-modules:     Schema, Encoding, PrimTypes, SchemaEncoding
   exposed-modules:
     Control.Monad.CapNProto.MessageBuilder,
-    Data.CapNProto.Blob,
-    Data.CapNProto.Errors,
     Data.CapNProto.Address,
     Data.CapNProto.Bits,
-    Data.CapNProto.Pointer,
-    Data.CapNProto.Untyped,
+    Data.CapNProto.Blob,
+    Data.CapNProto.Errors,
     Data.CapNProto.Message
+    Data.CapNProto.Pointer,
+    Data.CapNProto.Untyped
   -- other-modules:
   -- other-extensions:
   default-extensions:
