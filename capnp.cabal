@@ -64,6 +64,12 @@ executable capnpc-haskell
 test-suite the-test-suite
   type: exitcode-stdio-1.0
   main-is: TestMain.hs
+  other-modules:
+    Tests.Data.CapNProto.Untyped,
+    Tests.Data.CapNProto.Pointer,
+    Tests.Data.CapNProto.Bits,
+    TmpUtil,
+    Tests.Util
   default-extensions:
     FlexibleContexts
   build-depends:
