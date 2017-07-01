@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, KindSignatures, RecordWildCards #-}
+{-# LANGUAGE GADTs, RecordWildCards #-}
 {-|
 Module: Data.CapNProto.Untyped
 Description: Utilities for manipulating capnproto messages with no schema.
