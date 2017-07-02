@@ -54,7 +54,7 @@ instance Arbitrary Ptr where
 
 ptrTests = testGroup "Pointer Tests" [ptrProps, parsePtrExamples]
 
-ptrProps = testGroup "Pointer Properties" $
+ptrProps = testGroup "Pointer Properties"
     [ testProperty "parseEltSpec . serializeEltSpec == id"
         (\spec -> parseEltSpec (serializeEltSpec spec) == spec)
     , testProperty "parsePtr . serializePtr == id" $ \ptr ->
@@ -74,7 +74,7 @@ parsePtrExamples = testGroup "parsePtr Examples" $ hUnitTestToTests $ TestList $
         [ (0x0000000200000000, Just $ StructPtr 0 2 0)
         ]
   where
-    parseExample (word, expected) = TestCase $ do
+    parseExample (word, expected) = TestCase $
         assertEqual
             (concat ["parsePtr ", show word, " == ", show expected])
             expected

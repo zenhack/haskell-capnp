@@ -39,7 +39,7 @@ instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
 
 instance (Monad m) => Blob m BS.ByteString where
     length bs = return $ BS.length bs `div` 8
-    index bs i = do
+    index bs i =
         return $ foldl (.|.) 0 $ map byteN [0,1..7]
       where
         byteN n = fromIntegral (BS.index bs (i * 8 + n)) `shiftL` (n * 8)

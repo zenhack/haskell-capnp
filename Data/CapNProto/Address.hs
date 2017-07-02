@@ -15,9 +15,7 @@ data WordAddr = WordAt
     } deriving(Show, Eq)
 
 -- | The "address" of a capability
-data CapAddr
-    = Cap !Word32
-    deriving(Show, Eq)
+newtype CapAddr = Cap Word32 deriving(Show, Eq)
 
 -- | An address, i.e. a location that a pointer may point at.
 data Addr

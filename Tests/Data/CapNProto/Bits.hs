@@ -18,7 +18,7 @@ bitRangeExamples = testGroup "bitRange examples" $ hUnitTestToTests $ TestList $
         [ (0x0000000200000000, 32, 48, 2)
         ]
   where
-    bitRangeTest (word, lo, hi, expected) = TestCase $ do
+    bitRangeTest (word, lo, hi, expected) = TestCase $
         assertEqual
             (concat [ "bitRange ", show word, " ", show lo, " ", show hi
                     , " == "

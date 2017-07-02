@@ -18,8 +18,6 @@ import Data.CapNProto.Blob as B
 import Data.CapNProto.Bits (lo, hi)
 import Data.Word (Word64, Word32)
 
-import Control.Monad.State (MonadState)
-
 newtype Message a = Message (V.Vector a) deriving(Show)
 
 -- | @getSegment msg i@ gets the ith segment of a message. Throws a
@@ -27,7 +25,7 @@ newtype Message a = Message (V.Vector a) deriving(Show)
 getSegment :: (MonadThrow m) => Message a -> Int -> m a
 getSegment (Message segs) i = do
     when (i < 0 || i >= V.length segs) $
-        throwM $ BoundsError { index = i, maxIndex = V.length segs }
+        throwM BoundsError { index = i, maxIndex = V.length segs }
     segs `V.indexM` i
 
 -- | @getWord addr@ returns the word at @addr@ within @msg@. It throws a

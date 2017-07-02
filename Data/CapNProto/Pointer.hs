@@ -91,13 +91,13 @@ serializePtr (Just p) = serializePtr' p
 serializePtr' :: Ptr -> Word64
 serializePtr' (StructPtr off dataSz ptrSz) =
     -- 0 .|.
-    (fromLo (fromI30 off)) .|.
+    fromLo (fromI30 off) .|.
     (fromIntegral dataSz `shiftL` 32) .|.
     (fromIntegral ptrSz `shiftL` 48)
 serializePtr' (ListPtr off eltSpec) = -- eltSz numElts) =
     1 .|.
-    (fromLo (fromI30 off)) .|.
-    (serializeEltSpec eltSpec)
+    fromLo (fromI30 off) .|.
+    serializeEltSpec eltSpec
 serializePtr' (FarPtr twoWords off segId) =
     2 .|.
     (fromIntegral (fromEnum twoWords) `shiftL` 2) .|.
@@ -119,4 +119,4 @@ serializeEltSpec (EltNormal sz len) =
     (fromIntegral len `shiftL` 35)
 serializeEltSpec (EltComposite words) =
     (7 `shiftL` 32) .|.
-    (fromHi (fromI29 words))
+    fromHi (fromI29 words)

@@ -165,7 +165,7 @@ get ptr = invoice 1 >> get' ptr
     -- an unsafe downcast Addr -> WordAddr; we use this in a couple places
     -- where we *know* it's a word address.
     asWordAddr (WordAddr addr) = addr
-    asWordAddr _ = error ("Pointer is not a word address!")
+    asWordAddr _ = error "Pointer is not a word address!"
 
 getSubWord :: (MonadQuota m, MonadThrow m, Integral a, Blob m b)
     => AbsWord b -> m a
@@ -178,19 +178,19 @@ index i list = invoice 1 >> index' i list
     index' :: (MonadQuota m, MonadThrow m) => Int -> ListOf b a -> m (PtrTo b a)
     index' i (ListOfVoid len)
         | i < len = return PtrToVoid
-        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
-            let offset = i * (fromIntegral $ dataSz + ptrSz)
+            let offset = i * fromIntegral (dataSz + ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
-        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfWord64 msg addr@WordAt{..} len)
         | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
-        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr msg addr@WordAt{..} len)
         | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + i }
-        | otherwise = throwM $ E.BoundsError { E.index = i, E.maxIndex = len - 1}
+        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
 
 
 length (ListOfVoid len) = return len
