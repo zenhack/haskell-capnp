@@ -146,7 +146,7 @@ get ptr = invoice 1 >> get' ptr
             P.StructPtr offset dataSz ptrSz ->
                 PtrStruct $ PtrToStruct msg $ Struct
                     msg
-                    addr { wordIndex = wordIndex + 1 + fromIntegral offset }
+                    (asWordAddr $ resolvePtr addr p)
                     dataSz
                     ptrSz
             P.CapPtr cap -> PtrCap cap
