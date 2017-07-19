@@ -90,13 +90,14 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -- FIXME: the length is coming out as 4. I'm not sure that's
             -- actually wrong -- maybe there's a null terminator? Need to check
             -- the spec and fix something on my end:
-            -- 3 <- length name
+            4 <- length name
 
             -- More stuff that should pass eventually:
-            {-
-            forM_ (zip [0..2] (BS.unpack "bob")) $ \(i, c) -> do
+            forM_ (zip [0..3] (BS.unpack "bob\0")) $ \(i, c) -> do
                 c' <- get =<< index i name
-                when (c /= c') $ error (show c ++ " /= " ++ show c')
+                when (c /= c') $
+                    error ("index " ++ show i ++ ": " ++ show c ++ " /= " ++ show c')
+            {-
             Just (PtrList homesPtr) <- get =<< index 1 basePtrSec
             ListPtr homes <- get homesPtr
             0 <- length homes

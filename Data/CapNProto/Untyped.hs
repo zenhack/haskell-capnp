@@ -180,12 +180,21 @@ index i list = invoice 1 >> index' i list
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' i (ListOfBool   nlist) = indexNList nlist PtrToBool  64
+    index' i (ListOfWord8  nlist) = indexNList nlist PtrToWord8  8
+    index' i (ListOfWord16 nlist) = indexNList nlist PtrToWord16 4
+    index' i (ListOfWord32 nlist) = indexNList nlist PtrToWord32 2
     index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
         | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr msg addr@WordAt{..} len)
         | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    indexNList :: MonadThrow m => NormalList b -> (AbsWord b -> PtrTo b a) -> Int -> m (PtrTo b a)
+    indexNList (NormalList msg addr@WordAt{..} len) cons sz
+        | i < len = return $ cons $
+            AbsWord msg addr { wordIndex = wordIndex + (i `div` sz) } (i `mod` sz)
+        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
 
 -- | Returns the length of a list
