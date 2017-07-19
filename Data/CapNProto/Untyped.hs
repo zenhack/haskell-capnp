@@ -106,29 +106,9 @@ data Struct b
         Word16 -- Data section size.
         Word16 -- Pointer section size.
 
--- | @index i list@ returns a pointer to the ith element in @list@. Deducts
--- 1 from the quota
-index :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Int -> ListOf b a -> m (PtrTo b a)
-
--- | Returns the length of a list
-length :: (MonadQuota m, MonadThrow m, Blob m b) => ListOf b a -> m Int
 
 -- | Returns the value pointed to by a pointer. Deducts 1 from the quota.
 get :: (MonadQuota m, MonadThrow m, Blob m b) => PtrTo b a -> m a
-
--- | Returns the data section of a struct, as a list of Word64
-dataSection :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Struct b -> m (ListOf b Word64)
-
--- | Returns the pointer section of a struct, as a list of Ptr
-ptrSection :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Struct b -> m (ListOf b (Maybe (Ptr b)))
-
--- | Returns the root pointer of a message.
-rootPtr :: (MonadQuota m, MonadThrow m, Blob m b)
-    => M.Message b -> m (Maybe (Ptr b))
-
 get ptr = invoice 1 >> get' ptr
   where
     get' :: (MonadQuota m, MonadThrow m, Blob m b) => PtrTo b a -> m a
@@ -173,6 +153,10 @@ getSubWord (AbsWord msg addr shift) = do
     word <- M.getWord addr msg
     return $ fromIntegral $ word `shiftR` shift
 
+-- | @index i list@ returns a pointer to the ith element in @list@. Deducts
+-- 1 from the quota
+index :: (MonadQuota m, MonadThrow m, Blob m b)
+    => Int -> ListOf b a -> m (PtrTo b a)
 index i list = invoice 1 >> index' i list
   where
     index' :: (MonadQuota m, MonadThrow m) => Int -> ListOf b a -> m (PtrTo b a)
@@ -193,17 +177,29 @@ index i list = invoice 1 >> index' i list
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
 
 
+-- | Returns the length of a list
+length :: (MonadQuota m, MonadThrow m, Blob m b) => ListOf b a -> m Int
 length (ListOfVoid len) = return len
 length (ListOfStruct _ _ len) = return len
 length (ListOfWord64 _ _ len) = return len
 length (ListOfPtr _ _ len) = return len
 
+-- | Returns the data section of a struct, as a list of Word64
+dataSection :: (MonadQuota m, MonadThrow m, Blob m b)
+    => Struct b -> m (ListOf b Word64)
 dataSection (Struct msg addr dataSz _) =
     return $ ListOfWord64 msg addr (fromIntegral dataSz)
+
+-- | Returns the pointer section of a struct, as a list of Ptr
+ptrSection :: (MonadQuota m, MonadThrow m, Blob m b)
+    => Struct b -> m (ListOf b (Maybe (Ptr b)))
 ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
     return $ ListOfPtr
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)
 
+-- | Returns the root pointer of a message.
+rootPtr :: (MonadQuota m, MonadThrow m, Blob m b)
+    => M.Message b -> m (Maybe (Ptr b))
 rootPtr msg = get (PtrToPtr msg (WordAt 0 0))
