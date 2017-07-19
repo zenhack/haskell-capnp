@@ -23,6 +23,7 @@ import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
 import qualified Data.CapNProto.Pointer as P
+import Data.CapNProto.Pointer (ElementSize(..))
 import Data.CapNProto.Address (Addr(WordAddr), WordAddr(..), resolvePtr)
 import qualified Data.CapNProto.Errors as E
 import Data.CapNProto.Blob (Blob)
@@ -68,12 +69,13 @@ data PtrTo b a where
         -> Int -- size of the list in words.
         -> PtrTo b (List b)
     PtrToListNormal
-        :: M.Message b
-        -> WordAddr -- address of the start of the list
-        -> Int -- Number of elements
+        :: NormalList b
+        -> ElementSize
         -> PtrTo b (List b)
 
 data AbsWord b = AbsWord (M.Message b) WordAddr Int
+
+data NormalList b = NormalList (M.Message b) WordAddr Int
 
 -- | A list of values of type 'a' in a message.
 data ListOf b a where
@@ -86,11 +88,11 @@ data ListOf b a where
                     -- all elements.
         -> Int -- Number of elements
         -> ListOf b (Struct b)
-    ListOfWord64
-        :: M.Message b
-        -> WordAddr -- Start of list
-        -> Int -- length, in elements
-        -> ListOf b Word64
+    ListOfBool   :: NormalList b -> ListOf b Bool
+    ListOfWord8  :: NormalList b -> ListOf b Word8
+    ListOfWord16 :: NormalList b -> ListOf b Word16
+    ListOfWord32 :: NormalList b -> ListOf b Word32
+    ListOfWord64 :: NormalList b -> ListOf b Word64
     ListOfPtr
         -- arguments are the same as with Word64
         :: M.Message b
@@ -135,13 +137,22 @@ get ptr = invoice 1 >> get' ptr
                     msg
                     (asWordAddr $ resolvePtr addr p)
                     (fromIntegral len)
-            P.ListPtr _ (P.EltNormal _ len) -> PtrList $
+            P.ListPtr _ (P.EltNormal sz len) -> PtrList $
                 PtrToListNormal
-                    msg
-                    (asWordAddr $ resolvePtr addr p)
-                    (fromIntegral len)
+                    (NormalList
+                        msg
+                        (asWordAddr $ resolvePtr addr p)
+                        (fromIntegral len))
+                    sz
             _ -> undefined
     get' (PtrToStruct msg struct) = return struct
+    get' (PtrToListNormal nlist@(NormalList _ _ len) sz) = return $ case sz of
+        Sz0  -> List0  (ListOfVoid    len)
+        Sz1  -> List1  (ListOfBool    nlist)
+        Sz8  -> List8  (ListOfWord8   nlist)
+        Sz16 -> List16 (ListOfWord16  nlist)
+        Sz32 -> List32 (ListOfWord32  nlist)
+        Sz64 -> List64 (ListOfWord64  nlist)
     -- an unsafe downcast Addr -> WordAddr; we use this in a couple places
     -- where we *know* it's a word address.
     asWordAddr (WordAddr addr) = addr
@@ -169,7 +180,7 @@ index i list = invoice 1 >> index' i list
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' i (ListOfWord64 msg addr@WordAt{..} len)
+    index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
         | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr msg addr@WordAt{..} len)
@@ -181,14 +192,21 @@ index i list = invoice 1 >> index' i list
 length :: (MonadQuota m, MonadThrow m, Blob m b) => ListOf b a -> m Int
 length (ListOfVoid len) = return len
 length (ListOfStruct _ _ len) = return len
-length (ListOfWord64 _ _ len) = return len
+length (ListOfBool   nlist) = nLen nlist
+length (ListOfWord8  nlist) = nLen nlist
+length (ListOfWord16 nlist) = nLen nlist
+length (ListOfWord32 nlist) = nLen nlist
+length (ListOfWord64 nlist) = nLen nlist
 length (ListOfPtr _ _ len) = return len
+
+nLen :: (Monad m) => NormalList b -> m Int
+nLen (NormalList _ _ len) = return len
 
 -- | Returns the data section of a struct, as a list of Word64
 dataSection :: (MonadQuota m, MonadThrow m, Blob m b)
     => Struct b -> m (ListOf b Word64)
 dataSection (Struct msg addr dataSz _) =
-    return $ ListOfWord64 msg addr (fromIntegral dataSz)
+    return $ ListOfWord64 $ NormalList msg addr (fromIntegral dataSz)
 
 -- | Returns the pointer section of a struct, as a list of Ptr
 ptrSection :: (MonadQuota m, MonadThrow m, Blob m b)

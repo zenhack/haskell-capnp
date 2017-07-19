@@ -86,10 +86,14 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -- ...and the pointer section:
             Just (PtrList namePtr) <- get =<< index 0 basePtrSec
 
-            -- FIXME: we don't implement get for list pointers yet
-            {-
             List8 name <- get namePtr
-            3 <- length name
+            -- FIXME: the length is coming out as 4. I'm not sure that's
+            -- actually wrong -- maybe there's a null terminator? Need to check
+            -- the spec and fix something on my end:
+            -- 3 <- length name
+
+            -- More stuff that should pass eventually:
+            {-
             forM_ (zip [0..2] (BS.unpack "bob")) $ \(i, c) -> do
                 c' <- get =<< index i name
                 when (c /= c') $ error (show c ++ " /= " ++ show c')
@@ -99,7 +103,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -}
 
             return ()
-      , ((), Quota 108)
+      , ((), Quota 107)
       )
     ]
   where
