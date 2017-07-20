@@ -144,7 +144,6 @@ get ptr = invoice 1 >> get' ptr
                         (asWordAddr $ resolvePtr addr p)
                         (fromIntegral len))
                     sz
-            _ -> undefined
     get' (PtrToStruct msg struct) = return struct
     get' (PtrToListNormal nlist@(NormalList _ _ len) sz) = return $ case sz of
         Sz0  -> List0  (ListOfVoid    len)
