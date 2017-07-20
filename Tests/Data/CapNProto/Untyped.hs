@@ -7,7 +7,7 @@ import Data.ReinterpretCast (wordToDouble)
 import Text.Heredoc (here, there)
 import Prelude hiding (length)
 
-import Control.Monad (void, forM_, when)
+import Control.Monad (forM_, when)
 
 import Test.HUnit (assertEqual, Test(TestCase, TestList))
 import Test.Framework (testGroup)
@@ -16,9 +16,6 @@ import Test.Framework.Providers.HUnit (hUnitTestToTests)
 import Tests.Util
 import Control.Monad.Quota
 import Data.CapNProto.Untyped
-
-import qualified Data.Vector as B
-import qualified Data.Vector.Unboxed as U
 
 aircraftSchema = [there|testdata/aircraft.capnp|]
 
