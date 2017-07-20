@@ -92,19 +92,15 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -- the spec and fix something on my end:
             4 <- length name
 
-            -- More stuff that should pass eventually:
             forM_ (zip [0..3] (BS.unpack "bob\0")) $ \(i, c) -> do
                 c' <- get =<< index i name
                 when (c /= c') $
                     error ("index " ++ show i ++ ": " ++ show c ++ " /= " ++ show c')
-            {-
             Just (PtrList homesPtr) <- get =<< index 1 basePtrSec
-            ListPtr homes <- get homesPtr
+            List16 homes <- get homesPtr
             0 <- length homes
-            -}
-
             return ()
-      , ((), Quota 99)
+      , ((), Quota 96)
       )
     ]
   where
