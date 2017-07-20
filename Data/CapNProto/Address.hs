@@ -6,7 +6,6 @@ module Data.CapNProto.Address where
 
 import Data.Word
 import qualified Data.CapNProto.Pointer as P
-import Control.Monad.Catch (MonadThrow, throwM)
 
 -- | The address of a word within a message
 data WordAddr = WordAt

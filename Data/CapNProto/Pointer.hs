@@ -81,6 +81,7 @@ parsePtr word = Just $
             (bitRange word 3 32)
             (bitRange word 32 64)
         3 -> CapPtr (bitRange word 32 64)
+        _ -> error "unreachable"
 
 -- | @serializePtr ptr@ serializes the pointer  as a Word64, translating
 -- @Nothing@ to a null pointer.
