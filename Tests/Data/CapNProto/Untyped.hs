@@ -104,7 +104,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
             -}
 
             return ()
-      , ((), Quota 107)
+      , ((), Quota 99)
       )
     ]
   where

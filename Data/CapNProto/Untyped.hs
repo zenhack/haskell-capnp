@@ -193,7 +193,8 @@ index i list = invoice 1 >> index' i list
     indexNList :: MonadThrow m => NormalList b -> (AbsWord b -> PtrTo b a) -> Int -> m (PtrTo b a)
     indexNList (NormalList msg addr@WordAt{..} len) cons sz
         | i < len = return $ cons $
-            AbsWord msg addr { wordIndex = wordIndex + (i `div` sz) } (i `mod` sz)
+            AbsWord msg addr { wordIndex = wordIndex + (i `div` sz) }
+                             ((i `mod` sz) * sz)
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
 
