@@ -43,7 +43,7 @@ bitRange word lo hi = fromIntegral $
 
 -- | @replaceBits new orig shift@ replaces the bits [shift, shift+N) in
 -- @orig@ with the N bit integer @new@.
-replaceBits :: (Bounded a, Integral a, Bits a)
+replaceBits :: (Bounded a, Integral a)
     => a -> Word64 -> Int -> Word64
 replaceBits new orig shift =
     (orig .&. mask) .|. (fromIntegral new `shiftL` shift)
