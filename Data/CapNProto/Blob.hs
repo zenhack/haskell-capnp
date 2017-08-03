@@ -1,4 +1,7 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE
+      MultiParamTypeClasses
+    , FlexibleInstances
+    , TypeFamilies #-}
 module Data.CapNProto.Blob
     ( Blob(..)
     , BlobSlice(..)
@@ -64,10 +67,10 @@ instance (Monad m) => Blob m BS.ByteString where
     length = lengthFromBytes (return . BS.length)
     index = indexFromBytes $ \bs i -> return $ BS.index bs i
 
-instance (PrimMonad m) => Blob m (MutableByteArray (PrimState m)) where
+instance (PrimMonad m, s ~ PrimState m) => Blob m (MutableByteArray s) where
     length = lengthFromBytes (return . sizeofMutableByteArray)
     index = indexFromBytes readByteArray
 
 instance (Monad m) => Blob m ByteArray where
     length = lengthFromBytes (return . sizeofByteArray)
-    index = indexFromBytes $ \arr i -> return $ indexByteArray bs i
+    index = indexFromBytes $ \arr i -> return $ indexByteArray arr i
