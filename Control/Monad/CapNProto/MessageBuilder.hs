@@ -12,6 +12,8 @@ import Data.Primitive.ByteArray
     , copyMutableByteArray
     )
 
+import Data.CapNProto.Blob (BlobSlice(..))
+
 
 newtype ByteCount = ByteCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
 newtype WordCount = WordCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
@@ -35,14 +37,20 @@ newtype BuilderT p s m a =
     deriving(Functor, Applicative, Monad)
 
 runBuilderT :: (PrimMonad m)
-    => BuilderT p (PrimState m) m a -> m (MutableByteArray (PrimState m), a)
+    => BuilderT p (PrimState m) m a
+    -> m (BlobSlice (MutableByteArray (PrimState m)), a)
 runBuilderT (BuilderT m) = do
     initialArray <- newByteArray 0
     (x, bs, ()) <- runRWST
                        m
                        BuilderEnv   { parentOff = 0 }
                        BuilderState { array = initialArray, nextAlloc = 0 }
-    return (array bs, x)
+    return ( BlobSlice { blob = array bs
+                       , offset = 0
+                       , nextAlloc bs
+                       }
+           , x
+           )
 
 
 instance MonadTrans (BuilderT p s) where

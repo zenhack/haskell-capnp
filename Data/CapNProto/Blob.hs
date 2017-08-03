@@ -9,9 +9,18 @@ import Prelude hiding (length)
 
 import Control.Monad (when)
 import Control.Monad.Catch (MonadThrow(..))
+import Control.Monad.Primitive (PrimMonad, PrimState)
 import qualified Data.ByteString as BS
 import Data.Bits
 import Data.Word
+import Data.Primitive.ByteArray
+    ( MutableByteArray
+    , sizeofMutableByteArray
+    , readByteArray
+    , ByteArray
+    , sizeofByteArray
+    , indexByteArray
+    )
 
 import qualified Data.CapNProto.Errors as E
 
@@ -27,6 +36,20 @@ data BlobSlice a = BlobSlice
     } deriving(Show)
 
 
+lengthFromBytes :: (Monad m) => (a -> m Int) -> a -> m Int
+lengthFromBytes length arr = do
+    len <- length arr
+    return $ len `div` 8
+
+indexFromBytes :: (Monad m) => (a -> Int -> m Word8) -> a -> Int -> m Word64
+indexFromBytes index arr i = do
+        foldl (.|.) 0 <$> mapM byteN [0,1..7]
+      where
+        byteN n = do
+            b <- index arr (i * 8 + n)
+            return $ fromIntegral b `shiftL` (n * 8)
+
+
 instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
     length b = return $ sliceLen b
     index b i = do
@@ -38,8 +61,13 @@ instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
 
 
 instance (Monad m) => Blob m BS.ByteString where
-    length bs = return $ BS.length bs `div` 8
-    index bs i =
-        return $ foldl (.|.) 0 $ map byteN [0,1..7]
-      where
-        byteN n = fromIntegral (BS.index bs (i * 8 + n)) `shiftL` (n * 8)
+    length = lengthFromBytes (return . BS.length)
+    index = indexFromBytes $ \bs i -> return $ BS.index bs i
+
+instance (PrimMonad m) => Blob m (MutableByteArray (PrimState m)) where
+    length = lengthFromBytes (return . sizeofMutableByteArray)
+    index = indexFromBytes readByteArray
+
+instance (Monad m) => Blob m ByteArray where
+    length = lengthFromBytes (return . sizeofByteArray)
+    index = indexFromBytes $ \arr i -> return $ indexByteArray bs i
