@@ -37,9 +37,10 @@ replaceBitsExamples = testGroup "replaceBits" $ hUnitTestToTests $ TestList $
         , replaceTest 8 (0x2 :: Word8) 0x10   4 0x20
         , replaceTest 8 (0x1 :: Word8) 0x10   8 0x0110
         , replaceTest 8 (0xa :: Word8) 0xffff 8 0x0aff
+        , replaceTest 1 (0x0 :: Word1) 0xff  4 0xef
         ]
  where
-    replaceTest :: (Bounded a, Integral a, Bits a, Show a)
+    replaceTest :: (Bounded a, Integral a, Show a)
         => Int -> a -> Word64 -> Int -> Word64 -> Assertion
     replaceTest len new orig shift expected =
         assertEqual (concat [ "replaceBits (", show new, " :: Word", show len, ") "

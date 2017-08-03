@@ -2,6 +2,7 @@
 Module: Data.CapNProto.Bits
 Description: Utilities for bitwhacking useful for capnproto.
 -}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Data.CapNProto.Bits where
 
 import Data.Bits
@@ -49,3 +50,30 @@ replaceBits new orig shift =
     (orig .&. mask) .|. (fromIntegral new `shiftL` shift)
   where
     mask = complement $ fromIntegral (maxBound `asTypeOf` new) `shiftL` shift
+
+-- | 1 bit datatype, in the tradition of Word8, Word16 et al.
+newtype Word1 = Word1 Bool
+    deriving(Ord, Eq, Enum, Bounded)
+
+instance Num Word1 where
+    (+) = w1ThruEnum (+)
+    (*) = w1ThruEnum (*)
+    abs = id
+    signum = id
+    negate = id
+    fromInteger x = toEnum (fromIntegral x `mod` 2)
+
+instance Real Word1 where
+    toRational = fromIntegral . fromEnum
+
+instance Integral Word1 where
+    toInteger = toInteger . fromEnum
+    quotRem x y = let (x', y') = quotRem (fromEnum x) (fromEnum y)
+                  in (toEnum x', toEnum y')
+
+instance Show Word1 where
+    show = show . fromEnum
+    -- TODO: implement Read?
+
+w1ThruEnum :: (Int -> Int -> Int) -> Word1 -> Word1 -> Word1
+w1ThruEnum op l r = toEnum $ ((fromEnum l) `op` (fromEnum r)) `mod` 2
