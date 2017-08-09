@@ -1,16 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
 module Tests.Util where
 
-import Control.Concurrent (forkIO)
-
-import Control.Exception (bracket)
-import Control.Monad.Catch (throwM)
 import Control.Monad.Trans.Resource (runResourceT, allocate)
 import Control.Monad.Trans (lift)
 import GHC.IO.Handle (hSetBinaryMode)
 import qualified Data.ByteString as BS
-import qualified Data.Vector as B
-import qualified Data.Vector.Unboxed as U
 import System.IO
 import System.Process
 import System.Directory (removeFile)
