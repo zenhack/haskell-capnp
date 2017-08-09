@@ -15,21 +15,26 @@ import Data.Primitive.ByteArray
 import Data.CapNProto.Blob (BlobSlice(..))
 
 
+-- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
+-- up units:
 newtype ByteCount = ByteCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
 newtype WordCount = WordCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
 
+-- conversion functions for the above:
 bytesToWords :: ByteCount -> WordCount
 bytesToWords (ByteCount n) = WordCount (n `div` 8)
 wordsToBytes :: WordCount -> ByteCount
 wordsToBytes (WordCount n) = ByteCount (n * 8)
 
+-- | Internal state of a builder.
 data BuilderState s = BuilderState
-    { nextAlloc :: !ByteCount
-    , array :: MutableByteArray s
+    { nextAlloc :: !ByteCount -- ^ offset into the array for the next allocation
+    , array :: MutableByteArray s -- ^ array storing the message being built
     }
 
 data BuilderEnv = BuilderEnv
-    { parentOff :: !WordCount
+    { parentOff :: !WordCount -- ^ offset into the array to the start of
+                              -- the parent object.
     }
 
 newtype BuilderT p s m a =
