@@ -26,7 +26,10 @@ library
     Data.CapNProto.Errors,
     Data.CapNProto.Message
     Data.CapNProto.Pointer,
-    Data.CapNProto.Untyped
+    Data.CapNProto.Schema,
+    Data.CapNProto.Untyped,
+    Schema.CapNProto.Schema,
+    Schema.CapNProto.Schema.Node
   -- other-modules:
   -- other-extensions:
   default-extensions:

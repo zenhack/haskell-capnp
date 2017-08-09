@@ -11,7 +11,7 @@ scopeId :: Field S.Node Id
 parameters :: Field S.Node (List Parameter)
 isGeneric :: Field S.Node Bool
 nestedNodes :: Field S.Node (List NestedNode)
-annotations :: Field S.Node (List Annotations)
+annotations :: Field S.Node (List Annotation)
 
 data Parameter = Parameter
 data NestedNode = NestedNode
