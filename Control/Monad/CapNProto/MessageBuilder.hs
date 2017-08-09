@@ -1,7 +1,7 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, RecordWildCards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, RecordWildCards, TypeFamilies #-}
 module Control.Monad.CapNProto.MessageBuilder where
 
-import Control.Monad (when)
+import Control.Monad (when, forM_)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.RWS.Strict (RWST(runRWST), local, get, put)
@@ -10,9 +10,13 @@ import Data.Primitive.ByteArray
     , newByteArray
     , sizeofMutableByteArray
     , copyMutableByteArray
+    , writeByteArray
     )
 
 import Data.CapNProto.Blob (BlobSlice(..))
+import Data.CapNProto.Schema (Field)
+import Data.Bits
+import Data.Word
 
 
 -- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
@@ -85,3 +89,25 @@ withParent sz (BuilderT m) = do
     off <- alloc sz
     BuilderT $ local (\env -> env { parentOff = off }) m
     return off
+
+class BuildSelf a where
+    buildSelf :: (PrimMonad m, s ~ PrimState m)
+        => a -> WordCount -> Word16 -> BuilderT p s m ()
+
+instance BuildSelf Word64 where
+    buildSelf n words 0 = BuilderT $ do
+        arr <- array <$> get
+        let base = fromIntegral $ wordsToBytes words
+        forM_ ([0,1..7] :: [Int]) $ \i -> do
+            writeByteArray arr (base + i) $ n `shiftR` (i * 8)
+    buildSelf _ _ off =
+        error $ "call to (Word64) buildSelf with bit offset " ++ show off ++
+            " is not Word64-aligned."
+
+setField   :: (PrimMonad m, s ~ PrimState m, BuildSelf c)
+    => Field p c -> c                 -> BuilderT p s m ()
+buildField :: (PrimMonad m, s ~ PrimState m)
+    => Field p c -> BuilderT c s m () -> BuilderT p s m ()
+
+setField = undefined
+buildField = undefined
