@@ -1,20 +1,26 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, TypeFamilies #-}
 module Tests.Util
     ( MsgMetaData(..)
     , capnpEncode, capnpDecode
     , assertionsToTest
+    , freezeAsByteString
     )
   where
 
 import Control.Concurrent (forkIO)
 import Control.Monad (void)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT, allocate)
+import Control.Monad.Primitive (PrimMonad, PrimState)
 import Control.Monad.Trans (lift)
+import Data.Primitive.ByteArray (MutableByteArray, readByteArray)
 import GHC.IO.Handle (hSetBinaryMode)
 import qualified Data.ByteString as BS
 import System.IO
 import System.Process
 import System.Directory (removeFile)
+
+import Data.CapNProto.Bits (ByteCount(..), wordsToBytes)
+import Data.CapNProto.Blob (BlobSlice(..))
 
 import Test.Framework (testGroup, Test)
 import qualified Test.HUnit as H
@@ -81,6 +87,14 @@ interactCapnp subCommand MsgMetaData{..} = do
         lift $ hPutStr hndl msgSchema
         return path
 
+-- | Convert a BlobSlice (MutableByteArray s) to a ByteString. The former is the
+-- result of Control.Monad.CapNProto.MessageBuilder.runBuilderT
+freezeAsByteString :: (PrimMonad m, s ~ PrimState m)
+    => BlobSlice (MutableByteArray s) -> m BS.ByteString
+freezeAsByteString BlobSlice{..} = do
+    let ByteCount off = wordsToBytes offset
+    let ByteCount len = wordsToBytes sliceLen
+    BS.pack <$> mapM (readByteArray blob) [off..off+len-1]
 
 -- | Convert a list of 'Assertion's to a test group with the given name.
 assertionsToTest :: String -> [H.Assertion] -> Test

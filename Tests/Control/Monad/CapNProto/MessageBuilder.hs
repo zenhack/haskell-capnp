@@ -2,28 +2,24 @@
 module Tests.Control.Monad.CapNProto.MessageBuilder (buildTests) where
 
 import Control.Monad.CapNProto.MessageBuilder
-import Data.CapNProto.Bits (ByteCount(..), wordsToBytes)
-import Data.CapNProto.Blob (BlobSlice(..))
 import Data.CapNProto.Schema (Field(..))
 
 import Control.Monad (void)
 import Control.Monad.Primitive (RealWorld)
-import Data.Primitive.ByteArray (readByteArray)
+import qualified Data.ByteString as BS
 import Data.Int
 import Data.Word
 
-import Tests.Util (assertionsToTest)
+import Tests.Util (assertionsToTest, freezeAsByteString)
 
 import Test.HUnit (assertEqual, Assertion)
 
 
 buildTest :: BuilderT p RealWorld IO () -> [Word8] -> Assertion
 buildTest builder expected = do
-    (BlobSlice{..}, ()) <- runBuilderT builder
-    let ByteCount off = wordsToBytes offset
-    let ByteCount len = wordsToBytes sliceLen
-    actual <- mapM (readByteArray blob) [off..off+len-1]
-    assertEqual "" expected actual
+    (blobSlice, ()) <- runBuilderT builder
+    actual <- freezeAsByteString blobSlice
+    assertEqual "" expected (BS.unpack actual)
 
 
 buildTests = assertionsToTest "build tests" $ map (uncurry buildTest)
