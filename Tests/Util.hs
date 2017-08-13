@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Tests.Util where
 
+import Control.Concurrent (forkIO)
 import Control.Monad.Trans.Resource (runResourceT, allocate)
 import Control.Monad.Trans (lift)
 import GHC.IO.Handle (hSetBinaryMode)
@@ -30,10 +31,7 @@ capnpEncode msgValue MsgMetaData{..} = runResourceT $ do
     (_, schemaPath) <- allocate
         (writeTempFile "schema.capnp" msgSchema)
         removeFile
-    (_, valuePath) <- allocate
-        (writeTempFile "value.capnp" msgValue)
-        removeFile
-    lift $ runCapnp schemaPath valuePath msgType
+    runCapnp schemaPath
   where
     writeTempFile template contents = runResourceT $ do
         (_, (path, hndl)) <- allocate
@@ -41,17 +39,24 @@ capnpEncode msgValue MsgMetaData{..} = runResourceT $ do
             (\(_, hndl) -> hClose hndl)
         lift $ hPutStr hndl contents
         return path
-    runCapnp schemaFile valueFile typeName = do
-        hInput <- openFile valueFile ReadMode
+    runCapnp schemaFile = do
         let p = (proc "capnp" [ "encode"
                               , schemaFile
-                              , typeName
-                              ]) { std_in = UseHandle hInput
+                              , msgType
+                              ]) { std_in = CreatePipe
                                  , std_out = CreatePipe
                                  }
-        (Nothing, Just hout, Nothing, _) <- createProcess p
-        hSetBinaryMode hout True
-        BS.hGetContents hout
+        (_, (Just hin, Just hout, Nothing, _)) <- allocate
+            (createProcess p)
+            (\(Just hin, Just hout, Nothing, _p) -> do
+                hClose hout
+                hClose hin)
+        lift $ do
+            forkIO $ do
+                hPutStr hin msgValue
+                hClose hin
+            hSetBinaryMode hout True
+            BS.hGetContents hout
 
 
 -- | Convert a list of 'Assertion's to a test group with the given name.
