@@ -16,21 +16,20 @@ import Test.Framework (testGroup, Test)
 import qualified Test.HUnit as H
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
-getTestMessage :: TestMessage
-                -> Int -- Max message size
-                -> IO (M.Message (BlobSlice BS.ByteString))
-getTestMessage testMessage quota = do
-    contents <- encode testMessage
-    M.decode contents
+-- | Convert the textual message into a binary one, by calling the capnp tool.
+getTextMessage :: TextMessage -> IO (M.Message (BlobSlice BS.ByteString))
+getTextMessage textMessage = capnpEncode textMessage >>= M.decode
 
-
-data TestMessage = TestMessage
-    { msgSchema :: String
-    , msgType :: String
-    , msgValue :: String
+-- | A message in textual form, with enough information to encode it.
+data TextMessage = TextMessage
+    { msgSchema :: String -- ^ The source of the schema
+    , msgType   :: String -- ^ The name of the root struct's type
+    , msgValue  :: String -- ^ The textual representation of the value.
     } deriving(Show)
 
-encode TestMessage{..} = runResourceT $ do
+-- | Run @capnp encode@ on the message, returning the output
+capnpEncode :: TextMessage -> IO BS.ByteString
+capnpEncode TextMessage{..} = runResourceT $ do
     (_, schemaPath) <- allocate
         (writeTempFile "schema.capnp" msgSchema)
         removeFile
@@ -58,6 +57,7 @@ encode TestMessage{..} = runResourceT $ do
         BS.hGetContents hout
 
 
+-- | Convert a list of 'Assertion's to a test group with the given name.
 assertionsToTest :: String -> [H.Assertion] -> Test
 assertionsToTest name =
     testGroup name . hUnitTestToTests . H.TestList . map H.TestCase

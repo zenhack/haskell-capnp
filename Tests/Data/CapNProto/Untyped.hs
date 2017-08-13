@@ -100,7 +100,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
     ]
   where
     tst (schema, typename, value, quota, m, expected) = do
-        let testMessage = TestMessage schema typename value
-        msg <- getTestMessage testMessage quota
+        let textMessage = TextMessage schema typename value
+        msg <- getTextMessage textMessage
         actual <- runQuotaT (rootPtr msg >>= m) (Quota quota)
-        assertEqual (show testMessage) expected actual
+        assertEqual (show textMessage) expected actual
