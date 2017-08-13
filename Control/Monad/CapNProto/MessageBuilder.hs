@@ -146,8 +146,8 @@ instance BuildSelf Int8 where
     buildSelf n = buildSelf (fromIntegral n :: Word8)
 
 
--- | Helper function for buildSelf; it's a valid implementation for all of
--- WordN.
+-- | Helper function for buildSelf; it's a valid implementation for any type
+-- that can be used with 'replaceBits'
 buildSelfReplace :: (PrimMonad m, s ~ PrimState m, Bounded a, Integral a)
     => a -> WordCount -> Word16 -> BuilderT p s m ()
 buildSelfReplace n words shift = BuilderT $ do
