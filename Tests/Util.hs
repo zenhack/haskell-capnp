@@ -68,10 +68,8 @@ interactCapnp subCommand MsgMetaData{..} = do
             hClose hin
             void $ waitForProcess proc)
     return (hin, hout)
-
-
-saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
   where
+    saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
     writeTempFile = runResourceT $ do
         (_, (path, hndl)) <- allocate
             (openTempFile "/tmp" "schema.capnp")
