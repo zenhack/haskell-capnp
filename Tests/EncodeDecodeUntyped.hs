@@ -40,7 +40,7 @@ encodeDecodeUntypedTest
        )
     -> Assertion
 encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) = do
-    (blobSlice, ()) <- runBuilderT builder
+    (blobSlice, ()) <- runBuilderT (frameSegment builder)
     bytes <- freezeAsByteString blobSlice
     actualText <- capnpDecode bytes meta
     assertEqual "Builder to text" msgText actualText

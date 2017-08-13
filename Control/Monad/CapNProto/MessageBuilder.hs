@@ -16,13 +16,12 @@ import Data.Primitive.ByteArray
     , newByteArray
     )
 
-import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..))
+import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..), fromHi)
 import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
 import qualified Data.CapNProto.Pointer as P
 import Data.CapNProto.Schema (Field(..))
 import Data.Int
 import Data.Word
-
 
 -- | Internal mutable state of a builder.
 data BuilderState s = BuilderState
@@ -83,6 +82,22 @@ runBuilderT (BuilderT m) = do
            , x
            )
 
+-- | Add a message header to the result of another builder, which must build
+-- a single segment (with a struct pointer at the start).
+frameSegment :: (PrimMonad m, s ~ PrimState m)
+    => BuilderT p s m a -> BuilderT p s m a
+frameSegment builder = do
+    -- reserve space for the header, run the builder, then find the
+    -- segment length and patch it back in. The number of segments is
+    -- always 1, and the format specifies we encode that is (n-1), so
+    -- we don't have to do anything.
+    start <- alloc 1
+    result <- builder
+    BuilderState{..} <- BuilderT get
+    let segWords = fromIntegral (nextAlloc - start + 1) :: Word32
+    -- XXX TODO: check for integer overflow
+    lift $ write array start (fromHi segWords)
+    return result
 
 instance MonadTrans (BuilderT p s) where
     lift = BuilderT . lift

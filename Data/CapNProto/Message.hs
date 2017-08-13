@@ -68,7 +68,7 @@ decode blob = do
                          , sliceLen = WordCount len
                          }
 
--- | @readMessage read64 readSegment@ reads in a message using the
+-- | @readMessage read32 readSegment@ reads in a message using the
 -- monadic context, which should manage the current read position
 -- into a message. read32 should read a 32-bit little-endian integer,
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
