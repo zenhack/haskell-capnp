@@ -11,8 +11,16 @@ import Data.Word
 
 -- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
 -- up units:
-newtype ByteCount = ByteCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
-newtype WordCount = WordCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
+newtype ByteCount = ByteCount Int
+    deriving(Num, Real, Integral, Ord, Eq, Enum, Show)
+newtype WordCount = WordCount Int
+    deriving(Num, Real, Integral, Ord, Eq, Enum, Show)
+
+-- conversion functions for the above:
+bytesToWords :: ByteCount -> WordCount
+bytesToWords (ByteCount n) = WordCount (n `div` 8)
+wordsToBytes :: WordCount -> ByteCount
+wordsToBytes (WordCount n) = ByteCount (n * 8)
 
 -- | lo and hi extract the low and high 32 bits of a 64-bit word, respectively.
 lo, hi :: Word64 -> Word32

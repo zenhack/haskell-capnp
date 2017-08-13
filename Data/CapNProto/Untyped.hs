@@ -26,6 +26,7 @@ import Data.CapNProto.Pointer (ElementSize(..))
 import Data.CapNProto.Address (Addr(WordAddr), WordAddr(..), resolvePtr)
 import qualified Data.CapNProto.Errors as E
 import Data.CapNProto.Blob (Blob)
+import Data.CapNProto.Bits (WordCount(..))
 import Data.Bits
 import Data.Word
 
@@ -65,7 +66,7 @@ data PtrTo b a where
     PtrToListComposite
         :: M.Message b
         -> WordAddr -- address of the list's *tag*
-        -> Int -- size of the list in words.
+        -> WordCount -- size of the list in words.
         -> PtrTo b (List b)
     PtrToListNormal
         :: NormalList b
@@ -174,7 +175,7 @@ index i list = invoice 1 >> index' i list
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
-            let offset = i * fromIntegral (dataSz + ptrSz)
+            let offset = WordCount $ i * fromIntegral (dataSz + ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
@@ -183,15 +184,15 @@ index i list = invoice 1 >> index' i list
     index' i (ListOfWord16 nlist) = indexNList nlist PtrToWord16 4
     index' i (ListOfWord32 nlist) = indexNList nlist PtrToWord32 2
     index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
-        | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + i }
+        | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr msg addr@WordAt{..} len)
-        | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + i }
+        | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     indexNList :: MonadThrow m => NormalList b -> (AbsWord b -> PtrTo b a) -> Int -> m (PtrTo b a)
     indexNList (NormalList msg addr@WordAt{..} len) cons sz
         | i < len = return $ cons $
-            AbsWord msg addr { wordIndex = wordIndex + (i `div` sz) }
+            AbsWord msg addr { wordIndex = wordIndex + WordCount (i `div` sz) }
                              ((i `mod` sz) * sz)
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 

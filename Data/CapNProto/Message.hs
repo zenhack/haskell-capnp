@@ -15,7 +15,7 @@ import qualified Data.Vector as V
 import Data.CapNProto.Address (WordAddr(..))
 import Data.CapNProto.Errors (BoundsError(..))
 import Data.CapNProto.Blob as B
-import Data.CapNProto.Bits (lo, hi)
+import Data.CapNProto.Bits (lo, hi, WordCount(..))
 import Data.Word (Word64, Word32)
 
 newtype Message a = Message (V.Vector a) deriving(Show)
@@ -46,11 +46,11 @@ decode blob = do
     -- Note: we use the quota to avoid needing to do bounds checking here;
     -- since readMessage invoices the quota before reading, we can rely on it
     -- not to read past the end of the blob.
-    blobLen <- B.length blob
+    WordCount blobLen <- B.length blob
     flip evalStateT (Nothing, 0) $ flip evalQuotaT (Quota blobLen) $
         readMessage read32 readSegment
   where
-    bIndex b i = lift $ lift $ B.index b i
+    bIndex b i = lift $ lift $ B.index b (WordCount i)
     read32 = do
         (cur, idx) <- get
         case cur of
@@ -64,8 +64,8 @@ decode blob = do
     readSegment len = do
         (_, idx) <- get
         return BlobSlice { blob = blob
-                         , offset = idx
-                         , sliceLen = len
+                         , offset = WordCount idx
+                         , sliceLen = WordCount len
                          }
 
 -- | @readMessage read64 readSegment@ reads in a message using the

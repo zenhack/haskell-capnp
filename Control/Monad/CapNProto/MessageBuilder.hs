@@ -14,25 +14,18 @@ import Control.Monad.Trans.RWS.Strict (RWST(runRWST), local, get, put)
 import Data.Primitive.ByteArray
     ( MutableByteArray
     , newByteArray
-    , sizeofMutableByteArray
     )
 
-import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..), ByteCount(..))
+import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..))
 import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
 import Data.CapNProto.Schema (Field)
 import Data.Int
 import Data.Word
 
 
--- conversion functions for the above:
-bytesToWords :: ByteCount -> WordCount
-bytesToWords (ByteCount n) = WordCount (n `div` 8)
-wordsToBytes :: WordCount -> ByteCount
-wordsToBytes (WordCount n) = ByteCount (n * 8)
-
 -- | Internal mutable state of a builder.
 data BuilderState s = BuilderState
-    { nextAlloc :: !ByteCount -- ^ offset into the array for the next allocation
+    { nextAlloc :: !WordCount -- ^ offset into the array for the next allocation
     , array :: MutableByteArray s -- ^ array storing the message being built
     }
 
@@ -78,14 +71,14 @@ runBuilderT (BuilderT m) = do
 instance MonadTrans (BuilderT p s) where
     lift = BuilderT . lift
 
--- | @ensureSpaceFor bytes@ ensures that the array in the builder state has
--- at least @bytes@ bytes of unused space; if not it is resized. resizing is
--- done in such a way that allocation of n bytes runs amortized O(n) time.
-ensureSpaceFor :: (PrimMonad m) => ByteCount -> BuilderT p (PrimState m) m ()
-ensureSpaceFor (ByteCount sz) = BuilderT $ do
+-- | @ensureSpaceFor words@ ensures that the array in the builder state has
+-- at least @words@ words of unused space; if not it is resized. resizing is
+-- done in such a way that allocation of n words runs amortized O(n) time.
+ensureSpaceFor :: (PrimMonad m) => WordCount -> BuilderT p (PrimState m) m ()
+ensureSpaceFor sz = BuilderT $ do
     bs@BuilderState{..} <- get
-    when (sizeofMutableByteArray array - fromIntegral nextAlloc < sz) $ do
-        len <- length array
+    len <- length array
+    when (len - nextAlloc < sz) $ do
         array' <- lift $ grow array $ len + sz
         put bs{ array = array' }
 
@@ -93,12 +86,11 @@ ensureSpaceFor (ByteCount sz) = BuilderT $ do
 -- returns the index of the first word in the allocation.
 alloc :: (PrimMonad m)
     => WordCount -> BuilderT p (PrimState m) m WordCount
-alloc szWords = do
-    let szBytes = wordsToBytes szWords
-    ensureSpaceFor $ szBytes
+alloc sz = do
+    ensureSpaceFor sz
     bs@BuilderState{..} <- BuilderT get
-    BuilderT $ put bs { nextAlloc = nextAlloc + szBytes }
-    return $ bytesToWords nextAlloc
+    BuilderT $ put bs { nextAlloc = nextAlloc + sz }
+    return nextAlloc
 
 
 -- | @withParent words builder@ allocates a new object with size @words@, and
@@ -169,6 +161,12 @@ buildSelfReplace n words shift = BuilderT $ do
 setField, (%~) :: (PrimMonad m, s ~ PrimState m, BuildSelf c)
     => Field p c -> c                 -> BuilderT p s m ()
 setField = undefined
+{-
+setField (Field (DataField word shift) Nothing) value =
+    buildSelf value word shift
+setField (Field (DataField word shift) (Just tag)) = do
+    buildSelf value word shift
+-}
 -- | Infix alias for setField
 (%~) = setField
 
