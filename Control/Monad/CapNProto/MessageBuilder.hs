@@ -10,7 +10,7 @@ import Prelude hiding (length)
 import Control.Monad (when)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Control.Monad.Trans.Class (MonadTrans(lift))
-import Control.Monad.Trans.RWS.Strict (RWST(runRWST), local, get, put)
+import Control.Monad.Trans.RWS.Strict (RWST(runRWST), ask, local, get, put)
 import Data.Primitive.ByteArray
     ( MutableByteArray
     , newByteArray
@@ -18,6 +18,7 @@ import Data.Primitive.ByteArray
 
 import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..))
 import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
+import qualified Data.CapNProto.Pointer as P
 import Data.CapNProto.Schema (Field(..))
 import Data.Int
 import Data.Word
@@ -200,6 +201,17 @@ buildField (UnionField tagOff tagShift) (BuilderT m) = BuilderT $ flip local m $
     \env@BuilderEnv{..} -> env { parentTagOff = tagOff
                                , childShift = tagShift
                                }
+
+-- | @buildStruct dataSz ptrSz builder@ builds a struct with the given data and
+-- pointer section sizes, using @builder@ to fill its contents.
+buildStruct :: (PrimMonad m, s ~ PrimState m) => Word16 -> Word16 -> BuilderT c s m () -> BuilderT p s m ()
+buildStruct dataSz ptrSz (BuilderT m) = do
+    addr <- withParent (fromIntegral dataSz + fromIntegral ptrSz) $ BuilderT $
+        flip local m $ \env -> env { parentDataSz = dataSz }
+    BuilderEnv{..} <- BuilderT ask
+    let offset = addr - (parentOff + 1) -- the offset is from the *end* of the pointer.
+    let ptr = P.serializePtr $ Just $ P.StructPtr (fromIntegral offset) dataSz ptrSz
+    buildSelf ptr 0 0
 
 -- | Infix alias for buildField
 (<~) = buildField

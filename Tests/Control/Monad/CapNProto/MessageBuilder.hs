@@ -59,9 +59,16 @@ buildTests = assertionsToTest "build tests" $ map (uncurry buildTest)
     , ( void $ withParent 1 $ DataField 0 33 %~ True
       , [0, 0, 0, 0, 2, 0, 0, 0]
       )
-    , (void $ withParent 1 $ GroupField <~ do
+    , ( void $ withParent 1 $ GroupField <~ do
             DataField 0 0  %~ (0xffff :: Word16)
             DataField 0 17 %~ True
       , [0xff, 0xff, 2, 0, 0, 0, 0, 0]
+      )
+    , ( void $ withParent 1 $ buildStruct 1 2 $ return ()
+      , [0, 0, 0, 0, 1, 0, 2, 0
+        ,0, 0, 0, 0, 0, 0, 0, 0
+        ,0, 0, 0, 0, 0, 0, 0, 0
+        ,0, 0, 0, 0, 0, 0, 0, 0
+        ]
       )
     ]
