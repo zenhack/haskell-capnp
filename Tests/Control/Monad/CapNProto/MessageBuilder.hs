@@ -19,7 +19,7 @@ buildTest builder expected = do
     (BlobSlice{..}, ()) <- runBuilderT builder
     let WordCount off = offset
     let WordCount len = sliceLen
-    actual <- mapM (readByteArray blob) [off..off+len]
+    actual <- mapM (readByteArray blob) [off..off+len-1]
     assertEqual "" expected actual
 
 
