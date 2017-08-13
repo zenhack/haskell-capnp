@@ -14,6 +14,7 @@ import Test.HUnit (assertEqual)
 import Tests.Util
 import Control.Monad.Quota
 import Data.CapNProto.Untyped
+import qualified Data.CapNProto.Message as M
 
 aircraftSchema = [there|testdata/aircraft.capnp|]
 
@@ -100,7 +101,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
     ]
   where
     tst (schema, typename, value, quota, m, expected) = do
-        let textMessage = TextMessage schema typename value
-        msg <- getTextMessage textMessage
+        let meta = MsgMetaData schema typename
+        msg <- capnpEncode value meta >>= M.decode
         actual <- runQuotaT (rootPtr msg >>= m) (Quota quota)
-        assertEqual (show textMessage) expected actual
+        assertEqual (show (meta, value)) expected actual
