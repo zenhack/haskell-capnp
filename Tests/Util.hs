@@ -12,6 +12,10 @@ import System.Directory (removeFile)
 import Data.CapNProto.Blob (BlobSlice)
 import qualified Data.CapNProto.Message as M
 
+import Test.Framework (testGroup, Test)
+import qualified Test.HUnit as H
+import Test.Framework.Providers.HUnit (hUnitTestToTests)
+
 getTestMessage :: TestMessage
                 -> Int -- Max message size
                 -> IO (M.Message (BlobSlice BS.ByteString))
@@ -52,3 +56,8 @@ encode TestMessage{..} = runResourceT $ do
         (Nothing, Just hout, Nothing, _) <- createProcess p
         hSetBinaryMode hout True
         BS.hGetContents hout
+
+
+assertionsToTest :: String -> [H.Assertion] -> Test
+assertionsToTest name =
+    testGroup name . hUnitTestToTests . H.TestList . map H.TestCase

@@ -9,9 +9,7 @@ import Prelude hiding (length)
 
 import Control.Monad (forM_, when)
 
-import Test.HUnit (assertEqual, Test(TestCase, TestList))
-import Test.Framework (testGroup)
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
+import Test.HUnit (assertEqual)
 
 import Tests.Util
 import Control.Monad.Quota
@@ -19,7 +17,7 @@ import Data.CapNProto.Untyped
 
 aircraftSchema = [there|testdata/aircraft.capnp|]
 
-untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
+untypedTests = assertionsToTest "Untyped Tests"  $ map tst
     [ ( [here|@0xaa6fda3b444d262c;
                struct A {
                   a @0 :UInt64;
@@ -101,7 +99,7 @@ untypedTests = testGroup "Untyped Tests" $ hUnitTestToTests $ TestList $ map tst
       )
     ]
   where
-    tst (schema, typename, value, quota, m, expected) = TestCase $ do
+    tst (schema, typename, value, quota, m, expected) = do
         let testMessage = TestMessage schema typename value
         msg <- getTestMessage testMessage quota
         actual <- runQuotaT (rootPtr msg >>= m) (Quota quota)

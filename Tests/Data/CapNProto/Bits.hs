@@ -5,20 +5,21 @@ import Data.Word
 
 import Data.CapNProto.Bits
 
-import Test.HUnit (assertEqual, Test(TestCase, TestList), Assertion)
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
+import Tests.Util (assertionsToTest)
+
 import Test.Framework (testGroup)
+import Test.HUnit (assertEqual, Assertion)
 
 
 bitsTests = testGroup "bits tests" [bitRangeExamples, replaceBitsExamples]
 
-bitRangeExamples = testGroup "bitRange examples" $ hUnitTestToTests $ TestList $
+bitRangeExamples = assertionsToTest "bitRange examples" $
     map bitRangeTest $
         ones ++
         [ (0x0000000200000000, 32, 48, 2)
         ]
   where
-    bitRangeTest (word, lo, hi, expected) = TestCase $
+    bitRangeTest (word, lo, hi, expected) =
         assertEqual
             (concat [ "bitRange ", show word, " ", show lo, " ", show hi
                     , " == "
@@ -28,8 +29,7 @@ bitRangeExamples = testGroup "bitRange examples" $ hUnitTestToTests $ TestList $
             (bitRange word lo hi)
     ones = map (\bit ->  (1 `shiftL` bit, bit, bit + 1, 1)) [0..63]
 
-replaceBitsExamples = testGroup "replaceBits" $ hUnitTestToTests $ TestList $
-    map TestCase
+replaceBitsExamples = assertionsToTest "replaceBits"
         [ replaceTest 8 (0xf :: Word8) 0      0 0xf
         , replaceTest 8 (0x1 :: Word8) 0xf    0 0x1
         , replaceTest 8 (0x2 :: Word8) 0x1    0 0x2

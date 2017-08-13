@@ -9,13 +9,13 @@ import Control.Monad.Primitive (RealWorld)
 import Data.Primitive.ByteArray (readByteArray)
 import Data.Word
 
-import Test.Framework (testGroup)
-import Test.HUnit (assertEqual, Test(TestList, TestCase))
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
+import Tests.Util (assertionsToTest)
+
+import Test.HUnit (assertEqual, Assertion)
 
 
-buildTest :: BuilderT p RealWorld IO () -> [Word8] -> Test
-buildTest builder expected =  TestCase $ do
+buildTest :: BuilderT p RealWorld IO () -> [Word8] -> Assertion
+buildTest builder expected = do
     (BlobSlice{..}, ()) <- runBuilderT builder
     let WordCount off = offset
     let WordCount len = sliceLen
@@ -23,7 +23,7 @@ buildTest builder expected =  TestCase $ do
     assertEqual "" expected actual
 
 
-buildTests = testGroup "build tests" $ hUnitTestToTests $ TestList $ map (uncurry buildTest)
+buildTests = assertionsToTest "build tests" $ map (uncurry buildTest)
     [ ( return ()
       , []
       )

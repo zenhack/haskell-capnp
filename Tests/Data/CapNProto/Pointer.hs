@@ -8,9 +8,9 @@ import Test.Framework (testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (oneof, Gen)
-import Test.HUnit (assertEqual, Test(TestCase, TestList))
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
+import Test.HUnit (assertEqual)
 
+import Tests.Util (assertionsToTest)
 
 instance Arbitrary EltSpec where
     arbitrary = oneof [ EltNormal <$> arbitrary <*> arbitraryU29
@@ -69,12 +69,12 @@ ptrProps = testGroup "Pointer Properties"
     ]
 
 
-parsePtrExamples = testGroup "parsePtr Examples" $ hUnitTestToTests $ TestList $
+parsePtrExamples = assertionsToTest "parsePtr Examples" $
     map parseExample
         [ (0x0000000200000000, Just $ StructPtr 0 2 0)
         ]
   where
-    parseExample (word, expected) = TestCase $
+    parseExample (word, expected) =
         assertEqual
             (concat ["parsePtr ", show word, " == ", show expected])
             expected
