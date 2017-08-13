@@ -16,9 +16,11 @@ newtype ByteCount = ByteCount Int
 newtype WordCount = WordCount Int
     deriving(Num, Real, Integral, Ord, Eq, Enum, Show)
 
--- conversion functions for the above:
+-- | Convert bytes to words
 bytesToWords :: ByteCount -> WordCount
 bytesToWords (ByteCount n) = WordCount (n `div` 8)
+
+-- | Convert words to bytes.
 wordsToBytes :: WordCount -> ByteCount
 wordsToBytes (WordCount n) = ByteCount (n * 8)
 
