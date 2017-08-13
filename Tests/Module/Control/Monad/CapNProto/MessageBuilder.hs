@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, TypeFamilies #-}
-module Tests.Control.Monad.CapNProto.MessageBuilder (buildTests) where
+module Tests.Module.Control.Monad.CapNProto.MessageBuilder (buildTests) where
 
 import Control.Monad.CapNProto.MessageBuilder
 import Data.CapNProto.Schema (Field(..))

@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
-module Tests.Data.CapNProto.Untyped where
+module Tests.Module.Data.CapNProto.Untyped where
 
 
 import qualified Data.ByteString as BS

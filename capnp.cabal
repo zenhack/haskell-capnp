@@ -73,10 +73,10 @@ test-suite the-test-suite
   type: exitcode-stdio-1.0
   main-is: TestMain.hs
   other-modules:
-    Tests.Control.Monad.CapNProto.MessageBuilder,
-    Tests.Data.CapNProto.Untyped,
-    Tests.Data.CapNProto.Pointer,
-    Tests.Data.CapNProto.Bits,
+    Tests.Module.Control.Monad.CapNProto.MessageBuilder,
+    Tests.Module.Data.CapNProto.Untyped,
+    Tests.Module.Data.CapNProto.Pointer,
+    Tests.Module.Data.CapNProto.Bits,
     Tests.Util
   default-extensions:
     FlexibleContexts
