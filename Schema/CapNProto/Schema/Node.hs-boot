@@ -18,8 +18,8 @@ data NestedNode = NestedNode
 
 data Union_ = Union_
 
-file :: Field Union_ ()
-struct :: Field Union_ Union_struct
+file :: UnionVariant Union_ ()
+struct :: UnionVariant Union_ Union_struct
 
 data Union_struct = Union_struct
 

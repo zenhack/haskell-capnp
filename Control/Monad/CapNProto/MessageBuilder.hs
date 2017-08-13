@@ -18,7 +18,7 @@ import Data.Primitive.ByteArray
 
 import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..))
 import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
-import Data.CapNProto.Schema (Field(..), FieldLoc(..))
+import Data.CapNProto.Schema (Field(..))
 import Data.Int
 import Data.Word
 
@@ -163,10 +163,10 @@ buildSelfReplace n words shift = BuilderT $ do
 -- parent object to the value @value@.
 setField, (%~) :: (PrimMonad m, s ~ PrimState m, BuildSelf c)
     => Field p c -> c                 -> BuilderT p s m ()
-setField (Field (DataField word shift) Nothing) value =
+setField (DataField word shift) value =
     buildSelf value (fromIntegral word) shift
--- TODO: setField for things with tags. All of our instances of BuildSelf are
--- data fields, so that's OK, but it would be nice to improve the type safety.
+-- All of our instances of BuildSelf are data fields, so the incomplete pattern
+-- is *technically* OK, but it would be nice to improve the type safety.
 
 -- | Infix alias for setField
 (%~) = setField
