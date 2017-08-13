@@ -38,7 +38,6 @@ capnpEncode msgValue meta@MsgMetaData{..} = runResourceT $ do
 -- the needed metadata and returning the output
 capnpDecode :: BS.ByteString -> MsgMetaData -> IO String
 capnpDecode msgValue meta@MsgMetaData{..} = runResourceT $ do
-    schemaFile <- saveTmpSchema msgSchema
     (hin, hout) <- interactCapnp "decode" meta
     lift $ do
         forkIO $ do
