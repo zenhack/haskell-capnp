@@ -3,7 +3,18 @@ Module: Data.CapNProto.Bits
 Description: Utilities for bitwhacking useful for capnproto.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Data.CapNProto.Bits where
+module Data.CapNProto.Bits
+    ( ByteCount(..), WordCount(..)
+    , Word1(..)
+    , bytesToWords, wordsToBytes
+    , lo, hi
+    , i32, i30, i29
+    , fromLo, fromHi
+    , fromI32, fromI30, fromI29
+    , bitRange
+    , replaceBits
+    )
+  where
 
 import Data.Bits
 import Data.Int
