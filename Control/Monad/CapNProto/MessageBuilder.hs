@@ -1,4 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, RecordWildCards, TypeFamilies #-}
+{-|
+Module: Control.Monad.CapNProto.MessageBuilder
+Description: support for building capnproto messages.
+-}
 module Control.Monad.CapNProto.MessageBuilder where
 
 import Control.Monad (when, forM_)
@@ -30,21 +34,34 @@ bytesToWords (ByteCount n) = WordCount (n `div` 8)
 wordsToBytes :: WordCount -> ByteCount
 wordsToBytes (WordCount n) = ByteCount (n * 8)
 
--- | Internal state of a builder.
+-- | Internal mutable state of a builder.
 data BuilderState s = BuilderState
     { nextAlloc :: !ByteCount -- ^ offset into the array for the next allocation
     , array :: MutableByteArray s -- ^ array storing the message being built
     }
 
+-- | Internal read-only enviornment for the builder.
 data BuilderEnv = BuilderEnv
     { parentOff :: !WordCount -- ^ offset into the array to the start of
                               -- the parent object.
     }
 
+-- | A monadic builder of messages.
 newtype BuilderT p s m a =
+    -- This is just a wrapper around RWST; the reader keeps track of the
+    -- parent object, the state keeps track of the underlying buffer/allocator,
+    -- and the writer is just (), since we don't need it.
     BuilderT (RWST BuilderEnv () (BuilderState s) m a)
     deriving(Functor, Applicative, Monad)
 
+-- | Run a builder and yield the constructed message.
+--
+-- The result is a pair. The first component is the still-mutable array,
+-- wrapped in a BlobSlice. The slice indicates the part of the message that
+-- is actually valid; anything past that is unused storage.
+--
+-- The second component of the pair is simply the value returned by the
+-- builder.
 runBuilderT :: (PrimMonad m)
     => BuilderT p (PrimState m) m a
     -> m (BlobSlice (MutableByteArray (PrimState m)), a)

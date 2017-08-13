@@ -1,14 +1,13 @@
 {-# LANGUAGE GADTs, RecordWildCards #-}
 {-|
 Module: Data.CapNProto.Untyped
-Description: Utilities for manipulating capnproto messages with no schema.
+Description: Utilities for reading capnproto messages with no schema.
 
 The types and functions in this module know about things like structs and
 lists, but are not schema aware.
 
-Each of the data types exported by this module is parametrized over at least
-@msg@ and @seg@ types; these are the type of the message containing the value,
-and are not explicitly called out in every location.
+Each of the data types exported by this module is parametrized over a Blob
+instance, used as the underlying storage.
 -}
 module Data.CapNProto.Untyped
     ( Ptr(..), List(..)
