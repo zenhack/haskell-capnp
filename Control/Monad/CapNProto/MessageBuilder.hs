@@ -17,17 +17,12 @@ import Data.Primitive.ByteArray
     , sizeofMutableByteArray
     )
 
-import Data.CapNProto.Bits (Word1(..), replaceBits)
+import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..), ByteCount(..))
 import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
 import Data.CapNProto.Schema (Field)
 import Data.Int
 import Data.Word
 
-
--- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
--- up units:
-newtype ByteCount = ByteCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
-newtype WordCount = WordCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
 
 -- conversion functions for the above:
 bytesToWords :: ByteCount -> WordCount

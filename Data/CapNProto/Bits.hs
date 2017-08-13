@@ -9,6 +9,11 @@ import Data.Bits
 import Data.Int
 import Data.Word
 
+-- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
+-- up units:
+newtype ByteCount = ByteCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
+newtype WordCount = WordCount Int deriving(Num, Real, Integral, Ord, Eq, Enum)
+
 -- | lo and hi extract the low and high 32 bits of a 64-bit word, respectively.
 lo, hi :: Word64 -> Word32
 
