@@ -1,5 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
-module Tests.Util where
+module Tests.Util
+    ( MsgMetaData(..)
+    , capnpEncode, capnpDecode
+    , assertionsToTest
+    )
+  where
 
 import Control.Concurrent (forkIO)
 import Control.Monad (void)
