@@ -33,9 +33,17 @@ data BuilderState s = BuilderState
 data BuilderEnv = BuilderEnv
     { parentOff :: !WordCount -- ^ offset into the array to the start of
                               -- the parent object.
+
+    , parentDataSz :: !Word16 -- ^ The size of the parent's data section. Only
+                              -- meaningful if the parent is a struct.
+    , parentTagOff :: !Word16 -- ^ offset from parentOff to the word containing
+                              -- union tag for parent. The bit offset is in
+                              -- childShift. This is only meaningful when parent
+                              -- is a union.
     , childShift :: !Word16 -- ^ The number of bits the child should be shifted
                             -- inside its word. Only meaningful for data fields
-                            -- smaller than 64 bits.
+                            -- smaller than 64 bits (note that this includes
+                            -- union tags).
     }
 
 -- | A monadic builder of messages.
@@ -61,7 +69,11 @@ runBuilderT (BuilderT m) = do
     initialArray <- newByteArray 0
     (x, bs, ()) <- runRWST
                        m
-                       BuilderEnv   { parentOff = 0, childShift = 0 }
+                       BuilderEnv   { parentOff = 0
+                                    , parentDataSz = 0
+                                    , parentTagOff = 0
+                                    , childShift = 0
+                                    }
                        BuilderState { array = initialArray, nextAlloc = 0 }
     return ( BlobSlice { blob = array bs
                        , offset = 0
@@ -176,11 +188,18 @@ setField (DataField word shift) value =
 -- the parent object to the value built by @builder@.
 buildField, (<~) :: (PrimMonad m, s ~ PrimState m)
     => Field p c -> BuilderT c s m () -> BuilderT p s m ()
-buildField (Field (DataField word shift) Nothing) (BuilderT m) = BuilderT $
-    local (\env@BuilderEnv{..} -> env { parentOff = parentOff + fromIntegral word
-                                      , childShift = shift
-                                      })
-          m
+buildField (DataField word shift) (BuilderT m) = BuilderT $ flip local m $
+    \env@BuilderEnv{..} -> env { parentOff = parentOff + fromIntegral word
+                               , childShift = shift
+                               }
+buildField (PtrField n) (BuilderT m) =
+    BuilderT $ flip local m $ \env@BuilderEnv{..} ->
+        env { parentOff = parentOff + fromIntegral (parentDataSz + n) }
+buildField GroupField (BuilderT m) = BuilderT m
+buildField (UnionField tagOff tagShift) (BuilderT m) = BuilderT $ flip local m $
+    \env@BuilderEnv{..} -> env { parentTagOff = tagOff
+                               , childShift = tagShift
+                               }
 
 -- | Infix alias for buildField
 (<~) = buildField
