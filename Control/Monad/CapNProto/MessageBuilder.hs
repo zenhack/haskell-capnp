@@ -33,6 +33,9 @@ data BuilderState s = BuilderState
 data BuilderEnv = BuilderEnv
     { parentOff :: !WordCount -- ^ offset into the array to the start of
                               -- the parent object.
+    , childShift :: !Word16 -- ^ The number of bits the child should be shifted
+                            -- inside its word. Only meaningful for data fields
+                            -- smaller than 64 bits.
     }
 
 -- | A monadic builder of messages.
@@ -58,7 +61,7 @@ runBuilderT (BuilderT m) = do
     initialArray <- newByteArray 0
     (x, bs, ()) <- runRWST
                        m
-                       BuilderEnv   { parentOff = 0 }
+                       BuilderEnv   { parentOff = 0, childShift = 0 }
                        BuilderState { array = initialArray, nextAlloc = 0 }
     return ( BlobSlice { blob = array bs
                        , offset = 0
@@ -173,6 +176,11 @@ setField (Field (DataField word shift) Nothing) value =
 -- the parent object to the value built by @builder@.
 buildField, (<~) :: (PrimMonad m, s ~ PrimState m)
     => Field p c -> BuilderT c s m () -> BuilderT p s m ()
-buildField = undefined
+buildField (Field (DataField word shift) Nothing) (BuilderT m) = BuilderT $
+    local (\env@BuilderEnv{..} -> env { parentOff = parentOff + fromIntegral word
+                                      , childShift = shift
+                                      })
+          m
+
 -- | Infix alias for buildField
 (<~) = buildField
