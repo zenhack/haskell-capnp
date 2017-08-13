@@ -5,7 +5,9 @@ Description: support for building capnproto messages.
 -}
 module Control.Monad.CapNProto.MessageBuilder where
 
-import Control.Monad (when, forM_)
+import Prelude hiding (length)
+
+import Control.Monad (when)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.RWS.Strict (RWST(runRWST), local, get, put)
@@ -13,13 +15,12 @@ import Data.Primitive.ByteArray
     ( MutableByteArray
     , newByteArray
     , sizeofMutableByteArray
-    , copyMutableByteArray
-    , writeByteArray
     )
 
-import Data.CapNProto.Blob (BlobSlice(..))
+import Data.CapNProto.Bits (Word1(..), replaceBits)
+import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
 import Data.CapNProto.Schema (Field)
-import Data.Bits
+import Data.Int
 import Data.Word
 
 
@@ -89,8 +90,8 @@ ensureSpaceFor :: (PrimMonad m) => ByteCount -> BuilderT p (PrimState m) m ()
 ensureSpaceFor (ByteCount sz) = BuilderT $ do
     bs@BuilderState{..} <- get
     when (sizeofMutableByteArray array - fromIntegral nextAlloc < sz) $ do
-        array' <- lift $ newByteArray $ sizeofMutableByteArray array * 2 + sz
-        copyMutableByteArray array' 0 array 0 (fromIntegral nextAlloc)
+        len <- length array
+        array' <- lift $ grow array $ len + sz
         put bs{ array = array' }
 
 -- | @alloc words@ allocates space for @words@ words in the builder state, and
@@ -128,12 +129,45 @@ class BuildSelf a where
 instance BuildSelf Word64 where
     buildSelf n words 0 = BuilderT $ do
         arr <- array <$> get
-        let base = fromIntegral $ wordsToBytes words
-        forM_ ([0,1..7] :: [Int]) $ \i -> do
-            writeByteArray arr (base + i) $ n `shiftR` (i * 8)
+        write arr (fromIntegral words) n
     buildSelf _ _ off =
         error $ "call to (Word64) buildSelf with bit offset " ++ show off ++
             " is not Word64-aligned."
+
+instance BuildSelf Word32 where
+    buildSelf = buildSelfReplace
+
+instance BuildSelf Word16 where
+    buildSelf = buildSelfReplace
+
+instance BuildSelf Word8 where
+    buildSelf = buildSelfReplace
+
+instance BuildSelf Bool where
+    buildSelf n = buildSelfReplace (Word1 n)
+
+instance BuildSelf Int64 where
+    buildSelf n = buildSelf (fromIntegral n :: Word64)
+
+instance BuildSelf Int32 where
+    buildSelf n = buildSelf (fromIntegral n :: Word32)
+
+instance BuildSelf Int16 where
+    buildSelf n = buildSelf (fromIntegral n :: Word16)
+
+instance BuildSelf Int8 where
+    buildSelf n = buildSelf (fromIntegral n :: Word8)
+
+
+-- | Helper function for buildSelf; it's a valid implementation for all of
+-- WordN.
+buildSelfReplace :: (PrimMonad m, s ~ PrimState m, Bounded a, Integral a)
+    => a -> WordCount -> Word16 -> BuilderT p s m ()
+buildSelfReplace n words shift = BuilderT $ do
+    arr <- array <$> get
+    let i = fromIntegral words
+    word <- index arr i
+    write arr i $ replaceBits n word (fromIntegral shift)
 
 -- | @setField field value@ is a builder which sets the field @field@ in the
 -- parent object to the value @value@.
