@@ -19,27 +19,7 @@ import qualified Data.CapNProto.Message as M
 aircraftSchema = [there|testdata/aircraft.capnp|]
 
 untypedTests = assertionsToTest "Untyped Tests"  $ map tst
-    [ ( [here|@0xaa6fda3b444d262c;
-               struct A {
-                  a @0 :UInt64;
-                  b @1 :Bool;
-               }
-            |]
-      , "A"
-      , "( a = 72, b = true )"
-      , 128
-      , \(Just (PtrStruct root)) -> do
-            s <- get root
-            words <- dataSection s
-            2 <- length words
-            72 <- get =<< index 0 words
-            1 <- get =<< index 1 words
-            ptrs <- ptrSection s
-            0 <- length ptrs
-            return ()
-      , ((), Quota 122)
-      )
-    , ( aircraftSchema
+    [ ( aircraftSchema
       , "Aircraft"
       , [here|(f16 = (base = (
             name = "bob",

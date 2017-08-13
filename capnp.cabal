@@ -77,6 +77,7 @@ test-suite the-test-suite
     Tests.Module.Data.CapNProto.Untyped,
     Tests.Module.Data.CapNProto.Pointer,
     Tests.Module.Data.CapNProto.Bits,
+    Tests.EncodeDecodeUntyped,
     Tests.Util
   default-extensions:
     FlexibleContexts
