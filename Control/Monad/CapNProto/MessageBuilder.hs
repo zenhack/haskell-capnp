@@ -77,7 +77,7 @@ runBuilderT (BuilderT m) = do
                        BuilderState { array = initialArray, nextAlloc = 0 }
     return ( BlobSlice { blob = array bs
                        , offset = 0
-                       , sliceLen = fromIntegral $ nextAlloc bs
+                       , sliceLen = nextAlloc bs
                        }
            , x
            )

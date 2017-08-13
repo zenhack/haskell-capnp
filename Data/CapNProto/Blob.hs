@@ -21,6 +21,7 @@ import Data.Primitive.ByteArray
     ( MutableByteArray
     , sizeofMutableByteArray
     , copyMutableByteArray
+    , fillByteArray
     , newByteArray
     , readByteArray
     , writeByteArray
@@ -122,4 +123,5 @@ instance (PrimMonad m, s ~ PrimState m) => MutBlob m (MutableByteArray s) where
         let ByteCount amountBytes = wordsToBytes amount
         arr' <- newByteArray $ oldSize + amountBytes
         copyMutableByteArray arr' 0 arr 0 oldSize
+        fillByteArray arr' oldSize amountBytes 0
         return arr'
