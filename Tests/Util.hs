@@ -2,6 +2,7 @@
 module Tests.Util where
 
 import Control.Concurrent (forkIO)
+import Control.Monad (void)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT, allocate)
 import Control.Monad.Trans (lift)
 import GHC.IO.Handle (hSetBinaryMode)
@@ -49,7 +50,8 @@ capnpDecode msgValue meta@MsgMetaData{..} = runResourceT $ do
 -- | A helper for @capnpEncode@ and @capnpDecode@. Launches the capnp command
 -- with the given subcommand (either "encode" or "decode") and metadata,
 -- returning handles to its standard in and standard out. This runs inside
--- ResourceT, and sets the handles up to be freed when the ResourceT exits.
+-- ResourceT, and sets the handles up to be freed and the process to be reaped
+-- when the ResourceT exits.
 interactCapnp :: String -> MsgMetaData -> ResourceT IO (Handle, Handle)
 interactCapnp subCommand MsgMetaData{..} = do
     schemaFile <- saveTmpSchema msgSchema
@@ -61,9 +63,10 @@ interactCapnp subCommand MsgMetaData{..} = do
                              }
     (_, (Just hin, Just hout, Nothing, _)) <- allocate
         (createProcess p)
-        (\(Just hin, Just hout, Nothing, _p) -> do
+        (\(Just hin, Just hout, Nothing, proc) -> do
             hClose hout
-            hClose hin)
+            hClose hin
+            void $ waitForProcess proc)
     return (hin, hout)
 
 
