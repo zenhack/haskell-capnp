@@ -64,7 +64,7 @@ encodeDecodeUntypedTests =
                        |]
          , msgType = "A"
          }
-      , "( a = 72, b = true )"
+      , "(a = 72, b = true)\n"
       , void $ withParent 1 $ buildStruct 2 0 $ do
             DataField 0 0 %~ (72 :: Word64)
             DataField 1 0 %~ ( 1 :: Word64)
