@@ -4,7 +4,7 @@ Beginnings of a haskell [capnproto][1] library.
 
 We have partial support for reading and building untyped messages (i.e.
 working at the level of structs/lists/pointers, with no schema).
-Actually codegen is being planned. Lot's of stuff still doesn't work; We
+Actual codegen is being planned. Lots of stuff still doesn't work; We
 don't handle far pointers *at all*, and there are some other edge cases
 in the readers. The builders are even more immature.
 
