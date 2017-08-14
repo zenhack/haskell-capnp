@@ -145,12 +145,7 @@ class BuildSelf a where
         => a -> WordCount -> Word16 -> BuilderT p s m ()
 
 instance BuildSelf Word64 where
-    buildSelf n words 0 = BuilderT $ do
-        arr <- array <$> get
-        write arr (fromIntegral words) n
-    buildSelf _ _ off =
-        error $ "call to (Word64) buildSelf with bit offset " ++ show off ++
-            " is not Word64-aligned."
+    buildSelf = buildSelfReplace
 
 instance BuildSelf Word32 where
     buildSelf = buildSelfReplace
@@ -183,7 +178,8 @@ buildSelfReplace :: (PrimMonad m, s ~ PrimState m, Bounded a, Integral a)
     => a -> WordCount -> Word16 -> BuilderT p s m ()
 buildSelfReplace n words shift = BuilderT $ do
     arr <- array <$> get
-    let i = fromIntegral words
+    BuilderEnv{..} <- ask
+    let i = fromIntegral (parentOff + words)
     word <- index arr i
     write arr i $ replaceBits n word (fromIntegral shift)
 
