@@ -67,4 +67,12 @@ buildTests = assertionsToTest "build tests" $ map (uncurry buildTest)
         ,0, 0, 0, 0, 0, 0, 0, 0
         ]
       )
+    , ( void $ withParent 1 $ buildStruct 2 0 $ do
+            DataField 0 0 %~ (72 :: Word64)
+            DataField 1 0 %~ ( 1 :: Word64)
+      , [0 , 0, 0, 0, 2, 0, 0, 0
+        ,72, 0, 0, 0, 0, 0, 0, 0
+        ,1 , 0, 0, 0, 0, 0, 0, 0
+        ]
+      )
     ]

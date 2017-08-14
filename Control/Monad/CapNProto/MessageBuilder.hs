@@ -94,7 +94,7 @@ frameSegment builder = do
     start <- alloc 1
     result <- builder
     BuilderState{..} <- BuilderT get
-    let segWords = fromIntegral (nextAlloc - start + 1) :: Word32
+    let segWords = fromIntegral (nextAlloc - start - 1) :: Word32
     -- XXX TODO: check for integer overflow
     lift $ write array start (fromHi segWords)
     return result
