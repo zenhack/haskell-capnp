@@ -101,5 +101,6 @@ test-suite the-test-suite
     resourcet,
     heredoc,
     primitive,
-    reinterpret-cast
+    reinterpret-cast,
+    deepseq
   default-language:    Haskell2010

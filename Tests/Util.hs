@@ -8,6 +8,7 @@ module Tests.Util
   where
 
 import Control.Concurrent (forkIO)
+import Control.DeepSeq (deepseq)
 import Control.Monad (void)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT, allocate)
 import Control.Monad.Primitive (PrimMonad, PrimState)
@@ -55,7 +56,10 @@ capnpDecode msgValue meta@MsgMetaData{..} = runResourceT $ do
             hSetBinaryMode hin True
             BS.hPutStr hin msgValue
             hClose hin
-        hGetContents hout
+        ret <- hGetContents hout
+        -- We need to read the whole string in strictly, otherwise hClose may
+        -- happen before we're done; use deepseq to force full evaluation:
+        deepseq ret (return ret)
 
 -- | A helper for @capnpEncode@ and @capnpDecode@. Launches the capnp command
 -- with the given subcommand (either "encode" or "decode") and metadata,
