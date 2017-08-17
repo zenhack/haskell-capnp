@@ -4,9 +4,9 @@ import qualified Data.CapNProto.Schema as DS
 
 import Data.Text (Text)
 import Data.Word (Word16, Word32)
-import Schema.CapNProto.Schema as S
+import qualified Schema.CapNProto.Schema as S
 
-id :: DS.Field S.Node Id
+id :: DS.Field S.Node S.Id
 id = DS.fromBits 0 64
 
 displayName :: DS.Field S.Node Text
@@ -15,7 +15,7 @@ displayName = DS.PtrField 0
 displayNamePrefixLength :: DS.Field S.Node Text
 displayNamePrefixLength = DS.fromBits 64 96
 
-scopeId :: DS.Field S.Node Id
+scopeId :: DS.Field S.Node S.Id
 scopeId = DS.fromBits 128 192
 
 parameters :: DS.Field S.Node (DS.List Parameter)
@@ -27,7 +27,7 @@ isGeneric = DS.fromBits 288 289
 nestedNodes :: DS.Field S.Node (DS.List NestedNode)
 nestedNodes = DS.PtrField 1
 
-annotations :: DS.Field S.Node (DS.List Annotation)
+annotations :: DS.Field S.Node (DS.List S.Annotation)
 annotations = DS.PtrField 2
 
 data Parameter = Parameter

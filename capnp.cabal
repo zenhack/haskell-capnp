@@ -29,7 +29,8 @@ library
     Data.CapNProto.Schema,
     Data.CapNProto.Untyped,
     Schema.CapNProto.Schema,
-    Schema.CapNProto.Schema.Node
+    Schema.CapNProto.Schema.Node,
+    Schema.CapNProto.Schema.CodeGeneratorRequest
   -- other-modules:
   -- other-extensions:
   default-extensions:
