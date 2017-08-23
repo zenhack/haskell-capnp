@@ -33,7 +33,6 @@ data BuilderState s = BuilderState
 data BuilderEnv = BuilderEnv
     { parentOff :: !WordCount -- ^ offset into the array to the start of
                               -- the parent object.
-
     , parentDataSz :: !Word16 -- ^ The size of the parent's data section. Only
                               -- meaningful if the parent is a struct.
     , parentTagOff :: !Word16 -- ^ offset from parentOff to the word containing
