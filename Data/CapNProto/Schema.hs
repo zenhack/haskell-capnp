@@ -26,6 +26,6 @@ data List a
 -- thinking:
 
 -- | A variant in a union field
-data UnionVariant p c
-    = UnionVariant !Word16 -- the tag for the field
+newtype UnionVariant p c
+    = UnionVariant Word16 -- the tag for the field
     deriving(Show)

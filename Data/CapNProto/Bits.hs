@@ -102,4 +102,4 @@ instance Show Word1 where
     -- TODO: implement Read?
 
 w1ThruEnum :: (Int -> Int -> Int) -> Word1 -> Word1 -> Word1
-w1ThruEnum op l r = toEnum $ ((fromEnum l) `op` (fromEnum r)) `mod` 2
+w1ThruEnum op l r = toEnum $ (fromEnum l `op` fromEnum r) `mod` 2

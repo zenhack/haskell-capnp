@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, TypeFamilies #-}
+{-# LANGUAGE TypeFamilies #-}
 module Tests.Module.Control.Monad.CapNProto.MessageBuilder (buildTests) where
 
 import Control.Monad.CapNProto.MessageBuilder
@@ -43,8 +43,7 @@ buildTests = assertionsToTest "build tests" $ map (uncurry buildTest)
             buildSelf True 0 1
       , [0xf2, 0, 0, 0, 0, 0, 0, 0]
       )
-    , ( void $ withParent 1 $ do
-            buildSelf ((-1) ::  Int16) 0 16
+    , ( void $ withParent 1 $ buildSelf ((-1) ::  Int16) 0 16
       , [0, 0, 0xff, 0xff, 0, 0, 0, 0]
       )
     , ( void $ withParent 2 $ DataField 1 8  %~ (7 :: Word8)

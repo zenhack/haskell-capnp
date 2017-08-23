@@ -80,8 +80,7 @@ lengthFromBytes length arr = bytesToWords <$> length arr
 -- | @indexFromBytes f@ is a valid implenetation of the 'Blob' class's index
 -- method, given that @f b i@ returns the @ith@ byte of the blob @b@.
 indexFromBytes :: (Monad m) => (a -> ByteCount -> m Word8) -> a -> WordCount -> m Word64
-indexFromBytes index arr i = do
-        foldl (.|.) 0 <$> mapM byteN [0,1..7]
+indexFromBytes index arr i = foldl (.|.) 0 <$> mapM byteN [0,1..7]
       where
         byteN n = do
             b <- index arr (wordsToBytes i + n)
@@ -90,7 +89,7 @@ indexFromBytes index arr i = do
 writeFromBytes :: Monad m => (a -> ByteCount -> Word8 -> m ()) -> a -> WordCount -> Word64 -> m ()
 writeFromBytes writeByte arr words value = do
     let base = wordsToBytes words
-    forM_ ([0,1..7] :: [Int]) $ \i -> do
+    forM_ ([0,1..7] :: [Int]) $ \i ->
         writeByte arr (base + fromIntegral i) $ fromIntegral $ value `shiftR` (i * 8)
 
 

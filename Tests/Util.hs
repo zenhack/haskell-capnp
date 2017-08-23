@@ -37,7 +37,7 @@ data MsgMetaData = MsgMetaData
 -- | @capnpEncode msg meta@ runs @capnp encode@ on the message, providing
 -- the needed metadata and returning the output
 capnpEncode :: String -> MsgMetaData -> IO BS.ByteString
-capnpEncode msgValue meta@MsgMetaData{..} = runResourceT $ do
+capnpEncode msgValue meta = runResourceT $ do
     (hin, hout) <- interactCapnp "encode" meta
     lift $ do
         forkIO $ do
@@ -49,7 +49,7 @@ capnpEncode msgValue meta@MsgMetaData{..} = runResourceT $ do
 -- | @capnpDecode msg meta@ runs @capnp encode@ on the message, providing
 -- the needed metadata and returning the output
 capnpDecode :: BS.ByteString -> MsgMetaData -> IO String
-capnpDecode msgValue meta@MsgMetaData{..} = runResourceT $ do
+capnpDecode msgValue meta = runResourceT $ do
     (hin, hout) <- interactCapnp "decode" meta
     lift $ do
         forkIO $ do
@@ -64,7 +64,7 @@ capnpDecode msgValue meta@MsgMetaData{..} = runResourceT $ do
 -- | A helper for @capnpEncode@ and @capnpDecode@. Launches the capnp command
 -- with the given subcommand (either "encode" or "decode") and metadata,
 -- returning handles to its standard in and standard out. This runs inside
--- ResourceT, and sets the handles up to be freed and the process to be reaped
+-- ResourceT, and sets the handles up to be closed and the process to be reaped
 -- when the ResourceT exits.
 interactCapnp :: String -> MsgMetaData -> ResourceT IO (Handle, Handle)
 interactCapnp subCommand MsgMetaData{..} = do
