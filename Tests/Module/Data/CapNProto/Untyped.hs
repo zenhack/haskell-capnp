@@ -63,9 +63,11 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             Just (PtrList namePtr) <- get =<< index 0 basePtrSec
 
             List8 name <- get namePtr
-            -- FIXME: the length is coming out as 4. I'm not sure that's
-            -- actually wrong -- maybe there's a null terminator? Need to check
-            -- the spec and fix something on my end:
+            -- Text values have a NUL terminator, which is included in the
+            -- length on the wire. The spec says that this shouldn't be
+            -- included in the length reported to the caller, but that needs
+            -- to be dealt with by schema-aware code, so this is the length of
+            -- "bob\0"
             4 <- length name
 
             forM_ (zip [0..3] (BS.unpack "bob\0")) $ \(i, c) -> do
