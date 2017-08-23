@@ -190,6 +190,7 @@ setField (DataField word shift) value =
     buildSelf value (fromIntegral word) shift
 -- All of our instances of BuildSelf are data fields, so the incomplete pattern
 -- is *technically* OK, but it would be nice to improve the type safety.
+setField field _ = error $ "setField called with non DataField: " ++ show field
 
 -- | Infix alias for setField
 (%~) = setField
