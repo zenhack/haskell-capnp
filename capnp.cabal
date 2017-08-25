@@ -30,6 +30,8 @@ library
     Data.CapNProto.Untyped,
     Schema.CapNProto.Schema,
     Schema.CapNProto.Schema.Node,
+    Schema.CapNProto.Schema.Node.Union',
+    Schema.CapNProto.Schema.Node.Union'.Struct',
     Schema.CapNProto.Schema.CodeGeneratorRequest
   -- other-modules:
   -- other-extensions:

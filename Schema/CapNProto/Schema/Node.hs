@@ -33,30 +33,5 @@ annotations = DS.PtrField 2
 data Parameter = Parameter
 data NestedNode = NestedNode
 
-data Union_ = Union_
+data Union' = Union'
 
-file :: DS.UnionVariant Union_ ()
-file = DS.UnionVariant 0
-
-struct :: DS.UnionVariant Union_ Union_struct
-struct = DS.UnionVariant 1
-
-data Union_struct = Union_struct
-
-dataWordCount :: DS.Field Union_struct Word16
-dataWordCount = DS.fromBits 112 128
-
-pointerCount :: DS.Field Union_struct Word16
-pointerCount = DS.fromBits 192 208
-
-preferredListEncoding :: DS.Field Union_struct S.ElementSize
-preferredListEncoding = DS.fromBits 208 224
-
-isGroup :: DS.Field Union_struct Bool
-isGroup = DS.fromBits 224 225
-
-discriminantCount :: DS.Field Union_struct Word16
-discriminantCount = DS.fromBits 240 256
-
-discriminantOffset :: DS.Field Union_struct Word32
-discriminantOffset = DS.fromBits 256 288
