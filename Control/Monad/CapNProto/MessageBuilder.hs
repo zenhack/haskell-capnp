@@ -188,8 +188,8 @@ setField, (%~) :: (PrimMonad m, s ~ PrimState m, BuildSelf c)
     => Field p c -> c                 -> BuilderT p s m ()
 setField (DataField word shift) value =
     buildSelf value (fromIntegral word) shift
--- All of our instances of BuildSelf are data fields, so the incomplete pattern
--- is *technically* OK, but it would be nice to improve the type safety.
+-- All of our instances of BuildSelf are data fields, so the this should never
+-- happen, though it would be nice to improve the type safety:
 setField field _ = error $ "setField called with non DataField: " ++ show field
 
 -- | Infix alias for setField
