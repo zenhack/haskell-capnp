@@ -72,6 +72,12 @@ data PtrTo b a where
         :: NormalList b
         -> ElementSize
         -> PtrTo b (List b)
+    -- wrapper that converts the untyped value to a typed one:
+    PtrToMapped :: PtrTo b a -> (a -> c) -> PtrTo b c
+
+instance Functor (PtrTo b) where
+    fmap f (PtrToMapped ptr g) = PtrToMapped ptr (f . g)
+    fmap f ptr = PtrToMapped ptr f
 
 data AbsWord b = AbsWord (M.Message b) WordAddr Int
 
@@ -99,6 +105,13 @@ data ListOf b a where
         -> WordAddr
         -> Int
         -> ListOf b (Maybe (Ptr b))
+    -- like PtrToMapped, but for lists.
+    ListOfMapped :: ListOf b a -> (a -> c) -> ListOf b c
+
+
+instance Functor (ListOf b) where
+    fmap f (ListOfMapped list g) = ListOfMapped list (f . g)
+    fmap f list = ListOfMapped list f
 
 -- | A struct value in a message.
 data Struct b
