@@ -26,7 +26,7 @@ import Data.CapNProto.Pointer (ElementSize(..))
 import Data.CapNProto.Address (Addr(WordAddr), WordAddr(..), resolvePtr)
 import qualified Data.CapNProto.Errors as E
 import Data.CapNProto.Blob (Blob)
-import Data.CapNProto.Bits (WordCount(..))
+import Data.CapNProto.Bits (WordCount(..), Word1(..))
 import Data.Bits
 import Data.Word
 
@@ -163,37 +163,41 @@ getSubWord (AbsWord msg addr shift) = do
     word <- M.getWord addr msg
     return $ fromIntegral $ word `shiftR` shift
 
--- | @index i list@ returns a pointer to the ith element in @list@. Deducts
--- 1 from the quota
+-- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Int -> ListOf b a -> m (PtrTo b a)
+    => Int -> ListOf b a -> m a
 index i list = invoice 1 >> index' i list
   where
-    index' :: (MonadQuota m, MonadThrow m) => Int -> ListOf b a -> m (PtrTo b a)
+    index' :: (MonadQuota m, MonadThrow m, Blob m b) => Int -> ListOf b a -> m a
     index' i (ListOfVoid len)
-        | i < len = return PtrToVoid
+        | i < len = return ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
             let offset = WordCount $ i * fromIntegral (dataSz + ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
-            return $ PtrToStruct msg $ Struct msg addr' dataSz ptrSz
+            return $ Struct msg addr' dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' i (ListOfBool   nlist) = indexNList nlist PtrToBool  64
-    index' i (ListOfWord8  nlist) = indexNList nlist PtrToWord8  8
-    index' i (ListOfWord16 nlist) = indexNList nlist PtrToWord16 4
-    index' i (ListOfWord32 nlist) = indexNList nlist PtrToWord32 2
+    index' i (ListOfBool   nlist) = do
+        Word1 val <- indexNList nlist 64
+        return val
+    index' i (ListOfWord8  nlist) = indexNList nlist 8
+    index' i (ListOfWord16 nlist) = indexNList nlist 4
+    index' i (ListOfWord32 nlist) = indexNList nlist 2
     index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
-        | i < len = return $ PtrToWord64 msg addr { wordIndex = wordIndex + WordCount i }
+        | i < len = M.getWord addr { wordIndex = wordIndex + WordCount i } msg
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr msg addr@WordAt{..} len)
-        | i < len = return $ PtrToPtr msg addr { wordIndex = wordIndex + WordCount i }
+        | i < len = get $ PtrToPtr msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    indexNList :: MonadThrow m => NormalList b -> (AbsWord b -> PtrTo b a) -> Int -> m (PtrTo b a)
-    indexNList (NormalList msg addr@WordAt{..} len) cons sz
-        | i < len = return $ cons $
-            AbsWord msg addr { wordIndex = wordIndex + WordCount (i `div` sz) }
-                             ((i `mod` sz) * sz)
+    indexNList :: (MonadThrow m, MonadQuota m, Integral a, Blob m b)
+        => NormalList b -> Int -> m a
+    indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
+        | i < len = do
+            let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
+            word <- M.getWord addr { wordIndex = wordIndex' } msg
+            let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
+            return $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
 

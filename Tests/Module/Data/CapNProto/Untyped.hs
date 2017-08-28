@@ -36,15 +36,15 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
             1 <- length aircraftWords
-            3 <- get =<< index 0 aircraftWords -- tag for F16
+            3 <- index 0 aircraftWords -- tag for F16
             aircraftPtrSec <- ptrSection s
             1 <- length aircraftPtrSec
-            Just (PtrStruct f16Ptr) <- get =<< index 0 aircraftPtrSec
+            Just (PtrStruct f16Ptr) <- index 0 aircraftPtrSec
             f16 <- get f16Ptr
             0 <- length =<< dataSection f16
             f16PtrSec <- ptrSection f16
             1 <- length f16PtrSec
-            Just (PtrStruct basePtr) <- get =<< index 0 f16PtrSec
+            Just (PtrStruct basePtr) <- index 0 f16PtrSec
             base <- get basePtr
             baseWords <- dataSection base
             basePtrSec <- ptrSection base
@@ -54,13 +54,13 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             2 <- length basePtrSec -- name, homes
 
             -- Walk the data section:
-            7 <- get =<< index 0 baseWords -- rating
-            1 <- get =<< index 1 baseWords -- canFly
-            5173 <- get =<< index 2 baseWords -- capacity
-            12.0 <- wordToDouble <$> (get =<< index 3 baseWords)
+            7 <- index 0 baseWords -- rating
+            1 <- index 1 baseWords -- canFly
+            5173 <- index 2 baseWords -- capacity
+            12.0 <- wordToDouble <$> index 3 baseWords
 
             -- ...and the pointer section:
-            Just (PtrList namePtr) <- get =<< index 0 basePtrSec
+            Just (PtrList namePtr) <- index 0 basePtrSec
 
             List8 name <- get namePtr
             -- Text values have a NUL terminator, which is included in the
@@ -71,14 +71,14 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             4 <- length name
 
             forM_ (zip [0..3] (BS.unpack "bob\0")) $ \(i, c) -> do
-                c' <- get =<< index i name
+                c' <- index i name
                 when (c /= c') $
                     error ("index " ++ show i ++ ": " ++ show c ++ " /= " ++ show c')
-            Just (PtrList homesPtr) <- get =<< index 1 basePtrSec
+            Just (PtrList homesPtr) <- index 1 basePtrSec
             List16 homes <- get homesPtr
             0 <- length homes
             return ()
-      , ((), Quota 96)
+      , ((), Quota 105)
       )
     ]
   where

@@ -72,12 +72,12 @@ encodeDecodeUntypedTests =
             s <- get root
             words <- dataSection s
             2 <- length words
-            72 <- get =<< index 0 words
-            1 <- get =<< index 1 words
+            72 <- index 0 words
+            1 <- index 1 words
             ptrs <- ptrSection s
             0 <- length ptrs
             return ()
       , 128
-      , 122
+      , 124
       )
     ]
