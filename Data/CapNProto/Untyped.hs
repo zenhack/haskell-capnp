@@ -99,12 +99,7 @@ data ListOf b a where
     ListOfWord16 :: NormalList b -> ListOf b Word16
     ListOfWord32 :: NormalList b -> ListOf b Word32
     ListOfWord64 :: NormalList b -> ListOf b Word64
-    ListOfPtr
-        -- arguments are the same as with Word64
-        :: M.Message b
-        -> WordAddr
-        -> Int
-        -> ListOf b (Maybe (Ptr b))
+    ListOfPtr    :: NormalList b -> ListOf b (Maybe (Ptr b))
     -- like PtrToMapped, but for lists.
     ListOfMapped :: ListOf b a -> (a -> c) -> ListOf b c
 
@@ -200,7 +195,7 @@ index i list = invoice 1 >> index' i list
     index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
         | i < len = M.getWord addr { wordIndex = wordIndex + WordCount i } msg
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' i (ListOfPtr msg addr@WordAt{..} len)
+    index' i (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get $ PtrToPtr msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     indexNList :: (MonadThrow m, MonadQuota m, Integral a, Blob m b)
@@ -223,7 +218,7 @@ length (ListOfWord8  nlist) = nLen nlist
 length (ListOfWord16 nlist) = nLen nlist
 length (ListOfWord32 nlist) = nLen nlist
 length (ListOfWord64 nlist) = nLen nlist
-length (ListOfPtr _ _ len) = return len
+length (ListOfPtr    nlist) = nLen nlist
 
 nLen :: (Monad m) => NormalList b -> m Int
 nLen (NormalList _ _ len) = return len
@@ -238,7 +233,7 @@ dataSection (Struct msg addr dataSz _) =
 ptrSection :: (MonadQuota m, MonadThrow m, Blob m b)
     => Struct b -> m (ListOf b (Maybe (Ptr b)))
 ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
-    return $ ListOfPtr
+    return $ ListOfPtr $ NormalList
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)
