@@ -31,21 +31,18 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
         )))|]
       , 128
       , \(Just (PtrStruct root)) -> do
-            s <- get root
-            aircraftWords <- dataSection s
+            aircraftWords <- dataSection root
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
             1 <- length aircraftWords
             3 <- index 0 aircraftWords -- tag for F16
-            aircraftPtrSec <- ptrSection s
+            aircraftPtrSec <- ptrSection root
             1 <- length aircraftPtrSec
-            Just (PtrStruct f16Ptr) <- index 0 aircraftPtrSec
-            f16 <- get f16Ptr
+            Just (PtrStruct f16) <- index 0 aircraftPtrSec
             0 <- length =<< dataSection f16
             f16PtrSec <- ptrSection f16
             1 <- length f16PtrSec
-            Just (PtrStruct basePtr) <- index 0 f16PtrSec
-            base <- get basePtr
+            Just (PtrStruct base) <- index 0 f16PtrSec
             baseWords <- dataSection base
             basePtrSec <- ptrSection base
             4 <- length baseWords -- Except canFly, each field is 1 word, and
@@ -60,9 +57,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             12.0 <- wordToDouble <$> index 3 baseWords
 
             -- ...and the pointer section:
-            Just (PtrList namePtr) <- index 0 basePtrSec
-
-            List8 name <- get namePtr
+            Just (PtrList (List8 name)) <- index 0 basePtrSec
             -- Text values have a NUL terminator, which is included in the
             -- length on the wire. The spec says that this shouldn't be
             -- included in the length reported to the caller, but that needs
@@ -74,11 +69,10 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
                 c' <- index i name
                 when (c /= c') $
                     error ("index " ++ show i ++ ": " ++ show c ++ " /= " ++ show c')
-            Just (PtrList homesPtr) <- index 1 basePtrSec
-            List16 homes <- get homesPtr
+            Just (PtrList (List16 homes)) <- index 1 basePtrSec
             0 <- length homes
             return ()
-      , ((), Quota 105)
+      , ((), Quota 110)
       )
     ]
   where

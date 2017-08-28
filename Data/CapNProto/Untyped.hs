@@ -10,8 +10,7 @@ Each of the data types exported by this module is parametrized over a Blob
 instance, used as the underlying storage.
 -}
 module Data.CapNProto.Untyped
-    ( Ptr(..), List(..)
-    , Struct, PtrTo, ListOf
+    ( Ptr(..), List(..), Struct, ListOf
     , dataSection, ptrSection
     , get, index, length
     , rootPtr
@@ -23,7 +22,7 @@ import Control.Monad.Quota (MonadQuota, invoice)
 import qualified Data.CapNProto.Message as M
 import qualified Data.CapNProto.Pointer as P
 import Data.CapNProto.Pointer (ElementSize(..))
-import Data.CapNProto.Address (Addr(WordAddr), WordAddr(..), resolvePtr)
+import Data.CapNProto.Address (WordAddr(..))
 import qualified Data.CapNProto.Errors as E
 import Data.CapNProto.Blob (Blob)
 import Data.CapNProto.Bits (WordCount(..), Word1(..))
@@ -32,12 +31,12 @@ import Data.Word
 
 import Prelude hiding (length)
 
--- | A pointer to a value (of arbitrary type) in a message.
+-- | A an absolute pointer to a value (of arbitrary type) in a message.
 data Ptr b
     = PtrCap Word32
-    | PtrFar (PtrTo b (Maybe (Ptr b)))
-    | PtrList (PtrTo b (List b))
-    | PtrStruct (PtrTo b (Struct b))
+    | PtrFar -- TODO
+    | PtrList (List b)
+    | PtrStruct (Struct b)
 
 -- | A list of values (of arbitrary type) in a message.
 data List b
@@ -50,37 +49,7 @@ data List b
     | ListPtr (ListOf b (Ptr b))
     | ListStruct (ListOf b (Struct b))
 
--- | A Pointer to a value of type 'a' inside a message.
-data PtrTo b a where
-    PtrToVoid :: PtrTo b ()
-    PtrToBool :: AbsWord b -> PtrTo b Bool
-    PtrToWord8 :: AbsWord b -> PtrTo b Word8
-    PtrToWord16 :: AbsWord b -> PtrTo b Word16
-    PtrToWord32 :: AbsWord b -> PtrTo b Word32
-    PtrToWord64 :: M.Message b -> WordAddr -> PtrTo b Word64
-    PtrToPtr :: M.Message b -> WordAddr -> PtrTo b (Maybe (Ptr b))
-    PtrToStruct
-        :: M.Message b
-        -> Struct b
-        -> PtrTo b (Struct b)
-    PtrToListComposite
-        :: M.Message b
-        -> WordAddr -- address of the list's *tag*
-        -> WordCount -- size of the list in words.
-        -> PtrTo b (List b)
-    PtrToListNormal
-        :: NormalList b
-        -> ElementSize
-        -> PtrTo b (List b)
-    -- wrapper that converts the untyped value to a typed one:
-    PtrToMapped :: PtrTo b a -> (a -> c) -> PtrTo b c
-
-instance Functor (PtrTo b) where
-    fmap f (PtrToMapped ptr g) = PtrToMapped ptr (f . g)
-    fmap f ptr = PtrToMapped ptr f
-
-data AbsWord b = AbsWord (M.Message b) WordAddr Int
-
+-- | A "normal" (non-composite) list.
 data NormalList b = NormalList (M.Message b) WordAddr Int
 
 -- | A list of values of type 'a' in a message.
@@ -89,8 +58,7 @@ data ListOf b a where
         :: Int -- number of elements
         -> ListOf b ()
     ListOfStruct
-        :: M.Message b
-        -> Struct b -- First element. data/ptr sizes are the same for
+        :: Struct b -- First element. data/ptr sizes are the same for
                     -- all elements.
         -> Int -- Number of elements
         -> ListOf b (Struct b)
@@ -100,7 +68,7 @@ data ListOf b a where
     ListOfWord32 :: NormalList b -> ListOf b Word32
     ListOfWord64 :: NormalList b -> ListOf b Word64
     ListOfPtr    :: NormalList b -> ListOf b (Maybe (Ptr b))
-    -- like PtrToMapped, but for lists.
+    -- wrapper that converts an untyped value to a typed one:
     ListOfMapped :: ListOf b a -> (a -> c) -> ListOf b c
 
 
@@ -117,59 +85,46 @@ data Struct b
         Word16 -- Pointer section size.
 
 
--- | Returns the value pointed to by a pointer. Deducts 1 from the quota.
-get :: (MonadQuota m, MonadThrow m, Blob m b) => PtrTo b a -> m a
-get ptr = invoice 1 >> get' ptr
-  where
-    get' :: (MonadQuota m, MonadThrow m, Blob m b) => PtrTo b a -> m a
-    get' PtrToVoid = return ()
-    get' (PtrToBool (AbsWord msg addr shift)) = do
-        word <- M.getWord addr msg
-        return $ ((word `shiftR` shift) .&. 1) == 1
-    get' (PtrToWord8 absWord) = getSubWord absWord
-    get' (PtrToWord16 absWord) = getSubWord absWord
-    get' (PtrToWord32 absWord) = getSubWord absWord
-    get' (PtrToWord64 msg addr) = M.getWord addr msg
-    get' (PtrToPtr msg addr@WordAt{..}) = do
-        word <- M.getWord addr msg
-        return $ flip fmap (P.parsePtr word) $ \p -> case p of
-            P.StructPtr offset dataSz ptrSz ->
-                PtrStruct $ PtrToStruct msg $ Struct
-                    msg
-                    (asWordAddr $ resolvePtr addr p)
-                    dataSz
-                    ptrSz
-            P.CapPtr cap -> PtrCap cap
-            P.ListPtr _ (P.EltComposite len) -> PtrList $
-                PtrToListComposite
-                    msg
-                    (asWordAddr $ resolvePtr addr p)
-                    (fromIntegral len)
-            P.ListPtr _ (P.EltNormal sz len) -> PtrList $
-                PtrToListNormal
-                    (NormalList
-                        msg
-                        (asWordAddr $ resolvePtr addr p)
-                        (fromIntegral len))
-                    sz
-    get' (PtrToStruct msg struct) = return struct
-    get' (PtrToListNormal nlist@(NormalList _ _ len) sz) = return $ case sz of
-        Sz0  -> List0  (ListOfVoid    len)
-        Sz1  -> List1  (ListOfBool    nlist)
-        Sz8  -> List8  (ListOfWord8   nlist)
-        Sz16 -> List16 (ListOfWord16  nlist)
-        Sz32 -> List32 (ListOfWord32  nlist)
-        Sz64 -> List64 (ListOfWord64  nlist)
-    -- an unsafe downcast Addr -> WordAddr; we use this in a couple places
-    -- where we *know* it's a word address.
-    asWordAddr (WordAddr addr) = addr
-    asWordAddr _ = error "Pointer is not a word address!"
-
-getSubWord :: (MonadQuota m, MonadThrow m, Integral a, Blob m b)
-    => AbsWord b -> m a
-getSubWord (AbsWord msg addr shift) = do
+-- | @get msg addr@ returns the Ptr stored at @addr@ in @word@.
+-- Deducts 1 from the quota.
+get :: (MonadQuota m, MonadThrow m, Blob m b)
+    => M.Message b -> WordAddr -> m (Maybe (Ptr b))
+get msg addr = invoice 1 >> do
     word <- M.getWord addr msg
-    return $ fromIntegral $ word `shiftR` shift
+    case P.parsePtr word of
+        Nothing -> return Nothing
+        Just p -> Just <$> case p of
+            P.CapPtr cap -> return $ PtrCap cap
+            P.StructPtr off dataSz ptrSz -> return $ PtrStruct $
+                Struct msg (resolveOffset addr off) dataSz ptrSz
+            P.ListPtr off eltSpec -> PtrList <$> do
+                let addr'@WordAt{..} = resolveOffset addr off
+                case eltSpec of
+                    P.EltNormal sz len -> return $ case sz of
+                        Sz0  -> List0  (ListOfVoid    (fromIntegral len))
+                        Sz1  -> List1  (ListOfBool    nlist)
+                        Sz8  -> List8  (ListOfWord8   nlist)
+                        Sz16 -> List16 (ListOfWord16  nlist)
+                        Sz32 -> List32 (ListOfWord32  nlist)
+                        Sz64 -> List64 (ListOfWord64  nlist)
+                      where
+                        nlist = NormalList msg addr' (fromIntegral len)
+                    P.EltComposite _ -> do
+                        tagWord <- M.getWord addr' msg
+                        case P.parsePtr tagWord of
+                            Just (P.StructPtr numElts dataSz ptrSz) ->
+                                return $ ListStruct $ ListOfStruct
+                                    (Struct msg
+                                            addr' { wordIndex = wordIndex + 1 }
+                                            dataSz
+                                            ptrSz)
+                                    (fromIntegral numElts)
+                            tag -> throwM $ E.InvalidDataError $
+                                "Composite list tag was not a struct-" ++
+                                "formatted word: " ++ show tag
+  where
+    resolveOffset addr@WordAt{..} off =
+        addr { wordIndex = wordIndex + fromIntegral off + 1 }
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: (MonadQuota m, MonadThrow m, Blob m b)
@@ -180,7 +135,7 @@ index i list = invoice 1 >> index' i list
     index' i (ListOfVoid len)
         | i < len = return ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
-    index' i (ListOfStruct msg (Struct _ addr@WordAt{..} dataSz ptrSz) len)
+    index' i (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
             let offset = WordCount $ i * fromIntegral (dataSz + ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
@@ -196,7 +151,7 @@ index i list = invoice 1 >> index' i list
         | i < len = M.getWord addr { wordIndex = wordIndex + WordCount i } msg
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr (NormalList msg addr@WordAt{..} len))
-        | i < len = get $ PtrToPtr msg addr { wordIndex = wordIndex + WordCount i }
+        | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     indexNList :: (MonadThrow m, MonadQuota m, Integral a, Blob m b)
         => NormalList b -> Int -> m a
@@ -212,7 +167,7 @@ index i list = invoice 1 >> index' i list
 -- | Returns the length of a list
 length :: (MonadQuota m, MonadThrow m, Blob m b) => ListOf b a -> m Int
 length (ListOfVoid len) = return len
-length (ListOfStruct _ _ len) = return len
+length (ListOfStruct _ len) = return len
 length (ListOfBool   nlist) = nLen nlist
 length (ListOfWord8  nlist) = nLen nlist
 length (ListOfWord16 nlist) = nLen nlist
@@ -220,6 +175,7 @@ length (ListOfWord32 nlist) = nLen nlist
 length (ListOfWord64 nlist) = nLen nlist
 length (ListOfPtr    nlist) = nLen nlist
 
+-- | helper for 'length'; returns the length ofr a normal list.
 nLen :: (Monad m) => NormalList b -> m Int
 nLen (NormalList _ _ len) = return len
 
@@ -241,4 +197,4 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 -- | Returns the root pointer of a message.
 rootPtr :: (MonadQuota m, MonadThrow m, Blob m b)
     => M.Message b -> m (Maybe (Ptr b))
-rootPtr msg = get (PtrToPtr msg (WordAt 0 0))
+rootPtr msg = get msg (WordAt 0 0)

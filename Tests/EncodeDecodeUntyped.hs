@@ -69,15 +69,14 @@ encodeDecodeUntypedTests =
             DataField 0 0 %~ (72 :: Word64)
             DataField 1 0 %~ ( 1 :: Word64)
       , \(Just (PtrStruct root)) -> do
-            s <- get root
-            words <- dataSection s
+            words <- dataSection root
             2 <- length words
             72 <- index 0 words
             1 <- index 1 words
-            ptrs <- ptrSection s
+            ptrs <- ptrSection root
             0 <- length ptrs
             return ()
       , 128
-      , 124
+      , 125
       )
     ]
