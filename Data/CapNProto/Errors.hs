@@ -25,7 +25,7 @@ data RecursionLimitError
 instance Exception RecursionLimitError
 
 -- | An @InvalidDataError@ indicates that a part of a message being
--- parse was malformed.
+-- parsed was malformed.
 data InvalidDataError
     = InvalidDataError String -- error message
     deriving(Show, Eq)
