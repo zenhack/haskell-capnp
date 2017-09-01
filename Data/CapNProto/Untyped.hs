@@ -14,6 +14,8 @@ module Data.CapNProto.Untyped
     , dataSection, ptrSection
     , get, index, length
     , rootPtr
+
+    , requireListStruct
     )
   where
 
@@ -198,3 +200,10 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 rootPtr :: (MonadQuota m, MonadThrow m, Blob m b)
     => M.Message b -> m (Maybe (Ptr b))
 rootPtr msg = get msg (WordAt 0 0)
+
+
+-- | Convert the Maybe pointer to a Maybe (listof struct), or throw
+-- a SchemaViolationError.
+requireListStruct :: MonadThrow m => Ptr b -> m (ListOf b (Struct b))
+requireListStruct (PtrList (ListStruct list)) = return list
+requireListStruct _ = throwM $ E.SchemaViolationError "Expected composite list"

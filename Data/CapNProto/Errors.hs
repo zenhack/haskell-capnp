@@ -31,3 +31,12 @@ data InvalidDataError
     deriving(Show, Eq)
 
 instance Exception InvalidDataError
+
+-- | A @SchemaViolationError@ indicates that part of the message does
+-- not match the schema.
+
+data SchemaViolationError
+    = SchemaViolationError String
+    deriving(Show, Eq)
+
+instance Exception SchemaViolationError

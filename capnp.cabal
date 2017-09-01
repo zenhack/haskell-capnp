@@ -32,7 +32,10 @@ library
     Schema.CapNProto.Schema.Node,
     Schema.CapNProto.Schema.Node.Union',
     Schema.CapNProto.Schema.Node.Union'.Struct',
-    Schema.CapNProto.Schema.CodeGeneratorRequest
+    Schema.CapNProto.Schema.CodeGeneratorRequest,
+    Schema.CapNProto.Reader.Schema,
+    Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
+
   -- other-modules:
   -- other-extensions:
   default-extensions:
