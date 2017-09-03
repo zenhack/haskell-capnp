@@ -86,6 +86,7 @@ test-suite the-test-suite
     Tests.Module.Data.CapNProto.Pointer,
     Tests.Module.Data.CapNProto.Bits,
     Tests.EncodeDecodeUntyped,
+    Tests.WalkSchemaCodeGenRequest,
     Tests.Util
   default-extensions:
     FlexibleContexts
@@ -110,5 +111,6 @@ test-suite the-test-suite
     heredoc,
     primitive,
     reinterpret-cast,
+    template-haskell,
     deepseq
   default-language:    Haskell2010
