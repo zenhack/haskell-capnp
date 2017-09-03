@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, TemplateHaskell #-}
 module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest where
 
 import Control.Monad.Catch (MonadThrow)
@@ -8,9 +8,11 @@ import Data.CapNProto.Blob (Blob)
 import qualified Schema.CapNProto.Reader.Schema as S
 import qualified Data.CapNProto.Untyped as U
 
+import Data.CapNProto.TH
+
 type ReadMsg m b = (MonadThrow m, MonadQuota m, Blob m b)
 
-newtype RequestedFile b = RequestedFile (U.Struct b)
+$(mkStructWrappers ["RequestedFile"])
 
 nodes :: ReadMsg m b => S.CodeGeneratorRequest b -> m (Maybe (U.ListOf b (S.Node b)))
 nodes (S.CodeGeneratorRequest struct) = do
