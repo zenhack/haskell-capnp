@@ -5,11 +5,10 @@ import qualified Schema.CapNProto.Reader.Schema as S
 
 import Data.CapNProto.TH
 
-$(mkStructWrappers ["RequestedFile", "Import"])
+$(mkStructWrappers ["RequestedFile"])
 
 $(mkListReaders
     'S.CodeGeneratorRequest
-    [ ("nodes",          'S.Node)
-    , ("requestedFiles", 'RequestedFile)
-    , ("imports",        'Import)
+    [ ("nodes",          'S.Node, 0)
+    , ("requestedFiles", 'RequestedFile, 1)
     ])

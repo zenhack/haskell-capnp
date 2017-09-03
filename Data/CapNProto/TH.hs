@@ -6,6 +6,7 @@ module Data.CapNProto.TH
   where
 
 import Language.Haskell.TH
+import Data.Word
 
 import qualified Data.CapNProto.Untyped as U
 
@@ -24,8 +25,8 @@ mkStructWrapper name = do
 mkStructWrappers :: [String] -> DecsQ
 mkStructWrappers = mapM mkStructWrapper
 
-mkListReader :: String -> Name -> Name -> DecQ
-mkListReader name parentType childType = do
+mkListReader :: String -> Word16 -> Name -> Name -> DecQ
+mkListReader name offset parentType childType = do
     let fnName = mkName name
     struct <- newName "struct"
     body <- mkBody struct
@@ -36,13 +37,13 @@ mkListReader name parentType childType = do
  where
     childCon = return $ ConE childType
     mkBody struct = do
-        [| do ptr <- U.ptrSection $(return $ VarE struct) >>= U.index 0
+        [| do ptr <- U.ptrSection $(return $ VarE struct) >>= U.index offset
               case ptr of
                     Nothing -> return Nothing
                     Just ptr' -> do
                         listPtr <- U.requireListStruct ptr'
                         return $ Just $ fmap $(childCon) listPtr |]
 
-mkListReaders :: Name -> [(String, Name)] -> DecsQ
+mkListReaders :: Name -> [(String, Name, Word16)] -> DecsQ
 mkListReaders parent = mapM mkReader where
-    mkReader (name, child) = mkListReader name parent child
+    mkReader (name, child, offset) = mkListReader name offset parent child

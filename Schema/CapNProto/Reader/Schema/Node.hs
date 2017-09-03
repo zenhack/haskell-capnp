@@ -7,8 +7,7 @@ import qualified Schema.CapNProto.Reader.Schema as S
 $(mkStructWrappers ["Parameter", "NestedNode"])
 
 $(mkListReaders 'S.Node
-    [ ("parameters",  'Parameter)
-    , ("nestedNodes", 'NestedNode)
-    , ("annotations", 'S.Annotation)
-    , ("fields",      'S.Field)
+    [ ("parameters",  'Parameter,    5)
+    , ("nestedNodes", 'NestedNode,   1)
+    , ("annotations", 'S.Annotation, 2)
     ])

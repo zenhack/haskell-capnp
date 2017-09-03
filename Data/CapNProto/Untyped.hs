@@ -177,6 +177,7 @@ length (ListOfWord16 nlist) = nLen nlist
 length (ListOfWord32 nlist) = nLen nlist
 length (ListOfWord64 nlist) = nLen nlist
 length (ListOfPtr    nlist) = nLen nlist
+length (ListOfMapped list _) = length list
 
 -- | helper for 'length'; returns the length ofr a normal list.
 nLen :: (Monad m) => NormalList b -> m Int

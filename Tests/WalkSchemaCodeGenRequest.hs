@@ -5,6 +5,7 @@ module Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
   where
 
+import Control.Monad.Trans (lift)
 import qualified Data.ByteString as BS
 import Control.Monad.Quota
 import Tests.Util
@@ -28,10 +29,8 @@ theAssert = do
         let req = Schema.CodeGeneratorRequest root
         Just nodes <- CGReq.nodes req
         Just requestedFiles <- CGReq.requestedFiles req
-        Just imports <- CGReq.imports req
+        37 <- length nodes
         1 <- length requestedFiles
-        1 <- length imports
-        0 <- length nodes
         return ()
 
 walkSchemaCodeGenRequestTest =
