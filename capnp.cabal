@@ -17,7 +17,6 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
---  exposed-modules:     Schema, Encoding, PrimTypes, SchemaEncoding
   exposed-modules:
     Control.Monad.CapNProto.MessageBuilder,
     Data.CapNProto.Address,
