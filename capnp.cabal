@@ -35,6 +35,7 @@ library
     Schema.CapNProto.Schema.CodeGeneratorRequest,
     Schema.CapNProto.Reader.Schema,
     Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
+    Schema.CapNProto.Reader.Schema.Node
 
   -- other-modules:
   -- other-extensions:
