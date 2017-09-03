@@ -5,7 +5,6 @@ module Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
   where
 
-import Control.Monad.Trans (lift)
 import qualified Data.ByteString as BS
 import Control.Monad.Quota
 import Tests.Util
@@ -14,10 +13,12 @@ import Schema.CapNProto.Reader.Schema as Schema
 import Data.CapNProto.Message as M
 import Data.CapNProto.Untyped
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGReq
-import Test.HUnit (assertEqual)
+import Test.Framework (Test)
+import Test.HUnit (Assertion, assertEqual)
 
 import Data.CapNProto.Blob (BlobSlice)
 
+theAssert :: Assertion
 theAssert = do
     bytes <- BS.readFile "testdata/schema-codegenreq"
     msg <- M.decode bytes
@@ -32,6 +33,8 @@ theAssert = do
         37 <- length nodes
         1 <- length requestedFiles
         return ()
+    reader _ = error "Expected `Just (PtrStruct root)`"
 
+walkSchemaCodeGenRequestTest :: Test
 walkSchemaCodeGenRequestTest =
     assertionsToTest "walk schema CodeGenerationRequest" [theAssert]

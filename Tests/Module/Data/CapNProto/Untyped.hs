@@ -10,14 +10,16 @@ import Prelude hiding (length)
 import Control.Monad (forM_, when)
 
 import Test.HUnit (assertEqual)
-
+import Test.Framework (Test)
 import Tests.Util
 import Control.Monad.Quota
 import Data.CapNProto.Untyped
 import qualified Data.CapNProto.Message as M
 
+aircraftSchema :: String
 aircraftSchema = [there|testdata/aircraft.capnp|]
 
+untypedTests :: Test
 untypedTests = assertionsToTest "Untyped Tests"  $ map tst
     [ ( aircraftSchema
       , "Aircraft"

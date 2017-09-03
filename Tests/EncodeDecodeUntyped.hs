@@ -16,6 +16,7 @@ import Data.ByteString (ByteString)
 import Data.Word
 import Text.Heredoc (here)
 
+import Test.Framework (Test)
 import Test.HUnit (Assertion, assertEqual)
 
 import Control.Monad.CapNProto.MessageBuilder
@@ -53,6 +54,7 @@ encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) =
         assertEqual (show (meta, msgText)) ((), Quota endQuota) readerResult
 
 
+encodeDecodeUntypedTests :: Test
 encodeDecodeUntypedTests =
     assertionsToTest "encode-decode-untyped tests" $ map encodeDecodeUntypedTest
     [ ( MsgMetaData
@@ -69,10 +71,10 @@ encodeDecodeUntypedTests =
             DataField 0 0 %~ (72 :: Word64)
             DataField 1 0 %~ ( 1 :: Word64)
       , \(Just (PtrStruct root)) -> do
-            words <- dataSection root
-            2 <- length words
-            72 <- index 0 words
-            1 <- index 1 words
+            dataWords <- dataSection root
+            2 <- length dataWords
+            72 <- index 0 dataWords
+            1 <- index 1 dataWords
             ptrs <- ptrSection root
             0 <- length ptrs
             return ()

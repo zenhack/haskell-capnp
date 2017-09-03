@@ -29,7 +29,7 @@ data Addr
 -- address of the object pointed to, as that would reqiure access
 -- to the message.
 resolvePtr :: WordAddr -> P.Ptr -> Addr
-resolvePtr (WordAt seg word) (P.StructPtr off dataSz ptrSz) =
+resolvePtr (WordAt seg word) (P.StructPtr off _dataSz _ptrSz) =
     WordAddr $ WordAt seg (word + fromIntegral off + 1)
 resolvePtr (WordAt seg word) (P.ListPtr off _) =
     WordAddr (WordAt seg (word + fromIntegral off + 1))
