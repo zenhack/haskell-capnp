@@ -10,11 +10,11 @@ import qualified Data.CapNProto.Untyped as U
 
 import Data.CapNProto.TH
 
-$(mkStructWrappers ["RequestedFile"])
+$(mkStructWrappers ["RequestedFile", "Import"])
 
-nodes :: U.ReadCtx m b => S.CodeGeneratorRequest b -> m (Maybe (U.ListOf b (S.Node b)))
-nodes (S.CodeGeneratorRequest struct) = do
-    ptr <- U.ptrSection struct >>= U.index 0
-    case ptr of
-        Nothing -> return Nothing
-        Just ptr' -> U.requireListStruct ptr' >>= return . Just . fmap S.Node
+$(mkListReaders
+    'S.CodeGeneratorRequest
+    [ ("nodes",          'S.Node)
+    , ("requestedFiles", 'RequestedFile)
+    , ("imports",        'Import)
+    ])

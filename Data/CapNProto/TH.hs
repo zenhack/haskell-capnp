@@ -1,5 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Data.CapNProto.TH where
+module Data.CapNProto.TH
+    ( mkStructWrappers
+    , mkListReaders
+    )
+  where
 
 import Language.Haskell.TH
 
@@ -19,3 +23,26 @@ mkStructWrapper name = do
 
 mkStructWrappers :: [String] -> DecsQ
 mkStructWrappers = mapM mkStructWrapper
+
+mkListReader :: String -> Name -> Name -> DecQ
+mkListReader name parentType childType = do
+    let fnName = mkName name
+    struct <- newName "struct"
+    body <- mkBody struct
+    return $ FunD fnName [Clause [ConP parentType [VarP struct]]
+                                 (NormalB body)
+                                 []
+                         ]
+ where
+    childCon = return $ ConE childType
+    mkBody struct = do
+        [| do ptr <- U.ptrSection $(return $ VarE struct) >>= U.index 0
+              case ptr of
+                    Nothing -> return Nothing
+                    Just ptr' -> do
+                        listPtr <- U.requireListStruct ptr'
+                        return $ Just $ fmap $(childCon) listPtr |]
+
+mkListReaders :: Name -> [(String, Name)] -> DecsQ
+mkListReaders parent = mapM mkReader where
+    mkReader (name, child) = mkListReader name parent child
