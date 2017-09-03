@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RecordWildCards #-}
+{-# LANGUAGE GADTs, RecordWildCards, ConstraintKinds #-}
 {-|
 Module: Data.CapNProto.Untyped
 Description: Utilities for reading capnproto messages with no schema.
@@ -14,8 +14,8 @@ module Data.CapNProto.Untyped
     , dataSection, ptrSection
     , get, index, length
     , rootPtr
-
     , requireListStruct
+    , ReadCtx
     )
   where
 
@@ -32,6 +32,10 @@ import Data.Bits
 import Data.Word
 
 import Prelude hiding (length)
+
+-- | Type (constraint) synonym for the constraints needed for most read
+-- operations.
+type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 data Ptr b
@@ -89,8 +93,7 @@ data Struct b
 
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @word@.
 -- Deducts 1 from the quota.
-get :: (MonadQuota m, MonadThrow m, Blob m b)
-    => M.Message b -> WordAddr -> m (Maybe (Ptr b))
+get :: ReadCtx m b => M.Message b -> WordAddr -> m (Maybe (Ptr b))
 get msg addr = invoice 1 >> do
     word <- M.getWord addr msg
     case P.parsePtr word of
@@ -129,11 +132,10 @@ get msg addr = invoice 1 >> do
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
-index :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Int -> ListOf b a -> m a
+index :: ReadCtx m b => Int -> ListOf b a -> m a
 index i list = invoice 1 >> index' i list
   where
-    index' :: (MonadQuota m, MonadThrow m, Blob m b) => Int -> ListOf b a -> m a
+    index' :: ReadCtx m b => Int -> ListOf b a -> m a
     index' i (ListOfVoid len)
         | i < len = return ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
@@ -155,8 +157,7 @@ index i list = invoice 1 >> index' i list
     index' i (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    indexNList :: (MonadThrow m, MonadQuota m, Integral a, Blob m b)
-        => NormalList b -> Int -> m a
+    indexNList :: (ReadCtx m b, Integral a) => NormalList b -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
@@ -167,7 +168,7 @@ index i list = invoice 1 >> index' i list
 
 
 -- | Returns the length of a list
-length :: (MonadQuota m, MonadThrow m, Blob m b) => ListOf b a -> m Int
+length :: ReadCtx m b => ListOf b a -> m Int
 length (ListOfVoid len) = return len
 length (ListOfStruct _ len) = return len
 length (ListOfBool   nlist) = nLen nlist
@@ -182,14 +183,12 @@ nLen :: (Monad m) => NormalList b -> m Int
 nLen (NormalList _ _ len) = return len
 
 -- | Returns the data section of a struct, as a list of Word64
-dataSection :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Struct b -> m (ListOf b Word64)
+dataSection :: ReadCtx m b => Struct b -> m (ListOf b Word64)
 dataSection (Struct msg addr dataSz _) =
     return $ ListOfWord64 $ NormalList msg addr (fromIntegral dataSz)
 
 -- | Returns the pointer section of a struct, as a list of Ptr
-ptrSection :: (MonadQuota m, MonadThrow m, Blob m b)
-    => Struct b -> m (ListOf b (Maybe (Ptr b)))
+ptrSection :: ReadCtx m b => Struct b -> m (ListOf b (Maybe (Ptr b)))
 ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
     return $ ListOfPtr $ NormalList
         msg
@@ -197,8 +196,7 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
         (fromIntegral ptrSz)
 
 -- | Returns the root pointer of a message.
-rootPtr :: (MonadQuota m, MonadThrow m, Blob m b)
-    => M.Message b -> m (Maybe (Ptr b))
+rootPtr :: ReadCtx m b => M.Message b -> m (Maybe (Ptr b))
 rootPtr msg = get msg (WordAt 0 0)
 
 
