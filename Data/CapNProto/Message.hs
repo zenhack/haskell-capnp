@@ -28,11 +28,11 @@ getSegment (Message segs) i = do
         throwM BoundsError { index = i, maxIndex = V.length segs }
     segs `V.indexM` i
 
--- | @getWord addr@ returns the word at @addr@ within @msg@. It throws a
+-- | @getWord msg addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
 getWord :: (B.Blob m seg, MonadThrow m)
-    => WordAddr -> Message seg -> m Word64
-getWord WordAt{..} (Message segs) = do
+    => Message seg -> WordAddr -> m Word64
+getWord (Message segs) WordAt{..} = do
     seg <- segs `V.indexM` segIndex
     seg `B.index` wordIndex
 

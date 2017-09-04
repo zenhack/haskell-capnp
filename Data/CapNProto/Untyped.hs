@@ -97,7 +97,7 @@ data Struct b
 -- case of far pointers).
 get :: ReadCtx m b => M.Message b -> WordAddr -> m (Maybe (Ptr b))
 get msg addr = do
-    word <- getWord addr msg
+    word <- getWord msg addr
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
@@ -112,11 +112,12 @@ get msg addr = do
                 if not twoWords
                     then get msg addr'
                     else do
-                        landingPad <- getWord addr' msg
+                        landingPad <- getWord msg addr'
                         case (P.parsePtr landingPad) of
                             Just (P.FarPtr False off seg) -> do
-                                tagWord <- getWord addr' { wordIndex = wordIndex addr' + 1 }
-                                                   msg
+                                tagWord <- getWord
+                                            msg
+                                            addr' { wordIndex = wordIndex addr' + 1 }
                                 let finalAddr = WordAt { wordIndex = fromIntegral off
                                                        , segIndex = fromIntegral seg
                                                        }
@@ -145,7 +146,7 @@ get msg addr = do
                                 show ptr
 
   where
-    getWord addr msg = invoice 1 >> M.getWord addr msg
+    getWord msg addr = invoice 1 >> M.getWord msg addr
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList addr@WordAt{..} eltSpec = PtrList <$> do
@@ -161,7 +162,7 @@ get msg addr = do
               where
                 nlist = NormalList msg addr (fromIntegral len)
             P.EltComposite _ -> do
-                tagWord <- getWord addr msg
+                tagWord <- getWord msg addr
                 case P.parsePtr tagWord of
                     Just (P.StructPtr numElts dataSz ptrSz) ->
                         return $ ListStruct $ ListOfStruct
@@ -196,7 +197,7 @@ index i list = invoice 1 >> index' i list
     index' i (ListOfWord16 nlist) = indexNList nlist 4
     index' i (ListOfWord32 nlist) = indexNList nlist 2
     index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
-        | i < len = M.getWord addr { wordIndex = wordIndex + WordCount i } msg
+        | i < len = M.getWord msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' i (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
@@ -206,7 +207,7 @@ index i list = invoice 1 >> index' i list
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
-            word <- M.getWord addr { wordIndex = wordIndex' } msg
+            word <- M.getWord msg addr { wordIndex = wordIndex' }
             let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
             return $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
