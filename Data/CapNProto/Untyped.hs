@@ -102,34 +102,35 @@ get msg addr = invoice 1 >> do
             P.CapPtr cap -> return $ PtrCap cap
             P.StructPtr off dataSz ptrSz -> return $ PtrStruct $
                 Struct msg (resolveOffset addr off) dataSz ptrSz
-            P.ListPtr off eltSpec -> PtrList <$> do
-                let addr'@WordAt{..} = resolveOffset addr off
-                case eltSpec of
-                    P.EltNormal sz len -> return $ case sz of
-                        Sz0  -> List0  (ListOfVoid    (fromIntegral len))
-                        Sz1  -> List1  (ListOfBool    nlist)
-                        Sz8  -> List8  (ListOfWord8   nlist)
-                        Sz16 -> List16 (ListOfWord16  nlist)
-                        Sz32 -> List32 (ListOfWord32  nlist)
-                        Sz64 -> List64 (ListOfWord64  nlist)
-                      where
-                        nlist = NormalList msg addr' (fromIntegral len)
-                    P.EltComposite _ -> do
-                        tagWord <- M.getWord addr' msg
-                        case P.parsePtr tagWord of
-                            Just (P.StructPtr numElts dataSz ptrSz) ->
-                                return $ ListStruct $ ListOfStruct
-                                    (Struct msg
-                                            addr' { wordIndex = wordIndex + 1 }
-                                            dataSz
-                                            ptrSz)
-                                    (fromIntegral numElts)
-                            tag -> throwM $ E.InvalidDataError $
-                                "Composite list tag was not a struct-" ++
-                                "formatted word: " ++ show tag
+            P.ListPtr off eltSpec -> getList (resolveOffset addr off) eltSpec
   where
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
+    getList addr@WordAt{..} eltSpec = PtrList <$> do
+        case eltSpec of
+            P.EltNormal sz len -> return $ case sz of
+                Sz0  -> List0  (ListOfVoid    (fromIntegral len))
+                Sz1  -> List1  (ListOfBool    nlist)
+                Sz8  -> List8  (ListOfWord8   nlist)
+                Sz16 -> List16 (ListOfWord16  nlist)
+                Sz32 -> List32 (ListOfWord32  nlist)
+                Sz64 -> List64 (ListOfWord64  nlist)
+              where
+                nlist = NormalList msg addr (fromIntegral len)
+            P.EltComposite _ -> do
+                tagWord <- M.getWord addr msg
+                case P.parsePtr tagWord of
+                    Just (P.StructPtr numElts dataSz ptrSz) ->
+                        return $ ListStruct $ ListOfStruct
+                            (Struct msg
+                                    addr { wordIndex = wordIndex + 1 }
+                                    dataSz
+                                    ptrSz)
+                            (fromIntegral numElts)
+                    tag -> throwM $ E.InvalidDataError $
+                        "Composite list tag was not a struct-" ++
+                        "formatted word: " ++ show tag
+
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m b => Int -> ListOf b a -> m a
