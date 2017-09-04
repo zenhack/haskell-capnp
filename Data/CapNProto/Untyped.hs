@@ -38,9 +38,10 @@ import Prelude hiding (length)
 type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
+-- Note that there is no variant for far pointers, which don't make sense
+-- with absolute addressing.
 data Ptr b
     = PtrCap !Word32
-    | PtrFar -- TODO
     | PtrList (List b)
     | PtrStruct (Struct b)
 
@@ -92,18 +93,59 @@ data Struct b
 
 
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @word@.
--- Deducts 1 from the quota.
+-- Deducts 1 from the quota for each word read (which may be multiple in the
+-- case of far pointers).
 get :: ReadCtx m b => M.Message b -> WordAddr -> m (Maybe (Ptr b))
-get msg addr = invoice 1 >> do
-    word <- M.getWord addr msg
+get msg addr = do
+    word <- getWord addr msg
     case P.parsePtr word of
         Nothing -> return Nothing
-        Just p -> Just <$> case p of
-            P.CapPtr cap -> return $ PtrCap cap
-            P.StructPtr off dataSz ptrSz -> return $ PtrStruct $
+        Just p -> case p of
+            P.CapPtr cap -> return $ Just $ PtrCap cap
+            P.StructPtr off dataSz ptrSz -> return $ Just $ PtrStruct $
                 Struct msg (resolveOffset addr off) dataSz ptrSz
-            P.ListPtr off eltSpec -> getList (resolveOffset addr off) eltSpec
+            P.ListPtr off eltSpec -> Just <$> getList (resolveOffset addr off) eltSpec
+            P.FarPtr twoWords offset segment -> do
+                let addr' = WordAt { wordIndex = fromIntegral offset
+                                   , segIndex = fromIntegral segment
+                                   }
+                if not twoWords
+                    then get msg addr'
+                    else do
+                        landingPad <- getWord addr' msg
+                        case (P.parsePtr landingPad) of
+                            Just (P.FarPtr False off seg) -> do
+                                tagWord <- getWord addr' { wordIndex = wordIndex addr' + 1 }
+                                                   msg
+                                let finalAddr = WordAt { wordIndex = fromIntegral off
+                                                       , segIndex = fromIntegral seg
+                                                       }
+                                case P.parsePtr tagWord of
+                                    Just (P.StructPtr 0 dataSz ptrSz) ->
+                                        return $ Just $ PtrStruct $
+                                            Struct msg finalAddr dataSz ptrSz
+                                    Just (P.ListPtr 0 eltSpec) ->
+                                        Just <$> getList finalAddr eltSpec
+                                    -- TODO: I'm not sure whether far pointers to caps are
+                                    -- legal; it's clear how they would work, but I don't
+                                    -- see a use, and the spec is unclear. Should check
+                                    -- how the reference implementation does this, copy
+                                    -- that, and submit a patch to the spec.
+                                    Just (P.CapPtr cap) ->
+                                        return $ Just $ PtrCap cap
+                                    ptr -> throwM $ E.InvalidDataError $
+                                        "The tag word of a far pointer's " ++
+                                        "2-word landing pad should be an intra " ++
+                                        "segment pointer with offset 0, but " ++
+                                        "we read " ++ show ptr
+                            ptr -> throwM $ E.InvalidDataError $
+                                "The first word of a far pointer's 2-word " ++
+                                "landing pad should be another far pointer " ++
+                                "(with a one-word landing pad), but we read " ++
+                                show ptr
+
   where
+    getWord addr msg = invoice 1 >> M.getWord addr msg
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList addr@WordAt{..} eltSpec = PtrList <$> do
@@ -119,7 +161,7 @@ get msg addr = invoice 1 >> do
               where
                 nlist = NormalList msg addr (fromIntegral len)
             P.EltComposite _ -> do
-                tagWord <- M.getWord addr msg
+                tagWord <- getWord addr msg
                 case P.parsePtr tagWord of
                     Just (P.StructPtr numElts dataSz ptrSz) ->
                         return $ ListStruct $ ListOfStruct
