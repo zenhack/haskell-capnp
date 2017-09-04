@@ -52,7 +52,7 @@ data List b
     | List16 (ListOf b Word16)
     | List32 (ListOf b Word32)
     | List64 (ListOf b Word64)
-    | ListPtr (ListOf b (Ptr b))
+    | ListPtr (ListOf b (Maybe (Ptr b)))
     | ListStruct (ListOf b (Struct b))
 
 -- | A "normal" (non-composite) list.
@@ -115,6 +115,7 @@ get msg addr = invoice 1 >> do
                 Sz16 -> List16 (ListOfWord16  nlist)
                 Sz32 -> List32 (ListOfWord32  nlist)
                 Sz64 -> List64 (ListOfWord64  nlist)
+                SzPtr -> ListPtr (ListOfPtr nlist)
               where
                 nlist = NormalList msg addr (fromIntegral len)
             P.EltComposite _ -> do
@@ -158,6 +159,7 @@ index i list = invoice 1 >> index' i list
     index' i (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' i (ListOfMapped list f) = f <$> index' i list
     indexNList :: (ReadCtx m b, Integral a) => NormalList b -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
