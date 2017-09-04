@@ -178,31 +178,31 @@ get msg addr = do
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m b => Int -> ListOf b a -> m a
-index i list = invoice 1 >> index' i list
+index i list = invoice 1 >> index' list
   where
-    index' :: ReadCtx m b => Int -> ListOf b a -> m a
-    index' i (ListOfVoid len)
+    index' :: ReadCtx m b => ListOf b a -> m a
+    index' (ListOfVoid len)
         | i < len = return ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
-    index' i (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
+    index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
             let offset = WordCount $ i * fromIntegral (dataSz + ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ Struct msg addr' dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' i (ListOfBool   nlist) = do
+    index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
         return val
-    index' i (ListOfWord8  nlist) = indexNList nlist 8
-    index' i (ListOfWord16 nlist) = indexNList nlist 4
-    index' i (ListOfWord32 nlist) = indexNList nlist 2
-    index' i (ListOfWord64 (NormalList msg addr@WordAt{..} len))
+    index' (ListOfWord8  nlist) = indexNList nlist 8
+    index' (ListOfWord16 nlist) = indexNList nlist 4
+    index' (ListOfWord32 nlist) = indexNList nlist 2
+    index' (ListOfWord64 (NormalList msg addr@WordAt{..} len))
         | i < len = M.getWord msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' i (ListOfPtr (NormalList msg addr@WordAt{..} len))
+    index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' i (ListOfMapped list f) = f <$> index' i list
+    index' (ListOfMapped list f) = f <$> index' list
     indexNList :: (ReadCtx m b, Integral a) => NormalList b -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
