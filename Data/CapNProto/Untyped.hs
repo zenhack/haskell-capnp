@@ -39,7 +39,7 @@ type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 data Ptr b
-    = PtrCap Word32
+    = PtrCap !Word32
     | PtrFar -- TODO
     | PtrList (List b)
     | PtrStruct (Struct b)
@@ -61,19 +61,19 @@ data NormalList b = NormalList (M.Message b) WordAddr Int
 -- | A list of values of type 'a' in a message.
 data ListOf b a where
     ListOfVoid
-        :: Int -- number of elements
+        :: !Int -- number of elements
         -> ListOf b ()
     ListOfStruct
         :: Struct b -- First element. data/ptr sizes are the same for
                     -- all elements.
-        -> Int -- Number of elements
+        -> !Int -- Number of elements
         -> ListOf b (Struct b)
-    ListOfBool   :: NormalList b -> ListOf b Bool
-    ListOfWord8  :: NormalList b -> ListOf b Word8
-    ListOfWord16 :: NormalList b -> ListOf b Word16
-    ListOfWord32 :: NormalList b -> ListOf b Word32
-    ListOfWord64 :: NormalList b -> ListOf b Word64
-    ListOfPtr    :: NormalList b -> ListOf b (Maybe (Ptr b))
+    ListOfBool   :: !(NormalList b) -> ListOf b Bool
+    ListOfWord8  :: !(NormalList b) -> ListOf b Word8
+    ListOfWord16 :: !(NormalList b) -> ListOf b Word16
+    ListOfWord32 :: !(NormalList b) -> ListOf b Word32
+    ListOfWord64 :: !(NormalList b) -> ListOf b Word64
+    ListOfPtr    :: !(NormalList b) -> ListOf b (Maybe (Ptr b))
     -- wrapper that converts an untyped value to a typed one:
     ListOfMapped :: ListOf b a -> (a -> c) -> ListOf b c
 
@@ -86,9 +86,9 @@ instance Functor (ListOf b) where
 data Struct b
     = Struct
         (M.Message b)
-        WordAddr -- Start of struct
-        Word16 -- Data section size.
-        Word16 -- Pointer section size.
+        !WordAddr -- Start of struct
+        !Word16 -- Data section size.
+        !Word16 -- Pointer section size.
 
 
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @word@.
