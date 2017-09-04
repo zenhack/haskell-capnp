@@ -23,7 +23,7 @@ theAssert = do
     bytes <- BS.readFile "testdata/schema-codegenreq"
     msg <- M.decode bytes
     ((), Quota endQuota) <- runQuotaT (rootPtr msg >>= reader) (Quota 1024)
-    assertEqual "TODO" 512 endQuota
+    assertEqual "TODO" 1016 endQuota
   where
     reader :: Maybe (Ptr (BlobSlice BS.ByteString)) -> QuotaT IO ()
     reader (Just (PtrStruct root)) = do

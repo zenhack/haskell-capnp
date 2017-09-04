@@ -62,7 +62,8 @@ decode blob = do
                 put (Just $ hi word, idx + 1)
                 return (lo word)
     readSegment len = do
-        (_, idx) <- get
+        (cur, idx) <- get
+        put (cur, idx + len)
         return BlobSlice { blob = blob
                          , offset = WordCount idx
                          , sliceLen = WordCount len
