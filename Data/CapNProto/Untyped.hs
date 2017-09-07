@@ -14,7 +14,6 @@ module Data.CapNProto.Untyped
     , dataSection, ptrSection
     , get, index, length
     , rootPtr
-    , requireListStruct
     , ReadCtx
     )
   where
@@ -245,14 +244,3 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 -- | Returns the root pointer of a message.
 rootPtr :: ReadCtx m b => M.Message b -> m (Maybe (Ptr b))
 rootPtr msg = get msg (WordAt 0 0)
-
-
--- | Convert the Maybe pointer to a Maybe (listof struct), or throw
--- a SchemaViolationError.
-requireListStruct :: MonadThrow m => Ptr b -> m (ListOf b (Struct b))
-requireListStruct (PtrList (ListStruct list)) = return list
-requireListStruct _ = throwM $ E.SchemaViolationError "Expected composite list"
--- TODO: we'll want something like this for most pointer data types. it would be
--- nice to cut down on the boilerplate somehow; maybe we should just generate
--- these with template Haskell. It's not entirely clear to me that this is the
--- module this belongs in.
