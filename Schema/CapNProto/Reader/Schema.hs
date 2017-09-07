@@ -1,8 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Schema.CapNProto.Reader.Schema where
 
-import Data.CapNProto.TH
 import Data.Word
+import Language.CapNProto.TH
 
 type Id = Word64
 

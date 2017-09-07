@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Schema.CapNProto.Reader.Schema.Node where
 
-import Data.CapNProto.TH
+import Language.CapNProto.TH
 import qualified Schema.CapNProto.Reader.Schema as S
 
 $(mkStructWrappers ["Parameter", "NestedNode"])

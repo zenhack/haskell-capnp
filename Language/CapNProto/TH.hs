@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Data.CapNProto.TH
+module Language.CapNProto.TH
     ( mkStructWrappers
     , mkListReaders
     )

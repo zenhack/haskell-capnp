@@ -26,8 +26,8 @@ library
     Data.CapNProto.Message
     Data.CapNProto.Pointer,
     Data.CapNProto.Schema,
-    Data.CapNProto.TH,
     Data.CapNProto.Untyped,
+    Language.CapNProto.TH,
     Schema.CapNProto.Schema,
     Schema.CapNProto.Schema.Node,
     Schema.CapNProto.Schema.Node.Union',

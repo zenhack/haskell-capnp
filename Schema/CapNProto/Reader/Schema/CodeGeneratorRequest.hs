@@ -3,7 +3,7 @@ module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest where
 
 import qualified Schema.CapNProto.Reader.Schema as S
 
-import Data.CapNProto.TH
+import Language.CapNProto.TH
 
 $(mkStructWrappers ["RequestedFile"])
 
