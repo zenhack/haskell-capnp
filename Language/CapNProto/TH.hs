@@ -52,6 +52,22 @@ requireCon con = do
                         throwM $ E.SchemaViolationError $(return $ LitE $ StringL errmsg)
      |]
 
+mkReaderType :: Name -> (TypeQ -> TypeQ) -> TypeQ
+mkReaderType parentType returnType = do
+    m <- newName "m"
+    b <- newName "b"
+    let m' = return $ VarT m
+    let b' = return $ VarT b
+    let ret = returnType b'
+    [t| U.ReadCtx $m' $b'
+            => $(return $ ConT parentType) $b'
+            -> $m' $ret |]
+
+mkPtrReaderType :: Name -> (TypeQ -> TypeQ) -> TypeQ
+mkPtrReaderType parentType returnType =
+    mkReaderType parentType $ \b -> [t| Maybe $(returnType b) |]
+
+
 mkListReader :: String -> Word16 -> Name -> Name -> DecsQ
 mkListReader name offset parentData childData = do
     let parentType = inferTypeName parentData
@@ -59,13 +75,7 @@ mkListReader name offset parentData childData = do
     let fnName = mkName name
     struct <- newName "struct"
     body <- mkBody struct
-    m <- newName "m"
-    b <- newName "b"
-    let m' = return $ VarT m
-    let b' = return $ VarT b
-    ty <- [t| U.ReadCtx $m' $b'
-              => $(return $ ConT parentType) $b'
-              -> $m' (Maybe (U.ListOf $b' ($(return $ ConT childType) $b'))) |]
+    ty <- mkPtrReaderType parentType $ \b -> [t| U.ListOf $b ($(return $ ConT childType) $b) |]
     return $ [ SigD fnName ty
              , FunD fnName [Clause [ConP parentData [VarP struct]]
                                    (NormalB body)
