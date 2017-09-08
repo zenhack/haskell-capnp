@@ -36,8 +36,8 @@ encodeDecodeUntypedTest
        , String -- message in textual form
        , BuilderT p RealWorld IO () -- Builder for the message
        , Maybe (Ptr (BlobSlice ByteString)) -> QuotaT IO () -- reader.
-       , Int -- Quota to run the reader with.
-       , Int -- Remaining quota for the reader.
+       , Quota -- Quota to run the reader with.
+       , Quota -- Remaining quota for the reader.
        )
     -> Assertion
 encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) = do
@@ -50,8 +50,8 @@ encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) =
   where
     checkReader bytes = do
         msg <- M.decode bytes
-        readerResult <- runQuotaT (rootPtr msg >>= reader) (Quota startQuota)
-        assertEqual (show (meta, msgText)) ((), Quota endQuota) readerResult
+        readerResult <- runQuotaT (rootPtr msg >>= reader) startQuota
+        assertEqual (show (meta, msgText)) ((), endQuota) readerResult
 
 
 encodeDecodeUntypedTests :: Test

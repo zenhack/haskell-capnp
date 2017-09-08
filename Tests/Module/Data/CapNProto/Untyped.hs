@@ -74,12 +74,12 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             Just (PtrList (List16 homes)) <- index 1 basePtrSec
             0 <- length homes
             return ()
-      , ((), Quota 110)
+      , ((), 110)
       )
     ]
   where
     tst (schema, typename, value, quota, m, expected) = do
         let meta = MsgMetaData schema typename
         msg <- capnpEncode value meta >>= M.decode
-        actual <- runQuotaT (rootPtr msg >>= m) (Quota quota)
+        actual <- runQuotaT (rootPtr msg >>= m) quota
         assertEqual (show (meta, value)) expected actual
