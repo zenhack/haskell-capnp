@@ -68,8 +68,8 @@ mkPtrReaderType parentType returnType =
     mkReaderType parentType $ \b -> [t| Maybe $(returnType b) |]
 
 
-mkListReader :: String -> Word16 -> Name -> Name -> DecsQ
-mkListReader name offset parentData childData = do
+mkListReader :: String -> Word16 -> Name -> Name -> Name -> DecsQ
+mkListReader name offset parentData childData listCon = do
     let parentType = inferTypeName parentData
     let childType = inferTypeName childData
     let fnName = mkName name
@@ -90,11 +90,16 @@ mkListReader name offset parentData childData = do
                     Nothing -> return Nothing
                     Just ptr' -> do
                         ptrList <- $(requireCon 'U.PtrList) ptr'
-                        listStruct <- $(requireCon 'U.ListStruct) ptrList
-                        return $ Just $ fmap $(childCon) listStruct |]
+                        list <- $(requireCon listCon) ptrList
+                        return $ Just $ fmap $(childCon) list |]
 
-mkListReaders :: Name -> [(String, Name, Word16)] -> DecsQ
+mkListReaders :: Name -> [(String, Name, Word16, Name)] -> DecsQ
 mkListReaders parent readers = do
     concat <$> mapM mkReader readers
   where
-    mkReader (name, child, offset) = mkListReader name offset parent child
+    mkReader (name, child, offset, listCon) = mkListReader
+        name
+        offset
+        parent
+        child
+        listCon
