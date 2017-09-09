@@ -14,8 +14,8 @@ with rec {
     quota = pkgs.fetchFromGitHub {
       repo   = "haskell-quota";
       owner  = "zenhack";
-      rev    = "3059085facf116857313a88ffc0debefbf86aafa";
-      sha256 = "1xaj4vfa67m674z1h18g7jafpp36c10jjf3jcwvdr0b2a0p6i06c";
+      rev    = "9f0b67cdba226a0cfe23502e044adce48936a1e6";
+      sha256 = "0bi50addsnxs4wmbn6ybvjldsi01q9ji7m4d3s7ca9visq3n6gvj";
     };
   };
 
