@@ -20,6 +20,7 @@ library
   exposed-modules:
     Control.Monad.CapNProto.MessageBuilder,
     Data.CapNProto.Address,
+    Data.CapNProto.BasicTypes,
     Data.CapNProto.Bits,
     Data.CapNProto.Blob,
     Data.CapNProto.Errors,
