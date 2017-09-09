@@ -1,3 +1,5 @@
+[![Travis CI][travis-img]][travis-ci]
+
 Beginnings of a haskell [capnproto][1] library.
 
 # Status
@@ -12,3 +14,6 @@ can start doing codegen.
 MIT
 
 [1]: https://capnproto.org/
+
+[travis-ci]: https://travis-ci.org/zenhack/haskell-capnp
+[travis-img]: https://travis-ci.org/zenhack/haskell-capnp.svg?branch=master
