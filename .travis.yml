@@ -1,6 +1,6 @@
 language: nix
 script: |
-  make nix-shell << EOF
+  nix-shell << EOF
   make build
   cabal test
   EOF
