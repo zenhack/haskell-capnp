@@ -1,0 +1,17 @@
+{
+    "enabled": 1,
+    "hidden": false,
+    "description": "Jobsets",
+    "nixexprinput": "src",
+    "nixexprpath": "nix/declarative.nix",
+    "checkinterval": 15,
+    "schedulingshares": 10,
+    "enableemail": true,
+    "emailoverride": "",
+    "keepnr": 10,
+    "inputs": {
+         "src": { "type": "git", "value": "https://github.com/zenhack/haskell-capnp.git master", "emailresponsible": false },
+         "nixpkgs": { "type": "git", "value": "https://github.com/NixOS/nixpkgs-channels.git nixos-17.09", "emailresponsible": false },
+         "prsJSON": { "type": "githubpulls", "value": "zenhack haskell-capnp", "emailresponsible": false }
+     }
+}

@@ -19,6 +19,22 @@ with rec {
     };
   };
 
+  computeHaskellDir = hp: pkg: "${pkg.system}-${hp.ghc.name}";
+
+  addHydraHaddock = hp: pkg: (
+    with rec {
+      suffix = "share/doc/${computeHaskellDir hp pkg}/${pkg.name}/html";
+    };
+
+    pkgs.haskell.lib.overrideCabal pkg (old: rec {
+      doHaddock = true;
+      postInstall = ((old.postInstall or "") + ''
+        mkdir -pv "$out/nix-support"
+        echo "doc haddock $out/${suffix} index.html" \
+            >> "$out/nix-support/hydra-build-products"
+      '');
+    }));
+
   withFilteredSource = pkg: pkg.overrideDerivation (old:
     with {
       sf = name: type: let bn = baseNameOf (toString name); in !(
@@ -51,5 +67,5 @@ with rec {
 };
 
 {
-  capnp = haskellPackages.capnp;
+  capnp = addHydraHaddock haskellPackages haskellPackages.capnp;
 }
