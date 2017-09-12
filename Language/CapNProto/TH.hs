@@ -23,6 +23,8 @@ inferTypeName (Name occ (NameG DataName pkgName modName)) =
     Name occ (NameG TcClsName pkgName modName)
 inferTypeName name = name
 
+-- | @mkStructWrapper name@ Defines a newtype wrapper around a struct type,
+-- e.g. @newtype MyStruct b = MyStruct (U.Struct b)@
 mkStructWrapper :: String -> DecQ
 mkStructWrapper name = do
     let name' = mkName name
@@ -54,46 +56,50 @@ requireCon con = do
                         throwM $ E.SchemaViolationError $(return $ LitE $ StringL errmsg)
      |]
 
-mkReaderType :: Name -> (TypeQ -> TypeQ) -> TypeQ
+-- | @mkReaderType parentType childType@ emits the type for a reader that reads
+-- values of type @childType b@ from values of type @parentType b@, i.e.
+-- @U.ReadCtx m b => parentType b -> m (returnType b)@
+mkReaderType :: (TypeQ -> TypeQ) -> (TypeQ -> TypeQ) -> TypeQ
 mkReaderType parentType returnType = do
-    m <- newName "m"
-    b <- newName "b"
-    let m' = return $ VarT m
-    let b' = return $ VarT b
-    let ret = returnType b'
-    [t| U.ReadCtx $m' $b'
-            => $(return $ ConT parentType) $b'
-            -> $m' $ret |]
+    m <- VarT <$> newName "m"
+    b <- VarT <$> newName "b"
+    let (m', b') = (return m, return b)
+    [t| U.ReadCtx $m' $b' => $(parentType b') -> $m' $(returnType b') |]
 
-mkPtrReaderType :: Name -> (TypeQ -> TypeQ) -> TypeQ
+-- | Like @mkReaderType@, except that the return type is wrapped in a @Maybe@,
+-- as is typical of pointer types.
+mkPtrReaderType :: (TypeQ -> TypeQ) -> (TypeQ -> TypeQ) -> TypeQ
 mkPtrReaderType parentType returnType =
     mkReaderType parentType $ \b -> [t| Maybe $(returnType b) |]
 
 
 mkListReader :: String -> Word16 -> Name -> Name -> Name -> DecsQ
 mkListReader name offset parentData childData listCon = do
-    let parentType = inferTypeName parentData
-    let childType = inferTypeName childData
+    let parentType = return $ ConT $ inferTypeName parentData
+    let childType = return $ ConT $ inferTypeName childData
     let fnName = mkName name
-    struct <- newName "struct"
-    body <- mkBody struct
-    ty <- mkPtrReaderType parentType $ \b -> [t| U.ListOf $b ($(return $ ConT childType) $b) |]
-    return $ [ SigD fnName ty
-             , FunD fnName [Clause [ConP parentData [VarP struct]]
-                                   (NormalB body)
-                                   []
-                           ]
-             ]
+    ty <- mkPtrReaderType
+        (\b -> [t| $parentType $b |])
+        (\b -> [t| U.ListOf $b ($childType $b) |])
+    val <- mkVal
+    return [ SigD fnName ty
+           , ValD (VarP fnName) (NormalB val) []
+           ]
  where
-    childCon = return $ ConE childData
-    mkBody struct = do
-        [| do ptr <- U.ptrSection $(return $ VarE struct) >>= U.index offset
-              case ptr of
+    mkVal = do
+        struct <- newName "struct"
+        let structE = return $ VarE struct
+        let childConE = return $ ConE childData
+        let pattern = return $ ConP parentData [VarP struct]
+        [| \ $pattern -> do
+                ptrSec <- U.ptrSection $structE
+                ptr <- U.index offset ptrSec
+                case ptr of
                     Nothing -> return Nothing
                     Just ptr' -> do
                         ptrList <- $(requireCon 'U.PtrList) ptr'
                         list <- $(requireCon listCon) ptrList
-                        return $ Just $ fmap $(childCon) list |]
+                        return $ Just $ fmap $childConE list |]
 
 mkListReaders :: Name -> [(String, Name, Word16, Name)] -> DecsQ
 mkListReaders parent readers = do
