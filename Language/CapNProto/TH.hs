@@ -2,12 +2,14 @@
 module Language.CapNProto.TH
     ( mkStructWrappers
     , mkListReaders
+    , mkWordReaders
     )
   where
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Data.Word
+import Data.Bits
 import Control.Monad.Catch(throwM)
 
 import qualified Data.CapNProto.Errors as E
@@ -103,3 +105,27 @@ mkListReaders parent readers = do
         parent
         child
         listCon
+
+mkWordReaders :: Name -> [(String, Integer, Name, Integer, Name)] -> DecsQ
+mkWordReaders con readers =
+    concat <$> mapM mkReader readers
+  where
+    mkReader (name, start, typ, defaultVal, transform) = do
+        let fnName = mkName name
+        struct <- newName "struct"
+        body <- mkBody struct
+        return $ [ FunD fnName [Clause [ConP con [VarP struct]]
+                                       (NormalB body)
+                                       []
+                               ]
+                 ]
+      where
+        mkBody struct = do
+            let dataIndex = LitE $ IntegerL $ start `div` 64
+            let bitOffset = LitE $ IntegerL $  start `mod` 64
+            let defaultValE = return $ LitE $ IntegerL $ defaultVal
+            let transformE = return $ VarE transform
+            [| do dataSec <- U.dataSection $(return $ VarE struct)
+                  word <- U.index $(return $ dataIndex) dataSec
+                  let rawVal = word `shiftR` $(return $ bitOffset) `xor` $defaultValE
+                  return $ $transformE $ (fromIntegral rawVal :: $(return $ ConT typ)) |]
