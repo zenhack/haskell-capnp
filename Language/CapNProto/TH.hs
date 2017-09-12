@@ -50,10 +50,10 @@ requireCon con = do
     result <- newName "result"
     let errmsg = "Expected " ++ show con
     [| \arg -> case arg of
-                    $(return $ ConP con [VarP result]) ->
-                        return $(return $ VarE result)
+                    $(conP con [varP result]) ->
+                        return $(varE result)
                     _ ->
-                        throwM $ E.SchemaViolationError $(return $ LitE $ StringL errmsg)
+                        throwM $ E.SchemaViolationError $(litE $ StringL errmsg)
      |]
 
 -- | @mkReaderType parentType childType@ emits the type for a reader that reads
@@ -61,10 +61,9 @@ requireCon con = do
 -- @U.ReadCtx m b => parentType b -> m (returnType b)@
 mkReaderType :: (TypeQ -> TypeQ) -> (TypeQ -> TypeQ) -> TypeQ
 mkReaderType parentType returnType = do
-    m <- VarT <$> newName "m"
-    b <- VarT <$> newName "b"
-    let (m', b') = (return m, return b)
-    [t| U.ReadCtx $m' $b' => $(parentType b') -> $m' $(returnType b') |]
+    m <- varT <$> newName "m"
+    b <- varT <$> newName "b"
+    [t| U.ReadCtx $m $b => $(parentType b) -> $m $(returnType b) |]
 
 -- | Like @mkReaderType@, except that the return type is wrapped in a @Maybe@,
 -- as is typical of pointer types.
@@ -75,8 +74,8 @@ mkPtrReaderType parentType returnType =
 
 mkListReader :: String -> Word16 -> Name -> Name -> Name -> DecsQ
 mkListReader name offset parentData childData listCon = do
-    let parentType = return $ ConT $ inferTypeName parentData
-    let childType = return $ ConT $ inferTypeName childData
+    let parentType = conT $ inferTypeName parentData
+    let childType = conT $ inferTypeName childData
     let fnName = mkName name
     ty <- mkPtrReaderType
         (\b -> [t| $parentType $b |])
@@ -88,18 +87,15 @@ mkListReader name offset parentData childData listCon = do
  where
     mkVal = do
         struct <- newName "struct"
-        let structE = return $ VarE struct
-        let childConE = return $ ConE childData
-        let pattern = return $ ConP parentData [VarP struct]
-        [| \ $pattern -> do
-                ptrSec <- U.ptrSection $structE
+        [| \ $(conP parentData [varP struct]) -> do
+                ptrSec <- U.ptrSection $(varE struct)
                 ptr <- U.index offset ptrSec
                 case ptr of
                     Nothing -> return Nothing
                     Just ptr' -> do
                         ptrList <- $(requireCon 'U.PtrList) ptr'
                         list <- $(requireCon listCon) ptrList
-                        return $ Just $ fmap $childConE list |]
+                        return $ Just $ fmap $(conE childData) list |]
 
 mkListReaders :: Name -> [(String, Name, Word16, Name)] -> DecsQ
 mkListReaders parent readers = do
@@ -129,9 +125,9 @@ mkWordReaders con readers =
         mkBody struct = do
             let dataIndex = LitE $ IntegerL $ start `div` 64
             let bitOffset = LitE $ IntegerL $  start `mod` 64
-            let defaultValE = return $ LitE $ IntegerL $ defaultVal
-            let transformE = return $ VarE transform
-            [| do dataSec <- U.dataSection $(return $ VarE struct)
+            let defaultValE = litE $ IntegerL $ defaultVal
+            let transformE = varE transform
+            [| do dataSec <- U.dataSection $(varE struct)
                   word <- U.index $(return $ dataIndex) dataSec
                   let rawVal = word `shiftR` $(return $ bitOffset) `xor` $defaultValE
-                  return $ $transformE $ (fromIntegral rawVal :: $(return $ ConT typ)) |]
+                  return $ $transformE $ (fromIntegral rawVal :: $(conT typ)) |]
