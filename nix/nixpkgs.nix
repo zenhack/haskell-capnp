@@ -15,8 +15,8 @@ with rec {
   # as it needs to have fetchFromGitHub and ideally the binary cache should be
   # populated for this.
   hashes = {
-    commit = "76d649b59484607901f0c1b8f737d8376a904019";
-    sha = "04xp12gmjby84k4pabc0nspggf4pgycnl764zf7w50izx65r9q8x";
+    commit = "788ce6e3df12bb0cf19fb9ccf8ffa75558b551ba";
+    sha = "0ywvp5y6slff5xg1g63afhjywvqyz2pjxk3i203xph7fz3srpx2x";
   };
 
   stage1-tarball = import <nix/fetchurl.nix> {
