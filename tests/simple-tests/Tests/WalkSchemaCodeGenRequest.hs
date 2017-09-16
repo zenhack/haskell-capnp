@@ -1,5 +1,5 @@
 -- | This module defines a test that tries to walk over the
--- CodeGeneratorRequest in `tests/data/schema-codegenreq.capnp`,
+-- CodeGeneratorRequest in `tests/data/schema-codegenreq`,
 -- failing if any of the data is not as expected.
 module Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
