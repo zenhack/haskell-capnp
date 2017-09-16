@@ -10,6 +10,6 @@ $(mkStructWrappers ["RequestedFile"])
 
 $(mkListReaders
     'S.CodeGeneratorRequest
-    [ ("nodes",          'S.Node,        0, 'U.ListStruct)
-    , ("requestedFiles", 'RequestedFile, 1, 'U.ListStruct)
+    [ ("nodes",          0, 'U.ListStruct, 'S.Node)
+    , ("requestedFiles", 1, 'U.ListStruct, 'RequestedFile)
     ])

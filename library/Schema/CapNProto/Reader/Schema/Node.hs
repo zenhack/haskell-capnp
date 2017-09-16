@@ -9,9 +9,9 @@ import qualified Data.CapNProto.Untyped as U
 $(mkStructWrappers ["Parameter", "NestedNode"])
 
 $(mkListReaders 'S.Node
-    [ ("parameters",  'Parameter,    5, 'U.ListStruct)
-    , ("nestedNodes", 'NestedNode,   1, 'U.ListStruct)
-    , ("annotations", 'S.Annotation, 2, 'U.ListStruct)
+    [ ("parameters",  5, 'U.ListStruct, 'Parameter)
+    , ("nestedNodes", 1, 'U.ListStruct, 'NestedNode)
+    , ("annotations", 2, 'U.ListStruct, 'S.Annotation)
     ])
 
 $(mkWordReaders 'S.Node

@@ -8,7 +8,6 @@ module Language.CapNProto.TH
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Data.Word
 import Data.Bits
 import Control.Monad.Catch(throwM)
 
@@ -40,22 +39,6 @@ mkStructWrapper name = do
 mkStructWrappers :: [String] -> DecsQ
 mkStructWrappers = mapM mkStructWrapper
 
-
--- | @requireCon con@ constructs a function that matches its argument against
--- the unary data constructor named by @con@, returning the value contained
--- within if the pattern matches, and calling 'throwM' with a
--- 'SchemaViolationError' otherwise.
-requireCon :: Name -> ExpQ
-requireCon con = do
-    result <- newName "result"
-    let errmsg = "Expected " ++ show con
-    [| \arg -> case arg of
-                    $(conP con [varP result]) ->
-                        return $(varE result)
-                    _ ->
-                        throwM $ E.SchemaViolationError $(litE $ StringL errmsg)
-     |]
-
 -- | @mkReaderType parentType childType@ emits the type for a reader that reads
 -- values of type @childType b@ from values of type @parentType b@, i.e.
 -- @U.ReadCtx m b => parentType b -> m (returnType b)@
@@ -71,42 +54,62 @@ mkPtrReaderType :: (TypeQ -> TypeQ) -> (TypeQ -> TypeQ) -> TypeQ
 mkPtrReaderType parentType returnType =
     mkReaderType parentType $ \b -> [t| Maybe $(returnType b) |]
 
+mkPtrReaderVal parentConName ptrOffset withPtr = do
+    struct <- newName "struct"
+    ptr' <- newName "ptr'"
+    [| \ $(conP parentConName [varP struct]) -> do
+            ptrSec <- U.ptrSection $(varE struct)
+            ptr <- U.index $(litE $ IntegerL ptrOffset) ptrSec
+            case ptr of
+                Nothing -> return Nothing
+                Just $(varP ptr') -> $(withPtr ptr') |]
 
-mkListReader :: String -> Word16 -> Name -> Name -> Name -> DecsQ
-mkListReader name offset parentData childData listCon = do
-    let parentType = conT $ inferTypeName parentData
-    let childType = conT $ inferTypeName childData
-    let fnName = mkName name
-    ty <- mkPtrReaderType
-        (\b -> [t| $parentType $b |])
-        (\b -> [t| U.ListOf $b ($childType $b) |])
-    val <- mkVal
-    return [ SigD fnName ty
-           , ValD (VarP fnName) (NormalB val) []
+mkListReaderVal parentConName ptrOffset listConName withList = do
+    list <- newName "list"
+    mkPtrReaderVal parentConName ptrOffset $ \ptr' ->
+        [| case $(varE ptr') of
+                U.PtrList $(conP listConName [varP list]) ->
+                    $(withList list)
+                _ -> throwM $ E.SchemaViolationError $ $(litE $ StringL $
+                            "Expected PtrList (" ++ show listConName ++ " ...)") |]
+
+
+mkListReaderType parentType childType = mkPtrReaderType
+    (\b -> [t| $parentType $b |])
+    (\b -> [t| U.ListOf $b ($childType $b) |])
+
+mkReader :: Name -> TypeQ -> ExpQ -> DecsQ
+mkReader name ty val = do
+    ty' <- ty
+    val' <- val
+    return [ SigD name ty'
+           , ValD (VarP name) (NormalB val') []
            ]
- where
-    mkVal = do
-        struct <- newName "struct"
-        [| \ $(conP parentData [varP struct]) -> do
-                ptrSec <- U.ptrSection $(varE struct)
-                ptr <- U.index offset ptrSec
-                case ptr of
-                    Nothing -> return Nothing
-                    Just ptr' -> do
-                        ptrList <- $(requireCon 'U.PtrList) ptr'
-                        list <- $(requireCon listCon) ptrList
-                        return $ Just $ fmap $(conE childData) list |]
 
-mkListReaders :: Name -> [(String, Name, Word16, Name)] -> DecsQ
-mkListReaders parent readers = do
-    concat <$> mapM mkReader readers
+-- | @mkListReader@ generates a reader which extracts a list from a struct.
+mkListReader :: String -- ^ The name of the reader
+            -> Name    -- ^ The data constructor for the parent type.
+            -> Integer -- ^ The offset into the struct's pointer section.
+            -> Name    -- ^ The 'List' data constructor that we expect
+            -> Name    -- ^ A data constructor to apply to the elements of
+                       --   the list.
+            -> DecsQ
+mkListReader readerName parentConName ptrOffset listConName childConName = mkReader
+    (mkName readerName)
+    (mkListReaderType
+        (conT $ inferTypeName parentConName)
+        (conT $ inferTypeName childConName))
+    (mkListReaderVal parentConName ptrOffset listConName $
+        (\list -> [| return $ Just $ fmap $(conE childConName) $(varE list) |]))
+
+-- | @mkListReaders name args@ calls mkListReader once for each tuple in
+-- @args@. @parent@ is always passed as the first argument. the values
+-- in the tuple are the remaining arguments.
+mkListReaders :: Name -> [(String, Integer, Name, Name)] -> DecsQ
+mkListReaders parent readers =
+    concat <$> mapM (uncurry4 $ \arg -> mkListReader arg parent) readers
   where
-    mkReader (name, child, offset, listCon) = mkListReader
-        name
-        offset
-        parent
-        child
-        listCon
+    uncurry4 f (a, b, c, d) = f a b c d
 
 mkWordReaders :: Name -> [(String, Integer, Name, Integer, Name)] -> DecsQ
 mkWordReaders con readers =
