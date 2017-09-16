@@ -40,8 +40,6 @@ library
 
   -- other-modules:
   -- other-extensions:
-  default-extensions:
-    FlexibleContexts
   build-depends:
     base >=4.8 && <5.0,
     text >=1.2 && <2.0,
@@ -60,8 +58,6 @@ library
 
 executable capnpc-haskell
   main-is: Main.hs
-  default-extensions:
-    FlexibleContexts
   build-depends:
     capnp,
     base >=4.8 && <5.0,
@@ -89,8 +85,6 @@ test-suite the-test-suite
     Tests.EncodeDecodeUntyped,
     Tests.WalkSchemaCodeGenRequest,
     Tests.Util
-  default-extensions:
-    FlexibleContexts
   build-depends:
     base >=4.8 && <5.0,
     capnp,

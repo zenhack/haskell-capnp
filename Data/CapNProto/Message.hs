@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, RecordWildCards #-}
+{-# LANGUAGE MultiParamTypeClasses, RecordWildCards, FlexibleContexts #-}
 {-|
 Module: Data.CapNProto.Message
 Description: Tools for working with messages.
