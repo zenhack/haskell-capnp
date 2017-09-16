@@ -7,7 +7,7 @@ synopsis:            Cap'n Proto for Haskell
 -- description:
 homepage:            https://github.com/zenhack/haskell-capnp
 license:             MIT
-license-file:        LICENSE
+license-file:        LICENSE.md
 author:              Ian Denhardt
 maintainer:          ian@zenhack.net
 -- copyright:
