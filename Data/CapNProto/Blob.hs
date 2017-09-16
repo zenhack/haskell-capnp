@@ -34,7 +34,7 @@ import Data.CapNProto.Bits
     ( WordCount(..)
     , ByteCount(..)
     , wordsToBytes
-    , bytesToWords
+    , bytesToWordsFloor
     )
 import qualified Data.CapNProto.Errors as E
 
@@ -75,7 +75,7 @@ data BlobSlice a = BlobSlice
 -- | @lengthFromBytes f@ is a valid implenetation of the 'Blob' class's length
 -- method, given that @f b@ returns the length of the blob @b@, in bytes.
 lengthFromBytes :: (Monad m) => (a -> m ByteCount) -> a -> m WordCount
-lengthFromBytes length arr = bytesToWords <$> length arr
+lengthFromBytes length arr = bytesToWordsFloor <$> length arr
 
 -- | @indexFromBytes f@ is a valid implenetation of the 'Blob' class's index
 -- method, given that @f b i@ returns the @ith@ byte of the blob @b@.

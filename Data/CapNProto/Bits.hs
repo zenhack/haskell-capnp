@@ -6,7 +6,7 @@ Description: Utilities for bitwhacking useful for capnproto.
 module Data.CapNProto.Bits
     ( ByteCount(..), WordCount(..)
     , Word1(..)
-    , bytesToWords, wordsToBytes
+    , bytesToWordsFloor, wordsToBytes
     , lo, hi
     , i32, i30, i29
     , fromLo, fromHi
@@ -27,9 +27,9 @@ newtype ByteCount = ByteCount Int
 newtype WordCount = WordCount Int
     deriving(Num, Real, Integral, Ord, Eq, Enum, Show)
 
--- | Convert bytes to words
-bytesToWords :: ByteCount -> WordCount
-bytesToWords (ByteCount n) = WordCount (n `div` 8)
+-- | Convert bytes to words. Rounds down.
+bytesToWordsFloor :: ByteCount -> WordCount
+bytesToWordsFloor (ByteCount n) = WordCount (n `div` 8)
 
 -- | Convert words to bytes.
 wordsToBytes :: WordCount -> ByteCount
