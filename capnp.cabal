@@ -58,6 +58,7 @@ library
 
 executable capnpc-haskell
   main-is: Main.hs
+  hs-source-dirs: executables/capnpc-haskell
   build-depends:
     capnp,
     base >=4.8 && <5.0,
