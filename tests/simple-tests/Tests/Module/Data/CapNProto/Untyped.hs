@@ -17,7 +17,7 @@ import Data.CapNProto.Untyped
 import qualified Data.CapNProto.Message as M
 
 aircraftSchema :: String
-aircraftSchema = [there|testdata/aircraft.capnp|]
+aircraftSchema = [there|tests/data/aircraft.capnp|]
 
 untypedTests :: Test
 untypedTests = assertionsToTest "Untyped Tests"  $ map tst

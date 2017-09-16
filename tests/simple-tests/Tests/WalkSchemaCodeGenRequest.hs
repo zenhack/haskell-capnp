@@ -1,5 +1,5 @@
 -- | This module defines a test that tries to walk over the
--- CodeGeneratorRequest in `testdata/schema-codegenreq.capnp`,
+-- CodeGeneratorRequest in `tests/data/schema-codegenreq.capnp`,
 -- failing if any of the data is not as expected.
 module Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
@@ -24,7 +24,7 @@ import Data.CapNProto.Blob (BlobSlice)
 -- factor that out.
 theAssert :: Assertion
 theAssert = do
-    bytes <- BS.readFile "testdata/schema-codegenreq"
+    bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
     ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
     assertEqual "Correct remaining quota" 828 endQuota
