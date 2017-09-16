@@ -96,8 +96,8 @@ interactCapnp subCommand MsgMetaData{..} = do
 freezeAsByteString :: (PrimMonad m, s ~ PrimState m)
     => BlobSlice (MutableByteArray s) -> m BS.ByteString
 freezeAsByteString BlobSlice{..} = do
-    let ByteCount off = wordsToBytes offset
-    let ByteCount len = wordsToBytes sliceLen
+    let ByteCount off = offset
+    let ByteCount len = sliceLen
     BS.pack <$> mapM (readByteArray blob) [off..off+len-1]
 
 -- | Convert a list of 'Assertion's to a test group with the given name.

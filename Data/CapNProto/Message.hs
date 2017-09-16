@@ -15,7 +15,11 @@ import qualified Data.Vector as V
 import Data.CapNProto.Address (WordAddr(..))
 import Data.CapNProto.Errors (BoundsError(..))
 import Data.CapNProto.Blob as B
-import Data.CapNProto.Bits (lo, hi, WordCount(..))
+import Data.CapNProto.Bits
+    ( lo, hi
+    , WordCount(..)
+    , wordsToBytes
+    )
 import Data.Word (Word64, Word32)
 
 newtype Message a = Message (V.Vector a) deriving(Show)
@@ -34,10 +38,9 @@ getWord :: (B.Blob m seg, MonadThrow m)
     => Message seg -> WordAddr -> m Word64
 getWord (Message segs) WordAt{..} = do
     seg <- segs `V.indexM` segIndex
-    seg `B.index` wordIndex
+    seg `B.indexWord` wordIndex
 
--- | @decode blob@ decodes a message from the blob. words are assumed to be
--- little-endian; this is used in parsing the message header.
+-- | @decode blob@ decodes a message from the blob.
 --
 -- The segments will not be copied; the resulting message will be a view into
 -- the original blob.
@@ -46,11 +49,11 @@ decode blob = do
     -- Note: we use the quota to avoid needing to do bounds checking here;
     -- since readMessage invoices the quota before reading, we can rely on it
     -- not to read past the end of the blob.
-    WordCount blobLen <- B.length blob
+    WordCount blobLen <- B.lengthInWords blob
     flip evalStateT (Nothing, 0) $ flip evalQuotaT (Quota blobLen) $
         readMessage read32 readSegment
   where
-    bIndex b i = lift $ lift $ B.index b (WordCount i)
+    bIndex b i = lift $ lift $ B.indexWord b i
     read32 = do
         (cur, idx) <- get
         case cur of
@@ -65,8 +68,8 @@ decode blob = do
         (cur, idx) <- get
         put (cur, idx + len)
         return BlobSlice { blob = blob
-                         , offset = WordCount idx
-                         , sliceLen = WordCount len
+                         , offset = wordsToBytes idx
+                         , sliceLen = wordsToBytes len
                          }
 
 -- | @readMessage read32 readSegment@ reads in a message using the
@@ -76,7 +79,7 @@ decode blob = do
 -- The size of the message (in 64-bit words) is deducted from the quota,
 -- which can be used to set the maximum message size.
 readMessage :: (MonadQuota m, MonadThrow m)
-    => m Word32 -> (Int -> m b) -> m (Message b)
+    => m Word32 -> (WordCount -> m b) -> m (Message b)
 readMessage read32 readSegment = do
     invoice 1
     numSegs' <- read32

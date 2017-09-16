@@ -6,6 +6,9 @@ module Data.CapNProto.Blob
     ( Blob(..)
     , MutBlob(..)
     , BlobSlice(..)
+    , lengthInWords
+    , indexWord
+    , writeWord
     )
   where
 
@@ -43,23 +46,23 @@ import qualified Data.CapNProto.Errors as E
 -- inputs at all, relying on the caller not to violate the invariants.
 -- Preference would be for the former, of course.
 
--- | A 'Blob' is an array of 'Word64's, which may be accessed
+-- | A 'Blob' is an array of bytes, which may be accessed
 -- inside of a Monad.
 class Blob m a where
     -- | Return the length of the blob, in words.
-    length :: a -> m WordCount
-    -- | @index b i@ returns the ith word in the blob @b@. Typically,
+    length :: a -> m ByteCount
+    -- | @index b i@ returns the ith byte in the blob @b@. Typically,
     -- instances will include a MonadThrow constraint, throwing on out
     -- of bounds errors.
-    index :: a -> WordCount -> m Word64
+    index :: a -> ByteCount -> m Word8
 
 -- | A mutable 'Blob'.
 class Blob m a => MutBlob m a where
     -- | @write b i value@ writes @value@ to the ith position in the blob.
-    write :: a -> WordCount -> Word64 -> m ()
+    write :: a -> ByteCount -> Word8 -> m ()
     -- | @grow b amount@ grows the blob @b@ by @amount@ words. In an instance
     -- of PrimMonad, this may modify or destroy the original blob.
-    grow :: a -> WordCount -> m a
+    grow :: a -> ByteCount -> m a
 
 -- | A slice of a blob.
 --
@@ -67,30 +70,29 @@ class Blob m a => MutBlob m a where
 -- further slicing operations. The resulting value is itself a blob.
 data BlobSlice a = BlobSlice
     { blob :: a
-    , offset :: WordCount
-    , sliceLen :: WordCount
+    , offset :: ByteCount
+    , sliceLen :: ByteCount
     } deriving(Show)
 
+-- | @lengthInWords blob@ is The length of @blob@, in 64-bit words, rounded down.
+lengthInWords :: (Monad m, Blob m b) => b -> m WordCount
+lengthInWords = fmap bytesToWordsFloor . length
 
--- | @lengthFromBytes f@ is a valid implenetation of the 'Blob' class's length
--- method, given that @f b@ returns the length of the blob @b@, in bytes.
-lengthFromBytes :: (Monad m) => (a -> m ByteCount) -> a -> m WordCount
-lengthFromBytes length arr = bytesToWordsFloor <$> length arr
-
--- | @indexFromBytes f@ is a valid implenetation of the 'Blob' class's index
--- method, given that @f b i@ returns the @ith@ byte of the blob @b@.
-indexFromBytes :: (Monad m) => (a -> ByteCount -> m Word8) -> a -> WordCount -> m Word64
-indexFromBytes index arr i = foldl (.|.) 0 <$> mapM byteN [0,1..7]
+-- | @indexWord blob i@ returns the @ith@ little-endian 64-bit word of the blob @b@.
+indexWord :: (Monad m, Blob m b) => b -> WordCount -> m Word64
+indexWord blob i = foldl (.|.) 0 <$> mapM byteN [0,1..7]
       where
         byteN n = do
-            b <- index arr (wordsToBytes i + n)
+            b <- index blob (wordsToBytes i + n)
             return $ fromIntegral b `shiftL` (fromIntegral n * 8)
 
-writeFromBytes :: Monad m => (a -> ByteCount -> Word8 -> m ()) -> a -> WordCount -> Word64 -> m ()
-writeFromBytes writeByte arr words value = do
+-- | @writeWord blob i word@ writes @word@ to the @ith@ little-endian 64-bit
+-- word in @blob@.
+writeWord :: (Monad m, MutBlob m b) => b -> WordCount -> Word64 -> m ()
+writeWord arr words value = do
     let base = wordsToBytes words
     forM_ ([0,1..7] :: [Int]) $ \i ->
-        writeByte arr (base + fromIntegral i) $ fromIntegral $ value `shiftR` (i * 8)
+        write arr (base + fromIntegral i) $ fromIntegral $ value `shiftR` (i * 8)
 
 
 instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
@@ -104,23 +106,22 @@ instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
 
 
 instance (Monad m) => Blob m BS.ByteString where
-    length = lengthFromBytes (return . ByteCount . BS.length)
-    index = indexFromBytes $ \bs i -> return $ BS.index bs (fromIntegral i)
+    length = return . ByteCount . BS.length
+    index bs (ByteCount i) = return $ BS.index bs i
 
 instance (Monad m) => Blob m ByteArray where
-    length = lengthFromBytes (return . ByteCount . sizeofByteArray)
-    index = indexFromBytes $ \arr i -> return $ indexByteArray arr (fromIntegral i)
+    length = return . ByteCount . sizeofByteArray
+    index arr (ByteCount i) = return $ indexByteArray arr i
 
 instance (PrimMonad m, s ~ PrimState m) => Blob m (MutableByteArray s) where
-    length = lengthFromBytes (return . ByteCount . sizeofMutableByteArray)
-    index = indexFromBytes $ \arr (ByteCount i) -> readByteArray arr i
+    length = return . ByteCount . sizeofMutableByteArray
+    index blob (ByteCount i) = readByteArray blob i
 
 instance (PrimMonad m, s ~ PrimState m) => MutBlob m (MutableByteArray s) where
-    write = writeFromBytes $ \arr (ByteCount i) -> writeByteArray arr i
-    grow arr amount = do
+    write arr (ByteCount i) = writeByteArray arr i
+    grow arr (ByteCount amount) = do
         let oldSize = sizeofMutableByteArray arr
-        let ByteCount amountBytes = wordsToBytes amount
-        arr' <- newByteArray $ oldSize + amountBytes
+        arr' <- newByteArray $ oldSize + amount
         copyMutableByteArray arr' 0 arr 0 oldSize
-        fillByteArray arr' oldSize amountBytes 0
+        fillByteArray arr' oldSize amount 0
         return arr'

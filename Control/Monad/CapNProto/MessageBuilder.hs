@@ -16,9 +16,16 @@ import Data.Primitive.ByteArray
     , newByteArray
     )
 
-import Data.CapNProto.Bits (Word1(..), replaceBits, WordCount(..), fromHi)
-import Data.CapNProto.Blob (BlobSlice(..), Blob(..), MutBlob(..))
+import Data.CapNProto.Bits
+    ( Word1(..)
+    , replaceBits
+    , WordCount(..)
+    , bytesToWordsFloor
+    , fromHi
+    )
 import qualified Data.CapNProto.Pointer as P
+import Data.CapNProto.Bits (wordsToBytes)
+import Data.CapNProto.Blob
 import Data.CapNProto.Schema (Field(..))
 import Data.Int
 import Data.Word
@@ -76,7 +83,7 @@ runBuilderT (BuilderT m) = do
                        BuilderState { array = initialArray, nextAlloc = 0 }
     return ( BlobSlice { blob = array bs
                        , offset = 0
-                       , sliceLen = nextAlloc bs
+                       , sliceLen = wordsToBytes $ nextAlloc bs
                        }
            , x
            )
@@ -95,7 +102,7 @@ frameSegment builder = do
     BuilderState{..} <- BuilderT get
     let segWords = fromIntegral (nextAlloc - start - 1) :: Word32
     -- XXX TODO: check for integer overflow
-    lift $ write array start (fromHi segWords)
+    lift $ writeWord array start (fromHi segWords)
     return result
 
 instance MonadTrans (BuilderT p s) where
@@ -107,9 +114,9 @@ instance MonadTrans (BuilderT p s) where
 ensureSpaceFor :: (PrimMonad m) => WordCount -> BuilderT p (PrimState m) m ()
 ensureSpaceFor sz = BuilderT $ do
     bs@BuilderState{..} <- get
-    len <- length array
+    len <- bytesToWordsFloor <$> length array
     when (len - nextAlloc < sz) $ do
-        array' <- lift $ grow array $ len + sz
+        array' <- lift $ grow array $ wordsToBytes $ len + sz
         put bs{ array = array' }
 
 -- | @alloc words@ allocates space for @words@ words in the builder state, and
@@ -179,8 +186,8 @@ buildSelfReplace n words shift = BuilderT $ do
     arr <- array <$> get
     BuilderEnv{..} <- ask
     let i = fromIntegral (parentOff + words)
-    word <- index arr i
-    write arr i $ replaceBits n word (fromIntegral shift)
+    word <- indexWord arr i
+    writeWord arr i $ replaceBits n word (fromIntegral shift)
 
 -- | @setField field value@ is a builder which sets the field @field@ in the
 -- parent object to the value @value@.
