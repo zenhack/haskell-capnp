@@ -1,2 +1,2 @@
 language: nix
-script: make nix-build
+script: nix-env -iA nixpkgs.cabal2nix; make nix-build
