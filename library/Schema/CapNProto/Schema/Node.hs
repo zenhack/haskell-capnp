@@ -33,5 +33,5 @@ annotations = DS.PtrField 2
 data Parameter = Parameter
 data NestedNode = NestedNode
 
-data Union' = Union'
+data Union_ = Union_
 
