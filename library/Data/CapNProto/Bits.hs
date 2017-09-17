@@ -78,7 +78,7 @@ replaceBits new orig shift =
     mask = complement $ fromIntegral (maxBound `asTypeOf` new) `shiftL` shift
 
 -- | 1 bit datatype, in the tradition of Word8, Word16 et al.
-newtype Word1 = Word1 Bool
+newtype Word1 = Word1 { word1ToBool :: Bool }
     deriving(Ord, Eq, Enum, Bounded)
 
 instance Num Word1 where

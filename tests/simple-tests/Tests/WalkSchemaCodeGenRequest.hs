@@ -27,7 +27,7 @@ theAssert = do
     bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
     ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
-    assertEqual "Correct remaining quota" 828 endQuota
+    assertEqual "Correct remaining quota" 791 endQuota
   where
     reader :: Maybe (Ptr (BlobSlice BS.ByteString)) -> QuotaT IO ()
     reader (Just (PtrStruct root)) = do
@@ -40,8 +40,11 @@ theAssert = do
     reader _ = error "Expected `Just (PtrStruct root)`"
     walkNode nodes i = do
         node <- index i nodes
-        -- None of the nodes in the schema have parameters
+        -- None of the nodes in the schema have parameters:
         Nothing <- Node.parameters node
+        -- And none of them are generic:
+        False <- Node.isGeneric node
+
         annotations <- Node.annotations node
 
         -- there are two annotations in all of the nodes, at these indicies:

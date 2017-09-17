@@ -111,7 +111,7 @@ mkListReaders parent readers =
   where
     uncurry4 f (a, b, c, d) = f a b c d
 
-mkWordReaders :: Name -> [(String, Integer, Name, Integer, Name)] -> DecsQ
+mkWordReaders :: Name -> [(String, Integer, Name, Integer, ExpQ)] -> DecsQ
 mkWordReaders con readers =
     concat <$> mapM mkReader readers
   where
@@ -129,8 +129,7 @@ mkWordReaders con readers =
             let dataIndex = LitE $ IntegerL $ start `div` 64
             let bitOffset = LitE $ IntegerL $  start `mod` 64
             let defaultValE = litE $ IntegerL $ defaultVal
-            let transformE = varE transform
             [| do dataSec <- U.dataSection $(varE struct)
                   word <- U.index $(return $ dataIndex) dataSec
                   let rawVal = word `shiftR` $(return $ bitOffset) `xor` $defaultValE
-                  return $ $transformE $ (fromIntegral rawVal :: $(conT typ)) |]
+                  return $ $transform $ (fromIntegral rawVal :: $(conT typ)) |]
