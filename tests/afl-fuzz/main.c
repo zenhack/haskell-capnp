@@ -1,7 +1,7 @@
 #include <HsFFI.h>
 #ifdef __GLASGOW_HASKELL__
-#include "Safe_stub.h"
-extern void __stginit_Safe(void);
+#include "Decode_stub.h"
+extern void __stginit_Decode(void);
 #endif
 #include <stdio.h>
 
@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 	int i;
 	hs_init(&argc, &argv);
 #ifdef __GLASGOW_HASKELL__
-	hs_add_root(__stginit_Safe);
+	hs_add_root(__stginit_Decode);
 #endif
 
 	i = decodeStdin_hs();

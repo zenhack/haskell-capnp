@@ -1,5 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
+module Decode where
+
 import qualified Data.ByteString as BS
 import Control.Monad.Quota
 import Control.Monad.Catch
