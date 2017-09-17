@@ -9,6 +9,7 @@ module Language.CapNProto.TH
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Data.Bits
+import Data.Word
 import Control.Monad.Catch(throwM)
 
 import qualified Data.CapNProto.Errors as E
@@ -110,27 +111,35 @@ mkListReaders :: Name -> [(String, Integer, Name, Name, ExpQ)] -> DecsQ
 mkListReaders parent readers =
     concat <$> mapM (uncurry5 $ \arg -> mkListReader arg parent) readers
   where
-    uncurry5 f (a, b, c, d, e) = f a b c d e
+    uncurry5 func (a, b, c, d, e) = func a b c d e
 
-mkWordReaders :: Name -> [(String, Integer, Name, Integer, ExpQ)] -> DecsQ
-mkWordReaders con readers =
-    concat <$> mapM mkReader readers
+mkWordReader :: String -- ^ The name of the reader.
+            -> Name    -- ^ The data constructor for the parent type
+            -> Integer -- ^ The offset into the parent's data section (in bits)
+            -> Name    -- ^ The type constructor for the WordN type of the correct
+                       --   size.
+            -> (TypeQ -> TypeQ) -- ^ The type of the final result
+            -> Word64  -- ^ The default value of the field (bit representation)
+            -> ExpQ    -- ^ A function to apply to the result
+            -> DecsQ
+mkWordReader name parentConName start rawTyp typ defaultVal transform = do
+    struct <- newName "struct"
+    let dataIndex = litE $ IntegerL $ start `div` 64
+    let bitOffset = litE $ IntegerL $  start `mod` 64
+    let defaultValE = litE $ IntegerL $ fromIntegral defaultVal
+    mkReader
+        (mkName name)
+        (mkReaderType (\b -> [t| $(conT (inferTypeName parentConName)) $b |]) typ)
+        [| \ $(conP parentConName [varP struct]) -> do
+                dataSec <- U.dataSection $(varE struct)
+                word <- U.index $dataIndex dataSec
+                let rawVal = (word `shiftR` $bitOffset) `xor` $defaultValE
+                return $ $transform $ (fromIntegral rawVal :: $(conT rawTyp)) |]
+
+
+mkWordReaders :: Name -> [(String, Integer, Name, TypeQ -> TypeQ, Word64, ExpQ)]
+    -> DecsQ
+mkWordReaders parent readers =
+    concat <$> mapM (uncurry6 $ \arg -> mkWordReader arg parent) readers
   where
-    mkReader (name, start, typ, defaultVal, transform) = do
-        let fnName = mkName name
-        struct <- newName "struct"
-        body <- mkBody struct
-        return $ [ FunD fnName [Clause [ConP con [VarP struct]]
-                                       (NormalB body)
-                                       []
-                               ]
-                 ]
-      where
-        mkBody struct = do
-            let dataIndex = LitE $ IntegerL $ start `div` 64
-            let bitOffset = LitE $ IntegerL $  start `mod` 64
-            let defaultValE = litE $ IntegerL $ defaultVal
-            [| do dataSec <- U.dataSection $(varE struct)
-                  word <- U.index $(return $ dataIndex) dataSec
-                  let rawVal = word `shiftR` $(return $ bitOffset) `xor` $defaultValE
-                  return $ $transform $ (fromIntegral rawVal :: $(conT typ)) |]
+    uncurry6 func (a, b, c, d, e, f) = func a b c d e f

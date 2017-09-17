@@ -16,8 +16,8 @@ $(mkListReaders 'S.Node
     ])
 
 $(mkWordReaders 'S.Node
-    [ ("id",                        0, ''Word64, 0, [| id          |])
-    , ("displayNamePrefixLength",  64, ''Word32, 0, [| id          |])
-    , ("scopeId",                 128, ''Word64, 0, [| id          |])
-    , ("isGeneric",               288, ''Word1,  0, [| word1ToBool |])
+    [ ("id",                        0, ''Word64, const [t| Word64 |], 0, [| id          |])
+    , ("displayNamePrefixLength",  64, ''Word32, const [t| Word32 |], 0, [| id          |])
+    , ("scopeId",                 128, ''Word64, const [t| Word64 |], 0, [| id          |])
+    , ("isGeneric",               288, ''Word1,  const [t| Bool   |], 0, [| word1ToBool |])
     ])
