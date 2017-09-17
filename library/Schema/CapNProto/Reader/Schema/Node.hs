@@ -10,9 +10,9 @@ import Data.CapNProto.Bits (Word1, word1ToBool)
 $(mkStructWrappers ["Parameter", "NestedNode"])
 
 $(mkListReaders 'S.Node
-    [ ("parameters",  5, 'U.ListStruct, 'Parameter)
-    , ("nestedNodes", 1, 'U.ListStruct, 'NestedNode)
-    , ("annotations", 2, 'U.ListStruct, 'S.Annotation)
+    [ ("parameters",  5, 'U.ListStruct, ''Parameter,    [| Parameter    |])
+    , ("nestedNodes", 1, 'U.ListStruct, ''NestedNode,   [| NestedNode   |])
+    , ("annotations", 2, 'U.ListStruct, ''S.Annotation, [| S.Annotation |])
     ])
 
 $(mkWordReaders 'S.Node

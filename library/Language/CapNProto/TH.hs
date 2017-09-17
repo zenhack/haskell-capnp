@@ -87,29 +87,30 @@ mkReader name ty val = do
            ]
 
 -- | @mkListReader@ generates a reader which extracts a list from a struct.
-mkListReader :: String -- ^ The name of the reader
-            -> Name    -- ^ The data constructor for the parent type.
-            -> Integer -- ^ The offset into the struct's pointer section.
-            -> Name    -- ^ The 'List' data constructor that we expect
-            -> Name    -- ^ A data constructor to apply to the elements of
-                       --   the list.
+mkListReader :: String          -- ^ The name of the reader
+            -> Name             -- ^ The data constructor for the parent type.
+            -> Integer          -- ^ The offset into the struct's pointer section.
+            -> Name             -- ^ The 'List' data constructor that we expect
+            -> Name             -- ^ The type constructor for the element type.
+            -> ExpQ             -- ^ A function apply to the elements of the list.
             -> DecsQ
-mkListReader readerName parentConName ptrOffset listConName childConName = mkReader
-    (mkName readerName)
-    (mkListReaderType
-        (conT $ inferTypeName parentConName)
-        (conT $ inferTypeName childConName))
-    (mkListReaderVal parentConName ptrOffset listConName $
-        (\list -> [| return $ Just $ fmap $(conE childConName) $(varE list) |]))
+mkListReader readerName parentConName ptrOffset listConName childType transform =
+    mkReader
+        (mkName readerName)
+        (mkListReaderType
+            (conT $ inferTypeName parentConName)
+            (conT childType))
+        (mkListReaderVal parentConName ptrOffset listConName $
+            (\list -> [| return $ Just $ fmap $transform $(varE list) |]))
 
 -- | @mkListReaders name args@ calls mkListReader once for each tuple in
 -- @args@. @parent@ is always passed as the first argument. the values
 -- in the tuple are the remaining arguments.
-mkListReaders :: Name -> [(String, Integer, Name, Name)] -> DecsQ
+mkListReaders :: Name -> [(String, Integer, Name, Name, ExpQ)] -> DecsQ
 mkListReaders parent readers =
-    concat <$> mapM (uncurry4 $ \arg -> mkListReader arg parent) readers
+    concat <$> mapM (uncurry5 $ \arg -> mkListReader arg parent) readers
   where
-    uncurry4 f (a, b, c, d) = f a b c d
+    uncurry5 f (a, b, c, d, e) = f a b c d e
 
 mkWordReaders :: Name -> [(String, Integer, Name, Integer, ExpQ)] -> DecsQ
 mkWordReaders con readers =
