@@ -66,7 +66,7 @@ class Blob m a => MutBlob m a where
     -- of PrimMonad, this may modify or destroy the original blob.
     grow :: a -> ByteCount -> m a
 
--- A slice affords efficiently extracting sub-ranges.
+-- | A slice affords efficiently extracting sub-ranges.
 class Slice m a where
     -- | @slice s offset len@ extracts the range [offset, offset+len) from @s@.
     -- Complexity is O(1).
