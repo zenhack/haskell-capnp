@@ -20,7 +20,6 @@ import Test.Framework (Test)
 import Test.HUnit (Assertion, assertEqual)
 
 import Control.Monad.CapNProto.MessageBuilder
-import Data.CapNProto.Blob (BlobSlice(..))
 import Data.CapNProto.Schema
 import qualified Data.CapNProto.Message as M
 import Data.CapNProto.Untyped
@@ -35,7 +34,7 @@ encodeDecodeUntypedTest
     :: ( MsgMetaData -- schema and type name
        , String -- message in textual form
        , BuilderT p RealWorld IO () -- Builder for the message
-       , Maybe (Ptr (BlobSlice ByteString)) -> QuotaT IO () -- reader.
+       , Maybe (Ptr ByteString) -> QuotaT IO () -- reader.
        , Quota -- Quota to run the reader with.
        , Quota -- Remaining quota for the reader.
        )

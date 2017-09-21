@@ -18,8 +18,6 @@ import qualified Schema.CapNProto.Reader.Schema.Node as Node
 import Test.Framework (Test)
 import Test.HUnit (Assertion, assertEqual)
 
-import Data.CapNProto.Blob (BlobSlice)
-
 -- TODO: This contains a bit of copypasta from some of the untyped tests; should
 -- factor that out.
 theAssert :: Assertion
@@ -29,7 +27,7 @@ theAssert = do
     ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
     assertEqual "Correct remaining quota" 791 endQuota
   where
-    reader :: Maybe (Ptr (BlobSlice BS.ByteString)) -> QuotaT IO ()
+    reader :: Maybe (Ptr BS.ByteString) -> QuotaT IO ()
     reader (Just (PtrStruct root)) = do
         let req = Schema.CodeGeneratorRequest root
         Just nodes <- CGReq.nodes req

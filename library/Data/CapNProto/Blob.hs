@@ -1,10 +1,12 @@
 {-# LANGUAGE
       MultiParamTypeClasses
     , FlexibleInstances
-    , TypeFamilies #-}
+    , TypeFamilies
+    , RecordWildCards #-}
 module Data.CapNProto.Blob
     ( Blob(..)
     , MutBlob(..)
+    , Slice(..)
     , BlobSlice(..)
     , lengthInWords
     , indexWord
@@ -64,6 +66,12 @@ class Blob m a => MutBlob m a where
     -- of PrimMonad, this may modify or destroy the original blob.
     grow :: a -> ByteCount -> m a
 
+-- A slice affords efficiently extracting sub-ranges.
+class Slice m a where
+    -- | @slice s offset len@ extracts the range [offset, offset+len) from @s@.
+    -- Complexity is O(1).
+   slice :: a -> ByteCount -> ByteCount -> m a
+
 -- | A slice of a blob.
 --
 -- This wraps an instance of blob, exposing a sub-range of it, and allowing
@@ -104,10 +112,36 @@ instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
                                  }
         index (blob b) (offset b + i)
 
+-- Helper for checking the arguments to slice; calls throwM if the arguments
+-- are invalid in some way.
+checkSliceLen :: (Blob m b, MonadThrow m) => b -> ByteCount -> ByteCount -> m ()
+checkSliceLen s offset newLen = do
+    oldLen <- length s
+    -- TODO: when (offset < 0 || newLen < 0)
+    when (oldLen - offset < newLen) $ do
+        let ByteCount index    = offset + newLen
+        let ByteCount maxIndex = oldLen - 1
+        throwM E.BoundsError { E.index    = index
+                             , E.maxIndex = maxIndex
+                             }
+
+instance (Blob m a, MonadThrow m) => Slice m (BlobSlice a) where
+    slice bs@BlobSlice{..} off len = do
+        checkSliceLen bs off len
+        return $ bs { offset = offset + off
+                    , sliceLen = len
+                    }
 
 instance (Monad m) => Blob m BS.ByteString where
     length = return . ByteCount . BS.length
     index bs (ByteCount i) = return $ BS.index bs i
+
+instance (MonadThrow m) => Slice m BS.ByteString where
+    slice b off len = do
+        checkSliceLen b off len
+        let ByteCount off' = off
+        let ByteCount len' = len
+        return $ BS.take len' $ BS.drop off' b
 
 instance (Monad m) => Blob m ByteArray where
     length = return . ByteCount . sizeofByteArray

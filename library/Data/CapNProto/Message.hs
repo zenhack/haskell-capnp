@@ -44,7 +44,7 @@ getWord (Message segs) WordAt{..} = do
 --
 -- The segments will not be copied; the resulting message will be a view into
 -- the original blob.
-decode :: (Blob m b, MonadThrow m) => b -> m (Message (BlobSlice b))
+decode :: (Slice m b, Blob m b, MonadThrow m) => b -> m (Message b)
 decode blob = do
     -- Note: we use the quota to avoid needing to do bounds checking here;
     -- since readMessage invoices the quota before reading, we can rely on it
@@ -67,13 +67,10 @@ decode blob = do
     readSegment len = do
         (cur, idx) <- get
         put (cur, idx + len)
-        return BlobSlice { blob = blob
-                         , offset = wordsToBytes idx
-                         , sliceLen = wordsToBytes len
-                         }
+        lift $ lift $ slice blob (wordsToBytes idx) (wordsToBytes len)
 
 -- | @readMessage read32 readSegment@ reads in a message using the
--- monadic context, which should manage the current read position
+-- monadic context, which should manage the current read position,
 -- into a message. read32 should read a 32-bit little-endian integer,
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
 -- The size of the message (in 64-bit words) is deducted from the quota,
