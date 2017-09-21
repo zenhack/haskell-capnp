@@ -49,7 +49,7 @@ test-repl: configure
 
 nix-build: nix/capnp.nix
 	-@rm -f result*
-	nix-build --no-out-link release.nix -A capnp -Q -j $(NPROCS)
+	nix-build --no-out-link release.nix -A capnp -j $(NPROCS)
 
 # I've seen problems caused by not running cabal clean before entering a
 # nix shell. In particular, I think the result of cabal configure can be
