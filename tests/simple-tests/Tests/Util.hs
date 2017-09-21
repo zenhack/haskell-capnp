@@ -20,7 +20,7 @@ import System.IO
 import System.Process
 import System.Directory (removeFile)
 
-import Data.CapNProto.Bits (ByteCount(..), wordsToBytes)
+import Data.CapNProto.Bits (ByteCount(..))
 import Data.CapNProto.Blob (BlobSlice(..))
 
 import Test.Framework (testGroup, Test)
