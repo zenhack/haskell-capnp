@@ -1,6 +1,5 @@
 module Main (main) where
 
-
 import Test.Framework                                      (defaultMain)
 import Tests.EncodeDecodeUntyped
     (encodeDecodeUntypedTests)
@@ -12,6 +11,8 @@ import Tests.Module.Data.CapNProto.Untyped                 (untypedTests)
 import Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
 
+import Tests.SchemaQuickCheck (schemaCGRQuickCheck)
+
 main :: IO ()
 main = defaultMain [ bitsTests
                    , ptrTests
@@ -20,4 +21,5 @@ main = defaultMain [ bitsTests
                    , buildTests
                    , encodeDecodeUntypedTests
                    , walkSchemaCodeGenRequestTest
+                   , schemaCGRQuickCheck
                    ]
