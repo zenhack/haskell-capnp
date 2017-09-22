@@ -25,8 +25,13 @@ import qualified Data.CapNProto.Pointer as P
 import Data.CapNProto.Pointer (ElementSize(..))
 import Data.CapNProto.Address (WordAddr(..))
 import qualified Data.CapNProto.Errors as E
-import Data.CapNProto.Blob (Blob)
-import Data.CapNProto.Bits (WordCount(..), Word1(..))
+import Data.CapNProto.Blob (Blob, Slice(..))
+import Data.CapNProto.Bits
+    ( WordCount(..)
+    , Word1(..)
+    , ByteCount(..)
+    , wordsToBytes
+    )
 import Data.Bits
 import Data.Word
 
@@ -240,6 +245,26 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)
+
+
+-- | @rawBytes list@ returns the raw storage corresponding to the list.
+--
+-- Caveats:
+--
+-- * This returns the underlying *storage*, not the value, so e.g.
+--   @rawBytes (fmap (+1) list) == rawBytes list@, since fmap does not modify
+--   the message.
+-- * This only works if the underlying storage is a list of bytes, i.e. the
+--   underlying storage is ListOf b Word8. An exception will be thrown for
+--   things like @fmap (fromIntegral . length) (xs :: ListOf b [Potato])@,
+--   assuming @xs@ was not itself transformed from some @ListOf b Word8@.
+rawBytes :: (ReadCtx m b, Slice m b) => ListOf b Word8 -> m b
+rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
+    seg <- M.getSegment msg segIndex
+    slice seg (wordsToBytes wordIndex) (ByteCount len)
+rawBytes (ListOfMapped list@(ListOfWord8 _) _) = rawBytes list
+-- FIXME: properly throw an error if we get anything else.
+
 
 -- | Returns the root pointer of a message.
 rootPtr :: ReadCtx m b => M.Message b -> m (Maybe (Ptr b))
