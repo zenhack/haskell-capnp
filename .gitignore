@@ -4,3 +4,10 @@
 /.cabal-sandbox
 /cabal.sandbox.config
 result*
+
+# AFL stub intermediates
+tests/afl-fuzz/Decode.hi
+tests/afl-fuzz/Decode.o
+tests/afl-fuzz/Decode_stub.h
+tests/afl-fuzz/main
+tests/afl-fuzz/main.o
