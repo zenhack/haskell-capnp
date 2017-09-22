@@ -91,7 +91,7 @@ data Struct b
         !Word16 -- Pointer section size.
 
 
--- | @get msg addr@ returns the Ptr stored at @addr@ in @word@.
+-- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
 get :: ReadCtx m b => M.Message b -> WordAddr -> m (Maybe (Ptr b))
