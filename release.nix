@@ -112,6 +112,70 @@ with rec {
         echo "[SUCCESS] stylish-haskell had no suggestions"
       '';
     });
+
+  checkHLint = { src }: (
+    pkgs.stdenv.mkDerivation {
+      name = "check-hlint";
+
+      inherit src;
+
+      buildInputs = [ pkgs.haskellPackages.hlint_2_0_5 ];
+
+      phases = ["unpackPhase" "checkPhase"];
+
+      doCheck = true;
+
+      checkPhase = ''
+        test -e report.html && {
+            echo "[FAILURE] report.html already exists"; exit 1
+        }
+
+        hlint . --report || true
+
+        mkdir -pv "$out/nix-support"
+        mv report.html "$out/report.html"
+        echo "doc report $out report.html" \
+            >> "$out/nix-support/hydra-build-products"
+
+        echo "[SUCCESS] hlint report generated"
+      '';
+    });
+
+  checkCabalNixSync = { src }: (
+    pkgs.stdenv.mkDerivation {
+      name = "check-cabal-nix-sync";
+
+      inherit src;
+
+      buildInputs = [
+        pkgs.git
+        pkgs.gnumake
+        pkgs.haskellPackages.cabal2nix
+      ];
+
+      phases = ["unpackPhase" "checkPhase"];
+
+      doCheck = true;
+
+      checkPhase = ''
+        mkdir "$out"
+
+        git init                                   &> /dev/null
+        git config user.email "ignore@example.com" &> /dev/null
+        git config user.name  "Ignore Me"          &> /dev/null
+        git add '*'                                &> /dev/null
+        git commit -m 'temporary'                  &> /dev/null
+
+        make nix/capnp.nix
+
+        if test -n "$(git diff)"; then
+            echo "[FAILURE] nix/capnp.nix is out of date!"
+            exit 1
+        fi
+
+        echo "[SUCCESS] nix/capnp.nix is up to date"
+      '';
+    });
 };
 
 {
@@ -123,4 +187,8 @@ with rec {
       "library/Language/CapNProto/TH.hs"
     ];
   };
+
+  capnpHLint = checkHLint { src = haskellPackages.capnp.src; };
+
+  capnpCabalNixSync = checkCabalNixSync { src = haskellPackages.capnp.src; };
 }
