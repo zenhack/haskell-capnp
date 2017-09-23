@@ -18,6 +18,9 @@ with rec {
       sha256 = "0bi50addsnxs4wmbn6ybvjldsi01q9ji7m4d3s7ca9visq3n6gvj";
     };
 
+    # Pull in a version of haskell-src-exts that fixes
+    # https://github.com/haskell-suite/haskell-src-exts/issues/338, which causes
+    # stylish-haskell to choke on some of our template haskell code:
     haskell-src-exts = pkgs.fetchFromGitHub {
       owner  = "mtolly";
       repo   = "haskell-src-exts";
