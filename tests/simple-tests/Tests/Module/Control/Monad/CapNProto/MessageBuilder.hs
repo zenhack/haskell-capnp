@@ -2,18 +2,16 @@
 module Tests.Module.Control.Monad.CapNProto.MessageBuilder (buildTests) where
 
 import Control.Monad.CapNProto.MessageBuilder
-import Data.CapNProto.Schema                  (Field(..))
+import Data.Int
+import Data.Word
 
-import           Control.Monad           (void)
-import           Control.Monad.Primitive (RealWorld)
-import qualified Data.ByteString         as BS
-import           Data.Int
-import           Data.Word
+import Control.Monad           (void)
+import Control.Monad.Primitive (RealWorld)
+import Data.CapNProto.Schema   (Field(..))
+import Test.HUnit              (Assertion, assertEqual)
+import Tests.Util              (assertionsToTest, freezeAsByteString)
 
-import Tests.Util (assertionsToTest, freezeAsByteString)
-
-import Test.HUnit (Assertion, assertEqual)
-
+import qualified Data.ByteString as BS
 
 buildTest :: BuilderT p RealWorld IO () -> [Word8] -> Assertion
 buildTest builder expected = do

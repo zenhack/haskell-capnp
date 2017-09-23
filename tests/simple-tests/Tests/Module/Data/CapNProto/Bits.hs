@@ -1,14 +1,12 @@
 module Tests.Module.Data.CapNProto.Bits where
 
 import Data.Bits
-import Data.Word
-
 import Data.CapNProto.Bits
-
-import Tests.Util (assertionsToTest)
+import Data.Word
 
 import Test.Framework (testGroup)
 import Test.HUnit     (Assertion, assertEqual)
+import Tests.Util     (assertionsToTest)
 
 
 bitsTests = testGroup "bits tests" [bitRangeExamples, replaceBitsExamples]

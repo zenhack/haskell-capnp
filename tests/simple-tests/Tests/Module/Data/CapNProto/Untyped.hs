@@ -2,20 +2,20 @@
 {-# LANGUAGE QuasiQuotes       #-}
 module Tests.Module.Data.CapNProto.Untyped where
 
+import Prelude hiding (length)
 
-import qualified Data.ByteString      as BS
-import           Data.ReinterpretCast (wordToDouble)
-import           Prelude              hiding (length)
-import           Text.Heredoc         (here, there)
+import Control.Monad.Quota
+import Data.CapNProto.Untyped
+import Tests.Util
 
-import Control.Monad (forM_, when)
+import Control.Monad        (forM_, when)
+import Data.ReinterpretCast (wordToDouble)
+import Test.Framework       (Test)
+import Test.HUnit           (assertEqual)
+import Text.Heredoc         (here, there)
 
-import           Control.Monad.Quota
+import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Message as M
-import           Data.CapNProto.Untyped
-import           Test.Framework         (Test)
-import           Test.HUnit             (assertEqual)
-import           Tests.Util
 
 aircraftSchema :: String
 aircraftSchema = [there|tests/data/aircraft.capnp|]

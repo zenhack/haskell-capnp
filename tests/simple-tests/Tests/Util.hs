@@ -8,26 +8,25 @@ module Tests.Util
     )
   where
 
-import           Control.Concurrent           (forkIO)
-import           Control.DeepSeq              (deepseq)
-import           Control.Monad                (void)
-import           Control.Monad.Primitive      (PrimMonad, PrimState)
-import           Control.Monad.Trans          (lift)
-import           Control.Monad.Trans.Resource
-    (ResourceT, allocate, runResourceT)
-import qualified Data.ByteString              as BS
-import           Data.Primitive.ByteArray     (MutableByteArray, readByteArray)
-import           GHC.IO.Handle                (hSetBinaryMode)
-import           System.Directory             (removeFile)
-import           System.IO
-import           System.Process
+import System.IO
+import System.Process
 
-import Data.CapNProto.Bits (ByteCount(..))
-import Data.CapNProto.Blob (BlobSlice(..))
+import Control.Concurrent             (forkIO)
+import Control.DeepSeq                (deepseq)
+import Control.Monad                  (void)
+import Control.Monad.Primitive        (PrimMonad, PrimState)
+import Control.Monad.Trans            (lift)
+import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
+import Data.CapNProto.Bits            (ByteCount(..))
+import Data.CapNProto.Blob            (BlobSlice(..))
+import Data.Primitive.ByteArray       (MutableByteArray, readByteArray)
+import GHC.IO.Handle                  (hSetBinaryMode)
+import System.Directory               (removeFile)
+import Test.Framework                 (Test, testGroup)
+import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (hUnitTestToTests)
-import qualified Test.HUnit                     as H
+import qualified Data.ByteString as BS
+import qualified Test.HUnit      as H
 
 -- | Information about the contents of a capnp message. This is enough
 -- to encode/decode both textual and binary forms.

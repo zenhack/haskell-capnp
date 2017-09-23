@@ -9,21 +9,21 @@ module Tests.EncodeDecodeUntyped
 
 import Prelude hiding (length)
 
+import Control.Monad.CapNProto.MessageBuilder
+import Control.Monad.Quota
+import Data.CapNProto.Schema
+import Data.CapNProto.Untyped
+import Data.Word
+import Tests.Util
+
 import Control.Monad           (void)
 import Control.Monad.Primitive (RealWorld)
-import Control.Monad.Quota
 import Data.ByteString         (ByteString)
-import Data.Word
+import Test.Framework          (Test)
+import Test.HUnit              (Assertion, assertEqual)
 import Text.Heredoc            (here)
 
-import Test.Framework (Test)
-import Test.HUnit     (Assertion, assertEqual)
-
-import           Control.Monad.CapNProto.MessageBuilder
-import qualified Data.CapNProto.Message                 as M
-import           Data.CapNProto.Schema
-import           Data.CapNProto.Untyped
-import           Tests.Util
+import qualified Data.CapNProto.Message as M
 
 -- Cross check capnp encode/decode, builder, and the readers. Verifies that:
 --
