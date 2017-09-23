@@ -41,11 +41,11 @@ getData list = Data <$> U.rawBytes list
 -- 'SchemaViolationError' is thrown.
 getText :: (U.ReadCtx m b, B.Slice m b) => U.ListOf b Word8 -> m (Text b)
 getText list = do
-    bytes <- rawBytes list
+    bytes <- U.rawBytes list
     len <- B.length bytes
-    when (len == 0) $ throwM $ SchemaViolationError
+    when (len == 0) $ throwM $ E.SchemaViolationError
         "Text is not NUL-terminated (list of bytes has length 0)"
-    lastByte <- U.index (len - 1) bytes
-    when (lastByte /= 0) $ throwM $ SchemaViolationError $
+    lastByte <- B.index bytes (len - 1)
+    when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
     Text <$> B.slice bytes 0 (len - 1)
