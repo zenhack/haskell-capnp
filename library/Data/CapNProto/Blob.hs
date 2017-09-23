@@ -65,7 +65,7 @@ class Blob m a => MutBlob m a where
 
 -- | A slice affords efficiently extracting sub-ranges.
 class Slice m a where
-    -- | @slice s offset len@ extracts the range [offset, offset+len) from @s@.
+    -- @slice s offset len@ extracts the range [offset, offset+len) from @s@.
     -- Complexity is O(1).
    slice :: a -> ByteCount -> ByteCount -> m a
 
