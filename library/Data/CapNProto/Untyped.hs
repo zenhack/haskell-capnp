@@ -14,6 +14,7 @@ module Data.CapNProto.Untyped
     , dataSection, ptrSection
     , get, index, length
     , rootPtr
+    , rawBytes
     , ReadCtx
     )
   where
@@ -263,7 +264,12 @@ rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     seg <- M.getSegment msg segIndex
     slice seg (wordsToBytes wordIndex) (ByteCount len)
 rawBytes (ListOfMapped list@(ListOfWord8 _) _) = rawBytes list
--- FIXME: properly throw an error if we get anything else.
+rawBytes _ = throwM $ E.SchemaViolationError $
+    -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
+    -- here. It's *almost* right, in that the caller is asking for a
+    -- transformation that assumes a certain shape of data, but we should
+    -- come up with something that more clearly expresses what's going on.
+    "rawBytes called on something other than a list of bytes."
 
 
 -- | Returns the root pointer of a message.
