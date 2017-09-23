@@ -17,7 +17,8 @@ NIXPKGS_REVISION = 788ce6e3df12bb0cf19fb9ccf8ffa75558b551ba
 
 .PHONY: all help configure build       \
         lib-repl exe-repl test-repl    \
-        nix-build nix-shell update-nix
+        nix-build nix-shell update-nix \
+	format
 
 all: help
 
@@ -31,6 +32,7 @@ help:
 	-@echo "  nix-build:  build via nix"
 	-@echo "  nix-shell:  open a nix shell"
 	-@echo "  update-nix: update any pinned nix files"
+	-@echo "  format:     format source tree with stylish-haskell."
 
 configure:
 	cabal configure --enable-tests
@@ -63,6 +65,9 @@ nix-shell: nix/capnp.nix
 update-nix: nix/capnp.nix
 	nix-prefetch-git "https://github.com/NixOS/nixpkgs" $(NIXPKGS_REVISION) \
 	    > nix/nixpkgs.json
+
+format:
+	find * -name '*.hs' -exec stylish-haskell --inplace \{} \;
 
 nix/capnp.nix: capnp.cabal
 	cd nix; cabal2nix ../. > capnp.nix

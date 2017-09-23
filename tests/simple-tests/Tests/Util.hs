@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards, TypeFamilies #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies    #-}
 module Tests.Util
     ( MsgMetaData(..)
     , capnpEncode, capnpDecode
@@ -7,25 +8,26 @@ module Tests.Util
     )
   where
 
-import Control.Concurrent (forkIO)
-import Control.DeepSeq (deepseq)
-import Control.Monad (void)
-import Control.Monad.Trans.Resource (ResourceT, runResourceT, allocate)
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import Control.Monad.Trans (lift)
-import Data.Primitive.ByteArray (MutableByteArray, readByteArray)
-import GHC.IO.Handle (hSetBinaryMode)
-import qualified Data.ByteString as BS
-import System.IO
-import System.Process
-import System.Directory (removeFile)
+import           Control.Concurrent           (forkIO)
+import           Control.DeepSeq              (deepseq)
+import           Control.Monad                (void)
+import           Control.Monad.Primitive      (PrimMonad, PrimState)
+import           Control.Monad.Trans          (lift)
+import           Control.Monad.Trans.Resource
+    (ResourceT, allocate, runResourceT)
+import qualified Data.ByteString              as BS
+import           Data.Primitive.ByteArray     (MutableByteArray, readByteArray)
+import           GHC.IO.Handle                (hSetBinaryMode)
+import           System.Directory             (removeFile)
+import           System.IO
+import           System.Process
 
 import Data.CapNProto.Bits (ByteCount(..))
 import Data.CapNProto.Blob (BlobSlice(..))
 
-import Test.Framework (testGroup, Test)
-import qualified Test.HUnit as H
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
+import           Test.Framework                 (Test, testGroup)
+import           Test.Framework.Providers.HUnit (hUnitTestToTests)
+import qualified Test.HUnit                     as H
 
 -- | Information about the contents of a capnp message. This is enough
 -- to encode/decode both textual and binary forms.

@@ -1,8 +1,8 @@
 module Schema.CapNProto.Schema.Node.Union_.Struct_ where
 
-import Schema.CapNProto.Schema.Node.Union_ (Struct_)
-import qualified Schema.CapNProto.Schema as S
-import qualified Data.CapNProto.Schema as DS
+import qualified Data.CapNProto.Schema               as DS
+import qualified Schema.CapNProto.Schema             as S
+import           Schema.CapNProto.Schema.Node.Union_ (Struct_)
 
 import Data.Word
 

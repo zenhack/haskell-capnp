@@ -2,8 +2,8 @@ module Schema.CapNProto.Schema.Node where
 
 import qualified Data.CapNProto.Schema as DS
 
-import Data.Text (Text)
-import Data.Word (Word16, Word32)
+import           Data.Text               (Text)
+import           Data.Word               (Word16, Word32)
 import qualified Schema.CapNProto.Schema as S
 
 id :: DS.Field S.Node S.Id

@@ -1,4 +1,6 @@
-{-# LANGUAGE GADTs, RecordWildCards, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE GADTs           #-}
+{-# LANGUAGE RecordWildCards #-}
 {-|
 Module: Data.CapNProto.Untyped
 Description: Utilities for reading capnproto messages with no schema.
@@ -19,22 +21,18 @@ module Data.CapNProto.Untyped
     )
   where
 
-import Control.Monad.Catch (MonadThrow, throwM)
-import Control.Monad.Quota (MonadQuota, invoice)
+import           Control.Monad.Catch    (MonadThrow, throwM)
+import           Control.Monad.Quota    (MonadQuota, invoice)
+import           Data.Bits
+import           Data.CapNProto.Address (WordAddr(..))
+import           Data.CapNProto.Bits
+    (ByteCount(..), Word1(..), WordCount(..), wordsToBytes)
+import           Data.CapNProto.Blob    (Blob, Slice(..))
+import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Message as M
+import           Data.CapNProto.Pointer (ElementSize(..))
 import qualified Data.CapNProto.Pointer as P
-import Data.CapNProto.Pointer (ElementSize(..))
-import Data.CapNProto.Address (WordAddr(..))
-import qualified Data.CapNProto.Errors as E
-import Data.CapNProto.Blob (Blob, Slice(..))
-import Data.CapNProto.Bits
-    ( WordCount(..)
-    , Word1(..)
-    , ByteCount(..)
-    , wordsToBytes
-    )
-import Data.Bits
-import Data.Word
+import           Data.Word
 
 import Prelude hiding (length)
 
@@ -86,7 +84,7 @@ data ListOf b a where
 
 instance Functor (ListOf b) where
     fmap f (ListOfMapped list g) = ListOfMapped list (f . g)
-    fmap f list = ListOfMapped list f
+    fmap f list                  = ListOfMapped list f
 
 -- | A struct value in a message.
 data Struct b
@@ -157,12 +155,12 @@ get msg addr = do
     getList addr@WordAt{..} eltSpec = PtrList <$> do
         case eltSpec of
             P.EltNormal sz len -> return $ case sz of
-                Sz0  -> List0  (ListOfVoid    (fromIntegral len))
-                Sz1  -> List1  (ListOfBool    nlist)
-                Sz8  -> List8  (ListOfWord8   nlist)
-                Sz16 -> List16 (ListOfWord16  nlist)
-                Sz32 -> List32 (ListOfWord32  nlist)
-                Sz64 -> List64 (ListOfWord64  nlist)
+                Sz0   -> List0  (ListOfVoid    (fromIntegral len))
+                Sz1   -> List1  (ListOfBool    nlist)
+                Sz8   -> List8  (ListOfWord8   nlist)
+                Sz16  -> List16 (ListOfWord16  nlist)
+                Sz32  -> List32 (ListOfWord32  nlist)
+                Sz64  -> List64 (ListOfWord64  nlist)
                 SzPtr -> ListPtr (ListOfPtr nlist)
               where
                 nlist = NormalList msg addr (fromIntegral len)
@@ -220,14 +218,14 @@ index i list = invoice 1 >> index' list
 
 -- | Returns the length of a list
 length :: ReadCtx m b => ListOf b a -> m Int
-length (ListOfVoid len) = return len
-length (ListOfStruct _ len) = return len
-length (ListOfBool   nlist) = nLen nlist
-length (ListOfWord8  nlist) = nLen nlist
-length (ListOfWord16 nlist) = nLen nlist
-length (ListOfWord32 nlist) = nLen nlist
-length (ListOfWord64 nlist) = nLen nlist
-length (ListOfPtr    nlist) = nLen nlist
+length (ListOfVoid len)      = return len
+length (ListOfStruct _ len)  = return len
+length (ListOfBool   nlist)  = nLen nlist
+length (ListOfWord8  nlist)  = nLen nlist
+length (ListOfWord16 nlist)  = nLen nlist
+length (ListOfWord32 nlist)  = nLen nlist
+length (ListOfWord64 nlist)  = nLen nlist
+length (ListOfPtr    nlist)  = nLen nlist
 length (ListOfMapped list _) = length list
 
 -- | helper for 'length'; returns the length ofr a normal list.

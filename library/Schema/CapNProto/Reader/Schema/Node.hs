@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Schema.CapNProto.Reader.Schema.Node where
 
-import Data.Word
-import Language.CapNProto.TH
+import           Data.CapNProto.Bits            (Word1, word1ToBool)
+import qualified Data.CapNProto.Untyped         as U
+import           Data.Word
+import           Language.CapNProto.TH
 import qualified Schema.CapNProto.Reader.Schema as S
-import qualified Data.CapNProto.Untyped as U
-import Data.CapNProto.Bits (Word1, word1ToBool)
 
 $(mkStructWrappers ["Parameter", "NestedNode"])
 

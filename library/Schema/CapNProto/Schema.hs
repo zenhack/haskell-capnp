@@ -1,9 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Schema.CapNProto.Schema where
 
-import Data.Word
-    ( Word64
-    )
+import Data.Word (Word64)
 
 type Id = Word64
 

@@ -6,8 +6,8 @@ This module provides support for parsing and serializing capnproto pointers.
 -}
 module Data.CapNProto.Pointer where
 
-import Data.CapNProto.Bits
 import Data.Bits
+import Data.CapNProto.Bits
 import Data.Int
 import Data.Word
 
@@ -86,7 +86,7 @@ parsePtr word = Just $
 -- | @serializePtr ptr@ serializes the pointer  as a Word64, translating
 -- @Nothing@ to a null pointer.
 serializePtr :: Maybe Ptr -> Word64
-serializePtr Nothing = 0
+serializePtr Nothing  = 0
 serializePtr (Just p) = serializePtr' p
 
 serializePtr' :: Ptr -> Word64
@@ -111,7 +111,7 @@ serializePtr' (CapPtr index) =
 
 parseEltSpec :: Word64 -> EltSpec
 parseEltSpec word = case bitRange word 32 35 of
-    7 -> EltComposite (i29 (hi word))
+    7  -> EltComposite (i29 (hi word))
     sz -> EltNormal (toEnum sz) (bitRange word 35 64)
 
 serializeEltSpec :: EltSpec -> Word64

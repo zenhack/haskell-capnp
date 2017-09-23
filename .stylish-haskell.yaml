@@ -1,1 +1,29 @@
-steps: []
+steps:
+  - simple_align:
+      cases: true
+      top_level_patterns: true
+      records: true
+  - imports:
+      align: group
+      list_align: after_alias
+      pad_module_names: true
+      long_list_align: new_line_multiline
+      empty_list_align: right_after
+      list_padding: 4
+      separate_lists: false
+      space_surround: false
+  - language_pragmas:
+      style: vertical
+      align: true
+      remove_redundant: true
+      spaces: 4
+  - trailing_whitespace: {}
+columns: 80
+newline: lf
+language_extensions:
+  # stylish-haskell's parser (really haskell-src-exts) and GHC disagree about
+  # when some of the following are needed, so some of our modules will build
+  # without these extensions, but stylish-haskell needs them for parsing:
+  - ExplicitForAll
+  - FlexibleContexts
+  - MultiParamTypeClasses

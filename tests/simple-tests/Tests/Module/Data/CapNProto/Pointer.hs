@@ -1,14 +1,14 @@
 module Tests.Module.Data.CapNProto.Pointer where
 
 import Data.Bits
+import Data.CapNProto.Pointer
 import Data.Int
 import Data.Word
-import Data.CapNProto.Pointer
-import Test.Framework (testGroup)
+import Test.Framework                       (testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
-import Test.QuickCheck.Gen (oneof, Gen)
-import Test.HUnit (assertEqual)
+import Test.HUnit                           (assertEqual)
+import Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary)
+import Test.QuickCheck.Gen                  (Gen, oneof)
 
 import Tests.Util (assertionsToTest)
 
@@ -65,7 +65,7 @@ ptrProps = testGroup "Pointer Properties"
                                              -- of this test is a bit misleading
                                              -- because of this case; should fix
                                              -- that.
-            _ -> parsePtr (serializePtr ptr) == ptr
+            _                        -> parsePtr (serializePtr ptr) == ptr
     ]
 
 

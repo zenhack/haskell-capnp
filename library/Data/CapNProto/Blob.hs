@@ -1,8 +1,7 @@
-{-# LANGUAGE
-      MultiParamTypeClasses
-    , FlexibleInstances
-    , TypeFamilies
-    , RecordWildCards #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Data.CapNProto.Blob
     ( Blob(..)
     , MutBlob(..)
@@ -16,31 +15,27 @@ module Data.CapNProto.Blob
 
 import Prelude hiding (length)
 
-import Control.Monad (when, forM_)
-import Control.Monad.Catch (MonadThrow(..))
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import qualified Data.ByteString as BS
-import Data.Bits
-import Data.Word
-import Data.Primitive.ByteArray
-    ( MutableByteArray
-    , sizeofMutableByteArray
+import           Control.Monad            (forM_, when)
+import           Control.Monad.Catch      (MonadThrow(..))
+import           Control.Monad.Primitive  (PrimMonad, PrimState)
+import           Data.Bits
+import qualified Data.ByteString          as BS
+import           Data.Primitive.ByteArray
+    ( ByteArray
+    , MutableByteArray
     , copyMutableByteArray
     , fillByteArray
+    , indexByteArray
     , newByteArray
     , readByteArray
-    , writeByteArray
-    , ByteArray
     , sizeofByteArray
-    , indexByteArray
+    , sizeofMutableByteArray
+    , writeByteArray
     )
+import           Data.Word
 
-import Data.CapNProto.Bits
-    ( WordCount(..)
-    , ByteCount(..)
-    , wordsToBytes
-    , bytesToWordsFloor
-    )
+import           Data.CapNProto.Bits
+    (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
 import qualified Data.CapNProto.Errors as E
 
 -- TODO: be clearer about error handling re: these classes. The general notion
@@ -77,8 +72,8 @@ class Slice m a where
 -- This wraps an instance of blob, exposing a sub-range of it, and allowing
 -- further slicing operations. The resulting value is itself a blob.
 data BlobSlice a = BlobSlice
-    { blob :: a
-    , offset :: ByteCount
+    { blob     :: a
+    , offset   :: ByteCount
     , sliceLen :: ByteCount
     } deriving(Show)
 

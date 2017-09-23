@@ -9,7 +9,7 @@ module Data.CapNProto.BasicTypes where
 
 import Data.Word
 
-import Control.Monad (when)
+import Control.Monad       (when)
 import Control.Monad.Catch (throwM)
 
 import qualified Data.CapNProto.Blob    as B

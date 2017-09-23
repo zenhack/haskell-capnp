@@ -1,6 +1,6 @@
 module Main where
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Message as M
 
 main :: IO ()

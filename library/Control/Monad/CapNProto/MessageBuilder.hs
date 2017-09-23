@@ -1,4 +1,6 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, RecordWildCards, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-|
 Module: Control.Monad.CapNProto.MessageBuilder
 Description: support for building capnproto messages.
@@ -7,38 +9,30 @@ module Control.Monad.CapNProto.MessageBuilder where
 
 import Prelude hiding (length)
 
-import Control.Monad (when)
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import Control.Monad.Trans.Class (MonadTrans(lift))
-import Control.Monad.Trans.RWS.Strict (RWST(runRWST), ask, local, get, put)
-import Data.Primitive.ByteArray
-    ( MutableByteArray
-    , newByteArray
-    )
+import Control.Monad                  (when)
+import Control.Monad.Primitive        (PrimMonad, PrimState)
+import Control.Monad.Trans.Class      (MonadTrans(lift))
+import Control.Monad.Trans.RWS.Strict (RWST(runRWST), ask, get, local, put)
+import Data.Primitive.ByteArray       (MutableByteArray, newByteArray)
 
-import Data.CapNProto.Bits
-    ( Word1(..)
-    , replaceBits
-    , WordCount(..)
-    , bytesToWordsFloor
-    , fromHi
-    )
+import           Data.CapNProto.Bits
+    (Word1(..), WordCount(..), bytesToWordsFloor, fromHi, replaceBits)
+import           Data.CapNProto.Bits    (wordsToBytes)
+import           Data.CapNProto.Blob
 import qualified Data.CapNProto.Pointer as P
-import Data.CapNProto.Bits (wordsToBytes)
-import Data.CapNProto.Blob
-import Data.CapNProto.Schema (Field(..))
-import Data.Int
-import Data.Word
+import           Data.CapNProto.Schema  (Field(..))
+import           Data.Int
+import           Data.Word
 
 -- | Internal mutable state of a builder.
 data BuilderState s = BuilderState
     { nextAlloc :: !WordCount -- ^ offset into the array for the next allocation
-    , array :: MutableByteArray s -- ^ array storing the message being built
+    , array     :: MutableByteArray s -- ^ array storing the message being built
     }
 
 -- | Internal read-only enviornment for the builder.
 data BuilderEnv = BuilderEnv
-    { parentOff :: !WordCount -- ^ offset into the array to the start of
+    { parentOff    :: !WordCount -- ^ offset into the array to the start of
                               -- the parent object.
     , parentDataSz :: !Word16 -- ^ The size of the parent's data section. Only
                               -- meaningful if the parent is a struct.
@@ -46,7 +40,7 @@ data BuilderEnv = BuilderEnv
                               -- union tag for parent. The bit offset is in
                               -- childShift. This is only meaningful when parent
                               -- is a union.
-    , childShift :: !Word16 -- ^ The number of bits the child should be shifted
+    , childShift   :: !Word16 -- ^ The number of bits the child should be shifted
                             -- inside its word. Only meaningful for data fields
                             -- smaller than 64 bits (note that this includes
                             -- union tags).

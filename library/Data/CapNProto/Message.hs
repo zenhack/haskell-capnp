@@ -1,4 +1,6 @@
-{-# LANGUAGE MultiParamTypeClasses, RecordWildCards, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-|
 Module: Data.CapNProto.Message
 Description: Tools for working with messages.
@@ -6,21 +8,18 @@ Description: Tools for working with messages.
 -}
 module Data.CapNProto.Message where
 
-import Control.Monad (when, void)
-import Control.Monad.Catch (MonadThrow, throwM)
-import Control.Monad.Quota (MonadQuota, invoice, evalQuotaT, Quota(..))
-import Control.Monad.State (evalStateT, get, put)
-import Control.Monad.Trans.Class (MonadTrans(..))
-import qualified Data.Vector as V
-import Data.CapNProto.Address (WordAddr(..))
-import Data.CapNProto.Errors (BoundsError(..))
-import Data.CapNProto.Blob as B
-import Data.CapNProto.Bits
-    ( lo, hi
-    , WordCount(..)
-    , wordsToBytes
-    )
-import Data.Word (Word64, Word32)
+import           Control.Monad             (void, when)
+import           Control.Monad.Catch       (MonadThrow, throwM)
+import           Control.Monad.Quota
+    (MonadQuota, Quota(..), evalQuotaT, invoice)
+import           Control.Monad.State       (evalStateT, get, put)
+import           Control.Monad.Trans.Class (MonadTrans(..))
+import           Data.CapNProto.Address    (WordAddr(..))
+import           Data.CapNProto.Bits       (WordCount(..), hi, lo, wordsToBytes)
+import           Data.CapNProto.Blob       as B
+import           Data.CapNProto.Errors     (BoundsError(..))
+import qualified Data.Vector               as V
+import           Data.Word                 (Word32, Word64)
 
 newtype Message a = Message (V.Vector a) deriving(Show)
 

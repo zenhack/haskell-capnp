@@ -1,8 +1,9 @@
-{-# LANGUAGE ConstraintKinds, TemplateHaskell #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest where
 
+import qualified Data.CapNProto.Untyped         as U
 import qualified Schema.CapNProto.Reader.Schema as S
-import qualified Data.CapNProto.Untyped as U
 
 import Language.CapNProto.TH
 

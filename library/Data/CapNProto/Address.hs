@@ -4,13 +4,13 @@ Description: Utilities for manipulating addresses within capnproto messages.
 -}
 module Data.CapNProto.Address where
 
-import Data.Word
-import Data.CapNProto.Bits (WordCount)
+import           Data.CapNProto.Bits    (WordCount)
 import qualified Data.CapNProto.Pointer as P
+import           Data.Word
 
 -- | The address of a word within a message
 data WordAddr = WordAt
-    { segIndex :: !Int -- ^ Segment number
+    { segIndex  :: !Int -- ^ Segment number
     , wordIndex :: !WordCount -- ^ offset in words from the start of the segment.
     } deriving(Show, Eq)
 

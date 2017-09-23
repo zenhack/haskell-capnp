@@ -10,7 +10,7 @@ import Control.Monad.Catch (Exception)
 -- to access an illegal index @index@ within a sequence of length
 -- @len@.
 data BoundsError = BoundsError
-    { index :: Int
+    { index    :: Int
     , maxIndex :: Int
     } deriving(Show, Eq)
 
