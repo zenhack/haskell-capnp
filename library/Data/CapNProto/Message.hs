@@ -8,18 +8,18 @@ Description: Tools for working with messages.
 -}
 module Data.CapNProto.Message where
 
-import           Control.Monad             (void, when)
-import           Control.Monad.Catch       (MonadThrow, throwM)
-import           Control.Monad.Quota
-    (MonadQuota, Quota(..), evalQuotaT, invoice)
-import           Control.Monad.State       (evalStateT, get, put)
-import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Data.CapNProto.Address    (WordAddr(..))
-import           Data.CapNProto.Bits       (WordCount(..), hi, lo, wordsToBytes)
-import           Data.CapNProto.Blob       as B
-import           Data.CapNProto.Errors     (BoundsError(..))
-import qualified Data.Vector               as V
-import           Data.Word                 (Word32, Word64)
+import Control.Monad             (void, when)
+import Control.Monad.Catch       (MonadThrow, throwM)
+import Control.Monad.Quota       (MonadQuota, Quota(..), evalQuotaT, invoice)
+import Control.Monad.State       (evalStateT, get, put)
+import Control.Monad.Trans.Class (MonadTrans(..))
+import Data.CapNProto.Address    (WordAddr(..))
+import Data.CapNProto.Bits       (WordCount(..), hi, lo, wordsToBytes)
+import Data.CapNProto.Errors     (BoundsError(..))
+import Data.Word                 (Word32, Word64)
+
+import qualified Data.CapNProto.Blob as B
+import qualified Data.Vector         as V
 
 newtype Message a = Message (V.Vector a) deriving(Show)
 
@@ -43,7 +43,7 @@ getWord (Message segs) WordAt{..} = do
 --
 -- The segments will not be copied; the resulting message will be a view into
 -- the original blob.
-decode :: (Slice m b, Blob m b, MonadThrow m) => b -> m (Message b)
+decode :: (B.Slice m b, B.Blob m b, MonadThrow m) => b -> m (Message b)
 decode blob = do
     -- Note: we use the quota to avoid needing to do bounds checking here;
     -- since readMessage invoices the quota before reading, we can rely on it
@@ -66,7 +66,7 @@ decode blob = do
     readSegment len = do
         (cur, idx) <- get
         put (cur, idx + len)
-        lift $ lift $ slice blob (wordsToBytes idx) (wordsToBytes len)
+        lift $ lift $ B.slice blob (wordsToBytes idx) (wordsToBytes len)
 
 -- | @readMessage read32 readSegment@ reads in a message using the
 -- monadic context, which should manage the current read position,
@@ -89,7 +89,7 @@ readMessage read32 readSegment = do
 -- | @writeMesage write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
-writeMessage :: (Monad m, Blob m b)
+writeMessage :: (Monad m, B.Blob m b)
     => Message b -> (Word32 -> m ()) -> (b -> m ()) -> m ()
 writeMessage (Message msg) write32 writeSegment = do
     let numSegs = V.length msg

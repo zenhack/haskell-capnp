@@ -13,16 +13,16 @@ import Control.Monad                  (when)
 import Control.Monad.Primitive        (PrimMonad, PrimState)
 import Control.Monad.Trans.Class      (MonadTrans(lift))
 import Control.Monad.Trans.RWS.Strict (RWST(runRWST), ask, get, local, put)
-import Data.Primitive.ByteArray       (MutableByteArray, newByteArray)
-
-import           Data.CapNProto.Bits
+import Data.CapNProto.Bits
     (Word1(..), WordCount(..), bytesToWordsFloor, fromHi, replaceBits)
-import           Data.CapNProto.Bits    (wordsToBytes)
-import           Data.CapNProto.Blob
+import Data.CapNProto.Bits            (wordsToBytes)
+import Data.CapNProto.Blob
+import Data.CapNProto.Schema          (Field(..))
+import Data.Int
+import Data.Primitive.ByteArray       (MutableByteArray, newByteArray)
+import Data.Word
+
 import qualified Data.CapNProto.Pointer as P
-import           Data.CapNProto.Schema  (Field(..))
-import           Data.Int
-import           Data.Word
 
 -- | Internal mutable state of a builder.
 data BuilderState s = BuilderState

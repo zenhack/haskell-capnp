@@ -21,20 +21,22 @@ module Data.CapNProto.Untyped
     )
   where
 
-import           Control.Monad.Catch    (MonadThrow, throwM)
-import           Control.Monad.Quota    (MonadQuota, invoice)
-import           Data.Bits
-import           Data.CapNProto.Address (WordAddr(..))
-import           Data.CapNProto.Bits
+import Prelude hiding (length)
+
+import Data.Bits
+import Data.Word
+
+import Control.Monad.Catch    (MonadThrow, throwM)
+import Control.Monad.Quota    (MonadQuota, invoice)
+import Data.CapNProto.Address (WordAddr(..))
+import Data.CapNProto.Bits
     (ByteCount(..), Word1(..), WordCount(..), wordsToBytes)
-import           Data.CapNProto.Blob    (Blob, Slice(..))
+import Data.CapNProto.Blob    (Blob, Slice(..))
+import Data.CapNProto.Pointer (ElementSize(..))
+
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Message as M
-import           Data.CapNProto.Pointer (ElementSize(..))
 import qualified Data.CapNProto.Pointer as P
-import           Data.Word
-
-import Prelude hiding (length)
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.

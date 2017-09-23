@@ -15,12 +15,13 @@ module Data.CapNProto.Blob
 
 import Prelude hiding (length)
 
-import           Control.Monad            (forM_, when)
-import           Control.Monad.Catch      (MonadThrow(..))
-import           Control.Monad.Primitive  (PrimMonad, PrimState)
-import           Data.Bits
-import qualified Data.ByteString          as BS
-import           Data.Primitive.ByteArray
+import Data.Word
+
+import Control.Monad            (forM_, when)
+import Control.Monad.Catch      (MonadThrow(..))
+import Control.Monad.Primitive  (PrimMonad, PrimState)
+import Data.Bits
+import Data.Primitive.ByteArray
     ( ByteArray
     , MutableByteArray
     , copyMutableByteArray
@@ -32,10 +33,11 @@ import           Data.Primitive.ByteArray
     , sizeofMutableByteArray
     , writeByteArray
     )
-import           Data.Word
 
-import           Data.CapNProto.Bits
+import Data.CapNProto.Bits
     (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
+
+import qualified Data.ByteString       as BS
 import qualified Data.CapNProto.Errors as E
 
 -- TODO: be clearer about error handling re: these classes. The general notion

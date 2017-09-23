@@ -4,9 +4,11 @@ Description: Utilities for manipulating addresses within capnproto messages.
 -}
 module Data.CapNProto.Address where
 
-import           Data.CapNProto.Bits    (WordCount)
+import Data.Word
+
+import Data.CapNProto.Bits (WordCount)
+
 import qualified Data.CapNProto.Pointer as P
-import           Data.Word
 
 -- | The address of a word within a message
 data WordAddr = WordAt
