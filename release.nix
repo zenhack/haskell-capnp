@@ -64,8 +64,63 @@ with rec {
             (self.callPackage ./nix/capnp.nix {})));
         });
     });
+
+  checkStylishHaskell = { src, ignore ? [] }: (
+    pkgs.stdenv.mkDerivation {
+      name = "check-stylish-haskell";
+
+      inherit src;
+
+      buildInputs = [
+        pkgs.git
+        pkgs.gnused
+        pkgs.haskellPackages.stylish-haskell
+      ];
+
+      phases = ["unpackPhase" "checkPhase"];
+
+      doCheck = true;
+
+      checkPhase = ''
+        mkdir "$out"
+
+        ${pkgs.lib.concatMapStrings (x: "echo ${x} >> .gitignore\n") ignore}
+        git init                                   &> /dev/null
+        git config user.email "ignore@example.com" &> /dev/null
+        git config user.name  "Ignore Me"          &> /dev/null
+        git add '*'                                &> /dev/null
+        git commit -m 'temporary'                  &> /dev/null
+
+        for file in $(git ls-files '*.hs'); do
+            set +e
+            STYLISH_ERROR="$(stylish-haskell -i "$file" |& cat)"
+            STYLISH_CODE="$?"
+            set -e
+            if [[ "$STYLISH_CODE" != "0" ]]; then
+                echo "[FAILURE] stylish-haskell failed on $file"
+                stylish-haskell -v -i "$file" |& sed 's/^/[FAILURE]     /g'
+                exit 1
+            fi
+        done
+
+        if test -n "$(git diff)"; then
+            echo "[FAILURE] stylish-haskell suggestion diff:"
+            git diff | sed 's/^/[FAILURE]     /g'
+            exit 2
+        fi
+
+        echo "[SUCCESS] stylish-haskell had no suggestions"
+      '';
+    });
 };
 
 {
   capnp = addHydraHaddock haskellPackages haskellPackages.capnp;
+
+  capnpStylish = checkStylishHaskell {
+    src = haskellPackages.capnp.src;
+    ignore = [
+      "library/Language/CapNProto/TH.hs"
+    ];
+  };
 }
