@@ -12,10 +12,17 @@ with rec {
 
   sources = {
     quota = pkgs.fetchFromGitHub {
-      repo   = "haskell-quota";
       owner  = "zenhack";
+      repo   = "haskell-quota";
       rev    = "9f0b67cdba226a0cfe23502e044adce48936a1e6";
       sha256 = "0bi50addsnxs4wmbn6ybvjldsi01q9ji7m4d3s7ca9visq3n6gvj";
+    };
+
+    haskell-src-exts = pkgs.fetchFromGitHub {
+      owner  = "mtolly";
+      repo   = "haskell-src-exts";
+      rev    = "34953c8f8e6d84d2d8b5a8570ee8a145c846fb5d";
+      sha256 = "1hrvpw7jp4xm8majsdzn9nhpk1dqghmgvww4a3chikd4f1vdv9ad";
     };
   };
 
@@ -48,7 +55,7 @@ with rec {
     };
     { src = builtins.filterSource sf ./.; });
 
-  haskellPackages = (
+  hp = (
     haskellPackagesNormal.override {
       overrides = self: super: (
         with {
@@ -57,7 +64,12 @@ with rec {
         };
 
         {
+          haskell-src-exts = (
+            self.callCabal2nix "haskell-src-exts" sources.haskell-src-exts {});
+          haskell-src-meta = self.callHackage "haskell-src-meta" "0.8" {};
+
           quota = self.callCabal2nix "quota" sources.quota {};
+
           capnp = (
             withFilteredSource
             (addBuildTool pkgs.capnproto
@@ -74,7 +86,7 @@ with rec {
       buildInputs = [
         pkgs.git
         pkgs.gnused
-        pkgs.haskellPackages.stylish-haskell
+        hp.stylish-haskell
       ];
 
       phases = ["unpackPhase" "checkPhase"];
@@ -119,7 +131,7 @@ with rec {
 
       inherit src;
 
-      buildInputs = [ pkgs.haskellPackages.hlint_2_0_5 ];
+      buildInputs = [ hp.hlint_2_0_5 ];
 
       phases = ["unpackPhase" "checkPhase"];
 
@@ -179,16 +191,16 @@ with rec {
 };
 
 {
-  capnp = addHydraHaddock haskellPackages haskellPackages.capnp;
+  capnp = addHydraHaddock hp hp.capnp;
 
   capnpStylish = checkStylishHaskell {
-    src = haskellPackages.capnp.src;
-    ignore = [
-      "library/Language/CapNProto/TH.hs"
-    ];
+    src = hp.capnp.src;
+    # ignore = [
+    #   "library/Language/CapNProto/TH.hs"
+    # ];
   };
 
-  capnpHLint = checkHLint { src = haskellPackages.capnp.src; };
+  capnpHLint = checkHLint { src = hp.capnp.src; };
 
-  capnpCabalNixSync = checkCabalNixSync { src = haskellPackages.capnp.src; };
+  capnpCabalNixSync = checkCabalNixSync { src = hp.capnp.src; };
 }

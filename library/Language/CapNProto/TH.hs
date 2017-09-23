@@ -6,13 +6,13 @@ module Language.CapNProto.TH
     )
   where
 
-import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
+import Control.Monad.Catch        (throwM)
 import Data.Bits
 import Data.Word
-import Control.Monad.Catch(throwM)
+import Language.Haskell.TH
+import Language.Haskell.TH.Syntax
 
-import qualified Data.CapNProto.Errors as E
+import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Untyped as U
 
 -- | For a type with one data constructor, with the same name as its type
@@ -62,7 +62,7 @@ mkPtrReaderVal parentConName ptrOffset withPtr = do
             ptrSec <- U.ptrSection $(varE struct)
             ptr <- U.index $(litE $ IntegerL ptrOffset) ptrSec
             case ptr of
-                Nothing -> return Nothing
+                Nothing           -> return Nothing
                 Just $(varP ptr') -> $(withPtr ptr') |]
 
 mkListReaderVal parentConName ptrOffset listConName withList = do
