@@ -198,9 +198,6 @@ with rec {
 
   capnpStylish = checkStylishHaskell {
     src = hp.capnp.src;
-    # ignore = [
-    #   "library/Language/CapNProto/TH.hs"
-    # ];
   };
 
   capnpHLint = checkHLint { src = hp.capnp.src; };
