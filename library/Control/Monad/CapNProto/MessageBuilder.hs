@@ -5,7 +5,20 @@
 Module: Control.Monad.CapNProto.MessageBuilder
 Description: support for building capnproto messages.
 -}
-module Control.Monad.CapNProto.MessageBuilder where
+module Control.Monad.CapNProto.MessageBuilder
+    ( BuilderT
+    , BuildSelf(..)
+    , runBuilderT
+    , alloc
+    , frameSegment
+    , withParent
+    , setField
+    , buildField
+    , (<~)
+    , (%~)
+    , buildStruct
+    )
+  where
 
 import Prelude hiding (length)
 

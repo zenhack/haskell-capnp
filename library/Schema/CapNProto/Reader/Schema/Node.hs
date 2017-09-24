@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Schema.CapNProto.Reader.Schema.Node where
+module Schema.CapNProto.Reader.Schema.Node
+    (module Schema.CapNProto.Reader.Schema.Node)
+  where
 
 import           Data.CapNProto.Bits            (Word1, word1ToBool)
 import qualified Data.CapNProto.Untyped         as U

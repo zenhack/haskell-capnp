@@ -1,4 +1,6 @@
-module Schema.CapNProto.Schema where
+module Schema.CapNProto.Schema
+    (module Schema.CapNProto.Schema)
+  where
 
 import Data.Word (Word64)
 

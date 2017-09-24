@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.CapNProto.Untyped where
+module Tests.Module.Data.CapNProto.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 

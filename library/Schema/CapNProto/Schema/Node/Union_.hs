@@ -1,4 +1,6 @@
-module Schema.CapNProto.Schema.Node.Union_ where
+module Schema.CapNProto.Schema.Node.Union_
+    (Schema.CapNProto.Schema.Node.Union_)
+  where
 
 import qualified Data.CapNProto.Schema        as DS
 import           Schema.CapNProto.Schema.Node (Union_)

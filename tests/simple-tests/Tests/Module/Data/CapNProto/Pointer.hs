@@ -1,4 +1,4 @@
-module Tests.Module.Data.CapNProto.Pointer where
+module Tests.Module.Data.CapNProto.Pointer (ptrTests) where
 
 import Data.Bits
 import Data.CapNProto.Pointer

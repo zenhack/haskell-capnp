@@ -6,7 +6,15 @@ Module: Data.CapNProto.Message
 Description: Tools for working with messages.
 
 -}
-module Data.CapNProto.Message where
+module Data.CapNProto.Message
+    ( Message
+    , getSegment
+    , getWord
+    , decode
+    , readMessage
+    , writeMessage
+    )
+  where
 
 import Control.Monad             (void, when)
 import Control.Monad.Catch       (MonadThrow, throwM)

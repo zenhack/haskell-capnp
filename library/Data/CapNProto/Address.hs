@@ -2,7 +2,13 @@
 Module: Data.CapNProto.Address
 Description: Utilities for manipulating addresses within capnproto messages.
 -}
-module Data.CapNProto.Address where
+module Data.CapNProto.Address
+    ( WordAddr(..)
+    , CapAddr(..)
+    , Addr(..)
+    , resolvePtr
+    )
+  where
 
 import Data.Word
 

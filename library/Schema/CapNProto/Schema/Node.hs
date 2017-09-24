@@ -1,4 +1,6 @@
-module Schema.CapNProto.Schema.Node where
+module Schema.CapNProto.Schema.Node
+    (module Schema.CapNProto.Schema.Node)
+  where
 
 import qualified Data.CapNProto.Schema as DS
 

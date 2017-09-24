@@ -1,4 +1,6 @@
-module Schema.CapNProto.Schema.CodeGeneratorRequest where
+module Schema.CapNProto.Schema.CodeGeneratorRequest
+    (module Schema.CapNProto.Schema.CodeGeneratorRequest)
+  where
 
 import qualified Data.CapNProto.Schema   as DS
 import qualified Schema.CapNProto.Schema as S

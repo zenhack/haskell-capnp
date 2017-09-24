@@ -1,4 +1,4 @@
-module Tests.Module.Data.CapNProto.Bits where
+module Tests.Module.Data.CapNProto.Bits (bitsTests) where
 
 import Data.Bits
 import Data.CapNProto.Bits

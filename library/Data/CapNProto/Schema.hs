@@ -1,4 +1,10 @@
-module Data.CapNProto.Schema where
+module Data.CapNProto.Schema
+    ( Field(..)
+    , fromBits
+    , List
+    , UnionVariant
+    )
+  where
 
 import Data.Word
 

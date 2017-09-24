@@ -101,7 +101,7 @@ mkListReader readerName parentConName ptrOffset listConName childType transform 
         (mkListReaderType
             (conT $ inferTypeName parentConName)
             (conT childType))
-        (mkListReaderVal parentConName ptrOffset listConName $
+        (mkListReaderVal parentConName ptrOffset listConName
             (\list -> [| return $ Just $ fmap $transform $(varE list) |]))
 
 -- | @mkListReaders name args@ calls mkListReader once for each tuple in

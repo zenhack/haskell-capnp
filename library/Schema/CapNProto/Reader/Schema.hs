@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Schema.CapNProto.Reader.Schema where
+module Schema.CapNProto.Reader.Schema
+    (module Schema.CapNProto.Reader.Schema)
+  where
 
 import Data.Word
 import Language.CapNProto.TH

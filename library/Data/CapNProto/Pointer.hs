@@ -4,7 +4,16 @@ Description: Support for parsing/serializing capnproto pointers
 
 This module provides support for parsing and serializing capnproto pointers.
 -}
-module Data.CapNProto.Pointer where
+module Data.CapNProto.Pointer
+    ( Ptr(..)
+    , ElementSize(..)
+    , EltSpec(..)
+    , parsePtr
+    , serializePtr
+    , parseEltSpec
+    , serializeEltSpec
+    )
+  where
 
 import Data.Bits
 import Data.CapNProto.Bits

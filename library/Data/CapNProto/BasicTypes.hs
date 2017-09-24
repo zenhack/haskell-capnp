@@ -5,7 +5,13 @@
     but not on the wire (chiefly Data and Text, which are both just lists of
     bytes).
 -}
-module Data.CapNProto.BasicTypes where
+module Data.CapNProto.BasicTypes
+    ( Text(..)
+    , Data(..)
+    , getData
+    , getText
+    )
+  where
 
 import Data.Word
 

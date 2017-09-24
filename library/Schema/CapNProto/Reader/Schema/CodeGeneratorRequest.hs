@@ -1,6 +1,8 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest where
+module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
+    (module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest)
+  where
 
 import qualified Data.CapNProto.Untyped         as U
 import qualified Schema.CapNProto.Reader.Schema as S
