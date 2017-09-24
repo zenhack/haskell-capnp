@@ -49,8 +49,14 @@ library
                         , Schema.CapNProto.Schema.Node.Union_.Struct_
                         , Schema.CapNProto.Schema.CodeGeneratorRequest
                         , Schema.CapNProto.Reader.Schema
-                        , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
                         , Schema.CapNProto.Reader.Schema.Node
+                        , Schema.CapNProto.Reader.Schema.Field
+                        , Schema.CapNProto.Reader.Schema.Enumerant
+                        , Schema.CapNProto.Reader.Schema.Superclass
+                        , Schema.CapNProto.Reader.Schema.Method
+                        , Schema.CapNProto.Reader.Schema.Brand
+                        , Schema.CapNProto.Reader.Schema.Annotation
+                        , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
     -- other-modules:
     -- other-extensions:
     build-depends:        base       >= 4.8  && < 5.0

@@ -11,6 +11,7 @@ type Id = Word64
 $(mkStructWrappers
     [ "Node"
     , "Field"
+    , "Enumerant"
     , "Superclass"
     , "Method"
     , "Type"
