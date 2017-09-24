@@ -141,21 +141,13 @@ with rec {
       doCheck = true;
 
       checkPhase = ''
-        test -e report.html && {
-            echo "[FAILURE] report.html already exists"; exit 1
-        }
-
-        hlint . --report
+        hlint .
         HLINT_ERROR="$?"
-
         if [ "$HLINT_ERROR" = 0 ] ; then
             echo "[SUCCESS] hlint report clean"
         else
-            mkdir -pv "$out/nix-support"
-            mv report.html "$out/report.html"
-            echo "doc report $out report.html" \
-                >> "$out/nix-support/hydra-build-products"
-            echo "[ERROR] hlint has suggestions; report generated"
+            echo "[ERROR] hlint has suggestions; please address"
+            exit 1
         fi
       '';
     });
