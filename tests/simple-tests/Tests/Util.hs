@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeFamilies    #-}
 module Tests.Util
     ( MsgMetaData(..)
-    , capnpEncode, capnpDecode
+    , capnpEncode, capnpDecode, capnpCompile
     , assertionsToTest
     , freezeAsByteString
     )
@@ -61,6 +61,15 @@ capnpDecode msgValue meta = runResourceT $ do
         -- We need to read the whole string in strictly, otherwise hClose may
         -- happen before we're done; use deepseq to force full evaluation:
         deepseq ret (return ret)
+
+-- | @capnpCompile msg meta@ runs @capnp compile@ on the schema, providing
+-- the needed metadata and returning the output
+capnpCompile :: MsgMetaData -> IO BS.ByteString
+capnpCompile meta = runResourceT $ do
+    (hin, hout) <- interactCapnp "compile" meta
+    lift $ do
+        hSetBinaryMode hout True
+        BS.hGetContents hout
 
 -- | A helper for @capnpEncode@ and @capnpDecode@. Launches the capnp command
 -- with the given subcommand (either "encode" or "decode") and metadata,
