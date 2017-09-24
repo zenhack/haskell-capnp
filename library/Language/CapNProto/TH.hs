@@ -3,14 +3,18 @@ module Language.CapNProto.TH
     ( mkStructWrappers
     , mkListReaders
     , mkWordReaders
+    , mkTextReader
+    , mkDataReader
     )
   where
 
-import Control.Monad.Catch        (throwM)
 import Data.Bits
 import Data.Word
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
+
+import Control.Monad.Catch        (throwM)
+import Data.CapNProto.BasicTypes (Text, Data, getText, getData)
 
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Untyped as U
@@ -74,6 +78,28 @@ mkListReaderVal parentConName ptrOffset listConName withList = do
                 _ -> throwM $ E.SchemaViolationError $ $(litE $ StringL $
                             "Expected PtrList (" ++ show listConName ++ " ...)") |]
 
+mkBytesReaderVal parentConName ptrOffset withList = do
+    mkListReaderVal parentConName ptrOffset 'U.List8 $ \list ->
+        [| Just <$> $withList $(varE list) |]
+
+mkBytesReader :: String -> Name -> Integer -> (TypeQ -> TypeQ) -> ExpQ -> DecsQ
+mkBytesReader name parentConName ptrOffset ty transform = do
+    let name' = mkName name
+    mkReader name'
+        (mkPtrReaderType
+            (\b -> [t| $(conT (inferTypeName parentConName)) $b |])
+            ty)
+        (mkBytesReaderVal parentConName ptrOffset transform)
+
+mkTextReader name parentConName ptrOffset =
+    mkBytesReader name parentConName ptrOffset
+        (\b -> [t| Text $b |])
+        [| getText |]
+
+mkDataReader name parentConName ptrOffset =
+    mkBytesReader name parentConName ptrOffset
+        (\b -> [t| Data $b |])
+        [| getData |]
 
 mkListReaderType parentType childType = mkPtrReaderType
     (\b -> [t| $parentType $b |])

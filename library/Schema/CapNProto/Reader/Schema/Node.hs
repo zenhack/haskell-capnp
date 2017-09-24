@@ -23,3 +23,5 @@ $(mkWordReaders 'S.Node
     , ("scopeId",                 128, ''Word64, const [t| Word64 |], 0, [| id          |])
     , ("isGeneric",               288, ''Word1,  const [t| Bool   |], 0, [| word1ToBool |])
     ])
+
+$(mkTextReader "displayName" 'S.Node 0)

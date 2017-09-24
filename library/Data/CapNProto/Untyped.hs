@@ -40,7 +40,7 @@ import qualified Data.CapNProto.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b)
+type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b, Slice m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
