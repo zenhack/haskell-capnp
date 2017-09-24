@@ -78,10 +78,8 @@ mkListReaderVal parentConName ptrOffset listConName withList = do
                 _ -> throwM $ E.SchemaViolationError $ $(litE $ StringL $
                             "Expected PtrList (" ++ show listConName ++ " ...)") |]
 
-mkBytesReaderVal parentConName ptrOffset withList = do
-    mkListReaderVal parentConName ptrOffset 'U.List8 $ \list ->
-        [| Just <$> $withList $(varE list) |]
 
+-- Helper for Text/Data readers.
 mkBytesReader :: String -> Name -> Integer -> (TypeQ -> TypeQ) -> ExpQ -> DecsQ
 mkBytesReader name parentConName ptrOffset ty transform = do
     let name' = mkName name
@@ -89,13 +87,18 @@ mkBytesReader name parentConName ptrOffset ty transform = do
         (mkPtrReaderType
             (\b -> [t| $(conT (inferTypeName parentConName)) $b |])
             ty)
-        (mkBytesReaderVal parentConName ptrOffset transform)
+        (mkListReaderVal parentConName ptrOffset 'U.List8 $ \list ->
+            [| Just <$> $transform $(varE list) |])
 
+-- | @mkTextReader@ generates a reader which extracts a Text value from a
+-- struct.
 mkTextReader name parentConName ptrOffset =
     mkBytesReader name parentConName ptrOffset
         (\b -> [t| Text $b |])
         [| getText |]
 
+-- | @mkDataReader@ generates a reader which extracts a Text value from a
+-- struct.
 mkDataReader name parentConName ptrOffset =
     mkBytesReader name parentConName ptrOffset
         (\b -> [t| Data $b |])
