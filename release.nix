@@ -148,14 +148,13 @@ with rec {
         hlint . --report
         HLINT_ERROR="$?"
 
-        mkdir -pv "$out/nix-support"
-        mv report.html "$out/report.html"
-        echo "doc report $out report.html" \
-            >> "$out/nix-support/hydra-build-products"
-
         if [ "$HLINT_ERROR" = 0 ] ; then
             echo "[SUCCESS] hlint report clean"
         else
+            mkdir -pv "$out/nix-support"
+            mv report.html "$out/report.html"
+            echo "doc report $out report.html" \
+                >> "$out/nix-support/hydra-build-products"
             echo "[ERROR] hlint has suggestions; report generated"
       '';
     });
