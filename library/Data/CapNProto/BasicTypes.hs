@@ -18,7 +18,7 @@ import Data.Word
 
 import Control.Monad       (when)
 import Control.Monad.Catch (throwM)
-import Data.String (IsString)
+import Data.String         (IsString)
 
 import qualified Data.CapNProto.Blob    as B
 import qualified Data.CapNProto.Errors  as E
