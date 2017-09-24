@@ -5,20 +5,21 @@ module Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
   where
 
-import           Control.Monad                                       (mapM_)
-import           Control.Monad.Quota
+import Prelude hiding (length)
+
+import Control.Monad.Quota
+import Data.CapNProto.Untyped
+import Tests.Util
+
+import Control.Monad  (mapM_)
+import Test.Framework (Test)
+import Test.HUnit     (Assertion, assertEqual)
+
 import qualified Data.ByteString                                     as BS
-import           Data.CapNProto.Message                              as M
-import           Data.CapNProto.Untyped
-import           Prelude                                             hiding
-    (length)
-import           Schema.CapNProto.Reader.Schema                      as Schema
+import qualified Data.CapNProto.Message                              as M
+import qualified Schema.CapNProto.Reader.Schema                      as Schema
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGReq
 import qualified Schema.CapNProto.Reader.Schema.Node                 as Node
-import           Test.Framework                                      (Test)
-import           Test.HUnit
-    (Assertion, assertEqual)
-import           Tests.Util
 
 -- TODO: This contains a bit of copypasta from some of the untyped tests; should
 -- factor that out.
