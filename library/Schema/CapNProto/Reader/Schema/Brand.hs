@@ -3,7 +3,6 @@ module Schema.CapNProto.Reader.Schema.Brand
     (module Schema.CapNProto.Reader.Schema.Brand)
   where
 
-import Data.Word
 import Language.CapNProto.TH
 
 import qualified Data.CapNProto.Untyped         as U
