@@ -26,6 +26,7 @@ import Control.Monad.Quota as Q
 
 -- Functions to generate valid CGRs
 
+generateCGR :: [(String, String, String)] -> IO BS.ByteString
 generateCGR fields = do
   pOut <- capnpCompile (MsgMetaData (createSchema fields) "-o-")
   return pOut
@@ -55,12 +56,28 @@ decodeCGR bytes = do
         return numNodes
     reader _ = error "Expected `Just (PtrStruct root)`"
 
-prop_schemaValid :: String -> Property
-prop_schemaValid filename = ioProperty $ do
-  bytes <- BS.readFile filename
-  decoded <- try $ decodeCGR bytes
-  return $ r === decoded
-  where r | filename == "tests/data/schema-codegenreq" = Right (Quota 1016, 37)
-          | otherwise = Left QuotaError
+-- Schema generators
 
-schemaCGRQuickCheck = testProperty "valid schema QuickCheck" $ prop_schemaValid "tests/data/schema-codegenreq"
+genSafeChar :: Gen Char
+genSafeChar = elements ['a'..'z']
+
+genFieldName :: Gen String
+genFieldName = listOf1 genSafeChar
+
+newtype FieldName = FieldName { unwrapFieldName :: String }
+    deriving Show
+
+instance Arbitrary FieldName where
+    arbitrary = FieldName <$> genFieldName
+
+-- QuickCheck properties
+
+prop_schemaValid :: [FieldName] -> Property
+prop_schemaValid fieldNames = ioProperty $ do
+  compiled <- generateCGR [(unwrapFieldName fn, show i, "Text") | (i, fn) <- zip [0..] fieldNames]
+  decoded <- try $ decodeCGR compiled
+  return $ case decoded of
+    Left QuotaError -> False
+    Right _ -> True
+
+schemaCGRQuickCheck = testProperty "valid schema QuickCheck" prop_schemaValid
