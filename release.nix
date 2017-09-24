@@ -156,6 +156,7 @@ with rec {
             echo "doc report $out report.html" \
                 >> "$out/nix-support/hydra-build-products"
             echo "[ERROR] hlint has suggestions; report generated"
+        fi
       '';
     });
 
