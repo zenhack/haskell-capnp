@@ -26,7 +26,7 @@ instance Exception RecursionLimitError
 
 -- | An @InvalidDataError@ indicates that a part of a message being
 -- parsed was malformed.
-data InvalidDataError
+newtype InvalidDataError
     = InvalidDataError String -- error message
     deriving(Show, Eq)
 
@@ -35,7 +35,7 @@ instance Exception InvalidDataError
 -- | A @SchemaViolationError@ indicates that part of the message does
 -- not match the schema.
 
-data SchemaViolationError
+newtype SchemaViolationError
     = SchemaViolationError String
     deriving(Show, Eq)
 

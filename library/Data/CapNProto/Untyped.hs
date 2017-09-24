@@ -118,7 +118,7 @@ get msg addr = do
                     then get msg addr'
                     else do
                         landingPad <- getWord msg addr'
-                        case (P.parsePtr landingPad) of
+                        case P.parsePtr landingPad of
                             Just (P.FarPtr False off seg) -> do
                                 tagWord <- getWord
                                             msg
@@ -154,7 +154,7 @@ get msg addr = do
     getWord msg addr = invoice 1 >> M.getWord msg addr
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
-    getList addr@WordAt{..} eltSpec = PtrList <$> do
+    getList addr@WordAt{..} eltSpec = PtrList <$>
         case eltSpec of
             P.EltNormal sz len -> return $ case sz of
                 Sz0   -> List0  (ListOfVoid    (fromIntegral len))
@@ -264,7 +264,7 @@ rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     seg <- M.getSegment msg segIndex
     slice seg (wordsToBytes wordIndex) (ByteCount len)
 rawBytes (ListOfMapped list@(ListOfWord8 _) _) = rawBytes list
-rawBytes _ = throwM $ E.SchemaViolationError $
+rawBytes _ = throwM $ E.SchemaViolationError
     -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
     -- here. It's *almost* right, in that the caller is asking for a
     -- transformation that assumes a certain shape of data, but we should

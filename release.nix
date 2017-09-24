@@ -145,14 +145,18 @@ with rec {
             echo "[FAILURE] report.html already exists"; exit 1
         }
 
-        hlint . --report || true
+        hlint . --report
+        HLINT_ERROR="$?"
 
         mkdir -pv "$out/nix-support"
         mv report.html "$out/report.html"
         echo "doc report $out report.html" \
             >> "$out/nix-support/hydra-build-products"
 
-        echo "[SUCCESS] hlint report generated"
+        if [ "$HLINT_ERROR" = 0 ] ; then
+            echo "[SUCCESS] hlint report clean"
+        else
+            echo "[ERROR] hlint has suggestions; report generated"
       '';
     });
 

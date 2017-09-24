@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Schema.CapNProto.Schema where
 
 import Data.Word (Word64)
