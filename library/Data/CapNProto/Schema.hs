@@ -2,7 +2,7 @@ module Data.CapNProto.Schema
     ( Field(..)
     , fromBits
     , List
-    , UnionVariant
+    , UnionVariant(..)
     )
   where
 

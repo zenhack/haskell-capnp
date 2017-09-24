@@ -1,5 +1,5 @@
 module Schema.CapNProto.Schema.Node.Union_
-    (Schema.CapNProto.Schema.Node.Union_)
+    (module Schema.CapNProto.Schema.Node.Union_)
   where
 
 import qualified Data.CapNProto.Schema        as DS
