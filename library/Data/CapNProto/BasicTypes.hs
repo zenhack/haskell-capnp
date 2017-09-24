@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-| Module: Data.CapNProto.BasicTypes
     Description: Handling of "built-in" capnp datatypes.
 
@@ -17,6 +18,7 @@ import Data.Word
 
 import Control.Monad       (when)
 import Control.Monad.Catch (throwM)
+import Data.String (IsString)
 
 import qualified Data.CapNProto.Blob    as B
 import qualified Data.CapNProto.Errors  as E
@@ -30,10 +32,12 @@ import qualified Data.CapNProto.Untyped as U
 -- The argument to the constructor is the slice of the original message
 -- containing the text (but not the NUL terminator).
 newtype Text b = Text b
+    deriving(Show, Eq, Ord, IsString)
 
 -- | A blob of bytes ("Data" in capnproto's schema language). The argument
 -- to the constructor is a slice into the message, containing the raw bytes.
 newtype Data b = Data b
+    deriving(Show, Eq, Ord, IsString)
 
 -- | Interpret a list of Word8 as a capnproto 'Data' value. This validates that
 -- the bytes are in-bounds, throwing a 'BoundsError' if not.
