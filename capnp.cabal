@@ -50,6 +50,7 @@ library
                         , Schema.CapNProto.Schema.CodeGeneratorRequest
                         , Schema.CapNProto.Reader.Schema
                         , Schema.CapNProto.Reader.Schema.Node
+                        , Schema.CapNProto.Reader.Schema.Node.Union_
                         , Schema.CapNProto.Reader.Schema.Field
                         , Schema.CapNProto.Reader.Schema.Enumerant
                         , Schema.CapNProto.Reader.Schema.Superclass
