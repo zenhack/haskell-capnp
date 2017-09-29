@@ -55,41 +55,46 @@ genSafeLCChar = elements ['a'..'z']
 genSafeUCChar :: Gen Char
 genSafeUCChar = elements ['A'..'Z']
 
+genSafeHexChar :: Gen Char
+genSafeHexChar = elements (['0'..'9'] ++ ['a'..'f'])
+
 -- Field types
-
-genFieldName :: Gen FieldName
-genFieldName = FieldName <$> (listOf1 genSafeLCChar)
-
-genBuiltInType :: Gen FieldType
-genBuiltInType = do
-  return Bool
 
 genFieldDef :: Int -> Gen Field
 genFieldDef order = do
   fn <- genFieldName
   ft <- genBuiltInType
   return $ FieldDef fn order ft
+  where
+    genFieldName :: Gen FieldName
+    genFieldName = FieldName <$> (listOf1 genSafeLCChar)
 
--- Struct types
+    genBuiltInType :: Gen FieldType
+    genBuiltInType = do
+      return Bool
 
-genStructName :: Gen StructName
-genStructName = do
-    fc <- genSafeUCChar
-    rest <- listOf genSafeLCChar
-    return $ StructName (fc:rest)
+-- Struct type
 
 genStructDef :: Gen Field
 genStructDef = do
   sn <- genStructName
   content <- genFieldDef 0
   return $ StructDef sn [content]
+  where
+    genStructName :: Gen StructName
+    genStructName = do
+      fc <- genSafeUCChar
+      rest <- listOf genSafeLCChar
+      return $ StructName (fc:rest)
 
   -- Schema type
 
 genSchema :: Gen Schema
 genSchema = do
-    content <- listOf1 genStructDef
-    return $ Schema "b356b28dc0d11f83" content
+  id1st <- elements ['a'..'f']
+  idrest <- vectorOf 15 genSafeHexChar
+  content <- listOf1 genStructDef
+  return $ Schema (id1st:idrest) content
 
 instance Arbitrary Schema where
   arbitrary = genSchema
