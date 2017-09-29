@@ -30,11 +30,11 @@ $(mkWordReaders 'Struct
       , [| S.ElementSize |]
       )
 
-    , ("isGroup", 224, ''Word1, const [t| Bool |], 0, [| word1ToBool |])
-
     , ("disciriminantCount",  240, ''Word16, const [t| Word16 |], 0, [| id |])
     , ("disciriminantOffset", 256, ''Word32, const [t| Word32 |], 0, [| id |])
     ])
+
+$(mkBoolReader "isGroup" 'S.Node 224 False)
 
 $(mkListReaders 'Struct
     [ ("fields", 3, 'U.ListStruct, ''S.Field, [| S.Field |])

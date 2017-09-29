@@ -3,6 +3,8 @@ module Language.CapNProto.TH
     ( mkStructWrappers
     , mkListReaders
     , mkWordReaders
+    , mkWordReader
+    , mkBoolReader
     , mkTextReader
     , mkDataReader
     )
@@ -13,8 +15,9 @@ import Data.Word
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
-import Control.Monad.Catch        (throwM)
+import Control.Monad.Catch       (throwM)
 import Data.CapNProto.BasicTypes (Text, Data, getText, getData)
+import Data.CapNProto.Bits       (Word1, word1ToBool)
 
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Untyped as U
@@ -165,6 +168,17 @@ mkWordReader name parentConName start rawTyp typ defaultVal transform = do
                 let rawVal = (word `shiftR` $bitOffset) `xor` $defaultValE
                 return $ $transform $ (fromIntegral rawVal :: $(conT rawTyp)) |]
 
+-- | Make a reader that reads a boolean. The first three arguments are the same
+-- as mkWordReader. The final argument is the default value.
+mkBoolReader :: String -> Name -> Integer -> Bool -> DecsQ
+mkBoolReader name parentConName start def = mkWordReader
+    name
+    parentConName
+    start
+    ''Word1
+    (const [t| Bool |])
+    (if def then 1 else 0)
+    [| word1ToBool |]
 
 mkWordReaders :: Name -> [(String, Integer, Name, TypeQ -> TypeQ, Word64, ExpQ)]
     -> DecsQ
