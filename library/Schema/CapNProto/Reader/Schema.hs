@@ -21,4 +21,4 @@ $(mkStructWrappers
     , "CodeGeneratorRequest"
     ])
 
-newtype ElementSize b = ElementSize Word16
+newtype ElementSize = ElementSize Word16
