@@ -8,8 +8,7 @@ import Prelude hiding (length)
 import Data.CapNProto.Untyped (length, Ptr(PtrStruct), rootPtr)
 import Data.CapNProto.Blob (BlobSlice)
 import Data.CapNProto.Message as M
-import Data.CapNProto.Schema   (Field(..))
-import Schema.CapNProto.Reader.Schema as Schema
+import Schema.CapNProto.Reader.Schema as Schema hiding (Field)
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGReq
 
 -- Testing framework imports
@@ -19,6 +18,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 -- Schema generation imports
 import Tests.Util
+import Tests.SchemaGeneration
 
 -- Schema validation imports
 import Control.Monad.Catch as C
@@ -26,18 +26,10 @@ import Control.Monad.Quota as Q
 
 -- Functions to generate valid CGRs
 
-generateCGR :: [(String, String, String)] -> IO BS.ByteString
-generateCGR fields = do
-  pOut <- capnpCompile (MsgMetaData (createSchema fields) "-o-")
+generateCGR :: Schema -> IO BS.ByteString
+generateCGR schema = do
+  pOut <- capnpCompile (MsgMetaData (show schema) "-o-")
   return pOut
-  where
-    createSchema :: [(String, String, String)] -> String
-    createSchema fields =
-      "@0x832bcc6686a26d56;\n\n" ++ "struct Thing {\n" ++ (build fields) ++ "}"
-      where
-        build ((fname, fver, ftype):ff) =
-          fname ++ " @" ++ fver ++ " :" ++ ftype ++ ";\n" ++ (build ff)
-        build _ = ""
 
 -- Functions to validate CGRs
 
@@ -56,28 +48,14 @@ decodeCGR bytes = do
         return numNodes
     reader _ = error "Expected `Just (PtrStruct root)`"
 
--- Schema generators
-
-genSafeChar :: Gen Char
-genSafeChar = elements ['a'..'z']
-
-genFieldName :: Gen String
-genFieldName = listOf1 genSafeChar
-
-newtype FieldName = FieldName { unwrapFieldName :: String }
-    deriving Show
-
-instance Arbitrary FieldName where
-    arbitrary = FieldName <$> genFieldName
-
 -- QuickCheck properties
 
-prop_schemaValid :: [FieldName] -> Property
-prop_schemaValid fieldNames = ioProperty $ do
-  compiled <- generateCGR [(unwrapFieldName fn, show i, "Text") | (i, fn) <- zip [0..] fieldNames]
+prop_schemaValid :: Schema -> Property
+prop_schemaValid schema = ioProperty $ do
+  compiled <- generateCGR schema
   decoded <- try $ decodeCGR compiled
   return $ case decoded of
     Left QuotaError -> False
     Right _ -> True
 
-schemaCGRQuickCheck = testProperty "valid schema QuickCheck" prop_schemaValid
+schemaCGRQuickCheck = testProperty "valid schema QuickCheck" prop_schemaValid 
