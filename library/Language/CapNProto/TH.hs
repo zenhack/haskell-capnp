@@ -7,6 +7,7 @@ module Language.CapNProto.TH
     , mkBoolReader
     , mkTextReader
     , mkDataReader
+    , mkRootReader
     )
   where
 
@@ -179,6 +180,13 @@ mkBoolReader name parentConName start def = mkWordReader
     (const [t| Bool |])
     (if def then 1 else 0)
     [| word1ToBool |]
+
+
+-- | @mkRootReader fn@ declares a function called "root_", which extracts
+-- the root pointer from a message, and applies @fn@ to it. If the root
+-- pointer is not a struct pointer, a 'SchemaViolationError' is raised.
+mkRootReader :: ExpQ -> DecsQ
+mkRootReader fn = [d|root_ msg = fmap $fn (U.rootPtr msg)|]
 
 mkWordReaders :: Name -> [(String, Integer, Name, TypeQ -> TypeQ, Word64, ExpQ)]
     -> DecsQ
