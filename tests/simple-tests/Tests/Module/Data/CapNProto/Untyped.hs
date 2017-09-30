@@ -33,7 +33,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             maxSpeed = 12.0,
         )))|]
       , 128
-      , \(Just (PtrStruct root)) -> do
+      , \root -> do
             aircraftWords <- dataSection root
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.

@@ -273,5 +273,10 @@ rawBytes _ = throwM $ E.SchemaViolationError
 
 
 -- | Returns the root pointer of a message.
-rootPtr :: ReadCtx m b => M.Message b -> m (Maybe (Ptr b))
-rootPtr msg = get msg (WordAt 0 0)
+rootPtr :: ReadCtx m b => M.Message b -> m (Struct b)
+rootPtr msg = do
+    root <- get msg (WordAt 0 0)
+    case root of
+        Just (PtrStruct struct) -> return struct
+        _ -> throwM $ E.SchemaViolationError
+                "Unexpected root type; expected struct."

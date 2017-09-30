@@ -34,7 +34,7 @@ encodeDecodeUntypedTest
     :: ( MsgMetaData -- schema and type name
        , String -- message in textual form
        , BuilderT p RealWorld IO () -- Builder for the message
-       , Maybe (Ptr ByteString) -> QuotaT IO () -- reader.
+       , Struct ByteString -> QuotaT IO () -- reader.
        , Quota -- Quota to run the reader with.
        , Quota -- Remaining quota for the reader.
        )
@@ -69,7 +69,7 @@ encodeDecodeUntypedTests =
       , void $ withParent 1 $ buildStruct 2 0 $ do
             DataField 0 0 %~ (72 :: Word64)
             DataField 1 0 %~ ( 1 :: Word64)
-      , \(Just (PtrStruct root)) -> do
+      , \root -> do
             dataWords <- dataSection root
             2 <- length dataWords
             72 <- index 0 dataWords

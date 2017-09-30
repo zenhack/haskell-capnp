@@ -46,15 +46,14 @@ theAssert = do
     ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
     assertEqual "Correct remaining quota" 648 endQuota
   where
-    reader :: Maybe (Ptr BS.ByteString) -> QuotaT IO ()
-    reader (Just (PtrStruct root)) = do
+    reader :: Struct BS.ByteString -> QuotaT IO ()
+    reader root = do
         let req = Schema.CodeGeneratorRequest root
         Just nodes <- CGReq.nodes req
         Just requestedFiles <- CGReq.requestedFiles req
         37 <- length nodes
         1 <- length requestedFiles
         mapM_ (walkNode nodes) [0,1..36]
-    reader _ = error "Expected `Just (PtrStruct root)`"
     walkNode nodes i = do
         node <- index i nodes
         -- None of the nodes in the schema have parameters:
