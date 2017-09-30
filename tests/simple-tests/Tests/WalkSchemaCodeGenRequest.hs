@@ -51,8 +51,8 @@ theAssert = do
         let req = Schema.CodeGeneratorRequest root
         Just nodes <- CGReq.nodes req
         Just requestedFiles <- CGReq.requestedFiles req
-        37 <- length nodes
-        1 <- length requestedFiles
+        let 37 = length nodes
+        let 1 = length requestedFiles
         mapM_ (walkNode nodes) [0,1..36]
     walkNode nodes i = do
         node <- index i nodes
@@ -74,7 +74,7 @@ theAssert = do
         case (annotations, i `elem` [4, 9]) of
             (Nothing, False) -> return ()
             (Just annotations', True) -> do
-                1 <- length annotations'
+                let 1 = length annotations'
                 return ()
             (Nothing, True) ->
                 error $ "Node at index " ++ show i ++ " should have had" ++
