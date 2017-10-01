@@ -46,6 +46,7 @@ union_ (S.Node struct) = do
         5 -> Annotation (Union_.Annotation struct)
         _ -> Unknown tag
 
+type Id = Word64
 
 data Union_ b
     = File

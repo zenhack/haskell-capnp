@@ -20,6 +20,7 @@ module Data.CapNProto.List
 
 import Prelude hiding (fold, foldl, length, map, mapM_, sequence_)
 
+import Control.Monad          (join, liftM2, void)
 import Data.CapNProto.Untyped (ListOf, ReadCtx, index, length)
 import Data.Monoid            (mappend, mempty)
 
@@ -30,27 +31,27 @@ map = fmap
 -- | @mapM_ f list@ applies @f@ to each element and then executes the
 -- resulting action, in left to right order. This does not allocate
 -- space for the intermediate list.
-mapM_ :: ReadCtx m b => (a -> c) -> ListOf b a -> m ()
-mapM_ = sequence_ . fmap
+mapM_ :: ReadCtx m b => (a -> m c) -> ListOf b a -> m ()
+mapM_ f = sequence_ . fmap f
 
 -- | Like 'mapM_', but with the arguments flipped.
-forM_ :: ReadCtx m b => ListOf b a -> (a -> c) -> m ()
+forM_ :: ReadCtx m b => ListOf b a -> (a -> m c) -> m ()
 forM_ = flip mapM_
 
 -- | @sequence_ list@ executes each of the actions in @list@, from
 -- left to right.
 sequence_ :: ReadCtx m b => ListOf b (m a) -> m ()
-sequence_ = foldl (\m -> (>> void m)) (return ())
+sequence_ = foldl (<*) (return ())
 
 -- | Analouge of 'Prelude.foldl'.
-foldl :: ReadCtx m b => (c -> a -> c) -> c -> ListOf b a -> m c
-foldl f empty list = foldl_ list 0 empty
+foldl :: ReadCtx m b => (m c -> m a -> m c) -> m c -> ListOf b a -> m c
+foldl f empty list = go 0 empty
   where
-    foldl_ list start accum
-        | length list == start = return accum
-        | otherwise =
-            foldl_ list (start + 1) =<< (f accum <$> index list start)
+    len = length list
+    go i accum
+        | i == len  = accum
+        | otherwise = go (i+1) (f accum (index i list))
 
 -- | Analouge of 'Prelude.fold'.
 fold :: (Monoid w, ReadCtx m b) => ListOf b w -> m w
-fold = foldl mappend mempty
+fold = foldl (liftM2 mappend) (return mempty)

@@ -38,6 +38,7 @@ library
                         , Data.CapNProto.Bits
                         , Data.CapNProto.Blob
                         , Data.CapNProto.Errors
+                        , Data.CapNProto.List
                         , Data.CapNProto.Message
                         , Data.CapNProto.Pointer
                         , Data.CapNProto.Schema
@@ -94,6 +95,7 @@ executable capnpc-haskell
                         , base       >= 4.8  && < 5.0
                         , bytestring >= 0.10 && < 0.11
                         , array      >= 0.5  && < 0.6
+                        , containers
                         , cereal
                         , bytes
                         , vector
