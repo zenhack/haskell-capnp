@@ -6,8 +6,8 @@ module Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile
 import Data.Word
 import Language.CapNProto.TH
 
+import qualified Data.CapNProto.Untyped                              as U
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGR
-import qualified Data.CapNProto.Untyped as U
 
 $(mkStructWrappers ["Import"])
 
