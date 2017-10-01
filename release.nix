@@ -14,8 +14,8 @@ with rec {
     quota = pkgs.fetchFromGitHub {
       owner  = "zenhack";
       repo   = "haskell-quota";
-      rev    = "9f0b67cdba226a0cfe23502e044adce48936a1e6";
-      sha256 = "0bi50addsnxs4wmbn6ybvjldsi01q9ji7m4d3s7ca9visq3n6gvj";
+      rev    = "d753cf87ae7b3a4202f99f2e0bf8cd8bccd7c41e";
+      sha256 = "0rk9rvxmi5d0f05mr3ndijds749r9y9sb4a4yzw4wvkg99xklli4";
     };
 
     # Pull in a version of haskell-src-exts that fixes
