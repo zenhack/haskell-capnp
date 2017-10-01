@@ -7,7 +7,7 @@ import Data.CapNProto.Bits   (Word1, word1ToBool)
 import Data.Word
 import Language.CapNProto.TH
 
-import qualified Data.CapNProto.Untyped as U
+import qualified Data.CapNProto.Untyped         as U
 import qualified Schema.CapNProto.Reader.Schema as S
 
 $(mkStructWrappers

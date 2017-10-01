@@ -3,8 +3,8 @@ module Schema.CapNProto.Reader.Schema.Node
     (module Schema.CapNProto.Reader.Schema.Node)
   where
 
-import Data.CapNProto.Bits   (Word1, word1ToBool)
 import Data.Bits
+import Data.CapNProto.Bits   (Word1, word1ToBool)
 import Data.Word
 import Language.CapNProto.TH
 
