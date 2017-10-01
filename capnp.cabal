@@ -59,6 +59,7 @@ library
                         , Schema.CapNProto.Reader.Schema.Brand
                         , Schema.CapNProto.Reader.Schema.Annotation
                         , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
+                        , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile
     -- other-modules:
     -- other-extensions:
     build-depends:        base       >= 4.8  && < 5.0
