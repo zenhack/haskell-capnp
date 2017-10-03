@@ -36,7 +36,7 @@ codegen msg = do
     nodeMap <- buildNodeMap nodes
     Just reqFiles <- CGR.requestedFiles cgr
     List.forM_ reqFiles $ ReqFile.filename >=> \name -> tell [name]
-    return ((List.length reqFiles, M.keys nodeMap))
+    return (List.length reqFiles, M.keys nodeMap)
 
 main :: IO ()
 main = do
