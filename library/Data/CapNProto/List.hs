@@ -9,6 +9,7 @@ classes).
 module Data.CapNProto.List
     ( ListOf
     , length
+    , index
     , map
     , mapM_
     , forM_
@@ -20,7 +21,7 @@ module Data.CapNProto.List
 
 import Prelude hiding (fold, foldl, length, map, mapM_, sequence_)
 
-import Control.Monad          (liftM2)
+import Control.Monad          (join)
 import Data.CapNProto.Untyped (ListOf, ReadCtx, index, length)
 import Data.Monoid            (mappend, mempty)
 
@@ -41,17 +42,24 @@ forM_ = flip mapM_
 -- | @sequence_ list@ executes each of the actions in @list@, from
 -- left to right.
 sequence_ :: ReadCtx m b => ListOf b (m a) -> m ()
-sequence_ = foldl (<*) (return ())
+sequence_ = join . foldl (return2 (<*)) (return ())
 
 -- | Analouge of 'Prelude.foldl'.
-foldl :: ReadCtx m b => (m c -> m a -> m c) -> m c -> ListOf b a -> m c
+foldl :: ReadCtx m b => (c -> a -> m c) -> c -> ListOf b a -> m c
 foldl f empty list = go 0 empty
   where
     len = length list
     go i accum
-        | i == len  = accum
-        | otherwise = go (i+1) (f accum (index i list))
+        | i == len  = return accum
+        | otherwise = do
+            elt <- index i list
+            accum' <- f accum elt
+            go (i+1) accum'
 
 -- | Analouge of 'Prelude.fold'.
 fold :: (Monoid w, ReadCtx m b) => ListOf b w -> m w
-fold = foldl (liftM2 mappend) (return mempty)
+fold = foldl (return2 mappend) mempty
+
+-- Helper for lifting binary pure functions into a monad.
+return2 :: Monad m => (a -> b -> c) -> (a -> b -> m c)
+return2 f x y = return (f x y)

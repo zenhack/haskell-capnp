@@ -19,8 +19,7 @@ import qualified Data.CapNProto.Message                              as M
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGR
 
 lengthCounted :: ListOf BS.ByteString a -> Int
-lengthCounted list =
-    run $ List.mapM_ (const $ tell 1) list
+lengthCounted = run . List.mapM_ (const $ tell 1)
   where
     run = getSum
         . fromRight

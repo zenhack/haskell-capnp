@@ -1,10 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Main (main) where
 
-import Control.Monad              ((>=>))
-import Control.Monad.Quota        (Quota(..), evalQuotaT)
-import Control.Monad.Writer       (MonadWriter, runWriterT, tell)
-import Data.CapNProto.Message     (Message, decode)
+import Control.Monad          ((>=>))
+import Control.Monad.Quota    (Quota(..), evalQuotaT)
+import Control.Monad.Writer   (MonadWriter, runWriterT, tell)
+import Data.CapNProto.Message (Message, decode)
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
@@ -19,12 +19,11 @@ import qualified Schema.CapNProto.Reader.Schema.Node                            
 buildNodeMap :: U.ReadCtx m b
              => List.ListOf b (Schema.Node b)
              -> m (M.Map Node.Id (Schema.Node b))
-buildNodeMap = List.foldl
-    (\m node -> do node' <- node
-                   M.insert <$> Node.id node'
-                            <*> return node'
-                            <*> m)
-    (return M.empty)
+buildNodeMap = List.foldl addNode M.empty
+  where
+    addNode m node = do
+        nodeId <- Node.id node
+        return $ M.insert nodeId node m
 
 codegen :: (U.ReadCtx m b, MonadWriter [Maybe (BT.Text b)] m)
         => Message b -> m (Int, [Node.Id])
