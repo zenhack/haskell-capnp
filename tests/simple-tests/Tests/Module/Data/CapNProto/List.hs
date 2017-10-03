@@ -35,7 +35,7 @@ schemaNodes = do
     msg <- BS.readFile "tests/data/schema-codegenreq" >>= M.decode
     fromJust <$> evalQuotaT (CGR.root_ msg >>= CGR.nodes) 1024
 
-listTests = assertionsToTest "List tests" $
+listTests = assertionsToTest "List tests"
     [ do nodes <- schemaNodes
          -- First, sanity check that List.length returns the value
          -- we expect:
