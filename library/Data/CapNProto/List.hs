@@ -20,7 +20,7 @@ module Data.CapNProto.List
 
 import Prelude hiding (fold, foldl, length, map, mapM_, sequence_)
 
-import Control.Monad          (join, liftM2, void)
+import Control.Monad          (liftM2)
 import Data.CapNProto.Untyped (ListOf, ReadCtx, index, length)
 import Data.Monoid            (mappend, mempty)
 

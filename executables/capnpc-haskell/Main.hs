@@ -3,7 +3,6 @@ module Main (main) where
 
 import Control.Monad              ((>=>))
 import Control.Monad.Quota        (Quota(..), evalQuotaT)
-import Control.Monad.State.Strict (modify, runStateT)
 import Control.Monad.Writer       (MonadWriter, runWriterT, tell)
 import Data.CapNProto.Message     (Message, decode)
 
