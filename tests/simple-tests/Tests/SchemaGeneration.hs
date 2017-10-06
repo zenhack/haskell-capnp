@@ -5,38 +5,40 @@ import Test.QuickCheck
 
 -- Definitions
 
-newtype FieldName = FieldName { unwrapFieldName :: String }
-  deriving Show
-
-newtype StructName = StructName { unwrapStructName :: String }
-  deriving Show
+newtype FieldName = FieldName String
+instance Show (FieldName) where
+  show (FieldName fn) = fn
+  
+newtype StructName = StructName String
+instance Show (StructName) where
+  show (StructName fn) = fn
 
 data Field = FieldDef FieldName Int FieldType
            | StructDef StructName [Field]
 
-data FieldType = Void
-               | Bool
-               | Int8 | Int16
-               | Text
-               | Data
+data BuiltIn = Void
+             | Bool
+             | Int8 | Int16 | Int32 | Int64
+             | UInt8 | UInt16 | UInt32 | UInt64
+             | Float32 | Float64
+             | Text
+             | Data
+  deriving (Show, Enum)
+
+data FieldType = BasicType BuiltIn
                | ListType FieldType
                | StructType StructName
 instance Show (FieldType) where
-  show Void = "Void"
-  show Bool = "Bool"
-  show Int8 = "Int8"
-  show Int16 = "Int16"
-  show Text = "Text"
-  show Data = "Data"
+  show (BasicType bi) = show bi
   show (ListType ft) = "List(" ++ (show ft) ++ ")"
-  show (StructType sn) = unwrapStructName sn
+  show (StructType sn) = show sn
 
 instance Show (Field) where
   show (FieldDef name order entryType) =
-    (unwrapFieldName name) ++ " @" ++ (show order) ++ " :" ++
+    (show name) ++ " @" ++ (show order) ++ " :" ++
     (show entryType) ++ ";\n"
   show (StructDef name content) =
-    "struct " ++ (unwrapStructName name) ++ " {\n"
+    "struct " ++ (show name) ++ " {\n"
     ++ (foldl (++) "" ["\t" ++ (show se) | se <- content])
     ++ "}\n\n"
 
@@ -73,9 +75,9 @@ genFieldDef structTypes = do
     genFieldName = FieldName <$> (listOf1 genSafeLCChar)
 
     genFieldType :: Gen FieldType
-    genFieldType = elements ([Bool, Int8, Int16, Text, Data] ++ structTypes)
+    genFieldType = elements ((map BasicType [Bool ..]) ++ structTypes)
     
-    appendFN fn o = FieldName ((unwrapFieldName fn) ++ (show o))
+    appendFN fn o = FieldName ((show fn) ++ (show o))
 
 -- Struct type
 
@@ -98,7 +100,7 @@ genStructDef = do
       rest <- listOf genSafeLCChar
       return $ StructName (fc:rest)
     
-    appendSN sn o = StructName ((unwrapStructName sn) ++ (show o))
+    appendSN sn o = StructName ((show sn) ++ (show o))
     numberDefs fds = map (\(f, order) -> f order) (zip fds [0..])
 
   -- Schema type
