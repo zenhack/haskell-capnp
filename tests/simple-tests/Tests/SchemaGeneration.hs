@@ -2,13 +2,14 @@ module Tests.SchemaGeneration
   where
 
 import Test.QuickCheck
+import Control.Monad (replicateM)
 
 -- Definitions
 
 newtype FieldName = FieldName String
 instance Show (FieldName) where
   show (FieldName fn) = fn
-  
+
 newtype StructName = StructName String
 instance Show (StructName) where
   show (StructName fn) = fn
@@ -61,47 +62,49 @@ genSafeUCChar = elements ['A'..'Z']
 genSafeHexChar :: Gen Char
 genSafeHexChar = elements (['0'..'9'] ++ ['a'..'f'])
 
+genEnumerated :: Gen a -> Gen [a]
+genEnumerated gen = sized $ \n -> do
+  k <- choose (1, 1 `max` n)
+  replicateM k gen
+
 -- Field types
 
 -- need to enumerate each field; this will be performed during struct
 -- generation where the number of fields is known (numberDefs)
-genFieldDef :: [FieldType] -> Gen (Int -> Field)
-genFieldDef structTypes = do
-  fieldName <- genFieldName
-  fieldType <- genFieldType
-  return $ \order -> FieldDef (appendFN fieldName order) order fieldType
-  where
-    genFieldName :: Gen FieldName
-    genFieldName = FieldName <$> (listOf1 genSafeLCChar)
-
-    genFieldType :: Gen FieldType
-    genFieldType = elements ((map BasicType [Bool ..]) ++ structTypes)
-    
-    appendFN fn o = FieldName ((show fn) ++ (show o))
+genFieldDef :: [FieldType] -> Int -> Gen Field
+genFieldDef structTypes order = do
+  fieldName <- do
+    str <- listOf1 genSafeLCChar
+    return $ FieldName (str ++ show order)
+  fieldType <- elements ((map BasicType [Bool ..]) ++ structTypes)
+  
+  return $ FieldDef fieldName order fieldType
 
 -- Struct type
 
 -- like fields, we enumerate each struct during generation for uniqueness
-genStructDef :: Gen (Int -> Field)
-genStructDef = do
-  structName <- genStructName
-  numStructDefs <- frequency [(3, choose (0, 1)), (1, return 2)]
-  nestedStructDefs <- vectorOf numStructDefs genStructDef
-  let structDefs = numberDefs nestedStructDefs
+genStructDef :: Int -> Int -> Gen Field
+genStructDef depth order = do
+  -- generate the struct's name
+  structName <- do
+    fc <- genSafeUCChar
+    rest <- listOf genSafeLCChar
+    return $ StructName ((fc:rest) ++ (show order))
+
+  -- generate the nested structs
+  structDefIndices <- if depth == 0
+                      then pure []
+                      else (\n -> [0..n]) <$> choose (0, 3)
+  structDefs <- mapM (genStructDef (depth - 1)) structDefIndices
+
+  -- extract the available struct types
   let structTypes = map (\(StructDef sn _) -> (StructType sn)) structDefs
-  fieldDefs <- listOf1 $ genFieldDef structTypes
-  return $ \order -> StructDef
-                     (appendSN structName order)
-                     ((numberDefs fieldDefs) ++ structDefs)
-  where
-    genStructName :: Gen StructName
-    genStructName = do
-      fc <- genSafeUCChar
-      rest <- listOf genSafeLCChar
-      return $ StructName (fc:rest)
-    
-    appendSN sn o = StructName ((show sn) ++ (show o))
-    numberDefs fds = map (\(f, order) -> f order) (zip fds [0..])
+
+  -- generate the fields using available struct types
+  numFieldDefs <- sized (\n -> choose (1, 1 `max` n))
+  fieldDefs <- mapM (genFieldDef structTypes) [0..numFieldDefs]
+
+  return $ StructDef structName (fieldDefs ++ structDefs)
 
   -- Schema type
 
@@ -109,9 +112,8 @@ genSchema :: Gen Schema
 genSchema = do
   id1st <- elements ['a'..'f']
   idrest <- vectorOf 15 genSafeHexChar
-  content <- genStructDef -- multiple structs make tests take too long
-  return $ Schema (id1st:idrest) [content 0]
-  where numberDefs fds = map (\(f, order) -> f order) (zip fds [0..])
+  content <- genStructDef 3 0 -- multiple structs make tests take too long
+  return $ Schema (id1st:idrest) [content]
 
 instance Arbitrary Schema where
   arbitrary = genSchema
