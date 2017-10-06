@@ -4,8 +4,7 @@ module Tests.SchemaQuickCheck
 
 import qualified Data.ByteString as BS
 
-import Prelude hiding (length)
-import Data.CapNProto.Untyped (length, Ptr(PtrStruct), rootPtr)
+import qualified Data.CapNProto.Untyped as Untyped
 import Data.CapNProto.Blob (BlobSlice)
 import Data.CapNProto.Message as M
 import Schema.CapNProto.Reader.Schema as Schema hiding (Field)
@@ -36,17 +35,15 @@ generateCGR schema = do
 decodeCGR :: BS.ByteString -> IO (Quota, Int)
 decodeCGR bytes = do
   msg <- M.decode bytes
-  (numNodes, endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
+  (numNodes, endQuota) <- runQuotaT (Untyped.rootPtr msg >>= reader) 1024
   return (endQuota, numNodes)
   where
-    reader :: Maybe (Ptr BS.ByteString) -> QuotaT IO Int
-    reader (Just (PtrStruct root)) = do
-        let req = Schema.CodeGeneratorRequest root
-        Just nodes <- CGReq.nodes req
-        Just requestedFiles <- CGReq.requestedFiles req
-        numNodes <- length nodes
-        return numNodes
-    reader _ = error "Expected `Just (PtrStruct root)`"
+    reader :: Untyped.Struct BS.ByteString -> QuotaT IO Int
+    reader struct = do
+      let req = Schema.CodeGeneratorRequest struct
+      Just nodes <- CGReq.nodes req
+      Just requestedFiles <- CGReq.requestedFiles req
+      return (Untyped.length nodes)
 
 -- QuickCheck properties
 
