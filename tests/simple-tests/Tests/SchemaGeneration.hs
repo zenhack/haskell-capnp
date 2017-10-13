@@ -1,9 +1,18 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+
 module Tests.SchemaGeneration
-  where
+  ( Schema (..), genSchema
+  ) where
 
 import           Control.Monad   (replicateM)
 import           Data.Foldable   (foldl')
 import qualified Test.QuickCheck as QC
+
+import           Data.List.NonEmpty (NonEmpty((:|)))
+import qualified Data.List.NonEmpty as NE
+
+import Control.Monad.State.Strict
 
 -- Definitions
 
@@ -84,42 +93,84 @@ genSafeUCChar = QC.elements ['A'..'Z']
 genSafeHexChar :: QC.Gen Char
 genSafeHexChar = QC.elements (['0'..'9'] ++ ['a'..'f'])
 
+newtype FieldGen a
+  = FieldGen (StateT (NonEmpty (Int, Int)) QC.Gen a)
+  deriving (Functor, Applicative, Monad)
+
+liftGen :: QC.Gen a -> FieldGen a
+liftGen m = FieldGen (lift m)
+
+runFieldGen :: FieldGen a -> QC.Gen a
+runFieldGen (FieldGen m) = fst <$> runStateT m ((0, 0) :| [])
+
+pushFieldGen :: FieldGen ()
+pushFieldGen = FieldGen $ modify (NE.cons (0, 0))
+
+popFieldGen :: FieldGen ()
+popFieldGen = FieldGen $ do
+  original <- get
+  case original of
+    (x :| (y : rest)) -> put (y :| rest)
+    (x :| [])         -> put (x :| [])
+
+getStructOrder :: FieldGen Int
+getStructOrder = FieldGen $ do
+  current <- get
+  let (result, _) = NE.head current
+  case current of
+    ((x, y) :| rest) -> put ((x + 1, y) :| rest)
+  return result
+
+getOrder :: FieldGen Int
+getOrder = FieldGen $ do
+  current <- get
+  let (_, result) = NE.head current
+  case current of
+    ((x, y) :| rest) -> put ((x + 1, y + 1) :| rest)
+  return result
+
 -- Field types
 
 -- need to enumerate each field; this will be performed during struct
 -- generation where the number of fields is known (numberDefs)
-genFieldDef :: [FieldType] -> Int -> QC.Gen Field
-genFieldDef structTypes order = do
+genFieldDef :: [FieldType] -> FieldGen Field
+genFieldDef structTypes = do
+  order <- getOrder
   fieldName <- do
-    str <- QC.listOf1 genSafeLCChar
+    str <- liftGen $ QC.listOf1 genSafeLCChar
     return $ FieldName (str ++ show order)
-  fieldType <- QC.elements ((map BasicType [Bool ..]) ++ structTypes)
-
+  fieldType <- liftGen $ QC.elements (map BasicType [Bool ..] ++ structTypes)
   return $ FieldDef fieldName order fieldType
 
 -- Struct type
 
 -- like fields, we enumerate each struct during generation for uniqueness
-genStructDef :: Int -> Int -> QC.Gen Field
-genStructDef depth order = do
+genStructDef :: Int -> FieldGen Field
+genStructDef depth = do
+  order <- getStructOrder
+
+  pushFieldGen
+
   -- generate the struct's name
   structName <- do
-    fc <- genSafeUCChar
-    rest <- QC.listOf genSafeLCChar
-    return $ StructName ((fc:rest) ++ (show order))
+    fc <- liftGen genSafeUCChar
+    rest <- liftGen (QC.listOf genSafeLCChar)
+    return $ StructName ((fc:rest) ++ show order)
 
   -- generate the nested structs
-  structDefIndices <- if depth == 0
-                      then pure []
-                      else (\n -> [0..n]) <$> QC.choose (0, 3)
-  structDefs <- mapM (genStructDef (depth - 1)) structDefIndices
+  structNum  <- if depth <= 0
+                then pure 0
+                else liftGen (QC.choose (0, 3))
+  structDefs <- replicateM structNum (genStructDef (depth - 1))
 
   -- extract the available struct types
   let structTypes = map (\(StructDef sn _) -> (StructType sn)) structDefs
 
   -- generate the fields using available struct types
-  numFieldDefs <- QC.sized (\n -> QC.choose (1, 1 `max` n))
-  fieldDefs <- mapM (genFieldDef structTypes) [0..numFieldDefs]
+  fieldNum  <- liftGen (QC.sized (\n -> QC.choose (1, 1 `max` n)))
+  fieldDefs <- replicateM fieldNum (genFieldDef structTypes)
+
+  popFieldGen
 
   return $ StructDef structName (fieldDefs ++ structDefs)
 
@@ -129,5 +180,6 @@ genSchema :: QC.Gen Schema
 genSchema = do
   id1st <- QC.elements ['a'..'f']
   idrest <- QC.vectorOf 15 genSafeHexChar
-  content <- genStructDef 3 0 -- multiple structs make tests take too long
+  -- multiple structs make tests take too long
+  content <- runFieldGen (genStructDef 3)
   return $ Schema (id1st:idrest) [content]
