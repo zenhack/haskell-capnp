@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeFamilies    #-}
 module Tests.Util
     ( MsgMetaData(..)
-    , capnpEncode, capnpDecode, capnpCompile
+    , capnpEncode, capnpDecode, capnpCompile, capnpId
     , assertionsToTest
     , freezeAsByteString
     )
@@ -13,12 +13,13 @@ import System.Process
 
 import Control.Concurrent             (forkIO)
 import Control.DeepSeq                (deepseq)
-import Control.Monad                  (void)
+import Control.Monad                  (void, when)
 import Control.Monad.Primitive        (PrimMonad, PrimState)
 import Control.Monad.Trans            (lift)
 import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
 import Data.CapNProto.Bits            (ByteCount(..))
 import Data.CapNProto.Blob            (BlobSlice(..))
+import Data.Char                      (isHexDigit)
 import Data.Primitive.ByteArray       (MutableByteArray, readByteArray)
 import GHC.IO.Handle                  (hSetBinaryMode)
 import System.Directory               (removeFile)
@@ -26,6 +27,7 @@ import Test.Framework                 (Test, testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC8
 import qualified Test.HUnit      as H
 
 -- | Information about the contents of a capnp message. This is enough
@@ -39,7 +41,7 @@ data MsgMetaData = MsgMetaData
 -- the needed metadata and returning the output
 capnpEncode :: String -> MsgMetaData -> IO BS.ByteString
 capnpEncode msgValue meta = runResourceT $ do
-    (hin, hout) <- interactCapnp "encode" meta
+    (hin, hout) <- interactCapnpWithSchema "encode" meta
     lift $ do
         forkIO $ do
             hPutStr hin msgValue
@@ -51,7 +53,7 @@ capnpEncode msgValue meta = runResourceT $ do
 -- the needed metadata and returning the output
 capnpDecode :: BS.ByteString -> MsgMetaData -> IO String
 capnpDecode msgValue meta = runResourceT $ do
-    (hin, hout) <- interactCapnp "decode" meta
+    (hin, hout) <- interactCapnpWithSchema "decode" meta
     lift $ do
         forkIO $ do
             hSetBinaryMode hin True
@@ -66,40 +68,56 @@ capnpDecode msgValue meta = runResourceT $ do
 -- the needed metadata and returning the output
 capnpCompile :: MsgMetaData -> IO BS.ByteString
 capnpCompile meta = runResourceT $ do
-    (hin, hout) <- interactCapnp "compile" meta
+    (hin, hout) <- interactCapnpWithSchema "compile" meta
     lift $ do
         hSetBinaryMode hout True
         BS.hGetContents hout
+
+capnpId :: IO BS.ByteString
+capnpId = do
+  cid <- runResourceT $ do
+    (hin, hout) <- interactCapnp ["id"]
+    lift $ BS.hGetContents hout
+  case BSC8.stripSuffix "\n" cid of
+    Just stripped -> do
+      when (BSC8.length stripped /= 19)
+        $ fail "`capnp id` had the wrong length (should be 19)"
+      when (BSC8.take 3 stripped /= "@0x")
+        $ fail "`capnp id` was not in the expected format (@0x...)"
+      when (BSC8.dropWhile isHexDigit (BSC8.drop 3 stripped) /= "")
+        $ fail "`capnp id` was not in the expected format (hexadecimals)"
+      return stripped
+    Nothing -> fail "`capnp id` did not end with a newline"
+
+interactCapnp :: [String] -> ResourceT IO (Handle, Handle)
+interactCapnp args = do
+  let p = (proc "capnp" args) { std_in = CreatePipe
+                              , std_out = CreatePipe
+                              }
+  (_, (Just hin, Just hout, Nothing, _)) <- allocate
+      (createProcess p)
+      (\(Just hin, Just hout, Nothing, proc) -> do
+          hClose hout
+          hClose hin
+          void $ waitForProcess proc)
+  return (hin, hout)
 
 -- | A helper for @capnpEncode@ and @capnpDecode@. Launches the capnp command
 -- with the given subcommand (either "encode" or "decode") and metadata,
 -- returning handles to its standard in and standard out. This runs inside
 -- ResourceT, and sets the handles up to be closed and the process to be reaped
 -- when the ResourceT exits.
-interactCapnp :: String -> MsgMetaData -> ResourceT IO (Handle, Handle)
-interactCapnp subCommand MsgMetaData{..} = do
-    schemaFile <- saveTmpSchema msgSchema
-    let p = (proc "capnp" [ subCommand
-                          , schemaFile
-                          , msgType
-                          ]) { std_in = CreatePipe
-                             , std_out = CreatePipe
-                             }
-    (_, (Just hin, Just hout, Nothing, _)) <- allocate
-        (createProcess p)
-        (\(Just hin, Just hout, Nothing, proc) -> do
-            hClose hout
-            hClose hin
-            void $ waitForProcess proc)
-    return (hin, hout)
-  where
-    saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
-    writeTempFile = runResourceT $ do
+interactCapnpWithSchema :: String -> MsgMetaData -> ResourceT IO (Handle, Handle)
+interactCapnpWithSchema subCommand MsgMetaData{..} = do
+  let writeTempFile = runResourceT $ do
         (_, (path, hndl)) <- allocate
             (openTempFile "/tmp" "schema.capnp")
             (\(_, hndl) -> hClose hndl)
         lift $ hPutStr hndl msgSchema
         return path
+  let saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
+  schemaFile <- saveTmpSchema msgSchema
+  interactCapnp [subCommand, schemaFile, msgType]
 
 -- | Convert a BlobSlice (MutableByteArray s) to a ByteString. The former is the
 -- result of Control.Monad.CapNProto.MessageBuilder.runBuilderT
