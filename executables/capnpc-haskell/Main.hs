@@ -1,7 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns     #-}
 module Main (main) where
 
-import Control.Monad          ((>=>))
+import Control.Monad          (join, (>=>))
 import Control.Monad.Quota    (Quota(..), evalQuotaT)
 import Control.Monad.Writer   (MonadWriter, runWriterT, tell)
 import Data.CapNProto.Message (Message, decode)
@@ -25,22 +26,13 @@ buildNodeMap = List.foldl addNode M.empty
         nodeId <- Node.id node
         return $ M.insert nodeId node m
 
-codegen :: (U.ReadCtx m b, MonadWriter [Maybe (BT.Text b)] m)
-        => Message b -> m (Int, [Node.Id])
-codegen msg = do
-    -- FIXME: handle 'Nothing' properly.
-    cgr <- CGR.root_ msg
+codegen :: Message BS.ByteString -> Maybe (Int, [Node.Id])
+codegen (CGR.root_ -> Just cgr) = do
     Just nodes <- CGR.nodes cgr
     nodeMap <- buildNodeMap nodes
     Just reqFiles <- CGR.requestedFiles cgr
-    List.forM_ reqFiles $ ReqFile.filename >=> \name -> tell [name]
-    return (List.length reqFiles, M.keys nodeMap)
+    reqFiles' <- List.toList reqFiles
+    return (length reqFiles', M.keys nodeMap)
 
 main :: IO ()
-main = do
-    contents <- BS.getContents
-    msg <- decode contents
-    ((len, _), files) <- runWriterT $
-        evalQuotaT (codegen msg) (Quota $ BS.length contents * 10)
-    print files
-    print len
+main = BS.getContents >>= decode >>= print . codegen
