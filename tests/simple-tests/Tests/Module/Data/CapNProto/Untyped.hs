@@ -75,7 +75,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             Just (PtrList (List16 homes)) <- index 1 basePtrSec
             let 0 = length homes
             return ()
-      , ((), 110)
+      , ((), 128)
       )
     ]
   where
