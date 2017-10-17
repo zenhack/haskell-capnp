@@ -15,11 +15,13 @@ module Data.CapNProto.List
     , forM_
     , sequence_
     , foldl
+    , foldr
     , fold
+    , toList
     )
   where
 
-import Prelude hiding (fold, foldl, length, map, mapM_, sequence_)
+import Prelude hiding (fold, foldl, foldr, length, map, mapM_, sequence_)
 
 import Control.Monad          (join)
 import Data.CapNProto.Untyped (ListOf, ReadCtx, index, length)
@@ -56,9 +58,25 @@ foldl f empty list = go 0 empty
             accum' <- f accum elt
             go (i+1) accum'
 
+
+-- | Analouge of 'Prelude.foldr'.
+foldr :: ReadCtx m b => (a -> c -> m c) -> c -> ListOf b a -> m c
+foldr f empty list = go (length list - 1) empty
+  where
+    go i accum
+        | i < 0 = return accum
+        | otherwise = do
+            elt <- index i list
+            accum' <- f elt accum
+            go (i-1) accum'
+
 -- | Analouge of 'Prelude.fold'.
 fold :: (Monoid w, ReadCtx m b) => ListOf b w -> m w
 fold = foldl (return2 mappend) mempty
+
+-- | Convert the list to a standard haskell list
+toList :: ReadCtx m b => ListOf b a -> m [a]
+toList = foldr (return2 (:)) []
 
 -- Helper for lifting binary pure functions into a monad.
 return2 :: Monad m => (a -> b -> c) -> (a -> b -> m c)
