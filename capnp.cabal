@@ -51,6 +51,7 @@ library
                         , Schema.CapNProto.Schema.CodeGeneratorRequest
                         , Schema.CapNProto.Reader.Schema
                         , Schema.CapNProto.Reader.Schema.Node
+                        , Schema.CapNProto.Reader.Schema.Node.NestedNode
                         , Schema.CapNProto.Reader.Schema.Node.Union_
                         , Schema.CapNProto.Reader.Schema.Field
                         , Schema.CapNProto.Reader.Schema.Enumerant
@@ -106,6 +107,7 @@ executable capnpc-haskell
                         , primitive
                         , transformers
                         , quota
+                        , template-haskell
     default-language:     Haskell2010
     -- if impl(ghc >= 8.0)
     --    ghc-options:       -Wcompat -Weverything
