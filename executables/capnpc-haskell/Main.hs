@@ -1,5 +1,6 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ViewPatterns     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns      #-}
 module Main (main) where
 
 import Control.Monad            (void, (>=>))
@@ -9,6 +10,8 @@ import Control.Monad.Writer     (MonadWriter, Writer, runWriterT, tell)
 import Data.ByteString.UTF8     (toString)
 import Data.CapNProto.Message   (Message, decode)
 import Data.Functor.Identity    (Identity(..))
+import Data.List                (intersperse)
+import Data.Monoid              (mconcat, (<>))
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
@@ -29,6 +32,18 @@ type NS = [BT.Text BS]
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
 type Generator a = CatchT (Writer [(NS, TH.DecsQ)]) a
+
+modulePath :: NS -> BT.Text BS
+modulePath ns = mconcat $
+    "Schema.CapNProto.Reader." :
+    reverse (intersperse "." ns)
+
+moduleFile :: NS -> FilePath
+moduleFile ns = asStr $ mconcat ( "Schema/CapNproto/Reader/"
+                                : reverse (intersperse "/" ns)
+                                ) <> ".hs"
+  where
+    asStr (BT.Text path) = toString path
 
 buildNodeMap :: List.ListOf BS (Schema.Node BS) -> Generator NodeMap
 buildNodeMap = List.foldl addNode M.empty
