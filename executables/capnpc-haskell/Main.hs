@@ -2,19 +2,19 @@
 {-# LANGUAGE ViewPatterns     #-}
 module Main (main) where
 
-import Control.Monad          ((>=>), void)
-import Control.Monad.Quota    (Quota(..), evalQuotaT)
-import Control.Monad.Writer   (MonadWriter, Writer, runWriterT, tell)
+import Control.Monad            (void, (>=>))
 import Control.Monad.Catch.Pure (CatchT(..))
-import Data.CapNProto.Message (Message, decode)
+import Control.Monad.Quota      (Quota(..), evalQuotaT)
+import Control.Monad.Writer     (MonadWriter, Writer, runWriterT, tell)
+import Data.CapNProto.Message   (Message, decode)
 
-import qualified Language.Haskell.TH as TH
-import qualified Language.CapNProto.TH as CTH
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
 import qualified Data.CapNProto.List                                               as List
 import qualified Data.CapNProto.Untyped                                            as U
 import qualified Data.Map.Strict                                                   as M
+import qualified Language.CapNProto.TH                                             as CTH
+import qualified Language.Haskell.TH                                               as TH
 import qualified Schema.CapNProto.Reader.Schema                                    as Schema
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest               as CGR
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile as ReqFile
