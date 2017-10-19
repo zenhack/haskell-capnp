@@ -6,7 +6,9 @@ import Control.Monad            (void, (>=>))
 import Control.Monad.Catch.Pure (CatchT(..))
 import Control.Monad.Quota      (Quota(..), evalQuotaT)
 import Control.Monad.Writer     (MonadWriter, Writer, runWriterT, tell)
+import Data.ByteString.UTF8     (toString)
 import Data.CapNProto.Message   (Message, decode)
+import Data.Functor.Identity    (Identity(..))
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
@@ -55,9 +57,9 @@ genNestedNode nodeMap ns nestedNode = do
     List.mapM_ (genNestedNode nodeMap (name:ns)) nn
 
 genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
-genNode nodeMap ns node name = case Node.union_ node of
+genNode nodeMap ns node (BT.Text name) = case Node.union_ node of
     Right (Node.Struct struct) -> do
-        undefined
+        tell [ (ns, CTH.mkStructWrappers [toString name])]
 
 genReq :: Message BS.ByteString -> Generator ()
 genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
@@ -66,7 +68,9 @@ genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
     List.mapM_ (genModule nodeMap) reqFiles
 split f g x = (f x, g x)
 
+
 main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
-    void $ return $ runWriterT $ runCatchT $ genReq msg
+    case runWriterT $ runCatchT $ genReq msg of
+        Identity (Right (), decls) -> undefined
