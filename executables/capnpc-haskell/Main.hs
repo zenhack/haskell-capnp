@@ -33,8 +33,8 @@ type NodeMap = M.Map Node.Id (Schema.Node BS)
 
 type Generator a = CatchT (Writer [(NS, TH.DecsQ)]) a
 
-modulePath :: NS -> BT.Text BS
-modulePath ns = mconcat $
+moduleName :: NS -> BT.Text BS
+moduleName ns = mconcat $
     "Schema.CapNProto.Reader." :
     reverse (intersperse "." ns)
 
@@ -75,6 +75,7 @@ genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode nodeMap ns node (BT.Text name) = case Node.union_ node of
     Right (Node.Struct struct) -> do
         tell [ (ns, CTH.mkStructWrappers [toString name])]
+    _ -> return ()
 
 genReq :: Message BS.ByteString -> Generator ()
 genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
@@ -83,9 +84,23 @@ genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
     List.mapM_ (genModule nodeMap) reqFiles
 split f g x = (f x, g x)
 
+mkSrcs :: [(NS, TH.DecsQ)] -> IO (M.Map FilePath String)
+mkSrcs items = M.fromList <$> mapM mkSrc items where
+    mkSrc :: (NS, TH.DecsQ) -> IO (FilePath, String)
+    mkSrc (ns, qs) = do
+        decs <- TH.runQ qs
+        let BT.Text modname = moduleName ns
+            modfile = moduleFile ns
+            contents = unlines $ map TH.pprint $ decs
+        return ( modfile
+               , "module " ++ toString modname ++ " where\n" ++
+                 "\n" ++
+                 "import qualified Data.CapNProto.Untyped\n\n" ++
+                 contents
+               )
 
 main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
     case runWriterT $ runCatchT $ genReq msg of
-        Identity (Right (), decls) -> undefined
+        Identity (Right (), decls) -> print =<< mkSrcs decls
