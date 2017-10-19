@@ -2,10 +2,10 @@
 {-# LANGUAGE ViewPatterns     #-}
 module Main (main) where
 
-import Control.Monad          ((>=>), join)
+import Control.Monad          ((>=>), void)
 import Control.Monad.Quota    (Quota(..), evalQuotaT)
 import Control.Monad.Writer   (MonadWriter, Writer, runWriterT, tell)
-import Control.Monad.Maybe (MaybeT(..))
+import Control.Monad.Catch.Pure (CatchT(..))
 import Data.CapNProto.Message (Message, decode)
 
 import qualified Language.Haskell.TH as TH
@@ -26,9 +26,9 @@ type NS = [BT.Text BS]
 
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
-type Generator a = MaybeT (Writer [(NS, TH.DecsQ)] a)
+type Generator a = CatchT (Writer [(NS, TH.DecsQ)]) a
 
-buildNodeMap :: List.ListOf BS (Schema.Node BS) -> Maybe NodeMap
+buildNodeMap :: List.ListOf BS (Schema.Node BS) -> Generator NodeMap
 buildNodeMap = List.foldl addNode M.empty
   where
     addNode m node = do
@@ -38,34 +38,36 @@ buildNodeMap = List.foldl addNode M.empty
 genModule :: NodeMap -> CGR.RequestedFile BS -> Generator ()
 genModule nodeMap file = do
     id <- ReqFile.id file
-    node <- M.lookup id nodeMap
+    let Just node = M.lookup id nodeMap
 
     -- First, verify that the node in question is actually a file:
     Node.File <- Node.union_ node
 
-    join (Node.nestedNodes node)
-        >>= List.mapM_ (genNestedNode nodeMap [])
+    Just nn <- Node.nestedNodes node
+    List.mapM_ (genNestedNode nodeMap []) nn
 
 genNestedNode :: NodeMap -> NS -> Node.NestedNode BS -> Generator ()
 genNestedNode nodeMap ns nestedNode = do
     Just name <- NN.name nestedNode
     id <- NN.id nestedNode
-    node <- M.lookup id nodeMap
+    let Just node = M.lookup id nodeMap
     genNode nodeMap ns node name
-    join (Node.nestedNodes node) >>=
-        List.mapM_ (genNestedNode nodeMap (name:ns))
+    Just nn <- Node.nestedNodes node
+    List.mapM_ (genNestedNode nodeMap (name:ns)) nn
 
 genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode nodeMap ns node name = case Node.union_ node of
     Just (Node.Struct struct) -> do
         undefined -- tell [(ns, mkStructWrapper name)]
 
-genReq :: Message BS.ByteString -> Maybe ()
-genReq (CGR.root_ -> Just cgr) = do
+genReq :: Message BS.ByteString -> Generator ()
+genReq (CGR.root_ -> Right cgr) = do
     Just nodes <- CGR.nodes cgr
     nodeMap <- buildNodeMap nodes
-    join (CGR.requestedFiles cgr)
-        >>= List.mapM_ (genModule nodeMap)
+    Just reqFiles <- CGR.requestedFiles cgr
+    List.mapM_ (genModule nodeMap) reqFiles
 
 main :: IO ()
-main = BS.getContents >>= decode >>= print . genReq
+main = do
+    msg <- BS.getContents >>= decode
+    void $ return $ runWriterT $ runCatchT $ genReq msg
