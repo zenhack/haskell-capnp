@@ -36,8 +36,7 @@ buildNodeMap = List.foldl addNode M.empty
         return $ M.insert nodeId node m
 
 genModule :: NodeMap -> CGR.RequestedFile BS -> Generator ()
-genModule nodeMap file = do
-    id <- ReqFile.id file
+genModule nodeMap (ReqFile.id -> Right id) = do
     let Just node = M.lookup id nodeMap
 
     -- First, verify that the node in question is actually a file:
@@ -57,8 +56,8 @@ genNestedNode nodeMap ns nestedNode = do
 
 genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode nodeMap ns node name = case Node.union_ node of
-    Just (Node.Struct struct) -> do
-        undefined -- tell [(ns, mkStructWrapper name)]
+    Right (Node.Struct struct) -> do
+        undefined
 
 genReq :: Message BS.ByteString -> Generator ()
 genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
