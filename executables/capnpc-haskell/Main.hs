@@ -61,11 +61,11 @@ genNode nodeMap ns node name = case Node.union_ node of
         undefined -- tell [(ns, mkStructWrapper name)]
 
 genReq :: Message BS.ByteString -> Generator ()
-genReq (CGR.root_ -> Right cgr) = do
-    Just nodes <- CGR.nodes cgr
+genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
+                            (Right (Just nodes), Right (Just reqFiles)))) = do
     nodeMap <- buildNodeMap nodes
-    Just reqFiles <- CGR.requestedFiles cgr
     List.mapM_ (genModule nodeMap) reqFiles
+split f g x = (f x, g x)
 
 main :: IO ()
 main = do
