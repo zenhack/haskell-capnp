@@ -45,11 +45,6 @@ library
       , Data.CapNProto.Schema
       , Data.CapNProto.Untyped
       , Language.CapNProto.TH
-      , Schema.CapNProto.Schema
-      , Schema.CapNProto.Schema.Node
-      , Schema.CapNProto.Schema.Node.Union_
-      , Schema.CapNProto.Schema.Node.Union_.Struct_
-      , Schema.CapNProto.Schema.CodeGeneratorRequest
       , Schema.CapNProto.Reader.Schema
       , Schema.CapNProto.Reader.Schema.Node
       , Schema.CapNProto.Reader.Schema.Node.NestedNode
