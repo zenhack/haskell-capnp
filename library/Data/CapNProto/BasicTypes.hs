@@ -48,7 +48,7 @@ getData list = Data <$> U.rawBytes list
 -- | Interpret a list of Word8 as a capnproto 'Text' value.
 --
 -- This vaidates that the list is in-bounds, and that it is NUL-terminated,
--- but not that it is valid UTF-8. If it is not NUL-terminaed, a x
+-- but not that it is valid UTF-8. If it is not NUL-terminaed, a
 -- 'SchemaViolationError' is thrown.
 getText :: (U.ReadCtx m b, B.Slice m b) => U.ListOf b Word8 -> m (Text b)
 getText list = do
