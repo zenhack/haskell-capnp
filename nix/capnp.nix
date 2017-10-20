@@ -1,9 +1,9 @@
 { mkDerivation, array, base, binary, bytes, bytestring, cereal
-, containers, deepseq, directory, exceptions, heredoc, HUnit, mtl
-, primitive, process, QuickCheck, quota, reinterpret-cast
+, containers, deepseq, directory, dlist, exceptions, heredoc, HUnit
+, mtl, primitive, process, QuickCheck, quota, reinterpret-cast
 , resourcet, stdenv, template-haskell, test-framework
 , test-framework-hunit, test-framework-quickcheck2, text
-, transformers, vector
+, transformers, utf8-string, vector
 }:
 mkDerivation {
   pname = "capnp";
@@ -16,8 +16,9 @@ mkDerivation {
     template-haskell text transformers vector
   ];
   executableHaskellDepends = [
-    array base binary bytes bytestring cereal containers exceptions mtl
-    primitive quota transformers vector
+    array base binary bytes bytestring cereal containers dlist
+    exceptions mtl primitive quota template-haskell transformers
+    utf8-string vector
   ];
   testHaskellDepends = [
     base binary bytestring deepseq directory exceptions heredoc HUnit
