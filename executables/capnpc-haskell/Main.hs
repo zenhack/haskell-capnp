@@ -9,6 +9,7 @@ import Control.Monad.Quota      (Quota(..), evalQuotaT)
 import Control.Monad.Writer     (MonadWriter, Writer, runWriterT, tell)
 import Data.ByteString.UTF8     (toString)
 import Data.CapNProto.Message   (Message, decode)
+import Data.DList               (DList)
 import Data.Functor.Identity    (Identity(..))
 import Data.List                (intersperse)
 import Data.Monoid              (mconcat, (<>))
@@ -17,6 +18,7 @@ import qualified Data.ByteString                                                
 import qualified Data.CapNProto.BasicTypes                                         as BT
 import qualified Data.CapNProto.List                                               as List
 import qualified Data.CapNProto.Untyped                                            as U
+import qualified Data.DList                                                        as DList
 import qualified Data.Map.Strict                                                   as M
 import qualified Language.CapNProto.TH                                             as CTH
 import qualified Language.Haskell.TH                                               as TH
@@ -31,7 +33,7 @@ type NS = [BT.Text BS]
 
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
-type Generator a = CatchT (Writer [(NS, TH.DecsQ)]) a
+type Generator a = CatchT (Writer (DList (NS, TH.DecsQ))) a
 
 moduleName :: NS -> BT.Text BS
 moduleName ns = mconcat $
@@ -74,7 +76,7 @@ genNestedNode nodeMap ns nestedNode = do
 genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode nodeMap ns node (BT.Text name) = case Node.union_ node of
     Right (Node.Struct struct) -> do
-        tell [ (ns, CTH.mkStructWrappers [toString name])]
+        tell $ DList.singleton (ns, CTH.mkStructWrappers [toString name])
     _ -> return ()
 
 genReq :: Message BS.ByteString -> Generator ()
@@ -103,4 +105,4 @@ main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
     case runWriterT $ runCatchT $ genReq msg of
-        Identity (Right (), decls) -> print =<< mkSrcs decls
+        Identity (Right (), decls) -> print =<< mkSrcs (DList.toList decls)
