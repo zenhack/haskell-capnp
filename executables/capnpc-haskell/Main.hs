@@ -5,7 +5,9 @@ module Main (main) where
 
 import Generator
 
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Catch.Pure  (CatchT(..))
+import Control.Monad.Reader      (ReaderT, runReaderT, ask)
 import Data.ByteString.UTF8      (toString)
 import Data.CapNProto.Message    (Message, decode)
 import Data.Functor.Identity     (Identity(..))
@@ -29,18 +31,18 @@ type BS = BS.ByteString
 
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
-type Generator a = GenT (CatchT Identity) a
+type Generator a = ReaderT NodeMap (GenT (CatchT Identity)) a
 
-buildNodeMap :: List.ListOf BS (Schema.Node BS) -> Generator NodeMap
+buildNodeMap :: List.ListOf BS (Schema.Node BS) -> (CatchT Identity) NodeMap
 buildNodeMap = List.foldl addNode M.empty
   where
     addNode m node = do
         nodeId <- Node.id node
         return $ M.insert nodeId node m
 
-genModule :: NodeMap -> CGR.RequestedFile BS -> Generator ()
-genModule nodeMap (ReqFile.id -> Right id) = do
-    let Just node = M.lookup id nodeMap
+genModule :: CGR.RequestedFile BS -> Generator ()
+genModule (ReqFile.id -> Right id) = do
+    Just node <- M.lookup id <$> ask
 
     -- First, verify that the node in question is actually a file:
     Node.File <- Node.union_ node
@@ -52,29 +54,31 @@ genModule nodeMap (ReqFile.id -> Right id) = do
     -- aliases that re-export these modules from friendlier names, but doing it
     -- this way means we don't have to worry about a lot of the awkwardness re:
     -- locating packages that crops up in other languages.
-    List.mapM_ (genNestedNode nodeMap (fromId id)) nn
+    List.mapM_ (genNestedNode (fromId id)) nn
 
-genNestedNode :: NodeMap -> NS -> Node.NestedNode BS -> Generator ()
-genNestedNode nodeMap ns nestedNode = do
+genNestedNode :: NS -> Node.NestedNode BS -> Generator ()
+genNestedNode ns nestedNode = do
     Just name <- NN.name nestedNode
     id <- NN.id nestedNode
-    let Just node = M.lookup id nodeMap
-    genNode nodeMap ns node name
+    Just node <- M.lookup id <$> ask
+    genNode ns node name
     Just nn <- Node.nestedNodes node
-    List.mapM_ (genNestedNode nodeMap (subNS ns name)) nn
+    List.mapM_ (genNestedNode (subNS ns name)) nn
 
-genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
-genNode nodeMap ns node (BT.Text name) = case Node.union_ node of
+genNode :: NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
+genNode ns node (BT.Text name) = case Node.union_ node of
     Right (Node.Struct struct) -> do
-        emit ns (CTH.mkStructWrappers [toString name])
+        lift $ emit ns (CTH.mkStructWrappers [toString name])
     _ -> return ()
 
-genReq :: Message BS.ByteString -> Generator ()
-genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
-                            (Right (Just nodes), Right (Just reqFiles)))) = do
-    nodeMap <- buildNodeMap nodes
-    List.mapM_ (genModule nodeMap) reqFiles
-split f g x = (f x, g x)
+generate :: Message BS -> GenT (CatchT Identity) ()
+generate (CGR.root_ -> Right cgr@(CGR.nodes -> Right (Just nodes))) = do
+    nodeMap <- lift $ buildNodeMap nodes
+    runReaderT (genReq cgr) nodeMap
+
+genReq :: Schema.CodeGeneratorRequest BS -> Generator ()
+genReq (CGR.requestedFiles -> Right (Just reqFiles)) =
+    List.mapM_ genModule reqFiles
 
 mkSrcs :: M.Map NS TH.DecsQ -> IO [(FilePath, String)]
 mkSrcs = mapM mkSrc . M.toList where
@@ -94,7 +98,7 @@ mkSrcs = mapM mkSrc . M.toList where
 main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
-    case runIdentity $ runCatchT $ evalGenT $ genReq msg of
+    case runIdentity $ runCatchT $ evalGenT $ generate msg of
         (Right decls) -> mkSrcs decls >>= mapM_ writeOut
   where
     writeOut (path, contents) = do
