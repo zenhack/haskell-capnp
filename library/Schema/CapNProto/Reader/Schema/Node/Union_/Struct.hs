@@ -3,8 +3,8 @@ module Schema.CapNProto.Reader.Schema.Node.Union_.Struct where
 
 import Language.CapNProto.TH
 
-import qualified Data.CapNProto.Untyped as U
-import qualified Schema.CapNProto.Reader.Schema as S
+import qualified Data.CapNProto.Untyped                     as U
+import qualified Schema.CapNProto.Reader.Schema             as S
 import qualified Schema.CapNProto.Reader.Schema.Node.Union_ as Union_
 
 $(mkListReaders

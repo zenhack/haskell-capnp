@@ -5,9 +5,9 @@ module Main (main) where
 
 import Generator
 
-import Control.Monad.Trans.Class (lift)
 import Control.Monad.Catch.Pure  (CatchT(..))
-import Control.Monad.Reader      (ReaderT, runReaderT, ask)
+import Control.Monad.Reader      (ReaderT, ask, runReaderT)
+import Control.Monad.Trans.Class (lift)
 import Data.ByteString.UTF8      (toString)
 import Data.CapNProto.Message    (Message, decode)
 import Data.Functor.Identity     (Identity(..))
@@ -25,8 +25,8 @@ import qualified Schema.CapNProto.Reader.Schema                                 
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest               as CGR
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile as ReqFile
 import qualified Schema.CapNProto.Reader.Schema.Node                               as Node
-import qualified Schema.CapNProto.Reader.Schema.Node.Union_.Struct as Node'Struct
 import qualified Schema.CapNProto.Reader.Schema.Node.NestedNode                    as NN
+import qualified Schema.CapNProto.Reader.Schema.Node.Union_.Struct                 as Node'Struct
 
 type BS = BS.ByteString
 

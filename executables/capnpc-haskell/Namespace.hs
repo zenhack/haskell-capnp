@@ -11,9 +11,9 @@ module Namespace
 import Data.Word
 
 import Data.ByteString.UTF8 (toString)
-import Data.String          (fromString)
 import Data.List            (intersperse)
 import Data.Monoid          (mconcat, (<>))
+import Data.String          (fromString)
 import Text.Printf          (printf)
 
 import qualified Data.ByteString           as BS
