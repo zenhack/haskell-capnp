@@ -3,21 +3,24 @@
 {-# LANGUAGE ViewPatterns      #-}
 module Main (main) where
 
-import Control.Monad            (void, (>=>))
-import Control.Monad.Catch.Pure (CatchT(..))
-import Control.Monad.Quota      (Quota(..), evalQuotaT)
-import Control.Monad.Writer     (MonadWriter, Writer, runWriterT, tell)
-import Data.ByteString.UTF8     (toString)
-import Data.CapNProto.Message   (Message, decode)
-import Data.DList               (DList)
-import Data.Functor.Identity    (Identity(..))
-import Data.List                (intersperse)
-import Data.Monoid              (mconcat, (<>))
-import Data.String              (fromString)
+import Generator
+
+import Control.Monad             (void, (>=>))
+import Control.Monad.Catch.Pure  (CatchT(..))
+import Control.Monad.Quota       (Quota(..), evalQuotaT)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Writer      (MonadWriter, Writer, runWriterT, tell)
+import Data.ByteString.UTF8      (toString)
+import Data.CapNProto.Message    (Message, decode)
+import Data.DList                (DList)
+import Data.Functor.Identity     (Identity(..))
+import Data.List                 (intersperse)
+import Data.Monoid               (mconcat, (<>))
+import Data.String               (fromString)
 import Namespace
-import System.Directory         (createDirectoryIfMissing)
-import System.FilePath          (takeDirectory)
-import Text.Printf              (printf)
+import System.Directory          (createDirectoryIfMissing)
+import System.FilePath           (takeDirectory)
+import Text.Printf               (printf)
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
@@ -37,16 +40,7 @@ type BS = BS.ByteString
 
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
-newtype GenAcc = GenAcc (M.Map NS (DList TH.DecsQ))
-
-instance Monoid GenAcc where
-    mempty = GenAcc $ M.empty
-    mappend (GenAcc l) (GenAcc r) = GenAcc $ M.unionWith mappend l r
-
-emit :: MonadWriter GenAcc m => NS -> TH.DecsQ -> m ()
-emit k v = tell $ GenAcc $ M.singleton k (DList.singleton v)
-
-type Generator a = CatchT (Writer GenAcc) a
+type Generator a = GenT (CatchT Identity) a
 
 buildNodeMap :: List.ListOf BS (Schema.Node BS) -> Generator NodeMap
 buildNodeMap = List.foldl addNode M.empty
@@ -93,15 +87,15 @@ genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
     List.mapM_ (genModule nodeMap) reqFiles
 split f g x = (f x, g x)
 
-mkSrcs :: GenAcc -> IO [(FilePath, String)]
-mkSrcs (GenAcc m) = mapM mkSrc (M.toList m) where
-    mkSrc :: (NS, DList TH.DecsQ) -> IO (FilePath, String)
-    mkSrc (ns, qs) = do
-        decs <- mapM TH.runQ $ DList.toList qs
+mkSrcs :: M.Map NS TH.DecsQ -> IO [(FilePath, String)]
+mkSrcs = mapM mkSrc . M.toList where
+    mkSrc :: (NS, TH.DecsQ) -> IO (FilePath, String)
+    mkSrc (ns, q) = do
+        decs <- TH.runQ q
         let BT.Text modname = moduleName ns
-            modfile = moduleFile ns
+            filename = moduleFile ns
             contents = unlines $ map TH.pprint $ decs
-        return ( modfile
+        return ( filename
                , "module " ++ toString modname ++ " where\n" ++
                  "\n" ++
                  "import qualified Data.CapNProto.Untyped\n\n" ++
@@ -111,8 +105,8 @@ mkSrcs (GenAcc m) = mapM mkSrc (M.toList m) where
 main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
-    case runWriterT $ runCatchT $ genReq msg of
-        Identity (Right (), decls) -> mkSrcs decls >>= mapM_ writeOut
+    case runIdentity $ runCatchT $ evalGenT $ genReq msg of
+        (Right decls) -> mkSrcs decls >>= mapM_ writeOut
   where
     writeOut (path, contents) = do
         createDirectoryIfMissing True (takeDirectory path)

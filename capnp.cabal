@@ -79,7 +79,8 @@ library
 executable capnpc-haskell
     main-is:              Main.hs
     other-modules:
-      Namespace
+        Generator
+      , Namespace
     hs-source-dirs:       executables/capnpc-haskell
     build-depends:
         capnp
