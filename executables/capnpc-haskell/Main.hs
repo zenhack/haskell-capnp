@@ -63,7 +63,7 @@ genModule nodeMap (ReqFile.id -> Right id) = do
     -- aliases that re-export these modules from friendlier names, but doing it
     -- this way means we don't have to worry about a lot of the awkwardness re:
     -- locating packages that crops up in other languages.
-    List.mapM_ (genNestedNode nodeMap [fromString $ 'X' : printf "%08x" id]) nn
+    List.mapM_ (genNestedNode nodeMap (fromId id)) nn
 
 genNestedNode :: NodeMap -> NS -> Node.NestedNode BS -> Generator ()
 genNestedNode nodeMap ns nestedNode = do
@@ -72,7 +72,7 @@ genNestedNode nodeMap ns nestedNode = do
     let Just node = M.lookup id nodeMap
     genNode nodeMap ns node name
     Just nn <- Node.nestedNodes node
-    List.mapM_ (genNestedNode nodeMap (name:ns)) nn
+    List.mapM_ (genNestedNode nodeMap (subNS ns name)) nn
 
 genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode nodeMap ns node (BT.Text name) = case Node.union_ node of
