@@ -72,6 +72,8 @@ library
       , transformers
       , template-haskell
       , quota
+    ghc-options:
+      -Wunused-imports
     default-language:     Haskell2010
 
 --------------------------------------------------------------------------------
@@ -102,6 +104,8 @@ executable capnpc-haskell
       , transformers
       , quota
       , template-haskell
+    ghc-options:
+      -Wunused-imports
     default-language:     Haskell2010
 
 --------------------------------------------------------------------------------
@@ -142,6 +146,8 @@ test-suite simple-tests
       , reinterpret-cast
       , template-haskell
       , deepseq
+    ghc-options:
+      -Wunused-imports
     default-language:     Haskell2010
 
 --------------------------------------------------------------------------------

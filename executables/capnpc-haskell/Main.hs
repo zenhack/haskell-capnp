@@ -5,28 +5,17 @@ module Main (main) where
 
 import Generator
 
-import Control.Monad             (void, (>=>))
 import Control.Monad.Catch.Pure  (CatchT(..))
-import Control.Monad.Quota       (Quota(..), evalQuotaT)
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Writer      (MonadWriter, Writer, runWriterT, tell)
 import Data.ByteString.UTF8      (toString)
 import Data.CapNProto.Message    (Message, decode)
-import Data.DList                (DList)
 import Data.Functor.Identity     (Identity(..))
-import Data.List                 (intersperse)
-import Data.Monoid               (mconcat, (<>))
-import Data.String               (fromString)
 import Namespace
 import System.Directory          (createDirectoryIfMissing)
 import System.FilePath           (takeDirectory)
-import Text.Printf               (printf)
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
 import qualified Data.CapNProto.List                                               as List
-import qualified Data.CapNProto.Untyped                                            as U
-import qualified Data.DList                                                        as DList
 import qualified Data.Map.Strict                                                   as M
 import qualified Language.CapNProto.TH                                             as CTH
 import qualified Language.Haskell.TH                                               as TH
