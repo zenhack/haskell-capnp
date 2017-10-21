@@ -15,6 +15,8 @@ import Data.List                (intersperse)
 import Data.Monoid              (mconcat, (<>))
 import Data.String              (fromString)
 import Namespace
+import System.Directory         (createDirectoryIfMissing)
+import System.FilePath          (takeDirectory)
 import Text.Printf              (printf)
 
 import qualified Data.ByteString                                                   as BS
@@ -103,4 +105,6 @@ main = do
     case runWriterT $ runCatchT $ genReq msg of
         Identity (Right (), decls) -> mkSrcs (DList.toList decls) >>= mapM_ writeOut
   where
-    writeOut = uncurry writeFile
+    writeOut (path, contents) = do
+        createDirectoryIfMissing True (takeDirectory path)
+        writeFile path contents
