@@ -25,6 +25,7 @@ import qualified Schema.CapNProto.Reader.Schema                                 
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest               as CGR
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile as ReqFile
 import qualified Schema.CapNProto.Reader.Schema.Node                               as Node
+import qualified Schema.CapNProto.Reader.Schema.Node.Union_.Struct as Node'Struct
 import qualified Schema.CapNProto.Reader.Schema.Node.NestedNode                    as NN
 
 type BS = BS.ByteString
@@ -67,9 +68,13 @@ genNestedNode ns nestedNode = do
 
 genNode :: NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode ns node (BT.Text name) = case Node.union_ node of
-    Right (Node.Struct struct) -> do
+    Right (Node.Struct (Node'Struct.fields -> Right fields)) -> do
         lift $ emit ns (CTH.mkStructWrappers [toString name])
+        mapM_ (List.mapM_ (genField (subNS ns (BT.Text name)))) fields
     _ -> return ()
+
+genField :: NS -> Schema.Field BS -> Generator ()
+genField ns field = return ()
 
 generate :: Message BS -> GenT (CatchT Identity) ()
 generate (CGR.root_ -> Right cgr@(CGR.nodes -> Right (Just nodes))) = do
