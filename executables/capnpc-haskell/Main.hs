@@ -37,7 +37,16 @@ type BS = BS.ByteString
 
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
-type Generator a = CatchT (Writer (DList (NS, TH.DecsQ))) a
+newtype GenAcc = GenAcc (M.Map NS (DList TH.DecsQ))
+
+instance Monoid GenAcc where
+    mempty = GenAcc $ M.empty
+    mappend (GenAcc l) (GenAcc r) = GenAcc $ M.unionWith mappend l r
+
+emit :: MonadWriter GenAcc m => NS -> TH.DecsQ -> m ()
+emit k v = tell $ GenAcc $ M.singleton k (DList.singleton v)
+
+type Generator a = CatchT (Writer GenAcc) a
 
 buildNodeMap :: List.ListOf BS (Schema.Node BS) -> Generator NodeMap
 buildNodeMap = List.foldl addNode M.empty
@@ -74,7 +83,7 @@ genNestedNode nodeMap ns nestedNode = do
 genNode :: NodeMap -> NS -> Schema.Node BS -> (BT.Text BS) -> Generator ()
 genNode nodeMap ns node (BT.Text name) = case Node.union_ node of
     Right (Node.Struct struct) -> do
-        tell $ DList.singleton (ns, CTH.mkStructWrappers [toString name])
+        emit ns (CTH.mkStructWrappers [toString name])
     _ -> return ()
 
 genReq :: Message BS.ByteString -> Generator ()
@@ -84,11 +93,11 @@ genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
     List.mapM_ (genModule nodeMap) reqFiles
 split f g x = (f x, g x)
 
-mkSrcs :: [(NS, TH.DecsQ)] -> IO [(FilePath, String)]
-mkSrcs = mapM mkSrc where
-    mkSrc :: (NS, TH.DecsQ) -> IO (FilePath, String)
+mkSrcs :: GenAcc -> IO [(FilePath, String)]
+mkSrcs (GenAcc m) = mapM mkSrc (M.toList m) where
+    mkSrc :: (NS, DList TH.DecsQ) -> IO (FilePath, String)
     mkSrc (ns, qs) = do
-        decs <- TH.runQ qs
+        decs <- mapM TH.runQ $ DList.toList qs
         let BT.Text modname = moduleName ns
             modfile = moduleFile ns
             contents = unlines $ map TH.pprint $ decs
@@ -103,7 +112,7 @@ main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
     case runWriterT $ runCatchT $ genReq msg of
-        Identity (Right (), decls) -> mkSrcs (DList.toList decls) >>= mapM_ writeOut
+        Identity (Right (), decls) -> mkSrcs decls >>= mapM_ writeOut
   where
     writeOut (path, contents) = do
         createDirectoryIfMissing True (takeDirectory path)
