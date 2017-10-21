@@ -82,8 +82,8 @@ genReq (CGR.root_ -> Right (split CGR.nodes CGR.requestedFiles ->
     List.mapM_ (genModule nodeMap) reqFiles
 split f g x = (f x, g x)
 
-mkSrcs :: [(NS, TH.DecsQ)] -> IO (M.Map FilePath String)
-mkSrcs items = M.fromList <$> mapM mkSrc items where
+mkSrcs :: [(NS, TH.DecsQ)] -> IO [(FilePath, String)]
+mkSrcs = mapM mkSrc where
     mkSrc :: (NS, TH.DecsQ) -> IO (FilePath, String)
     mkSrc (ns, qs) = do
         decs <- TH.runQ qs
@@ -101,4 +101,6 @@ main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
     case runWriterT $ runCatchT $ genReq msg of
-        Identity (Right (), decls) -> print =<< mkSrcs (DList.toList decls)
+        Identity (Right (), decls) -> mkSrcs (DList.toList decls) >>= mapM_ writeOut
+  where
+    writeOut = uncurry writeFile

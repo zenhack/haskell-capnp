@@ -23,7 +23,7 @@ moduleName ns = mconcat $
     reverse (intersperse "." ns)
 
 moduleFile :: NS -> FilePath
-moduleFile ns = asStr $ mconcat ( "Schema/CapNproto/Reader/"
+moduleFile ns = asStr $ mconcat ( "Schema/CapNProto/Reader/"
                                 : reverse (intersperse "/" ns)
                                 ) <> ".hs"
   where
