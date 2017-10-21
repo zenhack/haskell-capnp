@@ -13,7 +13,9 @@ import Data.DList               (DList)
 import Data.Functor.Identity    (Identity(..))
 import Data.List                (intersperse)
 import Data.Monoid              (mconcat, (<>))
+import Data.String              (fromString)
 import Namespace
+import Text.Printf              (printf)
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
@@ -50,7 +52,13 @@ genModule nodeMap (ReqFile.id -> Right id) = do
     Node.File <- Node.union_ node
 
     Just nn <- Node.nestedNodes node
-    List.mapM_ (genNestedNode nodeMap []) nn
+    -- We put everything in a module named Schema.CapNProto.Reader.X<fileId>.
+    -- this makes module names deterministic, without annotations, regardless
+    -- of where files are actually loaded from. We can in the future generate
+    -- aliases that re-export these modules from friendlier names, but doing it
+    -- this way means we don't have to worry about a lot of the awkwardness re:
+    -- locating packages that crops up in other languages.
+    List.mapM_ (genNestedNode nodeMap [fromString $ 'X' : printf "%08x" id]) nn
 
 genNestedNode :: NodeMap -> NS -> Node.NestedNode BS -> Generator ()
 genNestedNode nodeMap ns nestedNode = do
