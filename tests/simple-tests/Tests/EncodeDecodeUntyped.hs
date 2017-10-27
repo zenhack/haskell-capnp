@@ -78,6 +78,6 @@ encodeDecodeUntypedTests =
             let 0 = length ptrs
             return ()
       , 128
-      , 128
+      , 125
       )
     ]

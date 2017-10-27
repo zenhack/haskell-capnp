@@ -44,7 +44,7 @@ theAssert = do
     bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
     ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
-    assertEqual "Correct remaining quota" 1024 endQuota
+    assertEqual "Correct remaining quota" 648 endQuota
   where
     reader :: Struct BS.ByteString -> QuotaT IO ()
     reader root = do

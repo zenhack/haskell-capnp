@@ -27,6 +27,7 @@ import Data.Bits
 import Data.Word
 
 import Control.Monad.Catch    (MonadThrow, throwM)
+import Control.Monad.Quota    (MonadQuota, invoice)
 import Data.CapNProto.Address (WordAddr(..))
 import Data.CapNProto.Bits
     (ByteCount(..), Word1(..), WordCount(..), wordsToBytes)
@@ -39,7 +40,7 @@ import qualified Data.CapNProto.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m b = (MonadThrow m, Blob m b, Slice m b)
+type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b, Slice m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
@@ -97,9 +98,11 @@ data Struct b
 
 
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
+-- Deducts 1 from the quota for each word read (which may be multiple in the
+-- case of far pointers).
 get :: ReadCtx m b => M.Message b -> WordAddr -> m (Maybe (Ptr b))
 get msg addr = do
-    word <- M.getWord msg addr
+    word <- getWord msg addr
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
@@ -114,10 +117,10 @@ get msg addr = do
                 if not twoWords
                     then get msg addr'
                     else do
-                        landingPad <- M.getWord msg addr'
+                        landingPad <- getWord msg addr'
                         case P.parsePtr landingPad of
                             Just (P.FarPtr False off seg) -> do
-                                tagWord <- M.getWord
+                                tagWord <- getWord
                                             msg
                                             addr' { wordIndex = wordIndex addr' + 1 }
                                 let finalAddr = WordAt { wordIndex = fromIntegral off
@@ -148,6 +151,7 @@ get msg addr = do
                                 show ptr
 
   where
+    getWord msg addr = invoice 1 >> M.getWord msg addr
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList addr@WordAt{..} eltSpec = PtrList <$>
@@ -163,7 +167,7 @@ get msg addr = do
               where
                 nlist = NormalList msg addr (fromIntegral len)
             P.EltComposite _ -> do
-                tagWord <- M.getWord msg addr
+                tagWord <- getWord msg addr
                 case P.parsePtr tagWord of
                     Just (P.StructPtr numElts dataSz ptrSz) ->
                         return $ ListStruct $ ListOfStruct
@@ -177,9 +181,9 @@ get msg addr = do
                         "formatted word: " ++ show tag
 
 
--- | @index i list@ returns the ith element in @list@.
+-- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m b => Int -> ListOf b a -> m a
-index i list = index' list
+index i list = invoice 1 >> index' list
   where
     index' :: ReadCtx m b => ListOf b a -> m a
     index' (ListOfVoid len)
