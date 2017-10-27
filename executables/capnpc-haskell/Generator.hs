@@ -8,6 +8,7 @@ module Generator
 
 import Namespace
 
+import Control.Monad.Quota (MonadQuota, invoice)
 import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Writer      (WriterT, execWriterT, tell)
@@ -24,6 +25,9 @@ newtype GenT m a = GenT ((WriterT GenAcc m) a)
 
 instance MonadTrans GenT where
     lift = GenT . lift
+
+instance MonadQuota m => MonadQuota (GenT m) where
+    invoice = lift . invoice
 
 -- | @emit ns@ Emits a declaration to be added to the module named by @ns@.
 emit :: Monad m => NS -> TH.DecsQ -> GenT m ()
