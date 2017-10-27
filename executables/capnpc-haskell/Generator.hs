@@ -8,8 +8,8 @@ module Generator
 
 import Namespace
 
-import Control.Monad.Quota (MonadQuota, invoice)
 import Control.Monad.Catch       (MonadThrow(..))
+import Control.Monad.Quota       (MonadQuota, invoice)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Writer      (WriterT, execWriterT, tell)
 import Data.DList                (DList)
