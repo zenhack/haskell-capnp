@@ -11,6 +11,12 @@ import Language.CapNProto.TH
 import qualified Prelude
 import qualified Schema.CapNProto.Reader.Schema as S
 
-$(mkWordReaders 'S.Superclass
-    [ ("id", 0, ''Word64, const [t| Word64 |], 0, [| Prelude.id |])
-    ])
+$(mkWordReader WordReaderSpec
+    { name = "id"
+    , parentConName = 'S.Superclass
+    , start = 0
+    , rawTyp = ''Word64
+    , typ = const [t| Word64 |]
+    , defaultVal = 0
+    , transform = [| Prelude.id |]
+    })

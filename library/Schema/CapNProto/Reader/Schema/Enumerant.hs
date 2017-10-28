@@ -13,8 +13,14 @@ $(mkListReaders 'S.Enumerant
     [ ("annotations", 1, 'U.ListStruct, ''S.Annotation, [| S.Annotation |])
     ])
 
-$(mkWordReaders 'S.Enumerant
-    [ ("codeOrder", 0, ''Word16, const [t| Word16 |], 0, [| id |])
-    ])
+$(mkWordReader WordReaderSpec
+    { name = "codeOrder"
+    , parentConName = 'S.Enumerant
+    , start = 0
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
 
 $(mkTextReader "name" 'S.Enumerant 0)

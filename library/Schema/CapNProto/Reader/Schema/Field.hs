@@ -16,9 +16,24 @@ $(mkListReaders 'S.Field
     [ ("annotations", 1, 'U.ListStruct, ''S.Annotation, [| S.Annotation |])
     ])
 
-$(mkWordReaders 'S.Field
-    [ ("codeOrder",          0, ''Word16, const [t| Word16 |], 0,      [| id |])
-    , ("discriminantValue", 16, ''Word16, const [t| Word16 |], 0xffff, [| id |])
-    ])
+$(mkWordReader WordReaderSpec
+    { name = "codeOrder"
+    , parentConName = 'S.Field
+    , start = 0
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
+
+$(mkWordReader WordReaderSpec
+    { name = "discriminantValue"
+    , parentConName = 'S.Field
+    , start = 0
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0xffff
+    , transform = [| id |]
+    })
 
 $(mkTextReader "name" 'S.Field 0)

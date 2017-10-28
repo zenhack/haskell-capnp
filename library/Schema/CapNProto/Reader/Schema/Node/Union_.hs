@@ -18,21 +18,55 @@ $(mkStructWrappers
     , "Annotation"
     ])
 
-$(mkWordReaders 'Struct
-    [ ("dataWordCount", 112, ''Word16, const [t| Word16 |], 0, [| id |])
-    , ("pointerCount",  192, ''Word16, const [t| Word16 |], 0, [| id |])
+$(mkWordReader WordReaderSpec
+    { name = "dataWordCount"
+    , parentConName = 'Struct
+    , start = 112
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
 
-    , ( "preferredListEncoding"
-      , 208
-      , ''Word16
-      , const [t| S.ElementSize |]
-      , 0
-      , [| S.ElementSize |]
-      )
+$(mkWordReader WordReaderSpec
+    { name = "pointerCount"
+    , parentConName = 'Struct
+    , start = 192
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
 
-    , ("disciriminantCount",  240, ''Word16, const [t| Word16 |], 0, [| id |])
-    , ("disciriminantOffset", 256, ''Word32, const [t| Word32 |], 0, [| id |])
-    ])
+$(mkWordReader WordReaderSpec
+    { name = "preferredListEncoding"
+    , parentConName = 'Struct
+    , start = 208
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
+
+$(mkWordReader WordReaderSpec
+    { name = "discriminantCount"
+    , parentConName = 'Struct
+    , start = 240
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
+
+$(mkWordReader WordReaderSpec
+    { name = "discriminantOffset"
+    , parentConName = 'Struct
+    , start = 256
+    , rawTyp = ''Word16
+    , typ = const [t| Word16 |]
+    , defaultVal = 0
+    , transform = [| id |]
+    })
 
 $(mkBoolReader "isGroup" 'S.Node 224 False)
 

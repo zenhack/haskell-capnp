@@ -3,12 +3,15 @@ module Schema.CapNProto.Reader.Schema.Node
     (module Schema.CapNProto.Reader.Schema.Node)
   where
 
+import Prelude hiding (id)
+
 import Data.Bits
 import Data.CapNProto.Bits   (Word1, word1ToBool)
 import Data.Word
 import Language.CapNProto.TH
 
 import qualified Data.CapNProto.Untyped                     as U
+import qualified Prelude
 import qualified Schema.CapNProto.Reader.Schema             as S
 import qualified Schema.CapNProto.Reader.Schema.Node.Union_ as Union_
 
@@ -20,11 +23,35 @@ $(mkListReaders 'S.Node
     , ("annotations", 2, 'U.ListStruct, ''S.Annotation, [| S.Annotation |])
     ])
 
-$(mkWordReaders 'S.Node
-    [ ("id",                        0, ''Word64, const [t| Word64 |], 0, [| id          |])
-    , ("displayNamePrefixLength",  64, ''Word32, const [t| Word32 |], 0, [| id          |])
-    , ("scopeId",                 128, ''Word64, const [t| Word64 |], 0, [| id          |])
-    ])
+$(mkWordReader WordReaderSpec
+    { name = "id"
+    , parentConName = 'S.Node
+    , start = 0
+    , rawTyp = ''Word64
+    , typ = const [t| Word64 |]
+    , defaultVal = 0
+    , transform = [| Prelude.id |]
+    })
+
+$(mkWordReader WordReaderSpec
+    { name = "displayNamePrefixLength"
+    , parentConName = 'S.Node
+    , start = 64
+    , rawTyp = ''Word32
+    , typ = const [t| Word32 |]
+    , defaultVal = 0
+    , transform = [| Prelude.id |]
+    })
+
+$(mkWordReader WordReaderSpec
+    { name = "scopeId"
+    , parentConName = 'S.Node
+    , start = 128
+    , rawTyp = ''Word64
+    , typ = const [t| Word64 |]
+    , defaultVal = 0
+    , transform = [| Prelude.id |]
+    })
 
 $(mkBoolReader "isGeneric" 'S.Node 288 False)
 

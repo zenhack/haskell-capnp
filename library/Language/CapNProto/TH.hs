@@ -1,8 +1,9 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Language.CapNProto.TH
-    ( mkStructWrappers
+    ( WordReaderSpec(..)
+    , mkStructWrappers
     , mkListReaders
-    , mkWordReaders
     , mkWordReader
     , mkBoolReader
     , mkTextReader
@@ -146,16 +147,19 @@ mkListReaders parent readers =
   where
     uncurry5 func (a, b, c, d, e) = func a b c d e
 
-mkWordReader :: String -- ^ The name of the reader.
-            -> Name    -- ^ The data constructor for the parent type
-            -> Integer -- ^ The offset into the parent's data section (in bits)
-            -> Name    -- ^ The type constructor for the WordN type of the correct
-                       --   size.
-            -> (TypeQ -> TypeQ) -- ^ The type of the final result
-            -> Word64  -- ^ The default value of the field (bit representation)
-            -> ExpQ    -- ^ A function to apply to the result
-            -> DecsQ
-mkWordReader name parentConName start rawTyp typ defaultVal transform = do
+data WordReaderSpec = WordReaderSpec
+    { name :: String -- ^ The name of the reader.
+    , parentConName :: Name -- ^ The data constructor for the parent type
+    , start :: Integer -- ^ The offset into the parent's data section (in bits)
+    , rawTyp :: Name -- ^ The type constructor for the WordN type of the correct
+                     --   size.
+    , typ :: (TypeQ -> TypeQ) -- ^ The type of the final result
+    , defaultVal :: Word64 -- ^ The default value of the field (bit representation)
+    , transform :: ExpQ -- ^ A function to apply to the result
+    }
+
+mkWordReader :: WordReaderSpec -> DecsQ
+mkWordReader WordReaderSpec{..} = do
     struct <- newName "struct"
     let dataIndex = litE $ IntegerL $ start `div` 64
     let bitOffset = litE $ IntegerL $  start `mod` 64
@@ -172,14 +176,15 @@ mkWordReader name parentConName start rawTyp typ defaultVal transform = do
 -- | Make a reader that reads a boolean. The first three arguments are the same
 -- as mkWordReader. The final argument is the default value.
 mkBoolReader :: String -> Name -> Integer -> Bool -> DecsQ
-mkBoolReader name parentConName start def = mkWordReader
-    name
-    parentConName
-    start
-    ''Word1
-    (const [t| Bool |])
-    (if def then 1 else 0)
-    [| word1ToBool |]
+mkBoolReader name parentConName start def = mkWordReader $
+    WordReaderSpec
+        name
+        parentConName
+        start
+        ''Word1
+        (const [t| Bool |])
+        (if def then 1 else 0)
+        [| word1ToBool |]
 
 
 -- | @mkRootReader fn@ declares a function called "root_", which extracts
@@ -187,10 +192,3 @@ mkBoolReader name parentConName start def = mkWordReader
 -- pointer is not a struct pointer, a 'SchemaViolationError' is raised.
 mkRootReader :: ExpQ -> DecsQ
 mkRootReader fn = [d|root_ msg = fmap $fn (U.rootPtr msg)|]
-
-mkWordReaders :: Name -> [(String, Integer, Name, TypeQ -> TypeQ, Word64, ExpQ)]
-    -> DecsQ
-mkWordReaders parent readers =
-    concat <$> mapM (uncurry6 $ \arg -> mkWordReader arg parent) readers
-  where
-    uncurry6 func (a, b, c, d, e, f) = func a b c d e f
