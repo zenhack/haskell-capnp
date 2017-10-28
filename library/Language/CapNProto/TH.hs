@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.CapNProto.TH
     ( WordReaderSpec(..)
+    , UnionSpec(..)
+    , UnionVariant(..)
     , mkStructWrappers
     , mkListReaders
     , mkWordReader
@@ -9,6 +11,7 @@ module Language.CapNProto.TH
     , mkTextReader
     , mkDataReader
     , mkRootReader
+    , mkUnion
     )
   where
 
@@ -23,6 +26,52 @@ import Data.CapNProto.Bits       (Word1, word1ToBool)
 
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Untyped as U
+
+data WordReaderSpec = WordReaderSpec
+    { name :: String -- ^ The name of the reader.
+    , parentConName :: Name -- ^ The data constructor for the parent type
+    , start :: Integer -- ^ The offset into the parent's data section (in bits)
+    , rawTyp :: Name -- ^ The type constructor for the WordN type of the correct
+                     --   size.
+    , typ :: (TypeQ -> TypeQ) -- ^ The type of the final result
+    , defaultVal :: Word64 -- ^ The default value of the field (bit representation)
+    , transform :: ExpQ -- ^ A function to apply to the result
+    }
+
+data UnionSpec = UnionSpec
+    { unionName :: String
+    , unionParentConName :: Name
+    , variants :: [UnionVariant]
+    }
+
+data UnionVariant = UnionVariant
+    { variantName :: String
+    , discriminantValue :: Word16
+    , elementType :: Maybe (TypeQ -> TypeQ)
+    }
+
+defaultBang :: Bang
+defaultBang = Bang NoSourceUnpackedness NoSourceStrictness
+
+-- | Declare a union type.
+mkUnion :: UnionSpec -> DecsQ
+mkUnion UnionSpec{..} = do
+    b <- newName "b"
+    cons <- mapM (mkCon b) variants
+    return [ DataD
+                []
+                (mkName unionName)
+                [PlainTV b]
+                Nothing
+                (NormalC (mkName "Unknown") [(defaultBang, ConT ''Word16)] : cons)
+                []
+           ]
+  where
+    mkCon b UnionVariant{..} = do
+        argT <- case elementType of
+                Nothing -> return []
+                Just ty -> (:[]) <$> ty (varT b)
+        return $ NormalC (mkName variantName) (map (\t -> (defaultBang, t)) argT)
 
 -- | For a type with one data constructor, with the same name as its type
 -- constructor, convert a 'Name' for the data constructor to a 'Name' for
@@ -39,8 +88,7 @@ mkStructWrapper name = do
     let name' = mkName name
     let b = mkName "b"
     return $ NewtypeD [] name' [PlainTV b] Nothing
-                (NormalC name' [ ( Bang NoSourceUnpackedness
-                                         NoSourceStrictness
+                (NormalC name' [ ( defaultBang
                                   , AppT (ConT ''U.Struct) (VarT b)
                                   )
                                 ])
@@ -146,17 +194,6 @@ mkListReaders parent readers =
     concat <$> mapM (uncurry5 $ \arg -> mkListReader arg parent) readers
   where
     uncurry5 func (a, b, c, d, e) = func a b c d e
-
-data WordReaderSpec = WordReaderSpec
-    { name :: String -- ^ The name of the reader.
-    , parentConName :: Name -- ^ The data constructor for the parent type
-    , start :: Integer -- ^ The offset into the parent's data section (in bits)
-    , rawTyp :: Name -- ^ The type constructor for the WordN type of the correct
-                     --   size.
-    , typ :: (TypeQ -> TypeQ) -- ^ The type of the final result
-    , defaultVal :: Word64 -- ^ The default value of the field (bit representation)
-    , transform :: ExpQ -- ^ A function to apply to the result
-    }
 
 mkWordReader :: WordReaderSpec -> DecsQ
 mkWordReader WordReaderSpec{..} = do
