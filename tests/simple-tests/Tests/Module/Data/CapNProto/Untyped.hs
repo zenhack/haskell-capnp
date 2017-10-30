@@ -24,7 +24,14 @@ untypedTests :: Test
 untypedTests = assertionsToTest "Untyped Tests"  $ map tst
     [ ( aircraftSchema
       , "Aircraft"
-      , "(f16 = (base = (name = \"bob\", homes = [none], rating = 7, canFly = true, capacity = 5173, maxSpeed = 12.0)))"
+      , [here|(f16 = (base = (
+           name = "bob",
+           homes = [none],
+           rating = 7,
+           canFly = true,
+           capacity = 5173,
+           maxSpeed = 12.0
+        )))|]
       , 128
       , \root -> do
             aircraftWords <- dataSection root
