@@ -26,7 +26,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
       , "Aircraft"
       , [here|(f16 = (base = (
            name = "bob",
-           homes = [none],
+           homes = [],
            rating = 7,
            canFly = true,
            capacity = 5173,

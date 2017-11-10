@@ -1,6 +1,6 @@
 module Tests.SchemaQuickCheck
     (schemaCGRQuickCheck)
-  where
+    where
 
 import qualified Data.ByteString as BS
 
@@ -28,32 +28,32 @@ import Control.Monad.Quota as Q
 
 generateCGR :: Schema -> IO BS.ByteString
 generateCGR schema = do
-  pOut <- capnpCompile (show schema) "-o-"
-  return pOut
+    pOut <- capnpCompile (show schema) "-o-"
+    return pOut
 
 -- Functions to validate CGRs
 
 decodeCGR :: BS.ByteString -> IO (Quota, Int)
 decodeCGR bytes = do
-  let reader :: Untyped.Struct BS.ByteString -> QuotaT IO Int
-      reader struct = do
-        let req = Schema.CodeGeneratorRequest struct
-        Just nodes <- CGReq.nodes req
-        Just requestedFiles <- CGReq.requestedFiles req
-        return (Untyped.length nodes)
-  msg <- M.decode bytes
-  (numNodes, endQuota) <- runQuotaT (Untyped.rootPtr msg >>= reader) 1024
-  return (endQuota, numNodes)
+    let reader :: Untyped.Struct BS.ByteString -> QuotaT IO Int
+        reader struct = do
+            let req = Schema.CodeGeneratorRequest struct
+            Just nodes <- CGReq.nodes req
+            Just requestedFiles <- CGReq.requestedFiles req
+            return (Untyped.length nodes)
+    msg <- M.decode bytes
+    (numNodes, endQuota) <- runQuotaT (Untyped.rootPtr msg >>= reader) 1024
+    return (endQuota, numNodes)
 
 -- QuickCheck properties
 
 prop_schemaValid :: Schema -> Property
 prop_schemaValid schema = ioProperty $ do
-  compiled <- generateCGR schema
-  decoded <- try $ decodeCGR compiled
-  return $ case decoded of
-    Left QuotaError -> False
-    Right _         -> True
+    compiled <- generateCGR schema
+    decoded <- try $ decodeCGR compiled
+    return $ case decoded of
+        Left QuotaError -> False
+        Right _         -> True
 
 schemaCGRQuickCheck = testProperty "valid schema QuickCheck"
                       (prop_schemaValid <$> genSchema)
