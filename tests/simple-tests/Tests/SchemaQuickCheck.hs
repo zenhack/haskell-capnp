@@ -28,7 +28,7 @@ import Control.Monad.Quota as Q
 
 generateCGR :: Schema -> IO BS.ByteString
 generateCGR schema = do
-    pOut <- capnpCompile (show schema) "-o-"
+    pOut <- capnpCompile (show schema) "-"
     return pOut
 
 -- Functions to validate CGRs

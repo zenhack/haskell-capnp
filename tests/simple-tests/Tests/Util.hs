@@ -11,7 +11,8 @@ module Tests.Util
 
 import System.IO
 import System.Exit                    (ExitCode(..))
-import System.Process
+import System.Process                 hiding (readCreateProcessWithExitCode)
+import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 
 import Control.Concurrent             (forkIO)
 import Control.DeepSeq                (deepseq)
@@ -23,13 +24,14 @@ import Data.CapNProto.Bits            (ByteCount(..))
 import Data.CapNProto.Blob            (BlobSlice(..))
 import Data.Char                      (isHexDigit)
 import Data.Primitive.ByteArray       (MutableByteArray, readByteArray)
-import GHC.IO.Handle                  (hSetBinaryMode)
 import System.Directory               (removeFile)
 import Test.Framework                 (Test, testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC8
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString.Lazy.Char8 as LBSC8
 import qualified Test.HUnit      as H
 
 -- | Information about the contents of a capnp message. This is enough
@@ -43,81 +45,39 @@ data MsgMetaData = MsgMetaData
 -- the needed metadata and returning the output
 capnpEncode :: String -> MsgMetaData -> IO BS.ByteString
 capnpEncode msgValue meta = do
-    (exitStatus, stdErr, contents) <- runResourceT $ do
-        (hin, hout, herr, phandle) <- interactCapnpWithSchema "encode" (msgSchema meta) [msgType meta]
-        contents <- lift $ do
-            forkIO $ do
-                hPutStr hin msgValue
-                hClose hin
-            hSetBinaryMode hout True
-            BS.hGetContents hout
-        stdErr <- lift $ BS.hGetContents herr
-        exitStatus <- lift $ waitForProcess phandle
-        return (exitStatus, stdErr, contents)
+    (exitStatus, stdOut, stdErr) <- runResourceT $ do
+        interactCapnpWithSchema "encode" (msgSchema meta) (LBSC8.pack msgValue) [msgType meta]
     case exitStatus of
-        ExitSuccess -> return contents
+        ExitSuccess -> return (LBS.toStrict stdOut)
         ExitFailure code -> fail ("`capnp encode` failed with exit code " ++ show code ++ ":\n" ++ show stdErr)
 
 -- | @capnpDecode msg meta@ runs @capnp decode@ on the message, providing
 -- the needed metadata and returning the output
 capnpDecode :: BS.ByteString -> MsgMetaData -> IO String
 capnpDecode encodedMsg meta = do
-    (exitStatus, stdErr, contents) <- runResourceT $ do
-        (hin, hout, herr, phandle) <- interactCapnpWithSchema "decode" (msgSchema meta) [msgType meta]
-        contents <- lift $ do
-            forkIO $ do
-                hSetBinaryMode hin True
-                BS.hPutStr hin encodedMsg
-                hClose hin
-            ret <- hGetContents hout
-            -- We need to read the whole string in strictly, otherwise hClose may
-            -- happen before we're done; use deepseq to force full evaluation:
-            deepseq ret (return ret)
-        stdErr <- lift $ BS.hGetContents herr
-        exitStatus <- lift $ waitForProcess phandle
-        return (exitStatus, stdErr, contents)
+    (exitStatus, stdOut, stdErr) <- runResourceT $ do
+        interactCapnpWithSchema "decode" (msgSchema meta) (LBS.fromStrict encodedMsg) [msgType meta]
     case exitStatus of
-        ExitSuccess -> return contents
+        ExitSuccess -> return (LBSC8.unpack stdOut)
         ExitFailure code -> fail ("`capnp decode` failed with exit code " ++ show code ++ ":\n" ++ show stdErr)
 
 -- | @capnpCompile msg meta@ runs @capnp compile@ on the schema, providing
 -- the needed metadata and returning the output
 capnpCompile :: String -> String -> IO BS.ByteString
 capnpCompile msgSchema outputArg = do
-    (exitStatus, stdErr, contents) <- runResourceT $ do
-        (hin, hout, herr, phandle) <- interactCapnpWithSchema "compile" msgSchema [outputArg]
-        contents <- lift $ do
-            hSetBinaryMode hout True
-            BS.hGetContents hout
-        stdErr <- lift $ BS.hGetContents herr
-        exitStatus <- lift $ waitForProcess phandle
-        return (exitStatus, stdErr, contents)
+    (exitStatus, stdOut, stdErr) <- runResourceT $ do
+        interactCapnpWithSchema "compile" msgSchema LBSC8.empty ["-o", outputArg]
     case exitStatus of
-        ExitSuccess -> return contents
+        ExitSuccess -> return (LBS.toStrict stdOut)
         ExitFailure code -> fail ("`capnp compile` failed with exit code " ++ show code ++ ":\n" ++ show stdErr)
-
-interactCapnp :: [String] -> ResourceT IO (Handle, Handle, Handle, ProcessHandle)
-interactCapnp args = do
-    let p = (proc "capnp" args) { std_in = CreatePipe
-                                , std_out = CreatePipe
-                                , std_err = CreatePipe
-                                }
-    (_, (Just hin, Just hout, Just herr, phandle)) <- allocate
-        (createProcess p)
-        (\(Just hin, Just hout, Just herr, proc) -> do
-            hClose hout
-            hClose hin
-            hClose herr
-            void $ waitForProcess proc)
-    return (hin, hout, herr, phandle)
 
 -- | A helper for @capnpEncode@ and @capnpDecode@. Launches the capnp command
 -- with the given subcommand (either "encode" or "decode") and metadata,
 -- returning handles to its standard in and standard out. This runs inside
 -- ResourceT, and sets the handles up to be closed and the process to be reaped
 -- when the ResourceT exits.
-interactCapnpWithSchema :: String -> String -> [String] -> ResourceT IO (Handle, Handle, Handle, ProcessHandle)
-interactCapnpWithSchema subCommand msgSchema args = do
+interactCapnpWithSchema :: String -> String -> LBS.ByteString -> [String] -> ResourceT IO (ExitCode, LBS.ByteString, LBS.ByteString)
+interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
     let writeTempFile = runResourceT $ do
             (_, (path, hndl)) <- allocate
                 (openTempFile "/tmp" "schema.capnp")
@@ -126,7 +86,7 @@ interactCapnpWithSchema subCommand msgSchema args = do
             return path
     let saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
     schemaFile <- saveTmpSchema msgSchema
-    interactCapnp $ [subCommand, schemaFile] ++ args
+    lift $ readCreateProcessWithExitCode (proc "capnp" ([subCommand, schemaFile] ++ args)) stdInBytes
 
 -- | Convert a BlobSlice (MutableByteArray s) to a ByteString. The former is the
 -- result of Control.Monad.CapNProto.MessageBuilder.runBuilderT
