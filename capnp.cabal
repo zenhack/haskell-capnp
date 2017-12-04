@@ -32,82 +32,82 @@ source-repository head
 
 library
     hs-source-dirs:       library
-    exposed-modules:      Control.Monad.CapNProto.MessageBuilder
-                        , Data.CapNProto.Address
-                        , Data.CapNProto.BasicTypes
-                        , Data.CapNProto.Bits
-                        , Data.CapNProto.Blob
-                        , Data.CapNProto.Errors
-                        , Data.CapNProto.Message
-                        , Data.CapNProto.Pointer
-                        , Data.CapNProto.Schema
-                        , Data.CapNProto.Untyped
-                        , Language.CapNProto.TH
-                        , Schema.CapNProto.Schema
-                        , Schema.CapNProto.Schema.Node
-                        , Schema.CapNProto.Schema.Node.Union_
-                        , Schema.CapNProto.Schema.Node.Union_.Struct_
-                        , Schema.CapNProto.Schema.CodeGeneratorRequest
-                        , Schema.CapNProto.Reader.Schema
-                        , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
-                        , Schema.CapNProto.Reader.Schema.Node
+    exposed-modules:
+        Control.Monad.CapNProto.MessageBuilder
+      , Data.CapNProto.Address
+      , Data.CapNProto.BasicTypes
+      , Data.CapNProto.Bits
+      , Data.CapNProto.Blob
+      , Data.CapNProto.Errors
+      , Data.CapNProto.List
+      , Data.CapNProto.Message
+      , Data.CapNProto.Pointer
+      , Data.CapNProto.Schema
+      , Data.CapNProto.Untyped
+      , Language.CapNProto.TH
+      , Schema.CapNProto.Reader.Schema
+      , Schema.CapNProto.Reader.Schema.Node
+      , Schema.CapNProto.Reader.Schema.Node.NestedNode
+      , Schema.CapNProto.Reader.Schema.Node.Union_
+      , Schema.CapNProto.Reader.Schema.Node.Union_.Struct
+      , Schema.CapNProto.Reader.Schema.Field
+      , Schema.CapNProto.Reader.Schema.Enumerant
+      , Schema.CapNProto.Reader.Schema.Superclass
+      , Schema.CapNProto.Reader.Schema.Method
+      , Schema.CapNProto.Reader.Schema.Brand
+      , Schema.CapNProto.Reader.Schema.Annotation
+      , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest
+      , Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile
     -- other-modules:
     -- other-extensions:
-    build-depends:        base       >= 4.8  && < 5.0
-                        , text       >= 1.2  && < 2.0
-                        , bytestring >= 0.10 && < 0.11
-                        , array      >= 0.5  && < 0.6
-                        , bytes
-                        , vector
-                        , exceptions
-                        , mtl
-                        , primitive
-                        , transformers
-                        , template-haskell
-                        , quota
+    build-depends:
+        base       >= 4.8  && < 5.0
+      , text       >= 1.2  && < 2.0
+      , bytestring >= 0.10 && < 0.11
+      , array      >= 0.5  && < 0.6
+      , bytes
+      , vector
+      , exceptions
+      , mtl
+      , primitive
+      , transformers
+      , template-haskell
+      , quota
+    ghc-options:
+      -Wunused-imports
     default-language:     Haskell2010
-    -- if impl(ghc >= 8.0)
-    --    ghc-options:       -Wcompat -Weverything
-    --                       -fno-warn-unsafe
-    --                       -fno-warn-safe
-    --                       -fno-warn-implicit-prelude
-    --                       -fno-warn-unused-do-bind
-    --                       -fno-warn-missed-specialisations
-    --                       -fno-warn-all-missed-specialisations
-    --                       -g
-    -- else
-    --    ghc-options:       -Wall -g
 
 --------------------------------------------------------------------------------
 
 executable capnpc-haskell
     main-is:              Main.hs
+    other-modules:
+        Generator
+      , Namespace
     hs-source-dirs:       executables/capnpc-haskell
-    build-depends:        capnp
-                        , base       >= 4.8  && < 5.0
-                        , bytestring >= 0.10 && < 0.11
-                        , array      >= 0.5  && < 0.6
-                        , cereal
-                        , bytes
-                        , vector
-                        , exceptions
-                        , mtl
-                        , binary
-                        , primitive
-                        , transformers
-                        , quota
+    build-depends:
+        capnp
+      , base       >= 4.8  && < 5.0
+      , bytestring >= 0.10 && < 0.11
+      , array      >= 0.5  && < 0.6
+      , directory
+      , filepath
+      , containers
+      , dlist
+      , utf8-string
+      , cereal
+      , bytes
+      , vector
+      , exceptions
+      , mtl
+      , binary
+      , primitive
+      , transformers
+      , quota
+      , template-haskell
+    ghc-options:
+      -Wunused-imports
     default-language:     Haskell2010
-    -- if impl(ghc >= 8.0)
-    --    ghc-options:       -Wcompat -Weverything
-    --                       -fno-warn-unsafe
-    --                       -fno-warn-safe
-    --                       -fno-warn-implicit-prelude
-    --                       -fno-warn-unused-do-bind
-    --                       -fno-warn-missed-specialisations
-    --                       -fno-warn-all-missed-specialisations
-    --                       -g
-    -- else
-    --    ghc-options:       -Wall -g
 
 --------------------------------------------------------------------------------
 
@@ -115,46 +115,41 @@ test-suite simple-tests
     type:                 exitcode-stdio-1.0
     main-is:              Main.hs
     hs-source-dirs:       tests/simple-tests
-    other-modules:        Tests.Module.Control.Monad.CapNProto.MessageBuilder
-                        , Tests.Module.Data.CapNProto.Untyped
-                        , Tests.Module.Data.CapNProto.Pointer
-                        , Tests.Module.Data.CapNProto.Bits
-                        , Tests.EncodeDecodeUntyped
-                        , Tests.WalkSchemaCodeGenRequest
-                        , Tests.Util
-    build-depends:        capnp
-                        , base       >= 4.8  && < 5.0
-                        , bytestring >= 0.10 && < 0.11
-                        , vector
-                        , process
-                        , exceptions
-                        , QuickCheck
-                        , quota
-                        , mtl
-                        , HUnit
-                        , test-framework
-                        , test-framework-hunit
-                        , test-framework-quickcheck2
-                        , binary
-                        , transformers
-                        , directory
-                        , resourcet
-                        , heredoc
-                        , primitive
-                        , reinterpret-cast
-                        , template-haskell
-                        , deepseq
+    other-modules:
+        Tests.Module.Control.Monad.CapNProto.MessageBuilder
+      , Tests.Module.Data.CapNProto.Untyped
+      , Tests.Module.Data.CapNProto.List
+      , Tests.Module.Data.CapNProto.Pointer
+      , Tests.Module.Data.CapNProto.Bits
+      , Tests.EncodeDecodeUntyped
+      , Tests.WalkSchemaCodeGenRequest
+      , Tests.Util
+    build-depends:
+        capnp
+      , base       >= 4.8  && < 5.0
+      , bytestring >= 0.10 && < 0.11
+      , vector
+      , process
+      , process-extras
+      , exceptions
+      , QuickCheck
+      , quota
+      , mtl
+      , HUnit
+      , test-framework
+      , test-framework-hunit
+      , test-framework-quickcheck2
+      , binary
+      , transformers
+      , directory
+      , resourcet
+      , heredoc
+      , primitive
+      , reinterpret-cast
+      , template-haskell
+      , deepseq
+    ghc-options:
+      -Wunused-imports
     default-language:     Haskell2010
-    -- if impl(ghc >= 8.0)
-    --    ghc-options:       -Wcompat -Weverything
-    --                       -fno-warn-unsafe
-    --                       -fno-warn-safe
-    --                       -fno-warn-implicit-prelude
-    --                       -fno-warn-unused-do-bind
-    --                       -fno-warn-missed-specialisations
-    --                       -fno-warn-all-missed-specialisations
-    --                       -g
-    -- else
-    --    ghc-options:       -Wall -g
 
 --------------------------------------------------------------------------------

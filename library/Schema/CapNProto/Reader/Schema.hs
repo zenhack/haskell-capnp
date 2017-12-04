@@ -11,6 +11,7 @@ type Id = Word64
 $(mkStructWrappers
     [ "Node"
     , "Field"
+    , "Enumerant"
     , "Superclass"
     , "Method"
     , "Type"
@@ -20,4 +21,4 @@ $(mkStructWrappers
     , "CodeGeneratorRequest"
     ])
 
-newtype ElementSize b = ElementSize Word16
+newtype ElementSize = ElementSize Word16

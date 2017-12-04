@@ -1,19 +1,77 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Language.CapNProto.TH
-    ( mkStructWrappers
+    ( WordReaderSpec(..)
+    , UnionSpec(..)
+    , UnionVariant(..)
+    , mkStructWrappers
     , mkListReaders
-    , mkWordReaders
+    , mkWordReader
+    , mkBoolReader
+    , mkTextReader
+    , mkDataReader
+    , mkRootReader
+    , mkUnion
     )
   where
 
-import Control.Monad.Catch        (throwM)
 import Data.Bits
 import Data.Word
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
+import Control.Monad.Catch       (throwM)
+import Data.CapNProto.BasicTypes (Text, Data, getText, getData)
+import Data.CapNProto.Bits       (Word1, word1ToBool)
+
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Untyped as U
+
+data WordReaderSpec = WordReaderSpec
+    { name :: String -- ^ The name of the reader.
+    , parentConName :: Name -- ^ The data constructor for the parent type
+    , start :: Integer -- ^ The offset into the parent's data section (in bits)
+    , rawTyp :: Name -- ^ The type constructor for the WordN type of the correct
+                     --   size.
+    , typ :: (TypeQ -> TypeQ) -- ^ The type of the final result
+    , defaultVal :: Word64 -- ^ The default value of the field (bit representation)
+    , transform :: ExpQ -- ^ A function to apply to the result
+    }
+
+data UnionSpec = UnionSpec
+    { unionName :: String
+    , unionParentConName :: Name
+    , variants :: [UnionVariant]
+    }
+
+data UnionVariant = UnionVariant
+    { variantName :: String
+    , discriminantValue :: Word16
+    , elementType :: Maybe (TypeQ -> TypeQ)
+    }
+
+defaultBang :: Bang
+defaultBang = Bang NoSourceUnpackedness NoSourceStrictness
+
+-- | Declare a union type.
+mkUnion :: UnionSpec -> DecsQ
+mkUnion UnionSpec{..} = do
+    b <- newName "b"
+    cons <- mapM (mkCon b) variants
+    return [ DataD
+                []
+                (mkName unionName)
+                [PlainTV b]
+                Nothing
+                (NormalC (mkName "Unknown") [(defaultBang, ConT ''Word16)] : cons)
+                []
+           ]
+  where
+    mkCon b UnionVariant{..} = do
+        argT <- case elementType of
+                Nothing -> return []
+                Just ty -> (:[]) <$> ty (varT b)
+        return $ NormalC (mkName variantName) (map (\t -> (defaultBang, t)) argT)
 
 -- | For a type with one data constructor, with the same name as its type
 -- constructor, convert a 'Name' for the data constructor to a 'Name' for
@@ -30,8 +88,7 @@ mkStructWrapper name = do
     let name' = mkName name
     let b = mkName "b"
     return $ NewtypeD [] name' [PlainTV b] Nothing
-                (NormalC name' [ ( Bang NoSourceUnpackedness
-                                         NoSourceStrictness
+                (NormalC name' [ ( defaultBang
                                   , AppT (ConT ''U.Struct) (VarT b)
                                   )
                                 ])
@@ -75,6 +132,31 @@ mkListReaderVal parentConName ptrOffset listConName withList = do
                             "Expected PtrList (" ++ show listConName ++ " ...)") |]
 
 
+-- Helper for Text/Data readers.
+mkBytesReader :: String -> Name -> Integer -> (TypeQ -> TypeQ) -> ExpQ -> DecsQ
+mkBytesReader name parentConName ptrOffset ty transform = do
+    let name' = mkName name
+    mkReader name'
+        (mkPtrReaderType
+            (\b -> [t| $(conT (inferTypeName parentConName)) $b |])
+            ty)
+        (mkListReaderVal parentConName ptrOffset 'U.List8 $ \list ->
+            [| Just <$> $transform $(varE list) |])
+
+-- | @mkTextReader@ generates a reader which extracts a Text value from a
+-- struct.
+mkTextReader name parentConName ptrOffset =
+    mkBytesReader name parentConName ptrOffset
+        (\b -> [t| Text $b |])
+        [| getText |]
+
+-- | @mkDataReader@ generates a reader which extracts a Text value from a
+-- struct.
+mkDataReader name parentConName ptrOffset =
+    mkBytesReader name parentConName ptrOffset
+        (\b -> [t| Data $b |])
+        [| getData |]
+
 mkListReaderType parentType childType = mkPtrReaderType
     (\b -> [t| $parentType $b |])
     (\b -> [t| U.ListOf $b ($childType $b) |])
@@ -113,16 +195,8 @@ mkListReaders parent readers =
   where
     uncurry5 func (a, b, c, d, e) = func a b c d e
 
-mkWordReader :: String -- ^ The name of the reader.
-            -> Name    -- ^ The data constructor for the parent type
-            -> Integer -- ^ The offset into the parent's data section (in bits)
-            -> Name    -- ^ The type constructor for the WordN type of the correct
-                       --   size.
-            -> (TypeQ -> TypeQ) -- ^ The type of the final result
-            -> Word64  -- ^ The default value of the field (bit representation)
-            -> ExpQ    -- ^ A function to apply to the result
-            -> DecsQ
-mkWordReader name parentConName start rawTyp typ defaultVal transform = do
+mkWordReader :: WordReaderSpec -> DecsQ
+mkWordReader WordReaderSpec{..} = do
     struct <- newName "struct"
     let dataIndex = litE $ IntegerL $ start `div` 64
     let bitOffset = litE $ IntegerL $  start `mod` 64
@@ -136,10 +210,22 @@ mkWordReader name parentConName start rawTyp typ defaultVal transform = do
                 let rawVal = (word `shiftR` $bitOffset) `xor` $defaultValE
                 return $ $transform $ (fromIntegral rawVal :: $(conT rawTyp)) |]
 
+-- | Make a reader that reads a boolean. The first three arguments are the same
+-- as mkWordReader. The final argument is the default value.
+mkBoolReader :: String -> Name -> Integer -> Bool -> DecsQ
+mkBoolReader name parentConName start def = mkWordReader $
+    WordReaderSpec
+        name
+        parentConName
+        start
+        ''Word1
+        (const [t| Bool |])
+        (if def then 1 else 0)
+        [| word1ToBool |]
 
-mkWordReaders :: Name -> [(String, Integer, Name, TypeQ -> TypeQ, Word64, ExpQ)]
-    -> DecsQ
-mkWordReaders parent readers =
-    concat <$> mapM (uncurry6 $ \arg -> mkWordReader arg parent) readers
-  where
-    uncurry6 func (a, b, c, d, e, f) = func a b c d e f
+
+-- | @mkRootReader fn@ declares a function called "root_", which extracts
+-- the root pointer from a message, and applies @fn@ to it. If the root
+-- pointer is not a struct pointer, a 'SchemaViolationError' is raised.
+mkRootReader :: ExpQ -> DecsQ
+mkRootReader fn = [d|root_ msg = fmap $fn (U.rootPtr msg)|]

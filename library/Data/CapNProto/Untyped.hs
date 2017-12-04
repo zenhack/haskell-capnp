@@ -40,7 +40,7 @@ import qualified Data.CapNProto.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b)
+type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b, Slice m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
@@ -219,9 +219,9 @@ index i list = invoice 1 >> index' list
 
 
 -- | Returns the length of a list
-length :: ReadCtx m b => ListOf b a -> m Int
-length (ListOfVoid len)      = return len
-length (ListOfStruct _ len)  = return len
+length :: ListOf b a -> Int
+length (ListOfVoid len)      = len
+length (ListOfStruct _ len)  = len
 length (ListOfBool   nlist)  = nLen nlist
 length (ListOfWord8  nlist)  = nLen nlist
 length (ListOfWord16 nlist)  = nLen nlist
@@ -231,8 +231,8 @@ length (ListOfPtr    nlist)  = nLen nlist
 length (ListOfMapped list _) = length list
 
 -- | helper for 'length'; returns the length ofr a normal list.
-nLen :: (Monad m) => NormalList b -> m Int
-nLen (NormalList _ _ len) = return len
+nLen :: NormalList b -> Int
+nLen (NormalList _ _ len) = len
 
 -- | Returns the data section of a struct, as a list of Word64
 dataSection :: ReadCtx m b => Struct b -> m (ListOf b Word64)
@@ -273,5 +273,10 @@ rawBytes _ = throwM $ E.SchemaViolationError
 
 
 -- | Returns the root pointer of a message.
-rootPtr :: ReadCtx m b => M.Message b -> m (Maybe (Ptr b))
-rootPtr msg = get msg (WordAt 0 0)
+rootPtr :: ReadCtx m b => M.Message b -> m (Struct b)
+rootPtr msg = do
+    root <- get msg (WordAt 0 0)
+    case root of
+        Just (PtrStruct struct) -> return struct
+        _ -> throwM $ E.SchemaViolationError
+                "Unexpected root type; expected struct."

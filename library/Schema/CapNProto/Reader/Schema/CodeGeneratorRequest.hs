@@ -16,3 +16,5 @@ $(mkListReaders
     [ ("nodes",          0, 'U.ListStruct, ''S.Node,        [| S.Node        |])
     , ("requestedFiles", 1, 'U.ListStruct, ''RequestedFile, [| RequestedFile |])
     ])
+
+$(mkRootReader [| S.CodeGeneratorRequest |])

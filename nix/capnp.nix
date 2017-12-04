@@ -1,8 +1,10 @@
 { mkDerivation, array, base, binary, bytes, bytestring, cereal
-, deepseq, directory, exceptions, heredoc, HUnit, mtl, primitive
-, process, QuickCheck, quota, reinterpret-cast, resourcet, stdenv
+, containers, deepseq, directory, dlist, exceptions, filepath
+, heredoc, HUnit, mtl, primitive, process, process-extras
+, QuickCheck, quota, reinterpret-cast, resourcet, stdenv
 , template-haskell, test-framework, test-framework-hunit
-, test-framework-quickcheck2, text, transformers, vector
+, test-framework-quickcheck2, text, transformers, utf8-string
+, vector
 }:
 mkDerivation {
   pname = "capnp";
@@ -15,14 +17,15 @@ mkDerivation {
     template-haskell text transformers vector
   ];
   executableHaskellDepends = [
-    array base binary bytes bytestring cereal exceptions mtl primitive
-    quota transformers vector
+    array base binary bytes bytestring cereal containers directory
+    dlist exceptions filepath mtl primitive quota template-haskell
+    transformers utf8-string vector
   ];
   testHaskellDepends = [
     base binary bytestring deepseq directory exceptions heredoc HUnit
-    mtl primitive process QuickCheck quota reinterpret-cast resourcet
-    template-haskell test-framework test-framework-hunit
-    test-framework-quickcheck2 transformers vector
+    mtl primitive process process-extras QuickCheck quota
+    reinterpret-cast resourcet template-haskell test-framework
+    test-framework-hunit test-framework-quickcheck2 transformers vector
   ];
   homepage = "https://github.com/zenhack/haskell-capnp";
   description = "Cap'n Proto for Haskell";
