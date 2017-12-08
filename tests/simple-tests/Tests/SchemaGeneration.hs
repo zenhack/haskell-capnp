@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase                 #-}
 
 module Tests.SchemaGeneration
-    ( Schema (..), genSchema
+    ( Schema (..), genSchema, Field (..), FieldName (..), FieldType (..), StructName (..), BuiltIn (..)
     ) where
 
 import           Control.Monad   (replicateM)

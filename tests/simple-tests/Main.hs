@@ -12,6 +12,7 @@ import Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
 
 import Tests.SchemaQuickCheck (schemaCGRQuickCheck)
+import Tests.MessageQuickCheck (msgEncodeDecodeQuickCheck)
 
 main :: IO ()
 main = defaultMain [ bitsTests
@@ -22,4 +23,5 @@ main = defaultMain [ bitsTests
                    , encodeDecodeUntypedTests
                    , walkSchemaCodeGenRequestTest
                    , schemaCGRQuickCheck
+                   , msgEncodeDecodeQuickCheck
                    ]
