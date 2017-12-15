@@ -32,7 +32,7 @@ data BasicData
 
 instance Show BasicData where
     show (Int i) = show i
-    show (Bool b) = show b
+    show (Bool b) = if b then "true" else "false"
     show (Float f) = show f
     show (Text t) = show t
     show (Data d) = show d
@@ -42,15 +42,17 @@ data MessageContent
     | ListContent [MessageContent]
     | StructContent [MessageItem]
 
+filterBlank [] = []
+filterBlank ("":xs) = filterBlank xs
+filterBlank (x:xs) = x:(filterBlank xs)
 joinStr :: String -> [String] -> String
 joinStr sep [] = ""
 joinStr sep (x:[]) = x
-joinStr sep ("":xs) = joinStr sep xs
 joinStr sep (x:xs) = x ++ sep ++ (joinStr sep xs)
 instance Show MessageContent where
     show (BasicContent bc) = show bc
-    show (ListContent lc) = "[" ++ (joinStr ", " $ map show lc) ++ "]"
-    show (StructContent sc) = "(" ++ (joinStr ", " $ map show sc) ++ ")"
+    show (ListContent lc) = "[" ++ (joinStr ", " (filterBlank $ map show lc)) ++ "]"
+    show (StructContent sc) = "(" ++ (joinStr ", " (filterBlank $ map show sc)) ++ ")"
 
 data MessageItem
     = BlankItem
@@ -68,7 +70,7 @@ data Message
         }
 
 instance Show Message where
-    show (Message s _ mc) = show s ++ "\n\n" ++ show mc
+    show (Message s mt mc) = show mc
 
 -- MessageItem types
 genBasicContent :: SG.BuiltIn -> QC.Gen BasicData
@@ -124,7 +126,7 @@ genMessage :: QC.Gen Message
 genMessage = do
     msgSchema@(SG.Schema sid sfs) <- SG.genSchema
     let StructTable st = genStructTable sfs
-    let structName = head $ Map.keys st
+    let SG.StructDef (SG.StructName structName) _ = head sfs
     let Just sfs = Map.lookup structName st
     msgContent <- mapM (\ f -> genMessageItem f (StructTable st)) sfs
     return $ Message msgSchema structName (StructContent msgContent)

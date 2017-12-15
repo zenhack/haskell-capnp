@@ -22,8 +22,8 @@ mkDerivation {
     transformers utf8-string vector
   ];
   testHaskellDepends = [
-    base binary bytestring deepseq directory exceptions heredoc HUnit
-    mtl primitive process process-extras QuickCheck quota
+    base binary bytestring containers deepseq directory exceptions
+    heredoc HUnit mtl primitive process process-extras QuickCheck quota
     reinterpret-cast resourcet template-haskell test-framework
     test-framework-hunit test-framework-quickcheck2 transformers vector
   ];

@@ -8,11 +8,14 @@ import Test.QuickCheck
 
 -- Schema generation imports
 import Tests.MessageGeneration as MG
+import Tests.Util
 
 -- QuickCheck properties
 
 prop_messageValid :: MG.Message -> Property
-prop_messageValid msg = ioProperty $ do
+prop_messageValid (MG.Message msgSchema msgType msgContent) = ioProperty $ do
+    let meta = (MsgMetaData (show msgSchema) msgType)
+    encoded <- capnpEncode (show msgContent) meta
     return True
 
 msgEncodeDecodeQuickCheck = testProperty "valid message QuickCheck"
