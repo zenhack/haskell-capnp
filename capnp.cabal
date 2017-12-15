@@ -148,6 +148,7 @@ test-suite simple-tests
       , reinterpret-cast
       , template-haskell
       , deepseq
+      , containers
     ghc-options:
       -Wunused-imports
     default-language:     Haskell2010

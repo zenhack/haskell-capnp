@@ -33,8 +33,7 @@ data Field
     | StructDef StructName [Field]
 
 data BuiltIn
-    = Void
-    | Bool
+    = Bool
     | Int8
     | Int16
     | Int32

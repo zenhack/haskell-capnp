@@ -5,6 +5,8 @@ module Tests.MessageGeneration
     ( Message (..), genMessage
     ) where
 
+import qualified Data.Map as Map
+
 import           Control.Monad   (replicateM)
 import           Data.Foldable   (foldl')
 import qualified Test.QuickCheck as QC
@@ -22,8 +24,7 @@ import qualified Tests.SchemaGeneration as SG
 -- Definitions
 
 data BasicData
-    = Void
-    | Bool Bool
+    = Bool Bool
     | Int Int
     | Float Float
     | Text String
@@ -33,7 +34,7 @@ instance Show BasicData where
     show (Int i) = show i
     show (Bool b) = show b
     show (Float f) = show f
-    show (Text t) = t
+    show (Text t) = show t
     show (Data d) = show d
 
 data MessageContent
@@ -44,32 +45,35 @@ data MessageContent
 joinStr :: String -> [String] -> String
 joinStr sep [] = ""
 joinStr sep (x:[]) = x
+joinStr sep ("":xs) = joinStr sep xs
 joinStr sep (x:xs) = x ++ sep ++ (joinStr sep xs)
 instance Show MessageContent where
     show (BasicContent bc) = show bc
-    show (ListContent lc) = "[" ++ (joinStr "," $ map show lc) ++ "]"
-    show (StructContent sc) = "(" ++ (joinStr "," $ map show sc) ++ ")"
+    show (ListContent lc) = "[" ++ (joinStr ", " $ map show lc) ++ "]"
+    show (StructContent sc) = "(" ++ (joinStr ", " $ map show sc) ++ ")"
 
 data MessageItem
-    = MessageItem SG.FieldName MessageContent
+    = BlankItem
+    | MessageItem SG.FieldName MessageContent
 
 instance Show MessageItem where
     show (MessageItem (SG.FieldName fn) mc) = fn ++ " = " ++ show mc
+    show BlankItem = ""
 
 data Message
     = Message
-        { msgSchema :: SG.Schema
-        , msgItem   :: MessageItem
+        { msgSchema  :: SG.Schema
+        , msgType    :: String
+        , msgContent :: MessageContent
         }
 
 instance Show Message where
-    show (Message _ md) = show md
+    show (Message s _ mc) = show s ++ "\n\n" ++ show mc
 
 -- MessageItem types
 genBasicContent :: SG.BuiltIn -> QC.Gen BasicData
 genBasicContent bt = do
     return $ case bt of
-        SG.Void    -> undefined
         SG.Bool    -> Bool False
         SG.Int8    -> Int 0
         SG.Int16   -> Int 0
@@ -84,35 +88,43 @@ genBasicContent bt = do
         SG.Text    -> Text "text"
         SG.Data    -> Data (BSC8.pack "data")
 
-genMessageContent :: SG.FieldType -> QC.Gen MessageContent
-genMessageContent ft = 
+newtype StructTable = StructTable (Map.Map String [SG.Field])
+
+genMessageContent :: SG.FieldType -> StructTable -> QC.Gen MessageContent
+genMessageContent ft (StructTable st) = 
     case ft of
         SG.BasicType bi -> do
             bc <- genBasicContent bi
             return $ BasicContent bc
         SG.ListType it -> do
-            lc <- genMessageContent it
+            lc <- genMessageContent it (StructTable st)
             return $ ListContent [lc]
         SG.StructType (SG.StructName sn) -> do
-            return $ BasicContent $ Text ("lookup: " ++ sn)
-genMessageContent _ = undefined
+            let Just sfs = Map.lookup sn st
+            msgContent <- mapM (\ f -> genMessageItem f (StructTable st)) sfs
+            return $ StructContent msgContent
 
-genMessageItem :: SG.Field -> QC.Gen MessageItem
-genMessageItem (SG.FieldDef fn _ ft) = do
-    mc <- genMessageContent ft
+genMessageItem :: SG.Field -> StructTable -> QC.Gen MessageItem
+genMessageItem (SG.FieldDef fn _ ft) st = do
+    mc <- genMessageContent ft st
     return $ MessageItem fn mc
-genMessageItem (SG.StructDef (SG.StructName sn) fds) = do
-    return $ MessageItem (SG.FieldName "new_struct_def") $ BasicContent $ Text sn
+genMessageItem _ _ = return BlankItem
 
-genFromSchema :: SG.Schema -> QC.Gen MessageItem
-genFromSchema (SG.Schema sid sfs) = do
-    items <- mapM genMessageItem sfs
-    return $ head items
-
+genStructTable :: [SG.Field] -> StructTable
+genStructTable sfs = aux sfs Map.empty
+    where aux [] st = StructTable st
+          aux ((SG.StructDef (SG.StructName sn) content):ss) st =
+            let StructTable st' = aux content st
+                st'' = Map.insert sn content st' in
+                aux ss st''
+          aux (_:ss) st = aux ss st
 
 -- Message type
 genMessage :: QC.Gen Message
 genMessage = do
-    msgSchema <- SG.genSchema
-    msgItem <- genFromSchema msgSchema
-    return $ Message msgSchema msgItem
+    msgSchema@(SG.Schema sid sfs) <- SG.genSchema
+    let StructTable st = genStructTable sfs
+    let structName = head $ Map.keys st
+    let Just sfs = Map.lookup structName st
+    msgContent <- mapM (\ f -> genMessageItem f (StructTable st)) sfs
+    return $ Message msgSchema structName (StructContent msgContent)
