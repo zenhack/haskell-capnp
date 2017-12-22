@@ -24,18 +24,18 @@ import qualified Tests.SchemaGeneration as SG
 -- Definitions
 
 data BasicData
-    = Bool Bool
-    | Int Int
-    | Float Float
-    | Text String
-    | Data BS.ByteString
+    = BoolData Bool
+    | IntData Int
+    | FloatData Float
+    | TextData String
+    | RawData BS.ByteString
 
 instance Show BasicData where
-    show (Int i) = show i
-    show (Bool b) = if b then "true" else "false"
-    show (Float f) = show f
-    show (Text t) = show t
-    show (Data d) = show d
+    show (IntData i) = show i
+    show (BoolData b) = if b then "true" else "false"
+    show (FloatData f) = show f
+    show (TextData t) = show t
+    show (RawData d) = show d
 
 data MessageContent
     = BasicContent BasicData
@@ -73,22 +73,37 @@ instance Show Message where
     show (Message s mt mc) = show mc
 
 -- MessageItem types
+genBool    = QC.elements [BoolData True, BoolData False]
+genInt :: Int -> QC.Gen BasicData
+genInt i   = do { x <- QC.elements [-2^(i-1) .. 2^(i-1)]; return $ IntData x }
+genUInt :: Int -> QC.Gen BasicData
+genUInt i  = do { x <- QC.elements [0 .. 2^i]; return $ IntData x }
+genFloat :: Int -> QC.Gen BasicData
+genFloat i = do { x <- QC.elements [0 .. 2^i]; return $ FloatData (x / 2) }
+genText :: QC.Gen BasicData
+genText    = do { x <- QC.listOf (QC.elements ['A'..'z']); return $ TextData x }
+genData :: QC.Gen BasicData
+genData    = do { TextData t <- genText ; return $ RawData (BSC8.pack t) }
+
 genBasicContent :: SG.BuiltIn -> QC.Gen BasicData
 genBasicContent bt = do
-    return $ case bt of
-        SG.Bool    -> Bool False
-        SG.Int8    -> Int 0
-        SG.Int16   -> Int 0
-        SG.Int32   -> Int 0
-        SG.Int64   -> Int 0
-        SG.UInt8   -> Int 0
-        SG.UInt16  -> Int 0
-        SG.UInt32  -> Int 0
-        SG.UInt64  -> Int 0
-        SG.Float32 -> Float 0.0
-        SG.Float64 -> Float 0.0
-        SG.Text    -> Text "text"
-        SG.Data    -> Data (BSC8.pack "data")
+    let signedRange i = [-2^(i-1) .. 2^(i-1)]
+    let unsignedRange i = [0 .. 2^i]
+    content <- case bt of
+        SG.Bool    -> genBool
+        SG.Int8    -> genInt 8
+        SG.Int16   -> genInt 16
+        SG.Int32   -> genInt 32
+        SG.Int64   -> genInt 64
+        SG.UInt8   -> genUInt 8
+        SG.UInt16  -> genUInt 16
+        SG.UInt32  -> genUInt 32
+        SG.UInt64  -> genUInt 64
+        SG.Float32 -> genFloat 32
+        SG.Float64 -> genFloat 64
+        SG.Text    -> genText
+        SG.Data    -> genData
+    return content
 
 newtype StructTable = StructTable (Map.Map String [SG.Field])
 
