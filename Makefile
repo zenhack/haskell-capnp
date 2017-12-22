@@ -28,7 +28,7 @@ help:
 	-@echo "  build:      cabal build"
 	-@echo "  lib-repl:   cabal repl lib:capnp"
 	-@echo "  exe-repl:   cabal repl exe:capnpc-haskell"
-	-@echo "  test-repl:  cabal repl test:the-test-suite"
+	-@echo "  test-repl:  cabal repl test:simple-tests"
 	-@echo "  nix-build:  build via nix"
 	-@echo "  nix-shell:  open a nix shell"
 	-@echo "  update-nix: update any pinned nix files"
@@ -47,7 +47,7 @@ exe-repl: configure
 	cabal repl "exe:capnpc-haskell"
 
 test-repl: configure
-	cabal repl "test:the-test-suite"
+	cabal repl "test:simple-tests"
 
 nix-build: nix/capnp.nix
 	-@rm -f result*
