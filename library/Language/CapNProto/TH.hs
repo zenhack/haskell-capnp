@@ -16,6 +16,7 @@ module Language.CapNProto.TH
   where
 
 import Data.Bits
+import Data.Char (toUpper)
 import Data.Word
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
@@ -165,6 +166,37 @@ mkReader name ty val = do
            , ValD (VarP name) (NormalB val') []
            ]
 
+mkPtrReader :: String -> TypeQ -> ExpQ -> Int -> Name -> DecsQ
+mkPtrReader name ty val offset parentCon = do
+    reader <- mkReader (mkName name) ty val
+    has <- mkHasPtr name parentCon offset
+    return $ reader ++ has
+
+mkHasPtr :: String -- ^ The name of the field
+        -> Name    -- ^ The data constructor for the parent type
+        -> Int     -- ^ The offset into the struct's pointer section.
+        -> DecsQ
+mkHasPtr fieldName@(c:cs) parentCon offset = do
+    let hasName = mkName $ "has" ++ (toUpper c:cs)
+    m <- varT <$> newName "m"
+    b <- varT <$> newName "b"
+    ty <- [t| U.ReadCtx $m $b => $(conT $ inferTypeName parentCon) $b -> $m Bool |]
+    val <- hasVal
+    return [ SigD hasName ty
+           , ValD (VarP hasName) (NormalB val) []
+           ]
+  where
+    hasVal = do
+        struct <- newName "struct"
+        [| \arg ->
+                case arg of
+                    $(conP parentCon [varP struct]) -> do
+                        ptr <- U.getPtr $(litE $ IntegerL $ fromIntegral offset) $(varE struct)
+                        case ptr of
+                            Just _ -> return True
+                            Nothing -> return False |]
+
+
 -- | @mkListReader@ generates a reader which extracts a list from a struct.
 mkListReader :: String          -- ^ The name of the reader
             -> Name             -- ^ The data constructor for the parent type.
@@ -174,13 +206,15 @@ mkListReader :: String          -- ^ The name of the reader
             -> ExpQ             -- ^ A function apply to the elements of the list.
             -> DecsQ
 mkListReader readerName parentConName ptrOffset listConName childType transform =
-    mkReader
-        (mkName readerName)
+    mkPtrReader
+        readerName
         (mkListReaderType
             (conT $ inferTypeName parentConName)
             (conT childType))
         (mkListReaderVal parentConName ptrOffset listConName
             (\list -> [| return $ fmap $transform $(list) |]))
+        ptrOffset
+        parentConName
 
 -- | @mkListReaders name args@ calls mkListReader once for each tuple in
 -- @args@. @parent@ is always passed as the first argument. the values

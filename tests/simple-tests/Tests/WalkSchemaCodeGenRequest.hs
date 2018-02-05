@@ -68,18 +68,18 @@ theAssert = do
         when (i < Prelude.length nodeNames && baseName /= (nodeNames !! i)) $
             error "Incorrect name."
 
-        annotations <- Node.annotations node
+        has <- Node.hasAnnotations node
 
         -- there are two annotations in all of the nodes, at these indicies:
-        case (annotations, i `elem` [4, 9]) of
-            (Nothing, False) -> return ()
-            (Just annotations', True) -> do
-                let 1 = length annotations'
+        case (has, i `elem` [4, 9]) of
+            (False, False) -> return ()
+            (True, True) -> do
+                1 <- length <$> Node.annotations node
                 return ()
-            (Nothing, True) ->
+            (False, True) ->
                 error $ "Node at index " ++ show i ++ " should have had" ++
                         "an annotation."
-            (Just _, False) ->
+            (True, False) ->
                 error $ "Node at index " ++ show i ++ " should not " ++
                         "have had an annotation."
 
