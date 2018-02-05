@@ -14,6 +14,7 @@ instance, used as the underlying storage.
 module Data.CapNProto.Untyped
     ( Ptr(..), List(..), Struct, ListOf
     , dataSection, ptrSection
+    , getData, getPtr
     , get, index, length
     , rootPtr
     , rawBytes
@@ -246,6 +247,20 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)
+
+-- | @'getData' i struct@ gets the @i@th word from the struct's data section,
+-- returning 0 if it is absent.
+getData :: ReadCtx m b => Int -> Struct b -> m Word64
+getData i struct
+    | length (dataSection struct) <= i = return 0
+    | otherwise = index i (dataSection struct)
+
+-- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
+-- returning Nothing if it is absent.
+getPtr :: ReadCtx m b => Int -> Struct b -> m (Maybe (Ptr b))
+getPtr i struct
+    | length (ptrSection struct) <= i = return Nothing
+    | otherwise = index i (ptrSection struct)
 
 
 -- | @rawBytes list@ returns the raw storage corresponding to the list.

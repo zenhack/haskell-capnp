@@ -39,28 +39,24 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             -- section.
             let 1 = length aircraftWords
             3 <- index 0 aircraftWords -- tag for F16
-            let aircraftPtrSec = ptrSection root
-            let 1 = length aircraftPtrSec
-            Just (PtrStruct f16) <- index 0 aircraftPtrSec
-            let 0 = length $ dataSection f16
-            let f16PtrSec = ptrSection f16
-            let 1 = length f16PtrSec
-            Just (PtrStruct base) <- index 0 f16PtrSec
-            let baseWords = dataSection base
-            let basePtrSec = ptrSection base
-            let 4 = length baseWords -- Except canFly, each field is 1 word, and
-                                     -- canFly is aligned such that it ends up
-                                     -- consuming a whole word.
-            let 2 = length basePtrSec -- name, homes
+            let 1 = length (ptrSection root)
+            Just (PtrStruct f16) <- getPtr 0 root
+            let 0 = length (dataSection f16)
+            let 1 = length (ptrSection f16)
+            Just (PtrStruct base) <- getPtr 0 f16
+            let 4 = length (dataSection base) -- Except canFly, each field is 1 word, and
+                                              -- canFly is aligned such that it ends up
+                                              -- consuming a whole word.
+            let 2 = length (ptrSection base) -- name, homes
 
             -- Walk the data section:
-            7 <- index 0 baseWords -- rating
-            1 <- index 1 baseWords -- canFly
-            5173 <- index 2 baseWords -- capacity
-            12.0 <- wordToDouble <$> index 3 baseWords
+            7 <- getData 0 base -- rating
+            1 <- getData 1 base -- canFly
+            5173 <- getData 2 base -- capacity
+            12.0 <- wordToDouble <$> getData 3 base
 
             -- ...and the pointer section:
-            Just (PtrList (List8 name)) <- index 0 basePtrSec
+            Just (PtrList (List8 name)) <- getPtr 0 base
             -- Text values have a NUL terminator, which is included in the
             -- length on the wire. The spec says that this shouldn't be
             -- included in the length reported to the caller, but that needs
@@ -72,7 +68,7 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
                 c' <- index i name
                 when (c /= c') $
                     error ("index " ++ show i ++ ": " ++ show c ++ " /= " ++ show c')
-            Just (PtrList (List16 homes)) <- index 1 basePtrSec
+            Just (PtrList (List16 homes)) <- getPtr 1 base
             let 0 = length homes
             return ()
       , ((), 110)
