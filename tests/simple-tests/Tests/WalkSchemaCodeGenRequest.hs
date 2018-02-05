@@ -44,24 +44,24 @@ theAssert = do
     bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
     ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
-    assertEqual "Correct remaining quota" 648 endQuota
+    assertEqual "Correct remaining quota" 641 endQuota
   where
     reader :: Struct BS.ByteString -> QuotaT IO ()
     reader root = do
         let req = Schema.CodeGeneratorRequest root
-        Just nodes <- CGReq.nodes req
-        Just requestedFiles <- CGReq.requestedFiles req
+        nodes <- CGReq.nodes req
+        requestedFiles <- CGReq.requestedFiles req
         let 37 = length nodes
         let 1 = length requestedFiles
         mapM_ (walkNode nodes) [0,1..36]
     walkNode nodes i = do
         node <- index i nodes
         -- None of the nodes in the schema have parameters:
-        Nothing <- Node.parameters node
+        False <- Node.hasParameters node
         -- And none of them are generic:
         False <- Node.isGeneric node
 
-        Just (Text name) <- Node.displayName node
+        Text name <- Node.displayName node
         prefixLen <- Node.displayNamePrefixLength node
         let baseName = BS.drop (fromIntegral prefixLen) name
 
