@@ -59,7 +59,7 @@ $(mkTextReader "displayName" 'S.Node 0)
 
 union_ :: U.ReadCtx m b => S.Node b -> m (Union_ b)
 union_ (S.Node struct) = do
-    dataSec <- U.dataSection struct
+    let dataSec = U.dataSection struct
     let dataIndex = 96 `div` 64
     let bitOffset = 96 `mod` 64
     word <- U.index dataIndex dataSec

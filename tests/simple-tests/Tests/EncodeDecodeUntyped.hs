@@ -70,11 +70,11 @@ encodeDecodeUntypedTests =
             DataField 0 0 %~ (72 :: Word64)
             DataField 1 0 %~ ( 1 :: Word64)
       , \root -> do
-            dataWords <- dataSection root
+            let dataWords = dataSection root
             let 2 = length dataWords
             72 <- index 0 dataWords
             1 <- index 1 dataWords
-            ptrs <- ptrSection root
+            let ptrs = ptrSection root
             let 0 = length ptrs
             return ()
       , 128

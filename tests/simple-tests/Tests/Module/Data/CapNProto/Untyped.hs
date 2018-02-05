@@ -34,20 +34,20 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
         )))|]
       , 128
       , \root -> do
-            aircraftWords <- dataSection root
+            let aircraftWords = dataSection root
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
             let 1 = length aircraftWords
             3 <- index 0 aircraftWords -- tag for F16
-            aircraftPtrSec <- ptrSection root
+            let aircraftPtrSec = ptrSection root
             let 1 = length aircraftPtrSec
             Just (PtrStruct f16) <- index 0 aircraftPtrSec
-            0 <- length <$> dataSection f16
-            f16PtrSec <- ptrSection f16
+            let 0 = length $ dataSection f16
+            let f16PtrSec = ptrSection f16
             let 1 = length f16PtrSec
             Just (PtrStruct base) <- index 0 f16PtrSec
-            baseWords <- dataSection base
-            basePtrSec <- ptrSection base
+            let baseWords = dataSection base
+            let basePtrSec = ptrSection base
             let 4 = length baseWords -- Except canFly, each field is 1 word, and
                                      -- canFly is aligned such that it ends up
                                      -- consuming a whole word.

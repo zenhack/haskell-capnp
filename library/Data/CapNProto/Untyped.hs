@@ -234,15 +234,15 @@ length (ListOfMapped list _) = length list
 nLen :: NormalList b -> Int
 nLen (NormalList _ _ len) = len
 
--- | Returns the data section of a struct, as a list of Word64
-dataSection :: ReadCtx m b => Struct b -> m (ListOf b Word64)
+-- | The data section of a struct, as a list of Word64
+dataSection :: Struct b -> ListOf b Word64
 dataSection (Struct msg addr dataSz _) =
-    return $ ListOfWord64 $ NormalList msg addr (fromIntegral dataSz)
+    ListOfWord64 $ NormalList msg addr (fromIntegral dataSz)
 
--- | Returns the pointer section of a struct, as a list of Ptr
-ptrSection :: ReadCtx m b => Struct b -> m (ListOf b (Maybe (Ptr b)))
+-- | The pointer section of a struct, as a list of Ptr
+ptrSection :: Struct b -> ListOf b (Maybe (Ptr b))
 ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
-    return $ ListOfPtr $ NormalList
+    ListOfPtr $ NormalList
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)

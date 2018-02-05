@@ -116,7 +116,7 @@ mkPtrReaderVal parentConName ptrOffset withPtr = do
     struct <- newName "struct"
     ptr' <- newName "ptr'"
     [| \ $(conP parentConName [varP struct]) -> do
-            ptrSec <- U.ptrSection $(varE struct)
+            let ptrSec = U.ptrSection $(varE struct)
             ptr <- U.index $(litE $ IntegerL ptrOffset) ptrSec
             case ptr of
                 Nothing           -> return Nothing
@@ -205,7 +205,7 @@ mkWordReader WordReaderSpec{..} = do
         (mkName name)
         (mkReaderType (\b -> [t| $(conT (inferTypeName parentConName)) $b |]) typ)
         [| \ $(conP parentConName [varP struct]) -> do
-                dataSec <- U.dataSection $(varE struct)
+                let dataSec = U.dataSection $(varE struct)
                 word <- U.index $dataIndex dataSec
                 let rawVal = (word `shiftR` $bitOffset) `xor` $defaultValE
                 return $ $transform $ (fromIntegral rawVal :: $(conT rawTyp)) |]
