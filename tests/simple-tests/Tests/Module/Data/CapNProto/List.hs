@@ -33,7 +33,7 @@ lengthCounted = run . List.mapM_ (const $ tell 1)
 schemaNodes :: IO (ListOf BS.ByteString (Node BS.ByteString))
 schemaNodes = do
     msg <- BS.readFile "tests/data/schema-codegenreq" >>= M.decode
-    fromJust <$> evalQuotaT (CGR.root_ msg >>= CGR.nodes) 1024
+    evalQuotaT (CGR.root_ msg >>= CGR.nodes) 1024
 
 listTests = assertionsToTest "List tests"
     [ do nodes <- schemaNodes

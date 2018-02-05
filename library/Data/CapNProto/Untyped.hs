@@ -16,6 +16,7 @@ module Data.CapNProto.Untyped
     , dataSection, ptrSection
     , getData, getPtr
     , get, index, length
+    , emptyList
     , rootPtr
     , rawBytes
     , ReadCtx
@@ -96,6 +97,11 @@ data Struct b
         !WordAddr -- Start of struct
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
+
+
+-- | An empty list, of any type.
+emptyList :: ListOf b a
+emptyList = ListOfMapped (ListOfVoid 0) undefined
 
 
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.

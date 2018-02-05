@@ -106,42 +106,38 @@ mkReaderType parentType returnType = do
     b <- varT <$> newName "b"
     [t| U.ReadCtx $m $b => $(parentType b) -> $m $(returnType b) |]
 
--- | Like @mkReaderType@, except that the return type is wrapped in a @Maybe@,
--- as is typical of pointer types.
-mkPtrReaderType :: (TypeQ -> TypeQ) -> (TypeQ -> TypeQ) -> TypeQ
-mkPtrReaderType parentType returnType =
-    mkReaderType parentType $ \b -> [t| Maybe $(returnType b) |]
-
+mkPtrReaderVal :: Name -> Int -> (ExpQ -> ExpQ) -> ExpQ
 mkPtrReaderVal parentConName ptrOffset withPtr = do
     struct <- newName "struct"
-    ptr' <- newName "ptr'"
+    ptr <- newName "ptr"
     [| \ $(conP parentConName [varP struct]) -> do
-            let ptrSec = U.ptrSection $(varE struct)
-            ptr <- U.index $(litE $ IntegerL ptrOffset) ptrSec
-            case ptr of
-                Nothing           -> return Nothing
-                Just $(varP ptr') -> $(withPtr ptr') |]
+            $(varP ptr) <- U.getPtr $(litE $ IntegerL $ fromIntegral ptrOffset) $(varE struct)
+            $(withPtr (varE ptr)) |]
 
+mkListReaderVal :: Name -> Int -> Name -> (ExpQ -> ExpQ) -> ExpQ
 mkListReaderVal parentConName ptrOffset listConName withList = do
     list <- newName "list"
     mkPtrReaderVal parentConName ptrOffset $ \ptr' ->
-        [| case $(varE ptr') of
-                U.PtrList $(conP listConName [varP list]) ->
-                    $(withList list)
+        [| case $(ptr') of
+                Nothing -> do
+                    let $(varP list) = U.emptyList
+                    $(withList (varE list))
+                Just (U.PtrList $(conP listConName [varP list])) ->
+                    $(withList (varE list))
                 _ -> throwM $ E.SchemaViolationError $ $(litE $ StringL $
                             "Expected PtrList (" ++ show listConName ++ " ...)") |]
 
 
 -- Helper for Text/Data readers.
-mkBytesReader :: String -> Name -> Integer -> (TypeQ -> TypeQ) -> ExpQ -> DecsQ
+mkBytesReader :: String -> Name -> Int -> (TypeQ -> TypeQ) -> ExpQ -> DecsQ
 mkBytesReader name parentConName ptrOffset ty transform = do
     let name' = mkName name
     mkReader name'
-        (mkPtrReaderType
+        (mkReaderType
             (\b -> [t| $(conT (inferTypeName parentConName)) $b |])
             ty)
         (mkListReaderVal parentConName ptrOffset 'U.List8 $ \list ->
-            [| Just <$> $transform $(varE list) |])
+            [| $transform $(list) |])
 
 -- | @mkTextReader@ generates a reader which extracts a Text value from a
 -- struct.
@@ -157,7 +153,7 @@ mkDataReader name parentConName ptrOffset =
         (\b -> [t| Data $b |])
         [| getData |]
 
-mkListReaderType parentType childType = mkPtrReaderType
+mkListReaderType parentType childType = mkReaderType
     (\b -> [t| $parentType $b |])
     (\b -> [t| U.ListOf $b ($childType $b) |])
 
@@ -172,7 +168,7 @@ mkReader name ty val = do
 -- | @mkListReader@ generates a reader which extracts a list from a struct.
 mkListReader :: String          -- ^ The name of the reader
             -> Name             -- ^ The data constructor for the parent type.
-            -> Integer          -- ^ The offset into the struct's pointer section.
+            -> Int              -- ^ The offset into the struct's pointer section.
             -> Name             -- ^ The 'List' data constructor that we expect
             -> Name             -- ^ The type constructor for the element type.
             -> ExpQ             -- ^ A function apply to the elements of the list.
@@ -184,12 +180,12 @@ mkListReader readerName parentConName ptrOffset listConName childType transform 
             (conT $ inferTypeName parentConName)
             (conT childType))
         (mkListReaderVal parentConName ptrOffset listConName
-            (\list -> [| return $ Just $ fmap $transform $(varE list) |]))
+            (\list -> [| return $ fmap $transform $(list) |]))
 
 -- | @mkListReaders name args@ calls mkListReader once for each tuple in
 -- @args@. @parent@ is always passed as the first argument. the values
 -- in the tuple are the remaining arguments.
-mkListReaders :: Name -> [(String, Integer, Name, Name, ExpQ)] -> DecsQ
+mkListReaders :: Name -> [(String, Int, Name, Name, ExpQ)] -> DecsQ
 mkListReaders parent readers =
     concat <$> mapM (uncurry5 $ \arg -> mkListReader arg parent) readers
   where

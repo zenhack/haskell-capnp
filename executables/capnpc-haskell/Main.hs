@@ -53,7 +53,7 @@ genModule file = do
     -- First, verify that the node in question is actually a file:
     Node.File <- Node.union_ node
 
-    Just nn <- Node.nestedNodes node
+    nn <- Node.nestedNodes node
     -- We put everything in a module named Schema.CapNProto.Reader.X<fileId>.
     -- this makes module names deterministic, without annotations, regardless
     -- of where files are actually loaded from. We can in the future generate
@@ -64,11 +64,11 @@ genModule file = do
 
 genNestedNode :: (MonadThrow m, MonadQuota m) => NS -> Node.NestedNode BS -> Generator m ()
 genNestedNode ns nestedNode = do
-    Just name <- NN.name nestedNode
+    name <- NN.name nestedNode
     id <- NN.id nestedNode
     Just node <- M.lookup id <$> ask
     genNode ns node name
-    Just nn <- Node.nestedNodes node
+    nn <- Node.nestedNodes node
     List.mapM_ (genNestedNode (subNS ns name)) nn
 
 genNode :: (MonadThrow m, MonadQuota m)
@@ -79,7 +79,7 @@ genNode ns node (BT.Text name) = do
         Node.Struct struct -> do
             fields <- Node'Struct.fields struct
             lift $ emit ns (CTH.mkStructWrappers [toString name])
-            mapM_ (List.mapM_ (genField (subNS ns (BT.Text name)))) fields
+            List.mapM_ (genField (subNS ns (BT.Text name))) fields
         _ -> return ()
 
 genField :: (MonadThrow m, MonadQuota m) => NS -> Schema.Field BS -> Generator m ()
@@ -88,14 +88,14 @@ genField ns field = return ()
 generate :: (MonadThrow m, MonadQuota m) => Message BS -> GenT m ()
 generate msg = do
     cgr <- CGR.root_ msg
-    Just nodes <- CGR.nodes cgr
+    nodes <- CGR.nodes cgr
     nodeMap <- lift $ buildNodeMap nodes
     runReaderT (genReq cgr) nodeMap
 
 genReq :: (MonadThrow m, MonadQuota m)
        => Schema.CodeGeneratorRequest BS -> Generator m ()
 genReq cgr = do
-    Just reqFiles <- CGR.requestedFiles cgr
+    reqFiles <- CGR.requestedFiles cgr
     List.mapM_ genModule reqFiles
 
 mkSrcs :: M.Map NS TH.DecsQ -> IO [(FilePath, String)]
