@@ -51,6 +51,8 @@ library
       , Schema.CapNProto.Reader.Schema.Node.Union_
       , Schema.CapNProto.Reader.Schema.Node.Union_.Struct
       , Schema.CapNProto.Reader.Schema.Field
+      , Schema.CapNProto.Reader.Schema.Field.Union_
+      , Schema.CapNProto.Reader.Schema.Field.Union_.Slot
       , Schema.CapNProto.Reader.Schema.Enumerant
       , Schema.CapNProto.Reader.Schema.Superclass
       , Schema.CapNProto.Reader.Schema.Method
