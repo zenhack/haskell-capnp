@@ -2,6 +2,7 @@
 Module: Data.CapNProto.Errors
 Description: Exception types used by haskell-capnp
 -}
+{-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Data.CapNProto.Errors
@@ -11,6 +12,15 @@ module Data.CapNProto.Errors
   where
 
 import Control.Monad.Catch (Exception, MonadThrow(throwM))
+
+-- Just so we can define ThrowError instances:
+import Control.Monad.Catch.Pure   (CatchT)
+import Control.Monad.Identity     (IdentityT)
+import Control.Monad.Reader       (ReaderT)
+import Control.Monad.RWS          (RWST)
+import Control.Monad.State.Strict (StateT)
+import Control.Monad.Writer       (WriterT)
+import GHC.Conc                   (STM)
 
 -- | Similar MonadThrow, but:
 --
@@ -26,23 +36,38 @@ import Control.Monad.Catch (Exception, MonadThrow(throwM))
 -- to be equivalnet to @pure 4@.
 class Applicative f => ThrowError f where
     throwError :: Error -> f a
-
--- I don't understand why GHC can't deduce Applicative from MonadThrow,
--- but it's giving me an error when I try to leave it out of the context.
-instance (Applicative m, MonadThrow m) => ThrowError m where
+    default throwError :: MonadThrow f => Error -> f a
     throwError = throwM
 
+instance ThrowError (Either Error) where
+    throwError = Left
+
+-- TODO: round all this out with instances for all the sensible things in the
+-- libraries that we depend on anyway.
+instance ThrowError IO
+instance ThrowError []
+instance ThrowError Maybe
+instance ThrowError STM
+instance (Monad m) => ThrowError (CatchT m)
+instance (MonadThrow m) => ThrowError (IdentityT m)
+instance (MonadThrow m) => ThrowError (ReaderT r m)
+instance (MonadThrow m, Monoid w) => ThrowError (RWST r w s m)
+instance (MonadThrow m) => ThrowError (StateT s m)
+instance (MonadThrow m, Monoid w) => ThrowError (WriterT w m)
+
 data Error
-    -- | A @BoundsError@ is an exception indicating an attempt
-    -- to access an illegal index @index@ within a sequence of length
-    -- @len@.
+    -- | A @BoundsError@ indicates an attempt to access an illegal
+    -- index @index@ within a sequence of length @len@.
     = BoundsError
     { index    :: Int
     , maxIndex :: Int
     }
-    -- | A @RecursionLimitError@ is an exception indicating that
-    -- the recursion depth limit was exceeded.
+    -- | A @RecursionLimitError@ indicates that the recursion depth limit
+    -- was exceeded.
     | RecursionLimitError
+    -- | A @TraversalLimitError@ indicates that the traversal limit was
+    -- exceeded.
+    | TraversalLimitError
     -- | An @InvalidDataError@ indicates that a part of a message being
     -- parsed was malformed.
     | InvalidDataError String -- error message
