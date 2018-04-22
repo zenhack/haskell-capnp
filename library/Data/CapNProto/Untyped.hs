@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo   #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE GADTs           #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -158,12 +159,12 @@ get msg addr = do
                                 show ptr
 
   where
-    getWord msg addr = invoice 1 >> M.getWord msg addr
+    getWord msg addr = invoice 1 *> M.getWord msg addr
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList addr@WordAt{..} eltSpec = PtrList <$>
         case eltSpec of
-            P.EltNormal sz len -> return $ case sz of
+            P.EltNormal sz len -> pure $ case sz of
                 Sz0   -> List0  (ListOfVoid    (fromIntegral len))
                 Sz1   -> List1  (ListOfBool    nlist)
                 Sz8   -> List8  (ListOfWord8   nlist)
@@ -177,7 +178,7 @@ get msg addr = do
                 tagWord <- getWord msg addr
                 case P.parsePtr tagWord of
                     Just (P.StructPtr numElts dataSz ptrSz) ->
-                        return $ ListStruct $ ListOfStruct
+                        pure $ ListStruct $ ListOfStruct
                             (Struct msg
                                     addr { wordIndex = wordIndex + 1 }
                                     dataSz
@@ -194,7 +195,7 @@ index i list = invoice 1 >> index' list
   where
     index' :: ReadCtx m b => ListOf b a -> m a
     index' (ListOfVoid len)
-        | i < len = return ()
+        | i < len = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
@@ -204,7 +205,7 @@ index i list = invoice 1 >> index' list
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
-        return val
+        pure val
     index' (ListOfWord8  nlist) = indexNList nlist 8
     index' (ListOfWord16 nlist) = indexNList nlist 4
     index' (ListOfWord32 nlist) = indexNList nlist 2
@@ -221,7 +222,7 @@ index i list = invoice 1 >> index' list
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
             word <- M.getWord msg addr { wordIndex = wordIndex' }
             let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
-            return $ fromIntegral $ word `shiftR` shift
+            pure $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
 
@@ -258,14 +259,14 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 -- returning 0 if it is absent.
 getData :: ReadCtx m b => Int -> Struct b -> m Word64
 getData i struct
-    | length (dataSection struct) <= i = invoice 1 >> return 0
+    | length (dataSection struct) <= i = invoice 1 *> pure 0
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
 getPtr :: ReadCtx m b => Int -> Struct b -> m (Maybe (Ptr b))
 getPtr i struct
-    | length (ptrSection struct) <= i = invoice 1 >> return Nothing
+    | length (ptrSection struct) <= i = invoice 1 *> pure Nothing
     | otherwise = index i (ptrSection struct)
 
 
@@ -298,6 +299,6 @@ rootPtr :: ReadCtx m b => M.Message b -> m (Struct b)
 rootPtr msg = do
     root <- get msg (WordAt 0 0)
     case root of
-        Just (PtrStruct struct) -> return struct
+        Just (PtrStruct struct) -> pure struct
         _ -> throwM $ E.SchemaViolationError
                 "Unexpected root type; expected struct."
