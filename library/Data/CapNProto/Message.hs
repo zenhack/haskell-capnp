@@ -23,7 +23,7 @@ import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Data.CapNProto.Address    (WordAddr(..))
 import Data.CapNProto.Bits       (WordCount(..), hi, lo, wordsToBytes)
-import Data.CapNProto.Errors     (BoundsError(..))
+import Data.CapNProto.Errors     (Error(..))
 import Data.Word                 (Word32, Word64)
 
 import qualified Data.CapNProto.Blob as B
