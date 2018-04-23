@@ -1,5 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs            #-}
+{-# LANGUAGE RecordWildCards  #-}
 module Data.CapNProto.Untyped.ADT
     ( Cap(..)
     , Slice(..)
@@ -15,12 +16,14 @@ module Data.CapNProto.Untyped.ADT
     )
   where
 
-import Prelude hiding (length, (!!))
+import Prelude hiding (length, readList, (!!))
 
-import qualified Data.ByteString as BS
-import Data.Primitive.Array (Array)
-import Data.Word
-import Data.Default (Default(def))
+import qualified Data.ByteString        as BS
+import qualified Data.CapNProto.Untyped as U
+import           Data.Default           (Default(def))
+import           Data.Primitive.Array   (Array)
+import qualified Data.Vector            as V
+import           Data.Word
 
 type Cap = Word32
 
@@ -36,8 +39,8 @@ data PtrType
     | PtrCap    !Cap
 
 data Struct = Struct
-    { structData :: Slice Word64
-    , structPtrs :: Slice (Maybe PtrType)
+    { structData :: BS.ByteString
+    , structPtrs :: V.Vector (Maybe PtrType)
     }
 
 data List'
@@ -99,3 +102,21 @@ sliceIndex :: Default a => Slice a -> Int -> a
 sliceIndex (Slice list) i
     | i < length list = list !! i
     | otherwise = def
+
+-- Conversion from the types in Data.CapNProto.Untyped
+
+readStruct :: U.ReadCtx m BS.ByteString => U.Struct BS.ByteString -> m Struct
+readStruct struct = Struct
+    <$> U.rawBytes (U.dataSection struct)
+    <*> readPtrSection
+  where
+    readPtrSection = do
+        let ptrs = U.ptrSection struct
+        V.generateM (U.length ptrs) $ \i -> do
+            elt <- U.index i ptrs
+            readPtr elt
+
+readPtr :: U.ReadCtx m BS.ByteString
+    => Maybe (U.Ptr BS.ByteString)
+    -> m (Maybe (PtrType))
+readPtr = undefined
