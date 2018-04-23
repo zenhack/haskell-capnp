@@ -5,7 +5,10 @@ module Tests.SchemaQuickCheck
 import qualified Data.ByteString as BS
 
 import           Data.CapNProto.Blob                                 (BlobSlice)
+import           Data.CapNProto.Errors                               (Error)
 import           Data.CapNProto.Message                              as M
+import           Data.CapNProto.TraversalLimit
+    (LimitT, runWithLimit)
 import qualified Data.CapNProto.Untyped                              as Untyped
 import           Schema.CapNProto.Reader.Schema                      as Schema hiding
     (Field)
@@ -22,7 +25,6 @@ import Tests.Util
 
 -- Schema validation imports
 import Control.Monad.Catch as C
-import Control.Monad.Quota as Q
 
 -- Functions to generate valid CGRs
 
@@ -33,16 +35,16 @@ generateCGR schema = do
 
 -- Functions to validate CGRs
 
-decodeCGR :: BS.ByteString -> IO (Quota, Int)
+decodeCGR :: BS.ByteString -> IO (Int, Int)
 decodeCGR bytes = do
-    let reader :: Untyped.Struct BS.ByteString -> QuotaT IO Int
+    let reader :: Untyped.Struct BS.ByteString -> LimitT IO Int
         reader struct = do
             let req = Schema.CodeGeneratorRequest struct
-            Just nodes <- CGReq.nodes req
-            Just requestedFiles <- CGReq.requestedFiles req
+            nodes <- CGReq.nodes req
+            requestedFiles <- CGReq.requestedFiles req
             return (Untyped.length nodes)
     msg <- M.decode bytes
-    (numNodes, endQuota) <- runQuotaT (Untyped.rootPtr msg >>= reader) 1024
+    (numNodes, endQuota) <- runWithLimit 1024 (Untyped.rootPtr msg >>= reader)
     return (endQuota, numNodes)
 
 -- QuickCheck properties
@@ -51,9 +53,9 @@ prop_schemaValid :: Schema -> Property
 prop_schemaValid schema = ioProperty $ do
     compiled <- generateCGR schema
     decoded <- try $ decodeCGR compiled
-    return $ case decoded of
-        Left QuotaError -> False
-        Right _         -> True
+    return $ case (decoded :: Either Error (Int, Int)) of
+        Left _  -> False
+        Right _ -> True
 
 schemaCGRQuickCheck = testProperty "valid schema QuickCheck"
                       (prop_schemaValid <$> genSchema)
