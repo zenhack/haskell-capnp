@@ -134,6 +134,7 @@ test-suite simple-tests
       , bytestring >= 0.10 && < 0.11
       , vector
       , process
+      , process-extras
       , exceptions
       , QuickCheck
       , mtl

@@ -25,12 +25,12 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
     [ ( aircraftSchema
       , "Aircraft"
       , [here|(f16 = (base = (
-            name = "bob",
-            homes = [],
-            rating = 7,
-            canFly = true,
-            capacity = 5173,
-            maxSpeed = 12.0,
+           name = "bob",
+           homes = [],
+           rating = 7,
+           canFly = true,
+           capacity = 5173,
+           maxSpeed = 12.0
         )))|]
       , 128
       , \root -> do
