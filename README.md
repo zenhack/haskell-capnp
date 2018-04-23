@@ -1,6 +1,3 @@
-[![Travis CI][travis-img]][travis-ci]
-[Hydra build status][hydra]
-
 Beginnings of a haskell [capnproto][1] library.
 
 # Status
@@ -16,7 +13,3 @@ able to replace them.
 MIT
 
 [1]: https://capnproto.org/
-
-[travis-ci]: https://travis-ci.org/zenhack/haskell-capnp
-[travis-img]: https://travis-ci.org/zenhack/haskell-capnp.svg?branch=master
-[hydra]: https://hydra.angeldsis.com/jobset/haskell-capnp/zenhack-master
