@@ -61,26 +61,25 @@ instance Show FieldType where
 
 instance Show Field where
     show (FieldDef name order entryType) = concat
-                                           [ show name, " @", show order, " :"
-                                           , show entryType, ";\n"
-                                           ]
-    show (StructDef name content)        = concat
-                                           [ "struct ", show name, " {\n"
-                                           , concatMap (('\t':) . show) content
-                                           , "}\n\n"
-                                           ]
+       [ show name, " @", show order, " :"
+       , show entryType, ";\n"
+       ]
+    show (StructDef name content) = concat
+       [ "struct ", show name, " {\n"
+       , concatMap (('\t':) . show) content
+       , "}\n\n"
+       ]
 
-data Schema
-    = Schema
+data Schema = Schema
       { schemaId      :: String
       , schemaContent :: [Field]
       }
 
 instance Show Schema where
     show s = concat
-             [ "@0x", schemaId s, ";\n\n"
-             , concatMap show (schemaContent s)
-             ]
+        [ "@0x", schemaId s, ";\n\n"
+        , concatMap show (schemaContent s)
+        ]
 
 -- Helper generators
 
