@@ -29,9 +29,7 @@ import Control.Monad.Catch as C
 -- Functions to generate valid CGRs
 
 generateCGR :: Schema -> IO BS.ByteString
-generateCGR schema = do
-    pOut <- capnpCompile (show schema) "-"
-    return pOut
+generateCGR schema = capnpCompile (show schema) "-"
 
 -- Functions to validate CGRs
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Language.CapNProto.TH
@@ -33,7 +34,7 @@ data WordReaderSpec = WordReaderSpec
     , start         :: Integer -- ^ The offset into the parent's data section (in bits)
     , rawTyp        :: Name -- ^ The type constructor for the WordN type of the correct
                      --   size.
-    , typ           :: (TypeQ -> TypeQ) -- ^ The type of the final result
+    , typ           :: TypeQ -> TypeQ -- ^ The type of the final result
     , defaultVal    :: Word64 -- ^ The default value of the field (bit representation)
     , transform     :: ExpQ -- ^ A function to apply to the result
     }
@@ -67,11 +68,11 @@ mkUnion UnionSpec{..} = do
                 []
            ]
   where
-    mkCon b UnionVariant{..} = do
-        argT <- case elementType of
-                Nothing -> return []
-                Just ty -> (:[]) <$> ty (varT b)
-        return $ NormalC (mkName variantName) (map (\t -> (defaultBang, t)) argT)
+    mkCon b UnionVariant{..} =
+        NormalC (mkName variantName) . map (\t -> (defaultBang, t)) <$>
+            case elementType of
+                    Nothing -> return []
+                    Just ty -> (:[]) <$> ty (varT b)
 
 -- | For a type with one data constructor, with the same name as its type
 -- constructor, convert a 'Name' for the data constructor to a 'Name' for
@@ -187,13 +188,12 @@ mkHasPtr fieldName@(c:cs) parentCon offset = do
   where
     hasVal = do
         struct <- newName "struct"
-        [| \arg ->
-                case arg of
-                    $(conP parentCon [varP struct]) -> do
-                        ptr <- U.getPtr $(litE $ IntegerL $ fromIntegral offset) $(varE struct)
-                        case ptr of
-                            Just _  -> return True
-                            Nothing -> return False |]
+        [| \case
+                $(conP parentCon [varP struct]) -> do
+                    ptr <- U.getPtr $(litE $ IntegerL $ fromIntegral offset) $(varE struct)
+                    case ptr of
+                        Just _  -> return True
+                        Nothing -> return False |]
 
 
 -- | @mkListReader@ generates a reader which extracts a list from a struct.

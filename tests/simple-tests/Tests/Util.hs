@@ -45,7 +45,7 @@ data MsgMetaData = MsgMetaData
 -- the needed metadata and returning the output
 capnpEncode :: String -> MsgMetaData -> IO BS.ByteString
 capnpEncode msgValue meta = do
-    (exitStatus, stdOut, stdErr) <- runResourceT $ do
+    (exitStatus, stdOut, stdErr) <- runResourceT $
         interactCapnpWithSchema "encode" (msgSchema meta) (LBSC8.pack msgValue) [msgType meta]
     case exitStatus of
         ExitSuccess -> return (LBS.toStrict stdOut)
@@ -55,7 +55,7 @@ capnpEncode msgValue meta = do
 -- the needed metadata and returning the output
 capnpDecode :: BS.ByteString -> MsgMetaData -> IO String
 capnpDecode encodedMsg meta = do
-    (exitStatus, stdOut, stdErr) <- runResourceT $ do
+    (exitStatus, stdOut, stdErr) <- runResourceT $
         interactCapnpWithSchema "decode" (msgSchema meta) (LBS.fromStrict encodedMsg) [msgType meta]
     case exitStatus of
         ExitSuccess -> return (LBSC8.unpack stdOut)
@@ -65,7 +65,7 @@ capnpDecode encodedMsg meta = do
 -- the needed metadata and returning the output
 capnpCompile :: String -> String -> IO BS.ByteString
 capnpCompile msgSchema outputArg = do
-    (exitStatus, stdOut, stdErr) <- runResourceT $ do
+    (exitStatus, stdOut, stdErr) <- runResourceT $
         interactCapnpWithSchema "compile" msgSchema LBSC8.empty ["-o", outputArg]
     case exitStatus of
         ExitSuccess -> return (LBS.toStrict stdOut)

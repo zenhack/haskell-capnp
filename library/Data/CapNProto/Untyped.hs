@@ -259,14 +259,14 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 -- returning 0 if it is absent.
 getData :: ReadCtx m b => Int -> Struct b -> m Word64
 getData i struct
-    | length (dataSection struct) <= i = invoice 1 *> pure 0
+    | length (dataSection struct) <= i = 0 <$ invoice 1
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
 getPtr :: ReadCtx m b => Int -> Struct b -> m (Maybe (Ptr b))
 getPtr i struct
-    | length (ptrSection struct) <= i = invoice 1 *> pure Nothing
+    | length (ptrSection struct) <= i = Nothing <$ invoice 1
     | otherwise = index i (ptrSection struct)
 
 

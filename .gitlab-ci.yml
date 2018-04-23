@@ -1,11 +1,15 @@
 before_script:
   - cabal update
   - cabal install stylish-haskell
+  - cabal install hlint
 test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
+      # Run the tests:
     - cabal new-build
     - cabal new-test
-      # Run stylish-haskell, and fail CI if it changes anything:
+      # Linting:
+    - ./hlint.sh
+      # Run stylish-haskell, and fail if it changes anything:
     - ./format.sh
     - git diff --exit-code

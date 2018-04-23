@@ -27,7 +27,7 @@ module Data.CapNProto.Untyped.ADT
     )
   where
 
-import Prelude hiding (length, readList, (!!))
+import Prelude hiding (length, (!!))
 
 import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Untyped as U
@@ -62,7 +62,7 @@ data List'
     | List32' (List Word32)
     | List64' (List Word64)
     | ListPtr' (List (Maybe PtrType))
-    | ListStruct' (List (Struct))
+    | ListStruct' (List Struct)
 
 data List a where
     List0      :: !Int ->                         List ()
@@ -129,5 +129,5 @@ readStruct struct = Struct
 -- | Parse a (possibly null) pointer into its ADT form.
 readPtr :: U.ReadCtx m BS.ByteString
     => Maybe (U.Ptr BS.ByteString)
-    -> m (Maybe (PtrType))
+    -> m (Maybe PtrType)
 readPtr = undefined

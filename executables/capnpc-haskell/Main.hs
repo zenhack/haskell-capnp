@@ -5,7 +5,7 @@ module Main (main) where
 import Generator
 
 import Control.Monad.Catch           (MonadThrow)
-import Control.Monad.Reader          (ReaderT, ask, runReaderT)
+import Control.Monad.Reader          (ReaderT, asks, runReaderT)
 import Control.Monad.Trans.Class     (lift)
 import Data.ByteString.UTF8          (toString)
 import Data.CapNProto.Errors         (ThrowError)
@@ -49,7 +49,7 @@ buildNodeMap = List.foldl addNode M.empty
 genModule :: (Monad m, ThrowError m, Limit m) => CGR.RequestedFile BS -> Generator m ()
 genModule file = do
     id <- ReqFile.id file
-    Just node <- M.lookup id <$> ask
+    Just node <- asks (M.lookup id)
 
     -- First, verify that the node in question is actually a file:
     Node.File <- Node.union_ node
@@ -67,13 +67,13 @@ genNestedNode :: (Monad m, ThrowError m, Limit m) => NS -> Node.NestedNode BS ->
 genNestedNode ns nestedNode = do
     name <- NN.name nestedNode
     id <- NN.id nestedNode
-    Just node <- M.lookup id <$> ask
+    Just node <- asks (M.lookup id)
     genNode ns node name
     nn <- Node.nestedNodes node
     List.mapM_ (genNestedNode (subNS ns name)) nn
 
 genNode :: (Monad m, ThrowError m, Limit m)
-        => NS -> Schema.Node BS -> (BT.Text BS) -> Generator m ()
+        => NS -> Schema.Node BS -> BT.Text BS -> Generator m ()
 genNode ns node (BT.Text name) = do
     union_ <- Node.union_ node
     case union_ of
@@ -106,7 +106,7 @@ mkSrcs = mapM mkSrc . M.toList where
         decs <- TH.runQ q
         let BT.Text modname = moduleName ns
             filename = moduleFile ns
-            contents = unlines $ map TH.pprint $ decs
+            contents = unlines $ map TH.pprint decs
         return ( filename
                , "module " ++ toString modname ++ " where\n" ++
                  "\n" ++

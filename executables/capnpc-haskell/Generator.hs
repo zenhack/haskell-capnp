@@ -46,10 +46,10 @@ evalGenT (GenT m) = do
 -- | Internal state for a 'GenT'; we maintain a mapping from module names
 -- to the declarations to be built for those modules. We define a Monoid
 -- instance, so we can use WriterT internally.
-newtype GenAcc = GenAcc (M.Map NS (TH.Q (DList (TH.Dec))))
+newtype GenAcc = GenAcc (M.Map NS (TH.Q (DList TH.Dec)))
 
 instance Monoid GenAcc where
-    mempty = GenAcc $ M.empty
+    mempty = GenAcc M.empty
     mappend (GenAcc l) (GenAcc r) = GenAcc $ M.unionWith mergeTHs l r
       where
         mergeTHs l r = mappend <$> l <*> r
