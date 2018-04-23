@@ -65,7 +65,11 @@ data List b
     | ListStruct (ListOf b (Struct b))
 
 -- | A "normal" (non-composite) list.
-data NormalList b = NormalList (M.Message b) WordAddr Int
+data NormalList b = NormalList
+    { nMsg  :: M.Message b
+    , nAddr :: WordAddr
+    , nLen  :: Int
+    }
 
 -- | A list of values of type 'a' in a message.
 data ListOf b a where
@@ -237,10 +241,6 @@ length (ListOfWord32 nlist)  = nLen nlist
 length (ListOfWord64 nlist)  = nLen nlist
 length (ListOfPtr    nlist)  = nLen nlist
 length (ListOfMapped list _) = length list
-
--- | helper for 'length'; returns the length ofr a normal list.
-nLen :: NormalList b -> Int
-nLen (NormalList _ _ len) = len
 
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct b -> ListOf b Word64
