@@ -1,2 +1,0 @@
-language: nix
-script: nix-env -iA nixpkgs.cabal2nix; make nix-build
