@@ -6,7 +6,6 @@ module Tests.SchemaGeneration
     ) where
 
 import           Control.Monad   (replicateM)
-import           Data.Foldable   (foldl')
 import qualified Test.QuickCheck as QC
 
 import           Data.List.NonEmpty (NonEmpty((:|)))
