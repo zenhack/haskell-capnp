@@ -1,8 +1,5 @@
-before_script:
-  - sudo apt-get update
-  - sudo apt-get installl -y capnproto
 test:alltests:
-  image: haskell
+  image: zenhack/haskell-capnp-ci
   script:
     - cabal new-build
     - cabal new-test
