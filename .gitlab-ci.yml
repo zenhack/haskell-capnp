@@ -1,6 +1,11 @@
+before_script:
+  - cabal update
+  - cabal install stylish-haskell
 test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
-    - cabal update
     - cabal new-build
     - cabal new-test
+      # Run stylish-haskell, and fail CI if it changes anything:
+    - ./format.sh
+    - git diff --exit-code

@@ -10,9 +10,9 @@ bikeshed, but consistency is worth a bit of that.
 * [stylish-haskell][1] takes care of most formatting issues. If it wants
   to change your code, let it; this solves a lot of consistency issues
   without us needing to remember anything, and it gets run as part of
-  our CI, so failing to use it will likely cause failures. Running `make
-  format` will apply it to the entire source tree, using this project's
-  rules, but we recommend you configure your editor to use it
+  our CI, so failing to use it will likely cause failures. Running
+  `./format.sh will apply it to the entire source tree, using this
+  project's rules, but we recommend you configure your editor to use it
   automatically.
 * Use a tabstop of 4 spaces in Haskell source code, 2 spaces in the
   cabal file.
