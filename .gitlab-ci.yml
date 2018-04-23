@@ -1,5 +1,6 @@
 test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
+    - cabal update
     - cabal new-build
     - cabal new-test
