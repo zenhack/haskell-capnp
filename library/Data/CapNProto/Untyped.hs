@@ -277,15 +277,17 @@ getPtr i struct
 -- * This returns the underlying *storage*, not the value, so e.g.
 --   @rawBytes (fmap (+1) list) == rawBytes list@, since fmap does not modify
 --   the message.
--- * This only works if the underlying storage is a list of bytes, i.e. the
---   underlying storage is ListOf b Word8. An exception will be thrown for
---   things like @fmap (fromIntegral . length) (xs :: ListOf b [Potato])@,
---   assuming @xs@ was not itself transformed from some @ListOf b Word8@.
-rawBytes :: (ReadCtx m b, Slice m b) => ListOf b Word8 -> m b
+-- * This doesn't work (raises an error) for composite lists, or lists whose
+--   element size is less than < 1 byte (() and Bool).
+rawBytes :: (ReadCtx m b, Slice m b) => ListOf b a -> m b
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     seg <- M.getSegment msg segIndex
     slice seg (wordsToBytes wordIndex) (ByteCount len)
-rawBytes (ListOfMapped list@(ListOfWord8 _) _) = rawBytes list
+rawBytes (ListOfWord16 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 2 })
+rawBytes (ListOfWord32 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 4 })
+rawBytes (ListOfWord64 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
+rawBytes (ListOfPtr    nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
+rawBytes (ListOfMapped list _) = rawBytes list
 rawBytes _ = throwError $ E.SchemaViolationError
     -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
     -- here. It's *almost* right, in that the caller is asking for a
