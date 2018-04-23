@@ -1,6 +1,6 @@
 {-|
 Module: Data.CapNProto.Errors
-Description: Exception types used by haskell-capnp
+Description: Error handling utilities
 -}
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE FlexibleInstances    #-}
@@ -42,37 +42,13 @@ class Applicative f => ThrowError f where
     default throwError :: MonadThrow f => Error -> f a
     throwError = throwM
 
-instance ThrowError (Either Error) where
-    throwError = Left
-
--- TODO: round all this out with instances for all the sensible things in the
--- libraries that we depend on anyway.
-instance ThrowError IO
-instance ThrowError []
-instance ThrowError Maybe
-instance ThrowError STM
-instance (Monad m) => ThrowError (CatchT m)
-
-instance (Monad m, ThrowError m) => ThrowError (IdentityT m) where
-    throwError = lift . throwError
-instance (Monad m, ThrowError m) => ThrowError (ReaderT r m) where
-    throwError = lift . throwError
-instance (Monad m, ThrowError m, Monoid w) => ThrowError (RWST r w s m) where
-    throwError = lift . throwError
-instance (Monad m, ThrowError m) => ThrowError (StateT s m) where
-    throwError = lift . throwError
-instance (Monad m, ThrowError m) => ThrowError (LazyState.StateT s m) where
-    throwError = lift . throwError
-instance (Monad m, ThrowError m, Monoid w) => ThrowError (WriterT w m) where
-    throwError = lift . throwError
-
 data Error
     -- | A @BoundsError@ indicates an attempt to access an illegal
     -- index @index@ within a sequence of length @len@.
     = BoundsError
-    { index    :: Int
-    , maxIndex :: Int
-    }
+        { index    :: Int
+        , maxIndex :: Int
+        }
     -- | A @RecursionLimitError@ indicates that the recursion depth limit
     -- was exceeded.
     | RecursionLimitError
@@ -88,3 +64,29 @@ data Error
     deriving(Show, Eq)
 
 instance Exception Error
+
+-- ThrowError instances for many common library types. TODO: round all this
+-- out with instances for all the sensible things in the libraries that we
+-- already pull in as dependencies.
+
+instance ThrowError IO
+instance ThrowError []
+instance ThrowError Maybe
+instance ThrowError STM
+instance (Monad m) => ThrowError (CatchT m)
+
+instance ThrowError (Either Error) where
+    throwError = Left
+
+instance (Monad m, ThrowError m) => ThrowError (IdentityT m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m) => ThrowError (ReaderT r m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m, Monoid w) => ThrowError (RWST r w s m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m) => ThrowError (StateT s m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m) => ThrowError (LazyState.StateT s m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m, Monoid w) => ThrowError (WriterT w m) where
+    throwError = lift . throwError

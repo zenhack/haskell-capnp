@@ -1,6 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs            #-}
 {-# LANGUAGE RecordWildCards  #-}
+{-| This module provides an idiomatic Haskell interface for untyped capnp
+    data, based on algebraic datatypes. It forgoes some of the benefits of
+    the capnp wire format in favor of a more convienient API.
+
+    In addition to the algebraic data types themselves, this module also
+    provides support for converting from the lower-level types in
+    Data.CapNProto.Untyped.
+-}
 module Data.CapNProto.Untyped.ADT
     ( Cap(..)
     , Slice(..)
@@ -13,6 +21,9 @@ module Data.CapNProto.Untyped.ADT
     , length
     , (!!)
     , sliceIndex
+
+    -- Converting from Data.CapNProto.Untyped.
+    , readStruct
     )
   where
 
@@ -103,8 +114,7 @@ sliceIndex (Slice list) i
     | i < length list = list !! i
     | otherwise = def
 
--- Conversion from the types in Data.CapNProto.Untyped
-
+-- | Parse a struct into its ADT form.
 readStruct :: U.ReadCtx m BS.ByteString => U.Struct BS.ByteString -> m Struct
 readStruct struct = Struct
     <$> U.rawBytes (U.dataSection struct)
@@ -116,6 +126,7 @@ readStruct struct = Struct
             elt <- U.index i ptrs
             readPtr elt
 
+-- | Parse a (possibly null) pointer into its ADT form.
 readPtr :: U.ReadCtx m BS.ByteString
     => Maybe (U.Ptr BS.ByteString)
     -> m (Maybe (PtrType))
