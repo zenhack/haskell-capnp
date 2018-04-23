@@ -4,15 +4,16 @@ module Main (main) where
 
 import Generator
 
-import Control.Monad.Catch       (MonadThrow)
-import Control.Monad.Quota       (MonadQuota, evalQuotaT)
-import Control.Monad.Reader      (ReaderT, ask, runReaderT)
-import Control.Monad.Trans.Class (lift)
-import Data.ByteString.UTF8      (toString)
-import Data.CapNProto.Message    (Message, decode)
+import Control.Monad.Catch           (MonadThrow)
+import Control.Monad.Reader          (ReaderT, ask, runReaderT)
+import Control.Monad.Trans.Class     (lift)
+import Data.ByteString.UTF8          (toString)
+import Data.CapNProto.Errors         (ThrowError)
+import Data.CapNProto.Message        (Message, decode)
+import Data.CapNProto.TraversalLimit (Limit, evalWithLimit)
 import Namespace
-import System.Directory          (createDirectoryIfMissing)
-import System.FilePath           (takeDirectory)
+import System.Directory              (createDirectoryIfMissing)
+import System.FilePath               (takeDirectory)
 
 import qualified Data.ByteString                                                   as BS
 import qualified Data.CapNProto.BasicTypes                                         as BT
@@ -38,14 +39,14 @@ type BS = BS.ByteString
 type Generator m a = ReaderT NodeMap (GenT m) a
 type NodeMap = M.Map Node.Id (Schema.Node BS)
 
-buildNodeMap :: (MonadThrow m, MonadQuota m) => List.ListOf BS (Schema.Node BS) -> m NodeMap
+buildNodeMap :: (Monad m, ThrowError m, Limit m) => List.ListOf BS (Schema.Node BS) -> m NodeMap
 buildNodeMap = List.foldl addNode M.empty
   where
     addNode m node = do
         nodeId <- Node.id node
         return $ M.insert nodeId node m
 
-genModule :: (MonadThrow m, MonadQuota m) => CGR.RequestedFile BS -> Generator m ()
+genModule :: (Monad m, ThrowError m, Limit m) => CGR.RequestedFile BS -> Generator m ()
 genModule file = do
     id <- ReqFile.id file
     Just node <- M.lookup id <$> ask
@@ -62,7 +63,7 @@ genModule file = do
     -- locating packages that crops up in other languages.
     List.mapM_ (genNestedNode (fromId id)) nn
 
-genNestedNode :: (MonadThrow m, MonadQuota m) => NS -> Node.NestedNode BS -> Generator m ()
+genNestedNode :: (Monad m, ThrowError m, Limit m) => NS -> Node.NestedNode BS -> Generator m ()
 genNestedNode ns nestedNode = do
     name <- NN.name nestedNode
     id <- NN.id nestedNode
@@ -71,7 +72,7 @@ genNestedNode ns nestedNode = do
     nn <- Node.nestedNodes node
     List.mapM_ (genNestedNode (subNS ns name)) nn
 
-genNode :: (MonadThrow m, MonadQuota m)
+genNode :: (Monad m, ThrowError m, Limit m)
         => NS -> Schema.Node BS -> (BT.Text BS) -> Generator m ()
 genNode ns node (BT.Text name) = do
     union_ <- Node.union_ node
@@ -82,17 +83,17 @@ genNode ns node (BT.Text name) = do
             List.mapM_ (genField (subNS ns (BT.Text name))) fields
         _ -> return ()
 
-genField :: (MonadThrow m, MonadQuota m) => NS -> Schema.Field BS -> Generator m ()
+genField :: (Monad m, ThrowError m, Limit m) => NS -> Schema.Field BS -> Generator m ()
 genField ns field = return ()
 
-generate :: (MonadThrow m, MonadQuota m) => Message BS -> GenT m ()
+generate :: (Monad m, ThrowError m, Limit m) => Message BS -> GenT m ()
 generate msg = do
     cgr <- CGR.root_ msg
     nodes <- CGR.nodes cgr
     nodeMap <- lift $ buildNodeMap nodes
     runReaderT (genReq cgr) nodeMap
 
-genReq :: (MonadThrow m, MonadQuota m)
+genReq :: (Monad m, ThrowError m, Limit m)
        => Schema.CodeGeneratorRequest BS -> Generator m ()
 genReq cgr = do
     reqFiles <- CGR.requestedFiles cgr
@@ -117,7 +118,7 @@ main :: IO ()
 main = do
     msg <- BS.getContents >>= decode
     let quota = 1024 * 1024
-    decls <- flip evalQuotaT quota $ evalGenT $ generate msg
+    decls <- evalWithLimit quota $ evalGenT $ generate msg
     mkSrcs decls >>= mapM_ writeOut
   where
     writeOut (path, contents) = do

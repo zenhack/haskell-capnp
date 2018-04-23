@@ -4,15 +4,15 @@ module Tests.Module.Data.CapNProto.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
-import Control.Monad.Quota
 import Data.CapNProto.Untyped
 import Tests.Util
 
-import Control.Monad        (forM_, when)
-import Data.ReinterpretCast (wordToDouble)
-import Test.Framework       (Test)
-import Test.HUnit           (assertEqual)
-import Text.Heredoc         (here, there)
+import Control.Monad                 (forM_, when)
+import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Data.ReinterpretCast          (wordToDouble)
+import Test.Framework                (Test)
+import Test.HUnit                    (assertEqual)
+import Text.Heredoc                  (here, there)
 
 import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Message as M
@@ -71,12 +71,19 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             Just (PtrList (List16 homes)) <- getPtr 1 base
             let 0 = length homes
             return ()
-      , ((), 110)
+      , 110
       )
     ]
   where
+    tst :: ( String
+           , String
+           , String
+           , Int
+           , Struct BS.ByteString -> LimitT IO ()
+           , Int
+           ) -> IO ()
     tst (schema, typename, value, quota, m, expected) = do
         let meta = MsgMetaData schema typename
         msg <- capnpEncode value meta >>= M.decode
-        actual <- runQuotaT (rootPtr msg >>= m) quota
+        ((), actual) <- runWithLimit quota (rootPtr msg >>= m)
         assertEqual (show (meta, value)) expected actual

@@ -36,6 +36,7 @@ import Data.Primitive.ByteArray
 
 import Data.CapNProto.Bits
     (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
+import Data.CapNProto.Errors (ThrowError, throwError)
 
 import qualified Data.ByteString       as BS
 import qualified Data.CapNProto.Errors as E
@@ -100,29 +101,29 @@ writeWord arr words value = do
         write arr (base + fromIntegral i) $ fromIntegral $ value `shiftR` (i * 8)
 
 
-instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
+instance (Blob m a, Monad m, ThrowError m) => Blob m (BlobSlice a) where
     length b = return $ sliceLen b
     index b i = do
         when (i > sliceLen b) $
-            throwM E.BoundsError { E.index = fromIntegral i
+            throwError E.BoundsError { E.index = fromIntegral i
                                  , E.maxIndex = fromIntegral $ sliceLen b - 1
                                  }
         index (blob b) (offset b + i)
 
--- Helper for checking the arguments to slice; calls throwM if the arguments
+-- Helper for checking the arguments to slice; calls throwError if the arguments
 -- are invalid in some way.
-checkSliceLen :: (Blob m b, MonadThrow m) => b -> ByteCount -> ByteCount -> m ()
+checkSliceLen :: (Blob m b, Monad m, ThrowError m) => b -> ByteCount -> ByteCount -> m ()
 checkSliceLen s offset newLen = do
     oldLen <- length s
     -- TODO: when (offset < 0 || newLen < 0)
     when (oldLen - offset < newLen) $ do
         let ByteCount index    = offset + newLen
         let ByteCount maxIndex = oldLen - 1
-        throwM E.BoundsError { E.index    = index
-                             , E.maxIndex = maxIndex
-                             }
+        throwError E.BoundsError { E.index    = index
+                                 , E.maxIndex = maxIndex
+                                 }
 
-instance (Blob m a, MonadThrow m) => Slice m (BlobSlice a) where
+instance (Blob m a, Monad m, ThrowError m) => Slice m (BlobSlice a) where
     slice bs@BlobSlice{..} off len = do
         checkSliceLen bs off len
         return $ bs { offset = offset + off
@@ -133,7 +134,7 @@ instance (Monad m) => Blob m BS.ByteString where
     length = return . ByteCount . BS.length
     index bs (ByteCount i) = return $ BS.index bs i
 
-instance (MonadThrow m) => Slice m BS.ByteString where
+instance (Monad m, ThrowError m) => Slice m BS.ByteString where
     slice b off len = do
         checkSliceLen b off len
         let ByteCount off' = off

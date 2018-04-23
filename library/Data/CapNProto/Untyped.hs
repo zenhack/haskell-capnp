@@ -29,13 +29,13 @@ import Prelude hiding (length)
 import Data.Bits
 import Data.Word
 
-import Control.Monad.Catch    (MonadThrow, throwM)
-import Control.Monad.Quota    (MonadQuota, invoice)
-import Data.CapNProto.Address (WordAddr(..))
+import Data.CapNProto.Address        (WordAddr(..))
 import Data.CapNProto.Bits
     (ByteCount(..), Word1(..), WordCount(..), wordsToBytes)
-import Data.CapNProto.Blob    (Blob, Slice(..))
-import Data.CapNProto.Pointer (ElementSize(..))
+import Data.CapNProto.Blob           (Blob, Slice(..))
+import Data.CapNProto.Errors         (ThrowError(throwError))
+import Data.CapNProto.Pointer        (ElementSize(..))
+import Data.CapNProto.TraversalLimit (Limit(invoice))
 
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Message as M
@@ -43,7 +43,7 @@ import qualified Data.CapNProto.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m b = (MonadThrow m, MonadQuota m, Blob m b, Slice m b)
+type ReadCtx m b = (Monad m, ThrowError m, Limit m, Blob m b, Slice m b)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
@@ -147,12 +147,12 @@ get msg addr = do
                                     -- that, and submit a patch to the spec.
                                     Just (P.CapPtr cap) ->
                                         return $ Just $ PtrCap cap
-                                    ptr -> throwM $ E.InvalidDataError $
+                                    ptr -> throwError $ E.InvalidDataError $
                                         "The tag word of a far pointer's " ++
                                         "2-word landing pad should be an intra " ++
                                         "segment pointer with offset 0, but " ++
                                         "we read " ++ show ptr
-                            ptr -> throwM $ E.InvalidDataError $
+                            ptr -> throwError $ E.InvalidDataError $
                                 "The first word of a far pointer's 2-word " ++
                                 "landing pad should be another far pointer " ++
                                 "(with a one-word landing pad), but we read " ++
@@ -184,7 +184,7 @@ get msg addr = do
                                     dataSz
                                     ptrSz)
                             (fromIntegral numElts)
-                    tag -> throwM $ E.InvalidDataError $
+                    tag -> throwError $ E.InvalidDataError $
                         "Composite list tag was not a struct-" ++
                         "formatted word: " ++ show tag
 
@@ -196,13 +196,13 @@ index i list = invoice 1 >> index' list
     index' :: ReadCtx m b => ListOf b a -> m a
     index' (ListOfVoid len)
         | i < len = pure ()
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+        | otherwise = throwError E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
             let offset = WordCount $ i * fromIntegral (dataSz + ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ Struct msg addr' dataSz ptrSz
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+        | otherwise = throwError E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
         pure val
@@ -211,10 +211,10 @@ index i list = invoice 1 >> index' list
     index' (ListOfWord32 nlist) = indexNList nlist 2
     index' (ListOfWord64 (NormalList msg addr@WordAt{..} len))
         | i < len = M.getWord msg addr { wordIndex = wordIndex + WordCount i }
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+        | otherwise = throwError E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+        | otherwise = throwError E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfMapped list f) = f <$> index' list
     indexNList :: (ReadCtx m b, Integral a) => NormalList b -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
@@ -223,7 +223,7 @@ index i list = invoice 1 >> index' list
             word <- M.getWord msg addr { wordIndex = wordIndex' }
             let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
             pure $ fromIntegral $ word `shiftR` shift
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+        | otherwise = throwError E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
 
 -- | Returns the length of a list
@@ -286,7 +286,7 @@ rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     seg <- M.getSegment msg segIndex
     slice seg (wordsToBytes wordIndex) (ByteCount len)
 rawBytes (ListOfMapped list@(ListOfWord8 _) _) = rawBytes list
-rawBytes _ = throwM $ E.SchemaViolationError
+rawBytes _ = throwError $ E.SchemaViolationError
     -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
     -- here. It's *almost* right, in that the caller is asking for a
     -- transformation that assumes a certain shape of data, but we should
@@ -300,5 +300,5 @@ rootPtr msg = do
     root <- get msg (WordAt 0 0)
     case root of
         Just (PtrStruct struct) -> pure struct
-        _ -> throwM $ E.SchemaViolationError
+        _ -> throwError $ E.SchemaViolationError
                 "Unexpected root type; expected struct."

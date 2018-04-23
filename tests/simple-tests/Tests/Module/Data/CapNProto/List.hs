@@ -4,9 +4,9 @@ module Tests.Module.Data.CapNProto.List (listTests) where
 import Tests.Util (assertionsToTest)
 
 import Control.Monad.Catch.Pure       (runCatchT)
-import Control.Monad.Quota            (evalQuotaT)
 import Control.Monad.Writer           (execWriterT, tell)
 import Data.CapNProto.List            (ListOf)
+import Data.CapNProto.TraversalLimit  (evalWithLimit)
 import Data.Functor.Identity          (Identity(..))
 import Data.Maybe                     (fromJust)
 import Data.Monoid                    (Sum(..))
@@ -25,7 +25,7 @@ lengthCounted = run . List.mapM_ (const $ tell 1)
         . fromRight
         . runIdentity
         . runCatchT
-        . flip evalQuotaT 1024
+        . evalWithLimit 1024
         . execWriterT
     fromRight (Right x) = x
     fromRight _         = error "Left"
@@ -33,7 +33,7 @@ lengthCounted = run . List.mapM_ (const $ tell 1)
 schemaNodes :: IO (ListOf BS.ByteString (Node BS.ByteString))
 schemaNodes = do
     msg <- BS.readFile "tests/data/schema-codegenreq" >>= M.decode
-    evalQuotaT (CGR.root_ msg >>= CGR.nodes) 1024
+    evalWithLimit 1024 (CGR.root_ msg >>= CGR.nodes)
 
 listTests = assertionsToTest "List tests"
     [ do nodes <- schemaNodes

@@ -16,39 +16,38 @@ module Language.CapNProto.TH
   where
 
 import Data.Bits
-import Data.Char (toUpper)
+import Data.Char                  (toUpper)
 import Data.Word
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
-import Control.Monad.Catch       (throwM)
-import Data.CapNProto.BasicTypes (Text, Data, getText, getData)
+import Data.CapNProto.BasicTypes (Data, Text, getData, getText)
 import Data.CapNProto.Bits       (Word1, word1ToBool)
 
 import qualified Data.CapNProto.Errors  as E
 import qualified Data.CapNProto.Untyped as U
 
 data WordReaderSpec = WordReaderSpec
-    { name :: String -- ^ The name of the reader.
+    { name          :: String -- ^ The name of the reader.
     , parentConName :: Name -- ^ The data constructor for the parent type
-    , start :: Integer -- ^ The offset into the parent's data section (in bits)
-    , rawTyp :: Name -- ^ The type constructor for the WordN type of the correct
+    , start         :: Integer -- ^ The offset into the parent's data section (in bits)
+    , rawTyp        :: Name -- ^ The type constructor for the WordN type of the correct
                      --   size.
-    , typ :: (TypeQ -> TypeQ) -- ^ The type of the final result
-    , defaultVal :: Word64 -- ^ The default value of the field (bit representation)
-    , transform :: ExpQ -- ^ A function to apply to the result
+    , typ           :: (TypeQ -> TypeQ) -- ^ The type of the final result
+    , defaultVal    :: Word64 -- ^ The default value of the field (bit representation)
+    , transform     :: ExpQ -- ^ A function to apply to the result
     }
 
 data UnionSpec = UnionSpec
-    { unionName :: String
+    { unionName          :: String
     , unionParentConName :: Name
-    , variants :: [UnionVariant]
+    , variants           :: [UnionVariant]
     }
 
 data UnionVariant = UnionVariant
-    { variantName :: String
+    { variantName       :: String
     , discriminantValue :: Word16
-    , elementType :: Maybe (TypeQ -> TypeQ)
+    , elementType       :: Maybe (TypeQ -> TypeQ)
     }
 
 defaultBang :: Bang
@@ -125,7 +124,7 @@ mkListReaderVal parentConName ptrOffset listConName withList = do
                     $(withList (varE list))
                 Just (U.PtrList $(conP listConName [varP list])) ->
                     $(withList (varE list))
-                _ -> throwM $ E.SchemaViolationError $ $(litE $ StringL $
+                _ -> E.throwError $ E.SchemaViolationError $ $(litE $ StringL $
                             "Expected PtrList (" ++ show listConName ++ " ...)") |]
 
 
@@ -193,7 +192,7 @@ mkHasPtr fieldName@(c:cs) parentCon offset = do
                     $(conP parentCon [varP struct]) -> do
                         ptr <- U.getPtr $(litE $ IntegerL $ fromIntegral offset) $(varE struct)
                         case ptr of
-                            Just _ -> return True
+                            Just _  -> return True
                             Nothing -> return False |]
 
 

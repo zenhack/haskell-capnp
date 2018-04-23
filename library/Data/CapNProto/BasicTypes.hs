@@ -16,10 +16,9 @@ module Data.CapNProto.BasicTypes
 
 import Data.Word
 
-import Control.Monad       (when)
-import Control.Monad.Catch (throwM)
-import Data.Monoid         (Monoid)
-import Data.String         (IsString)
+import Control.Monad (when)
+import Data.Monoid   (Monoid)
+import Data.String   (IsString)
 
 import qualified Data.CapNProto.Blob    as B
 import qualified Data.CapNProto.Errors  as E
@@ -54,9 +53,9 @@ getText :: (U.ReadCtx m b, B.Slice m b) => U.ListOf b Word8 -> m (Text b)
 getText list = do
     bytes <- U.rawBytes list
     len <- B.length bytes
-    when (len == 0) $ throwM $ E.SchemaViolationError
+    when (len == 0) $ E.throwError $ E.SchemaViolationError
         "Text is not NUL-terminated (list of bytes has length 0)"
     lastByte <- B.index bytes (len - 1)
-    when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
+    when (lastByte /= 0) $ E.throwError $ E.SchemaViolationError $
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
     Text <$> B.slice bytes 0 (len - 1)

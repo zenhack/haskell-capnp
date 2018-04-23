@@ -9,7 +9,6 @@ module Generator
 import Namespace
 
 import Control.Monad.Catch       (MonadThrow(..))
-import Control.Monad.Quota       (MonadQuota, invoice)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Writer      (WriterT, execWriterT, tell)
 import Data.DList                (DList)
@@ -17,6 +16,9 @@ import Data.DList                (DList)
 import qualified Data.DList          as DList
 import qualified Data.Map.Strict     as M
 import qualified Language.Haskell.TH as TH
+
+import Data.CapNProto.Errors         (ThrowError(..))
+import Data.CapNProto.TraversalLimit (Limit(invoice))
 
 -- | A monad transformer that adds the ability to emit template haskell
 -- declarations, scoped to specific modules. See 'emit'.
@@ -26,8 +28,11 @@ newtype GenT m a = GenT ((WriterT GenAcc m) a)
 instance MonadTrans GenT where
     lift = GenT . lift
 
-instance MonadQuota m => MonadQuota (GenT m) where
+instance (Monad m, Limit m) => Limit (GenT m) where
     invoice = lift . invoice
+
+instance (Monad m, ThrowError m) => ThrowError (GenT m) where
+    throwError = lift . throwError
 
 -- | @emit ns@ Emits a declaration to be added to the module named by @ns@.
 emit :: Monad m => NS -> TH.DecsQ -> GenT m ()

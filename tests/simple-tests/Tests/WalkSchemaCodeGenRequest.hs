@@ -8,14 +8,14 @@ module Tests.WalkSchemaCodeGenRequest
 
 import Prelude hiding (length)
 
-import Control.Monad.Quota
 import Data.CapNProto.Untyped
 import Tests.Util
 
-import Control.Monad             (mapM_, when)
-import Data.CapNProto.BasicTypes (Text(..))
-import Test.Framework            (Test)
-import Test.HUnit                (Assertion, assertEqual)
+import Control.Monad                 (mapM_, when)
+import Data.CapNProto.BasicTypes     (Text(..))
+import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Test.Framework                (Test)
+import Test.HUnit                    (Assertion, assertEqual)
 
 import qualified Data.ByteString                                     as BS
 import qualified Data.CapNProto.Message                              as M
@@ -43,10 +43,10 @@ theAssert :: Assertion
 theAssert = do
     bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
-    ((), endQuota) <- runQuotaT (rootPtr msg >>= reader) 1024
+    ((), endQuota) <- runWithLimit 1024 (rootPtr msg >>= reader)
     assertEqual "Correct remaining quota" 641 endQuota
   where
-    reader :: Struct BS.ByteString -> QuotaT IO ()
+    reader :: Struct BS.ByteString -> LimitT IO ()
     reader root = do
         let req = Schema.CodeGeneratorRequest root
         nodes <- CGReq.nodes req

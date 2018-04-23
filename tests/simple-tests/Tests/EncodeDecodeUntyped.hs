@@ -10,18 +10,18 @@ module Tests.EncodeDecodeUntyped
 import Prelude hiding (length)
 
 import Control.Monad.CapNProto.MessageBuilder
-import Control.Monad.Quota
 import Data.CapNProto.Schema
 import Data.CapNProto.Untyped
 import Data.Word
 import Tests.Util
 
-import Control.Monad           (void)
-import Control.Monad.Primitive (RealWorld)
-import Data.ByteString         (ByteString)
-import Test.Framework          (Test)
-import Test.HUnit              (Assertion, assertEqual)
-import Text.Heredoc            (here)
+import Control.Monad                 (void)
+import Control.Monad.Primitive       (RealWorld)
+import Data.ByteString               (ByteString)
+import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Test.Framework                (Test)
+import Test.HUnit                    (Assertion, assertEqual)
+import Text.Heredoc                  (here)
 
 import qualified Data.CapNProto.Message as M
 
@@ -34,9 +34,9 @@ encodeDecodeUntypedTest
     :: ( MsgMetaData -- schema and type name
        , String -- message in textual form
        , BuilderT p RealWorld IO () -- Builder for the message
-       , Struct ByteString -> QuotaT IO () -- reader.
-       , Quota -- Quota to run the reader with.
-       , Quota -- Remaining quota for the reader.
+       , Struct ByteString -> LimitT IO () -- reader.
+       , Int -- Quota to run the reader with.
+       , Int -- Remaining quota for the reader.
        )
     -> Assertion
 encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) = do
@@ -49,7 +49,7 @@ encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) =
   where
     checkReader bytes = do
         msg <- M.decode bytes
-        readerResult <- runQuotaT (rootPtr msg >>= reader) startQuota
+        readerResult <- runWithLimit startQuota (rootPtr msg >>= reader)
         assertEqual (show (meta, msgText)) ((), endQuota) readerResult
 
 

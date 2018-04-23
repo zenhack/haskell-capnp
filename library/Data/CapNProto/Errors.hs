@@ -13,14 +13,17 @@ module Data.CapNProto.Errors
 
 import Control.Monad.Catch (Exception, MonadThrow(throwM))
 
+import Control.Monad.Trans.Class (lift)
+
 -- Just so we can define ThrowError instances:
-import Control.Monad.Catch.Pure   (CatchT)
-import Control.Monad.Identity     (IdentityT)
-import Control.Monad.Reader       (ReaderT)
-import Control.Monad.RWS          (RWST)
-import Control.Monad.State.Strict (StateT)
-import Control.Monad.Writer       (WriterT)
-import GHC.Conc                   (STM)
+import           Control.Monad.Catch.Pure   (CatchT)
+import           Control.Monad.Identity     (IdentityT)
+import           Control.Monad.Reader       (ReaderT)
+import           Control.Monad.RWS          (RWST)
+import qualified Control.Monad.State.Lazy   as LazyState
+import           Control.Monad.State.Strict (StateT)
+import           Control.Monad.Writer       (WriterT)
+import           GHC.Conc                   (STM)
 
 -- | Similar MonadThrow, but:
 --
@@ -49,11 +52,19 @@ instance ThrowError []
 instance ThrowError Maybe
 instance ThrowError STM
 instance (Monad m) => ThrowError (CatchT m)
-instance (MonadThrow m) => ThrowError (IdentityT m)
-instance (MonadThrow m) => ThrowError (ReaderT r m)
-instance (MonadThrow m, Monoid w) => ThrowError (RWST r w s m)
-instance (MonadThrow m) => ThrowError (StateT s m)
-instance (MonadThrow m, Monoid w) => ThrowError (WriterT w m)
+
+instance (Monad m, ThrowError m) => ThrowError (IdentityT m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m) => ThrowError (ReaderT r m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m, Monoid w) => ThrowError (RWST r w s m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m) => ThrowError (StateT s m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m) => ThrowError (LazyState.StateT s m) where
+    throwError = lift . throwError
+instance (Monad m, ThrowError m, Monoid w) => ThrowError (WriterT w m) where
+    throwError = lift . throwError
 
 data Error
     -- | A @BoundsError@ indicates an attempt to access an illegal
