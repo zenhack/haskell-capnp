@@ -18,7 +18,6 @@ import Prelude hiding (length)
 import Data.Word
 
 import Control.Monad            (forM_, when)
-import Control.Monad.Catch      (MonadThrow(..))
 import Control.Monad.Primitive  (PrimMonad, PrimState)
 import Data.Bits
 import Data.Primitive.ByteArray

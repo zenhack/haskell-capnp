@@ -14,22 +14,17 @@ import System.IO
 import System.Process                 hiding (readCreateProcessWithExitCode)
 import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 
-import Control.Concurrent             (forkIO)
-import Control.DeepSeq                (deepseq)
-import Control.Monad                  (void, when)
 import Control.Monad.Primitive        (PrimMonad, PrimState)
 import Control.Monad.Trans            (lift)
 import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
 import Data.CapNProto.Bits            (ByteCount(..))
 import Data.CapNProto.Blob            (BlobSlice(..))
-import Data.Char                      (isHexDigit)
 import Data.Primitive.ByteArray       (MutableByteArray, readByteArray)
 import System.Directory               (removeFile)
 import Test.Framework                 (Test, testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 import qualified Data.ByteString            as BS
-import qualified Data.ByteString.Char8      as BSC8
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
 import qualified Test.HUnit                 as H

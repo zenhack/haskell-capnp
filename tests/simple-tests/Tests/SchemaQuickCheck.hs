@@ -4,7 +4,6 @@ module Tests.SchemaQuickCheck
 
 import qualified Data.ByteString as BS
 
-import Data.CapNProto.Blob           (BlobSlice)
 import Data.CapNProto.Errors         (Error)
 import Data.CapNProto.Message        as M
 import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
@@ -15,7 +14,6 @@ import qualified Data.CapNProto.Untyped                              as Untyped
 import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGReq
 
 -- Testing framework imports
-import Test.Framework                       (Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
 

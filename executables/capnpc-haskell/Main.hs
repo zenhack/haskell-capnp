@@ -4,7 +4,6 @@ module Main (main) where
 
 import Generator
 
-import Control.Monad.Catch           (MonadThrow)
 import Control.Monad.Reader          (ReaderT, asks, runReaderT)
 import Control.Monad.Trans.Class     (lift)
 import Data.ByteString.UTF8          (toString)
