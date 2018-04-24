@@ -1,6 +1,5 @@
 before_script:
   - cabal update
-  - ./ci/install-linters.sh
 test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
