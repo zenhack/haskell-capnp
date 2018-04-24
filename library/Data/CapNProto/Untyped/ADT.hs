@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs            #-}
-{-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE RecordWildCards  #-}
 {-| This module provides an idiomatic Haskell interface for untyped capnp
     data, based on algebraic datatypes. It forgoes some of the benefits of
