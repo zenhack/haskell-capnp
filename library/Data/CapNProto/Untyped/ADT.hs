@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs            #-}
+{-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE RecordWildCards  #-}
 {-| This module provides an idiomatic Haskell interface for untyped capnp
     data, based on algebraic datatypes. It forgoes some of the benefits of
@@ -27,7 +28,7 @@ module Data.CapNProto.Untyped.ADT
     )
   where
 
-import Prelude hiding (length, (!!))
+import Prelude hiding (length, readList, (!!))
 
 import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Untyped as U
@@ -130,4 +131,12 @@ readStruct struct = Struct
 readPtr :: U.ReadCtx m BS.ByteString
     => Maybe (U.Ptr BS.ByteString)
     -> m (Maybe PtrType)
-readPtr = undefined
+readPtr Nothing               = return Nothing
+readPtr (Just ptr) = Just <$> case ptr of
+    U.PtrCap cap       -> return (PtrCap cap)
+    U.PtrStruct struct -> PtrStruct <$> readStruct struct
+    U.PtrList list     -> PtrList <$> readList list
+
+-- | Parse a list into its ADT form.
+readList :: U.ReadCtx m BS.ByteString => U.List BS.ByteString -> m List'
+readList = undefined
