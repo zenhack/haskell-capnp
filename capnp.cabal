@@ -79,6 +79,7 @@ library
       , template-haskell
       , data-default
     ghc-options:
+      -Wincomplete-patterns
       -Wunused-imports
     default-language:     Haskell2010
 
