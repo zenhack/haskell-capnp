@@ -8,6 +8,7 @@ import Tests.Module.Data.CapNProto.Bits                    (bitsTests)
 import Tests.Module.Data.CapNProto.List                    (listTests)
 import Tests.Module.Data.CapNProto.Pointer                 (ptrTests)
 import Tests.Module.Data.CapNProto.Untyped                 (untypedTests)
+import Tests.Module.Data.CapNProto.Untyped.ADT             (untypedADTTests)
 import Tests.WalkSchemaCodeGenRequest
     (walkSchemaCodeGenRequestTest)
 
@@ -17,6 +18,7 @@ main :: IO ()
 main = defaultMain [ bitsTests
                    , ptrTests
                    , untypedTests
+                   , untypedADTTests
                    , listTests
                    , buildTests
                    , encodeDecodeUntypedTests

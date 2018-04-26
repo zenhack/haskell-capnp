@@ -1,6 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs            #-}
-{-# LANGUAGE RecordWildCards  #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-| This module provides an idiomatic Haskell interface for untyped capnp
     data, based on algebraic datatypes. It forgoes some of the benefits of
     the capnp wire format in favor of a more convienient API.
@@ -16,10 +17,9 @@ module Data.CapNProto.Untyped.ADT
     , PtrType(..)
     , Struct(..)
     , List'(..)
-    , List
+    , List(..)
     , Text(..)
     , length
-    , (!!)
     , sliceIndex
 
     -- Converting from Data.CapNProto.Untyped.
@@ -27,7 +27,10 @@ module Data.CapNProto.Untyped.ADT
     )
   where
 
-import Prelude hiding (length, readList, (!!))
+import Prelude hiding (length, readList)
+
+import Data.String (IsString)
+import GHC.Exts    (IsList)
 
 import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Untyped as U
@@ -39,20 +42,25 @@ import           Data.Word
 type Cap = Word32
 
 newtype Slice a = Slice (List a)
+    deriving(Show, Read, Eq, Ord, Functor, IsList)
 
 newtype Message = Message (Array BS.ByteString)
+    deriving(Show, Read, Eq, Ord, IsList)
 
 newtype Text = Text BS.ByteString
+    deriving(Show, Read, Eq, Ord, IsString)
 
 data PtrType
     = PtrStruct !Struct
     | PtrList   !List'
     | PtrCap    !Cap
+    deriving(Show, Read, Eq)
 
 data Struct = Struct
     { structData :: BS.ByteString
-    , structPtrs :: V.Vector (Maybe PtrType)
+    , structPtrs :: List (Maybe PtrType)
     }
+    deriving(Show, Read, Eq)
 
 data List'
     = List0'  (List ())
@@ -63,68 +71,24 @@ data List'
     | List64' (List Word64)
     | ListPtr' (List (Maybe PtrType))
     | ListStruct' (List Struct)
+    deriving(Show, Read, Eq)
 
-data List a where
-    List0      :: !Int ->                         List ()
-    List1      :: !Int ->        BS.ByteString -> List Bool
-    List8      :: !Int ->        BS.ByteString -> List Word8
-    List16     :: !Int ->        BS.ByteString -> List Word16
-    List32     :: !Int ->        BS.ByteString -> List Word32
-    List64     ::                BS.ByteString -> List Word64
-    ListPtr    :: {-# UNPACK #-} !ListOfPtr    -> List (Maybe PtrType)
-    ListStruct :: {-# UNPACK #-} !ListOfStruct -> List Struct
-    ListMapped :: List a ->      (a -> b)      -> List b
-
-data ListOfPtr = ListOfPtr
-    { ptrListLen :: !Int
-    , ptrListSeg :: !Int
-    , ptrListOff :: !Int
-    , ptrListMsg :: Message
-    }
-
-data ListOfStruct = ListOfStruct
-    { structListLen  :: !Int
-    , structListSeg  :: !Int
-    , structListOff  :: !Int
-    , structListData :: !Word16
-    , structListPtrs :: !Word16
-    , structListMsg  :: Message
-    }
+newtype List a = List (V.Vector a)
+    deriving(Show, Read, Eq, Ord, Functor, IsList)
 
 length :: List a -> Int
-length (List0      len)              = len
-length (List1      len _)            = len
-length (List8      len _)            = len
-length (List16     len _)            = len
-length (List32     len _)            = len
-length (List64     bytes)            = BS.length bytes `div` 8
-length (ListPtr    ListOfPtr{..})    = ptrListLen
-length (ListStruct ListOfStruct{..}) = structListLen
-length (ListMapped list _)           = length list
-
-(!!) :: List a -> Int -> a
-(!!) = undefined
-
-instance Functor List where
-    fmap f (ListMapped list g) = ListMapped list (f . g)
-    fmap f list                = ListMapped list f
+length (List vec) = V.length vec
 
 sliceIndex :: Default a => Slice a -> Int -> a
-sliceIndex (Slice list) i
-    | i < length list = list !! i
+sliceIndex (Slice (List vec)) i
+    | i < V.length vec = vec V.! i
     | otherwise = def
 
 -- | Parse a struct into its ADT form.
 readStruct :: U.ReadCtx m BS.ByteString => U.Struct BS.ByteString -> m Struct
 readStruct struct = Struct
     <$> U.rawBytes (U.dataSection struct)
-    <*> readPtrSection
-  where
-    readPtrSection = do
-        let ptrs = U.ptrSection struct
-        V.generateM (U.length ptrs) $ \i -> do
-            elt <- U.index i ptrs
-            readPtr elt
+    <*> readList (U.ptrSection struct) readPtr
 
 -- | Parse a (possibly null) pointer into its ADT form.
 readPtr :: U.ReadCtx m BS.ByteString
@@ -134,8 +98,20 @@ readPtr Nothing               = return Nothing
 readPtr (Just ptr) = Just <$> case ptr of
     U.PtrCap cap       -> return (PtrCap cap)
     U.PtrStruct struct -> PtrStruct <$> readStruct struct
-    U.PtrList list     -> PtrList <$> readList list
+    U.PtrList list     -> PtrList <$> readList' list
 
--- | Parse a list into its ADT form.
-readList :: U.ReadCtx m BS.ByteString => U.List BS.ByteString -> m List'
-readList = undefined
+-- | @'readList' list readElt@ parses a list into its ADT form. @readElt@ is
+-- used to parse the elements.
+readList :: U.ReadCtx m BS.ByteString => U.ListOf BS.ByteString a -> (a -> m b) -> m (List b)
+readList list readElt =
+    List <$> V.generateM (U.length list) (\i -> U.index i list >>= readElt)
+
+readList' :: U.ReadCtx m BS.ByteString => U.List BS.ByteString -> m List'
+readList' (U.List0 l)      = List0' <$> readList l pure
+readList' (U.List1 l)      = List1' <$> readList l pure
+readList' (U.List8 l)      = List8' <$> readList l pure
+readList' (U.List16 l)     = List16' <$> readList l pure
+readList' (U.List32 l)     = List32' <$> readList l pure
+readList' (U.List64 l)     = List64' <$> readList l pure
+readList' (U.ListPtr l)    = ListPtr' <$> readList l readPtr
+readList' (U.ListStruct l) = ListStruct' <$> readList l readStruct

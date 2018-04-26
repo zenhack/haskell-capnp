@@ -123,6 +123,7 @@ test-suite simple-tests
     other-modules:
         Tests.Module.Control.Monad.CapNProto.MessageBuilder
       , Tests.Module.Data.CapNProto.Untyped
+      , Tests.Module.Data.CapNProto.Untyped.ADT
       , Tests.Module.Data.CapNProto.List
       , Tests.Module.Data.CapNProto.Pointer
       , Tests.Module.Data.CapNProto.Bits
