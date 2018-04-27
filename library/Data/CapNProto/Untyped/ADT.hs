@@ -57,8 +57,8 @@ data PtrType
     deriving(Show, Read, Eq)
 
 data Struct = Struct
-    { structData :: BS.ByteString
-    , structPtrs :: List (Maybe PtrType)
+    { structData :: Slice Word64
+    , structPtrs :: Slice (Maybe PtrType)
     }
     deriving(Show, Read, Eq)
 
@@ -87,8 +87,8 @@ sliceIndex (Slice (List vec)) i
 -- | Parse a struct into its ADT form.
 readStruct :: U.ReadCtx m BS.ByteString => U.Struct BS.ByteString -> m Struct
 readStruct struct = Struct
-    <$> U.rawBytes (U.dataSection struct)
-    <*> readList (U.ptrSection struct) readPtr
+    <$> (Slice <$> readList (U.dataSection struct) pure)
+    <*> (Slice <$> readList (U.ptrSection struct) readPtr)
 
 -- | Parse a (possibly null) pointer into its ADT form.
 readPtr :: U.ReadCtx m BS.ByteString

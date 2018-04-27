@@ -14,7 +14,6 @@ import Test.Framework                (Test)
 import Test.HUnit                    (assertEqual)
 import Text.Heredoc                  (here, there)
 
-import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Message as M
 import qualified Data.CapNProto.Untyped as U
 import qualified Data.Vector            as V
@@ -50,15 +49,15 @@ untypedADTTests = assertionsToTest "Untyped ADT Tests"  $ map tst
         )))|]
       , 128
       , Struct
-            (BS.pack [3,0,0,0,0,0,0,0])
+            [3]
             [ Just $ PtrStruct $ Struct
-                ""
+               []
                 [ Just $ PtrStruct $ Struct
-                    (BS.pack $
-                        [7 ,0 ,0,0,0,0,0,0
-                        ,1 ,0 ,0,0,0,0,0,0
-                        ,53,20,0,0,0,0,0,0
-                        ] ++ doubleToBytes 12.0)
+                    [ 7
+                    , 1
+                    , 5173
+                    , doubleToWord 12.0
+                    ]
                     [ Just $ PtrList $ List8' $ List $ V.fromList $ map (fromIntegral . fromEnum) "bob\0"
                     , Just $ PtrList $ List16' []
                     ]
