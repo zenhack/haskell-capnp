@@ -8,32 +8,30 @@ import Data.CapNProto.Untyped
 import Tests.Util
 
 import Control.Monad                 (forM_, when)
-import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Data.CapNProto.TraversalLimit (execWithLimit)
 import Data.ReinterpretCast          (wordToDouble)
 import Test.Framework                (Test)
 import Test.HUnit                    (assertEqual)
 import Text.Heredoc                  (here, there)
 
-import qualified Data.ByteString        as BS
-import qualified Data.CapNProto.Message as M
-
-aircraftSchema :: String
-aircraftSchema = [there|tests/data/aircraft.capnp|]
+import qualified Data.ByteString as BS
 
 untypedTests :: Test
-untypedTests = assertionsToTest "Untyped Tests"  $ map tst
-    [ ( aircraftSchema
-      , "Aircraft"
-      , [here|(f16 = (base = (
-           name = "bob",
-           homes = [],
-           rating = 7,
-           canFly = true,
-           capacity = 5173,
-           maxSpeed = 12.0
-        )))|]
-      , 128
-      , \root -> do
+untypedTests = assertionsToTest "Untyped Tests"
+    [ do
+        msg <- encodeValue
+                    [there|tests/data/aircraft.capnp|]
+                    "Aircraft"
+                    [here|(f16 = (base = (
+                       name = "bob",
+                       homes = [],
+                       rating = 7,
+                       canFly = true,
+                       capacity = 5173,
+                       maxSpeed = 12.0
+                    )))|]
+        endQuota <- execWithLimit 128 $ do
+            root <- rootPtr msg
             let aircraftWords = dataSection root
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
@@ -71,19 +69,5 @@ untypedTests = assertionsToTest "Untyped Tests"  $ map tst
             Just (PtrList (List16 homes)) <- getPtr 1 base
             let 0 = length homes
             return ()
-      , 110
-      )
+        assertEqual "endQuota == 110" 110 endQuota
     ]
-  where
-    tst :: ( String
-           , String
-           , String
-           , Int
-           , Struct BS.ByteString -> LimitT IO ()
-           , Int
-           ) -> IO ()
-    tst (schema, typename, value, quota, m, expected) = do
-        let meta = MsgMetaData schema typename
-        msg <- capnpEncode value meta >>= M.decode
-        ((), actual) <- runWithLimit quota (rootPtr msg >>= m)
-        assertEqual (show (meta, value)) expected actual
