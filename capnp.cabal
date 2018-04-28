@@ -31,7 +31,7 @@ source-repository head
 --------------------------------------------------------------------------------
 
 library
-    hs-source-dirs:       library
+    hs-source-dirs:       lib
     exposed-modules:
         Control.Monad.CapNProto.MessageBuilder
       , Data.CapNProto.Address
@@ -91,7 +91,7 @@ executable capnpc-haskell
     other-modules:
         Generator
       , Namespace
-    hs-source-dirs:       executables/capnpc-haskell
+    hs-source-dirs:       exe/capnpc-haskell
     build-depends:
         capnp
       , base       >= 4.8  && < 5.0
