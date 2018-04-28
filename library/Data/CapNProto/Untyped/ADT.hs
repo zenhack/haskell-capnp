@@ -81,8 +81,8 @@ newtype List a = List (V.Vector a)
 length :: List a -> Int
 length (List vec) = V.length vec
 
-sliceIndex :: Default a => Slice a -> Int -> a
-sliceIndex (Slice (List vec)) i
+sliceIndex :: Default a => Int -> Slice a -> a
+sliceIndex i (Slice (List vec))
     | i < V.length vec = vec V.! i
     | otherwise = def
 
