@@ -150,6 +150,18 @@ vec2BS :: V.Vector Word8 -> BS.ByteString
 -- TODO: replace this with some existing library function (I'm sure one exists)
 vec2BS = BS.pack . V.toList
 
+data CapnpVersion = CapnpVersion
+    { major :: Word16
+    , minor :: Word8
+    , micro :: Word8
+    }
+    deriving(Show, Read, Eq)
+
+readCapnpVersion :: (ThrowError m, Monad m) => Struct -> m CapnpVersion
+readCapnpVersion (Struct words _) = pure $ CapnpVersion
+    (fromIntegral $ sliceIndex 0 words)
+    (fromIntegral $ sliceIndex 0 words `shiftR` 16)
+    (fromIntegral $ sliceIndex 0 words `shiftR` 24)
 
 -- Still need to implement these, but put them here so the other stuff at least
 -- builds.

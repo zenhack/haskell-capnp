@@ -7,14 +7,26 @@ import Tests.Util
 
 import Data.CapNProto.TraversalLimit (evalWithLimit)
 import Data.CapNProto.Untyped.ADT    (readStruct)
+import Test.Framework                (testGroup)
 import Test.HUnit                    (assertEqual)
 import Text.Heredoc                  (there)
 
 import qualified Data.CapNProto.Untyped as U
 
-schemaTests = valueTests
+schemaTests = testGroup "schema decode tests"
+    [ valueTests
+    , capnpVersionTests
+    ]
 
-valueTests = assertionsToTest "Decode values" $ map testCase
+decodeTests typename reader cases =
+    assertionsToTest ("Decode " ++ typename) $ map (testCase typename reader) cases
+
+capnpVersionTests = decodeTests "CapnpVersion" readCapnpVersion
+    [ ("(major = 0, minor = 5, micro = 3)", CapnpVersion 0 5 3)
+    , ("(major = 1, minor = 0, micro = 2)", CapnpVersion 1 0 2)
+    ]
+
+valueTests = decodeTests "Value" readValue
     [ ("(bool = true)", Value $ Value'Bool True)
     , ("(bool = false)", Value $ Value'Bool False)
     , ("(int8 = -4)", Value $ Value'Int8 (-4))
@@ -39,8 +51,9 @@ valueTests = assertionsToTest "Decode values" $ map testCase
     -- an AnyPointer in the input to capnp encode. Maybe capnp eval
     -- can do something like this? will have to investigate.
     ]
-  where
-    testCase (capnpText, expected) = do
-        msg <- encodeValue [there|tests/data/schema.capnp|] "Value" capnpText
-        actual <- evalWithLimit 128 $ U.rootPtr msg >>= readStruct >>= readValue
-        assertEqual (show (capnpText, expected)) expected actual
+
+
+testCase typename reader (capnpText, expected) = do
+    msg <- encodeValue [there|tests/data/schema.capnp|] typename capnpText
+    actual <- evalWithLimit 128 $ U.rootPtr msg >>= readStruct >>= reader
+    assertEqual (show (capnpText, expected)) expected actual
