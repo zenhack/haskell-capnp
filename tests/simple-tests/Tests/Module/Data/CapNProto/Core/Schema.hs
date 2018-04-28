@@ -33,9 +33,11 @@ valueTests = assertionsToTest "Decode values" $ map testCase
     , ("(data = \"beep boop.\")", Value $ Value'Data "beep boop.")
     , ("(text = \"Hello, World!\")", Value $ Value'Text "Hello, World!")
     , ("(enum = 2313)", Value $ Value'Enum 2313)
-    -- TODO: It would be nice to test list, struct, interface, and anyPointer
-    -- variants, but I(zenhack) haven't figured out what those should look
-    -- like in the input to capnp encode.
+    , ("(interface = void)", Value Value'Interface)
+    -- TODO: It would be nice to test list, struct, and anyPointer
+    -- variants, but I(zenhack) haven't figured out how to specify
+    -- an AnyPointer in the input to capnp encode. Maybe capnp eval
+    -- can do something like this? will have to investigate.
     ]
   where
     testCase (capnpText, expected) = do
