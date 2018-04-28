@@ -79,6 +79,7 @@ data Field'Ordinal
 data Value = Value
     { union' :: Value'Union'
     }
+    deriving(Show, Read, Eq)
 
 data Value'Union'
     = Value'Void
@@ -101,6 +102,7 @@ data Value'Union'
     | Value'Interface
     | Value'AnyPointer (Maybe PtrType)
     | Value'Unknown' Word16
+    deriving(Show, Read, Eq)
 
 readValue :: (ThrowError m, Monad m) => Struct -> m Value
 readValue struct = Value <$> readValue'Union' struct
@@ -111,12 +113,12 @@ readValue'Union' (Struct words ptrs) =
     in case tag of
         0 -> pure Value'Void
         1 -> pure $ Value'Bool $ ((sliceIndex 0 words `shiftR` 16) .&. 1) == 1
-        2 -> pure $ Value'Int8 $ fromIntegral (sliceIndex 0 words `shiftR` 24)
-        3 -> pure $ Value'Int16 $ fromIntegral (sliceIndex 0 words `shiftR` 24)
+        2 -> pure $ Value'Int8 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+        3 -> pure $ Value'Int16 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
         4 -> pure $ Value'Int32 $ fromIntegral (sliceIndex 0 words `shiftR` 32)
         5 -> pure $ Value'Int64 $ fromIntegral $ sliceIndex 1 words
-        6 -> pure $ Value'Uint8 $ fromIntegral (sliceIndex 0 words `shiftR` 24)
-        7 -> pure $ Value'Uint16 $ fromIntegral (sliceIndex 0 words `shiftR` 24)
+        6 -> pure $ Value'Uint8 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+        7 -> pure $ Value'Uint16 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
         8 -> pure $ Value'Uint32 $ fromIntegral (sliceIndex 0 words `shiftR` 32)
         9 -> pure $ Value'Uint64 $ fromIntegral $ sliceIndex 1 words
         10 -> pure $ Value'Float32 $ wordToFloat $ fromIntegral (sliceIndex 0 words `shiftR` 32)
@@ -124,7 +126,7 @@ readValue'Union' (Struct words ptrs) =
         12 -> Value'Text <$> readText (sliceIndex 0 ptrs)
         13 -> Value'Data <$> readData (sliceIndex 0 ptrs)
         14 -> pure $ Value'List (sliceIndex 0 ptrs)
-        15 -> pure $ Value'Enum $ fromIntegral (sliceIndex 0 words `shiftR` 24)
+        15 -> pure $ Value'Enum $ fromIntegral (sliceIndex 0 words `shiftR` 16)
         16 -> pure $ Value'Struct (sliceIndex 0 ptrs)
         17 -> pure Value'Interface
         18 -> pure $ Value'AnyPointer (sliceIndex 0 ptrs)
@@ -141,7 +143,7 @@ readText :: (ThrowError m, Monad m) => Maybe PtrType -> m Text
 readText ptr = Text <$> (trim =<< readData ptr) where
     trim bs
         | BS.length bs == 0 = throwError $ SchemaViolationError "Text had zero length (no NUL byte)"
-        | BS.index bs 0 /= 0 = throwError $ SchemaViolationError "Text did not end with NUL"
+        | BS.index bs (BS.length bs - 1) /= 0 = throwError $ SchemaViolationError "Text did not end with NUL"
         | otherwise = pure $ BS.take (BS.length bs - 1) bs
 
 vec2BS :: V.Vector Word8 -> BS.ByteString

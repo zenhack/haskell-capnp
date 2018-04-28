@@ -5,6 +5,7 @@ import Tests.EncodeDecodeUntyped
     (encodeDecodeUntypedTests)
 import Tests.Module.Control.Monad.CapNProto.MessageBuilder (buildTests)
 import Tests.Module.Data.CapNProto.Bits                    (bitsTests)
+import Tests.Module.Data.CapNProto.Core.Schema             (schemaTests)
 import Tests.Module.Data.CapNProto.List                    (listTests)
 import Tests.Module.Data.CapNProto.Pointer                 (ptrTests)
 import Tests.Module.Data.CapNProto.Untyped                 (untypedTests)
@@ -24,4 +25,5 @@ main = defaultMain [ bitsTests
                    , encodeDecodeUntypedTests
                    , walkSchemaCodeGenRequestTest
                    , schemaCGRQuickCheck
+                   , schemaTests
                    ]
