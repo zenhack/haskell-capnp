@@ -4,6 +4,7 @@ module Data.CapNProto.Core.Schema where
 import Prelude hiding (id)
 
 import Data.CapNProto.Untyped.ADT
+import Data.Int
 import Data.Word
 
 type Id = Word64
@@ -66,10 +67,34 @@ data Field'Ordinal
     | Field'Oridinal'Excplicit Word16
     | Field'Oridinal'Unknown' Word16
 
+data Value = Value
+    { union' :: Value'Union'
+    }
+
+data Value'Union'
+    = Value'Void
+    | Value'Bool Bool
+    | Value'Int8 Int8
+    | Value'Int16 Int16
+    | Value'Int32 Int32
+    | Value'Int64 Int64
+    | Value'Uint8 Word8
+    | Value'Uint16 Word16
+    | Value'Uint32 Word32
+    | Value'Uint64 Word64
+    | Value'Float32 Float
+    | Value'Float64 Double
+    | Value'Text Text
+    | Value'Data Data
+    | Value'List (Maybe PtrType)
+    | Value'Enum Word16
+    | Value'Struct (Maybe PtrType)
+    | Value'Interface
+    | Value'AnyPointer (Maybe PtrType)
+
 -- Still need to implement these, but put them here so the other stuff at least
 -- builds.
 data Type
-data Value
 data Annotation
 data Parameter
 data Node'Struct'

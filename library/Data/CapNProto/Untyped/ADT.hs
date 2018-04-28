@@ -19,6 +19,7 @@ module Data.CapNProto.Untyped.ADT
     , List'(..)
     , List(..)
     , Text(..)
+    , Data(..)
     , length
     , sliceIndex
 
@@ -40,6 +41,7 @@ import qualified Data.Vector            as V
 import           Data.Word
 
 type Cap = Word32
+type Data = BS.ByteString
 
 newtype Slice a = Slice (List a)
     deriving(Show, Read, Eq, Ord, Functor, IsList)
