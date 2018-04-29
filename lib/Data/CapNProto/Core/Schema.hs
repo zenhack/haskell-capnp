@@ -50,9 +50,14 @@ instance Decerialize Struct Node where
         <*> (listStruct (sliceIndex 2 ptrs) >>= traverse decerialize)
         <*> case fromIntegral (sliceIndex 1 words `shiftR` 32) :: Word16 of
                 0 -> pure Node'File
-                1 -> pure $ Node'Struct
+                1 -> Node'Struct
                         (fromIntegral $ sliceIndex 1 words `shiftR` 48)
-                        (fromIntegral $ sliceIndex 2 words)
+                        (fromIntegral $ sliceIndex 3 words)
+                        <$> decerialize (fromIntegral (sliceIndex 3 words `shiftR` 16) :: Word16)
+                        <*> pure (((sliceIndex 3 words `shiftR` 32) .&. 1) == 1)
+                        <*> pure (fromIntegral (sliceIndex 3 words `shiftR` 48))
+                        <*> pure (fromIntegral (sliceIndex 4 words))
+                        <*> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
                 tag -> pure $ Node'Unknown' tag
 
 data Node'Parameter = Node'Parameter
@@ -78,15 +83,13 @@ instance Decerialize Struct Node'NestedNode where
 data Node'Union'
     = Node'File
     | Node'Struct
-        { dataWordCount :: Word16
-        , pointerCount  :: Word16
-{- TODO
+        { dataWordCount         :: Word16
+        , pointerCount          :: Word16
         , preferredListEncoding :: ElementSize
         , isGroup               :: Bool
         , disciriminantCount    :: Word16
         , discriminantOffset    :: Word32
         , fields                :: List Field
--}
         }
 {- TODO
     | Node'Enum Node'Enum'
@@ -96,6 +99,30 @@ data Node'Union'
 -}
     | Node'Unknown' Word16
     deriving(Show, Read, Eq)
+
+data ElementSize
+    = Empty
+    | Bit
+    | Byte
+    | TwoBytes
+    | FourBytes
+    | EightBytes
+    | Pointer
+    | InlineComposite
+    | Unknown' Word16
+    deriving(Show, Read, Eq)
+
+instance Decerialize Word16 ElementSize where
+    decerialize n = pure $ case n of
+        0 -> Empty
+        1 -> Bit
+        2 -> Byte
+        3 -> TwoBytes
+        4 -> FourBytes
+        5 -> EightBytes
+        6 -> Pointer
+        7 -> InlineComposite
+        _ -> Unknown' n
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = 0xffff

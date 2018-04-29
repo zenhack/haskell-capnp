@@ -16,7 +16,69 @@ import Text.Heredoc                  (here, there)
 import qualified Data.CapNProto.Untyped as U
 
 schemaTests = testGroup "schema decode tests"
-    [ decodeTests "Node.Parameter"
+    [ decodeTests "Node"
+        [ ( [here|
+                ( id = 7
+                , displayName = "foo:MyType"
+                , displayNamePrefixLength = 4
+                , scopeId = 2
+                , parameters = [ (name = "theName") ]
+                , isGeneric = true
+                , nestedNodes = [(name = "theName", id = 321)]
+                , annotations = [ (id = 2, brand = (scopes = []), value = (bool = true)) ]
+                , |] ++ unionText ++ [here|
+                )
+            |]
+          , Node
+                7
+                "foo:MyType"
+                4
+                2
+                [Node'Parameter "theName"]
+                True
+                [Node'NestedNode "theName" 321]
+                [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                unionVal
+          )
+        | (unionText, unionVal) <-
+            [ ("file = void", Node'File)
+            , ( [here| struct =
+                    ( dataWordCount = 3
+                    , pointerCount = 2
+                    , preferredListEncoding = inlineComposite
+                    , isGroup = false
+                    , discriminantCount = 4
+                    , discriminantOffset = 2
+                    , fields =
+                        [ ( name = "fieldName"
+                          , codeOrder = 3
+                          , annotations = [ (id = 2, brand = (scopes = []), value = (bool = true)) ]
+                          , discriminantValue = 3
+                          , group = (typeId = 4)
+                          , ordinal = (implicit = void)
+                          )
+                        ]
+                    )
+                |]
+              , Node'Struct
+                    3
+                    2
+                    InlineComposite
+                    False
+                    4
+                    2
+                    [ Field
+                        "fieldName"
+                        3
+                        [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                        3
+                        (Field'Group $ Field'Group' 4)
+                        Field'Ordinal'Implicit
+                    ]
+              )
+            ]
+        ]
+    , decodeTests "Node.Parameter"
         [ ("(name = \"theName\")", Node'Parameter "theName")
         ]
     , decodeTests "Node.NestedNode"
