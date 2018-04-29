@@ -6,6 +6,7 @@ module Data.CapNProto.Core.Schema where
 import Prelude hiding (id)
 
 import Data.CapNProto.Errors (Error(SchemaViolationError), ThrowError(..))
+import Data.Default          (def)
 import Data.ReinterpretCast  (wordToDouble, wordToFloat)
 
 import Data.Bits
@@ -132,7 +133,7 @@ readValue'Union' (Struct words ptrs) =
         18 -> pure $ Value'AnyPointer (sliceIndex 0 ptrs)
         _ -> pure $ Value'Unknown' tag
 
--- TODO: move readData/readText to somewhere common.
+-- TODO: move these to somewhere common.
 readData :: (ThrowError m, Monad m) => Maybe PtrType -> m Data
 readData = \case
     Nothing -> pure ""
@@ -146,9 +147,165 @@ readText ptr = Text <$> (trim =<< readData ptr) where
         | BS.index bs (BS.length bs - 1) /= 0 = throwError $ SchemaViolationError "Text did not end with NUL"
         | otherwise = pure $ BS.take (BS.length bs - 1) bs
 
+ptrStruct :: ThrowError f => Maybe PtrType -> f Struct
+ptrStruct Nothing              = pure def
+ptrStruct (Just (PtrStruct s)) = pure s
+ptrStruct (Just _)             = expected "pointer to struct"
+
+list0 :: ThrowError f => Maybe PtrType -> f (List ())
+list0 Nothing                     = pure def
+list0 (Just (PtrList (List0' l))) = pure l
+list0 _                           = expected "pointer to list with element size 0"
+
+list1 :: ThrowError f => Maybe PtrType -> f (List Bool)
+list1 Nothing                     = pure def
+list1 (Just (PtrList (List1' l))) = pure l
+list1 _                           = expected "pointer to list with element size 1"
+
+list8 :: ThrowError f => Maybe PtrType -> f (List Word8)
+list8 Nothing                     = pure def
+list8 (Just (PtrList (List8' l))) = pure l
+list8 _                           = expected "pointer to list with element size 8"
+
+list16 :: ThrowError f => Maybe PtrType -> f (List Word16)
+list16 Nothing                      = pure def
+list16 (Just (PtrList (List16' l))) = pure l
+list16 _                            = expected "pointer to list with element size 16"
+
+list32 :: ThrowError f => Maybe PtrType -> f (List Word32)
+list32 Nothing                      = pure def
+list32 (Just (PtrList (List32' l))) = pure l
+list32 _                            = expected "pointer to list with element size 32"
+
+list64 :: ThrowError f => Maybe PtrType -> f (List Word64)
+list64 Nothing                      = pure def
+list64 (Just (PtrList (List64' l))) = pure l
+list64 _                            = expected "pointer to list with element size 64"
+
+listPtr :: ThrowError f => Maybe PtrType -> f (List (Maybe PtrType))
+listPtr Nothing                       = pure def
+listPtr (Just (PtrList (ListPtr' l))) = pure l
+listPtr _                             = expected "pointer to list of pointers"
+
+listStruct :: ThrowError f => Maybe PtrType -> f (List Struct)
+listStruct Nothing         = pure def
+listStruct (Just (PtrList (ListStruct' l))) = pure l
+listStruct _               = expected "pointer to list of structs"
+
+expected msg = throwError $ SchemaViolationError $ "expected " ++ msg
+
 vec2BS :: V.Vector Word8 -> BS.ByteString
 -- TODO: replace this with some existing library function (I'm sure one exists)
 vec2BS = BS.pack . V.toList
+
+data Brand = Brand
+    { scopes :: List Brand'Scope
+    }
+    deriving(Show, Read, Eq)
+
+readBrand :: (ThrowError m, Monad m) => Struct -> m Brand
+readBrand (Struct _ ptrs) = Brand <$>
+    (listStruct (sliceIndex 0 ptrs) >>= traverse readBrand'Scope)
+
+data Brand'Scope = Brand'Scope
+    { scopeId :: Word64
+    , union'  :: Brand'Scope'Union'
+    }
+    deriving(Show, Read, Eq)
+
+data Brand'Scope'Union'
+    = Brand'Scope'Bind (List Brand'Binding)
+    | Brand'Scope'Inherit
+    | Brand'Scope'Unknown' Word16
+    deriving(Show, Read, Eq)
+
+readBrand'Scope :: (ThrowError m, Monad m) => Struct -> m Brand'Scope
+readBrand'Scope (Struct words ptrs) = Brand'Scope (sliceIndex 0 words) <$>
+    case fromIntegral (sliceIndex 1 words) :: Word16 of
+        0 -> Brand'Scope'Bind <$>
+                (listStruct (sliceIndex 0 ptrs)
+                >>= traverse readBrand'Binding)
+        1 -> pure Brand'Scope'Inherit
+        tag -> pure $ Brand'Scope'Unknown' tag
+
+data Brand'Binding
+    = Brand'Binding'Unbound
+    | Brand'Binding'Type Type
+    | Brand'Binding'Unknown' Word16
+    deriving(Show, Read, Eq)
+
+readBrand'Binding :: (ThrowError m, Monad m) => Struct -> m Brand'Binding
+readBrand'Binding (Struct words ptrs) =
+    case fromIntegral (sliceIndex 0 words) :: Word16 of
+        0 -> pure Brand'Binding'Unbound
+        1 -> Brand'Binding'Type <$> (ptrStruct (sliceIndex 0 ptrs) >>= readType)
+        tag -> pure $ Brand'Binding'Unknown' tag
+
+data Type = Type
+    { union' :: Type'Union'
+    }
+    deriving(Show, Read, Eq)
+
+data Type'Union'
+    = Type'Void
+    | Type'Bool
+    | Type'Int8
+    | Type'Int16
+    | Type'Int32
+    | Type'Int64
+    | Type'Uint8
+    | Type'Uint16
+    | Type'Uint32
+    | Type'Uint64
+    | Type'Float32
+    | Type'Float64
+    | Type'Text
+    | Type'Data
+    | Type'List
+        { elementType :: Type
+        }
+    | Type'Enum
+        { typeId :: Word64
+        , brand  :: Brand
+        }
+    | Type'Struct
+        { typeId :: Word64
+        , brand  :: Brand
+        }
+    | Type'Interface
+        { typeId :: Word64
+        , brand  :: Brand
+        }
+    -- TODO: | Type'AnyPointer Type'AnyPointer
+    | Type'Unknown' Word16
+    deriving(Show, Read, Eq)
+
+readType :: (ThrowError m, Monad m) => Struct -> m Type
+readType (Struct words ptrs) = Type <$>
+    case fromIntegral (sliceIndex 0 words) :: Word16 of
+        0 -> pure Type'Void
+        1 -> pure Type'Bool
+        2 -> pure Type'Int8
+        3 -> pure Type'Int16
+        4 -> pure Type'Int32
+        5 -> pure Type'Int64
+        6 -> pure Type'Uint8
+        7 -> pure Type'Uint16
+        8 -> pure Type'Uint32
+        9 -> pure Type'Uint64
+        10 -> pure Type'Float32
+        11 -> pure Type'Float64
+        12 -> pure Type'Text
+        13 -> pure Type'Data
+        14 -> Type'List <$> (ptrStruct (sliceIndex 0 ptrs) >>= readType)
+        15 -> Type'Enum (sliceIndex 1 words) <$>
+                (ptrStruct (sliceIndex 0 ptrs) >>= readBrand)
+        16 -> Type'Struct (sliceIndex 1 words) <$>
+                (ptrStruct (sliceIndex 0 ptrs) >>= readBrand)
+        17 -> Type'Interface (sliceIndex 1 words) <$>
+                (ptrStruct (sliceIndex 0 ptrs) >>= readBrand)
+        -- TODO: 18 -> anyPointer
+        tag -> pure $ Type'Unknown' tag
 
 data CapnpVersion = CapnpVersion
     { major :: Word16
@@ -165,7 +322,6 @@ readCapnpVersion (Struct words _) = pure $ CapnpVersion
 
 -- Still need to implement these, but put them here so the other stuff at least
 -- builds.
-data Type
 data Annotation
 data Parameter
 data Node'Struct'

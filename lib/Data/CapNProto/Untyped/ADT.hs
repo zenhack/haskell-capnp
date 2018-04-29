@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -30,8 +32,9 @@ module Data.CapNProto.Untyped.ADT
 
 import Prelude hiding (length, readList)
 
-import Data.String (IsString)
-import GHC.Exts    (IsList)
+import Data.String  (IsString)
+import GHC.Exts     (IsList)
+import GHC.Generics (Generic)
 
 import qualified Data.ByteString        as BS
 import qualified Data.CapNProto.Untyped as U
@@ -44,25 +47,26 @@ type Cap = Word32
 type Data = BS.ByteString
 
 newtype Slice a = Slice (List a)
-    deriving(Show, Read, Eq, Ord, Functor, IsList)
+    deriving(Generic, Show, Read, Eq, Ord, Functor, IsList, Default)
 
 newtype Message = Message (Array BS.ByteString)
-    deriving(Show, Read, Eq, Ord, IsList)
+    deriving(Generic, Show, Read, Eq, Ord, IsList)
 
 newtype Text = Text BS.ByteString
-    deriving(Show, Read, Eq, Ord, IsString)
+    deriving(Generic, Show, Read, Eq, Ord, IsString)
 
 data PtrType
     = PtrStruct !Struct
     | PtrList   !List'
     | PtrCap    !Cap
-    deriving(Show, Read, Eq)
+    deriving(Generic, Show, Read, Eq)
 
 data Struct = Struct
     { structData :: Slice Word64
     , structPtrs :: Slice (Maybe PtrType)
     }
-    deriving(Show, Read, Eq)
+    deriving(Generic, Show, Read, Eq)
+instance Default Struct
 
 data List'
     = List0'  (List ())
@@ -73,10 +77,14 @@ data List'
     | List64' (List Word64)
     | ListPtr' (List (Maybe PtrType))
     | ListStruct' (List Struct)
-    deriving(Show, Read, Eq)
+    deriving(Generic, Show, Read, Eq)
 
 newtype List a = List (V.Vector a)
-    deriving(Show, Read, Eq, Ord, Functor, IsList)
+    deriving(Generic, Show, Read, Eq, Ord, Functor, IsList, Foldable, Traversable)
+
+instance Default (List a) where
+    def = List V.empty
+
 
 length :: List a -> Int
 length (List vec) = V.length vec
