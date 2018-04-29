@@ -16,30 +16,81 @@ import Data.List     (intercalate)
 import Text.Printf   (printf)
 
 import qualified Data.ByteString    as BS
-import qualified Data.Map           as M
+import qualified Data.Map.Strict    as M
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Vector        as V
+
+-- General TODO: we should avoid using String in favor of Text.Builder, and
+-- also avoid asymptotically inefficient uses of lists.
+
+mustDecodeUtf8 :: Text -> String
+mustDecodeUtf8 = T.unpack . T.decodeUtf8 . toBytes
+
+type NodeMap = M.Map Id NodeMetaData
+
+-- | Some useful metadata about a node.
+data NodeMetaData = NodeMetaData
+    { moduleId  :: Id
+    -- ^ The id of the module that this node belongs to.
+    , namespace :: [String]
+    -- ^ The namespace within a file that the node is defined.
+    , node      :: Node
+    -- ^ The node itself.
+    }
+    deriving(Show, Read, Eq)
+
+-- Helper for makeNodeMap. TODO: document in more detial.
+collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
+collectMetaData nodeMap meta@NodeMetaData{..} =
+    (nodeId node, meta) : concatMap kid (V.toList $ toVector $ nestedNodes node)
+  where
+    nodeId Node{..} = id
+    kid nn@Node'NestedNode{..} =
+        collectMetaData
+            nodeMap
+            meta
+                { node = nodeMap M.! id
+                , namespace = mustDecodeUtf8 name : namespace
+                }
 
 main :: IO ()
 main = do
     msg <- Message.decode =<< BS.getContents
     -- Traversal limit is 64 MiB. Somewhat aribtrary.
-    cgr <- evalWithLimit (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
-    let (_, moduleText) = handleCGR cgr V.! 0
-    putStrLn moduleText
+    cgr@CodeGeneratorRequest{..} <- evalWithLimit (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
+    mapM_ printResult (handleCGR cgr)
+  where
+    printResult (filename, contents) = do
+        putStrLn $ "-- " ++ filename
+        putStrLn contents
 
-allNodes :: CodeGeneratorRequest -> M.Map Id Node
-allNodes CodeGeneratorRequest{..} =
-    toVector nodes
+-- | Build a NodeMap for all of the nodes in the CodeGeneratorRequest.
+makeNodeMap :: CodeGeneratorRequest -> NodeMap
+makeNodeMap CodeGeneratorRequest{..} =
+    V.map (\node@Node{..} -> collectMetaData baseMap NodeMetaData
+        { moduleId = id
+        , namespace = []
+        , node = node
+        })
+        rootNodes
     & V.toList
-    & map (\node@Node{..} -> (id, node))
+    & concat
     & M.fromList
+  where
+    nodes' = toVector nodes
+    rootNodes = V.filter (\Node{..} -> scopeId == 0) $ toVector nodes
+    baseMap =
+        toVector nodes
+        & V.toList
+        & map (\node@Node{..} -> (id, node))
+        & M.fromList
 
 moduleNameFromId :: Id -> String
 moduleNameFromId = printf "Data.CapNProto.ById.X%x"
 
-generateFile :: M.Map Id Node -> CodeGeneratorRequest'RequestedFile -> String
+-- | Generate the source code for a module based on a RequstedFile.
+generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
 generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
@@ -47,13 +98,15 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""
-    , generateTypes nodeMap id []
+    -- , generateTypes nodeMap id []
     ]
 
-generateTypes :: M.Map Id Node -> Id -> [String] -> String
-generateTypes nodeMap id namespace = case M.lookup id nodeMap of
-    Nothing -> error $ printf "Referenced node with id 0x%x does not exist!" id
-    Just Node{..} -> case union' of
+{-
+
+generateTypes :: NodeMap -> Id -> [String] -> String
+generateTypes nodeMap id namespace =
+    let Node{..} = nodeMap M.! id
+    in case union' of
         Node'Struct{..} ->
             let name = intercalate "'" namespace
             in concat
@@ -64,18 +117,19 @@ generateTypes nodeMap id namespace = case M.lookup id nodeMap of
                 ]
         _ -> "" -- TODO
 
-generateField :: M.Map Id Node -> Field -> String
+generateField :: NodeMap -> Field -> String
 generateField nodeMap Field{..} = T.unpack (T.decodeUtf8 $ toBytes name) ++ " :: () {- TODO -}" -- ++ case union' of
     -- Field'Slot{..} -> formatType nodes type'
+-}
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
     "import qualified " ++ moduleNameFromId id
 
-handleCGR :: CodeGeneratorRequest -> V.Vector (Text, String)
-handleCGR cgr@CodeGeneratorRequest{..} =
-    let nodeMap = allNodes cgr
+handleCGR :: CodeGeneratorRequest -> [(FilePath, String)]
+handleCGR cgr@CodeGeneratorRequest{..} = V.toList $
+    let nodeMap = makeNodeMap cgr
     in fmap
         (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
-            (filename, generateFile nodeMap reqFile))
+            (mustDecodeUtf8 filename, generateFile nodeMap reqFile))
         (toVector requestedFiles)
