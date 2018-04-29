@@ -245,6 +245,19 @@ instance Decerialize Struct Brand'Binding where
             1 -> Brand'Binding'Type <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
             tag -> pure $ Brand'Binding'Unknown' tag
 
+data Enumerant = Enumerant
+    { name        :: Text
+    , codeOrder   :: Word16
+    , annotations :: List Annotation
+    }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Enumerant where
+    decerialize (Struct words ptrs) = Enumerant
+        <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+        <*> pure (fromIntegral $ sliceIndex 0 words)
+        <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
+
 data Superclass = Superclass
     { id    :: Word64
     , brand :: Brand

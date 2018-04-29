@@ -50,6 +50,18 @@ schemaTests = testGroup "schema decode tests"
         [ ("(major = 0, minor = 5, micro = 3)", CapnpVersion 0 5 3)
         , ("(major = 1, minor = 0, micro = 2)", CapnpVersion 1 0 2)
         ]
+    , decodeTests "Enumerant"
+        [ ( [here|
+                ( name = "red"
+                , codeOrder = 4
+                , annotations =
+                    [ (id = 23, brand = (scopes = []), value = (uint8 = 3))
+                    ]
+                )
+            |]
+          , Enumerant "red" 4 [Annotation 23 (Brand []) (Value $ Value'Uint8 3)]
+          )
+        ]
     , decodeTests "Superclass"
         [ ("(id = 34, brand = (scopes = []))", Superclass 34 (Brand []))
         ]
