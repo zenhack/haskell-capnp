@@ -108,6 +108,7 @@ schemaTests = testGroup "schema decode tests"
     decodeTests typename cases =
         assertionsToTest ("Decode " ++ typename) $ map (testCase typename) cases
     testCase typename (capnpText, expected) = do
-        msg <- encodeValue [there|tests/data/schema.capnp|] typename capnpText
+        msg <- encodeValue schemaText typename capnpText
         actual <- evalWithLimit 128 $ U.rootPtr msg >>= readStruct >>= decerialize
         assertEqual (show (capnpText, expected)) expected actual
+    schemaText = [there|tests/data/schema.capnp|]
