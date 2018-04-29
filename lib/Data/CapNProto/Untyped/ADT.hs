@@ -52,7 +52,7 @@ newtype Slice a = Slice (List a)
 newtype Message = Message (Array BS.ByteString)
     deriving(Generic, Show, Read, Eq, Ord, IsList)
 
-newtype Text = Text BS.ByteString
+newtype Text = Text { toBytes :: BS.ByteString }
     deriving(Generic, Show, Read, Eq, Ord, IsString)
 
 data PtrType
@@ -79,12 +79,11 @@ data List'
     | ListStruct' (List Struct)
     deriving(Generic, Show, Read, Eq)
 
-newtype List a = List (V.Vector a)
+newtype List a = List { toVector :: V.Vector a }
     deriving(Generic, Show, Read, Eq, Ord, Functor, IsList, Foldable, Traversable)
 
 instance Default (List a) where
     def = List V.empty
-
 
 length :: List a -> Int
 length (List vec) = V.length vec

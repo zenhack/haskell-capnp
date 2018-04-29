@@ -1,125 +1,81 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-| This is the capnp compiler plugin.
+-}
+{-# LANGUAGE RecordWildCards #-}
 module Main (main) where
 
-import Generator
+import Data.CapNProto.Core.Schema
 
-import Control.Monad.Reader          (ReaderT, asks, runReaderT)
-import Control.Monad.Trans.Class     (lift)
-import Data.ByteString.UTF8          (toString)
-import Data.CapNProto.Errors         (ThrowError)
-import Data.CapNProto.Message        (Message, decode)
-import Data.CapNProto.TraversalLimit (Limit, evalWithLimit)
-import Namespace
-import System.Directory              (createDirectoryIfMissing)
-import System.FilePath               (takeDirectory)
+import Data.CapNProto.TraversalLimit (evalWithLimit)
+import Data.CapNProto.Untyped        (rootPtr)
+import Data.CapNProto.Untyped.ADT    (List(..), Text(..), readStruct)
 
-import qualified Data.ByteString                                                   as BS
-import qualified Data.CapNProto.BasicTypes                                         as BT
-import qualified Data.CapNProto.List                                               as List
-import qualified Data.Map.Strict                                                   as M
-import qualified Language.CapNProto.TH                                             as CTH
-import qualified Language.Haskell.TH                                               as TH
-import qualified Schema.CapNProto.Reader.Schema                                    as Schema
-import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest               as CGR
-import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest.RequestedFile as ReqFile
-import qualified Schema.CapNProto.Reader.Schema.Node                               as Node
-import qualified Schema.CapNProto.Reader.Schema.Node.NestedNode                    as NN
-import qualified Schema.CapNProto.Reader.Schema.Node.Union_.Struct                 as Node'Struct
+import qualified Data.CapNProto.Message as Message
 
--- TODO: right now in a number of places we're doing:
---
--- Just foo <- ...
---
--- In a do block. We should change this to something that will facilitate good
--- error messages.
+import Data.Function ((&))
+import Data.List     (intercalate)
+import Text.Printf   (printf)
 
-type BS = BS.ByteString
-type Generator m a = ReaderT NodeMap (GenT m) a
-type NodeMap = M.Map Node.Id (Schema.Node BS)
-
-buildNodeMap :: (Monad m, ThrowError m, Limit m) => List.ListOf BS (Schema.Node BS) -> m NodeMap
-buildNodeMap = List.foldl addNode M.empty
-  where
-    addNode m node = do
-        nodeId <- Node.id node
-        return $ M.insert nodeId node m
-
-genModule :: (Monad m, ThrowError m, Limit m) => CGR.RequestedFile BS -> Generator m ()
-genModule file = do
-    id <- ReqFile.id file
-    Just node <- asks (M.lookup id)
-
-    -- First, verify that the node in question is actually a file:
-    Node.File <- Node.union_ node
-
-    nn <- Node.nestedNodes node
-    -- We put everything in a module named Schema.CapNProto.Reader.X<fileId>.
-    -- this makes module names deterministic, without annotations, regardless
-    -- of where files are actually loaded from. We can in the future generate
-    -- aliases that re-export these modules from friendlier names, but doing it
-    -- this way means we don't have to worry about a lot of the awkwardness re:
-    -- locating packages that crops up in other languages.
-    List.mapM_ (genNestedNode (fromId id)) nn
-
-genNestedNode :: (Monad m, ThrowError m, Limit m) => NS -> Node.NestedNode BS -> Generator m ()
-genNestedNode ns nestedNode = do
-    name <- NN.name nestedNode
-    id <- NN.id nestedNode
-    Just node <- asks (M.lookup id)
-    genNode ns node name
-    nn <- Node.nestedNodes node
-    List.mapM_ (genNestedNode (subNS ns name)) nn
-
-genNode :: (Monad m, ThrowError m, Limit m)
-        => NS -> Schema.Node BS -> BT.Text BS -> Generator m ()
-genNode ns node (BT.Text name) = do
-    union_ <- Node.union_ node
-    case union_ of
-        Node.Struct struct -> do
-            fields <- Node'Struct.fields struct
-            lift $ emit ns (CTH.mkStructWrappers [toString name])
-            List.mapM_ (genField (subNS ns (BT.Text name))) fields
-        _ -> return ()
-
-genField :: (Monad m, ThrowError m, Limit m) => NS -> Schema.Field BS -> Generator m ()
-genField ns field = return ()
-
-generate :: (Monad m, ThrowError m, Limit m) => Message BS -> GenT m ()
-generate msg = do
-    cgr <- CGR.root_ msg
-    nodes <- CGR.nodes cgr
-    nodeMap <- lift $ buildNodeMap nodes
-    runReaderT (genReq cgr) nodeMap
-
-genReq :: (Monad m, ThrowError m, Limit m)
-       => Schema.CodeGeneratorRequest BS -> Generator m ()
-genReq cgr = do
-    reqFiles <- CGR.requestedFiles cgr
-    List.mapM_ genModule reqFiles
-
-mkSrcs :: M.Map NS TH.DecsQ -> IO [(FilePath, String)]
-mkSrcs = mapM mkSrc . M.toList where
-    mkSrc :: (NS, TH.DecsQ) -> IO (FilePath, String)
-    mkSrc (ns, q) = do
-        decs <- TH.runQ q
-        let BT.Text modname = moduleName ns
-            filename = moduleFile ns
-            contents = unlines $ map TH.pprint decs
-        return ( filename
-               , "module " ++ toString modname ++ " where\n" ++
-                 "\n" ++
-                 "import qualified Data.CapNProto.Untyped\n\n" ++
-                 contents
-               )
+import qualified Data.ByteString    as BS
+import qualified Data.Map           as M
+import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
+import qualified Data.Vector        as V
 
 main :: IO ()
 main = do
-    msg <- BS.getContents >>= decode
-    let quota = 1024 * 1024
-    decls <- evalWithLimit quota $ evalGenT $ generate msg
-    mkSrcs decls >>= mapM_ writeOut
-  where
-    writeOut (path, contents) = do
-        createDirectoryIfMissing True (takeDirectory path)
-        writeFile path contents
+    msg <- Message.decode =<< BS.getContents
+    -- Traversal limit is 64 MiB. Somewhat aribtrary.
+    cgr <- evalWithLimit (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
+    let (_, moduleText) = handleCGR cgr V.! 0
+    putStrLn moduleText
+
+allNodes :: CodeGeneratorRequest -> M.Map Id Node
+allNodes CodeGeneratorRequest{..} =
+    toVector nodes
+    & V.toList
+    & map (\node@Node{..} -> (id, node))
+    & M.fromList
+
+moduleNameFromId :: Id -> String
+moduleNameFromId = printf "Data.CapNProto.ById.X%x"
+
+generateFile :: M.Map Id Node -> CodeGeneratorRequest'RequestedFile -> String
+generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
+    [ "{-# LANGUAGE DuplicateRecordFields #-}"
+    , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+    , "module " ++ moduleNameFromId id ++ " where"
+    , ""
+    , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
+    , ""
+    , generateTypes nodeMap id []
+    ]
+
+generateTypes :: M.Map Id Node -> Id -> [String] -> String
+generateTypes nodeMap id namespace = case M.lookup id nodeMap of
+    Nothing -> error $ printf "Referenced node with id 0x%x does not exist!" id
+    Just Node{..} -> case union' of
+        Node'Struct{..} ->
+            let name = intercalate "'" namespace
+            in concat
+                [ "data ", name, " = ", name
+                , "{", intercalate ", " (map (generateField nodeMap) $ V.toList $ toVector fields)
+                , "}"
+                , "deriving(Show, Eq, Ord)"
+                ]
+        _ -> "" -- TODO
+
+generateField :: M.Map Id Node -> Field -> String
+generateField nodeMap Field{..} = T.unpack (T.decodeUtf8 $ toBytes name) ++ " :: () {- TODO -}" -- ++ case union' of
+    -- Field'Slot{..} -> formatType nodes type'
+
+generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
+generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
+    "import qualified " ++ moduleNameFromId id
+
+handleCGR :: CodeGeneratorRequest -> V.Vector (Text, String)
+handleCGR cgr@CodeGeneratorRequest{..} =
+    let nodeMap = allNodes cgr
+    in fmap
+        (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
+            (filename, generateFile nodeMap reqFile))
+        (toVector requestedFiles)
