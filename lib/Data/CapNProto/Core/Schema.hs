@@ -241,6 +241,17 @@ readBrand'Binding (Struct words ptrs) =
         1 -> Brand'Binding'Type <$> (ptrStruct (sliceIndex 0 ptrs) >>= readType)
         tag -> pure $ Brand'Binding'Unknown' tag
 
+data Superclass = Superclass
+    { id    :: Word64
+    , brand :: Brand
+    }
+    deriving(Show, Read, Eq)
+
+readSuperclass :: (ThrowError m, Monad m) => Struct -> m Superclass
+readSuperclass (Struct words ptrs) = Superclass
+    (sliceIndex 0 words)
+    <$> (ptrStruct (sliceIndex 0 ptrs) >>= readBrand)
+
 data Type = Type
     { union' :: Type'Union'
     }

@@ -44,6 +44,9 @@ schemaTests = testGroup "schema decode tests"
         [ ("(major = 0, minor = 5, micro = 3)", CapnpVersion 0 5 3)
         , ("(major = 1, minor = 0, micro = 2)", CapnpVersion 1 0 2)
         ]
+    , decodeTests "Superclass" readSuperclass
+        [ ("(id = 34, brand = (scopes = []))", Superclass 34 (Brand []))
+        ]
     , decodeTests "Type" readType
         [ ("(bool = void)", Type $ Type'Bool)
         , ("(int8 = void)", Type $ Type'Int8)
