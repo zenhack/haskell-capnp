@@ -129,17 +129,31 @@ generateTypes nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
     in case union' of
         Node'Struct{..} ->
-            let name = intercalate "'" namespace
+            let name = intercalate "'" (reverse namespace)
+                allFields = V.toList $ toVector fields
+                isUnionized Field{..} = discriminantValue /= field'noDiscriminant
+                unionFields = filter isUnionized allFields
             in concat
                 [ "data ", name, " = ", name
                 , "\n    { ", intercalate "\n    , " $
-                    toVector fields &
-                    V.toList &
-                    filter (\Field{..} -> discriminantValue == field'noDiscriminant) &
-                    map (generateField nodeMap)
+                    map (generateField nodeMap) (filter (not . isUnionized) allFields)
+                    ++ case unionFields of
+                            []      -> [] -- No union.
+                            uFields -> ["union' :: " ++ name ++ "'"]
                 , "\n    } deriving(Show, Eq, Ord)\n\n"
+                , case unionFields of
+                    [] -> "" -- No union.
+                    _  -> concat
+                        [ "data ", name, "'\n    = "
+                        , intercalate "\n    | " $ map (generateVariant name) unionFields
+                        , "\n    deriving(Show, Eq, Ord)\n\n"
+                        ]
                 ]
         _ -> "" -- TODO
+
+generateVariant :: String -> Field -> String
+generateVariant parentName Field{..} =
+    parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
 
 generateField :: NodeMap -> Field -> String
 generateField nodeMap Field{..} =
