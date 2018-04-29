@@ -132,7 +132,11 @@ generateTypes nodeMap meta@NodeMetaData{..} =
             let name = intercalate "'" namespace
             in concat
                 [ "data ", name, " = ", name
-                , "\n    { ", intercalate "\n    , " (map (generateField nodeMap) $ V.toList $ toVector fields)
+                , "\n    { ", intercalate "\n    , " $
+                    toVector fields &
+                    V.toList &
+                    filter (\Field{..} -> discriminantValue == field'noDiscriminant) &
+                    map (generateField nodeMap)
                 , "\n    } deriving(Show, Eq, Ord)\n\n"
                 ]
         _ -> "" -- TODO
