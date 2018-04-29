@@ -50,6 +50,51 @@ schemaTests = testGroup "schema decode tests"
         [ ("(major = 0, minor = 5, micro = 3)", CapnpVersion 0 5 3)
         , ("(major = 1, minor = 0, micro = 2)", CapnpVersion 1 0 2)
         ]
+    , decodeTests "Field"
+        [ ( [here|
+                ( name = "fieldName"
+                , codeOrder = 3
+                , annotations = [ (id = 2, brand = (scopes = []), value = (bool = true)) ]
+                , discriminantValue = 3
+                , group = (typeId = 4)
+                , ordinal = (implicit = void)
+                )
+            |]
+          , Field
+                "fieldName"
+                3
+                [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                3
+                (Field'Group $ Field'Group' 4)
+                Field'Ordinal'Implicit
+          )
+        , ( [here|
+                ( name = "fieldName"
+                , codeOrder = 3
+                , annotations = [ (id = 2, brand = (scopes = []), value = (bool = true)) ]
+                , discriminantValue = 3
+                , slot =
+                    ( offset = 3
+                    , type = (bool = void)
+                    , defaultValue = (bool = false)
+                    , hadExplicitDefault = true
+                    )
+                , ordinal = (explicit = 7)
+                )
+            |]
+          , Field
+                "fieldName"
+                3
+                [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                3
+                (Field'Slot $ Field'Slot'
+                    3
+                    (Type Type'Bool)
+                    (Value $ Value'Bool False)
+                    True)
+                (Field'Ordinal'Explicit 7)
+          )
+        ]
     , decodeTests "Enumerant"
         [ ( [here|
                 ( name = "red"

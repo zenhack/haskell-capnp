@@ -55,17 +55,20 @@ field'noDiscriminant :: Word16
 field'noDiscriminant = 0xffff
 
 data Field = Field
-    { name              :: Maybe Text
+    { name              :: Text
     , codeOrder         :: Word16
-    , annotations       :: Maybe (List Annotation)
+    , annotations       :: List Annotation
     , discriminantValue :: Word16
     , union'            :: Field'Union'
     , ordinal           :: Field'Ordinal
     }
+    deriving(Show, Read, Eq)
 
 data Field'Union'
     = Field'Slot Field'Slot'
     | Field'Group Field'Group'
+    | Field'Unknown' Word16
+    deriving(Show, Read, Eq)
 
 data Field'Slot' = Field'Slot'
     { offset            :: Word32
@@ -73,15 +76,37 @@ data Field'Slot' = Field'Slot'
     , defaultValue      :: Value
     , hadExplcitDefault :: Bool
     }
+    deriving(Show, Read, Eq)
 
 data Field'Group' = Field'Group'
     { typeId :: Id
     }
+    deriving(Show, Read, Eq)
 
 data Field'Ordinal
-    = Field'Oridinal'Implicit
-    | Field'Oridinal'Excplicit Word16
-    | Field'Oridinal'Unknown' Word16
+    = Field'Ordinal'Implicit
+    | Field'Ordinal'Explicit Word16
+    | Field'Ordinal'Unknown' Word16
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Field where
+    decerialize struct@(Struct words ptrs) = Field
+        <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+        <*> pure (fromIntegral (sliceIndex 0 words) :: Word16)
+        <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
+        <*> pure (field'noDiscriminant `xor` fromIntegral (sliceIndex 0 words `shiftR` 16))
+        <*> case fromIntegral (sliceIndex 1 words) :: Word16 of
+                0 -> Field'Slot <$> (Field'Slot'
+                        (fromIntegral $ sliceIndex 0 words `shiftR` 32)
+                        <$> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
+                        <*> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
+                        <*> pure ((sliceIndex 2 words .&. 1) == 1))
+                1 -> pure $ Field'Group $ Field'Group' (sliceIndex 2 words)
+                tag -> pure $ Field'Unknown' tag
+        <*> case fromIntegral (sliceIndex 1 words `shiftR` 16) :: Word16 of
+                0 -> pure Field'Ordinal'Implicit
+                1 -> pure $ Field'Ordinal'Explicit $ fromIntegral $ sliceIndex 1 words `shiftR` 32
+                tag -> pure $ Field'Ordinal'Unknown' tag
 
 data Value = Value
     { union' :: Value'Union'
