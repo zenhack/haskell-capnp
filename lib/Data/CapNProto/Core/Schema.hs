@@ -90,6 +90,43 @@ instance Decerialize Struct Node'Parameter where
     decerialize (Struct _ ptrs) =
         Node'Parameter <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
 
+data CodeGeneratorRequest = CodeGeneratorRequest
+    { capnpVersion   :: CapnpVersion
+    , nodes          :: List Node
+    , requestedFiles :: List CodeGeneratorRequest'RequestedFile
+    }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct CodeGeneratorRequest where
+    decerialize (Struct words ptrs) = CodeGeneratorRequest
+        <$> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
+        <*> (listStruct (sliceIndex 0 ptrs) >>= traverse decerialize)
+        <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
+
+data CodeGeneratorRequest'RequestedFile = CodeGeneratorRequest'RequestedFile
+    { id       :: Id
+    , filename :: Text
+    , imports  :: List CodeGeneratorRequest'RequestedFile'Import
+    }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct CodeGeneratorRequest'RequestedFile where
+    decerialize (Struct words ptrs) = CodeGeneratorRequest'RequestedFile
+        (sliceIndex 0 words)
+        <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+        <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
+
+data CodeGeneratorRequest'RequestedFile'Import = CodeGeneratorRequest'RequestedFile'Import
+    { id   :: Id
+    , name :: Text
+    }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct CodeGeneratorRequest'RequestedFile'Import where
+    decerialize (Struct words ptrs) = CodeGeneratorRequest'RequestedFile'Import
+        (sliceIndex 0 words)
+        <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+
 data Node'NestedNode = Node'NestedNode
     { name :: Text
     , id   :: Id

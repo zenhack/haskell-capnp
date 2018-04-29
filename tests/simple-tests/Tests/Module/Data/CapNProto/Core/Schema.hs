@@ -16,7 +16,31 @@ import Text.Heredoc                  (here, there)
 import qualified Data.CapNProto.Untyped as U
 
 schemaTests = testGroup "schema decode tests"
-    [ decodeTests "Node"
+    [ decodeTests "CodeGeneratorRequest"
+        [ ( [here|
+                ( capnpVersion = (major = 0, minor = 6, micro = 1)
+                , nodes = []
+                , requestedFiles =
+                    [ ( id = 4
+                      , filename = "hello.capnp"
+                      , imports =
+                          [ (id = 2, name = "std")
+                          ]
+                      )
+                    ]
+                )
+            |]
+          , CodeGeneratorRequest
+                (CapnpVersion 0 6 1)
+                []
+                [ CodeGeneratorRequest'RequestedFile
+                    4
+                    "hello.capnp"
+                    [CodeGeneratorRequest'RequestedFile'Import 2 "std"]
+                ]
+          )
+        ]
+    , decodeTests "Node"
         [ ( [here|
                 ( id = 7
                 , displayName = "foo:MyType"
