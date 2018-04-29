@@ -80,7 +80,7 @@ schemaTests = testGroup "schema decode tests"
               , Node'Enum [Enumerant "blue" 2 []]
               )
             , ( "interface = (methods = [], superclasses = [(id = 0, brand = (scopes = []))])"
-              , Node'Interface [Superclass 0 (Brand [])]
+              , Node'Interface [] [Superclass 0 (Brand [])]
               )
             , ( "const = (type = (bool = void), value = (bool = false))"
               , Node'Const

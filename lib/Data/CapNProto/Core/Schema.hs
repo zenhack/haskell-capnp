@@ -60,8 +60,8 @@ instance Decerialize Struct Node where
                         <*> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
                 2 -> Node'Enum <$> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
                 3 -> Node'Interface
-                        <$> -- TODO: methods
-                        (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
+                        <$> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
+                        <*> (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
                 4 -> Node'Const
                         <$> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
                         <*> (ptrStruct (sliceIndex 4 ptrs) >>= decerialize)
@@ -116,8 +116,8 @@ data Node'Union'
         { enumerants :: List Enumerant
         }
     | Node'Interface
-        { -- TODO: methods
-        superclasses :: List Superclass
+        { methods      :: List Method
+        , superclasses :: List Superclass
         }
     | Node'Const
         { type' :: Type
@@ -538,3 +538,26 @@ instance Decerialize Struct Annotation where
         (sliceIndex 0 words)
         <$> (ptrStruct (sliceIndex 1 ptrs) >>= decerialize)
         <*> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
+
+data Method = Method
+    { name               :: Text
+    , codeOrder          :: Word16
+    , implicitParmaeters :: List Node'Parameter
+    , paramStructType    :: Word64
+    , paramBrand         :: Brand
+    , resultStructType   :: Word64
+    , resultBrand        :: Brand
+    , anontations        :: List Annotation
+    }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Method where
+    decerialize (Struct words ptrs) = Method
+        <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+        <*> pure (fromIntegral $ sliceIndex 0 words)
+        <*> (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
+        <*> pure (sliceIndex 1 words)
+        <*> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
+        <*> pure (sliceIndex 2 words)
+        <*> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
+        <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
