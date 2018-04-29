@@ -304,12 +304,51 @@ data Type'Union'
         { typeId :: Word64
         , brand  :: Brand
         }
-    -- TODO: | Type'AnyPointer Type'AnyPointer
+    | Type'AnyPointer Type'AnyPointer
     | Type'Unknown' Word16
     deriving(Show, Read, Eq)
 
+data Type'AnyPointer
+    = Type'AnyPointer'Unconstrained
+        { union' :: Type'AnyPointer'Unconstrained'Union'
+        }
+    | Type'AnyPointer'Parameter
+        { scopeId        :: Word64
+        , parameterIndex :: Word16
+        }
+    | Type'AnyPointer'ImplicitMethodParameter
+        { parameterIndex :: Word16
+        }
+    | Type'AnyPointer'Unknown' Word16
+    deriving(Show, Read, Eq)
+
+data Type'AnyPointer'Unconstrained'Union'
+    = Unconstrained'AnyKind
+    | Unconstrained'Struct
+    | Unconstrained'List
+    | Unconstrained'Capability
+    | Unconstrained'Unknown' Word16
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Type'AnyPointer where
+    decerialize (Struct words _) = pure $
+        case fromIntegral (sliceIndex 1 words) :: Word16 of
+            0 -> Type'AnyPointer'Unconstrained $
+                case fromIntegral (sliceIndex 1 words `shiftR` 16) :: Word16 of
+                    0   -> Unconstrained'AnyKind
+                    1   -> Unconstrained'Struct
+                    2   -> Unconstrained'List
+                    3   -> Unconstrained'Capability
+                    tag -> Unconstrained'Unknown' tag
+            1 -> Type'AnyPointer'Parameter
+                    (sliceIndex 2 words)
+                    (fromIntegral $ sliceIndex 1 words `shiftR` 16)
+            2 -> Type'AnyPointer'ImplicitMethodParameter
+                    (fromIntegral $ sliceIndex 1 words `shiftR` 16)
+            tag -> Type'AnyPointer'Unknown' tag
+
 instance Decerialize Struct Type where
-    decerialize (Struct words ptrs) = Type <$>
+    decerialize struct@(Struct words ptrs) = Type <$>
         case fromIntegral (sliceIndex 0 words) :: Word16 of
             0 -> pure Type'Void
             1 -> pure Type'Bool
@@ -332,7 +371,7 @@ instance Decerialize Struct Type where
                     (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
             17 -> Type'Interface (sliceIndex 1 words) <$>
                     (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-            -- TODO: 18 -> anyPointer
+            18 -> Type'AnyPointer <$> decerialize struct
             tag -> pure $ Type'Unknown' tag
 
 data CapnpVersion = CapnpVersion

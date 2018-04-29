@@ -91,6 +91,24 @@ schemaTests = testGroup "schema decode tests"
         , ( "(interface = (typeId = 1, brand = (scopes = [])))"
           , Type $ Type'Interface 1 (Brand [])
           )
+        , ( "(anyPointer = (unconstrained = (anyKind = void)))"
+          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'AnyKind
+          )
+        , ( "(anyPointer = (unconstrained = (struct = void)))"
+          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'Struct
+          )
+        , ( "(anyPointer = (unconstrained = (list = void)))"
+          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'List
+          )
+        , ( "(anyPointer = (unconstrained = (capability = void)))"
+          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'Capability
+          )
+        , ( "(anyPointer = (parameter = (scopeId = 4, parameterIndex = 2)))"
+          , Type $ Type'AnyPointer $ Type'AnyPointer'Parameter 4 2
+          )
+        , ( "(anyPointer = (implicitMethodParameter = (parameterIndex = 7)))"
+          , Type $ Type'AnyPointer $ Type'AnyPointer'ImplicitMethodParameter 7
+          )
         ]
     , decodeTests "Brand"
         [ ("(scopes = [])", Brand [])
