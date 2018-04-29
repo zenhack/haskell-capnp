@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
@@ -15,7 +16,7 @@ import Text.Heredoc                  (here, there)
 import qualified Data.CapNProto.Untyped as U
 
 schemaTests = testGroup "schema decode tests"
-    [ decodeTests "Value" readValue
+    [ decodeTests "Value"
         [ ("(bool = true)", Value $ Value'Bool True)
         , ("(bool = false)", Value $ Value'Bool False)
         , ("(int8 = -4)", Value $ Value'Int8 (-4))
@@ -40,19 +41,19 @@ schemaTests = testGroup "schema decode tests"
         -- an AnyPointer in the input to capnp encode. Maybe capnp eval
         -- can do something like this? will have to investigate.
         ]
-    , decodeTests "Annotation" readAnnotation
+    , decodeTests "Annotation"
         [ ( "(id = 323, brand = (scopes = []), value = (bool = true))"
           , Annotation 323 (Brand []) (Value $ Value'Bool True)
           )
         ]
-    , decodeTests "CapnpVersion" readCapnpVersion
+    , decodeTests "CapnpVersion"
         [ ("(major = 0, minor = 5, micro = 3)", CapnpVersion 0 5 3)
         , ("(major = 1, minor = 0, micro = 2)", CapnpVersion 1 0 2)
         ]
-    , decodeTests "Superclass" readSuperclass
+    , decodeTests "Superclass"
         [ ("(id = 34, brand = (scopes = []))", Superclass 34 (Brand []))
         ]
-    , decodeTests "Type" readType
+    , decodeTests "Type"
         [ ("(bool = void)", Type $ Type'Bool)
         , ("(int8 = void)", Type $ Type'Int8)
         , ("(int16 = void)", Type $ Type'Int16)
@@ -79,7 +80,7 @@ schemaTests = testGroup "schema decode tests"
           , Type $ Type'Interface 1 (Brand [])
           )
         ]
-    , decodeTests "Brand" readBrand
+    , decodeTests "Brand"
         [ ("(scopes = [])", Brand [])
         , ( [here|
                 ( scopes =
@@ -103,9 +104,10 @@ schemaTests = testGroup "schema decode tests"
         ]
     ]
   where
-    decodeTests typename reader cases =
-        assertionsToTest ("Decode " ++ typename) $ map (testCase typename reader) cases
-    testCase typename reader (capnpText, expected) = do
+    -- decodeTests :: Decerialize Struct a => String -> [(String, a)] -> IO ()
+    decodeTests typename cases =
+        assertionsToTest ("Decode " ++ typename) $ map (testCase typename) cases
+    testCase typename (capnpText, expected) = do
         msg <- encodeValue [there|tests/data/schema.capnp|] typename capnpText
-        actual <- evalWithLimit 128 $ U.rootPtr msg >>= readStruct >>= reader
+        actual <- evalWithLimit 128 $ U.rootPtr msg >>= readStruct >>= decerialize
         assertEqual (show (capnpText, expected)) expected actual
