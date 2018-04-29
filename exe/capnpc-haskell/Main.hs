@@ -46,13 +46,33 @@ collectMetaData nodeMap meta@NodeMetaData{..} =
     (nodeId node, meta) : concatMap kid (V.toList $ toVector $ nestedNodes node)
   where
     nodeId Node{..} = id
-    kid nn@Node'NestedNode{..} =
-        collectMetaData
-            nodeMap
-            meta
-                { node = nodeMap M.! id
-                , namespace = mustDecodeUtf8 name : namespace
-                }
+    kid nn@Node'NestedNode{..} = case M.lookup id nodeMap of
+        Just node -> collectMetaData
+                        nodeMap
+                        meta
+                        { node = node
+                        , namespace = makeLegalName (mustDecodeUtf8 name) : namespace
+                        }
+        Nothing ->
+            -- Imperically, this can happen if e.g. the node isn't in a subtree
+            -- of a RequestedFile, and not actually used anywhere else. This
+            -- crops up with c++.capnp:name when processing schema.capnp, for
+            -- example. In this case, just leave it out of the map:
+            []
+
+-- | Convert the argument into a valid haskell identifier. This doesn't handle
+-- every possible violation, just ones that might occur in legal schema.
+makeLegalName :: String -> String
+makeLegalName str
+    | str `elem` keywords = str ++ "_"
+    | otherwise = str
+  where
+    keywords =
+        [ "as", "case", "of", "class", "data", "family", "instance", "default"
+        , "deriving", "do", "forall", "foreign", "hiding", "if", "then", "else"
+        , "import", "infix", "infixl", "infixr", "let", "in", "mdo", "module"
+        , "newtype", "proc", "qualified", "rec", "type", "where"
+        ]
 
 main :: IO ()
 main = do
@@ -78,7 +98,6 @@ makeNodeMap CodeGeneratorRequest{..} =
     & concat
     & M.fromList
   where
-    nodes' = toVector nodes
     rootNodes = V.filter (\Node{..} -> scopeId == 0) $ toVector nodes
     baseMap =
         toVector nodes
@@ -98,29 +117,29 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""
-    -- , generateTypes nodeMap id []
+    , concatMap (generateTypes nodeMap)
+        $ filter (\NodeMetaData{..} -> moduleId == id)
+        $ map snd
+        $ M.toList nodeMap
     ]
 
-{-
 
-generateTypes :: NodeMap -> Id -> [String] -> String
-generateTypes nodeMap id namespace =
-    let Node{..} = nodeMap M.! id
+generateTypes :: NodeMap -> NodeMetaData -> String
+generateTypes nodeMap meta@NodeMetaData{..} =
+    let Node{..} = node
     in case union' of
         Node'Struct{..} ->
             let name = intercalate "'" namespace
             in concat
                 [ "data ", name, " = ", name
-                , "{", intercalate ", " (map (generateField nodeMap) $ V.toList $ toVector fields)
-                , "}"
-                , "deriving(Show, Eq, Ord)"
+                , "\n    { ", intercalate "\n    , " (map (generateField nodeMap) $ V.toList $ toVector fields)
+                , "\n    } deriving(Show, Eq, Ord)\n\n"
                 ]
         _ -> "" -- TODO
 
 generateField :: NodeMap -> Field -> String
-generateField nodeMap Field{..} = T.unpack (T.decodeUtf8 $ toBytes name) ++ " :: () {- TODO -}" -- ++ case union' of
-    -- Field'Slot{..} -> formatType nodes type'
--}
+generateField nodeMap Field{..} =
+    makeLegalName (T.unpack (T.decodeUtf8 $ toBytes name)) ++ " :: () {- TODO -}"
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
