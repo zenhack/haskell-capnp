@@ -33,8 +33,27 @@ data Node = Node
     , parameters              :: List Node'Parameter
     , isGeneric               :: Bool
     , nestedNodes             :: List Node'NestedNode
+    , annotations             :: List Annotation
     , union'                  :: Node'Union'
     }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Node where
+    decerialize (Struct words ptrs) = Node
+        <$> pure (sliceIndex 0 words)
+        <*> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+        <*> pure (fromIntegral $ sliceIndex 1 words)
+        <*> pure (sliceIndex 2 words)
+        <*> (listStruct (sliceIndex 5 ptrs) >>= traverse decerialize)
+        <*> pure (((sliceIndex 4 words `shiftR` 32) .&. 1) == 1)
+        <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
+        <*> (listStruct (sliceIndex 2 ptrs) >>= traverse decerialize)
+        <*> case fromIntegral (sliceIndex 1 words `shiftR` 32) :: Word16 of
+                0 -> pure Node'File
+                1 -> pure $ Node'Struct
+                        (fromIntegral $ sliceIndex 1 words `shiftR` 48)
+                        (fromIntegral $ sliceIndex 2 words)
+                tag -> pure $ Node'Unknown' tag
 
 data Node'Parameter = Node'Parameter
     { name :: Text
@@ -58,13 +77,25 @@ instance Decerialize Struct Node'NestedNode where
 
 data Node'Union'
     = Node'File
-    | Node'Struct Node'Struct'
+    | Node'Struct
+        { dataWordCount :: Word16
+        , pointerCount  :: Word16
+{- TODO
+        , preferredListEncoding :: ElementSize
+        , isGroup               :: Bool
+        , disciriminantCount    :: Word16
+        , discriminantOffset    :: Word32
+        , fields                :: List Field
+-}
+        }
+{- TODO
     | Node'Enum Node'Enum'
     | Node'Interface Node'Interface'
     | Node'Const Node'Const'
     | Node'Annotation Node'Annotation'
+-}
     | Node'Unknown' Word16
-
+    deriving(Show, Read, Eq)
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = 0xffff
@@ -439,11 +470,3 @@ instance Decerialize Struct Annotation where
         (sliceIndex 0 words)
         <$> (ptrStruct (sliceIndex 1 ptrs) >>= decerialize)
         <*> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-
--- Still need to implement these, but put them here so the other stuff at least
--- builds.
-data Node'Struct'
-data Node'Interface'
-data Node'Const'
-data Node'Enum'
-data Node'Annotation'
