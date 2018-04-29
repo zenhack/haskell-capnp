@@ -27,19 +27,34 @@ type Id = Word64
 
 data Node = Node
     { id                      :: Id
-    , displayName             :: Maybe Text
+    , displayName             :: Text
     , displayNamePrefixLength :: Word32
     , scopeId                 :: Id
-    , parameters              :: Maybe (List Parameter)
+    , parameters              :: List Node'Parameter
     , isGeneric               :: Bool
-    , nestedNodes             :: Maybe (List Node'NestedNode)
+    , nestedNodes             :: List Node'NestedNode
     , union'                  :: Node'Union'
     }
 
+data Node'Parameter = Node'Parameter
+    { name :: Text
+    }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Node'Parameter where
+    decerialize (Struct _ ptrs) =
+        Node'Parameter <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+
 data Node'NestedNode = Node'NestedNode
-    { name :: Maybe Text
+    { name :: Text
     , id   :: Id
     }
+    deriving(Show, Read, Eq)
+
+instance Decerialize Struct Node'NestedNode where
+    decerialize (Struct words ptrs) = Node'NestedNode
+        <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+        <*> pure (sliceIndex 0 words)
 
 data Node'Union'
     = Node'File
@@ -427,7 +442,6 @@ instance Decerialize Struct Annotation where
 
 -- Still need to implement these, but put them here so the other stuff at least
 -- builds.
-data Parameter
 data Node'Struct'
 data Node'Interface'
 data Node'Const'

@@ -16,7 +16,13 @@ import Text.Heredoc                  (here, there)
 import qualified Data.CapNProto.Untyped as U
 
 schemaTests = testGroup "schema decode tests"
-    [ decodeTests "Value"
+    [ decodeTests "Node.Parameter"
+        [ ("(name = \"theName\")", Node'Parameter "theName")
+        ]
+    , decodeTests "Node.NestedNode"
+        [ ("(name = \"theName\", id = 321)", Node'NestedNode "theName" 321)
+        ]
+    , decodeTests "Value"
         [ ("(bool = true)", Value $ Value'Bool True)
         , ("(bool = false)", Value $ Value'Bool False)
         , ("(int8 = -4)", Value $ Value'Int8 (-4))
