@@ -58,6 +58,27 @@ instance Decerialize Struct Node where
                         <*> pure (fromIntegral (sliceIndex 3 words `shiftR` 48))
                         <*> pure (fromIntegral (sliceIndex 4 words))
                         <*> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
+                2 -> Node'Enum <$> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
+                3 -> Node'Interface
+                        <$> -- TODO: methods
+                        (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
+                4 -> Node'Const
+                        <$> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
+                        <*> (ptrStruct (sliceIndex 4 ptrs) >>= decerialize)
+                5 -> Node'Annotation
+                        <$> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
+                        <*> pure (((sliceIndex 1 words `shiftR` 48) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 49) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 50) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 51) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 52) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 53) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 54) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 55) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 56) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 57) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 58) .&. 1) == 1)
+                        <*> pure (((sliceIndex 1 words `shiftR` 59) .&. 1) == 1)
                 tag -> pure $ Node'Unknown' tag
 
 data Node'Parameter = Node'Parameter
@@ -91,12 +112,32 @@ data Node'Union'
         , discriminantOffset    :: Word32
         , fields                :: List Field
         }
-{- TODO
-    | Node'Enum Node'Enum'
-    | Node'Interface Node'Interface'
-    | Node'Const Node'Const'
-    | Node'Annotation Node'Annotation'
--}
+    | Node'Enum
+        { enumerants :: List Enumerant
+        }
+    | Node'Interface
+        { -- TODO: methods
+        superclasses :: List Superclass
+        }
+    | Node'Const
+        { type' :: Type
+        , value :: Value
+        }
+    | Node'Annotation
+        { type'             :: Type
+        , targetsFile       :: Bool
+        , targetsConst      :: Bool
+        , targetsEnum       :: Bool
+        , targetsEnumerant  :: Bool
+        , targetsStruct     :: Bool
+        , targetsField      :: Bool
+        , targetsUnion      :: Bool
+        , targetsGroup      :: Bool
+        , targetsInterface  :: Bool
+        , targetsMethod     :: Bool
+        , targetsParam      :: Bool
+        , targetsAnnotation :: Bool
+        }
     | Node'Unknown' Word16
     deriving(Show, Read, Eq)
 

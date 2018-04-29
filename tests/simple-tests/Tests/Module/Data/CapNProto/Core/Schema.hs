@@ -76,6 +76,48 @@ schemaTests = testGroup "schema decode tests"
                         Field'Ordinal'Implicit
                     ]
               )
+            , ( "enum = (enumerants = [(name = \"blue\", codeOrder = 2, annotations = [])])"
+              , Node'Enum [Enumerant "blue" 2 []]
+              )
+            , ( "interface = (methods = [], superclasses = [(id = 0, brand = (scopes = []))])"
+              , Node'Interface [Superclass 0 (Brand [])]
+              )
+            , ( "const = (type = (bool = void), value = (bool = false))"
+              , Node'Const
+                    (Type Type'Bool)
+                    (Value $ Value'Bool False)
+              )
+            , ( [here| annotation =
+                    ( type = (bool = void)
+                    , targetsFile = true
+                    , targetsConst = false
+                    , targetsEnum = false
+                    , targetsEnumerant = true
+                    , targetsStruct = true
+                    , targetsField = true
+                    , targetsUnion = false
+                    , targetsGroup = false
+                    , targetsInterface = true
+                    , targetsMethod = false
+                    , targetsParam = true
+                    , targetsAnnotation = false
+                    )
+                |]
+              , Node'Annotation
+                    (Type Type'Bool)
+                    True
+                    False
+                    False
+                    True
+                    True
+                    True
+                    False
+                    False
+                    True
+                    False
+                    True
+                    False
+              )
             ]
         ]
     , decodeTests "Node.Parameter"
