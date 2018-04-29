@@ -331,9 +331,21 @@ readCapnpVersion (Struct words _) = pure $ CapnpVersion
     (fromIntegral $ sliceIndex 0 words `shiftR` 16)
     (fromIntegral $ sliceIndex 0 words `shiftR` 24)
 
+data Annotation = Annotation
+    { id    :: Word64
+    , brand :: Brand
+    , value :: Value
+    }
+    deriving(Show, Read, Eq)
+
+readAnnotation :: (ThrowError m, Monad m) => Struct -> m Annotation
+readAnnotation (Struct words ptrs) = Annotation
+    (sliceIndex 0 words)
+    <$> (ptrStruct (sliceIndex 1 ptrs) >>= readBrand)
+    <*> (ptrStruct (sliceIndex 0 ptrs) >>= readValue)
+
 -- Still need to implement these, but put them here so the other stuff at least
 -- builds.
-data Annotation
 data Parameter
 data Node'Struct'
 data Node'Interface'

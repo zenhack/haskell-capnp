@@ -40,6 +40,11 @@ schemaTests = testGroup "schema decode tests"
         -- an AnyPointer in the input to capnp encode. Maybe capnp eval
         -- can do something like this? will have to investigate.
         ]
+    , decodeTests "Annotation" readAnnotation
+        [ ( "(id = 323, brand = (scopes = []), value = (bool = true))"
+          , Annotation 323 (Brand []) (Value $ Value'Bool True)
+          )
+        ]
     , decodeTests "CapnpVersion" readCapnpVersion
         [ ("(major = 0, minor = 5, micro = 3)", CapnpVersion 0 5 3)
         , ("(major = 1, minor = 0, micro = 2)", CapnpVersion 1 0 2)
