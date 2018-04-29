@@ -323,7 +323,7 @@ instance Decerialize (List Word8) Text where
     decerialize bytes = Text <$> (decerialize bytes >>= trim)
       where
         trim bs
-            | BS.length bs == 0 = throwError $ SchemaViolationError "Text had zero length (no NUL byte)"
+            | BS.length bs == 0 = pure bs
             | BS.index bs (BS.length bs - 1) /= 0 = throwError $ SchemaViolationError "Text did not end with NUL"
             | otherwise = pure $ BS.take (BS.length bs - 1) bs
 
