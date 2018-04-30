@@ -115,6 +115,11 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "module " ++ moduleNameFromId id ++ " where"
     , ""
+    , "import Data.Int"
+    , "import Data.Word"
+    , ""
+    , "import Data.CapNProto.Untyped.ADT (Text, Data, List)"
+    , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""
     , concatMap (generateTypes nodeMap)
@@ -154,10 +159,40 @@ generateTypes nodeMap meta@NodeMetaData{..} =
 generateVariant :: String -> Field -> String
 generateVariant parentName Field{..} =
     parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
+        ++ case union' of
+            Field'Slot Field'Slot'{..} ->
+                case type' of
+                    Type Type'Void -> ""
+                    _              -> " " ++ formatType type'
+            Field'Group _ ->
+                "{- TODO: group -}"
 
 generateField :: NodeMap -> Field -> String
 generateField nodeMap Field{..} =
-    makeLegalName (T.unpack (T.decodeUtf8 $ toBytes name)) ++ " :: () {- TODO -}"
+    makeLegalName (T.unpack (T.decodeUtf8 $ toBytes name))
+        ++ " :: "
+        ++ case union' of
+            Field'Slot Field'Slot'{..}   -> formatType type'
+            Field'Group Field'Group'{..} -> "() {- TODO: group -}"
+
+formatType :: Type -> String
+formatType (Type ty) = case ty of
+    Type'Void     -> "()"
+    Type'Bool     -> "Bool"
+    Type'Int8     -> "Int8"
+    Type'Int16    -> "Int16"
+    Type'Int32    -> "Int32"
+    Type'Int64    -> "Int64"
+    Type'Uint8    -> "Word8"
+    Type'Uint16   -> "Word16"
+    Type'Uint32   -> "Word32"
+    Type'Uint64   -> "Word64"
+    Type'Float32  -> "Float"
+    Type'Float64  -> "Double"
+    Type'Text     -> "Text"
+    Type'Data     -> "Data"
+    Type'List elt -> "List (" ++ formatType elt ++ ")"
+    _             -> "() {- TODO: slot -}"
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
