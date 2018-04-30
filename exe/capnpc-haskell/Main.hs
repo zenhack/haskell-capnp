@@ -40,6 +40,13 @@ data NodeMetaData = NodeMetaData
     }
     deriving(Show, Read, Eq)
 
+identifierFromMetaData :: Id -> NodeMetaData -> String
+identifierFromMetaData thisModule NodeMetaData{..} =
+    (if moduleId /= thisModule
+        then printf "Data.CapNProto.ById.X%x." moduleId
+        else "")
+    ++ intercalate "'" (reverse namespace)
+
 -- Helper for makeNodeMap. TODO: document in more detial.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
 collectMetaData nodeMap meta@NodeMetaData{..} =
@@ -122,26 +129,26 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""
-    , concatMap (generateTypes nodeMap)
+    , concatMap (generateTypes id nodeMap)
         $ filter (\NodeMetaData{..} -> moduleId == id)
         $ map snd
         $ M.toList nodeMap
     ]
 
 
-generateTypes :: NodeMap -> NodeMetaData -> String
-generateTypes nodeMap meta@NodeMetaData{..} =
+generateTypes :: Id -> NodeMap -> NodeMetaData -> String
+generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
     in case union' of
         Node'Struct{..} ->
-            let name = intercalate "'" (reverse namespace)
+            let name = identifierFromMetaData moduleId meta
                 allFields = V.toList $ toVector fields
                 isUnionized Field{..} = discriminantValue /= field'noDiscriminant
                 unionFields = filter isUnionized allFields
             in concat
                 [ "data ", name, " = ", name
                 , "\n    { ", intercalate "\n    , " $
-                    map (generateField nodeMap) (filter (not . isUnionized) allFields)
+                    map (generateField thisModule nodeMap) (filter (not . isUnionized) allFields)
                     ++ case unionFields of
                             []      -> [] -- No union.
                             uFields -> ["union' :: " ++ name ++ "'"]
@@ -150,49 +157,57 @@ generateTypes nodeMap meta@NodeMetaData{..} =
                     [] -> "" -- No union.
                     _  -> concat
                         [ "data ", name, "'\n    = "
-                        , intercalate "\n    | " $ map (generateVariant name) unionFields
+                        , intercalate "\n    | " $ map (generateVariant thisModule nodeMap name) unionFields
                         , "\n    deriving(Show, Eq, Ord)\n\n"
                         ]
                 ]
         _ -> "" -- TODO
 
-generateVariant :: String -> Field -> String
-generateVariant parentName Field{..} =
+generateVariant :: Id -> NodeMap -> String -> Field -> String
+generateVariant thisModule nodeMap parentName Field{..} =
     parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
         ++ case union' of
             Field'Slot Field'Slot'{..} ->
                 case type' of
                     Type Type'Void -> ""
-                    _              -> " " ++ formatType type'
-            Field'Group _ ->
-                "{- TODO: group -}"
+                    _              -> " " ++ formatType thisModule nodeMap type'
+            Field'Group Field'Group'{..} ->
+                let meta = nodeMap M.! typeId
+                in " {- TODO: group -}"
 
-generateField :: NodeMap -> Field -> String
-generateField nodeMap Field{..} =
+generateField :: Id -> NodeMap -> Field -> String
+generateField thisModule nodeMap Field{..} =
     makeLegalName (T.unpack (T.decodeUtf8 $ toBytes name))
         ++ " :: "
         ++ case union' of
-            Field'Slot Field'Slot'{..}   -> formatType type'
+            Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} -> "() {- TODO: group -}"
 
-formatType :: Type -> String
-formatType (Type ty) = case ty of
-    Type'Void     -> "()"
-    Type'Bool     -> "Bool"
-    Type'Int8     -> "Int8"
-    Type'Int16    -> "Int16"
-    Type'Int32    -> "Int32"
-    Type'Int64    -> "Int64"
-    Type'Uint8    -> "Word8"
-    Type'Uint16   -> "Word16"
-    Type'Uint32   -> "Word32"
-    Type'Uint64   -> "Word64"
-    Type'Float32  -> "Float"
-    Type'Float64  -> "Double"
-    Type'Text     -> "Text"
-    Type'Data     -> "Data"
-    Type'List elt -> "List (" ++ formatType elt ++ ")"
-    _             -> "() {- TODO: slot -}"
+formatType :: Id -> NodeMap -> Type -> String
+formatType thisModule nodeMap (Type ty) = case ty of
+    Type'Void       -> "()"
+    Type'Bool       -> "Bool"
+    Type'Int8       -> "Int8"
+    Type'Int16      -> "Int16"
+    Type'Int32      -> "Int32"
+    Type'Int64      -> "Int64"
+    Type'Uint8      -> "Word8"
+    Type'Uint16     -> "Word16"
+    Type'Uint32     -> "Word32"
+    Type'Uint64     -> "Word64"
+    Type'Float32    -> "Float"
+    Type'Float64    -> "Double"
+    Type'Text       -> "Text"
+    Type'Data       -> "Data"
+    Type'List elt   -> "List (" ++ formatType thisModule nodeMap elt ++ ")"
+    Type'Enum{..} -> namedType typeId brand
+    Type'Struct{..} -> namedType typeId brand
+    Type'Interface{..} -> namedType typeId brand
+    _               -> "() {- TODO: anyPointer-}"
+  where
+    namedType typeId brand =
+        -- TODO: use brand.
+        identifierFromMetaData thisModule (nodeMap M.! typeId)
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
