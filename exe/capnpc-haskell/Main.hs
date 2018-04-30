@@ -143,19 +143,13 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
         Node'Struct{..} ->
             let name = identifierFromMetaData moduleId meta
                 allFields = V.toList $ toVector fields
-                isUnionized Field{..} = discriminantValue /= field'noDiscriminant
-                unionFields = filter isUnionized allFields
             in concat
                 [ "data ", name, " = ", name
-                , "\n    { ", intercalate "\n    , " $
-                    map (generateField thisModule nodeMap) (filter (not . isUnionized) allFields)
-                    ++ case unionFields of
-                            []      -> [] -- No union.
-                            uFields -> ["union' :: " ++ name ++ "'"]
-                , "\n    } deriving(Show, Eq, Ord)\n\n"
-                , case unionFields of
+                , formatStructBody thisModule nodeMap name allFields
+                , " deriving(Show, Read, Eq)\n\n"
+                , case filter isUnionField allFields of
                     [] -> "" -- No union.
-                    _  -> concat
+                    unionFields -> concat
                         [ "data ", name, "'\n    = "
                         , intercalate "\n    | " $ map (generateVariant thisModule nodeMap name) unionFields
                         , "\n    deriving(Show, Eq, Ord)\n\n"
@@ -163,17 +157,43 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 ]
         _ -> "" -- TODO
 
+isUnionField Field{..} = discriminantValue /= field'noDiscriminant
+
+formatStructBody :: Id -> NodeMap -> String -> [Field] -> String
+formatStructBody thisModule nodeMap parentName fields =
+    concat
+        [ "\n    { "
+        , intercalate "\n    , " $
+            map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
+            ++ case filter isUnionField fields of
+                        [] -> [] -- No union.
+                        _  -> ["union' :: " ++ parentName ++ "'"]
+        , "\n    }"
+        ]
+
 generateVariant :: Id -> NodeMap -> String -> Field -> String
 generateVariant thisModule nodeMap parentName Field{..} =
-    parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
+    let variantName = parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
+    in variantName
         ++ case union' of
             Field'Slot Field'Slot'{..} ->
                 case type' of
                     Type Type'Void -> ""
                     _              -> " " ++ formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} ->
-                let meta = nodeMap M.! typeId
-                in " {- TODO: group -}"
+                let NodeMetaData{..} = nodeMap M.! typeId
+                                        -- FIXME: for some reason this is coming up
+                                        -- missing for the Field.slot id. I've
+                                        -- inspected the cgr manually and the
+                                        -- corresponding node id is there; need to
+                                        -- investigate further.
+                    Node{..} = node
+                in case union' of
+                    Node'Struct{..} ->
+                        formatStructBody thisModule nodeMap variantName (V.toList $ toVector fields)
+                    _               ->
+                        error "A group field referenced a non-struct node."
+
 
 generateField :: Id -> NodeMap -> Field -> String
 generateField thisModule nodeMap Field{..} =
