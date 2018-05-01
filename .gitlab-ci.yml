@@ -12,6 +12,7 @@ test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
       # Run the tests:
+    - cabal configure --enable-tests
     - cabal install --only-dependencies
     - cabal build
     - cabal test
