@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-| This module provides an idiomatic Haskell interface for untyped capnp
     data, based on algebraic datatypes. It forgoes some of the benefits of
@@ -33,7 +34,7 @@ module Data.CapNProto.Untyped.ADT
 import Prelude hiding (length, readList)
 
 import Data.String  (IsString)
-import GHC.Exts     (IsList)
+import GHC.Exts     (IsList(..))
 import GHC.Generics (Generic)
 
 import qualified Data.ByteString        as BS
@@ -47,10 +48,10 @@ type Cap = Word32
 type Data = BS.ByteString
 
 newtype Slice a = Slice (List a)
-    deriving(Generic, Show, Read, Eq, Ord, Functor, IsList, Default)
+    deriving(Generic, Show, Read, Eq, Ord, Functor, Default)
 
 newtype Message = Message (Array BS.ByteString)
-    deriving(Generic, Show, Read, Eq, Ord, IsList)
+    deriving(Generic, Show, Read, Eq, Ord)
 
 newtype Text = Text { toBytes :: BS.ByteString }
     deriving(Generic, Show, Read, Eq, Ord, IsString)
@@ -80,7 +81,26 @@ data List'
     deriving(Generic, Show, Read, Eq)
 
 newtype List a = List { toVector :: V.Vector a }
-    deriving(Generic, Show, Read, Eq, Ord, Functor, IsList, Foldable, Traversable)
+    deriving(Generic, Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+
+-- Cookie-cutter IsList instances. These are derivable with
+-- GeneralizedNewtypeDeriving as of ghc >= 8.2.1, but not on
+-- 8.0.x, due to the associated type.
+instance IsList Message where
+    type Item Message = BS.ByteString
+    toList (Message segs) = toList segs
+    fromList = Message . fromList
+    fromListN n = Message . fromListN n
+instance IsList (Slice a) where
+    type Item (Slice a) = a
+    toList (Slice list) = toList list
+    fromList = Slice . fromList
+    fromListN n = Slice . fromListN n
+instance IsList (List a) where
+    type Item (List a) = a
+    toList (List vec) = toList vec
+    fromList = List . fromList
+    fromListN n = List . fromListN n
 
 instance Default (List a) where
     def = List V.empty
