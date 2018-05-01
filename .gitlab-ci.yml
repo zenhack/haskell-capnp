@@ -12,8 +12,9 @@ test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
       # Run the tests:
-    - cabal new-build
-    - cabal new-test
+    - cabal install --only-dependencies
+    - cabal build
+    - cabal test
       # Linting:
     - ./hlint.sh
       # Run stylish-haskell, and fail if it changes anything:
