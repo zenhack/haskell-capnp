@@ -4,6 +4,8 @@ before_script:
   - ghc --version
   - cabal --version
   - capnp --version
+  - stylish-haskell --version
+  - hlint --version
   # Update the hackage databse:
   - cabal update
 test:alltests:
