@@ -1,4 +1,10 @@
 before_script:
+  # Report the versions of varioius software, to make diagnosing problems
+  # easier:
+  - ghc --version
+  - cabal --version
+  - capnp --version
+  # Update the hackage databse:
   - cabal update
 test:alltests:
   image: zenhack/haskell-capnp-ci
