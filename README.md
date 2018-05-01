@@ -1,5 +1,7 @@
 Beginnings of a haskell [capnproto][1] library.
 
+[![build status][ci-img]][ci]
+
 # Status
 
 We have partial support for reading and building untyped messages (i.e.
@@ -13,3 +15,6 @@ able to replace them.
 MIT
 
 [1]: https://capnproto.org/
+
+[ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
+[ci]: https://gitlab.com/isd/haskell-capnp/pipelines
