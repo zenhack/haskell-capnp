@@ -18,8 +18,7 @@ build-type:               Simple
 cabal-version:            >= 1.10
 extra-source-files:       README.md
                           -- FIXME: add CHANGELOG.md to this list
-tested-with:              GHC == 8.0.2
-                          -- FIXME: test against more GHC versions
+tested-with:              GHC == 8.0.2, GHC == 8.2.2
 
 --------------------------------------------------------------------------------
 
