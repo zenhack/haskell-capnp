@@ -12,8 +12,7 @@ test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
       # Run the tests:
-    - cabal configure --enable-tests
-    - cabal install --only-dependencies
+    - cabal install --only-dependencies --enable-tests
     - cabal build
     - cabal test
       # Linting:
