@@ -115,7 +115,7 @@ makeNodeMap CodeGeneratorRequest{..} =
 moduleNameFromId :: Id -> String
 moduleNameFromId = printf "Data.CapNProto.ById.X%x"
 
--- | Generate the source code for a module based on a RequstedFile.
+-- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
 generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
