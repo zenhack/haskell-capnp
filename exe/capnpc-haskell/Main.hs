@@ -46,7 +46,7 @@ data NodeMetaData = NodeMetaData
 identifierFromMetaData :: Id -> NodeMetaData -> String
 identifierFromMetaData thisModule NodeMetaData{..} =
     (if moduleId /= thisModule
-        then printf "Data.CapNProto.ById.X%x." moduleId
+        then moduleNameFromId moduleId ++ "."
         else "")
     ++ intercalate "'" (reverse namespace)
 
