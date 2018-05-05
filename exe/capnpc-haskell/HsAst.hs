@@ -15,10 +15,15 @@ data Type
     | Unit
     deriving(Show, Read, Eq)
 
-data Variant = Variant
-    { variantName   :: Name
-    , variantFields :: [Field]
-    }
+data Variant
+    = Record
+        { recordName   :: Name
+        , recordFields :: [Field]
+        }
+    | NormalVariant
+        { variantName :: Name
+        , variantType :: Maybe Type
+        }
     deriving(Show, Read, Eq)
 
 data Field = Field
@@ -45,9 +50,11 @@ instance HsFmt Type where
     hsFmt Unit = "()"
 
 instance HsFmt Variant where
-    hsFmt (Variant name []) = hsFmt name
-    hsFmt (Variant name fields) = concat
-        [ hsFmt name, "{ ", intercalate ", " $ map hsFmt fields,  "}" ]
+    hsFmt (NormalVariant name Nothing) = hsFmt name
+    hsFmt (NormalVariant name (Just ty)) = hsFmt name ++ " (" ++ hsFmt ty ++ ")"
+    hsFmt (Record name []) = hsFmt name
+    hsFmt (Record name fields) = concat
+        [ hsFmt name, "\n    { ", intercalate "\n    , " $ map hsFmt fields,  "\n    }" ]
 
 instance HsFmt Field where
     hsFmt (Field name ty) = name ++ " :: " ++ hsFmt ty

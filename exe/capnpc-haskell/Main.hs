@@ -193,14 +193,14 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
             let name = identifierFromMetaData moduleId meta
                 allFields = V.toList $ toVector fields
             in concat
-                [ "data ", name, " = ", name
-                , formatStructBody thisModule nodeMap name allFields
+                [ "data ", name, " = "
+                , hsFmt $ formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields
                 , " deriving(Show, Read, Eq)\n\n"
                 , case filter isUnionField allFields of
                     [] -> "" -- No union.
                     unionFields -> concat
                         [ "data ", name, "'\n    = "
-                        , intercalate "\n    | " $ map (generateVariant thisModule nodeMap name) unionFields
+                        , intercalate "\n    | " $ map (hsFmt . generateVariant thisModule nodeMap name) unionFields
                         , "\n    deriving(Show, Eq, Ord)\n\n"
                         ]
                 ]
@@ -210,49 +210,41 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
 isUnionField :: Field -> Bool
 isUnionField Field{..} = discriminantValue /= field'noDiscriminant
 
-formatStructBody :: Id -> NodeMap -> String -> [Field] -> String
-formatStructBody thisModule nodeMap parentName fields =
-    concat
-        [ "\n    { "
-        , intercalate "\n    , " $
-            map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
-            ++ case filter isUnionField fields of
-                        [] -> [] -- No union.
-                        _  -> ["union' :: " ++ parentName ++ "'"]
-        , "\n    }"
-        ]
+formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.Variant
+formatStructBody thisModule nodeMap (HsAst.Name parentName) fields = HsAst.Record
+    (HsAst.Name parentName)
+    $ map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
+    ++ case filter isUnionField fields of
+        [] -> [] -- no union
+        _ -> [HsAst.Field "union'" $ HsAst.Type (HsAst.Name (parentName ++ [""])) []]
 
--- | Generate a variant type corresponding to an anonymous union in a struct.
---
--- If the generated type for the struct is Foo, then the type for the union
--- will be Foo'.
-generateVariant :: Id -> NodeMap -> String -> Field -> String
-generateVariant thisModule nodeMap parentName Field{..} =
-    let variantName = parentName ++ "'" ++ makeLegalName name
-    in variantName
-        ++ case union' of
-            Field'Slot Field'Slot'{..} ->
-                case type' of
-                    Type Type'Void -> ""
-                    _              -> " " ++ hsFmt (formatType thisModule nodeMap type')
-            Field'Group Field'Group'{..} ->
-                let NodeMetaData{..} = nodeMap M.! typeId
-                    Node{..} = node
-                in case union' of
-                    Node'Struct{..} ->
-                        formatStructBody thisModule nodeMap variantName (V.toList $ toVector fields)
-                    _               ->
-                        error "A group field referenced a non-struct node."
+-- | Generate a variant of a type corresponding to an anonymous union in a
+-- struct.
+generateVariant :: Id -> NodeMap -> String -> Field -> HsAst.Variant
+generateVariant thisModule nodeMap parentName Field{..} = case union' of
+    Field'Slot Field'Slot'{..} -> HsAst.NormalVariant variantName $
+        case type' of
+            Type Type'Void -> Nothing
+            _              -> Just $ formatType thisModule nodeMap type'
+    Field'Group Field'Group'{..} ->
+        let NodeMetaData{node=node@Node{..},..} = nodeMap M.! typeId
+        in case union' of
+            Node'Struct{..} ->
+                formatStructBody thisModule nodeMap variantName (V.toList $ toVector fields)
+            _               ->
+                error "A group field referenced a non-struct node."
+  where
+    variantName = HsAst.Name [parentName, makeLegalName name]
 
 
-generateField :: Id -> NodeMap -> Field -> String
+generateField :: Id -> NodeMap -> Field -> HsAst.Field
 generateField thisModule nodeMap Field{..} =
-    makeLegalName name
-        ++ " :: "
-        ++ case union' of
-            Field'Slot Field'Slot'{..}   -> hsFmt (formatType thisModule nodeMap type')
+    HsAst.Field
+        (makeLegalName name)
+        $ case union' of
+            Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} ->
-                identifierFromMetaData thisModule (nodeMap M.! typeId)
+                HsAst.Type (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
 
 formatType :: Id -> NodeMap -> Type -> HsAst.Type
 formatType thisModule nodeMap (Type ty) = case ty of
