@@ -54,19 +54,33 @@ identifierFromMetaData thisModule NodeMetaData{..} =
 -- all of its descendants in the tree.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
 collectMetaData nodeMap meta@NodeMetaData{..} =
-    -- FIXME: we can't rely on all decendent nodes being reachable through
-    -- "nestedNodes." per schema.capnp:
-    --
-    -- > Typically, the scope node will have a NestedNode pointing back at
-    -- > this node, but robust code should avoid relying on this (and, in
-    -- > fact, group nodes are not listed in the outer struct's nestedNodes,
-    -- > since they are listed in the fields).
-    --
-    -- I suspect this is what is causing the failures discussed in
-    -- generateVariant.
-    (nodeId node, meta) : concatMap kid (V.toList $ toVector $ nestedNodes node)
+    concat
+        [ [(nodeId node, meta)]
+        -- Child nodes can be in two places: most are in nestedNodes, but
+        -- group fields are not, and can only be found in the fields of
+        -- a struct union.
+        , case nodeUnion' node of
+                Node'Struct{..} ->
+                    concatMap field $ V.toList $ toVector fields
+                _ ->
+                    []
+        , concatMap kid $ V.toList $ toVector $ nestedNodes node
+        ]
   where
+    toList = V.toList . toVector
+    nodeUnion' Node{..} = union'
     nodeId Node{..} = id
+    field Field{..} = case union' of
+        Field'Group Field'Group'{..} -> collectMetaData
+            nodeMap
+            meta
+            { node = nodeMap M.! typeId
+            -- in this case, name comes from the field, so for a field bar in a
+            -- struct Foo, we'll end up with a type for the group named Foo'bar.
+            , namespace = makeLegalName (mustDecodeUtf8 name) : namespace
+            }
+        _ ->
+            []
     kid nn@Node'NestedNode{..} = case M.lookup id nodeMap of
         Just node -> collectMetaData
                         nodeMap
@@ -212,11 +226,6 @@ generateVariant thisModule nodeMap parentName Field{..} =
                     _              -> " " ++ formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} ->
                 let NodeMetaData{..} = nodeMap M.! typeId
-                                        -- FIXME: for some reason this is coming up
-                                        -- missing for the Field.slot id. I've
-                                        -- inspected the cgr manually and the
-                                        -- corresponding node id is there; need to
-                                        -- investigate further.
                     Node{..} = node
                 in case union' of
                     Node'Struct{..} ->
