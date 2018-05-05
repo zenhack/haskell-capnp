@@ -1,8 +1,9 @@
 {-| This is the capnp compiler plugin.
 -}
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE ViewPatterns      #-}
 module Main (main) where
 
 import Data.CapNProto.Core.Schema
@@ -13,6 +14,9 @@ import Data.CapNProto.Untyped        (rootPtr)
 import Data.CapNProto.Untyped.ADT    (List(..), Text(..), readStruct)
 
 import qualified Data.CapNProto.Message as Message
+import qualified HsAst
+
+import HsAst (HsFmt(..))
 
 import Data.Function ((&))
 import Data.List     (intercalate)
@@ -154,8 +158,8 @@ moduleNameFromId = printf "Data.CapNProto.ById.X%x"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the untyped ADT module.
-untypedName :: String -> String
-untypedName name = "Data.CapNProto.Untyped.ADT." ++ name
+untypedName :: String -> HsAst.Name
+untypedName name = HsAst.Name ["Data.CapNProto.Untyped.ADT." ++ name]
 
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
@@ -230,7 +234,7 @@ generateVariant thisModule nodeMap parentName Field{..} =
             Field'Slot Field'Slot'{..} ->
                 case type' of
                     Type Type'Void -> ""
-                    _              -> " " ++ formatType thisModule nodeMap type'
+                    _              -> " " ++ hsFmt (formatType thisModule nodeMap type')
             Field'Group Field'Group'{..} ->
                 let NodeMetaData{..} = nodeMap M.! typeId
                     Node{..} = node
@@ -246,44 +250,50 @@ generateField thisModule nodeMap Field{..} =
     makeLegalName name
         ++ " :: "
         ++ case union' of
-            Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
+            Field'Slot Field'Slot'{..}   -> hsFmt (formatType thisModule nodeMap type')
             Field'Group Field'Group'{..} ->
                 identifierFromMetaData thisModule (nodeMap M.! typeId)
 
-formatType :: Id -> NodeMap -> Type -> String
+formatType :: Id -> NodeMap -> Type -> HsAst.Type
 formatType thisModule nodeMap (Type ty) = case ty of
-    Type'Void       -> "()"
-    Type'Bool       -> "Bool"
-    Type'Int8       -> "Int8"
-    Type'Int16      -> "Int16"
-    Type'Int32      -> "Int32"
-    Type'Int64      -> "Int64"
-    Type'Uint8      -> "Word8"
-    Type'Uint16     -> "Word16"
-    Type'Uint32     -> "Word32"
-    Type'Uint64     -> "Word64"
-    Type'Float32    -> "Float"
-    Type'Float64    -> "Double"
-    Type'Text       -> untypedName "Text"
-    Type'Data       -> untypedName "Data"
-    Type'List elt   -> untypedName "List" ++ " (" ++ formatType thisModule nodeMap elt ++ ")"
+    Type'Void       -> HsAst.Unit
+    Type'Bool       -> HsAst.Type "Bool" []
+    Type'Int8       -> HsAst.Type "Int8" []
+    Type'Int16      -> HsAst.Type "Int16" []
+    Type'Int32      -> HsAst.Type "Int32" []
+    Type'Int64      -> HsAst.Type "Int64" []
+    Type'Uint8      -> HsAst.Type "Word8" []
+    Type'Uint16     -> HsAst.Type "Word16" []
+    Type'Uint32     -> HsAst.Type "Word32" []
+    Type'Uint64     -> HsAst.Type "Word64" []
+    Type'Float32    -> HsAst.Type "Float" []
+    Type'Float64    -> HsAst.Type "Double" []
+    Type'Text       -> HsAst.Type (untypedName "Text") []
+    Type'Data       -> HsAst.Type (untypedName "Data") []
+    Type'List elt   -> HsAst.Type (untypedName "List") [formatType thisModule nodeMap elt]
     Type'Enum{..} -> namedType typeId brand
     Type'Struct{..} -> namedType typeId brand
     Type'Interface{..} -> namedType typeId brand
-    Type'AnyPointer anyPtr -> "Maybe " ++ case anyPtr of
-        Type'AnyPointer'Unconstrained Unconstrained'AnyKind ->
-            untypedName "PtrType"
-        Type'AnyPointer'Unconstrained Unconstrained'Struct ->
-            untypedName "Struct"
-        Type'AnyPointer'Unconstrained Unconstrained'List ->
-            untypedName "List'" -- Node the '; this is an untyped List.
-        Type'AnyPointer'Unconstrained Unconstrained'Capability ->
-            untypedName "Cap"
-    _ -> "() {- TODO: constrained anyPointers -}"
+    Type'AnyPointer anyPtr ->
+        HsAst.Type "Maybe"
+            [ HsAst.Type
+                (case anyPtr of
+                    Type'AnyPointer'Unconstrained Unconstrained'AnyKind ->
+                        untypedName "PtrType"
+                    Type'AnyPointer'Unconstrained Unconstrained'Struct ->
+                        untypedName "Struct"
+                    Type'AnyPointer'Unconstrained Unconstrained'List ->
+                        untypedName "List'" -- Note the '; this is an untyped List.
+                    Type'AnyPointer'Unconstrained Unconstrained'Capability ->
+                        untypedName "Cap")
+                []
+            ]
+    _ -> HsAst.Type "() {- TODO: constrained anyPointers -}" []
   where
-    namedType typeId brand =
+    namedType typeId brand = HsAst.Type
+        (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)])
         -- TODO: use brand.
-        identifierFromMetaData thisModule (nodeMap M.! typeId)
+        []
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =

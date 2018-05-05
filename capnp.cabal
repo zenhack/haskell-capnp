@@ -72,6 +72,8 @@ library
 
 executable capnpc-haskell
     main-is:              Main.hs
+    other-modules:
+      HsAst
     hs-source-dirs:       exe/capnpc-haskell
     build-depends:
         capnp
