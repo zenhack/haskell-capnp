@@ -54,7 +54,7 @@ instance HsFmt Variant where
     hsFmt (NormalVariant name (Just ty)) = hsFmt name ++ " (" ++ hsFmt ty ++ ")"
     hsFmt (Record name []) = hsFmt name
     hsFmt (Record name fields) = concat
-        [ hsFmt name, "\n    { ", intercalate "\n    , " $ map hsFmt fields,  "\n    }" ]
+        [ hsFmt name, "\n        { ", intercalate "\n        , " $ map hsFmt fields,  "\n        }" ]
 
 instance HsFmt Field where
     hsFmt (Field name ty) = name ++ " :: " ++ hsFmt ty
