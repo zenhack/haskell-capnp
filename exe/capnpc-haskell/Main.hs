@@ -1,6 +1,8 @@
 {-| This is the capnp compiler plugin.
 -}
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
 module Main (main) where
 
 import Data.CapNProto.Core.Schema
@@ -53,41 +55,37 @@ identifierFromMetaData thisModule NodeMetaData{..} =
 -- Helper for makeNodeMap; recursively collect metadata for a node and
 -- all of its descendants in the tree.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
-collectMetaData nodeMap meta@NodeMetaData{..} =
-    concat
-        [ [(nodeId node, meta)]
-        -- Child nodes can be in two places: most are in nestedNodes, but
-        -- group fields are not, and can only be found in the fields of
-        -- a struct union.
-        , case nodeUnion' node of
-                Node'Struct{..} ->
-                    concatMap field $ V.toList $ toVector fields
-                _ ->
-                    []
-        , concatMap kid $ V.toList $ toVector $ nestedNodes node
-        ]
+collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
+    [ [(id, meta)]
+    , concatMap collectNested $ V.toList $ toVector nestedNodes
+    -- Child nodes can be in two places: most are in nestedNodes, but
+    -- group fields are not, and can only be found in the fields of
+    -- a struct union.
+    , case union' of
+            Node'Struct{..} ->
+                concatMap collectField $ V.toList $ toVector fields
+            _ ->
+                []
+    ]
   where
-    toList = V.toList . toVector
-    nodeUnion' Node{..} = union'
-    nodeId Node{..} = id
-    field Field{..} = case union' of
-        Field'Group Field'Group'{..} -> collectMetaData
-            nodeMap
+    -- Collect metadata for nodes under a Field.
+    collectField Field{..} = case union' of
+        Field'Group Field'Group'{..} -> collectMetaData nodeMap
             meta
-            { node = nodeMap M.! typeId
-            -- in this case, name comes from the field, so for a field bar in a
-            -- struct Foo, we'll end up with a type for the group named Foo'bar.
-            , namespace = makeLegalName (mustDecodeUtf8 name) : namespace
-            }
+                { node = nodeMap M.! typeId
+                -- in this case, name comes from the field, so for a field bar in a
+                -- struct Foo, we'll end up with a type for the group named Foo'bar.
+                , namespace = makeLegalName name : namespace
+                }
         _ ->
             []
-    kid nn@Node'NestedNode{..} = case M.lookup id nodeMap of
-        Just node -> collectMetaData
-                        nodeMap
-                        meta
-                        { node = node
-                        , namespace = makeLegalName (mustDecodeUtf8 name) : namespace
-                        }
+    -- Collect metadata for nodes under a NestedNode.
+    collectNested nn@Node'NestedNode{..} = case M.lookup id nodeMap of
+        Just node -> collectMetaData nodeMap
+            meta
+                { node = node
+                , namespace = makeLegalName name : namespace
+                }
         Nothing ->
             -- Imperically, this can happen if e.g. the node isn't in a subtree
             -- of a RequestedFile, and not actually used anywhere else. This
@@ -97,8 +95,8 @@ collectMetaData nodeMap meta@NodeMetaData{..} =
 
 -- | Convert the argument into a valid haskell identifier. This doesn't handle
 -- every possible violation, just ones that might occur in legal schema.
-makeLegalName :: String -> String
-makeLegalName str
+makeLegalName :: Text -> String
+makeLegalName (mustDecodeUtf8 -> str)
     | str `elem` keywords = str ++ "_"
     | otherwise = str
   where
@@ -217,7 +215,7 @@ formatStructBody thisModule nodeMap parentName fields =
 -- will be Foo'.
 generateVariant :: Id -> NodeMap -> String -> Field -> String
 generateVariant thisModule nodeMap parentName Field{..} =
-    let variantName = parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
+    let variantName = parentName ++ "'" ++ makeLegalName name
     in variantName
         ++ case union' of
             Field'Slot Field'Slot'{..} ->
@@ -236,7 +234,7 @@ generateVariant thisModule nodeMap parentName Field{..} =
 
 generateField :: Id -> NodeMap -> Field -> String
 generateField thisModule nodeMap Field{..} =
-    makeLegalName (T.unpack (T.decodeUtf8 $ toBytes name))
+    makeLegalName name
         ++ " :: "
         ++ case union' of
             Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
