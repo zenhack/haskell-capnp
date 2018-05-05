@@ -269,7 +269,16 @@ formatType thisModule nodeMap (Type ty) = case ty of
     Type'Enum{..} -> namedType typeId brand
     Type'Struct{..} -> namedType typeId brand
     Type'Interface{..} -> namedType typeId brand
-    _               -> "() {- TODO: anyPointer-}"
+    Type'AnyPointer anyPtr -> "Maybe " ++ case anyPtr of
+        Type'AnyPointer'Unconstrained Unconstrained'AnyKind ->
+            untypedName "PtrType"
+        Type'AnyPointer'Unconstrained Unconstrained'Struct ->
+            untypedName "Struct"
+        Type'AnyPointer'Unconstrained Unconstrained'List ->
+            untypedName "List'" -- Node the '; this is an untyped List.
+        Type'AnyPointer'Unconstrained Unconstrained'Capability ->
+            untypedName "Cap"
+    _ -> "() {- TODO: constrained anyPointers -}"
   where
     namedType typeId brand =
         -- TODO: use brand.
