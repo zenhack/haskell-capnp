@@ -50,9 +50,20 @@ identifierFromMetaData thisModule NodeMetaData{..} =
         else "")
     ++ intercalate "'" (reverse namespace)
 
--- Helper for makeNodeMap. TODO: document in more detial.
+-- Helper for makeNodeMap; recursively collect metadata for a node and
+-- all of its descendants in the tree.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
 collectMetaData nodeMap meta@NodeMetaData{..} =
+    -- FIXME: we can't rely on all decendent nodes being reachable through
+    -- "nestedNodes." per schema.capnp:
+    --
+    -- > Typically, the scope node will have a NestedNode pointing back at
+    -- > this node, but robust code should avoid relying on this (and, in
+    -- > fact, group nodes are not listed in the outer struct's nestedNodes,
+    -- > since they are listed in the fields).
+    --
+    -- I suspect this is what is causing the failures discussed in
+    -- generateVariant.
     (nodeId node, meta) : concatMap kid (V.toList $ toVector $ nestedNodes node)
   where
     nodeId Node{..} = id
