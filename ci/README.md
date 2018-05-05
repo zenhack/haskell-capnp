@@ -4,5 +4,5 @@ This directory contains the Dockerfile used to build:
 
 ...which is used by ../.gitlab-ci.yml.
 
-It's the ubuntu 18.04 docker image, plus a few extra packages installed
-from apt; see the Dockerfile for details.
+It's just the standard haskell docker image, plus capnproto 0.6.1 and
+some linters already installed.
