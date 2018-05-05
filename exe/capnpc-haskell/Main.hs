@@ -151,6 +151,11 @@ makeNodeMap CodeGeneratorRequest{..} =
 moduleNameFromId :: Id -> String
 moduleNameFromId = printf "Data.CapNProto.ById.X%x"
 
+-- | @'untypedName' name@ is the fully qualified name for @name@ defined
+-- within the untyped ADT module.
+untypedName :: String -> String
+untypedName name = "Data.CapNProto.Untyped.ADT." ++ name
+
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
 generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
@@ -162,6 +167,8 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "import Data.Word"
     , ""
     , "import Data.CapNProto.Untyped.ADT (Text, Data, List)"
+    , ""
+    , "import qualified Data.CapNProto.Untyped.ADT"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""
@@ -239,8 +246,7 @@ generateField thisModule nodeMap Field{..} =
         ++ case union' of
             Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} ->
-                let meta = nodeMap M.! typeId
-                in identifierFromMetaData thisModule meta
+                identifierFromMetaData thisModule (nodeMap M.! typeId)
 
 
 formatType :: Id -> NodeMap -> Type -> String
@@ -257,9 +263,9 @@ formatType thisModule nodeMap (Type ty) = case ty of
     Type'Uint64     -> "Word64"
     Type'Float32    -> "Float"
     Type'Float64    -> "Double"
-    Type'Text       -> "Text"
-    Type'Data       -> "Data"
-    Type'List elt   -> "List (" ++ formatType thisModule nodeMap elt ++ ")"
+    Type'Text       -> untypedName "Text"
+    Type'Data       -> untypedName "Data"
+    Type'List elt   -> untypedName "List" ++ " (" ++ formatType thisModule nodeMap elt ++ ")"
     Type'Enum{..} -> namedType typeId brand
     Type'Struct{..} -> namedType typeId brand
     Type'Interface{..} -> namedType typeId brand
