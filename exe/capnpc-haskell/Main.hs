@@ -40,6 +40,9 @@ data NodeMetaData = NodeMetaData
     }
     deriving(Show, Read, Eq)
 
+-- | @'identifierFromMetaData' thisModule meta@ return a haskell identifier
+-- for a node based on the metadata @meta@, and @thisModule@, the id for
+-- the module in which the name will be used.
 identifierFromMetaData :: Id -> NodeMetaData -> String
 identifierFromMetaData thisModule NodeMetaData{..} =
     (if moduleId /= thisModule
@@ -112,6 +115,16 @@ makeNodeMap CodeGeneratorRequest{..} =
         & map (\node@Node{..} -> (id, node))
         & M.fromList
 
+-- | Translate a capnproto id to a fully-qualified haskell module name.
+-- We name our modules Data.CapNProto.ById.X<schema-id>, because this
+-- makes it easy for one generated module to import another without
+-- the troubles with finding the correct namespace that crop up with
+-- other implmentations -- no special annotations, no worrying about
+-- what the namespaces of generated modules are.
+--
+-- We will also want to probably output a module with a more human-friendly
+-- name, which re-exports everything from this module, but this is still
+-- TODO.
 moduleNameFromId :: Id -> String
 moduleNameFromId = printf "Data.CapNProto.ById.X%x"
 
@@ -157,6 +170,8 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 ]
         _ -> "" -- TODO
 
+-- | Return whether the field is part of a union within its struct.
+isUnionField :: Field -> Bool
 isUnionField Field{..} = discriminantValue /= field'noDiscriminant
 
 formatStructBody :: Id -> NodeMap -> String -> [Field] -> String
@@ -171,6 +186,10 @@ formatStructBody thisModule nodeMap parentName fields =
         , "\n    }"
         ]
 
+-- | Generate a variant type corresponding to an anonymous union in a struct.
+--
+-- If the generated type for the struct is Foo, then the type for the union
+-- will be Foo'.
 generateVariant :: Id -> NodeMap -> String -> Field -> String
 generateVariant thisModule nodeMap parentName Field{..} =
     let variantName = parentName ++ "'" ++ makeLegalName (mustDecodeUtf8 name)
