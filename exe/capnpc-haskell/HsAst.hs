@@ -61,7 +61,7 @@ instance HsFmt Field where
 
 instance HsFmt DataDef where
     hsFmt (DataDef name variants) = concat
-        [ "data ", hsFmt name, " = "
-        , intercalate " | " (map hsFmt variants)
-        , " deriving(Show, Read, Eq)"
+        [ "data ", hsFmt name, "\n    = "
+        , intercalate "\n    | " (map hsFmt variants)
+        , "\n    deriving(Show, Read, Eq)\n\n"
         ]

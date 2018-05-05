@@ -192,18 +192,15 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
         Node'Struct{..} ->
             let name = identifierFromMetaData moduleId meta
                 allFields = V.toList $ toVector fields
-            in concat
-                [ "data ", name, " = "
-                , hsFmt $ formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields
-                , " deriving(Show, Read, Eq)\n\n"
-                , case filter isUnionField allFields of
+            in
+                hsFmt (HsAst.DataDef
+                    (HsAst.Name [name])
+                    [formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields])
+                ++ case filter isUnionField allFields of
                     [] -> "" -- No union.
-                    unionFields -> concat
-                        [ "data ", name, "'\n    = "
-                        , intercalate "\n    | " $ map (hsFmt . generateVariant thisModule nodeMap name) unionFields
-                        , "\n    deriving(Show, Eq, Ord)\n\n"
-                        ]
-                ]
+                    unionFields -> hsFmt $ HsAst.DataDef
+                        (HsAst.Name [name, ""])
+                        $ map (generateVariant thisModule nodeMap name) unionFields
         _ -> "" -- TODO
 
 -- | Return whether the field is part of a union within its struct.
