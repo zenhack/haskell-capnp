@@ -8,6 +8,8 @@ module Data.CapNProto.Core.Schema where
 
 import Prelude hiding (id)
 
+import Codec.CapNProto (Decerialize(..))
+
 import Data.CapNProto.Errors (Error(SchemaViolationError), ThrowError(..))
 import Data.Default          (def)
 import Data.ReinterpretCast  (wordToDouble, wordToFloat)
@@ -19,9 +21,6 @@ import Data.Word
 
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
-
-class Decerialize from to where
-    decerialize :: (ThrowError m, Monad m) => from -> m to
 
 type Id = Word64
 

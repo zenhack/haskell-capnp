@@ -4,6 +4,8 @@
 {-# LANGUAGE QuasiQuotes       #-}
 module Tests.Module.Data.CapNProto.Core.Schema (schemaTests) where
 
+import Codec.CapNProto (Decerialize(..))
+
 import Data.CapNProto.Core.Schema
 import Tests.Util
 

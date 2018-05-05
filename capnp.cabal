@@ -33,6 +33,7 @@ library
     hs-source-dirs:       lib
     exposed-modules:
         Control.Monad.CapNProto.MessageBuilder
+      , Codec.CapNProto
       , Data.CapNProto.Address
       , Data.CapNProto.BasicTypes
       , Data.CapNProto.Bits

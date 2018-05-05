@@ -7,6 +7,7 @@ module Main (main) where
 
 import Data.CapNProto.Core.Schema
 
+import Codec.CapNProto               (Decerialize(..))
 import Data.CapNProto.TraversalLimit (evalWithLimit)
 import Data.CapNProto.Untyped        (rootPtr)
 import Data.CapNProto.Untyped.ADT    (List(..), Text(..), readStruct)
@@ -169,6 +170,7 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "import Data.CapNProto.Untyped.ADT (Text, Data, List)"
     , ""
     , "import qualified Data.CapNProto.Untyped.ADT"
+    , "import qualified Codec.CapNProto"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""
@@ -247,7 +249,6 @@ generateField thisModule nodeMap Field{..} =
             Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} ->
                 identifierFromMetaData thisModule (nodeMap M.! typeId)
-
 
 formatType :: Id -> NodeMap -> Type -> String
 formatType thisModule nodeMap (Type ty) = case ty of
