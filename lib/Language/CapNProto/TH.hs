@@ -125,7 +125,7 @@ mkListReaderVal parentConName ptrOffset listConName withList = do
                     $(withList (varE list))
                 Just (U.PtrList $(conP listConName [varP list])) ->
                     $(withList (varE list))
-                _ -> E.throwError $ E.SchemaViolationError $ $(litE $ StringL $
+                _ -> E.throwError $ E.SchemaViolationError $(litE $ StringL $
                             "Expected PtrList (" ++ show listConName ++ " ...)") |]
 
 
@@ -237,7 +237,7 @@ mkWordReader WordReaderSpec{..} = do
                 let dataSec = U.dataSection $(varE struct)
                 word <- U.index $dataIndex dataSec
                 let rawVal = (word `shiftR` $bitOffset) `xor` $defaultValE
-                return $ $transform $ (fromIntegral rawVal :: $(conT rawTyp)) |]
+                return $ $transform (fromIntegral rawVal :: $(conT rawTyp)) |]
 
 -- | Make a reader that reads a boolean. The first three arguments are the same
 -- as mkWordReader. The final argument is the default value.
