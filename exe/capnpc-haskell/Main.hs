@@ -238,7 +238,10 @@ generateField thisModule nodeMap Field{..} =
         ++ " :: "
         ++ case union' of
             Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
-            Field'Group Field'Group'{..} -> "() {- TODO: group -}"
+            Field'Group Field'Group'{..} ->
+                let meta = nodeMap M.! typeId
+                in identifierFromMetaData thisModule meta
+
 
 formatType :: Id -> NodeMap -> Type -> String
 formatType thisModule nodeMap (Type ty) = case ty of
