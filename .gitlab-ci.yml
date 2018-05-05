@@ -12,9 +12,7 @@ test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
     - cabal new-build
-      # Run the tests. Newer versions of cabal have a new-test subcommand, but
-      # not the version in the docker container.
-    - $(find dist-newstyle -type f -name simple-tests)
+    - cabal new-test
       # Linting:
     - ./hlint.sh
       # Run stylish-haskell, and fail if it changes anything:
