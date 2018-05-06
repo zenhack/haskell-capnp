@@ -11,7 +11,7 @@ import Data.CapNProto.Core.Schema
 import Codec.CapNProto               (Decerialize(..))
 import Data.CapNProto.TraversalLimit (evalWithLimit)
 import Data.CapNProto.Untyped        (rootPtr)
-import Data.CapNProto.Untyped.ADT    (List(..), Text(..), readStruct)
+import Data.CapNProto.Untyped.Pure   (List(..), Text(..), readStruct)
 
 import qualified Data.CapNProto.Message as Message
 import qualified HsAst
@@ -157,9 +157,9 @@ moduleNameFromId :: Id -> String
 moduleNameFromId = printf "Data.CapNProto.ById.X%x"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
--- within the untyped ADT module.
+-- within the pure-untyped module.
 untypedName :: String -> HsAst.Name
-untypedName name = HsAst.Name ["Data.CapNProto.Untyped.ADT." ++ name]
+untypedName name = HsAst.Name ["Data.CapNProto.Untyped.Pure." ++ name]
 
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
@@ -171,9 +171,9 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "import Data.Int"
     , "import Data.Word"
     , ""
-    , "import Data.CapNProto.Untyped.ADT (Text, Data, List)"
+    , "import Data.CapNProto.Untyped.Pure (Text, Data, List)"
     , ""
-    , "import qualified Data.CapNProto.Untyped.ADT"
+    , "import qualified Data.CapNProto.Untyped.Pure"
     , "import qualified Codec.CapNProto"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports

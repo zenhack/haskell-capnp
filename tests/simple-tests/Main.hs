@@ -8,7 +8,7 @@ import Tests.Module.Data.CapNProto.Bits                    (bitsTests)
 import Tests.Module.Data.CapNProto.Core.Schema             (schemaTests)
 import Tests.Module.Data.CapNProto.Pointer                 (ptrTests)
 import Tests.Module.Data.CapNProto.Untyped                 (untypedTests)
-import Tests.Module.Data.CapNProto.Untyped.ADT             (untypedADTTests)
+import Tests.Module.Data.CapNProto.Untyped.Pure            (pureUntypedTests)
 
 -- These tests are currently broken, due to the removed TH-based code
 -- generation, but a version of them may be useful again at some point:
@@ -21,7 +21,7 @@ main :: IO ()
 main = defaultMain [ bitsTests
                    , ptrTests
                    , untypedTests
-                   , untypedADTTests
+                   , pureUntypedTests
                    -- , listTests
                    , buildTests
                    , encodeDecodeUntypedTests

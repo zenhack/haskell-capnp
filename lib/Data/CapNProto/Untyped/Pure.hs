@@ -13,7 +13,7 @@
     provides support for converting from the lower-level types in
     Data.CapNProto.Untyped.
 -}
-module Data.CapNProto.Untyped.ADT
+module Data.CapNProto.Untyped.Pure
     ( Cap(..)
     , Slice(..)
     , Message(..)

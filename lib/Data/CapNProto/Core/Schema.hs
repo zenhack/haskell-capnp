@@ -15,7 +15,7 @@ import Data.Default          (def)
 import Data.ReinterpretCast  (wordToDouble, wordToFloat)
 
 import Data.Bits
-import Data.CapNProto.Untyped.ADT
+import Data.CapNProto.Untyped.Pure
 import Data.Int
 import Data.Word
 

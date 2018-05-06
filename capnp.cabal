@@ -44,7 +44,7 @@ library
       , Data.CapNProto.Pointer
       , Data.CapNProto.Schema
       , Data.CapNProto.Untyped
-      , Data.CapNProto.Untyped.ADT
+      , Data.CapNProto.Untyped.Pure
       , Data.CapNProto.Core.Schema
       , Data.CapNProto.TraversalLimit
     -- other-modules:
@@ -109,7 +109,7 @@ test-suite simple-tests
         Tests.Module.Control.Monad.CapNProto.MessageBuilder
       , Tests.Module.Data.CapNProto.Core.Schema
       , Tests.Module.Data.CapNProto.Untyped
-      , Tests.Module.Data.CapNProto.Untyped.ADT
+      , Tests.Module.Data.CapNProto.Untyped.Pure
       -- , Tests.Module.Data.CapNProto.List
       , Tests.Module.Data.CapNProto.Pointer
       , Tests.Module.Data.CapNProto.Bits

@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.CapNProto.Untyped.ADT (untypedADTTests) where
+module Tests.Module.Data.CapNProto.Untyped.Pure (pureUntypedTests) where
 
-import Data.CapNProto.Untyped.ADT
+import Data.CapNProto.Untyped.Pure
 import Tests.Util
 
 import Data.CapNProto.TraversalLimit (runWithLimit)
@@ -16,9 +16,9 @@ import qualified Data.CapNProto.Untyped as U
 import qualified Data.Vector            as V
 
 -- This is analogous to Tests.Module.Data.CapNProto.Untyped.untypedTests, but
--- using the ADT module:
-untypedADTTests :: Test
-untypedADTTests = assertionsToTest "Untyped ADT Tests"
+-- using the Pure module:
+pureUntypedTests :: Test
+pureUntypedTests = assertionsToTest "Untyped ADT Tests"
     [ do
         msg <- encodeValue
                     [there|tests/data/aircraft.capnp|]

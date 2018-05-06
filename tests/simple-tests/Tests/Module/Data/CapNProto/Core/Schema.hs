@@ -10,7 +10,7 @@ import Data.CapNProto.Core.Schema
 import Tests.Util
 
 import Data.CapNProto.TraversalLimit (evalWithLimit)
-import Data.CapNProto.Untyped.ADT    (readStruct)
+import Data.CapNProto.Untyped.Pure   (readStruct)
 import Test.Framework                (testGroup)
 import Test.HUnit                    (assertEqual)
 import Text.Heredoc                  (here, there)
