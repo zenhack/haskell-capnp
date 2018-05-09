@@ -154,7 +154,7 @@ makeNodeMap CodeGeneratorRequest{..} =
 -- name, which re-exports everything from this module, but this is still
 -- TODO.
 moduleNameFromId :: Id -> String
-moduleNameFromId = printf "Data.CapNProto.ById.X%x"
+moduleNameFromId = printf "Data.CapNProto.ById.X%x.Pure"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the pure-untyped module.
@@ -188,10 +188,10 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
 generateTypes :: Id -> NodeMap -> NodeMetaData -> String
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
+        name = identifierFromMetaData moduleId meta
     in case union' of
         Node'Struct{..} ->
-            let name = identifierFromMetaData moduleId meta
-                allFields = V.toList $ toVector fields
+            let allFields = V.toList $ toVector fields
             in
                 hsFmt (HsAst.DataDef
                     (HsAst.Name [name])
@@ -201,7 +201,23 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     unionFields -> hsFmt $ HsAst.DataDef
                         (HsAst.Name [name, ""])
                         $ map (generateVariant thisModule nodeMap name) unionFields
+        Node'Enum{..} ->
+            hsFmt $ HsAst.DataDef
+                (HsAst.Name [name])
+                $ map (generateEnum thisModule nodeMap name) (V.toList $ toVector enumerants)
+                  ++ [HsAst.NormalVariant
+                        { HsAst.variantName = HsAst.Name [name, "unknown_"]
+                        , HsAst.variantType = Just $ HsAst.Type "Word16" []
+                        }
+                     ]
         _ -> "" -- TODO
+
+generateEnum :: Id -> NodeMap -> String -> Enumerant -> HsAst.Variant
+generateEnum thisModule nodeMap parentName Enumerant{..} =
+    HsAst.NormalVariant
+        { HsAst.variantName = HsAst.Name [parentName, mustDecodeUtf8 name]
+        , HsAst.variantType = Nothing
+        }
 
 -- | Return whether the field is part of a union within its struct.
 isUnionField :: Field -> Bool
