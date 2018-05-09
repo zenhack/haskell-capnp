@@ -1,7 +1,7 @@
-module Tests.Module.Data.CapNProto.Pointer (ptrTests) where
+module Tests.Module.Data.Capnp.Pointer (ptrTests) where
 
 import Data.Bits
-import Data.CapNProto.Pointer
+import Data.Capnp.Pointer
 import Data.Int
 import Data.Word
 

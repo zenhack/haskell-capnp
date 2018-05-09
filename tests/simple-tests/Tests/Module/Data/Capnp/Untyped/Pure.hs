@@ -1,21 +1,21 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.CapNProto.Untyped.Pure (pureUntypedTests) where
+module Tests.Module.Data.Capnp.Untyped.Pure (pureUntypedTests) where
 
-import Data.CapNProto.Untyped.Pure
+import Data.Capnp.Untyped.Pure
 import Tests.Util
 
-import Data.CapNProto.TraversalLimit (runWithLimit)
+import Data.Capnp.TraversalLimit (runWithLimit)
 import Data.ReinterpretCast          (doubleToWord)
 import Test.Framework                (Test)
 import Test.HUnit                    (assertEqual)
 import Text.Heredoc                  (here, there)
 
-import qualified Data.CapNProto.Untyped as U
+import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector            as V
 
--- This is analogous to Tests.Module.Data.CapNProto.Untyped.untypedTests, but
+-- This is analogous to Tests.Module.Data.Capnp.Untyped.untypedTests, but
 -- using the Pure module:
 pureUntypedTests :: Test
 pureUntypedTests = assertionsToTest "Untyped ADT Tests"

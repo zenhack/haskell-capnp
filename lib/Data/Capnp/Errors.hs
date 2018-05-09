@@ -1,11 +1,11 @@
 {-|
-Module: Data.CapNProto.Errors
+Module: Data.Capnp.Errors
 Description: Error handling utilities
 -}
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Data.CapNProto.Errors
+module Data.Capnp.Errors
     ( Error(..)
     , ThrowError(..)
     )

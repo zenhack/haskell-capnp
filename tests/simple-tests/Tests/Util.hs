@@ -18,8 +18,8 @@ import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 import Control.Monad.Primitive        (PrimMonad, PrimState)
 import Control.Monad.Trans            (lift)
 import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
-import Data.CapNProto.Bits            (ByteCount(..))
-import Data.CapNProto.Blob            (BlobSlice(..))
+import Data.Capnp.Bits            (ByteCount(..))
+import Data.Capnp.Blob            (BlobSlice(..))
 import Data.Primitive.ByteArray       (MutableByteArray, readByteArray)
 import System.Directory               (removeFile)
 import Test.Framework                 (Test, testGroup)
@@ -28,7 +28,7 @@ import Test.Framework.Providers.HUnit (hUnitTestToTests)
 import qualified Data.ByteString            as BS
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
-import qualified Data.CapNProto.Message     as M
+import qualified Data.Capnp.Message     as M
 import qualified Test.HUnit                 as H
 
 -- | Information about the contents of a capnp message. This is enough
@@ -86,7 +86,7 @@ interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
     lift $ readCreateProcessWithExitCode (proc "capnp" ([subCommand, schemaFile] ++ args)) stdInBytes
 
 -- | Convert a BlobSlice (MutableByteArray s) to a ByteString. The former is the
--- result of Control.Monad.CapNProto.MessageBuilder.runBuilderT
+-- result of Control.Monad.Capnp.MessageBuilder.runBuilderT
 freezeAsByteString :: (PrimMonad m, s ~ PrimState m)
     => BlobSlice (MutableByteArray s) -> m BS.ByteString
 freezeAsByteString BlobSlice{..} = do

@@ -4,14 +4,14 @@ module Tests.SchemaQuickCheck
 
 import qualified Data.ByteString as BS
 
-import Data.CapNProto.Errors         (Error)
-import Data.CapNProto.Message        as M
-import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Data.Capnp.Errors         (Error)
+import Data.Capnp.Message        as M
+import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
 
-import Schema.CapNProto.Reader.Schema as Schema hiding (Field)
+import Schema.Capnp.Reader.Schema as Schema hiding (Field)
 
-import qualified Data.CapNProto.Untyped                              as Untyped
-import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGReq
+import qualified Data.Capnp.Untyped                              as Untyped
+import qualified Schema.Capnp.Reader.Schema.CodeGeneratorRequest as CGReq
 
 -- Testing framework imports
 import Test.Framework.Providers.QuickCheck2 (testProperty)

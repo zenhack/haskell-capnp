@@ -11,9 +11,9 @@
 
     In addition to the algebraic data types themselves, this module also
     provides support for converting from the lower-level types in
-    Data.CapNProto.Untyped.
+    Data.Capnp.Untyped.
 -}
-module Data.CapNProto.Untyped.Pure
+module Data.Capnp.Untyped.Pure
     ( Cap(..)
     , Slice(..)
     , Message(..)
@@ -26,7 +26,7 @@ module Data.CapNProto.Untyped.Pure
     , length
     , sliceIndex
 
-    -- Converting from Data.CapNProto.Untyped.
+    -- Converting from Data.Capnp.Untyped.
     , readStruct
     )
   where
@@ -38,7 +38,7 @@ import GHC.Exts     (IsList(..))
 import GHC.Generics (Generic)
 
 import qualified Data.ByteString        as BS
-import qualified Data.CapNProto.Untyped as U
+import qualified Data.Capnp.Untyped as U
 import           Data.Default           (Default(def))
 import           Data.Primitive.Array   (Array)
 import qualified Data.Vector            as V

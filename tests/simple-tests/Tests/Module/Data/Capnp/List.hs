@@ -1,22 +1,22 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Tests.Module.Data.CapNProto.List (listTests) where
+module Tests.Module.Data.Capnp.List (listTests) where
 
 import Tests.Util (assertionsToTest)
 
 import Control.Monad.Catch.Pure       (runCatchT)
 import Control.Monad.Writer           (execWriterT, tell)
-import Data.CapNProto.List            (ListOf)
-import Data.CapNProto.TraversalLimit  (evalWithLimit)
+import Data.Capnp.List            (ListOf)
+import Data.Capnp.TraversalLimit  (evalWithLimit)
 import Data.Functor.Identity          (Identity(..))
 import Data.Maybe                     (fromJust)
 import Data.Monoid                    (Sum(..))
-import Schema.CapNProto.Reader.Schema (Node)
+import Schema.Capnp.Reader.Schema (Node)
 import Test.HUnit                     (assertEqual)
 
 import qualified Data.ByteString                                     as BS
-import qualified Data.CapNProto.List                                 as List
-import qualified Data.CapNProto.Message                              as M
-import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGR
+import qualified Data.Capnp.List                                 as List
+import qualified Data.Capnp.Message                              as M
+import qualified Schema.Capnp.Reader.Schema.CodeGeneratorRequest as CGR
 
 lengthCounted :: ListOf BS.ByteString a -> Int
 lengthCounted = run . List.mapM_ (const $ tell 1)

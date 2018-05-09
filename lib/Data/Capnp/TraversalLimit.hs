@@ -20,7 +20,7 @@ transformer and mtl-style type class to track the limit; reading from the
 message happens inside of this monad.
 
 -}
-module Data.CapNProto.TraversalLimit
+module Data.Capnp.TraversalLimit
     ( Limit(..)
     , LimitT
     , runWithLimit
@@ -33,7 +33,7 @@ import Control.Monad.Catch        (MonadThrow(throwM))
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
 import Control.Monad.Trans.Class  (MonadTrans(lift))
-import Data.CapNProto.Errors
+import Data.Capnp.Errors
     (Error(TraversalLimitError), ThrowError(throwError))
 
 -- Just to define Limit instances:

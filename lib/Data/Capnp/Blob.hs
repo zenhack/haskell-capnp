@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeFamilies          #-}
-module Data.CapNProto.Blob
+module Data.Capnp.Blob
     ( Blob(..)
     , MutBlob(..)
     , Slice(..)
@@ -33,12 +33,12 @@ import Data.Primitive.ByteArray
     , writeByteArray
     )
 
-import Data.CapNProto.Bits
+import Data.Capnp.Bits
     (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
-import Data.CapNProto.Errors (ThrowError, throwError)
+import Data.Capnp.Errors (ThrowError, throwError)
 
 import qualified Data.ByteString       as BS
-import qualified Data.CapNProto.Errors as E
+import qualified Data.Capnp.Errors as E
 
 -- TODO: be clearer about error handling re: these classes. The general notion
 -- is to either throw (in a monad that supports it), or just not check the

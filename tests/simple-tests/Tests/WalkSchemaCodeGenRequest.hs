@@ -8,21 +8,21 @@ module Tests.WalkSchemaCodeGenRequest
 
 import Prelude hiding (length)
 
-import Data.CapNProto.Untyped
+import Data.Capnp.Untyped
 import Tests.Util
 
 import Control.Monad                 (mapM_, when)
-import Data.CapNProto.BasicTypes     (Text(..))
-import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Data.Capnp.BasicTypes     (Text(..))
+import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
 import Test.Framework                (Test)
 import Test.HUnit                    (Assertion, assertEqual)
 
 import qualified Data.ByteString                                     as BS
-import qualified Data.CapNProto.Message                              as M
+import qualified Data.Capnp.Message                              as M
 import qualified Prelude
-import qualified Schema.CapNProto.Reader.Schema                      as Schema
-import qualified Schema.CapNProto.Reader.Schema.CodeGeneratorRequest as CGReq
-import qualified Schema.CapNProto.Reader.Schema.Node                 as Node
+import qualified Schema.Capnp.Reader.Schema                      as Schema
+import qualified Schema.Capnp.Reader.Schema.CodeGeneratorRequest as CGReq
+import qualified Schema.Capnp.Reader.Schema.Node                 as Node
 
 
 -- | TODO: make this an array; we're doing random access to it below.

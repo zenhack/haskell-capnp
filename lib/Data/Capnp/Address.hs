@@ -1,8 +1,8 @@
 {-|
-Module: Data.CapNProto.Address
+Module: Data.Capnp.Address
 Description: Utilities for manipulating addresses within capnproto messages.
 -}
-module Data.CapNProto.Address
+module Data.Capnp.Address
     ( WordAddr(..)
     , CapAddr(..)
     , Addr(..)
@@ -12,9 +12,9 @@ module Data.CapNProto.Address
 
 import Data.Word
 
-import Data.CapNProto.Bits (WordCount)
+import Data.Capnp.Bits (WordCount)
 
-import qualified Data.CapNProto.Pointer as P
+import qualified Data.Capnp.Pointer as P
 
 -- | The address of a word within a message
 data WordAddr = WordAt

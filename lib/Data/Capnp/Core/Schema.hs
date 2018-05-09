@@ -4,18 +4,18 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-module Data.CapNProto.Core.Schema where
+module Data.Capnp.Core.Schema where
 
 import Prelude hiding (id)
 
-import Codec.CapNProto (Decerialize(..))
+import Codec.Capnp (Decerialize(..))
 
-import Data.CapNProto.Errors (Error(SchemaViolationError), ThrowError(..))
+import Data.Capnp.Errors (Error(SchemaViolationError), ThrowError(..))
 import Data.Default          (def)
 import Data.ReinterpretCast  (wordToDouble, wordToFloat)
 
 import Data.Bits
-import Data.CapNProto.Untyped.Pure
+import Data.Capnp.Untyped.Pure
 import Data.Int
 import Data.Word
 

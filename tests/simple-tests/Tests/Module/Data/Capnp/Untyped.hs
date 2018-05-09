@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.CapNProto.Untyped (untypedTests) where
+module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
-import Data.CapNProto.Untyped
+import Data.Capnp.Untyped
 import Tests.Util
 
 import Control.Monad                 (forM_, when)
-import Data.CapNProto.TraversalLimit (execWithLimit)
+import Data.Capnp.TraversalLimit (execWithLimit)
 import Data.ReinterpretCast          (wordToDouble)
 import Test.Framework                (Test)
 import Test.HUnit                    (assertEqual)

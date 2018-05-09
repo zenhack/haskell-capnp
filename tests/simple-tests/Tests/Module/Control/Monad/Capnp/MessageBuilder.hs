@@ -1,13 +1,13 @@
 {-# LANGUAGE TypeFamilies #-}
-module Tests.Module.Control.Monad.CapNProto.MessageBuilder (buildTests) where
+module Tests.Module.Control.Monad.Capnp.MessageBuilder (buildTests) where
 
-import Control.Monad.CapNProto.MessageBuilder
+import Control.Monad.Capnp.MessageBuilder
 import Data.Int
 import Data.Word
 
 import Control.Monad           (void)
 import Control.Monad.Primitive (RealWorld)
-import Data.CapNProto.Schema   (Field(..))
+import Data.Capnp.Schema   (Field(..))
 import Test.HUnit              (Assertion, assertEqual)
 import Tests.Util              (assertionsToTest, freezeAsByteString)
 

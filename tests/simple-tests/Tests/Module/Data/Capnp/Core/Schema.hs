@@ -2,20 +2,20 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.CapNProto.Core.Schema (schemaTests) where
+module Tests.Module.Data.Capnp.Core.Schema (schemaTests) where
 
-import Codec.CapNProto (Decerialize(..))
+import Codec.Capnp (Decerialize(..))
 
-import Data.CapNProto.Core.Schema
+import Data.Capnp.Core.Schema
 import Tests.Util
 
-import Data.CapNProto.TraversalLimit (evalWithLimit)
-import Data.CapNProto.Untyped.Pure   (readStruct)
+import Data.Capnp.TraversalLimit (evalWithLimit)
+import Data.Capnp.Untyped.Pure   (readStruct)
 import Test.Framework                (testGroup)
 import Test.HUnit                    (assertEqual)
 import Text.Heredoc                  (here, there)
 
-import qualified Data.CapNProto.Untyped as U
+import qualified Data.Capnp.Untyped as U
 
 schemaTests = testGroup "schema decode tests"
     [ decodeTests "CodeGeneratorRequest"

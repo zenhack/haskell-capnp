@@ -6,14 +6,14 @@
 {-# LANGUAGE ViewPatterns      #-}
 module Main (main) where
 
-import Data.CapNProto.Core.Schema
+import Data.Capnp.Core.Schema
 
-import Codec.CapNProto               (Decerialize(..))
-import Data.CapNProto.TraversalLimit (evalWithLimit)
-import Data.CapNProto.Untyped        (rootPtr)
-import Data.CapNProto.Untyped.Pure   (List(..), Text(..), readStruct)
+import Codec.Capnp               (Decerialize(..))
+import Data.Capnp.TraversalLimit (evalWithLimit)
+import Data.Capnp.Untyped        (rootPtr)
+import Data.Capnp.Untyped.Pure   (List(..), Text(..), readStruct)
 
-import qualified Data.CapNProto.Message as Message
+import qualified Data.Capnp.Message as Message
 import qualified HsAst
 
 import HsAst (HsFmt(..))
@@ -144,7 +144,7 @@ makeNodeMap CodeGeneratorRequest{..} =
         & M.fromList
 
 -- | Translate a capnproto id to a fully-qualified haskell module name.
--- We name our modules Data.CapNProto.ById.X<schema-id>, because this
+-- We name our modules Data.Capnp.ById.X<schema-id>, because this
 -- makes it easy for one generated module to import another without
 -- the troubles with finding the correct namespace that crop up with
 -- other implmentations -- no special annotations, no worrying about
@@ -154,12 +154,12 @@ makeNodeMap CodeGeneratorRequest{..} =
 -- name, which re-exports everything from this module, but this is still
 -- TODO.
 moduleNameFromId :: Id -> String
-moduleNameFromId = printf "Data.CapNProto.ById.X%x.Pure"
+moduleNameFromId = printf "Data.Capnp.ById.X%x.Pure"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the pure-untyped module.
 untypedName :: String -> HsAst.Name
-untypedName name = HsAst.Name ["Data.CapNProto.Untyped.Pure." ++ name]
+untypedName name = HsAst.Name ["Data.Capnp.Untyped.Pure." ++ name]
 
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
@@ -171,10 +171,10 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "import Data.Int"
     , "import Data.Word"
     , ""
-    , "import Data.CapNProto.Untyped.Pure (Text, Data, List)"
+    , "import Data.Capnp.Untyped.Pure (Text, Data, List)"
     , ""
-    , "import qualified Data.CapNProto.Untyped.Pure"
-    , "import qualified Codec.CapNProto"
+    , "import qualified Data.Capnp.Untyped.Pure"
+    , "import qualified Codec.Capnp"
     , ""
     , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
     , ""

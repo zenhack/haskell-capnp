@@ -1,4 +1,4 @@
-module Data.CapNProto.Schema
+module Data.Capnp.Schema
     ( Field(..)
     , fromBits
     , List

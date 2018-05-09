@@ -2,10 +2,10 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-|
-Module: Control.Monad.CapNProto.MessageBuilder
+Module: Control.Monad.Capnp.MessageBuilder
 Description: support for building capnproto messages.
 -}
-module Control.Monad.CapNProto.MessageBuilder
+module Control.Monad.Capnp.MessageBuilder
     ( BuilderT
     , BuildSelf(..)
     , runBuilderT
@@ -26,7 +26,7 @@ import Control.Monad                  (when)
 import Control.Monad.Primitive        (PrimMonad, PrimState)
 import Control.Monad.Trans.Class      (MonadTrans(lift))
 import Control.Monad.Trans.RWS.Strict (RWST(runRWST), ask, get, local, put)
-import Data.CapNProto.Bits
+import Data.Capnp.Bits
     ( Word1(..)
     , WordCount(..)
     , bytesToWordsFloor
@@ -34,13 +34,13 @@ import Data.CapNProto.Bits
     , replaceBits
     , wordsToBytes
     )
-import Data.CapNProto.Blob
-import Data.CapNProto.Schema          (Field(..))
+import Data.Capnp.Blob
+import Data.Capnp.Schema          (Field(..))
 import Data.Int
 import Data.Primitive.ByteArray       (MutableByteArray, newByteArray)
 import Data.Word
 
-import qualified Data.CapNProto.Pointer as P
+import qualified Data.Capnp.Pointer as P
 
 -- | Internal mutable state of a builder.
 data BuilderState s = BuilderState

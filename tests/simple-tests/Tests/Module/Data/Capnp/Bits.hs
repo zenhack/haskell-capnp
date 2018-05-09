@@ -1,7 +1,7 @@
-module Tests.Module.Data.CapNProto.Bits (bitsTests) where
+module Tests.Module.Data.Capnp.Bits (bitsTests) where
 
 import Data.Bits
-import Data.CapNProto.Bits
+import Data.Capnp.Bits
 import Data.Word
 
 import Test.Framework (testGroup)

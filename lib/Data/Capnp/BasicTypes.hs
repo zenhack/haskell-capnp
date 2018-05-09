@@ -1,12 +1,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-| Module: Data.CapNProto.BasicTypes
+{-| Module: Data.Capnp.BasicTypes
     Description: Handling of "built-in" capnp datatypes.
 
     In particular, things that are primitive types in the schema, language,
     but not on the wire (chiefly Data and Text, which are both just lists of
     bytes).
 -}
-module Data.CapNProto.BasicTypes
+module Data.Capnp.BasicTypes
     ( Text(..)
     , Data(..)
     , getData
@@ -20,9 +20,9 @@ import Control.Monad (when)
 import Data.Monoid   (Monoid)
 import Data.String   (IsString)
 
-import qualified Data.CapNProto.Blob    as B
-import qualified Data.CapNProto.Errors  as E
-import qualified Data.CapNProto.Untyped as U
+import qualified Data.Capnp.Blob    as B
+import qualified Data.Capnp.Errors  as E
+import qualified Data.Capnp.Untyped as U
 
 -- | A textual string ("Text" in capnproto's schema language). On the wire,
 -- this is NUL-terminated. The encoding should be UTF-8, but the library *does

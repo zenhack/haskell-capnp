@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Codec.CapNProto where
+module Codec.Capnp where
 
-import Data.CapNProto.Errors (ThrowError)
+import Data.Capnp.Errors (ThrowError)
 
 class Decerialize from to where
     decerialize :: (ThrowError m, Monad m) => from -> m to

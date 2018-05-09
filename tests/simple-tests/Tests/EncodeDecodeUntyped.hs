@@ -3,27 +3,27 @@ module Tests.EncodeDecodeUntyped
     (encodeDecodeUntypedTests)
   where
 
--- These tests verify Control.Monad.CapNProto.MessageBuilder and
--- Data.CapNProto.Untyped against eachother and against capnp
+-- These tests verify Control.Monad.Capnp.MessageBuilder and
+-- Data.Capnp.Untyped against eachother and against capnp
 -- encode/decode. They are not schema-aware.
 
 import Prelude hiding (length)
 
-import Control.Monad.CapNProto.MessageBuilder
-import Data.CapNProto.Schema
-import Data.CapNProto.Untyped
+import Control.Monad.Capnp.MessageBuilder
+import Data.Capnp.Schema
+import Data.Capnp.Untyped
 import Data.Word
 import Tests.Util
 
 import Control.Monad                 (void)
 import Control.Monad.Primitive       (RealWorld)
 import Data.ByteString               (ByteString)
-import Data.CapNProto.TraversalLimit (LimitT, runWithLimit)
+import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
 import Test.Framework                (Test)
 import Test.HUnit                    (Assertion, assertEqual)
 import Text.Heredoc                  (here)
 
-import qualified Data.CapNProto.Message as M
+import qualified Data.Capnp.Message as M
 
 -- Cross check capnp encode/decode, builder, and the readers. Verifies that:
 --

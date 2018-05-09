@@ -32,21 +32,21 @@ source-repository head
 library
     hs-source-dirs:       lib
     exposed-modules:
-        Control.Monad.CapNProto.MessageBuilder
-      , Codec.CapNProto
-      , Data.CapNProto.Address
-      , Data.CapNProto.BasicTypes
-      , Data.CapNProto.Bits
-      , Data.CapNProto.Blob
-      , Data.CapNProto.Errors
-      , Data.CapNProto.List
-      , Data.CapNProto.Message
-      , Data.CapNProto.Pointer
-      , Data.CapNProto.Schema
-      , Data.CapNProto.Untyped
-      , Data.CapNProto.Untyped.Pure
-      , Data.CapNProto.Core.Schema
-      , Data.CapNProto.TraversalLimit
+        Control.Monad.Capnp.MessageBuilder
+      , Codec.Capnp
+      , Data.Capnp.Address
+      , Data.Capnp.BasicTypes
+      , Data.Capnp.Bits
+      , Data.Capnp.Blob
+      , Data.Capnp.Errors
+      , Data.Capnp.List
+      , Data.Capnp.Message
+      , Data.Capnp.Pointer
+      , Data.Capnp.Schema
+      , Data.Capnp.Untyped
+      , Data.Capnp.Untyped.Pure
+      , Data.Capnp.Core.Schema
+      , Data.Capnp.TraversalLimit
     -- other-modules:
     -- other-extensions:
     build-depends:
@@ -106,13 +106,13 @@ test-suite simple-tests
     main-is:              Main.hs
     hs-source-dirs:       tests/simple-tests
     other-modules:
-        Tests.Module.Control.Monad.CapNProto.MessageBuilder
-      , Tests.Module.Data.CapNProto.Core.Schema
-      , Tests.Module.Data.CapNProto.Untyped
-      , Tests.Module.Data.CapNProto.Untyped.Pure
-      -- , Tests.Module.Data.CapNProto.List
-      , Tests.Module.Data.CapNProto.Pointer
-      , Tests.Module.Data.CapNProto.Bits
+        Tests.Module.Control.Monad.Capnp.MessageBuilder
+      , Tests.Module.Data.Capnp.Core.Schema
+      , Tests.Module.Data.Capnp.Untyped
+      , Tests.Module.Data.Capnp.Untyped.Pure
+      -- , Tests.Module.Data.Capnp.List
+      , Tests.Module.Data.Capnp.Pointer
+      , Tests.Module.Data.Capnp.Bits
       , Tests.EncodeDecodeUntyped
       -- , Tests.WalkSchemaCodeGenRequest
       , Tests.SchemaGeneration

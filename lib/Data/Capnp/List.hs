@@ -6,7 +6,7 @@ context, we can't just implement e.g. Traversable, but this module provides
 close analouges to the things allowed by Traversable (and similair type
 classes).
 -}
-module Data.CapNProto.List
+module Data.Capnp.List
     ( ListOf
     , length
     , index
@@ -24,7 +24,7 @@ module Data.CapNProto.List
 import Prelude hiding (fold, foldl, foldr, length, map, mapM_, sequence_)
 
 import Control.Monad          (join)
-import Data.CapNProto.Untyped (ListOf, ReadCtx, index, length)
+import Data.Capnp.Untyped (ListOf, ReadCtx, index, length)
 import Data.Monoid            (mappend, mempty)
 
 -- | Alias for 'fmap'

@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs           #-}
 {-# LANGUAGE RecordWildCards #-}
 {-|
-Module: Data.CapNProto.Untyped
+Module: Data.Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.
 
 The types and functions in this module know about things like structs and
@@ -12,7 +12,7 @@ lists, but are not schema aware.
 Each of the data types exported by this module is parametrized over a Blob
 instance, used as the underlying storage.
 -}
-module Data.CapNProto.Untyped
+module Data.Capnp.Untyped
     ( Ptr(..), List(..), Struct, ListOf
     , dataSection, ptrSection
     , getData, getPtr
@@ -29,17 +29,17 @@ import Prelude hiding (length)
 import Data.Bits
 import Data.Word
 
-import Data.CapNProto.Address        (WordAddr(..))
-import Data.CapNProto.Bits
+import Data.Capnp.Address        (WordAddr(..))
+import Data.Capnp.Bits
     (ByteCount(..), Word1(..), WordCount(..), wordsToBytes)
-import Data.CapNProto.Blob           (Blob, Slice(..))
-import Data.CapNProto.Errors         (ThrowError(throwError))
-import Data.CapNProto.Pointer        (ElementSize(..))
-import Data.CapNProto.TraversalLimit (Limit(invoice))
+import Data.Capnp.Blob           (Blob, Slice(..))
+import Data.Capnp.Errors         (ThrowError(throwError))
+import Data.Capnp.Pointer        (ElementSize(..))
+import Data.Capnp.TraversalLimit (Limit(invoice))
 
-import qualified Data.CapNProto.Errors  as E
-import qualified Data.CapNProto.Message as M
-import qualified Data.CapNProto.Pointer as P
+import qualified Data.Capnp.Errors  as E
+import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
