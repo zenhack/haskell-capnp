@@ -246,6 +246,11 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
                 formatStructBody thisModule nodeMap variantName (V.toList $ toVector fields)
             _               ->
                 error "A group field referenced a non-struct node."
+    Field'Unknown' _ ->
+        -- Some sort of field we don't know about (newer version of capnp probably).
+        -- Generate the variant, but we don't know what the argument type should be,
+        -- so leave it out.
+        HsAst.NormalVariant variantName Nothing
   where
     variantName = HsAst.Name [parentName, makeLegalName name]
 
@@ -258,6 +263,10 @@ generateField thisModule nodeMap Field{..} =
             Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
             Field'Group Field'Group'{..} ->
                 HsAst.Type (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
+            Field'Unknown' _ ->
+                -- Don't know how to interpret this; we'll have to leave the argument
+                -- opaque.
+                HsAst.Unit
 
 formatType :: Id -> NodeMap -> Type -> HsAst.Type
 formatType thisModule nodeMap (Type ty) = case ty of
@@ -290,7 +299,10 @@ formatType thisModule nodeMap (Type ty) = case ty of
                     Type'AnyPointer'Unconstrained Unconstrained'List ->
                         untypedName "List'" -- Note the '; this is an untyped List.
                     Type'AnyPointer'Unconstrained Unconstrained'Capability ->
-                        untypedName "Cap")
+                        untypedName "Cap"
+                    _ ->
+                        -- Something we don't know about; assume it could be anything.
+                        untypedName "PtrType")
                 []
             ]
     _ -> HsAst.Type "() {- TODO: constrained anyPointers -}" []

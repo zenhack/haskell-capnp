@@ -96,6 +96,7 @@ executable capnpc-haskell
       , utf8-string                       >= 1.0.1 && < 1.1
       , vector                            >= 0.12.0 && < 0.13
     ghc-options:
+      -Wincomplete-patterns
       -Wunused-imports
     default-language:     Haskell2010
 
@@ -142,5 +143,6 @@ test-suite simple-tests
       , template-haskell
       , deepseq
     ghc-options:
+      -Wincomplete-patterns
       -Wunused-imports
     default-language:     Haskell2010
