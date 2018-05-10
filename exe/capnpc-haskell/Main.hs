@@ -171,14 +171,14 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     , ""
     , mintercalate "\n" $ map generateImport $ V.toList imports
     , ""
-    , mconcat $ map (generateTypes id nodeMap)
+    , mconcat $ map (mconcat . map hsFmt . generateTypes id nodeMap)
         $ filter (\NodeMetaData{..} -> moduleId == id)
         $ map snd
         $ M.toList nodeMap
     ]
 
 
-generateTypes :: Id -> NodeMap -> NodeMetaData -> TB.Builder
+generateTypes :: Id -> NodeMap -> NodeMetaData -> [HsAst.DataDef]
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
         name = identifierFromMetaData moduleId meta
@@ -186,24 +186,27 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
         Node'Struct{..} ->
             let allFields = V.toList fields
             in
-                hsFmt (HsAst.DataDef
+                HsAst.DataDef
                     (HsAst.Name [name])
-                    [formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields])
-                <> case filter isUnionField allFields of
-                    [] -> "" -- No union.
-                    unionFields -> hsFmt $ HsAst.DataDef
-                        (HsAst.Name [name, ""])
-                        $ map (generateVariant thisModule nodeMap name) unionFields
+                    [formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields]
+                : case filter isUnionField allFields of
+                    [] -> [] -- No union.
+                    unionFields ->
+                        [ HsAst.DataDef
+                            (HsAst.Name [name, ""])
+                            $ map (generateVariant thisModule nodeMap name) unionFields
+                        ]
         Node'Enum{..} ->
-            hsFmt $ HsAst.DataDef
+            [ HsAst.DataDef
                 (HsAst.Name [name])
                 $ map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                  <> [HsAst.NormalVariant
+                <> [ HsAst.NormalVariant
                         { HsAst.variantName = HsAst.Name [name, "unknown'"]
                         , HsAst.variantType = Just $ HsAst.Type "Word16" []
                         }
-                     ]
-        _ -> "" -- TODO
+                   ]
+            ]
+        _ -> [] -- TODO
 
 generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsAst.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
