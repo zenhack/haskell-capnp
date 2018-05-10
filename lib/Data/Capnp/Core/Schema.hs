@@ -316,7 +316,7 @@ instance Decerialize Struct Value'Union' where
 
 -- TODO: move these to somewhere common.
 instance Decerialize (List Word8) Data where
-    decerialize (List vec) = pure $ vec2BS vec
+    decerialize = pure . vec2BS
 
 instance Decerialize (List Word8) Text where
     decerialize bytes = Text <$> (decerialize bytes >>= trim)

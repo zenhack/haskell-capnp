@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -32,6 +31,8 @@ module Data.Capnp.Untyped.Pure
   where
 
 import Prelude hiding (length, readList)
+
+import Data.Default.Instances.Vector ()
 
 import Data.String  (IsString)
 import GHC.Exts     (IsList(..))
@@ -80,8 +81,7 @@ data List'
     | ListStruct' (List Struct)
     deriving(Generic, Show, Read, Eq)
 
-newtype List a = List { toVector :: V.Vector a }
-    deriving(Generic, Show, Read, Eq, Ord, Functor, Foldable, Traversable)
+type List a = V.Vector a
 
 -- Cookie-cutter IsList instances. These are derivable with
 -- GeneralizedNewtypeDeriving as of ghc >= 8.2.1, but not on
@@ -96,20 +96,12 @@ instance IsList (Slice a) where
     toList (Slice list) = toList list
     fromList = Slice . fromList
     fromListN n = Slice . fromListN n
-instance IsList (List a) where
-    type Item (List a) = a
-    toList (List vec) = toList vec
-    fromList = List . fromList
-    fromListN n = List . fromListN n
-
-instance Default (List a) where
-    def = List V.empty
 
 length :: List a -> Int
-length (List vec) = V.length vec
+length = V.length
 
 sliceIndex :: Default a => Int -> Slice a -> a
-sliceIndex i (Slice (List vec))
+sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
 
@@ -133,7 +125,7 @@ readPtr (Just ptr) = Just <$> case ptr of
 -- used to parse the elements.
 readList :: U.ReadCtx m BS.ByteString => U.ListOf BS.ByteString a -> (a -> m b) -> m (List b)
 readList list readElt =
-    List <$> V.generateM (U.length list) (\i -> U.index i list >>= readElt)
+    V.generateM (U.length list) (\i -> U.index i list >>= readElt)
 
 readList' :: U.ReadCtx m BS.ByteString => U.List BS.ByteString -> m List'
 readList' (U.List0 l)      = List0' <$> readList l pure

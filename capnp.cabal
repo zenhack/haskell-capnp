@@ -55,6 +55,7 @@ library
       , bytes                             >= 0.15.4 && < 0.16
       , bytestring                        >= 0.10 && < 0.11
       , data-default                      >= 0.7.1 && < 0.8
+      , data-default-instances-vector     >= 0.0.1 && < 0.1
       , exceptions                        >= 0.10.0 && < 0.11
       , mtl                               >= 2.2.2 && < 2.3
       , primitive                         >= 0.6.3 && < 0.7

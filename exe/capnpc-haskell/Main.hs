@@ -11,7 +11,7 @@ import Data.Capnp.Core.Schema
 import Codec.Capnp               (Decerialize(..))
 import Data.Capnp.TraversalLimit (evalWithLimit)
 import Data.Capnp.Untyped        (rootPtr)
-import Data.Capnp.Untyped.Pure   (List(..), Text(..), readStruct)
+import Data.Capnp.Untyped.Pure   (Text(..), readStruct)
 
 import qualified Data.Capnp.Message as Message
 import qualified HsAst
@@ -62,13 +62,13 @@ identifierFromMetaData thisModule NodeMetaData{..} =
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
 collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
     [ [(id, meta)]
-    , concatMap collectNested $ V.toList $ toVector nestedNodes
+    , concatMap collectNested $ V.toList nestedNodes
     -- Child nodes can be in two places: most are in nestedNodes, but
     -- group fields are not, and can only be found in the fields of
     -- a struct union.
     , case union' of
             Node'Struct{..} ->
-                concatMap collectField $ V.toList $ toVector fields
+                concatMap collectField $ V.toList fields
             _ ->
                 []
     ]
@@ -136,10 +136,9 @@ makeNodeMap CodeGeneratorRequest{..} =
     & concat
     & M.fromList
   where
-    rootNodes = V.filter (\Node{..} -> scopeId == 0) $ toVector nodes
+    rootNodes = V.filter (\Node{..} -> scopeId == 0) nodes
     baseMap =
-        toVector nodes
-        & V.toList
+        V.toList nodes
         & map (\node@Node{..} -> (id, node))
         & M.fromList
 
@@ -176,7 +175,7 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "import qualified Data.Capnp.Untyped.Pure"
     , "import qualified Codec.Capnp"
     , ""
-    , intercalate "\n" $ map generateImport $ V.toList $ toVector imports
+    , intercalate "\n" $ map generateImport $ V.toList imports
     , ""
     , concatMap (generateTypes id nodeMap)
         $ filter (\NodeMetaData{..} -> moduleId == id)
@@ -191,7 +190,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
         name = identifierFromMetaData moduleId meta
     in case union' of
         Node'Struct{..} ->
-            let allFields = V.toList $ toVector fields
+            let allFields = V.toList fields
             in
                 hsFmt (HsAst.DataDef
                     (HsAst.Name [name])
@@ -204,7 +203,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
         Node'Enum{..} ->
             hsFmt $ HsAst.DataDef
                 (HsAst.Name [name])
-                $ map (generateEnum thisModule nodeMap name) (V.toList $ toVector enumerants)
+                $ map (generateEnum thisModule nodeMap name) (V.toList enumerants)
                   ++ [HsAst.NormalVariant
                         { HsAst.variantName = HsAst.Name [name, "unknown_"]
                         , HsAst.variantType = Just $ HsAst.Type "Word16" []
@@ -243,7 +242,7 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
         let NodeMetaData{node=node@Node{..},..} = nodeMap M.! typeId
         in case union' of
             Node'Struct{..} ->
-                formatStructBody thisModule nodeMap variantName (V.toList $ toVector fields)
+                formatStructBody thisModule nodeMap variantName $ V.toList fields
             _               ->
                 error "A group field referenced a non-struct node."
     Field'Unknown' _ ->
@@ -322,4 +321,4 @@ handleCGR cgr@CodeGeneratorRequest{..} = V.toList $
     in fmap
         (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
             (mustDecodeUtf8 filename, generateFile nodeMap reqFile))
-        (toVector requestedFiles)
+        requestedFiles
