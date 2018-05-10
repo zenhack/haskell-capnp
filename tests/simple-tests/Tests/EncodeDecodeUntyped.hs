@@ -15,13 +15,13 @@ import Data.Capnp.Untyped
 import Data.Word
 import Tests.Util
 
-import Control.Monad                 (void)
-import Control.Monad.Primitive       (RealWorld)
-import Data.ByteString               (ByteString)
+import Control.Monad             (void)
+import Control.Monad.Primitive   (RealWorld)
+import Data.ByteString           (ByteString)
 import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
-import Test.Framework                (Test)
-import Test.HUnit                    (Assertion, assertEqual)
-import Text.Heredoc                  (here)
+import Test.Framework            (Test)
+import Test.HUnit                (Assertion, assertEqual)
+import Text.Heredoc              (here)
 
 import qualified Data.Capnp.Message as M
 

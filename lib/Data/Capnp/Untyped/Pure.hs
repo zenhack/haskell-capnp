@@ -37,11 +37,11 @@ import Data.String  (IsString)
 import GHC.Exts     (IsList(..))
 import GHC.Generics (Generic)
 
-import qualified Data.ByteString        as BS
-import qualified Data.Capnp.Untyped as U
-import           Data.Default           (Default(def))
-import           Data.Primitive.Array   (Array)
-import qualified Data.Vector            as V
+import qualified Data.ByteString      as BS
+import qualified Data.Capnp.Untyped   as U
+import           Data.Default         (Default(def))
+import           Data.Primitive.Array (Array)
+import qualified Data.Vector          as V
 import           Data.Word
 
 type Cap = Word32

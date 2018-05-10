@@ -37,7 +37,7 @@ import Data.Capnp.Bits
     (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
 import Data.Capnp.Errors (ThrowError, throwError)
 
-import qualified Data.ByteString       as BS
+import qualified Data.ByteString   as BS
 import qualified Data.Capnp.Errors as E
 
 -- TODO: be clearer about error handling re: these classes. The general notion

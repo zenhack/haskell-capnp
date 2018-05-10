@@ -11,13 +11,13 @@ import Prelude hiding (length)
 import Data.Capnp.Untyped
 import Tests.Util
 
-import Control.Monad                 (mapM_, when)
+import Control.Monad             (mapM_, when)
 import Data.Capnp.BasicTypes     (Text(..))
 import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
-import Test.Framework                (Test)
-import Test.HUnit                    (Assertion, assertEqual)
+import Test.Framework            (Test)
+import Test.HUnit                (Assertion, assertEqual)
 
-import qualified Data.ByteString                                     as BS
+import qualified Data.ByteString                                 as BS
 import qualified Data.Capnp.Message                              as M
 import qualified Prelude
 import qualified Schema.Capnp.Reader.Schema                      as Schema

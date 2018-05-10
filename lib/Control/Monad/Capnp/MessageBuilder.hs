@@ -35,7 +35,7 @@ import Data.Capnp.Bits
     , wordsToBytes
     )
 import Data.Capnp.Blob
-import Data.Capnp.Schema          (Field(..))
+import Data.Capnp.Schema              (Field(..))
 import Data.Int
 import Data.Primitive.ByteArray       (MutableByteArray, newByteArray)
 import Data.Word

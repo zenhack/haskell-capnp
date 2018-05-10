@@ -16,17 +16,17 @@ module Data.Capnp.Message
     )
   where
 
-import Control.Monad                 (void, when)
-import Control.Monad.State           (evalStateT, get, put)
-import Control.Monad.Trans.Class     (MonadTrans(..))
+import Control.Monad             (void, when)
+import Control.Monad.State       (evalStateT, get, put)
+import Control.Monad.Trans.Class (MonadTrans(..))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo, wordsToBytes)
 import Data.Capnp.Errors         (Error(..), ThrowError(..))
 import Data.Capnp.TraversalLimit (Limit(invoice), evalWithLimit)
-import Data.Word                     (Word32, Word64)
+import Data.Word                 (Word32, Word64)
 
 import qualified Data.Capnp.Blob as B
-import qualified Data.Vector         as V
+import qualified Data.Vector     as V
 
 newtype Message a = Message (V.Vector a) deriving(Show)
 

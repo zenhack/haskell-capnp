@@ -23,9 +23,9 @@ module Data.Capnp.List
 
 import Prelude hiding (fold, foldl, foldr, length, map, mapM_, sequence_)
 
-import Control.Monad          (join)
+import Control.Monad      (join)
 import Data.Capnp.Untyped (ListOf, ReadCtx, index, length)
-import Data.Monoid            (mappend, mempty)
+import Data.Monoid        (mappend, mempty)
 
 -- | Alias for 'fmap'
 map :: (a -> c) -> ListOf b a -> ListOf b c

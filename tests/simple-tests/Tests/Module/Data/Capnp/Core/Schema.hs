@@ -11,9 +11,9 @@ import Tests.Util
 
 import Data.Capnp.TraversalLimit (evalWithLimit)
 import Data.Capnp.Untyped.Pure   (readStruct)
-import Test.Framework                (testGroup)
-import Test.HUnit                    (assertEqual)
-import Text.Heredoc                  (here, there)
+import Test.Framework            (testGroup)
+import Test.HUnit                (assertEqual)
+import Text.Heredoc              (here, there)
 
 import qualified Data.Capnp.Untyped as U
 

@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Test.Framework                                      (defaultMain)
+import Test.Framework                                  (defaultMain)
 import Tests.EncodeDecodeUntyped
     (encodeDecodeUntypedTests)
 import Tests.Module.Control.Monad.Capnp.MessageBuilder (buildTests)

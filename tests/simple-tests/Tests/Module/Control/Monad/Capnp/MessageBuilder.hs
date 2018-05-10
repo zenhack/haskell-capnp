@@ -7,7 +7,7 @@ import Data.Word
 
 import Control.Monad           (void)
 import Control.Monad.Primitive (RealWorld)
-import Data.Capnp.Schema   (Field(..))
+import Data.Capnp.Schema       (Field(..))
 import Test.HUnit              (Assertion, assertEqual)
 import Tests.Util              (assertionsToTest, freezeAsByteString)
 

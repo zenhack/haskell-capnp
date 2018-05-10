@@ -10,9 +10,9 @@ import Prelude hiding (id)
 
 import Codec.Capnp (Decerialize(..))
 
-import Data.Capnp.Errors (Error(SchemaViolationError), ThrowError(..))
-import Data.Default          (def)
-import Data.ReinterpretCast  (wordToDouble, wordToFloat)
+import Data.Capnp.Errors    (Error(SchemaViolationError), ThrowError(..))
+import Data.Default         (def)
+import Data.ReinterpretCast (wordToDouble, wordToFloat)
 
 import Data.Bits
 import Data.Capnp.Untyped.Pure

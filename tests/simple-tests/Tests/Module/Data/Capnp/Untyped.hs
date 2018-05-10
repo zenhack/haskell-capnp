@@ -7,12 +7,12 @@ import Prelude hiding (length)
 import Data.Capnp.Untyped
 import Tests.Util
 
-import Control.Monad                 (forM_, when)
+import Control.Monad             (forM_, when)
 import Data.Capnp.TraversalLimit (execWithLimit)
-import Data.ReinterpretCast          (wordToDouble)
-import Test.Framework                (Test)
-import Test.HUnit                    (assertEqual)
-import Text.Heredoc                  (here, there)
+import Data.ReinterpretCast      (wordToDouble)
+import Test.Framework            (Test)
+import Test.HUnit                (assertEqual)
+import Text.Heredoc              (here, there)
 
 import qualified Data.ByteString as BS
 
