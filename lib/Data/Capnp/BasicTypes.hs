@@ -29,6 +29,9 @@ import qualified Data.Capnp.Untyped as U
 -- not* verify this; users of the library must do validation themselves, if
 -- they care about this.
 --
+-- Rationale: validation would require doing an up-front pass over the data,
+-- which runs counter to the overall design of capnproto.
+--
 -- The argument to the constructor is the slice of the original message
 -- containing the text (but not the NUL terminator).
 newtype Text b = Text b
