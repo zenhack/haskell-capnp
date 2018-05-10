@@ -180,8 +180,8 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
 
 
 -- | Check whether the node's parent scope actually needs a type definition for
--- the node. This is true unless it is a group belonging to a union, since in
--- that case for a group field named varaint1 we generate code like:
+-- the node. This is true unless it is a group belonging to a union, which itself
+-- has no anonymous union. In that case we just inline the fields, like:
 --
 -- @@@
 -- data MyUnion
@@ -193,7 +193,7 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
 --
 -- ...and thus don't need an intervening type definition.
 neededByParent :: NodeMap -> Node -> Bool
-neededByParent nodeMap Node{id,scopeId,union'=Node'Struct{isGroup}} | isGroup =
+neededByParent nodeMap Node{id,scopeId,union'=Node'Struct{isGroup,discriminantCount}} | isGroup =
     case nodeMap M.! scopeId of
         NodeMetaData{node=Node{union'=Node'Struct{fields}}} ->
             let me = V.filter
@@ -203,7 +203,7 @@ neededByParent nodeMap Node{id,scopeId,union'=Node'Struct{isGroup}} | isGroup =
                         fields
             in if V.length me /= 1
                 then error "Invalid schema; group matched multiple fields in its scopeId!"
-                else not $ isUnionField (me V.! 0)
+                else not (isUnionField (me V.! 0) && discriminantCount == 0)
         _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
 neededByParent _ _ = True
 
