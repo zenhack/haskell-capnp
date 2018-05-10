@@ -142,7 +142,7 @@ data Node'Union'
         , pointerCount          :: Word16
         , preferredListEncoding :: ElementSize
         , isGroup               :: Bool
-        , disciriminantCount    :: Word16
+        , discriminantCount     :: Word16
         , discriminantOffset    :: Word32
         , fields                :: List Field
         }
