@@ -1,5 +1,6 @@
 {-| This is the capnp compiler plugin.
 -}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
@@ -178,12 +179,40 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     ]
 
 
+-- | Check whether the node's parent scope actually needs a type definition for
+-- the node. This is true unless it is a group belonging to a union, since in
+-- that case for a group field named varaint1 we generate code like:
+--
+-- @@@
+-- data MyUnion
+--     MyUnion'variant1
+--        { foo :: Bar
+--        , baz :: Quux
+--        }
+-- @@@
+--
+-- ...and thus don't need an intervening type definition.
+neededByParent :: NodeMap -> Node -> Bool
+neededByParent nodeMap Node{id,scopeId,union'=Node'Struct{isGroup}} | isGroup =
+    case nodeMap M.! scopeId of
+        NodeMetaData{node=Node{union'=Node'Struct{fields}}} ->
+            let me = V.filter
+                        (\case
+                            Field{union'=Field'Group Field'Group'{typeId}} -> typeId == id
+                            _ -> False)
+                        fields
+            in if V.length me /= 1
+                then error "Invalid schema; group matched multiple fields in its scopeId!"
+                else not $ isUnionField (me V.! 0)
+        _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
+neededByParent _ _ = True
+
 generateTypes :: Id -> NodeMap -> NodeMetaData -> [HsAst.DataDef]
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
         name = identifierFromMetaData moduleId meta
     in case union' of
-        Node'Struct{..} ->
+        Node'Struct{..} | neededByParent nodeMap node ->
             let allFields = V.toList fields
             in
                 HsAst.DataDef
