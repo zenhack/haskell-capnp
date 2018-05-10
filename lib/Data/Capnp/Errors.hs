@@ -32,11 +32,7 @@ import           GHC.Conc                   (STM)
 --    this module.
 -- 3. Don't necessarily enforce evaluation order to the same extent;
 --    while @throwM e >> m@ is required to be equivalent to @throwM e@,
---    it is legal (though not required) for e.g:
---
---      @snd <$> ((,) <$> throwError e <*> pure 4@
---
--- to be equivalnet to @pure 4@.
+--    it is also legal for @throwError e *> m@ to be equivalent to @m@.
 class Applicative f => ThrowError f where
     throwError :: Error -> f a
     default throwError :: MonadThrow f => Error -> f a

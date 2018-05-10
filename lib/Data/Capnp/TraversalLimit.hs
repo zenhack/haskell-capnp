@@ -44,6 +44,12 @@ import           Control.Monad.Writer     (WriterT)
 
 -- | mtl-style type class to track the traversal limit. This is used
 -- by other parts of the library which actually do the reading.
+--
+-- Note that, deviating from the standard mtl type classes, there is no
+-- Monad constraint. The motivations are similar to 'ThrowError': We
+-- may at some point develop an instance of this class that allows
+-- parrallel or non-deterministic exploration of a message, and only
+-- 'Applicative' is really needed.
 class Limit m where
     -- | @'invoice' n@ deducts @n@ from the traversal limit, signalling
     -- an error if the limit is exhausted.
