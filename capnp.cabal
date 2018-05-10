@@ -35,7 +35,8 @@ library
         Control.Monad.Capnp.MessageBuilder
       , Codec.Capnp
       , Data.Capnp.Address
-      , Data.Capnp.BasicTypes
+      , Data.Capnp.BuiltinTypes
+      , Data.Capnp.BuiltinTypes.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Blob
       , Data.Capnp.Errors

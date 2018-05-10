@@ -15,6 +15,8 @@ import Control.Monad.Catch (Exception, MonadThrow(throwM))
 
 import Control.Monad.Trans.Class (lift)
 
+import Data.Text.Encoding.Error (UnicodeException)
+
 -- Just so we can define ThrowError instances:
 import           Control.Monad.Catch.Pure   (CatchT)
 import           Control.Monad.Identity     (IdentityT)
@@ -57,6 +59,12 @@ data Error
     -- | A 'SchemaViolationError' indicates that part of the message does
     -- not match the schema.
     | SchemaViolationError String
+    -- | An 'InvalidUtf8Error' indicates that a text value in the message
+    -- was invalid utf8.
+    --
+    -- Note well: Most parts of the library don't actually check for valid
+    -- utf8 -- don't assume the check is made unless an interface says it is.
+    | InvalidUtf8Error UnicodeException
     deriving(Show, Eq)
 
 instance Exception Error

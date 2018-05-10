@@ -3,7 +3,6 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE ViewPatterns      #-}
 module Main (main) where
 
 import Data.Capnp.Core.Schema
@@ -11,28 +10,23 @@ import Data.Capnp.Core.Schema
 import Codec.Capnp               (Decerialize(..))
 import Data.Capnp.TraversalLimit (evalWithLimit)
 import Data.Capnp.Untyped        (rootPtr)
-import Data.Capnp.Untyped.Pure   (Text(..), readStruct)
+import Data.Capnp.Untyped.Pure   (readStruct)
 
 import qualified Data.Capnp.Message as Message
 import qualified HsAst
 
-import HsAst (HsFmt(..))
+import HsAst (HsFmt(..), mintercalate)
 
 import Data.Function ((&))
-import Data.List     (intercalate)
+import Data.Monoid   ((<>))
 import Text.Printf   (printf)
 
-import qualified Data.ByteString    as BS
-import qualified Data.Map.Strict    as M
-import qualified Data.Text          as T
-import qualified Data.Text.Encoding as T
-import qualified Data.Vector        as V
-
--- General TODO: we should avoid using String in favor of Text.Builder, and
--- also avoid asymptotically inefficient uses of lists.
-
-mustDecodeUtf8 :: Text -> String
-mustDecodeUtf8 = T.unpack . T.decodeUtf8 . toBytes
+import qualified Data.ByteString        as BS
+import qualified Data.Map.Strict        as M
+import qualified Data.Text              as T
+import qualified Data.Text.Lazy.Builder as TB
+import qualified Data.Text.Lazy.IO      as TIO
+import qualified Data.Vector            as V
 
 type NodeMap = M.Map Id NodeMetaData
 
@@ -40,7 +34,7 @@ type NodeMap = M.Map Id NodeMetaData
 data NodeMetaData = NodeMetaData
     { moduleId  :: Id
     -- ^ The id of the module that this node belongs to.
-    , namespace :: [String]
+    , namespace :: [T.Text]
     -- ^ The namespace within a file that the node is defined.
     , node      :: Node
     -- ^ The node itself.
@@ -50,12 +44,12 @@ data NodeMetaData = NodeMetaData
 -- | @'identifierFromMetaData' thisModule meta@ return a haskell identifier
 -- for a node based on the metadata @meta@, and @thisModule@, the id for
 -- the module in which the name will be used.
-identifierFromMetaData :: Id -> NodeMetaData -> String
+identifierFromMetaData :: Id -> NodeMetaData -> T.Text
 identifierFromMetaData thisModule NodeMetaData{..} =
     (if moduleId /= thisModule
-        then moduleNameFromId moduleId ++ "."
+        then moduleNameFromId moduleId <> "."
         else "")
-    ++ intercalate "'" (reverse namespace)
+    <> mintercalate "'" (reverse namespace)
 
 -- Helper for makeNodeMap; recursively collect metadata for a node and
 -- all of its descendants in the tree.
@@ -100,10 +94,10 @@ collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
 
 -- | Convert the argument into a valid haskell identifier. This doesn't handle
 -- every possible violation, just ones that might occur in legal schema.
-makeLegalName :: Text -> String
-makeLegalName (mustDecodeUtf8 -> str)
-    | str `elem` keywords = str ++ "_"
-    | otherwise = str
+makeLegalName :: T.Text -> T.Text
+makeLegalName txt
+    | txt `elem` keywords = txt <> "_"
+    | otherwise = txt
   where
     keywords =
         [ "as", "case", "of", "class", "data", "family", "instance", "default"
@@ -121,7 +115,7 @@ main = do
   where
     printResult (filename, contents) = do
         putStrLn $ "-- " ++ filename
-        putStrLn contents
+        TIO.putStrLn $ TB.toLazyText contents
 
 -- | Build a NodeMap for all of the nodes in the CodeGeneratorRequest.
 makeNodeMap :: CodeGeneratorRequest -> NodeMap
@@ -152,20 +146,20 @@ makeNodeMap CodeGeneratorRequest{..} =
 -- We will also want to probably output a module with a more human-friendly
 -- name, which re-exports everything from this module, but this is still
 -- TODO.
-moduleNameFromId :: Id -> String
-moduleNameFromId = printf "Data.Capnp.ById.X%x.Pure"
+moduleNameFromId :: Id -> T.Text
+moduleNameFromId = T.pack . printf "Data.Capnp.ById.X%x.Pure"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the pure-untyped module.
-untypedName :: String -> HsAst.Name
-untypedName name = HsAst.Name ["Data.Capnp.Untyped.Pure." ++ name]
+untypedName :: T.Text -> HsAst.Name
+untypedName name = HsAst.Name ["Data.Capnp.Untyped.Pure." <> name]
 
 -- | Generate the source code for a module based on a RequestedFile.
-generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> String
-generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
+generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> TB.Builder
+generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
-    , "module " ++ moduleNameFromId id ++ " where"
+    , "module " <> TB.fromText (moduleNameFromId id) <> " where"
     , ""
     , "import Data.Int"
     , "import Data.Word"
@@ -175,16 +169,16 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = intercalate "\n"
     , "import qualified Data.Capnp.Untyped.Pure"
     , "import qualified Codec.Capnp"
     , ""
-    , intercalate "\n" $ map generateImport $ V.toList imports
+    , mintercalate "\n" $ map generateImport $ V.toList imports
     , ""
-    , concatMap (generateTypes id nodeMap)
+    , mconcat $ map (generateTypes id nodeMap)
         $ filter (\NodeMetaData{..} -> moduleId == id)
         $ map snd
         $ M.toList nodeMap
     ]
 
 
-generateTypes :: Id -> NodeMap -> NodeMetaData -> String
+generateTypes :: Id -> NodeMap -> NodeMetaData -> TB.Builder
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
         name = identifierFromMetaData moduleId meta
@@ -195,7 +189,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 hsFmt (HsAst.DataDef
                     (HsAst.Name [name])
                     [formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields])
-                ++ case filter isUnionField allFields of
+                <> case filter isUnionField allFields of
                     [] -> "" -- No union.
                     unionFields -> hsFmt $ HsAst.DataDef
                         (HsAst.Name [name, ""])
@@ -204,17 +198,17 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
             hsFmt $ HsAst.DataDef
                 (HsAst.Name [name])
                 $ map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                  ++ [HsAst.NormalVariant
+                  <> [HsAst.NormalVariant
                         { HsAst.variantName = HsAst.Name [name, "unknown_"]
                         , HsAst.variantType = Just $ HsAst.Type "Word16" []
                         }
                      ]
         _ -> "" -- TODO
 
-generateEnum :: Id -> NodeMap -> String -> Enumerant -> HsAst.Variant
+generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsAst.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
     HsAst.NormalVariant
-        { HsAst.variantName = HsAst.Name [parentName, mustDecodeUtf8 name]
+        { HsAst.variantName = HsAst.Name [parentName, name]
         , HsAst.variantType = Nothing
         }
 
@@ -226,13 +220,13 @@ formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.Variant
 formatStructBody thisModule nodeMap (HsAst.Name parentName) fields = HsAst.Record
     (HsAst.Name parentName)
     $ map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
-    ++ case filter isUnionField fields of
+    <> case filter isUnionField fields of
         [] -> [] -- no union
-        _ -> [HsAst.Field "union'" $ HsAst.Type (HsAst.Name (parentName ++ [""])) []]
+        _ -> [HsAst.Field "union'" $ HsAst.Type (HsAst.Name (parentName <> [""])) []]
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
-generateVariant :: Id -> NodeMap -> String -> Field -> HsAst.Variant
+generateVariant :: Id -> NodeMap -> T.Text -> Field -> HsAst.Variant
 generateVariant thisModule nodeMap parentName Field{..} = case union' of
     Field'Slot Field'Slot'{..} -> HsAst.NormalVariant variantName $
         case type' of
@@ -311,14 +305,14 @@ formatType thisModule nodeMap (Type ty) = case ty of
         -- TODO: use brand.
         []
 
-generateImport :: CodeGeneratorRequest'RequestedFile'Import -> String
+generateImport :: CodeGeneratorRequest'RequestedFile'Import -> TB.Builder
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
-    "import qualified " ++ moduleNameFromId id
+    "import qualified " <> TB.fromText (moduleNameFromId id)
 
-handleCGR :: CodeGeneratorRequest -> [(FilePath, String)]
+handleCGR :: CodeGeneratorRequest -> [(FilePath, TB.Builder)]
 handleCGR cgr@CodeGeneratorRequest{..} = V.toList $
     let nodeMap = makeNodeMap cgr
     in fmap
         (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
-            (mustDecodeUtf8 filename, generateFile nodeMap reqFile))
+            (T.unpack filename, generateFile nodeMap reqFile))
         requestedFiles

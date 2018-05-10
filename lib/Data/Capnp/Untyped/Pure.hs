@@ -20,8 +20,6 @@ module Data.Capnp.Untyped.Pure
     , Struct(..)
     , List'(..)
     , List(..)
-    , Text(..)
-    , Data(..)
     , length
     , sliceIndex
 
@@ -34,7 +32,6 @@ import Prelude hiding (length, readList)
 
 import Data.Default.Instances.Vector ()
 
-import Data.String  (IsString)
 import GHC.Exts     (IsList(..))
 import GHC.Generics (Generic)
 
@@ -46,16 +43,12 @@ import qualified Data.Vector          as V
 import           Data.Word
 
 type Cap = Word32
-type Data = BS.ByteString
 
 newtype Slice a = Slice (List a)
     deriving(Generic, Show, Read, Eq, Ord, Functor, Default)
 
 newtype Message = Message (Array BS.ByteString)
     deriving(Generic, Show, Read, Eq, Ord)
-
-newtype Text = Text { toBytes :: BS.ByteString }
-    deriving(Generic, Show, Read, Eq, Ord, IsString)
 
 data PtrType
     = PtrStruct !Struct

@@ -15,12 +15,10 @@ import Data.Default         (def)
 import Data.ReinterpretCast (wordToDouble, wordToFloat)
 
 import Data.Bits
+import Data.Capnp.BuiltinTypes.Pure
 import Data.Capnp.Untyped.Pure
 import Data.Int
 import Data.Word
-
-import qualified Data.ByteString as BS
-import qualified Data.Vector     as V
 
 type Id = Word64
 
@@ -314,18 +312,6 @@ instance Decerialize Struct Value'Union' where
             18 -> pure $ Value'AnyPointer (sliceIndex 0 ptrs)
             _ -> pure $ Value'Unknown' tag
 
--- TODO: move these to somewhere common.
-instance Decerialize (List Word8) Data where
-    decerialize = pure . vec2BS
-
-instance Decerialize (List Word8) Text where
-    decerialize bytes = Text <$> (decerialize bytes >>= trim)
-      where
-        trim bs
-            | BS.length bs == 0 = pure bs
-            | BS.index bs (BS.length bs - 1) /= 0 = throwError $ SchemaViolationError "Text did not end with NUL"
-            | otherwise = pure $ BS.take (BS.length bs - 1) bs
-
 ptrStruct :: ThrowError f => Maybe PtrType -> f Struct
 ptrStruct Nothing              = pure def
 ptrStruct (Just (PtrStruct s)) = pure s
@@ -372,10 +358,6 @@ listStruct (Just (PtrList (ListStruct' l))) = pure l
 listStruct _               = expected "pointer to list of structs"
 
 expected msg = throwError $ SchemaViolationError $ "expected " ++ msg
-
-vec2BS :: V.Vector Word8 -> BS.ByteString
--- TODO: replace this with some existing library function (I'm sure one exists)
-vec2BS = BS.pack . V.toList
 
 data Brand = Brand
     { scopes :: List Brand'Scope
