@@ -25,36 +25,36 @@ import           Control.Monad.State.Strict (StateT)
 import           Control.Monad.Writer       (WriterT)
 import           GHC.Conc                   (STM)
 
--- | Similar MonadThrow, but:
+-- | 'ThrowError' is similar 'MonadThrow', but:
 --
--- 1. Only require Applicative.
--- 2. Don't allow general exceptions, just the 'Error' type defined in
+-- 1. Only requires 'Applicative'.
+-- 2. Doesn't allow general exceptions, just the 'Error' type defined in
 --    this module.
--- 3. Don't necessarily enforce evaluation order to the same extent;
---    while @throwM e >> m@ is required to be equivalent to @throwM e@,
---    it is also legal for @throwError e *> m@ to be equivalent to @m@.
+-- 3. Doesn't necessarily enforce evaluation order to the same extent;
+--    while @'throwM' e >> m@ is required to be equivalent to @'throwM' e@,
+--    it is also legal for @'throwError' e *> m@ to be equivalent to @m@.
 class Applicative f => ThrowError f where
     throwError :: Error -> f a
     default throwError :: MonadThrow f => Error -> f a
     throwError = throwM
 
 data Error
-    -- | A @BoundsError@ indicates an attempt to access an illegal
-    -- index @index@ within a sequence of length @len@.
+    -- | A 'BoundsError' indicates an attempt to access an illegal
+    -- index 'index' within a sequence of length 'maxIndex'.
     = BoundsError
         { index    :: Int
         , maxIndex :: Int
         }
-    -- | A @RecursionLimitError@ indicates that the recursion depth limit
+    -- | A 'RecursionLimitError' indicates that the recursion depth limit
     -- was exceeded.
     | RecursionLimitError
-    -- | A @TraversalLimitError@ indicates that the traversal limit was
+    -- | A 'TraversalLimitError' indicates that the traversal limit was
     -- exceeded.
     | TraversalLimitError
-    -- | An @InvalidDataError@ indicates that a part of a message being
+    -- | An 'InvalidDataError' indicates that a part of a message being
     -- parsed was malformed.
     | InvalidDataError String -- error message
-    -- | A @SchemaViolationError@ indicates that part of the message does
+    -- | A 'SchemaViolationError' indicates that part of the message does
     -- not match the schema.
     | SchemaViolationError String
     deriving(Show, Eq)

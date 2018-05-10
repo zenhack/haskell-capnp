@@ -1,4 +1,6 @@
-{-| Utility module for working with capnproto lists.
+{-|
+Module: Data.Capnp.List
+Description: Utility module for working with capnproto lists.
 
 This supplies many familiar operators for working with sequence types.
 Unfortunately, because the capnproto readers operate inside of a monadic
