@@ -199,7 +199,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 (HsAst.Name [name])
                 $ map (generateEnum thisModule nodeMap name) (V.toList enumerants)
                   <> [HsAst.NormalVariant
-                        { HsAst.variantName = HsAst.Name [name, "unknown_"]
+                        { HsAst.variantName = HsAst.Name [name, "unknown'"]
                         , HsAst.variantType = Just $ HsAst.Type "Word16" []
                         }
                      ]
