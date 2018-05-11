@@ -22,6 +22,9 @@ import Data.Function ((&))
 import Data.Monoid   ((<>))
 import Text.Printf   (printf)
 
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath  (takeDirectory)
+
 import qualified Data.ByteString        as BS
 import qualified Data.Map.Strict        as M
 import qualified Data.Text              as T
@@ -112,11 +115,11 @@ main = do
     msg <- Message.decode =<< BS.getContents
     -- Traversal limit is 64 MiB. Somewhat aribtrary.
     cgr@CodeGeneratorRequest{..} <- evalWithLimit (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
-    mapM_ printResult (handleCGR cgr)
+    mapM_ saveResult (handleCGR cgr)
   where
-    printResult (filename, contents) = do
-        putStrLn $ "-- " ++ filename
-        TIO.putStrLn $ TB.toLazyText contents
+    saveResult (filename, contents) = do
+        createDirectoryIfMissing True (takeDirectory filename)
+        TIO.writeFile filename $ TB.toLazyText contents
 
 -- | Build a NodeMap for all of the nodes in the CodeGeneratorRequest.
 makeNodeMap :: CodeGeneratorRequest -> NodeMap
@@ -161,6 +164,8 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "module " <> TB.fromText (moduleNameFromId id) <> " where"
+    , ""
+    , "-- generated from " <> TB.fromText filename
     , ""
     , "import Data.Int"
     , "import Data.Word"
@@ -346,5 +351,7 @@ handleCGR cgr@CodeGeneratorRequest{..} = V.toList $
     let nodeMap = makeNodeMap cgr
     in fmap
         (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
-            (T.unpack filename, generateFile nodeMap reqFile))
+            ( printf "Data/Capnp/ById/X%x/Pure.hs" id
+            , generateFile nodeMap reqFile)
+            )
         requestedFiles
