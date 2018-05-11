@@ -226,11 +226,6 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 -- variants to generate that go inside the union:
                 unionVariants =
                     map (generateVariant thisModule nodeMap name) unionFields
-                -- variant for the outside of the union. If unionVariants is
-                -- non empty, this includes a field @union'@ that points to
-                -- another type for the union.
-                commonVariants =
-                    [formatStructBody thisModule nodeMap typeName allFields]
             in case (unionFields, commonFields) of
                 ([], []) ->
                     -- I(zenhack) don't fully understand this case. It seems like
@@ -243,7 +238,8 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [HsAst.DataDef typeName commonVariants]
+                    [HsAst.DataDef typeName
+                        [formatStructBody thisModule nodeMap typeName allFields]]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
@@ -251,9 +247,12 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
-                    [ HsAst.DataDef typeName commonVariants
-                    , HsAst.DataDef (HsAst.Name [name, ""]) unionVariants
-                    ]
+                    let unionName = HsAst.Name [name, ""]
+                    in  [ HsAst.DataDef
+                            typeName
+                            [formatStructBody thisModule nodeMap unionName allFields]
+                        , HsAst.DataDef unionName unionVariants
+                        ]
         Node'Enum{..} ->
             [ HsAst.DataDef
                 (HsAst.Name [name])
@@ -278,12 +277,12 @@ isUnionField :: Field -> Bool
 isUnionField Field{..} = discriminantValue /= field'noDiscriminant
 
 formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.Variant
-formatStructBody thisModule nodeMap (HsAst.Name parentName) fields = HsAst.Record
-    (HsAst.Name parentName)
+formatStructBody thisModule nodeMap parentName fields = HsAst.Record
+    parentName
     $ map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
     <> case filter isUnionField fields of
         [] -> [] -- no union
-        _ -> [HsAst.Field "union'" $ HsAst.Type (HsAst.Name (parentName <> [""])) []]
+        _  -> [HsAst.Field "union'" $ HsAst.Type parentName []]
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.

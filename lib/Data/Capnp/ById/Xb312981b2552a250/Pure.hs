@@ -74,7 +74,7 @@ data Provide
     deriving(Show, Read, Eq)
 
 data Return
-    = Return
+    = Return'
         { answerId :: Word32
         , releaseParamCaps :: Bool
         , union' :: Return'
@@ -106,7 +106,7 @@ data Exception'Type
     deriving(Show, Read, Eq)
 
 data Resolve
-    = Resolve
+    = Resolve'
         { promiseId :: Word32
         , union' :: Resolve'
         }

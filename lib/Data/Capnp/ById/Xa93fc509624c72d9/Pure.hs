@@ -50,7 +50,7 @@ data Enumerant
     deriving(Show, Read, Eq)
 
 data Field
-    = Field
+    = Field'
         { name :: Text
         , codeOrder :: Word16
         , annotations :: List (Annotation)
@@ -80,7 +80,7 @@ data Superclass
     deriving(Show, Read, Eq)
 
 data Brand'Scope
-    = Brand'Scope
+    = Brand'Scope'
         { scopeId :: Word64
         , union' :: Brand'Scope'
         }
@@ -119,7 +119,7 @@ data CodeGeneratorRequest
 
 data Type'anyPointer
     = Type'anyPointer'unconstrained
-        { union' :: Type'anyPointer'unconstrained'
+        { union' :: Type'anyPointer'unconstrained
         }
     | Type'anyPointer'parameter
         { scopeId :: Word64
@@ -196,7 +196,7 @@ data Type
         , brand :: Brand
         }
     | Type'anyPointer
-        { union' :: Type'anyPointer'
+        { union' :: Type'anyPointer
         }
     deriving(Show, Read, Eq)
 
@@ -228,7 +228,7 @@ data Node'NestedNode
     deriving(Show, Read, Eq)
 
 data Node
-    = Node
+    = Node'
         { id :: Word64
         , displayName :: Text
         , displayNamePrefixLength :: Word32
