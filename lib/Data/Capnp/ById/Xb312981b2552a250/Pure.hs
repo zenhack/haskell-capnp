@@ -7,7 +7,8 @@ module Data.Capnp.ById.Xb312981b2552a250.Pure where
 import Data.Int
 import Data.Word
 
-import Data.Capnp.Untyped.Pure (Text, Data, List)
+import Data.Capnp.Untyped.Pure (List)
+import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Codec.Capnp
@@ -78,7 +79,7 @@ data MessageTarget'
 data Payload
     = Payload
         { content :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
-        , capTable :: Data.Capnp.Untyped.Pure.List (CapDescriptor)
+        , capTable :: List (CapDescriptor)
         }
     deriving(Show, Read, Eq)
 
@@ -171,7 +172,7 @@ data Disembargo'context'
 
 data Exception
     = Exception
-        { reason :: Data.Capnp.Untyped.Pure.Text
+        { reason :: Text
         , obsoleteIsCallersFault :: Bool
         , obsoleteDurability :: Word16
         , type_ :: Exception'Type
@@ -181,7 +182,7 @@ data Exception
 data PromisedAnswer
     = PromisedAnswer
         { questionId :: Word32
-        , transform :: Data.Capnp.Untyped.Pure.List (PromisedAnswer'Op)
+        , transform :: List (PromisedAnswer'Op)
         }
     deriving(Show, Read, Eq)
 

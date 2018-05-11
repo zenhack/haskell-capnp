@@ -7,7 +7,8 @@ module Data.Capnp.ById.X8ef99297a43a5e34.Pure where
 import Data.Int
 import Data.Word
 
-import Data.Capnp.Untyped.Pure (Text, Data, List)
+import Data.Capnp.Untyped.Pure (List)
+import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Codec.Capnp
@@ -24,22 +25,22 @@ data JsonValue'
     = JsonValue'null
     | JsonValue'boolean (Bool)
     | JsonValue'number (Double)
-    | JsonValue'string (Data.Capnp.Untyped.Pure.Text)
-    | JsonValue'array (Data.Capnp.Untyped.Pure.List (JsonValue))
-    | JsonValue'object (Data.Capnp.Untyped.Pure.List (JsonValue'Field))
+    | JsonValue'string (Text)
+    | JsonValue'array (List (JsonValue))
+    | JsonValue'object (List (JsonValue'Field))
     | JsonValue'call (JsonValue'Call)
     deriving(Show, Read, Eq)
 
 data JsonValue'Call
     = JsonValue'Call
-        { function :: Data.Capnp.Untyped.Pure.Text
-        , params :: Data.Capnp.Untyped.Pure.List (JsonValue)
+        { function :: Text
+        , params :: List (JsonValue)
         }
     deriving(Show, Read, Eq)
 
 data JsonValue'Field
     = JsonValue'Field
-        { name :: Data.Capnp.Untyped.Pure.Text
+        { name :: Text
         , value :: JsonValue
         }
     deriving(Show, Read, Eq)

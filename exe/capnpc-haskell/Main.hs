@@ -170,7 +170,8 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     , "import Data.Int"
     , "import Data.Word"
     , ""
-    , "import Data.Capnp.Untyped.Pure (Text, Data, List)"
+    , "import Data.Capnp.Untyped.Pure (List)"
+    , "import Data.Capnp.BuiltinTypes.Pure (Data, Text)"
     , ""
     , "import qualified Data.Capnp.Untyped.Pure"
     , "import qualified Codec.Capnp"
@@ -312,9 +313,9 @@ formatType thisModule nodeMap (Type ty) = case ty of
     Type'Uint64     -> HsAst.Type "Word64" []
     Type'Float32    -> HsAst.Type "Float" []
     Type'Float64    -> HsAst.Type "Double" []
-    Type'Text       -> HsAst.Type (untypedName "Text") []
-    Type'Data       -> HsAst.Type (untypedName "Data") []
-    Type'List elt   -> HsAst.Type (untypedName "List") [formatType thisModule nodeMap elt]
+    Type'Text       -> HsAst.Type "Text" []
+    Type'Data       -> HsAst.Type "Data" []
+    Type'List elt   -> HsAst.Type "List" [formatType thisModule nodeMap elt]
     Type'Enum{..} -> namedType typeId brand
     Type'Struct{..} -> namedType typeId brand
     Type'Interface{..} -> namedType typeId brand

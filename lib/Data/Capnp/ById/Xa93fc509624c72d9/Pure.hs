@@ -7,7 +7,8 @@ module Data.Capnp.ById.Xa93fc509624c72d9.Pure where
 import Data.Int
 import Data.Word
 
-import Data.Capnp.Untyped.Pure (Text, Data, List)
+import Data.Capnp.Untyped.Pure (List)
+import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Codec.Capnp
@@ -29,36 +30,36 @@ data Type'anyPointer'unconstrained'
 
 data Brand
     = Brand
-        { scopes :: Data.Capnp.Untyped.Pure.List (Brand'Scope)
+        { scopes :: List (Brand'Scope)
         }
     deriving(Show, Read, Eq)
 
 data Method
     = Method
-        { name :: Data.Capnp.Untyped.Pure.Text
+        { name :: Text
         , codeOrder :: Word16
         , paramStructType :: Word64
         , resultStructType :: Word64
-        , annotations :: Data.Capnp.Untyped.Pure.List (Annotation)
+        , annotations :: List (Annotation)
         , paramBrand :: Brand
         , resultBrand :: Brand
-        , implicitParameters :: Data.Capnp.Untyped.Pure.List (Node'Parameter)
+        , implicitParameters :: List (Node'Parameter)
         }
     deriving(Show, Read, Eq)
 
 data Enumerant
     = Enumerant
-        { name :: Data.Capnp.Untyped.Pure.Text
+        { name :: Text
         , codeOrder :: Word16
-        , annotations :: Data.Capnp.Untyped.Pure.List (Annotation)
+        , annotations :: List (Annotation)
         }
     deriving(Show, Read, Eq)
 
 data Field
     = Field
-        { name :: Data.Capnp.Untyped.Pure.Text
+        { name :: Text
         , codeOrder :: Word16
-        , annotations :: Data.Capnp.Untyped.Pure.List (Annotation)
+        , annotations :: List (Annotation)
         , discriminantValue :: Word16
         , ordinal :: Field'ordinal
         , union' :: Field'
@@ -92,20 +93,20 @@ data Brand'Scope
     deriving(Show, Read, Eq)
 
 data Brand'Scope'
-    = Brand'Scope'bind (Data.Capnp.Untyped.Pure.List (Brand'Binding))
+    = Brand'Scope'bind (List (Brand'Binding))
     | Brand'Scope'inherit
     deriving(Show, Read, Eq)
 
 data CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import
         { id :: Word64
-        , name :: Data.Capnp.Untyped.Pure.Text
+        , name :: Text
         }
     deriving(Show, Read, Eq)
 
 data Node'Parameter
     = Node'Parameter
-        { name :: Data.Capnp.Untyped.Pure.Text
+        { name :: Text
         }
     deriving(Show, Read, Eq)
 
@@ -122,8 +123,8 @@ data Field'ordinal'
 
 data CodeGeneratorRequest
     = CodeGeneratorRequest
-        { nodes :: Data.Capnp.Untyped.Pure.List (Node)
-        , requestedFiles :: Data.Capnp.Untyped.Pure.List (CodeGeneratorRequest'RequestedFile)
+        { nodes :: List (Node)
+        , requestedFiles :: List (CodeGeneratorRequest'RequestedFile)
         , capnpVersion :: CapnpVersion
         }
     deriving(Show, Read, Eq)
@@ -177,8 +178,8 @@ data Value'
     | Value'uint64 (Word64)
     | Value'float32 (Float)
     | Value'float64 (Double)
-    | Value'text (Data.Capnp.Untyped.Pure.Text)
-    | Value'data_ (Data.Capnp.Untyped.Pure.Data)
+    | Value'text (Text)
+    | Value'data_ (Data)
     | Value'list (Maybe (Data.Capnp.Untyped.Pure.PtrType))
     | Value'enum (Word16)
     | Value'struct (Maybe (Data.Capnp.Untyped.Pure.PtrType))
@@ -189,8 +190,8 @@ data Value'
 data CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile
         { id :: Word64
-        , filename :: Data.Capnp.Untyped.Pure.Text
-        , imports :: Data.Capnp.Untyped.Pure.List (CodeGeneratorRequest'RequestedFile'Import)
+        , filename :: Text
+        , imports :: List (CodeGeneratorRequest'RequestedFile'Import)
         }
     deriving(Show, Read, Eq)
 
@@ -257,7 +258,7 @@ data CapnpVersion
 
 data Node'NestedNode
     = Node'NestedNode
-        { name :: Data.Capnp.Untyped.Pure.Text
+        { name :: Text
         , id :: Word64
         }
     deriving(Show, Read, Eq)
@@ -265,12 +266,12 @@ data Node'NestedNode
 data Node
     = Node
         { id :: Word64
-        , displayName :: Data.Capnp.Untyped.Pure.Text
+        , displayName :: Text
         , displayNamePrefixLength :: Word32
         , scopeId :: Word64
-        , nestedNodes :: Data.Capnp.Untyped.Pure.List (Node'NestedNode)
-        , annotations :: Data.Capnp.Untyped.Pure.List (Annotation)
-        , parameters :: Data.Capnp.Untyped.Pure.List (Node'Parameter)
+        , nestedNodes :: List (Node'NestedNode)
+        , annotations :: List (Annotation)
+        , parameters :: List (Node'Parameter)
         , isGeneric :: Bool
         , union' :: Node'
         }
@@ -285,14 +286,14 @@ data Node'
         , isGroup :: Bool
         , discriminantCount :: Word16
         , discriminantOffset :: Word32
-        , fields :: Data.Capnp.Untyped.Pure.List (Field)
+        , fields :: List (Field)
         }
     | Node'enum
-        { enumerants :: Data.Capnp.Untyped.Pure.List (Enumerant)
+        { enumerants :: List (Enumerant)
         }
     | Node'interface
-        { methods :: Data.Capnp.Untyped.Pure.List (Method)
-        , superclasses :: Data.Capnp.Untyped.Pure.List (Superclass)
+        { methods :: List (Method)
+        , superclasses :: List (Superclass)
         }
     | Node'const
         { type_ :: Type

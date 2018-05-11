@@ -7,7 +7,8 @@ module Data.Capnp.ById.Xa184c7885cdaf2a1.Pure where
 import Data.Int
 import Data.Word
 
-import Data.Capnp.Untyped.Pure (Text, Data, List)
+import Data.Capnp.Untyped.Pure (List)
+import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Codec.Capnp
