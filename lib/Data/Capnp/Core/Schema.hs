@@ -4,50 +4,51 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-module Data.Capnp.Core.Schema where
+module Data.Capnp.Core.Schema
+    (
+    -- re-export the generated code:
+    module Data.Capnp.ById.Xa93fc509624c72d9.Pure
+
+    ------ Stuff we don't generate yet:
+
+    -- type aliases
+    , Id(..)
+
+    -- constants
+    , field'noDiscriminant
+    )
+    where
 
 import Prelude hiding (id)
 
+import Data.Capnp.ById.Xa93fc509624c72d9.Pure
+
 import Codec.Capnp (Decerialize(..))
 
-import Data.Capnp.Errors    (Error(SchemaViolationError), ThrowError(..))
-import Data.Default         (def)
 import Data.ReinterpretCast (wordToDouble, wordToFloat)
 
 import Data.Bits
-import Data.Capnp.BuiltinTypes.Pure
 import Data.Capnp.Untyped.Pure
-import Data.Int
 import Data.Word
 
 type Id = Word64
 
-data Node = Node
-    { id                      :: Id
-    , displayName             :: Text
-    , displayNamePrefixLength :: Word32
-    , scopeId                 :: Id
-    , parameters              :: List Node'Parameter
-    , isGeneric               :: Bool
-    , nestedNodes             :: List Node'NestedNode
-    , annotations             :: List Annotation
-    , union'                  :: Node'Union'
-    }
-    deriving(Show, Read, Eq)
+field'noDiscriminant :: Word16
+field'noDiscriminant = 0xffff
 
 instance Decerialize Struct Node where
-    decerialize (Struct words ptrs) = Node
+    decerialize (Struct words ptrs) = Node'
         <$> pure (sliceIndex 0 words)
         <*> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (fromIntegral $ sliceIndex 1 words)
         <*> pure (sliceIndex 2 words)
-        <*> (listStruct (sliceIndex 5 ptrs) >>= traverse decerialize)
-        <*> pure (((sliceIndex 4 words `shiftR` 32) .&. 1) == 1)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
         <*> (listStruct (sliceIndex 2 ptrs) >>= traverse decerialize)
+        <*> (listStruct (sliceIndex 5 ptrs) >>= traverse decerialize)
+        <*> pure (((sliceIndex 4 words `shiftR` 32) .&. 1) == 1)
         <*> case fromIntegral (sliceIndex 1 words `shiftR` 32) :: Word16 of
-                0 -> pure Node'File
-                1 -> Node'Struct
+                0 -> pure Node'file
+                1 -> Node'struct
                         (fromIntegral $ sliceIndex 1 words `shiftR` 48)
                         (fromIntegral $ sliceIndex 3 words)
                         <$> decerialize (fromIntegral (sliceIndex 3 words `shiftR` 16) :: Word16)
@@ -55,14 +56,14 @@ instance Decerialize Struct Node where
                         <*> pure (fromIntegral (sliceIndex 3 words `shiftR` 48))
                         <*> pure (fromIntegral (sliceIndex 4 words))
                         <*> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
-                2 -> Node'Enum <$> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
-                3 -> Node'Interface
+                2 -> Node'enum <$> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
+                3 -> Node'interface
                         <$> (listStruct (sliceIndex 3 ptrs) >>= traverse decerialize)
                         <*> (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
-                4 -> Node'Const
+                4 -> Node'const
                         <$> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
                         <*> (ptrStruct (sliceIndex 4 ptrs) >>= decerialize)
-                5 -> Node'Annotation
+                5 -> Node'annotation
                         <$> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
                         <*> pure (((sliceIndex 1 words `shiftR` 48) .&. 1) == 1)
                         <*> pure (((sliceIndex 1 words `shiftR` 49) .&. 1) == 1)
@@ -76,36 +77,17 @@ instance Decerialize Struct Node where
                         <*> pure (((sliceIndex 1 words `shiftR` 57) .&. 1) == 1)
                         <*> pure (((sliceIndex 1 words `shiftR` 58) .&. 1) == 1)
                         <*> pure (((sliceIndex 1 words `shiftR` 59) .&. 1) == 1)
-                tag -> pure $ Node'Unknown' tag
-
-data Node'Parameter = Node'Parameter
-    { name :: Text
-    }
-    deriving(Show, Read, Eq)
+                tag -> pure $ Node'unknown' tag
 
 instance Decerialize Struct Node'Parameter where
     decerialize (Struct _ ptrs) =
         Node'Parameter <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
 
-data CodeGeneratorRequest = CodeGeneratorRequest
-    { capnpVersion   :: CapnpVersion
-    , nodes          :: List Node
-    , requestedFiles :: List CodeGeneratorRequest'RequestedFile
-    }
-    deriving(Show, Read, Eq)
-
 instance Decerialize Struct CodeGeneratorRequest where
     decerialize (Struct words ptrs) = CodeGeneratorRequest
-        <$> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
-        <*> (listStruct (sliceIndex 0 ptrs) >>= traverse decerialize)
+        <$> (listStruct (sliceIndex 0 ptrs) >>= traverse decerialize)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
-
-data CodeGeneratorRequest'RequestedFile = CodeGeneratorRequest'RequestedFile
-    { id       :: Id
-    , filename :: Text
-    , imports  :: List CodeGeneratorRequest'RequestedFile'Import
-    }
-    deriving(Show, Read, Eq)
+        <*> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
 
 instance Decerialize Struct CodeGeneratorRequest'RequestedFile where
     decerialize (Struct words ptrs) = CodeGeneratorRequest'RequestedFile
@@ -113,301 +95,79 @@ instance Decerialize Struct CodeGeneratorRequest'RequestedFile where
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
 
-data CodeGeneratorRequest'RequestedFile'Import = CodeGeneratorRequest'RequestedFile'Import
-    { id   :: Id
-    , name :: Text
-    }
-    deriving(Show, Read, Eq)
-
 instance Decerialize Struct CodeGeneratorRequest'RequestedFile'Import where
     decerialize (Struct words ptrs) = CodeGeneratorRequest'RequestedFile'Import
         (sliceIndex 0 words)
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
-
-data Node'NestedNode = Node'NestedNode
-    { name :: Text
-    , id   :: Id
-    }
-    deriving(Show, Read, Eq)
 
 instance Decerialize Struct Node'NestedNode where
     decerialize (Struct words ptrs) = Node'NestedNode
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (sliceIndex 0 words)
 
-data Node'Union'
-    = Node'File
-    | Node'Struct
-        { dataWordCount         :: Word16
-        , pointerCount          :: Word16
-        , preferredListEncoding :: ElementSize
-        , isGroup               :: Bool
-        , discriminantCount     :: Word16
-        , discriminantOffset    :: Word32
-        , fields                :: List Field
-        }
-    | Node'Enum
-        { enumerants :: List Enumerant
-        }
-    | Node'Interface
-        { methods      :: List Method
-        , superclasses :: List Superclass
-        }
-    | Node'Const
-        { type' :: Type
-        , value :: Value
-        }
-    | Node'Annotation
-        { type'             :: Type
-        , targetsFile       :: Bool
-        , targetsConst      :: Bool
-        , targetsEnum       :: Bool
-        , targetsEnumerant  :: Bool
-        , targetsStruct     :: Bool
-        , targetsField      :: Bool
-        , targetsUnion      :: Bool
-        , targetsGroup      :: Bool
-        , targetsInterface  :: Bool
-        , targetsMethod     :: Bool
-        , targetsParam      :: Bool
-        , targetsAnnotation :: Bool
-        }
-    | Node'Unknown' Word16
-    deriving(Show, Read, Eq)
-
-data ElementSize
-    = Empty
-    | Bit
-    | Byte
-    | TwoBytes
-    | FourBytes
-    | EightBytes
-    | Pointer
-    | InlineComposite
-    | Unknown' Word16
-    deriving(Show, Read, Eq)
-
-instance Decerialize Word16 ElementSize where
-    decerialize n = pure $ case n of
-        0 -> Empty
-        1 -> Bit
-        2 -> Byte
-        3 -> TwoBytes
-        4 -> FourBytes
-        5 -> EightBytes
-        6 -> Pointer
-        7 -> InlineComposite
-        _ -> Unknown' n
-
-field'noDiscriminant :: Word16
-field'noDiscriminant = 0xffff
-
-data Field = Field
-    { name              :: Text
-    , codeOrder         :: Word16
-    , annotations       :: List Annotation
-    , discriminantValue :: Word16
-    , union'            :: Field'Union'
-    , ordinal           :: Field'Ordinal
-    }
-    deriving(Show, Read, Eq)
-
-data Field'Union'
-    = Field'Slot Field'Slot'
-    | Field'Group Field'Group'
-    | Field'Unknown' Word16
-    deriving(Show, Read, Eq)
-
-data Field'Slot' = Field'Slot'
-    { offset            :: Word32
-    , type'             :: Type
-    , defaultValue      :: Value
-    , hadExplcitDefault :: Bool
-    }
-    deriving(Show, Read, Eq)
-
-data Field'Group' = Field'Group'
-    { typeId :: Id
-    }
-    deriving(Show, Read, Eq)
-
-data Field'Ordinal
-    = Field'Ordinal'Implicit
-    | Field'Ordinal'Explicit Word16
-    | Field'Ordinal'Unknown' Word16
-    deriving(Show, Read, Eq)
-
 instance Decerialize Struct Field where
-    decerialize struct@(Struct words ptrs) = Field
+    decerialize struct@(Struct words ptrs) = Field'
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (fromIntegral (sliceIndex 0 words) :: Word16)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
         <*> pure (field'noDiscriminant `xor` fromIntegral (sliceIndex 0 words `shiftR` 16))
+        <*> case fromIntegral (sliceIndex 1 words `shiftR` 16) :: Word16 of
+                0 -> pure (Field'ordinal'implicit)
+                1 -> pure $ Field'ordinal'explicit $ fromIntegral $ sliceIndex 1 words `shiftR` 32
+                tag -> pure $ Field'ordinal'unknown' tag
         <*> case fromIntegral (sliceIndex 1 words) :: Word16 of
-                0 -> Field'Slot <$> (Field'Slot'
+                0 -> Field'slot
                         (fromIntegral $ sliceIndex 0 words `shiftR` 32)
                         <$> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
                         <*> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
-                        <*> pure ((sliceIndex 2 words .&. 1) == 1))
-                1 -> pure $ Field'Group $ Field'Group' (sliceIndex 2 words)
-                tag -> pure $ Field'Unknown' tag
-        <*> case fromIntegral (sliceIndex 1 words `shiftR` 16) :: Word16 of
-                0 -> pure Field'Ordinal'Implicit
-                1 -> pure $ Field'Ordinal'Explicit $ fromIntegral $ sliceIndex 1 words `shiftR` 32
-                tag -> pure $ Field'Ordinal'Unknown' tag
-
-data Value = Value
-    { union' :: Value'Union'
-    }
-    deriving(Show, Read, Eq)
-
-data Value'Union'
-    = Value'Void
-    | Value'Bool Bool
-    | Value'Int8 Int8
-    | Value'Int16 Int16
-    | Value'Int32 Int32
-    | Value'Int64 Int64
-    | Value'Uint8 Word8
-    | Value'Uint16 Word16
-    | Value'Uint32 Word32
-    | Value'Uint64 Word64
-    | Value'Float32 Float
-    | Value'Float64 Double
-    | Value'Text Text
-    | Value'Data Data
-    | Value'List (Maybe PtrType)
-    | Value'Enum Word16
-    | Value'Struct (Maybe PtrType)
-    | Value'Interface
-    | Value'AnyPointer (Maybe PtrType)
-    | Value'Unknown' Word16
-    deriving(Show, Read, Eq)
+                        <*> pure ((sliceIndex 2 words .&. 1) == 1)
+                1 -> pure $ Field'group (sliceIndex 2 words)
+                tag -> pure $ Field'unknown' tag
 
 instance Decerialize Struct Value where
-    decerialize struct = Value <$> decerialize struct
-
-instance Decerialize Struct Value'Union' where
     decerialize (Struct words ptrs) =
         let tag = fromIntegral (sliceIndex 0 words) :: Word16
         in case tag of
-            0 -> pure Value'Void
-            1 -> pure $ Value'Bool $ ((sliceIndex 0 words `shiftR` 16) .&. 1) == 1
-            2 -> pure $ Value'Int8 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
-            3 -> pure $ Value'Int16 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
-            4 -> pure $ Value'Int32 $ fromIntegral (sliceIndex 0 words `shiftR` 32)
-            5 -> pure $ Value'Int64 $ fromIntegral $ sliceIndex 1 words
-            6 -> pure $ Value'Uint8 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
-            7 -> pure $ Value'Uint16 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
-            8 -> pure $ Value'Uint32 $ fromIntegral (sliceIndex 0 words `shiftR` 32)
-            9 -> pure $ Value'Uint64 $ fromIntegral $ sliceIndex 1 words
-            10 -> pure $ Value'Float32 $ wordToFloat $ fromIntegral (sliceIndex 0 words `shiftR` 32)
-            11 -> pure $ Value'Float64 $ wordToDouble $ sliceIndex 1 words
-            12 -> Value'Text <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
-            13 -> Value'Data <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
-            14 -> pure $ Value'List (sliceIndex 0 ptrs)
-            15 -> pure $ Value'Enum $ fromIntegral (sliceIndex 0 words `shiftR` 16)
-            16 -> pure $ Value'Struct (sliceIndex 0 ptrs)
-            17 -> pure Value'Interface
-            18 -> pure $ Value'AnyPointer (sliceIndex 0 ptrs)
-            _ -> pure $ Value'Unknown' tag
-
-ptrStruct :: ThrowError f => Maybe PtrType -> f Struct
-ptrStruct Nothing              = pure def
-ptrStruct (Just (PtrStruct s)) = pure s
-ptrStruct (Just _)             = expected "pointer to struct"
-
-list0 :: ThrowError f => Maybe PtrType -> f (List ())
-list0 Nothing                     = pure def
-list0 (Just (PtrList (List0' l))) = pure l
-list0 _                           = expected "pointer to list with element size 0"
-
-list1 :: ThrowError f => Maybe PtrType -> f (List Bool)
-list1 Nothing                     = pure def
-list1 (Just (PtrList (List1' l))) = pure l
-list1 _                           = expected "pointer to list with element size 1"
-
-list8 :: ThrowError f => Maybe PtrType -> f (List Word8)
-list8 Nothing                     = pure def
-list8 (Just (PtrList (List8' l))) = pure l
-list8 _                           = expected "pointer to list with element size 8"
-
-list16 :: ThrowError f => Maybe PtrType -> f (List Word16)
-list16 Nothing                      = pure def
-list16 (Just (PtrList (List16' l))) = pure l
-list16 _                            = expected "pointer to list with element size 16"
-
-list32 :: ThrowError f => Maybe PtrType -> f (List Word32)
-list32 Nothing                      = pure def
-list32 (Just (PtrList (List32' l))) = pure l
-list32 _                            = expected "pointer to list with element size 32"
-
-list64 :: ThrowError f => Maybe PtrType -> f (List Word64)
-list64 Nothing                      = pure def
-list64 (Just (PtrList (List64' l))) = pure l
-list64 _                            = expected "pointer to list with element size 64"
-
-listPtr :: ThrowError f => Maybe PtrType -> f (List (Maybe PtrType))
-listPtr Nothing                       = pure def
-listPtr (Just (PtrList (ListPtr' l))) = pure l
-listPtr _                             = expected "pointer to list of pointers"
-
-listStruct :: ThrowError f => Maybe PtrType -> f (List Struct)
-listStruct Nothing         = pure def
-listStruct (Just (PtrList (ListStruct' l))) = pure l
-listStruct _               = expected "pointer to list of structs"
-
-expected msg = throwError $ SchemaViolationError $ "expected " ++ msg
-
-data Brand = Brand
-    { scopes :: List Brand'Scope
-    }
-    deriving(Show, Read, Eq)
+            0 -> pure Value'void
+            1 -> pure $ Value'bool $ ((sliceIndex 0 words `shiftR` 16) .&. 1) == 1
+            2 -> pure $ Value'int8 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+            3 -> pure $ Value'int16 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+            4 -> pure $ Value'int32 $ fromIntegral (sliceIndex 0 words `shiftR` 32)
+            5 -> pure $ Value'int64 $ fromIntegral $ sliceIndex 1 words
+            6 -> pure $ Value'uint8 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+            7 -> pure $ Value'uint16 $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+            8 -> pure $ Value'uint32 $ fromIntegral (sliceIndex 0 words `shiftR` 32)
+            9 -> pure $ Value'uint64 $ fromIntegral $ sliceIndex 1 words
+            10 -> pure $ Value'float32 $ wordToFloat $ fromIntegral (sliceIndex 0 words `shiftR` 32)
+            11 -> pure $ Value'float64 $ wordToDouble $ sliceIndex 1 words
+            12 -> Value'text <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+            13 -> Value'data_ <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
+            14 -> pure $ Value'list (sliceIndex 0 ptrs)
+            15 -> pure $ Value'enum $ fromIntegral (sliceIndex 0 words `shiftR` 16)
+            16 -> pure $ Value'struct (sliceIndex 0 ptrs)
+            17 -> pure Value'interface
+            18 -> pure $ Value'anyPointer (sliceIndex 0 ptrs)
+            _ -> pure $ Value'unknown' tag
 
 instance Decerialize Struct Brand where
     decerialize (Struct _ ptrs) = Brand <$>
         (listStruct (sliceIndex 0 ptrs) >>= traverse decerialize)
 
-data Brand'Scope = Brand'Scope
-    { scopeId :: Word64
-    , union'  :: Brand'Scope'Union'
-    }
-    deriving(Show, Read, Eq)
-
-data Brand'Scope'Union'
-    = Brand'Scope'Bind (List Brand'Binding)
-    | Brand'Scope'Inherit
-    | Brand'Scope'Unknown' Word16
-    deriving(Show, Read, Eq)
-
 instance Decerialize Struct Brand'Scope where
-    decerialize (Struct words ptrs) = Brand'Scope (sliceIndex 0 words) <$>
+    decerialize (Struct words ptrs) = Brand'Scope' (sliceIndex 0 words) <$>
         case fromIntegral (sliceIndex 1 words) :: Word16 of
-            0 -> Brand'Scope'Bind <$>
+            0 -> Brand'Scope'bind <$>
                     (listStruct (sliceIndex 0 ptrs)
                     >>= traverse decerialize)
-            1 -> pure Brand'Scope'Inherit
-            tag -> pure $ Brand'Scope'Unknown' tag
-
-data Brand'Binding
-    = Brand'Binding'Unbound
-    | Brand'Binding'Type Type
-    | Brand'Binding'Unknown' Word16
-    deriving(Show, Read, Eq)
+            1 -> pure Brand'Scope'inherit
+            tag -> pure $ Brand'Scope'unknown' tag
 
 instance Decerialize Struct Brand'Binding where
     decerialize (Struct words ptrs) =
         case fromIntegral (sliceIndex 0 words) :: Word16 of
-            0 -> pure Brand'Binding'Unbound
-            1 -> Brand'Binding'Type <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-            tag -> pure $ Brand'Binding'Unknown' tag
-
-data Enumerant = Enumerant
-    { name        :: Text
-    , codeOrder   :: Word16
-    , annotations :: List Annotation
-    }
-    deriving(Show, Read, Eq)
+            0 -> pure Brand'Binding'unbound
+            1 -> Brand'Binding'type_ <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
+            tag -> pure $ Brand'Binding'unknown' tag
 
 instance Decerialize Struct Enumerant where
     decerialize (Struct words ptrs) = Enumerant
@@ -415,128 +175,54 @@ instance Decerialize Struct Enumerant where
         <*> pure (fromIntegral $ sliceIndex 0 words)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
 
-data Superclass = Superclass
-    { id    :: Word64
-    , brand :: Brand
-    }
-    deriving(Show, Read, Eq)
-
 instance Decerialize Struct Superclass where
     decerialize (Struct words ptrs) = Superclass
         (sliceIndex 0 words)
         <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
 
-data Type = Type
-    { union' :: Type'Union'
-    }
-    deriving(Show, Read, Eq)
-
-data Type'Union'
-    = Type'Void
-    | Type'Bool
-    | Type'Int8
-    | Type'Int16
-    | Type'Int32
-    | Type'Int64
-    | Type'Uint8
-    | Type'Uint16
-    | Type'Uint32
-    | Type'Uint64
-    | Type'Float32
-    | Type'Float64
-    | Type'Text
-    | Type'Data
-    | Type'List
-        { elementType :: Type
-        }
-    | Type'Enum
-        { typeId :: Word64
-        , brand  :: Brand
-        }
-    | Type'Struct
-        { typeId :: Word64
-        , brand  :: Brand
-        }
-    | Type'Interface
-        { typeId :: Word64
-        , brand  :: Brand
-        }
-    | Type'AnyPointer Type'AnyPointer
-    | Type'Unknown' Word16
-    deriving(Show, Read, Eq)
-
-data Type'AnyPointer
-    = Type'AnyPointer'Unconstrained
-        { union' :: Type'AnyPointer'Unconstrained'Union'
-        }
-    | Type'AnyPointer'Parameter
-        { scopeId        :: Word64
-        , parameterIndex :: Word16
-        }
-    | Type'AnyPointer'ImplicitMethodParameter
-        { parameterIndex :: Word16
-        }
-    | Type'AnyPointer'Unknown' Word16
-    deriving(Show, Read, Eq)
-
-data Type'AnyPointer'Unconstrained'Union'
-    = Unconstrained'AnyKind
-    | Unconstrained'Struct
-    | Unconstrained'List
-    | Unconstrained'Capability
-    | Unconstrained'Unknown' Word16
-    deriving(Show, Read, Eq)
-
-instance Decerialize Struct Type'AnyPointer where
+instance Decerialize Struct Type'anyPointer where
     decerialize (Struct words _) = pure $
         case fromIntegral (sliceIndex 1 words) :: Word16 of
-            0 -> Type'AnyPointer'Unconstrained $
+            0 -> Type'anyPointer'unconstrained $
                 case fromIntegral (sliceIndex 1 words `shiftR` 16) :: Word16 of
-                    0   -> Unconstrained'AnyKind
-                    1   -> Unconstrained'Struct
-                    2   -> Unconstrained'List
-                    3   -> Unconstrained'Capability
-                    tag -> Unconstrained'Unknown' tag
-            1 -> Type'AnyPointer'Parameter
+                    0   -> Type'anyPointer'unconstrained'anyKind
+                    1   -> Type'anyPointer'unconstrained'struct
+                    2   -> Type'anyPointer'unconstrained'list
+                    3   -> Type'anyPointer'unconstrained'capability
+                    tag -> Type'anyPointer'unconstrained'unknown' tag
+            1 -> Type'anyPointer'parameter
                     (sliceIndex 2 words)
                     (fromIntegral $ sliceIndex 1 words `shiftR` 16)
-            2 -> Type'AnyPointer'ImplicitMethodParameter
+            2 -> Type'anyPointer'implicitMethodParameter
                     (fromIntegral $ sliceIndex 1 words `shiftR` 16)
-            tag -> Type'AnyPointer'Unknown' tag
+            tag -> Type'anyPointer'unknown' tag
 
 instance Decerialize Struct Type where
-    decerialize struct@(Struct words ptrs) = Type <$>
+    decerialize struct@(Struct words ptrs) =
         case fromIntegral (sliceIndex 0 words) :: Word16 of
-            0 -> pure Type'Void
-            1 -> pure Type'Bool
-            2 -> pure Type'Int8
-            3 -> pure Type'Int16
-            4 -> pure Type'Int32
-            5 -> pure Type'Int64
-            6 -> pure Type'Uint8
-            7 -> pure Type'Uint16
-            8 -> pure Type'Uint32
-            9 -> pure Type'Uint64
-            10 -> pure Type'Float32
-            11 -> pure Type'Float64
-            12 -> pure Type'Text
-            13 -> pure Type'Data
-            14 -> Type'List <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-            15 -> Type'Enum (sliceIndex 1 words) <$>
+            0 -> pure Type'void
+            1 -> pure Type'bool
+            2 -> pure Type'int8
+            3 -> pure Type'int16
+            4 -> pure Type'int32
+            5 -> pure Type'int64
+            6 -> pure Type'uint8
+            7 -> pure Type'uint16
+            8 -> pure Type'uint32
+            9 -> pure Type'uint64
+            10 -> pure Type'float32
+            11 -> pure Type'float64
+            12 -> pure Type'text
+            13 -> pure Type'data_
+            14 -> Type'list <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
+            15 -> Type'enum (sliceIndex 1 words) <$>
                     (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-            16 -> Type'Struct (sliceIndex 1 words) <$>
+            16 -> Type'struct (sliceIndex 1 words) <$>
                     (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-            17 -> Type'Interface (sliceIndex 1 words) <$>
+            17 -> Type'interface (sliceIndex 1 words) <$>
                     (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-            18 -> Type'AnyPointer <$> decerialize struct
-            tag -> pure $ Type'Unknown' tag
-
-data CapnpVersion = CapnpVersion
-    { major :: Word16
-    , minor :: Word8
-    , micro :: Word8
-    }
-    deriving(Show, Read, Eq)
+            18 -> Type'anyPointer <$> decerialize struct
+            tag -> pure $ Type'unknown' tag
 
 instance Decerialize Struct CapnpVersion where
     decerialize (Struct words _) = pure $ CapnpVersion
@@ -544,38 +230,31 @@ instance Decerialize Struct CapnpVersion where
         (fromIntegral $ sliceIndex 0 words `shiftR` 16)
         (fromIntegral $ sliceIndex 0 words `shiftR` 24)
 
-data Annotation = Annotation
-    { id    :: Word64
-    , brand :: Brand
-    , value :: Value
-    }
-    deriving(Show, Read, Eq)
-
 instance Decerialize Struct Annotation where
     decerialize (Struct words ptrs) = Annotation
         (sliceIndex 0 words)
-        <$> (ptrStruct (sliceIndex 1 ptrs) >>= decerialize)
-        <*> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
-
-data Method = Method
-    { name               :: Text
-    , codeOrder          :: Word16
-    , implicitParmaeters :: List Node'Parameter
-    , paramStructType    :: Word64
-    , paramBrand         :: Brand
-    , resultStructType   :: Word64
-    , resultBrand        :: Brand
-    , anontations        :: List Annotation
-    }
-    deriving(Show, Read, Eq)
+        <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
+        <*> (ptrStruct (sliceIndex 1 ptrs) >>= decerialize)
 
 instance Decerialize Struct Method where
     decerialize (Struct words ptrs) = Method
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (fromIntegral $ sliceIndex 0 words)
-        <*> (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
         <*> pure (sliceIndex 1 words)
-        <*> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
         <*> pure (sliceIndex 2 words)
-        <*> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
+        <*> (ptrStruct (sliceIndex 3 ptrs) >>= decerialize)
+        <*> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
+        <*> (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
+
+instance Decerialize Word16 ElementSize where
+    decerialize n = pure $ case n of
+        0 -> ElementSize'empty
+        1 -> ElementSize'bit
+        2 -> ElementSize'byte
+        3 -> ElementSize'twoBytes
+        4 -> ElementSize'fourBytes
+        5 -> ElementSize'eightBytes
+        6 -> ElementSize'pointer
+        7 -> ElementSize'inlineComposite
+        _ -> ElementSize'unknown' n

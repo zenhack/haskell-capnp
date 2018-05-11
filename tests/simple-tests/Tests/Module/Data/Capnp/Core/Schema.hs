@@ -33,13 +33,15 @@ schemaTests = testGroup "schema decode tests"
                 )
             |]
           , CodeGeneratorRequest
-                (CapnpVersion 0 6 1)
-                []
-                [ CodeGeneratorRequest'RequestedFile
-                    4
-                    "hello.capnp"
-                    [CodeGeneratorRequest'RequestedFile'Import 2 "std"]
-                ]
+                { capnpVersion = CapnpVersion { major = 0, minor = 6, micro = 1 }
+                , nodes = []
+                , requestedFiles =
+                    [ CodeGeneratorRequest'RequestedFile
+                        4
+                        "hello.capnp"
+                        [CodeGeneratorRequest'RequestedFile'Import 2 "std"]
+                    ]
+                }
           )
         ]
     , decodeTests "Node"
@@ -55,19 +57,19 @@ schemaTests = testGroup "schema decode tests"
                 , |] ++ unionText ++ [here|
                 )
             |]
-          , Node
+          , Node'
                 7
                 "foo:MyType"
                 4
                 2
-                [Node'Parameter "theName"]
-                True
                 [Node'NestedNode "theName" 321]
-                [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                [Annotation 2 (Value'bool True) (Brand [])]
+                [Node'Parameter "theName" ]
+                True
                 unionVal
           )
         | (unionText, unionVal) <-
-            [ ("file = void", Node'File)
+            [ ("file = void", Node'file)
             , ( [here| struct =
                     ( dataWordCount = 3
                     , pointerCount = 2
@@ -79,39 +81,43 @@ schemaTests = testGroup "schema decode tests"
                         [ ( name = "fieldName"
                           , codeOrder = 3
                           , annotations = [ (id = 2, brand = (scopes = []), value = (bool = true)) ]
-                          , discriminantValue = 3
+                          , discriminantValue = 7
                           , group = (typeId = 4)
                           , ordinal = (implicit = void)
                           )
                         ]
                     )
                 |]
-              , Node'Struct
-                    3
-                    2
-                    InlineComposite
-                    False
-                    4
-                    2
-                    [ Field
-                        "fieldName"
-                        3
-                        [Annotation 2 (Brand []) (Value $ Value'Bool True)]
-                        3
-                        (Field'Group $ Field'Group' 4)
-                        Field'Ordinal'Implicit
-                    ]
+              , Node'struct
+                    { dataWordCount = 3
+                    , pointerCount = 2
+                    , preferredListEncoding = ElementSize'inlineComposite
+                    , isGroup = False
+                    , discriminantCount = 4
+                    , discriminantOffset = 2
+                    , fields =
+                        [ Field'
+                            "fieldName"
+                            3
+                            [ Annotation
+                                2
+                                (Value'bool True)
+                                (Brand [])
+                            ]
+                            7
+                            Field'ordinal'implicit
+                            (Field'group 4)
+                        ]
+                    }
               )
             , ( "enum = (enumerants = [(name = \"blue\", codeOrder = 2, annotations = [])])"
-              , Node'Enum [Enumerant "blue" 2 []]
+              , Node'enum [ Enumerant "blue" 2 [] ]
               )
             , ( "interface = (methods = [], superclasses = [(id = 0, brand = (scopes = []))])"
-              , Node'Interface [] [Superclass 0 (Brand [])]
+              , Node'interface [] [Superclass 0 (Brand [])]
               )
             , ( "const = (type = (bool = void), value = (bool = false))"
-              , Node'Const
-                    (Type Type'Bool)
-                    (Value $ Value'Bool False)
+              , Node'const Type'bool (Value'bool False)
               )
             , ( [here| annotation =
                     ( type = (bool = void)
@@ -129,8 +135,8 @@ schemaTests = testGroup "schema decode tests"
                     , targetsAnnotation = false
                     )
                 |]
-              , Node'Annotation
-                    (Type Type'Bool)
+              , Node'annotation
+                    Type'bool
                     True
                     False
                     False
@@ -147,31 +153,31 @@ schemaTests = testGroup "schema decode tests"
             ]
         ]
     , decodeTests "Node.Parameter"
-        [ ("(name = \"theName\")", Node'Parameter "theName")
+        [ ("(name = \"theName\")", Node'Parameter "theName" )
         ]
     , decodeTests "Node.NestedNode"
         [ ("(name = \"theName\", id = 321)", Node'NestedNode "theName" 321)
         ]
     , decodeTests "Value"
-        [ ("(bool = true)", Value $ Value'Bool True)
-        , ("(bool = false)", Value $ Value'Bool False)
-        , ("(int8 = -4)", Value $ Value'Int8 (-4))
-        , ("(int8 = -128)", Value $ Value'Int8 (-128))
-        , ("(int8 = 127)", Value $ Value'Int8 127)
-        , ("(uint8 = 23)", Value $ Value'Uint8 23)
-        , ("(uint8 = 255)", Value $ Value'Uint8 255)
-        , ("(int16 = 1012)", Value $ Value'Int16 1012)
-        , ("(uint16 = 40000)", Value $ Value'Uint16 40000)
-        , ("(uint32 = 1000100)", Value $ Value'Uint32 1000100)
-        , ("(int32 = 1000100)", Value $ Value'Int32 1000100)
-        , ("(uint64 = 1234567890123456)", Value $ Value'Uint64 1234567890123456)
-        , ("(int64 = 12345678901234567)", Value $ Value'Int64 12345678901234567)
-        , ("(float32 = 17.32)", Value $ Value'Float32 17.32)
-        , ("(float64 = 13.99)", Value $ Value'Float64 13.99)
-        , ("(data = \"beep boop.\")", Value $ Value'Data "beep boop.")
-        , ("(text = \"Hello, World!\")", Value $ Value'Text "Hello, World!")
-        , ("(enum = 2313)", Value $ Value'Enum 2313)
-        , ("(interface = void)", Value Value'Interface)
+        [ ("(bool = true)", Value'bool True)
+        , ("(bool = false)", Value'bool False)
+        , ("(int8 = -4)", Value'int8 (-4))
+        , ("(int8 = -128)", Value'int8 (-128))
+        , ("(int8 = 127)", Value'int8 127)
+        , ("(uint8 = 23)", Value'uint8 23)
+        , ("(uint8 = 255)", Value'uint8 255)
+        , ("(int16 = 1012)", Value'int16 1012)
+        , ("(uint16 = 40000)", Value'uint16 40000)
+        , ("(uint32 = 1000100)", Value'uint32 1000100)
+        , ("(int32 = 1000100)", Value'int32 1000100)
+        , ("(uint64 = 1234567890123456)", Value'uint64 1234567890123456)
+        , ("(int64 = 12345678901234567)", Value'int64 12345678901234567)
+        , ("(float32 = 17.32)", Value'float32 17.32)
+        , ("(float64 = 13.99)", Value'float64 13.99)
+        , ("(data = \"beep boop.\")", Value'data_ "beep boop.")
+        , ("(text = \"Hello, World!\")", Value'text "Hello, World!")
+        , ("(enum = 2313)", Value'enum 2313)
+        , ("(interface = void)", Value'interface)
         -- TODO: It would be nice to test list, struct, and anyPointer
         -- variants, but I(zenhack) haven't figured out how to specify
         -- an AnyPointer in the input to capnp encode. Maybe capnp eval
@@ -179,7 +185,7 @@ schemaTests = testGroup "schema decode tests"
         ]
     , decodeTests "Annotation"
         [ ( "(id = 323, brand = (scopes = []), value = (bool = true))"
-          , Annotation 323 (Brand []) (Value $ Value'Bool True)
+          , Annotation 323 (Value'bool True) (Brand [])
           )
         ]
     , decodeTests "CapnpVersion"
@@ -196,13 +202,13 @@ schemaTests = testGroup "schema decode tests"
                 , ordinal = (implicit = void)
                 )
             |]
-          , Field
+          , Field'
                 "fieldName"
                 3
-                [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                [Annotation 2 (Value'bool True) (Brand [])]
                 3
-                (Field'Group $ Field'Group' 4)
-                Field'Ordinal'Implicit
+                Field'ordinal'implicit
+                (Field'group 4)
           )
         , ( [here|
                 ( name = "fieldName"
@@ -218,17 +224,17 @@ schemaTests = testGroup "schema decode tests"
                 , ordinal = (explicit = 7)
                 )
             |]
-          , Field
+          , Field'
                 "fieldName"
                 3
-                [Annotation 2 (Brand []) (Value $ Value'Bool True)]
+                [Annotation 2 (Value'bool True) (Brand [])]
                 3
-                (Field'Slot $ Field'Slot'
+                (Field'ordinal'explicit 7)
+                (Field'slot
                     3
-                    (Type Type'Bool)
-                    (Value $ Value'Bool False)
+                    Type'bool
+                    (Value'bool False)
                     True)
-                (Field'Ordinal'Explicit 7)
           )
         ]
     , decodeTests "Enumerant"
@@ -240,55 +246,55 @@ schemaTests = testGroup "schema decode tests"
                     ]
                 )
             |]
-          , Enumerant "red" 4 [Annotation 23 (Brand []) (Value $ Value'Uint8 3)]
+          , Enumerant "red" 4 [Annotation 23 (Value'uint8 3) (Brand [])]
           )
         ]
     , decodeTests "Superclass"
         [ ("(id = 34, brand = (scopes = []))", Superclass 34 (Brand []))
         ]
     , decodeTests "Type"
-        [ ("(bool = void)", Type $ Type'Bool)
-        , ("(int8 = void)", Type $ Type'Int8)
-        , ("(int16 = void)", Type $ Type'Int16)
-        , ("(int32 = void)", Type $ Type'Int32)
-        , ("(int64 = void)", Type $ Type'Int64)
-        , ("(uint8 = void)", Type $ Type'Uint8)
-        , ("(uint16 = void)", Type $ Type'Uint16)
-        , ("(uint32 = void)", Type $ Type'Uint32)
-        , ("(uint64 = void)", Type $ Type'Uint64)
-        , ("(float32 = void)", Type $ Type'Float32)
-        , ("(float64 = void)", Type $ Type'Float64)
-        , ("(text = void)", Type $ Type'Text)
-        , ("(data = void)", Type $ Type'Data)
+        [ ("(bool = void)", Type'bool)
+        , ("(int8 = void)", Type'int8)
+        , ("(int16 = void)", Type'int16)
+        , ("(int32 = void)", Type'int32)
+        , ("(int64 = void)", Type'int64)
+        , ("(uint8 = void)", Type'uint8)
+        , ("(uint16 = void)", Type'uint16)
+        , ("(uint32 = void)", Type'uint32)
+        , ("(uint64 = void)", Type'uint64)
+        , ("(float32 = void)", Type'float32)
+        , ("(float64 = void)", Type'float64)
+        , ("(text = void)", Type'text)
+        , ("(data = void)", Type'data_)
         , ( "(list = (elementType = (list = (elementType = (text = void)))))"
-          , Type $ Type'List $ Type $ Type'List $ Type Type'Text
+          , Type'list $ Type'list Type'text
           )
         , ( "(enum = (typeId = 4, brand = (scopes = [])))"
-          , Type $ Type'Enum 4 (Brand [])
+          , Type'enum 4 (Brand [])
           )
         , ( "(struct = (typeId = 7, brand = (scopes = [])))"
-          , Type $ Type'Struct 7 (Brand [])
+          , Type'struct 7 (Brand [])
           )
         , ( "(interface = (typeId = 1, brand = (scopes = [])))"
-          , Type $ Type'Interface 1 (Brand [])
+          , Type'interface 1 (Brand [])
           )
         , ( "(anyPointer = (unconstrained = (anyKind = void)))"
-          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'AnyKind
+          , Type'anyPointer $ Type'anyPointer'unconstrained $ Type'anyPointer'unconstrained'anyKind
           )
         , ( "(anyPointer = (unconstrained = (struct = void)))"
-          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'Struct
+          , Type'anyPointer $ Type'anyPointer'unconstrained $ Type'anyPointer'unconstrained'struct
           )
         , ( "(anyPointer = (unconstrained = (list = void)))"
-          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'List
+          , Type'anyPointer $ Type'anyPointer'unconstrained $ Type'anyPointer'unconstrained'list
           )
         , ( "(anyPointer = (unconstrained = (capability = void)))"
-          , Type $ Type'AnyPointer $ Type'AnyPointer'Unconstrained $ Unconstrained'Capability
+          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability
           )
         , ( "(anyPointer = (parameter = (scopeId = 4, parameterIndex = 2)))"
-          , Type $ Type'AnyPointer $ Type'AnyPointer'Parameter 4 2
+          , Type'anyPointer $ Type'anyPointer'parameter 4 2
           )
         , ( "(anyPointer = (implicitMethodParameter = (parameterIndex = 7)))"
-          , Type $ Type'AnyPointer $ Type'AnyPointer'ImplicitMethodParameter 7
+          , Type'anyPointer $ Type'anyPointer'implicitMethodParameter 7
           )
         ]
     , decodeTests "Brand"
@@ -305,10 +311,10 @@ schemaTests = testGroup "schema decode tests"
                 )
             |]
           , Brand
-                [ Brand'Scope 32 Brand'Scope'Inherit
-                , Brand'Scope 23 $ Brand'Scope'Bind
-                    [ Brand'Binding'Unbound
-                    , Brand'Binding'Type $ Type Type'Bool
+                [ Brand'Scope' 32 Brand'Scope'inherit
+                , Brand'Scope' 23 $ Brand'Scope'bind
+                    [ Brand'Binding'unbound
+                    , Brand'Binding'type_ Type'bool
                     ]
                 ]
           )

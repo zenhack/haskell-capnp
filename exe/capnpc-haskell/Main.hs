@@ -58,22 +58,22 @@ identifierFromMetaData thisModule NodeMetaData{..} =
 -- Helper for makeNodeMap; recursively collect metadata for a node and
 -- all of its descendants in the tree.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
-collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
+collectMetaData nodeMap meta@NodeMetaData{node=node@Node'{..}, ..} = concat
     [ [(id, meta)]
     , concatMap collectNested $ V.toList nestedNodes
     -- Child nodes can be in two places: most are in nestedNodes, but
     -- group fields are not, and can only be found in the fields of
     -- a struct union.
     , case union' of
-            Node'Struct{..} ->
+            Node'struct{..} ->
                 concatMap collectField $ V.toList fields
             _ ->
                 []
     ]
   where
     -- Collect metadata for nodes under a Field.
-    collectField Field{..} = case union' of
-        Field'Group Field'Group'{..} -> collectMetaData nodeMap
+    collectField Field'{..} = case union' of
+        Field'group{..} -> collectMetaData nodeMap
             meta
                 { node = nodeMap M.! typeId
                 -- in this case, name comes from the field, so for a field bar in a
@@ -124,7 +124,7 @@ main = do
 -- | Build a NodeMap for all of the nodes in the CodeGeneratorRequest.
 makeNodeMap :: CodeGeneratorRequest -> NodeMap
 makeNodeMap CodeGeneratorRequest{..} =
-    V.map (\node@Node{..} -> collectMetaData baseMap NodeMetaData
+    V.map (\node@Node'{..} -> collectMetaData baseMap NodeMetaData
         { moduleId = id
         , namespace = []
         , node = node
@@ -134,10 +134,10 @@ makeNodeMap CodeGeneratorRequest{..} =
     & concat
     & M.fromList
   where
-    rootNodes = V.filter (\Node{..} -> scopeId == 0) nodes
+    rootNodes = V.filter (\Node'{..} -> scopeId == 0) nodes
     baseMap =
         V.toList nodes
-        & map (\node@Node{..} -> (id, node))
+        & map (\node@Node'{..} -> (id, node))
         & M.fromList
 
 -- | Translate a capnproto id to a fully-qualified haskell module name.
@@ -199,12 +199,12 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
 --
 -- ...and thus don't need an intervening type definition.
 neededByParent :: NodeMap -> Node -> Bool
-neededByParent nodeMap Node{id,scopeId,union'=Node'Struct{isGroup,discriminantCount}} | isGroup =
+neededByParent nodeMap Node'{id,scopeId,union'=Node'struct{isGroup,discriminantCount}} | isGroup =
     case nodeMap M.! scopeId of
-        NodeMetaData{node=Node{union'=Node'Struct{fields}}} ->
+        NodeMetaData{node=Node'{union'=Node'struct{fields}}} ->
             let me = V.filter
                         (\case
-                            Field{union'=Field'Group Field'Group'{typeId}} -> typeId == id
+                            Field'{union'=Field'group{typeId}} -> typeId == id
                             _ -> False)
                         fields
             in if V.length me /= 1
@@ -215,10 +215,10 @@ neededByParent _ _ = True
 
 generateTypes :: Id -> NodeMap -> NodeMetaData -> [HsAst.DataDef]
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
-    let Node{..} = node
+    let Node'{..} = node
         name = identifierFromMetaData moduleId meta
     in case union' of
-        Node'Struct{..} | neededByParent nodeMap node ->
+        Node'struct{..} | neededByParent nodeMap node ->
             let allFields = V.toList fields
                 unionFields = filter isUnionField allFields
                 commonFields = filter (not . isUnionField) allFields
@@ -261,7 +261,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                             [formatStructBody thisModule nodeMap unionName allFields]
                         , HsAst.DataDef unionName unionVariants
                         ]
-        Node'Enum{..} ->
+        Node'enum{..} ->
             [ HsAst.DataDef
                 (HsAst.Name [name])
                 $ map (generateEnum thisModule nodeMap name) (V.toList enumerants)
@@ -282,7 +282,7 @@ generateEnum thisModule nodeMap parentName Enumerant{..} =
 
 -- | Return whether the field is part of a union within its struct.
 isUnionField :: Field -> Bool
-isUnionField Field{..} = discriminantValue /= field'noDiscriminant
+isUnionField Field'{..} = discriminantValue /= field'noDiscriminant
 
 formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.Variant
 formatStructBody thisModule nodeMap parentName fields = HsAst.Record
@@ -295,19 +295,19 @@ formatStructBody thisModule nodeMap parentName fields = HsAst.Record
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
 generateVariant :: Id -> NodeMap -> T.Text -> Field -> HsAst.Variant
-generateVariant thisModule nodeMap parentName Field{..} = case union' of
-    Field'Slot Field'Slot'{..} -> HsAst.NormalVariant variantName $
-        case type' of
-            Type Type'Void -> Nothing
-            _              -> Just $ formatType thisModule nodeMap type'
-    Field'Group Field'Group'{..} ->
-        let NodeMetaData{node=node@Node{..},..} = nodeMap M.! typeId
+generateVariant thisModule nodeMap parentName Field'{..} = case union' of
+    Field'slot{..} -> HsAst.NormalVariant variantName $
+        case type_ of
+            Type'void -> Nothing
+            _         -> Just $ formatType thisModule nodeMap type_
+    Field'group{..} ->
+        let NodeMetaData{node=node@Node'{..},..} = nodeMap M.! typeId
         in case union' of
-            Node'Struct{..} ->
+            Node'struct{..} ->
                 formatStructBody thisModule nodeMap variantName $ V.toList fields
             _               ->
                 error "A group field referenced a non-struct node."
-    Field'Unknown' _ ->
+    Field'unknown' _ ->
         -- Some sort of field we don't know about (newer version of capnp probably).
         -- Generate the variant, but we don't know what the argument type should be,
         -- so leave it out.
@@ -317,49 +317,49 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
 
 
 generateField :: Id -> NodeMap -> Field -> HsAst.Field
-generateField thisModule nodeMap Field{..} =
+generateField thisModule nodeMap Field'{..} =
     HsAst.Field
         (makeLegalName name)
         $ case union' of
-            Field'Slot Field'Slot'{..}   -> formatType thisModule nodeMap type'
-            Field'Group Field'Group'{..} ->
+            Field'slot{..}   -> formatType thisModule nodeMap type_
+            Field'group{..} ->
                 HsAst.Type (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
-            Field'Unknown' _ ->
+            Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
                 HsAst.Unit
 
 formatType :: Id -> NodeMap -> Type -> HsAst.Type
-formatType thisModule nodeMap (Type ty) = case ty of
-    Type'Void       -> HsAst.Unit
-    Type'Bool       -> HsAst.Type "Bool" []
-    Type'Int8       -> HsAst.Type "Int8" []
-    Type'Int16      -> HsAst.Type "Int16" []
-    Type'Int32      -> HsAst.Type "Int32" []
-    Type'Int64      -> HsAst.Type "Int64" []
-    Type'Uint8      -> HsAst.Type "Word8" []
-    Type'Uint16     -> HsAst.Type "Word16" []
-    Type'Uint32     -> HsAst.Type "Word32" []
-    Type'Uint64     -> HsAst.Type "Word64" []
-    Type'Float32    -> HsAst.Type "Float" []
-    Type'Float64    -> HsAst.Type "Double" []
-    Type'Text       -> HsAst.Type "Text" []
-    Type'Data       -> HsAst.Type "Data" []
-    Type'List elt   -> HsAst.Type "List" [formatType thisModule nodeMap elt]
-    Type'Enum{..} -> namedType typeId brand
-    Type'Struct{..} -> namedType typeId brand
-    Type'Interface{..} -> namedType typeId brand
-    Type'AnyPointer anyPtr ->
+formatType thisModule nodeMap ty = case ty of
+    Type'void       -> HsAst.Unit
+    Type'bool       -> HsAst.Type "Bool" []
+    Type'int8       -> HsAst.Type "Int8" []
+    Type'int16      -> HsAst.Type "Int16" []
+    Type'int32      -> HsAst.Type "Int32" []
+    Type'int64      -> HsAst.Type "Int64" []
+    Type'uint8      -> HsAst.Type "Word8" []
+    Type'uint16     -> HsAst.Type "Word16" []
+    Type'uint32     -> HsAst.Type "Word32" []
+    Type'uint64     -> HsAst.Type "Word64" []
+    Type'float32    -> HsAst.Type "Float" []
+    Type'float64    -> HsAst.Type "Double" []
+    Type'text       -> HsAst.Type "Text" []
+    Type'data_      -> HsAst.Type "Data" []
+    Type'list elt   -> HsAst.Type "List" [formatType thisModule nodeMap elt]
+    Type'enum{..} -> namedType typeId brand
+    Type'struct{..} -> namedType typeId brand
+    Type'interface{..} -> namedType typeId brand
+    Type'anyPointer anyPtr ->
         HsAst.Type "Maybe"
             [ HsAst.Type
                 (case anyPtr of
-                    Type'AnyPointer'Unconstrained Unconstrained'AnyKind ->
+                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
                         untypedName "PtrType"
-                    Type'AnyPointer'Unconstrained Unconstrained'Struct ->
+                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'struct ->
                         untypedName "Struct"
-                    Type'AnyPointer'Unconstrained Unconstrained'List ->
+                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'list ->
                         untypedName "List'" -- Note the '; this is an untyped List.
-                    Type'AnyPointer'Unconstrained Unconstrained'Capability ->
+                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability ->
                         untypedName "Cap"
                     _ ->
                         -- Something we don't know about; assume it could be anything.

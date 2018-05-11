@@ -25,6 +25,16 @@ module Data.Capnp.Untyped.Pure
 
     -- Converting from Data.Capnp.Untyped.
     , readStruct
+
+    -- TODO: figure out a better places to put these:
+    , ptrStruct
+    , list0
+    , list1
+    , list8
+    , list16
+    , list32
+    , list64
+    , listStruct
     )
   where
 
@@ -41,6 +51,9 @@ import           Data.Default         (Default(def))
 import           Data.Primitive.Array (Array)
 import qualified Data.Vector          as V
 import           Data.Word
+
+import Codec.Capnp       (expected)
+import Data.Capnp.Errors (ThrowError)
 
 type Cap = Word32
 
@@ -129,3 +142,48 @@ readList' (U.List32 l)     = List32' <$> readList l pure
 readList' (U.List64 l)     = List64' <$> readList l pure
 readList' (U.ListPtr l)    = ListPtr' <$> readList l readPtr
 readList' (U.ListStruct l) = ListStruct' <$> readList l readStruct
+
+ptrStruct :: ThrowError f => Maybe PtrType -> f Struct
+ptrStruct Nothing              = pure def
+ptrStruct (Just (PtrStruct s)) = pure s
+ptrStruct (Just _)             = expected "pointer to struct"
+
+list0 :: ThrowError f => Maybe PtrType -> f (List ())
+list0 Nothing                     = pure def
+list0 (Just (PtrList (List0' l))) = pure l
+list0 _                           = expected "pointer to list with element size 0"
+
+list1 :: ThrowError f => Maybe PtrType -> f (List Bool)
+list1 Nothing                     = pure def
+list1 (Just (PtrList (List1' l))) = pure l
+list1 _                           = expected "pointer to list with element size 1"
+
+list8 :: ThrowError f => Maybe PtrType -> f (List Word8)
+list8 Nothing                     = pure def
+list8 (Just (PtrList (List8' l))) = pure l
+list8 _                           = expected "pointer to list with element size 8"
+
+list16 :: ThrowError f => Maybe PtrType -> f (List Word16)
+list16 Nothing                      = pure def
+list16 (Just (PtrList (List16' l))) = pure l
+list16 _                            = expected "pointer to list with element size 16"
+
+list32 :: ThrowError f => Maybe PtrType -> f (List Word32)
+list32 Nothing                      = pure def
+list32 (Just (PtrList (List32' l))) = pure l
+list32 _                            = expected "pointer to list with element size 32"
+
+list64 :: ThrowError f => Maybe PtrType -> f (List Word64)
+list64 Nothing                      = pure def
+list64 (Just (PtrList (List64' l))) = pure l
+list64 _                            = expected "pointer to list with element size 64"
+
+listPtr :: ThrowError f => Maybe PtrType -> f (List (Maybe PtrType))
+listPtr Nothing                       = pure def
+listPtr (Just (PtrList (ListPtr' l))) = pure l
+listPtr _                             = expected "pointer to list of pointers"
+
+listStruct :: ThrowError f => Maybe PtrType -> f (List Struct)
+listStruct Nothing         = pure def
+listStruct (Just (PtrList (ListStruct' l))) = pure l
+listStruct _               = expected "pointer to list of structs"
