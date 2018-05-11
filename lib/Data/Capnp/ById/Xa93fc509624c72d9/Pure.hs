@@ -16,12 +16,6 @@ import qualified Codec.Capnp
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
 
 data Type'anyPointer'unconstrained
-    = Type'anyPointer'unconstrained
-        { union' :: Type'anyPointer'unconstrained'
-        }
-    deriving(Show, Read, Eq)
-
-data Type'anyPointer'unconstrained'
     = Type'anyPointer'unconstrained'anyKind
     | Type'anyPointer'unconstrained'struct
     | Type'anyPointer'unconstrained'list
@@ -111,12 +105,6 @@ data Node'Parameter
     deriving(Show, Read, Eq)
 
 data Field'ordinal
-    = Field'ordinal
-        { union' :: Field'ordinal'
-        }
-    deriving(Show, Read, Eq)
-
-data Field'ordinal'
     = Field'ordinal'implicit
     | Field'ordinal'explicit (Word16)
     deriving(Show, Read, Eq)
@@ -130,12 +118,6 @@ data CodeGeneratorRequest
     deriving(Show, Read, Eq)
 
 data Type'anyPointer
-    = Type'anyPointer
-        { union' :: Type'anyPointer'
-        }
-    deriving(Show, Read, Eq)
-
-data Type'anyPointer'
     = Type'anyPointer'unconstrained
         { union' :: Type'anyPointer'unconstrained'
         }
@@ -149,23 +131,11 @@ data Type'anyPointer'
     deriving(Show, Read, Eq)
 
 data Brand'Binding
-    = Brand'Binding
-        { union' :: Brand'Binding'
-        }
-    deriving(Show, Read, Eq)
-
-data Brand'Binding'
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type)
     deriving(Show, Read, Eq)
 
 data Value
-    = Value
-        { union' :: Value'
-        }
-    deriving(Show, Read, Eq)
-
-data Value'
     = Value'void
     | Value'bool (Bool)
     | Value'int8 (Int8)
@@ -196,12 +166,6 @@ data CodeGeneratorRequest'RequestedFile
     deriving(Show, Read, Eq)
 
 data Type
-    = Type
-        { union' :: Type'
-        }
-    deriving(Show, Read, Eq)
-
-data Type'
     = Type'void
     | Type'bool
     | Type'int8

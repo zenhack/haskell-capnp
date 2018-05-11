@@ -28,12 +28,6 @@ data Call
     deriving(Show, Read, Eq)
 
 data CapDescriptor
-    = CapDescriptor
-        { union' :: CapDescriptor'
-        }
-    deriving(Show, Read, Eq)
-
-data CapDescriptor'
     = CapDescriptor'none
     | CapDescriptor'senderHosted (Word32)
     | CapDescriptor'senderPromise (Word32)
@@ -43,12 +37,6 @@ data CapDescriptor'
     deriving(Show, Read, Eq)
 
 data Message
-    = Message
-        { union' :: Message'
-        }
-    deriving(Show, Read, Eq)
-
-data Message'
     = Message'unimplemented (Message)
     | Message'abort (Exception)
     | Message'call (Call)
@@ -66,12 +54,6 @@ data Message'
     deriving(Show, Read, Eq)
 
 data MessageTarget
-    = MessageTarget
-        { union' :: MessageTarget'
-        }
-    deriving(Show, Read, Eq)
-
-data MessageTarget'
     = MessageTarget'importedCap (Word32)
     | MessageTarget'promisedAnswer (PromisedAnswer)
     deriving(Show, Read, Eq)
@@ -158,12 +140,6 @@ data Accept
     deriving(Show, Read, Eq)
 
 data Disembargo'context
-    = Disembargo'context
-        { union' :: Disembargo'context'
-        }
-    deriving(Show, Read, Eq)
-
-data Disembargo'context'
     = Disembargo'context'senderLoopback (Word32)
     | Disembargo'context'receiverLoopback (Word32)
     | Disembargo'context'accept
@@ -187,12 +163,6 @@ data PromisedAnswer
     deriving(Show, Read, Eq)
 
 data Call'sendResultsTo
-    = Call'sendResultsTo
-        { union' :: Call'sendResultsTo'
-        }
-    deriving(Show, Read, Eq)
-
-data Call'sendResultsTo'
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
     | Call'sendResultsTo'thirdParty (Maybe (Data.Capnp.Untyped.Pure.PtrType))
@@ -206,12 +176,6 @@ data Bootstrap
     deriving(Show, Read, Eq)
 
 data PromisedAnswer'Op
-    = PromisedAnswer'Op
-        { union' :: PromisedAnswer'Op'
-        }
-    deriving(Show, Read, Eq)
-
-data PromisedAnswer'Op'
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField (Word16)
     deriving(Show, Read, Eq)

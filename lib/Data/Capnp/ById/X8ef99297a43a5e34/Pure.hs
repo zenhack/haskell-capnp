@@ -16,12 +16,6 @@ import qualified Codec.Capnp
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
 
 data JsonValue
-    = JsonValue
-        { union' :: JsonValue'
-        }
-    deriving(Show, Read, Eq)
-
-data JsonValue'
     = JsonValue'null
     | JsonValue'boolean (Bool)
     | JsonValue'number (Double)

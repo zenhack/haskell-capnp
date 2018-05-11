@@ -220,17 +220,40 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     in case union' of
         Node'Struct{..} | neededByParent nodeMap node ->
             let allFields = V.toList fields
-            in
-                HsAst.DataDef
-                    (HsAst.Name [name])
-                    [formatStructBody thisModule nodeMap (HsAst.Name [name]) allFields]
-                : case filter isUnionField allFields of
-                    [] -> [] -- No union.
-                    unionFields ->
-                        [ HsAst.DataDef
-                            (HsAst.Name [name, ""])
-                            $ map (generateVariant thisModule nodeMap name) unionFields
-                        ]
+                unionFields = filter isUnionField allFields
+                commonFields = filter (not . isUnionField) allFields
+                typeName = HsAst.Name [name]
+                -- variants to generate that go inside the union:
+                unionVariants =
+                    map (generateVariant thisModule nodeMap name) unionFields
+                -- variant for the outside of the union. If unionVariants is
+                -- non empty, this includes a field @union'@ that points to
+                -- another type for the union.
+                commonVariants =
+                    [formatStructBody thisModule nodeMap typeName allFields]
+            in case (unionFields, commonFields) of
+                ([], []) ->
+                    -- I(zenhack) don't fully understand this case. It seems like
+                    -- it should apply to struct Foo {}, but it also imperically
+                    -- shows up for type aliases in the schema. In this case, the
+                    -- schema should still build without them since our generated
+                    -- code just uses the original type. Furthermore, right now
+                    -- our ast output doesn't handle types with no variants, so
+                    -- we just don't output any code.
+                    []
+                ([], _:_) ->
+                    -- There's no anonymous union; just declare the fields.
+                    [HsAst.DataDef typeName commonVariants]
+                (_:_, []) ->
+                    -- The struct is just one big anonymous union; expand the variants
+                    -- in-line, rather than making a wrapper.
+                    [HsAst.DataDef typeName unionVariants]
+                (_:_, _:_) ->
+                    -- There are both common fields and an anonymous union. Generate
+                    -- an auxiliary type for the union.
+                    [ HsAst.DataDef typeName commonVariants
+                    , HsAst.DataDef (HsAst.Name [name, ""]) unionVariants
+                    ]
         Node'Enum{..} ->
             [ HsAst.DataDef
                 (HsAst.Name [name])

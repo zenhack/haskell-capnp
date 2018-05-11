@@ -15,10 +15,6 @@ import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
 
-data RecipientId
-    = RecipientId
-    deriving(Show, Read, Eq)
-
 data JoinKeyPart
     = JoinKeyPart
         { joinId :: Word32
@@ -39,10 +35,6 @@ data Side
     = Side'server
     | Side'client
     | Side'unknown' (Word16)
-    deriving(Show, Read, Eq)
-
-data ThirdPartyCapId
-    = ThirdPartyCapId
     deriving(Show, Read, Eq)
 
 data ProvisionId
