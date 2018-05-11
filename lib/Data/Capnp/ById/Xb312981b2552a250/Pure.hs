@@ -34,6 +34,7 @@ data CapDescriptor
     | CapDescriptor'receiverHosted (Word32)
     | CapDescriptor'receiverAnswer (PromisedAnswer)
     | CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor)
+    | CapDescriptor'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Message
@@ -51,11 +52,13 @@ data Message
     | Message'accept (Accept)
     | Message'join (Join)
     | Message'disembargo (Disembargo)
+    | Message'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data MessageTarget
     = MessageTarget'importedCap (Word32)
     | MessageTarget'promisedAnswer (PromisedAnswer)
+    | MessageTarget'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Payload
@@ -88,6 +91,7 @@ data Return'
     | Return'resultsSentElsewhere
     | Return'takeFromOtherQuestion (Word32)
     | Return'acceptFromThirdParty (Maybe (Data.Capnp.Untyped.Pure.PtrType))
+    | Return'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Release
@@ -115,6 +119,7 @@ data Resolve
 data Resolve'
     = Resolve'cap (CapDescriptor)
     | Resolve'exception (Exception)
+    | Resolve'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data ThirdPartyCapDescriptor
@@ -144,6 +149,7 @@ data Disembargo'context
     | Disembargo'context'receiverLoopback (Word32)
     | Disembargo'context'accept
     | Disembargo'context'provide (Word32)
+    | Disembargo'context'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Exception
@@ -166,6 +172,7 @@ data Call'sendResultsTo
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
     | Call'sendResultsTo'thirdParty (Maybe (Data.Capnp.Untyped.Pure.PtrType))
+    | Call'sendResultsTo'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Bootstrap
@@ -178,6 +185,7 @@ data Bootstrap
 data PromisedAnswer'Op
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField (Word16)
+    | PromisedAnswer'Op'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Disembargo

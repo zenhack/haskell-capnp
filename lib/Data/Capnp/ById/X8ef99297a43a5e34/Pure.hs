@@ -23,6 +23,7 @@ data JsonValue
     | JsonValue'array (List (JsonValue))
     | JsonValue'object (List (JsonValue'Field))
     | JsonValue'call (JsonValue'Call)
+    | JsonValue'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data JsonValue'Call

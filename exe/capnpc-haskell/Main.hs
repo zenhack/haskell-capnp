@@ -226,6 +226,14 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 -- variants to generate that go inside the union:
                 unionVariants =
                     map (generateVariant thisModule nodeMap name) unionFields
+                    ++
+                    -- Every union gets an extra "unknown" varaint, which is used
+                    -- whenever what's on the wire has a discriminant that's not
+                    -- in our schema.
+                    [ HsAst.NormalVariant
+                        (HsAst.Name [name, "unknown'"])
+                        (Just $ HsAst.Type "Word16" [])
+                    ]
             in case (unionFields, commonFields) of
                 ([], []) ->
                     -- I(zenhack) don't fully understand this case. It seems like

@@ -20,6 +20,7 @@ data Type'anyPointer'unconstrained
     | Type'anyPointer'unconstrained'struct
     | Type'anyPointer'unconstrained'list
     | Type'anyPointer'unconstrained'capability
+    | Type'anyPointer'unconstrained'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Brand
@@ -70,6 +71,7 @@ data Field'
     | Field'group
         { typeId :: Word64
         }
+    | Field'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Superclass
@@ -89,6 +91,7 @@ data Brand'Scope
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
     | Brand'Scope'inherit
+    | Brand'Scope'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data CodeGeneratorRequest'RequestedFile'Import
@@ -107,6 +110,7 @@ data Node'Parameter
 data Field'ordinal
     = Field'ordinal'implicit
     | Field'ordinal'explicit (Word16)
+    | Field'ordinal'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data CodeGeneratorRequest
@@ -128,11 +132,13 @@ data Type'anyPointer
     | Type'anyPointer'implicitMethodParameter
         { parameterIndex :: Word16
         }
+    | Type'anyPointer'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Brand'Binding
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type)
+    | Brand'Binding'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Value
@@ -155,6 +161,7 @@ data Value
     | Value'struct (Maybe (Data.Capnp.Untyped.Pure.PtrType))
     | Value'interface
     | Value'anyPointer (Maybe (Data.Capnp.Untyped.Pure.PtrType))
+    | Value'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data CodeGeneratorRequest'RequestedFile
@@ -198,6 +205,7 @@ data Type
     | Type'anyPointer
         { union' :: Type'anyPointer
         }
+    | Type'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data ElementSize
@@ -278,6 +286,7 @@ data Node'
         , targetsParam :: Bool
         , targetsAnnotation :: Bool
         }
+    | Node'unknown' (Word16)
     deriving(Show, Read, Eq)
 
 data Annotation
