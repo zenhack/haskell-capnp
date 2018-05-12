@@ -29,6 +29,7 @@ data Type
 data Variant = Variant
     { variantName   :: Name
     , variantParams :: VariantParams
+    , variantTag    :: Maybe Word16
     }
     deriving(Show, Read, Eq)
 

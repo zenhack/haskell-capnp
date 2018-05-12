@@ -235,6 +235,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     [ HsAst.Variant
                         { variantName = HsAst.Name [name, "unknown'"]
                         , variantParams = HsAst.Unnamed $ HsAst.Type "Word16" []
+                        , variantTag = Nothing
                         }
                     ]
             in case (unionFields, commonFields) of
@@ -251,7 +252,13 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- There's no anonymous union; just declare the fields.
                     [ HsAst.DataDef
                         { dataName = typeName
-                        , dataVariants = [formatStructBody thisModule nodeMap typeName allFields]
+                        , dataVariants =
+                            [ HsAst.Variant
+                                { variantName = typeName
+                                , variantParams = formatStructBody thisModule nodeMap typeName allFields
+                                , variantTag = Nothing
+                                }
+                            ]
                         , dataTagLoc = Nothing
                         }
                     ]
@@ -270,7 +277,13 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     let unionName = HsAst.Name [name, ""]
                     in  [ HsAst.DataDef
                             { dataName = typeName
-                            , dataVariants = [formatStructBody thisModule nodeMap unionName allFields]
+                            , dataVariants =
+                                [ HsAst.Variant
+                                    { variantName = unionName
+                                    , variantParams = formatStructBody thisModule nodeMap unionName allFields
+                                    , variantTag = Nothing
+                                    }
+                                ]
                             , dataTagLoc = Nothing
                             }
                         , HsAst.DataDef
@@ -287,6 +300,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     <> [ HsAst.Variant
                             { variantName = HsAst.Name [name, "unknown'"]
                             , variantParams = HsAst.Unnamed $ HsAst.Type "Word16" []
+                            , variantTag = Nothing
                             }
                        ]
                 , dataTagLoc = Nothing
@@ -307,29 +321,27 @@ dataLoc offset ty =
 generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsAst.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
     HsAst.Variant
-        { HsAst.variantName = HsAst.Name [parentName, name]
-        , HsAst.variantParams = HsAst.NoParams
+        { variantName = HsAst.Name [parentName, name]
+        , variantParams = HsAst.NoParams
+        , variantTag = Just codeOrder
         }
 
 -- | Return whether the field is part of a union within its struct.
 isUnionField :: Field -> Bool
 isUnionField Field'{..} = discriminantValue /= field'noDiscriminant
 
-formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.Variant
-formatStructBody thisModule nodeMap parentName fields = HsAst.Variant
-    { variantName = parentName
-    , variantParams = HsAst.Record $
-        map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
-        <> case filter isUnionField fields of
-            [] -> [] -- no union
-            _  ->
-                [ HsAst.Field
-                    { fieldName = "union'"
-                    , fieldType = HsAst.Type parentName []
-                    , fieldLoc = HsAst.HereField
-                    }
-                ]
-    }
+formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.VariantParams
+formatStructBody thisModule nodeMap parentName fields = HsAst.Record $
+    map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
+    <> case filter isUnionField fields of
+        [] -> [] -- no union
+        _  ->
+            [ HsAst.Field
+                { fieldName = "union'"
+                , fieldType = HsAst.Type parentName []
+                , fieldLoc = HsAst.HereField
+                }
+            ]
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
@@ -340,12 +352,17 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         , variantParams = case type_ of
             Type'void -> HsAst.NoParams
             _         -> HsAst.Unnamed (formatType thisModule nodeMap type_)
+        , variantTag = Just discriminantValue
         }
     Field'group{..} ->
         let NodeMetaData{node=node@Node'{..},..} = nodeMap M.! typeId
         in case union' of
-            Node'struct{..} ->
-                formatStructBody thisModule nodeMap variantName $ V.toList fields
+            Node'struct{..} -> HsAst.Variant
+                { variantName = variantName
+                , variantParams =
+                    formatStructBody thisModule nodeMap variantName $ V.toList fields
+                , variantTag = Just discriminantValue
+                }
             _               ->
                 error "A group field referenced a non-struct node."
     Field'unknown' _ ->
@@ -355,6 +372,7 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         HsAst.Variant
             { variantName
             , variantParams = HsAst.NoParams
+            , variantTag = Nothing
             }
   where
     variantName = HsAst.Name [parentName, makeLegalName name]
