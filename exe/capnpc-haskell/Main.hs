@@ -180,12 +180,13 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     , ""
     , mintercalate "\n" $ map generateImport $ V.toList imports
     , ""
-    , mconcat $ map (mconcat . map hsFmt . generateTypes id nodeMap)
+    , mconcat $ map hsFmt $ concat allTypes
+    ]
+  where
+    allTypes = map (generateTypes id nodeMap)
         $ filter (\NodeMetaData{..} -> moduleId == id)
         $ map snd
         $ M.toList nodeMap
-    ]
-
 
 -- | Check whether the node's parent scope actually needs a type definition for
 -- the node. This is true unless it is a group belonging to a union, which itself
