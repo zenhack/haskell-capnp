@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 module HsAst where
 
@@ -5,6 +6,7 @@ import Data.List   (intersperse)
 import Data.Monoid (Monoid, mconcat, (<>))
 import Data.String (IsString(..))
 import Data.Text   (Text)
+import Data.Word
 
 import qualified Data.Text.Lazy.Builder as TB
 
@@ -38,12 +40,36 @@ data Variant
 data Field = Field
     { fieldName :: Text
     , fieldType :: Type
+    , fieldLoc  :: FieldLoc
     }
     deriving(Show, Read, Eq)
 
 data DataDef = DataDef
     { dataName     :: Name
     , dataVariants :: [Variant]
+    -- ^ The location of the tag for the union, if any.
+    , dataTagLoc   :: Maybe DataLoc
+    }
+    deriving(Show, Read, Eq)
+
+-- | The location of a field within a struct
+data FieldLoc
+    -- | The field is in the struct's data section.
+    = DataField DataLoc
+    -- | The field is in the struct's pointer section (the argument is the
+    -- index).
+    | PtrField !Word16
+    -- | The field is a group or union; it's "location" is the whole struct.
+    | HereField
+    -- | The field is zero-size (and has no argument)
+    | VoidField
+    deriving(Show, Read, Eq)
+
+-- | The location of a field within a struct's data section.
+data DataLoc = DataLoc
+    { dataIdx :: !Int
+    -- ^ The index of the 64-bit word containing the field.
+    , dataOff :: !Int
     }
     deriving(Show, Read, Eq)
 
@@ -73,11 +99,11 @@ instance HsFmt Variant where
         ]
 
 instance HsFmt Field where
-    hsFmt (Field name ty) = hsFmt name <> " :: " <> hsFmt ty
+    hsFmt Field{fieldName,fieldType} = hsFmt fieldName <> " :: " <> hsFmt fieldType
 
 instance HsFmt DataDef where
-    hsFmt (DataDef name variants) = mconcat
-        [ "data ", hsFmt name, "\n    = "
-        , mintercalate "\n    | " (map hsFmt variants)
+    hsFmt DataDef{dataName,dataVariants} = mconcat
+        [ "data ", hsFmt dataName, "\n    = "
+        , mintercalate "\n    | " (map hsFmt dataVariants)
         , "\n    deriving(Show, Read, Eq)\n\n"
         ]

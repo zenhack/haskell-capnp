@@ -8,6 +8,8 @@ module Main (main) where
 
 import Data.Capnp.Core.Schema
 
+import Data.Word
+
 import Codec.Capnp               (Decerialize(..))
 import Data.Capnp.TraversalLimit (evalWithLimit)
 import Data.Capnp.Untyped        (rootPtr)
@@ -246,32 +248,60 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [HsAst.DataDef typeName
-                        [formatStructBody thisModule nodeMap typeName allFields]]
+                    [ HsAst.DataDef
+                        { dataName = typeName
+                        , dataVariants = [formatStructBody thisModule nodeMap typeName allFields]
+                        , dataTagLoc = Nothing
+                        }
+                    ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [HsAst.DataDef typeName unionVariants]
+                    [ HsAst.DataDef
+                        { dataName = typeName
+                        , dataVariants = unionVariants
+                        , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
+                        }
+                    ]
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
                     let unionName = HsAst.Name [name, ""]
                     in  [ HsAst.DataDef
-                            typeName
-                            [formatStructBody thisModule nodeMap unionName allFields]
-                        , HsAst.DataDef unionName unionVariants
+                            { dataName = typeName
+                            , dataVariants = [formatStructBody thisModule nodeMap unionName allFields]
+                            , dataTagLoc = Nothing
+                            }
+                        , HsAst.DataDef
+                            { dataName = unionName
+                            , dataVariants = unionVariants
+                            , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
+                            }
                         ]
         Node'enum{..} ->
             [ HsAst.DataDef
-                (HsAst.Name [name])
-                $ map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                <> [ HsAst.NormalVariant
-                        { HsAst.variantName = HsAst.Name [name, "unknown'"]
-                        , HsAst.variantType = Just $ HsAst.Type "Word16" []
-                        }
-                   ]
+                { dataName = HsAst.Name [name]
+                , dataVariants =
+                    map (generateEnum thisModule nodeMap name) (V.toList enumerants)
+                    <> [ HsAst.NormalVariant
+                            { HsAst.variantName = HsAst.Name [name, "unknown'"]
+                            , HsAst.variantType = Just $ HsAst.Type "Word16" []
+                            }
+                       ]
+                , dataTagLoc = Nothing
+                }
             ]
         _ -> [] -- TODO
+
+-- | Given the offset field from the capnp schema and a type, return a DataLoc
+-- describing the location of a field.
+dataLoc :: Word32 -> Type -> HsAst.DataLoc
+dataLoc offset ty =
+    let bitsOffset = fromIntegral offset * typeSize ty
+    in HsAst.DataLoc
+        { dataIdx = bitsOffset `div` 64
+        , dataOff = bitsOffset `mod` 64
+        }
 
 generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsAst.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
@@ -290,7 +320,13 @@ formatStructBody thisModule nodeMap parentName fields = HsAst.Record
     $ map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
     <> case filter isUnionField fields of
         [] -> [] -- no union
-        _  -> [HsAst.Field "union'" $ HsAst.Type parentName []]
+        _  ->
+            [ HsAst.Field
+                { fieldName = "union'"
+                , fieldType = HsAst.Type parentName []
+                , fieldLoc = HsAst.HereField
+                }
+            ]
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
@@ -319,8 +355,8 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
 generateField :: Id -> NodeMap -> Field -> HsAst.Field
 generateField thisModule nodeMap Field'{..} =
     HsAst.Field
-        (makeLegalName name)
-        $ case union' of
+        { fieldName = makeLegalName name
+        , fieldType = case union' of
             Field'slot{..}   -> formatType thisModule nodeMap type_
             Field'group{..} ->
                 HsAst.Type (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
@@ -328,6 +364,59 @@ generateField thisModule nodeMap Field'{..} =
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
                 HsAst.Unit
+        , fieldLoc = case union' of
+            Field'group{} ->
+                HsAst.HereField
+            Field'slot{offset,type_} ->
+                case typeSection type_ of
+                    VoidSec ->
+                        HsAst.VoidField
+                    PtrSec ->
+                        HsAst.PtrField (fromIntegral offset)
+                    DataSec ->
+                        HsAst.DataField (dataLoc offset type_)
+            Field'unknown' _ ->
+                -- Some field tpe we don't know about; we can't
+                -- give a location for it, so call it void
+                HsAst.VoidField
+        }
+
+-- | Return the size of the type in units of the minimum size that makes
+-- sense for the section of a struct in which it belongs -- bits for the
+-- data section, and pointers for the pointer section.
+typeSize :: Type -> Int
+typeSize = \case
+    Type'void -> 0
+    Type'bool -> 1
+    Type'int8 -> 8
+    Type'int16 -> 16
+    Type'int32 -> 32
+    Type'int64 -> 64
+    Type'uint8 -> 8
+    Type'uint16 -> 16
+    Type'uint32 -> 32
+    Type'uint64 -> 64
+    Type'float32 -> 32
+    Type'float64 -> 64
+    Type'text -> 1
+    Type'enum{} -> 16
+    Type'data_ -> 1
+    Type'list{} -> 1
+    Type'struct{} -> 1
+    Type'interface{} -> 1
+    Type'anyPointer{} -> 1
+    -- something we don't know about; just call it 0, since we're not
+    -- generating code for it anyway.
+    Type'unknown' _ -> 0
+
+typeSection :: Type -> Section
+typeSection ty = case (typeSize ty, ty) of
+    (0, _)         -> VoidSec
+    (_, Type'bool) -> DataSec
+    (1, _)         -> PtrSec
+    _              -> DataSec
+
+data Section = DataSec | PtrSec | VoidSec
 
 formatType :: Id -> NodeMap -> Type -> HsAst.Type
 formatType thisModule nodeMap ty = case ty of
