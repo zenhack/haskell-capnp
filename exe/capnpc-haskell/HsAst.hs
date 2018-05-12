@@ -47,11 +47,17 @@ data Field = Field
     deriving(Show, Read, Eq)
 
 data DataDef = DataDef
-    { dataName     :: Name
-    , dataVariants :: [Variant]
-    -- ^ The location of the tag for the union, if any.
-    , dataTagLoc   :: Maybe DataLoc
+    { dataName       :: Name
+    , dataVariants   :: [Variant]
+    -- | The location of the tag for the union, if any.
+    , dataTagLoc     :: Maybe DataLoc
+    , dataCerialType :: CerialType
     }
+    deriving(Show, Read, Eq)
+
+data CerialType
+    = CTyStruct
+    | CTyWord !Int
     deriving(Show, Read, Eq)
 
 -- | The location of a field within a struct

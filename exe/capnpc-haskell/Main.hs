@@ -260,6 +260,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                                 }
                             ]
                         , dataTagLoc = Nothing
+                        , dataCerialType = HsAst.CTyStruct
                         }
                     ]
                 (_:_, []) ->
@@ -269,6 +270,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                         { dataName = typeName
                         , dataVariants = unionVariants
                         , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
+                        , dataCerialType = HsAst.CTyStruct
                         }
                     ]
                 (_:_, _:_) ->
@@ -285,11 +287,13 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                                     }
                                 ]
                             , dataTagLoc = Nothing
+                            , dataCerialType = HsAst.CTyStruct
                             }
                         , HsAst.DataDef
                             { dataName = unionName
                             , dataVariants = unionVariants
                             , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
+                            , dataCerialType = HsAst.CTyStruct
                             }
                         ]
         Node'enum{..} ->
@@ -304,6 +308,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                             }
                        ]
                 , dataTagLoc = Nothing
+                , dataCerialType = HsAst.CTyWord 16
                 }
             ]
         _ -> [] -- TODO
