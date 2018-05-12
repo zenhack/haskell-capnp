@@ -232,9 +232,10 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- Every union gets an extra "unknown" varaint, which is used
                     -- whenever what's on the wire has a discriminant that's not
                     -- in our schema.
-                    [ HsAst.NormalVariant
-                        (HsAst.Name [name, "unknown'"])
-                        (Just $ HsAst.Type "Word16" [])
+                    [ HsAst.Variant
+                        { variantName = HsAst.Name [name, "unknown'"]
+                        , variantParams = HsAst.Unnamed $ HsAst.Type "Word16" []
+                        }
                     ]
             in case (unionFields, commonFields) of
                 ([], []) ->
@@ -283,9 +284,9 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 { dataName = HsAst.Name [name]
                 , dataVariants =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                    <> [ HsAst.NormalVariant
-                            { HsAst.variantName = HsAst.Name [name, "unknown'"]
-                            , HsAst.variantType = Just $ HsAst.Type "Word16" []
+                    <> [ HsAst.Variant
+                            { variantName = HsAst.Name [name, "unknown'"]
+                            , variantParams = HsAst.Unnamed $ HsAst.Type "Word16" []
                             }
                        ]
                 , dataTagLoc = Nothing
@@ -305,9 +306,9 @@ dataLoc offset ty =
 
 generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsAst.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
-    HsAst.NormalVariant
+    HsAst.Variant
         { HsAst.variantName = HsAst.Name [parentName, name]
-        , HsAst.variantType = Nothing
+        , HsAst.variantParams = HsAst.NoParams
         }
 
 -- | Return whether the field is part of a union within its struct.
@@ -315,27 +316,31 @@ isUnionField :: Field -> Bool
 isUnionField Field'{..} = discriminantValue /= field'noDiscriminant
 
 formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.Variant
-formatStructBody thisModule nodeMap parentName fields = HsAst.Record
-    parentName
-    $ map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
-    <> case filter isUnionField fields of
-        [] -> [] -- no union
-        _  ->
-            [ HsAst.Field
-                { fieldName = "union'"
-                , fieldType = HsAst.Type parentName []
-                , fieldLoc = HsAst.HereField
-                }
-            ]
+formatStructBody thisModule nodeMap parentName fields = HsAst.Variant
+    { variantName = parentName
+    , variantParams = HsAst.Record $
+        map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
+        <> case filter isUnionField fields of
+            [] -> [] -- no union
+            _  ->
+                [ HsAst.Field
+                    { fieldName = "union'"
+                    , fieldType = HsAst.Type parentName []
+                    , fieldLoc = HsAst.HereField
+                    }
+                ]
+    }
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
 generateVariant :: Id -> NodeMap -> T.Text -> Field -> HsAst.Variant
 generateVariant thisModule nodeMap parentName Field'{..} = case union' of
-    Field'slot{..} -> HsAst.NormalVariant variantName $
-        case type_ of
-            Type'void -> Nothing
-            _         -> Just $ formatType thisModule nodeMap type_
+    Field'slot{..} -> HsAst.Variant
+        { variantName
+        , variantParams = case type_ of
+            Type'void -> HsAst.NoParams
+            _         -> HsAst.Unnamed (formatType thisModule nodeMap type_)
+        }
     Field'group{..} ->
         let NodeMetaData{node=node@Node'{..},..} = nodeMap M.! typeId
         in case union' of
@@ -347,7 +352,10 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         -- Some sort of field we don't know about (newer version of capnp probably).
         -- Generate the variant, but we don't know what the argument type should be,
         -- so leave it out.
-        HsAst.NormalVariant variantName Nothing
+        HsAst.Variant
+            { variantName
+            , variantParams = HsAst.NoParams
+            }
   where
     variantName = HsAst.Name [parentName, makeLegalName name]
 

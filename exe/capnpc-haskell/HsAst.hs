@@ -26,15 +26,16 @@ data Type
     | Unit
     deriving(Show, Read, Eq)
 
-data Variant
-    = Record
-        { recordName   :: Name
-        , recordFields :: [Field]
-        }
-    | NormalVariant
-        { variantName :: Name
-        , variantType :: Maybe Type
-        }
+data Variant = Variant
+    { variantName   :: Name
+    , variantParams :: VariantParams
+    }
+    deriving(Show, Read, Eq)
+
+data VariantParams
+    = Unnamed Type
+    | Record [Field]
+    | NoParams
     deriving(Show, Read, Eq)
 
 data Field = Field
@@ -88,15 +89,16 @@ instance HsFmt Type where
     hsFmt Unit = "()"
 
 instance HsFmt Variant where
-    hsFmt (NormalVariant name Nothing) = hsFmt name
-    hsFmt (NormalVariant name (Just ty)) = hsFmt name <> " (" <> hsFmt ty <> ")"
-    hsFmt (Record name []) = hsFmt name
-    hsFmt (Record name fields) = mconcat
-        [ hsFmt name
-        , "\n        { "
-        , mintercalate "\n        , " $ map hsFmt fields
-        ,  "\n        }"
-        ]
+    hsFmt Variant{variantName,variantParams} = hsFmt variantName <>
+        case variantParams of
+            NoParams -> ""
+            Unnamed ty -> " (" <> hsFmt ty <> ")"
+            Record [] -> ""
+            Record fields -> mconcat
+                [ "\n        { "
+                , mintercalate "\n        , " $ map hsFmt fields
+                ,  "\n        }"
+                ]
 
 instance HsFmt Field where
     hsFmt Field{fieldName,fieldType} = hsFmt fieldName <> " :: " <> hsFmt fieldType
