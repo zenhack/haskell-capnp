@@ -55,6 +55,18 @@ data DataDef = DataDef
     }
     deriving(Show, Read, Eq)
 
+data HsExpr
+    = ExCase HsExpr [(HsPat, HsExpr)]
+    | ExApp HsExpr HsExpr
+    | ExVar Text
+    | ExInt !Int
+    deriving(Show, Read, Eq)
+
+data HsPat
+    = PatInt Int
+    | PatVar Text
+    deriving(Show, Read, Eq)
+
 data CerialType
     = CTyStruct
     | CTyWord !Int
