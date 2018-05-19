@@ -16,12 +16,11 @@ import Data.Capnp.Untyped        (rootPtr)
 import Data.Capnp.Untyped.Pure   (readStruct)
 
 import qualified Data.Capnp.Message as Message
-import qualified HsAst
-
-import HsAst (HsFmt(..), mintercalate)
+import qualified HsSchema
 
 import Data.Function ((&))
 import Data.Monoid   ((<>))
+import FmtPure       (HsFmt(..), mintercalate)
 import Text.Printf   (printf)
 
 import System.Directory (createDirectoryIfMissing)
@@ -157,8 +156,8 @@ moduleNameFromId = T.pack . printf "Data.Capnp.ById.X%x.Pure"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the pure-untyped module.
-untypedName :: T.Text -> HsAst.Name
-untypedName name = HsAst.Name ["Data.Capnp.Untyped.Pure." <> name]
+untypedName :: T.Text -> HsSchema.Name
+untypedName name = HsSchema.Name ["Data.Capnp.Untyped.Pure." <> name]
 
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> TB.Builder
@@ -216,7 +215,7 @@ neededByParent nodeMap Node'{id,scopeId,union'=Node'struct{isGroup,discriminantC
         _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
 neededByParent _ _ = True
 
-generateTypes :: Id -> NodeMap -> NodeMetaData -> [HsAst.DataDef]
+generateTypes :: Id -> NodeMap -> NodeMetaData -> [HsSchema.DataDef]
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node'{..} = node
         name = identifierFromMetaData moduleId meta
@@ -225,7 +224,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
             let allFields = V.toList fields
                 unionFields = filter isUnionField allFields
                 commonFields = filter (not . isUnionField) allFields
-                typeName = HsAst.Name [name]
+                typeName = HsSchema.Name [name]
                 -- variants to generate that go inside the union:
                 unionVariants =
                     map (generateVariant thisModule nodeMap name) unionFields
@@ -233,9 +232,9 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- Every union gets an extra "unknown" varaint, which is used
                     -- whenever what's on the wire has a discriminant that's not
                     -- in our schema.
-                    [ HsAst.Variant
-                        { variantName = HsAst.Name [name, "unknown'"]
-                        , variantParams = HsAst.Unnamed $ HsAst.Type "Word16" []
+                    [ HsSchema.Variant
+                        { variantName = HsSchema.Name [name, "unknown'"]
+                        , variantParams = HsSchema.Unnamed $ HsSchema.Type "Word16" []
                         , variantTag = Nothing
                         }
                     ]
@@ -251,84 +250,84 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ HsAst.DataDef
+                    [ HsSchema.DataDef
                         { dataName = typeName
                         , dataVariants =
-                            [ HsAst.Variant
+                            [ HsSchema.Variant
                                 { variantName = typeName
                                 , variantParams = formatStructBody thisModule nodeMap typeName allFields
                                 , variantTag = Nothing
                                 }
                             ]
                         , dataTagLoc = Nothing
-                        , dataCerialType = HsAst.CTyStruct
+                        , dataCerialType = HsSchema.CTyStruct
                         }
                     ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [ HsAst.DataDef
+                    [ HsSchema.DataDef
                         { dataName = typeName
                         , dataVariants = unionVariants
                         , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
-                        , dataCerialType = HsAst.CTyStruct
+                        , dataCerialType = HsSchema.CTyStruct
                         }
                     ]
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
-                    let unionName = HsAst.Name [name, ""]
-                    in  [ HsAst.DataDef
+                    let unionName = HsSchema.Name [name, ""]
+                    in  [ HsSchema.DataDef
                             { dataName = typeName
                             , dataVariants =
-                                [ HsAst.Variant
+                                [ HsSchema.Variant
                                     { variantName = unionName
                                     , variantParams = formatStructBody thisModule nodeMap unionName allFields
                                     , variantTag = Nothing
                                     }
                                 ]
                             , dataTagLoc = Nothing
-                            , dataCerialType = HsAst.CTyStruct
+                            , dataCerialType = HsSchema.CTyStruct
                             }
-                        , HsAst.DataDef
+                        , HsSchema.DataDef
                             { dataName = unionName
                             , dataVariants = unionVariants
                             , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
-                            , dataCerialType = HsAst.CTyStruct
+                            , dataCerialType = HsSchema.CTyStruct
                             }
                         ]
         Node'enum{..} ->
-            [ HsAst.DataDef
-                { dataName = HsAst.Name [name]
+            [ HsSchema.DataDef
+                { dataName = HsSchema.Name [name]
                 , dataVariants =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                    <> [ HsAst.Variant
-                            { variantName = HsAst.Name [name, "unknown'"]
-                            , variantParams = HsAst.Unnamed $ HsAst.Type "Word16" []
+                    <> [ HsSchema.Variant
+                            { variantName = HsSchema.Name [name, "unknown'"]
+                            , variantParams = HsSchema.Unnamed $ HsSchema.Type "Word16" []
                             , variantTag = Nothing
                             }
                        ]
                 , dataTagLoc = Nothing
-                , dataCerialType = HsAst.CTyWord 16
+                , dataCerialType = HsSchema.CTyWord 16
                 }
             ]
         _ -> [] -- TODO
 
 -- | Given the offset field from the capnp schema and a type, return a DataLoc
 -- describing the location of a field.
-dataLoc :: Word32 -> Type -> HsAst.DataLoc
+dataLoc :: Word32 -> Type -> HsSchema.DataLoc
 dataLoc offset ty =
     let bitsOffset = fromIntegral offset * typeSize ty
-    in HsAst.DataLoc
+    in HsSchema.DataLoc
         { dataIdx = bitsOffset `div` 64
         , dataOff = bitsOffset `mod` 64
         }
 
-generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsAst.Variant
+generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsSchema.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
-    HsAst.Variant
-        { variantName = HsAst.Name [parentName, name]
-        , variantParams = HsAst.NoParams
+    HsSchema.Variant
+        { variantName = HsSchema.Name [parentName, name]
+        , variantParams = HsSchema.NoParams
         , variantTag = Just codeOrder
         }
 
@@ -336,34 +335,34 @@ generateEnum thisModule nodeMap parentName Enumerant{..} =
 isUnionField :: Field -> Bool
 isUnionField Field'{..} = discriminantValue /= field'noDiscriminant
 
-formatStructBody :: Id -> NodeMap -> HsAst.Name -> [Field] -> HsAst.VariantParams
-formatStructBody thisModule nodeMap parentName fields = HsAst.Record $
+formatStructBody :: Id -> NodeMap -> HsSchema.Name -> [Field] -> HsSchema.VariantParams
+formatStructBody thisModule nodeMap parentName fields = HsSchema.Record $
     map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
     <> case filter isUnionField fields of
         [] -> [] -- no union
         _  ->
-            [ HsAst.Field
+            [ HsSchema.Field
                 { fieldName = "union'"
-                , fieldType = HsAst.Type parentName []
-                , fieldLoc = HsAst.HereField
+                , fieldType = HsSchema.Type parentName []
+                , fieldLoc = HsSchema.HereField
                 }
             ]
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
-generateVariant :: Id -> NodeMap -> T.Text -> Field -> HsAst.Variant
+generateVariant :: Id -> NodeMap -> T.Text -> Field -> HsSchema.Variant
 generateVariant thisModule nodeMap parentName Field'{..} = case union' of
-    Field'slot{..} -> HsAst.Variant
+    Field'slot{..} -> HsSchema.Variant
         { variantName
         , variantParams = case type_ of
-            Type'void -> HsAst.NoParams
-            _         -> HsAst.Unnamed (formatType thisModule nodeMap type_)
+            Type'void -> HsSchema.NoParams
+            _         -> HsSchema.Unnamed (formatType thisModule nodeMap type_)
         , variantTag = Just discriminantValue
         }
     Field'group{..} ->
         let NodeMetaData{node=node@Node'{..},..} = nodeMap M.! typeId
         in case union' of
-            Node'struct{..} -> HsAst.Variant
+            Node'struct{..} -> HsSchema.Variant
                 { variantName = variantName
                 , variantParams =
                     formatStructBody thisModule nodeMap variantName $ V.toList fields
@@ -375,42 +374,42 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         -- Some sort of field we don't know about (newer version of capnp probably).
         -- Generate the variant, but we don't know what the argument type should be,
         -- so leave it out.
-        HsAst.Variant
+        HsSchema.Variant
             { variantName
-            , variantParams = HsAst.NoParams
+            , variantParams = HsSchema.NoParams
             , variantTag = Nothing
             }
   where
-    variantName = HsAst.Name [parentName, makeLegalName name]
+    variantName = HsSchema.Name [parentName, makeLegalName name]
 
 
-generateField :: Id -> NodeMap -> Field -> HsAst.Field
+generateField :: Id -> NodeMap -> Field -> HsSchema.Field
 generateField thisModule nodeMap Field'{..} =
-    HsAst.Field
+    HsSchema.Field
         { fieldName = makeLegalName name
         , fieldType = case union' of
             Field'slot{..}   -> formatType thisModule nodeMap type_
             Field'group{..} ->
-                HsAst.Type (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
+                HsSchema.Type (HsSchema.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
             Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
-                HsAst.Unit
+                HsSchema.Unit
         , fieldLoc = case union' of
             Field'group{} ->
-                HsAst.HereField
+                HsSchema.HereField
             Field'slot{offset,type_} ->
                 case typeSection type_ of
                     VoidSec ->
-                        HsAst.VoidField
+                        HsSchema.VoidField
                     PtrSec ->
-                        HsAst.PtrField (fromIntegral offset)
+                        HsSchema.PtrField (fromIntegral offset)
                     DataSec ->
-                        HsAst.DataField (dataLoc offset type_)
+                        HsSchema.DataField (dataLoc offset type_)
             Field'unknown' _ ->
                 -- Some field tpe we don't know about; we can't
                 -- give a location for it, so call it void
-                HsAst.VoidField
+                HsSchema.VoidField
         }
 
 -- | Return the size of the type in units of the minimum size that makes
@@ -450,29 +449,29 @@ typeSection ty = case (typeSize ty, ty) of
 
 data Section = DataSec | PtrSec | VoidSec
 
-formatType :: Id -> NodeMap -> Type -> HsAst.Type
+formatType :: Id -> NodeMap -> Type -> HsSchema.Type
 formatType thisModule nodeMap ty = case ty of
-    Type'void       -> HsAst.Unit
-    Type'bool       -> HsAst.Type "Bool" []
-    Type'int8       -> HsAst.Type "Int8" []
-    Type'int16      -> HsAst.Type "Int16" []
-    Type'int32      -> HsAst.Type "Int32" []
-    Type'int64      -> HsAst.Type "Int64" []
-    Type'uint8      -> HsAst.Type "Word8" []
-    Type'uint16     -> HsAst.Type "Word16" []
-    Type'uint32     -> HsAst.Type "Word32" []
-    Type'uint64     -> HsAst.Type "Word64" []
-    Type'float32    -> HsAst.Type "Float" []
-    Type'float64    -> HsAst.Type "Double" []
-    Type'text       -> HsAst.Type "Text" []
-    Type'data_      -> HsAst.Type "Data" []
-    Type'list elt   -> HsAst.Type "List" [formatType thisModule nodeMap elt]
+    Type'void       -> HsSchema.Unit
+    Type'bool       -> HsSchema.Type "Bool" []
+    Type'int8       -> HsSchema.Type "Int8" []
+    Type'int16      -> HsSchema.Type "Int16" []
+    Type'int32      -> HsSchema.Type "Int32" []
+    Type'int64      -> HsSchema.Type "Int64" []
+    Type'uint8      -> HsSchema.Type "Word8" []
+    Type'uint16     -> HsSchema.Type "Word16" []
+    Type'uint32     -> HsSchema.Type "Word32" []
+    Type'uint64     -> HsSchema.Type "Word64" []
+    Type'float32    -> HsSchema.Type "Float" []
+    Type'float64    -> HsSchema.Type "Double" []
+    Type'text       -> HsSchema.Type "Text" []
+    Type'data_      -> HsSchema.Type "Data" []
+    Type'list elt   -> HsSchema.Type "List" [formatType thisModule nodeMap elt]
     Type'enum{..} -> namedType typeId brand
     Type'struct{..} -> namedType typeId brand
     Type'interface{..} -> namedType typeId brand
     Type'anyPointer anyPtr ->
-        HsAst.Type "Maybe"
-            [ HsAst.Type
+        HsSchema.Type "Maybe"
+            [ HsSchema.Type
                 (case anyPtr of
                     Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
                         untypedName "PtrType"
@@ -487,10 +486,10 @@ formatType thisModule nodeMap ty = case ty of
                         untypedName "PtrType")
                 []
             ]
-    _ -> HsAst.Type "() {- TODO: constrained anyPointers -}" []
+    _ -> HsSchema.Type "() {- TODO: constrained anyPointers -}" []
   where
-    namedType typeId brand = HsAst.Type
-        (HsAst.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)])
+    namedType typeId brand = HsSchema.Type
+        (HsSchema.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)])
         -- TODO: use brand.
         []
 

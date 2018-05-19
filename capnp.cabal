@@ -82,7 +82,8 @@ library
 executable capnpc-haskell
     main-is:              Main.hs
     other-modules:
-      HsAst
+        HsSchema
+      , FmtPure
     hs-source-dirs:       exe/capnpc-haskell
     build-depends:
         capnp
