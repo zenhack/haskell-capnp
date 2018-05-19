@@ -16,8 +16,8 @@ data Error
     -- | A 'BoundsError' indicates an attempt to access an illegal
     -- index 'index' within a sequence of length 'maxIndex'.
     = BoundsError
-        { index    :: Int
-        , maxIndex :: Int
+        { index    :: !Int
+        , maxIndex :: !Int
         }
     -- | A 'RecursionLimitError' indicates that the recursion depth limit
     -- was exceeded.
