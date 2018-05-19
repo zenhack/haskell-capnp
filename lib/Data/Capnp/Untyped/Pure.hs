@@ -40,20 +40,19 @@ module Data.Capnp.Untyped.Pure
 
 import Prelude hiding (length, readList)
 
+import Data.Word
+
+import Codec.Capnp                   (expected)
+import Control.Monad.Catch           (MonadThrow)
+import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
+import Data.Primitive.Array          (Array)
+import GHC.Exts                      (IsList(..))
+import GHC.Generics                  (Generic)
 
-import Control.Monad.Catch (MonadThrow)
-import GHC.Exts            (IsList(..))
-import GHC.Generics        (Generic)
-
-import qualified Data.ByteString      as BS
-import qualified Data.Capnp.Untyped   as U
-import           Data.Default         (Default(def))
-import           Data.Primitive.Array (Array)
-import qualified Data.Vector          as V
-import           Data.Word
-
-import Codec.Capnp (expected)
+import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Untyped as U
+import qualified Data.Vector        as V
 
 type Cap = Word32
 

@@ -15,8 +15,7 @@ import Codec.Capnp
 import Control.Monad.Catch     (MonadThrow(throwM))
 import Data.Capnp.Errors       (Error(InvalidUtf8Error, SchemaViolationError))
 import Data.Capnp.Untyped.Pure (List)
-
-import Data.Text.Encoding (decodeUtf8')
+import Data.Text.Encoding      (decodeUtf8')
 
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T

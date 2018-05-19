@@ -85,17 +85,15 @@ The same rule applies for other constructs.
 
 ## Imports
 
-Most of this section is bikeshed, but here so we at least agree on
-*something*. There is one bit that I(@zenhack) think is a bit more
-objective though:
+Some guidelines re: imports:
 
-Favor qualified imports or importing specific items. Unqualified
-imports are acceptable in a few cases, where you're using a ton of
-stuff from a single module, but try to avoid them, especially with
-libraries whose API is not very very stable.
-
-On to the bikeshed:
-
+* Favor qualified imports or importing specific items. Unqualified
+  imports are acceptable in a few cases, where you're using a ton of
+  stuff from a single module, but try to avoid them, especially with
+  libraries whose API is not very very stable.
+* Wildcard imports of all of a type's data constructors/type class's
+  methods (`MonadThrow(..)`) are more acceptable, though still prefer
+  specifying specific ones if you're only using a couple.
 * Group imports into four distinct sections, separated by a single blank
   line (some of these may be absent):
 
@@ -118,20 +116,5 @@ import Data.ByteString as BS
 
 The formatter will take care of formatting the sections correctly, as
 long as you keep the line-breaks right.
-
-* Don't mix different "kinds" of imports:
-
-```haskell
--- Bad:
-
-import qualified Data.ByteString as BS (ByteString)
-
--- Good:
-
-import Data.ByteString (ByteString)
-
-import qualified Data.ByteString as BS
-```
-
 
 [1]: https://github.com/jaspervdj/stylish-haskell

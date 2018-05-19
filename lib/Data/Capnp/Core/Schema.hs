@@ -21,15 +21,13 @@ module Data.Capnp.Core.Schema
 
 import Prelude hiding (id)
 
-import Data.Capnp.ById.Xa93fc509624c72d9.Pure
-
-import Codec.Capnp (Decerialize(..))
-
-import Data.ReinterpretCast (wordToDouble, wordToFloat)
-
 import Data.Bits
+import Data.Capnp.ById.Xa93fc509624c72d9.Pure
 import Data.Capnp.Untyped.Pure
 import Data.Word
+
+import Codec.Capnp          (Decerialize(..))
+import Data.ReinterpretCast (wordToDouble, wordToFloat)
 
 type Id = Word64
 
