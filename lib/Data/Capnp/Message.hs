@@ -17,12 +17,13 @@ module Data.Capnp.Message
   where
 
 import Control.Monad             (void, when)
+import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo, wordsToBytes)
-import Data.Capnp.Errors         (Error(..), ThrowError(..))
-import Data.Capnp.TraversalLimit (Limit(invoice), evalWithLimit)
+import Data.Capnp.Errors         (Error(..))
+import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Word                 (Word32, Word64)
 
 import qualified Data.Capnp.Blob as B
@@ -32,15 +33,15 @@ newtype Message a = Message (V.Vector a) deriving(Show)
 
 -- | @getSegment msg i@ gets the ith segment of a message. Throws a
 -- 'BoundsError' if @i@ is out of bounds.
-getSegment :: (Monad m, ThrowError m) => Message a -> Int -> m a
+getSegment :: (MonadThrow m) => Message a -> Int -> m a
 getSegment (Message segs) i = do
     when (i < 0 || i >= V.length segs) $
-        throwError BoundsError { index = i, maxIndex = V.length segs }
+        throwM BoundsError { index = i, maxIndex = V.length segs }
     segs `V.indexM` i
 
 -- | @getWord msg addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
-getWord :: (B.Blob m seg, Monad m, ThrowError m)
+getWord :: (B.Blob m seg, MonadThrow m)
     => Message seg -> WordAddr -> m Word64
 getWord (Message segs) WordAt{..} = do
     seg <- segs `V.indexM` segIndex
@@ -50,13 +51,13 @@ getWord (Message segs) WordAt{..} = do
 --
 -- The segments will not be copied; the resulting message will be a view into
 -- the original blob.
-decode :: (B.Slice m b, B.Blob m b, Monad m, ThrowError m) => b -> m (Message b)
+decode :: (B.Slice m b, B.Blob m b, MonadThrow m) => b -> m (Message b)
 decode blob = do
     -- Note: we use the quota to avoid needing to do bounds checking here;
     -- since readMessage invoices the quota before reading, we can rely on it
     -- not to read past the end of the blob.
     WordCount blobLen <- B.lengthInWords blob
-    flip evalStateT (Nothing, 0) $ evalWithLimit blobLen $
+    flip evalStateT (Nothing, 0) $ evalLimitT blobLen $
         readMessage read32 readSegment
   where
     bIndex b i = lift $ lift $ B.indexWord b i
@@ -81,7 +82,7 @@ decode blob = do
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
 -- The size of the message (in 64-bit words) is deducted from the quota,
 -- which can be used to set the maximum message size.
-readMessage :: (Monad m, ThrowError m, Limit m)
+readMessage :: (MonadLimit m)
     => m Word32 -> (WordCount -> m b) -> m (Message b)
 readMessage read32 readSegment = do
     invoice 1

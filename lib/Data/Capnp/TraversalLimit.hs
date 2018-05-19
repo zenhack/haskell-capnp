@@ -21,11 +21,11 @@ message happens inside of this monad.
 
 -}
 module Data.Capnp.TraversalLimit
-    ( Limit(..)
+    ( MonadLimit(..)
     , LimitT
-    , runWithLimit
-    , evalWithLimit
-    , execWithLimit
+    , runLimitT
+    , evalLimitT
+    , execLimitT
     ) where
 
 import Control.Monad              (when)
@@ -33,10 +33,9 @@ import Control.Monad.Catch        (MonadThrow(throwM))
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
 import Control.Monad.Trans.Class  (MonadTrans(lift))
-import Data.Capnp.Errors
-    (Error(TraversalLimitError), ThrowError(throwError))
+import Data.Capnp.Errors          (Error(TraversalLimitError))
 
--- Just to define Limit instances:
+-- Just to define 'MonadLimit' instances:
 import           Control.Monad.Reader     (ReaderT)
 import           Control.Monad.RWS        (RWST)
 import qualified Control.Monad.State.Lazy as LazyState
@@ -44,48 +43,39 @@ import           Control.Monad.Writer     (WriterT)
 
 -- | mtl-style type class to track the traversal limit. This is used
 -- by other parts of the library which actually do the reading.
---
--- Note that, deviating from the standard mtl type classes, there is no
--- Monad constraint. The motivations are similar to 'ThrowError': We
--- may at some point develop an instance of this class that allows
--- parrallel or non-deterministic exploration of a message, and only
--- 'Applicative' is really needed.
-class Limit m where
-    -- | @'invoice' n@ deducts @n@ from the traversal limit, signalling
+class Monad m => MonadLimit m where
+    -- | @'invoice' n@ deducts @n@ from the traversal limit, signaling
     -- an error if the limit is exhausted.
     invoice :: Int -> m ()
 
--- | Monad transformer implementing 'Limit'. The underlying monad must
--- implement 'ThrowError', which will be used to signal an error when
+-- | Monad transformer implementing 'MonadLimit'. The underlying monad
+-- must implement 'MonadThrow', which will be used to signal an error when
 -- the limit is exhausted.
-newtype LimitT m a = LimitT { runLimitT :: StateT Int m a }
+newtype LimitT m a = LimitT (StateT Int m a)
     deriving(Functor, Applicative, Monad)
 
--- Run a LimitT, returning the value from the computation and the remaining
+-- | Run a 'LimitT', returning the value from the computation and the remaining
 -- traversal limit.
-runWithLimit :: (Monad m, ThrowError m) => Int -> LimitT m a -> m (a, Int)
-runWithLimit limit (LimitT stateT) = runStateT stateT limit
+runLimitT :: MonadThrow m => Int -> LimitT m a -> m (a, Int)
+runLimitT limit (LimitT stateT) = runStateT stateT limit
 
--- Run a LimitT, returning the value from the computation.
-evalWithLimit :: (Monad m, ThrowError m) => Int -> LimitT m a -> m a
-evalWithLimit limit (LimitT stateT) = evalStateT stateT limit
+-- | Run a 'LimitT', returning the value from the computation.
+evalLimitT :: MonadThrow m => Int -> LimitT m a -> m a
+evalLimitT limit (LimitT stateT) = evalStateT stateT limit
 
--- Run a LimitT, returning the remaining traversal limit.
-execWithLimit :: (Monad m, ThrowError m) => Int -> LimitT m a -> m Int
-execWithLimit limit (LimitT stateT) = execStateT stateT limit
+-- | Run a 'LimitT', returning the remaining traversal limit.
+execLimitT :: MonadThrow m => Int -> LimitT m a -> m Int
+execLimitT limit (LimitT stateT) = execStateT stateT limit
 
------- Instances of mtl type classes for LimitT.
+------ Instances of mtl type classes for 'LimitT'.
 
 instance MonadThrow m => MonadThrow (LimitT m) where
     throwM = lift . throwM
 
-instance (Monad m, ThrowError m) => ThrowError (LimitT m) where
-    throwError = lift . throwError
-
-instance (Monad m, ThrowError m) => Limit (LimitT m) where
+instance MonadThrow m => MonadLimit (LimitT m) where
     invoice deduct = LimitT $ do
         limit <- get
-        when (limit < deduct) $ throwError TraversalLimitError
+        when (limit < deduct) $ throwM TraversalLimitError
         put (limit - deduct)
 
 instance MonadTrans LimitT where
@@ -95,19 +85,19 @@ instance MonadState s m => MonadState s (LimitT m) where
     get = lift get
     put = lift . put
 
------- Instances of Limit for standard monad transformers
+------ Instances of 'MonadLimit' for standard monad transformers
 
-instance (Monad m, Limit m) => Limit (StateT s m) where
+instance MonadLimit m => MonadLimit (StateT s m) where
     invoice = lift . invoice
 
-instance (Monad m, Limit m) => Limit (LazyState.StateT s m) where
+instance MonadLimit m => MonadLimit (LazyState.StateT s m) where
     invoice = lift . invoice
 
-instance (Monoid w, Monad m, Limit m) => Limit (WriterT w m) where
+instance (Monoid w, MonadLimit m) => MonadLimit (WriterT w m) where
     invoice = lift . invoice
 
-instance (Monad m, Limit m) => Limit (ReaderT r m) where
+instance (MonadLimit m) => MonadLimit (ReaderT r m) where
     invoice = lift . invoice
 
-instance (Monoid w, Monad m, Limit m) => Limit (RWST r w s m) where
+instance (Monoid w, MonadLimit m) => MonadLimit (RWST r w s m) where
     invoice = lift . invoice

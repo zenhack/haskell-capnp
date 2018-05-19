@@ -12,8 +12,8 @@ module Data.Capnp.BuiltinTypes.Pure
 import Data.Word
 
 import Codec.Capnp
-import Data.Capnp.Errors
-    (Error(InvalidUtf8Error, SchemaViolationError), ThrowError(throwError))
+import Control.Monad.Catch     (MonadThrow(throwM))
+import Data.Capnp.Errors       (Error(InvalidUtf8Error, SchemaViolationError))
 import Data.Capnp.Untyped.Pure (List)
 
 import Data.Text.Encoding (decodeUtf8')
@@ -32,10 +32,10 @@ instance Decerialize (List Word8) Text where
     decerialize bytes = do
             trimedBS <- decerialize bytes >>= trim
             case decodeUtf8' trimedBS of
-                Left e    -> throwError $ InvalidUtf8Error e
+                Left e    -> throwM $ InvalidUtf8Error e
                 Right txt -> pure txt
       where
         trim bs
             | BS.length bs == 0 = pure bs
-            | BS.index bs (BS.length bs - 1) /= 0 = throwError $ SchemaViolationError "Text did not end with NUL"
+            | BS.index bs (BS.length bs - 1) /= 0 = throwM $ SchemaViolationError "Text did not end with NUL"
             | otherwise = pure $ BS.take (BS.length bs - 1) bs

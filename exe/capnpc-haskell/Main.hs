@@ -11,7 +11,7 @@ import Data.Capnp.Core.Schema
 import Data.Word
 
 import Codec.Capnp               (Decerialize(..))
-import Data.Capnp.TraversalLimit (evalWithLimit)
+import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Capnp.Untyped        (rootPtr)
 import Data.Capnp.Untyped.Pure   (readStruct)
 
@@ -116,7 +116,7 @@ main :: IO ()
 main = do
     msg <- Message.decode =<< BS.getContents
     -- Traversal limit is 64 MiB. Somewhat aribtrary.
-    cgr@CodeGeneratorRequest{..} <- evalWithLimit (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
+    cgr@CodeGeneratorRequest{..} <- evalLimitT (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
     mapM_ saveResult (handleCGR cgr)
   where
     saveResult (filename, contents) = do

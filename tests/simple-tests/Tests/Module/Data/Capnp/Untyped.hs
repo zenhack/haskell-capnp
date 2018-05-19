@@ -8,7 +8,7 @@ import Data.Capnp.Untyped
 import Tests.Util
 
 import Control.Monad             (forM_, when)
-import Data.Capnp.TraversalLimit (execWithLimit)
+import Data.Capnp.TraversalLimit (execLimitT)
 import Data.ReinterpretCast      (wordToDouble)
 import Test.Framework            (Test)
 import Test.HUnit                (assertEqual)
@@ -30,7 +30,7 @@ untypedTests = assertionsToTest "Untyped Tests"
                        capacity = 5173,
                        maxSpeed = 12.0
                     )))|]
-        endQuota <- execWithLimit 128 $ do
+        endQuota <- execLimitT 128 $ do
             root <- rootPtr msg
             let aircraftWords = dataSection root
             -- Aircraft just has the union tag, nothing else in it's data

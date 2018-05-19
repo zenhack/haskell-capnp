@@ -9,7 +9,7 @@ import Codec.Capnp (Decerialize(..))
 import Data.Capnp.Core.Schema
 import Tests.Util
 
-import Data.Capnp.TraversalLimit (evalWithLimit)
+import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Capnp.Untyped.Pure   (readStruct)
 import Test.Framework            (testGroup)
 import Test.HUnit                (assertEqual)
@@ -326,6 +326,6 @@ schemaTests = testGroup "schema decode tests"
         assertionsToTest ("Decode " ++ typename) $ map (testCase typename) cases
     testCase typename (capnpText, expected) = do
         msg <- encodeValue schemaText typename capnpText
-        actual <- evalWithLimit 128 $ U.rootPtr msg >>= readStruct >>= decerialize
+        actual <- evalLimitT 128 $ U.rootPtr msg >>= readStruct >>= decerialize
         assertEqual (show (capnpText, expected)) expected actual
     schemaText = [there|tests/data/schema.capnp|]

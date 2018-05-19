@@ -15,11 +15,14 @@ module Data.Capnp.Blob
 
 import Prelude hiding (length)
 
+import Data.Bits
 import Data.Word
 
 import Control.Monad            (forM_, when)
+import Control.Monad.Catch      (MonadThrow(throwM))
 import Control.Monad.Primitive  (PrimMonad, PrimState)
-import Data.Bits
+import Data.Capnp.Bits
+    (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
 import Data.Primitive.ByteArray
     ( ByteArray
     , MutableByteArray
@@ -32,10 +35,6 @@ import Data.Primitive.ByteArray
     , sizeofMutableByteArray
     , writeByteArray
     )
-
-import Data.Capnp.Bits
-    (ByteCount(..), WordCount(..), bytesToWordsFloor, wordsToBytes)
-import Data.Capnp.Errors (ThrowError, throwError)
 
 import qualified Data.ByteString   as BS
 import qualified Data.Capnp.Errors as E
@@ -51,7 +50,7 @@ class Blob m a where
     -- | Return the length of the blob, in words.
     length :: a -> m ByteCount
     -- | @index b i@ returns the ith byte in the blob @b@. Typically,
-    -- instances will include a MonadThrow constraint, throwing on out
+    -- instances will include a 'MonadThrow' constraint, throwing on out
     -- of bounds errors.
     index :: a -> ByteCount -> m Word8
 
@@ -60,7 +59,7 @@ class Blob m a => MutBlob m a where
     -- | @write b i value@ writes @value@ to the ith position in the blob.
     write :: a -> ByteCount -> Word8 -> m ()
     -- | @grow b amount@ grows the blob @b@ by @amount@ words. In an instance
-    -- of PrimMonad, this may modify or destroy the original blob.
+    -- of 'PrimMonad', this may modify or destroy the original blob.
     grow :: a -> ByteCount -> m a
 
 -- | A slice affords efficiently extracting sub-ranges.
@@ -100,47 +99,47 @@ writeWord arr words value = do
         write arr (base + fromIntegral i) $ fromIntegral $ value `shiftR` (i * 8)
 
 
-instance (Blob m a, Monad m, ThrowError m) => Blob m (BlobSlice a) where
+instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
     length b = return $ sliceLen b
     index b i = do
         when (i > sliceLen b) $
-            throwError E.BoundsError { E.index = fromIntegral i
+            throwM E.BoundsError { E.index = fromIntegral i
                                  , E.maxIndex = fromIntegral $ sliceLen b - 1
                                  }
         index (blob b) (offset b + i)
 
--- Helper for checking the arguments to slice; calls throwError if the arguments
+-- Helper for checking the arguments to slice; calls 'throwM' if the arguments
 -- are invalid in some way.
-checkSliceLen :: (Blob m b, Monad m, ThrowError m) => b -> ByteCount -> ByteCount -> m ()
+checkSliceLen :: (Blob m b, MonadThrow m) => b -> ByteCount -> ByteCount -> m ()
 checkSliceLen s offset newLen = do
     oldLen <- length s
     -- TODO: when (offset < 0 || newLen < 0)
     when (oldLen - offset < newLen) $ do
         let ByteCount index    = offset + newLen
         let ByteCount maxIndex = oldLen - 1
-        throwError E.BoundsError { E.index    = index
-                                 , E.maxIndex = maxIndex
-                                 }
+        throwM E.BoundsError { E.index    = index
+                             , E.maxIndex = maxIndex
+                             }
 
-instance (Blob m a, Monad m, ThrowError m) => Slice m (BlobSlice a) where
+instance (Blob m a, MonadThrow m) => Slice m (BlobSlice a) where
     slice bs@BlobSlice{..} off len = do
         checkSliceLen bs off len
         return $ bs { offset = offset + off
                     , sliceLen = len
                     }
 
-instance (Monad m) => Blob m BS.ByteString where
+instance Monad m => Blob m BS.ByteString where
     length = return . ByteCount . BS.length
     index bs (ByteCount i) = return $ BS.index bs i
 
-instance (Monad m, ThrowError m) => Slice m BS.ByteString where
+instance MonadThrow m => Slice m BS.ByteString where
     slice b off len = do
         checkSliceLen b off len
         let ByteCount off' = off
         let ByteCount len' = len
         return $ BS.take len' $ BS.drop off' b
 
-instance (Monad m) => Blob m ByteArray where
+instance Monad m => Blob m ByteArray where
     length = return . ByteCount . sizeofByteArray
     index arr (ByteCount i) = return $ indexByteArray arr i
 

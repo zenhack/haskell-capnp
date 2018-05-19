@@ -1,10 +1,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Codec.Capnp where
 
-import Data.Capnp.Errors (Error(..), ThrowError(..))
+import Control.Monad.Catch (MonadThrow(throwM))
+import Data.Capnp.Errors   (Error(SchemaViolationError))
 
 class Decerialize from to where
-    decerialize :: (ThrowError m, Monad m) => from -> m to
+    decerialize :: MonadThrow m => from -> m to
 
-expected :: ThrowError m => String -> m a
-expected msg = throwError $ SchemaViolationError $ "expected " ++ msg
+expected :: MonadThrow m => String -> m a
+expected msg = throwM $ SchemaViolationError $ "expected " ++ msg

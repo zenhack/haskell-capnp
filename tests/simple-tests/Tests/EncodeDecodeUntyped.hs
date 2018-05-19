@@ -18,7 +18,7 @@ import Tests.Util
 import Control.Monad             (void)
 import Control.Monad.Primitive   (RealWorld)
 import Data.ByteString           (ByteString)
-import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
+import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)
 import Text.Heredoc              (here)
@@ -49,7 +49,7 @@ encodeDecodeUntypedTest (meta, msgText, builder, reader, startQuota, endQuota) =
   where
     checkReader bytes = do
         msg <- M.decode bytes
-        readerResult <- runWithLimit startQuota (rootPtr msg >>= reader)
+        readerResult <- runLimitT startQuota (rootPtr msg >>= reader)
         assertEqual (show (meta, msgText)) ((), endQuota) readerResult
 
 

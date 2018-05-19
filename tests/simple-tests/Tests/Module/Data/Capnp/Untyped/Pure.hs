@@ -6,7 +6,7 @@ module Tests.Module.Data.Capnp.Untyped.Pure (pureUntypedTests) where
 import Data.Capnp.Untyped.Pure
 import Tests.Util
 
-import Data.Capnp.TraversalLimit (runWithLimit)
+import Data.Capnp.TraversalLimit (runLimitT)
 import Data.ReinterpretCast      (doubleToWord)
 import Test.Framework            (Test)
 import Test.HUnit                (assertEqual)
@@ -31,7 +31,7 @@ pureUntypedTests = assertionsToTest "Untyped ADT Tests"
                        capacity = 5173,
                        maxSpeed = 12.0
                     )))|]
-        (actual, 110) <- runWithLimit 128 $ U.rootPtr msg >>= readStruct
+        (actual, 110) <- runLimitT 128 $ U.rootPtr msg >>= readStruct
         assertEqual
             "Untyped ADT test (assertEqual)"
             (Struct
