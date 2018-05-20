@@ -15,23 +15,25 @@ import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Capnp.Untyped        (rootPtr)
 import Data.Capnp.Untyped.Pure   (readStruct)
 
-import qualified Data.Capnp.Message as Message
-import qualified HsSchema
 
 import Data.Function ((&))
 import Data.Monoid   ((<>))
-import FmtPure       (fmtModule)
 import Text.Printf   (printf)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
 
 import qualified Data.ByteString        as BS
+import qualified Data.Capnp.Message     as Message
 import qualified Data.Map.Strict        as M
 import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as TB
 import qualified Data.Text.Lazy.IO      as TIO
 import qualified Data.Vector            as V
+
+import qualified FmtPure
+import qualified FmtRaw
+import qualified HsSchema
 
 type NodeMap = M.Map Id NodeMetaData
 
@@ -168,10 +170,9 @@ untypedName name = HsSchema.Name
     , nameUnqualified = name
     }
 
--- | Generate the source code for a module based on a RequestedFile.
-generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> TB.Builder
-generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} =
-    fmtModule HsSchema.Module
+generateModule :: NodeMap -> CodeGeneratorRequest'RequestedFile -> HsSchema.Module
+generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
+    HsSchema.Module
         { modId = id
         , modFile = filename
         , modImports = map generateImport $ V.toList imports
@@ -492,11 +493,17 @@ generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
     HsSchema.Import (HsSchema.ByCapnpId id)
 
 handleCGR :: CodeGeneratorRequest -> [(FilePath, TB.Builder)]
-handleCGR cgr@CodeGeneratorRequest{..} = V.toList $
+handleCGR cgr@CodeGeneratorRequest{..} = concat $ V.toList $
     let nodeMap = makeNodeMap cgr
     in fmap
         (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
-            ( printf "Data/Capnp/ById/X%x/Pure.hs" id
-            , generateFile nodeMap reqFile)
-            )
+            let mod = generateModule nodeMap reqFile in
+            [ ( printf "Data/Capnp/ById/X%x/Pure.hs" id
+              , FmtPure.fmtModule mod
+              )
+            , ( printf "Data/Capnp/ById/X%x.hs" id
+              , FmtRaw.fmtModule mod
+              )
+            ]
+        )
         requestedFiles

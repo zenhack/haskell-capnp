@@ -10,17 +10,13 @@ module FmtPure
 import HsSchema
 
 import Data.Capnp.Core.Schema (Id)
-import Data.List              (intersperse)
-import Data.Monoid            (Monoid, mconcat, (<>))
+import Data.Monoid            (mconcat, (<>))
 import GHC.Exts               (IsList(..))
 import Text.Printf            (printf)
+import Util                   (mintercalate)
 
 import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as TB
-
--- | Generalization of 'Data.List.intercalate', analogous to concat/mconcat
-mintercalate :: Monoid w => w -> [w] -> w
-mintercalate sep = mconcat . intersperse sep
 
 class HsFmt a where
     -- | Format the value as haskell source code. The Id parameter indicates

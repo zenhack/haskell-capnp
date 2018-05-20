@@ -45,6 +45,12 @@ library
       , Data.Capnp.ById.Xb312981b2552a250.Pure
       , Data.Capnp.ById.Xa184c7885cdaf2a1.Pure
       , Data.Capnp.ById.Xa93fc509624c72d9.Pure
+      , Data.Capnp.ById.Xbdf87d7bb8304e81
+      , Data.Capnp.ById.X8ef99297a43a5e34
+      , Data.Capnp.ById.Xb8630836983feed7
+      , Data.Capnp.ById.Xb312981b2552a250
+      , Data.Capnp.ById.Xa184c7885cdaf2a1
+      , Data.Capnp.ById.Xa93fc509624c72d9
       , Data.Capnp.Errors
       , Data.Capnp.List
       , Data.Capnp.Message
@@ -84,6 +90,8 @@ executable capnpc-haskell
     other-modules:
         HsSchema
       , FmtPure
+      , FmtRaw
+      , Util
     hs-source-dirs:       exe/capnpc-haskell
     build-depends:
         capnp
