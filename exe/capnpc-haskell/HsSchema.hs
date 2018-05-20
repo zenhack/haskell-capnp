@@ -23,6 +23,7 @@
 module HsSchema
     ( Name(..)
     , Namespace(..)
+    , ModuleRef(..)
     , Type(..)
     , Variant(..)
     , VariantParams(..)
@@ -36,9 +37,10 @@ module HsSchema
 
 import Data.Word
 
-import Data.String (IsString(fromString))
-import Data.Text   (Text)
-import GHC.Exts    (IsList(..))
+import Data.Capnp.Core.Schema (Id)
+import Data.String            (IsString(fromString))
+import Data.Text              (Text)
+import GHC.Exts               (IsList(..))
 
 import qualified Data.Text as T
 
@@ -50,9 +52,13 @@ instance IsList Namespace where
     fromList = Namespace
     toList (Namespace parts) = parts
 
+data ModuleRef
+    = FullyQualified Namespace
+    | ByCapnpId Id
+    deriving(Show, Read, Eq)
 
 data Name = Name
-    { nameModule      :: Namespace
+    { nameModule      :: ModuleRef
     , nameLocalNS     :: Namespace
     , nameUnqualified :: Text
     }
@@ -66,7 +72,7 @@ subName name@Name{..} nextPart = name
 
 instance IsString Name where
     fromString str = Name
-        { nameModule = []
+        { nameModule = HsSchema.FullyQualified []
         , nameLocalNS = []
         , nameUnqualified = T.pack str
         }

@@ -7,7 +7,6 @@ module FmtPure
     ( HsFmt(..)
     -- TODO: move mintercalate somewhere else (or find it in some library).
     , mintercalate
-    , moduleFromId
     ) where
 
 import HsSchema
@@ -37,12 +36,12 @@ instance HsFmt Name where
         localName = mintercalate "'" $
             map TB.fromText $ fromList $ toList nameLocalNS ++ [nameUnqualified]
         modPrefix
-            | null (toList nameModule) || moduleFromId thisMod == nameModule = ""
-            | otherwise = mintercalate "." (map TB.fromText $ toList nameModule) <> "."
-
-moduleFromId :: Id -> HsSchema.Namespace
-moduleFromId id = HsSchema.Namespace
-    ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
+            | null nsParts || modRefToNS (ByCapnpId thisMod) == ns = ""
+            | otherwise = mintercalate "." (map TB.fromText nsParts) <> "."
+        ns@(Namespace nsParts) = modRefToNS nameModule
+        modRefToNS (FullyQualified ns) = ns
+        modRefToNS (ByCapnpId id) = HsSchema.Namespace
+            ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
 
 instance HsFmt Type where
     hsFmt thisMod (Type name params) =

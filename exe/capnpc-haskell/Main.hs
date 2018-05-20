@@ -20,7 +20,7 @@ import qualified HsSchema
 
 import Data.Function ((&))
 import Data.Monoid   ((<>))
-import FmtPure       (HsFmt(..), mintercalate, moduleFromId)
+import FmtPure       (HsFmt(..), mintercalate)
 import Text.Printf   (printf)
 
 import System.Directory (createDirectoryIfMissing)
@@ -52,7 +52,7 @@ data NodeMetaData = NodeMetaData
 identifierFromMetaData :: Id -> NodeMetaData -> HsSchema.Name
 identifierFromMetaData _ NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
     HsSchema.Name
-        { nameModule = moduleFromId moduleId
+        { nameModule = HsSchema.ByCapnpId moduleId
         , nameLocalNS = HsSchema.Namespace $ reverse localNS
         , nameUnqualified = unqualified
         }
@@ -162,7 +162,8 @@ moduleNameFromId = T.pack . printf "Data.Capnp.ById.X%x.Pure"
 -- within the pure-untyped module.
 untypedName :: T.Text -> HsSchema.Name
 untypedName name = HsSchema.Name
-    { nameModule = HsSchema.Namespace ["Data", "Capnp", "Untyped", "Pure"]
+    { nameModule = HsSchema.FullyQualified $
+        HsSchema.Namespace ["Data", "Capnp", "Untyped", "Pure"]
     , nameLocalNS = HsSchema.Namespace []
     , nameUnqualified = name
     }
