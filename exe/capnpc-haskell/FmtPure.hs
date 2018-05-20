@@ -1,4 +1,5 @@
 {-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 -- Generate idiomatic haskell data types from the types in HsSchema.
@@ -14,6 +15,7 @@ import HsSchema
 import Data.Capnp.Core.Schema (Id)
 import Data.List              (intersperse)
 import Data.Monoid            (Monoid, mconcat, (<>))
+import GHC.Exts               (IsList(..))
 import Text.Printf            (printf)
 
 import qualified Data.Text              as T
@@ -33,13 +35,13 @@ instance HsFmt Name where
     hsFmt thisMod Name{..} = modPrefix <> localName
       where
         localName = mintercalate "'" $
-            map TB.fromText (nameLocalNS <> [nameUnqualified])
+            map TB.fromText $ fromList $ toList nameLocalNS ++ [nameUnqualified]
         modPrefix
-            | null nameModule || moduleFromId thisMod == nameModule = ""
-            | otherwise = mintercalate "." (map TB.fromText nameModule) <> "."
+            | null (toList nameModule) || moduleFromId thisMod == nameModule = ""
+            | otherwise = mintercalate "." (map TB.fromText $ toList nameModule) <> "."
 
-moduleFromId :: Id -> [T.Text]
-moduleFromId id =
+moduleFromId :: Id -> HsSchema.Namespace
+moduleFromId id = HsSchema.Namespace
     ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
 
 instance HsFmt Type where

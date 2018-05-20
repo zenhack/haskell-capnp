@@ -1,5 +1,7 @@
 {-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies    #-}
 -- This module defines datatypes that represent something between the capnp
 -- schema and Haskell code. The representation has the following
 -- chracteristics:
@@ -20,6 +22,7 @@
 --   (TODO).
 module HsSchema
     ( Name(..)
+    , Namespace(..)
     , Type(..)
     , Variant(..)
     , VariantParams(..)
@@ -35,19 +38,29 @@ import Data.Word
 
 import Data.String (IsString(fromString))
 import Data.Text   (Text)
+import GHC.Exts    (IsList(..))
 
 import qualified Data.Text as T
 
+newtype Namespace = Namespace [Text]
+    deriving(Show, Read, Eq)
+
+instance IsList Namespace where
+    type Item Namespace = Text
+    fromList = Namespace
+    toList (Namespace parts) = parts
+
+
 data Name = Name
-    { nameModule      :: [Text]
-    , nameLocalNS     :: [Text]
+    { nameModule      :: Namespace
+    , nameLocalNS     :: Namespace
     , nameUnqualified :: Text
     }
     deriving(Show, Read, Eq)
 
 subName :: Name -> Text -> Name
 subName name@Name{..} nextPart = name
-    { nameLocalNS = nameLocalNS ++ [nameUnqualified]
+    { nameLocalNS = fromList $ toList nameLocalNS ++ [nameUnqualified]
     , nameUnqualified = nextPart
     }
 

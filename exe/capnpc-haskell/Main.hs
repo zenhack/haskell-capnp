@@ -53,7 +53,7 @@ identifierFromMetaData :: Id -> NodeMetaData -> HsSchema.Name
 identifierFromMetaData _ NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
     HsSchema.Name
         { nameModule = moduleFromId moduleId
-        , nameLocalNS = reverse localNS
+        , nameLocalNS = HsSchema.Namespace $ reverse localNS
         , nameUnqualified = unqualified
         }
 identifierFromMetaData _ meta =
@@ -162,8 +162,8 @@ moduleNameFromId = T.pack . printf "Data.Capnp.ById.X%x.Pure"
 -- within the pure-untyped module.
 untypedName :: T.Text -> HsSchema.Name
 untypedName name = HsSchema.Name
-    { nameModule = ["Data", "Capnp", "Untyped", "Pure"]
-    , nameLocalNS = []
+    { nameModule = HsSchema.Namespace ["Data", "Capnp", "Untyped", "Pure"]
+    , nameLocalNS = HsSchema.Namespace []
     , nameUnqualified = name
     }
 
