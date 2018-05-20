@@ -20,7 +20,7 @@ import qualified HsSchema
 
 import Data.Function ((&))
 import Data.Monoid   ((<>))
-import FmtPure       (HsFmt(..), mintercalate)
+import FmtPure       (fmtModule)
 import Text.Printf   (printf)
 
 import System.Directory (createDirectoryIfMissing)
@@ -170,31 +170,16 @@ untypedName name = HsSchema.Name
 
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> TB.Builder
-generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
-    [ "{-# LANGUAGE DuplicateRecordFields #-}"
-    , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
-    , "module " <> TB.fromText (moduleNameFromId id) <> " where"
-    , ""
-    , "-- generated from " <> TB.fromText filename
-    , ""
-    , "import Data.Int"
-    , "import Data.Word"
-    , ""
-    , "import Data.Capnp.Untyped.Pure (List)"
-    , "import Data.Capnp.BuiltinTypes.Pure (Data, Text)"
-    , ""
-    , "import qualified Data.Capnp.Untyped.Pure"
-    , "import qualified Codec.Capnp"
-    , ""
-    , mintercalate "\n" $ map generateImport $ V.toList imports
-    , ""
-    , mconcat $ map (hsFmt id) $ concat allTypes
-    ]
-  where
-    allTypes = map (generateTypes id nodeMap)
-        $ filter (\NodeMetaData{..} -> moduleId == id)
-        $ map snd
-        $ M.toList nodeMap
+generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} =
+    fmtModule HsSchema.Module
+        { modId = id
+        , modFile = filename
+        , modImports = map generateImport $ V.toList imports
+        , modDefs = concatMap (generateTypes id nodeMap)
+            $ filter (\NodeMetaData{..} -> moduleId == id)
+            $ map snd
+            $ M.toList nodeMap
+        }
 
 -- | Check whether the node's parent scope actually needs a type definition for
 -- the node. This is true unless it is a group belonging to a union, which itself
@@ -502,9 +487,9 @@ formatType thisModule nodeMap ty = case ty of
         -- TODO: use brand.
         []
 
-generateImport :: CodeGeneratorRequest'RequestedFile'Import -> TB.Builder
+generateImport :: CodeGeneratorRequest'RequestedFile'Import -> HsSchema.Import
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
-    "import qualified " <> TB.fromText (moduleNameFromId id)
+    HsSchema.Import (HsSchema.ByCapnpId id)
 
 handleCGR :: CodeGeneratorRequest -> [(FilePath, TB.Builder)]
 handleCGR cgr@CodeGeneratorRequest{..} = V.toList $

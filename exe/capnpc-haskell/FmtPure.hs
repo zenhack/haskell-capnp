@@ -4,9 +4,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 -- Generate idiomatic haskell data types from the types in HsSchema.
 module FmtPure
-    ( HsFmt(..)
-    -- TODO: move mintercalate somewhere else (or find it in some library).
-    , mintercalate
+    ( fmtModule
     ) where
 
 import HsSchema
@@ -37,11 +35,46 @@ instance HsFmt Name where
             map TB.fromText $ fromList $ toList nameLocalNS ++ [nameUnqualified]
         modPrefix
             | null nsParts || modRefToNS (ByCapnpId thisMod) == ns = ""
-            | otherwise = mintercalate "." (map TB.fromText nsParts) <> "."
+            | otherwise = hsFmt thisMod nameModule <> "."
         ns@(Namespace nsParts) = modRefToNS nameModule
-        modRefToNS (FullyQualified ns) = ns
-        modRefToNS (ByCapnpId id) = HsSchema.Namespace
-            ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
+
+modRefToNS :: ModuleRef -> Namespace
+modRefToNS (FullyQualified ns) = ns
+modRefToNS (ByCapnpId id) = HsSchema.Namespace
+    ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
+
+fmtModule :: Module -> TB.Builder
+fmtModule Module{..} = mintercalate "\n"
+    [ "{-# LANGUAGE DuplicateRecordFields #-}"
+    , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+    , "module "
+        <> hsFmt modId (ByCapnpId modId)
+        <> " where"
+    , ""
+    , "-- generated from " <> TB.fromText modFile
+    , ""
+    , "import Data.Int"
+    , "import Data.Word"
+    , ""
+    , "import Data.Capnp.Untyped.Pure (List)"
+    , "import Data.Capnp.BuiltinTypes.Pure (Data, Text)"
+    , ""
+    , "import qualified Data.Capnp.Untyped.Pure"
+    , "import qualified Codec.Capnp"
+    , ""
+    , mintercalate "\n" $ map (hsFmt modId) modImports
+    , ""
+    , mconcat $ map (hsFmt modId) modDefs
+    ]
+
+instance HsFmt Import where
+    hsFmt _ (Import ref) =
+        "import qualified " <>
+            mintercalate "."
+            (map TB.fromText $ toList $ modRefToNS ref)
+
+instance HsFmt ModuleRef where
+    hsFmt _ ref = mintercalate "." (map TB.fromText $ toList $ modRefToNS ref)
 
 instance HsFmt Type where
     hsFmt thisMod (Type name params) =

@@ -23,7 +23,9 @@
 module HsSchema
     ( Name(..)
     , Namespace(..)
+    , Module(..)
     , ModuleRef(..)
+    , Import(..)
     , Type(..)
     , Variant(..)
     , VariantParams(..)
@@ -51,6 +53,17 @@ instance IsList Namespace where
     type Item Namespace = Text
     fromList = Namespace
     toList (Namespace parts) = parts
+
+data Module = Module
+    { modId      :: Id
+    , modFile    :: Text
+    , modImports :: [Import]
+    , modDefs    :: [DataDef]
+    }
+    deriving(Show, Read, Eq)
+
+newtype Import = Import ModuleRef
+    deriving(Show, Read, Eq)
 
 data ModuleRef
     = FullyQualified Namespace
