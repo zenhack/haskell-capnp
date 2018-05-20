@@ -1,19 +1,22 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 -- Generate idiomatic haskell data types from the types in HsSchema.
 module FmtPure
     ( HsFmt(..)
     -- TODO: move mintercalate somewhere else (or find it in some library).
     , mintercalate
+    , moduleFromId
     ) where
 
 import HsSchema
 
-import Data.List   (intersperse)
-import Data.Monoid (Monoid, mconcat, (<>))
-import Data.String (IsString(..))
-import Data.Text   (Text)
+import Data.Capnp.Core.Schema (Id)
+import Data.List              (intersperse)
+import Data.Monoid            (Monoid, mconcat, (<>))
+import Text.Printf            (printf)
 
+import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as TB
 
 -- | Generalization of 'Data.List.intercalate', analogous to concat/mconcat
@@ -21,41 +24,50 @@ mintercalate :: Monoid w => w -> [w] -> w
 mintercalate sep = mconcat . intersperse sep
 
 class HsFmt a where
-    -- | Format the value as haskell source code.
-    hsFmt :: a -> TB.Builder
-
-instance IsString Name where
-    fromString str = Name [fromString str]
-
-instance HsFmt Text where
-    hsFmt = TB.fromText
+    -- | Format the value as haskell source code. The Id parameter indicates
+    -- which module the value is being referenced from (really only of interest
+    -- to 'Name'; everything else just passes it through).
+    hsFmt :: Id -> a -> TB.Builder
 
 instance HsFmt Name where
-    hsFmt (Name parts) = mintercalate "'" (map hsFmt parts)
+    hsFmt thisMod Name{..} = modPrefix <> localName
+      where
+        localName = mintercalate "'" $
+            map TB.fromText (nameLocalNS <> [nameUnqualified])
+        modPrefix
+            | null nameModule || moduleFromId thisMod == nameModule = ""
+            | otherwise = mintercalate "." (map TB.fromText nameModule) <> "."
+
+moduleFromId :: Id -> [T.Text]
+moduleFromId id =
+    ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
 
 instance HsFmt Type where
-    hsFmt (Type name params) =
-        hsFmt name <> mconcat [" (" <> hsFmt ty <> ")" | ty <- params]
-    hsFmt Unit = "()"
+    hsFmt thisMod (Type name params) =
+        hsFmt thisMod name
+        <> mconcat [" (" <> hsFmt thisMod ty <> ")" | ty <- params]
+    hsFmt _ Unit = "()"
 
 instance HsFmt Variant where
-    hsFmt Variant{variantName,variantParams} = hsFmt variantName <>
-        case variantParams of
+    hsFmt thisMod Variant{variantName,variantParams} =
+        hsFmt thisMod variantName
+        <> case variantParams of
             NoParams -> ""
-            Unnamed ty -> " (" <> hsFmt ty <> ")"
+            Unnamed ty -> " (" <> hsFmt thisMod ty <> ")"
             Record [] -> ""
             Record fields -> mconcat
                 [ "\n        { "
-                , mintercalate "\n        , " $ map hsFmt fields
+                , mintercalate "\n        , " $ map (hsFmt thisMod) fields
                 ,  "\n        }"
                 ]
 
 instance HsFmt Field where
-    hsFmt Field{fieldName,fieldType} = hsFmt fieldName <> " :: " <> hsFmt fieldType
+    hsFmt thisMod Field{fieldName,fieldType} =
+        TB.fromText fieldName <> " :: " <> hsFmt thisMod fieldType
 
 instance HsFmt DataDef where
-    hsFmt DataDef{dataName,dataVariants} = mconcat
-        [ "data ", hsFmt dataName, "\n    = "
-        , mintercalate "\n    | " (map hsFmt dataVariants)
+    hsFmt thisMod DataDef{dataName,dataVariants} = mconcat
+        [ "data ", hsFmt thisMod dataName, "\n    = "
+        , mintercalate "\n    | " $ map (hsFmt thisMod) dataVariants
         , "\n    deriving(Show, Read, Eq)\n\n"
         ]

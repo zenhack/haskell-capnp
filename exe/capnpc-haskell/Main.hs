@@ -20,7 +20,7 @@ import qualified HsSchema
 
 import Data.Function ((&))
 import Data.Monoid   ((<>))
-import FmtPure       (HsFmt(..), mintercalate)
+import FmtPure       (HsFmt(..), mintercalate, moduleFromId)
 import Text.Printf   (printf)
 
 import System.Directory (createDirectoryIfMissing)
@@ -49,12 +49,16 @@ data NodeMetaData = NodeMetaData
 -- | @'identifierFromMetaData' thisModule meta@ return a haskell identifier
 -- for a node based on the metadata @meta@, and @thisModule@, the id for
 -- the module in which the name will be used.
-identifierFromMetaData :: Id -> NodeMetaData -> T.Text
-identifierFromMetaData thisModule NodeMetaData{..} =
-    (if moduleId /= thisModule
-        then moduleNameFromId moduleId <> "."
-        else "")
-    <> mintercalate "'" (reverse namespace)
+identifierFromMetaData :: Id -> NodeMetaData -> HsSchema.Name
+identifierFromMetaData _ NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
+    HsSchema.Name
+        { nameModule = moduleFromId moduleId
+        , nameLocalNS = reverse localNS
+        , nameUnqualified = unqualified
+        }
+identifierFromMetaData _ meta =
+    -- TODO: rule out this possibility statically; shouldn't be too hard.
+    error $ "Node metadata had an empty namespace field: " ++ show meta
 
 -- Helper for makeNodeMap; recursively collect metadata for a node and
 -- all of its descendants in the tree.
@@ -157,7 +161,11 @@ moduleNameFromId = T.pack . printf "Data.Capnp.ById.X%x.Pure"
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the pure-untyped module.
 untypedName :: T.Text -> HsSchema.Name
-untypedName name = HsSchema.Name ["Data.Capnp.Untyped.Pure." <> name]
+untypedName name = HsSchema.Name
+    { nameModule = ["Data", "Capnp", "Untyped", "Pure"]
+    , nameLocalNS = []
+    , nameUnqualified = name
+    }
 
 -- | Generate the source code for a module based on a RequestedFile.
 generateFile :: NodeMap -> CodeGeneratorRequest'RequestedFile -> TB.Builder
@@ -179,7 +187,7 @@ generateFile nodeMap CodeGeneratorRequest'RequestedFile{..} = mintercalate "\n"
     , ""
     , mintercalate "\n" $ map generateImport $ V.toList imports
     , ""
-    , mconcat $ map hsFmt $ concat allTypes
+    , mconcat $ map (hsFmt id) $ concat allTypes
     ]
   where
     allTypes = map (generateTypes id nodeMap)
@@ -224,7 +232,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
             let allFields = V.toList fields
                 unionFields = filter isUnionField allFields
                 commonFields = filter (not . isUnionField) allFields
-                typeName = HsSchema.Name [name]
+                typeName = name
                 -- variants to generate that go inside the union:
                 unionVariants =
                     map (generateVariant thisModule nodeMap name) unionFields
@@ -233,7 +241,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- whenever what's on the wire has a discriminant that's not
                     -- in our schema.
                     [ HsSchema.Variant
-                        { variantName = HsSchema.Name [name, "unknown'"]
+                        { variantName = HsSchema.subName name "unknown'"
                         , variantParams = HsSchema.Unnamed $ HsSchema.Type "Word16" []
                         , variantTag = Nothing
                         }
@@ -276,7 +284,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
-                    let unionName = HsSchema.Name [name, ""]
+                    let unionName = HsSchema.subName name ""
                     in  [ HsSchema.DataDef
                             { dataName = typeName
                             , dataVariants =
@@ -298,11 +306,11 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                         ]
         Node'enum{..} ->
             [ HsSchema.DataDef
-                { dataName = HsSchema.Name [name]
+                { dataName = name
                 , dataVariants =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)
                     <> [ HsSchema.Variant
-                            { variantName = HsSchema.Name [name, "unknown'"]
+                            { variantName = HsSchema.subName name "unknown'"
                             , variantParams = HsSchema.Unnamed $ HsSchema.Type "Word16" []
                             , variantTag = Nothing
                             }
@@ -323,10 +331,10 @@ dataLoc offset ty =
         , dataOff = bitsOffset `mod` 64
         }
 
-generateEnum :: Id -> NodeMap -> T.Text -> Enumerant -> HsSchema.Variant
+generateEnum :: Id -> NodeMap -> HsSchema.Name -> Enumerant -> HsSchema.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
     HsSchema.Variant
-        { variantName = HsSchema.Name [parentName, name]
+        { variantName = HsSchema.subName parentName name
         , variantParams = HsSchema.NoParams
         , variantTag = Just codeOrder
         }
@@ -350,7 +358,7 @@ formatStructBody thisModule nodeMap parentName fields = HsSchema.Record $
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
-generateVariant :: Id -> NodeMap -> T.Text -> Field -> HsSchema.Variant
+generateVariant :: Id -> NodeMap -> HsSchema.Name -> Field -> HsSchema.Variant
 generateVariant thisModule nodeMap parentName Field'{..} = case union' of
     Field'slot{..} -> HsSchema.Variant
         { variantName
@@ -380,7 +388,7 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
             , variantTag = Nothing
             }
   where
-    variantName = HsSchema.Name [parentName, makeLegalName name]
+    variantName = HsSchema.subName parentName (makeLegalName name)
 
 
 generateField :: Id -> NodeMap -> Field -> HsSchema.Field
@@ -390,7 +398,7 @@ generateField thisModule nodeMap Field'{..} =
         , fieldType = case union' of
             Field'slot{..}   -> formatType thisModule nodeMap type_
             Field'group{..} ->
-                HsSchema.Type (HsSchema.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)]) []
+                HsSchema.Type (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
             Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
@@ -489,7 +497,7 @@ formatType thisModule nodeMap ty = case ty of
     _ -> HsSchema.Type "() {- TODO: constrained anyPointers -}" []
   where
     namedType typeId brand = HsSchema.Type
-        (HsSchema.Name [identifierFromMetaData thisModule (nodeMap M.! typeId)])
+        (identifierFromMetaData thisModule (nodeMap M.! typeId))
         -- TODO: use brand.
         []
 

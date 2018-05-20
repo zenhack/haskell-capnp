@@ -1,4 +1,5 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RecordWildCards #-}
 -- This module defines datatypes that represent something between the capnp
 -- schema and Haskell code. The representation has the following
 -- chracteristics:
@@ -17,14 +18,45 @@
 --   enough information attached to access each variant and argument.
 -- * Names are fully-qualified; see the 'Name' type for more information
 --   (TODO).
-module HsSchema where
+module HsSchema
+    ( Name(..)
+    , Type(..)
+    , Variant(..)
+    , VariantParams(..)
+    , Field(..)
+    , DataDef(..)
+    , CerialType(..)
+    , FieldLoc(..)
+    , DataLoc(..)
+    , subName
+    ) where
 
 import Data.Word
 
-import Data.Text (Text)
+import Data.String (IsString(fromString))
+import Data.Text   (Text)
 
-newtype Name = Name [Text]
+import qualified Data.Text as T
+
+data Name = Name
+    { nameModule      :: [Text]
+    , nameLocalNS     :: [Text]
+    , nameUnqualified :: Text
+    }
     deriving(Show, Read, Eq)
+
+subName :: Name -> Text -> Name
+subName name@Name{..} nextPart = name
+    { nameLocalNS = nameLocalNS ++ [nameUnqualified]
+    , nameUnqualified = nextPart
+    }
+
+instance IsString Name where
+    fromString str = Name
+        { nameModule = []
+        , nameLocalNS = []
+        , nameUnqualified = T.pack str
+        }
 
 data Type
     = Type Name [Type]
