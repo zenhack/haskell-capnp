@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
--- Generate idiomatic haskell data types from the types in HsSchema.
+-- Generate idiomatic haskell data types from the types in IR.
 module FmtPure
     ( fmtModule
     ) where
 
-import HsSchema
+import IR
 
 import Data.Capnp.Core.Schema (Id)
 import Data.Monoid            (mconcat, (<>))
@@ -36,7 +36,7 @@ instance HsFmt Name where
 
 modRefToNS :: ModuleRef -> Namespace
 modRefToNS (FullyQualified ns) = ns
-modRefToNS (ByCapnpId id) = HsSchema.Namespace
+modRefToNS (ByCapnpId id) = Namespace
     ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
 
 fmtModule :: Module -> TB.Builder

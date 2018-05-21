@@ -20,7 +20,7 @@
 --   enough information attached to access each variant and argument.
 -- * Names are fully-qualified; see the 'Name' type for more information
 --   (TODO).
-module HsSchema
+module IR
     ( Name(..)
     , Namespace(..)
     , Module(..)
@@ -87,7 +87,7 @@ subName name@Name{..} nextPart = name
 
 instance IsString Name where
     fromString str = Name
-        { nameModule = HsSchema.FullyQualified []
+        { nameModule = FullyQualified []
         , nameLocalNS = []
         , nameUnqualified = T.pack str
         }

@@ -1,4 +1,4 @@
--- Generate low-level accessors from type types in HsSchema.
+-- Generate low-level accessors from type types in IR.
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -7,7 +7,7 @@ module FmtRaw
     ( fmtModule
     ) where
 
-import HsSchema
+import IR
 
 import Data.Capnp.Core.Schema (Id)
 import Data.Monoid            ((<>))

@@ -33,7 +33,7 @@ import qualified Data.Vector            as V
 
 import qualified FmtPure
 import qualified FmtRaw
-import qualified HsSchema
+import qualified IR
 
 type NodeMap = M.Map Id NodeMetaData
 
@@ -51,11 +51,11 @@ data NodeMetaData = NodeMetaData
 -- | @'identifierFromMetaData' thisModule meta@ return a haskell identifier
 -- for a node based on the metadata @meta@, and @thisModule@, the id for
 -- the module in which the name will be used.
-identifierFromMetaData :: Id -> NodeMetaData -> HsSchema.Name
+identifierFromMetaData :: Id -> NodeMetaData -> IR.Name
 identifierFromMetaData _ NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
-    HsSchema.Name
-        { nameModule = HsSchema.ByCapnpId moduleId
-        , nameLocalNS = HsSchema.Namespace $ reverse localNS
+    IR.Name
+        { nameModule = IR.ByCapnpId moduleId
+        , nameLocalNS = IR.Namespace $ reverse localNS
         , nameUnqualified = unqualified
         }
 identifierFromMetaData _ meta =
@@ -162,17 +162,17 @@ moduleNameFromId = T.pack . printf "Data.Capnp.ById.X%x.Pure"
 
 -- | @'untypedName' name@ is the fully qualified name for @name@ defined
 -- within the pure-untyped module.
-untypedName :: T.Text -> HsSchema.Name
-untypedName name = HsSchema.Name
-    { nameModule = HsSchema.FullyQualified $
-        HsSchema.Namespace ["Data", "Capnp", "Untyped", "Pure"]
-    , nameLocalNS = HsSchema.Namespace []
+untypedName :: T.Text -> IR.Name
+untypedName name = IR.Name
+    { nameModule = IR.FullyQualified $
+        IR.Namespace ["Data", "Capnp", "Untyped", "Pure"]
+    , nameLocalNS = IR.Namespace []
     , nameUnqualified = name
     }
 
-generateModule :: NodeMap -> CodeGeneratorRequest'RequestedFile -> HsSchema.Module
+generateModule :: NodeMap -> CodeGeneratorRequest'RequestedFile -> IR.Module
 generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
-    HsSchema.Module
+    IR.Module
         { modId = id
         , modFile = filename
         , modImports = map generateImport $ V.toList imports
@@ -210,7 +210,7 @@ neededByParent nodeMap Node'{id,scopeId,union'=Node'struct{isGroup,discriminantC
         _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
 neededByParent _ _ = True
 
-generateTypes :: Id -> NodeMap -> NodeMetaData -> [HsSchema.DataDef]
+generateTypes :: Id -> NodeMap -> NodeMetaData -> [IR.DataDef]
 generateTypes thisModule nodeMap meta@NodeMetaData{..} =
     let Node'{..} = node
         name = identifierFromMetaData moduleId meta
@@ -227,10 +227,10 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- Every union gets an extra "unknown" varaint, which is used
                     -- whenever what's on the wire has a discriminant that's not
                     -- in our schema.
-                    [ HsSchema.Variant
-                        { variantName = HsSchema.subName name "unknown'"
-                        , variantParams = HsSchema.Unnamed $
-                            HsSchema.PrimType HsSchema.PrimInt{isSigned=False, size=16}
+                    [ IR.Variant
+                        { variantName = IR.subName name "unknown'"
+                        , variantParams = IR.Unnamed $
+                            IR.PrimType IR.PrimInt{isSigned=False, size=16}
                         , variantTag = Nothing
                         }
                     ]
@@ -246,85 +246,85 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ HsSchema.DataDef
+                    [ IR.DataDef
                         { dataName = typeName
                         , dataVariants =
-                            [ HsSchema.Variant
+                            [ IR.Variant
                                 { variantName = typeName
                                 , variantParams = formatStructBody thisModule nodeMap typeName allFields
                                 , variantTag = Nothing
                                 }
                             ]
                         , dataTagLoc = Nothing
-                        , dataCerialType = HsSchema.CTyStruct
+                        , dataCerialType = IR.CTyStruct
                         }
                     ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [ HsSchema.DataDef
+                    [ IR.DataDef
                         { dataName = typeName
                         , dataVariants = unionVariants
                         , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
-                        , dataCerialType = HsSchema.CTyStruct
+                        , dataCerialType = IR.CTyStruct
                         }
                     ]
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
-                    let unionName = HsSchema.subName name ""
-                    in  [ HsSchema.DataDef
+                    let unionName = IR.subName name ""
+                    in  [ IR.DataDef
                             { dataName = typeName
                             , dataVariants =
-                                [ HsSchema.Variant
+                                [ IR.Variant
                                     { variantName = unionName
                                     , variantParams = formatStructBody thisModule nodeMap unionName allFields
                                     , variantTag = Nothing
                                     }
                                 ]
                             , dataTagLoc = Nothing
-                            , dataCerialType = HsSchema.CTyStruct
+                            , dataCerialType = IR.CTyStruct
                             }
-                        , HsSchema.DataDef
+                        , IR.DataDef
                             { dataName = unionName
                             , dataVariants = unionVariants
                             , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
-                            , dataCerialType = HsSchema.CTyStruct
+                            , dataCerialType = IR.CTyStruct
                             }
                         ]
         Node'enum{..} ->
-            [ HsSchema.DataDef
+            [ IR.DataDef
                 { dataName = name
                 , dataVariants =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                    <> [ HsSchema.Variant
-                            { variantName = HsSchema.subName name "unknown'"
-                            , variantParams = HsSchema.Unnamed $
-                                HsSchema.PrimType HsSchema.PrimInt {isSigned=False, size=16}
+                    <> [ IR.Variant
+                            { variantName = IR.subName name "unknown'"
+                            , variantParams = IR.Unnamed $
+                                IR.PrimType IR.PrimInt {isSigned=False, size=16}
                             , variantTag = Nothing
                             }
                        ]
                 , dataTagLoc = Nothing
-                , dataCerialType = HsSchema.CTyWord 16
+                , dataCerialType = IR.CTyWord 16
                 }
             ]
         _ -> [] -- TODO
 
 -- | Given the offset field from the capnp schema and a type, return a DataLoc
 -- describing the location of a field.
-dataLoc :: Word32 -> Type -> HsSchema.DataLoc
+dataLoc :: Word32 -> Type -> IR.DataLoc
 dataLoc offset ty =
     let bitsOffset = fromIntegral offset * typeSize ty
-    in HsSchema.DataLoc
+    in IR.DataLoc
         { dataIdx = bitsOffset `div` 64
         , dataOff = bitsOffset `mod` 64
         }
 
-generateEnum :: Id -> NodeMap -> HsSchema.Name -> Enumerant -> HsSchema.Variant
+generateEnum :: Id -> NodeMap -> IR.Name -> Enumerant -> IR.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
-    HsSchema.Variant
-        { variantName = HsSchema.subName parentName name
-        , variantParams = HsSchema.NoParams
+    IR.Variant
+        { variantName = IR.subName parentName name
+        , variantParams = IR.NoParams
         , variantTag = Just codeOrder
         }
 
@@ -332,34 +332,34 @@ generateEnum thisModule nodeMap parentName Enumerant{..} =
 isUnionField :: Field -> Bool
 isUnionField Field'{..} = discriminantValue /= field'noDiscriminant
 
-formatStructBody :: Id -> NodeMap -> HsSchema.Name -> [Field] -> HsSchema.VariantParams
-formatStructBody thisModule nodeMap parentName fields = HsSchema.Record $
+formatStructBody :: Id -> NodeMap -> IR.Name -> [Field] -> IR.VariantParams
+formatStructBody thisModule nodeMap parentName fields = IR.Record $
     map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
     <> case filter isUnionField fields of
         [] -> [] -- no union
         _  ->
-            [ HsSchema.Field
+            [ IR.Field
                 { fieldName = "union'"
-                , fieldType = HsSchema.Type parentName []
-                , fieldLoc = HsSchema.HereField
+                , fieldType = IR.Type parentName []
+                , fieldLoc = IR.HereField
                 }
             ]
 
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
-generateVariant :: Id -> NodeMap -> HsSchema.Name -> Field -> HsSchema.Variant
+generateVariant :: Id -> NodeMap -> IR.Name -> Field -> IR.Variant
 generateVariant thisModule nodeMap parentName Field'{..} = case union' of
-    Field'slot{..} -> HsSchema.Variant
+    Field'slot{..} -> IR.Variant
         { variantName
         , variantParams = case type_ of
-            Type'void -> HsSchema.NoParams
-            _         -> HsSchema.Unnamed (formatType thisModule nodeMap type_)
+            Type'void -> IR.NoParams
+            _         -> IR.Unnamed (formatType thisModule nodeMap type_)
         , variantTag = Just discriminantValue
         }
     Field'group{..} ->
         let NodeMetaData{node=node@Node'{..},..} = nodeMap M.! typeId
         in case union' of
-            Node'struct{..} -> HsSchema.Variant
+            Node'struct{..} -> IR.Variant
                 { variantName = variantName
                 , variantParams =
                     formatStructBody thisModule nodeMap variantName $ V.toList fields
@@ -371,42 +371,42 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         -- Some sort of field we don't know about (newer version of capnp probably).
         -- Generate the variant, but we don't know what the argument type should be,
         -- so leave it out.
-        HsSchema.Variant
+        IR.Variant
             { variantName
-            , variantParams = HsSchema.NoParams
+            , variantParams = IR.NoParams
             , variantTag = Nothing
             }
   where
-    variantName = HsSchema.subName parentName (makeLegalName name)
+    variantName = IR.subName parentName (makeLegalName name)
 
 
-generateField :: Id -> NodeMap -> Field -> HsSchema.Field
+generateField :: Id -> NodeMap -> Field -> IR.Field
 generateField thisModule nodeMap Field'{..} =
-    HsSchema.Field
+    IR.Field
         { fieldName = makeLegalName name
         , fieldType = case union' of
             Field'slot{..}   -> formatType thisModule nodeMap type_
             Field'group{..} ->
-                HsSchema.Type (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
+                IR.Type (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
             Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
-                HsSchema.PrimType HsSchema.PrimVoid
+                IR.PrimType IR.PrimVoid
         , fieldLoc = case union' of
             Field'group{} ->
-                HsSchema.HereField
+                IR.HereField
             Field'slot{offset,type_} ->
                 case typeSection type_ of
                     VoidSec ->
-                        HsSchema.VoidField
+                        IR.VoidField
                     PtrSec ->
-                        HsSchema.PtrField (fromIntegral offset)
+                        IR.PtrField (fromIntegral offset)
                     DataSec ->
-                        HsSchema.DataField (dataLoc offset type_)
+                        IR.DataField (dataLoc offset type_)
             Field'unknown' _ ->
                 -- Some field tpe we don't know about; we can't
                 -- give a location for it, so call it void
-                HsSchema.VoidField
+                IR.VoidField
         }
 
 -- | Return the size of the type in units of the minimum size that makes
@@ -446,49 +446,49 @@ typeSection ty = case (typeSize ty, ty) of
 
 data Section = DataSec | PtrSec | VoidSec
 
-formatType :: Id -> NodeMap -> Type -> HsSchema.Type
+formatType :: Id -> NodeMap -> Type -> IR.Type
 formatType thisModule nodeMap ty = case ty of
-    Type'void       -> HsSchema.PrimType HsSchema.PrimVoid
-    Type'bool       -> HsSchema.PrimType HsSchema.PrimBool
-    Type'int8       -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 8}
-    Type'int16      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 16}
-    Type'int32      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 32}
-    Type'int64      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 64}
-    Type'uint8      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 8}
-    Type'uint16     -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 16}
-    Type'uint32     -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 32}
-    Type'uint64     -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 64}
-    Type'float32    -> HsSchema.PrimType HsSchema.PrimFloat32
-    Type'float64    -> HsSchema.PrimType HsSchema.PrimFloat64
-    Type'text       -> HsSchema.PrimType HsSchema.PrimText
-    Type'data_      -> HsSchema.PrimType HsSchema.PrimData
-    Type'list elt   -> HsSchema.ListOf (formatType thisModule nodeMap elt)
+    Type'void       -> IR.PrimType IR.PrimVoid
+    Type'bool       -> IR.PrimType IR.PrimBool
+    Type'int8       -> IR.PrimType IR.PrimInt {isSigned = True, size = 8}
+    Type'int16      -> IR.PrimType IR.PrimInt {isSigned = True, size = 16}
+    Type'int32      -> IR.PrimType IR.PrimInt {isSigned = True, size = 32}
+    Type'int64      -> IR.PrimType IR.PrimInt {isSigned = True, size = 64}
+    Type'uint8      -> IR.PrimType IR.PrimInt {isSigned = False, size = 8}
+    Type'uint16     -> IR.PrimType IR.PrimInt {isSigned = False, size = 16}
+    Type'uint32     -> IR.PrimType IR.PrimInt {isSigned = False, size = 32}
+    Type'uint64     -> IR.PrimType IR.PrimInt {isSigned = False, size = 64}
+    Type'float32    -> IR.PrimType IR.PrimFloat32
+    Type'float64    -> IR.PrimType IR.PrimFloat64
+    Type'text       -> IR.PrimType IR.PrimText
+    Type'data_      -> IR.PrimType IR.PrimData
+    Type'list elt   -> IR.ListOf (formatType thisModule nodeMap elt)
     Type'enum{..} -> namedType typeId brand
     Type'struct{..} -> namedType typeId brand
     Type'interface{..} -> namedType typeId brand
-    Type'anyPointer anyPtr -> HsSchema.Untyped $
+    Type'anyPointer anyPtr -> IR.Untyped $
         case anyPtr of
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
-                HsSchema.Ptr
+                IR.Ptr
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'struct ->
-                HsSchema.Struct
+                IR.Struct
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'list ->
-                HsSchema.List
+                IR.List
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability ->
-                HsSchema.Cap
+                IR.Cap
             _ ->
                 -- Something we don't know about; assume it could be anything.
-                HsSchema.Ptr
-    _ -> HsSchema.PrimType HsSchema.PrimVoid -- TODO: constrained anyPointers
+                IR.Ptr
+    _ -> IR.PrimType IR.PrimVoid -- TODO: constrained anyPointers
   where
-    namedType typeId brand = HsSchema.Type
+    namedType typeId brand = IR.Type
         (identifierFromMetaData thisModule (nodeMap M.! typeId))
         -- TODO: use brand.
         []
 
-generateImport :: CodeGeneratorRequest'RequestedFile'Import -> HsSchema.Import
+generateImport :: CodeGeneratorRequest'RequestedFile'Import -> IR.Import
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
-    HsSchema.Import (HsSchema.ByCapnpId id)
+    IR.Import (IR.ByCapnpId id)
 
 handleCGR :: CodeGeneratorRequest -> [(FilePath, TB.Builder)]
 handleCGR cgr@CodeGeneratorRequest{..} = concat $ V.toList $
