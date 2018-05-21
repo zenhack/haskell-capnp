@@ -1,4 +1,5 @@
 -- Generate low-level accessors from type types in HsSchema.
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
@@ -48,12 +49,26 @@ fmtNewtypeStruct thisMod name =
         , nameText
         , " b = "
         , nameText
-        , " (Data.Capnp.Untyped.Struct b)\n"
+        , " (Data.Capnp.Untyped.Struct b)\n\n"
+        ]
+
+
+fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
+fmtFieldAccessor thisMod typeName variantName Field{..} =
+    let accessorName = "get_" <> fmtName thisMod (subName variantName fieldName)
+    in mconcat
+        [ accessorName, " :: Data.Capnp.Untyped.ReadCtx m b => "
+        , fmtName thisMod typeName, " b -> m ", fmtType thisMod fieldType, "\n"
+        , accessorName, " = undefined -- TODO: generate accessor values.\n"
         ]
 
 fmtDataDef :: Id -> DataDef -> TB.Builder
-fmtDataDef thisMod DataDef{dataVariants=[variant], dataCerialType=CTyStruct, ..} =
-    fmtNewtypeStruct thisMod dataName
+fmtDataDef thisMod DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct, ..} =
+    fmtNewtypeStruct thisMod dataName <>
+    case variantParams of
+        Record fields ->
+            mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
+        _ -> ""
 fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
     [ "data ", fmtName thisMod dataName, " b"
     , "\n    = "
@@ -67,26 +82,29 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
         case variantParams of
             Record _   -> " (" <> fmtName thisMod (subName variantName "group'") <> " b)"
             NoParams   -> ""
-            Unnamed ty -> " " <> fmtType ty
-
-    fmtVariantAuxNewtype Variant{variantName, variantParams=Record _} =
-        fmtNewtypeStruct thisMod (subName variantName "group'")
+            Unnamed ty -> " " <> fmtType thisMod ty
+    fmtVariantAuxNewtype Variant{variantName, variantParams=Record fields} =
+        let typeName = subName variantName "group'"
+        in fmtNewtypeStruct thisMod typeName <>
+            mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
     fmtVariantAuxNewtype _ = ""
+fmtDataDef _ _ = ""
 
-    fmtType :: Type -> TB.Builder
-    fmtType (ListOf eltType) =
-        "(Data.Capnp.Untyped.ListOf b " <> fmtType eltType <> ")"
-    fmtType (Type name []) = "(" <> fmtName thisMod name <> " b)"
-    fmtType (Type name params) = mconcat
+fmtType :: Id -> Type -> TB.Builder
+fmtType thisMod = \case
+    ListOf eltType ->
+        "(Data.Capnp.Untyped.ListOf b " <> fmtType thisMod eltType <> ")"
+    Type name [] ->
+        "(" <> fmtName thisMod name <> " b)"
+    Type name params -> mconcat
         [ "("
         , fmtName thisMod name
         , " b "
-        , mintercalate " " (map fmtType params)
+        , mintercalate " " $ map (fmtType thisMod) params
         , ")"
         ]
-    fmtType (PrimType prim) = fmtPrimType prim
-    fmtType (Untyped ty) = "(Maybe " <> fmtUntyped ty <> ")"
-fmtDataDef _ _ = ""
+    PrimType prim -> fmtPrimType prim
+    Untyped ty -> "(Maybe " <> fmtUntyped ty <> ")"
 
 fmtPrimType :: PrimType -> TB.Builder
 -- TODO: most of this (except Text & Data) should probably be shared with FmtPure.
