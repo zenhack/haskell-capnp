@@ -1,4 +1,5 @@
 -- Generate low-level accessors from type types in HsSchema.
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 module FmtRaw
@@ -44,7 +45,9 @@ fmtDataDef thisMod DataDef{dataVariants=[variant], dataCerialType=CTyStruct, ..}
 fmtDataDef _ _ = ""
 
 fmtName :: Id -> Name -> TB.Builder
--- TODO: actually do something with the Id parameter. This is sufficient for
--- what we support so far, but not to reference things from other modules.
-fmtName _ Name{nameLocalNS=Namespace parts, nameUnqualified=localName} =
-    mintercalate "'" $ map TB.fromText $ parts ++ [localName]
+fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
+    modPrefix <> mintercalate "'" (map TB.fromText $ parts <> [localName])
+  where
+    modPrefix = case nameModule of
+        ByCapnpId id | id == thisMod -> ""
+        _            -> fmtModRef nameModule <> "."
