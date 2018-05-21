@@ -229,7 +229,8 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- in our schema.
                     [ HsSchema.Variant
                         { variantName = HsSchema.subName name "unknown'"
-                        , variantParams = HsSchema.Unnamed $ HsSchema.Type "Word16" []
+                        , variantParams = HsSchema.Unnamed $
+                            HsSchema.PrimType HsSchema.PrimInt{isSigned=False, size=16}
                         , variantTag = Nothing
                         }
                     ]
@@ -298,7 +299,8 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)
                     <> [ HsSchema.Variant
                             { variantName = HsSchema.subName name "unknown'"
-                            , variantParams = HsSchema.Unnamed $ HsSchema.Type "Word16" []
+                            , variantParams = HsSchema.Unnamed $
+                                HsSchema.PrimType HsSchema.PrimInt {isSigned=False, size=16}
                             , variantTag = Nothing
                             }
                        ]

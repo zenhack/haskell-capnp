@@ -76,11 +76,11 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
     fmtType :: Type -> TB.Builder
     fmtType (ListOf eltType) =
         "(Data.Capnp.Untyped.ListOf b " <> fmtType eltType <> ")"
-    fmtType (Type name []) = fmtName thisMod name
+    fmtType (Type name []) = "(" <> fmtName thisMod name <> " b)"
     fmtType (Type name params) = mconcat
         [ "("
         , fmtName thisMod name
-        , " "
+        , " b "
         , mintercalate " " (map fmtType params)
         , ")"
         ]
@@ -92,8 +92,8 @@ fmtPrimType :: PrimType -> TB.Builder
 -- TODO: most of this (except Text & Data) should probably be shared with FmtPure.
 fmtPrimType PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
 fmtPrimType PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
-fmtPrimType PrimFloat32                  = "Float32"
-fmtPrimType PrimFloat64                  = "Float64"
+fmtPrimType PrimFloat32                  = "Float"
+fmtPrimType PrimFloat64                  = "Double"
 fmtPrimType PrimBool                     = "Bool"
 fmtPrimType PrimVoid                     = "()"
 fmtPrimType PrimText                     = "(Data.Capnp.BuiltinTypes.Text b)"
