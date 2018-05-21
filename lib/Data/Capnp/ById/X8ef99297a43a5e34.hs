@@ -30,4 +30,16 @@ data JsonValue b
 
 newtype JsonValue'Call b = JsonValue'Call (Data.Capnp.Untyped.Struct b)
 
+get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call b -> m (Data.Capnp.BuiltinTypes.Text b)
+get_JsonValue'Call'function = undefined -- TODO: generate accessor values.
+
+get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call b -> m (Data.Capnp.Untyped.ListOf b (JsonValue b))
+get_JsonValue'Call'params = undefined -- TODO: generate accessor values.
+
 newtype JsonValue'Field b = JsonValue'Field (Data.Capnp.Untyped.Struct b)
+
+get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field b -> m (Data.Capnp.BuiltinTypes.Text b)
+get_JsonValue'Field'name = undefined -- TODO: generate accessor values.
+
+get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field b -> m (JsonValue b)
+get_JsonValue'Field'value = undefined -- TODO: generate accessor values.

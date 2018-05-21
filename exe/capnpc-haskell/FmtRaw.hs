@@ -88,7 +88,21 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
         in fmtNewtypeStruct thisMod typeName <>
             mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
     fmtVariantAuxNewtype _ = ""
-fmtDataDef _ _ = ""
+-- Assume this is an enum, for now:
+fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} = mconcat
+    [ "data ", fmtName thisMod dataName, " b"
+    , "\n    = "
+    , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
+    ]
+  where
+    fmtEnumVariant Variant{variantName,variantParams=NoParams,variantTag=Just _} =
+        fmtName thisMod variantName
+    fmtEnumVariant Variant{variantName,variantParams=Unnamed ty, variantTag=Nothing} =
+        fmtName thisMod variantName <> " " <> fmtType thisMod ty
+    fmtEnumVariant variant =
+        error $ "Unexpected variant for enum: " ++ show variant
+fmtDataDef _ dataDef =
+    error $ "Unexpected data definition: " ++ show dataDef
 
 fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod = \case
