@@ -460,28 +460,24 @@ formatType thisModule nodeMap ty = case ty of
     Type'float64    -> HsSchema.PrimType HsSchema.PrimFloat64
     Type'text       -> HsSchema.PrimType HsSchema.PrimText
     Type'data_      -> HsSchema.PrimType HsSchema.PrimData
-    Type'list elt   -> HsSchema.List (formatType thisModule nodeMap elt)
+    Type'list elt   -> HsSchema.ListOf (formatType thisModule nodeMap elt)
     Type'enum{..} -> namedType typeId brand
     Type'struct{..} -> namedType typeId brand
     Type'interface{..} -> namedType typeId brand
-    Type'anyPointer anyPtr ->
-        HsSchema.Type "Maybe"
-            [ HsSchema.Type
-                (case anyPtr of
-                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
-                        untypedName "PtrType"
-                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'struct ->
-                        untypedName "Struct"
-                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'list ->
-                        untypedName "List'" -- Note the '; this is an untyped List.
-                    Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability ->
-                        untypedName "Cap"
-                    _ ->
-                        -- Something we don't know about; assume it could be anything.
-                        untypedName "PtrType")
-                []
-            ]
-    _ -> HsSchema.Type "() {- TODO: constrained anyPointers -}" []
+    Type'anyPointer anyPtr -> HsSchema.Untyped $
+        case anyPtr of
+            Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
+                HsSchema.Ptr
+            Type'anyPointer'unconstrained Type'anyPointer'unconstrained'struct ->
+                HsSchema.Struct
+            Type'anyPointer'unconstrained Type'anyPointer'unconstrained'list ->
+                HsSchema.List
+            Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability ->
+                HsSchema.Cap
+            _ ->
+                -- Something we don't know about; assume it could be anything.
+                HsSchema.Ptr
+    _ -> HsSchema.PrimType HsSchema.PrimVoid -- TODO: constrained anyPointers
   where
     namedType typeId brand = HsSchema.Type
         (identifierFromMetaData thisModule (nodeMap M.! typeId))

@@ -76,8 +76,9 @@ instance HsFmt Type where
     hsFmt thisMod (Type name params) =
         hsFmt thisMod name
         <> mconcat [" (" <> hsFmt thisMod ty <> ")" | ty <- params]
-    hsFmt thisMod (List eltType) = "List (" <> hsFmt thisMod eltType <> ")"
+    hsFmt thisMod (ListOf eltType) = "List (" <> hsFmt thisMod eltType <> ")"
     hsFmt thisMod (PrimType prim) = hsFmt thisMod prim
+    hsFmt thisMod (Untyped ty) = "Maybe (" <> hsFmt thisMod ty <> ")"
 
 instance HsFmt PrimType where
     hsFmt _ PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
@@ -88,6 +89,12 @@ instance HsFmt PrimType where
     hsFmt _ PrimText                     = "Text"
     hsFmt _ PrimData                     = "Data"
     hsFmt _ PrimVoid                     = "()"
+
+instance HsFmt Untyped where
+    hsFmt _ Struct = "Data.Capnp.Untyped.Pure.Struct"
+    hsFmt _ List   = "Data.Capnp.Untyped.Pure.List'"
+    hsFmt _ Cap    = "Data.Capnp.Untyped.Pure.Cap"
+    hsFmt _ Ptr    = "Data.Capnp.Untyped.Pure.PtrType"
 
 instance HsFmt Variant where
     hsFmt thisMod Variant{variantName,variantParams} =

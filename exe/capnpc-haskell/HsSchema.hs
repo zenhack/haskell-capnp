@@ -28,6 +28,7 @@ module HsSchema
     , Import(..)
     , Type(..)
     , PrimType(..)
+    , Untyped(..)
     , Variant(..)
     , VariantParams(..)
     , Field(..)
@@ -93,8 +94,9 @@ instance IsString Name where
 
 data Type
     = Type Name [Type]
-    | List Type
+    | ListOf Type
     | PrimType PrimType
+    | Untyped Untyped
     deriving(Show, Read, Eq)
 
 data PrimType
@@ -105,6 +107,13 @@ data PrimType
     | PrimData
     | PrimBool
     | PrimVoid
+    deriving(Show, Read, Eq)
+
+data Untyped
+    = Struct
+    | List
+    | Cap
+    | Ptr
     deriving(Show, Read, Eq)
 
 data Variant = Variant

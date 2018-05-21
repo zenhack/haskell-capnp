@@ -59,7 +59,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
             Unnamed ty -> " " <> fmtType ty
 
     fmtType :: Type -> TB.Builder
-    fmtType (List eltType) =
+    fmtType (ListOf eltType) =
         "(Data.Capnp.Untyped.ListOf b " <> fmtType eltType <> ")"
     fmtType (Type name []) = fmtName thisMod name
     fmtType (Type name params) = mconcat
@@ -70,9 +70,8 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
         , ")"
         ]
     fmtType (PrimType prim) = fmtPrimType prim
-
+    fmtType (Untyped ty) = "(Maybe " <> fmtUntyped ty <> ")"
 fmtDataDef _ _ = ""
-
 
 fmtPrimType :: PrimType -> TB.Builder
 -- TODO: most of this (except Text & Data) should probably be shared with FmtPure.
@@ -84,6 +83,12 @@ fmtPrimType PrimBool                     = "Bool"
 fmtPrimType PrimVoid                     = "()"
 fmtPrimType PrimText                     = "(Data.Capnp.BuiltinTypes.Text b)"
 fmtPrimType PrimData                     = "(Data.Capnp.BuiltinTypes.Data b)"
+
+fmtUntyped :: Untyped -> TB.Builder
+fmtUntyped Struct = "(Data.Capnp.Untyped.Struct b)"
+fmtUntyped List   = "(Data.Capnp.Untyped.List b)"
+fmtUntyped Cap    = "Word32"
+fmtUntyped Ptr    = "(Ptr b)"
 
 fmtName :: Id -> Name -> TB.Builder
 fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
