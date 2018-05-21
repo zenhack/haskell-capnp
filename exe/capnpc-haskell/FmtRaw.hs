@@ -22,6 +22,9 @@ fmtModule Module{..} = mintercalate "\n"
     , ""
     , "-- generated from " <> TB.fromText modFile
     , ""
+    , "import Data.Int"
+    , "import Data.Word"
+    , ""
     , "import qualified Data.Capnp.Untyped"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
@@ -42,6 +45,26 @@ fmtDataDef thisMod DataDef{dataVariants=[variant], dataCerialType=CTyStruct, ..}
     in mconcat
         [ "newtype ", name, " b = ", name, " (Data.Capnp.Untyped.Struct b)"
         ]
+fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
+    [ "data ", fmtName thisMod dataName, " b"
+    , "\n    = "
+    , mintercalate "\n    | " (map fmtDataVariant dataVariants)
+    ]
+  where
+    fmtDataVariant Variant{..} = fmtName thisMod variantName <>
+        case variantParams of
+            Record _   -> " (Data.Capnp.Untyped.Struct b)"
+            NoParams   -> ""
+            Unnamed ty -> " " <> fmtType ty
+    fmtType Unit = ""
+    fmtType (Type name []) = fmtName thisMod name
+    fmtType (Type name params) = mconcat
+        [ "("
+        , fmtName thisMod name
+        , " "
+        , mintercalate " " (map fmtType params)
+        , ")"
+        ]
 fmtDataDef _ _ = ""
 
 fmtName :: Id -> Name -> TB.Builder
@@ -49,5 +72,6 @@ fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=lo
     modPrefix <> mintercalate "'" (map TB.fromText $ parts <> [localName])
   where
     modPrefix = case nameModule of
-        ByCapnpId id | id == thisMod -> ""
-        _            -> fmtModRef nameModule <> "."
+        ByCapnpId id                  | id == thisMod -> ""
+        FullyQualified (Namespace []) -> ""
+        _                             -> fmtModRef nameModule <> "."
