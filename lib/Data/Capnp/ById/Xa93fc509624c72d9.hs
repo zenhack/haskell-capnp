@@ -22,10 +22,6 @@ data Type'anyPointer'unconstrained b
 
 
 
-
-
-
-
 newtype Brand b = Brand (Data.Capnp.Untyped.Struct b)
 
 newtype Method b = Method (Data.Capnp.Untyped.Struct b)
@@ -40,9 +36,7 @@ data Field' b
     | Field'unknown' Word16
 newtype Field'slot'group' b = Field'slot'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Field'group'group' b = Field'group'group' (Data.Capnp.Untyped.Struct b)
-
 
 
 newtype Superclass b = Superclass (Data.Capnp.Untyped.Struct b)
@@ -53,8 +47,6 @@ data Brand'Scope' b
     = Brand'Scope'bind (Data.Capnp.Untyped.ListOf b (Brand'Binding b))
     | Brand'Scope'inherit
     | Brand'Scope'unknown' Word16
-
-
 
 
 
@@ -69,8 +61,6 @@ data Field'ordinal b
 
 
 
-
-
 newtype CodeGeneratorRequest b = CodeGeneratorRequest (Data.Capnp.Untyped.Struct b)
 
 data Type'anyPointer b
@@ -80,20 +70,15 @@ data Type'anyPointer b
     | Type'anyPointer'unknown' Word16
 newtype Type'anyPointer'unconstrained'group' b = Type'anyPointer'unconstrained'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Type'anyPointer'parameter'group' b = Type'anyPointer'parameter'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Type'anyPointer'implicitMethodParameter'group' b = Type'anyPointer'implicitMethodParameter'group' (Data.Capnp.Untyped.Struct b)
-
 
 
 data Brand'Binding b
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type b)
     | Brand'Binding'unknown' Word16
-
-
 
 
 
@@ -118,25 +103,6 @@ data Value b
     | Value'interface
     | Value'anyPointer (Maybe (Data.Capnp.Untyped.Ptr b))
     | Value'unknown' Word16
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -194,34 +160,15 @@ data Type b
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 newtype Type'list'group' b = Type'list'group' (Data.Capnp.Untyped.Struct b)
-
 
 newtype Type'enum'group' b = Type'enum'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Type'struct'group' b = Type'struct'group' (Data.Capnp.Untyped.Struct b)
-
 
 newtype Type'interface'group' b = Type'interface'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Type'anyPointer'group' b = Type'anyPointer'group' (Data.Capnp.Untyped.Struct b)
-
 
 
 
@@ -240,21 +187,15 @@ data Node' b
     | Node'annotation (Node'annotation'group' b)
     | Node'unknown' Word16
 
-
 newtype Node'struct'group' b = Node'struct'group' (Data.Capnp.Untyped.Struct b)
-
 
 newtype Node'enum'group' b = Node'enum'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Node'interface'group' b = Node'interface'group' (Data.Capnp.Untyped.Struct b)
-
 
 newtype Node'const'group' b = Node'const'group' (Data.Capnp.Untyped.Struct b)
 
-
 newtype Node'annotation'group' b = Node'annotation'group' (Data.Capnp.Untyped.Struct b)
-
 
 
 newtype Annotation b = Annotation (Data.Capnp.Untyped.Struct b)

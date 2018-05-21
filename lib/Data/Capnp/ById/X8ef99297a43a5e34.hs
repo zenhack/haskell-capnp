@@ -28,13 +28,6 @@ data JsonValue b
 
 
 
-
-
-
-
-
-
-
 newtype JsonValue'Call b = JsonValue'Call (Data.Capnp.Untyped.Struct b)
 
 newtype JsonValue'Field b = JsonValue'Field (Data.Capnp.Untyped.Struct b)

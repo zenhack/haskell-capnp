@@ -28,12 +28,6 @@ data CapDescriptor b
 
 
 
-
-
-
-
-
-
 data Message b
     = Message'unimplemented (Message b)
     | Message'abort (Exception b)
@@ -65,26 +59,10 @@ data Message b
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 data MessageTarget b
     = MessageTarget'importedCap Word32
     | MessageTarget'promisedAnswer (PromisedAnswer b)
     | MessageTarget'unknown' Word16
-
-
 
 
 
@@ -109,12 +87,6 @@ data Return' b
 
 
 
-
-
-
-
-
-
 newtype Release b = Release (Data.Capnp.Untyped.Struct b)
 
 
@@ -124,8 +96,6 @@ data Resolve' b
     = Resolve'cap (CapDescriptor b)
     | Resolve'exception (Exception b)
     | Resolve'unknown' Word16
-
-
 
 
 
@@ -146,10 +116,6 @@ data Disembargo'context b
 
 
 
-
-
-
-
 newtype Exception b = Exception (Data.Capnp.Untyped.Struct b)
 
 newtype PromisedAnswer b = PromisedAnswer (Data.Capnp.Untyped.Struct b)
@@ -163,17 +129,12 @@ data Call'sendResultsTo b
 
 
 
-
-
-
 newtype Bootstrap b = Bootstrap (Data.Capnp.Untyped.Struct b)
 
 data PromisedAnswer'Op b
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField Word16
     | PromisedAnswer'Op'unknown' Word16
-
-
 
 
 

@@ -60,7 +60,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
     , mintercalate "\n    | " (map fmtDataVariant dataVariants)
     -- Generate auxiliary newtype definitions for group fields:
     , "\n"
-    , mintercalate "\n\n" (map fmtVariantAuxNewtype dataVariants)
+    , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
     ]
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
