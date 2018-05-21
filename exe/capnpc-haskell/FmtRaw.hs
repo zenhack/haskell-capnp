@@ -40,23 +40,38 @@ fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map TB.fromText ns
 fmtImport :: Import -> TB.Builder
 fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 
+fmtNewtypeStruct :: Id -> Name -> TB.Builder
+fmtNewtypeStruct thisMod name =
+    let nameText = fmtName thisMod name
+    in mconcat
+        [ "newtype "
+        , nameText
+        , " b = "
+        , nameText
+        , " (Data.Capnp.Untyped.Struct b)\n"
+        ]
+
 fmtDataDef :: Id -> DataDef -> TB.Builder
 fmtDataDef thisMod DataDef{dataVariants=[variant], dataCerialType=CTyStruct, ..} =
-    let name = fmtName thisMod dataName
-    in mconcat
-        [ "newtype ", name, " b = ", name, " (Data.Capnp.Untyped.Struct b)"
-        ]
+    fmtNewtypeStruct thisMod dataName
 fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
     [ "data ", fmtName thisMod dataName, " b"
     , "\n    = "
     , mintercalate "\n    | " (map fmtDataVariant dataVariants)
+    -- Generate auxiliary newtype definitions for group fields:
+    , "\n"
+    , mintercalate "\n\n" (map fmtVariantAuxNewtype dataVariants)
     ]
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
         case variantParams of
-            Record _   -> " (Data.Capnp.Untyped.Struct b)"
+            Record _   -> " (" <> fmtName thisMod (subName variantName "group'") <> " b)"
             NoParams   -> ""
             Unnamed ty -> " " <> fmtType ty
+
+    fmtVariantAuxNewtype Variant{variantName, variantParams=Record _} =
+        fmtNewtypeStruct thisMod (subName variantName "group'")
+    fmtVariantAuxNewtype _ = ""
 
     fmtType :: Type -> TB.Builder
     fmtType (ListOf eltType) =
