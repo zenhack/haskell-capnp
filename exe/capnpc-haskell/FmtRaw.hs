@@ -88,7 +88,7 @@ fmtUntyped :: Untyped -> TB.Builder
 fmtUntyped Struct = "(Data.Capnp.Untyped.Struct b)"
 fmtUntyped List   = "(Data.Capnp.Untyped.List b)"
 fmtUntyped Cap    = "Word32"
-fmtUntyped Ptr    = "(Ptr b)"
+fmtUntyped Ptr    = "(Data.Capnp.Untyped.Ptr b)"
 
 fmtName :: Id -> Name -> TB.Builder
 fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
