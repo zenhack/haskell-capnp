@@ -389,7 +389,7 @@ generateField thisModule nodeMap Field'{..} =
             Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
-                HsSchema.Unit
+                HsSchema.PrimType HsSchema.PrimVoid
         , fieldLoc = case union' of
             Field'group{} ->
                 HsSchema.HereField
@@ -446,21 +446,21 @@ data Section = DataSec | PtrSec | VoidSec
 
 formatType :: Id -> NodeMap -> Type -> HsSchema.Type
 formatType thisModule nodeMap ty = case ty of
-    Type'void       -> HsSchema.Unit
-    Type'bool       -> HsSchema.Type "Bool" []
-    Type'int8       -> HsSchema.Type "Int8" []
-    Type'int16      -> HsSchema.Type "Int16" []
-    Type'int32      -> HsSchema.Type "Int32" []
-    Type'int64      -> HsSchema.Type "Int64" []
-    Type'uint8      -> HsSchema.Type "Word8" []
-    Type'uint16     -> HsSchema.Type "Word16" []
-    Type'uint32     -> HsSchema.Type "Word32" []
-    Type'uint64     -> HsSchema.Type "Word64" []
-    Type'float32    -> HsSchema.Type "Float" []
-    Type'float64    -> HsSchema.Type "Double" []
-    Type'text       -> HsSchema.Type "Text" []
-    Type'data_      -> HsSchema.Type "Data" []
-    Type'list elt   -> HsSchema.Type "List" [formatType thisModule nodeMap elt]
+    Type'void       -> HsSchema.PrimType HsSchema.PrimVoid
+    Type'bool       -> HsSchema.PrimType HsSchema.PrimBool
+    Type'int8       -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 8}
+    Type'int16      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 16}
+    Type'int32      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 32}
+    Type'int64      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = True, size = 64}
+    Type'uint8      -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 8}
+    Type'uint16     -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 16}
+    Type'uint32     -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 32}
+    Type'uint64     -> HsSchema.PrimType HsSchema.PrimInt {isSigned = False, size = 64}
+    Type'float32    -> HsSchema.PrimType HsSchema.PrimFloat32
+    Type'float64    -> HsSchema.PrimType HsSchema.PrimFloat64
+    Type'text       -> HsSchema.PrimType HsSchema.PrimText
+    Type'data_      -> HsSchema.PrimType HsSchema.PrimData
+    Type'list elt   -> HsSchema.List (formatType thisModule nodeMap elt)
     Type'enum{..} -> namedType typeId brand
     Type'struct{..} -> namedType typeId brand
     Type'interface{..} -> namedType typeId brand

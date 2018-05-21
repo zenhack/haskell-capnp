@@ -27,6 +27,7 @@ module HsSchema
     , ModuleRef(..)
     , Import(..)
     , Type(..)
+    , PrimType(..)
     , Variant(..)
     , VariantParams(..)
     , Field(..)
@@ -92,7 +93,18 @@ instance IsString Name where
 
 data Type
     = Type Name [Type]
-    | Unit
+    | List Type
+    | PrimType PrimType
+    deriving(Show, Read, Eq)
+
+data PrimType
+    = PrimInt { isSigned :: !Bool, size :: !Int }
+    | PrimFloat32
+    | PrimFloat64
+    | PrimText
+    | PrimData
+    | PrimBool
+    | PrimVoid
     deriving(Show, Read, Eq)
 
 data Variant = Variant

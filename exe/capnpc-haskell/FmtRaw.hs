@@ -25,6 +25,7 @@ fmtModule Module{..} = mintercalate "\n"
     , "import Data.Int"
     , "import Data.Word"
     , ""
+    , "import qualified Data.Capnp.BuiltinTypes"
     , "import qualified Data.Capnp.Untyped"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
@@ -56,7 +57,10 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
             Record _   -> " (Data.Capnp.Untyped.Struct b)"
             NoParams   -> ""
             Unnamed ty -> " " <> fmtType ty
-    fmtType Unit = ""
+
+    fmtType :: Type -> TB.Builder
+    fmtType (List eltType) =
+        "(Data.Capnp.Untyped.ListOf b " <> fmtType eltType <> ")"
     fmtType (Type name []) = fmtName thisMod name
     fmtType (Type name params) = mconcat
         [ "("
@@ -65,7 +69,21 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
         , mintercalate " " (map fmtType params)
         , ")"
         ]
+    fmtType (PrimType prim) = fmtPrimType prim
+
 fmtDataDef _ _ = ""
+
+
+fmtPrimType :: PrimType -> TB.Builder
+-- TODO: most of this (except Text & Data) should probably be shared with FmtPure.
+fmtPrimType PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
+fmtPrimType PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
+fmtPrimType PrimFloat32                  = "Float32"
+fmtPrimType PrimFloat64                  = "Float64"
+fmtPrimType PrimBool                     = "Bool"
+fmtPrimType PrimVoid                     = "()"
+fmtPrimType PrimText                     = "(Data.Capnp.BuiltinTypes.Text b)"
+fmtPrimType PrimData                     = "(Data.Capnp.BuiltinTypes.Data b)"
 
 fmtName :: Id -> Name -> TB.Builder
 fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =

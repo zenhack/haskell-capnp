@@ -76,7 +76,18 @@ instance HsFmt Type where
     hsFmt thisMod (Type name params) =
         hsFmt thisMod name
         <> mconcat [" (" <> hsFmt thisMod ty <> ")" | ty <- params]
-    hsFmt _ Unit = "()"
+    hsFmt thisMod (List eltType) = "List (" <> hsFmt thisMod eltType <> ")"
+    hsFmt thisMod (PrimType prim) = hsFmt thisMod prim
+
+instance HsFmt PrimType where
+    hsFmt _ PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
+    hsFmt _ PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
+    hsFmt _ PrimFloat32                  = "Float"
+    hsFmt _ PrimFloat64                  = "Double"
+    hsFmt _ PrimBool                     = "Bool"
+    hsFmt _ PrimText                     = "Text"
+    hsFmt _ PrimData                     = "Data"
+    hsFmt _ PrimVoid                     = "()"
 
 instance HsFmt Variant where
     hsFmt thisMod Variant{variantName,variantParams} =
