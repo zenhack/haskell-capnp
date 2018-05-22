@@ -5,8 +5,10 @@ module Data.Capnp.ById.Xbdf87d7bb8304e81 where
 
 import Data.Int
 import Data.Word
+import qualified Data.Bits
 
 import qualified Data.Capnp.BuiltinTypes
+import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
 
 

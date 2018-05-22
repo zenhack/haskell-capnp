@@ -10,6 +10,7 @@ module FmtRaw
 import IR
 
 import Data.Capnp.Core.Schema (Id)
+import Data.List              (sortOn)
 import Data.Monoid            ((<>))
 import Text.Printf            (printf)
 import Util                   (mintercalate)
@@ -103,18 +104,46 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} = mconcat
             mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
     fmtVariantAuxNewtype _ = ""
 -- Assume this is an enum, for now:
-fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} = mconcat
-    [ "data ", fmtName thisMod dataName, " b"
-    , "\n    = "
-    , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
-    ]
+fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
+    let typeName = fmtName thisMod dataName
+    in mconcat
+        [ "data ", typeName, " b"
+        , "\n    = "
+        , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
+        , "\n"
+        , "instance Enum (", typeName, " b) where\n"
+        , "    toEnum = Data.Capnp.BuiltinTypes.fromWord . fromIntegral\n"
+        , "    fromEnum = fromIntegral . Data.Capnp.BuiltinTypes.toWord\n"
+        , "\n\n"
+        , "instance Data.Capnp.BuiltinTypes.IsWord (", typeName, " b) where"
+        , "\n    fromWord "
+        , mintercalate "\n    fromWord " $
+            map fmtEnumFromWordCase $ reverse $ sortOn variantTag dataVariants
+        , "\n    toWord "
+        , mintercalate "\n    toWord " $
+            map fmtEnumToWordCase   $ reverse $ sortOn variantTag dataVariants
+        , "\n"
+        ]
   where
+    -- | Format a data constructor in the definition of a data type for an enum.
     fmtEnumVariant Variant{variantName,variantParams=NoParams,variantTag=Just _} =
         fmtName thisMod variantName
     fmtEnumVariant Variant{variantName,variantParams=Unnamed ty, variantTag=Nothing} =
         fmtName thisMod variantName <> " " <> fmtType thisMod ty
     fmtEnumVariant variant =
         error $ "Unexpected variant for enum: " ++ show variant
+    -- | Format an equation in an enum's IsWord.fromWord implementation.
+    fmtEnumFromWordCase Variant{variantTag=Just tag,variantName} =
+        -- For the tags we know about:
+        TB.fromString (show tag) <> " = " <> fmtName thisMod variantName
+    fmtEnumFromWordCase Variant{variantTag=Nothing,variantName} =
+        -- For other tags:
+        "tag = " <> fmtName thisMod variantName <> " (fromIntegral tag)"
+    -- | Format in an equation in an enum's IsWord.toWord implementation.
+    fmtEnumToWordCase Variant{variantTag=Just tag,variantName} =
+        fmtName thisMod variantName <> " = " <> TB.fromString (show tag)
+    fmtEnumToWordCase Variant{variantTag=Nothing,variantName} =
+        "(" <> fmtName thisMod variantName <> " tag) = fromIntegral tag"
 fmtDataDef _ dataDef =
     error $ "Unexpected data definition: " ++ show dataDef
 

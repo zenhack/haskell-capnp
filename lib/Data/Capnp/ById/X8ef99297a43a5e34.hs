@@ -5,8 +5,10 @@ module Data.Capnp.ById.X8ef99297a43a5e34 where
 
 import Data.Int
 import Data.Word
+import qualified Data.Bits
 
 import qualified Data.Capnp.BuiltinTypes
+import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
@@ -31,15 +33,12 @@ data JsonValue b
 newtype JsonValue'Call b = JsonValue'Call (Data.Capnp.Untyped.Struct b)
 
 get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_JsonValue'Call'function = undefined -- TODO: generate accessor values.
-
+get_JsonValue'Call'function (JsonValue'Call struct) = undefined -- TODO: handle pointer fields
 get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call b -> m (Data.Capnp.Untyped.ListOf b (JsonValue b))
-get_JsonValue'Call'params = undefined -- TODO: generate accessor values.
-
+get_JsonValue'Call'params (JsonValue'Call struct) = undefined -- TODO: handle pointer fields
 newtype JsonValue'Field b = JsonValue'Field (Data.Capnp.Untyped.Struct b)
 
 get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_JsonValue'Field'name = undefined -- TODO: generate accessor values.
-
+get_JsonValue'Field'name (JsonValue'Field struct) = undefined -- TODO: handle pointer fields
 get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field b -> m (JsonValue b)
-get_JsonValue'Field'value = undefined -- TODO: generate accessor values.
+get_JsonValue'Field'value (JsonValue'Field struct) = undefined -- TODO: handle pointer fields
