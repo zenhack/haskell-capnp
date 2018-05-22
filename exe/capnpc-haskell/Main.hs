@@ -16,9 +16,10 @@ import Data.Capnp.Untyped        (rootPtr)
 import Data.Capnp.Untyped.Pure   (readStruct)
 
 
-import Data.Function ((&))
-import Data.Monoid   ((<>))
-import Text.Printf   (printf)
+import Data.Function        ((&))
+import Data.Monoid          ((<>))
+import Data.ReinterpretCast (doubleToWord, floatToWord)
+import Text.Printf          (printf)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
@@ -265,7 +266,11 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     [ IR.DataDef
                         { dataName = typeName
                         , dataVariants = unionVariants
-                        , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
+                        , dataTagLoc = Just $ dataLoc
+                            discriminantOffset
+                            Type'uint16
+                            -- The default value for a union tag is always zero:
+                            (Value'uint16 0)
                         , dataCerialType = IR.CTyStruct
                         }
                     ]
@@ -288,7 +293,11 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                         , IR.DataDef
                             { dataName = unionName
                             , dataVariants = unionVariants
-                            , dataTagLoc = Just (dataLoc discriminantOffset Type'uint16)
+                            , dataTagLoc = Just $ dataLoc
+                                discriminantOffset
+                                Type'uint16
+                                -- Default value for a union tag is always zero:
+                                (Value'uint16 0)
                             , dataCerialType = IR.CTyStruct
                             }
                         ]
@@ -310,14 +319,15 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
             ]
         _ -> [] -- TODO
 
--- | Given the offset field from the capnp schema and a type, return a DataLoc
--- describing the location of a field.
-dataLoc :: Word32 -> Type -> IR.DataLoc
-dataLoc offset ty =
+-- | Given the offset field from the capnp schema, a type, and a
+-- default value, return a DataLoc describing the location of a field.
+dataLoc :: Word32 -> Type -> Value -> IR.DataLoc
+dataLoc offset ty defaultVal =
     let bitsOffset = fromIntegral offset * typeSize ty
     in IR.DataLoc
         { dataIdx = bitsOffset `div` 64
         , dataOff = bitsOffset `mod` 64
+        , dataDef = valueBits defaultVal
         }
 
 generateEnum :: Id -> NodeMap -> IR.Name -> Enumerant -> IR.Variant
@@ -395,14 +405,14 @@ generateField thisModule nodeMap Field'{..} =
         , fieldLoc = case union' of
             Field'group{} ->
                 IR.HereField
-            Field'slot{offset,type_} ->
+            Field'slot{offset,type_,defaultValue} ->
                 case typeSection type_ of
                     VoidSec ->
                         IR.VoidField
                     PtrSec ->
                         IR.PtrField (fromIntegral offset)
                     DataSec ->
-                        IR.DataField (dataLoc offset type_)
+                        IR.DataField (dataLoc offset type_ defaultValue)
             Field'unknown' _ ->
                 -- Some field tpe we don't know about; we can't
                 -- give a location for it, so call it void
@@ -436,6 +446,27 @@ typeSize = \case
     -- something we don't know about; just call it 0, since we're not
     -- generating code for it anyway.
     Type'unknown' _ -> 0
+
+-- | Return the raw bit-level representation of a value that is stored
+-- in a struct's data section.
+--
+-- Returns 0 for any non-data values. TODO: would be nice to not have
+-- an arbitrary default here.
+valueBits :: Value -> Word64
+valueBits = \case
+    Value'bool b -> fromIntegral $ fromEnum b
+    Value'int8 n -> fromIntegral n
+    Value'int16 n -> fromIntegral n
+    Value'int32 n -> fromIntegral n
+    Value'int64 n -> fromIntegral n
+    Value'uint8 n -> fromIntegral n
+    Value'uint16 n -> fromIntegral n
+    Value'uint32 n -> fromIntegral n
+    Value'uint64 n -> n
+    Value'float32 n -> fromIntegral $ floatToWord n
+    Value'float64 n -> doubleToWord n
+    Value'enum n -> fromIntegral n
+    _ -> 0 -- some non-word type.
 
 typeSection :: Type -> Section
 typeSection ty = case (typeSize ty, ty) of

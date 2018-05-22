@@ -25,8 +25,10 @@ fmtModule Module{..} = mintercalate "\n"
     , ""
     , "import Data.Int"
     , "import Data.Word"
+    , "import qualified Data.Bits"
     , ""
     , "import qualified Data.Capnp.BuiltinTypes"
+    , "import qualified Data.Capnp.TraversalLimit"
     , "import qualified Data.Capnp.Untyped"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
@@ -59,7 +61,19 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
     in mconcat
         [ accessorName, " :: Data.Capnp.Untyped.ReadCtx m b => "
         , fmtName thisMod typeName, " b -> m ", fmtType thisMod fieldType, "\n"
-        , accessorName, " = undefined -- TODO: generate accessor values.\n"
+        , accessorName
+        , " (", fmtName thisMod typeName, " struct) = ", case fieldLoc of
+            DataField DataLoc{..} -> mconcat
+                [ "fmap\n"
+                , "    ( Data.Capnp.BuiltinTypes.fromWord\n"
+                , "    . Data.Bits.xor ", TB.fromString (show dataDef), "\n"
+                , "    . (`Data.Bits.shiftR` ", TB.fromString (show dataOff), ")\n"
+                , "    )\n"
+                , "    (Data.Capnp.Untyped.getData ", TB.fromString (show dataIdx), " struct)\n"
+                ]
+            PtrField _ -> "undefined -- TODO: handle pointer fields"
+            HereField -> "undefined -- TODO: handle groups/anonymous union fields"
+            VoidField -> "Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         ]
 
 fmtDataDef :: Id -> DataDef -> TB.Builder

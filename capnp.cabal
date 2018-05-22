@@ -113,6 +113,7 @@ executable capnpc-haskell
       , transformers                      >= 0.5.2 && < 0.6
       , utf8-string                       >= 1.0.1 && < 1.1
       , vector                            >= 0.12.0 && < 0.13
+      , reinterpret-cast                  >= 0.1 && < 0.2
     ghc-options:
       -Wnoncanonical-monad-instances
       -Wincomplete-patterns

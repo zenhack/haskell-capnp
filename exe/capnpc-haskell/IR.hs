@@ -172,5 +172,9 @@ data DataLoc = DataLoc
     { dataIdx :: !Int
     -- ^ The index of the 64-bit word containing the field.
     , dataOff :: !Int
+    , dataDef :: !Word64
+    -- ^ The value is stored xor-ed with this value. This is used
+    -- to allow for encoding default values. Note that this is xor-ed
+    -- with the bits representing the value, not the whole word.
     }
     deriving(Show, Read, Eq)
