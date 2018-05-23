@@ -122,7 +122,7 @@ readPtr :: U.ReadCtx m BS.ByteString
     -> m (Maybe PtrType)
 readPtr Nothing               = return Nothing
 readPtr (Just ptr) = Just <$> case ptr of
-    U.PtrCap cap       -> return (PtrCap cap)
+    U.PtrCap _ cap     -> return (PtrCap cap)
     U.PtrStruct struct -> PtrStruct <$> readStruct struct
     U.PtrList list     -> PtrList <$> readList' list
 

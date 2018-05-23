@@ -1,7 +1,9 @@
-{-# LANGUAGE ApplicativeDo   #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE GADTs           #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ApplicativeDo         #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-|
 Module: Data.Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.
@@ -17,10 +19,10 @@ module Data.Capnp.Untyped
     , dataSection, ptrSection
     , getData, getPtr
     , get, index, length
-    , emptyList
     , rootPtr
     , rawBytes
     , ReadCtx
+    , HasMessage(..), MessageDefault(..)
     )
   where
 
@@ -49,7 +51,7 @@ type ReadCtx m b = (MonadThrow m, MonadLimit m, Blob m b, Slice m b)
 -- Note that there is no variant for far pointers, which don't make sense
 -- with absolute addressing.
 data Ptr b
-    = PtrCap !Word32
+    = PtrCap (M.Message b) !Word32
     | PtrList (List b)
     | PtrStruct (Struct b)
 
@@ -74,7 +76,8 @@ data NormalList b = NormalList
 -- | A list of values of type 'a' in a message.
 data ListOf b a where
     ListOfVoid
-        :: !Int -- number of elements
+        :: M.Message b
+        -> !Int -- number of elements
         -> ListOf b ()
     ListOfStruct
         :: Struct b -- First element. data/ptr sizes are the same for
@@ -90,7 +93,6 @@ data ListOf b a where
     -- wrapper that converts an untyped value to a typed one:
     ListOfMapped :: ListOf b a -> (a -> c) -> ListOf b c
 
-
 instance Functor (ListOf b) where
     fmap f (ListOfMapped list g) = ListOfMapped list (f . g)
     fmap f list                  = ListOfMapped list f
@@ -103,11 +105,74 @@ data Struct b
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
+-- | Types @a@ whose storage is owned by a message with blob type @b@.
+class HasMessage a b where
+    -- | Get the message in which the @a@ is stored.
+    message :: a -> M.Message b
 
--- | An empty list, of any type.
-emptyList :: ListOf b a
-emptyList = ListOfMapped (ListOfVoid 0) undefined
+-- | Types which have a "default" value, but require a message
+-- to construct it.
+--
+-- The default is usually conceptually zero-size. This is mostly useful
+-- for generated code, so that it can use standard decoding techniques
+-- on default values.
+class HasMessage a b => MessageDefault a b where
+    messageDefault :: M.Message b -> a
 
+instance HasMessage (Ptr b) b where
+    message (PtrCap msg _)     = msg
+    message (PtrList list)     = message list
+    message (PtrStruct struct) = message struct
+
+instance HasMessage (Struct b) b where
+    message (Struct msg _ _ _) = msg
+
+instance MessageDefault (Struct b) b where
+    messageDefault msg = Struct msg (WordAt 0 0) 0 0
+
+instance HasMessage (List b) b where
+    message (List0 list)      = message list
+    message (List1 list)      = message list
+    message (List8 list)      = message list
+    message (List16 list)     = message list
+    message (List32 list)     = message list
+    message (List64 list)     = message list
+    message (ListPtr list)    = message list
+    message (ListStruct list) = message list
+
+instance HasMessage (ListOf b a) b where
+    message (ListOfVoid msg _)    = msg
+    message (ListOfStruct tag _)  = message tag
+    message (ListOfBool list)     = message list
+    message (ListOfWord8 list)    = message list
+    message (ListOfWord16 list)   = message list
+    message (ListOfWord32 list)   = message list
+    message (ListOfWord64 list)   = message list
+    message (ListOfPtr list)      = message list
+    message (ListOfMapped list _) = message list
+
+instance MessageDefault (ListOf b ()) b where
+    messageDefault msg = ListOfVoid msg 0
+instance MessageDefault (ListOf b (Struct b)) b where
+    messageDefault msg = ListOfStruct (messageDefault msg) 0
+instance MessageDefault (ListOf b Bool) b where
+    messageDefault msg = ListOfBool (messageDefault msg)
+instance MessageDefault (ListOf b Word8) b where
+    messageDefault msg = ListOfWord8 (messageDefault msg)
+instance MessageDefault (ListOf b Word16) b where
+    messageDefault msg = ListOfWord16 (messageDefault msg)
+instance MessageDefault (ListOf b Word32) b where
+    messageDefault msg = ListOfWord32 (messageDefault msg)
+instance MessageDefault (ListOf b Word64) b where
+    messageDefault msg = ListOfWord64 (messageDefault msg)
+instance MessageDefault (ListOf b (Maybe (Ptr b))) b where
+    messageDefault msg = ListOfPtr (messageDefault msg)
+
+instance HasMessage (NormalList b) b where
+    message = nMsg
+
+instance MessageDefault (NormalList b) b where
+    messageDefault msg = NormalList msg (WordAt 0 0) 0
 
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
@@ -118,7 +183,7 @@ get msg addr = do
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
-            P.CapPtr cap -> return $ Just $ PtrCap cap
+            P.CapPtr cap -> return $ Just $ PtrCap msg cap
             P.StructPtr off dataSz ptrSz -> return $ Just $ PtrStruct $
                 Struct msg (resolveOffset addr off) dataSz ptrSz
             P.ListPtr off eltSpec -> Just <$> getList (resolveOffset addr off) eltSpec
@@ -150,7 +215,7 @@ get msg addr = do
                                     -- how the reference implementation does this, copy
                                     -- that, and submit a patch to the spec.
                                     Just (P.CapPtr cap) ->
-                                        return $ Just $ PtrCap cap
+                                        return $ Just $ PtrCap msg cap
                                     ptr -> throwM $ E.InvalidDataError $
                                         "The tag word of a far pointer's " ++
                                         "2-word landing pad should be an intra " ++
@@ -169,7 +234,7 @@ get msg addr = do
     getList addr@WordAt{..} eltSpec = PtrList <$>
         case eltSpec of
             P.EltNormal sz len -> pure $ case sz of
-                Sz0   -> List0  (ListOfVoid    (fromIntegral len))
+                Sz0   -> List0  (ListOfVoid    msg (fromIntegral len))
                 Sz1   -> List1  (ListOfBool    nlist)
                 Sz8   -> List8  (ListOfWord8   nlist)
                 Sz16  -> List16 (ListOfWord16  nlist)
@@ -198,7 +263,7 @@ index :: ReadCtx m b => Int -> ListOf b a -> m a
 index i list = invoice 1 >> index' list
   where
     index' :: ReadCtx m b => ListOf b a -> m a
-    index' (ListOfVoid len)
+    index' (ListOfVoid _ len)
         | i < len = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
@@ -232,7 +297,7 @@ index i list = invoice 1 >> index' list
 
 -- | Returns the length of a list
 length :: ListOf b a -> Int
-length (ListOfVoid len)      = len
+length (ListOfVoid _ len)    = len
 length (ListOfStruct _ len)  = len
 length (ListOfBool   nlist)  = nLen nlist
 length (ListOfWord8  nlist)  = nLen nlist
