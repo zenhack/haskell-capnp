@@ -60,7 +60,7 @@ get_JoinResult'succeeded (JoinResult struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_JoinResult'cap :: Data.Capnp.Untyped.ReadCtx m b => JoinResult b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_JoinResult'cap (JoinResult struct) = undefined -- TODO: handle pointer fields
+get_JoinResult'cap (JoinResult struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= pure)
 data Side b
     = Side'server
     | Side'client

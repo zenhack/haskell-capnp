@@ -29,11 +29,11 @@ data Type'anyPointer'unconstrained b
 newtype Brand b = Brand (Data.Capnp.Untyped.Struct b)
 
 get_Brand'scopes :: Data.Capnp.Untyped.ReadCtx m b => Brand b -> m (Data.Capnp.Untyped.ListOf b (Brand'Scope b))
-get_Brand'scopes (Brand struct) = undefined -- TODO: handle pointer fields
+get_Brand'scopes (Brand struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace ["Brand"], nameUnqualified = "Scope"}) [])
 newtype Method b = Method (Data.Capnp.Untyped.Struct b)
 
 get_Method'name :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Method'name (Method struct) = undefined -- TODO: handle pointer fields
+get_Method'name (Method struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_Method'codeOrder :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m Word16
 get_Method'codeOrder (Method struct) = fmap
     ( Codec.Capnp.fromWord
@@ -59,17 +59,17 @@ get_Method'resultStructType (Method struct) = fmap
     (Data.Capnp.Untyped.getData 2 struct)
 
 get_Method'annotations :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m (Data.Capnp.Untyped.ListOf b (Annotation b))
-get_Method'annotations (Method struct) = undefined -- TODO: handle pointer fields
+get_Method'annotations (Method struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Annotation"}) [])
 get_Method'paramBrand :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m (Brand b)
-get_Method'paramBrand (Method struct) = undefined -- TODO: handle pointer fields
+get_Method'paramBrand (Method struct) = (Data.Capnp.Untyped.getPtr 2 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []
 get_Method'resultBrand :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m (Brand b)
-get_Method'resultBrand (Method struct) = undefined -- TODO: handle pointer fields
+get_Method'resultBrand (Method struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []
 get_Method'implicitParameters :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m (Data.Capnp.Untyped.ListOf b (Node'Parameter b))
-get_Method'implicitParameters (Method struct) = undefined -- TODO: handle pointer fields
+get_Method'implicitParameters (Method struct) = (Data.Capnp.Untyped.getPtr 4 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace ["Node"], nameUnqualified = "Parameter"}) [])
 newtype Enumerant b = Enumerant (Data.Capnp.Untyped.Struct b)
 
 get_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m b => Enumerant b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Enumerant'name (Enumerant struct) = undefined -- TODO: handle pointer fields
+get_Enumerant'name (Enumerant struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_Enumerant'codeOrder :: Data.Capnp.Untyped.ReadCtx m b => Enumerant b -> m Word16
 get_Enumerant'codeOrder (Enumerant struct) = fmap
     ( Codec.Capnp.fromWord
@@ -79,11 +79,11 @@ get_Enumerant'codeOrder (Enumerant struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m b => Enumerant b -> m (Data.Capnp.Untyped.ListOf b (Annotation b))
-get_Enumerant'annotations (Enumerant struct) = undefined -- TODO: handle pointer fields
+get_Enumerant'annotations (Enumerant struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Annotation"}) [])
 newtype Field b = Field (Data.Capnp.Untyped.Struct b)
 
 get_Field''name :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Field''name (Field struct) = undefined -- TODO: handle pointer fields
+get_Field''name (Field struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_Field''codeOrder :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m Word16
 get_Field''codeOrder (Field struct) = fmap
     ( Codec.Capnp.fromWord
@@ -93,7 +93,7 @@ get_Field''codeOrder (Field struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Field''annotations :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m (Data.Capnp.Untyped.ListOf b (Annotation b))
-get_Field''annotations (Field struct) = undefined -- TODO: handle pointer fields
+get_Field''annotations (Field struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Annotation"}) [])
 get_Field''discriminantValue :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m Word16
 get_Field''discriminantValue (Field struct) = fmap
     ( Codec.Capnp.fromWord
@@ -121,9 +121,9 @@ get_Field'slot'offset (Field'slot'group' struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Field'slot'type_ :: Data.Capnp.Untyped.ReadCtx m b => Field'slot'group' b -> m (Type b)
-get_Field'slot'type_ (Field'slot'group' struct) = undefined -- TODO: handle pointer fields
+get_Field'slot'type_ (Field'slot'group' struct) = (Data.Capnp.Untyped.getPtr 2 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Type"}) []
 get_Field'slot'defaultValue :: Data.Capnp.Untyped.ReadCtx m b => Field'slot'group' b -> m (Value b)
-get_Field'slot'defaultValue (Field'slot'group' struct) = undefined -- TODO: handle pointer fields
+get_Field'slot'defaultValue (Field'slot'group' struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Value"}) []
 get_Field'slot'hadExplicitDefault :: Data.Capnp.Untyped.ReadCtx m b => Field'slot'group' b -> m Bool
 get_Field'slot'hadExplicitDefault (Field'slot'group' struct) = fmap
     ( Codec.Capnp.fromWord
@@ -154,7 +154,7 @@ get_Superclass'id (Superclass struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Superclass'brand :: Data.Capnp.Untyped.ReadCtx m b => Superclass b -> m (Brand b)
-get_Superclass'brand (Superclass struct) = undefined -- TODO: handle pointer fields
+get_Superclass'brand (Superclass struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []
 newtype Brand'Scope b = Brand'Scope (Data.Capnp.Untyped.Struct b)
 
 get_Brand'Scope''scopeId :: Data.Capnp.Untyped.ReadCtx m b => Brand'Scope b -> m Word64
@@ -185,11 +185,11 @@ get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'Requested
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest'RequestedFile'Import b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import struct) = undefined -- TODO: handle pointer fields
+get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 newtype Node'Parameter b = Node'Parameter (Data.Capnp.Untyped.Struct b)
 
 get_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m b => Node'Parameter b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Node'Parameter'name (Node'Parameter struct) = undefined -- TODO: handle pointer fields
+get_Node'Parameter'name (Node'Parameter struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 data Field'ordinal b
     = Field'ordinal'implicit
     | Field'ordinal'explicit Word16
@@ -200,11 +200,11 @@ data Field'ordinal b
 newtype CodeGeneratorRequest b = CodeGeneratorRequest (Data.Capnp.Untyped.Struct b)
 
 get_CodeGeneratorRequest'nodes :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest b -> m (Data.Capnp.Untyped.ListOf b (Node b))
-get_CodeGeneratorRequest'nodes (CodeGeneratorRequest struct) = undefined -- TODO: handle pointer fields
+get_CodeGeneratorRequest'nodes (CodeGeneratorRequest struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Node"}) [])
 get_CodeGeneratorRequest'requestedFiles :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest b -> m (Data.Capnp.Untyped.ListOf b (CodeGeneratorRequest'RequestedFile b))
-get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest struct) = undefined -- TODO: handle pointer fields
+get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace ["CodeGeneratorRequest"], nameUnqualified = "RequestedFile"}) [])
 get_CodeGeneratorRequest'capnpVersion :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest b -> m (CapnpVersion b)
-get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest struct) = undefined -- TODO: handle pointer fields
+get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest struct) = (Data.Capnp.Untyped.getPtr 2 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "CapnpVersion"}) []
 data Type'anyPointer b
     = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' b)
     | Type'anyPointer'parameter (Type'anyPointer'parameter'group' b)
@@ -302,9 +302,9 @@ get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile st
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest'RequestedFile b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile struct) = undefined -- TODO: handle pointer fields
+get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_CodeGeneratorRequest'RequestedFile'imports :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest'RequestedFile b -> m (Data.Capnp.Untyped.ListOf b (CodeGeneratorRequest'RequestedFile'Import b))
-get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile struct) = undefined -- TODO: handle pointer fields
+get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace ["CodeGeneratorRequest","RequestedFile"], nameUnqualified = "Import"}) [])
 data Type b
     = Type'void
     | Type'bool
@@ -343,7 +343,7 @@ data Type b
 newtype Type'list'group' b = Type'list'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'list'elementType :: Data.Capnp.Untyped.ReadCtx m b => Type'list'group' b -> m (Type b)
-get_Type'list'elementType (Type'list'group' struct) = undefined -- TODO: handle pointer fields
+get_Type'list'elementType (Type'list'group' struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Type"}) []
 newtype Type'enum'group' b = Type'enum'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'enum'typeId :: Data.Capnp.Untyped.ReadCtx m b => Type'enum'group' b -> m Word64
@@ -355,7 +355,7 @@ get_Type'enum'typeId (Type'enum'group' struct) = fmap
     (Data.Capnp.Untyped.getData 1 struct)
 
 get_Type'enum'brand :: Data.Capnp.Untyped.ReadCtx m b => Type'enum'group' b -> m (Brand b)
-get_Type'enum'brand (Type'enum'group' struct) = undefined -- TODO: handle pointer fields
+get_Type'enum'brand (Type'enum'group' struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []
 newtype Type'struct'group' b = Type'struct'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'struct'typeId :: Data.Capnp.Untyped.ReadCtx m b => Type'struct'group' b -> m Word64
@@ -367,7 +367,7 @@ get_Type'struct'typeId (Type'struct'group' struct) = fmap
     (Data.Capnp.Untyped.getData 1 struct)
 
 get_Type'struct'brand :: Data.Capnp.Untyped.ReadCtx m b => Type'struct'group' b -> m (Brand b)
-get_Type'struct'brand (Type'struct'group' struct) = undefined -- TODO: handle pointer fields
+get_Type'struct'brand (Type'struct'group' struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []
 newtype Type'interface'group' b = Type'interface'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'interface'typeId :: Data.Capnp.Untyped.ReadCtx m b => Type'interface'group' b -> m Word64
@@ -379,7 +379,7 @@ get_Type'interface'typeId (Type'interface'group' struct) = fmap
     (Data.Capnp.Untyped.getData 1 struct)
 
 get_Type'interface'brand :: Data.Capnp.Untyped.ReadCtx m b => Type'interface'group' b -> m (Brand b)
-get_Type'interface'brand (Type'interface'group' struct) = undefined -- TODO: handle pointer fields
+get_Type'interface'brand (Type'interface'group' struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []
 newtype Type'anyPointer'group' b = Type'anyPointer'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'anyPointer'union' :: Data.Capnp.Untyped.ReadCtx m b => Type'anyPointer'group' b -> m (Type'anyPointer b)
@@ -449,7 +449,7 @@ get_CapnpVersion'micro (CapnpVersion struct) = fmap
 newtype Node'NestedNode b = Node'NestedNode (Data.Capnp.Untyped.Struct b)
 
 get_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m b => Node'NestedNode b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Node'NestedNode'name (Node'NestedNode struct) = undefined -- TODO: handle pointer fields
+get_Node'NestedNode'name (Node'NestedNode struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_Node'NestedNode'id :: Data.Capnp.Untyped.ReadCtx m b => Node'NestedNode b -> m Word64
 get_Node'NestedNode'id (Node'NestedNode struct) = fmap
     ( Codec.Capnp.fromWord
@@ -469,7 +469,7 @@ get_Node''id (Node struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Node''displayName :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Node''displayName (Node struct) = undefined -- TODO: handle pointer fields
+get_Node''displayName (Node struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_Node''displayNamePrefixLength :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m Word32
 get_Node''displayNamePrefixLength (Node struct) = fmap
     ( Codec.Capnp.fromWord
@@ -487,11 +487,11 @@ get_Node''scopeId (Node struct) = fmap
     (Data.Capnp.Untyped.getData 2 struct)
 
 get_Node''nestedNodes :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m (Data.Capnp.Untyped.ListOf b (Node'NestedNode b))
-get_Node''nestedNodes (Node struct) = undefined -- TODO: handle pointer fields
+get_Node''nestedNodes (Node struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace ["Node"], nameUnqualified = "NestedNode"}) [])
 get_Node''annotations :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m (Data.Capnp.Untyped.ListOf b (Annotation b))
-get_Node''annotations (Node struct) = undefined -- TODO: handle pointer fields
+get_Node''annotations (Node struct) = (Data.Capnp.Untyped.getPtr 2 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Annotation"}) [])
 get_Node''parameters :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m (Data.Capnp.Untyped.ListOf b (Node'Parameter b))
-get_Node''parameters (Node struct) = undefined -- TODO: handle pointer fields
+get_Node''parameters (Node struct) = (Data.Capnp.Untyped.getPtr 5 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace ["Node"], nameUnqualified = "Parameter"}) [])
 get_Node''isGeneric :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m Bool
 get_Node''isGeneric (Node struct) = fmap
     ( Codec.Capnp.fromWord
@@ -562,27 +562,27 @@ get_Node'struct'discriminantOffset (Node'struct'group' struct) = fmap
     (Data.Capnp.Untyped.getData 4 struct)
 
 get_Node'struct'fields :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m (Data.Capnp.Untyped.ListOf b (Field b))
-get_Node'struct'fields (Node'struct'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'struct'fields (Node'struct'group' struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Field"}) [])
 newtype Node'enum'group' b = Node'enum'group' (Data.Capnp.Untyped.Struct b)
 
 get_Node'enum'enumerants :: Data.Capnp.Untyped.ReadCtx m b => Node'enum'group' b -> m (Data.Capnp.Untyped.ListOf b (Enumerant b))
-get_Node'enum'enumerants (Node'enum'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'enum'enumerants (Node'enum'group' struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Enumerant"}) [])
 newtype Node'interface'group' b = Node'interface'group' (Data.Capnp.Untyped.Struct b)
 
 get_Node'interface'methods :: Data.Capnp.Untyped.ReadCtx m b => Node'interface'group' b -> m (Data.Capnp.Untyped.ListOf b (Method b))
-get_Node'interface'methods (Node'interface'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'interface'methods (Node'interface'group' struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Method"}) [])
 get_Node'interface'superclasses :: Data.Capnp.Untyped.ReadCtx m b => Node'interface'group' b -> m (Data.Capnp.Untyped.ListOf b (Superclass b))
-get_Node'interface'superclasses (Node'interface'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'interface'superclasses (Node'interface'group' struct) = (Data.Capnp.Untyped.getPtr 4 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Superclass"}) [])
 newtype Node'const'group' b = Node'const'group' (Data.Capnp.Untyped.Struct b)
 
 get_Node'const'type_ :: Data.Capnp.Untyped.ReadCtx m b => Node'const'group' b -> m (Type b)
-get_Node'const'type_ (Node'const'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'const'type_ (Node'const'group' struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Type"}) []
 get_Node'const'value :: Data.Capnp.Untyped.ReadCtx m b => Node'const'group' b -> m (Value b)
-get_Node'const'value (Node'const'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'const'value (Node'const'group' struct) = (Data.Capnp.Untyped.getPtr 4 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Value"}) []
 newtype Node'annotation'group' b = Node'annotation'group' (Data.Capnp.Untyped.Struct b)
 
 get_Node'annotation'type_ :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m (Type b)
-get_Node'annotation'type_ (Node'annotation'group' struct) = undefined -- TODO: handle pointer fields
+get_Node'annotation'type_ (Node'annotation'group' struct) = (Data.Capnp.Untyped.getPtr 3 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Type"}) []
 get_Node'annotation'targetsFile :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsFile (Node'annotation'group' struct) = fmap
     ( Codec.Capnp.fromWord
@@ -691,6 +691,6 @@ get_Annotation'id (Annotation struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Annotation'value :: Data.Capnp.Untyped.ReadCtx m b => Annotation b -> m (Value b)
-get_Annotation'value (Annotation struct) = undefined -- TODO: handle pointer fields
+get_Annotation'value (Annotation struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Value"}) []
 get_Annotation'brand :: Data.Capnp.Untyped.ReadCtx m b => Annotation b -> m (Brand b)
-get_Annotation'brand (Annotation struct) = undefined -- TODO: handle pointer fields
+get_Annotation'brand (Annotation struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12195682960037147353, nameLocalNS = Namespace [], nameUnqualified = "Brand"}) []

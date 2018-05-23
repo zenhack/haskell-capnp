@@ -35,12 +35,12 @@ data JsonValue b
 newtype JsonValue'Call b = JsonValue'Call (Data.Capnp.Untyped.Struct b)
 
 get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_JsonValue'Call'function (JsonValue'Call struct) = undefined -- TODO: handle pointer fields
+get_JsonValue'Call'function (JsonValue'Call struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call b -> m (Data.Capnp.Untyped.ListOf b (JsonValue b))
-get_JsonValue'Call'params (JsonValue'Call struct) = undefined -- TODO: handle pointer fields
+get_JsonValue'Call'params (JsonValue'Call struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 10302426802579725876, nameLocalNS = Namespace [], nameUnqualified = "JsonValue"}) [])
 newtype JsonValue'Field b = JsonValue'Field (Data.Capnp.Untyped.Struct b)
 
 get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_JsonValue'Field'name (JsonValue'Field struct) = undefined -- TODO: handle pointer fields
+get_JsonValue'Field'name (JsonValue'Field struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field b -> m (JsonValue b)
-get_JsonValue'Field'value (JsonValue'Field struct) = undefined -- TODO: handle pointer fields
+get_JsonValue'Field'value (JsonValue'Field struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 10302426802579725876, nameLocalNS = Namespace [], nameUnqualified = "JsonValue"}) []

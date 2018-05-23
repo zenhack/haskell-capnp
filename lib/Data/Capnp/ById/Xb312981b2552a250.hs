@@ -26,7 +26,7 @@ get_Call'questionId (Call struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Call'target :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m (MessageTarget b)
-get_Call'target (Call struct) = undefined -- TODO: handle pointer fields
+get_Call'target (Call struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace [], nameUnqualified = "MessageTarget"}) []
 get_Call'interfaceId :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m Word64
 get_Call'interfaceId (Call struct) = fmap
     ( Codec.Capnp.fromWord
@@ -44,7 +44,7 @@ get_Call'methodId (Call struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Call'params :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m (Payload b)
-get_Call'params (Call struct) = undefined -- TODO: handle pointer fields
+get_Call'params (Call struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace [], nameUnqualified = "Payload"}) []
 get_Call'sendResultsTo :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m (Call'sendResultsTo b)
 get_Call'sendResultsTo (Call struct) = undefined -- TODO: handle groups/anonymous union fields
 get_Call'allowThirdPartyTailCall :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m Bool
@@ -111,9 +111,9 @@ data MessageTarget b
 newtype Payload b = Payload (Data.Capnp.Untyped.Struct b)
 
 get_Payload'content :: Data.Capnp.Untyped.ReadCtx m b => Payload b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_Payload'content (Payload struct) = undefined -- TODO: handle pointer fields
+get_Payload'content (Payload struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= pure)
 get_Payload'capTable :: Data.Capnp.Untyped.ReadCtx m b => Payload b -> m (Data.Capnp.Untyped.ListOf b (CapDescriptor b))
-get_Payload'capTable (Payload struct) = undefined -- TODO: handle pointer fields
+get_Payload'capTable (Payload struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace [], nameUnqualified = "CapDescriptor"}) [])
 newtype Provide b = Provide (Data.Capnp.Untyped.Struct b)
 
 get_Provide'questionId :: Data.Capnp.Untyped.ReadCtx m b => Provide b -> m Word32
@@ -125,9 +125,9 @@ get_Provide'questionId (Provide struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Provide'target :: Data.Capnp.Untyped.ReadCtx m b => Provide b -> m (MessageTarget b)
-get_Provide'target (Provide struct) = undefined -- TODO: handle pointer fields
+get_Provide'target (Provide struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace [], nameUnqualified = "MessageTarget"}) []
 get_Provide'recipient :: Data.Capnp.Untyped.ReadCtx m b => Provide b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_Provide'recipient (Provide struct) = undefined -- TODO: handle pointer fields
+get_Provide'recipient (Provide struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= pure)
 newtype Return b = Return (Data.Capnp.Untyped.Struct b)
 
 get_Return''answerId :: Data.Capnp.Untyped.ReadCtx m b => Return b -> m Word32
@@ -226,7 +226,7 @@ data Resolve' b
 newtype ThirdPartyCapDescriptor b = ThirdPartyCapDescriptor (Data.Capnp.Untyped.Struct b)
 
 get_ThirdPartyCapDescriptor'id :: Data.Capnp.Untyped.ReadCtx m b => ThirdPartyCapDescriptor b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) = undefined -- TODO: handle pointer fields
+get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= pure)
 get_ThirdPartyCapDescriptor'vineId :: Data.Capnp.Untyped.ReadCtx m b => ThirdPartyCapDescriptor b -> m Word32
 get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) = fmap
     ( Codec.Capnp.fromWord
@@ -264,7 +264,7 @@ get_Accept'questionId (Accept struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Accept'provision :: Data.Capnp.Untyped.ReadCtx m b => Accept b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_Accept'provision (Accept struct) = undefined -- TODO: handle pointer fields
+get_Accept'provision (Accept struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= pure)
 get_Accept'embargo :: Data.Capnp.Untyped.ReadCtx m b => Accept b -> m Bool
 get_Accept'embargo (Accept struct) = fmap
     ( Codec.Capnp.fromWord
@@ -287,7 +287,7 @@ data Disembargo'context b
 newtype Exception b = Exception (Data.Capnp.Untyped.Struct b)
 
 get_Exception'reason :: Data.Capnp.Untyped.ReadCtx m b => Exception b -> m (Data.Capnp.BuiltinTypes.Text b)
-get_Exception'reason (Exception struct) = undefined -- TODO: handle pointer fields
+get_Exception'reason (Exception struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.getList8 (Data.Capnp.Untyped.message struct) >>= Data.Capnp.BuiltinTypes.getText)
 get_Exception'obsoleteIsCallersFault :: Data.Capnp.Untyped.ReadCtx m b => Exception b -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception struct) = fmap
     ( Codec.Capnp.fromWord
@@ -323,7 +323,7 @@ get_PromisedAnswer'questionId (PromisedAnswer struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_PromisedAnswer'transform :: Data.Capnp.Untyped.ReadCtx m b => PromisedAnswer b -> m (Data.Capnp.Untyped.ListOf b (PromisedAnswer'Op b))
-get_PromisedAnswer'transform (PromisedAnswer struct) = undefined -- TODO: handle pointer fields
+get_PromisedAnswer'transform (PromisedAnswer struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type ListOf (Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace ["PromisedAnswer"], nameUnqualified = "Op"}) [])
 data Call'sendResultsTo b
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
@@ -344,7 +344,7 @@ get_Bootstrap'questionId (Bootstrap struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Bootstrap'deprecatedObjectId :: Data.Capnp.Untyped.ReadCtx m b => Bootstrap b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_Bootstrap'deprecatedObjectId (Bootstrap struct) = undefined -- TODO: handle pointer fields
+get_Bootstrap'deprecatedObjectId (Bootstrap struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= pure)
 data PromisedAnswer'Op b
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField Word16
@@ -355,7 +355,7 @@ data PromisedAnswer'Op b
 newtype Disembargo b = Disembargo (Data.Capnp.Untyped.Struct b)
 
 get_Disembargo'target :: Data.Capnp.Untyped.ReadCtx m b => Disembargo b -> m (MessageTarget b)
-get_Disembargo'target (Disembargo struct) = undefined -- TODO: handle pointer fields
+get_Disembargo'target (Disembargo struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace [], nameUnqualified = "MessageTarget"}) []
 get_Disembargo'context :: Data.Capnp.Untyped.ReadCtx m b => Disembargo b -> m (Disembargo'context b)
 get_Disembargo'context (Disembargo struct) = undefined -- TODO: handle groups/anonymous union fields
 newtype Join b = Join (Data.Capnp.Untyped.Struct b)
@@ -369,6 +369,6 @@ get_Join'questionId (Join struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_Join'target :: Data.Capnp.Untyped.ReadCtx m b => Join b -> m (MessageTarget b)
-get_Join'target (Join struct) = undefined -- TODO: handle pointer fields
+get_Join'target (Join struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= undefined) -- TODO: handle pointer fields of type Type (Name {nameModule = ByCapnpId 12903543124727603792, nameLocalNS = Namespace [], nameUnqualified = "MessageTarget"}) []
 get_Join'keyPart :: Data.Capnp.Untyped.ReadCtx m b => Join b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_Join'keyPart (Join struct) = undefined -- TODO: handle pointer fields
+get_Join'keyPart (Join struct) = (Data.Capnp.Untyped.getPtr 1 struct >>= pure)
