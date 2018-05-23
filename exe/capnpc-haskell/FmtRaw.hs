@@ -139,7 +139,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
     fmtEnumFromWordCase Variant{variantTag=Nothing,variantName} =
         -- For other tags:
         "tag = " <> fmtName thisMod variantName <> " (fromIntegral tag)"
-    -- | Format in an equation in an enum's IsWord.toWord implementation.
+    -- | Format an equation in an enum's IsWord.toWord implementation.
     fmtEnumToWordCase Variant{variantTag=Just tag,variantName} =
         fmtName thisMod variantName <> " = " <> TB.fromString (show tag)
     fmtEnumToWordCase Variant{variantTag=Nothing,variantName} =
