@@ -1,0 +1,3 @@
+# Mark generated output as such for GitHub diffs:
+/lib/Data/Capnp/ById/X*.hs linguist-generated=true
+/lib/Data/Capnp/ById/X*/Pure.hs linguist-generated=true
