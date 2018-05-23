@@ -8,6 +8,7 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 
+import qualified Codec.Capnp
 import qualified Data.Capnp.BuiltinTypes
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
@@ -35,7 +36,7 @@ get_Method'name :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m (Data.Capnp.B
 get_Method'name (Method struct) = undefined -- TODO: handle pointer fields
 get_Method'codeOrder :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m Word16
 get_Method'codeOrder (Method struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -43,7 +44,7 @@ get_Method'codeOrder (Method struct) = fmap
 
 get_Method'paramStructType :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m Word64
 get_Method'paramStructType (Method struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -51,7 +52,7 @@ get_Method'paramStructType (Method struct) = fmap
 
 get_Method'resultStructType :: Data.Capnp.Untyped.ReadCtx m b => Method b -> m Word64
 get_Method'resultStructType (Method struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -71,7 +72,7 @@ get_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m b => Enumerant b -> m (Data.C
 get_Enumerant'name (Enumerant struct) = undefined -- TODO: handle pointer fields
 get_Enumerant'codeOrder :: Data.Capnp.Untyped.ReadCtx m b => Enumerant b -> m Word16
 get_Enumerant'codeOrder (Enumerant struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -85,7 +86,7 @@ get_Field''name :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m (Data.Capnp.Bu
 get_Field''name (Field struct) = undefined -- TODO: handle pointer fields
 get_Field''codeOrder :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m Word16
 get_Field''codeOrder (Field struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -95,7 +96,7 @@ get_Field''annotations :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m (Data.C
 get_Field''annotations (Field struct) = undefined -- TODO: handle pointer fields
 get_Field''discriminantValue :: Data.Capnp.Untyped.ReadCtx m b => Field b -> m Word16
 get_Field''discriminantValue (Field struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 65535
     . (`Data.Bits.shiftR` 16)
     )
@@ -113,7 +114,7 @@ newtype Field'slot'group' b = Field'slot'group' (Data.Capnp.Untyped.Struct b)
 
 get_Field'slot'offset :: Data.Capnp.Untyped.ReadCtx m b => Field'slot'group' b -> m Word32
 get_Field'slot'offset (Field'slot'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -125,7 +126,7 @@ get_Field'slot'defaultValue :: Data.Capnp.Untyped.ReadCtx m b => Field'slot'grou
 get_Field'slot'defaultValue (Field'slot'group' struct) = undefined -- TODO: handle pointer fields
 get_Field'slot'hadExplicitDefault :: Data.Capnp.Untyped.ReadCtx m b => Field'slot'group' b -> m Bool
 get_Field'slot'hadExplicitDefault (Field'slot'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -135,7 +136,7 @@ newtype Field'group'group' b = Field'group'group' (Data.Capnp.Untyped.Struct b)
 
 get_Field'group'typeId :: Data.Capnp.Untyped.ReadCtx m b => Field'group'group' b -> m Word64
 get_Field'group'typeId (Field'group'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -146,7 +147,7 @@ newtype Superclass b = Superclass (Data.Capnp.Untyped.Struct b)
 
 get_Superclass'id :: Data.Capnp.Untyped.ReadCtx m b => Superclass b -> m Word64
 get_Superclass'id (Superclass struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -158,7 +159,7 @@ newtype Brand'Scope b = Brand'Scope (Data.Capnp.Untyped.Struct b)
 
 get_Brand'Scope''scopeId :: Data.Capnp.Untyped.ReadCtx m b => Brand'Scope b -> m Word64
 get_Brand'Scope''scopeId (Brand'Scope struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -177,7 +178,7 @@ newtype CodeGeneratorRequest'RequestedFile'Import b = CodeGeneratorRequest'Reque
 
 get_CodeGeneratorRequest'RequestedFile'Import'id :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest'RequestedFile'Import b -> m Word64
 get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -217,7 +218,7 @@ newtype Type'anyPointer'parameter'group' b = Type'anyPointer'parameter'group' (D
 
 get_Type'anyPointer'parameter'scopeId :: Data.Capnp.Untyped.ReadCtx m b => Type'anyPointer'parameter'group' b -> m Word64
 get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -225,7 +226,7 @@ get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group' struct) 
 
 get_Type'anyPointer'parameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m b => Type'anyPointer'parameter'group' b -> m Word16
 get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 16)
     )
@@ -235,7 +236,7 @@ newtype Type'anyPointer'implicitMethodParameter'group' b = Type'anyPointer'impli
 
 get_Type'anyPointer'implicitMethodParameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m b => Type'anyPointer'implicitMethodParameter'group' b -> m Word16
 get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 16)
     )
@@ -294,7 +295,7 @@ newtype CodeGeneratorRequest'RequestedFile b = CodeGeneratorRequest'RequestedFil
 
 get_CodeGeneratorRequest'RequestedFile'id :: Data.Capnp.Untyped.ReadCtx m b => CodeGeneratorRequest'RequestedFile b -> m Word64
 get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -347,7 +348,7 @@ newtype Type'enum'group' b = Type'enum'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'enum'typeId :: Data.Capnp.Untyped.ReadCtx m b => Type'enum'group' b -> m Word64
 get_Type'enum'typeId (Type'enum'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -359,7 +360,7 @@ newtype Type'struct'group' b = Type'struct'group' (Data.Capnp.Untyped.Struct b)
 
 get_Type'struct'typeId :: Data.Capnp.Untyped.ReadCtx m b => Type'struct'group' b -> m Word64
 get_Type'struct'typeId (Type'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -371,7 +372,7 @@ newtype Type'interface'group' b = Type'interface'group' (Data.Capnp.Untyped.Stru
 
 get_Type'interface'typeId :: Data.Capnp.Untyped.ReadCtx m b => Type'interface'group' b -> m Word64
 get_Type'interface'typeId (Type'interface'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -395,11 +396,11 @@ data ElementSize b
     | ElementSize'inlineComposite
     | ElementSize'unknown' Word16
 instance Enum (ElementSize b) where
-    toEnum = Data.Capnp.BuiltinTypes.fromWord . fromIntegral
-    fromEnum = fromIntegral . Data.Capnp.BuiltinTypes.toWord
+    toEnum = Codec.Capnp.fromWord . fromIntegral
+    fromEnum = fromIntegral . Codec.Capnp.toWord
 
 
-instance Data.Capnp.BuiltinTypes.IsWord (ElementSize b) where
+instance Codec.Capnp.IsWord (ElementSize b) where
     fromWord 7 = ElementSize'inlineComposite
     fromWord 6 = ElementSize'pointer
     fromWord 5 = ElementSize'eightBytes
@@ -423,7 +424,7 @@ newtype CapnpVersion b = CapnpVersion (Data.Capnp.Untyped.Struct b)
 
 get_CapnpVersion'major :: Data.Capnp.Untyped.ReadCtx m b => CapnpVersion b -> m Word16
 get_CapnpVersion'major (CapnpVersion struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -431,7 +432,7 @@ get_CapnpVersion'major (CapnpVersion struct) = fmap
 
 get_CapnpVersion'minor :: Data.Capnp.Untyped.ReadCtx m b => CapnpVersion b -> m Word8
 get_CapnpVersion'minor (CapnpVersion struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 16)
     )
@@ -439,7 +440,7 @@ get_CapnpVersion'minor (CapnpVersion struct) = fmap
 
 get_CapnpVersion'micro :: Data.Capnp.Untyped.ReadCtx m b => CapnpVersion b -> m Word8
 get_CapnpVersion'micro (CapnpVersion struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 24)
     )
@@ -451,7 +452,7 @@ get_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m b => Node'NestedNode b 
 get_Node'NestedNode'name (Node'NestedNode struct) = undefined -- TODO: handle pointer fields
 get_Node'NestedNode'id :: Data.Capnp.Untyped.ReadCtx m b => Node'NestedNode b -> m Word64
 get_Node'NestedNode'id (Node'NestedNode struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -461,7 +462,7 @@ newtype Node b = Node (Data.Capnp.Untyped.Struct b)
 
 get_Node''id :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m Word64
 get_Node''id (Node struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -471,7 +472,7 @@ get_Node''displayName :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m (Data.Cap
 get_Node''displayName (Node struct) = undefined -- TODO: handle pointer fields
 get_Node''displayNamePrefixLength :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m Word32
 get_Node''displayNamePrefixLength (Node struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -479,7 +480,7 @@ get_Node''displayNamePrefixLength (Node struct) = fmap
 
 get_Node''scopeId :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m Word64
 get_Node''scopeId (Node struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -493,7 +494,7 @@ get_Node''parameters :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m (Data.Capn
 get_Node''parameters (Node struct) = undefined -- TODO: handle pointer fields
 get_Node''isGeneric :: Data.Capnp.Untyped.ReadCtx m b => Node b -> m Bool
 get_Node''isGeneric (Node struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -514,7 +515,7 @@ newtype Node'struct'group' b = Node'struct'group' (Data.Capnp.Untyped.Struct b)
 
 get_Node'struct'dataWordCount :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m Word16
 get_Node'struct'dataWordCount (Node'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 48)
     )
@@ -522,7 +523,7 @@ get_Node'struct'dataWordCount (Node'struct'group' struct) = fmap
 
 get_Node'struct'pointerCount :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m Word16
 get_Node'struct'pointerCount (Node'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -530,7 +531,7 @@ get_Node'struct'pointerCount (Node'struct'group' struct) = fmap
 
 get_Node'struct'preferredListEncoding :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m (ElementSize b)
 get_Node'struct'preferredListEncoding (Node'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 16)
     )
@@ -538,7 +539,7 @@ get_Node'struct'preferredListEncoding (Node'struct'group' struct) = fmap
 
 get_Node'struct'isGroup :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m Bool
 get_Node'struct'isGroup (Node'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -546,7 +547,7 @@ get_Node'struct'isGroup (Node'struct'group' struct) = fmap
 
 get_Node'struct'discriminantCount :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m Word16
 get_Node'struct'discriminantCount (Node'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 48)
     )
@@ -554,7 +555,7 @@ get_Node'struct'discriminantCount (Node'struct'group' struct) = fmap
 
 get_Node'struct'discriminantOffset :: Data.Capnp.Untyped.ReadCtx m b => Node'struct'group' b -> m Word32
 get_Node'struct'discriminantOffset (Node'struct'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -584,7 +585,7 @@ get_Node'annotation'type_ :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'g
 get_Node'annotation'type_ (Node'annotation'group' struct) = undefined -- TODO: handle pointer fields
 get_Node'annotation'targetsFile :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsFile (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 48)
     )
@@ -592,7 +593,7 @@ get_Node'annotation'targetsFile (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsConst :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsConst (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 49)
     )
@@ -600,7 +601,7 @@ get_Node'annotation'targetsConst (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsEnum :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsEnum (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 50)
     )
@@ -608,7 +609,7 @@ get_Node'annotation'targetsEnum (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsEnumerant :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsEnumerant (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 51)
     )
@@ -616,7 +617,7 @@ get_Node'annotation'targetsEnumerant (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsStruct :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsStruct (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 52)
     )
@@ -624,7 +625,7 @@ get_Node'annotation'targetsStruct (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsField :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsField (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 53)
     )
@@ -632,7 +633,7 @@ get_Node'annotation'targetsField (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsUnion :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsUnion (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 54)
     )
@@ -640,7 +641,7 @@ get_Node'annotation'targetsUnion (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsGroup :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsGroup (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 55)
     )
@@ -648,7 +649,7 @@ get_Node'annotation'targetsGroup (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsInterface :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsInterface (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 56)
     )
@@ -656,7 +657,7 @@ get_Node'annotation'targetsInterface (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsMethod :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsMethod (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 57)
     )
@@ -664,7 +665,7 @@ get_Node'annotation'targetsMethod (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsParam :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsParam (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 58)
     )
@@ -672,7 +673,7 @@ get_Node'annotation'targetsParam (Node'annotation'group' struct) = fmap
 
 get_Node'annotation'targetsAnnotation :: Data.Capnp.Untyped.ReadCtx m b => Node'annotation'group' b -> m Bool
 get_Node'annotation'targetsAnnotation (Node'annotation'group' struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 59)
     )
@@ -683,7 +684,7 @@ newtype Annotation b = Annotation (Data.Capnp.Untyped.Struct b)
 
 get_Annotation'id :: Data.Capnp.Untyped.ReadCtx m b => Annotation b -> m Word64
 get_Annotation'id (Annotation struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )

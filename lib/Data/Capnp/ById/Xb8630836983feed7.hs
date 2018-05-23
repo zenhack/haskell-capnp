@@ -8,6 +8,7 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 
+import qualified Codec.Capnp
 import qualified Data.Capnp.BuiltinTypes
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped

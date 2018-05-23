@@ -8,6 +8,7 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 
+import qualified Codec.Capnp
 import qualified Data.Capnp.BuiltinTypes
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
@@ -18,7 +19,7 @@ newtype JoinKeyPart b = JoinKeyPart (Data.Capnp.Untyped.Struct b)
 
 get_JoinKeyPart'joinId :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart b -> m Word32
 get_JoinKeyPart'joinId (JoinKeyPart struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -26,7 +27,7 @@ get_JoinKeyPart'joinId (JoinKeyPart struct) = fmap
 
 get_JoinKeyPart'partCount :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart b -> m Word16
 get_JoinKeyPart'partCount (JoinKeyPart struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -34,7 +35,7 @@ get_JoinKeyPart'partCount (JoinKeyPart struct) = fmap
 
 get_JoinKeyPart'partNum :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart b -> m Word16
 get_JoinKeyPart'partNum (JoinKeyPart struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 48)
     )
@@ -44,7 +45,7 @@ newtype JoinResult b = JoinResult (Data.Capnp.Untyped.Struct b)
 
 get_JoinResult'joinId :: Data.Capnp.Untyped.ReadCtx m b => JoinResult b -> m Word32
 get_JoinResult'joinId (JoinResult struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -52,7 +53,7 @@ get_JoinResult'joinId (JoinResult struct) = fmap
 
 get_JoinResult'succeeded :: Data.Capnp.Untyped.ReadCtx m b => JoinResult b -> m Bool
 get_JoinResult'succeeded (JoinResult struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -65,11 +66,11 @@ data Side b
     | Side'client
     | Side'unknown' Word16
 instance Enum (Side b) where
-    toEnum = Data.Capnp.BuiltinTypes.fromWord . fromIntegral
-    fromEnum = fromIntegral . Data.Capnp.BuiltinTypes.toWord
+    toEnum = Codec.Capnp.fromWord . fromIntegral
+    fromEnum = fromIntegral . Codec.Capnp.toWord
 
 
-instance Data.Capnp.BuiltinTypes.IsWord (Side b) where
+instance Codec.Capnp.IsWord (Side b) where
     fromWord 1 = Side'client
     fromWord 0 = Side'server
     fromWord tag = Side'unknown' (fromIntegral tag)
@@ -81,7 +82,7 @@ newtype ProvisionId b = ProvisionId (Data.Capnp.Untyped.Struct b)
 
 get_ProvisionId'joinId :: Data.Capnp.Untyped.ReadCtx m b => ProvisionId b -> m Word32
 get_ProvisionId'joinId (ProvisionId struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -91,7 +92,7 @@ newtype VatId b = VatId (Data.Capnp.Untyped.Struct b)
 
 get_VatId'side :: Data.Capnp.Untyped.ReadCtx m b => VatId b -> m (Side b)
 get_VatId'side (VatId struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )

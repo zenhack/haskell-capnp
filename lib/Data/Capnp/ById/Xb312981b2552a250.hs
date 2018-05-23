@@ -8,6 +8,7 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 
+import qualified Codec.Capnp
 import qualified Data.Capnp.BuiltinTypes
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
@@ -18,7 +19,7 @@ newtype Call b = Call (Data.Capnp.Untyped.Struct b)
 
 get_Call'questionId :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m Word32
 get_Call'questionId (Call struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -28,7 +29,7 @@ get_Call'target :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m (MessageTarget 
 get_Call'target (Call struct) = undefined -- TODO: handle pointer fields
 get_Call'interfaceId :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m Word64
 get_Call'interfaceId (Call struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -36,7 +37,7 @@ get_Call'interfaceId (Call struct) = fmap
 
 get_Call'methodId :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m Word16
 get_Call'methodId (Call struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -48,7 +49,7 @@ get_Call'sendResultsTo :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m (Call'se
 get_Call'sendResultsTo (Call struct) = undefined -- TODO: handle groups/anonymous union fields
 get_Call'allowThirdPartyTailCall :: Data.Capnp.Untyped.ReadCtx m b => Call b -> m Bool
 get_Call'allowThirdPartyTailCall (Call struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -117,7 +118,7 @@ newtype Provide b = Provide (Data.Capnp.Untyped.Struct b)
 
 get_Provide'questionId :: Data.Capnp.Untyped.ReadCtx m b => Provide b -> m Word32
 get_Provide'questionId (Provide struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -131,7 +132,7 @@ newtype Return b = Return (Data.Capnp.Untyped.Struct b)
 
 get_Return''answerId :: Data.Capnp.Untyped.ReadCtx m b => Return b -> m Word32
 get_Return''answerId (Return struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -139,7 +140,7 @@ get_Return''answerId (Return struct) = fmap
 
 get_Return''releaseParamCaps :: Data.Capnp.Untyped.ReadCtx m b => Return b -> m Bool
 get_Return''releaseParamCaps (Return struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 1
     . (`Data.Bits.shiftR` 32)
     )
@@ -166,7 +167,7 @@ newtype Release b = Release (Data.Capnp.Untyped.Struct b)
 
 get_Release'id :: Data.Capnp.Untyped.ReadCtx m b => Release b -> m Word32
 get_Release'id (Release struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -174,7 +175,7 @@ get_Release'id (Release struct) = fmap
 
 get_Release'referenceCount :: Data.Capnp.Untyped.ReadCtx m b => Release b -> m Word32
 get_Release'referenceCount (Release struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -187,11 +188,11 @@ data Exception'Type b
     | Exception'Type'unimplemented
     | Exception'Type'unknown' Word16
 instance Enum (Exception'Type b) where
-    toEnum = Data.Capnp.BuiltinTypes.fromWord . fromIntegral
-    fromEnum = fromIntegral . Data.Capnp.BuiltinTypes.toWord
+    toEnum = Codec.Capnp.fromWord . fromIntegral
+    fromEnum = fromIntegral . Codec.Capnp.toWord
 
 
-instance Data.Capnp.BuiltinTypes.IsWord (Exception'Type b) where
+instance Codec.Capnp.IsWord (Exception'Type b) where
     fromWord 3 = Exception'Type'unimplemented
     fromWord 2 = Exception'Type'disconnected
     fromWord 1 = Exception'Type'overloaded
@@ -207,7 +208,7 @@ newtype Resolve b = Resolve (Data.Capnp.Untyped.Struct b)
 
 get_Resolve''promiseId :: Data.Capnp.Untyped.ReadCtx m b => Resolve b -> m Word32
 get_Resolve''promiseId (Resolve struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -228,7 +229,7 @@ get_ThirdPartyCapDescriptor'id :: Data.Capnp.Untyped.ReadCtx m b => ThirdPartyCa
 get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) = undefined -- TODO: handle pointer fields
 get_ThirdPartyCapDescriptor'vineId :: Data.Capnp.Untyped.ReadCtx m b => ThirdPartyCapDescriptor b -> m Word32
 get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -238,7 +239,7 @@ newtype Finish b = Finish (Data.Capnp.Untyped.Struct b)
 
 get_Finish'questionId :: Data.Capnp.Untyped.ReadCtx m b => Finish b -> m Word32
 get_Finish'questionId (Finish struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -246,7 +247,7 @@ get_Finish'questionId (Finish struct) = fmap
 
 get_Finish'releaseResultCaps :: Data.Capnp.Untyped.ReadCtx m b => Finish b -> m Bool
 get_Finish'releaseResultCaps (Finish struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 1
     . (`Data.Bits.shiftR` 32)
     )
@@ -256,7 +257,7 @@ newtype Accept b = Accept (Data.Capnp.Untyped.Struct b)
 
 get_Accept'questionId :: Data.Capnp.Untyped.ReadCtx m b => Accept b -> m Word32
 get_Accept'questionId (Accept struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -266,7 +267,7 @@ get_Accept'provision :: Data.Capnp.Untyped.ReadCtx m b => Accept b -> m (Maybe (
 get_Accept'provision (Accept struct) = undefined -- TODO: handle pointer fields
 get_Accept'embargo :: Data.Capnp.Untyped.ReadCtx m b => Accept b -> m Bool
 get_Accept'embargo (Accept struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -289,7 +290,7 @@ get_Exception'reason :: Data.Capnp.Untyped.ReadCtx m b => Exception b -> m (Data
 get_Exception'reason (Exception struct) = undefined -- TODO: handle pointer fields
 get_Exception'obsoleteIsCallersFault :: Data.Capnp.Untyped.ReadCtx m b => Exception b -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -297,7 +298,7 @@ get_Exception'obsoleteIsCallersFault (Exception struct) = fmap
 
 get_Exception'obsoleteDurability :: Data.Capnp.Untyped.ReadCtx m b => Exception b -> m Word16
 get_Exception'obsoleteDurability (Exception struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 16)
     )
@@ -305,7 +306,7 @@ get_Exception'obsoleteDurability (Exception struct) = fmap
 
 get_Exception'type_ :: Data.Capnp.Untyped.ReadCtx m b => Exception b -> m (Exception'Type b)
 get_Exception'type_ (Exception struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 32)
     )
@@ -315,7 +316,7 @@ newtype PromisedAnswer b = PromisedAnswer (Data.Capnp.Untyped.Struct b)
 
 get_PromisedAnswer'questionId :: Data.Capnp.Untyped.ReadCtx m b => PromisedAnswer b -> m Word32
 get_PromisedAnswer'questionId (PromisedAnswer struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -336,7 +337,7 @@ newtype Bootstrap b = Bootstrap (Data.Capnp.Untyped.Struct b)
 
 get_Bootstrap'questionId :: Data.Capnp.Untyped.ReadCtx m b => Bootstrap b -> m Word32
 get_Bootstrap'questionId (Bootstrap struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )
@@ -361,7 +362,7 @@ newtype Join b = Join (Data.Capnp.Untyped.Struct b)
 
 get_Join'questionId :: Data.Capnp.Untyped.ReadCtx m b => Join b -> m Word32
 get_Join'questionId (Join struct) = fmap
-    ( Data.Capnp.BuiltinTypes.fromWord
+    ( Codec.Capnp.fromWord
     . Data.Bits.xor 0
     . (`Data.Bits.shiftR` 0)
     )

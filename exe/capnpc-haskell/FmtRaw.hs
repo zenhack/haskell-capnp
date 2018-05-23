@@ -29,6 +29,7 @@ fmtModule Module{..} = mintercalate "\n"
     , "import Data.Word"
     , "import qualified Data.Bits"
     , ""
+    , "import qualified Codec.Capnp"
     , "import qualified Data.Capnp.BuiltinTypes"
     , "import qualified Data.Capnp.TraversalLimit"
     , "import qualified Data.Capnp.Untyped"
@@ -67,7 +68,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , " (", fmtName thisMod typeName, " struct) = ", case fieldLoc of
             DataField DataLoc{..} -> mconcat
                 [ "fmap\n"
-                , "    ( Data.Capnp.BuiltinTypes.fromWord\n"
+                , "    ( Codec.Capnp.fromWord\n"
                 , "    . Data.Bits.xor ", TB.fromString (show dataDef), "\n"
                 , "    . (`Data.Bits.shiftR` ", TB.fromString (show dataOff), ")\n"
                 , "    )\n"
@@ -113,10 +114,10 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
         , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
         , "\n"
         , "instance Enum (", typeName, " b) where\n"
-        , "    toEnum = Data.Capnp.BuiltinTypes.fromWord . fromIntegral\n"
-        , "    fromEnum = fromIntegral . Data.Capnp.BuiltinTypes.toWord\n"
+        , "    toEnum = Codec.Capnp.fromWord . fromIntegral\n"
+        , "    fromEnum = fromIntegral . Codec.Capnp.toWord\n"
         , "\n\n"
-        , "instance Data.Capnp.BuiltinTypes.IsWord (", typeName, " b) where"
+        , "instance Codec.Capnp.IsWord (", typeName, " b) where"
         , "\n    fromWord "
         , mintercalate "\n    fromWord " $
             map fmtEnumFromWordCase $ reverse $ sortOn variantTag dataVariants

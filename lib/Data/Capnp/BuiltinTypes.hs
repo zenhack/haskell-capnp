@@ -9,18 +9,15 @@
 module Data.Capnp.BuiltinTypes
     ( Text(..)
     , Data(..)
-    , IsWord(..)
     , getData
     , getText
     )
   where
 
-import Data.Int
 import Data.Word
 
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Bits           ((.&.))
 import Data.Monoid         (Monoid)
 import Data.String         (IsString)
 
@@ -66,46 +63,3 @@ getText list = do
     when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
     Text <$> B.slice bytes 0 (len - 1)
-
--- | Types that can be converted to and from a 64-bit word.
---
--- This is mostly a helper for generated code, which uses it to interact
--- with the data sections of structs.
---
--- TODO: this doesn't feel like quite the right place to put this to
--- me(zenhack), but I'm not totally sure what is. Maybe we should have
--- a separate module just for helpers for generated code?
-class IsWord a where
-    fromWord :: Word64 -> a
-    toWord :: a -> Word64
-
-instance IsWord Bool where
-    fromWord n = (n .&. 1) == 1
-    toWord True  = 1
-    toWord False = 0
-
--- Integral types all have the same implementation:
-instance IsWord Int8 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Int16 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Int32 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Int64 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word8 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word16 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word32 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word64 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
