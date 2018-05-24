@@ -99,6 +99,8 @@ instance IsPtr (Struct b) b where
     fromPtr msg Nothing              = pure $ messageDefault msg
     fromPtr msg (Just (PtrStruct s)) = pure s
     fromPtr _ _                      = expected "pointer to struct"
+instance IsPtr (Maybe (Ptr b)) b where
+    fromPtr _ = pure
 
 instance IsPtr (ListOf b Float) b where
     fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
