@@ -1,14 +1,17 @@
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Codec.Capnp where
 
 import Data.Int
 import Data.Word
 
-import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Bits           ((.&.))
-import Data.Capnp.Errors   (Error(SchemaViolationError))
+import Control.Monad.Catch     (MonadThrow(throwM))
+import Data.Bits               ((.&.))
+import Data.Capnp.BuiltinTypes (Data, Text, getData, getText)
+import Data.Capnp.Errors       (Error(SchemaViolationError))
 import Data.Capnp.Untyped
     (List(..), ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
+import Data.ReinterpretCast    (wordToDouble, wordToFloat)
 
 import qualified Data.Capnp.Message as M
 
@@ -57,42 +60,61 @@ instance IsWord Word64 where
     fromWord = fromIntegral
     toWord = fromIntegral
 
-getList0 ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b ())
-getList0 msg Nothing                       = pure $ messageDefault msg
-getList0 msg (Just (PtrList (List0 list))) = pure list
-getList0 _ _ = expected "pointer to list with element size 0"
+-- | Types that can be extracted from an untyped pointer.
+--
+-- Similarly to IsWord, this is mostly used in generated code, to interact
+-- with the pointer section of structs.
+class IsPtr a b where
+    fromPtr :: ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m a
 
-getList8 ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b Word8)
-getList8 msg Nothing                       = pure $ messageDefault msg
-getList8 msg (Just (PtrList (List8 list))) = pure list
-getList8 _ _ = expected "pointer to list with element size 8"
+instance IsPtr (ListOf b ()) b where
+    fromPtr msg Nothing                       = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (List0 list))) = pure list
+    fromPtr _ _ = expected "pointer to list with element size 0"
+instance IsPtr (ListOf b Word8) b where
+    fromPtr msg Nothing                       = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (List8 list))) = pure list
+    fromPtr _ _ = expected "pointer to list with element size 8"
+instance IsPtr (ListOf b Word16) b where
+    fromPtr msg Nothing                       = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (List16 list))) = pure list
+    fromPtr _ _ = expected "pointer to list with element size 16"
+instance IsPtr (ListOf b Word32) b where
+    fromPtr msg Nothing                       = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (List32 list))) = pure list
+    fromPtr _ _ = expected "pointer to list with element size 32"
+instance IsPtr (ListOf b Word64) b where
+    fromPtr msg Nothing                       = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (List64 list))) = pure list
+    fromPtr _ _ = expected "pointer to list with element size 64"
+instance IsPtr (ListOf b (Maybe (Ptr b))) b where
+    fromPtr msg Nothing                         = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (ListPtr list))) = pure list
+    fromPtr _ _ = expected "pointer to list of pointers"
+instance IsPtr (ListOf b (Struct b)) b where
+    fromPtr msg Nothing                            = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (ListStruct list))) = pure list
+    fromPtr _ _ = expected "pointer to list of structs"
+instance IsPtr (Struct b) b where
+    fromPtr msg Nothing              = pure $ messageDefault msg
+    fromPtr msg (Just (PtrStruct s)) = pure s
+    fromPtr _ _                      = expected "pointer to struct"
 
-getList16 ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b Word16)
-getList16 msg Nothing                        = pure $ messageDefault msg
-getList16 msg (Just (PtrList (List16 list))) = pure list
-getList16 _ _ = expected "pointer to list with element size 16"
+instance IsPtr (ListOf b Float) b where
+    fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
+instance IsPtr (ListOf b Double) b where
+    fromPtr msg = fmap (fmap wordToDouble) . fromPtr msg
 
-getList32 ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b Word32)
-getList32 msg Nothing                        = pure $ messageDefault msg
-getList32 msg (Just (PtrList (List32 list))) = pure list
-getList32 _ _ = expected "pointer to list with element size 32"
+instance IsPtr (ListOf b Int8) b where
+    fromPtr msg = fmap (fmap (fromIntegral :: Word8 -> Int8)) . fromPtr msg
+instance IsPtr (ListOf b Int16) b where
+    fromPtr msg = fmap (fmap (fromIntegral :: Word16 -> Int16)) . fromPtr msg
+instance IsPtr (ListOf b Int32) b where
+    fromPtr msg = fmap (fmap (fromIntegral :: Word32 -> Int32)) . fromPtr msg
+instance IsPtr (ListOf b Int64) b where
+    fromPtr msg = fmap (fmap (fromIntegral :: Word64 -> Int64)) . fromPtr msg
 
-getList64 ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b Word64)
-getList64 msg Nothing                        = pure $ messageDefault msg
-getList64 msg (Just (PtrList (List64 list))) = pure list
-getList64 _ _ = expected "pointer to list with element size 64"
-
-getListPtr ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b (Maybe (Ptr b)))
-getListPtr msg Nothing                         = pure $ messageDefault msg
-getListPtr msg (Just (PtrList (ListPtr list))) = pure list
-getListPtr _ _ = expected "pointer to list of pointers"
-
-getListStruct ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (ListOf b (Struct b))
-getListStruct msg Nothing                            = pure $ messageDefault msg
-getListStruct msg (Just (PtrList (ListStruct list))) = pure list
-getListStruct _ _ = expected "pointer to list of structs"
-
-getStruct ::  ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m (Struct b)
-getStruct msg Nothing              = pure $ messageDefault msg
-getStruct msg (Just (PtrStruct s)) = pure s
-getStruct _ _                      = expected "pointer to struct"
+instance IsPtr (Data b) b where
+    fromPtr msg ptr = fromPtr msg ptr >>= getData
+instance IsPtr (Text b) b where
+    fromPtr msg ptr = fromPtr msg ptr >>= getText

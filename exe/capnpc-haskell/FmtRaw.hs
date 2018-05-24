@@ -65,47 +65,22 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         [ accessorName, " :: Data.Capnp.Untyped.ReadCtx m b => "
         , fmtName thisMod typeName, " b -> m ", fmtType thisMod fieldType, "\n"
         , accessorName
-        , " (", fmtName thisMod typeName, " struct) = ", case fieldLoc of
+        , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
             DataField DataLoc{..} -> mconcat
-                [ "fmap\n"
+                [ " fmap\n"
                 , "    ( Codec.Capnp.fromWord\n"
                 , "    . Data.Bits.xor ", TB.fromString (show dataDef), "\n"
                 , "    . (`Data.Bits.shiftR` ", TB.fromString (show dataOff), ")\n"
                 , "    )\n"
                 , "    (Data.Capnp.Untyped.getData ", TB.fromString (show dataIdx), " struct)\n"
                 ]
-            PtrField idx -> "(Data.Capnp.Untyped.getPtr " <> TB.fromString (show idx) <> " struct >>= " <>
-                let getListN n = mconcat
-                        [ "Codec.Capnp.getList"
-                        , TB.fromString (show n)
-                        , " (Data.Capnp.Untyped.message struct)"
-                        ]
-                in case fieldType of
-                    PrimType PrimData ->
-                        getListN 8 <> " >>= Data.Capnp.BuiltinTypes.getData)"
-                    PrimType PrimText ->
-                        getListN 8 <> " >>= Data.Capnp.BuiltinTypes.getText)"
-                    PrimType ty ->
-                        error $ "unexpected non-pointer type in pointer field: " ++ show ty
-                    ListOf (PrimType PrimVoid) ->
-                        getListN 0 <> ")"
-                    ListOf (PrimType PrimBool) ->
-                        getListN 1 <> ")"
-                    ListOf (PrimType PrimInt{size}) ->
-                        getListN size <> ") & fmap fromIntegral"
-                    ListOf (PrimType PrimFloat32) ->
-                        getListN 32 <> ") & fmap wordToFloat"
-                    ListOf (PrimType PrimFloat64) ->
-                        getListN 64 <> ") & fmap wordToDouble"
-                    Untyped Struct ->
-                        "Codec.Capnp.getStruct (Data.Capnp.Untyped.message struct))"
-                    Untyped Ptr ->
-                        "pure)"
-                    ty ->
-                        "undefined) -- TODO: handle pointer fields of type " <>
-                            TB.fromString (show ty)
-            HereField -> "undefined -- TODO: handle groups/anonymous union fields"
-            VoidField -> "Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
+            PtrField idx -> mconcat
+                [ "\n    Data.Capnp.Untyped.getPtr ", TB.fromString (show idx), " struct"
+                , "\n    >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)"
+                , "\n"
+                ]
+            HereField -> " undefined -- TODO: handle groups/anonymous union fields"
+            VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         ]
 
 fmtDataDef :: Id -> DataDef -> TB.Builder

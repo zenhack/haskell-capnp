@@ -60,7 +60,10 @@ get_JoinResult'succeeded (JoinResult struct) = fmap
     (Data.Capnp.Untyped.getData 0 struct)
 
 get_JoinResult'cap :: Data.Capnp.Untyped.ReadCtx m b => JoinResult b -> m (Maybe (Data.Capnp.Untyped.Ptr b))
-get_JoinResult'cap (JoinResult struct) = (Data.Capnp.Untyped.getPtr 0 struct >>= pure)
+get_JoinResult'cap (JoinResult struct) =
+    Data.Capnp.Untyped.getPtr 0 struct
+    >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
+
 data Side b
     = Side'server
     | Side'client
