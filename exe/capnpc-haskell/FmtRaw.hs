@@ -68,13 +68,11 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , fmtName thisMod typeName, " b -> m ", fmtType thisMod fieldType, "\n"
         , accessorName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
-            DataField DataLoc{..} -> mconcat
-                [ " fmap\n"
-                , "    ( Codec.Capnp.fromWord\n"
-                , "    . Data.Bits.xor ", TB.fromString (show dataDef), "\n"
-                , "    . (`Data.Bits.shiftR` ", TB.fromString (show dataOff), ")\n"
-                , "    )\n"
-                , "    (Data.Capnp.Untyped.getData ", TB.fromString (show dataIdx), " struct)\n"
+            DataField DataLoc{..} -> mintercalate " "
+                [ " Codec.Capnp.getWordField struct"
+                , TB.fromString (show dataIdx)
+                , TB.fromString (show dataOff)
+                , TB.fromString (show dataDef)
                 ]
             PtrField idx -> mconcat
                 [ "\n    Data.Capnp.Untyped.getPtr ", TB.fromString (show idx), " struct"

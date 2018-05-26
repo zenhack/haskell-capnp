@@ -2,24 +2,37 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Codec.Capnp where
 
+import Data.Bits
 import Data.Int
 import Data.Word
 
 import Control.Monad.Catch     (MonadThrow(throwM))
-import Data.Bits               ((.&.))
-import Data.Capnp.BuiltinTypes (Data, Text, getData, getText)
+import Data.Capnp.BuiltinTypes (Data, Text)
 import Data.Capnp.Errors       (Error(SchemaViolationError))
 import Data.Capnp.Untyped
-    (List(..), ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
+    (List(..), ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault)
 import Data.ReinterpretCast    (wordToDouble, wordToFloat)
 
-import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
+import qualified Data.Capnp.Message      as M
 
 class Decerialize from to where
     decerialize :: MonadThrow m => from -> m to
 
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
+
+-- | @'getWordField' struct index offset def@ fetches a field from the
+-- struct's data section. @index@ is the index of the 64-bit word in the data
+-- section in which the field resides. @offset@ is the offset in bits from the
+-- start of that word to the field. @def@ is the default value for this field.
+getWordField :: (ReadCtx m b, IsWord a) => Struct b -> Int -> Int -> Word64 -> m a
+getWordField struct idx offset def = fmap
+    ( fromWord
+    . xor def
+    . (`shiftR` offset)
+    )
+    (getData idx struct)
 
 -- | Types that can be converted to and from a 64-bit word.
 --
@@ -117,6 +130,6 @@ instance IsPtr (ListOf b Int64) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word64 -> Int64)) . fromPtr msg
 
 instance IsPtr (Data b) b where
-    fromPtr msg ptr = fromPtr msg ptr >>= getData
+    fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
 instance IsPtr (Text b) b where
-    fromPtr msg ptr = fromPtr msg ptr >>= getText
+    fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getText
