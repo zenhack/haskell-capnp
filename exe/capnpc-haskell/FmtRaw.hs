@@ -60,6 +60,17 @@ fmtNewtypeStruct thisMod name =
         ]
 
 
+-- | Generate a call to 'Codec.Capnp.getWordField' based on a 'DataLoc'.
+-- The first argument is an expression for the struct.
+fmtGetWordField :: TB.Builder -> DataLoc -> TB.Builder
+fmtGetWordField struct DataLoc{..} = mintercalate " "
+    [ " Codec.Capnp.getWordField"
+    , struct
+    , TB.fromString (show dataIdx)
+    , TB.fromString (show dataOff)
+    , TB.fromString (show dataDef)
+    ]
+
 fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
     let accessorName = "get_" <> fmtName thisMod (subName variantName fieldName)
@@ -68,12 +79,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , fmtName thisMod typeName, " b -> m ", fmtType thisMod fieldType, "\n"
         , accessorName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
-            DataField DataLoc{..} -> mintercalate " "
-                [ " Codec.Capnp.getWordField struct"
-                , TB.fromString (show dataIdx)
-                , TB.fromString (show dataOff)
-                , TB.fromString (show dataDef)
-                ]
+            DataField loc -> fmtGetWordField "struct" loc
             PtrField idx -> mconcat
                 [ "\n    Data.Capnp.Untyped.getPtr ", TB.fromString (show idx), " struct"
                 , "\n    >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)"
