@@ -110,8 +110,8 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
         , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where"
         , "\n    fromStruct struct = do"
-        , "\n    tag <- ", fmtGetWordField "struct" tagLoc
-        , "\n    pure $ case tag of"
+        , "\n        tag <- ", fmtGetWordField "struct" tagLoc
+        , "\n        pure $ case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
         ]
@@ -122,7 +122,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
             NoParams   -> ""
             Unnamed ty -> " " <> fmtType thisMod ty
     fmtVariantCase Variant{..} =
-        "\n        " <>
+        "\n            " <>
         case variantTag of
             Just tag ->
                 mconcat
