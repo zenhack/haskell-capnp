@@ -58,7 +58,16 @@ data CapDescriptor (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (CapDescriptor m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 0 0
+    pure $ case tag of
+        5 -> CapDescriptor'thirdPartyHosted undefined -- TODO
+        4 -> CapDescriptor'receiverAnswer undefined -- TODO
+        3 -> CapDescriptor'receiverHosted undefined -- TODO
+        2 -> CapDescriptor'senderPromise undefined -- TODO
+        1 -> CapDescriptor'senderHosted undefined -- TODO
+        0 -> CapDescriptor'none
+        _ -> CapDescriptor'unknown' tag
 
 data Message (m :: * -> *) b
     = Message'unimplemented (Message m b)
@@ -92,7 +101,24 @@ data Message (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Message m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 0 0
+    pure $ case tag of
+        13 -> Message'disembargo undefined -- TODO
+        12 -> Message'join undefined -- TODO
+        11 -> Message'accept undefined -- TODO
+        10 -> Message'provide undefined -- TODO
+        9 -> Message'obsoleteDelete undefined -- TODO
+        8 -> Message'bootstrap undefined -- TODO
+        7 -> Message'obsoleteSave undefined -- TODO
+        6 -> Message'release undefined -- TODO
+        5 -> Message'resolve undefined -- TODO
+        4 -> Message'finish undefined -- TODO
+        3 -> Message'return undefined -- TODO
+        2 -> Message'call undefined -- TODO
+        1 -> Message'abort undefined -- TODO
+        0 -> Message'unimplemented undefined -- TODO
+        _ -> Message'unknown' tag
 
 data MessageTarget (m :: * -> *) b
     = MessageTarget'importedCap Word32
@@ -102,7 +128,12 @@ data MessageTarget (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (MessageTarget m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 32 0
+    pure $ case tag of
+        1 -> MessageTarget'promisedAnswer undefined -- TODO
+        0 -> MessageTarget'importedCap undefined -- TODO
+        _ -> MessageTarget'unknown' tag
 
 newtype Payload (m :: * -> *) b = Payload (Data.Capnp.Untyped.Struct m b)
 
@@ -160,7 +191,16 @@ data Return' (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Return' m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 48 0
+    pure $ case tag of
+        5 -> Return'acceptFromThirdParty undefined -- TODO
+        4 -> Return'takeFromOtherQuestion undefined -- TODO
+        3 -> Return'resultsSentElsewhere
+        2 -> Return'canceled
+        1 -> Return'exception undefined -- TODO
+        0 -> Return'results undefined -- TODO
+        _ -> Return'unknown' tag
 
 newtype Release (m :: * -> *) b = Release (Data.Capnp.Untyped.Struct m b)
 
@@ -213,7 +253,12 @@ data Resolve' (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Resolve' m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 32 0
+    pure $ case tag of
+        1 -> Resolve'exception undefined -- TODO
+        0 -> Resolve'cap undefined -- TODO
+        _ -> Resolve'unknown' tag
 
 newtype ThirdPartyCapDescriptor (m :: * -> *) b = ThirdPartyCapDescriptor (Data.Capnp.Untyped.Struct m b)
 
@@ -259,7 +304,14 @@ data Disembargo'context (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Disembargo'context m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 32 0
+    pure $ case tag of
+        3 -> Disembargo'context'provide undefined -- TODO
+        2 -> Disembargo'context'accept
+        1 -> Disembargo'context'receiverLoopback undefined -- TODO
+        0 -> Disembargo'context'senderLoopback undefined -- TODO
+        _ -> Disembargo'context'unknown' tag
 
 newtype Exception (m :: * -> *) b = Exception (Data.Capnp.Untyped.Struct m b)
 
@@ -297,7 +349,13 @@ data Call'sendResultsTo (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Call'sendResultsTo m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 48 0
+    pure $ case tag of
+        2 -> Call'sendResultsTo'thirdParty undefined -- TODO
+        1 -> Call'sendResultsTo'yourself
+        0 -> Call'sendResultsTo'caller
+        _ -> Call'sendResultsTo'unknown' tag
 
 newtype Bootstrap (m :: * -> *) b = Bootstrap (Data.Capnp.Untyped.Struct m b)
 
@@ -318,7 +376,12 @@ data PromisedAnswer'Op (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (PromisedAnswer'Op m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 0 0
+    pure $ case tag of
+        1 -> PromisedAnswer'Op'getPointerField undefined -- TODO
+        0 -> PromisedAnswer'Op'noop
+        _ -> PromisedAnswer'Op'unknown' tag
 
 newtype Disembargo (m :: * -> *) b = Disembargo (Data.Capnp.Untyped.Struct m b)
 

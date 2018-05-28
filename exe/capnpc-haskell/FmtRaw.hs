@@ -99,7 +99,7 @@ fmtDataDef thisMod DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct,
         Record fields ->
             mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
         _ -> ""
-fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} =
+fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataName,dataVariants} =
     let nameText = fmtName thisMod dataName
     in mconcat
         [ "data ", nameText, " (m :: * -> *) b"
@@ -109,7 +109,10 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} =
         , "\n"
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
         , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where"
-        , "\n    fromStruct = undefined -- TODO"
+        , "\n    fromStruct struct = do"
+        , "\n    tag <- ", fmtGetWordField "struct" tagLoc
+        , "\n    pure $ case tag of"
+        , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
         ]
   where
@@ -118,6 +121,19 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} =
             Record _   -> " (" <> fmtName thisMod (subName variantName "group'") <> " m b)"
             NoParams   -> ""
             Unnamed ty -> " " <> fmtType thisMod ty
+    fmtVariantCase Variant{..} =
+        "\n        " <>
+        case variantTag of
+            Just tag ->
+                mconcat
+                    [ TB.fromString (show tag), " -> ", fmtName thisMod variantName
+                    , case variantParams of
+                        Record _  -> " struct"
+                        NoParams  -> ""
+                        Unnamed _ -> " undefined -- TODO"
+                    ]
+            Nothing ->
+                "_ -> "<> fmtName thisMod variantName <> " tag"
     fmtVariantAuxNewtype Variant{variantName, variantParams=Record fields} =
         let typeName = subName variantName "group'"
         in fmtNewtypeStruct thisMod typeName <>

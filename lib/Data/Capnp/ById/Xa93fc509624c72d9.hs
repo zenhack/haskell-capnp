@@ -30,7 +30,14 @@ data Type'anyPointer'unconstrained (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Type'anyPointer'unconstrained m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 1 16 0
+    pure $ case tag of
+        3 -> Type'anyPointer'unconstrained'capability
+        2 -> Type'anyPointer'unconstrained'list
+        1 -> Type'anyPointer'unconstrained'struct
+        0 -> Type'anyPointer'unconstrained'anyKind
+        _ -> Type'anyPointer'unconstrained'unknown' tag
 
 newtype Brand (m :: * -> *) b = Brand (Data.Capnp.Untyped.Struct m b)
 
@@ -144,7 +151,12 @@ get_Field'group'typeId :: Data.Capnp.Untyped.ReadCtx m b => Field'group'group' m
 get_Field'group'typeId (Field'group'group' struct) = Codec.Capnp.getWordField struct 2 0 0
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Field' m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 1 0 0
+    pure $ case tag of
+        1 -> Field'group struct
+        0 -> Field'slot struct
+        _ -> Field'unknown' tag
 
 newtype Superclass (m :: * -> *) b = Superclass (Data.Capnp.Untyped.Struct m b)
 
@@ -173,7 +185,12 @@ data Brand'Scope' (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Brand'Scope' m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 1 0 0
+    pure $ case tag of
+        1 -> Brand'Scope'inherit
+        0 -> Brand'Scope'bind undefined -- TODO
+        _ -> Brand'Scope'unknown' tag
 
 newtype CodeGeneratorRequest'RequestedFile'Import (m :: * -> *) b = CodeGeneratorRequest'RequestedFile'Import (Data.Capnp.Untyped.Struct m b)
 
@@ -203,7 +220,12 @@ data Field'ordinal (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Field'ordinal m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 1 16 0
+    pure $ case tag of
+        1 -> Field'ordinal'explicit undefined -- TODO
+        0 -> Field'ordinal'implicit
+        _ -> Field'ordinal'unknown' tag
 
 newtype CodeGeneratorRequest (m :: * -> *) b = CodeGeneratorRequest (Data.Capnp.Untyped.Struct m b)
 
@@ -251,7 +273,13 @@ get_Type'anyPointer'implicitMethodParameter'parameterIndex :: Data.Capnp.Untyped
 get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group' struct) = Codec.Capnp.getWordField struct 1 16 0
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Type'anyPointer m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 1 0 0
+    pure $ case tag of
+        2 -> Type'anyPointer'implicitMethodParameter struct
+        1 -> Type'anyPointer'parameter struct
+        0 -> Type'anyPointer'unconstrained struct
+        _ -> Type'anyPointer'unknown' tag
 
 data Brand'Binding (m :: * -> *) b
     = Brand'Binding'unbound
@@ -261,7 +289,12 @@ data Brand'Binding (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Brand'Binding m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 0 0
+    pure $ case tag of
+        1 -> Brand'Binding'type_ undefined -- TODO
+        0 -> Brand'Binding'unbound
+        _ -> Brand'Binding'unknown' tag
 
 data Value (m :: * -> *) b
     = Value'void
@@ -305,7 +338,29 @@ data Value (m :: * -> *) b
 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Value m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 0 0
+    pure $ case tag of
+        18 -> Value'anyPointer undefined -- TODO
+        17 -> Value'interface
+        16 -> Value'struct undefined -- TODO
+        15 -> Value'enum undefined -- TODO
+        14 -> Value'list undefined -- TODO
+        13 -> Value'data_ undefined -- TODO
+        12 -> Value'text undefined -- TODO
+        11 -> Value'float64 undefined -- TODO
+        10 -> Value'float32 undefined -- TODO
+        9 -> Value'uint64 undefined -- TODO
+        8 -> Value'uint32 undefined -- TODO
+        7 -> Value'uint16 undefined -- TODO
+        6 -> Value'uint8 undefined -- TODO
+        5 -> Value'int64 undefined -- TODO
+        4 -> Value'int32 undefined -- TODO
+        3 -> Value'int16 undefined -- TODO
+        2 -> Value'int8 undefined -- TODO
+        1 -> Value'bool undefined -- TODO
+        0 -> Value'void
+        _ -> Value'unknown' tag
 
 newtype CodeGeneratorRequest'RequestedFile (m :: * -> *) b = CodeGeneratorRequest'RequestedFile (Data.Capnp.Untyped.Struct m b)
 
@@ -408,7 +463,29 @@ get_Type'anyPointer'union' :: Data.Capnp.Untyped.ReadCtx m b => Type'anyPointer'
 get_Type'anyPointer'union' (Type'anyPointer'group' struct) = Codec.Capnp.fromStruct struct
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Type m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 0 0 0
+    pure $ case tag of
+        18 -> Type'anyPointer struct
+        17 -> Type'interface struct
+        16 -> Type'struct struct
+        15 -> Type'enum struct
+        14 -> Type'list struct
+        13 -> Type'data_
+        12 -> Type'text
+        11 -> Type'float64
+        10 -> Type'float32
+        9 -> Type'uint64
+        8 -> Type'uint32
+        7 -> Type'uint16
+        6 -> Type'uint8
+        5 -> Type'int64
+        4 -> Type'int32
+        3 -> Type'int16
+        2 -> Type'int8
+        1 -> Type'bool
+        0 -> Type'void
+        _ -> Type'unknown' tag
 
 data ElementSize (m :: * -> *) b
     = ElementSize'empty
@@ -606,7 +683,16 @@ get_Node'annotation'targetsAnnotation :: Data.Capnp.Untyped.ReadCtx m b => Node'
 get_Node'annotation'targetsAnnotation (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 59 0
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Node' m b) b where
-    fromStruct = undefined -- TODO
+    fromStruct struct = do
+    tag <-  Codec.Capnp.getWordField struct 1 32 0
+    pure $ case tag of
+        5 -> Node'annotation struct
+        4 -> Node'const struct
+        3 -> Node'interface struct
+        2 -> Node'enum struct
+        1 -> Node'struct struct
+        0 -> Node'file
+        _ -> Node'unknown' tag
 
 newtype Annotation (m :: * -> *) b = Annotation (Data.Capnp.Untyped.Struct m b)
 
