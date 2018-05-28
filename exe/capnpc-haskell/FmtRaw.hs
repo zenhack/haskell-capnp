@@ -58,6 +58,8 @@ fmtNewtypeStruct thisMod name =
         , " (m :: * -> *) b = "
         , nameText
         , " (Data.Capnp.Untyped.Struct m b)\n\n"
+        , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where\n"
+        , "    fromStruct = pure . ", nameText, "\n"
         ]
 
 
@@ -86,7 +88,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 , "\n    >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)"
                 , "\n"
                 ]
-            HereField -> " undefined -- TODO: handle groups/anonymous union fields"
+            HereField -> " Codec.Capnp.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         ]
 
@@ -114,6 +116,9 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} =
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
         , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where"
         , "\n    fromPtr = undefined -- TODO: define fromPtr for sums."
+        , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where"
+        , "\n    fromStruct = undefined -- TODO"
+        , "\n"
         ]
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>

@@ -37,8 +37,13 @@ data JsonValue (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b) b where
+    fromStruct = undefined -- TODO
+
 newtype JsonValue'Call (m :: * -> *) b = JsonValue'Call (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Call m b) b where
+    fromStruct = pure . JsonValue'Call
 get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m (Data.Capnp.BuiltinTypes.Text b)
 get_JsonValue'Call'function (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 0 struct
@@ -54,6 +59,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Call m
 
 newtype JsonValue'Field (m :: * -> *) b = JsonValue'Field (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Field m b) b where
+    fromStruct = pure . JsonValue'Field
 get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m (Data.Capnp.BuiltinTypes.Text b)
 get_JsonValue'Field'name (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 0 struct

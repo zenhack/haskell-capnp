@@ -20,6 +20,8 @@ import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
 newtype Call (m :: * -> *) b = Call (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Call m b) b where
+    fromStruct = pure . Call
 get_Call'questionId :: Data.Capnp.Untyped.ReadCtx m b => Call m b -> m Word32
 get_Call'questionId (Call struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Call'target :: Data.Capnp.Untyped.ReadCtx m b => Call m b -> m (MessageTarget m b)
@@ -37,7 +39,7 @@ get_Call'params (Call struct) =
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 get_Call'sendResultsTo :: Data.Capnp.Untyped.ReadCtx m b => Call m b -> m (Call'sendResultsTo m b)
-get_Call'sendResultsTo (Call struct) = undefined -- TODO: handle groups/anonymous union fields
+get_Call'sendResultsTo (Call struct) = Codec.Capnp.fromStruct struct
 get_Call'allowThirdPartyTailCall :: Data.Capnp.Untyped.ReadCtx m b => Call m b -> m Bool
 get_Call'allowThirdPartyTailCall (Call struct) = Codec.Capnp.getWordField struct 2 0 0
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Call m b) b where
@@ -60,6 +62,9 @@ data CapDescriptor (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (CapDescriptor m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (CapDescriptor m b) b where
+    fromStruct = undefined -- TODO
+
 data Message (m :: * -> *) b
     = Message'unimplemented (Message m b)
     | Message'abort (Exception m b)
@@ -93,6 +98,9 @@ data Message (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Message m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Message m b) b where
+    fromStruct = undefined -- TODO
+
 data MessageTarget (m :: * -> *) b
     = MessageTarget'importedCap Word32
     | MessageTarget'promisedAnswer (PromisedAnswer m b)
@@ -102,8 +110,13 @@ data MessageTarget (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (MessageTarget m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (MessageTarget m b) b where
+    fromStruct = undefined -- TODO
+
 newtype Payload (m :: * -> *) b = Payload (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Payload m b) b where
+    fromStruct = pure . Payload
 get_Payload'content :: Data.Capnp.Untyped.ReadCtx m b => Payload m b -> m (Maybe (Data.Capnp.Untyped.Ptr m b))
 get_Payload'content (Payload struct) =
     Data.Capnp.Untyped.getPtr 0 struct
@@ -119,6 +132,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Payload m b) b w
 
 newtype Provide (m :: * -> *) b = Provide (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Provide m b) b where
+    fromStruct = pure . Provide
 get_Provide'questionId :: Data.Capnp.Untyped.ReadCtx m b => Provide m b -> m Word32
 get_Provide'questionId (Provide struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Provide'target :: Data.Capnp.Untyped.ReadCtx m b => Provide m b -> m (MessageTarget m b)
@@ -136,12 +151,14 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Provide m b) b w
 
 newtype Return (m :: * -> *) b = Return (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Return m b) b where
+    fromStruct = pure . Return
 get_Return''answerId :: Data.Capnp.Untyped.ReadCtx m b => Return m b -> m Word32
 get_Return''answerId (Return struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Return''releaseParamCaps :: Data.Capnp.Untyped.ReadCtx m b => Return m b -> m Bool
 get_Return''releaseParamCaps (Return struct) = Codec.Capnp.getWordField struct 0 32 1
 get_Return''union' :: Data.Capnp.Untyped.ReadCtx m b => Return m b -> m (Return' m b)
-get_Return''union' (Return struct) = undefined -- TODO: handle groups/anonymous union fields
+get_Return''union' (Return struct) = Codec.Capnp.fromStruct struct
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Return m b) b where
     fromPtr msg ptr = fmap Return (Codec.Capnp.fromPtr msg ptr)
 
@@ -162,8 +179,13 @@ data Return' (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Return' m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Return' m b) b where
+    fromStruct = undefined -- TODO
+
 newtype Release (m :: * -> *) b = Release (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Release m b) b where
+    fromStruct = pure . Release
 get_Release'id :: Data.Capnp.Untyped.ReadCtx m b => Release m b -> m Word32
 get_Release'id (Release struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Release'referenceCount :: Data.Capnp.Untyped.ReadCtx m b => Release m b -> m Word32
@@ -200,10 +222,12 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyp
 
 newtype Resolve (m :: * -> *) b = Resolve (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Resolve m b) b where
+    fromStruct = pure . Resolve
 get_Resolve''promiseId :: Data.Capnp.Untyped.ReadCtx m b => Resolve m b -> m Word32
 get_Resolve''promiseId (Resolve struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Resolve''union' :: Data.Capnp.Untyped.ReadCtx m b => Resolve m b -> m (Resolve' m b)
-get_Resolve''union' (Resolve struct) = undefined -- TODO: handle groups/anonymous union fields
+get_Resolve''union' (Resolve struct) = Codec.Capnp.fromStruct struct
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Resolve m b) b where
     fromPtr msg ptr = fmap Resolve (Codec.Capnp.fromPtr msg ptr)
 
@@ -216,8 +240,13 @@ data Resolve' (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Resolve' m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Resolve' m b) b where
+    fromStruct = undefined -- TODO
+
 newtype ThirdPartyCapDescriptor (m :: * -> *) b = ThirdPartyCapDescriptor (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (ThirdPartyCapDescriptor m b) b where
+    fromStruct = pure . ThirdPartyCapDescriptor
 get_ThirdPartyCapDescriptor'id :: Data.Capnp.Untyped.ReadCtx m b => ThirdPartyCapDescriptor m b -> m (Maybe (Data.Capnp.Untyped.Ptr m b))
 get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) =
     Data.Capnp.Untyped.getPtr 0 struct
@@ -230,6 +259,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (ThirdPartyCapDes
 
 newtype Finish (m :: * -> *) b = Finish (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Finish m b) b where
+    fromStruct = pure . Finish
 get_Finish'questionId :: Data.Capnp.Untyped.ReadCtx m b => Finish m b -> m Word32
 get_Finish'questionId (Finish struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Finish'releaseResultCaps :: Data.Capnp.Untyped.ReadCtx m b => Finish m b -> m Bool
@@ -239,6 +270,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Finish m b) b wh
 
 newtype Accept (m :: * -> *) b = Accept (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Accept m b) b where
+    fromStruct = pure . Accept
 get_Accept'questionId :: Data.Capnp.Untyped.ReadCtx m b => Accept m b -> m Word32
 get_Accept'questionId (Accept struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Accept'provision :: Data.Capnp.Untyped.ReadCtx m b => Accept m b -> m (Maybe (Data.Capnp.Untyped.Ptr m b))
@@ -264,8 +297,13 @@ data Disembargo'context (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Disembargo'context m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Disembargo'context m b) b where
+    fromStruct = undefined -- TODO
+
 newtype Exception (m :: * -> *) b = Exception (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Exception m b) b where
+    fromStruct = pure . Exception
 get_Exception'reason :: Data.Capnp.Untyped.ReadCtx m b => Exception m b -> m (Data.Capnp.BuiltinTypes.Text b)
 get_Exception'reason (Exception struct) =
     Data.Capnp.Untyped.getPtr 0 struct
@@ -282,6 +320,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Exception m b) b
 
 newtype PromisedAnswer (m :: * -> *) b = PromisedAnswer (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (PromisedAnswer m b) b where
+    fromStruct = pure . PromisedAnswer
 get_PromisedAnswer'questionId :: Data.Capnp.Untyped.ReadCtx m b => PromisedAnswer m b -> m Word32
 get_PromisedAnswer'questionId (PromisedAnswer struct) = Codec.Capnp.getWordField struct 0 0 0
 get_PromisedAnswer'transform :: Data.Capnp.Untyped.ReadCtx m b => PromisedAnswer m b -> m (Data.Capnp.Untyped.ListOf m b (PromisedAnswer'Op m b))
@@ -303,8 +343,13 @@ data Call'sendResultsTo (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Call'sendResultsTo m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Call'sendResultsTo m b) b where
+    fromStruct = undefined -- TODO
+
 newtype Bootstrap (m :: * -> *) b = Bootstrap (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Bootstrap m b) b where
+    fromStruct = pure . Bootstrap
 get_Bootstrap'questionId :: Data.Capnp.Untyped.ReadCtx m b => Bootstrap m b -> m Word32
 get_Bootstrap'questionId (Bootstrap struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Bootstrap'deprecatedObjectId :: Data.Capnp.Untyped.ReadCtx m b => Bootstrap m b -> m (Maybe (Data.Capnp.Untyped.Ptr m b))
@@ -324,20 +369,27 @@ data PromisedAnswer'Op (m :: * -> *) b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (PromisedAnswer'Op m b) b where
     fromPtr = undefined -- TODO: define fromPtr for sums.
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (PromisedAnswer'Op m b) b where
+    fromStruct = undefined -- TODO
+
 newtype Disembargo (m :: * -> *) b = Disembargo (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Disembargo m b) b where
+    fromStruct = pure . Disembargo
 get_Disembargo'target :: Data.Capnp.Untyped.ReadCtx m b => Disembargo m b -> m (MessageTarget m b)
 get_Disembargo'target (Disembargo struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 get_Disembargo'context :: Data.Capnp.Untyped.ReadCtx m b => Disembargo m b -> m (Disembargo'context m b)
-get_Disembargo'context (Disembargo struct) = undefined -- TODO: handle groups/anonymous union fields
+get_Disembargo'context (Disembargo struct) = Codec.Capnp.fromStruct struct
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Disembargo m b) b where
     fromPtr msg ptr = fmap Disembargo (Codec.Capnp.fromPtr msg ptr)
 
 newtype Join (m :: * -> *) b = Join (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Join m b) b where
+    fromStruct = pure . Join
 get_Join'questionId :: Data.Capnp.Untyped.ReadCtx m b => Join m b -> m Word32
 get_Join'questionId (Join struct) = Codec.Capnp.getWordField struct 0 0 0
 get_Join'target :: Data.Capnp.Untyped.ReadCtx m b => Join m b -> m (MessageTarget m b)

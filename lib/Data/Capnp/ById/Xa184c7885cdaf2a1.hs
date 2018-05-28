@@ -20,6 +20,8 @@ import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
 newtype JoinKeyPart (m :: * -> *) b = JoinKeyPart (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JoinKeyPart m b) b where
+    fromStruct = pure . JoinKeyPart
 get_JoinKeyPart'joinId :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -> m Word32
 get_JoinKeyPart'joinId (JoinKeyPart struct) = Codec.Capnp.getWordField struct 0 0 0
 get_JoinKeyPart'partCount :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -> m Word16
@@ -31,6 +33,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JoinKeyPart m b)
 
 newtype JoinResult (m :: * -> *) b = JoinResult (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JoinResult m b) b where
+    fromStruct = pure . JoinResult
 get_JoinResult'joinId :: Data.Capnp.Untyped.ReadCtx m b => JoinResult m b -> m Word32
 get_JoinResult'joinId (JoinResult struct) = Codec.Capnp.getWordField struct 0 0 0
 get_JoinResult'succeeded :: Data.Capnp.Untyped.ReadCtx m b => JoinResult m b -> m Bool
@@ -66,6 +70,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyp
 
 newtype ProvisionId (m :: * -> *) b = ProvisionId (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (ProvisionId m b) b where
+    fromStruct = pure . ProvisionId
 get_ProvisionId'joinId :: Data.Capnp.Untyped.ReadCtx m b => ProvisionId m b -> m Word32
 get_ProvisionId'joinId (ProvisionId struct) = Codec.Capnp.getWordField struct 0 0 0
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (ProvisionId m b) b where
@@ -73,6 +79,8 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (ProvisionId m b)
 
 newtype VatId (m :: * -> *) b = VatId (Data.Capnp.Untyped.Struct m b)
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (VatId m b) b where
+    fromStruct = pure . VatId
 get_VatId'side :: Data.Capnp.Untyped.ReadCtx m b => VatId m b -> m (Side m b)
 get_VatId'side (VatId struct) = Codec.Capnp.getWordField struct 0 0 0
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (VatId m b) b where

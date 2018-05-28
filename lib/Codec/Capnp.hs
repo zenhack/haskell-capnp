@@ -27,6 +27,25 @@ import qualified Data.Capnp.Message      as M
 class Decerialize from to where
     decerialize :: MonadThrow m => from -> m to
 
+-- | Types that can be converted to and from a 64-bit word.
+--
+-- This is mostly a helper for generated code, which uses it to interact
+-- with the data sections of structs.
+class IsWord a where
+    fromWord :: Word64 -> a
+    toWord :: a -> Word64
+
+-- | Types that can be extracted from an untyped pointer.
+--
+-- Similarly to IsWord, this is mostly used in generated code, to interact
+-- with the pointer section of structs.
+class ReadCtx m b => IsPtr m a b where
+    fromPtr :: M.Message b -> Maybe (Ptr m b) -> m a
+
+-- | Types that can be extracted from a struct.
+class IsStruct m a b where
+    fromStruct :: Struct m b -> m a
+
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 
@@ -41,14 +60,6 @@ getWordField struct idx offset def = fmap
     . (`shiftR` offset)
     )
     (getData idx struct)
-
--- | Types that can be converted to and from a 64-bit word.
---
--- This is mostly a helper for generated code, which uses it to interact
--- with the data sections of structs.
-class IsWord a where
-    fromWord :: Word64 -> a
-    toWord :: a -> Word64
 
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
@@ -80,13 +91,6 @@ instance IsWord Word32 where
 instance IsWord Word64 where
     fromWord = fromIntegral
     toWord = fromIntegral
-
--- | Types that can be extracted from an untyped pointer.
---
--- Similarly to IsWord, this is mostly used in generated code, to interact
--- with the pointer section of structs.
-class ReadCtx m b => IsPtr m a b where
-    fromPtr :: M.Message b -> Maybe (Ptr m b) -> m a
 
 instance ReadCtx m b => IsPtr m (ListOf m b ()) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
@@ -151,3 +155,6 @@ instance ReadCtx m b => IsPtr m (Text b) b where
 instance (ReadCtx m b, IsPtr m a b) => IsPtr m (ListOf m b a) b where
     -- I need to do a little refactoring before I can actually implement this.
     fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
+
+instance ReadCtx m b => IsStruct m (Struct m b) b where
+    fromStruct = pure
