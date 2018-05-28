@@ -28,9 +28,6 @@ get_JoinKeyPart'partCount :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -
 get_JoinKeyPart'partCount (JoinKeyPart struct) = Codec.Capnp.getWordField struct 0 32 0
 get_JoinKeyPart'partNum :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -> m Word16
 get_JoinKeyPart'partNum (JoinKeyPart struct) = Codec.Capnp.getWordField struct 0 48 0
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JoinKeyPart m b) b where
-    fromPtr msg ptr = fmap JoinKeyPart (Codec.Capnp.fromPtr msg ptr)
-
 newtype JoinResult (m :: * -> *) b = JoinResult (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JoinResult m b) b where
@@ -43,9 +40,6 @@ get_JoinResult'cap :: Data.Capnp.Untyped.ReadCtx m b => JoinResult m b -> m (May
 get_JoinResult'cap (JoinResult struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
-
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JoinResult m b) b where
-    fromPtr msg ptr = fmap JoinResult (Codec.Capnp.fromPtr msg ptr)
 
 data Side (m :: * -> *) b
     = Side'server
@@ -74,14 +68,9 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (ProvisionId m
     fromStruct = pure . ProvisionId
 get_ProvisionId'joinId :: Data.Capnp.Untyped.ReadCtx m b => ProvisionId m b -> m Word32
 get_ProvisionId'joinId (ProvisionId struct) = Codec.Capnp.getWordField struct 0 0 0
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (ProvisionId m b) b where
-    fromPtr msg ptr = fmap ProvisionId (Codec.Capnp.fromPtr msg ptr)
-
 newtype VatId (m :: * -> *) b = VatId (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (VatId m b) b where
     fromStruct = pure . VatId
 get_VatId'side :: Data.Capnp.Untyped.ReadCtx m b => VatId m b -> m (Side m b)
 get_VatId'side (VatId struct) = Codec.Capnp.getWordField struct 0 0 0
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (VatId m b) b where
-    fromPtr msg ptr = fmap VatId (Codec.Capnp.fromPtr msg ptr)

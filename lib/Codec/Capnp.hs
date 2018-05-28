@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module Codec.Capnp where
 
 import Data.Bits
@@ -61,12 +63,13 @@ getWordField struct idx offset def = fmap
     )
     (getData idx struct)
 
+-- IsWord instance for booleans.
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
     toWord True  = 1
     toWord False = 0
 
--- Integral types all have the same implementation:
+-- IsWord instances for integral types; they're all the same.
 instance IsWord Int8 where
     fromWord = fromIntegral
     toWord = fromIntegral
@@ -92,11 +95,14 @@ instance IsWord Word64 where
     fromWord = fromIntegral
     toWord = fromIntegral
 
+-- IsPtr instance for lists of Void/().
 instance ReadCtx m b => IsPtr m (ListOf m b ()) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
 
+-- IsPtr instances for lists of unsigned integers.
+--
 -- For some reason GHC is telling me that these overlap with the instance
 -- defined for IsPtr a b => IsPtr (List b a) b. This makes no sense to me,
 -- because e.g. there's no instance for IsPtr Word8 b. But for now we add
@@ -118,26 +124,26 @@ instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word64) b where
     fromPtr msg (Just (PtrList (List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
 
-instance ReadCtx m b => IsPtr m (Struct m b) b where
-    fromPtr msg Nothing              = pure $ messageDefault msg
-    fromPtr msg (Just (PtrStruct s)) = pure s
-    fromPtr _ _                      = expected "pointer to struct"
-instance ReadCtx m b => IsPtr m (Maybe (Ptr m b)) b where
+-- | IsPtr instance for pointers -- this is just the identity.
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (Maybe (Ptr m b)) b where
     fromPtr _ = pure
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b (Maybe (Ptr m b))) b where
-    fromPtr msg Nothing                         = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (ListPtr list))) = pure list
-    fromPtr _ _ = expected "pointer to list of pointers"
+
+-- IsPtr instance for composite lists.
 instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b (Struct m b)) b where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
 
+-- | IsPtr instances for lists of floating point numbers.
+--
+-- These just wrap the unsigned integer instances of the appropriate size.
 instance ReadCtx m b => IsPtr m (ListOf m b Float) b where
     fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
 instance ReadCtx m b => IsPtr m (ListOf m b Double) b where
     fromPtr msg = fmap (fmap wordToDouble) . fromPtr msg
 
+-- IsPtr instances for lists of signed instances. These just shell out to the
+-- unsigned instances.
 instance ReadCtx m b => IsPtr m (ListOf m b Int8) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word8 -> Int8)) . fromPtr msg
 instance ReadCtx m b => IsPtr m (ListOf m b Int16) b where
@@ -147,14 +153,29 @@ instance ReadCtx m b => IsPtr m (ListOf m b Int32) b where
 instance ReadCtx m b => IsPtr m (ListOf m b Int64) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word64 -> Int64)) . fromPtr msg
 
+-- IsPtr instances for Text and Data. These wrap lists of bytes.
 instance ReadCtx m b => IsPtr m (Data b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
-instance ReadCtx m b => IsPtr m (Text b) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (Text b) b where
+    -- I don't understand why but without the OVERLAPS pragma, we get an error
+    -- about overlapping instances of IsPtr for Text when building one of the
+    -- schema. The other matching instance it mentions is the one for
+    -- IsStruct => IsPtr, which makes no sense, because there's no IsStruct
+    -- instance for Text. Indeed, if we comment out this instance, it
+    -- complains that there is no IsStruct instance for Text. Need to figure
+    -- this one out at some point.
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getText
 
-instance (ReadCtx m b, IsPtr m a b) => IsPtr m (ListOf m b a) b where
-    -- I need to do a little refactoring before I can actually implement this.
+-- IsPtr instance for lists of pointer types.
+instance {-# OVERLAPS #-} (ReadCtx m b, IsPtr m a b) => IsPtr m (ListOf m b a) b where
     fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
 
+-- IsPtr instances for structs.
+instance (ReadCtx m b, IsStruct m a b) => IsPtr m a b where
+    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct m b)
+    fromPtr msg (Just (PtrStruct s)) = fromStruct s
+    fromPtr _ _                      = expected "pointer to struct"
+
+-- IsStruct instance for Struct; just the identity.
 instance ReadCtx m b => IsStruct m (Struct m b) b where
     fromStruct = pure

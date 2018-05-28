@@ -99,12 +99,6 @@ fmtDataDef thisMod DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct,
         Record fields ->
             mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
         _ -> ""
-    <> let nameText = fmtName thisMod dataName
-       in mconcat
-            [ "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where"
-            , "\n    fromPtr msg ptr = fmap ", nameText, " (Codec.Capnp.fromPtr msg ptr)"
-            , "\n"
-            ]
 fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} =
     let nameText = fmtName thisMod dataName
     in mconcat
@@ -114,8 +108,6 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,..} =
         -- Generate auxiliary newtype definitions for group fields:
         , "\n"
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
-        , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where"
-        , "\n    fromPtr = undefined -- TODO: define fromPtr for sums."
         , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where"
         , "\n    fromStruct = undefined -- TODO"
         , "\n"

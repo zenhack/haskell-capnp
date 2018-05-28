@@ -35,8 +35,6 @@ data JsonValue (m :: * -> *) b
 
 
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue m b) b where
-    fromPtr = undefined -- TODO: define fromPtr for sums.
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b) b where
     fromStruct = undefined -- TODO
 
@@ -54,9 +52,6 @@ get_JsonValue'Call'params (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Call m b) b where
-    fromPtr msg ptr = fmap JsonValue'Call (Codec.Capnp.fromPtr msg ptr)
-
 newtype JsonValue'Field (m :: * -> *) b = JsonValue'Field (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Field m b) b where
@@ -70,6 +65,3 @@ get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m
 get_JsonValue'Field'value (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
-
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Field m b) b where
-    fromPtr msg ptr = fmap JsonValue'Field (Codec.Capnp.fromPtr msg ptr)
