@@ -10,11 +10,18 @@ import Control.Monad.Catch     (MonadThrow(throwM))
 import Data.Capnp.BuiltinTypes (Data, Text)
 import Data.Capnp.Errors       (Error(SchemaViolationError))
 import Data.Capnp.Untyped
-    (List(..), ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault)
+    ( List(..)
+    , ListOf
+    , Ptr(..)
+    , ReadCtx
+    , Struct
+    , flatten
+    , getData
+    , messageDefault
+    )
 import Data.ReinterpretCast    (wordToDouble, wordToFloat)
 
 import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
-import qualified Data.Capnp.List         as List
 import qualified Data.Capnp.Message      as M
 
 class Decerialize from to where
@@ -143,4 +150,4 @@ instance ReadCtx m b => IsPtr m (Text b) b where
 
 instance (ReadCtx m b, IsPtr m a b) => IsPtr m (ListOf m b a) b where
     -- I need to do a little refactoring before I can actually implement this.
-    fromPtr msg ptr = fromPtr msg ptr >>= List.mapM (fromPtr msg)
+    fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr

@@ -13,9 +13,7 @@ module Data.Capnp.List
     , length
     , index
     , map
-    , mapM
     , mapM_
-    , forM
     , forM_
     , sequence_
     , foldl
@@ -25,7 +23,7 @@ module Data.Capnp.List
     )
   where
 
-import Prelude hiding (fold, foldl, foldr, length, map, mapM, mapM_, sequence_)
+import Prelude hiding (fold, foldl, foldr, length, map, mapM_, sequence_)
 
 import Control.Monad      (join)
 import Data.Capnp.Untyped (ListOf, ReadCtx, index, length)
@@ -40,12 +38,6 @@ map = fmap
 -- space for the intermediate list.
 mapM_ :: ReadCtx m b => (a -> m c) -> ListOf m b a -> m ()
 mapM_ f = sequence_ . fmap f
-
-mapM :: ReadCtx m b => (a -> m c) -> ListOf m b a -> m (ListOf m b c)
-mapM = undefined
-
-forM :: ReadCtx m b => ListOf m b a -> (a -> m c) -> m (ListOf m b c)
-forM = flip mapM
 
 -- | Like 'mapM_', but with the arguments flipped.
 forM_ :: ReadCtx m b => ListOf m b a -> (a -> m c) -> m ()

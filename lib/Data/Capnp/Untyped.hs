@@ -22,6 +22,7 @@ module Data.Capnp.Untyped
     , get, index, length
     , rootPtr
     , rawBytes
+    , flatten
     , ReadCtx
     , HasMessage(..), MessageDefault(..)
     )
@@ -32,6 +33,7 @@ import Prelude hiding (length)
 import Data.Bits
 import Data.Word
 
+import Control.Monad             (join)
 import Control.Monad.Catch       (MonadThrow(throwM))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits
@@ -93,6 +95,9 @@ data ListOf (m :: * -> *) b a where
     ListOfPtr    :: !(NormalList b) -> ListOf m b (Maybe (Ptr m b))
     -- wrapper that converts an untyped value to a typed one:
     ListOfMapped :: ListOf m b a -> (a -> c) -> ListOf m b c
+    -- wrapper allowing us to hide extra effects; this is useful for
+    -- e.g. building nested lists (see the treatment in 'index').
+    ListOfJoined :: ListOf m b (m a) -> ListOf m b a
 
 instance Functor (ListOf m b) where
     fmap f (ListOfMapped list g) = ListOfMapped list (f . g)
@@ -151,6 +156,7 @@ instance HasMessage (ListOf m b a) b where
     message (ListOfWord64 list)   = message list
     message (ListOfPtr list)      = message list
     message (ListOfMapped list _) = message list
+    message (ListOfJoined list)   = message list
 
 instance MessageDefault (ListOf m b ()) b where
     messageDefault msg = ListOfVoid msg 0
@@ -286,6 +292,7 @@ index i list = invoice 1 >> index' list
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfMapped list f) = f <$> index' list
+    index' (ListOfJoined list) = join $ index' list
     indexNList :: (ReadCtx m b, Integral a) => NormalList b -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
@@ -295,6 +302,11 @@ index i list = invoice 1 >> index' list
             pure $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
+
+-- | hide the effects in the element type of a list. 'index' will implicitly
+-- extract the element from the 'm' as well.
+flatten :: ListOf m b (m a) -> ListOf m b a
+flatten = ListOfJoined
 
 -- | Returns the length of a list
 length :: ListOf m b a -> Int
@@ -307,6 +319,7 @@ length (ListOfWord32 nlist)  = nLen nlist
 length (ListOfWord64 nlist)  = nLen nlist
 length (ListOfPtr    nlist)  = nLen nlist
 length (ListOfMapped list _) = length list
+length (ListOfJoined list)   = length list
 
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct m b -> ListOf m b Word64
@@ -354,6 +367,7 @@ rawBytes (ListOfWord32 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLe
 rawBytes (ListOfWord64 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
 rawBytes (ListOfPtr    nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
 rawBytes (ListOfMapped list _) = rawBytes list
+rawBytes (ListOfJoined list) = rawBytes list
 rawBytes _ = throwM $ E.SchemaViolationError
     -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
     -- here. It's *almost* right, in that the caller is asking for a
