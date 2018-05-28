@@ -34,7 +34,7 @@ encodeDecodeUntypedTest
     :: ( MsgMetaData -- schema and type name
        , String -- message in textual form
        , BuilderT p RealWorld IO () -- Builder for the message
-       , Struct ByteString -> LimitT IO () -- reader.
+       , Struct (LimitT IO) ByteString -> LimitT IO () -- reader.
        , Int -- Quota to run the reader with.
        , Int -- Remaining quota for the reader.
        )

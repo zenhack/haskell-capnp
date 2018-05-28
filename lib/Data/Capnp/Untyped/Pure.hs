@@ -111,14 +111,14 @@ sliceIndex i (Slice vec)
     | otherwise = def
 
 -- | Parse a struct into its ADT form.
-readStruct :: U.ReadCtx m BS.ByteString => U.Struct BS.ByteString -> m Struct
+readStruct :: U.ReadCtx m BS.ByteString => U.Struct m BS.ByteString -> m Struct
 readStruct struct = Struct
     <$> (Slice <$> readList (U.dataSection struct) pure)
     <*> (Slice <$> readList (U.ptrSection struct) readPtr)
 
 -- | Parse a (possibly null) pointer into its ADT form.
 readPtr :: U.ReadCtx m BS.ByteString
-    => Maybe (U.Ptr BS.ByteString)
+    => Maybe (U.Ptr m BS.ByteString)
     -> m (Maybe PtrType)
 readPtr Nothing               = return Nothing
 readPtr (Just ptr) = Just <$> case ptr of
@@ -128,11 +128,11 @@ readPtr (Just ptr) = Just <$> case ptr of
 
 -- | @'readList' list readElt@ parses a list into its ADT form. @readElt@ is
 -- used to parse the elements.
-readList :: U.ReadCtx m BS.ByteString => U.ListOf BS.ByteString a -> (a -> m b) -> m (List b)
+readList :: U.ReadCtx m BS.ByteString => U.ListOf m BS.ByteString a -> (a -> m b) -> m (List b)
 readList list readElt =
     V.generateM (U.length list) (\i -> U.index i list >>= readElt)
 
-readList' :: U.ReadCtx m BS.ByteString => U.List BS.ByteString -> m List'
+readList' :: U.ReadCtx m BS.ByteString => U.List m BS.ByteString -> m List'
 readList' (U.List0 l)      = List0' <$> readList l pure
 readList' (U.List1 l)      = List1' <$> readList l pure
 readList' (U.List8 l)      = List8' <$> readList l pure

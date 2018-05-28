@@ -14,6 +14,7 @@ import Data.Capnp.Untyped
 import Data.ReinterpretCast    (wordToDouble, wordToFloat)
 
 import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
+import qualified Data.Capnp.List         as List
 import qualified Data.Capnp.Message      as M
 
 class Decerialize from to where
@@ -26,7 +27,7 @@ expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 -- struct's data section. @index@ is the index of the 64-bit word in the data
 -- section in which the field resides. @offset@ is the offset in bits from the
 -- start of that word to the field. @def@ is the default value for this field.
-getWordField :: (ReadCtx m b, IsWord a) => Struct b -> Int -> Int -> Word64 -> m a
+getWordField :: (ReadCtx m b, IsWord a) => Struct m b -> Int -> Int -> Word64 -> m a
 getWordField struct idx offset def = fmap
     ( fromWord
     . xor def
@@ -77,10 +78,10 @@ instance IsWord Word64 where
 --
 -- Similarly to IsWord, this is mostly used in generated code, to interact
 -- with the pointer section of structs.
-class IsPtr a b where
-    fromPtr :: ReadCtx m b => M.Message b -> Maybe (Ptr b) -> m a
+class ReadCtx m b => IsPtr m a b where
+    fromPtr :: M.Message b -> Maybe (Ptr m b) -> m a
 
-instance IsPtr (ListOf b ()) b where
+instance ReadCtx m b => IsPtr m (ListOf m b ()) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
@@ -89,57 +90,57 @@ instance IsPtr (ListOf b ()) b where
 -- defined for IsPtr a b => IsPtr (List b a) b. This makes no sense to me,
 -- because e.g. there's no instance for IsPtr Word8 b. But for now we add
 -- the OVERLAPS pragmas; I'll figure it out later.
-instance {-# OVERLAPS #-} IsPtr (ListOf b Word8) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word8) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-instance {-# OVERLAPS #-} IsPtr (ListOf b Word16) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word16) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-instance {-# OVERLAPS #-} IsPtr (ListOf b Word32) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word32) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-instance {-# OVERLAPS #-} IsPtr (ListOf b Word64) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word64) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
 
-instance IsPtr (Struct b) b where
+instance ReadCtx m b => IsPtr m (Struct m b) b where
     fromPtr msg Nothing              = pure $ messageDefault msg
     fromPtr msg (Just (PtrStruct s)) = pure s
     fromPtr _ _                      = expected "pointer to struct"
-instance IsPtr (Maybe (Ptr b)) b where
+instance ReadCtx m b => IsPtr m (Maybe (Ptr m b)) b where
     fromPtr _ = pure
-instance {-# OVERLAPS #-} IsPtr (ListOf b (Maybe (Ptr b))) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b (Maybe (Ptr m b))) b where
     fromPtr msg Nothing                         = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (ListPtr list))) = pure list
     fromPtr _ _ = expected "pointer to list of pointers"
-instance {-# OVERLAPS #-} IsPtr (ListOf b (Struct b)) b where
+instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b (Struct m b)) b where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
 
-instance IsPtr (ListOf b Float) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Float) b where
     fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
-instance IsPtr (ListOf b Double) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Double) b where
     fromPtr msg = fmap (fmap wordToDouble) . fromPtr msg
 
-instance IsPtr (ListOf b Int8) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Int8) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word8 -> Int8)) . fromPtr msg
-instance IsPtr (ListOf b Int16) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Int16) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word16 -> Int16)) . fromPtr msg
-instance IsPtr (ListOf b Int32) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Int32) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word32 -> Int32)) . fromPtr msg
-instance IsPtr (ListOf b Int64) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Int64) b where
     fromPtr msg = fmap (fmap (fromIntegral :: Word64 -> Int64)) . fromPtr msg
 
-instance IsPtr (Data b) b where
+instance ReadCtx m b => IsPtr m (Data b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
-instance IsPtr (Text b) b where
+instance ReadCtx m b => IsPtr m (Text b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getText
 
-instance IsPtr a b => IsPtr (ListOf b a) b where
+instance (ReadCtx m b, IsPtr m a b) => IsPtr m (ListOf m b a) b where
     -- I need to do a little refactoring before I can actually implement this.
-    fromPtr msg ptr = undefined
+    fromPtr msg ptr = fromPtr msg ptr >>= List.mapM (fromPtr msg)
