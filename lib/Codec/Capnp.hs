@@ -84,36 +84,42 @@ instance IsPtr (ListOf b ()) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
-instance IsPtr (ListOf b Word8) b where
+
+-- For some reason GHC is telling me that these overlap with the instance
+-- defined for IsPtr a b => IsPtr (List b a) b. This makes no sense to me,
+-- because e.g. there's no instance for IsPtr Word8 b. But for now we add
+-- the OVERLAPS pragmas; I'll figure it out later.
+instance {-# OVERLAPS #-} IsPtr (ListOf b Word8) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-instance IsPtr (ListOf b Word16) b where
+instance {-# OVERLAPS #-} IsPtr (ListOf b Word16) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-instance IsPtr (ListOf b Word32) b where
+instance {-# OVERLAPS #-} IsPtr (ListOf b Word32) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-instance IsPtr (ListOf b Word64) b where
+instance {-# OVERLAPS #-} IsPtr (ListOf b Word64) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
-instance IsPtr (ListOf b (Maybe (Ptr b))) b where
-    fromPtr msg Nothing                         = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (ListPtr list))) = pure list
-    fromPtr _ _ = expected "pointer to list of pointers"
-instance IsPtr (ListOf b (Struct b)) b where
-    fromPtr msg Nothing                            = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (ListStruct list))) = pure list
-    fromPtr _ _ = expected "pointer to list of structs"
+
 instance IsPtr (Struct b) b where
     fromPtr msg Nothing              = pure $ messageDefault msg
     fromPtr msg (Just (PtrStruct s)) = pure s
     fromPtr _ _                      = expected "pointer to struct"
 instance IsPtr (Maybe (Ptr b)) b where
     fromPtr _ = pure
+instance {-# OVERLAPS #-} IsPtr (ListOf b (Maybe (Ptr b))) b where
+    fromPtr msg Nothing                         = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (ListPtr list))) = pure list
+    fromPtr _ _ = expected "pointer to list of pointers"
+instance {-# OVERLAPS #-} IsPtr (ListOf b (Struct b)) b where
+    fromPtr msg Nothing                            = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (ListStruct list))) = pure list
+    fromPtr _ _ = expected "pointer to list of structs"
 
 instance IsPtr (ListOf b Float) b where
     fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
@@ -133,3 +139,7 @@ instance IsPtr (Data b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
 instance IsPtr (Text b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getText
+
+instance IsPtr a b => IsPtr (ListOf b a) b where
+    -- I need to do a little refactoring before I can actually implement this.
+    fromPtr msg ptr = undefined
