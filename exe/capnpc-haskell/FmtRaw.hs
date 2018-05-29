@@ -49,6 +49,14 @@ fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map TB.fromText ns
 fmtImport :: Import -> TB.Builder
 fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 
+-- | format the IsPtr instance for a list of the struct type with
+-- the given name.
+fmtStructListIsPtr :: TB.Builder -> TB.Builder
+fmtStructListIsPtr nameText = mconcat
+    [ "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (", nameText, " m b)) b where\n"
+    , "    fromPtr = Codec.Capnp.structListPtr\n"
+    ]
+
 fmtNewtypeStruct :: Id -> Name -> TB.Builder
 fmtNewtypeStruct thisMod name =
     let nameText = fmtName thisMod name
@@ -60,6 +68,10 @@ fmtNewtypeStruct thisMod name =
         , " (Data.Capnp.Untyped.Struct m b)\n\n"
         , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where\n"
         , "    fromStruct = pure . ", nameText, "\n"
+        , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where\n"
+        , "    fromPtr = Codec.Capnp.structPtr\n"
+        , "\n"
+        , fmtStructListIsPtr nameText
         ]
 
 
@@ -114,6 +126,10 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
         , "\n        pure $ case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
+        , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where"
+        , "\n    fromPtr = Codec.Capnp.structPtr"
+        , "\n"
+        , fmtStructListIsPtr nameText
         ]
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>

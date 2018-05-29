@@ -102,34 +102,29 @@ instance ReadCtx m b => IsPtr m (ListOf m b ()) b where
     fromPtr _ _ = expected "pointer to list with element size 0"
 
 -- IsPtr instances for lists of unsigned integers.
---
--- For some reason GHC is telling me that these overlap with the instance
--- defined for IsPtr a b => IsPtr (List b a) b. This makes no sense to me,
--- because e.g. there's no instance for IsPtr Word8 b. But for now we add
--- the OVERLAPS pragmas; I'll figure it out later.
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word8) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Word8) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word16) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Word16) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word32) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Word32) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b Word64) b where
+instance ReadCtx m b => IsPtr m (ListOf m b Word64) b where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
 
 -- | IsPtr instance for pointers -- this is just the identity.
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (Maybe (Ptr m b)) b where
+instance ReadCtx m b => IsPtr m (Maybe (Ptr m b)) b where
     fromPtr _ = pure
 
 -- IsPtr instance for composite lists.
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (ListOf m b (Struct m b)) b where
+instance ReadCtx m b => IsPtr m (ListOf m b (Struct m b)) b where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
@@ -156,26 +151,37 @@ instance ReadCtx m b => IsPtr m (ListOf m b Int64) b where
 -- IsPtr instances for Text and Data. These wrap lists of bytes.
 instance ReadCtx m b => IsPtr m (Data b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
-instance {-# OVERLAPS #-} ReadCtx m b => IsPtr m (Text b) b where
-    -- I don't understand why but without the OVERLAPS pragma, we get an error
-    -- about overlapping instances of IsPtr for Text when building one of the
-    -- schema. The other matching instance it mentions is the one for
-    -- IsStruct => IsPtr, which makes no sense, because there's no IsStruct
-    -- instance for Text. Indeed, if we comment out this instance, it
-    -- complains that there is no IsStruct instance for Text. Need to figure
-    -- this one out at some point.
+instance ReadCtx m b => IsPtr m (Text b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getText
 
--- IsPtr instance for lists of pointer types.
-instance {-# OVERLAPS #-} (ReadCtx m b, IsPtr m a b) => IsPtr m (ListOf m b a) b where
-    fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
+nestedListPtr :: (ReadCtx m b, IsPtr m a b) => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b a)
+nestedListPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
 
--- IsPtr instances for structs.
-instance (ReadCtx m b, IsStruct m a b) => IsPtr m a b where
-    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct m b)
-    fromPtr msg (Just (PtrStruct s)) = fromStruct s
-    fromPtr _ _                      = expected "pointer to struct"
+structListPtr :: (ReadCtx m b, IsStruct m a b) => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b a)
+structListPtr msg ptr =
+    flatten . fmap fromStruct <$> structListFromPtr msg ptr
+  where
+    structListFromPtr :: ReadCtx m b => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b (Struct m b))
+    structListFromPtr = fromPtr
+
+structPtr :: (ReadCtx m b, IsStruct m a b) => M.Message b -> Maybe (Ptr m b) -> m a
+structPtr msg ptr = structFromPtr msg ptr >>= fromStruct
+  where
+    structFromPtr :: ReadCtx m b => M.Message b -> Maybe (Ptr m b) -> m (Struct m b)
+    structFromPtr = fromPtr
+
+instance (ReadCtx m b, IsPtr m (ListOf m b a) b) => IsPtr m (ListOf m b (ListOf m b a)) b where
+    fromPtr = nestedListPtr
+    -- fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
+instance (ReadCtx m b) => IsPtr m (ListOf m b (Maybe (Ptr m b))) b where
+    fromPtr = nestedListPtr
+    -- fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
 
 -- IsStruct instance for Struct; just the identity.
 instance ReadCtx m b => IsStruct m (Struct m b) b where
     fromStruct = pure
+
+instance ReadCtx m b => IsPtr m (Struct m b) b where
+    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct m b)
+    fromPtr msg (Just (PtrStruct s)) = fromStruct s
+    fromPtr _ _                      = expected "pointer to struct"

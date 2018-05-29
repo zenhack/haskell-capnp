@@ -48,10 +48,20 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b
             0 -> JsonValue'null
             _ -> JsonValue'unknown' tag
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue m b) b where
+    fromPtr = Codec.Capnp.structPtr
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (JsonValue m b)) b where
+    fromPtr = Codec.Capnp.structListPtr
+
 newtype JsonValue'Call (m :: * -> *) b = JsonValue'Call (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Call m b) b where
     fromStruct = pure . JsonValue'Call
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Call m b) b where
+    fromPtr = Codec.Capnp.structPtr
+
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (JsonValue'Call m b)) b where
+    fromPtr = Codec.Capnp.structListPtr
 get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m (Data.Capnp.BuiltinTypes.Text b)
 get_JsonValue'Call'function (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 0 struct
@@ -66,6 +76,11 @@ newtype JsonValue'Field (m :: * -> *) b = JsonValue'Field (Data.Capnp.Untyped.St
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Field m b) b where
     fromStruct = pure . JsonValue'Field
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Field m b) b where
+    fromPtr = Codec.Capnp.structPtr
+
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (JsonValue'Field m b)) b where
+    fromPtr = Codec.Capnp.structListPtr
 get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m (Data.Capnp.BuiltinTypes.Text b)
 get_JsonValue'Field'name (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 0 struct
