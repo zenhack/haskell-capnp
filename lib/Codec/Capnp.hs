@@ -21,7 +21,8 @@ import Data.Capnp.Untyped
     , getData
     , messageDefault
     )
-import Data.ReinterpretCast    (wordToDouble, wordToFloat)
+import Data.ReinterpretCast
+    (doubleToWord, floatToWord, wordToDouble, wordToFloat)
 
 import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
 import qualified Data.Capnp.Message      as M
@@ -94,6 +95,13 @@ instance IsWord Word32 where
 instance IsWord Word64 where
     fromWord = fromIntegral
     toWord = fromIntegral
+
+instance IsWord Float where
+    fromWord = wordToFloat . fromIntegral
+    toWord = fromIntegral . floatToWord
+instance IsWord Double where
+    fromWord = wordToDouble
+    toWord = doubleToWord
 
 -- IsPtr instance for lists of Void/().
 instance ReadCtx m b => IsPtr m (ListOf m b ()) b where
