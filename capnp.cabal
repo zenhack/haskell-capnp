@@ -131,13 +131,13 @@ test-suite simple-tests
       , Tests.Module.Data.Capnp.Core.Schema
       , Tests.Module.Data.Capnp.Untyped
       , Tests.Module.Data.Capnp.Untyped.Pure
-      -- , Tests.Module.Data.Capnp.List
+      , Tests.Module.Data.Capnp.List
       , Tests.Module.Data.Capnp.Pointer
       , Tests.Module.Data.Capnp.Bits
       , Tests.EncodeDecodeUntyped
-      -- , Tests.WalkSchemaCodeGenRequest
+      , Tests.WalkSchemaCodeGenRequest
       , Tests.SchemaGeneration
-      -- , Tests.SchemaQuickCheck
+      , Tests.SchemaQuickCheck
       , Tests.Util
     build-depends:
         capnp

@@ -12,17 +12,15 @@ import Data.Capnp.Untyped
 import Tests.Util
 
 import Control.Monad             (mapM_, when)
-import Data.Capnp.BasicTypes     (Text(..))
-import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
+import Data.Capnp.BuiltinTypes   (Text(..))
+import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)
 
-import qualified Data.ByteString                                 as BS
-import qualified Data.Capnp.Message                              as M
+import qualified Data.ByteString                   as BS
+import qualified Data.Capnp.ById.Xa93fc509624c72d9 as Schema
+import qualified Data.Capnp.Message                as M
 import qualified Prelude
-import qualified Schema.Capnp.Reader.Schema                      as Schema
-import qualified Schema.Capnp.Reader.Schema.CodeGeneratorRequest as CGReq
-import qualified Schema.Capnp.Reader.Schema.Node                 as Node
 
 
 -- | TODO: make this an array; we're doing random access to it below.
@@ -43,38 +41,38 @@ theAssert :: Assertion
 theAssert = do
     bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
-    ((), endQuota) <- runWithLimit 1024 (rootPtr msg >>= reader)
+    endQuota <- execLimitT 1024 (rootPtr msg >>= reader)
     assertEqual "Correct remaining quota" 641 endQuota
   where
-    reader :: Struct BS.ByteString -> LimitT IO ()
+    reader :: Struct (LimitT IO) BS.ByteString -> LimitT IO ()
     reader root = do
         let req = Schema.CodeGeneratorRequest root
-        nodes <- CGReq.nodes req
-        requestedFiles <- CGReq.requestedFiles req
+        nodes <- Schema.get_CodeGeneratorRequest'nodes req
+        requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
         let 37 = length nodes
         let 1 = length requestedFiles
         mapM_ (walkNode nodes) [0,1..36]
     walkNode nodes i = do
         node <- index i nodes
         -- None of the nodes in the schema have parameters:
-        False <- Node.hasParameters node
+        let False = Schema.has_Node''parameters node
         -- And none of them are generic:
-        False <- Node.isGeneric node
+        False <- Schema.get_Node''isGeneric node
 
-        Text name <- Node.displayName node
-        prefixLen <- Node.displayNamePrefixLength node
+        Text name <- Schema.get_Node''displayName node
+        prefixLen <- Schema.get_Node''displayNamePrefixLength node
         let baseName = BS.drop (fromIntegral prefixLen) name
 
         when (i < Prelude.length nodeNames && baseName /= (nodeNames !! i)) $
             error "Incorrect name."
 
-        has <- Node.hasAnnotations node
+        let has = Schema.has_Node''annotations node
 
         -- there are two annotations in all of the nodes, at these indicies:
         case (has, i `elem` [4, 9]) of
             (False, False) -> return ()
             (True, True) -> do
-                1 <- length <$> Node.annotations node
+                1 <- length <$> Schema.get_Node''annotations node
                 return ()
             (False, True) ->
                 error $ "Node at index " ++ show i ++ " should have had" ++

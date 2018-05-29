@@ -6,12 +6,10 @@ import qualified Data.ByteString as BS
 
 import Data.Capnp.Errors         (Error)
 import Data.Capnp.Message        as M
-import Data.Capnp.TraversalLimit (LimitT, runWithLimit)
+import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 
-import Schema.Capnp.Reader.Schema as Schema hiding (Field)
-
-import qualified Data.Capnp.Untyped                              as Untyped
-import qualified Schema.Capnp.Reader.Schema.CodeGeneratorRequest as CGReq
+import qualified Data.Capnp.ById.Xa93fc509624c72d9 as Schema
+import qualified Data.Capnp.Untyped                as Untyped
 
 -- Testing framework imports
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -33,14 +31,14 @@ generateCGR schema = capnpCompile (show schema) "-"
 
 decodeCGR :: BS.ByteString -> IO (Int, Int)
 decodeCGR bytes = do
-    let reader :: Untyped.Struct BS.ByteString -> LimitT IO Int
+    let reader :: Untyped.Struct (LimitT IO) BS.ByteString -> LimitT IO Int
         reader struct = do
             let req = Schema.CodeGeneratorRequest struct
-            nodes <- CGReq.nodes req
-            requestedFiles <- CGReq.requestedFiles req
+            nodes <- Schema.get_CodeGeneratorRequest'nodes req
+            requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
             return (Untyped.length nodes)
     msg <- M.decode bytes
-    (numNodes, endQuota) <- runWithLimit 1024 (Untyped.rootPtr msg >>= reader)
+    (numNodes, endQuota) <- runLimitT 1024 (Untyped.rootPtr msg >>= reader)
     return (endQuota, numNodes)
 
 -- QuickCheck properties
