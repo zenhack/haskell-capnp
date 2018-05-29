@@ -10,7 +10,7 @@ module Data.Capnp.ById.X8ef99297a43a5e34 where
 import Data.Int
 import Data.Word
 import qualified Data.Bits
-
+import qualified Data.Maybe
 import qualified Codec.Capnp
 import qualified Data.Capnp.BuiltinTypes
 import qualified Data.Capnp.TraversalLimit
@@ -68,16 +68,16 @@ get_JsonValue'Call'function (JsonValue'Call struct) =
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Call'function :: JsonValue'Call m b -> Bool
-has_JsonValue'Call'function(JsonValue'Call struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)
+has_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m Bool
+has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
 get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m (Data.Capnp.Untyped.ListOf m b (JsonValue m b))
 get_JsonValue'Call'params (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Call'params :: JsonValue'Call m b -> Bool
-has_JsonValue'Call'params(JsonValue'Call struct) = 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)
+has_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m Bool
+has_JsonValue'Call'params(JsonValue'Call struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
 newtype JsonValue'Field (m :: * -> *) b = JsonValue'Field (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Field m b) b where
@@ -93,13 +93,13 @@ get_JsonValue'Field'name (JsonValue'Field struct) =
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Field'name :: JsonValue'Field m b -> Bool
-has_JsonValue'Field'name(JsonValue'Field struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)
+has_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m Bool
+has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
 get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m (JsonValue m b)
 get_JsonValue'Field'value (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Field'value :: JsonValue'Field m b -> Bool
-has_JsonValue'Field'value(JsonValue'Field struct) = 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)
+has_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m Bool
+has_JsonValue'Field'value(JsonValue'Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct

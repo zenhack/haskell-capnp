@@ -55,7 +55,7 @@ theAssert = do
     walkNode nodes i = do
         node <- index i nodes
         -- None of the nodes in the schema have parameters:
-        let False = Schema.has_Node''parameters node
+        False <- Schema.has_Node''parameters node
         -- And none of them are generic:
         False <- Schema.get_Node''isGeneric node
 
@@ -66,7 +66,7 @@ theAssert = do
         when (i < Prelude.length nodeNames && baseName /= (nodeNames !! i)) $
             error "Incorrect name."
 
-        let has = Schema.has_Node''annotations node
+        has <- Schema.has_Node''annotations node
 
         -- there are two annotations in all of the nodes, at these indicies:
         case (has, i `elem` [4, 9]) of

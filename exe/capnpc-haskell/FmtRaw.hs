@@ -31,7 +31,7 @@ fmtModule Module{..} = mintercalate "\n"
     , "import Data.Int"
     , "import Data.Word"
     , "import qualified Data.Bits"
-    , ""
+    , "import qualified Data.Maybe"
     , "import qualified Codec.Capnp"
     , "import qualified Data.Capnp.BuiltinTypes"
     , "import qualified Data.Capnp.TraversalLimit"
@@ -105,15 +105,15 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> " Codec.Capnp.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         , "\n\n"
-        , hasName, " :: ", fmtName thisMod typeName, " m b -> Bool\n"
+        , hasName, " :: Data.Capnp.Untyped.ReadCtx m b => ", fmtName thisMod typeName, " m b -> m Bool\n"
         , hasName, "(", fmtName thisMod typeName, " struct) = "
         , case fieldLoc of
             DataField DataLoc{dataIdx} ->
-                TB.fromString (show dataIdx) <> " < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)"
+                "pure $ " <> TB.fromString (show dataIdx) <> " < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)"
             PtrField idx ->
-                TB.fromString (show idx) <> " < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)"
-            HereField -> "True"
-            VoidField -> "True"
+                "Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr " <> TB.fromString (show idx) <> " struct"
+            HereField -> "pure True"
+            VoidField -> "pure True"
         ]
 
 fmtDataDef :: Id -> DataDef -> TB.Builder
