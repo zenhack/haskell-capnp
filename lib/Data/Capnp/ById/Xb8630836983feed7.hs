@@ -32,6 +32,9 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
+
+has_Persistent'SaveResults'sturdyRef :: Persistent'SaveResults m b -> Bool
+has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)
 newtype Persistent'SaveParams (m :: * -> *) b = Persistent'SaveParams (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Persistent'SaveParams m b) b where
@@ -45,3 +48,7 @@ get_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m b => Persisten
 get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
+
+
+has_Persistent'SaveParams'sealFor :: Persistent'SaveParams m b -> Bool
+has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)

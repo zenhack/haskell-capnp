@@ -88,11 +88,13 @@ fmtGetWordField struct DataLoc{..} = mintercalate " "
 
 fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
-    let accessorName = "get_" <> fmtName thisMod (subName variantName fieldName)
+    let nameSuffix = fmtName thisMod (subName variantName fieldName)
+        getName = "get_" <> nameSuffix
+        hasName = "has_" <> nameSuffix
     in mconcat
-        [ accessorName, " :: Data.Capnp.Untyped.ReadCtx m b => "
+        [ getName, " :: Data.Capnp.Untyped.ReadCtx m b => "
         , fmtName thisMod typeName, " m b -> m ", fmtType thisMod fieldType, "\n"
-        , accessorName
+        , getName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
             DataField loc -> fmtGetWordField "struct" loc
             PtrField idx -> mconcat
@@ -102,6 +104,16 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 ]
             HereField -> " Codec.Capnp.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
+        , "\n\n"
+        , hasName, " :: ", fmtName thisMod typeName, " m b -> Bool\n"
+        , hasName, "(", fmtName thisMod typeName, " struct) = "
+        , case fieldLoc of
+            DataField DataLoc{dataIdx} ->
+                TB.fromString (show dataIdx) <> " < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)"
+            PtrField idx ->
+                TB.fromString (show idx) <> " < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)"
+            HereField -> "True"
+            VoidField -> "True"
         ]
 
 fmtDataDef :: Id -> DataDef -> TB.Builder

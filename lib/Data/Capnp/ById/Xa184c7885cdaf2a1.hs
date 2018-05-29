@@ -29,10 +29,19 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyp
     fromPtr = Codec.Capnp.structListPtr
 get_JoinKeyPart'joinId :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -> m Word32
 get_JoinKeyPart'joinId (JoinKeyPart struct) = Codec.Capnp.getWordField struct 0 0 0
+
+has_JoinKeyPart'joinId :: JoinKeyPart m b -> Bool
+has_JoinKeyPart'joinId(JoinKeyPart struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 get_JoinKeyPart'partCount :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -> m Word16
 get_JoinKeyPart'partCount (JoinKeyPart struct) = Codec.Capnp.getWordField struct 0 32 0
+
+has_JoinKeyPart'partCount :: JoinKeyPart m b -> Bool
+has_JoinKeyPart'partCount(JoinKeyPart struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 get_JoinKeyPart'partNum :: Data.Capnp.Untyped.ReadCtx m b => JoinKeyPart m b -> m Word16
 get_JoinKeyPart'partNum (JoinKeyPart struct) = Codec.Capnp.getWordField struct 0 48 0
+
+has_JoinKeyPart'partNum :: JoinKeyPart m b -> Bool
+has_JoinKeyPart'partNum(JoinKeyPart struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 newtype JoinResult (m :: * -> *) b = JoinResult (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JoinResult m b) b where
@@ -44,13 +53,22 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyp
     fromPtr = Codec.Capnp.structListPtr
 get_JoinResult'joinId :: Data.Capnp.Untyped.ReadCtx m b => JoinResult m b -> m Word32
 get_JoinResult'joinId (JoinResult struct) = Codec.Capnp.getWordField struct 0 0 0
+
+has_JoinResult'joinId :: JoinResult m b -> Bool
+has_JoinResult'joinId(JoinResult struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 get_JoinResult'succeeded :: Data.Capnp.Untyped.ReadCtx m b => JoinResult m b -> m Bool
 get_JoinResult'succeeded (JoinResult struct) = Codec.Capnp.getWordField struct 0 32 0
+
+has_JoinResult'succeeded :: JoinResult m b -> Bool
+has_JoinResult'succeeded(JoinResult struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 get_JoinResult'cap :: Data.Capnp.Untyped.ReadCtx m b => JoinResult m b -> m (Maybe (Data.Capnp.Untyped.Ptr m b))
 get_JoinResult'cap (JoinResult struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
+
+has_JoinResult'cap :: JoinResult m b -> Bool
+has_JoinResult'cap(JoinResult struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.ptrSection struct)
 data Side (m :: * -> *) b
     = Side'server
     | Side'client
@@ -83,6 +101,9 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyp
     fromPtr = Codec.Capnp.structListPtr
 get_ProvisionId'joinId :: Data.Capnp.Untyped.ReadCtx m b => ProvisionId m b -> m Word32
 get_ProvisionId'joinId (ProvisionId struct) = Codec.Capnp.getWordField struct 0 0 0
+
+has_ProvisionId'joinId :: ProvisionId m b -> Bool
+has_ProvisionId'joinId(ProvisionId struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 newtype VatId (m :: * -> *) b = VatId (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (VatId m b) b where
@@ -94,3 +115,6 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyp
     fromPtr = Codec.Capnp.structListPtr
 get_VatId'side :: Data.Capnp.Untyped.ReadCtx m b => VatId m b -> m (Side m b)
 get_VatId'side (VatId struct) = Codec.Capnp.getWordField struct 0 0 0
+
+has_VatId'side :: VatId m b -> Bool
+has_VatId'side(VatId struct) = 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
