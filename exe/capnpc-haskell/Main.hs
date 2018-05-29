@@ -230,8 +230,9 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- in our schema.
                     [ IR.Variant
                         { variantName = IR.subName name "unknown'"
-                        , variantParams = IR.Unnamed $
-                            IR.PrimType IR.PrimInt{isSigned=False, size=16}
+                        , variantParams = IR.Unnamed
+                            (IR.PrimType IR.PrimInt{isSigned=False, size=16})
+                            IR.VoidField -- We won't end up actually fetching this from anywhere.
                         , variantTag = Nothing
                         }
                     ]
@@ -308,8 +309,9 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)
                     <> [ IR.Variant
                             { variantName = IR.subName name "unknown'"
-                            , variantParams = IR.Unnamed $
-                                IR.PrimType IR.PrimInt {isSigned=False, size=16}
+                            , variantParams = IR.Unnamed
+                                (IR.PrimType IR.PrimInt {isSigned=False, size=16})
+                                IR.VoidField
                             , variantTag = Nothing
                             }
                        ]
@@ -363,7 +365,7 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         { variantName
         , variantParams = case type_ of
             Type'void -> IR.NoParams
-            _         -> IR.Unnamed (formatType thisModule nodeMap type_)
+            _         -> IR.Unnamed (formatType thisModule nodeMap type_) (getFieldLoc union')
         , variantTag = Just discriminantValue
         }
     Field'group{..} ->
@@ -402,22 +404,23 @@ generateField thisModule nodeMap Field'{..} =
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
                 IR.PrimType IR.PrimVoid
-        , fieldLoc = case union' of
-            Field'group{} ->
-                IR.HereField
-            Field'slot{offset,type_,defaultValue} ->
-                case typeSection type_ of
-                    VoidSec ->
-                        IR.VoidField
-                    PtrSec ->
-                        IR.PtrField (fromIntegral offset)
-                    DataSec ->
-                        IR.DataField (dataLoc offset type_ defaultValue)
-            Field'unknown' _ ->
-                -- Some field tpe we don't know about; we can't
-                -- give a location for it, so call it void
-                IR.VoidField
+        , fieldLoc = getFieldLoc union'
         }
+
+getFieldLoc :: Field' -> IR.FieldLoc
+getFieldLoc Field'group{} = IR.HereField
+getFieldLoc Field'slot{offset,type_,defaultValue} =
+    case typeSection type_ of
+        VoidSec ->
+            IR.VoidField
+        PtrSec ->
+            IR.PtrField (fromIntegral offset)
+        DataSec ->
+            IR.DataField (dataLoc offset type_ defaultValue)
+getFieldLoc (Field'unknown' _) =
+    -- Some field type we don't know about; we can't
+    -- give a location for it, so call it void
+    IR.VoidField
 
 -- | Return the size of the type in units of the minimum size that makes
 -- sense for the section of a struct in which it belongs -- bits for the

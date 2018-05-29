@@ -124,7 +124,7 @@ data Variant = Variant
     deriving(Show, Read, Eq)
 
 data VariantParams
-    = Unnamed Type
+    = Unnamed Type FieldLoc
     | Record [Field]
     | NoParams
     deriving(Show, Read, Eq)

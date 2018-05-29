@@ -102,7 +102,7 @@ instance HsFmt Variant where
         hsFmt thisMod variantName
         <> case variantParams of
             NoParams -> ""
-            Unnamed ty -> " (" <> hsFmt thisMod ty <> ")"
+            Unnamed ty _ -> " (" <> hsFmt thisMod ty <> ")"
             Record [] -> ""
             Record fields -> mconcat
                 [ "\n        { "

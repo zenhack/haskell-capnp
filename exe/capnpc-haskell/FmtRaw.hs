@@ -136,7 +136,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
         case variantParams of
             Record _   -> " (" <> fmtName thisMod (subName variantName "group'") <> " m b)"
             NoParams   -> ""
-            Unnamed ty -> " " <> fmtType thisMod ty
+            Unnamed ty _ -> " " <> fmtType thisMod ty
     fmtVariantCase Variant{..} =
         let nameText = fmtName thisMod variantName
         in "\n            " <>
@@ -147,7 +147,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
                         , case variantParams of
                             Record _  -> nameText <> " <$> Codec.Capnp.fromStruct struct"
                             NoParams  -> "pure " <> nameText
-                            Unnamed _ -> nameText <> " <$> undefined -- TODO"
+                            Unnamed _ _ -> nameText <> " <$> undefined -- TODO"
                         ]
                 Nothing ->
                     "_ -> pure $ " <> nameText <> " tag"
@@ -189,7 +189,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
     -- | Format a data constructor in the definition of a data type for an enum.
     fmtEnumVariant Variant{variantName,variantParams=NoParams,variantTag=Just _} =
         fmtName thisMod variantName
-    fmtEnumVariant Variant{variantName,variantParams=Unnamed ty, variantTag=Nothing} =
+    fmtEnumVariant Variant{variantName,variantParams=Unnamed ty _, variantTag=Nothing} =
         fmtName thisMod variantName <> " " <> fmtType thisMod ty
     fmtEnumVariant variant =
         error $ "Unexpected variant for enum: " ++ show variant
