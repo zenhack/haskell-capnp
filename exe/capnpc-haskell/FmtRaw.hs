@@ -123,7 +123,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
         , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where"
         , "\n    fromStruct struct = do"
         , "\n        tag <- ", fmtGetWordField "struct" tagLoc
-        , "\n        pure $ case tag of"
+        , "\n        case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
         , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where"
@@ -138,18 +138,19 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
             NoParams   -> ""
             Unnamed ty -> " " <> fmtType thisMod ty
     fmtVariantCase Variant{..} =
-        "\n            " <>
-        case variantTag of
-            Just tag ->
-                mconcat
-                    [ TB.fromString (show tag), " -> ", fmtName thisMod variantName
-                    , case variantParams of
-                        Record _  -> " struct"
-                        NoParams  -> ""
-                        Unnamed _ -> " undefined -- TODO"
-                    ]
-            Nothing ->
-                "_ -> "<> fmtName thisMod variantName <> " tag"
+        let nameText = fmtName thisMod variantName
+        in "\n            " <>
+            case variantTag of
+                Just tag ->
+                    mconcat
+                        [ TB.fromString (show tag), " -> "
+                        , case variantParams of
+                            Record _  -> nameText <> " <$> Codec.Capnp.fromStruct struct"
+                            NoParams  -> "pure " <> nameText
+                            Unnamed _ -> nameText <> " <$> undefined -- TODO"
+                        ]
+                Nothing ->
+                    "_ -> pure $ " <> nameText <> " tag"
     fmtVariantAuxNewtype Variant{variantName, variantParams=Record fields} =
         let typeName = subName variantName "group'"
         in fmtNewtypeStruct thisMod typeName <>

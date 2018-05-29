@@ -38,15 +38,15 @@ data JsonValue (m :: * -> *) b
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b) b where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
-        pure $ case tag of
-            6 -> JsonValue'call undefined -- TODO
-            5 -> JsonValue'object undefined -- TODO
-            4 -> JsonValue'array undefined -- TODO
-            3 -> JsonValue'string undefined -- TODO
-            2 -> JsonValue'number undefined -- TODO
-            1 -> JsonValue'boolean undefined -- TODO
-            0 -> JsonValue'null
-            _ -> JsonValue'unknown' tag
+        case tag of
+            6 -> JsonValue'call <$> undefined -- TODO
+            5 -> JsonValue'object <$> undefined -- TODO
+            4 -> JsonValue'array <$> undefined -- TODO
+            3 -> JsonValue'string <$> undefined -- TODO
+            2 -> JsonValue'number <$> undefined -- TODO
+            1 -> JsonValue'boolean <$> undefined -- TODO
+            0 -> pure JsonValue'null
+            _ -> pure $ JsonValue'unknown' tag
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue m b) b where
     fromPtr = Codec.Capnp.structPtr
