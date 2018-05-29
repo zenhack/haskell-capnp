@@ -39,12 +39,12 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
-            6 -> JsonValue'call <$> undefined -- TODO
-            5 -> JsonValue'object <$> undefined -- TODO
-            4 -> JsonValue'array <$> undefined -- TODO
-            3 -> JsonValue'string <$> undefined -- TODO
-            2 -> JsonValue'number <$> undefined -- TODO
-            1 -> JsonValue'boolean <$> undefined -- TODO
+            6 -> JsonValue'call <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            5 -> JsonValue'object <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            4 -> JsonValue'array <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            3 -> JsonValue'string <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            2 -> JsonValue'number <$>  Codec.Capnp.getWordField struct 1 0 0
+            1 -> JsonValue'boolean <$>  Codec.Capnp.getWordField struct 0 16 0
             0 -> pure JsonValue'null
             _ -> pure $ JsonValue'unknown' tag
 

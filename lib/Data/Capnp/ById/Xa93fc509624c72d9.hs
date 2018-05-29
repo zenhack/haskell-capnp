@@ -239,7 +239,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Brand'Scope' 
         tag <-  Codec.Capnp.getWordField struct 1 0 0
         case tag of
             1 -> pure Brand'Scope'inherit
-            0 -> Brand'Scope'bind <$> undefined -- TODO
+            0 -> Brand'Scope'bind <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
             _ -> pure $ Brand'Scope'unknown' tag
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Brand'Scope' m b) b where
@@ -288,7 +288,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Field'ordinal
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 16 0
         case tag of
-            1 -> Field'ordinal'explicit <$> undefined -- TODO
+            1 -> Field'ordinal'explicit <$>  Codec.Capnp.getWordField struct 1 32 0
             0 -> pure Field'ordinal'implicit
             _ -> pure $ Field'ordinal'unknown' tag
 
@@ -387,7 +387,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Brand'Binding
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
-            1 -> Brand'Binding'type_ <$> undefined -- TODO
+            1 -> Brand'Binding'type_ <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
             0 -> pure Brand'Binding'unbound
             _ -> pure $ Brand'Binding'unknown' tag
 
@@ -441,24 +441,24 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Value m b) b 
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
-            18 -> Value'anyPointer <$> undefined -- TODO
+            18 -> Value'anyPointer <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
             17 -> pure Value'interface
-            16 -> Value'struct <$> undefined -- TODO
-            15 -> Value'enum <$> undefined -- TODO
-            14 -> Value'list <$> undefined -- TODO
-            13 -> Value'data_ <$> undefined -- TODO
-            12 -> Value'text <$> undefined -- TODO
-            11 -> Value'float64 <$> undefined -- TODO
-            10 -> Value'float32 <$> undefined -- TODO
-            9 -> Value'uint64 <$> undefined -- TODO
-            8 -> Value'uint32 <$> undefined -- TODO
-            7 -> Value'uint16 <$> undefined -- TODO
-            6 -> Value'uint8 <$> undefined -- TODO
-            5 -> Value'int64 <$> undefined -- TODO
-            4 -> Value'int32 <$> undefined -- TODO
-            3 -> Value'int16 <$> undefined -- TODO
-            2 -> Value'int8 <$> undefined -- TODO
-            1 -> Value'bool <$> undefined -- TODO
+            16 -> Value'struct <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            15 -> Value'enum <$>  Codec.Capnp.getWordField struct 0 16 0
+            14 -> Value'list <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            13 -> Value'data_ <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            12 -> Value'text <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
+            11 -> Value'float64 <$>  Codec.Capnp.getWordField struct 1 0 0
+            10 -> Value'float32 <$>  Codec.Capnp.getWordField struct 0 32 0
+            9 -> Value'uint64 <$>  Codec.Capnp.getWordField struct 1 0 0
+            8 -> Value'uint32 <$>  Codec.Capnp.getWordField struct 0 32 0
+            7 -> Value'uint16 <$>  Codec.Capnp.getWordField struct 0 16 0
+            6 -> Value'uint8 <$>  Codec.Capnp.getWordField struct 0 16 0
+            5 -> Value'int64 <$>  Codec.Capnp.getWordField struct 1 0 0
+            4 -> Value'int32 <$>  Codec.Capnp.getWordField struct 0 32 0
+            3 -> Value'int16 <$>  Codec.Capnp.getWordField struct 0 16 0
+            2 -> Value'int8 <$>  Codec.Capnp.getWordField struct 0 16 0
+            1 -> Value'bool <$>  Codec.Capnp.getWordField struct 0 16 0
             0 -> pure Value'void
             _ -> pure $ Value'unknown' tag
 

@@ -147,7 +147,17 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
                         , case variantParams of
                             Record _  -> nameText <> " <$> Codec.Capnp.fromStruct struct"
                             NoParams  -> "pure " <> nameText
-                            Unnamed _ _ -> nameText <> " <$> undefined -- TODO"
+                            Unnamed _ HereField -> nameText <> " <$> Codec.Capnp.fromStruct struct"
+                            Unnamed _ VoidField -> error
+                                "Shouldn't happen; this should be NoParams."
+                                -- TODO: rule this out statically if possible.
+                            Unnamed _ (DataField loc) ->
+                                nameText <> " <$> " <> fmtGetWordField "struct" loc
+                            Unnamed _ (PtrField idx) -> mconcat
+                                [ nameText <> " <$> "
+                                , " (Data.Capnp.Untyped.getPtr ", TB.fromString (show idx), " struct"
+                                , " >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))"
+                                ]
                         ]
                 Nothing ->
                     "_ -> pure $ " <> nameText <> " tag"
