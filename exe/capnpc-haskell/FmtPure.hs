@@ -132,9 +132,7 @@ fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
                 pureName = fmtName Pure thisMod dataName
             in mconcat
                 -- The IsStruct instance is just a wrapper around decerialize:
-                [ "instance Data.Capnp.Untyped.ReadCtx m b\n"
-                , "    => Codec.Capnp.IsStruct m ", pureName, " b\n"
-                , "  where\n"
+                [ "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m ", pureName, " b where\n"
                 , "    fromStruct = Codec.Capnp.decerialize . ", rawName, "\n"
                 , "\n"
                 -- This is the thing that does the work:

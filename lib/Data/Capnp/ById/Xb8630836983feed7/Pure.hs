@@ -27,9 +27,7 @@ data Persistent'SaveResults
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m Persistent'SaveResults b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Persistent'SaveResults b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults m b) Persistent'SaveResults where
@@ -40,9 +38,7 @@ data Persistent'SaveParams
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m Persistent'SaveParams b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Persistent'SaveParams b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m b) Persistent'SaveParams where

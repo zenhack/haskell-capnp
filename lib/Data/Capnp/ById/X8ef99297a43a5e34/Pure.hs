@@ -39,9 +39,7 @@ data JsonValue'Call
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m JsonValue'Call b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JsonValue'Call b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m b) JsonValue'Call where
@@ -53,9 +51,7 @@ data JsonValue'Field
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m JsonValue'Field b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JsonValue'Field b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m b) JsonValue'Field where

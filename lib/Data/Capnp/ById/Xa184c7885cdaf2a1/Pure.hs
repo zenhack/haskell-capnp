@@ -29,9 +29,7 @@ data JoinKeyPart
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m JoinKeyPart b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JoinKeyPart b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m b) JoinKeyPart where
@@ -44,9 +42,7 @@ data JoinResult
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m JoinResult b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JoinResult b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult m b) JoinResult where
@@ -63,9 +59,7 @@ data ProvisionId
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m ProvisionId b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m ProvisionId b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m b) ProvisionId where
@@ -76,9 +70,7 @@ data VatId
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b
-    => Codec.Capnp.IsStruct m VatId b
-  where
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m VatId b where
     fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.VatId
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.VatId m b) VatId where
