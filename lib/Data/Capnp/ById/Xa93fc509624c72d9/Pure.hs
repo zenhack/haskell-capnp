@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xa93fc509624c72d9.Pure where
 
@@ -12,6 +14,7 @@ import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
+import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -31,6 +34,11 @@ data Brand
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Brand b
+  where
+    fromStruct = undefined
+
 data Method
     = Method
         { name :: Text
@@ -44,6 +52,11 @@ data Method
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Method b
+  where
+    fromStruct = undefined
+
 data Enumerant
     = Enumerant
         { name :: Text
@@ -51,6 +64,11 @@ data Enumerant
         , annotations :: List (Annotation)
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Enumerant b
+  where
+    fromStruct = undefined
 
 data Field
     = Field'
@@ -62,6 +80,11 @@ data Field
         , union' :: Field'
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Field b
+  where
+    fromStruct = undefined
 
 data Field'
     = Field'slot
@@ -83,12 +106,22 @@ data Superclass
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Superclass b
+  where
+    fromStruct = undefined
+
 data Brand'Scope
     = Brand'Scope'
         { scopeId :: Word64
         , union' :: Brand'Scope'
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Brand'Scope b
+  where
+    fromStruct = undefined
 
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
@@ -103,11 +136,21 @@ data CodeGeneratorRequest'RequestedFile'Import
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m CodeGeneratorRequest'RequestedFile'Import b
+  where
+    fromStruct = undefined
+
 data Node'Parameter
     = Node'Parameter
         { name :: Text
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Node'Parameter b
+  where
+    fromStruct = undefined
 
 data Field'ordinal
     = Field'ordinal'implicit
@@ -122,6 +165,11 @@ data CodeGeneratorRequest
         , capnpVersion :: CapnpVersion
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m CodeGeneratorRequest b
+  where
+    fromStruct = undefined
 
 data Type'anyPointer
     = Type'anyPointer'unconstrained
@@ -173,6 +221,11 @@ data CodeGeneratorRequest'RequestedFile
         , imports :: List (CodeGeneratorRequest'RequestedFile'Import)
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m CodeGeneratorRequest'RequestedFile b
+  where
+    fromStruct = undefined
 
 data Type
     = Type'void
@@ -230,12 +283,22 @@ data CapnpVersion
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m CapnpVersion b
+  where
+    fromStruct = undefined
+
 data Node'NestedNode
     = Node'NestedNode
         { name :: Text
         , id :: Word64
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Node'NestedNode b
+  where
+    fromStruct = undefined
 
 data Node
     = Node'
@@ -250,6 +313,11 @@ data Node
         , union' :: Node'
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Node b
+  where
+    fromStruct = undefined
 
 data Node'
     = Node'file
@@ -298,4 +366,9 @@ data Annotation
         , brand :: Brand
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Annotation b
+  where
+    fromStruct = undefined
 

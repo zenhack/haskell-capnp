@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.X8ef99297a43a5e34.Pure where
 
@@ -12,6 +14,7 @@ import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
+import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -35,10 +38,20 @@ data JsonValue'Call
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m JsonValue'Call b
+  where
+    fromStruct = undefined
+
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text
         , value :: JsonValue
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m JsonValue'Field b
+  where
+    fromStruct = undefined
 

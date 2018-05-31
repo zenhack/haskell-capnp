@@ -43,6 +43,8 @@ modRefToNS ty (ByCapnpId id) = Namespace $ case ty of
 fmtModule :: Module -> TB.Builder
 fmtModule Module{..} = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
+    , "{-# LANGUAGE FlexibleInstances #-}"
+    , "{-# LANGUAGE MultiParamTypeClasses #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "module "
         <> fmtModRef Pure (ByCapnpId modId)
@@ -58,6 +60,7 @@ fmtModule Module{..} = mintercalate "\n"
     , "import Data.Capnp.BuiltinTypes.Pure (Data, Text)"
     , ""
     , "import qualified Data.Capnp.Untyped.Pure"
+    , "import qualified Data.Capnp.Untyped"
     , "import qualified Codec.Capnp"
     , ""
     , mintercalate "\n" $ map (fmtImport Pure) modImports
@@ -114,8 +117,21 @@ fmtField thisMod Field{fieldName,fieldType} =
     TB.fromText fieldName <> " :: " <> fmtType thisMod fieldType
 
 fmtDataDef ::  Id -> DataDef -> TB.Builder
-fmtDataDef thisMod DataDef{dataName,dataVariants} = mconcat
+fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
     [ "data ", fmtName Pure thisMod dataName, "\n    = "
     , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
     , "\n    deriving(Show, Read, Eq)\n\n"
-    ]
+    ] <>
+    case (dataVariants, dataCerialType) of
+        ([variant], CTyStruct) ->
+            -- The raw module just has this as a newtype wrapper. Let's
+            -- generate an IsStruct instance.
+            mconcat
+                [ "instance Data.Capnp.Untyped.ReadCtx m b\n"
+                , "    => Codec.Capnp.IsStruct m ", fmtName Pure thisMod dataName, " b\n"
+                , "  where\n"
+                , "    fromStruct = undefined\n\n"
+                ]
+        _ ->
+            -- Don't know what to do with this yet.
+            ""

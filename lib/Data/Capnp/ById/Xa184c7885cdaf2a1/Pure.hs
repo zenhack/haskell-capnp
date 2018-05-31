@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xa184c7885cdaf2a1.Pure where
 
@@ -12,6 +14,7 @@ import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
+import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -25,6 +28,11 @@ data JoinKeyPart
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m JoinKeyPart b
+  where
+    fromStruct = undefined
+
 data JoinResult
     = JoinResult
         { joinId :: Word32
@@ -32,6 +40,11 @@ data JoinResult
         , cap :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m JoinResult b
+  where
+    fromStruct = undefined
 
 data Side
     = Side'server
@@ -45,9 +58,19 @@ data ProvisionId
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m ProvisionId b
+  where
+    fromStruct = undefined
+
 data VatId
     = VatId
         { side :: Side
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m VatId b
+  where
+    fromStruct = undefined
 

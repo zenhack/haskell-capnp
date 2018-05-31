@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xb8630836983feed7.Pure where
 
@@ -12,6 +14,7 @@ import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
+import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -23,9 +26,19 @@ data Persistent'SaveResults
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Persistent'SaveResults b
+  where
+    fromStruct = undefined
+
 data Persistent'SaveParams
     = Persistent'SaveParams
         { sealFor :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Persistent'SaveParams b
+  where
+    fromStruct = undefined
 

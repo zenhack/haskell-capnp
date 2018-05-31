@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xb312981b2552a250.Pure where
 
@@ -12,6 +14,7 @@ import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 
 import qualified Data.Capnp.Untyped.Pure
+import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -28,6 +31,11 @@ data Call
         , allowThirdPartyTailCall :: Bool
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Call b
+  where
+    fromStruct = undefined
 
 data CapDescriptor
     = CapDescriptor'none
@@ -70,6 +78,11 @@ data Payload
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Payload b
+  where
+    fromStruct = undefined
+
 data Provide
     = Provide
         { questionId :: Word32
@@ -78,6 +91,11 @@ data Provide
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Provide b
+  where
+    fromStruct = undefined
+
 data Return
     = Return'
         { answerId :: Word32
@@ -85,6 +103,11 @@ data Return
         , union' :: Return'
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Return b
+  where
+    fromStruct = undefined
 
 data Return'
     = Return'results (Payload)
@@ -103,6 +126,11 @@ data Release
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Release b
+  where
+    fromStruct = undefined
+
 data Exception'Type
     = Exception'Type'failed
     | Exception'Type'overloaded
@@ -118,6 +146,11 @@ data Resolve
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Resolve b
+  where
+    fromStruct = undefined
+
 data Resolve'
     = Resolve'cap (CapDescriptor)
     | Resolve'exception (Exception)
@@ -131,12 +164,22 @@ data ThirdPartyCapDescriptor
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m ThirdPartyCapDescriptor b
+  where
+    fromStruct = undefined
+
 data Finish
     = Finish
         { questionId :: Word32
         , releaseResultCaps :: Bool
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Finish b
+  where
+    fromStruct = undefined
 
 data Accept
     = Accept
@@ -145,6 +188,11 @@ data Accept
         , embargo :: Bool
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Accept b
+  where
+    fromStruct = undefined
 
 data Disembargo'context
     = Disembargo'context'senderLoopback (Word32)
@@ -163,12 +211,22 @@ data Exception
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Exception b
+  where
+    fromStruct = undefined
+
 data PromisedAnswer
     = PromisedAnswer
         { questionId :: Word32
         , transform :: List (PromisedAnswer'Op)
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m PromisedAnswer b
+  where
+    fromStruct = undefined
 
 data Call'sendResultsTo
     = Call'sendResultsTo'caller
@@ -184,6 +242,11 @@ data Bootstrap
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Bootstrap b
+  where
+    fromStruct = undefined
+
 data PromisedAnswer'Op
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField (Word16)
@@ -197,6 +260,11 @@ data Disembargo
         }
     deriving(Show, Read, Eq)
 
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Disembargo b
+  where
+    fromStruct = undefined
+
 data Join
     = Join
         { questionId :: Word32
@@ -204,4 +272,9 @@ data Join
         , keyPart :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
         }
     deriving(Show, Read, Eq)
+
+instance Data.Capnp.Untyped.ReadCtx m b
+    => Codec.Capnp.IsStruct m Join b
+  where
+    fromStruct = undefined
 
