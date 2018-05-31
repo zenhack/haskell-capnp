@@ -1,6 +1,5 @@
 {-| This is the capnp compiler plugin.
 -}
-{-# LANGUAGE NamedFieldPuns #-}
 module Main (main) where
 
 import Data.Capnp.Core.Schema
