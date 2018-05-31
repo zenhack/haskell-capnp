@@ -15,6 +15,7 @@ import qualified Data.Capnp.Untyped.Pure
 import qualified Codec.Capnp
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
+import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
 data Type'anyPointer'unconstrained
     = Type'anyPointer'unconstrained'anyKind
