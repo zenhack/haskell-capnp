@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 -- Generate idiomatic haskell data types from the types in IR.
-module FmtPure
+module Backends.Pure
     ( fmtModule
     ) where
 

@@ -3,7 +3,7 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module FmtRaw
+module Backends.Raw
     ( fmtModule
     ) where
 
@@ -247,7 +247,8 @@ fmtType thisMod = \case
     Untyped ty -> "(Maybe " <> fmtUntyped ty <> ")"
 
 fmtPrimType :: PrimType -> TB.Builder
--- TODO: most of this (except Text & Data) should probably be shared with FmtPure.
+-- TODO: most of this (except Text & Data) should probably be shared with the
+-- Pure backend.
 fmtPrimType PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
 fmtPrimType PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
 fmtPrimType PrimFloat32                  = "Float"

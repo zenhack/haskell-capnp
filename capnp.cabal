@@ -89,8 +89,8 @@ executable capnpc-haskell
     main-is:              Main.hs
     other-modules:
         IR
-      , FmtPure
-      , FmtRaw
+      , Backends.Pure
+      , Backends.Raw
       , Util
     hs-source-dirs:       exe/capnpc-haskell
     build-depends:

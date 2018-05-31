@@ -32,8 +32,8 @@ import qualified Data.Text.Lazy.Builder as TB
 import qualified Data.Text.Lazy.IO      as TIO
 import qualified Data.Vector            as V
 
-import qualified FmtPure
-import qualified FmtRaw
+import qualified Backends.Pure
+import qualified Backends.Raw
 import qualified IR
 
 type NodeMap = M.Map Id NodeMetaData
@@ -531,10 +531,10 @@ handleCGR cgr@CodeGeneratorRequest{..} = concat $ V.toList $
         (\reqFile@CodeGeneratorRequest'RequestedFile{..} ->
             let mod = generateModule nodeMap reqFile in
             [ ( printf "Data/Capnp/ById/X%x/Pure.hs" id
-              , FmtPure.fmtModule mod
+              , Backends.Pure.fmtModule mod
               )
             , ( printf "Data/Capnp/ById/X%x.hs" id
-              , FmtRaw.fmtModule mod
+              , Backends.Raw.fmtModule mod
               )
             ]
         )
