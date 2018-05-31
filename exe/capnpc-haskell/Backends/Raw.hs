@@ -5,6 +5,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Backends.Raw
     ( fmtModule
+    , modFileName
     ) where
 
 import IR
@@ -41,6 +42,9 @@ fmtModule Module{..} = mintercalate "\n"
     , ""
     , mintercalate "\n" $ map (fmtDataDef modId) modDefs
     ]
+
+modFileName :: Module -> FilePath
+modFileName Module{modId} = printf "Data/Capnp/ById/X%x.hs" modId
 
 fmtModRef :: ModuleRef -> TB.Builder
 fmtModRef (ByCapnpId id) = TB.fromString $ printf "Data.Capnp.ById.X%x" id

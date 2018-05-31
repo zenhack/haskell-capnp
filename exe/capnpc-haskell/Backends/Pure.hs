@@ -5,6 +5,7 @@
 -- Generate idiomatic haskell data types from the types in IR.
 module Backends.Pure
     ( fmtModule
+    , modFileName
     ) where
 
 import IR
@@ -23,6 +24,9 @@ import qualified Data.Text.Lazy.Builder as TB
 -- this module generates)?
 data ModRefType = Pure | Raw
     deriving(Show, Read, Eq)
+
+modFileName :: Module -> FilePath
+modFileName Module{modId} = printf "Data/Capnp/ById/X%x/Pure.hs" modId
 
 fmtName :: ModRefType -> Id -> Name -> TB.Builder
 fmtName refTy thisMod Name{..} = modPrefix <> localName
