@@ -17,6 +17,7 @@ import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
+import qualified Data.Capnp.ById.X8ef99297a43a5e34
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
@@ -41,8 +42,10 @@ data JsonValue'Call
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m JsonValue'Call b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m b) JsonValue'Call where
+    decerialize raw = undefined
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text
@@ -53,5 +56,7 @@ data JsonValue'Field
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m JsonValue'Field b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m b) JsonValue'Field where
+    decerialize raw = undefined

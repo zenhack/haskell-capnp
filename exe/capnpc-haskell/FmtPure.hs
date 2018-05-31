@@ -30,7 +30,8 @@ fmtName refTy thisMod Name{..} = modPrefix <> localName
     localName = mintercalate "'" $
         map TB.fromText $ fromList $ toList nameLocalNS ++ [nameUnqualified]
     modPrefix
-        | null nsParts || modRefToNS refTy (ByCapnpId thisMod) == ns = ""
+        | null nsParts = ""
+        | refTy == Pure && modRefToNS refTy (ByCapnpId thisMod) == ns = ""
         | otherwise = fmtModRef refTy nameModule <> "."
     ns@(Namespace nsParts) = modRefToNS refTy nameModule
 
@@ -63,6 +64,7 @@ fmtModule Module{..} = mintercalate "\n"
     , "import qualified Data.Capnp.Untyped"
     , "import qualified Codec.Capnp"
     , ""
+    , fmtImport Raw $ Import (ByCapnpId modId)
     , mintercalate "\n" $ map (fmtImport Pure) modImports
     , mintercalate "\n" $ map (fmtImport Raw) modImports
     , ""
@@ -125,12 +127,23 @@ fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
     case (dataVariants, dataCerialType) of
         ([variant], CTyStruct) ->
             -- The raw module just has this as a newtype wrapper. Let's
-            -- generate an IsStruct instance.
-            mconcat
+            -- generate an IsStruct instance and a Decerialize instance.
+            let rawName = fmtName Raw thisMod dataName
+                pureName = fmtName Pure thisMod dataName
+            in mconcat
+                -- The IsStruct instance is just a wrapper around decerialize:
                 [ "instance Data.Capnp.Untyped.ReadCtx m b\n"
-                , "    => Codec.Capnp.IsStruct m ", fmtName Pure thisMod dataName, " b\n"
+                , "    => Codec.Capnp.IsStruct m ", pureName, " b\n"
                 , "  where\n"
-                , "    fromStruct = undefined\n\n"
+                , "    fromStruct = Codec.Capnp.decerialize . ", rawName, "\n"
+                , "\n"
+                -- This is the thing that does the work:
+                , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize ("
+                , rawName
+                , " m b) "
+                , pureName
+                , " where\n"
+                , "    decerialize raw = undefined\n" -- TODO: parse fields.
                 ]
         _ ->
             -- Don't know what to do with this yet.

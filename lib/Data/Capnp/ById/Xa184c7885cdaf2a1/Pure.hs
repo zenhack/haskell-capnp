@@ -17,6 +17,7 @@ import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
+import qualified Data.Capnp.ById.Xa184c7885cdaf2a1
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
@@ -31,8 +32,10 @@ data JoinKeyPart
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m JoinKeyPart b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m b) JoinKeyPart where
+    decerialize raw = undefined
 data JoinResult
     = JoinResult
         { joinId :: Word32
@@ -44,8 +47,10 @@ data JoinResult
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m JoinResult b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult m b) JoinResult where
+    decerialize raw = undefined
 data Side
     = Side'server
     | Side'client
@@ -61,8 +66,10 @@ data ProvisionId
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m ProvisionId b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m b) ProvisionId where
+    decerialize raw = undefined
 data VatId
     = VatId
         { side :: Side
@@ -72,5 +79,7 @@ data VatId
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m VatId b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xa184c7885cdaf2a1.VatId
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.VatId m b) VatId where
+    decerialize raw = undefined

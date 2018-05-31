@@ -17,6 +17,7 @@ import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
+import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
 
 

@@ -17,6 +17,7 @@ import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
+import qualified Data.Capnp.ById.Xb312981b2552a250
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 
@@ -35,8 +36,10 @@ data Call
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Call b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Call
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Call m b) Call where
+    decerialize raw = undefined
 data CapDescriptor
     = CapDescriptor'none
     | CapDescriptor'senderHosted (Word32)
@@ -81,8 +84,10 @@ data Payload
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Payload b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Payload
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Payload m b) Payload where
+    decerialize raw = undefined
 data Provide
     = Provide
         { questionId :: Word32
@@ -94,8 +99,10 @@ data Provide
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Provide b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Provide
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Provide m b) Provide where
+    decerialize raw = undefined
 data Return
     = Return'
         { answerId :: Word32
@@ -107,8 +114,10 @@ data Return
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Return b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Return
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Return m b) Return where
+    decerialize raw = undefined
 data Return'
     = Return'results (Payload)
     | Return'exception (Exception)
@@ -129,8 +138,10 @@ data Release
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Release b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Release
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Release m b) Release where
+    decerialize raw = undefined
 data Exception'Type
     = Exception'Type'failed
     | Exception'Type'overloaded
@@ -149,8 +160,10 @@ data Resolve
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Resolve b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Resolve
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Resolve m b) Resolve where
+    decerialize raw = undefined
 data Resolve'
     = Resolve'cap (CapDescriptor)
     | Resolve'exception (Exception)
@@ -167,8 +180,10 @@ data ThirdPartyCapDescriptor
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m ThirdPartyCapDescriptor b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor m b) ThirdPartyCapDescriptor where
+    decerialize raw = undefined
 data Finish
     = Finish
         { questionId :: Word32
@@ -179,8 +194,10 @@ data Finish
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Finish b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Finish
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Finish m b) Finish where
+    decerialize raw = undefined
 data Accept
     = Accept
         { questionId :: Word32
@@ -192,8 +209,10 @@ data Accept
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Accept b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Accept
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Accept m b) Accept where
+    decerialize raw = undefined
 data Disembargo'context
     = Disembargo'context'senderLoopback (Word32)
     | Disembargo'context'receiverLoopback (Word32)
@@ -214,8 +233,10 @@ data Exception
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Exception b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Exception
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Exception m b) Exception where
+    decerialize raw = undefined
 data PromisedAnswer
     = PromisedAnswer
         { questionId :: Word32
@@ -226,8 +247,10 @@ data PromisedAnswer
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m PromisedAnswer b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.PromisedAnswer
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.PromisedAnswer m b) PromisedAnswer where
+    decerialize raw = undefined
 data Call'sendResultsTo
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
@@ -245,8 +268,10 @@ data Bootstrap
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Bootstrap b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Bootstrap
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Bootstrap m b) Bootstrap where
+    decerialize raw = undefined
 data PromisedAnswer'Op
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField (Word16)
@@ -263,8 +288,10 @@ data Disembargo
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Disembargo b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Disembargo
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Disembargo m b) Disembargo where
+    decerialize raw = undefined
 data Join
     = Join
         { questionId :: Word32
@@ -276,5 +303,7 @@ data Join
 instance Data.Capnp.Untyped.ReadCtx m b
     => Codec.Capnp.IsStruct m Join b
   where
-    fromStruct = undefined
+    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb312981b2552a250.Join
 
+instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb312981b2552a250.Join m b) Join where
+    decerialize raw = undefined
