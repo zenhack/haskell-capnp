@@ -18,3 +18,7 @@ test:alltests:
       # Run stylish-haskell, and fail if it changes anything:
     - ./format.sh
     - git diff --exit-code
+      # Regenerate the schema, and make sure they're in-sync
+      # with what was committed:
+    - ./regen.sh
+    - git diff --exit-code
