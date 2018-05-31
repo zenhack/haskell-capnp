@@ -10,7 +10,7 @@
 --   schema format itself and the types defined for it in schema.capnp have some
 --   quirks that need to be ironed out to perform the mapping:
 --   * Unions and structs are not separate types; a union is just a (possibly
---     anonymous field within a struct.
+--     anonymous) field within a struct.
 --   * Groups are only kindof their own type.
 --   * Schema can have nested, mutually recursive namespaces even within a
 --     single file. We want to generate a module with a flat namespace.
