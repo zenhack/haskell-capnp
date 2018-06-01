@@ -44,6 +44,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JsonValue'Call
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m b) JsonValue'Call where
     decerialize raw = undefined
+
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text
@@ -56,3 +57,4 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JsonValue'Fiel
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m b) JsonValue'Field where
     decerialize raw = undefined
+

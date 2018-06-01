@@ -146,6 +146,7 @@ fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
                 , pureName
                 , " where\n"
                 , "    decerialize raw = undefined\n" -- TODO: parse fields.
+                , "\n"
                 ]
         _ ->
             -- Don't know what to do with this yet.

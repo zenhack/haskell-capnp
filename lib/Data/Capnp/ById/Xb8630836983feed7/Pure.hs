@@ -32,6 +32,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Persistent'Sav
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults m b) Persistent'SaveResults where
     decerialize raw = undefined
+
 data Persistent'SaveParams
     = Persistent'SaveParams
         { sealFor :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
@@ -43,3 +44,4 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Persistent'Sav
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m b) Persistent'SaveParams where
     decerialize raw = undefined
+

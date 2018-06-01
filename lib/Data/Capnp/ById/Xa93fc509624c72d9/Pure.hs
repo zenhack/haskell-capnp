@@ -40,6 +40,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Brand b where
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Brand m b) Brand where
     decerialize raw = undefined
+
 data Method
     = Method
         { name :: Text
@@ -58,6 +59,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Method b where
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Method m b) Method where
     decerialize raw = undefined
+
 data Enumerant
     = Enumerant
         { name :: Text
@@ -71,6 +73,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Enumerant b wh
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Enumerant m b) Enumerant where
     decerialize raw = undefined
+
 data Field
     = Field'
         { name :: Text
@@ -87,6 +90,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Field b where
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Field m b) Field where
     decerialize raw = undefined
+
 data Field'
     = Field'slot
         { offset :: Word32
@@ -112,6 +116,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Superclass b w
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Superclass m b) Superclass where
     decerialize raw = undefined
+
 data Brand'Scope
     = Brand'Scope'
         { scopeId :: Word64
@@ -124,6 +129,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Brand'Scope b 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Brand'Scope m b) Brand'Scope where
     decerialize raw = undefined
+
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
     | Brand'Scope'inherit
@@ -142,6 +148,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m CodeGeneratorR
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import m b) CodeGeneratorRequest'RequestedFile'Import where
     decerialize raw = undefined
+
 data Node'Parameter
     = Node'Parameter
         { name :: Text
@@ -153,6 +160,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Node'Parameter
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Node'Parameter m b) Node'Parameter where
     decerialize raw = undefined
+
 data Field'ordinal
     = Field'ordinal'implicit
     | Field'ordinal'explicit (Word16)
@@ -172,6 +180,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m CodeGeneratorR
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest m b) CodeGeneratorRequest where
     decerialize raw = undefined
+
 data Type'anyPointer
     = Type'anyPointer'unconstrained
         { union' :: Type'anyPointer'unconstrained
@@ -228,6 +237,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m CodeGeneratorR
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile m b) CodeGeneratorRequest'RequestedFile where
     decerialize raw = undefined
+
 data Type
     = Type'void
     | Type'bool
@@ -289,6 +299,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m CapnpVersion b
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.CapnpVersion m b) CapnpVersion where
     decerialize raw = undefined
+
 data Node'NestedNode
     = Node'NestedNode
         { name :: Text
@@ -301,6 +312,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Node'NestedNod
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Node'NestedNode m b) Node'NestedNode where
     decerialize raw = undefined
+
 data Node
     = Node'
         { id :: Word64
@@ -320,6 +332,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Node b where
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Node m b) Node where
     decerialize raw = undefined
+
 data Node'
     = Node'file
     | Node'struct
@@ -373,3 +386,4 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Annotation b w
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa93fc509624c72d9.Annotation m b) Annotation where
     decerialize raw = undefined
+

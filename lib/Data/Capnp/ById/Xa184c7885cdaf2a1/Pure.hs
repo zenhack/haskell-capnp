@@ -34,6 +34,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JoinKeyPart b 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m b) JoinKeyPart where
     decerialize raw = undefined
+
 data JoinResult
     = JoinResult
         { joinId :: Word32
@@ -47,6 +48,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JoinResult b w
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult m b) JoinResult where
     decerialize raw = undefined
+
 data Side
     = Side'server
     | Side'client
@@ -64,6 +66,7 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m ProvisionId b 
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m b) ProvisionId where
     decerialize raw = undefined
+
 data VatId
     = VatId
         { side :: Side
@@ -75,3 +78,4 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m VatId b where
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xa184c7885cdaf2a1.VatId m b) VatId where
     decerialize raw = undefined
+
