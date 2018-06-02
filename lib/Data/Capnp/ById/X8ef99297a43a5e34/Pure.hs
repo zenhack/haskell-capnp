@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.X8ef99297a43a5e34.Pure where
 
@@ -49,6 +50,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'call val -> JsonValue'call <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> JsonValue'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JsonValue BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.X8ef99297a43a5e34.JsonValue m BS.ByteString)
+
 data JsonValue'Call
     = JsonValue'Call
         { function :: Text
@@ -61,6 +67,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JsonValue'Call BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m BS.ByteString)
+
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text
@@ -72,4 +83,9 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = JsonValue'Field
             <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JsonValue'Field BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m BS.ByteString)
 

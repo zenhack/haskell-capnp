@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xa184c7885cdaf2a1.Pure where
 
@@ -40,6 +41,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinKeyPart BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m BS.ByteString)
+
 data JoinResult
     = JoinResult
         { joinId :: Word32
@@ -53,6 +59,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinResult BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult m BS.ByteString)
 
 data Side
     = Side'server
@@ -77,6 +88,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = ProvisionId
             <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m ProvisionId BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m BS.ByteString)
+
 data VatId
     = VatId
         { side :: Side
@@ -86,4 +102,9 @@ data VatId
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa184c7885cdaf2a1.VatId m BS.ByteString) VatId where
     decerialize raw = VatId
             <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m VatId BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa184c7885cdaf2a1.VatId m BS.ByteString)
 

@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xb312981b2552a250.Pure where
 
@@ -48,6 +49,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Call'allowThirdPartyTailCall raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Call BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Call m BS.ByteString)
+
 data CapDescriptor
     = CapDescriptor'none
     | CapDescriptor'senderHosted (Word32)
@@ -68,6 +74,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.CapDescriptor'receiverAnswer val -> CapDescriptor'receiverAnswer <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.CapDescriptor'thirdPartyHosted val -> CapDescriptor'thirdPartyHosted <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.CapDescriptor'unknown' val -> CapDescriptor'unknown' <$> Codec.Capnp.decerialize val
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m CapDescriptor BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.CapDescriptor m BS.ByteString)
 
 data Message
     = Message'unimplemented (Message)
@@ -106,6 +117,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.Message'disembargo val -> Message'disembargo <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.Message'unknown' val -> Message'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Message BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Message m BS.ByteString)
+
 data MessageTarget
     = MessageTarget'importedCap (Word32)
     | MessageTarget'promisedAnswer (PromisedAnswer)
@@ -119,6 +135,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.MessageTarget'promisedAnswer val -> MessageTarget'promisedAnswer <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.MessageTarget'unknown' val -> MessageTarget'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m MessageTarget BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.MessageTarget m BS.ByteString)
+
 data Payload
     = Payload
         { content :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
@@ -130,6 +151,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Payload
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Payload'content raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Payload'capTable raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Payload BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Payload m BS.ByteString)
 
 data Provide
     = Provide
@@ -145,6 +171,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Provide'target raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Provide'recipient raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Provide BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Provide m BS.ByteString)
+
 data Return
     = Return'
         { answerId :: Word32
@@ -158,6 +189,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Return''answerId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Return''releaseParamCaps raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Return''union' raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Return BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Return m BS.ByteString)
 
 data Return'
     = Return'results (Payload)
@@ -180,6 +216,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.Return'acceptFromThirdParty val -> Return'acceptFromThirdParty <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.Return'unknown' val -> Return'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Return' BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Return' m BS.ByteString)
+
 data Release
     = Release
         { id :: Word32
@@ -191,6 +232,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Release
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Release'id raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Release'referenceCount raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Release BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Release m BS.ByteString)
 
 data Exception'Type
     = Exception'Type'failed
@@ -221,6 +267,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Resolve''promiseId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Resolve''union' raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Resolve BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Resolve m BS.ByteString)
+
 data Resolve'
     = Resolve'cap (CapDescriptor)
     | Resolve'exception (Exception)
@@ -234,6 +285,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.Resolve'exception val -> Resolve'exception <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.Resolve'unknown' val -> Resolve'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Resolve' BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Resolve' m BS.ByteString)
+
 data ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor
         { id :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
@@ -246,6 +302,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'id raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'vineId raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m ThirdPartyCapDescriptor BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor m BS.ByteString)
+
 data Finish
     = Finish
         { questionId :: Word32
@@ -257,6 +318,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Finish
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Finish'questionId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Finish'releaseResultCaps raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Finish BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Finish m BS.ByteString)
 
 data Accept
     = Accept
@@ -271,6 +337,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Accept'questionId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Accept'provision raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Accept'embargo raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Accept BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Accept m BS.ByteString)
 
 data Disembargo'context
     = Disembargo'context'senderLoopback (Word32)
@@ -289,6 +360,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.Disembargo'context'provide val -> Disembargo'context'provide <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.Disembargo'context'unknown' val -> Disembargo'context'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Disembargo'context BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Disembargo'context m BS.ByteString)
+
 data Exception
     = Exception
         { reason :: Text
@@ -305,6 +381,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteDurability raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Exception'type_ raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Exception BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Exception m BS.ByteString)
+
 data PromisedAnswer
     = PromisedAnswer
         { questionId :: Word32
@@ -316,6 +397,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = PromisedAnswer
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'questionId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'transform raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m PromisedAnswer BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.PromisedAnswer m BS.ByteString)
 
 data Call'sendResultsTo
     = Call'sendResultsTo'caller
@@ -332,6 +418,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.Call'sendResultsTo'thirdParty val -> Call'sendResultsTo'thirdParty <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.Call'sendResultsTo'unknown' val -> Call'sendResultsTo'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Call'sendResultsTo BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Call'sendResultsTo m BS.ByteString)
+
 data Bootstrap
     = Bootstrap
         { questionId :: Word32
@@ -343,6 +434,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Bootstrap
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Bootstrap'questionId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Bootstrap'deprecatedObjectId raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Bootstrap BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Bootstrap m BS.ByteString)
 
 data PromisedAnswer'Op
     = PromisedAnswer'Op'noop
@@ -357,6 +453,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op'getPointerField val -> PromisedAnswer'Op'getPointerField <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op'unknown' val -> PromisedAnswer'Op'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m PromisedAnswer'Op BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op m BS.ByteString)
+
 data Disembargo
     = Disembargo
         { target :: MessageTarget
@@ -368,6 +469,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Disembargo
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Disembargo'target raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Disembargo BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Disembargo m BS.ByteString)
 
 data Join
     = Join
@@ -382,4 +488,9 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xb312981b2552a250.get_Join'questionId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Join'target raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xb312981b2552a250.get_Join'keyPart raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Join BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb312981b2552a250.Join m BS.ByteString)
 

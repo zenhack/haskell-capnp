@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xb8630836983feed7.Pure where
 
@@ -36,6 +37,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Persistent'SaveResults
             <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Persistent'SaveResults BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults m BS.ByteString)
+
 data Persistent'SaveParams
     = Persistent'SaveParams
         { sealFor :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
@@ -45,4 +51,9 @@ data Persistent'SaveParams
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m BS.ByteString) Persistent'SaveParams where
     decerialize raw = Persistent'SaveParams
             <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Persistent'SaveParams BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m BS.ByteString)
 

@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xa93fc509624c72d9.Pure where
 
@@ -43,6 +44,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'capability -> pure Type'anyPointer'unconstrained'capability
         Data.Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'unknown' val -> Type'anyPointer'unconstrained'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Type'anyPointer'unconstrained BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained m BS.ByteString)
+
 data Brand
     = Brand
         { scopes :: List (Brand'Scope)
@@ -52,6 +58,11 @@ data Brand
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa93fc509624c72d9.Brand m BS.ByteString) Brand where
     decerialize raw = Brand
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Brand'scopes raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Brand BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Brand m BS.ByteString)
 
 data Method
     = Method
@@ -77,6 +88,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Method'resultBrand raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Method'implicitParameters raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Method BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Method m BS.ByteString)
+
 data Enumerant
     = Enumerant
         { name :: Text
@@ -90,6 +106,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Enumerant'name raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Enumerant'codeOrder raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Enumerant'annotations raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Enumerant BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Enumerant m BS.ByteString)
 
 data Field
     = Field'
@@ -110,6 +131,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Field''discriminantValue raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Field''ordinal raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Field''union' raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Field BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Field m BS.ByteString)
 
 data Field'
     = Field'slot
@@ -136,6 +162,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Field'group'typeId raw >>= Codec.Capnp.decerialize)
         Data.Capnp.ById.Xa93fc509624c72d9.Field'unknown' val -> Field'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Field' BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Field' m BS.ByteString)
+
 data Superclass
     = Superclass
         { id :: Word64
@@ -148,6 +179,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Superclass'id raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Superclass'brand raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Superclass BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Superclass m BS.ByteString)
+
 data Brand'Scope
     = Brand'Scope'
         { scopeId :: Word64
@@ -159,6 +195,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Brand'Scope'
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope''scopeId raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope''union' raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Brand'Scope BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Brand'Scope m BS.ByteString)
 
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
@@ -173,6 +214,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xa93fc509624c72d9.Brand'Scope'inherit -> pure Brand'Scope'inherit
         Data.Capnp.ById.Xa93fc509624c72d9.Brand'Scope'unknown' val -> Brand'Scope'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Brand'Scope' BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Brand'Scope' m BS.ByteString)
+
 data CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import
         { id :: Word64
@@ -185,6 +231,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'id raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'name raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m CodeGeneratorRequest'RequestedFile'Import BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import m BS.ByteString)
+
 data Node'Parameter
     = Node'Parameter
         { name :: Text
@@ -194,6 +245,11 @@ data Node'Parameter
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa93fc509624c72d9.Node'Parameter m BS.ByteString) Node'Parameter where
     decerialize raw = Node'Parameter
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node'Parameter'name raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Node'Parameter BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Node'Parameter m BS.ByteString)
 
 data Field'ordinal
     = Field'ordinal'implicit
@@ -208,6 +264,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xa93fc509624c72d9.Field'ordinal'explicit val -> Field'ordinal'explicit <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xa93fc509624c72d9.Field'ordinal'unknown' val -> Field'ordinal'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Field'ordinal BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Field'ordinal m BS.ByteString)
+
 data CodeGeneratorRequest
     = CodeGeneratorRequest
         { nodes :: List (Node)
@@ -221,6 +282,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'nodes raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'requestedFiles raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'capnpVersion raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m CodeGeneratorRequest BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest m BS.ByteString)
 
 data Type'anyPointer
     = Type'anyPointer'unconstrained
@@ -248,6 +314,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'implicitMethodParameter'parameterIndex raw >>= Codec.Capnp.decerialize)
         Data.Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unknown' val -> Type'anyPointer'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Type'anyPointer BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Type'anyPointer m BS.ByteString)
+
 data Brand'Binding
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type)
@@ -260,6 +331,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xa93fc509624c72d9.Brand'Binding'unbound -> pure Brand'Binding'unbound
         Data.Capnp.ById.Xa93fc509624c72d9.Brand'Binding'type_ val -> Brand'Binding'type_ <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xa93fc509624c72d9.Brand'Binding'unknown' val -> Brand'Binding'unknown' <$> Codec.Capnp.decerialize val
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Brand'Binding BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Brand'Binding m BS.ByteString)
 
 data Value
     = Value'void
@@ -308,6 +384,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
         Data.Capnp.ById.Xa93fc509624c72d9.Value'anyPointer val -> Value'anyPointer <$> Codec.Capnp.decerialize val
         Data.Capnp.ById.Xa93fc509624c72d9.Value'unknown' val -> Value'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Value BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Value m BS.ByteString)
+
 data CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile
         { id :: Word64
@@ -321,6 +402,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'id raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'filename raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'imports raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m CodeGeneratorRequest'RequestedFile BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile m BS.ByteString)
 
 data Type
     = Type'void
@@ -390,6 +476,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw >>= Codec.Capnp.decerialize)
         Data.Capnp.ById.Xa93fc509624c72d9.Type'unknown' val -> Type'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Type BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Type m BS.ByteString)
+
 data ElementSize
     = ElementSize'empty
     | ElementSize'bit
@@ -429,6 +520,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'minor raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'micro raw >>= Codec.Capnp.decerialize)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m CapnpVersion BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.CapnpVersion m BS.ByteString)
+
 data Node'NestedNode
     = Node'NestedNode
         { name :: Text
@@ -440,6 +536,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
     decerialize raw = Node'NestedNode
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node'NestedNode'name raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node'NestedNode'id raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Node'NestedNode BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Node'NestedNode m BS.ByteString)
 
 data Node
     = Node'
@@ -466,6 +567,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node''parameters raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node''isGeneric raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node''union' raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Node BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Node m BS.ByteString)
 
 data Node'
     = Node'file
@@ -543,6 +649,11 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Node'annotation'targetsAnnotation raw >>= Codec.Capnp.decerialize)
         Data.Capnp.ById.Xa93fc509624c72d9.Node'unknown' val -> Node'unknown' <$> Codec.Capnp.decerialize val
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Node' BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Node' m BS.ByteString)
+
 data Annotation
     = Annotation
         { id :: Word64
@@ -556,4 +667,9 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.B
             <$> (Data.Capnp.ById.Xa93fc509624c72d9.get_Annotation'id raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Annotation'value raw >>= Codec.Capnp.decerialize)
             <*> (Data.Capnp.ById.Xa93fc509624c72d9.get_Annotation'brand raw >>= Codec.Capnp.decerialize)
+
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Annotation BS.ByteString where
+    fromStruct struct = do
+        raw <- Codec.Capnp.fromStruct struct
+        Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Annotation m BS.ByteString)
 

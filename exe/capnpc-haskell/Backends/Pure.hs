@@ -51,6 +51,7 @@ fmtModule Module{..} = mintercalate "\n"
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
+    , "{-# LANGUAGE ScopedTypeVariables #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "module "
         <> fmtModRef Pure (ByCapnpId modId)
@@ -128,15 +129,15 @@ fmtField thisMod Field{fieldName,fieldType} =
     TB.fromText fieldName <> " :: " <> fmtType thisMod fieldType
 
 fmtDataDef ::  Id -> DataDef -> TB.Builder
-fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
-    [ "data ", fmtName Pure thisMod dataName, "\n    = "
-    , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
-    , "\n    deriving(Show, Read, Eq)\n\n"
-    ] <>
+fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} =
     let rawName = fmtName Raw thisMod dataName
         pureName = fmtName Pure thisMod dataName
     in mconcat
-        [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
+        [ "data ", fmtName Pure thisMod dataName, "\n    = "
+        , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
+        , "\n    deriving(Show, Read, Eq)"
+        , "\n\n"
+        , "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
         , rawName
         , " m BS.ByteString) "
         , pureName
@@ -151,6 +152,17 @@ fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
                 , mintercalate "\n        " (map fmtDecerializeVariant dataVariants)
                 ]
         , "\n\n"
+        , case dataCerialType of
+            CTyStruct -> mconcat
+                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m "
+                , pureName, " BS.ByteString where\n"
+                , "    fromStruct struct = do\n"
+                , "        raw <- Codec.Capnp.fromStruct struct\n"
+                , "        Codec.Capnp.decerialize (raw :: ", rawName, " m BS.ByteString)\n"
+                , "\n"
+                ]
+            _ ->
+                ""
         ]
   where
     fmtDecerializeArgs variantName fields = mconcat
