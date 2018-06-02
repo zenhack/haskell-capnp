@@ -135,46 +135,41 @@ fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
     ] <>
     let rawName = fmtName Raw thisMod dataName
         pureName = fmtName Pure thisMod dataName
-    in case dataCerialType of
-        CTyStruct ->
-            -- The raw module just has this as a newtype wrapper. Let's
-            -- generate an IsStruct instance and a Decerialize instance.
-            mconcat
-                -- The IsStruct instance is just a wrapper around decerialize:
-                {-
-                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m "
-                , pureName
-                , " BS.ByteString where\n"
-                , "    fromStruct = Codec.Capnp.decerialize . ", rawName, "\n"
-                , "\n"
-                -- This is the thing that does the work:
-                -}
-                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
-                , rawName
-                , " m BS.ByteString) "
-                , pureName
-                , " where\n"
-                , "    decerialize raw ="
-                , case dataVariants of
-                    [Variant{variantParams=NoParams}] -> ""
-                    [Variant{variantName,variantParams=Record fields}] -> mconcat
-                        [ " ", fmtName Pure thisMod variantName
-                        , "\n        <$> "
-                        , mintercalate "\n        <*> " $ flip map fields $ \Field{fieldName} -> mconcat
-                            [ "(", fmtName Raw thisMod $ prefixName "get_" (subName variantName fieldName)
-                            , " raw >>= Codec.Capnp.decerialize)"
-                            ]
-                        ]
-                    _ -> " undefined -- TODO"
-                , "\n\n"
+    in mconcat
+        [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
+        , rawName
+        , " m BS.ByteString) "
+        , pureName
+        , " where\n"
+        , "    decerialize raw = "
+        , case dataVariants of
+            [Variant{variantName,variantParams=Record fields}] ->
+                fmtDecerializeArgs variantName fields
+            _ -> mconcat
+                [ "case raw of\n"
+                , "\n        "
+                , mintercalate "\n        " (map fmtDecerializeVariant dataVariants)
                 ]
-        _ ->
-            -- Don't know what to do with this yet.
-            mconcat
-                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
-                , rawName
-                , " m BS.ByteString) "
-                , pureName
-                , " where\n"
-                , "    decerialize raw = undefined\n\n"
+        , "\n\n"
+        ]
+  where
+    fmtDecerializeArgs variantName fields = mconcat
+        [ fmtName Pure thisMod variantName
+        , "\n            <$> "
+        , mintercalate "\n            <*> " $
+            flip map fields $ \Field{fieldName} -> mconcat
+                [ "(", fmtName Raw thisMod $ prefixName "get_" (subName variantName fieldName)
+                , " raw >>= Codec.Capnp.decerialize)"
+                ]
+        ]
+    fmtDecerializeVariant Variant{variantName,variantParams} =
+        fmtName Raw thisMod variantName <>
+        case variantParams of
+            NoParams -> " -> pure " <> fmtName Pure thisMod variantName
+            Record fields ->
+              " raw -> " <> fmtDecerializeArgs variantName fields
+            _ -> mconcat
+                [ " val -> "
+                , fmtName Pure thisMod variantName
+                , " <$> Codec.Capnp.decerialize val"
                 ]

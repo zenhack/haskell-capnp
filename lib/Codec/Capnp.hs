@@ -74,15 +74,18 @@ instance Monad m => Decerialize m Word32 Word32 where
     decerialize = pure
 instance Monad m => Decerialize m Word64 Word64 where
     decerialize = pure
-
-instance Monad m => Decerialize m Word8 Int8 where
-    decerialize = pure . fromIntegral
-instance Monad m => Decerialize m Word16 Int16 where
-    decerialize = pure . fromIntegral
-instance Monad m => Decerialize m Word32 Int32 where
-    decerialize = pure . fromIntegral
-instance Monad m => Decerialize m Word64 Int64 where
-    decerialize = pure . fromIntegral
+instance Monad m => Decerialize m Int8 Int8 where
+    decerialize = pure
+instance Monad m => Decerialize m Int16 Int16 where
+    decerialize = pure
+instance Monad m => Decerialize m Int32 Int32 where
+    decerialize = pure
+instance Monad m => Decerialize m Int64 Int64 where
+    decerialize = pure
+instance Monad m => Decerialize m Float Float where
+    decerialize = pure
+instance Monad m => Decerialize m Double Double where
+    decerialize = pure
 
 -- IsWord instance for booleans.
 instance IsWord Bool where

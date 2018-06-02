@@ -36,9 +36,9 @@ data JoinKeyPart
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m BS.ByteString) JoinKeyPart where
     decerialize raw = JoinKeyPart
-        <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= Codec.Capnp.decerialize)
-        <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= Codec.Capnp.decerialize)
-        <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= Codec.Capnp.decerialize)
+            <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= Codec.Capnp.decerialize)
+            <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= Codec.Capnp.decerialize)
 
 data JoinResult
     = JoinResult
@@ -50,9 +50,9 @@ data JoinResult
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa184c7885cdaf2a1.JoinResult m BS.ByteString) JoinResult where
     decerialize raw = JoinResult
-        <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= Codec.Capnp.decerialize)
-        <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= Codec.Capnp.decerialize)
-        <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= Codec.Capnp.decerialize)
+            <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= Codec.Capnp.decerialize)
+            <*> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= Codec.Capnp.decerialize)
 
 data Side
     = Side'server
@@ -61,7 +61,11 @@ data Side
     deriving(Show, Read, Eq)
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa184c7885cdaf2a1.Side m BS.ByteString) Side where
-    decerialize raw = undefined
+    decerialize raw = case raw of
+
+        Data.Capnp.ById.Xa184c7885cdaf2a1.Side'server -> pure Side'server
+        Data.Capnp.ById.Xa184c7885cdaf2a1.Side'client -> pure Side'client
+        Data.Capnp.ById.Xa184c7885cdaf2a1.Side'unknown' val -> Side'unknown' <$> Codec.Capnp.decerialize val
 
 data ProvisionId
     = ProvisionId
@@ -71,7 +75,7 @@ data ProvisionId
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m BS.ByteString) ProvisionId where
     decerialize raw = ProvisionId
-        <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= Codec.Capnp.decerialize)
 
 data VatId
     = VatId
@@ -81,5 +85,5 @@ data VatId
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xa184c7885cdaf2a1.VatId m BS.ByteString) VatId where
     decerialize raw = VatId
-        <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= Codec.Capnp.decerialize)
 

@@ -34,7 +34,7 @@ data Persistent'SaveResults
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults m BS.ByteString) Persistent'SaveResults where
     decerialize raw = Persistent'SaveResults
-        <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= Codec.Capnp.decerialize)
 
 data Persistent'SaveParams
     = Persistent'SaveParams
@@ -44,5 +44,5 @@ data Persistent'SaveParams
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m BS.ByteString) Persistent'SaveParams where
     decerialize raw = Persistent'SaveParams
-        <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= Codec.Capnp.decerialize)
 

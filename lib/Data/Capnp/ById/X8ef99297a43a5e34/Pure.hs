@@ -38,7 +38,16 @@ data JsonValue
     deriving(Show, Read, Eq)
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue m BS.ByteString) JsonValue where
-    decerialize raw = undefined -- TODO
+    decerialize raw = case raw of
+
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'null -> pure JsonValue'null
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'boolean val -> JsonValue'boolean <$> Codec.Capnp.decerialize val
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'number val -> JsonValue'number <$> Codec.Capnp.decerialize val
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'string val -> JsonValue'string <$> Codec.Capnp.decerialize val
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'array val -> JsonValue'array <$> Codec.Capnp.decerialize val
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'object val -> JsonValue'object <$> Codec.Capnp.decerialize val
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'call val -> JsonValue'call <$> Codec.Capnp.decerialize val
+        Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> JsonValue'unknown' <$> Codec.Capnp.decerialize val
 
 data JsonValue'Call
     = JsonValue'Call
@@ -49,8 +58,8 @@ data JsonValue'Call
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m BS.ByteString) JsonValue'Call where
     decerialize raw = JsonValue'Call
-        <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= Codec.Capnp.decerialize)
-        <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= Codec.Capnp.decerialize)
+            <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= Codec.Capnp.decerialize)
 
 data JsonValue'Field
     = JsonValue'Field
@@ -61,6 +70,6 @@ data JsonValue'Field
 
 instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m BS.ByteString) JsonValue'Field where
     decerialize raw = JsonValue'Field
-        <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= Codec.Capnp.decerialize)
-        <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= Codec.Capnp.decerialize)
+            <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= Codec.Capnp.decerialize)
+            <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= Codec.Capnp.decerialize)
 
