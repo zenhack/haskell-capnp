@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xb8630836983feed7.Pure where
@@ -12,10 +13,14 @@ import Data.Word
 
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
+import Control.Monad.Catch (MonadThrow)
+import Data.Capnp.TraversalLimit (MonadLimit)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
+
+import Data.ByteString as BS
 
 import qualified Data.Capnp.ById.Xb8630836983feed7
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -27,11 +32,9 @@ data Persistent'SaveResults
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Persistent'SaveResults b where
-    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults
-
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults m b) Persistent'SaveResults where
-    decerialize raw = undefined
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveResults m BS.ByteString) Persistent'SaveResults where
+    decerialize raw = Persistent'SaveResults
+        <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= Codec.Capnp.decerialize)
 
 data Persistent'SaveParams
     = Persistent'SaveParams
@@ -39,9 +42,7 @@ data Persistent'SaveParams
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m Persistent'SaveParams b where
-    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams
-
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m b) Persistent'SaveParams where
-    decerialize raw = undefined
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.Xb8630836983feed7.Persistent'SaveParams m BS.ByteString) Persistent'SaveParams where
+    decerialize raw = Persistent'SaveParams
+        <$> (Data.Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= Codec.Capnp.decerialize)
 

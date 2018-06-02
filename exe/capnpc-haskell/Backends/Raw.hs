@@ -92,9 +92,8 @@ fmtGetWordField struct DataLoc{..} = mintercalate " "
 
 fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
-    let nameSuffix = fmtName thisMod (subName variantName fieldName)
-        getName = "get_" <> nameSuffix
-        hasName = "has_" <> nameSuffix
+    let getName = fmtName thisMod $ prefixName "get_" (subName variantName fieldName)
+        hasName = fmtName thisMod $ prefixName "has_" (subName variantName fieldName)
     in mconcat
         [ getName, " :: Data.Capnp.Untyped.ReadCtx m b => "
         , fmtName thisMod typeName, " m b -> m ", fmtType thisMod fieldType, "\n"

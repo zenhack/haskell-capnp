@@ -26,15 +26,17 @@ import Data.Capnp.ById.Xa93fc509624c72d9.Pure
 import Data.Capnp.Untyped.Pure
 import Data.Word
 
-import Codec.Capnp          (Decerialize(..))
-import Data.ReinterpretCast (wordToDouble, wordToFloat)
+import Codec.Capnp               (Decerialize(..))
+import Control.Monad.Catch       (MonadThrow)
+import Data.Capnp.TraversalLimit (MonadLimit)
+import Data.ReinterpretCast      (wordToDouble, wordToFloat)
 
 type Id = Word64
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = 0xffff
 
-instance Decerialize Struct Node where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Node where
     decerialize (Struct words ptrs) = Node'
         <$> pure (sliceIndex 0 words)
         <*> (list8 (sliceIndex 0 ptrs) >>= decerialize)
@@ -77,33 +79,33 @@ instance Decerialize Struct Node where
                         <*> pure (((sliceIndex 1 words `shiftR` 59) .&. 1) == 1)
                 tag -> pure $ Node'unknown' tag
 
-instance Decerialize Struct Node'Parameter where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Node'Parameter where
     decerialize (Struct _ ptrs) =
         Node'Parameter <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
 
-instance Decerialize Struct CodeGeneratorRequest where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct CodeGeneratorRequest where
     decerialize (Struct words ptrs) = CodeGeneratorRequest
         <$> (listStruct (sliceIndex 0 ptrs) >>= traverse decerialize)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
         <*> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
 
-instance Decerialize Struct CodeGeneratorRequest'RequestedFile where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct CodeGeneratorRequest'RequestedFile where
     decerialize (Struct words ptrs) = CodeGeneratorRequest'RequestedFile
         (sliceIndex 0 words)
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
 
-instance Decerialize Struct CodeGeneratorRequest'RequestedFile'Import where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct CodeGeneratorRequest'RequestedFile'Import where
     decerialize (Struct words ptrs) = CodeGeneratorRequest'RequestedFile'Import
         (sliceIndex 0 words)
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
 
-instance Decerialize Struct Node'NestedNode where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Node'NestedNode where
     decerialize (Struct words ptrs) = Node'NestedNode
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (sliceIndex 0 words)
 
-instance Decerialize Struct Field where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Field where
     decerialize struct@(Struct words ptrs) = Field'
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (fromIntegral (sliceIndex 0 words) :: Word16)
@@ -122,7 +124,7 @@ instance Decerialize Struct Field where
                 1 -> pure $ Field'group (sliceIndex 2 words)
                 tag -> pure $ Field'unknown' tag
 
-instance Decerialize Struct Value where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Value where
     decerialize (Struct words ptrs) =
         let tag = fromIntegral (sliceIndex 0 words) :: Word16
         in case tag of
@@ -147,11 +149,11 @@ instance Decerialize Struct Value where
             18 -> pure $ Value'anyPointer (sliceIndex 0 ptrs)
             _ -> pure $ Value'unknown' tag
 
-instance Decerialize Struct Brand where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Brand where
     decerialize (Struct _ ptrs) = Brand <$>
         (listStruct (sliceIndex 0 ptrs) >>= traverse decerialize)
 
-instance Decerialize Struct Brand'Scope where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Brand'Scope where
     decerialize (Struct words ptrs) = Brand'Scope' (sliceIndex 0 words) <$>
         case fromIntegral (sliceIndex 1 words) :: Word16 of
             0 -> Brand'Scope'bind <$>
@@ -160,25 +162,25 @@ instance Decerialize Struct Brand'Scope where
             1 -> pure Brand'Scope'inherit
             tag -> pure $ Brand'Scope'unknown' tag
 
-instance Decerialize Struct Brand'Binding where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Brand'Binding where
     decerialize (Struct words ptrs) =
         case fromIntegral (sliceIndex 0 words) :: Word16 of
             0 -> pure Brand'Binding'unbound
             1 -> Brand'Binding'type_ <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
             tag -> pure $ Brand'Binding'unknown' tag
 
-instance Decerialize Struct Enumerant where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Enumerant where
     decerialize (Struct words ptrs) = Enumerant
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (fromIntegral $ sliceIndex 0 words)
         <*> (listStruct (sliceIndex 1 ptrs) >>= traverse decerialize)
 
-instance Decerialize Struct Superclass where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Superclass where
     decerialize (Struct words ptrs) = Superclass
         (sliceIndex 0 words)
         <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
 
-instance Decerialize Struct Type'anyPointer where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Type'anyPointer where
     decerialize (Struct words _) = pure $
         case fromIntegral (sliceIndex 1 words) :: Word16 of
             0 -> Type'anyPointer'unconstrained $
@@ -195,7 +197,7 @@ instance Decerialize Struct Type'anyPointer where
                     (fromIntegral $ sliceIndex 1 words `shiftR` 16)
             tag -> Type'anyPointer'unknown' tag
 
-instance Decerialize Struct Type where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Type where
     decerialize struct@(Struct words ptrs) =
         case fromIntegral (sliceIndex 0 words) :: Word16 of
             0 -> pure Type'void
@@ -222,19 +224,19 @@ instance Decerialize Struct Type where
             18 -> Type'anyPointer <$> decerialize struct
             tag -> pure $ Type'unknown' tag
 
-instance Decerialize Struct CapnpVersion where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct CapnpVersion where
     decerialize (Struct words _) = pure $ CapnpVersion
         (fromIntegral $ sliceIndex 0 words)
         (fromIntegral $ sliceIndex 0 words `shiftR` 16)
         (fromIntegral $ sliceIndex 0 words `shiftR` 24)
 
-instance Decerialize Struct Annotation where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Annotation where
     decerialize (Struct words ptrs) = Annotation
         (sliceIndex 0 words)
         <$> (ptrStruct (sliceIndex 0 ptrs) >>= decerialize)
         <*> (ptrStruct (sliceIndex 1 ptrs) >>= decerialize)
 
-instance Decerialize Struct Method where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Struct Method where
     decerialize (Struct words ptrs) = Method
         <$> (list8 (sliceIndex 0 ptrs) >>= decerialize)
         <*> pure (fromIntegral $ sliceIndex 0 words)
@@ -245,7 +247,7 @@ instance Decerialize Struct Method where
         <*> (ptrStruct (sliceIndex 2 ptrs) >>= decerialize)
         <*> (listStruct (sliceIndex 4 ptrs) >>= traverse decerialize)
 
-instance Decerialize Word16 ElementSize where
+instance (MonadThrow m, MonadLimit m) => Decerialize m Word16 ElementSize where
     decerialize n = pure $ case n of
         0 -> ElementSize'empty
         1 -> ElementSize'bit

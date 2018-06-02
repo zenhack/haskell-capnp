@@ -27,8 +27,8 @@ import Data.ReinterpretCast
 import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
 import qualified Data.Capnp.Message      as M
 
-class Decerialize from to where
-    decerialize :: MonadThrow m => from -> m to
+class Decerialize m from to where
+    decerialize :: from -> m to
 
 -- | Types that can be converted to and from a 64-bit word.
 --
@@ -63,6 +63,26 @@ getWordField struct idx offset def = fmap
     . (`shiftR` offset)
     )
     (getData idx struct)
+
+instance Monad m => Decerialize m Bool Bool where
+    decerialize = pure
+instance Monad m => Decerialize m Word8 Word8 where
+    decerialize = pure
+instance Monad m => Decerialize m Word16 Word16 where
+    decerialize = pure
+instance Monad m => Decerialize m Word32 Word32 where
+    decerialize = pure
+instance Monad m => Decerialize m Word64 Word64 where
+    decerialize = pure
+
+instance Monad m => Decerialize m Word8 Int8 where
+    decerialize = pure . fromIntegral
+instance Monad m => Decerialize m Word16 Int16 where
+    decerialize = pure . fromIntegral
+instance Monad m => Decerialize m Word32 Int32 where
+    decerialize = pure . fromIntegral
+instance Monad m => Decerialize m Word64 Int64 where
+    decerialize = pure . fromIntegral
 
 -- IsWord instance for booleans.
 instance IsWord Bool where

@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.Xbdf87d7bb8304e81.Pure where
@@ -12,10 +13,14 @@ import Data.Word
 
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
+import Control.Monad.Catch (MonadThrow)
+import Data.Capnp.TraversalLimit (MonadLimit)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
+
+import Data.ByteString as BS
 
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81
 

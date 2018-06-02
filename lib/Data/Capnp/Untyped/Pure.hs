@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-| This module provides an idiomatic Haskell interface for untyped capnp
@@ -42,8 +44,9 @@ import Prelude hiding (length, readList)
 
 import Data.Word
 
-import Codec.Capnp                   (expected)
+import Codec.Capnp                   (Decerialize(..), expected)
 import Control.Monad.Catch           (MonadThrow)
+import Data.Capnp.TraversalLimit     (MonadLimit)
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
 import Data.Primitive.Array          (Array)
@@ -110,11 +113,17 @@ sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
 
+instance (MonadThrow m, MonadLimit m) => Decerialize m (U.Struct m BS.ByteString) Struct where
+    decerialize = readStruct
+
 -- | Parse a struct into its ADT form.
 readStruct :: U.ReadCtx m BS.ByteString => U.Struct m BS.ByteString -> m Struct
 readStruct struct = Struct
     <$> (Slice <$> readList (U.dataSection struct) pure)
     <*> (Slice <$> readList (U.ptrSection struct) readPtr)
+
+instance (MonadThrow m, MonadLimit m) => Decerialize m (Maybe (U.Ptr m BS.ByteString)) (Maybe PtrType) where
+    decerialize = readPtr
 
 -- | Parse a (possibly null) pointer into its ADT form.
 readPtr :: U.ReadCtx m BS.ByteString
@@ -125,6 +134,9 @@ readPtr (Just ptr) = Just <$> case ptr of
     U.PtrCap _ cap     -> return (PtrCap cap)
     U.PtrStruct struct -> PtrStruct <$> readStruct struct
     U.PtrList list     -> PtrList <$> readList' list
+
+instance (U.ReadCtx m BS.ByteString, Decerialize m a b) => Decerialize m (U.ListOf m BS.ByteString a) (List b) where
+    decerialize raw = readList raw decerialize
 
 -- | @'readList' list readElt@ parses a list into its ADT form. @readElt@ is
 -- used to parse the elements.

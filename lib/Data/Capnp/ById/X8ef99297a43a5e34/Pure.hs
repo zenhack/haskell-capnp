@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Data.Capnp.ById.X8ef99297a43a5e34.Pure where
@@ -12,10 +13,14 @@ import Data.Word
 
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.BuiltinTypes.Pure (Data, Text)
+import Control.Monad.Catch (MonadThrow)
+import Data.Capnp.TraversalLimit (MonadLimit)
 
 import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
+
+import Data.ByteString as BS
 
 import qualified Data.Capnp.ById.X8ef99297a43a5e34
 import qualified Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -32,6 +37,9 @@ data JsonValue
     | JsonValue'unknown' (Word16)
     deriving(Show, Read, Eq)
 
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue m BS.ByteString) JsonValue where
+    decerialize raw = undefined -- TODO
+
 data JsonValue'Call
     = JsonValue'Call
         { function :: Text
@@ -39,11 +47,10 @@ data JsonValue'Call
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JsonValue'Call b where
-    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call
-
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m b) JsonValue'Call where
-    decerialize raw = undefined
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Call m BS.ByteString) JsonValue'Call where
+    decerialize raw = JsonValue'Call
+        <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= Codec.Capnp.decerialize)
+        <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= Codec.Capnp.decerialize)
 
 data JsonValue'Field
     = JsonValue'Field
@@ -52,9 +59,8 @@ data JsonValue'Field
         }
     deriving(Show, Read, Eq)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m JsonValue'Field b where
-    fromStruct = Codec.Capnp.decerialize . Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field
-
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m b) JsonValue'Field where
-    decerialize raw = undefined
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Data.Capnp.ById.X8ef99297a43a5e34.JsonValue'Field m BS.ByteString) JsonValue'Field where
+    decerialize raw = JsonValue'Field
+        <$> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= Codec.Capnp.decerialize)
+        <*> (Data.Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= Codec.Capnp.decerialize)
 

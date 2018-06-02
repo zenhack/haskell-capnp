@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies    #-}
+{-# LANGUAGE ViewPatterns    #-}
 -- This module defines datatypes that represent something between the capnp
 -- schema and Haskell code. The representation has the following
 -- chracteristics:
@@ -37,6 +38,7 @@ module IR
     , FieldLoc(..)
     , DataLoc(..)
     , subName
+    , prefixName
     ) where
 
 import Data.Word
@@ -44,7 +46,9 @@ import Data.Word
 import Data.Capnp.Core.Schema (Id)
 import Data.String            (IsString(fromString))
 import Data.Text              (Text)
-import GHC.Exts               (IsList(..))
+
+import Data.Monoid ((<>))
+import GHC.Exts    (IsList(..))
 
 import qualified Data.Text as T
 
@@ -84,6 +88,11 @@ subName name@Name{..} nextPart = name
     { nameLocalNS = fromList $ toList nameLocalNS ++ [nameUnqualified]
     , nameUnqualified = nextPart
     }
+
+prefixName :: Text -> Name -> Name
+prefixName prefix name@Name{nameLocalNS=(toList -> (x:xs))} =
+    name { nameLocalNS = fromList $ (prefix <> x):xs }
+prefixName prefix name = name { nameLocalNS = fromList [prefix] }
 
 instance IsString Name where
     fromString str = Name

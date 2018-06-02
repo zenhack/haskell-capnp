@@ -49,6 +49,7 @@ fmtModule :: Module -> TB.Builder
 fmtModule Module{..} = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
+    , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "module "
@@ -63,10 +64,14 @@ fmtModule Module{..} = mintercalate "\n"
     , ""
     , "import Data.Capnp.Untyped.Pure (List)"
     , "import Data.Capnp.BuiltinTypes.Pure (Data, Text)"
+    , "import Control.Monad.Catch (MonadThrow)"
+    , "import Data.Capnp.TraversalLimit (MonadLimit)"
     , ""
     , "import qualified Data.Capnp.Untyped.Pure"
     , "import qualified Data.Capnp.Untyped"
     , "import qualified Codec.Capnp"
+    , ""
+    , "import Data.ByteString as BS"
     , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , mintercalate "\n" $ map (fmtImport Pure) modImports
@@ -128,26 +133,48 @@ fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} = mconcat
     , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
     , "\n    deriving(Show, Read, Eq)\n\n"
     ] <>
-    case (dataVariants, dataCerialType) of
-        ([variant], CTyStruct) ->
+    let rawName = fmtName Raw thisMod dataName
+        pureName = fmtName Pure thisMod dataName
+    in case dataCerialType of
+        CTyStruct ->
             -- The raw module just has this as a newtype wrapper. Let's
             -- generate an IsStruct instance and a Decerialize instance.
-            let rawName = fmtName Raw thisMod dataName
-                pureName = fmtName Pure thisMod dataName
-            in mconcat
+            mconcat
                 -- The IsStruct instance is just a wrapper around decerialize:
-                [ "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m ", pureName, " b where\n"
+                {-
+                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m "
+                , pureName
+                , " BS.ByteString where\n"
                 , "    fromStruct = Codec.Capnp.decerialize . ", rawName, "\n"
                 , "\n"
                 -- This is the thing that does the work:
-                , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.Decerialize ("
+                -}
+                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
                 , rawName
-                , " m b) "
+                , " m BS.ByteString) "
                 , pureName
                 , " where\n"
-                , "    decerialize raw = undefined\n" -- TODO: parse fields.
-                , "\n"
+                , "    decerialize raw ="
+                , case dataVariants of
+                    [Variant{variantParams=NoParams}] -> ""
+                    [Variant{variantName,variantParams=Record fields}] -> mconcat
+                        [ " ", fmtName Pure thisMod variantName
+                        , "\n        <$> "
+                        , mintercalate "\n        <*> " $ flip map fields $ \Field{fieldName} -> mconcat
+                            [ "(", fmtName Raw thisMod $ prefixName "get_" (subName variantName fieldName)
+                            , " raw >>= Codec.Capnp.decerialize)"
+                            ]
+                        ]
+                    _ -> " undefined -- TODO"
+                , "\n\n"
                 ]
         _ ->
             -- Don't know what to do with this yet.
-            ""
+            mconcat
+                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
+                , rawName
+                , " m BS.ByteString) "
+                , pureName
+                , " where\n"
+                , "    decerialize raw = undefined\n\n"
+                ]
