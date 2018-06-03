@@ -197,8 +197,10 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
         , "\n\n"
         -- Generate an IsWord instance.
         , "instance Codec.Capnp.IsWord (", typeName, " m b) where"
-        , "\n    fromWord "
-        , mintercalate "\n    fromWord " $
+        , "\n    fromWord n = go (fromIntegral n :: Word16)"
+        , "\n      where"
+        , "\n        go "
+        , mintercalate "\n        go " $
             map fmtEnumFromWordCase $ reverse $ sortOn variantTag dataVariants
         , "\n    toWord "
         , mintercalate "\n    toWord " $

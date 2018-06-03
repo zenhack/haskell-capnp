@@ -787,15 +787,17 @@ instance Enum (ElementSize m b) where
 
 
 instance Codec.Capnp.IsWord (ElementSize m b) where
-    fromWord 7 = ElementSize'inlineComposite
-    fromWord 6 = ElementSize'pointer
-    fromWord 5 = ElementSize'eightBytes
-    fromWord 4 = ElementSize'fourBytes
-    fromWord 3 = ElementSize'twoBytes
-    fromWord 2 = ElementSize'byte
-    fromWord 1 = ElementSize'bit
-    fromWord 0 = ElementSize'empty
-    fromWord tag = ElementSize'unknown' (fromIntegral tag)
+    fromWord n = go (fromIntegral n :: Word16)
+      where
+        go 7 = ElementSize'inlineComposite
+        go 6 = ElementSize'pointer
+        go 5 = ElementSize'eightBytes
+        go 4 = ElementSize'fourBytes
+        go 3 = ElementSize'twoBytes
+        go 2 = ElementSize'byte
+        go 1 = ElementSize'bit
+        go 0 = ElementSize'empty
+        go tag = ElementSize'unknown' (fromIntegral tag)
     toWord ElementSize'inlineComposite = 7
     toWord ElementSize'pointer = 6
     toWord ElementSize'eightBytes = 5

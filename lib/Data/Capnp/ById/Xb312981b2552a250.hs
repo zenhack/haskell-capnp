@@ -318,11 +318,13 @@ instance Enum (Exception'Type m b) where
 
 
 instance Codec.Capnp.IsWord (Exception'Type m b) where
-    fromWord 3 = Exception'Type'unimplemented
-    fromWord 2 = Exception'Type'disconnected
-    fromWord 1 = Exception'Type'overloaded
-    fromWord 0 = Exception'Type'failed
-    fromWord tag = Exception'Type'unknown' (fromIntegral tag)
+    fromWord n = go (fromIntegral n :: Word16)
+      where
+        go 3 = Exception'Type'unimplemented
+        go 2 = Exception'Type'disconnected
+        go 1 = Exception'Type'overloaded
+        go 0 = Exception'Type'failed
+        go tag = Exception'Type'unknown' (fromIntegral tag)
     toWord Exception'Type'unimplemented = 3
     toWord Exception'Type'disconnected = 2
     toWord Exception'Type'overloaded = 1

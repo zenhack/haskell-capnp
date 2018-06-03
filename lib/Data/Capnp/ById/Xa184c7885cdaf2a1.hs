@@ -79,9 +79,11 @@ instance Enum (Side m b) where
 
 
 instance Codec.Capnp.IsWord (Side m b) where
-    fromWord 1 = Side'client
-    fromWord 0 = Side'server
-    fromWord tag = Side'unknown' (fromIntegral tag)
+    fromWord n = go (fromIntegral n :: Word16)
+      where
+        go 1 = Side'client
+        go 0 = Side'server
+        go tag = Side'unknown' (fromIntegral tag)
     toWord Side'client = 1
     toWord Side'server = 0
     toWord (Side'unknown' tag) = fromIntegral tag
