@@ -183,7 +183,15 @@ instance ReadCtx m b => IsPtr m (ListOf m b Int64) b where
 instance ReadCtx m b => IsPtr m (Data b) b where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
 instance ReadCtx m b => IsPtr m (Text b) b where
-    fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getText
+    fromPtr msg ptr = case ptr of
+        Just _ ->
+            fromPtr msg ptr >>= BuiltinTypes.getText
+        Nothing -> do
+            -- getText expects and strips off a NUL byte at the end of the
+            -- string. In the case of a null pointer we just want to return
+            -- the empty string, so we bypass it here.
+            BuiltinTypes.Data bytes <- fromPtr msg ptr
+            pure $ BuiltinTypes.Text bytes
 
 nestedListPtr :: (ReadCtx m b, IsPtr m a b) => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b a)
 nestedListPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
