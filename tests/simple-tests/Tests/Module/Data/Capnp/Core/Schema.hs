@@ -12,7 +12,6 @@ import Tests.Util
 
 import Control.Monad    (when)
 import Test.Framework   (testGroup)
-import Test.HUnit       (assertEqual)
 import Text.Heredoc     (here, there)
 import Text.Show.Pretty (ppShow)
 
