@@ -58,7 +58,7 @@ class Blob m a where
 class Blob m a => MutBlob m a where
     -- | @write b i value@ writes @value@ to the ith position in the blob.
     write :: a -> ByteCount -> Word8 -> m ()
-    -- | @grow b amount@ grows the blob @b@ by @amount@ words. In an instance
+    -- | @grow b amount@ grows the blob @b@ by @amount@ bytes. In an instance
     -- of 'PrimMonad', this may modify or destroy the original blob.
     grow :: a -> ByteCount -> m a
 
