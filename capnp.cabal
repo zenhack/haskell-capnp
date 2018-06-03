@@ -163,6 +163,7 @@ test-suite simple-tests
       , reinterpret-cast
       , template-haskell
       , deepseq
+      , pretty-show
     ghc-options:
       -Wnoncanonical-monad-instances
       -Wincomplete-patterns

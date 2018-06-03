@@ -4,16 +4,17 @@
 {-# LANGUAGE QuasiQuotes       #-}
 module Tests.Module.Data.Capnp.Core.Schema (schemaTests) where
 
-import Codec.Capnp (Decerialize(..))
+import Codec.Capnp               (IsStruct(..))
+import Data.Capnp.TraversalLimit (evalLimitT)
 
 import Data.Capnp.Core.Schema
 import Tests.Util
 
-import Data.Capnp.TraversalLimit (evalLimitT)
-import Data.Capnp.Untyped.Pure   (readStruct)
-import Test.Framework            (testGroup)
-import Test.HUnit                (assertEqual)
-import Text.Heredoc              (here, there)
+import Control.Monad    (when)
+import Test.Framework   (testGroup)
+import Test.HUnit       (assertEqual)
+import Text.Heredoc     (here, there)
+import Text.Show.Pretty (ppShow)
 
 import qualified Data.Capnp.Untyped as U
 
@@ -326,6 +327,7 @@ schemaTests = testGroup "schema decode tests"
         assertionsToTest ("Decode " ++ typename) $ map (testCase typename) cases
     testCase typename (capnpText, expected) = do
         msg <- encodeValue schemaText typename capnpText
-        actual <- evalLimitT 128 $ U.rootPtr msg >>= readStruct >>= decerialize
-        assertEqual (show (capnpText, expected)) expected actual
+        actual <- evalLimitT 128 $ U.rootPtr msg >>= fromStruct
+        when (actual /= expected) $ error $
+            "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
     schemaText = [there|tests/data/schema.capnp|]
