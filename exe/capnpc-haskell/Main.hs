@@ -4,10 +4,9 @@ module Main (main) where
 
 import Data.Capnp.Core.Schema
 
-import Codec.Capnp               (Decerialize(..))
+import Codec.Capnp               (fromStruct)
 import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Capnp.Untyped        (rootPtr)
-import Data.Capnp.Untyped.Pure   (readStruct)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
@@ -25,7 +24,7 @@ main :: IO ()
 main = do
     msg <- Message.decode =<< BS.getContents
     -- Traversal limit is 64 MiB. Somewhat aribtrary.
-    cgr <- evalLimitT (64 * 1024 * 1024) (rootPtr msg >>= readStruct >>= decerialize)
+    cgr <- evalLimitT (64 * 1024 * 1024) (rootPtr msg >>= fromStruct)
     mapM_ saveResult (handleCGR cgr)
   where
     saveResult (filename, contents) = do
