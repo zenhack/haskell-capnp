@@ -39,7 +39,7 @@ fmtModule Module{..} = mintercalate "\n"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
     , ""
-    , mintercalate "\n" $ map (fmtDataDef modId) modDefs
+    , mintercalate "\n" $ map (fmtDecl modId) modDecls
     ]
 
 modFileName :: Module -> FilePath
@@ -117,6 +117,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> "pure True"
             VoidField -> "pure True"
         ]
+
+fmtDecl :: Id -> Decl -> TB.Builder
+fmtDecl thisMod (DeclDef d)   = fmtDataDef thisMod d
+fmtDecl thisMod (DeclConst _) = ""
 
 fmtDataDef :: Id -> DataDef -> TB.Builder
 fmtDataDef thisMod DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct, ..} =

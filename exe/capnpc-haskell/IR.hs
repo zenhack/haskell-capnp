@@ -33,6 +33,7 @@ module IR
     , Variant(..)
     , VariantParams(..)
     , Field(..)
+    , Decl(..)
     , DataDef(..)
     , CerialType(..)
     , FieldLoc(..)
@@ -65,8 +66,13 @@ data Module = Module
     { modId      :: Id
     , modFile    :: Text
     , modImports :: [Import]
-    , modDefs    :: [DataDef]
+    , modDecls   :: [Decl]
     }
+    deriving(Show, Read, Eq)
+
+data Decl
+    = DeclDef DataDef
+    | DeclConst Const
     deriving(Show, Read, Eq)
 
 newtype Import = Import ModuleRef
@@ -144,6 +150,14 @@ data Field = Field
     , fieldType :: Type
     , fieldLoc  :: FieldLoc
     }
+    deriving(Show, Read, Eq)
+
+data Const
+    = WordConst
+        { wordValue :: Word64
+        , wordType  :: Type
+        }
+    -- TODO: support pointer types.
     deriving(Show, Read, Eq)
 
 data DataDef = DataDef

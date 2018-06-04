@@ -127,7 +127,7 @@ generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
         { modId = id
         , modFile = filename
         , modImports = map generateImport $ V.toList imports
-        , modDefs = concatMap (generateTypes id nodeMap)
+        , modDecls = concatMap (generateDecls id nodeMap)
             $ filter (\NodeMetaData{..} -> moduleId == id)
             $ map snd
             $ M.toList nodeMap
@@ -161,8 +161,8 @@ neededByParent nodeMap Node'{id,scopeId,union'=Node'struct{isGroup,discriminantC
         _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
 neededByParent _ _ = True
 
-generateTypes :: Id -> NodeMap -> NodeMetaData -> [IR.DataDef]
-generateTypes thisModule nodeMap meta@NodeMetaData{..} =
+generateDecls :: Id -> NodeMap -> NodeMetaData -> [IR.Decl]
+generateDecls thisModule nodeMap meta@NodeMetaData{..} =
     let Node'{..} = node
         name = identifierFromMetaData moduleId meta
     in case union' of
@@ -198,7 +198,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ IR.DataDef
+                    [ IR.DeclDef IR.DataDef
                         { dataName = typeName
                         , dataVariants =
                             [ IR.Variant
@@ -214,7 +214,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [ IR.DataDef
+                    [ IR.DeclDef IR.DataDef
                         { dataName = typeName
                         , dataVariants = unionVariants
                         , dataTagLoc = Just $ dataLoc
@@ -229,7 +229,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
                     let unionName = IR.subName name ""
-                    in  [ IR.DataDef
+                    in  [ IR.DeclDef IR.DataDef
                             { dataName = typeName
                             , dataVariants =
                                 [ IR.Variant
@@ -241,7 +241,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                             , dataTagLoc = Nothing
                             , dataCerialType = IR.CTyStruct
                             }
-                        , IR.DataDef
+                        , IR.DeclDef IR.DataDef
                             { dataName = unionName
                             , dataVariants = unionVariants
                             , dataTagLoc = Just $ dataLoc
@@ -253,7 +253,7 @@ generateTypes thisModule nodeMap meta@NodeMetaData{..} =
                             }
                         ]
         Node'enum{..} ->
-            [ IR.DataDef
+            [ IR.DeclDef IR.DataDef
                 { dataName = name
                 , dataVariants =
                     map (generateEnum thisModule nodeMap name) (V.toList enumerants)

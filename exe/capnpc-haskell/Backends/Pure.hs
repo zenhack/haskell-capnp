@@ -77,7 +77,7 @@ fmtModule Module{..} = mintercalate "\n"
     , mintercalate "\n" $ map (fmtImport Pure) modImports
     , mintercalate "\n" $ map (fmtImport Raw) modImports
     , ""
-    , mconcat $ map (fmtDataDef modId) modDefs
+    , mconcat $ map (fmtDecl modId) modDecls
     ]
 
 fmtImport :: ModRefType -> Import -> TB.Builder
@@ -126,6 +126,10 @@ fmtVariant thisMod Variant{variantName,variantParams} =
 fmtField :: Id -> Field -> TB.Builder
 fmtField thisMod Field{fieldName,fieldType} =
     TB.fromText fieldName <> " :: " <> fmtType thisMod fieldType
+
+fmtDecl :: Id -> Decl -> TB.Builder
+fmtDecl thisMod (DeclDef d)   = fmtDataDef thisMod d
+fmtDecl thisMod (DeclConst _) = ""
 
 fmtDataDef ::  Id -> DataDef -> TB.Builder
 fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} =
