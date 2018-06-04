@@ -73,7 +73,6 @@ library
       , mtl                               >= 2.2.2 && < 2.3
       , primitive                         >= 0.6.3 && < 0.7
       , reinterpret-cast                  >= 0.1.0 && < 0.2
-      , template-haskell                  >= 2.12.0 && < 2.13
       , text                              >= 1.2  && < 2.0
       , transformers                      >= 0.5.2 && < 0.6
       , vector                            >= 0.12.0 && < 0.13
@@ -109,7 +108,6 @@ executable capnpc-haskell
       , filepath                          >= 1.4.1 && < 1.5
       , mtl                               >= 2.2.2 && < 2.3
       , primitive                         >= 0.6.3 && < 0.7
-      , template-haskell                  >= 2.12.0 && < 2.13
       , text                              >= 1.2  && < 2.0
       , transformers                      >= 0.5.2 && < 0.6
       , utf8-string                       >= 1.0.1 && < 1.1
@@ -161,7 +159,6 @@ test-suite simple-tests
       , heredoc
       , primitive
       , reinterpret-cast
-      , template-haskell
       , deepseq
       , pretty-show
     ghc-options:
