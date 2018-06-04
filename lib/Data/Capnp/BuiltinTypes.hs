@@ -36,12 +36,12 @@ import qualified Data.Capnp.Untyped as U
 -- The argument to the constructor is the slice of the original message
 -- containing the text (but not the NUL terminator).
 newtype Text b = Text b
-    deriving(Show, Eq, Ord, IsString, Monoid)
+    deriving(Show, Eq, Ord, IsString, Semigroup, Monoid)
 
 -- | A blob of bytes ("Data" in capnproto's schema language). The argument
 -- to the constructor is a slice into the message, containing the raw bytes.
 newtype Data b = Data b
-    deriving(Show, Eq, Ord, IsString, Monoid)
+    deriving(Show, Eq, Ord, IsString, Semigroup, Monoid)
 
 -- | Interpret a list of Word8 as a capnproto 'Data' value. This validates that
 -- the bytes are in-bounds, throwing a 'BoundsError' if not.
