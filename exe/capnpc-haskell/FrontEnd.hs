@@ -7,12 +7,12 @@ module FrontEnd
     ) where
 
 import Data.Capnp.Core.Schema
-
 import Data.Word
 
 import Data.Function        ((&))
 import Data.Monoid          ((<>))
 import Data.ReinterpretCast (doubleToWord, floatToWord)
+import Util                 (Id)
 
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T

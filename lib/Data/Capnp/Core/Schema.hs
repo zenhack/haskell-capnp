@@ -11,9 +11,6 @@ module Data.Capnp.Core.Schema
 
     ------ Stuff we don't generate yet:
 
-    -- type aliases
-    , Id(..)
-
     -- constants
     , field'noDiscriminant
     )
@@ -30,8 +27,6 @@ import Codec.Capnp               (Decerialize(..))
 import Control.Monad.Catch       (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Data.ReinterpretCast      (wordToDouble, wordToFloat)
-
-type Id = Word64
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = 0xffff

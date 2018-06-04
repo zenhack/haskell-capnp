@@ -9,12 +9,11 @@ module Backends.Raw
     ) where
 
 import IR
+import Util
 
-import Data.Capnp.Core.Schema (Id)
-import Data.List              (sortOn)
-import Data.Monoid            ((<>))
-import Text.Printf            (printf)
-import Util                   (mintercalate)
+import Data.List   (sortOn)
+import Data.Monoid ((<>))
+import Text.Printf (printf)
 
 import qualified Data.Text.Lazy.Builder as TB
 

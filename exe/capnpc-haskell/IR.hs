@@ -41,11 +41,12 @@ module IR
     , prefixName
     ) where
 
+import Util
+
 import Data.Word
 
-import Data.Capnp.Core.Schema (Id)
-import Data.String            (IsString(fromString))
-import Data.Text              (Text)
+import Data.String (IsString(fromString))
+import Data.Text   (Text)
 
 import Data.Monoid ((<>))
 import GHC.Exts    (IsList(..))

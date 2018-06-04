@@ -9,12 +9,11 @@ module Backends.Pure
     ) where
 
 import IR
+import Util
 
-import Data.Capnp.Core.Schema (Id)
-import Data.Monoid            (mconcat, (<>))
-import GHC.Exts               (IsList(..))
-import Text.Printf            (printf)
-import Util                   (mintercalate)
+import Data.Monoid (mconcat, (<>))
+import GHC.Exts    (IsList(..))
+import Text.Printf (printf)
 
 import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as TB
