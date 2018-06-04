@@ -155,6 +155,7 @@ get_Enumerant'annotations (Enumerant struct) =
 
 has_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m b => Enumerant m b -> m Bool
 has_Enumerant'annotations(Enumerant struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
+
 newtype Field (m :: * -> *) b = Field (Data.Capnp.Untyped.Struct m b)
 
 instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (Field m b) b where

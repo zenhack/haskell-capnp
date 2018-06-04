@@ -274,7 +274,38 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     }
               )
             ]
+        Node'const{type_=Type'void,value=Value'void} ->
+            [(name, primTypeConst IR.PrimVoid 0)]
+        Node'const{type_=Type'bool,value=Value'bool v} ->
+            [(name, primTypeConst IR.PrimBool (fromEnum v))]
+        Node'const{type_=Type'int8,value=Value'int8 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 8 } v)]
+        Node'const{type_=Type'int16,value=Value'int16 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 16 } v)]
+        Node'const{type_=Type'int32,value=Value'int32 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 32 } v)]
+        Node'const{type_=Type'int64,value=Value'int64 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 64 } v)]
+        Node'const{type_=Type'uint8,value=Value'uint8 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 8 } v)]
+        Node'const{type_=Type'uint16,value=Value'uint16 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 16 } v)]
+        Node'const{type_=Type'uint32,value=Value'uint32 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 32 } v)]
+        Node'const{type_=Type'uint64,value=Value'uint64 v} ->
+            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 64 } v)]
+        Node'const{type_=Type'float32,value=Value'float32 v} ->
+            [(name, primTypeConst IR.PrimFloat32 (floatToWord v))]
+        Node'const{type_=Type'float64,value=Value'float64 v} ->
+            [(name, primTypeConst IR.PrimFloat64 (doubleToWord v))]
+        -- TODO: other constants.
         _ -> [] -- TODO
+
+primTypeConst :: Integral a => IR.PrimType -> a -> IR.Decl
+primTypeConst ty val = IR.DeclConst IR.WordConst
+    { wordValue = fromIntegral val
+    , wordType = IR.PrimType ty
+    }
 
 -- | Given the offset field from the capnp schema, a type, and a
 -- default value, return a DataLoc describing the location of a field.

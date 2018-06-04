@@ -36,6 +36,7 @@ module IR
     , Decl(..)
     , DataDef(..)
     , CerialType(..)
+    , Const(..)
     , FieldLoc(..)
     , DataLoc(..)
     , subName
