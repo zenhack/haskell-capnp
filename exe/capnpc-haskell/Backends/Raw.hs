@@ -118,18 +118,18 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             VoidField -> "pure True"
         ]
 
-fmtDecl :: Id -> Decl -> TB.Builder
-fmtDecl thisMod (DeclDef d)   = fmtDataDef thisMod d
-fmtDecl thisMod (DeclConst _) = ""
+fmtDecl :: Id -> (Name, Decl) -> TB.Builder
+fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
+fmtDecl thisMod (name, DeclConst _) = ""
 
-fmtDataDef :: Id -> DataDef -> TB.Builder
-fmtDataDef thisMod DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct, ..} =
+fmtDataDef :: Id -> Name -> DataDef -> TB.Builder
+fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct, ..} =
     fmtNewtypeStruct thisMod dataName <>
     case variantParams of
         Record fields ->
             mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
         _ -> ""
-fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataName,dataVariants} =
+fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataVariants} =
     let nameText = fmtName thisMod dataName
     in mconcat
         [ "data ", nameText, " (m :: * -> *) b"
@@ -185,7 +185,7 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataN
             mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
     fmtVariantAuxNewtype _ = ""
 -- Assume this is an enum, for now:
-fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
+fmtDataDef thisMod dataName DataDef{dataCerialType=CTyWord 16,..} =
     let typeName = fmtName thisMod dataName
     in mconcat
         [ "data ", typeName, " (m :: * -> *) b"
@@ -235,8 +235,8 @@ fmtDataDef thisMod DataDef{dataCerialType=CTyWord 16,..} =
         fmtName thisMod variantName <> " = " <> TB.fromString (show tag)
     fmtEnumToWordCase Variant{variantTag=Nothing,variantName} =
         "(" <> fmtName thisMod variantName <> " tag) = fromIntegral tag"
-fmtDataDef _ dataDef =
-    error $ "Unexpected data definition: " ++ show dataDef
+fmtDataDef _ dataName dataDef =
+    error $ "Unexpected data definition: " ++ show (dataName, dataDef)
 
 fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod = \case

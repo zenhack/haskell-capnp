@@ -66,7 +66,7 @@ data Module = Module
     { modId      :: Id
     , modFile    :: Text
     , modImports :: [Import]
-    , modDecls   :: [Decl]
+    , modDecls   :: [(Name, Decl)]
     }
     deriving(Show, Read, Eq)
 
@@ -161,8 +161,7 @@ data Const
     deriving(Show, Read, Eq)
 
 data DataDef = DataDef
-    { dataName       :: Name
-    , dataVariants   :: [Variant]
+    { dataVariants   :: [Variant]
     -- | The location of the tag for the union, if any.
     , dataTagLoc     :: Maybe DataLoc
     , dataCerialType :: CerialType

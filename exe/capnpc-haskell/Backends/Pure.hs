@@ -127,12 +127,12 @@ fmtField :: Id -> Field -> TB.Builder
 fmtField thisMod Field{fieldName,fieldType} =
     TB.fromText fieldName <> " :: " <> fmtType thisMod fieldType
 
-fmtDecl :: Id -> Decl -> TB.Builder
-fmtDecl thisMod (DeclDef d)   = fmtDataDef thisMod d
-fmtDecl thisMod (DeclConst _) = ""
+fmtDecl :: Id -> (Name, Decl) -> TB.Builder
+fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
+fmtDecl thisMod (name, DeclConst _) = ""
 
-fmtDataDef ::  Id -> DataDef -> TB.Builder
-fmtDataDef thisMod DataDef{dataName,dataVariants,dataCerialType} =
+fmtDataDef ::  Id -> Name -> DataDef -> TB.Builder
+fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
     let rawName = fmtName Raw thisMod dataName
         pureName = fmtName Pure thisMod dataName
     in mconcat

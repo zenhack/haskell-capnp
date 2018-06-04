@@ -161,7 +161,7 @@ neededByParent nodeMap Node'{id,scopeId,union'=Node'struct{isGroup,discriminantC
         _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
 neededByParent _ _ = True
 
-generateDecls :: Id -> NodeMap -> NodeMetaData -> [IR.Decl]
+generateDecls :: Id -> NodeMap -> NodeMetaData -> [(IR.Name, IR.Decl)]
 generateDecls thisModule nodeMap meta@NodeMetaData{..} =
     let Node'{..} = node
         name = identifierFromMetaData moduleId meta
@@ -198,76 +198,81 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ IR.DeclDef IR.DataDef
-                        { dataName = typeName
-                        , dataVariants =
-                            [ IR.Variant
-                                { variantName = typeName
-                                , variantParams = formatStructBody thisModule nodeMap typeName allFields
-                                , variantTag = Nothing
-                                }
-                            ]
-                        , dataTagLoc = Nothing
-                        , dataCerialType = IR.CTyStruct
-                        }
-                    ]
-                (_:_, []) ->
-                    -- The struct is just one big anonymous union; expand the variants
-                    -- in-line, rather than making a wrapper.
-                    [ IR.DeclDef IR.DataDef
-                        { dataName = typeName
-                        , dataVariants = unionVariants
-                        , dataTagLoc = Just $ dataLoc
-                            discriminantOffset
-                            Type'uint16
-                            -- The default value for a union tag is always zero:
-                            (Value'uint16 0)
-                        , dataCerialType = IR.CTyStruct
-                        }
-                    ]
-                (_:_, _:_) ->
-                    -- There are both common fields and an anonymous union. Generate
-                    -- an auxiliary type for the union.
-                    let unionName = IR.subName name ""
-                    in  [ IR.DeclDef IR.DataDef
-                            { dataName = typeName
-                            , dataVariants =
+                    [ ( typeName
+                      , IR.DeclDef IR.DataDef
+                            { dataVariants =
                                 [ IR.Variant
-                                    { variantName = unionName
-                                    , variantParams = formatStructBody thisModule nodeMap unionName allFields
+                                    { variantName = typeName
+                                    , variantParams = formatStructBody thisModule nodeMap typeName allFields
                                     , variantTag = Nothing
                                     }
                                 ]
                             , dataTagLoc = Nothing
                             , dataCerialType = IR.CTyStruct
                             }
-                        , IR.DeclDef IR.DataDef
-                            { dataName = unionName
-                            , dataVariants = unionVariants
+                      )
+                    ]
+                (_:_, []) ->
+                    -- The struct is just one big anonymous union; expand the variants
+                    -- in-line, rather than making a wrapper.
+                    [ ( typeName
+                      , IR.DeclDef IR.DataDef
+                            { dataVariants = unionVariants
                             , dataTagLoc = Just $ dataLoc
                                 discriminantOffset
                                 Type'uint16
-                                -- Default value for a union tag is always zero:
+                                -- The default value for a union tag is always zero:
                                 (Value'uint16 0)
                             , dataCerialType = IR.CTyStruct
                             }
+                      )
+                    ]
+                (_:_, _:_) ->
+                    -- There are both common fields and an anonymous union. Generate
+                    -- an auxiliary type for the union.
+                    let unionName = IR.subName name ""
+                    in  [ ( typeName
+                          , IR.DeclDef IR.DataDef
+                                { dataVariants =
+                                    [ IR.Variant
+                                        { variantName = unionName
+                                        , variantParams = formatStructBody thisModule nodeMap unionName allFields
+                                        , variantTag = Nothing
+                                        }
+                                    ]
+                                , dataTagLoc = Nothing
+                                , dataCerialType = IR.CTyStruct
+                                }
+                          )
+                        , ( unionName
+                          , IR.DeclDef IR.DataDef
+                                { dataVariants = unionVariants
+                                , dataTagLoc = Just $ dataLoc
+                                    discriminantOffset
+                                    Type'uint16
+                                    -- Default value for a union tag is always zero:
+                                    (Value'uint16 0)
+                                , dataCerialType = IR.CTyStruct
+                                }
+                          )
                         ]
         Node'enum{..} ->
-            [ IR.DeclDef IR.DataDef
-                { dataName = name
-                , dataVariants =
-                    map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                    <> [ IR.Variant
-                            { variantName = IR.subName name "unknown'"
-                            , variantParams = IR.Unnamed
-                                (IR.PrimType IR.PrimInt {isSigned=False, size=16})
-                                IR.VoidField
-                            , variantTag = Nothing
-                            }
-                       ]
-                , dataTagLoc = Nothing
-                , dataCerialType = IR.CTyWord 16
-                }
+            [ ( name
+              , IR.DeclDef IR.DataDef
+                    { dataVariants =
+                        map (generateEnum thisModule nodeMap name) (V.toList enumerants)
+                        <> [ IR.Variant
+                                { variantName = IR.subName name "unknown'"
+                                , variantParams = IR.Unnamed
+                                    (IR.PrimType IR.PrimInt {isSigned=False, size=16})
+                                    IR.VoidField
+                                , variantTag = Nothing
+                                }
+                           ]
+                    , dataTagLoc = Nothing
+                    , dataCerialType = IR.CTyWord 16
+                    }
+              )
             ]
         _ -> [] -- TODO
 
