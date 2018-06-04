@@ -16,17 +16,8 @@ module Data.Capnp.Core.Schema
     )
     where
 
-import Prelude hiding (id)
-
-import Data.Bits
 import Data.Capnp.ById.Xa93fc509624c72d9.Pure
-import Data.Capnp.Untyped.Pure
 import Data.Word
-
-import Codec.Capnp               (Decerialize(..))
-import Control.Monad.Catch       (MonadThrow)
-import Data.Capnp.TraversalLimit (MonadLimit)
-import Data.ReinterpretCast      (wordToDouble, wordToFloat)
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = 0xffff
