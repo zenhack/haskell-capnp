@@ -120,7 +120,12 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
 
 fmtDecl :: Id -> (Name, Decl) -> TB.Builder
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
-fmtDecl thisMod (name, DeclConst _) = ""
+fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
+    let nameText = fmtName thisMod (valueName name)
+    in mconcat
+        [ nameText, " :: ", fmtType thisMod wordType, "\n"
+        , nameText, " = Codec.Capnp.fromWord ", TB.fromString (show wordValue), "\n"
+        ]
 
 fmtDataDef :: Id -> Name -> DataDef -> TB.Builder
 fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct, ..} =

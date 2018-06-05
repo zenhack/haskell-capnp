@@ -155,6 +155,8 @@ get_Enumerant'annotations (Enumerant struct) =
 
 has_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m b => Enumerant m b -> m Bool
 has_Enumerant'annotations(Enumerant struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
+field'noDiscriminant :: Word16
+field'noDiscriminant = Codec.Capnp.fromWord 65535
 
 newtype Field (m :: * -> *) b = Field (Data.Capnp.Untyped.Struct m b)
 

@@ -41,12 +41,14 @@ module IR
     , DataLoc(..)
     , subName
     , prefixName
+    , valueName
     ) where
 
 import Util
 
 import Data.Word
 
+import Data.Char   (toLower)
 import Data.String (IsString(fromString))
 import Data.Text   (Text)
 
@@ -101,6 +103,14 @@ prefixName :: Text -> Name -> Name
 prefixName prefix name@Name{nameLocalNS=(toList -> (x:xs))} =
     name { nameLocalNS = fromList $ (prefix <> x):xs }
 prefixName prefix name = name { nameLocalNS = fromList [prefix] }
+
+-- | 'valueName' converts a name to one which starts with a lowercase
+-- letter, so that it is valid to use as a name for a value (as opposed
+-- to a type).
+valueName :: Name -> Name
+valueName name@Name{nameLocalNS=(toList -> (T.unpack -> (c:cs)):xs)} =
+    name { nameLocalNS = fromList $ T.pack (toLower c : cs) : xs }
+valueName name = name
 
 instance IsString Name where
     fromString str = Name

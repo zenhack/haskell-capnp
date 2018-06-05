@@ -16,8 +16,5 @@ module Data.Capnp.Core.Schema
     )
     where
 
+import Data.Capnp.ById.Xa93fc509624c72d9      (field'noDiscriminant)
 import Data.Capnp.ById.Xa93fc509624c72d9.Pure
-import Data.Word
-
-field'noDiscriminant :: Word16
-field'noDiscriminant = 0xffff
