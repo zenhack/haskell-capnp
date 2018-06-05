@@ -4,11 +4,10 @@ Beginnings of a haskell [capnproto][1] library.
 
 # Status
 
-We have partial support for reading and building untyped messages (i.e.
-working at the level of structs/lists/pointers, with no schema).
-Manually stubbed out readers for the datatypes in schema.capnp are
-written, and a code generator is in progress that will be able to
-replace them.
+There is a basic schema compiler plugin, which while not entirely
+feature complete is capable of generating the definitions it needs
+itself to operate. The generated code is currently only able to read
+messages, not write them.
 
 # License
 
