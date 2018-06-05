@@ -67,6 +67,7 @@ instance IsList Namespace where
 
 data Module = Module
     { modId      :: Id
+    , modName    :: Namespace
     , modFile    :: Text
     , modImports :: [Import]
     , modDecls   :: [(Name, Decl)]

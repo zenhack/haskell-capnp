@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.Capnp.Core.Schema (schemaTests) where
+module Tests.Module.Data.Capnp.Schema.Capnp.Schema (schemaTests) where
 
 import Codec.Capnp               (IsStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
-import Data.Capnp.Core.Schema
+import Data.Capnp.Schema.Capnp.Schema
 import Tests.Util
 
 import Control.Monad    (when)
@@ -279,13 +279,13 @@ schemaTests = testGroup "schema decode tests"
           , Type'interface 1 (Brand [])
           )
         , ( "(anyPointer = (unconstrained = (anyKind = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained $ Type'anyPointer'unconstrained'anyKind
+          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind
           )
         , ( "(anyPointer = (unconstrained = (struct = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained $ Type'anyPointer'unconstrained'struct
+          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'struct
           )
         , ( "(anyPointer = (unconstrained = (list = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained $ Type'anyPointer'unconstrained'list
+          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'list
           )
         , ( "(anyPointer = (unconstrained = (capability = void)))"
           , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability

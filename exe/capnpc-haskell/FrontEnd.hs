@@ -6,13 +6,14 @@ module FrontEnd
     ( cgrToIR
     ) where
 
-import Data.Capnp.Core.Schema
+import Data.Capnp.Schema.Capnp.Schema
 import Data.Word
 
+import Data.Char            (toUpper)
 import Data.Function        ((&))
 import Data.Monoid          ((<>))
 import Data.ReinterpretCast (doubleToWord, floatToWord)
-import Util                 (Id)
+import Util                 (Id, splitOn)
 
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
@@ -125,6 +126,10 @@ generateModule :: NodeMap -> CodeGeneratorRequest'RequestedFile -> IR.Module
 generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
     IR.Module
         { modId = id
+        , modName = IR.Namespace
+            $ map (T.pack . mangleFileName)
+            $ filter (/= "")
+            $ splitOn '/' (T.unpack filename)
         , modFile = filename
         , modImports = map generateImport $ V.toList imports
         , modDecls = concatMap (generateDecls id nodeMap)
@@ -132,6 +137,18 @@ generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
             $ map snd
             $ M.toList nodeMap
         }
+  where
+    -- Transform the file name into a valid haskell module name.
+    -- TODO: this is a best-effort transformation; it gives good
+    -- results on the schema I've found in the wild, but may fail
+    -- to generate valid/non-overlapping module names in all cases.
+    mangleFileName "c++.capnp" = "Cxx"
+    mangleFileName ""          = error "Unexpected empty file name"
+    mangleFileName (c:cs)      = go (toUpper c : cs) where
+        go ('-':c:cs) = toUpper c : go cs
+        go ".capnp"   = ""
+        go []         = ""
+        go (c:cs)     = c : go cs
 
 -- | Check whether the node's parent scope actually needs a type definition for
 -- the node. This is true unless it is a group belonging to a union, which itself

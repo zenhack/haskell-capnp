@@ -1,5 +1,5 @@
 -- | Misc. helpers.
-module Util (Id(..), mintercalate) where
+module Util (Id(..), mintercalate, splitOn) where
 
 import Data.Word
 
@@ -15,3 +15,14 @@ mintercalate sep = mconcat . intersperse sep
 -- on type aliases in the message it sends to the plugin, so we have no way
 -- of automating the alias.
 type Id = Word64
+
+-- | @'splitOn' sep str@ splits the string @str@ on boundaries
+-- equal to @sep@. This is a misc. helper function that really should be
+-- in the stdlib, but it isn't.
+splitOn :: Char -> String -> [String]
+splitOn target = go [] where
+    go [] [] = []
+    go acc [] = [reverse acc]
+    go acc (c:cs)
+        | c == target = reverse acc : go [] cs
+        | otherwise = go (c:acc) cs

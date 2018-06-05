@@ -39,6 +39,21 @@ library
       , Data.Capnp.BuiltinTypes.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Blob
+      , Data.Capnp.Errors
+      , Data.Capnp.List
+      , Data.Capnp.Message
+      , Data.Capnp.Pointer
+      , Data.Capnp.Schema
+      , Data.Capnp.Untyped
+      , Data.Capnp.Untyped.Pure
+      , Data.Capnp.TraversalLimit
+      -- BEGIN GENERATED MODULES
+      , Data.Capnp.Schema.Capnp.Cxx
+      , Data.Capnp.Schema.Capnp.Json
+      , Data.Capnp.Schema.Capnp.Persistent
+      , Data.Capnp.Schema.Capnp.Rpc
+      , Data.Capnp.Schema.Capnp.RpcTwoparty
+      , Data.Capnp.Schema.Capnp.Schema
       , Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
       , Data.Capnp.ById.X8ef99297a43a5e34.Pure
       , Data.Capnp.ById.Xb8630836983feed7.Pure
@@ -51,15 +66,7 @@ library
       , Data.Capnp.ById.Xb312981b2552a250
       , Data.Capnp.ById.Xa184c7885cdaf2a1
       , Data.Capnp.ById.Xa93fc509624c72d9
-      , Data.Capnp.Errors
-      , Data.Capnp.List
-      , Data.Capnp.Message
-      , Data.Capnp.Pointer
-      , Data.Capnp.Schema
-      , Data.Capnp.Untyped
-      , Data.Capnp.Untyped.Pure
-      , Data.Capnp.Core.Schema
-      , Data.Capnp.TraversalLimit
+      -- END GENERATED MODULES
     -- other-modules:
     -- other-extensions:
     build-depends:
@@ -127,7 +134,7 @@ test-suite simple-tests
     hs-source-dirs:       tests/simple-tests
     other-modules:
         Tests.Module.Control.Monad.Capnp.MessageBuilder
-      , Tests.Module.Data.Capnp.Core.Schema
+      , Tests.Module.Data.Capnp.Schema.Capnp.Schema
       , Tests.Module.Data.Capnp.Untyped
       , Tests.Module.Data.Capnp.Untyped.Pure
       , Tests.Module.Data.Capnp.List

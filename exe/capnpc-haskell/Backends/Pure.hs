@@ -5,7 +5,6 @@
 -- Generate idiomatic haskell data types from the types in IR.
 module Backends.Pure
     ( fmtModule
-    , modFileName
     ) where
 
 import IR
@@ -24,9 +23,6 @@ import qualified Data.Text.Lazy.Builder as TB
 data ModRefType = Pure | Raw
     deriving(Show, Read, Eq)
 
-modFileName :: Module -> FilePath
-modFileName Module{modId} = printf "Data/Capnp/ById/X%x/Pure.hs" modId
-
 fmtName :: ModRefType -> Id -> Name -> TB.Builder
 fmtName refTy thisMod Name{..} = modPrefix <> localName
   where
@@ -44,8 +40,25 @@ modRefToNS ty (ByCapnpId id) = Namespace $ case ty of
     Pure -> ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
     Raw  -> ["Data", "Capnp", "ById", T.pack (printf "X%x" id)]
 
-fmtModule :: Module -> TB.Builder
-fmtModule Module{..} = mintercalate "\n"
+fmtModule :: Module -> [(FilePath, TB.Builder)]
+fmtModule Module{modName=Namespace modNameParts,..} =
+    let parts = "Data" : "Capnp" : modNameParts
+        modRef = FullyQualified $ Namespace parts
+    in
+    [ ( printf "Data/Capnp/ById/X%x/Pure.hs" modId
+      , mainContent
+      )
+    , ( T.unpack $ mintercalate "/" parts <> ".hs"
+      , let pureMod = fmtModRef Pure (ByCapnpId modId)
+        in mconcat
+            [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+            , "module ", fmtModRef Pure modRef , "(module ", pureMod, ") where\n"
+            , "\n"
+            , "import ", pureMod
+            ]
+      )
+    ] where
+  mainContent = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE FlexibleContexts #-}"

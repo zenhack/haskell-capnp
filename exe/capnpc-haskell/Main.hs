@@ -2,7 +2,7 @@
 -}
 module Main (main) where
 
-import Data.Capnp.Core.Schema
+import Data.Capnp.Schema.Capnp.Schema
 
 import Codec.Capnp               (fromStruct)
 import Data.Capnp.TraversalLimit (evalLimitT)
@@ -34,10 +34,4 @@ main = do
 handleCGR :: CodeGeneratorRequest -> [(FilePath, TB.Builder)]
 handleCGR = concatMap genFiles . FrontEnd.cgrToIR where
     genFiles mod =
-        [ ( Backends.Pure.modFileName mod
-          , Backends.Pure.fmtModule mod
-          )
-        , ( Backends.Raw.modFileName mod
-          , Backends.Raw.fmtModule mod
-          )
-        ]
+        Backends.Pure.fmtModule mod ++ Backends.Raw.fmtModule mod

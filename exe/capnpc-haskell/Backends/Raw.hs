@@ -5,7 +5,6 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Backends.Raw
     ( fmtModule
-    , modFileName
     ) where
 
 import IR
@@ -17,8 +16,13 @@ import Text.Printf (printf)
 
 import qualified Data.Text.Lazy.Builder as TB
 
-fmtModule :: Module -> TB.Builder
-fmtModule Module{..} = mintercalate "\n"
+fmtModule :: Module -> [(FilePath, TB.Builder)]
+fmtModule Module{..} =
+    [ ( printf "Data/Capnp/ById/X%x.hs" modId
+      , content
+      )
+    ] where
+ content = mintercalate "\n"
     [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
@@ -41,9 +45,6 @@ fmtModule Module{..} = mintercalate "\n"
     , ""
     , mintercalate "\n" $ map (fmtDecl modId) modDecls
     ]
-
-modFileName :: Module -> FilePath
-modFileName Module{modId} = printf "Data/Capnp/ById/X%x.hs" modId
 
 fmtModRef :: ModuleRef -> TB.Builder
 fmtModRef (ByCapnpId id) = TB.fromString $ printf "Data.Capnp.ById.X%x" id
