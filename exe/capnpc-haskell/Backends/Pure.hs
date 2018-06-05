@@ -129,7 +129,13 @@ fmtField thisMod Field{fieldName,fieldType} =
 
 fmtDecl :: Id -> (Name, Decl) -> TB.Builder
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
-fmtDecl thisMod (name, DeclConst _) = ""
+-- TODO: this is copypasta from the Raw backend. We should factor this out.
+fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
+    let nameText = fmtName Pure thisMod (valueName name)
+    in mconcat
+        [ nameText, " :: ", fmtType thisMod wordType, "\n"
+        , nameText, " = Codec.Capnp.fromWord ", TB.fromString (show wordValue), "\n"
+        ]
 
 fmtDataDef ::  Id -> Name -> DataDef -> TB.Builder
 fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =

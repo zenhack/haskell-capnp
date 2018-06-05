@@ -112,6 +112,8 @@ instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m Enumerant BS.Byt
         raw <- Codec.Capnp.fromStruct struct
         Codec.Capnp.decerialize (raw :: Data.Capnp.ById.Xa93fc509624c72d9.Enumerant m BS.ByteString)
 
+field'noDiscriminant :: Word16
+field'noDiscriminant = Codec.Capnp.fromWord 65535
 data Field
     = Field'
         { name :: Text
