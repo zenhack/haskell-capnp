@@ -6,5 +6,5 @@
 # in the output that hlint will flag. We also skip code that is meant
 # to be replaced by the generated output, once the generator is complete.
 exec hlint $(find lib exe tests -name '*.hs' \
-		| grep -v Data.Capnp.Core \
-		| grep -v Data.Capnp.ById)
+		| grep -v Data/Capnp/Schema/ \
+		| grep -v Data/Capnp/ById)
