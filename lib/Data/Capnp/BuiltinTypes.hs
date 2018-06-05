@@ -19,6 +19,7 @@ import Data.Word
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Monoid         (Monoid)
+import Data.Semigroup      (Semigroup)
 import Data.String         (IsString)
 
 import qualified Data.Capnp.Blob    as B
