@@ -4,7 +4,7 @@ name:                     capnp
 version:                  0.1.0.0
 stability:                Experimental
 category:                 Data, Serialization
--- copyright:             FIXME: add copyright declaration
+copyright:                2016-2018 haskell-capnp contributors (see CONTRIBUTORS file).
 author:                   Ian Denhardt
 maintainer:               ian@zenhack.net
 license:                  MIT
