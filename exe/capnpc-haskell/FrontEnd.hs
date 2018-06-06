@@ -412,12 +412,17 @@ generateField thisModule nodeMap Field'{..} =
 
 getFieldLoc :: Field' -> IR.FieldLoc
 getFieldLoc Field'group{} = IR.HereField
-getFieldLoc Field'slot{offset,type_,defaultValue} =
+getFieldLoc Field'slot{offset,type_,defaultValue,hadExplicitDefault} =
     case typeSection type_ of
         VoidSec ->
             IR.VoidField
-        PtrSec ->
-            IR.PtrField (fromIntegral offset)
+        PtrSec
+            | hadExplicitDefault -> error $
+                "Error: capnpc-haskell does not support explicit default " ++
+                "field values for pointer types. See:\n" ++
+                "\n" ++
+                "    https://github.com/zenhack/haskell-capnp/issues/28"
+            | otherwise -> IR.PtrField (fromIntegral offset)
         DataSec ->
             IR.DataField (dataLoc offset type_ defaultValue)
 getFieldLoc (Field'unknown' _) =
