@@ -41,6 +41,6 @@ esac
 # capnp compile.
 log "Generating schema modules..."
 export PATH="$(dirname $exe):$PATH"
-capnp compile -I ./schema --src-prefix=schema/ -ohaskell ./schema/capnp/*.capnp
+capnp compile -I ../core-schema --src-prefix=../core-schema/ -ohaskell ../core-schema/capnp/*.capnp
 
 # vim: set ts=2 sw=2 noet :
