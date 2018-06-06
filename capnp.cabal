@@ -16,8 +16,23 @@ description:              Cap'n Proto for Haskell
                           -- FIXME: add proper package description
 build-type:               Simple
 cabal-version:            >= 1.10
-extra-source-files:       README.md
-                          -- FIXME: add CHANGELOG.md to this list
+extra-source-files:
+    README.md
+  , CONTRIBUTING.md
+  , core-schema/README.md
+  , core-schema/capnp/c++.capnp
+  , core-schema/capnp/json.capnp
+  , core-schema/capnp/persistent.capnp
+  , core-schema/capnp/rpc.capnp
+  , core-schema/capnp/rpc-twoparty.capnp
+  , core-schema/capnp/schema.capnp
+  , hlint.sh
+  , regen.sh
+  , .stylish-haskell
+  , .gitattributes
+  , .gitignore
+  , .gitlab-ci.yml
+  -- FIXME: add a CHANGELOG.md and add it to this list
 tested-with:              GHC == 8.0.2, GHC == 8.2.2
 
 --------------------------------------------------------------------------------
