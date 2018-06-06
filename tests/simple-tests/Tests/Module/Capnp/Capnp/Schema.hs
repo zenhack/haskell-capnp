@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Data.Capnp.Schema.Capnp.Schema (schemaTests) where
+module Tests.Module.Capnp.Capnp.Schema (schemaTests) where
 
 import Codec.Capnp               (IsStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
-import Data.Capnp.Schema.Capnp.Schema
+import Capnp.Capnp.Schema
 import Tests.Util
 
 import Control.Monad    (when)

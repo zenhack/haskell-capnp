@@ -9,11 +9,11 @@ import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Monoid               (Sum(..))
 import Test.HUnit                (assertEqual)
 
-import qualified Data.ByteString                   as BS
-import qualified Data.Capnp.ById.Xa93fc509624c72d9 as Schema
-import qualified Data.Capnp.List                   as List
-import qualified Data.Capnp.Message                as M
-import qualified Data.Capnp.Untyped                as Untyped
+import qualified Capnp.ById.Xa93fc509624c72d9 as Schema
+import qualified Data.ByteString              as BS
+import qualified Data.Capnp.List              as List
+import qualified Data.Capnp.Message           as M
+import qualified Data.Capnp.Untyped           as Untyped
 
 lengthCounted :: (MonadWriter (Sum Int) m, Untyped.ReadCtx m b) => ListOf m b a -> m ()
 lengthCounted = List.mapM_ (const $ tell 1)

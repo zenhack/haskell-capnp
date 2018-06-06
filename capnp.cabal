@@ -149,7 +149,7 @@ test-suite simple-tests
     hs-source-dirs:       tests/simple-tests
     other-modules:
         Tests.Module.Control.Monad.Capnp.MessageBuilder
-      , Tests.Module.Data.Capnp.Schema.Capnp.Schema
+      , Tests.Module.Capnp.Capnp.Schema
       , Tests.Module.Data.Capnp.Untyped
       , Tests.Module.Data.Capnp.Untyped.Pure
       , Tests.Module.Data.Capnp.List
