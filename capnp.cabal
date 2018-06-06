@@ -33,7 +33,9 @@ extra-source-files:
   , .gitignore
   , .gitlab-ci.yml
   -- FIXME: add a CHANGELOG.md and add it to this list
-tested-with:              GHC == 8.0.2, GHC == 8.2.2
+tested-with:
+    GHC == 8.2.1 -- Our Gitlab CI uses this version.
+  , GHC == 8.4.2 -- @zenhack currently uses this version.
 
 --------------------------------------------------------------------------------
 
