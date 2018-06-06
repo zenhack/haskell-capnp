@@ -6,7 +6,7 @@ module FrontEnd
     ( cgrToIR
     ) where
 
-import Data.Capnp.Schema.Capnp.Schema
+import Capnp.Capnp.Schema
 import Data.Word
 
 import Data.Char            (toUpper)

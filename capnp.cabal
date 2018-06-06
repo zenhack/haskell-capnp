@@ -48,24 +48,24 @@ library
       , Data.Capnp.Untyped.Pure
       , Data.Capnp.TraversalLimit
       -- BEGIN GENERATED MODULES
-      , Data.Capnp.Schema.Capnp.Cxx
-      , Data.Capnp.Schema.Capnp.Json
-      , Data.Capnp.Schema.Capnp.Persistent
-      , Data.Capnp.Schema.Capnp.Rpc
-      , Data.Capnp.Schema.Capnp.RpcTwoparty
-      , Data.Capnp.Schema.Capnp.Schema
-      , Data.Capnp.ById.Xbdf87d7bb8304e81.Pure
-      , Data.Capnp.ById.X8ef99297a43a5e34.Pure
-      , Data.Capnp.ById.Xb8630836983feed7.Pure
-      , Data.Capnp.ById.Xb312981b2552a250.Pure
-      , Data.Capnp.ById.Xa184c7885cdaf2a1.Pure
-      , Data.Capnp.ById.Xa93fc509624c72d9.Pure
-      , Data.Capnp.ById.Xbdf87d7bb8304e81
-      , Data.Capnp.ById.X8ef99297a43a5e34
-      , Data.Capnp.ById.Xb8630836983feed7
-      , Data.Capnp.ById.Xb312981b2552a250
-      , Data.Capnp.ById.Xa184c7885cdaf2a1
-      , Data.Capnp.ById.Xa93fc509624c72d9
+      , Capnp.Capnp.Cxx
+      , Capnp.Capnp.Json
+      , Capnp.Capnp.Persistent
+      , Capnp.Capnp.Rpc
+      , Capnp.Capnp.RpcTwoparty
+      , Capnp.Capnp.Schema
+      , Capnp.ById.Xbdf87d7bb8304e81.Pure
+      , Capnp.ById.X8ef99297a43a5e34.Pure
+      , Capnp.ById.Xb8630836983feed7.Pure
+      , Capnp.ById.Xb312981b2552a250.Pure
+      , Capnp.ById.Xa184c7885cdaf2a1.Pure
+      , Capnp.ById.Xa93fc509624c72d9.Pure
+      , Capnp.ById.Xbdf87d7bb8304e81
+      , Capnp.ById.X8ef99297a43a5e34
+      , Capnp.ById.Xb8630836983feed7
+      , Capnp.ById.Xb312981b2552a250
+      , Capnp.ById.Xa184c7885cdaf2a1
+      , Capnp.ById.Xa93fc509624c72d9
       -- END GENERATED MODULES
     -- other-modules:
     -- other-extensions:

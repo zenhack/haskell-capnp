@@ -2,7 +2,7 @@
 -}
 module Main (main) where
 
-import Data.Capnp.Schema.Capnp.Schema
+import Capnp.Capnp.Schema
 
 import Codec.Capnp               (fromStruct)
 import Data.Capnp.TraversalLimit (evalLimitT)

@@ -18,7 +18,7 @@ import qualified Data.Text.Lazy.Builder as TB
 
 fmtModule :: Module -> [(FilePath, TB.Builder)]
 fmtModule Module{..} =
-    [ ( printf "Data/Capnp/ById/X%x.hs" modId
+    [ ( printf "Capnp/ById/X%x.hs" modId
       , content
       )
     ] where
@@ -47,7 +47,7 @@ fmtModule Module{..} =
     ]
 
 fmtModRef :: ModuleRef -> TB.Builder
-fmtModRef (ByCapnpId id) = TB.fromString $ printf "Data.Capnp.ById.X%x" id
+fmtModRef (ByCapnpId id) = TB.fromString $ printf "Capnp.ById.X%x" id
 fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map TB.fromText ns)
 
 fmtImport :: Import -> TB.Builder

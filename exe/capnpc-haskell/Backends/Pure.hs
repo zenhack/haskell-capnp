@@ -37,15 +37,15 @@ fmtName refTy thisMod Name{..} = modPrefix <> localName
 modRefToNS :: ModRefType -> ModuleRef -> Namespace
 modRefToNS _ (FullyQualified ns) = ns
 modRefToNS ty (ByCapnpId id) = Namespace $ case ty of
-    Pure -> ["Data", "Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
-    Raw  -> ["Data", "Capnp", "ById", T.pack (printf "X%x" id)]
+    Pure -> ["Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
+    Raw  -> ["Capnp", "ById", T.pack (printf "X%x" id)]
 
 fmtModule :: Module -> [(FilePath, TB.Builder)]
 fmtModule Module{modName=Namespace modNameParts,..} =
     [ ( T.unpack $ mintercalate "/" humanParts <> ".hs"
       , mainContent
       )
-    , ( printf "Data/Capnp/ById/X%x/Pure.hs" modId
+    , ( printf "Capnp/ById/X%x/Pure.hs" modId
       , mconcat
             [ "{-# OPTIONS_GHC -Wno-unused-imports #-}\n"
             , "module ", fmtModRef Pure (ByCapnpId modId), "(module ", humanMod, ") where\n"
@@ -56,7 +56,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     ]
  where
   humanMod = fmtModRef Pure $ FullyQualified $ Namespace humanParts
-  humanParts = "Data":"Capnp":modNameParts
+  humanParts = "Capnp":modNameParts
   mainContent = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
