@@ -154,8 +154,9 @@ withParent sz (BuilderT m) = do
 
 class BuildSelf a where
     -- | @buildSelf x word offset@ stores the value @x@ in the message at the
-    -- word @word@, shifted @offset@ bits from the start of the word. It should
-    -- not distrupt other values in the word.
+    -- word @word@ (relative to the start of the parent), shifted @offset@
+    -- bits from the start of the word. It should not distrupt other values
+    -- in the word.
     --
     -- implementations may assume @offset@ is properly aligned; the caller is
     -- required to ensure this.
