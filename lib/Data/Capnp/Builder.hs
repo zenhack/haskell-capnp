@@ -2,10 +2,10 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-|
-Module: Control.Monad.Capnp.MessageBuilder
+Module: Data.Capnp.Builder
 Description: support for building capnproto messages.
 -}
-module Control.Monad.Capnp.MessageBuilder
+module Data.Capnp.Builder
     ( BuilderT
     , BuildSelf(..)
     , runBuilderT

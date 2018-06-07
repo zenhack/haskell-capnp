@@ -3,13 +3,13 @@ module Tests.EncodeDecodeUntyped
     (encodeDecodeUntypedTests)
   where
 
--- These tests verify Control.Monad.Capnp.MessageBuilder and
+-- These tests verify Data.Capnp.Builder and
 -- Data.Capnp.Untyped against eachother and against capnp
 -- encode/decode. They are not schema-aware.
 
 import Prelude hiding (length)
 
-import Control.Monad.Capnp.MessageBuilder
+import Data.Capnp.Builder
 import Data.Capnp.Schema
 import Data.Capnp.Untyped
 import Data.Word

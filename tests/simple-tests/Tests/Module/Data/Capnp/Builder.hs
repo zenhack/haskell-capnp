@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
-module Tests.Module.Control.Monad.Capnp.MessageBuilder (buildTests) where
+module Tests.Module.Data.Capnp.Builder (buildTests) where
 
-import Control.Monad.Capnp.MessageBuilder
+import Data.Capnp.Builder
 import Data.Int
 import Data.Word
 

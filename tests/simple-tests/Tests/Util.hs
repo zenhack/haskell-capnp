@@ -86,7 +86,7 @@ interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
     lift $ readCreateProcessWithExitCode (proc "capnp" ([subCommand, schemaFile] ++ args)) stdInBytes
 
 -- | Convert a BlobSlice (MutableByteArray s) to a ByteString. The former is the
--- result of Control.Monad.Capnp.MessageBuilder.runBuilderT
+-- result of Data.Capnp.Builder.runBuilderT
 freezeAsByteString :: (PrimMonad m, s ~ PrimState m)
     => BlobSlice (MutableByteArray s) -> m BS.ByteString
 freezeAsByteString BlobSlice{..} = do
