@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE RecordWildCards        #-}
 {-|
 Module: Data.Capnp.Message
 Description: Tools for working with messages.
@@ -29,22 +31,34 @@ import Data.Word                 (Word32, Word64)
 import qualified Data.Capnp.Blob as B
 import qualified Data.Vector     as V
 
+class (B.Blob m seg, MonadThrow m) => Msg m msg seg | msg -> seg where
+    idxSegs :: msg -> Int -> m seg
+    numSegs :: msg -> m Int
+
+class (B.MutBlob m seg, Msg m msg seg) => MutMsg m msg seg | msg -> seg where
+    setSeg :: Int -> seg -> msg -> m ()
+    newSeg :: msg -> m (Int, seg)
+
 newtype Message a = Message (V.Vector a) deriving(Show)
+
+instance (B.Blob m seg, MonadThrow m) => Msg m (Message seg) seg where
+    getS (Message vec) i = vec `V.indexM` i
+    numS (Message vec) = pure $ V.length vec
 
 -- | @getSegment msg i@ gets the ith segment of a message. Throws a
 -- 'BoundsError' if @i@ is out of bounds.
-getSegment :: (MonadThrow m) => Message a -> Int -> m a
-getSegment (Message segs) i = do
-    when (i < 0 || i >= V.length segs) $
-        throwM BoundsError { index = i, maxIndex = V.length segs }
-    segs `V.indexM` i
+getSegment :: (Msg m msg seg) => msg -> Int -> m seg
+getSegment msg i = do
+    len <- numSegs msg
+    when (i < 0 || i >= len) $
+        throwM BoundsError { index = i, maxIndex = len }
+    msg `idxSegs` i
 
 -- | @getWord msg addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
-getWord :: (B.Blob m seg, MonadThrow m)
-    => Message seg -> WordAddr -> m Word64
-getWord (Message segs) WordAt{..} = do
-    seg <- segs `V.indexM` segIndex
+getWord :: Msg m msg seg => msg -> WordAddr -> m Word64
+getWord msg WordAt{..} = do
+    seg <- msg `idxSegs` segIndex
     seg `B.indexWord` wordIndex
 
 -- | @decode blob@ decodes a message from the blob.
