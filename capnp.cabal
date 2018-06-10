@@ -52,6 +52,9 @@ library
     hs-source-dirs:       lib
     exposed-modules:
         Codec.Capnp
+
+      , Data.Capnp.Little64
+
       , Data.Capnp.Address
       , Data.Capnp.Builder
       , Data.Capnp.BuiltinTypes
@@ -90,6 +93,7 @@ library
     -- other-extensions:
     build-depends:
         base                              >= 4.8  && < 5.0
+      , cpu                               >= 0.1.2 && < 0.2
       , array                             >= 0.5  && < 0.6
       , bytes                             >= 0.15.4 && < 0.16
       , bytestring                        >= 0.10 && < 0.11
