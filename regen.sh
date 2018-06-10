@@ -18,14 +18,14 @@ log "Rebuilding schema compiler plugin..."
 cd "$(dirname $0)"
 cabal new-build capnpc-haskell
 
-# We run the code generator from inside lib/, so that it outputs
+# We run the code generator from inside lib/capnp/, so that it outputs
 # modules to the right locations:
-cd lib
+cd lib/capnp
 
 # Find the compiler plugin executable. It would be nice to just
 # use new-run here, but doing so from a subdirectory is a bit fiddly
 # and I(zenhack) haven't found a nice way to do it.
-exe="$(find ../dist-newstyle -type f -name capnpc-haskell)"
+exe="$(find ../../dist-newstyle -type f -name capnpc-haskell)"
 
 # Make sure we only found one file:
 argslen() {
@@ -41,6 +41,6 @@ esac
 # capnp compile.
 log "Generating schema modules..."
 export PATH="$(dirname $exe):$PATH"
-capnp compile -I ../core-schema --src-prefix=../core-schema/ -ohaskell ../core-schema/capnp/*.capnp
+capnp compile -I ../../core-schema --src-prefix=../../core-schema/ -ohaskell ../../core-schema/capnp/*.capnp
 
 # vim: set ts=2 sw=2 noet :

@@ -4,4 +4,4 @@
 #
 # We skip the generated schema, since we deliberately use conventions
 # in the output that hlint will flag.
-exec hlint $(find lib exe tests -name '*.hs' | grep -v lib/Capnp/)
+exec hlint $(find lib exe tests -name '*.hs' | grep -v lib/capnp/Capnp/)
