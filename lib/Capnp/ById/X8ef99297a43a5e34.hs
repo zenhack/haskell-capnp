@@ -18,14 +18,14 @@ import qualified Data.Capnp.Untyped
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-data JsonValue (m :: * -> *) b
+data JsonValue (m :: * -> *)
     = JsonValue'null
     | JsonValue'boolean Bool
     | JsonValue'number Double
-    | JsonValue'string (Data.Capnp.BuiltinTypes.Text b)
-    | JsonValue'array (Data.Capnp.Untyped.ListOf m b (JsonValue m b))
-    | JsonValue'object (Data.Capnp.Untyped.ListOf m b (JsonValue'Field m b))
-    | JsonValue'call (JsonValue'Call m b)
+    | JsonValue'string Data.Capnp.BuiltinTypes.Text
+    | JsonValue'array (Data.Capnp.Untyped.ListOf m (JsonValue m))
+    | JsonValue'object (Data.Capnp.Untyped.ListOf m (JsonValue'Field m))
+    | JsonValue'call (JsonValue'Call m)
     | JsonValue'unknown' Word16
 
 
@@ -35,7 +35,7 @@ data JsonValue (m :: * -> *) b
 
 
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsStruct m (JsonValue m) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
@@ -48,58 +48,58 @@ instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue m b
             0 -> pure JsonValue'null
             _ -> pure $ JsonValue'unknown' tag
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue m b) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (JsonValue m) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (JsonValue m b)) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m (JsonValue m)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype JsonValue'Call (m :: * -> *) b = JsonValue'Call (Data.Capnp.Untyped.Struct m b)
+newtype JsonValue'Call (m :: * -> *) = JsonValue'Call (Data.Capnp.Untyped.Struct m)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Call m b) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsStruct m (JsonValue'Call m) where
     fromStruct = pure . JsonValue'Call
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Call m b) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (JsonValue'Call m) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (JsonValue'Call m b)) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m (JsonValue'Call m)) where
     fromPtr = Codec.Capnp.structListPtr
-get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m (Data.Capnp.BuiltinTypes.Text b)
+get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call m -> m Data.Capnp.BuiltinTypes.Text
 get_JsonValue'Call'function (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m Bool
+has_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call m -> m Bool
 has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m (Data.Capnp.Untyped.ListOf m b (JsonValue m b))
+get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call m -> m (Data.Capnp.Untyped.ListOf m (JsonValue m))
 get_JsonValue'Call'params (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Call m b -> m Bool
+has_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call m -> m Bool
 has_JsonValue'Call'params(JsonValue'Call struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
-newtype JsonValue'Field (m :: * -> *) b = JsonValue'Field (Data.Capnp.Untyped.Struct m b)
+newtype JsonValue'Field (m :: * -> *) = JsonValue'Field (Data.Capnp.Untyped.Struct m)
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (JsonValue'Field m b) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsStruct m (JsonValue'Field m) where
     fromStruct = pure . JsonValue'Field
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (JsonValue'Field m b) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (JsonValue'Field m) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (JsonValue'Field m b)) b where
+instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m (JsonValue'Field m)) where
     fromPtr = Codec.Capnp.structListPtr
-get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m (Data.Capnp.BuiltinTypes.Text b)
+get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field m -> m Data.Capnp.BuiltinTypes.Text
 get_JsonValue'Field'name (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m Bool
+has_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field m -> m Bool
 has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m (JsonValue m b)
+get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field m -> m (JsonValue m)
 get_JsonValue'Field'value (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m b => JsonValue'Field m b -> m Bool
+has_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field m -> m Bool
 has_JsonValue'Field'value(JsonValue'Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct

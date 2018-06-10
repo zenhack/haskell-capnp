@@ -44,7 +44,7 @@ theAssert = do
     endQuota <- execLimitT 1024 (rootPtr msg >>= reader)
     assertEqual "Correct remaining quota" 641 endQuota
   where
-    reader :: Struct (LimitT IO) BS.ByteString -> LimitT IO ()
+    reader :: Struct (LimitT IO) -> LimitT IO ()
     reader root = do
         let req = Schema.CodeGeneratorRequest root
         nodes <- Schema.get_CodeGeneratorRequest'nodes req

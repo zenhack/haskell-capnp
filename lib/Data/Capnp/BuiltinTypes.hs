@@ -22,6 +22,7 @@ import Data.Monoid         (Monoid)
 import Data.Semigroup      (Semigroup)
 import Data.String         (IsString)
 
+import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Blob    as B
 import qualified Data.Capnp.Errors  as E
 import qualified Data.Capnp.Untyped as U
@@ -36,17 +37,17 @@ import qualified Data.Capnp.Untyped as U
 --
 -- The argument to the constructor is the slice of the original message
 -- containing the text (but not the NUL terminator).
-newtype Text b = Text b
+newtype Text = Text BS.ByteString
     deriving(Show, Eq, Ord, IsString, Semigroup, Monoid)
 
 -- | A blob of bytes ("Data" in capnproto's schema language). The argument
 -- to the constructor is a slice into the message, containing the raw bytes.
-newtype Data b = Data b
+newtype Data = Data BS.ByteString
     deriving(Show, Eq, Ord, IsString, Semigroup, Monoid)
 
 -- | Interpret a list of Word8 as a capnproto 'Data' value. This validates that
 -- the bytes are in-bounds, throwing a 'BoundsError' if not.
-getData :: (U.ReadCtx m b, B.Slice m b) => U.ListOf m b Word8 -> m (Data b)
+getData :: U.ReadCtx m => U.ListOf m Word8 -> m Data
 getData list = Data <$> U.rawBytes list
 
 -- | Interpret a list of Word8 as a capnproto 'Text' value.
@@ -54,7 +55,7 @@ getData list = Data <$> U.rawBytes list
 -- This vaidates that the list is in-bounds, and that it is NUL-terminated,
 -- but not that it is valid UTF-8. If it is not NUL-terminaed, a
 -- 'SchemaViolationError' is thrown.
-getText :: (U.ReadCtx m b, B.Slice m b) => U.ListOf m b Word8 -> m (Text b)
+getText :: U.ReadCtx m => U.ListOf m Word8 -> m Text
 getText list = do
     bytes <- U.rawBytes list
     len <- B.length bytes

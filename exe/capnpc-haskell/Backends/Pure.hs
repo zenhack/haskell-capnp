@@ -81,8 +81,6 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Untyped"
     , "import qualified Codec.Capnp"
     , ""
-    , "import Data.ByteString as BS"
-    , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , mintercalate "\n" $ map (fmtImport Pure) modImports
     , mintercalate "\n" $ map (fmtImport Raw) modImports
@@ -158,7 +156,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "\n\n"
         , "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
         , rawName
-        , " m BS.ByteString) "
+        , " m) "
         , pureName
         , " where\n"
         , "    decerialize raw = "
@@ -174,10 +172,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , case dataCerialType of
             CTyStruct -> mconcat
                 [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m "
-                , pureName, " BS.ByteString where\n"
+                , pureName, " where\n"
                 , "    fromStruct struct = do\n"
                 , "        raw <- Codec.Capnp.fromStruct struct\n"
-                , "        Codec.Capnp.decerialize (raw :: ", rawName, " m BS.ByteString)\n"
+                , "        Codec.Capnp.decerialize (raw :: ", rawName, " m)\n"
                 , "\n"
                 ]
             _ ->

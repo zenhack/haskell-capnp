@@ -15,14 +15,14 @@ import qualified Data.Capnp.List              as List
 import qualified Data.Capnp.Message           as M
 import qualified Data.Capnp.Untyped           as Untyped
 
-lengthCounted :: (MonadWriter (Sum Int) m, Untyped.ReadCtx m b) => ListOf m b a -> m ()
+lengthCounted :: (MonadWriter (Sum Int) m, Untyped.ReadCtx m) => ListOf m a -> m ()
 lengthCounted = List.mapM_ (const $ tell 1)
 
-readSchema :: IO (M.Message BS.ByteString)
+readSchema :: IO M.Message
 readSchema =
     BS.readFile "tests/data/schema-codegenreq" >>= M.decode
 
-schemaNodes :: Untyped.ReadCtx m b => M.Message b -> m (Untyped.ListOf m b (Schema.Node m b))
+schemaNodes :: Untyped.ReadCtx m => M.Message -> m (Untyped.ListOf m (Schema.Node m))
 schemaNodes msg = do
     cgr <- Schema.CodeGeneratorRequest <$> Untyped.rootPtr msg
     Schema.get_CodeGeneratorRequest'nodes cgr

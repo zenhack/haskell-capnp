@@ -101,7 +101,7 @@ assertionsToTest name =
 
 -- | @'encodeValue' schema typename value@ encodes the textual value @value@
 -- as a capnp message. This is a thin wrapper around 'capnpEncode'.
-encodeValue :: String -> String -> String -> IO (M.Message BS.ByteString)
+encodeValue :: String -> String -> String -> IO M.Message
 encodeValue schema typename value =
     let meta = MsgMetaData schema typename
     in capnpEncode value meta >>= M.decode

@@ -57,7 +57,7 @@ fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 -- the given name.
 fmtStructListIsPtr :: TB.Builder -> TB.Builder
 fmtStructListIsPtr nameText = mconcat
-    [ "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (", nameText, " m b)) b where\n"
+    [ "instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m (", nameText, " m)) where\n"
     , "    fromPtr = Codec.Capnp.structListPtr\n"
     ]
 
@@ -67,12 +67,12 @@ fmtNewtypeStruct thisMod name =
     in mconcat
         [ "newtype "
         , nameText
-        , " (m :: * -> *) b = "
+        , " (m :: * -> *) = "
         , nameText
-        , " (Data.Capnp.Untyped.Struct m b)\n\n"
-        , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where\n"
+        , " (Data.Capnp.Untyped.Struct m)\n\n"
+        , "instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsStruct m (", nameText, " m) where\n"
         , "    fromStruct = pure . ", nameText, "\n"
-        , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where\n"
+        , "instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (", nameText, " m) where\n"
         , "    fromPtr = Codec.Capnp.structPtr\n"
         , "\n"
         , fmtStructListIsPtr nameText
@@ -95,8 +95,8 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
     let getName = fmtName thisMod $ prefixName "get_" (subName variantName fieldName)
         hasName = fmtName thisMod $ prefixName "has_" (subName variantName fieldName)
     in mconcat
-        [ getName, " :: Data.Capnp.Untyped.ReadCtx m b => "
-        , fmtName thisMod typeName, " m b -> m ", fmtType thisMod fieldType, "\n"
+        [ getName, " :: Data.Capnp.Untyped.ReadCtx m => "
+        , fmtName thisMod typeName, " m -> m ", fmtType thisMod fieldType, "\n"
         , getName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
             DataField loc -> fmtGetWordField "struct" loc
@@ -108,7 +108,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> " Codec.Capnp.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         , "\n\n"
-        , hasName, " :: Data.Capnp.Untyped.ReadCtx m b => ", fmtName thisMod typeName, " m b -> m Bool\n"
+        , hasName, " :: Data.Capnp.Untyped.ReadCtx m => ", fmtName thisMod typeName, " m -> m Bool\n"
         , hasName, "(", fmtName thisMod typeName, " struct) = "
         , case fieldLoc of
             DataField DataLoc{dataIdx} ->
@@ -138,19 +138,19 @@ fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=C
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataVariants} =
     let nameText = fmtName thisMod dataName
     in mconcat
-        [ "data ", nameText, " (m :: * -> *) b"
+        [ "data ", nameText, " (m :: * -> *)"
         , "\n    = "
         , mintercalate "\n    | " (map fmtDataVariant dataVariants)
         -- Generate auxiliary newtype definitions for group fields:
         , "\n"
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
-        , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsStruct m (", nameText, " m b) b where"
+        , "\ninstance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsStruct m (", nameText, " m) where"
         , "\n    fromStruct struct = do"
         , "\n        tag <- ", fmtGetWordField "struct" tagLoc
         , "\n        case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
-        , "\ninstance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (", nameText, " m b) b where"
+        , "\ninstance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (", nameText, " m) where"
         , "\n    fromPtr = Codec.Capnp.structPtr"
         , "\n"
         , fmtStructListIsPtr nameText
@@ -158,7 +158,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
         case variantParams of
-            Record _   -> " (" <> fmtName thisMod (subName variantName "group'") <> " m b)"
+            Record _   -> " (" <> fmtName thisMod (subName variantName "group'") <> " m)"
             NoParams   -> ""
             Unnamed ty _ -> " " <> fmtType thisMod ty
     fmtVariantCase Variant{..} =
@@ -194,18 +194,18 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyWord 16,..} =
     let typeName = fmtName thisMod dataName
     in mconcat
-        [ "data ", typeName, " (m :: * -> *) b"
+        [ "data ", typeName, " (m :: * -> *)"
         , "\n    = "
         , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
         , "\n"
         -- Generate an Enum instance. This is a trivial wrapper around the
         -- IsWord instance, below.
-        , "instance Enum (", typeName, " m b) where\n"
+        , "instance Enum (", typeName, " m) where\n"
         , "    toEnum = Codec.Capnp.fromWord . fromIntegral\n"
         , "    fromEnum = fromIntegral . Codec.Capnp.toWord\n"
         , "\n\n"
         -- Generate an IsWord instance.
-        , "instance Codec.Capnp.IsWord (", typeName, " m b) where"
+        , "instance Codec.Capnp.IsWord (", typeName, " m) where"
         , "\n    fromWord n = go (fromIntegral n :: Word16)"
         , "\n      where"
         , "\n        go "
@@ -215,7 +215,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyWord 16,..} =
         , mintercalate "\n    toWord " $
             map fmtEnumToWordCase   $ reverse $ sortOn variantTag dataVariants
         , "\n"
-        , "instance Data.Capnp.Untyped.ReadCtx m b => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m b (", typeName, " m b)) b where"
+        , "instance Data.Capnp.Untyped.ReadCtx m => Codec.Capnp.IsPtr m (Data.Capnp.Untyped.ListOf m (", typeName, " m)) where"
         , "\n    fromPtr msg ptr = fmap"
         , "\n       (fmap (toEnum . (fromIntegral :: Word16 -> Int)))"
         , "\n       (Codec.Capnp.fromPtr msg ptr)"
@@ -247,13 +247,13 @@ fmtDataDef _ dataName dataDef =
 fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod = \case
     ListOf eltType ->
-        "(Data.Capnp.Untyped.ListOf m b " <> fmtType thisMod eltType <> ")"
+        "(Data.Capnp.Untyped.ListOf m " <> fmtType thisMod eltType <> ")"
     Type name [] ->
-        "(" <> fmtName thisMod name <> " m b)"
+        "(" <> fmtName thisMod name <> " m)"
     Type name params -> mconcat
         [ "("
         , fmtName thisMod name
-        , " m b "
+        , " m "
         , mintercalate " " $ map (fmtType thisMod) params
         , ")"
         ]
@@ -269,14 +269,14 @@ fmtPrimType PrimFloat32                  = "Float"
 fmtPrimType PrimFloat64                  = "Double"
 fmtPrimType PrimBool                     = "Bool"
 fmtPrimType PrimVoid                     = "()"
-fmtPrimType PrimText                     = "(Data.Capnp.BuiltinTypes.Text b)"
-fmtPrimType PrimData                     = "(Data.Capnp.BuiltinTypes.Data b)"
+fmtPrimType PrimText                     = "Data.Capnp.BuiltinTypes.Text"
+fmtPrimType PrimData                     = "Data.Capnp.BuiltinTypes.Data"
 
 fmtUntyped :: Untyped -> TB.Builder
-fmtUntyped Struct = "(Data.Capnp.Untyped.Struct m b)"
-fmtUntyped List   = "(Data.Capnp.Untyped.List m b)"
+fmtUntyped Struct = "(Data.Capnp.Untyped.Struct m)"
+fmtUntyped List   = "(Data.Capnp.Untyped.List m)"
 fmtUntyped Cap    = "Word32"
-fmtUntyped Ptr    = "(Data.Capnp.Untyped.Ptr m b)"
+fmtUntyped Ptr    = "(Data.Capnp.Untyped.Ptr m)"
 
 fmtName :: Id -> Name -> TB.Builder
 fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =

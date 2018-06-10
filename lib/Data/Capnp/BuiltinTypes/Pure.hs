@@ -29,10 +29,10 @@ import qualified Data.Vector             as V
 type Data = BS.ByteString
 type Text = T.Text
 
-instance (MonadThrow m, MonadLimit m) => Decerialize m (BuiltinTypes.Data BS.ByteString) Data where
+instance (MonadThrow m, MonadLimit m) => Decerialize m BuiltinTypes.Data Data where
     decerialize (BuiltinTypes.Data bytes) = pure bytes
 
-instance (MonadThrow m, MonadLimit m) => Decerialize m (BuiltinTypes.Text BS.ByteString) Text where
+instance (MonadThrow m, MonadLimit m) => Decerialize m BuiltinTypes.Text Text where
     decerialize (BuiltinTypes.Text bytes) =
             case decodeUtf8' bytes of
                 Left e    -> throwM $ InvalidUtf8Error e

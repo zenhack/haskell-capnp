@@ -17,7 +17,6 @@ import Tests.Util
 
 import Control.Monad             (void)
 import Control.Monad.Primitive   (RealWorld)
-import Data.ByteString           (ByteString)
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)
@@ -34,7 +33,7 @@ encodeDecodeUntypedTest
     :: ( MsgMetaData -- schema and type name
        , String -- message in textual form
        , BuilderT p RealWorld IO () -- Builder for the message
-       , Struct (LimitT IO) ByteString -> LimitT IO () -- reader.
+       , Struct (LimitT IO) -> LimitT IO () -- reader.
        , Int -- Quota to run the reader with.
        , Int -- Remaining quota for the reader.
        )

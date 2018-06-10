@@ -21,8 +21,6 @@ import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
 
-import Data.ByteString as BS
-
 import qualified Capnp.ById.Xa184c7885cdaf2a1
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
@@ -35,16 +33,16 @@ data JoinKeyPart
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m BS.ByteString) JoinKeyPart where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m) JoinKeyPart where
     decerialize raw = JoinKeyPart
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinKeyPart BS.ByteString where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinKeyPart where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m BS.ByteString)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m)
 
 data JoinResult
     = JoinResult
@@ -54,16 +52,16 @@ data JoinResult
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.JoinResult m BS.ByteString) JoinResult where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.JoinResult m) JoinResult where
     decerialize raw = JoinResult
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinResult BS.ByteString where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinResult where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult m BS.ByteString)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult m)
 
 data Side
     = Side'server
@@ -71,7 +69,7 @@ data Side
     | Side'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.Side m BS.ByteString) Side where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.Side m) Side where
     decerialize raw = case raw of
 
         Capnp.ById.Xa184c7885cdaf2a1.Side'server -> pure Side'server
@@ -84,14 +82,14 @@ data ProvisionId
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m BS.ByteString) ProvisionId where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m) ProvisionId where
     decerialize raw = ProvisionId
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m ProvisionId BS.ByteString where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m ProvisionId where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m BS.ByteString)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m)
 
 data VatId
     = VatId
@@ -99,12 +97,12 @@ data VatId
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.VatId m BS.ByteString) VatId where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.VatId m) VatId where
     decerialize raw = VatId
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m VatId BS.ByteString where
+instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m VatId where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId m BS.ByteString)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId m)
 

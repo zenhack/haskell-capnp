@@ -42,12 +42,12 @@ class IsWord a where
 --
 -- Similarly to IsWord, this is mostly used in generated code, to interact
 -- with the pointer section of structs.
-class ReadCtx m b => IsPtr m a b where
-    fromPtr :: M.Message b -> Maybe (Ptr m b) -> m a
+class ReadCtx m => IsPtr m a where
+    fromPtr :: M.Message -> Maybe (Ptr m) -> m a
 
 -- | Types that can be extracted from a struct.
-class IsStruct m a b where
-    fromStruct :: Struct m b -> m a
+class IsStruct m a where
+    fromStruct :: Struct m -> m a
 
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
@@ -56,7 +56,7 @@ expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 -- struct's data section. @index@ is the index of the 64-bit word in the data
 -- section in which the field resides. @offset@ is the offset in bits from the
 -- start of that word to the field. @def@ is the default value for this field.
-getWordField :: (ReadCtx m b, IsWord a) => Struct m b -> Int -> Int -> Word64 -> m a
+getWordField :: (ReadCtx m, IsWord a) => Struct m -> Int -> Int -> Word64 -> m a
 getWordField struct idx offset def = fmap
     ( fromWord
     . xor def
@@ -127,35 +127,35 @@ instance IsWord Double where
     toWord = doubleToWord
 
 -- IsPtr instance for lists of Void/().
-instance ReadCtx m b => IsPtr m (ListOf m b ()) b where
+instance ReadCtx m => IsPtr m (ListOf m ()) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
 
 -- IsPtr instances for lists of unsigned integers.
-instance ReadCtx m b => IsPtr m (ListOf m b Word8) b where
+instance ReadCtx m => IsPtr m (ListOf m Word8) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-instance ReadCtx m b => IsPtr m (ListOf m b Word16) b where
+instance ReadCtx m => IsPtr m (ListOf m Word16) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-instance ReadCtx m b => IsPtr m (ListOf m b Word32) b where
+instance ReadCtx m => IsPtr m (ListOf m Word32) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-instance ReadCtx m b => IsPtr m (ListOf m b Word64) b where
+instance ReadCtx m => IsPtr m (ListOf m Word64) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
 
 -- | IsPtr instance for pointers -- this is just the identity.
-instance ReadCtx m b => IsPtr m (Maybe (Ptr m b)) b where
+instance ReadCtx m => IsPtr m (Maybe (Ptr m)) where
     fromPtr _ = pure
 
 -- IsPtr instance for composite lists.
-instance ReadCtx m b => IsPtr m (ListOf m b (Struct m b)) b where
+instance ReadCtx m => IsPtr m (ListOf m (Struct m)) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
@@ -163,26 +163,26 @@ instance ReadCtx m b => IsPtr m (ListOf m b (Struct m b)) b where
 -- | IsPtr instances for lists of floating point numbers.
 --
 -- These just wrap the unsigned integer instances of the appropriate size.
-instance ReadCtx m b => IsPtr m (ListOf m b Float) b where
+instance ReadCtx m => IsPtr m (ListOf m Float) where
     fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
-instance ReadCtx m b => IsPtr m (ListOf m b Double) b where
+instance ReadCtx m => IsPtr m (ListOf m Double) where
     fromPtr msg = fmap (fmap wordToDouble) . fromPtr msg
 
 -- IsPtr instances for lists of signed instances. These just shell out to the
 -- unsigned instances.
-instance ReadCtx m b => IsPtr m (ListOf m b Int8) b where
+instance ReadCtx m => IsPtr m (ListOf m Int8) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word8 -> Int8)) . fromPtr msg
-instance ReadCtx m b => IsPtr m (ListOf m b Int16) b where
+instance ReadCtx m => IsPtr m (ListOf m Int16) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word16 -> Int16)) . fromPtr msg
-instance ReadCtx m b => IsPtr m (ListOf m b Int32) b where
+instance ReadCtx m => IsPtr m (ListOf m Int32) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word32 -> Int32)) . fromPtr msg
-instance ReadCtx m b => IsPtr m (ListOf m b Int64) b where
+instance ReadCtx m => IsPtr m (ListOf m Int64) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word64 -> Int64)) . fromPtr msg
 
 -- IsPtr instances for Text and Data. These wrap lists of bytes.
-instance ReadCtx m b => IsPtr m (Data b) b where
+instance ReadCtx m => IsPtr m Data where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
-instance ReadCtx m b => IsPtr m (Text b) b where
+instance ReadCtx m => IsPtr m Text where
     fromPtr msg ptr = case ptr of
         Just _ ->
             fromPtr msg ptr >>= BuiltinTypes.getText
@@ -193,34 +193,34 @@ instance ReadCtx m b => IsPtr m (Text b) b where
             BuiltinTypes.Data bytes <- fromPtr msg ptr
             pure $ BuiltinTypes.Text bytes
 
-nestedListPtr :: (ReadCtx m b, IsPtr m a b) => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b a)
+nestedListPtr :: (ReadCtx m, IsPtr m a) => M.Message -> Maybe (Ptr m) -> m (ListOf m a)
 nestedListPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
 
-structListPtr :: (ReadCtx m b, IsStruct m a b) => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b a)
+structListPtr :: (ReadCtx m, IsStruct m a) => M.Message -> Maybe (Ptr m) -> m (ListOf m a)
 structListPtr msg ptr =
     flatten . fmap fromStruct <$> structListFromPtr msg ptr
   where
-    structListFromPtr :: ReadCtx m b => M.Message b -> Maybe (Ptr m b) -> m (ListOf m b (Struct m b))
+    structListFromPtr :: ReadCtx m => M.Message -> Maybe (Ptr m) -> m (ListOf m (Struct m))
     structListFromPtr = fromPtr
 
-structPtr :: (ReadCtx m b, IsStruct m a b) => M.Message b -> Maybe (Ptr m b) -> m a
+structPtr :: (ReadCtx m, IsStruct m a) => M.Message -> Maybe (Ptr m) -> m a
 structPtr msg ptr = structFromPtr msg ptr >>= fromStruct
   where
-    structFromPtr :: ReadCtx m b => M.Message b -> Maybe (Ptr m b) -> m (Struct m b)
+    structFromPtr :: ReadCtx m => M.Message -> Maybe (Ptr m) -> m (Struct m)
     structFromPtr = fromPtr
 
-instance (ReadCtx m b, IsPtr m (ListOf m b a) b) => IsPtr m (ListOf m b (ListOf m b a)) b where
+instance (ReadCtx m, IsPtr m (ListOf m a)) => IsPtr m (ListOf m (ListOf m a)) where
     fromPtr = nestedListPtr
     -- fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
-instance (ReadCtx m b) => IsPtr m (ListOf m b (Maybe (Ptr m b))) b where
+instance (ReadCtx m) => IsPtr m (ListOf m (Maybe (Ptr m))) where
     fromPtr = nestedListPtr
     -- fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
 
 -- IsStruct instance for Struct; just the identity.
-instance ReadCtx m b => IsStruct m (Struct m b) b where
+instance ReadCtx m => IsStruct m (Struct m) where
     fromStruct = pure
 
-instance ReadCtx m b => IsPtr m (Struct m b) b where
-    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct m b)
+instance ReadCtx m => IsPtr m (Struct m) where
+    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct m)
     fromPtr msg (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                      = expected "pointer to struct"

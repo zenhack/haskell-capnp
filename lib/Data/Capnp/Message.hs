@@ -26,14 +26,16 @@ import Data.Capnp.Errors         (Error(..))
 import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Word                 (Word32, Word64)
 
+import qualified Data.ByteString as BS
 import qualified Data.Capnp.Blob as B
 import qualified Data.Vector     as V
 
-newtype Message a = Message (V.Vector a) deriving(Show)
+newtype Message = Message (V.Vector BS.ByteString) deriving(Show)
+type Segment = BS.ByteString
 
 -- | @getSegment msg i@ gets the ith segment of a message. Throws a
 -- 'BoundsError' if @i@ is out of bounds.
-getSegment :: (MonadThrow m) => Message a -> Int -> m a
+getSegment :: (MonadThrow m) => Message -> Int -> m Segment
 getSegment (Message segs) i = do
     when (i < 0 || i >= V.length segs) $
         throwM BoundsError { index = i, maxIndex = V.length segs }
@@ -41,8 +43,7 @@ getSegment (Message segs) i = do
 
 -- | @getWord msg addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
-getWord :: (B.Blob m seg, MonadThrow m)
-    => Message seg -> WordAddr -> m Word64
+getWord :: MonadThrow m => Message -> WordAddr -> m Word64
 getWord (Message segs) WordAt{..} = do
     seg <- segs `V.indexM` segIndex
     seg `B.indexWord` wordIndex
@@ -51,7 +52,7 @@ getWord (Message segs) WordAt{..} = do
 --
 -- The segments will not be copied; the resulting message will be a view into
 -- the original blob.
-decode :: (B.Slice m b, B.Blob m b, MonadThrow m) => b -> m (Message b)
+decode :: MonadThrow m => BS.ByteString -> m Message
 decode blob = do
     -- Note: we use the quota to avoid needing to do bounds checking here;
     -- since readMessage invoices the quota before reading, we can rely on it
@@ -82,8 +83,7 @@ decode blob = do
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
 -- The size of the message (in 64-bit words) is deducted from the quota,
 -- which can be used to set the maximum message size.
-readMessage :: (MonadLimit m)
-    => m Word32 -> (WordCount -> m b) -> m (Message b)
+readMessage :: (MonadLimit m) => m Word32 -> (WordCount -> m Segment) -> m Message
 readMessage read32 readSegment = do
     invoice 1
     numSegs' <- read32
@@ -97,8 +97,7 @@ readMessage read32 readSegment = do
 -- | @writeMesage write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
-writeMessage :: (Monad m, B.Blob m b)
-    => Message b -> (Word32 -> m ()) -> (b -> m ()) -> m ()
+writeMessage :: MonadThrow m => Message -> (Word32 -> m ()) -> (Segment -> m ()) -> m ()
 writeMessage (Message msg) write32 writeSegment = do
     let numSegs = V.length msg
     write32 (fromIntegral numSegs - 1)

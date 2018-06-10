@@ -113,21 +113,21 @@ sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
 
-instance (MonadThrow m, MonadLimit m) => Decerialize m (U.Struct m BS.ByteString) Struct where
+instance (MonadThrow m, MonadLimit m) => Decerialize m (U.Struct m) Struct where
     decerialize = readStruct
 
 -- | Parse a struct into its ADT form.
-readStruct :: U.ReadCtx m BS.ByteString => U.Struct m BS.ByteString -> m Struct
+readStruct :: U.ReadCtx m => U.Struct m -> m Struct
 readStruct struct = Struct
     <$> (Slice <$> readList (U.dataSection struct) pure)
     <*> (Slice <$> readList (U.ptrSection struct) readPtr)
 
-instance (MonadThrow m, MonadLimit m) => Decerialize m (Maybe (U.Ptr m BS.ByteString)) (Maybe PtrType) where
+instance (MonadThrow m, MonadLimit m) => Decerialize m (Maybe (U.Ptr m)) (Maybe PtrType) where
     decerialize = readPtr
 
 -- | Parse a (possibly null) pointer into its ADT form.
-readPtr :: U.ReadCtx m BS.ByteString
-    => Maybe (U.Ptr m BS.ByteString)
+readPtr :: U.ReadCtx m
+    => Maybe (U.Ptr m)
     -> m (Maybe PtrType)
 readPtr Nothing               = return Nothing
 readPtr (Just ptr) = Just <$> case ptr of
@@ -135,16 +135,16 @@ readPtr (Just ptr) = Just <$> case ptr of
     U.PtrStruct struct -> PtrStruct <$> readStruct struct
     U.PtrList list     -> PtrList <$> readList' list
 
-instance (U.ReadCtx m BS.ByteString, Decerialize m a b) => Decerialize m (U.ListOf m BS.ByteString a) (List b) where
+instance (U.ReadCtx m, Decerialize m a b) => Decerialize m (U.ListOf m a) (List b) where
     decerialize raw = readList raw decerialize
 
 -- | @'readList' list readElt@ parses a list into its ADT form. @readElt@ is
 -- used to parse the elements.
-readList :: U.ReadCtx m BS.ByteString => U.ListOf m BS.ByteString a -> (a -> m b) -> m (List b)
+readList :: U.ReadCtx m => U.ListOf m a -> (a -> m b) -> m (List b)
 readList list readElt =
     V.generateM (U.length list) (\i -> U.index i list >>= readElt)
 
-readList' :: U.ReadCtx m BS.ByteString => U.List m BS.ByteString -> m List'
+readList' :: U.ReadCtx m => U.List m -> m List'
 readList' (U.List0 l)      = List0' <$> readList l pure
 readList' (U.List1 l)      = List1' <$> readList l pure
 readList' (U.List8 l)      = List8' <$> readList l pure
