@@ -17,7 +17,7 @@ import Data.Capnp.Untyped
     , Ptr(..)
     , ReadCtx
     , Struct
-    , flatten
+    , extractElts
     , getData
     , messageDefault
     )
@@ -27,8 +27,8 @@ import Data.ReinterpretCast
 import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
 import qualified Data.Capnp.Message      as M
 
-class Decerialize m from to where
-    decerialize :: from -> m to
+class Decerialize from to where
+    decerialize :: ReadCtx m => from -> m to
 
 -- | Types that can be converted to and from a 64-bit word.
 --
@@ -42,12 +42,12 @@ class IsWord a where
 --
 -- Similarly to IsWord, this is mostly used in generated code, to interact
 -- with the pointer section of structs.
-class ReadCtx m => IsPtr m a where
-    fromPtr :: M.Message -> Maybe (Ptr m) -> m a
+class IsPtr a where
+    fromPtr :: ReadCtx m => M.Message -> Maybe Ptr -> m a
 
 -- | Types that can be extracted from a struct.
-class IsStruct m a where
-    fromStruct :: Struct m -> m a
+class IsStruct a where
+    fromStruct :: ReadCtx m => Struct -> m a
 
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
@@ -56,7 +56,7 @@ expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 -- struct's data section. @index@ is the index of the 64-bit word in the data
 -- section in which the field resides. @offset@ is the offset in bits from the
 -- start of that word to the field. @def@ is the default value for this field.
-getWordField :: (ReadCtx m, IsWord a) => Struct m -> Int -> Int -> Word64 -> m a
+getWordField :: (ReadCtx m, IsWord a) => Struct -> Int -> Int -> Word64 -> m a
 getWordField struct idx offset def = fmap
     ( fromWord
     . xor def
@@ -64,30 +64,29 @@ getWordField struct idx offset def = fmap
     )
     (getData idx struct)
 
-instance Monad m => Decerialize m Bool Bool where
+instance Decerialize Bool Bool where
     decerialize = pure
-instance Monad m => Decerialize m Word8 Word8 where
+instance Decerialize Word8 Word8 where
     decerialize = pure
-instance Monad m => Decerialize m Word16 Word16 where
+instance Decerialize Word16 Word16 where
     decerialize = pure
-instance Monad m => Decerialize m Word32 Word32 where
+instance Decerialize Word32 Word32 where
     decerialize = pure
-instance Monad m => Decerialize m Word64 Word64 where
+instance Decerialize Word64 Word64 where
     decerialize = pure
-instance Monad m => Decerialize m Int8 Int8 where
+instance Decerialize Int8 Int8 where
     decerialize = pure
-instance Monad m => Decerialize m Int16 Int16 where
+instance Decerialize Int16 Int16 where
     decerialize = pure
-instance Monad m => Decerialize m Int32 Int32 where
+instance Decerialize Int32 Int32 where
     decerialize = pure
-instance Monad m => Decerialize m Int64 Int64 where
+instance Decerialize Int64 Int64 where
     decerialize = pure
-instance Monad m => Decerialize m Float Float where
+instance Decerialize Float Float where
     decerialize = pure
-instance Monad m => Decerialize m Double Double where
+instance Decerialize Double Double where
     decerialize = pure
 
--- IsWord instance for booleans.
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
     toWord True  = 1
@@ -127,35 +126,35 @@ instance IsWord Double where
     toWord = doubleToWord
 
 -- IsPtr instance for lists of Void/().
-instance ReadCtx m => IsPtr m (ListOf m ()) where
+instance IsPtr (ListOf ()) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
 
 -- IsPtr instances for lists of unsigned integers.
-instance ReadCtx m => IsPtr m (ListOf m Word8) where
+instance IsPtr (ListOf Word8) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-instance ReadCtx m => IsPtr m (ListOf m Word16) where
+instance IsPtr (ListOf Word16) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-instance ReadCtx m => IsPtr m (ListOf m Word32) where
+instance IsPtr (ListOf Word32) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-instance ReadCtx m => IsPtr m (ListOf m Word64) where
+instance IsPtr (ListOf Word64) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
 
 -- | IsPtr instance for pointers -- this is just the identity.
-instance ReadCtx m => IsPtr m (Maybe (Ptr m)) where
+instance IsPtr (Maybe Ptr) where
     fromPtr _ = pure
 
 -- IsPtr instance for composite lists.
-instance ReadCtx m => IsPtr m (ListOf m (Struct m)) where
+instance IsPtr (ListOf Struct) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
@@ -163,26 +162,26 @@ instance ReadCtx m => IsPtr m (ListOf m (Struct m)) where
 -- | IsPtr instances for lists of floating point numbers.
 --
 -- These just wrap the unsigned integer instances of the appropriate size.
-instance ReadCtx m => IsPtr m (ListOf m Float) where
+instance IsPtr (ListOf Float) where
     fromPtr msg = fmap (fmap wordToFloat) . fromPtr msg
-instance ReadCtx m => IsPtr m (ListOf m Double) where
+instance IsPtr (ListOf Double) where
     fromPtr msg = fmap (fmap wordToDouble) . fromPtr msg
 
 -- IsPtr instances for lists of signed instances. These just shell out to the
 -- unsigned instances.
-instance ReadCtx m => IsPtr m (ListOf m Int8) where
+instance IsPtr (ListOf Int8) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word8 -> Int8)) . fromPtr msg
-instance ReadCtx m => IsPtr m (ListOf m Int16) where
+instance IsPtr (ListOf Int16) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word16 -> Int16)) . fromPtr msg
-instance ReadCtx m => IsPtr m (ListOf m Int32) where
+instance IsPtr (ListOf Int32) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word32 -> Int32)) . fromPtr msg
-instance ReadCtx m => IsPtr m (ListOf m Int64) where
+instance IsPtr (ListOf Int64) where
     fromPtr msg = fmap (fmap (fromIntegral :: Word64 -> Int64)) . fromPtr msg
 
 -- IsPtr instances for Text and Data. These wrap lists of bytes.
-instance ReadCtx m => IsPtr m Data where
+instance IsPtr Data where
     fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
-instance ReadCtx m => IsPtr m Text where
+instance IsPtr Text where
     fromPtr msg ptr = case ptr of
         Just _ ->
             fromPtr msg ptr >>= BuiltinTypes.getText
@@ -193,34 +192,28 @@ instance ReadCtx m => IsPtr m Text where
             BuiltinTypes.Data bytes <- fromPtr msg ptr
             pure $ BuiltinTypes.Text bytes
 
-nestedListPtr :: (ReadCtx m, IsPtr m a) => M.Message -> Maybe (Ptr m) -> m (ListOf m a)
-nestedListPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
+nestedListPtr :: (ReadCtx m, IsPtr a) => M.Message -> Maybe Ptr -> m (ListOf a)
+nestedListPtr msg ptr = extractElts (fromPtr msg) <$> fromPtr msg ptr
 
-structListPtr :: (ReadCtx m, IsStruct m a) => M.Message -> Maybe (Ptr m) -> m (ListOf m a)
-structListPtr msg ptr =
-    flatten . fmap fromStruct <$> structListFromPtr msg ptr
-  where
-    structListFromPtr :: ReadCtx m => M.Message -> Maybe (Ptr m) -> m (ListOf m (Struct m))
-    structListFromPtr = fromPtr
+structListPtr :: (ReadCtx m, IsStruct a) => M.Message -> Maybe Ptr -> m (ListOf a)
+structListPtr msg ptr = extractElts fromStruct <$> fromPtr msg ptr
 
-structPtr :: (ReadCtx m, IsStruct m a) => M.Message -> Maybe (Ptr m) -> m a
+structPtr :: (ReadCtx m, IsStruct a) => M.Message -> Maybe Ptr -> m a
 structPtr msg ptr = structFromPtr msg ptr >>= fromStruct
   where
-    structFromPtr :: ReadCtx m => M.Message -> Maybe (Ptr m) -> m (Struct m)
+    structFromPtr :: ReadCtx m => M.Message -> Maybe Ptr -> m Struct
     structFromPtr = fromPtr
 
-instance (ReadCtx m, IsPtr m (ListOf m a)) => IsPtr m (ListOf m (ListOf m a)) where
+instance IsPtr (ListOf a) => IsPtr (ListOf (ListOf a)) where
     fromPtr = nestedListPtr
-    -- fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
-instance (ReadCtx m) => IsPtr m (ListOf m (Maybe (Ptr m))) where
+instance IsPtr (ListOf (Maybe Ptr)) where
     fromPtr = nestedListPtr
-    -- fromPtr msg ptr = flatten . fmap (fromPtr msg) <$> fromPtr msg ptr
 
 -- IsStruct instance for Struct; just the identity.
-instance ReadCtx m => IsStruct m (Struct m) where
+instance IsStruct Struct where
     fromStruct = pure
 
-instance ReadCtx m => IsPtr m (Struct m) where
-    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct m)
+instance IsPtr Struct where
+    fromPtr msg Nothing              = fromStruct (messageDefault msg :: Struct)
     fromPtr msg (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                      = expected "pointer to struct"

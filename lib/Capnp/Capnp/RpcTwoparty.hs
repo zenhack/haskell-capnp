@@ -33,16 +33,16 @@ data JoinKeyPart
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m) JoinKeyPart where
+instance Codec.Capnp.Decerialize Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart JoinKeyPart where
     decerialize raw = JoinKeyPart
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinKeyPart where
+instance Codec.Capnp.IsStruct JoinKeyPart where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart m)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart)
 
 data JoinResult
     = JoinResult
@@ -52,16 +52,16 @@ data JoinResult
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.JoinResult m) JoinResult where
+instance Codec.Capnp.Decerialize Capnp.ById.Xa184c7885cdaf2a1.JoinResult JoinResult where
     decerialize raw = JoinResult
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m JoinResult where
+instance Codec.Capnp.IsStruct JoinResult where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult m)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult)
 
 data Side
     = Side'server
@@ -69,7 +69,7 @@ data Side
     | Side'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.Side m) Side where
+instance Codec.Capnp.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side Side where
     decerialize raw = case raw of
 
         Capnp.ById.Xa184c7885cdaf2a1.Side'server -> pure Side'server
@@ -82,14 +82,14 @@ data ProvisionId
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m) ProvisionId where
+instance Codec.Capnp.Decerialize Capnp.ById.Xa184c7885cdaf2a1.ProvisionId ProvisionId where
     decerialize raw = ProvisionId
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m ProvisionId where
+instance Codec.Capnp.IsStruct ProvisionId where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId m)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId)
 
 data VatId
     = VatId
@@ -97,12 +97,12 @@ data VatId
         }
     deriving(Show, Read, Eq)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m (Capnp.ById.Xa184c7885cdaf2a1.VatId m) VatId where
+instance Codec.Capnp.Decerialize Capnp.ById.Xa184c7885cdaf2a1.VatId VatId where
     decerialize raw = VatId
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= Codec.Capnp.decerialize)
 
-instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m VatId where
+instance Codec.Capnp.IsStruct VatId where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId m)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId)
 

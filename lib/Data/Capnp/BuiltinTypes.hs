@@ -47,7 +47,7 @@ newtype Data = Data BS.ByteString
 
 -- | Interpret a list of Word8 as a capnproto 'Data' value. This validates that
 -- the bytes are in-bounds, throwing a 'BoundsError' if not.
-getData :: U.ReadCtx m => U.ListOf m Word8 -> m Data
+getData :: U.ReadCtx m => U.ListOf Word8 -> m Data
 getData list = Data <$> U.rawBytes list
 
 -- | Interpret a list of Word8 as a capnproto 'Text' value.
@@ -55,7 +55,7 @@ getData list = Data <$> U.rawBytes list
 -- This vaidates that the list is in-bounds, and that it is NUL-terminated,
 -- but not that it is valid UTF-8. If it is not NUL-terminaed, a
 -- 'SchemaViolationError' is thrown.
-getText :: U.ReadCtx m => U.ListOf m Word8 -> m Text
+getText :: U.ReadCtx m => U.ListOf Word8 -> m Text
 getText list = do
     bytes <- U.rawBytes list
     len <- B.length bytes

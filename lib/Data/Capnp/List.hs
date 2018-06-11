@@ -30,26 +30,26 @@ import Data.Capnp.Untyped (ListOf, ReadCtx, index, length)
 import Data.Monoid        (mappend, mempty)
 
 -- | Alias for 'fmap'
-map :: (a -> c) -> ListOf m a -> ListOf m c
+map :: (a -> c) -> ListOf a -> ListOf c
 map = fmap
 
 -- | @mapM_ f list@ applies @f@ to each element and then executes the
 -- resulting action, in left to right order. This does not allocate
 -- space for the intermediate list.
-mapM_ :: ReadCtx m => (a -> m c) -> ListOf m a -> m ()
+mapM_ :: ReadCtx m => (a -> m c) -> ListOf a -> m ()
 mapM_ f = sequence_ . fmap f
 
 -- | Like 'mapM_', but with the arguments flipped.
-forM_ :: ReadCtx m => ListOf m a -> (a -> m c) -> m ()
+forM_ :: ReadCtx m => ListOf a -> (a -> m c) -> m ()
 forM_ = flip mapM_
 
 -- | @sequence_ list@ executes each of the actions in @list@, from
 -- left to right.
-sequence_ :: ReadCtx m => ListOf m (m a) -> m ()
+sequence_ :: ReadCtx m => ListOf (m a) -> m ()
 sequence_ = join . foldl (return2 (<*)) (return ())
 
 -- | Analouge of 'Prelude.foldl'.
-foldl :: ReadCtx m => (c -> a -> m c) -> c -> ListOf m a -> m c
+foldl :: ReadCtx m => (c -> a -> m c) -> c -> ListOf a -> m c
 foldl f empty list = go 0 empty
   where
     len = length list
@@ -62,7 +62,7 @@ foldl f empty list = go 0 empty
 
 
 -- | Analouge of 'Prelude.foldr'.
-foldr :: ReadCtx m => (a -> c -> m c) -> c -> ListOf m a -> m c
+foldr :: ReadCtx m => (a -> c -> m c) -> c -> ListOf a -> m c
 foldr f empty list = go (length list - 1) empty
   where
     go i accum
@@ -73,11 +73,11 @@ foldr f empty list = go (length list - 1) empty
             go (i-1) accum'
 
 -- | Analouge of 'Prelude.fold'.
-fold :: (Monoid w, ReadCtx m) => ListOf m w -> m w
+fold :: (Monoid w, ReadCtx m) => ListOf w -> m w
 fold = foldl (return2 mappend) mempty
 
 -- | Convert the list to a standard haskell list
-toList :: ReadCtx m => ListOf m a -> m [a]
+toList :: ReadCtx m => ListOf a -> m [a]
 toList = foldr (return2 (:)) []
 
 -- Helper for lifting binary pure functions into a monad.

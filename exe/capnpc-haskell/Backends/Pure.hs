@@ -154,9 +154,9 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
         , "\n    deriving(Show, Read, Eq)"
         , "\n\n"
-        , "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.Decerialize m ("
+        , "instance Codec.Capnp.Decerialize "
         , rawName
-        , " m) "
+        , " "
         , pureName
         , " where\n"
         , "    decerialize raw = "
@@ -171,11 +171,11 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "\n\n"
         , case dataCerialType of
             CTyStruct -> mconcat
-                [ "instance (MonadThrow m, MonadLimit m) => Codec.Capnp.IsStruct m "
+                [ "instance Codec.Capnp.IsStruct "
                 , pureName, " where\n"
                 , "    fromStruct struct = do\n"
                 , "        raw <- Codec.Capnp.fromStruct struct\n"
-                , "        Codec.Capnp.decerialize (raw :: ", rawName, " m)\n"
+                , "        Codec.Capnp.decerialize (raw :: ", rawName, ")\n"
                 , "\n"
                 ]
             _ ->

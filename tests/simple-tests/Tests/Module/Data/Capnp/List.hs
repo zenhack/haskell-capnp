@@ -3,7 +3,7 @@ module Tests.Module.Data.Capnp.List (listTests) where
 
 import Tests.Util (assertionsToTest)
 
-import Control.Monad.Writer      (MonadWriter, execWriterT, runWriterT, tell)
+import Control.Monad.Writer      (MonadWriter, execWriterT, tell)
 import Data.Capnp.List           (ListOf)
 import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Monoid               (Sum(..))
@@ -15,21 +15,21 @@ import qualified Data.Capnp.List              as List
 import qualified Data.Capnp.Message           as M
 import qualified Data.Capnp.Untyped           as Untyped
 
-lengthCounted :: (MonadWriter (Sum Int) m, Untyped.ReadCtx m) => ListOf m a -> m ()
+lengthCounted :: (MonadWriter (Sum Int) m, Untyped.ReadCtx m) => ListOf a -> m ()
 lengthCounted = List.mapM_ (const $ tell 1)
 
 readSchema :: IO M.Message
 readSchema =
     BS.readFile "tests/data/schema-codegenreq" >>= M.decode
 
-schemaNodes :: Untyped.ReadCtx m => M.Message -> m (Untyped.ListOf m (Schema.Node m))
+schemaNodes :: Untyped.ReadCtx m => M.Message -> m (Untyped.ListOf Schema.Node)
 schemaNodes msg = do
     cgr <- Schema.CodeGeneratorRequest <$> Untyped.rootPtr msg
     Schema.get_CodeGeneratorRequest'nodes cgr
 
 listTests = assertionsToTest "List tests"
     [ do msg <- readSchema
-         (nodes, _) <- evalLimitT 1024 $ runWriterT $ schemaNodes msg
+         nodes <- evalLimitT 1024 (schemaNodes msg)
          -- First, sanity check that List.length returns the value
          -- we expect:
          assertEqual

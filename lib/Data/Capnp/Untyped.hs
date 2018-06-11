@@ -4,6 +4,7 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-|
 Module: Data.Capnp.Untyped
@@ -22,7 +23,8 @@ module Data.Capnp.Untyped
     , get, index, length
     , rootPtr
     , rawBytes
-    , flatten
+    -- , flatten
+    , extractElts
     , ReadCtx
     , HasMessage(..), MessageDefault(..)
     )
@@ -33,7 +35,6 @@ import Prelude hiding (length)
 import Data.Bits
 import Data.Word
 
-import Control.Monad             (join)
 import Control.Monad.Catch       (MonadThrow(throwM))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits
@@ -54,21 +55,21 @@ type ReadCtx m = (MonadThrow m, MonadLimit m)
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
 -- with absolute addressing.
-data Ptr (m :: * -> *)
+data Ptr
     = PtrCap M.Message !Word32
-    | PtrList (List m)
-    | PtrStruct (Struct m)
+    | PtrList List
+    | PtrStruct Struct
 
 -- | A list of values (of arbitrary type) in a message.
-data List m
-    = List0 (ListOf m ())
-    | List1 (ListOf m Bool)
-    | List8 (ListOf m Word8)
-    | List16 (ListOf m Word16)
-    | List32 (ListOf m Word32)
-    | List64 (ListOf m Word64)
-    | ListPtr (ListOf m (Maybe (Ptr m)))
-    | ListStruct (ListOf m (Struct m))
+data List
+    = List0 (ListOf ())
+    | List1 (ListOf Bool)
+    | List8 (ListOf Word8)
+    | List16 (ListOf Word16)
+    | List32 (ListOf Word32)
+    | List64 (ListOf Word64)
+    | ListPtr (ListOf (Maybe Ptr))
+    | ListStruct (ListOf Struct)
 
 -- | A "normal" (non-composite) list.
 data NormalList = NormalList
@@ -78,34 +79,36 @@ data NormalList = NormalList
     }
 
 -- | A list of values of type 'a' in a message.
-data ListOf (m :: * -> *) a where
+data ListOf a where
     ListOfVoid
         :: M.Message
         -> !Int -- number of elements
-        -> ListOf m ()
+        -> ListOf ()
     ListOfStruct
-        :: Struct m -- First element. data/ptr sizes are the same for
-                      -- all elements.
+        :: Struct -- First element. data/ptr sizes are the same for
+                  -- all elements.
         -> !Int -- Number of elements
-        -> ListOf m (Struct m)
-    ListOfBool   :: !NormalList -> ListOf m Bool
-    ListOfWord8  :: !NormalList -> ListOf m Word8
-    ListOfWord16 :: !NormalList -> ListOf m Word16
-    ListOfWord32 :: !NormalList -> ListOf m Word32
-    ListOfWord64 :: !NormalList -> ListOf m Word64
-    ListOfPtr    :: !NormalList -> ListOf m (Maybe (Ptr m))
+        -> ListOf Struct
+    ListOfBool   :: !NormalList -> ListOf Bool
+    ListOfWord8  :: !NormalList -> ListOf Word8
+    ListOfWord16 :: !NormalList -> ListOf Word16
+    ListOfWord32 :: !NormalList -> ListOf Word32
+    ListOfWord64 :: !NormalList -> ListOf Word64
+    ListOfPtr    :: !NormalList -> ListOf (Maybe Ptr)
     -- wrapper that converts an untyped value to a typed one:
-    ListOfMapped :: ListOf m a -> (a -> c) -> ListOf m c
-    -- wrapper allowing us to hide extra effects; this is useful for
-    -- e.g. building nested lists (see the treatment in 'index').
-    ListOfJoined :: ListOf m (m a) -> ListOf m a
+    ListOfMapped :: ListOf a -> (a -> c) -> ListOf c
 
-instance Functor (ListOf m) where
+    ListOfExtract :: (forall (m :: * -> *). ReadCtx m => a -> m b) -> ListOf a -> ListOf b
+
+extractElts :: (forall (m :: * -> *). ReadCtx m => a -> m b) -> ListOf a -> ListOf b
+extractElts = ListOfExtract
+
+instance Functor ListOf where
     fmap f (ListOfMapped list g) = ListOfMapped list (f . g)
     fmap f list                  = ListOfMapped list f
 
 -- | A struct value in a message.
-data Struct (m :: * -> *)
+data Struct
     = Struct
         M.Message
         !WordAddr -- Start of struct
@@ -126,18 +129,18 @@ class HasMessage a where
 class HasMessage a => MessageDefault a where
     messageDefault :: M.Message -> a
 
-instance HasMessage (Ptr m) where
+instance HasMessage Ptr where
     message (PtrCap msg _)     = msg
     message (PtrList list)     = message list
     message (PtrStruct struct) = message struct
 
-instance HasMessage (Struct m) where
+instance HasMessage Struct where
     message (Struct msg _ _ _) = msg
 
-instance MessageDefault (Struct m) where
+instance MessageDefault Struct where
     messageDefault msg = Struct msg (WordAt 0 0) 0 0
 
-instance HasMessage (List m) where
+instance HasMessage List where
     message (List0 list)      = message list
     message (List1 list)      = message list
     message (List8 list)      = message list
@@ -147,33 +150,33 @@ instance HasMessage (List m) where
     message (ListPtr list)    = message list
     message (ListStruct list) = message list
 
-instance HasMessage (ListOf m a) where
-    message (ListOfVoid msg _)    = msg
-    message (ListOfStruct tag _)  = message tag
-    message (ListOfBool list)     = message list
-    message (ListOfWord8 list)    = message list
-    message (ListOfWord16 list)   = message list
-    message (ListOfWord32 list)   = message list
-    message (ListOfWord64 list)   = message list
-    message (ListOfPtr list)      = message list
-    message (ListOfMapped list _) = message list
-    message (ListOfJoined list)   = message list
+instance HasMessage (ListOf a) where
+    message (ListOfVoid msg _)     = msg
+    message (ListOfStruct tag _)   = message tag
+    message (ListOfBool list)      = message list
+    message (ListOfWord8 list)     = message list
+    message (ListOfWord16 list)    = message list
+    message (ListOfWord32 list)    = message list
+    message (ListOfWord64 list)    = message list
+    message (ListOfPtr list)       = message list
+    message (ListOfMapped list _)  = message list
+    message (ListOfExtract _ list) = message list
 
-instance MessageDefault (ListOf m ()) where
+instance MessageDefault (ListOf ()) where
     messageDefault msg = ListOfVoid msg 0
-instance MessageDefault (ListOf m (Struct m)) where
+instance MessageDefault (ListOf Struct) where
     messageDefault msg = ListOfStruct (messageDefault msg) 0
-instance MessageDefault (ListOf m Bool) where
+instance MessageDefault (ListOf Bool) where
     messageDefault msg = ListOfBool (messageDefault msg)
-instance MessageDefault (ListOf m Word8) where
+instance MessageDefault (ListOf Word8) where
     messageDefault msg = ListOfWord8 (messageDefault msg)
-instance MessageDefault (ListOf m Word16) where
+instance MessageDefault (ListOf Word16) where
     messageDefault msg = ListOfWord16 (messageDefault msg)
-instance MessageDefault (ListOf m Word32) where
+instance MessageDefault (ListOf Word32) where
     messageDefault msg = ListOfWord32 (messageDefault msg)
-instance MessageDefault (ListOf m Word64) where
+instance MessageDefault (ListOf Word64) where
     messageDefault msg = ListOfWord64 (messageDefault msg)
-instance MessageDefault (ListOf m (Maybe (Ptr m))) where
+instance MessageDefault (ListOf (Maybe Ptr)) where
     messageDefault msg = ListOfPtr (messageDefault msg)
 
 instance HasMessage NormalList where
@@ -185,7 +188,7 @@ instance MessageDefault NormalList where
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
-get :: ReadCtx m => M.Message -> WordAddr -> m (Maybe (Ptr m))
+get :: ReadCtx m => M.Message -> WordAddr -> m (Maybe Ptr)
 get msg addr = do
     word <- getWord msg addr
     case P.parsePtr word of
@@ -267,10 +270,10 @@ get msg addr = do
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
-index :: ReadCtx m => Int -> ListOf m a -> m a
+index :: ReadCtx m => Int -> ListOf a -> m a
 index i list = invoice 1 >> index' list
   where
-    index' :: ReadCtx m => ListOf m a -> m a
+    index' :: ReadCtx m => ListOf a -> m a
     index' (ListOfVoid _ len)
         | i < len = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
@@ -293,7 +296,7 @@ index i list = invoice 1 >> index' list
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfMapped list f) = f <$> index' list
-    index' (ListOfJoined list) = join $ index' list
+    index' (ListOfExtract f list) = index' list >>= f
     indexNList :: (ReadCtx m, Integral a) => NormalList -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
@@ -303,32 +306,26 @@ index i list = invoice 1 >> index' list
             pure $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
 
-
--- | hide the effects in the element type of a list. 'index' will implicitly
--- extract the element from the 'm' as well.
-flatten :: ListOf m (m a) -> ListOf m a
-flatten = ListOfJoined
-
 -- | Returns the length of a list
-length :: ListOf m a -> Int
-length (ListOfVoid _ len)    = len
-length (ListOfStruct _ len)  = len
-length (ListOfBool   nlist)  = nLen nlist
-length (ListOfWord8  nlist)  = nLen nlist
-length (ListOfWord16 nlist)  = nLen nlist
-length (ListOfWord32 nlist)  = nLen nlist
-length (ListOfWord64 nlist)  = nLen nlist
-length (ListOfPtr    nlist)  = nLen nlist
-length (ListOfMapped list _) = length list
-length (ListOfJoined list)   = length list
+length :: ListOf a -> Int
+length (ListOfVoid _ len)     = len
+length (ListOfStruct _ len)   = len
+length (ListOfBool   nlist)   = nLen nlist
+length (ListOfWord8  nlist)   = nLen nlist
+length (ListOfWord16 nlist)   = nLen nlist
+length (ListOfWord32 nlist)   = nLen nlist
+length (ListOfWord64 nlist)   = nLen nlist
+length (ListOfPtr    nlist)   = nLen nlist
+length (ListOfMapped list _)  = length list
+length (ListOfExtract _ list) = length list
 
 -- | The data section of a struct, as a list of Word64
-dataSection :: Struct m -> ListOf m Word64
+dataSection :: Struct -> ListOf Word64
 dataSection (Struct msg addr dataSz _) =
     ListOfWord64 $ NormalList msg addr (fromIntegral dataSz)
 
 -- | The pointer section of a struct, as a list of Ptr
-ptrSection :: Struct m -> ListOf m (Maybe (Ptr m))
+ptrSection :: Struct -> ListOf (Maybe Ptr)
 ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
     ListOfPtr $ NormalList
         msg
@@ -337,14 +334,14 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 
 -- | @'getData' i struct@ gets the @i@th word from the struct's data section,
 -- returning 0 if it is absent.
-getData :: ReadCtx m => Int -> Struct m -> m Word64
+getData :: ReadCtx m => Int -> Struct -> m Word64
 getData i struct
     | length (dataSection struct) <= i = 0 <$ invoice 1
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
-getPtr :: ReadCtx m => Int -> Struct m -> m (Maybe (Ptr m))
+getPtr :: ReadCtx m => Int -> Struct -> m (Maybe Ptr)
 getPtr i struct
     | length (ptrSection struct) <= i = Nothing <$ invoice 1
     | otherwise = index i (ptrSection struct)
@@ -359,7 +356,7 @@ getPtr i struct
 --   the message.
 -- * This doesn't work (raises an error) for composite lists, or lists whose
 --   element size is less than < 1 byte (() and Bool).
-rawBytes :: ReadCtx m => ListOf m a -> m BS.ByteString
+rawBytes :: ReadCtx m => ListOf a -> m BS.ByteString
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     seg <- M.getSegment msg segIndex
     slice seg (wordsToBytes wordIndex) (ByteCount len)
@@ -368,7 +365,6 @@ rawBytes (ListOfWord32 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLe
 rawBytes (ListOfWord64 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
 rawBytes (ListOfPtr    nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
 rawBytes (ListOfMapped list _) = rawBytes list
-rawBytes (ListOfJoined list) = rawBytes list
 rawBytes _ = throwM $ E.SchemaViolationError
     -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
     -- here. It's *almost* right, in that the caller is asking for a
@@ -378,7 +374,7 @@ rawBytes _ = throwM $ E.SchemaViolationError
 
 
 -- | Returns the root pointer of a message.
-rootPtr :: ReadCtx m => M.Message -> m (Struct m)
+rootPtr :: ReadCtx m => M.Message -> m Struct
 rootPtr msg = do
     root <- get msg (WordAt 0 0)
     case root of

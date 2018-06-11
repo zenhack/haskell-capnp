@@ -12,13 +12,12 @@ module Data.Capnp.BuiltinTypes.Pure
 
 import Codec.Capnp
 
-import Control.Monad             (when)
-import Control.Monad.Catch       (MonadThrow(throwM))
-import Data.Capnp.Errors         (Error(InvalidUtf8Error, SchemaViolationError))
-import Data.Capnp.TraversalLimit (MonadLimit)
-import Data.Capnp.Untyped.Pure   (List)
-import Data.Text.Encoding        (decodeUtf8')
-import Data.Word                 (Word8)
+import Control.Monad           (when)
+import Control.Monad.Catch     (MonadThrow(throwM))
+import Data.Capnp.Errors       (Error(InvalidUtf8Error, SchemaViolationError))
+import Data.Capnp.Untyped.Pure (List)
+import Data.Text.Encoding      (decodeUtf8')
+import Data.Word               (Word8)
 
 import qualified Data.ByteString         as BS
 import qualified Data.Capnp.Blob         as B
@@ -29,10 +28,10 @@ import qualified Data.Vector             as V
 type Data = BS.ByteString
 type Text = T.Text
 
-instance (MonadThrow m, MonadLimit m) => Decerialize m BuiltinTypes.Data Data where
+instance Decerialize BuiltinTypes.Data Data where
     decerialize (BuiltinTypes.Data bytes) = pure bytes
 
-instance (MonadThrow m, MonadLimit m) => Decerialize m BuiltinTypes.Text Text where
+instance Decerialize BuiltinTypes.Text Text where
     decerialize (BuiltinTypes.Text bytes) =
             case decodeUtf8' bytes of
                 Left e    -> throwM $ InvalidUtf8Error e
@@ -40,9 +39,9 @@ instance (MonadThrow m, MonadLimit m) => Decerialize m BuiltinTypes.Text Text wh
 
 
 -- TODO: remove these, once stuff is bootstrapped.
-instance (MonadThrow m, MonadLimit m) => Decerialize m (List Word8) Data where
+instance Decerialize (List Word8) Data where
     decerialize = pure . BS.pack . V.toList
-instance (MonadThrow m, MonadLimit m) => Decerialize m (List Word8) Text where
+instance Decerialize (List Word8) Text where
     decerialize raw = do
         bytes <- decerialize raw
         len <- B.length (bytes :: BS.ByteString)
