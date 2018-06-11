@@ -38,6 +38,8 @@ unpack (Little64 w) = fromLE64 w
 newtype instance UV.MVector s Little64 = MVec (UV.MVector s Word64)
 newtype instance UV.Vector Little64 = Vec (UV.Vector Word64)
 
+instance UV.Unbox Little64
+
 instance GMV.MVector UV.MVector Little64 where
     {-# INLINE basicLength #-}
     {-# INLINE basicUnsafeSlice #-}

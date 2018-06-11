@@ -1,15 +1,15 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-|
 Module: Data.Capnp.Message
 Description: Tools for working with messages.
 
 -}
 module Data.Capnp.Message
-    ( Message
-    , getSegment
-    , getWord
+    ( Message(..)
+    , Segment(..)
     , decode
     , readMessage
     , writeMessage
@@ -19,49 +19,53 @@ module Data.Capnp.Message
 import Control.Monad             (void, when)
 import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.State       (evalStateT, get, put)
-import Control.Monad.Trans.Class (MonadTrans(..))
-import Data.Capnp.Address        (WordAddr(..))
-import Data.Capnp.Bits           (WordCount(..), hi, lo, wordsToBytes)
-import Data.Capnp.Errors         (Error(..))
+import Data.ByteString.Internal  (ByteString(..))
+import Data.Capnp.Bits           (WordCount(..), hi, lo)
+import Data.Capnp.Internal.Util  (checkIndex)
 import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Word                 (Word32, Word64)
+import System.Endian             (fromLE64)
 
-import qualified Data.ByteString as BS
-import qualified Data.Capnp.Blob as B
-import qualified Data.Vector     as V
+import qualified Data.Capnp.Message.Generic as GM
+import qualified Data.Vector                as V
+import qualified Data.Vector.Storable       as SV
 
-newtype Message = Message (V.Vector BS.ByteString) deriving(Show)
-type Segment = BS.ByteString
+newtype Message = Message (V.Vector Segment)
+newtype Segment = Segment (SV.Vector Word64)
 
--- | @getSegment msg i@ gets the ith segment of a message. Throws a
--- 'BoundsError' if @i@ is out of bounds.
-getSegment :: (MonadThrow m) => Message -> Int -> m Segment
-getSegment (Message segs) i = do
-    when (i < 0 || i >= V.length segs) $
-        throwM BoundsError { index = i, maxIndex = V.length segs }
-    segs `V.indexM` i
+instance MonadThrow m => GM.Segment m Segment where
+    segLen (Segment vec) = pure $ SV.length vec
+    slice start len (Segment vec) = pure $ Segment (SV.slice start len vec)
+    read (Segment vec) i = fromLE64 <$> vec `SV.indexM` i
 
--- | @getWord msg addr@ returns the word at @addr@ within @msg@. It throws a
--- @BoundsError@ if the address is out of bounds.
-getWord :: MonadThrow m => Message -> WordAddr -> m Word64
-getWord (Message segs) WordAt{..} = do
-    seg <- segs `V.indexM` segIndex
-    seg `B.indexWord` wordIndex
+    -- FIXME: Verify that the pointer is actually 64-bit aligned before casting.
+    fromByteString (PS fptr offset len) =
+        pure $ Segment (SV.unsafeCast $ SV.unsafeFromForeignPtr fptr offset len)
+    toByteString (Segment vec) = pure $ PS fptr offset len where
+        (fptr, offset, len) = SV.unsafeToForeignPtr (SV.unsafeCast vec)
 
--- | @decode blob@ decodes a message from the blob.
+instance MonadThrow m => GM.Message m Message Segment where
+    msgLen (Message vec) = pure $ V.length vec
+    getSeg (Message vec) i = do
+        checkIndex i (V.length vec)
+        vec `V.indexM` i
+
+-- | 'decode' decodes a message from a bytestring.
 --
 -- The segments will not be copied; the resulting message will be a view into
--- the original blob.
-decode :: MonadThrow m => BS.ByteString -> m Message
-decode blob = do
-    -- Note: we use the quota to avoid needing to do bounds checking here;
-    -- since readMessage invoices the quota before reading, we can rely on it
-    -- not to read past the end of the blob.
-    WordCount blobLen <- B.lengthInWords blob
-    flip evalStateT (Nothing, 0) $ evalLimitT blobLen $
+-- the original bytestring. Runs in O(number of segments in the message).
+decode :: MonadThrow m => ByteString -> m Message
+decode bytes = GM.fromByteString bytes >>= decodeSeg
+
+decodeSeg :: MonadThrow m => Segment -> m Message
+decodeSeg seg = do
+    len <- GM.segLen seg
+    flip evalStateT (Nothing, 0) $ evalLimitT len $
+        -- Note: we use the quota to avoid needing to do bounds checking here;
+        -- since readMessage invoices the quota before reading, we can rely on it
+        -- not to read past the end of the blob.
         readMessage read32 readSegment
   where
-    bIndex b i = lift $ lift $ B.indexWord b i
     read32 = do
         (cur, idx) <- get
         case cur of
@@ -69,13 +73,13 @@ decode blob = do
                 put (Nothing, idx)
                 return n
             Nothing -> do
-                word <- bIndex blob idx
+                word <- GM.read seg idx
                 put (Just $ hi word, idx + 1)
                 return (lo word)
-    readSegment len = do
+    readSegment (WordCount len) = do
         (cur, idx) <- get
         put (cur, idx + len)
-        lift $ lift $ B.slice blob (wordsToBytes idx) (wordsToBytes len)
+        GM.slice idx len seg
 
 -- | @readMessage read32 readSegment@ reads in a message using the
 -- monadic context, which should manage the current read position,
@@ -98,9 +102,9 @@ readMessage read32 readSegment = do
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
 writeMessage :: MonadThrow m => Message -> (Word32 -> m ()) -> (Segment -> m ()) -> m ()
-writeMessage (Message msg) write32 writeSegment = do
-    let numSegs = V.length msg
+writeMessage (Message segs) write32 writeSegment = do
+    let numSegs = V.length segs
     write32 (fromIntegral numSegs - 1)
-    V.forM_ msg $ \seg -> write32 =<< fromIntegral <$> B.length seg
+    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> GM.segLen seg
     when (numSegs `mod` 2 == 0) $ write32 0
-    V.forM_ msg writeSegment
+    V.forM_ segs writeSegment

@@ -1,10 +1,10 @@
 module Main (main) where
 
-import Test.Framework                       (defaultMain)
-import Tests.EncodeDecodeUntyped            (encodeDecodeUntypedTests)
-import Tests.Module.Capnp.Capnp.Schema      (schemaTests)
-import Tests.Module.Data.Capnp.Bits         (bitsTests)
-import Tests.Module.Data.Capnp.Builder      (buildTests)
+import Test.Framework (defaultMain)
+-- import Tests.EncodeDecodeUntyped       (encodeDecodeUntypedTests)
+import Tests.Module.Capnp.Capnp.Schema (schemaTests)
+import Tests.Module.Data.Capnp.Bits    (bitsTests)
+-- import Tests.Module.Data.Capnp.Builder      (buildTests)
 import Tests.Module.Data.Capnp.List         (listTests)
 import Tests.Module.Data.Capnp.Pointer      (ptrTests)
 import Tests.Module.Data.Capnp.Untyped      (untypedTests)
@@ -18,8 +18,8 @@ main = defaultMain [ bitsTests
                    , untypedTests
                    , pureUntypedTests
                    , listTests
-                   , buildTests
-                   , encodeDecodeUntypedTests
+                   -- , buildTests
+                   -- , encodeDecodeUntypedTests
                    , walkSchemaCodeGenRequestTest
                    , schemaCGRQuickCheck
                    , schemaTests

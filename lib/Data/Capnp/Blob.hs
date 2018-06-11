@@ -9,7 +9,6 @@ module Data.Capnp.Blob
     , BlobSlice(..)
     , lengthInWords
     , indexWord
-    , writeWord
     )
   where
 
@@ -18,7 +17,7 @@ import Prelude hiding (length)
 import Data.Bits
 import Data.Word
 
-import Control.Monad            (forM_, when)
+import Control.Monad            (when)
 import Control.Monad.Catch      (MonadThrow(throwM))
 import Control.Monad.Primitive  (PrimMonad, PrimState)
 import Data.Capnp.Bits
@@ -89,14 +88,6 @@ indexWord blob i = foldl (.|.) 0 <$> mapM byteN [0,1..7]
         byteN n = do
             b <- index blob (wordsToBytes i + n)
             return $ fromIntegral b `shiftL` (fromIntegral n * 8)
-
--- | @writeWord blob i word@ writes @word@ to the @ith@ little-endian 64-bit
--- word in @blob@.
-writeWord :: (Monad m, MutBlob m b) => b -> WordCount -> Word64 -> m ()
-writeWord arr words value = do
-    let base = wordsToBytes words
-    forM_ ([0,1..7] :: [Int]) $ \i ->
-        write arr (base + fromIntegral i) $ fromIntegral $ value `shiftR` (i * 8)
 
 
 instance (Blob m a, MonadThrow m) => Blob m (BlobSlice a) where
