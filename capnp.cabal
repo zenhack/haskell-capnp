@@ -52,9 +52,6 @@ library
     hs-source-dirs:       lib
     exposed-modules:
         Codec.Capnp
-
-      , Data.Capnp.Little64
-
       , Data.Capnp.Address
       -- , Data.Capnp.Builder
       , Data.Capnp.BuiltinTypes
