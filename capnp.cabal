@@ -58,6 +58,7 @@ library
       , Data.Capnp.Address
       -- , Data.Capnp.Builder
       , Data.Capnp.BuiltinTypes
+      , Data.Capnp.BuiltinTypes.Generic
       , Data.Capnp.BuiltinTypes.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Blob

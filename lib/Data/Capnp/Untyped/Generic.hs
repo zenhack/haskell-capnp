@@ -2,7 +2,6 @@
 {-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
@@ -23,7 +22,6 @@ module Data.Capnp.Untyped.Generic
     , get, index, length
     , rootPtr
     , rawBytes
-    , extractElts
     , ReadCtx
     , HasMessage(..), MessageDefault(..)
     )
@@ -93,17 +91,6 @@ data ListOf msg a where
     ListOfWord32 :: !(NormalList msg) -> ListOf msg Word32
     ListOfWord64 :: !(NormalList msg) -> ListOf msg Word64
     ListOfPtr    :: !(NormalList msg) -> ListOf msg (Maybe (Ptr msg))
-    -- wrapper that converts an untyped value to a typed one:
-    ListOfMapped :: ListOf msg a -> (a -> c) -> ListOf msg c
-
-    ListOfExtract :: (forall (m :: * -> *). ReadCtx m => a -> m b) -> ListOf msg a -> ListOf msg b
-
-extractElts :: (forall (m :: * -> *). ReadCtx m => a -> m b) -> ListOf msg a -> ListOf msg b
-extractElts = ListOfExtract
-
-instance Functor (ListOf msg) where
-    fmap f (ListOfMapped list g) = ListOfMapped list (f . g)
-    fmap f list                  = ListOfMapped list f
 
 -- | A struct value in a message.
 data Struct msg
@@ -149,16 +136,14 @@ instance HasMessage (List msg) msg where
     message (ListStruct list) = message list
 
 instance HasMessage (ListOf msg a) msg where
-    message (ListOfVoid msg _)     = msg
-    message (ListOfStruct tag _)   = message tag
-    message (ListOfBool list)      = message list
-    message (ListOfWord8 list)     = message list
-    message (ListOfWord16 list)    = message list
-    message (ListOfWord32 list)    = message list
-    message (ListOfWord64 list)    = message list
-    message (ListOfPtr list)       = message list
-    message (ListOfMapped list _)  = message list
-    message (ListOfExtract _ list) = message list
+    message (ListOfVoid msg _)   = msg
+    message (ListOfStruct tag _) = message tag
+    message (ListOfBool list)    = message list
+    message (ListOfWord8 list)   = message list
+    message (ListOfWord16 list)  = message list
+    message (ListOfWord32 list)  = message list
+    message (ListOfWord64 list)  = message list
+    message (ListOfPtr list)     = message list
 
 instance MessageDefault (ListOf msg ()) msg where
     messageDefault msg = ListOfVoid msg 0
@@ -293,8 +278,6 @@ index i list = invoice 1 >> index' list
     index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' (ListOfMapped list f) = f <$> index' list
-    index' (ListOfExtract f list) = index' list >>= f
     indexNList :: (GM.Message m msg seg, ReadCtx m, Integral a) => NormalList msg -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
@@ -306,16 +289,14 @@ index i list = invoice 1 >> index' list
 
 -- | Returns the length of a list
 length :: ListOf msg a -> Int
-length (ListOfVoid _ len)     = len
-length (ListOfStruct _ len)   = len
-length (ListOfBool   nlist)   = nLen nlist
-length (ListOfWord8  nlist)   = nLen nlist
-length (ListOfWord16 nlist)   = nLen nlist
-length (ListOfWord32 nlist)   = nLen nlist
-length (ListOfWord64 nlist)   = nLen nlist
-length (ListOfPtr    nlist)   = nLen nlist
-length (ListOfMapped list _)  = length list
-length (ListOfExtract _ list) = length list
+length (ListOfVoid _ len)   = len
+length (ListOfStruct _ len) = len
+length (ListOfBool   nlist) = nLen nlist
+length (ListOfWord8  nlist) = nLen nlist
+length (ListOfWord16 nlist) = nLen nlist
+length (ListOfWord32 nlist) = nLen nlist
+length (ListOfWord64 nlist) = nLen nlist
+length (ListOfPtr    nlist) = nLen nlist
 
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct msg -> ListOf msg Word64
@@ -345,31 +326,13 @@ getPtr i struct
     | otherwise = index i (ptrSection struct)
 
 
--- | @rawBytes list@ returns the raw storage corresponding to the list.
---
--- Caveats:
---
--- * This returns the underlying *storage*, not the value, so e.g.
---   @rawBytes (fmap (+1) list) == rawBytes list@, since fmap does not modify
---   the message.
--- * This doesn't work (raises an error) for composite lists, or lists whose
---   element size is less than < 1 byte (() and Bool).
-rawBytes :: (GM.Message m msg seg, ReadCtx m) => ListOf msg a -> m BS.ByteString
+-- | 'rawBytes' returns the raw bytes corresponding to the list.
+rawBytes :: (GM.Message m msg seg, ReadCtx m) => ListOf msg Word8 -> m BS.ByteString
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
+    invoice len
     bytes <- GM.getSegment msg segIndex >>= GM.toByteString
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
-rawBytes (ListOfWord16 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 2 })
-rawBytes (ListOfWord32 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 4 })
-rawBytes (ListOfWord64 nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
-rawBytes (ListOfPtr    nlist@NormalList{..}) = rawBytes (ListOfWord8 nlist { nLen = nLen * 8 })
-rawBytes (ListOfMapped list _) = rawBytes list
-rawBytes _ = throwM $ E.SchemaViolationError
-    -- XXX: SchemaViolationError doesn't have *quite* the semantics we want
-    -- here. It's *almost* right, in that the caller is asking for a
-    -- transformation that assumes a certain shape of data, but we should
-    -- come up with something that more clearly expresses what's going on.
-    "rawBytes called on something other than a list of bytes."
 
 
 -- | Returns the root pointer of a message.
