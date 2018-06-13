@@ -12,6 +12,7 @@ module Data.Capnp.Errors
 import Control.Monad.Catch      (Exception)
 import Data.Text.Encoding.Error (UnicodeException)
 
+-- | An error that may occur when processing a capnproto message.
 data Error
     -- | A 'BoundsError' indicates an attempt to access an illegal
     -- index 'index' within a sequence of length 'maxIndex'.
@@ -26,10 +27,12 @@ data Error
     -- exceeded.
     | TraversalLimitError
     -- | An 'InvalidDataError' indicates that a part of a message being
-    -- parsed was malformed.
-    | InvalidDataError String -- error message
+    -- parsed was malformed. The argument to the data constructor is a
+    -- human-readable error message.
+    | InvalidDataError String
     -- | A 'SchemaViolationError' indicates that part of the message does
-    -- not match the schema.
+    -- not match the schema. The argument to the data construtor is a
+    -- human-readable error message.
     | SchemaViolationError String
     -- | An 'InvalidUtf8Error' indicates that a text value in the message
     -- was invalid utf8.

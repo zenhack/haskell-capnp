@@ -40,7 +40,7 @@ class IsWord a where
 
 -- | Types that can be extracted from an untyped pointer.
 --
--- Similarly to IsWord, this is mostly used in generated code, to interact
+-- Similarly to 'IsWord', this is mostly used in generated code, to interact
 -- with the pointer section of structs.
 class IsPtr a where
     fromPtr :: ReadCtx m => M.Message -> Maybe Ptr -> m a
