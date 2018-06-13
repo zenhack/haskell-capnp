@@ -4,7 +4,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-|
 Module: Data.Capnp.Message
-Description: Tools for working with messages.
+Description: Read-only capnpoto messages.
 
 -}
 module Data.Capnp.Message
@@ -30,7 +30,14 @@ import qualified Data.Capnp.Message.Generic as GM
 import qualified Data.Vector                as V
 import qualified Data.Vector.Storable       as SV
 
+-- | A read-only capnproto message.
 newtype Message = Message (V.Vector Segment)
+
+-- | A read-only segment in a 'Message'.
+--
+-- 'Segment' is an instance of the generic 'GM.Segment' type class. its
+-- implementations of 'GM.toByteString' and 'GM.fromByteString' are O(1);
+-- the underlying bytes are not copied.
 newtype Segment = Segment (SV.Vector Word64)
 
 instance MonadThrow m => GM.Segment m Segment where
@@ -57,6 +64,10 @@ instance MonadThrow m => GM.Message m Message Segment where
 decode :: MonadThrow m => ByteString -> m Message
 decode bytes = GM.fromByteString bytes >>= decodeSeg
 
+-- | 'decodeSeg' decodes a message from a segment, treating the segment as if
+-- it were raw bytes.
+--
+-- this is mostly here as a helper for 'decode'.
 decodeSeg :: MonadThrow m => Segment -> m Message
 decodeSeg seg = do
     len <- GM.segLen seg

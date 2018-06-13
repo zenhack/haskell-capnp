@@ -21,9 +21,20 @@ import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
 
+-- | A 'Message' is a mutable capnproto message. The type parameter 's' is the
+-- state token for the instance of 'PrimMonad' in which the message may be
+-- modified.
 newtype Message s = Message (MV.MVector s (Segment s))
+
+-- | A 'Segment' is a mutable capnproto segment. The type parameter 's' is the
+-- state token for the instance of 'PrimMonad' in which the message may be
+-- modified.
+--
+-- Due to mutabilty, the implementations of 'toByteString' and 'fromByteString'
+-- must make full copies, and so are O(n) in the length of the segment.
 newtype Segment s = Segment (SMV.MVector s Word64)
 
+-- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 
 instance WriteCtx m s => GM.Segment m (Segment s) where

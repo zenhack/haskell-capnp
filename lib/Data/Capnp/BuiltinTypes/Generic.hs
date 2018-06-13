@@ -3,13 +3,17 @@
 {-| Module: Data.Capnp.BuiltinTypes.Generic
     Description: Handling of "built-in" capnp datatypes.
 
-    In particular, things that are primitive types in the schema language,
-    but not on the wire (chiefly Data and Text, which are both just lists of
-    bytes).
+    In particular
+
+    * Text and Data (which are primitive types in the schema language,
+      but are both the same as List(uint8) on the wire).
+    * List of types other than those in 'Data.Capnp.Untyped.Generic'.
+      Whereas 'GU.ListOf' only deals with low-level encodings of lists,
+      this modules 'List' type can represent typed lists.
 -}
 module Data.Capnp.BuiltinTypes.Generic
-    ( Text
-    , Data
+    ( Text(..)
+    , Data(..)
     , List
     , getData
     , getText
@@ -34,6 +38,10 @@ import qualified Data.Capnp.Untyped.Generic as GU
 data List msg a where
     List :: (b -> a) -> (a -> b) -> GU.ListOf msg b -> List msg a
 
+-- | @'mapMut' from to list@ maps (possibly mutable) Lists of one type to
+-- another. @from@ is a function which converts a value of the old list's
+-- element type to one of the new list's element type. @to@ converts in the
+-- other direction.
 mapMut :: (a -> b) -> (b -> a) -> List msg a -> List msg b
 mapMut from to (List from' to' base) = List (from . from') (to' . to) base
 
@@ -48,12 +56,13 @@ instance Functor (List M.Message) where
 -- Rationale: validation would require doing an up-front pass over the data,
 -- which runs counter to the overall design of capnproto.
 --
--- The argument to the constructor is the slice of the original message
--- containing the text (but not the NUL terminator).
+-- The argument to the data constructor is the slice of the original message
+-- containing the text, including the NUL terminator.
 newtype Text msg = Text (GU.ListOf msg Word8)
 
 -- | A blob of bytes ("Data" in capnproto's schema language). The argument
--- to the constructor is a slice into the message, containing the raw bytes.
+-- to the data constructor is a slice into the message, containing the raw
+-- bytes.
 newtype Data msg = Data (GU.ListOf msg Word8)
 
 -- | Interpret a list of Word8 as a capnproto 'Data' value.
@@ -78,10 +87,12 @@ getText list = do
 getList :: (GM.Message m msg seg, GU.ReadCtx m) => GU.ListOf msg a -> m (List msg a)
 getList = pure . List id id
 
-
+-- | Convert a 'Data' to a 'BS.ByteString.
 dataBytes :: (GM.Message m msg seg, GU.ReadCtx m) => Data msg -> m BS.ByteString
 dataBytes (Data list) = GU.rawBytes list
 
+-- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
+-- (not counting the NUL terminator).
 textBytes :: (GM.Message m msg seg, GU.ReadCtx m) => Text msg -> m BS.ByteString
 textBytes (Text list) = do
     bytes <- GU.rawBytes list
