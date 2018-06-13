@@ -15,10 +15,15 @@ module Data.Capnp.BuiltinTypes.Generic
     ( Text(..)
     , Data(..)
     , List
+    , map
     , getData
     , getText
     , getList
+    , dataBytes
+    , textBytes
     ) where
+
+import Prelude hiding (map)
 
 import Data.Word
 
@@ -38,15 +43,15 @@ import qualified Data.Capnp.Untyped.Generic as GU
 data List msg a where
     List :: (b -> a) -> (a -> b) -> GU.ListOf msg b -> List msg a
 
--- | @'mapMut' from to list@ maps (possibly mutable) Lists of one type to
+-- | @'map' from to list@ maps (possibly mutable) Lists of one type to
 -- another. @from@ is a function which converts a value of the old list's
 -- element type to one of the new list's element type. @to@ converts in the
 -- other direction.
-mapMut :: (a -> b) -> (b -> a) -> List msg a -> List msg b
-mapMut from to (List from' to' base) = List (from . from') (to' . to) base
+map :: (a -> b) -> (b -> a) -> List msg a -> List msg b
+map from to (List from' to' base) = List (from . from') (to' . to) base
 
 instance Functor (List M.Message) where
-    fmap f = mapMut f undefined
+    fmap f = map f undefined
 
 -- | A textual string ("Text" in capnproto's schema language). On the wire,
 -- this is NUL-terminated. The encoding should be UTF-8, but the library *does
