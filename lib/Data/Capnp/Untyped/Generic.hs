@@ -100,6 +100,78 @@ data Struct msg
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (Ptr mmsg) (Ptr cmsg) where
+    thaw (PtrCap cmsg n) = do
+        mmsg <- GM.thaw cmsg
+        pure $ PtrCap mmsg n
+    thaw (PtrList l) = PtrList <$> GM.thaw l
+    thaw (PtrStruct s) = PtrStruct <$> GM.thaw s
+    freeze (PtrCap mmsg n) = do
+        cmsg <- GM.freeze mmsg
+        pure $ PtrCap cmsg n
+    freeze (PtrList l) = PtrList <$> GM.freeze l
+    freeze (PtrStruct s) = PtrStruct <$> GM.freeze s
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (List mmsg) (List cmsg) where
+    thaw (List0 l)      = List0 <$> GM.thaw l
+    thaw (List1 l)      = List1 <$> GM.thaw l
+    thaw (List8 l)      = List8 <$> GM.thaw l
+    thaw (List16 l)     = List16 <$> GM.thaw l
+    thaw (List32 l)     = List32 <$> GM.thaw l
+    thaw (List64 l)     = List64 <$> GM.thaw l
+    thaw (ListPtr l)    = ListPtr <$> GM.thaw l
+    thaw (ListStruct l) = ListStruct <$> GM.thaw l
+    freeze (List0 l)      = List0 <$> GM.freeze l
+    freeze (List1 l)      = List1 <$> GM.freeze l
+    freeze (List8 l)      = List8 <$> GM.freeze l
+    freeze (List16 l)     = List16 <$> GM.freeze l
+    freeze (List32 l)     = List32 <$> GM.freeze l
+    freeze (List64 l)     = List64 <$> GM.freeze l
+    freeze (ListPtr l)    = ListPtr <$> GM.freeze l
+    freeze (ListStruct l) = ListStruct <$> GM.freeze l
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (NormalList mmsg) (NormalList cmsg) where
+    thaw NormalList{..} = do
+        mmsg <- GM.thaw nMsg
+        pure NormalList { nMsg = mmsg, .. }
+    freeze NormalList{..} = do
+        cmsg <- GM.freeze nMsg
+        pure NormalList { nMsg = cmsg, .. }
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg ()) (ListOf cmsg ()) where
+    thaw (ListOfVoid cmsg n) = do
+        mmsg <- GM.thaw cmsg
+        pure $ ListOfVoid mmsg n
+    freeze (ListOfVoid mmsg n) = do
+        cmsg <- GM.freeze mmsg
+        pure $ ListOfVoid cmsg n
+-- Annoyingly, we can't just have an instance @Mutable m (ListOf mmsg a) (ListOf cmsg a)@,
+-- because that would require that the implementation to be valid for e.g.
+-- @Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct mmsg))@ (note that the type
+-- parameter for 'Struct' does not change). So, instead, we define a separate instance for
+-- each possible parameter type:
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Bool) (ListOf cmsg Bool) where
+    thaw (ListOfBool msg) = ListOfBool <$> GM.thaw msg
+    freeze (ListOfBool msg) = ListOfBool <$> GM.freeze msg
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word8) (ListOf cmsg Word8) where
+    thaw (ListOfWord8 msg) = ListOfWord8 <$> GM.thaw msg
+    freeze (ListOfWord8 msg) = ListOfWord8 <$> GM.freeze msg
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word16) (ListOf cmsg Word16) where
+    thaw (ListOfWord16 msg) = ListOfWord16 <$> GM.thaw msg
+    freeze (ListOfWord16 msg) = ListOfWord16 <$> GM.freeze msg
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word32) (ListOf cmsg Word32) where
+    thaw (ListOfWord32 msg) = ListOfWord32 <$> GM.thaw msg
+    freeze (ListOfWord32 msg) = ListOfWord32 <$> GM.freeze msg
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word64) (ListOf cmsg Word64) where
+    thaw (ListOfWord64 msg) = ListOfWord64 <$> GM.thaw msg
+    freeze (ListOfWord64 msg) = ListOfWord64 <$> GM.freeze msg
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct cmsg)) where
+    thaw (ListOfStruct ctag size) = do
+        mtag <- GM.thaw ctag
+        pure $ ListOfStruct mtag size
+    freeze (ListOfStruct mtag size) = do
+        ctag <- GM.freeze mtag
+        pure $ ListOfStruct ctag size
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg (Maybe (Ptr mmsg))) (ListOf cmsg (Maybe (Ptr cmsg))) where
+    thaw (ListOfPtr msg) = ListOfPtr <$> GM.thaw msg
+    freeze (ListOfPtr msg) = ListOfPtr <$> GM.freeze msg
 instance GM.Mutable m mmsg cmsg => GM.Mutable m (Struct mmsg) (Struct cmsg) where
     thaw (Struct cmsg addr dataSz ptrSz) = do
         mmsg <- GM.thaw cmsg
