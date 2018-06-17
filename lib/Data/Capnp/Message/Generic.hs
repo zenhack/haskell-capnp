@@ -8,6 +8,7 @@ Description: Generic interfaces for message storage implementations.
 module Data.Capnp.Message.Generic
     ( Message(..)
     , MMessage(..)
+    , Mutable(..)
     , getSegment
     , getWord
     ) where
@@ -17,6 +18,7 @@ import Prelude hiding (read)
 import Data.Word
 
 import Control.Monad.Catch      (MonadThrow)
+import Control.Monad.Primitive  (PrimMonad)
 import Data.ByteString          (ByteString)
 import Data.Capnp.Address       (WordAddr(..))
 import Data.Capnp.Bits          (WordCount(..))
@@ -61,6 +63,13 @@ class Message m msg => MMessage m msg where
     -- | @'grow' segment amount@ grows the segment by the specified number
     -- of 64-bit words. The original segment should not be used afterwards.
     grow  :: Segment m msg -> Int -> m (Segment m msg)
+
+-- | The 'Mutable' type class relates mutable and immutable versions of a type.
+class PrimMonad m => Mutable m mut const where
+    -- | Convert an immutable value to a mutable one.
+    thaw :: const -> m mut
+    -- | Convert a mutable value to an immutable one.
+    freeze :: mut -> m const
 
 -- | @'getSegment' message index@ fetches the given segment in the message.
 -- It throws a @BoundsError@ if the address is out of bounds.

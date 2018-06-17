@@ -100,6 +100,14 @@ data Struct msg
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
+instance GM.Mutable m mmsg cmsg => GM.Mutable m (Struct mmsg) (Struct cmsg) where
+    thaw (Struct cmsg addr dataSz ptrSz) = do
+        mmsg <- GM.thaw cmsg
+        pure $ Struct mmsg addr dataSz ptrSz
+    freeze (Struct mmsg addr dataSz ptrSz) = do
+        cmsg <- GM.freeze mmsg
+        pure $ Struct cmsg addr dataSz ptrSz
+
 -- | Types @a@ whose storage is owned by a message with blob type @b@.
 class HasMessage a msg where
     -- | Get the message in which the @a@ is stored.

@@ -6,8 +6,6 @@
 module Data.Capnp.Message.Mutable
     ( Message
     , WriteCtx(..)
-    , freeze
-    , thaw
     ) where
 
 import Data.Word
@@ -58,17 +56,15 @@ instance WriteCtx m s => GM.MMessage m (Message s) where
 
     internalSetSeg (Message msg) i (Segment seg) = MV.write msg i seg
 
-thaw :: WriteCtx m s => M.Message -> m (Message s)
-thaw roMsg = do
-    len <- GM.numSegs roMsg
-    rwMsg <- MV.new len
-    forM_ [0..len-1] $ \i -> do
-        roSeg <- M.internalToWordVector <$> GM.getSegment roMsg i
-        rwSeg <- SV.thaw roSeg
-        MV.write rwMsg i rwSeg
-    pure (Message rwMsg)
-
-freeze :: WriteCtx m s => Message s -> m M.Message
-freeze (Message mvec) = do
-    vec <- V.freeze mvec
-    M.internalFromSegVector <$> V.mapM (fmap M.internalFromWordVector . SV.freeze) vec
+instance WriteCtx m s => GM.Mutable m (Message s) M.Message where
+    thaw roMsg = do
+        len <- GM.numSegs roMsg
+        rwMsg <- MV.new len
+        forM_ [0..len-1] $ \i -> do
+            roSeg <- M.internalToWordVector <$> GM.getSegment roMsg i
+            rwSeg <- SV.thaw roSeg
+            MV.write rwMsg i rwSeg
+        pure (Message rwMsg)
+    freeze (Message mvec) = do
+        vec <- V.freeze mvec
+        M.internalFromSegVector <$> V.mapM (fmap M.internalFromWordVector . SV.freeze) vec
