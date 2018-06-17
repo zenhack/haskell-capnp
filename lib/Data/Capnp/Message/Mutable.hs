@@ -38,7 +38,7 @@ newtype Segment s = Segment (SMV.MVector s Word64)
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 
 instance WriteCtx m s => GM.Segment m (Segment s) where
-    segLen (Segment vec) = pure $ SMV.length vec
+    numWords (Segment vec) = pure $ SMV.length vec
     slice start len (Segment vec) = pure $ Segment (SMV.slice start len vec)
     read (Segment vec) i = fromLE64 <$> SMV.read vec i
     fromByteString bytes = do
@@ -54,8 +54,8 @@ instance WriteCtx m s => GM.MSegment m (Segment s) where
     grow (Segment vec) amount = Segment <$> SMV.grow vec amount
 
 instance WriteCtx m s => GM.Message m (Message s) (Segment s) where
-    msgLen (Message vec) = pure $ MV.length vec
-    getSeg (Message vec) = MV.read vec
+    numSegs (Message vec) = pure $ MV.length vec
+    internalGetSeg (Message vec) = MV.read vec
 
 instance WriteCtx m s => GM.MMessage m (Message s) (Segment s) where
-    setSeg (Message vec) = MV.write vec
+    internalSetSeg (Message vec) = MV.write vec

@@ -41,7 +41,7 @@ newtype Message = Message (V.Vector Segment)
 newtype Segment = Segment (SV.Vector Word64)
 
 instance MonadThrow m => GM.Segment m Segment where
-    segLen (Segment vec) = pure $ SV.length vec
+    numWords (Segment vec) = pure $ SV.length vec
     slice start len (Segment vec) = pure $ Segment (SV.slice start len vec)
     read (Segment vec) i = fromLE64 <$> vec `SV.indexM` i
 
@@ -52,8 +52,8 @@ instance MonadThrow m => GM.Segment m Segment where
         (fptr, offset, len) = SV.unsafeToForeignPtr (SV.unsafeCast vec)
 
 instance MonadThrow m => GM.Message m Message Segment where
-    msgLen (Message vec) = pure $ V.length vec
-    getSeg (Message vec) i = do
+    numSegs (Message vec) = pure $ V.length vec
+    internalGetSeg (Message vec) i = do
         checkIndex i (V.length vec)
         vec `V.indexM` i
 
@@ -70,7 +70,7 @@ decode bytes = GM.fromByteString bytes >>= decodeSeg
 -- this is mostly here as a helper for 'decode'.
 decodeSeg :: MonadThrow m => Segment -> m Message
 decodeSeg seg = do
-    len <- GM.segLen seg
+    len <- GM.numWords seg
     flip evalStateT (Nothing, 0) $ evalLimitT len $
         -- Note: we use the quota to avoid needing to do bounds checking here;
         -- since readMessage invoices the quota before reading, we can rely on it
@@ -116,6 +116,6 @@ writeMessage :: MonadThrow m => Message -> (Word32 -> m ()) -> (Segment -> m ())
 writeMessage (Message segs) write32 writeSegment = do
     let numSegs = V.length segs
     write32 (fromIntegral numSegs - 1)
-    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> GM.segLen seg
+    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> GM.numWords seg
     when (numSegs `mod` 2 == 0) $ write32 0
     V.forM_ segs writeSegment
