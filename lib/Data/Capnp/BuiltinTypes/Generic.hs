@@ -62,7 +62,7 @@ instance Functor (List M.Message) where
 -- which runs counter to the overall design of capnproto.
 --
 -- The argument to the data constructor is the slice of the original message
--- containing the text, including the NUL terminator.
+-- containing the text, excluding the NUL terminator.
 newtype Text msg = Text (GU.ListOf msg Word8)
 
 -- | A blob of bytes ("Data" in capnproto's schema language). The argument
@@ -86,7 +86,7 @@ getText list = do
     lastByte <- GU.index (len - 1) list
     when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
-    pure $ Text list
+    Text <$> GU.take (len - 1) list
 
 -- | Convert an untyped list to a typed list (of the same underlying data type).
 getList :: (GM.Message m msg, GU.ReadCtx m) => GU.ListOf msg a -> m (List msg a)
@@ -99,7 +99,4 @@ dataBytes (Data list) = GU.rawBytes list
 -- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
 -- (not counting the NUL terminator).
 textBytes :: (GM.Message m msg, GU.ReadCtx m) => Text msg -> m BS.ByteString
-textBytes (Text list) = do
-    bytes <- GU.rawBytes list
-    -- Chop off the NUL byte:
-    pure (BS.take (BS.length bytes - 1) bytes)
+textBytes (Text list) = GU.rawBytes list
