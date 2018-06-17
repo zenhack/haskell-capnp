@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-|
 Module: Data.Capnp.Message
 Description: Read-only capnpoto messages.
@@ -9,16 +10,19 @@ Description: Read-only capnpoto messages.
 -}
 module Data.Capnp.Message
     ( Message(..)
-    , Segment(..)
     , decode
     , readMessage
     , writeMessage
+
+    , internalToWordVector
+    , internalFromWordVector
     )
   where
 
 import Control.Monad             (void, when)
 import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.State       (evalStateT, get, put)
+import Control.Monad.Trans.Class (lift)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
 import Data.Capnp.Internal.Util  (checkIndex)
@@ -31,16 +35,20 @@ import qualified Data.Vector                as V
 import qualified Data.Vector.Storable       as SV
 
 -- | A read-only capnproto message.
-newtype Message = Message (V.Vector Segment)
-
--- | A read-only segment in a 'Message'.
 --
--- 'Segment' is an instance of the generic 'GM.Segment' type class. its
+-- 'Message' is an instance of the generic 'GM.Message' type class. its
 -- implementations of 'GM.toByteString' and 'GM.fromByteString' are O(1);
 -- the underlying bytes are not copied.
-newtype Segment = Segment (SV.Vector Word64)
+newtype Message = Message (V.Vector (SV.Vector Word64))
 
-instance MonadThrow m => GM.Segment m Segment where
+instance MonadThrow m => GM.Message m Message where
+    newtype Segment m Message = Segment { segToVec :: SV.Vector Word64 }
+
+    numSegs (Message vec) = pure $ V.length vec
+    internalGetSeg (Message vec) i = do
+        checkIndex i (V.length vec)
+        Segment <$> vec `V.indexM` i
+
     numWords (Segment vec) = pure $ SV.length vec
     slice start len (Segment vec) = pure $ Segment (SV.slice start len vec)
     read (Segment vec) i = fromLE64 <$> vec `SV.indexM` i
@@ -50,12 +58,6 @@ instance MonadThrow m => GM.Segment m Segment where
         pure $ Segment (SV.unsafeCast $ SV.unsafeFromForeignPtr fptr offset len)
     toByteString (Segment vec) = pure $ PS fptr offset len where
         (fptr, offset, len) = SV.unsafeToForeignPtr (SV.unsafeCast vec)
-
-instance MonadThrow m => GM.Message m Message Segment where
-    numSegs (Message vec) = pure $ V.length vec
-    internalGetSeg (Message vec) i = do
-        checkIndex i (V.length vec)
-        vec `V.indexM` i
 
 -- | 'decode' decodes a message from a bytestring.
 --
@@ -68,7 +70,7 @@ decode bytes = GM.fromByteString bytes >>= decodeSeg
 -- it were raw bytes.
 --
 -- this is mostly here as a helper for 'decode'.
-decodeSeg :: MonadThrow m => Segment -> m Message
+decodeSeg :: MonadThrow m => GM.Segment m Message -> m Message
 decodeSeg seg = do
     len <- GM.numWords seg
     flip evalStateT (Nothing, 0) $ evalLimitT len $
@@ -84,13 +86,13 @@ decodeSeg seg = do
                 put (Nothing, idx)
                 return n
             Nothing -> do
-                word <- GM.read seg idx
+                word <- lift $ lift $ GM.read seg idx
                 put (Just $ hi word, idx + 1)
                 return (lo word)
     readSegment (WordCount len) = do
         (cur, idx) <- get
         put (cur, idx + len)
-        GM.slice idx len seg
+        lift $ lift $ GM.slice idx len seg
 
 -- | @readMessage read32 readSegment@ reads in a message using the
 -- monadic context, which should manage the current read position,
@@ -98,7 +100,7 @@ decodeSeg seg = do
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
 -- The size of the message (in 64-bit words) is deducted from the quota,
 -- which can be used to set the maximum message size.
-readMessage :: (MonadLimit m) => m Word32 -> (WordCount -> m Segment) -> m Message
+-- readMessage :: (MonadLimit m) => m Word32 -> (WordCount -> m (GM.Segment m Message)) -> m Message
 readMessage read32 readSegment = do
     invoice 1
     numSegs' <- read32
@@ -107,15 +109,22 @@ readMessage read32 readSegment = do
     segSizes <- V.replicateM (fromIntegral numSegs) read32
     when (numSegs `mod` 2 == 0) $ void read32
     V.mapM_ (invoice . fromIntegral) segSizes
-    Message <$> V.mapM (readSegment . fromIntegral) segSizes
+    Message <$> V.mapM (fmap segToVec . readSegment . fromIntegral) segSizes
 
 -- | @writeMesage write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
-writeMessage :: MonadThrow m => Message -> (Word32 -> m ()) -> (Segment -> m ()) -> m ()
+writeMessage :: MonadThrow m => Message -> (Word32 -> m ()) -> (GM.Segment m Message -> m ()) -> m ()
 writeMessage (Message segs) write32 writeSegment = do
     let numSegs = V.length segs
     write32 (fromIntegral numSegs - 1)
-    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> GM.numWords seg
+    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> GM.numWords (Segment seg)
     when (numSegs `mod` 2 == 0) $ write32 0
-    V.forM_ segs writeSegment
+    V.forM_ segs (writeSegment . Segment)
+
+
+internalToWordVector :: GM.Segment m Message -> SV.Vector Word64
+internalToWordVector = segToVec
+
+internalFromWordVector :: SV.Vector Word64 -> GM.Segment m Message
+internalFromWordVector = Segment

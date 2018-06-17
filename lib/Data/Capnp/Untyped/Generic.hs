@@ -171,7 +171,7 @@ instance MessageDefault (NormalList msg) msg where
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
-get :: (GM.Message m msg seg, ReadCtx m) => msg -> WordAddr -> m (Maybe (Ptr msg))
+get :: (GM.Message m msg, ReadCtx m) => msg -> WordAddr -> m (Maybe (Ptr msg))
 get msg addr = do
     word <- getWord msg addr
     case P.parsePtr word of
@@ -253,10 +253,10 @@ get msg addr = do
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
-index :: (GM.Message m msg seg, ReadCtx m) => Int -> ListOf msg a -> m a
+index :: (GM.Message m msg, ReadCtx m) => Int -> ListOf msg a -> m a
 index i list = invoice 1 >> index' list
   where
-    index' :: (GM.Message m msg seg, ReadCtx m) => ListOf msg a -> m a
+    index' :: (GM.Message m msg, ReadCtx m) => ListOf msg a -> m a
     index' (ListOfVoid _ len)
         | i < len = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
@@ -278,7 +278,7 @@ index i list = invoice 1 >> index' list
     index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    indexNList :: (GM.Message m msg seg, ReadCtx m, Integral a) => NormalList msg -> Int -> m a
+    indexNList :: (GM.Message m msg, ReadCtx m, Integral a) => NormalList msg -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
@@ -313,21 +313,21 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 
 -- | @'getData' i struct@ gets the @i@th word from the struct's data section,
 -- returning 0 if it is absent.
-getData :: (GM.Message m msg seg, ReadCtx m) => Int -> Struct msg -> m Word64
+getData :: (GM.Message m msg, ReadCtx m) => Int -> Struct msg -> m Word64
 getData i struct
     | length (dataSection struct) <= i = 0 <$ invoice 1
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
-getPtr :: (GM.Message m msg seg, ReadCtx m) => Int -> Struct msg -> m (Maybe (Ptr msg))
+getPtr :: (GM.Message m msg, ReadCtx m) => Int -> Struct msg -> m (Maybe (Ptr msg))
 getPtr i struct
     | length (ptrSection struct) <= i = Nothing <$ invoice 1
     | otherwise = index i (ptrSection struct)
 
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
-rawBytes :: (GM.Message m msg seg, ReadCtx m) => ListOf msg Word8 -> m BS.ByteString
+rawBytes :: (GM.Message m msg, ReadCtx m) => ListOf msg Word8 -> m BS.ByteString
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     invoice len
     bytes <- GM.getSegment msg segIndex >>= GM.toByteString
@@ -336,7 +336,7 @@ rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
 
 
 -- | Returns the root pointer of a message.
-rootPtr :: (GM.Message m msg seg, ReadCtx m) => msg -> m (Struct msg)
+rootPtr :: (GM.Message m msg, ReadCtx m) => msg -> m (Struct msg)
 rootPtr msg = do
     root <- get msg (WordAt 0 0)
     case root of
