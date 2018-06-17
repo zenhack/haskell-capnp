@@ -14,6 +14,8 @@ module Data.Capnp.Message
     , readMessage
     , writeMessage
 
+    , internalToSegVector
+    , internalFromSegVector
     , internalToWordVector
     , internalFromWordVector
     )
@@ -122,6 +124,11 @@ writeMessage (Message segs) write32 writeSegment = do
     when (numSegs `mod` 2 == 0) $ write32 0
     V.forM_ segs (writeSegment . Segment)
 
+internalToSegVector :: Message -> V.Vector (GM.Segment m Message)
+internalToSegVector (Message vec) = fmap Segment vec
+
+internalFromSegVector :: V.Vector (GM.Segment m Message) -> Message
+internalFromSegVector = Message . fmap segToVec
 
 internalToWordVector :: GM.Segment m Message -> SV.Vector Word64
 internalToWordVector = segToVec

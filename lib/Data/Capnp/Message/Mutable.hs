@@ -6,16 +6,20 @@
 module Data.Capnp.Message.Mutable
     ( Message
     , WriteCtx(..)
+    , freeze
+    , thaw
     ) where
 
 import Data.Word
 
+import Control.Monad           (forM_)
 import Control.Monad.Catch     (MonadThrow)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import System.Endian           (fromLE64, toLE64)
 
 import qualified Data.Capnp.Message           as M
 import qualified Data.Capnp.Message.Generic   as GM
+import qualified Data.Vector                  as V
 import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
@@ -53,3 +57,18 @@ instance WriteCtx m s => GM.MMessage m (Message s) where
     grow (Segment vec) amount = Segment <$> SMV.grow vec amount
 
     internalSetSeg (Message msg) i (Segment seg) = MV.write msg i seg
+
+thaw :: WriteCtx m s => M.Message -> m (Message s)
+thaw roMsg = do
+    len <- GM.numSegs roMsg
+    rwMsg <- MV.new len
+    forM_ [0..len-1] $ \i -> do
+        roSeg <- M.internalToWordVector <$> GM.getSegment roMsg i
+        rwSeg <- SV.thaw roSeg
+        MV.write rwMsg i rwSeg
+    pure (Message rwMsg)
+
+freeze :: WriteCtx m s => Message s -> m M.Message
+freeze (Message mvec) = do
+    vec <- V.freeze mvec
+    M.internalFromSegVector <$> V.mapM (fmap M.internalFromWordVector . SV.freeze) vec
