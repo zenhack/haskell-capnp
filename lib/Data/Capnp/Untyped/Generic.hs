@@ -20,6 +20,7 @@ module Data.Capnp.Untyped.Generic
     , dataSection, ptrSection
     , getData, getPtr
     , get, index, length
+    , take
     , rootPtr
     , rawBytes
     , ReadCtx
@@ -27,7 +28,7 @@ module Data.Capnp.Untyped.Generic
     )
   where
 
-import Prelude hiding (length)
+import Prelude hiding (length, take)
 
 import Data.Bits
 import Data.Word
@@ -377,6 +378,25 @@ length (ListOfWord16 nlist) = nLen nlist
 length (ListOfWord32 nlist) = nLen nlist
 length (ListOfWord64 nlist) = nLen nlist
 length (ListOfPtr    nlist) = nLen nlist
+
+-- | Return a prefix of the list, of the given length.
+take :: MonadThrow m => Int -> ListOf msg a -> m (ListOf msg a)
+take count list
+    | length list < count =
+        throwM E.BoundsError { E.index = count, E.maxIndex = length list - 1 }
+    | otherwise = pure $ go list
+  where
+    go (ListOfVoid msg _)   = ListOfVoid msg count
+    go (ListOfStruct tag _) = ListOfStruct tag count
+    go (ListOfBool nlist)   = ListOfBool $ nTake nlist
+    go (ListOfWord8 nlist)  = ListOfWord8 $ nTake nlist
+    go (ListOfWord16 nlist) = ListOfWord16 $ nTake nlist
+    go (ListOfWord32 nlist) = ListOfWord32 $ nTake nlist
+    go (ListOfWord64 nlist) = ListOfWord64 $ nTake nlist
+    go (ListOfPtr nlist)    = ListOfPtr $ nTake nlist
+
+    nTake :: NormalList msg -> NormalList msg
+    nTake NormalList{..} = NormalList { nLen = count, .. }
 
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct msg -> ListOf msg Word64
