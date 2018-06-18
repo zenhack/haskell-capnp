@@ -20,6 +20,7 @@ module Data.Capnp.Untyped.Generic
     , dataSection, ptrSection
     , getData, getPtr
     , get, index, length
+    , setIndex
     , take
     , rootPtr
     , rawBytes
@@ -36,13 +37,14 @@ import Data.Word
 import Control.Monad.Catch       (MonadThrow(throwM))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits
-    (ByteCount(..), Word1(..), WordCount(..), wordsToBytes)
+    (ByteCount(..), Word1(..), WordCount(..), replaceBits, wordsToBytes)
 import Data.Capnp.Pointer        (ElementSize(..))
 import Data.Capnp.TraversalLimit (MonadLimit(invoice))
 
 import qualified Data.ByteString            as BS
 import qualified Data.Capnp.Errors          as E
 import qualified Data.Capnp.Message.Generic as GM
+import qualified Data.Capnp.Message.Mutable as MM
 import qualified Data.Capnp.Pointer         as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
@@ -331,6 +333,23 @@ get msg addr = do
                     tag -> throwM $ E.InvalidDataError $
                         "Composite list tag was not a struct-" ++
                         "formatted word: " ++ show tag
+
+setIndex :: (ReadCtx m, MM.WriteCtx m s) => a -> Int -> ListOf (MM.Message s) a -> m ()
+setIndex value i list | length list <= i =
+    throwM E.BoundsError { E.index = i, E.maxIndex = length list }
+setIndex value i list = case list of
+    ListOfVoid _ _     -> pure ()
+    ListOfBool nlist   -> setNIndex nlist 64 (Word1 value)
+    ListOfWord8 nlist  -> setNIndex nlist 8 value
+    ListOfWord16 nlist -> setNIndex nlist 4 value
+    ListOfWord32 nlist -> setNIndex nlist 2 value
+    ListOfWord64 nlist -> setNIndex nlist 1 value
+  where
+    setNIndex :: (ReadCtx m, MM.WriteCtx m s, Bounded a, Integral a) => NormalList (MM.Message s) -> Int -> a -> m ()
+    setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
+        let wordAddr = nAddr { wordIndex = wordIndex + WordCount (i `div` eltsPerWord) }
+        word <- GM.getWord nMsg wordAddr
+        GM.setWord nMsg wordAddr (replaceBits value word (i `mod` eltsPerWord))
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota

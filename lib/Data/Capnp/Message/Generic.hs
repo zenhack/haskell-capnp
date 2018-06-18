@@ -11,6 +11,8 @@ module Data.Capnp.Message.Generic
     , Mutable(..)
     , getSegment
     , getWord
+    , setSegment
+    , setWord
     ) where
 
 import Prelude hiding (read)
