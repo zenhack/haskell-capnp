@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-| Support for managing message traversal limits.
 
@@ -30,6 +31,7 @@ module Data.Capnp.TraversalLimit
 
 import Control.Monad              (when)
 import Control.Monad.Catch        (MonadThrow(throwM))
+import Control.Monad.Primitive    (PrimMonad(primitive), PrimState)
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
 import Control.Monad.Trans.Class  (MonadTrans(lift))
@@ -85,6 +87,10 @@ instance MonadTrans LimitT where
 instance MonadState s m => MonadState s (LimitT m) where
     get = lift get
     put = lift . put
+
+instance (PrimMonad m, s ~ PrimState m) => PrimMonad (LimitT m) where
+    type PrimState (LimitT m) = PrimState m
+    primitive = lift . primitive
 
 ------ Instances of 'MonadLimit' for standard monad transformers
 

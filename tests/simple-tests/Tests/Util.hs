@@ -4,6 +4,7 @@
 module Tests.Util
     ( MsgMetaData(..)
     , capnpEncode, capnpDecode, capnpCompile
+    , decodeValue
     , encodeValue
     , assertionsToTest
     , freezeAsByteString
@@ -26,6 +27,7 @@ import Test.Framework                 (Test, testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 import qualified Data.ByteString            as BS
+import qualified Data.ByteString.Builder    as BB
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
 import qualified Data.Capnp.Message         as M
@@ -98,6 +100,16 @@ freezeAsByteString BlobSlice{..} = do
 assertionsToTest :: String -> [H.Assertion] -> Test
 assertionsToTest name =
     testGroup name . hUnitTestToTests . H.TestList . map H.TestCase
+
+-- | @'decodeValue' schema typename message@ decodes the value at the root of
+-- the message and converts it to text. This is a thin wrapper around
+-- 'capnpDecode'.
+decodeValue :: String -> String -> M.Message -> IO String
+decodeValue schema typename msg = do
+    bytes <- M.encode msg
+    capnpDecode
+        (LBS.toStrict $ BB.toLazyByteString bytes)
+        (MsgMetaData schema typename)
 
 -- | @'encodeValue' schema typename value@ encodes the textual value @value@
 -- as a capnp message. This is a thin wrapper around 'capnpEncode'.

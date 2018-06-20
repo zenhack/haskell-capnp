@@ -10,6 +10,7 @@ Description: Read-only capnpoto messages.
 -}
 module Data.Capnp.Message
     ( Message(..)
+    , encode
     , decode
     , readMessage
     , writeMessage
@@ -21,10 +22,11 @@ module Data.Capnp.Message
     )
   where
 
-import Control.Monad             (void, when)
+import Control.Monad             (void, when, (>=>))
 import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Writer      (execWriterT, tell)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
 import Data.Capnp.Internal.Util  (checkIndex)
@@ -32,6 +34,7 @@ import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Word                 (Word32, Word64)
 import System.Endian             (fromLE64)
 
+import qualified Data.ByteString.Builder    as BB
 import qualified Data.Capnp.Message.Generic as GM
 import qualified Data.Vector                as V
 import qualified Data.Vector.Storable       as SV
@@ -67,6 +70,12 @@ instance MonadThrow m => GM.Message m Message where
 -- the original bytestring. Runs in O(number of segments in the message).
 decode :: MonadThrow m => ByteString -> m Message
 decode bytes = GM.fromByteString bytes >>= decodeSeg
+
+encode :: MonadThrow m => Message -> m BB.Builder
+encode msg = execWriterT $ writeMessage
+    msg
+    (tell . BB.word32LE)
+    (GM.toByteString >=> tell . BB.byteString)
 
 -- | 'decodeSeg' decodes a message from a segment, treating the segment as if
 -- it were raw bytes.
