@@ -6,6 +6,7 @@ import Tests.Util
 
 import Control.Monad             (when)
 import Data.Capnp.TraversalLimit (evalLimitT)
+import Data.ReinterpretCast      (doubleToWord)
 import Test.Framework            (Test)
 import Text.Heredoc              (there)
 
@@ -47,6 +48,12 @@ genericUntypedTests = assertionsToTest "Test setIndex" $ map testCase
             GU.setIndex False 0 list
             GU.setIndex True 2 list
             GU.setIndex False 3 list
+        }
+    , ModTest
+        { testIn = "(f64 = 2.0)\n"
+        , testType = "Z"
+        , testOut = "(f64 = 7.2)\n"
+        , testMod = GU.setIndex (doubleToWord 7.2) 1 . GU.dataSection
         }
     ]
   where
