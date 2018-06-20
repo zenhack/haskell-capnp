@@ -349,7 +349,8 @@ setIndex value i list = case list of
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
         let wordAddr = nAddr { wordIndex = wordIndex + WordCount (i `div` eltsPerWord) }
         word <- GM.getWord nMsg wordAddr
-        GM.setWord nMsg wordAddr (replaceBits value word (i `mod` eltsPerWord))
+        let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
+        GM.setWord nMsg wordAddr $ replaceBits value word shift
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
