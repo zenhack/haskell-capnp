@@ -37,7 +37,6 @@ genericUntypedTests = assertionsToTest "Test setIndex" $ map testCase
             GU.setIndex (fromIntegral (fromEnum 'h')) 0 list
             GU.setIndex (fromIntegral (fromEnum 'E')) 1 list
             GU.setIndex (fromIntegral (fromEnum 'w')) 7 list
-            return ()
         }
     , ModTest
         { testIn = "(boolvec = [true, true, false, true])\n"
@@ -48,7 +47,6 @@ genericUntypedTests = assertionsToTest "Test setIndex" $ map testCase
             GU.setIndex False 0 list
             GU.setIndex True 2 list
             GU.setIndex False 3 list
-            return ()
         }
     ]
   where
