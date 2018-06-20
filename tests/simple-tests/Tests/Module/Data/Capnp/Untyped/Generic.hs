@@ -39,6 +39,17 @@ genericUntypedTests = assertionsToTest "Test setIndex" $ map testCase
             GU.setIndex (fromIntegral (fromEnum 'w')) 7 list
             return ()
         }
+    , ModTest
+        { testIn = "(boolvec = [true, true, false, true])\n"
+        , testType = "Z"
+        , testOut = "( boolvec = [false, true, true, false] )\n"
+        , testMod = \struct -> do
+            Just (GU.PtrList (GU.List1 list)) <- GU.index 0 (GU.ptrSection struct)
+            GU.setIndex False 0 list
+            GU.setIndex True 2 list
+            GU.setIndex False 3 list
+            return ()
+        }
     ]
   where
     testCase ModTest{..} = do
