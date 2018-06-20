@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-|
@@ -35,7 +36,7 @@ import Data.Bits
 import Data.Word
 
 import Control.Monad.Catch       (MonadThrow(throwM))
-import Data.Capnp.Address        (WordAddr(..))
+import Data.Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
 import Data.Capnp.Bits
     (ByteCount(..), Word1(..), WordCount(..), replaceBits, wordsToBytes)
 import Data.Capnp.Pointer        (ElementSize(..))
@@ -334,6 +335,36 @@ get msg addr = do
                         "Composite list tag was not a struct-" ++
                         "formatted word: " ++ show tag
 
+-- | Return the EltSpec needed for a pointer to the given list.
+listEltSpec :: List msg -> P.EltSpec
+listEltSpec (ListStruct list@(ListOfStruct (Struct msg _ dataSz ptrSz) _)) =
+    P.EltComposite $ fromIntegral (length list) * (fromIntegral dataSz + fromIntegral ptrSz)
+listEltSpec (List0 list)   = P.EltNormal Sz0 $ fromIntegral (length list)
+listEltSpec (List1 list)   = P.EltNormal Sz1 $ fromIntegral (length list)
+listEltSpec (List8 list)   = P.EltNormal Sz8 $ fromIntegral (length list)
+listEltSpec (List16 list)  = P.EltNormal Sz16 $ fromIntegral (length list)
+listEltSpec (List32 list)  = P.EltNormal Sz32 $ fromIntegral (length list)
+listEltSpec (List64 list)  = P.EltNormal Sz64 $ fromIntegral (length list)
+listEltSpec (ListPtr list) = P.EltNormal SzPtr $ fromIntegral (length list)
+
+-- | Return the starting address of the list.
+listAddr :: List msg -> WordAddr
+listAddr (ListStruct (ListOfStruct (Struct _ addr _ _) _)) = addr
+listAddr (List0 _) = WordAt { segIndex = 0, wordIndex = 1 }
+listAddr (List1 (ListOfBool NormalList{nAddr})) = nAddr
+listAddr (List8 (ListOfWord8 NormalList{nAddr})) = nAddr
+listAddr (List16 (ListOfWord16 NormalList{nAddr})) = nAddr
+listAddr (List32 (ListOfWord32 NormalList{nAddr})) = nAddr
+listAddr (List64 (ListOfWord64 NormalList{nAddr})) = nAddr
+listAddr (ListPtr (ListOfPtr NormalList{nAddr})) = nAddr
+
+-- | Return the address of the pointer's target. It is illegal to call this on
+-- a pointer which targets a capability.
+ptrAddr :: Ptr msg -> WordAddr
+ptrAddr (PtrCap _ _) = error "ptrAddr called on a capability pointer."
+ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
+ptrAddr (PtrList list) = listAddr list
+
 setIndex :: (ReadCtx m, MM.WriteCtx m s) => a -> Int -> ListOf (MM.Message s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
@@ -344,6 +375,13 @@ setIndex value i list = case list of
     ListOfWord16 nlist -> setNIndex nlist 4 value
     ListOfWord32 nlist -> setNIndex nlist 2 value
     ListOfWord64 nlist -> setNIndex nlist 1 value
+    ListOfPtr nlist -> case value of
+        Nothing                -> setNIndex nlist 1 (P.serializePtr Nothing)
+        Just (PtrCap _ cap)    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
+        Just p@(PtrList ptrList)     ->
+            setPtrIndex nlist p $ P.ListPtr 0 (listEltSpec ptrList)
+        Just p@(PtrStruct (Struct _ addr dataSz ptrSz)) ->
+            setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
   where
     setNIndex :: (ReadCtx m, MM.WriteCtx m s, Bounded a, Integral a) => NormalList (MM.Message s) -> Int -> a -> m ()
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
@@ -351,6 +389,14 @@ setIndex value i list = case list of
         word <- GM.getWord nMsg wordAddr
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         GM.setWord nMsg wordAddr $ replaceBits value word shift
+    setPtrIndex :: (ReadCtx m, MM.WriteCtx m s) => NormalList (MM.Message s) -> Ptr (MM.Message s) -> P.Ptr -> m ()
+    setPtrIndex nlist@NormalList{..} absPtr relPtr =
+        let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
+        in case pointerFrom srcAddr (ptrAddr absPtr) relPtr of
+            Left DifferentSegments -> error "TODO: handle setIndex when we need a far pointer."
+            Left OutOfRange -> error "BUG: we should be screening messages to make this impossible."
+            Right ptr ->
+                setNIndex nlist 1 $ P.serializePtr (Just ptr)
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota

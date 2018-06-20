@@ -23,9 +23,9 @@ import Data.Word
 -- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
 -- up units:
 newtype ByteCount = ByteCount Int
-    deriving(Num, Real, Integral, Ord, Eq, Enum, Show)
+    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
 newtype WordCount = WordCount Int
-    deriving(Num, Real, Integral, Ord, Eq, Enum, Show)
+    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
 
 -- | Convert bytes to words. Rounds down.
 bytesToWordsFloor :: ByteCount -> WordCount

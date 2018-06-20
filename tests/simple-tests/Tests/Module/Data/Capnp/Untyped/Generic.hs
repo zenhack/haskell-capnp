@@ -55,6 +55,25 @@ genericUntypedTests = assertionsToTest "Test setIndex" $ map testCase
         , testOut = "(f64 = 7.2)\n"
         , testMod = GU.setIndex (doubleToWord 7.2) 1 . GU.dataSection
         }
+    , ModTest
+        { testIn = unlines
+            [ "( size = 4,"
+            , "  words = \"Hello, World!\","
+            , "  wordlist = [\"apples\", \"oranges\"] )"
+            ]
+        , testType = "Counter"
+        , testOut = unlines
+            [ "( size = 4,"
+            , "  words = \"oranges\","
+            , "  wordlist = [\"apples\", \"Hello, World!\"] )"
+            ]
+        , testMod = \struct -> do
+            Just (GU.PtrList (GU.ListPtr list)) <- GU.index 1 (GU.ptrSection struct)
+            helloWorld <- GU.index 0 (GU.ptrSection struct)
+            oranges <- GU.index 1 list
+            GU.setIndex oranges 0 (GU.ptrSection struct)
+            GU.setIndex helloWorld 1 list
+        }
     ]
   where
     testCase ModTest{..} = do
