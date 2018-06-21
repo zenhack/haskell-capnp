@@ -1,5 +1,7 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-| Module: Data.Capnp.BuiltinTypes.Generic
     Description: Handling of "built-in" capnp datatypes.
 
@@ -14,44 +16,95 @@
 module Data.Capnp.BuiltinTypes.Generic
     ( Text(..)
     , Data(..)
-    , List
-    , map
+    , List(..)
+    , BackedBy(..)
     , getData
     , getText
-    , getList
     , dataBytes
     , textBytes
+    , length
+    , index
+    , setIndex
     ) where
 
-import Prelude hiding (map)
+import Prelude hiding (length)
 
+import Data.Int
 import Data.Word
 
-import Control.Monad       (when)
-import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Monad        (when)
+import Control.Monad.Catch  (MonadThrow(throwM))
+import Data.ReinterpretCast
+    (doubleToWord, floatToWord, wordToDouble, wordToFloat)
 
 import qualified Data.ByteString            as BS
 import qualified Data.Capnp.Errors          as E
-import qualified Data.Capnp.Message         as M
 import qualified Data.Capnp.Message.Generic as GM
+import qualified Data.Capnp.Message.Mutable as MM
 import qualified Data.Capnp.Untyped.Generic as GU
+
+class BackedBy typed untyped where
+    toTyped :: GU.ReadCtx m => untyped -> m typed
+    toUntyped :: typed -> untyped
 
 -- | Typed lists.
 --
 -- Unlike 'GU.ListOf', typed lists can be lists of any type, not just the
 -- basic storage types.
 data List msg a where
-    List :: (b -> a) -> (a -> b) -> GU.ListOf msg b -> List msg a
+    List :: BackedBy typed untyped => !(GU.ListOf msg untyped) -> List msg typed
 
--- | @'map' from to list@ maps (possibly mutable) Lists of one type to
--- another. @from@ is a function which converts a value of the old list's
--- element type to one of the new list's element type. @to@ converts in the
--- other direction.
-map :: (a -> b) -> (b -> a) -> List msg a -> List msg b
-map from to (List from' to' base) = List (from . from') (to' . to) base
+instance BackedBy () () where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy Bool Bool where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy Word8 Word8 where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy Word16 Word16 where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy Word32 Word32 where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy Word64 Word64 where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy Int8 Word8 where
+    toTyped = pure . fromIntegral
+    toUntyped = fromIntegral
+instance BackedBy Int16 Word16 where
+    toTyped = pure . fromIntegral
+    toUntyped = fromIntegral
+instance BackedBy Int32 Word32 where
+    toTyped = pure . fromIntegral
+    toUntyped = fromIntegral
+instance BackedBy Int64 Word64 where
+    toTyped = pure . fromIntegral
+    toUntyped = fromIntegral
+instance BackedBy Float Word32 where
+    toTyped = pure . wordToFloat
+    toUntyped = floatToWord
+instance BackedBy Double Word64 where
+    toTyped = pure . wordToDouble
+    toUntyped = doubleToWord
+instance BackedBy (Maybe (GU.Ptr msg)) (Maybe (GU.Ptr msg)) where
+    toTyped = pure
+    toUntyped = id
+instance BackedBy (GU.Struct msg) (GU.Struct msg) where
+    toTyped = pure
+    toUntyped = id
 
-instance Functor (List M.Message) where
-    fmap f = map f undefined
+length :: List msg a -> Int
+length (List list) = GU.length list
+
+index :: (GM.Message m msg, GU.ReadCtx m) => Int -> List msg a -> m a
+index i (List list) = GU.index i list >>= toTyped
+
+setIndex :: (GU.ReadCtx m, MM.WriteCtx m s) => a -> Int -> List (MM.Message s) a -> m ()
+setIndex val i (List list) = GU.setIndex (toUntyped val) i list
 
 -- | A textual string ("Text" in capnproto's schema language). On the wire,
 -- this is NUL-terminated. The encoding should be UTF-8, but the library *does
@@ -87,10 +140,6 @@ getText list = do
     when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
     Text <$> GU.take (len - 1) list
-
--- | Convert an untyped list to a typed list (of the same underlying data type).
-getList :: (GM.Message m msg, GU.ReadCtx m) => GU.ListOf msg a -> m (List msg a)
-getList = pure . List id id
 
 -- | Convert a 'Data' to a 'BS.ByteString.
 dataBytes :: (GM.Message m msg, GU.ReadCtx m) => Data msg -> m BS.ByteString

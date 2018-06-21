@@ -8,10 +8,8 @@ module Data.Capnp.BuiltinTypes.Mutable
     , List(..)
 
     -- re-exported from Generic.
-    , GB.map
     , GB.getText
     , GB.getData
-    , GB.getList
     , GB.dataBytes
     , GB.textBytes
     ) where
