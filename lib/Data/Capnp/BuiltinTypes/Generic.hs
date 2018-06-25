@@ -16,95 +16,24 @@
 module Data.Capnp.BuiltinTypes.Generic
     ( Text(..)
     , Data(..)
-    , List(..)
-    , BackedBy(..)
+    , ListElem(..)
     , getData
     , getText
     , dataBytes
     , textBytes
-    , length
-    , index
-    , setIndex
     ) where
 
-import Prelude hiding (length)
-
-import Data.Int
 import Data.Word
 
-import Control.Monad        (when)
-import Control.Monad.Catch  (MonadThrow(throwM))
-import Data.ReinterpretCast
-    (doubleToWord, floatToWord, wordToDouble, wordToFloat)
+import Control.Monad                 (when)
+import Control.Monad.Catch           (MonadThrow(throwM))
+import Data.Capnp.BuiltinTypes.Lists (ListElem(..))
 
 import qualified Data.ByteString            as BS
 import qualified Data.Capnp.Errors          as E
 import qualified Data.Capnp.Message.Generic as GM
-import qualified Data.Capnp.Message.Mutable as MM
 import qualified Data.Capnp.Untyped.Generic as GU
 
-class BackedBy typed untyped where
-    toTyped :: GU.ReadCtx m => untyped -> m typed
-    toUntyped :: typed -> untyped
-
--- | Typed lists.
---
--- Unlike 'GU.ListOf', typed lists can be lists of any type, not just the
--- basic storage types.
-data List msg a where
-    List :: BackedBy typed untyped => !(GU.ListOf msg untyped) -> List msg typed
-
-instance BackedBy () () where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy Bool Bool where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy Word8 Word8 where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy Word16 Word16 where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy Word32 Word32 where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy Word64 Word64 where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy Int8 Word8 where
-    toTyped = pure . fromIntegral
-    toUntyped = fromIntegral
-instance BackedBy Int16 Word16 where
-    toTyped = pure . fromIntegral
-    toUntyped = fromIntegral
-instance BackedBy Int32 Word32 where
-    toTyped = pure . fromIntegral
-    toUntyped = fromIntegral
-instance BackedBy Int64 Word64 where
-    toTyped = pure . fromIntegral
-    toUntyped = fromIntegral
-instance BackedBy Float Word32 where
-    toTyped = pure . wordToFloat
-    toUntyped = floatToWord
-instance BackedBy Double Word64 where
-    toTyped = pure . wordToDouble
-    toUntyped = doubleToWord
-instance BackedBy (Maybe (GU.Ptr msg)) (Maybe (GU.Ptr msg)) where
-    toTyped = pure
-    toUntyped = id
-instance BackedBy (GU.Struct msg) (GU.Struct msg) where
-    toTyped = pure
-    toUntyped = id
-
-length :: List msg a -> Int
-length (List list) = GU.length list
-
-index :: (GM.Message m msg, GU.ReadCtx m) => Int -> List msg a -> m a
-index i (List list) = GU.index i list >>= toTyped
-
-setIndex :: (GU.ReadCtx m, MM.WriteCtx m s) => a -> Int -> List (MM.Message s) a -> m ()
-setIndex val i (List list) = GU.setIndex (toUntyped val) i list
 
 -- | A textual string ("Text" in capnproto's schema language). On the wire,
 -- this is NUL-terminated. The encoding should be UTF-8, but the library *does

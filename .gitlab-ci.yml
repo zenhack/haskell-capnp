@@ -22,3 +22,7 @@ test:alltests:
       # with what was committed:
     - ./regen.sh
     - git diff --exit-code
+      # Regenerate our other generated modules, and make sure
+      # they're in-sync.
+    - runhaskell gen-builtintypes-lists.hs > lib/Data/Capnp/BuiltinTypes/Lists.hs
+    - git diff --exit-code

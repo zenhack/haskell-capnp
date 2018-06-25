@@ -56,6 +56,7 @@ library
       -- , Data.Capnp.Builder
       , Data.Capnp.BuiltinTypes
       , Data.Capnp.BuiltinTypes.Generic
+      , Data.Capnp.BuiltinTypes.Lists
       , Data.Capnp.BuiltinTypes.Mutable
       , Data.Capnp.BuiltinTypes.Pure
       , Data.Capnp.Bits
