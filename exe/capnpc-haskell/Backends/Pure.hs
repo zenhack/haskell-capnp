@@ -95,7 +95,7 @@ fmtModRef :: ModRefType -> ModuleRef -> TB.Builder
 fmtModRef ty ref = mintercalate "." (map TB.fromText $ toList $ modRefToNS ty ref)
 
 fmtType :: Id -> Type -> TB.Builder
-fmtType thisMod (Type name params) =
+fmtType thisMod (StructType name params) =
     fmtName Pure thisMod name
     <> mconcat [" (" <> fmtType thisMod ty <> ")" | ty <- params]
 fmtType thisMod (EnumType name)  = fmtName Pure thisMod name

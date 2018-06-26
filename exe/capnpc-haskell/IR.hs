@@ -121,7 +121,7 @@ instance IsString Name where
         }
 
 data Type
-    = Type Name [Type]
+    = StructType Name [Type]
     | EnumType Name
     | ListOf Type
     | PrimType PrimType

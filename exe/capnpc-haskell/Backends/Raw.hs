@@ -249,9 +249,7 @@ fmtType thisMod = \case
         "(Data.Capnp.Untyped.ListOf " <> fmtType thisMod eltType <> ")"
     EnumType name ->
         fmtName thisMod name
-    Type name [] ->
-        fmtName thisMod name
-    Type name params -> mconcat
+    StructType name params -> mconcat
         [ "("
         , fmtName thisMod name
         , " "

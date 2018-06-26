@@ -355,7 +355,7 @@ formatStructBody thisModule nodeMap parentName fields = IR.Record $
         _  ->
             [ IR.Field
                 { fieldName = "union'"
-                , fieldType = IR.Type parentName []
+                , fieldType = IR.StructType parentName []
                 , fieldLoc = IR.HereField
                 }
             ]
@@ -402,7 +402,7 @@ generateField thisModule nodeMap Field'{..} =
         , fieldType = case union' of
             Field'slot{..}   -> formatType thisModule nodeMap type_
             Field'group{..} ->
-                IR.Type (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
+                IR.StructType (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
             Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
@@ -505,9 +505,11 @@ formatType thisModule nodeMap ty = case ty of
     Type'text       -> IR.PrimType IR.PrimText
     Type'data_      -> IR.PrimType IR.PrimData
     Type'list elt   -> IR.ListOf (formatType thisModule nodeMap elt)
-    Type'enum{..}   -> IR.EnumType (identifierFromMetaData thisModule (nodeMap M.! typeId))
-    Type'struct{..} -> namedType typeId brand
-    Type'interface{..} -> namedType typeId brand
+    -- TODO: use 'brand' to generate type parameters.
+    Type'enum{..}   -> IR.EnumType (typeName typeId)
+    Type'struct{..} -> IR.StructType (typeName typeId) []
+    -- TODO: interfaces are not structs; handle them separately.
+    Type'interface{..} -> IR.StructType (typeName typeId) []
     Type'anyPointer anyPtr -> IR.Untyped $
         case anyPtr of
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
@@ -523,10 +525,8 @@ formatType thisModule nodeMap ty = case ty of
                 IR.Ptr
     _ -> IR.PrimType IR.PrimVoid -- TODO: constrained anyPointers
   where
-    namedType typeId brand = IR.Type
-        (identifierFromMetaData thisModule (nodeMap M.! typeId))
-        -- TODO: use brand.
-        []
+    typeName typeId =
+        identifierFromMetaData thisModule (nodeMap M.! typeId)
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> IR.Import
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =

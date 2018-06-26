@@ -22,9 +22,9 @@ data JsonValue
     | JsonValue'boolean Bool
     | JsonValue'number Double
     | JsonValue'string Data.Capnp.BuiltinTypes.Text
-    | JsonValue'array (Data.Capnp.Untyped.ListOf JsonValue)
-    | JsonValue'object (Data.Capnp.Untyped.ListOf JsonValue'Field)
-    | JsonValue'call JsonValue'Call
+    | JsonValue'array (Data.Capnp.Untyped.ListOf (JsonValue ))
+    | JsonValue'object (Data.Capnp.Untyped.ListOf (JsonValue'Field ))
+    | JsonValue'call (JsonValue'Call )
     | JsonValue'unknown' Word16
 
 
@@ -69,7 +69,7 @@ get_JsonValue'Call'function (JsonValue'Call struct) =
 
 has_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call -> m Bool
 has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call -> m (Data.Capnp.Untyped.ListOf JsonValue)
+get_JsonValue'Call'params :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call -> m (Data.Capnp.Untyped.ListOf (JsonValue ))
 get_JsonValue'Call'params (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -94,7 +94,7 @@ get_JsonValue'Field'name (JsonValue'Field struct) =
 
 has_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field -> m Bool
 has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field -> m JsonValue
+get_JsonValue'Field'value :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field -> m (JsonValue )
 get_JsonValue'Field'value (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
