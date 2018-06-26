@@ -10,7 +10,7 @@ module Data.Capnp.BuiltinTypes.Pure
     , List(..)
     ) where
 
-import Codec.Capnp
+import Codec.Capnp hiding (ListElem(List))
 
 import Control.Monad           (when)
 import Control.Monad.Catch     (MonadThrow(throwM))

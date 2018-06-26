@@ -6,15 +6,9 @@ import Data.Int
 import Data.ReinterpretCast
 import Data.Word
 
-import qualified Data.Capnp.Message.Generic as GM
-import qualified Data.Capnp.Message.Mutable as MM
-import qualified Data.Capnp.Untyped.Generic as GU
+import Codec.Capnp (ListElem(..))
 
-class ListElem e where
-    data List msg e
-    length :: List msg e -> Int
-    index :: (GM.Message m msg, GU.ReadCtx m) => Int -> List msg e -> m e
-    setIndex :: (GU.ReadCtx m, MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
+import qualified Data.Capnp.Untyped.Generic as GU
 
 instance ListElem Int8 where
     newtype List msg Int8 = ListInt8 (GU.ListOf msg Word8)

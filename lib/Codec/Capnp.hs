@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 module Codec.Capnp where
 
@@ -12,20 +13,22 @@ import Control.Monad.Catch     (MonadThrow(throwM))
 import Data.Capnp.BuiltinTypes (Data, Text)
 import Data.Capnp.Errors       (Error(SchemaViolationError))
 import Data.Capnp.Untyped
-    ( List(..)
-    , ListOf
-    , Ptr(..)
-    , ReadCtx
-    , Struct
-    , extractElts
-    , getData
-    , messageDefault
-    )
+    (ListOf, Ptr(..), ReadCtx, Struct, extractElts, getData, messageDefault)
 import Data.ReinterpretCast
     (doubleToWord, floatToWord, wordToDouble, wordToFloat)
 
-import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
-import qualified Data.Capnp.Message      as M
+import qualified Data.Capnp.BuiltinTypes    as BuiltinTypes
+import qualified Data.Capnp.Message         as M
+import qualified Data.Capnp.Message.Generic as GM
+import qualified Data.Capnp.Message.Mutable as MM
+import qualified Data.Capnp.Untyped         as U
+import qualified Data.Capnp.Untyped.Generic as GU
+
+class ListElem e where
+    data List msg e
+    length :: List msg e -> Int
+    index :: (GM.Message m msg, GU.ReadCtx m) => Int -> List msg e -> m e
+    setIndex :: (GU.ReadCtx m, MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
 
 class Decerialize from to where
     decerialize :: ReadCtx m => from -> m to
@@ -128,25 +131,25 @@ instance IsWord Double where
 -- IsPtr instance for lists of Void/().
 instance IsPtr (ListOf ()) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (List0 list))) = pure list
+    fromPtr msg (Just (PtrList (U.List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
 
 -- IsPtr instances for lists of unsigned integers.
 instance IsPtr (ListOf Word8) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (List8 list))) = pure list
+    fromPtr msg (Just (PtrList (U.List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
 instance IsPtr (ListOf Word16) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (List16 list))) = pure list
+    fromPtr msg (Just (PtrList (U.List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
 instance IsPtr (ListOf Word32) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (List32 list))) = pure list
+    fromPtr msg (Just (PtrList (U.List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
 instance IsPtr (ListOf Word64) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (List64 list))) = pure list
+    fromPtr msg (Just (PtrList (U.List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
 
 -- | IsPtr instance for pointers -- this is just the identity.
@@ -156,7 +159,7 @@ instance IsPtr (Maybe Ptr) where
 -- IsPtr instance for composite lists.
 instance IsPtr (ListOf Struct) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
-    fromPtr msg (Just (PtrList (ListStruct list))) = pure list
+    fromPtr msg (Just (PtrList (U.ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
 
 -- | IsPtr instances for lists of floating point numbers.

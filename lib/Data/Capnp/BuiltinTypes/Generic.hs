@@ -25,9 +25,11 @@ module Data.Capnp.BuiltinTypes.Generic
 
 import Data.Word
 
-import Control.Monad                 (when)
-import Control.Monad.Catch           (MonadThrow(throwM))
-import Data.Capnp.BuiltinTypes.Lists (ListElem(..))
+import Control.Monad       (when)
+import Control.Monad.Catch (MonadThrow(throwM))
+
+import Codec.Capnp                   (ListElem(..))
+import Data.Capnp.BuiltinTypes.Lists ()
 
 import qualified Data.ByteString            as BS
 import qualified Data.Capnp.Errors          as E
