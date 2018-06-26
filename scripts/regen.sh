@@ -15,7 +15,7 @@ err() {
 
 # First make sure the compiler plugin is up to date.
 log "Rebuilding schema compiler plugin..."
-cd "$(dirname $0)"
+cd "$(dirname $0)/.."
 cabal new-build capnpc-haskell
 
 # We run the code generator from inside lib/, so that it outputs

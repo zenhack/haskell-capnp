@@ -14,15 +14,15 @@ test:alltests:
     - cabal new-build
     - cabal new-test
       # Linting:
-    - ./hlint.sh
+    - ./scripts/hlint.sh
       # Run stylish-haskell, and fail if it changes anything:
-    - ./format.sh
+    - ./scripts/format.sh
     - git diff --exit-code
       # Regenerate the schema, and make sure they're in-sync
       # with what was committed:
-    - ./regen.sh
+    - ./scripts/regen.sh
     - git diff --exit-code
       # Regenerate our other generated modules, and make sure
       # they're in-sync.
-    - runhaskell gen-builtintypes-lists.hs
+    - runhaskell scripts/gen-builtintypes-lists.hs
     - git diff --exit-code
