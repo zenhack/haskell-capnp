@@ -56,7 +56,7 @@ fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 -- the given name.
 fmtStructListIsPtr :: TB.Builder -> TB.Builder
 fmtStructListIsPtr nameText = mconcat
-    [ "instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf ", nameText, ") where\n"
+    [ "instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (", nameText, " msg)) where\n"
     , "    fromPtr = Codec.Capnp.structListPtr\n"
     ]
 
@@ -66,12 +66,12 @@ fmtNewtypeStruct thisMod name =
     in mconcat
         [ "newtype "
         , nameText
-        , " = "
+        , " msg = "
         , nameText
         , " Data.Capnp.Untyped.Struct\n\n"
-        , "instance Codec.Capnp.IsStruct ", nameText, " where\n"
+        , "instance Codec.Capnp.IsStruct (", nameText, " msg) where\n"
         , "    fromStruct = pure . ", nameText, "\n"
-        , "instance Codec.Capnp.IsPtr ", nameText, " where\n"
+        , "instance Codec.Capnp.IsPtr (", nameText, " msg) where\n"
         , "    fromPtr = Codec.Capnp.structPtr\n"
         , "\n"
         , fmtStructListIsPtr nameText
@@ -95,7 +95,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         hasName = fmtName thisMod $ prefixName "has_" (subName variantName fieldName)
     in mconcat
         [ getName, " :: Data.Capnp.Untyped.ReadCtx m => "
-        , fmtName thisMod typeName, " -> m ", fmtType thisMod fieldType, "\n"
+        , fmtName thisMod typeName, " msg -> m ", fmtType thisMod fieldType, "\n"
         , getName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
             DataField loc -> fmtGetWordField "struct" loc
@@ -107,7 +107,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> " Codec.Capnp.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         , "\n\n"
-        , hasName, " :: Data.Capnp.Untyped.ReadCtx m => ", fmtName thisMod typeName, " -> m Bool\n"
+        , hasName, " :: Data.Capnp.Untyped.ReadCtx m => ", fmtName thisMod typeName, " msg -> m Bool\n"
         , hasName, "(", fmtName thisMod typeName, " struct) = "
         , case fieldLoc of
             DataField DataLoc{dataIdx} ->
@@ -137,19 +137,19 @@ fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=C
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataVariants} =
     let nameText = fmtName thisMod dataName
     in mconcat
-        [ "data ", nameText
+        [ "data ", nameText, " msg"
         , "\n    = "
         , mintercalate "\n    | " (map fmtDataVariant dataVariants)
         -- Generate auxiliary newtype definitions for group fields:
         , "\n"
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
-        , "\ninstance Codec.Capnp.IsStruct ", nameText, " where"
+        , "\ninstance Codec.Capnp.IsStruct (", nameText, " msg) where"
         , "\n    fromStruct struct = do"
         , "\n        tag <- ", fmtGetWordField "struct" tagLoc
         , "\n        case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
-        , "\ninstance Codec.Capnp.IsPtr ", nameText, " where"
+        , "\ninstance Codec.Capnp.IsPtr (", nameText, " msg) where"
         , "\n    fromPtr = Codec.Capnp.structPtr"
         , "\n"
         , fmtStructListIsPtr nameText
@@ -157,7 +157,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
         case variantParams of
-            Record _   -> " " <> fmtName thisMod (subName variantName "group'")
+            Record _   -> " (" <> fmtName thisMod (subName variantName "group' msg)")
             NoParams   -> ""
             Unnamed ty _ -> " " <> fmtType thisMod ty
     fmtVariantCase Variant{..} =
@@ -253,7 +253,7 @@ fmtType thisMod = \case
         [ "("
         , fmtName thisMod name
         , " "
-        , mintercalate " " $ map (fmtType thisMod) params
+        , mintercalate " " $ "msg" : map (fmtType thisMod) params
         , ")"
         ]
     PrimType prim -> fmtPrimType prim

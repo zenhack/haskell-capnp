@@ -17,7 +17,7 @@ import qualified Data.Capnp.Untyped
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-data Type'anyPointer'unconstrained
+data Type'anyPointer'unconstrained msg
     = Type'anyPointer'unconstrained'anyKind
     | Type'anyPointer'unconstrained'struct
     | Type'anyPointer'unconstrained'list
@@ -28,7 +28,7 @@ data Type'anyPointer'unconstrained
 
 
 
-instance Codec.Capnp.IsStruct Type'anyPointer'unconstrained where
+instance Codec.Capnp.IsStruct (Type'anyPointer'unconstrained msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 16 0
         case tag of
@@ -38,225 +38,225 @@ instance Codec.Capnp.IsStruct Type'anyPointer'unconstrained where
             0 -> pure Type'anyPointer'unconstrained'anyKind
             _ -> pure $ Type'anyPointer'unconstrained'unknown' tag
 
-instance Codec.Capnp.IsPtr Type'anyPointer'unconstrained where
+instance Codec.Capnp.IsPtr (Type'anyPointer'unconstrained msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'anyPointer'unconstrained) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'unconstrained msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype Brand = Brand Data.Capnp.Untyped.Struct
+newtype Brand msg = Brand Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Brand where
+instance Codec.Capnp.IsStruct (Brand msg) where
     fromStruct = pure . Brand
-instance Codec.Capnp.IsPtr Brand where
+instance Codec.Capnp.IsPtr (Brand msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Brand) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Brand msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Brand'scopes :: Data.Capnp.Untyped.ReadCtx m => Brand -> m (Data.Capnp.Untyped.ListOf (Brand'Scope ))
+get_Brand'scopes :: Data.Capnp.Untyped.ReadCtx m => Brand msg -> m (Data.Capnp.Untyped.ListOf (Brand'Scope msg))
 get_Brand'scopes (Brand struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Brand'scopes :: Data.Capnp.Untyped.ReadCtx m => Brand -> m Bool
+has_Brand'scopes :: Data.Capnp.Untyped.ReadCtx m => Brand msg -> m Bool
 has_Brand'scopes(Brand struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Method = Method Data.Capnp.Untyped.Struct
+newtype Method msg = Method Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Method where
+instance Codec.Capnp.IsStruct (Method msg) where
     fromStruct = pure . Method
-instance Codec.Capnp.IsPtr Method where
+instance Codec.Capnp.IsPtr (Method msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Method) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Method msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Method'name :: Data.Capnp.Untyped.ReadCtx m => Method -> m Data.Capnp.BuiltinTypes.Text
+get_Method'name :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Data.Capnp.BuiltinTypes.Text
 get_Method'name (Method struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Method'name :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'name :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'name(Method struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_Method'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Method -> m Word16
+get_Method'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Word16
 get_Method'codeOrder (Method struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Method'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'codeOrder(Method struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Method'paramStructType :: Data.Capnp.Untyped.ReadCtx m => Method -> m Word64
+get_Method'paramStructType :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Word64
 get_Method'paramStructType (Method struct) = Codec.Capnp.getWordField struct 1 0 0
 
-has_Method'paramStructType :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'paramStructType :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'paramStructType(Method struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Method'resultStructType :: Data.Capnp.Untyped.ReadCtx m => Method -> m Word64
+get_Method'resultStructType :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Word64
 get_Method'resultStructType (Method struct) = Codec.Capnp.getWordField struct 2 0 0
 
-has_Method'resultStructType :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'resultStructType :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'resultStructType(Method struct) = pure $ 2 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Method'annotations :: Data.Capnp.Untyped.ReadCtx m => Method -> m (Data.Capnp.Untyped.ListOf (Annotation ))
+get_Method'annotations :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m (Data.Capnp.Untyped.ListOf (Annotation msg))
 get_Method'annotations (Method struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Method'annotations :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'annotations :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'annotations(Method struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
-get_Method'paramBrand :: Data.Capnp.Untyped.ReadCtx m => Method -> m (Brand )
+get_Method'paramBrand :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m (Brand msg)
 get_Method'paramBrand (Method struct) =
     Data.Capnp.Untyped.getPtr 2 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Method'paramBrand :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'paramBrand :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'paramBrand(Method struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 2 struct
-get_Method'resultBrand :: Data.Capnp.Untyped.ReadCtx m => Method -> m (Brand )
+get_Method'resultBrand :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m (Brand msg)
 get_Method'resultBrand (Method struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Method'resultBrand :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'resultBrand :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'resultBrand(Method struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-get_Method'implicitParameters :: Data.Capnp.Untyped.ReadCtx m => Method -> m (Data.Capnp.Untyped.ListOf (Node'Parameter ))
+get_Method'implicitParameters :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m (Data.Capnp.Untyped.ListOf (Node'Parameter msg))
 get_Method'implicitParameters (Method struct) =
     Data.Capnp.Untyped.getPtr 4 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Method'implicitParameters :: Data.Capnp.Untyped.ReadCtx m => Method -> m Bool
+has_Method'implicitParameters :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Bool
 has_Method'implicitParameters(Method struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 4 struct
-newtype Enumerant = Enumerant Data.Capnp.Untyped.Struct
+newtype Enumerant msg = Enumerant Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Enumerant where
+instance Codec.Capnp.IsStruct (Enumerant msg) where
     fromStruct = pure . Enumerant
-instance Codec.Capnp.IsPtr Enumerant where
+instance Codec.Capnp.IsPtr (Enumerant msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Enumerant) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Enumerant msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m => Enumerant -> m Data.Capnp.BuiltinTypes.Text
+get_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Data.Capnp.BuiltinTypes.Text
 get_Enumerant'name (Enumerant struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m => Enumerant -> m Bool
+has_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Bool
 has_Enumerant'name(Enumerant struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_Enumerant'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Enumerant -> m Word16
+get_Enumerant'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Word16
 get_Enumerant'codeOrder (Enumerant struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Enumerant'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Enumerant -> m Bool
+has_Enumerant'codeOrder :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Bool
 has_Enumerant'codeOrder(Enumerant struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m => Enumerant -> m (Data.Capnp.Untyped.ListOf (Annotation ))
+get_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m (Data.Capnp.Untyped.ListOf (Annotation msg))
 get_Enumerant'annotations (Enumerant struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m => Enumerant -> m Bool
+has_Enumerant'annotations :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Bool
 has_Enumerant'annotations(Enumerant struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
 field'noDiscriminant :: Word16
 field'noDiscriminant = Codec.Capnp.fromWord 65535
 
-newtype Field = Field Data.Capnp.Untyped.Struct
+newtype Field msg = Field Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Field where
+instance Codec.Capnp.IsStruct (Field msg) where
     fromStruct = pure . Field
-instance Codec.Capnp.IsPtr Field where
+instance Codec.Capnp.IsPtr (Field msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Field) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Field''name :: Data.Capnp.Untyped.ReadCtx m => Field -> m Data.Capnp.BuiltinTypes.Text
+get_Field''name :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Data.Capnp.BuiltinTypes.Text
 get_Field''name (Field struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Field''name :: Data.Capnp.Untyped.ReadCtx m => Field -> m Bool
+has_Field''name :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Bool
 has_Field''name(Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_Field''codeOrder :: Data.Capnp.Untyped.ReadCtx m => Field -> m Word16
+get_Field''codeOrder :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Word16
 get_Field''codeOrder (Field struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Field''codeOrder :: Data.Capnp.Untyped.ReadCtx m => Field -> m Bool
+has_Field''codeOrder :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Bool
 has_Field''codeOrder(Field struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Field''annotations :: Data.Capnp.Untyped.ReadCtx m => Field -> m (Data.Capnp.Untyped.ListOf (Annotation ))
+get_Field''annotations :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m (Data.Capnp.Untyped.ListOf (Annotation msg))
 get_Field''annotations (Field struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Field''annotations :: Data.Capnp.Untyped.ReadCtx m => Field -> m Bool
+has_Field''annotations :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Bool
 has_Field''annotations(Field struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
-get_Field''discriminantValue :: Data.Capnp.Untyped.ReadCtx m => Field -> m Word16
+get_Field''discriminantValue :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Word16
 get_Field''discriminantValue (Field struct) = Codec.Capnp.getWordField struct 0 16 65535
 
-has_Field''discriminantValue :: Data.Capnp.Untyped.ReadCtx m => Field -> m Bool
+has_Field''discriminantValue :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Bool
 has_Field''discriminantValue(Field struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Field''ordinal :: Data.Capnp.Untyped.ReadCtx m => Field -> m (Field'ordinal )
+get_Field''ordinal :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m (Field'ordinal msg)
 get_Field''ordinal (Field struct) = Codec.Capnp.fromStruct struct
 
-has_Field''ordinal :: Data.Capnp.Untyped.ReadCtx m => Field -> m Bool
+has_Field''ordinal :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Bool
 has_Field''ordinal(Field struct) = pure True
-get_Field''union' :: Data.Capnp.Untyped.ReadCtx m => Field -> m (Field' )
+get_Field''union' :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m (Field' msg)
 get_Field''union' (Field struct) = Codec.Capnp.fromStruct struct
 
-has_Field''union' :: Data.Capnp.Untyped.ReadCtx m => Field -> m Bool
+has_Field''union' :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Bool
 has_Field''union'(Field struct) = pure True
-data Field'
-    = Field'slot Field'slot'group'
-    | Field'group Field'group'group'
+data Field' msg
+    = Field'slot (Field'slot'group' msg)
+    | Field'group (Field'group'group' msg)
     | Field'unknown' Word16
-newtype Field'slot'group' = Field'slot'group' Data.Capnp.Untyped.Struct
+newtype Field'slot'group' msg = Field'slot'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Field'slot'group' where
+instance Codec.Capnp.IsStruct (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'
-instance Codec.Capnp.IsPtr Field'slot'group' where
+instance Codec.Capnp.IsPtr (Field'slot'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Field'slot'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field'slot'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Field'slot'offset :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m Word32
+get_Field'slot'offset :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m Word32
 get_Field'slot'offset (Field'slot'group' struct) = Codec.Capnp.getWordField struct 0 32 0
 
-has_Field'slot'offset :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m Bool
+has_Field'slot'offset :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m Bool
 has_Field'slot'offset(Field'slot'group' struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Field'slot'type_ :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m (Type )
+get_Field'slot'type_ :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m (Type msg)
 get_Field'slot'type_ (Field'slot'group' struct) =
     Data.Capnp.Untyped.getPtr 2 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Field'slot'type_ :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m Bool
+has_Field'slot'type_ :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m Bool
 has_Field'slot'type_(Field'slot'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 2 struct
-get_Field'slot'defaultValue :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m (Value )
+get_Field'slot'defaultValue :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m (Value msg)
 get_Field'slot'defaultValue (Field'slot'group' struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Field'slot'defaultValue :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m Bool
+has_Field'slot'defaultValue :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m Bool
 has_Field'slot'defaultValue(Field'slot'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-get_Field'slot'hadExplicitDefault :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m Bool
+get_Field'slot'hadExplicitDefault :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m Bool
 get_Field'slot'hadExplicitDefault (Field'slot'group' struct) = Codec.Capnp.getWordField struct 2 0 0
 
-has_Field'slot'hadExplicitDefault :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' -> m Bool
+has_Field'slot'hadExplicitDefault :: Data.Capnp.Untyped.ReadCtx m => Field'slot'group' msg -> m Bool
 has_Field'slot'hadExplicitDefault(Field'slot'group' struct) = pure $ 2 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-newtype Field'group'group' = Field'group'group' Data.Capnp.Untyped.Struct
+newtype Field'group'group' msg = Field'group'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Field'group'group' where
+instance Codec.Capnp.IsStruct (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'
-instance Codec.Capnp.IsPtr Field'group'group' where
+instance Codec.Capnp.IsPtr (Field'group'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Field'group'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field'group'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Field'group'typeId :: Data.Capnp.Untyped.ReadCtx m => Field'group'group' -> m Word64
+get_Field'group'typeId :: Data.Capnp.Untyped.ReadCtx m => Field'group'group' msg -> m Word64
 get_Field'group'typeId (Field'group'group' struct) = Codec.Capnp.getWordField struct 2 0 0
 
-has_Field'group'typeId :: Data.Capnp.Untyped.ReadCtx m => Field'group'group' -> m Bool
+has_Field'group'typeId :: Data.Capnp.Untyped.ReadCtx m => Field'group'group' msg -> m Bool
 has_Field'group'typeId(Field'group'group' struct) = pure $ 2 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 
-instance Codec.Capnp.IsStruct Field' where
+instance Codec.Capnp.IsStruct (Field' msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 0 0
         case tag of
@@ -264,60 +264,60 @@ instance Codec.Capnp.IsStruct Field' where
             0 -> Field'slot <$> Codec.Capnp.fromStruct struct
             _ -> pure $ Field'unknown' tag
 
-instance Codec.Capnp.IsPtr Field' where
+instance Codec.Capnp.IsPtr (Field' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Field') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field' msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype Superclass = Superclass Data.Capnp.Untyped.Struct
+newtype Superclass msg = Superclass Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Superclass where
+instance Codec.Capnp.IsStruct (Superclass msg) where
     fromStruct = pure . Superclass
-instance Codec.Capnp.IsPtr Superclass where
+instance Codec.Capnp.IsPtr (Superclass msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Superclass) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Superclass msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Superclass'id :: Data.Capnp.Untyped.ReadCtx m => Superclass -> m Word64
+get_Superclass'id :: Data.Capnp.Untyped.ReadCtx m => Superclass msg -> m Word64
 get_Superclass'id (Superclass struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Superclass'id :: Data.Capnp.Untyped.ReadCtx m => Superclass -> m Bool
+has_Superclass'id :: Data.Capnp.Untyped.ReadCtx m => Superclass msg -> m Bool
 has_Superclass'id(Superclass struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Superclass'brand :: Data.Capnp.Untyped.ReadCtx m => Superclass -> m (Brand )
+get_Superclass'brand :: Data.Capnp.Untyped.ReadCtx m => Superclass msg -> m (Brand msg)
 get_Superclass'brand (Superclass struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Superclass'brand :: Data.Capnp.Untyped.ReadCtx m => Superclass -> m Bool
+has_Superclass'brand :: Data.Capnp.Untyped.ReadCtx m => Superclass msg -> m Bool
 has_Superclass'brand(Superclass struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Brand'Scope = Brand'Scope Data.Capnp.Untyped.Struct
+newtype Brand'Scope msg = Brand'Scope Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Brand'Scope where
+instance Codec.Capnp.IsStruct (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope
-instance Codec.Capnp.IsPtr Brand'Scope where
+instance Codec.Capnp.IsPtr (Brand'Scope msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Brand'Scope) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Brand'Scope msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Brand'Scope''scopeId :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope -> m Word64
+get_Brand'Scope''scopeId :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope msg -> m Word64
 get_Brand'Scope''scopeId (Brand'Scope struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Brand'Scope''scopeId :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope -> m Bool
+has_Brand'Scope''scopeId :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope msg -> m Bool
 has_Brand'Scope''scopeId(Brand'Scope struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Brand'Scope''union' :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope -> m (Brand'Scope' )
+get_Brand'Scope''union' :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope msg -> m (Brand'Scope' msg)
 get_Brand'Scope''union' (Brand'Scope struct) = Codec.Capnp.fromStruct struct
 
-has_Brand'Scope''union' :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope -> m Bool
+has_Brand'Scope''union' :: Data.Capnp.Untyped.ReadCtx m => Brand'Scope msg -> m Bool
 has_Brand'Scope''union'(Brand'Scope struct) = pure True
-data Brand'Scope'
-    = Brand'Scope'bind (Data.Capnp.Untyped.ListOf (Brand'Binding ))
+data Brand'Scope' msg
+    = Brand'Scope'bind (Data.Capnp.Untyped.ListOf (Brand'Binding msg))
     | Brand'Scope'inherit
     | Brand'Scope'unknown' Word16
 
 
 
-instance Codec.Capnp.IsStruct Brand'Scope' where
+instance Codec.Capnp.IsStruct (Brand'Scope' msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 0 0
         case tag of
@@ -325,58 +325,58 @@ instance Codec.Capnp.IsStruct Brand'Scope' where
             0 -> Brand'Scope'bind <$>  (Data.Capnp.Untyped.getPtr 0 struct >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct))
             _ -> pure $ Brand'Scope'unknown' tag
 
-instance Codec.Capnp.IsPtr Brand'Scope' where
+instance Codec.Capnp.IsPtr (Brand'Scope' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Brand'Scope') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Brand'Scope' msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype CodeGeneratorRequest'RequestedFile'Import = CodeGeneratorRequest'RequestedFile'Import Data.Capnp.Untyped.Struct
+newtype CodeGeneratorRequest'RequestedFile'Import msg = CodeGeneratorRequest'RequestedFile'Import Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct CodeGeneratorRequest'RequestedFile'Import where
+instance Codec.Capnp.IsStruct (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import
-instance Codec.Capnp.IsPtr CodeGeneratorRequest'RequestedFile'Import where
+instance Codec.Capnp.IsPtr (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf CodeGeneratorRequest'RequestedFile'Import) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile'Import msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_CodeGeneratorRequest'RequestedFile'Import'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import -> m Word64
+get_CodeGeneratorRequest'RequestedFile'Import'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Word64
 get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_CodeGeneratorRequest'RequestedFile'Import'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import -> m Bool
+has_CodeGeneratorRequest'RequestedFile'Import'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'id(CodeGeneratorRequest'RequestedFile'Import struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import -> m Data.Capnp.BuiltinTypes.Text
+get_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Data.Capnp.BuiltinTypes.Text
 get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import -> m Bool
+has_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'name(CodeGeneratorRequest'RequestedFile'Import struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Node'Parameter = Node'Parameter Data.Capnp.Untyped.Struct
+newtype Node'Parameter msg = Node'Parameter Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'Parameter where
+instance Codec.Capnp.IsStruct (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter
-instance Codec.Capnp.IsPtr Node'Parameter where
+instance Codec.Capnp.IsPtr (Node'Parameter msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'Parameter) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'Parameter msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m => Node'Parameter -> m Data.Capnp.BuiltinTypes.Text
+get_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m => Node'Parameter msg -> m Data.Capnp.BuiltinTypes.Text
 get_Node'Parameter'name (Node'Parameter struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m => Node'Parameter -> m Bool
+has_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m => Node'Parameter msg -> m Bool
 has_Node'Parameter'name(Node'Parameter struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-data Field'ordinal
+data Field'ordinal msg
     = Field'ordinal'implicit
     | Field'ordinal'explicit Word16
     | Field'ordinal'unknown' Word16
 
 
 
-instance Codec.Capnp.IsStruct Field'ordinal where
+instance Codec.Capnp.IsStruct (Field'ordinal msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 16 0
         case tag of
@@ -384,98 +384,98 @@ instance Codec.Capnp.IsStruct Field'ordinal where
             0 -> pure Field'ordinal'implicit
             _ -> pure $ Field'ordinal'unknown' tag
 
-instance Codec.Capnp.IsPtr Field'ordinal where
+instance Codec.Capnp.IsPtr (Field'ordinal msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Field'ordinal) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field'ordinal msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype CodeGeneratorRequest = CodeGeneratorRequest Data.Capnp.Untyped.Struct
+newtype CodeGeneratorRequest msg = CodeGeneratorRequest Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct CodeGeneratorRequest where
+instance Codec.Capnp.IsStruct (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest
-instance Codec.Capnp.IsPtr CodeGeneratorRequest where
+instance Codec.Capnp.IsPtr (CodeGeneratorRequest msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf CodeGeneratorRequest) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_CodeGeneratorRequest'nodes :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest -> m (Data.Capnp.Untyped.ListOf (Node ))
+get_CodeGeneratorRequest'nodes :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest msg -> m (Data.Capnp.Untyped.ListOf (Node msg))
 get_CodeGeneratorRequest'nodes (CodeGeneratorRequest struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_CodeGeneratorRequest'nodes :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest -> m Bool
+has_CodeGeneratorRequest'nodes :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'nodes(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_CodeGeneratorRequest'requestedFiles :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest -> m (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile ))
+get_CodeGeneratorRequest'requestedFiles :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest msg -> m (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile msg))
 get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_CodeGeneratorRequest'requestedFiles :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest -> m Bool
+has_CodeGeneratorRequest'requestedFiles :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'requestedFiles(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
-get_CodeGeneratorRequest'capnpVersion :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest -> m (CapnpVersion )
+get_CodeGeneratorRequest'capnpVersion :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest msg -> m (CapnpVersion msg)
 get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest struct) =
     Data.Capnp.Untyped.getPtr 2 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_CodeGeneratorRequest'capnpVersion :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest -> m Bool
+has_CodeGeneratorRequest'capnpVersion :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'capnpVersion(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 2 struct
-data Type'anyPointer
-    = Type'anyPointer'unconstrained Type'anyPointer'unconstrained'group'
-    | Type'anyPointer'parameter Type'anyPointer'parameter'group'
-    | Type'anyPointer'implicitMethodParameter Type'anyPointer'implicitMethodParameter'group'
+data Type'anyPointer msg
+    = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg)
+    | Type'anyPointer'parameter (Type'anyPointer'parameter'group' msg)
+    | Type'anyPointer'implicitMethodParameter (Type'anyPointer'implicitMethodParameter'group' msg)
     | Type'anyPointer'unknown' Word16
-newtype Type'anyPointer'unconstrained'group' = Type'anyPointer'unconstrained'group' Data.Capnp.Untyped.Struct
+newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'anyPointer'unconstrained'group' where
+instance Codec.Capnp.IsStruct (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'
-instance Codec.Capnp.IsPtr Type'anyPointer'unconstrained'group' where
+instance Codec.Capnp.IsPtr (Type'anyPointer'unconstrained'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'anyPointer'unconstrained'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'unconstrained'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'anyPointer'unconstrained'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'unconstrained'group' -> m (Type'anyPointer'unconstrained )
+get_Type'anyPointer'unconstrained'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'unconstrained'group' msg -> m (Type'anyPointer'unconstrained msg)
 get_Type'anyPointer'unconstrained'union' (Type'anyPointer'unconstrained'group' struct) = Codec.Capnp.fromStruct struct
 
-has_Type'anyPointer'unconstrained'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'unconstrained'group' -> m Bool
+has_Type'anyPointer'unconstrained'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'unconstrained'group' msg -> m Bool
 has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group' struct) = pure True
-newtype Type'anyPointer'parameter'group' = Type'anyPointer'parameter'group' Data.Capnp.Untyped.Struct
+newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'anyPointer'parameter'group' where
+instance Codec.Capnp.IsStruct (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'
-instance Codec.Capnp.IsPtr Type'anyPointer'parameter'group' where
+instance Codec.Capnp.IsPtr (Type'anyPointer'parameter'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'anyPointer'parameter'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'parameter'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'anyPointer'parameter'scopeId :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' -> m Word64
+get_Type'anyPointer'parameter'scopeId :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' msg -> m Word64
 get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group' struct) = Codec.Capnp.getWordField struct 2 0 0
 
-has_Type'anyPointer'parameter'scopeId :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' -> m Bool
+has_Type'anyPointer'parameter'scopeId :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' msg -> m Bool
 has_Type'anyPointer'parameter'scopeId(Type'anyPointer'parameter'group' struct) = pure $ 2 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Type'anyPointer'parameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' -> m Word16
+get_Type'anyPointer'parameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' msg -> m Word16
 get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group' struct) = Codec.Capnp.getWordField struct 1 16 0
 
-has_Type'anyPointer'parameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' -> m Bool
+has_Type'anyPointer'parameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'parameter'group' msg -> m Bool
 has_Type'anyPointer'parameter'parameterIndex(Type'anyPointer'parameter'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-newtype Type'anyPointer'implicitMethodParameter'group' = Type'anyPointer'implicitMethodParameter'group' Data.Capnp.Untyped.Struct
+newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'anyPointer'implicitMethodParameter'group' where
+instance Codec.Capnp.IsStruct (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'
-instance Codec.Capnp.IsPtr Type'anyPointer'implicitMethodParameter'group' where
+instance Codec.Capnp.IsPtr (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'anyPointer'implicitMethodParameter'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'implicitMethodParameter'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'anyPointer'implicitMethodParameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'implicitMethodParameter'group' -> m Word16
+get_Type'anyPointer'implicitMethodParameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'implicitMethodParameter'group' msg -> m Word16
 get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group' struct) = Codec.Capnp.getWordField struct 1 16 0
 
-has_Type'anyPointer'implicitMethodParameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'implicitMethodParameter'group' -> m Bool
+has_Type'anyPointer'implicitMethodParameter'parameterIndex :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'implicitMethodParameter'group' msg -> m Bool
 has_Type'anyPointer'implicitMethodParameter'parameterIndex(Type'anyPointer'implicitMethodParameter'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 
-instance Codec.Capnp.IsStruct Type'anyPointer where
+instance Codec.Capnp.IsStruct (Type'anyPointer msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 0 0
         case tag of
@@ -484,19 +484,19 @@ instance Codec.Capnp.IsStruct Type'anyPointer where
             0 -> Type'anyPointer'unconstrained <$> Codec.Capnp.fromStruct struct
             _ -> pure $ Type'anyPointer'unknown' tag
 
-instance Codec.Capnp.IsPtr Type'anyPointer where
+instance Codec.Capnp.IsPtr (Type'anyPointer msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'anyPointer) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-data Brand'Binding
+data Brand'Binding msg
     = Brand'Binding'unbound
-    | Brand'Binding'type_ (Type )
+    | Brand'Binding'type_ (Type msg)
     | Brand'Binding'unknown' Word16
 
 
 
-instance Codec.Capnp.IsStruct Brand'Binding where
+instance Codec.Capnp.IsStruct (Brand'Binding msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
@@ -504,12 +504,12 @@ instance Codec.Capnp.IsStruct Brand'Binding where
             0 -> pure Brand'Binding'unbound
             _ -> pure $ Brand'Binding'unknown' tag
 
-instance Codec.Capnp.IsPtr Brand'Binding where
+instance Codec.Capnp.IsPtr (Brand'Binding msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Brand'Binding) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Brand'Binding msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-data Value
+data Value msg
     = Value'void
     | Value'bool Bool
     | Value'int8 Int8
@@ -550,7 +550,7 @@ data Value
 
 
 
-instance Codec.Capnp.IsStruct Value where
+instance Codec.Capnp.IsStruct (Value msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
@@ -575,42 +575,42 @@ instance Codec.Capnp.IsStruct Value where
             0 -> pure Value'void
             _ -> pure $ Value'unknown' tag
 
-instance Codec.Capnp.IsPtr Value where
+instance Codec.Capnp.IsPtr (Value msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Value) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Value msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype CodeGeneratorRequest'RequestedFile = CodeGeneratorRequest'RequestedFile Data.Capnp.Untyped.Struct
+newtype CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct CodeGeneratorRequest'RequestedFile where
+instance Codec.Capnp.IsStruct (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile
-instance Codec.Capnp.IsPtr CodeGeneratorRequest'RequestedFile where
+instance Codec.Capnp.IsPtr (CodeGeneratorRequest'RequestedFile msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf CodeGeneratorRequest'RequestedFile) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_CodeGeneratorRequest'RequestedFile'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile -> m Word64
+get_CodeGeneratorRequest'RequestedFile'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Word64
 get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_CodeGeneratorRequest'RequestedFile'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile -> m Bool
+has_CodeGeneratorRequest'RequestedFile'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'id(CodeGeneratorRequest'RequestedFile struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile -> m Data.Capnp.BuiltinTypes.Text
+get_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Data.Capnp.BuiltinTypes.Text
 get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile -> m Bool
+has_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'filename(CodeGeneratorRequest'RequestedFile struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_CodeGeneratorRequest'RequestedFile'imports :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile -> m (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile'Import ))
+get_CodeGeneratorRequest'RequestedFile'imports :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile'Import msg))
 get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_CodeGeneratorRequest'RequestedFile'imports :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile -> m Bool
+has_CodeGeneratorRequest'RequestedFile'imports :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'imports(CodeGeneratorRequest'RequestedFile struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
-data Type
+data Type msg
     = Type'void
     | Type'bool
     | Type'int8
@@ -625,11 +625,11 @@ data Type
     | Type'float64
     | Type'text
     | Type'data_
-    | Type'list Type'list'group'
-    | Type'enum Type'enum'group'
-    | Type'struct Type'struct'group'
-    | Type'interface Type'interface'group'
-    | Type'anyPointer Type'anyPointer'group'
+    | Type'list (Type'list'group' msg)
+    | Type'enum (Type'enum'group' msg)
+    | Type'struct (Type'struct'group' msg)
+    | Type'interface (Type'interface'group' msg)
+    | Type'anyPointer (Type'anyPointer'group' msg)
     | Type'unknown' Word16
 
 
@@ -645,105 +645,105 @@ data Type
 
 
 
-newtype Type'list'group' = Type'list'group' Data.Capnp.Untyped.Struct
+newtype Type'list'group' msg = Type'list'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'list'group' where
+instance Codec.Capnp.IsStruct (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'
-instance Codec.Capnp.IsPtr Type'list'group' where
+instance Codec.Capnp.IsPtr (Type'list'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'list'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'list'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'list'elementType :: Data.Capnp.Untyped.ReadCtx m => Type'list'group' -> m (Type )
+get_Type'list'elementType :: Data.Capnp.Untyped.ReadCtx m => Type'list'group' msg -> m (Type msg)
 get_Type'list'elementType (Type'list'group' struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Type'list'elementType :: Data.Capnp.Untyped.ReadCtx m => Type'list'group' -> m Bool
+has_Type'list'elementType :: Data.Capnp.Untyped.ReadCtx m => Type'list'group' msg -> m Bool
 has_Type'list'elementType(Type'list'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Type'enum'group' = Type'enum'group' Data.Capnp.Untyped.Struct
+newtype Type'enum'group' msg = Type'enum'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'enum'group' where
+instance Codec.Capnp.IsStruct (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'
-instance Codec.Capnp.IsPtr Type'enum'group' where
+instance Codec.Capnp.IsPtr (Type'enum'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'enum'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'enum'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'enum'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' -> m Word64
+get_Type'enum'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' msg -> m Word64
 get_Type'enum'typeId (Type'enum'group' struct) = Codec.Capnp.getWordField struct 1 0 0
 
-has_Type'enum'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' -> m Bool
+has_Type'enum'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' msg -> m Bool
 has_Type'enum'typeId(Type'enum'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Type'enum'brand :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' -> m (Brand )
+get_Type'enum'brand :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' msg -> m (Brand msg)
 get_Type'enum'brand (Type'enum'group' struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Type'enum'brand :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' -> m Bool
+has_Type'enum'brand :: Data.Capnp.Untyped.ReadCtx m => Type'enum'group' msg -> m Bool
 has_Type'enum'brand(Type'enum'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Type'struct'group' = Type'struct'group' Data.Capnp.Untyped.Struct
+newtype Type'struct'group' msg = Type'struct'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'struct'group' where
+instance Codec.Capnp.IsStruct (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'
-instance Codec.Capnp.IsPtr Type'struct'group' where
+instance Codec.Capnp.IsPtr (Type'struct'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'struct'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'struct'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'struct'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' -> m Word64
+get_Type'struct'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' msg -> m Word64
 get_Type'struct'typeId (Type'struct'group' struct) = Codec.Capnp.getWordField struct 1 0 0
 
-has_Type'struct'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' -> m Bool
+has_Type'struct'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' msg -> m Bool
 has_Type'struct'typeId(Type'struct'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Type'struct'brand :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' -> m (Brand )
+get_Type'struct'brand :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' msg -> m (Brand msg)
 get_Type'struct'brand (Type'struct'group' struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Type'struct'brand :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' -> m Bool
+has_Type'struct'brand :: Data.Capnp.Untyped.ReadCtx m => Type'struct'group' msg -> m Bool
 has_Type'struct'brand(Type'struct'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Type'interface'group' = Type'interface'group' Data.Capnp.Untyped.Struct
+newtype Type'interface'group' msg = Type'interface'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'interface'group' where
+instance Codec.Capnp.IsStruct (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'
-instance Codec.Capnp.IsPtr Type'interface'group' where
+instance Codec.Capnp.IsPtr (Type'interface'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'interface'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'interface'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'interface'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' -> m Word64
+get_Type'interface'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' msg -> m Word64
 get_Type'interface'typeId (Type'interface'group' struct) = Codec.Capnp.getWordField struct 1 0 0
 
-has_Type'interface'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' -> m Bool
+has_Type'interface'typeId :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' msg -> m Bool
 has_Type'interface'typeId(Type'interface'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Type'interface'brand :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' -> m (Brand )
+get_Type'interface'brand :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' msg -> m (Brand msg)
 get_Type'interface'brand (Type'interface'group' struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Type'interface'brand :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' -> m Bool
+has_Type'interface'brand :: Data.Capnp.Untyped.ReadCtx m => Type'interface'group' msg -> m Bool
 has_Type'interface'brand(Type'interface'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Type'anyPointer'group' = Type'anyPointer'group' Data.Capnp.Untyped.Struct
+newtype Type'anyPointer'group' msg = Type'anyPointer'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Type'anyPointer'group' where
+instance Codec.Capnp.IsStruct (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'
-instance Codec.Capnp.IsPtr Type'anyPointer'group' where
+instance Codec.Capnp.IsPtr (Type'anyPointer'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type'anyPointer'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Type'anyPointer'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'group' -> m (Type'anyPointer )
+get_Type'anyPointer'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'group' msg -> m (Type'anyPointer msg)
 get_Type'anyPointer'union' (Type'anyPointer'group' struct) = Codec.Capnp.fromStruct struct
 
-has_Type'anyPointer'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'group' -> m Bool
+has_Type'anyPointer'union' :: Data.Capnp.Untyped.ReadCtx m => Type'anyPointer'group' msg -> m Bool
 has_Type'anyPointer'union'(Type'anyPointer'group' struct) = pure True
 
-instance Codec.Capnp.IsStruct Type where
+instance Codec.Capnp.IsStruct (Type msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 0 0 0
         case tag of
@@ -768,9 +768,9 @@ instance Codec.Capnp.IsStruct Type where
             0 -> pure Type'void
             _ -> pure $ Type'unknown' tag
 
-instance Codec.Capnp.IsPtr Type where
+instance Codec.Capnp.IsPtr (Type msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Type) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
 data ElementSize
@@ -814,320 +814,320 @@ instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf ElementSize) where
        (fmap (toEnum . (fromIntegral :: Word16 -> Int)))
        (Codec.Capnp.fromPtr msg ptr)
 
-newtype CapnpVersion = CapnpVersion Data.Capnp.Untyped.Struct
+newtype CapnpVersion msg = CapnpVersion Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct CapnpVersion where
+instance Codec.Capnp.IsStruct (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion
-instance Codec.Capnp.IsPtr CapnpVersion where
+instance Codec.Capnp.IsPtr (CapnpVersion msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf CapnpVersion) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CapnpVersion msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_CapnpVersion'major :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion -> m Word16
+get_CapnpVersion'major :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion msg -> m Word16
 get_CapnpVersion'major (CapnpVersion struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_CapnpVersion'major :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion -> m Bool
+has_CapnpVersion'major :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion msg -> m Bool
 has_CapnpVersion'major(CapnpVersion struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_CapnpVersion'minor :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion -> m Word8
+get_CapnpVersion'minor :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion msg -> m Word8
 get_CapnpVersion'minor (CapnpVersion struct) = Codec.Capnp.getWordField struct 0 16 0
 
-has_CapnpVersion'minor :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion -> m Bool
+has_CapnpVersion'minor :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion msg -> m Bool
 has_CapnpVersion'minor(CapnpVersion struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_CapnpVersion'micro :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion -> m Word8
+get_CapnpVersion'micro :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion msg -> m Word8
 get_CapnpVersion'micro (CapnpVersion struct) = Codec.Capnp.getWordField struct 0 24 0
 
-has_CapnpVersion'micro :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion -> m Bool
+has_CapnpVersion'micro :: Data.Capnp.Untyped.ReadCtx m => CapnpVersion msg -> m Bool
 has_CapnpVersion'micro(CapnpVersion struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-newtype Node'NestedNode = Node'NestedNode Data.Capnp.Untyped.Struct
+newtype Node'NestedNode msg = Node'NestedNode Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'NestedNode where
+instance Codec.Capnp.IsStruct (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode
-instance Codec.Capnp.IsPtr Node'NestedNode where
+instance Codec.Capnp.IsPtr (Node'NestedNode msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'NestedNode) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'NestedNode msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode -> m Data.Capnp.BuiltinTypes.Text
+get_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode msg -> m Data.Capnp.BuiltinTypes.Text
 get_Node'NestedNode'name (Node'NestedNode struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode -> m Bool
+has_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'name(Node'NestedNode struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_Node'NestedNode'id :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode -> m Word64
+get_Node'NestedNode'id :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode msg -> m Word64
 get_Node'NestedNode'id (Node'NestedNode struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Node'NestedNode'id :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode -> m Bool
+has_Node'NestedNode'id :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'id(Node'NestedNode struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-newtype Node = Node Data.Capnp.Untyped.Struct
+newtype Node msg = Node Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node where
+instance Codec.Capnp.IsStruct (Node msg) where
     fromStruct = pure . Node
-instance Codec.Capnp.IsPtr Node where
+instance Codec.Capnp.IsPtr (Node msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node''id :: Data.Capnp.Untyped.ReadCtx m => Node -> m Word64
+get_Node''id :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Word64
 get_Node''id (Node struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Node''id :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''id :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''id(Node struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node''displayName :: Data.Capnp.Untyped.ReadCtx m => Node -> m Data.Capnp.BuiltinTypes.Text
+get_Node''displayName :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Data.Capnp.BuiltinTypes.Text
 get_Node''displayName (Node struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node''displayName :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''displayName :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''displayName(Node struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_Node''displayNamePrefixLength :: Data.Capnp.Untyped.ReadCtx m => Node -> m Word32
+get_Node''displayNamePrefixLength :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Word32
 get_Node''displayNamePrefixLength (Node struct) = Codec.Capnp.getWordField struct 1 0 0
 
-has_Node''displayNamePrefixLength :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''displayNamePrefixLength :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''displayNamePrefixLength(Node struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node''scopeId :: Data.Capnp.Untyped.ReadCtx m => Node -> m Word64
+get_Node''scopeId :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Word64
 get_Node''scopeId (Node struct) = Codec.Capnp.getWordField struct 2 0 0
 
-has_Node''scopeId :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''scopeId :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''scopeId(Node struct) = pure $ 2 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node''nestedNodes :: Data.Capnp.Untyped.ReadCtx m => Node -> m (Data.Capnp.Untyped.ListOf (Node'NestedNode ))
+get_Node''nestedNodes :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m (Data.Capnp.Untyped.ListOf (Node'NestedNode msg))
 get_Node''nestedNodes (Node struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node''nestedNodes :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''nestedNodes :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''nestedNodes(Node struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct
-get_Node''annotations :: Data.Capnp.Untyped.ReadCtx m => Node -> m (Data.Capnp.Untyped.ListOf (Annotation ))
+get_Node''annotations :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m (Data.Capnp.Untyped.ListOf (Annotation msg))
 get_Node''annotations (Node struct) =
     Data.Capnp.Untyped.getPtr 2 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node''annotations :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''annotations :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''annotations(Node struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 2 struct
-get_Node''parameters :: Data.Capnp.Untyped.ReadCtx m => Node -> m (Data.Capnp.Untyped.ListOf (Node'Parameter ))
+get_Node''parameters :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m (Data.Capnp.Untyped.ListOf (Node'Parameter msg))
 get_Node''parameters (Node struct) =
     Data.Capnp.Untyped.getPtr 5 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node''parameters :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''parameters :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''parameters(Node struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 5 struct
-get_Node''isGeneric :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+get_Node''isGeneric :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 get_Node''isGeneric (Node struct) = Codec.Capnp.getWordField struct 4 32 0
 
-has_Node''isGeneric :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''isGeneric :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''isGeneric(Node struct) = pure $ 4 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node''union' :: Data.Capnp.Untyped.ReadCtx m => Node -> m (Node' )
+get_Node''union' :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m (Node' msg)
 get_Node''union' (Node struct) = Codec.Capnp.fromStruct struct
 
-has_Node''union' :: Data.Capnp.Untyped.ReadCtx m => Node -> m Bool
+has_Node''union' :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''union'(Node struct) = pure True
-data Node'
+data Node' msg
     = Node'file
-    | Node'struct Node'struct'group'
-    | Node'enum Node'enum'group'
-    | Node'interface Node'interface'group'
-    | Node'const Node'const'group'
-    | Node'annotation Node'annotation'group'
+    | Node'struct (Node'struct'group' msg)
+    | Node'enum (Node'enum'group' msg)
+    | Node'interface (Node'interface'group' msg)
+    | Node'const (Node'const'group' msg)
+    | Node'annotation (Node'annotation'group' msg)
     | Node'unknown' Word16
 
-newtype Node'struct'group' = Node'struct'group' Data.Capnp.Untyped.Struct
+newtype Node'struct'group' msg = Node'struct'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'struct'group' where
+instance Codec.Capnp.IsStruct (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'
-instance Codec.Capnp.IsPtr Node'struct'group' where
+instance Codec.Capnp.IsPtr (Node'struct'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'struct'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'struct'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'struct'dataWordCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Word16
+get_Node'struct'dataWordCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Word16
 get_Node'struct'dataWordCount (Node'struct'group' struct) = Codec.Capnp.getWordField struct 1 48 0
 
-has_Node'struct'dataWordCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'dataWordCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'dataWordCount(Node'struct'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'struct'pointerCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Word16
+get_Node'struct'pointerCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Word16
 get_Node'struct'pointerCount (Node'struct'group' struct) = Codec.Capnp.getWordField struct 3 0 0
 
-has_Node'struct'pointerCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'pointerCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'pointerCount(Node'struct'group' struct) = pure $ 3 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'struct'preferredListEncoding :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m ElementSize
+get_Node'struct'preferredListEncoding :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m ElementSize
 get_Node'struct'preferredListEncoding (Node'struct'group' struct) = Codec.Capnp.getWordField struct 3 16 0
 
-has_Node'struct'preferredListEncoding :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'preferredListEncoding :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'preferredListEncoding(Node'struct'group' struct) = pure $ 3 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'struct'isGroup :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+get_Node'struct'isGroup :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 get_Node'struct'isGroup (Node'struct'group' struct) = Codec.Capnp.getWordField struct 3 32 0
 
-has_Node'struct'isGroup :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'isGroup :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'isGroup(Node'struct'group' struct) = pure $ 3 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'struct'discriminantCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Word16
+get_Node'struct'discriminantCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Word16
 get_Node'struct'discriminantCount (Node'struct'group' struct) = Codec.Capnp.getWordField struct 3 48 0
 
-has_Node'struct'discriminantCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'discriminantCount :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'discriminantCount(Node'struct'group' struct) = pure $ 3 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'struct'discriminantOffset :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Word32
+get_Node'struct'discriminantOffset :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Word32
 get_Node'struct'discriminantOffset (Node'struct'group' struct) = Codec.Capnp.getWordField struct 4 0 0
 
-has_Node'struct'discriminantOffset :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'discriminantOffset :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'discriminantOffset(Node'struct'group' struct) = pure $ 4 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'struct'fields :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m (Data.Capnp.Untyped.ListOf (Field ))
+get_Node'struct'fields :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m (Data.Capnp.Untyped.ListOf (Field msg))
 get_Node'struct'fields (Node'struct'group' struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'struct'fields :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' -> m Bool
+has_Node'struct'fields :: Data.Capnp.Untyped.ReadCtx m => Node'struct'group' msg -> m Bool
 has_Node'struct'fields(Node'struct'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-newtype Node'enum'group' = Node'enum'group' Data.Capnp.Untyped.Struct
+newtype Node'enum'group' msg = Node'enum'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'enum'group' where
+instance Codec.Capnp.IsStruct (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'
-instance Codec.Capnp.IsPtr Node'enum'group' where
+instance Codec.Capnp.IsPtr (Node'enum'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'enum'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'enum'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'enum'enumerants :: Data.Capnp.Untyped.ReadCtx m => Node'enum'group' -> m (Data.Capnp.Untyped.ListOf (Enumerant ))
+get_Node'enum'enumerants :: Data.Capnp.Untyped.ReadCtx m => Node'enum'group' msg -> m (Data.Capnp.Untyped.ListOf (Enumerant msg))
 get_Node'enum'enumerants (Node'enum'group' struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'enum'enumerants :: Data.Capnp.Untyped.ReadCtx m => Node'enum'group' -> m Bool
+has_Node'enum'enumerants :: Data.Capnp.Untyped.ReadCtx m => Node'enum'group' msg -> m Bool
 has_Node'enum'enumerants(Node'enum'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-newtype Node'interface'group' = Node'interface'group' Data.Capnp.Untyped.Struct
+newtype Node'interface'group' msg = Node'interface'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'interface'group' where
+instance Codec.Capnp.IsStruct (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'
-instance Codec.Capnp.IsPtr Node'interface'group' where
+instance Codec.Capnp.IsPtr (Node'interface'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'interface'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'interface'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'interface'methods :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' -> m (Data.Capnp.Untyped.ListOf (Method ))
+get_Node'interface'methods :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' msg -> m (Data.Capnp.Untyped.ListOf (Method msg))
 get_Node'interface'methods (Node'interface'group' struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'interface'methods :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' -> m Bool
+has_Node'interface'methods :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' msg -> m Bool
 has_Node'interface'methods(Node'interface'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-get_Node'interface'superclasses :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' -> m (Data.Capnp.Untyped.ListOf (Superclass ))
+get_Node'interface'superclasses :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' msg -> m (Data.Capnp.Untyped.ListOf (Superclass msg))
 get_Node'interface'superclasses (Node'interface'group' struct) =
     Data.Capnp.Untyped.getPtr 4 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'interface'superclasses :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' -> m Bool
+has_Node'interface'superclasses :: Data.Capnp.Untyped.ReadCtx m => Node'interface'group' msg -> m Bool
 has_Node'interface'superclasses(Node'interface'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 4 struct
-newtype Node'const'group' = Node'const'group' Data.Capnp.Untyped.Struct
+newtype Node'const'group' msg = Node'const'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'const'group' where
+instance Codec.Capnp.IsStruct (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'
-instance Codec.Capnp.IsPtr Node'const'group' where
+instance Codec.Capnp.IsPtr (Node'const'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'const'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'const'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'const'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' -> m (Type )
+get_Node'const'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' msg -> m (Type msg)
 get_Node'const'type_ (Node'const'group' struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'const'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' -> m Bool
+has_Node'const'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' msg -> m Bool
 has_Node'const'type_(Node'const'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-get_Node'const'value :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' -> m (Value )
+get_Node'const'value :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' msg -> m (Value msg)
 get_Node'const'value (Node'const'group' struct) =
     Data.Capnp.Untyped.getPtr 4 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'const'value :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' -> m Bool
+has_Node'const'value :: Data.Capnp.Untyped.ReadCtx m => Node'const'group' msg -> m Bool
 has_Node'const'value(Node'const'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 4 struct
-newtype Node'annotation'group' = Node'annotation'group' Data.Capnp.Untyped.Struct
+newtype Node'annotation'group' msg = Node'annotation'group' Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Node'annotation'group' where
+instance Codec.Capnp.IsStruct (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'
-instance Codec.Capnp.IsPtr Node'annotation'group' where
+instance Codec.Capnp.IsPtr (Node'annotation'group' msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node'annotation'group') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'annotation'group' msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'annotation'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m (Type )
+get_Node'annotation'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m (Type msg)
 get_Node'annotation'type_ (Node'annotation'group' struct) =
     Data.Capnp.Untyped.getPtr 3 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Node'annotation'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'type_ :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'type_(Node'annotation'group' struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 3 struct
-get_Node'annotation'targetsFile :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsFile :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsFile (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 48 0
 
-has_Node'annotation'targetsFile :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsFile :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsFile(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsConst :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsConst :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsConst (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 49 0
 
-has_Node'annotation'targetsConst :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsConst :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsConst(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsEnum :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsEnum :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsEnum (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 50 0
 
-has_Node'annotation'targetsEnum :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsEnum :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsEnum(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsEnumerant :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsEnumerant :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsEnumerant (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 51 0
 
-has_Node'annotation'targetsEnumerant :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsEnumerant :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsEnumerant(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsStruct :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsStruct :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsStruct (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 52 0
 
-has_Node'annotation'targetsStruct :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsStruct :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsStruct(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsField :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsField :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsField (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 53 0
 
-has_Node'annotation'targetsField :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsField :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsField(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsUnion :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsUnion :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsUnion (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 54 0
 
-has_Node'annotation'targetsUnion :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsUnion :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsUnion(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsGroup :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsGroup :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsGroup (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 55 0
 
-has_Node'annotation'targetsGroup :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsGroup :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsGroup(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsInterface :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsInterface :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsInterface (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 56 0
 
-has_Node'annotation'targetsInterface :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsInterface :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsInterface(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsMethod :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsMethod :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsMethod (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 57 0
 
-has_Node'annotation'targetsMethod :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsMethod :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsMethod(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsParam :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsParam :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsParam (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 58 0
 
-has_Node'annotation'targetsParam :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsParam :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsParam(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node'annotation'targetsAnnotation :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+get_Node'annotation'targetsAnnotation :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsAnnotation (Node'annotation'group' struct) = Codec.Capnp.getWordField struct 1 59 0
 
-has_Node'annotation'targetsAnnotation :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' -> m Bool
+has_Node'annotation'targetsAnnotation :: Data.Capnp.Untyped.ReadCtx m => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsAnnotation(Node'annotation'group' struct) = pure $ 1 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
 
-instance Codec.Capnp.IsStruct Node' where
+instance Codec.Capnp.IsStruct (Node' msg) where
     fromStruct struct = do
         tag <-  Codec.Capnp.getWordField struct 1 32 0
         case tag of
@@ -1139,38 +1139,38 @@ instance Codec.Capnp.IsStruct Node' where
             0 -> pure Node'file
             _ -> pure $ Node'unknown' tag
 
-instance Codec.Capnp.IsPtr Node' where
+instance Codec.Capnp.IsPtr (Node' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Node') where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node' msg)) where
     fromPtr = Codec.Capnp.structListPtr
 
-newtype Annotation = Annotation Data.Capnp.Untyped.Struct
+newtype Annotation msg = Annotation Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Annotation where
+instance Codec.Capnp.IsStruct (Annotation msg) where
     fromStruct = pure . Annotation
-instance Codec.Capnp.IsPtr Annotation where
+instance Codec.Capnp.IsPtr (Annotation msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Annotation) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Annotation msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Annotation'id :: Data.Capnp.Untyped.ReadCtx m => Annotation -> m Word64
+get_Annotation'id :: Data.Capnp.Untyped.ReadCtx m => Annotation msg -> m Word64
 get_Annotation'id (Annotation struct) = Codec.Capnp.getWordField struct 0 0 0
 
-has_Annotation'id :: Data.Capnp.Untyped.ReadCtx m => Annotation -> m Bool
+has_Annotation'id :: Data.Capnp.Untyped.ReadCtx m => Annotation msg -> m Bool
 has_Annotation'id(Annotation struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Annotation'value :: Data.Capnp.Untyped.ReadCtx m => Annotation -> m (Value )
+get_Annotation'value :: Data.Capnp.Untyped.ReadCtx m => Annotation msg -> m (Value msg)
 get_Annotation'value (Annotation struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Annotation'value :: Data.Capnp.Untyped.ReadCtx m => Annotation -> m Bool
+has_Annotation'value :: Data.Capnp.Untyped.ReadCtx m => Annotation msg -> m Bool
 has_Annotation'value(Annotation struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-get_Annotation'brand :: Data.Capnp.Untyped.ReadCtx m => Annotation -> m (Brand )
+get_Annotation'brand :: Data.Capnp.Untyped.ReadCtx m => Annotation msg -> m (Brand msg)
 get_Annotation'brand (Annotation struct) =
     Data.Capnp.Untyped.getPtr 1 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Annotation'brand :: Data.Capnp.Untyped.ReadCtx m => Annotation -> m Bool
+has_Annotation'brand :: Data.Capnp.Untyped.ReadCtx m => Annotation msg -> m Bool
 has_Annotation'brand(Annotation struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 1 struct

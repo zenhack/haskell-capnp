@@ -17,37 +17,37 @@ import qualified Data.Capnp.Untyped
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-newtype Persistent'SaveResults = Persistent'SaveResults Data.Capnp.Untyped.Struct
+newtype Persistent'SaveResults msg = Persistent'SaveResults Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Persistent'SaveResults where
+instance Codec.Capnp.IsStruct (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults
-instance Codec.Capnp.IsPtr Persistent'SaveResults where
+instance Codec.Capnp.IsPtr (Persistent'SaveResults msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Persistent'SaveResults) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Persistent'SaveResults msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Persistent'SaveResults'sturdyRef :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveResults -> m (Maybe Data.Capnp.Untyped.Ptr)
+get_Persistent'SaveResults'sturdyRef :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveResults msg -> m (Maybe Data.Capnp.Untyped.Ptr)
 get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Persistent'SaveResults'sturdyRef :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveResults -> m Bool
+has_Persistent'SaveResults'sturdyRef :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Persistent'SaveParams = Persistent'SaveParams Data.Capnp.Untyped.Struct
+newtype Persistent'SaveParams msg = Persistent'SaveParams Data.Capnp.Untyped.Struct
 
-instance Codec.Capnp.IsStruct Persistent'SaveParams where
+instance Codec.Capnp.IsStruct (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams
-instance Codec.Capnp.IsPtr Persistent'SaveParams where
+instance Codec.Capnp.IsPtr (Persistent'SaveParams msg) where
     fromPtr = Codec.Capnp.structPtr
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Persistent'SaveParams) where
+instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Persistent'SaveParams msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveParams -> m (Maybe Data.Capnp.Untyped.Ptr)
+get_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveParams msg -> m (Maybe Data.Capnp.Untyped.Ptr)
 get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
 
 
-has_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveParams -> m Bool
+has_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct

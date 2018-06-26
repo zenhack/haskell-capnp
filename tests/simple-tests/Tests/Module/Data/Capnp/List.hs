@@ -22,7 +22,7 @@ readSchema :: IO M.Message
 readSchema =
     BS.readFile "tests/data/schema-codegenreq" >>= M.decode
 
-schemaNodes :: Untyped.ReadCtx m => M.Message -> m (Untyped.ListOf Schema.Node)
+schemaNodes :: Untyped.ReadCtx m => M.Message -> m (Untyped.ListOf (Schema.Node M.Message))
 schemaNodes msg = do
     cgr <- Schema.CodeGeneratorRequest <$> Untyped.rootPtr msg
     Schema.get_CodeGeneratorRequest'nodes cgr

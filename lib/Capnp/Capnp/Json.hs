@@ -17,6 +17,7 @@ import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
+import qualified Data.Capnp.Message
 import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
@@ -36,7 +37,7 @@ data JsonValue
     | JsonValue'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize Capnp.ById.X8ef99297a43a5e34.JsonValue JsonValue where
+instance Codec.Capnp.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue msg) JsonValue where
     decerialize raw = case raw of
 
         Capnp.ById.X8ef99297a43a5e34.JsonValue'null -> pure JsonValue'null
@@ -51,7 +52,7 @@ instance Codec.Capnp.Decerialize Capnp.ById.X8ef99297a43a5e34.JsonValue JsonValu
 instance Codec.Capnp.IsStruct JsonValue where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue Data.Capnp.Message.Message)
 
 data JsonValue'Call
     = JsonValue'Call
@@ -60,7 +61,7 @@ data JsonValue'Call
         }
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize Capnp.ById.X8ef99297a43a5e34.JsonValue'Call JsonValue'Call where
+instance Codec.Capnp.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call msg) JsonValue'Call where
     decerialize raw = JsonValue'Call
             <$> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= Codec.Capnp.decerialize)
@@ -68,7 +69,7 @@ instance Codec.Capnp.Decerialize Capnp.ById.X8ef99297a43a5e34.JsonValue'Call Jso
 instance Codec.Capnp.IsStruct JsonValue'Call where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call Data.Capnp.Message.Message)
 
 data JsonValue'Field
     = JsonValue'Field
@@ -77,7 +78,7 @@ data JsonValue'Field
         }
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize Capnp.ById.X8ef99297a43a5e34.JsonValue'Field JsonValue'Field where
+instance Codec.Capnp.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field msg) JsonValue'Field where
     decerialize raw = JsonValue'Field
             <$> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= Codec.Capnp.decerialize)
             <*> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= Codec.Capnp.decerialize)
@@ -85,5 +86,5 @@ instance Codec.Capnp.Decerialize Capnp.ById.X8ef99297a43a5e34.JsonValue'Field Js
 instance Codec.Capnp.IsStruct JsonValue'Field where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field Data.Capnp.Message.Message)
 

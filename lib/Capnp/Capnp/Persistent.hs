@@ -17,6 +17,7 @@ import Data.Capnp.BuiltinTypes.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
+import qualified Data.Capnp.Message
 import qualified Data.Capnp.Untyped.Pure
 import qualified Data.Capnp.Untyped
 import qualified Codec.Capnp
@@ -31,14 +32,14 @@ data Persistent'SaveResults
         }
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize Capnp.ById.Xb8630836983feed7.Persistent'SaveResults Persistent'SaveResults where
+instance Codec.Capnp.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults msg) Persistent'SaveResults where
     decerialize raw = Persistent'SaveResults
             <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= Codec.Capnp.decerialize)
 
 instance Codec.Capnp.IsStruct Persistent'SaveResults where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults Data.Capnp.Message.Message)
 
 data Persistent'SaveParams
     = Persistent'SaveParams
@@ -46,12 +47,12 @@ data Persistent'SaveParams
         }
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize Capnp.ById.Xb8630836983feed7.Persistent'SaveParams Persistent'SaveParams where
+instance Codec.Capnp.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams msg) Persistent'SaveParams where
     decerialize raw = Persistent'SaveParams
             <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= Codec.Capnp.decerialize)
 
 instance Codec.Capnp.IsStruct Persistent'SaveParams where
     fromStruct struct = do
         raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams)
+        Codec.Capnp.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams Data.Capnp.Message.Message)
 

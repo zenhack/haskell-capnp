@@ -77,6 +77,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import Control.Monad.Catch (MonadThrow)"
     , "import Data.Capnp.TraversalLimit (MonadLimit)"
     , ""
+    , "import qualified Data.Capnp.Message"
     , "import qualified Data.Capnp.Untyped.Pure"
     , "import qualified Data.Capnp.Untyped"
     , "import qualified Codec.Capnp"
@@ -156,7 +157,15 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "\n    deriving(Show, Read, Eq)"
         , "\n\n"
         , "instance Codec.Capnp.Decerialize "
-        , rawName
+        , case dataCerialType of
+            CTyStruct -> "(" <> rawName <> " msg)"
+            CTyWord 16 -> rawName
+            CTyWord _ ->
+                -- TODO: we aren't currently using any size other than 16,
+                -- and I(zenhack) am not sure there are actually any use cases
+                -- for such. Maybe we should get rid of the size parameter, and
+                -- just mark it as an enum.
+                error "Unexpected dataCerialType"
         , " "
         , pureName
         , " where\n"
@@ -176,7 +185,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
                 , pureName, " where\n"
                 , "    fromStruct struct = do\n"
                 , "        raw <- Codec.Capnp.fromStruct struct\n"
-                , "        Codec.Capnp.decerialize (raw :: ", rawName, ")\n"
+                , "        Codec.Capnp.decerialize (raw :: ", rawName, " Data.Capnp.Message.Message)\n"
                 , "\n"
                 ]
             _ ->
