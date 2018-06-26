@@ -65,4 +65,3 @@ instance ListElem Bool where
     length (ListBool l) = GU.length l
     index i (ListBool l) = id <$> GU.index i l
     setIndex elt i (ListBool l) = GU.setIndex (id elt) i l
-

@@ -74,4 +74,5 @@ instances =
         }
     ]
 
-main = putStrLn $ header ++ concatMap genInstance instances
+main = writeFile "lib/Data/Capnp/BuiltinTypes/Lists.hs" $
+    header ++ concatMap genInstance instances
