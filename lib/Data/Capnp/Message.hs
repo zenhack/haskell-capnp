@@ -29,9 +29,9 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
-import Data.Capnp.Internal.Util  (checkIndex)
 import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Word                 (Word32, Word64)
+import Internal.Util             (checkIndex)
 import System.Endian             (fromLE64)
 
 import qualified Data.ByteString.Builder    as BB

@@ -7,4 +7,4 @@
 cd "$(dirname $0)/.."
 exec hlint $(find lib exe tests -name '*.hs' \
 		| grep -v lib/Capnp/ \
-		| grep -v lib/Data/Capnp/BuiltinTypes/Lists.hs)
+		| grep -v lib/Internal/Gen)

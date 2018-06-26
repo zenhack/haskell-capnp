@@ -1,9 +1,9 @@
 {-|
-Module: Data.Capnp.Internal.Util
+Module: Internal.Util
 Description: Misc. helpers.
 
 -}
-module Data.Capnp.Internal.Util where
+module Internal.Util where
 
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(..))

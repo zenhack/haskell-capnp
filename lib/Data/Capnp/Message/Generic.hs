@@ -19,12 +19,12 @@ import Prelude hiding (read)
 
 import Data.Word
 
-import Control.Monad.Catch      (MonadThrow)
-import Control.Monad.Primitive  (PrimMonad)
-import Data.ByteString          (ByteString)
-import Data.Capnp.Address       (WordAddr(..))
-import Data.Capnp.Bits          (WordCount(..))
-import Data.Capnp.Internal.Util (checkIndex)
+import Control.Monad.Catch     (MonadThrow)
+import Control.Monad.Primitive (PrimMonad)
+import Data.ByteString         (ByteString)
+import Data.Capnp.Address      (WordAddr(..))
+import Data.Capnp.Bits         (WordCount(..))
+import Internal.Util           (checkIndex)
 
 -- | A 'Message' is a (possibly read-only) capnproto message. It is
 -- parameterized over a monad in which operations are performed.

@@ -56,7 +56,6 @@ library
       -- , Data.Capnp.Builder
       , Data.Capnp.BuiltinTypes
       , Data.Capnp.BuiltinTypes.Generic
-      , Data.Capnp.BuiltinTypes.Lists
       , Data.Capnp.BuiltinTypes.Mutable
       , Data.Capnp.BuiltinTypes.Pure
       , Data.Capnp.Bits
@@ -72,7 +71,7 @@ library
       , Data.Capnp.Untyped.Generic
       , Data.Capnp.Untyped.Pure
       , Data.Capnp.TraversalLimit
-      -- BEGIN GENERATED MODULES
+      -- BEGIN GENERATED SCHEMA MODULES
       , Capnp.Capnp.Cxx
       , Capnp.Capnp.Json
       , Capnp.Capnp.Persistent
@@ -91,9 +90,10 @@ library
       , Capnp.ById.Xb312981b2552a250
       , Capnp.ById.Xa184c7885cdaf2a1
       , Capnp.ById.Xa93fc509624c72d9
-      -- END GENERATED MODULES
+      -- END GENERATED SCHEMA MODULES
     other-modules:
-      Data.Capnp.Internal.Util
+        Internal.Util
+      , Internal.Gen.ListElem
     -- other-extensions:
     build-depends:
         base                              >= 4.8  && < 5.0
