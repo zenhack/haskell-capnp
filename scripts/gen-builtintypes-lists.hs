@@ -1,8 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
--- Script that generates Data.Capnp.BuiltinTypes.Lists.
---
--- That module is mostly a bunch of tedious instances, though we also
--- generate the ListElem class here; see 'header', below.
+-- | Script that generates 'Data.Capnp.BuiltinTypes.Lists', which is mostly a
+-- bunch of tedious 'ListElem' instances.
 module Main where
 
 header = unlines
