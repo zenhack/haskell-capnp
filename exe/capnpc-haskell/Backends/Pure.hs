@@ -98,6 +98,7 @@ fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod (Type name params) =
     fmtName Pure thisMod name
     <> mconcat [" (" <> fmtType thisMod ty <> ")" | ty <- params]
+fmtType thisMod (EnumType name)  = fmtName Pure thisMod name
 fmtType thisMod (ListOf eltType) = "List (" <> fmtType thisMod eltType <> ")"
 fmtType thisMod (PrimType prim)  = fmtPrimType prim
 fmtType thisMod (Untyped ty)     = "Maybe (" <> fmtUntyped ty <> ")"

@@ -122,6 +122,7 @@ instance IsString Name where
 
 data Type
     = Type Name [Type]
+    | EnumType Name
     | ListOf Type
     | PrimType PrimType
     | Untyped Untyped

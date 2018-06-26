@@ -505,7 +505,7 @@ formatType thisModule nodeMap ty = case ty of
     Type'text       -> IR.PrimType IR.PrimText
     Type'data_      -> IR.PrimType IR.PrimData
     Type'list elt   -> IR.ListOf (formatType thisModule nodeMap elt)
-    Type'enum{..} -> namedType typeId brand
+    Type'enum{..}   -> IR.EnumType (identifierFromMetaData thisModule (nodeMap M.! typeId))
     Type'struct{..} -> namedType typeId brand
     Type'interface{..} -> namedType typeId brand
     Type'anyPointer anyPtr -> IR.Untyped $
