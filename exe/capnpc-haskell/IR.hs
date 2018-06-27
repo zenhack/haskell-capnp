@@ -181,13 +181,15 @@ data DataDef = DataDef
     }
     deriving(Show, Read, Eq)
 
--- | What kind of untyped wire format a type is stored as.
+-- | What kind of value is this; struct, enum, or...?
+--
+-- Unlike 'Type', this only encodes types of values that we may be asked to
+-- define, and encodes less detail (no type parameters, name etc).
 data CerialType
     -- | Stored as a struct
     = CTyStruct
-    -- | Stored in the data section (i.e. an integer-like type). The argument
-    -- is the size of the data type, in bits.
-    | CTyWord !Int
+    -- | Stored in the data section (i.e. an integer-like type).
+    | CTyEnum
     deriving(Show, Read, Eq)
 
 -- | The location of a field within a struct

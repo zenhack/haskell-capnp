@@ -287,7 +287,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                                 }
                            ]
                     , dataTagLoc = Nothing
-                    , dataCerialType = IR.CTyWord 16
+                    , dataCerialType = IR.CTyEnum
                     }
               )
             ]

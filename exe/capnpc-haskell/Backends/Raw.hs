@@ -189,8 +189,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         in fmtNewtypeStruct thisMod typeName <>
             mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
     fmtVariantAuxNewtype _ = ""
--- Assume this is an enum, for now:
-fmtDataDef thisMod dataName DataDef{dataCerialType=CTyWord 16,..} =
+fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
     let typeName = fmtName thisMod dataName
     in mconcat
         [ "data ", typeName

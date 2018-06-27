@@ -159,13 +159,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "instance Codec.Capnp.Decerialize "
         , case dataCerialType of
             CTyStruct -> "(" <> rawName <> " msg)"
-            CTyWord 16 -> rawName
-            CTyWord _ ->
-                -- TODO: we aren't currently using any size other than 16,
-                -- and I(zenhack) am not sure there are actually any use cases
-                -- for such. Maybe we should get rid of the size parameter, and
-                -- just mark it as an enum.
-                error "Unexpected dataCerialType"
+            CTyEnum   -> rawName
         , " "
         , pureName
         , " where\n"
