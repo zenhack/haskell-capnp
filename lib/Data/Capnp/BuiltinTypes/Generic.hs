@@ -34,7 +34,6 @@ import Internal.Gen.ListElem ()
 
 import qualified Data.ByteString            as BS
 import qualified Data.Capnp.Errors          as E
-import qualified Data.Capnp.Message.Generic as GM
 import qualified Data.Capnp.Untyped.Generic as GU
 
 
@@ -56,14 +55,14 @@ newtype Text msg = Text (GU.ListOf msg Word8)
 newtype Data msg = Data (GU.ListOf msg Word8)
 
 -- | Interpret a list of Word8 as a capnproto 'Data' value.
-getData :: (GM.Message m msg, GU.ReadCtx m) => GU.ListOf msg Word8 -> m (Data msg)
+getData :: GU.ReadCtx m msg => GU.ListOf msg Word8 -> m (Data msg)
 getData = pure . Data
 
 -- | Interpret a list of Word8 as a capnproto 'Text' value.
 --
 -- This vaildates that the list is NUL-terminated, but not that it is valid
 -- UTF-8. If it is not NUL-terminaed, a 'SchemaViolationError' is thrown.
-getText :: (GM.Message m msg, GU.ReadCtx m) => GU.ListOf msg Word8 -> m (Text msg)
+getText :: GU.ReadCtx m msg => GU.ListOf msg Word8 -> m (Text msg)
 getText list = do
     let len = GU.length list
     when (len == 0) $ throwM $ E.SchemaViolationError
@@ -74,10 +73,10 @@ getText list = do
     Text <$> GU.take (len - 1) list
 
 -- | Convert a 'Data' to a 'BS.ByteString.
-dataBytes :: (GM.Message m msg, GU.ReadCtx m) => Data msg -> m BS.ByteString
+dataBytes :: GU.ReadCtx m msg => Data msg -> m BS.ByteString
 dataBytes (Data list) = GU.rawBytes list
 
 -- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
 -- (not counting the NUL terminator).
-textBytes :: (GM.Message m msg, GU.ReadCtx m) => Text msg -> m BS.ByteString
+textBytes :: GU.ReadCtx m msg => Text msg -> m BS.ByteString
 textBytes (Text list) = GU.rawBytes list

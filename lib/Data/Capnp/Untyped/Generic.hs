@@ -1,5 +1,6 @@
 {-# LANGUAGE ApplicativeDo         #-}
 {-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -50,7 +51,7 @@ import qualified Data.Capnp.Pointer         as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m = (MonadThrow m, MonadLimit m)
+type ReadCtx m msg = (GM.Message m msg, MonadThrow m, MonadLimit m)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
@@ -255,7 +256,7 @@ instance MessageDefault (NormalList msg) msg where
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
-get :: (GM.Message m msg, ReadCtx m) => msg -> WordAddr -> m (Maybe (Ptr msg))
+get :: ReadCtx m msg => msg -> WordAddr -> m (Maybe (Ptr msg))
 get msg addr = do
     word <- getWord msg addr
     case P.parsePtr word of
@@ -365,7 +366,7 @@ ptrAddr (PtrCap _ _) = error "ptrAddr called on a capability pointer."
 ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
-setIndex :: (ReadCtx m, MM.WriteCtx m s) => a -> Int -> ListOf (MM.Message s) a -> m ()
+setIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s) => a -> Int -> ListOf (MM.Message s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -383,13 +384,13 @@ setIndex value i list = case list of
         Just p@(PtrStruct (Struct _ addr dataSz ptrSz)) ->
             setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
   where
-    setNIndex :: (ReadCtx m, MM.WriteCtx m s, Bounded a, Integral a) => NormalList (MM.Message s) -> Int -> a -> m ()
+    setNIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s, Bounded a, Integral a) => NormalList (MM.Message s) -> Int -> a -> m ()
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
         let wordAddr = nAddr { wordIndex = wordIndex + WordCount (i `div` eltsPerWord) }
         word <- GM.getWord nMsg wordAddr
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         GM.setWord nMsg wordAddr $ replaceBits value word shift
-    setPtrIndex :: (ReadCtx m, MM.WriteCtx m s) => NormalList (MM.Message s) -> Ptr (MM.Message s) -> P.Ptr -> m ()
+    setPtrIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s) => NormalList (MM.Message s) -> Ptr (MM.Message s) -> P.Ptr -> m ()
     setPtrIndex nlist@NormalList{..} absPtr relPtr =
         let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
         in case pointerFrom srcAddr (ptrAddr absPtr) relPtr of
@@ -400,10 +401,10 @@ setIndex value i list = case list of
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
-index :: (GM.Message m msg, ReadCtx m) => Int -> ListOf msg a -> m a
+index :: ReadCtx m msg => Int -> ListOf msg a -> m a
 index i list = invoice 1 >> index' list
   where
-    index' :: (GM.Message m msg, ReadCtx m) => ListOf msg a -> m a
+    index' :: ReadCtx m msg => ListOf msg a -> m a
     index' (ListOfVoid _ len)
         | i < len = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
@@ -425,7 +426,7 @@ index i list = invoice 1 >> index' list
     index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    indexNList :: (GM.Message m msg, ReadCtx m, Integral a) => NormalList msg -> Int -> m a
+    indexNList :: (ReadCtx m msg, Integral a) => NormalList msg -> Int -> m a
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
@@ -479,21 +480,21 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
 
 -- | @'getData' i struct@ gets the @i@th word from the struct's data section,
 -- returning 0 if it is absent.
-getData :: (GM.Message m msg, ReadCtx m) => Int -> Struct msg -> m Word64
+getData :: ReadCtx m msg => Int -> Struct msg -> m Word64
 getData i struct
     | length (dataSection struct) <= i = 0 <$ invoice 1
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
-getPtr :: (GM.Message m msg, ReadCtx m) => Int -> Struct msg -> m (Maybe (Ptr msg))
+getPtr :: ReadCtx m msg => Int -> Struct msg -> m (Maybe (Ptr msg))
 getPtr i struct
     | length (ptrSection struct) <= i = Nothing <$ invoice 1
     | otherwise = index i (ptrSection struct)
 
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
-rawBytes :: (GM.Message m msg, ReadCtx m) => ListOf msg Word8 -> m BS.ByteString
+rawBytes :: ReadCtx m msg => ListOf msg Word8 -> m BS.ByteString
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     invoice len
     bytes <- GM.getSegment msg segIndex >>= GM.toByteString
@@ -502,7 +503,7 @@ rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
 
 
 -- | Returns the root pointer of a message.
-rootPtr :: (GM.Message m msg, ReadCtx m) => msg -> m (Struct msg)
+rootPtr :: ReadCtx m msg => msg -> m (Struct msg)
 rootPtr msg = do
     root <- get msg (WordAt 0 0)
     case root of

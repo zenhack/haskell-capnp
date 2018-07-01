@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -19,7 +20,6 @@ import Data.ReinterpretCast
 
 import qualified Data.Capnp.BuiltinTypes    as BuiltinTypes
 import qualified Data.Capnp.Message         as M
-import qualified Data.Capnp.Message.Generic as GM
 import qualified Data.Capnp.Message.Mutable as MM
 import qualified Data.Capnp.Untyped         as U
 import qualified Data.Capnp.Untyped.Generic as GU
@@ -27,10 +27,10 @@ import qualified Data.Capnp.Untyped.Generic as GU
 class ListElem msg e where
     data List msg e
     length :: List msg e -> Int
-    index :: (GM.Message m msg, GU.ReadCtx m) => Int -> List msg e -> m e
+    index :: GU.ReadCtx m msg => Int -> List msg e -> m e
 
 class MutListElem s e where
-    setIndex :: (GU.ReadCtx m, MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
+    setIndex :: (GU.ReadCtx m (MM.Message s), MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
 
 class Decerialize from to where
     decerialize :: ReadCtx m => from -> m to
