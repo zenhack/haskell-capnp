@@ -362,6 +362,12 @@ instance Codec.Capnp.IsWord Exception'Type where
     toWord Exception'Type'overloaded = 1
     toWord Exception'Type'failed = 0
     toWord (Exception'Type'unknown' tag) = fromIntegral tag
+instance Data.Capnp.BuiltinTypes.Generic.ListElem msg Exception'Type where
+    newtype List msg Exception'Type = List_Exception'Type (Data.Capnp.Untyped.ListOf Word16)
+    length (List_Exception'Type l) = Data.Capnp.Untyped.length l
+    index i (List_Exception'Type l) = (Codec.Capnp.fromWord . fromIntegral) <$> Data.Capnp.Untyped.index i l
+instance Data.Capnp.BuiltinTypes.Generic.MutListElem s Exception'Type where
+    setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Exception'Type) where
     fromPtr msg ptr = fmap
        (fmap (toEnum . (fromIntegral :: Word16 -> Int)))

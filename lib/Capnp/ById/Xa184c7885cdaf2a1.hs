@@ -101,6 +101,12 @@ instance Codec.Capnp.IsWord Side where
     toWord Side'client = 1
     toWord Side'server = 0
     toWord (Side'unknown' tag) = fromIntegral tag
+instance Data.Capnp.BuiltinTypes.Generic.ListElem msg Side where
+    newtype List msg Side = List_Side (Data.Capnp.Untyped.ListOf Word16)
+    length (List_Side l) = Data.Capnp.Untyped.length l
+    index i (List_Side l) = (Codec.Capnp.fromWord . fromIntegral) <$> Data.Capnp.Untyped.index i l
+instance Data.Capnp.BuiltinTypes.Generic.MutListElem s Side where
+    setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf Side) where
     fromPtr msg ptr = fmap
        (fmap (toEnum . (fromIntegral :: Word16 -> Int)))

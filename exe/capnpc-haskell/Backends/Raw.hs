@@ -223,6 +223,14 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , mintercalate "\n    toWord " $
             map fmtEnumToWordCase   $ reverse $ sortOn variantTag dataVariants
         , "\n"
+        , "instance Data.Capnp.BuiltinTypes.Generic.ListElem msg ", typeName, " where"
+        , "\n    newtype List msg ", typeName, " = List_", typeName, " (Data.Capnp.Untyped.ListOf Word16)"
+        , "\n    length (List_", typeName, " l) = Data.Capnp.Untyped.length l"
+        , "\n    index i (List_", typeName, " l) = (Codec.Capnp.fromWord . fromIntegral) <$> Data.Capnp.Untyped.index i l"
+        , "\n"
+        , "instance Data.Capnp.BuiltinTypes.Generic.MutListElem s ", typeName, " where"
+        , "\n    setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\""
+        , "\n"
         , "instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf ", typeName, ") where"
         , "\n    fromPtr msg ptr = fmap"
         , "\n       (fmap (toEnum . (fromIntegral :: Word16 -> Int)))"

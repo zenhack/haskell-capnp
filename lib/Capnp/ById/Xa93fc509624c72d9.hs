@@ -932,6 +932,12 @@ instance Codec.Capnp.IsWord ElementSize where
     toWord ElementSize'bit = 1
     toWord ElementSize'empty = 0
     toWord (ElementSize'unknown' tag) = fromIntegral tag
+instance Data.Capnp.BuiltinTypes.Generic.ListElem msg ElementSize where
+    newtype List msg ElementSize = List_ElementSize (Data.Capnp.Untyped.ListOf Word16)
+    length (List_ElementSize l) = Data.Capnp.Untyped.length l
+    index i (List_ElementSize l) = (Codec.Capnp.fromWord . fromIntegral) <$> Data.Capnp.Untyped.index i l
+instance Data.Capnp.BuiltinTypes.Generic.MutListElem s ElementSize where
+    setIndex elt i (List_ElementSize l) = error "TODO: generate code for setIndex"
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf ElementSize) where
     fromPtr msg ptr = fmap
        (fmap (toEnum . (fromIntegral :: Word16 -> Int)))
