@@ -17,6 +17,7 @@ module Data.Capnp.BuiltinTypes.Generic
     ( Text(..)
     , Data(..)
     , ListElem(..)
+    , MutListElem(..)
     , getData
     , getText
     , dataBytes
@@ -28,7 +29,7 @@ import Data.Word
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(throwM))
 
-import Codec.Capnp           (ListElem(..))
+import Codec.Capnp           (ListElem(..), MutListElem(..))
 import Internal.Gen.ListElem ()
 
 import qualified Data.ByteString            as BS
