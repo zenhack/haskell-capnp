@@ -1,4 +1,4 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
-module Capnp.ById.Xbdf87d7bb8304e81.Pure(module Capnp.Capnp.Cxx) where
+module Capnp.ById.Xbdf87d7bb8304e81.Pure(module Capnp.Capnp.Cxx.Pure) where
 
-import Capnp.Capnp.Cxx
+import Capnp.Capnp.Cxx.Pure

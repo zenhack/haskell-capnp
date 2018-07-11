@@ -56,7 +56,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     ]
  where
   humanMod = fmtModRef Pure $ FullyQualified $ Namespace humanParts
-  humanParts = "Capnp":modNameParts
+  humanParts = "Capnp":modNameParts ++ ["Pure"]
   mainContent = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"

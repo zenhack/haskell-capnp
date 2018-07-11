@@ -7,7 +7,7 @@ module Tests.Module.Capnp.Capnp.Schema (schemaTests) where
 import Codec.Capnp               (IsStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
-import Capnp.Capnp.Schema
+import Capnp.Capnp.Schema.Pure
 import Tests.Util
 
 import Control.Monad    (when)
