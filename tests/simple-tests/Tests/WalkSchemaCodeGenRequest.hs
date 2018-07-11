@@ -12,7 +12,7 @@ import Data.Capnp.Untyped
 import Tests.Util
 
 import Control.Monad             (mapM_, when)
-import Data.Capnp.BuiltinTypes   (Text(..))
+import Data.Capnp.Basics         (Text(..))
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)

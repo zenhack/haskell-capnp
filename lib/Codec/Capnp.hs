@@ -10,15 +10,15 @@ import Data.Bits
 import Data.Int
 import Data.Word
 
-import Control.Monad.Catch     (MonadThrow(throwM))
-import Data.Capnp.BuiltinTypes (Data, Text)
-import Data.Capnp.Errors       (Error(SchemaViolationError))
+import Control.Monad.Catch  (MonadThrow(throwM))
+import Data.Capnp.Basics    (Data, Text)
+import Data.Capnp.Errors    (Error(SchemaViolationError))
 import Data.Capnp.Untyped
     (ListOf, Ptr(..), ReadCtx, Struct, extractElts, getData, messageDefault)
 import Data.ReinterpretCast
     (doubleToWord, floatToWord, wordToDouble, wordToFloat)
 
-import qualified Data.Capnp.BuiltinTypes    as BuiltinTypes
+import qualified Data.Capnp.Basics          as Basics
 import qualified Data.Capnp.Message         as M
 import qualified Data.Capnp.Message.Mutable as MM
 import qualified Data.Capnp.Untyped         as U
@@ -185,17 +185,17 @@ instance IsPtr (ListOf Int64) where
 
 -- IsPtr instances for Text and Data. These wrap lists of bytes.
 instance IsPtr Data where
-    fromPtr msg ptr = fromPtr msg ptr >>= BuiltinTypes.getData
+    fromPtr msg ptr = fromPtr msg ptr >>= Basics.getData
 instance IsPtr Text where
     fromPtr msg ptr = case ptr of
         Just _ ->
-            fromPtr msg ptr >>= BuiltinTypes.getText
+            fromPtr msg ptr >>= Basics.getText
         Nothing -> do
             -- getText expects and strips off a NUL byte at the end of the
             -- string. In the case of a null pointer we just want to return
             -- the empty string, so we bypass it here.
-            BuiltinTypes.Data bytes <- fromPtr msg ptr
-            pure $ BuiltinTypes.Text bytes
+            Basics.Data bytes <- fromPtr msg ptr
+            pure $ Basics.Text bytes
 
 nestedListPtr :: (ReadCtx m, IsPtr a) => M.Message -> Maybe Ptr -> m (ListOf a)
 nestedListPtr msg ptr = extractElts (fromPtr msg) <$> fromPtr msg ptr

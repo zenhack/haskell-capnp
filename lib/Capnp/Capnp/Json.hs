@@ -12,8 +12,8 @@ import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp
-import qualified Data.Capnp.BuiltinTypes
-import qualified Data.Capnp.BuiltinTypes.Generic
+import qualified Data.Capnp.Basics
+import qualified Data.Capnp.Basics.Generic
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
 import qualified Data.Capnp.Message.Mutable
@@ -24,7 +24,7 @@ data JsonValue msg
     = JsonValue'null
     | JsonValue'boolean Bool
     | JsonValue'number Double
-    | JsonValue'string Data.Capnp.BuiltinTypes.Text
+    | JsonValue'string Data.Capnp.Basics.Text
     | JsonValue'array (Data.Capnp.Untyped.ListOf (JsonValue msg))
     | JsonValue'object (Data.Capnp.Untyped.ListOf (JsonValue'Field msg))
     | JsonValue'call (JsonValue'Call msg)
@@ -61,16 +61,16 @@ instance Codec.Capnp.IsStruct (JsonValue'Call msg) where
     fromStruct = pure . JsonValue'Call
 instance Codec.Capnp.IsPtr (JsonValue'Call msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (JsonValue'Call msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_JsonValue'Call l) = Data.Capnp.Untyped.length l
     index i (List_JsonValue'Call l) = JsonValue'Call <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (JsonValue'Call (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (JsonValue'Call (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (JsonValue'Call msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call msg -> m Data.Capnp.BuiltinTypes.Text
+get_JsonValue'Call'function :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Call msg -> m Data.Capnp.Basics.Text
 get_JsonValue'Call'function (JsonValue'Call struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -92,16 +92,16 @@ instance Codec.Capnp.IsStruct (JsonValue'Field msg) where
     fromStruct = pure . JsonValue'Field
 instance Codec.Capnp.IsPtr (JsonValue'Field msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (JsonValue'Field msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_JsonValue'Field l) = Data.Capnp.Untyped.length l
     index i (List_JsonValue'Field l) = JsonValue'Field <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (JsonValue'Field (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (JsonValue'Field (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (JsonValue'Field msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field msg -> m Data.Capnp.BuiltinTypes.Text
+get_JsonValue'Field'name :: Data.Capnp.Untyped.ReadCtx m => JsonValue'Field msg -> m Data.Capnp.Basics.Text
 get_JsonValue'Field'name (JsonValue'Field struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)

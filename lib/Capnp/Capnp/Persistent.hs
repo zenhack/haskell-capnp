@@ -12,8 +12,8 @@ import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp
-import qualified Data.Capnp.BuiltinTypes
-import qualified Data.Capnp.BuiltinTypes.Generic
+import qualified Data.Capnp.Basics
+import qualified Data.Capnp.Basics.Generic
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
 import qualified Data.Capnp.Message.Mutable
@@ -26,11 +26,11 @@ instance Codec.Capnp.IsStruct (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults
 instance Codec.Capnp.IsPtr (Persistent'SaveResults msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Persistent'SaveResults msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Persistent'SaveResults l) = Data.Capnp.Untyped.length l
     index i (List_Persistent'SaveResults l) = Persistent'SaveResults <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Persistent'SaveResults (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Persistent'SaveResults (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Persistent'SaveResults msg)) where
@@ -49,11 +49,11 @@ instance Codec.Capnp.IsStruct (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams
 instance Codec.Capnp.IsPtr (Persistent'SaveParams msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Persistent'SaveParams msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Persistent'SaveParams l) = Data.Capnp.Untyped.length l
     index i (List_Persistent'SaveParams l) = Persistent'SaveParams <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Persistent'SaveParams (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Persistent'SaveParams (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Persistent'SaveParams msg)) where

@@ -12,8 +12,8 @@ import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp
-import qualified Data.Capnp.BuiltinTypes
-import qualified Data.Capnp.BuiltinTypes.Generic
+import qualified Data.Capnp.Basics
+import qualified Data.Capnp.Basics.Generic
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
 import qualified Data.Capnp.Message.Mutable

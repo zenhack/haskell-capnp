@@ -1,12 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-| Module: Data.Capnp.BuiltinTypes
-    Description: Handling of "built-in" capnp datatypes.
+{-| Module: Data.Capnp.Basics
+    Description: Handling of "basic" capnp data types.
 
-    In particular, things that are primitive types in the schema language,
-    but not on the wire (chiefly Data and Text, which are both just lists of
-    bytes).
+    Basic data types are are primitive types in the schema language -- Int32,
+    Float, Text, etc.
 -}
-module Data.Capnp.BuiltinTypes
+module Data.Capnp.Basics
     ( Text(..)
     , Data(..)
     , getData

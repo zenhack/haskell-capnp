@@ -2,8 +2,8 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
-{-| Module: Data.Capnp.BuiltinTypes.Generic
-    Description: Handling of "built-in" capnp datatypes.
+{-| Module: Data.Capnp.Basics.Generic
+    Description: Handling of "basic" capnp datatypes.
 
     In particular
 
@@ -11,9 +11,9 @@
       but are both the same as List(uint8) on the wire).
     * List of types other than those in 'Data.Capnp.Untyped.Generic'.
       Whereas 'GU.ListOf' only deals with low-level encodings of lists,
-      this modules 'List' type can represent typed lists.
+      this module's 'List' type can represent typed lists.
 -}
-module Data.Capnp.BuiltinTypes.Generic
+module Data.Capnp.Basics.Generic
     ( Text(..)
     , Data(..)
     , ListElem(..)

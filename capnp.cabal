@@ -54,10 +54,10 @@ library
         Codec.Capnp
       , Data.Capnp.Address
       -- , Data.Capnp.Builder
-      , Data.Capnp.BuiltinTypes
-      , Data.Capnp.BuiltinTypes.Generic
-      , Data.Capnp.BuiltinTypes.Mutable
-      , Data.Capnp.BuiltinTypes.Pure
+      , Data.Capnp.Basics
+      , Data.Capnp.Basics.Generic
+      , Data.Capnp.Basics.Mutable
+      , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Blob
       , Data.Capnp.Errors

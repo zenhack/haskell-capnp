@@ -2,7 +2,7 @@
 Module: Data.Capnp.BuitlinTypes.Mutable
 Description: built-in types backed by mutable messages.
 -}
-module Data.Capnp.BuiltinTypes.Mutable
+module Data.Capnp.Basics.Mutable
     ( Text(..)
     , Data(..)
     , List(..)
@@ -14,8 +14,8 @@ module Data.Capnp.BuiltinTypes.Mutable
     , GB.textBytes
     ) where
 
-import qualified Data.Capnp.BuiltinTypes.Generic as GB
-import qualified Data.Capnp.Message.Mutable      as MM
+import qualified Data.Capnp.Basics.Generic  as GB
+import qualified Data.Capnp.Message.Mutable as MM
 
 type Text s = GB.Text (MM.Message s)
 type Data s = GB.Data (MM.Message s)

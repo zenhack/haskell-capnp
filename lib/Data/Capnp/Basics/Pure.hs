@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
-module Data.Capnp.BuiltinTypes.Pure
+module Data.Capnp.Basics.Pure
     ( Data(..)
     , Text(..)
 
@@ -19,20 +19,20 @@ import Data.Capnp.Untyped.Pure (List)
 import Data.Text.Encoding      (decodeUtf8')
 import Data.Word               (Word8)
 
-import qualified Data.ByteString         as BS
-import qualified Data.Capnp.Blob         as B
-import qualified Data.Capnp.BuiltinTypes as BuiltinTypes
-import qualified Data.Text               as T
-import qualified Data.Vector             as V
+import qualified Data.ByteString   as BS
+import qualified Data.Capnp.Basics as Basics
+import qualified Data.Capnp.Blob   as B
+import qualified Data.Text         as T
+import qualified Data.Vector       as V
 
 type Data = BS.ByteString
 type Text = T.Text
 
-instance Decerialize BuiltinTypes.Data Data where
-    decerialize (BuiltinTypes.Data bytes) = pure bytes
+instance Decerialize Basics.Data Data where
+    decerialize (Basics.Data bytes) = pure bytes
 
-instance Decerialize BuiltinTypes.Text Text where
-    decerialize (BuiltinTypes.Text bytes) =
+instance Decerialize Basics.Text Text where
+    decerialize (Basics.Text bytes) =
             case decodeUtf8' bytes of
                 Left e    -> throwM $ InvalidUtf8Error e
                 Right txt -> pure txt
@@ -51,4 +51,4 @@ instance Decerialize (List Word8) Text where
                 lastByte <- B.index bytes (len - 1)
                 when (lastByte /= 0) $ throwM $ SchemaViolationError $
                     "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
-                decerialize =<< (BuiltinTypes.Text <$> B.slice bytes 0 (len - 1))
+                decerialize =<< (Basics.Text <$> B.slice bytes 0 (len - 1))

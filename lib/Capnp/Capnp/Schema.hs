@@ -12,8 +12,8 @@ import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp
-import qualified Data.Capnp.BuiltinTypes
-import qualified Data.Capnp.BuiltinTypes.Generic
+import qualified Data.Capnp.Basics
+import qualified Data.Capnp.Basics.Generic
 import qualified Data.Capnp.TraversalLimit
 import qualified Data.Capnp.Untyped
 import qualified Data.Capnp.Message.Mutable
@@ -52,11 +52,11 @@ instance Codec.Capnp.IsStruct (Brand msg) where
     fromStruct = pure . Brand
 instance Codec.Capnp.IsPtr (Brand msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Brand msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Brand msg) where
     newtype List msg (Brand msg) = List_Brand (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Brand l) = Data.Capnp.Untyped.length l
     index i (List_Brand l) = Brand <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Brand (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Brand (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Brand elt) i (List_Brand l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Brand msg)) where
@@ -75,16 +75,16 @@ instance Codec.Capnp.IsStruct (Method msg) where
     fromStruct = pure . Method
 instance Codec.Capnp.IsPtr (Method msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Method msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Method msg) where
     newtype List msg (Method msg) = List_Method (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Method l) = Data.Capnp.Untyped.length l
     index i (List_Method l) = Method <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Method (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Method (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Method elt) i (List_Method l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Method msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Method'name :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Data.Capnp.BuiltinTypes.Text
+get_Method'name :: Data.Capnp.Untyped.ReadCtx m => Method msg -> m Data.Capnp.Basics.Text
 get_Method'name (Method struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -145,16 +145,16 @@ instance Codec.Capnp.IsStruct (Enumerant msg) where
     fromStruct = pure . Enumerant
 instance Codec.Capnp.IsPtr (Enumerant msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Enumerant msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Enumerant msg) where
     newtype List msg (Enumerant msg) = List_Enumerant (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Enumerant l) = Data.Capnp.Untyped.length l
     index i (List_Enumerant l) = Enumerant <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Enumerant (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Enumerant (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Enumerant elt) i (List_Enumerant l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Enumerant msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Data.Capnp.BuiltinTypes.Text
+get_Enumerant'name :: Data.Capnp.Untyped.ReadCtx m => Enumerant msg -> m Data.Capnp.Basics.Text
 get_Enumerant'name (Enumerant struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -184,16 +184,16 @@ instance Codec.Capnp.IsStruct (Field msg) where
     fromStruct = pure . Field
 instance Codec.Capnp.IsPtr (Field msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Field msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Field msg) where
     newtype List msg (Field msg) = List_Field (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Field l) = Data.Capnp.Untyped.length l
     index i (List_Field l) = Field <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Field (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Field (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Field elt) i (List_Field l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Field''name :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Data.Capnp.BuiltinTypes.Text
+get_Field''name :: Data.Capnp.Untyped.ReadCtx m => Field msg -> m Data.Capnp.Basics.Text
 get_Field''name (Field struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -239,11 +239,11 @@ instance Codec.Capnp.IsStruct (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'
 instance Codec.Capnp.IsPtr (Field'slot'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Field'slot'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Field'slot'group' msg) where
     newtype List msg (Field'slot'group' msg) = List_Field'slot'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Field'slot'group' l) = Data.Capnp.Untyped.length l
     index i (List_Field'slot'group' l) = Field'slot'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Field'slot'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Field'slot'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Field'slot'group' elt) i (List_Field'slot'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field'slot'group' msg)) where
@@ -280,11 +280,11 @@ instance Codec.Capnp.IsStruct (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'
 instance Codec.Capnp.IsPtr (Field'group'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Field'group'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Field'group'group' msg) where
     newtype List msg (Field'group'group' msg) = List_Field'group'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Field'group'group' l) = Data.Capnp.Untyped.length l
     index i (List_Field'group'group' l) = Field'group'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Field'group'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Field'group'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Field'group'group' elt) i (List_Field'group'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Field'group'group' msg)) where
@@ -314,11 +314,11 @@ instance Codec.Capnp.IsStruct (Superclass msg) where
     fromStruct = pure . Superclass
 instance Codec.Capnp.IsPtr (Superclass msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Superclass msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Superclass msg) where
     newtype List msg (Superclass msg) = List_Superclass (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Superclass l) = Data.Capnp.Untyped.length l
     index i (List_Superclass l) = Superclass <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Superclass (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Superclass (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Superclass elt) i (List_Superclass l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Superclass msg)) where
@@ -342,11 +342,11 @@ instance Codec.Capnp.IsStruct (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope
 instance Codec.Capnp.IsPtr (Brand'Scope msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Brand'Scope msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Brand'Scope msg) where
     newtype List msg (Brand'Scope msg) = List_Brand'Scope (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Brand'Scope l) = Data.Capnp.Untyped.length l
     index i (List_Brand'Scope l) = Brand'Scope <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Brand'Scope (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Brand'Scope (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Brand'Scope elt) i (List_Brand'Scope l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Brand'Scope msg)) where
@@ -387,11 +387,11 @@ instance Codec.Capnp.IsStruct (CodeGeneratorRequest'RequestedFile'Import msg) wh
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import
 instance Codec.Capnp.IsPtr (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile'Import msg) = List_CodeGeneratorRequest'RequestedFile'Import (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_CodeGeneratorRequest'RequestedFile'Import l) = Data.Capnp.Untyped.length l
     index i (List_CodeGeneratorRequest'RequestedFile'Import l) = CodeGeneratorRequest'RequestedFile'Import <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (CodeGeneratorRequest'RequestedFile'Import elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile'Import msg)) where
@@ -401,7 +401,7 @@ get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'Requested
 
 has_CodeGeneratorRequest'RequestedFile'Import'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'id(CodeGeneratorRequest'RequestedFile'Import struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Data.Capnp.BuiltinTypes.Text
+get_CodeGeneratorRequest'RequestedFile'Import'name :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile'Import msg -> m Data.Capnp.Basics.Text
 get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -415,16 +415,16 @@ instance Codec.Capnp.IsStruct (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter
 instance Codec.Capnp.IsPtr (Node'Parameter msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'Parameter msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'Parameter msg) where
     newtype List msg (Node'Parameter msg) = List_Node'Parameter (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'Parameter l) = Data.Capnp.Untyped.length l
     index i (List_Node'Parameter l) = Node'Parameter <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'Parameter (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'Parameter (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'Parameter elt) i (List_Node'Parameter l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'Parameter msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m => Node'Parameter msg -> m Data.Capnp.BuiltinTypes.Text
+get_Node'Parameter'name :: Data.Capnp.Untyped.ReadCtx m => Node'Parameter msg -> m Data.Capnp.Basics.Text
 get_Node'Parameter'name (Node'Parameter struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -458,11 +458,11 @@ instance Codec.Capnp.IsStruct (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest
 instance Codec.Capnp.IsPtr (CodeGeneratorRequest msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (CodeGeneratorRequest msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (CodeGeneratorRequest msg) where
     newtype List msg (CodeGeneratorRequest msg) = List_CodeGeneratorRequest (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_CodeGeneratorRequest l) = Data.Capnp.Untyped.length l
     index i (List_CodeGeneratorRequest l) = CodeGeneratorRequest <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (CodeGeneratorRequest (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (CodeGeneratorRequest (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (CodeGeneratorRequest elt) i (List_CodeGeneratorRequest l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest msg)) where
@@ -502,11 +502,11 @@ instance Codec.Capnp.IsStruct (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'
 instance Codec.Capnp.IsPtr (Type'anyPointer'unconstrained'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
     newtype List msg (Type'anyPointer'unconstrained'group' msg) = List_Type'anyPointer'unconstrained'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'anyPointer'unconstrained'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'anyPointer'unconstrained'group' l) = Type'anyPointer'unconstrained'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'anyPointer'unconstrained'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'anyPointer'unconstrained'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'anyPointer'unconstrained'group' elt) i (List_Type'anyPointer'unconstrained'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'unconstrained'group' msg)) where
@@ -522,11 +522,11 @@ instance Codec.Capnp.IsStruct (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'
 instance Codec.Capnp.IsPtr (Type'anyPointer'parameter'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'anyPointer'parameter'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'anyPointer'parameter'group' msg) where
     newtype List msg (Type'anyPointer'parameter'group' msg) = List_Type'anyPointer'parameter'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'anyPointer'parameter'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'anyPointer'parameter'group' l) = Type'anyPointer'parameter'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'anyPointer'parameter'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'anyPointer'parameter'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'anyPointer'parameter'group' elt) i (List_Type'anyPointer'parameter'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'parameter'group' msg)) where
@@ -547,11 +547,11 @@ instance Codec.Capnp.IsStruct (Type'anyPointer'implicitMethodParameter'group' ms
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'
 instance Codec.Capnp.IsPtr (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     newtype List msg (Type'anyPointer'implicitMethodParameter'group' msg) = List_Type'anyPointer'implicitMethodParameter'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'anyPointer'implicitMethodParameter'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'anyPointer'implicitMethodParameter'group' l) = Type'anyPointer'implicitMethodParameter'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'anyPointer'implicitMethodParameter'group' elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'implicitMethodParameter'group' msg)) where
@@ -609,8 +609,8 @@ data Value msg
     | Value'uint64 Word64
     | Value'float32 Float
     | Value'float64 Double
-    | Value'text Data.Capnp.BuiltinTypes.Text
-    | Value'data_ Data.Capnp.BuiltinTypes.Data
+    | Value'text Data.Capnp.Basics.Text
+    | Value'data_ Data.Capnp.Basics.Data
     | Value'list (Maybe Data.Capnp.Untyped.Ptr)
     | Value'enum Word16
     | Value'struct (Maybe Data.Capnp.Untyped.Ptr)
@@ -673,11 +673,11 @@ instance Codec.Capnp.IsStruct (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile
 instance Codec.Capnp.IsPtr (CodeGeneratorRequest'RequestedFile msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile msg) = List_CodeGeneratorRequest'RequestedFile (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_CodeGeneratorRequest'RequestedFile l) = Data.Capnp.Untyped.length l
     index i (List_CodeGeneratorRequest'RequestedFile l) = CodeGeneratorRequest'RequestedFile <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (CodeGeneratorRequest'RequestedFile (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (CodeGeneratorRequest'RequestedFile (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (CodeGeneratorRequest'RequestedFile elt) i (List_CodeGeneratorRequest'RequestedFile l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CodeGeneratorRequest'RequestedFile msg)) where
@@ -687,7 +687,7 @@ get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile st
 
 has_CodeGeneratorRequest'RequestedFile'id :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'id(CodeGeneratorRequest'RequestedFile struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Data.Capnp.BuiltinTypes.Text
+get_CodeGeneratorRequest'RequestedFile'filename :: Data.Capnp.Untyped.ReadCtx m => CodeGeneratorRequest'RequestedFile msg -> m Data.Capnp.Basics.Text
 get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -744,11 +744,11 @@ instance Codec.Capnp.IsStruct (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'
 instance Codec.Capnp.IsPtr (Type'list'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'list'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'list'group' msg) where
     newtype List msg (Type'list'group' msg) = List_Type'list'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'list'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'list'group' l) = Type'list'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'list'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'list'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'list'group' elt) i (List_Type'list'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'list'group' msg)) where
@@ -767,11 +767,11 @@ instance Codec.Capnp.IsStruct (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'
 instance Codec.Capnp.IsPtr (Type'enum'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'enum'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'enum'group' msg) where
     newtype List msg (Type'enum'group' msg) = List_Type'enum'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'enum'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'enum'group' l) = Type'enum'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'enum'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'enum'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'enum'group' elt) i (List_Type'enum'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'enum'group' msg)) where
@@ -795,11 +795,11 @@ instance Codec.Capnp.IsStruct (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'
 instance Codec.Capnp.IsPtr (Type'struct'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'struct'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'struct'group' msg) where
     newtype List msg (Type'struct'group' msg) = List_Type'struct'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'struct'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'struct'group' l) = Type'struct'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'struct'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'struct'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'struct'group' elt) i (List_Type'struct'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'struct'group' msg)) where
@@ -823,11 +823,11 @@ instance Codec.Capnp.IsStruct (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'
 instance Codec.Capnp.IsPtr (Type'interface'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'interface'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'interface'group' msg) where
     newtype List msg (Type'interface'group' msg) = List_Type'interface'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'interface'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'interface'group' l) = Type'interface'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'interface'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'interface'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'interface'group' elt) i (List_Type'interface'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'interface'group' msg)) where
@@ -851,11 +851,11 @@ instance Codec.Capnp.IsStruct (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'
 instance Codec.Capnp.IsPtr (Type'anyPointer'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Type'anyPointer'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Type'anyPointer'group' msg) where
     newtype List msg (Type'anyPointer'group' msg) = List_Type'anyPointer'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Type'anyPointer'group' l) = Data.Capnp.Untyped.length l
     index i (List_Type'anyPointer'group' l) = Type'anyPointer'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Type'anyPointer'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Type'anyPointer'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Type'anyPointer'group' elt) i (List_Type'anyPointer'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Type'anyPointer'group' msg)) where
@@ -932,11 +932,11 @@ instance Codec.Capnp.IsWord ElementSize where
     toWord ElementSize'bit = 1
     toWord ElementSize'empty = 0
     toWord (ElementSize'unknown' tag) = fromIntegral tag
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg ElementSize where
+instance Data.Capnp.Basics.Generic.ListElem msg ElementSize where
     newtype List msg ElementSize = List_ElementSize (Data.Capnp.Untyped.ListOf Word16)
     length (List_ElementSize l) = Data.Capnp.Untyped.length l
     index i (List_ElementSize l) = (Codec.Capnp.fromWord . fromIntegral) <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s ElementSize where
+instance Data.Capnp.Basics.Generic.MutListElem s ElementSize where
     setIndex elt i (List_ElementSize l) = error "TODO: generate code for setIndex"
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf ElementSize) where
     fromPtr msg ptr = fmap
@@ -949,11 +949,11 @@ instance Codec.Capnp.IsStruct (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion
 instance Codec.Capnp.IsPtr (CapnpVersion msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (CapnpVersion msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (CapnpVersion msg) where
     newtype List msg (CapnpVersion msg) = List_CapnpVersion (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_CapnpVersion l) = Data.Capnp.Untyped.length l
     index i (List_CapnpVersion l) = CapnpVersion <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (CapnpVersion (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (CapnpVersion (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (CapnpVersion elt) i (List_CapnpVersion l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (CapnpVersion msg)) where
@@ -979,16 +979,16 @@ instance Codec.Capnp.IsStruct (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode
 instance Codec.Capnp.IsPtr (Node'NestedNode msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'NestedNode msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'NestedNode msg) where
     newtype List msg (Node'NestedNode msg) = List_Node'NestedNode (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'NestedNode l) = Data.Capnp.Untyped.length l
     index i (List_Node'NestedNode l) = Node'NestedNode <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'NestedNode (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'NestedNode (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'NestedNode elt) i (List_Node'NestedNode l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'NestedNode msg)) where
     fromPtr = Codec.Capnp.structListPtr
-get_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode msg -> m Data.Capnp.BuiltinTypes.Text
+get_Node'NestedNode'name :: Data.Capnp.Untyped.ReadCtx m => Node'NestedNode msg -> m Data.Capnp.Basics.Text
 get_Node'NestedNode'name (Node'NestedNode struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -1007,11 +1007,11 @@ instance Codec.Capnp.IsStruct (Node msg) where
     fromStruct = pure . Node
 instance Codec.Capnp.IsPtr (Node msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node msg) where
     newtype List msg (Node msg) = List_Node (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node l) = Data.Capnp.Untyped.length l
     index i (List_Node l) = Node <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node elt) i (List_Node l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node msg)) where
@@ -1021,7 +1021,7 @@ get_Node''id (Node struct) = Codec.Capnp.getWordField struct 0 0 0
 
 has_Node''id :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Bool
 has_Node''id(Node struct) = pure $ 0 < Data.Capnp.Untyped.length (Data.Capnp.Untyped.dataSection struct)
-get_Node''displayName :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Data.Capnp.BuiltinTypes.Text
+get_Node''displayName :: Data.Capnp.Untyped.ReadCtx m => Node msg -> m Data.Capnp.Basics.Text
 get_Node''displayName (Node struct) =
     Data.Capnp.Untyped.getPtr 0 struct
     >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
@@ -1088,11 +1088,11 @@ instance Codec.Capnp.IsStruct (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'
 instance Codec.Capnp.IsPtr (Node'struct'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'struct'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'struct'group' msg) where
     newtype List msg (Node'struct'group' msg) = List_Node'struct'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'struct'group' l) = Data.Capnp.Untyped.length l
     index i (List_Node'struct'group' l) = Node'struct'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'struct'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'struct'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'struct'group' elt) i (List_Node'struct'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'struct'group' msg)) where
@@ -1141,11 +1141,11 @@ instance Codec.Capnp.IsStruct (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'
 instance Codec.Capnp.IsPtr (Node'enum'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'enum'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'enum'group' msg) where
     newtype List msg (Node'enum'group' msg) = List_Node'enum'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'enum'group' l) = Data.Capnp.Untyped.length l
     index i (List_Node'enum'group' l) = Node'enum'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'enum'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'enum'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'enum'group' elt) i (List_Node'enum'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'enum'group' msg)) where
@@ -1164,11 +1164,11 @@ instance Codec.Capnp.IsStruct (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'
 instance Codec.Capnp.IsPtr (Node'interface'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'interface'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'interface'group' msg) where
     newtype List msg (Node'interface'group' msg) = List_Node'interface'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'interface'group' l) = Data.Capnp.Untyped.length l
     index i (List_Node'interface'group' l) = Node'interface'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'interface'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'interface'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'interface'group' elt) i (List_Node'interface'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'interface'group' msg)) where
@@ -1195,11 +1195,11 @@ instance Codec.Capnp.IsStruct (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'
 instance Codec.Capnp.IsPtr (Node'const'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'const'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'const'group' msg) where
     newtype List msg (Node'const'group' msg) = List_Node'const'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'const'group' l) = Data.Capnp.Untyped.length l
     index i (List_Node'const'group' l) = Node'const'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'const'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'const'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'const'group' elt) i (List_Node'const'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'const'group' msg)) where
@@ -1226,11 +1226,11 @@ instance Codec.Capnp.IsStruct (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'
 instance Codec.Capnp.IsPtr (Node'annotation'group' msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Node'annotation'group' msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Node'annotation'group' msg) where
     newtype List msg (Node'annotation'group' msg) = List_Node'annotation'group' (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Node'annotation'group' l) = Data.Capnp.Untyped.length l
     index i (List_Node'annotation'group' l) = Node'annotation'group' <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Node'annotation'group' (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Node'annotation'group' (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Node'annotation'group' elt) i (List_Node'annotation'group' l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Node'annotation'group' msg)) where
@@ -1327,11 +1327,11 @@ instance Codec.Capnp.IsStruct (Annotation msg) where
     fromStruct = pure . Annotation
 instance Codec.Capnp.IsPtr (Annotation msg) where
     fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.BuiltinTypes.Generic.ListElem msg (Annotation msg) where
+instance Data.Capnp.Basics.Generic.ListElem msg (Annotation msg) where
     newtype List msg (Annotation msg) = List_Annotation (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
     length (List_Annotation l) = Data.Capnp.Untyped.length l
     index i (List_Annotation l) = Annotation <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.BuiltinTypes.Generic.MutListElem s (Annotation (Data.Capnp.Message.Mutable.Message s)) where
+instance Data.Capnp.Basics.Generic.MutListElem s (Annotation (Data.Capnp.Message.Mutable.Message s)) where
     setIndex (Annotation elt) i (List_Annotation l) = error "TODO: Generate code for setIndex"
 
 instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Annotation msg)) where

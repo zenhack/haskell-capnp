@@ -73,7 +73,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import Data.Word"
     , ""
     , "import Data.Capnp.Untyped.Pure (List)"
-    , "import Data.Capnp.BuiltinTypes.Pure (Data, Text)"
+    , "import Data.Capnp.Basics.Pure (Data, Text)"
     , "import Control.Monad.Catch (MonadThrow)"
     , "import Data.Capnp.TraversalLimit (MonadLimit)"
     , ""
