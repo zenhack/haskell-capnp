@@ -11,58 +11,58 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
-import qualified Codec.Capnp
-import qualified Data.Capnp.Basics
-import qualified Data.Capnp.Basics.Generic
-import qualified Data.Capnp.TraversalLimit
-import qualified Data.Capnp.Untyped
-import qualified Data.Capnp.Message.Mutable
+import qualified Codec.Capnp as C'
+import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.Basics.Generic as GB'
+import qualified Data.Capnp.TraversalLimit as TL'
+import qualified Data.Capnp.Untyped as U'
+import qualified Data.Capnp.Message.Mutable as MM'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-newtype Persistent'SaveResults msg = Persistent'SaveResults Data.Capnp.Untyped.Struct
+newtype Persistent'SaveResults msg = Persistent'SaveResults U'.Struct
 
-instance Codec.Capnp.IsStruct (Persistent'SaveResults msg) where
+instance C'.IsStruct (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults
-instance Codec.Capnp.IsPtr (Persistent'SaveResults msg) where
-    fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.Basics.Generic.ListElem msg (Persistent'SaveResults msg) where
-    newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
-    length (List_Persistent'SaveResults l) = Data.Capnp.Untyped.length l
-    index i (List_Persistent'SaveResults l) = Persistent'SaveResults <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.Basics.Generic.MutListElem s (Persistent'SaveResults (Data.Capnp.Message.Mutable.Message s)) where
+instance C'.IsPtr (Persistent'SaveResults msg) where
+    fromPtr = C'.structPtr
+instance GB'.ListElem msg (Persistent'SaveResults msg) where
+    newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf U'.Struct)
+    length (List_Persistent'SaveResults l) = U'.length l
+    index i (List_Persistent'SaveResults l) = Persistent'SaveResults <$> U'.index i l
+instance GB'.MutListElem s (Persistent'SaveResults (MM'.Message s)) where
     setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = error "TODO: Generate code for setIndex"
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Persistent'SaveResults msg)) where
-    fromPtr = Codec.Capnp.structListPtr
-get_Persistent'SaveResults'sturdyRef :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveResults msg -> m (Maybe Data.Capnp.Untyped.Ptr)
+instance C'.IsPtr (U'.ListOf (Persistent'SaveResults msg)) where
+    fromPtr = C'.structListPtr
+get_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m => Persistent'SaveResults msg -> m (Maybe U'.Ptr)
 get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
-    Data.Capnp.Untyped.getPtr 0 struct
-    >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
 
 
-has_Persistent'SaveResults'sturdyRef :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveResults msg -> m Bool
-has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
-newtype Persistent'SaveParams msg = Persistent'SaveParams Data.Capnp.Untyped.Struct
+has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m => Persistent'SaveResults msg -> m Bool
+has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+newtype Persistent'SaveParams msg = Persistent'SaveParams U'.Struct
 
-instance Codec.Capnp.IsStruct (Persistent'SaveParams msg) where
+instance C'.IsStruct (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams
-instance Codec.Capnp.IsPtr (Persistent'SaveParams msg) where
-    fromPtr = Codec.Capnp.structPtr
-instance Data.Capnp.Basics.Generic.ListElem msg (Persistent'SaveParams msg) where
-    newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (Data.Capnp.Untyped.ListOf Data.Capnp.Untyped.Struct)
-    length (List_Persistent'SaveParams l) = Data.Capnp.Untyped.length l
-    index i (List_Persistent'SaveParams l) = Persistent'SaveParams <$> Data.Capnp.Untyped.index i l
-instance Data.Capnp.Basics.Generic.MutListElem s (Persistent'SaveParams (Data.Capnp.Message.Mutable.Message s)) where
+instance C'.IsPtr (Persistent'SaveParams msg) where
+    fromPtr = C'.structPtr
+instance GB'.ListElem msg (Persistent'SaveParams msg) where
+    newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf U'.Struct)
+    length (List_Persistent'SaveParams l) = U'.length l
+    index i (List_Persistent'SaveParams l) = Persistent'SaveParams <$> U'.index i l
+instance GB'.MutListElem s (Persistent'SaveParams (MM'.Message s)) where
     setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = error "TODO: Generate code for setIndex"
 
-instance Codec.Capnp.IsPtr (Data.Capnp.Untyped.ListOf (Persistent'SaveParams msg)) where
-    fromPtr = Codec.Capnp.structListPtr
-get_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveParams msg -> m (Maybe Data.Capnp.Untyped.Ptr)
+instance C'.IsPtr (U'.ListOf (Persistent'SaveParams msg)) where
+    fromPtr = C'.structListPtr
+get_Persistent'SaveParams'sealFor :: U'.ReadCtx m => Persistent'SaveParams msg -> m (Maybe U'.Ptr)
 get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
-    Data.Capnp.Untyped.getPtr 0 struct
-    >>= Codec.Capnp.fromPtr (Data.Capnp.Untyped.message struct)
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
 
 
-has_Persistent'SaveParams'sealFor :: Data.Capnp.Untyped.ReadCtx m => Persistent'SaveParams msg -> m Bool
-has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> Data.Capnp.Untyped.getPtr 0 struct
+has_Persistent'SaveParams'sealFor :: U'.ReadCtx m => Persistent'SaveParams msg -> m Bool
+has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
