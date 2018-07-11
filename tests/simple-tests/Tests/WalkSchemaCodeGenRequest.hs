@@ -17,9 +17,9 @@ import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)
 
-import qualified Capnp.ById.Xa93fc509624c72d9 as Schema
-import qualified Data.ByteString              as BS
-import qualified Data.Capnp.Message           as M
+import qualified Capnp.Capnp.Schema as Schema
+import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Message as M
 import qualified Prelude
 
 

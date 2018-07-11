@@ -78,6 +78,12 @@ library
       , Capnp.Capnp.Rpc.Pure
       , Capnp.Capnp.RpcTwoparty.Pure
       , Capnp.Capnp.Schema.Pure
+      , Capnp.Capnp.Cxx
+      , Capnp.Capnp.Json
+      , Capnp.Capnp.Persistent
+      , Capnp.Capnp.Rpc
+      , Capnp.Capnp.RpcTwoparty
+      , Capnp.Capnp.Schema
       , Capnp.ById.Xbdf87d7bb8304e81.Pure
       , Capnp.ById.X8ef99297a43a5e34.Pure
       , Capnp.ById.Xb8630836983feed7.Pure

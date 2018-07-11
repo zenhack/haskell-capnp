@@ -8,8 +8,8 @@ import Data.Capnp.Errors         (Error)
 import Data.Capnp.Message        as M
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 
-import qualified Capnp.ById.Xa93fc509624c72d9 as Schema
-import qualified Data.Capnp.Untyped           as Untyped
+import qualified Capnp.Capnp.Schema as Schema
+import qualified Data.Capnp.Untyped as Untyped
 
 -- Testing framework imports
 import Test.Framework.Providers.QuickCheck2 (testProperty)
