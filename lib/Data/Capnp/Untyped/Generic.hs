@@ -36,6 +36,7 @@ import Prelude hiding (length, take)
 import Data.Bits
 import Data.Word
 
+import Control.Monad             (forM_)
 import Control.Monad.Catch       (MonadThrow(throwM))
 import Data.Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
 import Data.Capnp.Bits
@@ -383,6 +384,27 @@ setIndex value i list = case list of
             setPtrIndex nlist p $ P.ListPtr 0 (listEltSpec ptrList)
         Just p@(PtrStruct (Struct _ addr dataSz ptrSz)) ->
             setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
+    list@(ListOfStruct _ _) -> do
+        -- We copy both the data and pointer sections from value to the struct
+        -- at the specified index, padding the tail of the destination section
+        -- with zeros/null pointers as necessary. If the destination section is
+        -- smaller than the source section, this will raise a BoundsError.
+        --
+        -- TODO: possible enhancement: allow the destination section to be
+        -- smaller than the source section if and only if the tail of the
+        -- source section is all zeros (default values).
+        dest <- index i list
+        copySection (dataSection dest) (dataSection value) 0
+        copySection (ptrSection  dest) (ptrSection  value) Nothing
+      where
+        copySection dest src pad = do
+            -- Copy the source section to the destination section:
+            forM_ [0..length src - 1] $ \i -> do
+                word <- index i src
+                setIndex word i dest
+            -- Pad the remainder with zeros/default values:
+            forM_ [length src..length dest - 1] $ \i ->
+                setIndex pad i dest
   where
     setNIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s, Bounded a, Integral a) => NormalList (MM.Message s) -> Int -> a -> m ()
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do

@@ -74,6 +74,51 @@ genericUntypedTests = assertionsToTest "Test setIndex" $ map testCase
             GU.setIndex oranges 0 (GU.ptrSection struct)
             GU.setIndex helloWorld 1 list
         }
+    , ModTest
+        { testIn = unlines
+            [ "( aircraftvec = ["
+            , "    ( f16 = ("
+            , "        base = ("
+            , "          name = \"alice\","
+            , "          homes = [],"
+            , "          rating = 7,"
+            , "          canFly = true,"
+            , "          capacity = 4,"
+            , "          maxSpeed = 100 ) ) ),"
+            , "    ( b737 = ("
+            , "        base = ("
+            , "          name = \"bob\","
+            , "          homes = [],"
+            , "          rating = 2,"
+            , "          canFly = false,"
+            , "          capacity = 9,"
+            , "          maxSpeed = 50 ) ) ) ] )"
+            ]
+        , testType = "Z"
+        , testOut = unlines
+            [ "( aircraftvec = ["
+            , "    ( f16 = ("
+            , "        base = ("
+            , "          name = \"alice\","
+            , "          homes = [],"
+            , "          rating = 7,"
+            , "          canFly = true,"
+            , "          capacity = 4,"
+            , "          maxSpeed = 100 ) ) ),"
+            , "    ( f16 = ("
+            , "        base = ("
+            , "          name = \"alice\","
+            , "          homes = [],"
+            , "          rating = 7,"
+            , "          canFly = true,"
+            , "          capacity = 4,"
+            , "          maxSpeed = 100 ) ) ) ] )"
+            ]
+        , testMod = \struct -> do
+            Just (GU.PtrList (GU.ListStruct list)) <- GU.getPtr 0 struct
+            src <- GU.index 0 list
+            GU.setIndex src 1 list
+        }
     ]
   where
     testCase ModTest{..} = do
