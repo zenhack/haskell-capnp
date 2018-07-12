@@ -83,15 +83,22 @@ fmtNewtypeStruct thisMod name =
         , "    fromStruct = pure . ", nameText, "\n"
         , "instance C'.IsPtr msg (", nameText, " msg) where\n"
         , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
-        , "instance GB'.ListElem msg (", nameText, " msg) where\n"
-        , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
-        , "    length (List_", nameText, " l) = U'.length l\n"
-        , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText, "\n"
+        , fmtStructListElem nameText
         , "instance GB'.MutListElem s (", nameText, " (MM'.Message s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
+
+-- | Generate an instance of ListElem for a struct type. The parameter is the name of
+-- the type constructor.
+fmtStructListElem :: TB.Builder -> TB.Builder
+fmtStructListElem nameText = mconcat
+    [ "instance GB'.ListElem msg (", nameText, " msg) where\n"
+    , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
+    , "    length (List_", nameText, " l) = U'.length l\n"
+    , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText, "\n"
+    ]
 
 -- | Output an expression equivalent to fromStruct, but restricted to the type
 -- with the given type constructor (which must have kind * -> *).
@@ -174,6 +181,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         , "\n        case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
+        , fmtStructListElem nameText
         , "\ninstance C'.IsPtr msg (", nameText, " msg) where"
         , "\n    fromPtr msg ptr = C'.fromPtr msg ptr >>= ", fmtRestrictedFromStruct nameText, "\n"
         , "\n"
