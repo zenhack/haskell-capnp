@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
@@ -8,16 +9,23 @@ import Data.Capnp.Untyped.Generic
 import Tests.Util
 
 import Control.Monad             (forM_, when)
-import Data.Capnp.TraversalLimit (execLimitT)
-import Data.ReinterpretCast      (wordToDouble)
-import Test.Framework            (Test)
+import Data.Capnp.TraversalLimit (evalLimitT, execLimitT)
+import Data.ReinterpretCast      (doubleToWord, wordToDouble)
+import Test.Framework            (Test, testGroup)
 import Test.HUnit                (assertEqual)
 import Text.Heredoc              (here, there)
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString            as BS
+import qualified Data.Capnp.Message.Generic as GM
+import qualified Data.Capnp.Message.Mutable as MM
 
-untypedTests :: Test
-untypedTests = assertionsToTest "Untyped Tests"
+untypedTests = testGroup "Untyped Tests"
+    [ readTests
+    , setIndexTests
+    ]
+
+readTests :: Test
+readTests = assertionsToTest "read tests"
     [ do
         msg <- encodeValue
                     [there|tests/data/aircraft.capnp|]
@@ -71,3 +79,118 @@ untypedTests = assertionsToTest "Untyped Tests"
             return ()
         assertEqual "endQuota == 110" 110 endQuota
     ]
+
+data ModTest m s = ModTest
+    { testIn   :: String
+    , testMod  :: Struct (MM.Message s) -> m ()
+    , testOut  :: String
+    , testType :: String
+    }
+
+setIndexTests :: Test
+setIndexTests = assertionsToTest "Test setIndex" $ map testCase
+    [ ModTest
+        { testIn = "(year = 2018, month = 6, day = 20)\n"
+        , testType = "Zdate"
+        , testOut = "(year = 0, month = 0, day = 0)\n"
+        , testMod = setIndex 0 0 . dataSection
+        }
+    , ModTest
+        { testIn = "(text = \"Hello, World!\")\n"
+        , testType = "Z"
+        , testOut = "(text = \"hEllo, world!\")\n"
+        , testMod = \struct -> do
+            Just (PtrList (List8 list)) <- index 0 (ptrSection struct)
+            setIndex (fromIntegral (fromEnum 'h')) 0 list
+            setIndex (fromIntegral (fromEnum 'E')) 1 list
+            setIndex (fromIntegral (fromEnum 'w')) 7 list
+        }
+    , ModTest
+        { testIn = "(boolvec = [true, true, false, true])\n"
+        , testType = "Z"
+        , testOut = "( boolvec = [false, true, true, false] )\n"
+        , testMod = \struct -> do
+            Just (PtrList (List1 list)) <- index 0 (ptrSection struct)
+            setIndex False 0 list
+            setIndex True 2 list
+            setIndex False 3 list
+        }
+    , ModTest
+        { testIn = "(f64 = 2.0)\n"
+        , testType = "Z"
+        , testOut = "(f64 = 7.2)\n"
+        , testMod = setIndex (doubleToWord 7.2) 1 . dataSection
+        }
+    , ModTest
+        { testIn = unlines
+            [ "( size = 4,"
+            , "  words = \"Hello, World!\","
+            , "  wordlist = [\"apples\", \"oranges\"] )"
+            ]
+        , testType = "Counter"
+        , testOut = unlines
+            [ "( size = 4,"
+            , "  words = \"oranges\","
+            , "  wordlist = [\"apples\", \"Hello, World!\"] )"
+            ]
+        , testMod = \struct -> do
+            Just (PtrList (ListPtr list)) <- index 1 (ptrSection struct)
+            helloWorld <- index 0 (ptrSection struct)
+            oranges <- index 1 list
+            setIndex oranges 0 (ptrSection struct)
+            setIndex helloWorld 1 list
+        }
+    , ModTest
+        { testIn = unlines
+            [ "( aircraftvec = ["
+            , "    ( f16 = ("
+            , "        base = ("
+            , "          name = \"alice\","
+            , "          homes = [],"
+            , "          rating = 7,"
+            , "          canFly = true,"
+            , "          capacity = 4,"
+            , "          maxSpeed = 100 ) ) ),"
+            , "    ( b737 = ("
+            , "        base = ("
+            , "          name = \"bob\","
+            , "          homes = [],"
+            , "          rating = 2,"
+            , "          canFly = false,"
+            , "          capacity = 9,"
+            , "          maxSpeed = 50 ) ) ) ] )"
+            ]
+        , testType = "Z"
+        , testOut = unlines
+            [ "( aircraftvec = ["
+            , "    ( f16 = ("
+            , "        base = ("
+            , "          name = \"alice\","
+            , "          homes = [],"
+            , "          rating = 7,"
+            , "          canFly = true,"
+            , "          capacity = 4,"
+            , "          maxSpeed = 100 ) ) ),"
+            , "    ( f16 = ("
+            , "        base = ("
+            , "          name = \"alice\","
+            , "          homes = [],"
+            , "          rating = 7,"
+            , "          canFly = true,"
+            , "          capacity = 4,"
+            , "          maxSpeed = 100 ) ) ) ] )"
+            ]
+        , testMod = \struct -> do
+            Just (PtrList (ListStruct list)) <- getPtr 0 struct
+            src <- index 0 list
+            setIndex src 1 list
+        }
+    ]
+  where
+    testCase ModTest{..} = do
+        msg <- GM.thaw =<< encodeValue schemaText testType testIn
+        evalLimitT 128 $ rootPtr msg >>= testMod
+        actualOut <- decodeValue schemaText testType =<< GM.freeze msg
+        when (actualOut /= testOut) $
+            error $ "Expected:\n\n" ++ show testOut ++ "\n\n...but got:\n\n" ++ show actualOut
+    schemaText = [there|tests/data/aircraft.capnp|]

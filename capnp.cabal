@@ -166,7 +166,6 @@ test-suite simple-tests
         -- Tests.Module.Data.Capnp.Builder
         Tests.Module.Capnp.Capnp.Schema
       , Tests.Module.Data.Capnp.Untyped
-      , Tests.Module.Data.Capnp.Untyped.Generic
       , Tests.Module.Data.Capnp.Untyped.Pure
       , Tests.Module.Data.Capnp.Pointer
       , Tests.Module.Data.Capnp.Bits
