@@ -48,7 +48,6 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Maybe"
     -- The trailing ' is to avoid possible name collisions:
     , "import qualified Codec.Capnp.Generic as C'"
-    , "import qualified Data.Capnp.Basics as B'"
     , "import qualified Data.Capnp.Basics.Generic as GB'"
     , "import qualified Data.Capnp.TraversalLimit as TL'"
     , "import qualified Data.Capnp.Untyped.Generic as U'"
@@ -87,12 +86,22 @@ fmtNewtypeStruct thisMod name =
         , "instance GB'.ListElem msg (", nameText, " msg) where\n"
         , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
         , "    length (List_", nameText, " l) = U'.length l\n"
-        , "    index i (List_", nameText, " l) = ", nameText , " <$> U'.index i l\n"
+        , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText, "\n"
         , "instance GB'.MutListElem s (", nameText, " (MM'.Message s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
+
+-- | Output an expression equivalent to fromStruct, but restricted to the type
+-- with the given type constructor (which must have kind * -> *).
+fmtRestrictedFromStruct :: TB.Builder -> TB.Builder
+fmtRestrictedFromStruct nameText = mconcat
+    [ "(let {"
+    , "go :: U'.ReadCtx m msg => U'.Struct msg -> m (", nameText, " msg); "
+    , "go = C'.fromStruct"
+    , "} in go)"
+    ]
 
 -- | Generate a call to 'C'.getWordField' based on a 'DataLoc'.
 -- The first argument is an expression for the struct.
@@ -166,7 +175,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
         , "\ninstance C'.IsPtr msg (", nameText, " msg) where"
-        , "\n    fromPtr msg ptr = C'.fromPtr msg ptr >>= C'.fromStruct"
+        , "\n    fromPtr msg ptr = C'.fromPtr msg ptr >>= ", fmtRestrictedFromStruct nameText, "\n"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
@@ -289,8 +298,8 @@ fmtPrimType PrimFloat32                  = "Float"
 fmtPrimType PrimFloat64                  = "Double"
 fmtPrimType PrimBool                     = "Bool"
 fmtPrimType PrimVoid                     = "()"
-fmtPrimType PrimText                     = "B'.Text"
-fmtPrimType PrimData                     = "B'.Data"
+fmtPrimType PrimText                     = "(GB'.Text msg)"
+fmtPrimType PrimData                     = "(GB'.Data msg)"
 
 fmtUntyped :: Untyped -> TB.Builder
 fmtUntyped Struct = "(U'.Struct msg)"
