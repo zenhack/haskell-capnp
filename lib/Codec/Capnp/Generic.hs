@@ -1,9 +1,16 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
-module Codec.Capnp.Generic where
+module Codec.Capnp.Generic
+    ( IsWord(..)
+    , ListElem(..)
+    , MutListElem(..)
+    , IsPtr(..)
+    , IsStruct(..)
+    , getWordField
+    ) where
 
-import Codec.Capnp (IsWord(..))
+import Codec.Capnp (IsWord(..), ListElem(..), MutListElem(..))
 
 import Data.Bits
 import Data.Word

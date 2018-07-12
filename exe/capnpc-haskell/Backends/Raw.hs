@@ -47,11 +47,11 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
     -- The trailing ' is to avoid possible name collisions:
-    , "import qualified Codec.Capnp as C'"
+    , "import qualified Codec.Capnp.Generic as C'"
     , "import qualified Data.Capnp.Basics as B'"
     , "import qualified Data.Capnp.Basics.Generic as GB'"
     , "import qualified Data.Capnp.TraversalLimit as TL'"
-    , "import qualified Data.Capnp.Untyped as U'"
+    , "import qualified Data.Capnp.Untyped.Generic as U'"
     , "import qualified Data.Capnp.Message.Mutable as MM'"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
@@ -70,31 +70,29 @@ fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 -- the given name.
 fmtStructListIsPtr :: TB.Builder -> TB.Builder
 fmtStructListIsPtr nameText = mconcat
-    [ "instance C'.IsPtr (U'.ListOf (", nameText, " msg)) where\n"
-    , "    fromPtr = C'.structListPtr\n"
+    [ "instance C'.IsPtr msg (GB'.List msg (", nameText, " msg)) where\n"
+    , "    fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr\n"
     ]
 
 fmtNewtypeStruct :: Id -> Name -> TB.Builder
 fmtNewtypeStruct thisMod name =
     let nameText = fmtName thisMod name
     in mconcat
-        [ "newtype ", nameText, " msg = ", nameText, " U'.Struct"
+        [ "newtype ", nameText, " msg = ", nameText, " (U'.Struct msg)"
         , "\n\n"
-        , "instance C'.IsStruct (", nameText, " msg) where\n"
+        , "instance C'.IsStruct msg (", nameText, " msg) where\n"
         , "    fromStruct = pure . ", nameText, "\n"
-        , "instance C'.IsPtr (", nameText, " msg) where\n"
-        , "    fromPtr = C'.structPtr\n"
+        , "instance C'.IsPtr msg (", nameText, " msg) where\n"
+        , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
         , "instance GB'.ListElem msg (", nameText, " msg) where\n"
-        , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf U'.Struct)\n"
+        , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
         , "    length (List_", nameText, " l) = U'.length l\n"
-        , "    index i (List_", nameText, " l) = ", nameText, " <$> U'.index i l\n"
+        , "    index i (List_", nameText, " l) = ", nameText , " <$> U'.index i l\n"
         , "instance GB'.MutListElem s (", nameText, " (MM'.Message s)) where\n"
-        -- We can't generate setIndex until we change List_* to be a newtype wrapper around .Generic.Struct.
-        , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = error \"TODO: Generate code for setIndex\"\n"
+        , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
-
 
 -- | Generate a call to 'C'.getWordField' based on a 'DataLoc'.
 -- The first argument is an expression for the struct.
@@ -112,7 +110,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
     let getName = fmtName thisMod $ prefixName "get_" (subName variantName fieldName)
         hasName = fmtName thisMod $ prefixName "has_" (subName variantName fieldName)
     in mconcat
-        [ getName, " :: U'.ReadCtx m => "
+        [ getName, " :: U'.ReadCtx m msg => "
         , fmtName thisMod typeName, " msg -> m ", fmtType thisMod fieldType, "\n"
         , getName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
@@ -125,7 +123,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> " C'.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         , "\n\n"
-        , hasName, " :: U'.ReadCtx m => ", fmtName thisMod typeName, " msg -> m Bool\n"
+        , hasName, " :: U'.ReadCtx m msg => ", fmtName thisMod typeName, " msg -> m Bool\n"
         , hasName, "(", fmtName thisMod typeName, " struct) = "
         , case fieldLoc of
             DataField DataLoc{dataIdx} ->
@@ -158,17 +156,17 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         [ "data ", nameText, " msg"
         , "\n    = "
         , mintercalate "\n    | " (map fmtDataVariant dataVariants)
-        -- Generate auxiliary newtype definitions for group fields:
         , "\n"
+        -- Generate auxiliary newtype definitions for group fields:
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
-        , "\ninstance C'.IsStruct (", nameText, " msg) where"
+        , "\ninstance C'.IsStruct msg (", nameText, " msg) where"
         , "\n    fromStruct struct = do"
         , "\n        tag <- ", fmtGetWordField "struct" tagLoc
         , "\n        case tag of"
         , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
         , "\n"
-        , "\ninstance C'.IsPtr (", nameText, " msg) where"
-        , "\n    fromPtr = C'.structPtr"
+        , "\ninstance C'.IsPtr msg (", nameText, " msg) where"
+        , "\n    fromPtr msg ptr = C'.fromPtr msg ptr >>= C'.fromStruct"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
@@ -232,17 +230,15 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
             map fmtEnumToWordCase   $ reverse $ sortOn variantTag dataVariants
         , "\n"
         , "instance GB'.ListElem msg ", typeName, " where"
-        , "\n    newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf Word16)"
+        , "\n    newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)"
         , "\n    length (List_", typeName, " l) = U'.length l"
         , "\n    index i (List_", typeName, " l) = (C'.fromWord . fromIntegral) <$> U'.index i l"
         , "\n"
         , "instance GB'.MutListElem s ", typeName, " where"
         , "\n    setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\""
         , "\n"
-        , "instance C'.IsPtr (U'.ListOf ", typeName, ") where"
-        , "\n    fromPtr msg ptr = fmap"
-        , "\n       (fmap (toEnum . (fromIntegral :: Word16 -> Int)))"
-        , "\n       (C'.fromPtr msg ptr)"
+        , "instance C'.IsPtr msg (GB'.List msg ", typeName, ") where"
+        , "\n    fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr"
         , "\n"
         ]
   where
@@ -271,7 +267,7 @@ fmtDataDef _ dataName dataDef =
 fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod = \case
     ListOf eltType ->
-        "(U'.ListOf " <> fmtType thisMod eltType <> ")"
+        "(GB'.List msg " <> fmtType thisMod eltType <> ")"
     EnumType name ->
         fmtName thisMod name
     StructType name params -> mconcat
@@ -297,10 +293,10 @@ fmtPrimType PrimText                     = "B'.Text"
 fmtPrimType PrimData                     = "B'.Data"
 
 fmtUntyped :: Untyped -> TB.Builder
-fmtUntyped Struct = "U'.Struct"
-fmtUntyped List   = "U'.List"
+fmtUntyped Struct = "(U'.Struct msg)"
+fmtUntyped List   = "(U'.List msg)"
 fmtUntyped Cap    = "Word32"
-fmtUntyped Ptr    = "U'.Ptr"
+fmtUntyped Ptr    = "(U'.Ptr msg)"
 
 fmtName :: Id -> Name -> TB.Builder
 fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
