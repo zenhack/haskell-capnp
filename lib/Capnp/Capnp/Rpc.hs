@@ -11,70 +11,69 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
-import qualified Codec.Capnp as C'
-import qualified Data.Capnp.Basics as B'
+import qualified Codec.Capnp.Generic as C'
 import qualified Data.Capnp.Basics.Generic as GB'
 import qualified Data.Capnp.TraversalLimit as TL'
-import qualified Data.Capnp.Untyped as U'
+import qualified Data.Capnp.Untyped.Generic as U'
 import qualified Data.Capnp.Message.Mutable as MM'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-newtype Call msg = Call U'.Struct
+newtype Call msg = Call (U'.Struct msg)
 
-instance C'.IsStruct (Call msg) where
+instance C'.IsStruct msg (Call msg) where
     fromStruct = pure . Call
-instance C'.IsPtr (Call msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Call msg) where
+    fromPtr msg ptr = Call <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Call msg) where
-    newtype List msg (Call msg) = List_Call (U'.ListOf U'.Struct)
+    newtype List msg (Call msg) = List_Call (U'.ListOf msg (U'.Struct msg))
     length (List_Call l) = U'.length l
-    index i (List_Call l) = Call <$> U'.index i l
+    index i (List_Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Call (MM'.Message s)) where
-    setIndex (Call elt) i (List_Call l) = error "TODO: Generate code for setIndex"
+    setIndex (Call elt) i (List_Call l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Call msg)) where
-    fromPtr = C'.structListPtr
-get_Call'questionId :: U'.ReadCtx m => Call msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Call msg)) where
+    fromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
+get_Call'questionId :: U'.ReadCtx m msg => Call msg -> m Word32
 get_Call'questionId (Call struct) = C'.getWordField struct 0 0 0
 
-has_Call'questionId :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'questionId :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'questionId(Call struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Call'target :: U'.ReadCtx m => Call msg -> m (MessageTarget msg)
+get_Call'target :: U'.ReadCtx m msg => Call msg -> m (MessageTarget msg)
 get_Call'target (Call struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Call'target :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'target :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'target(Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Call'interfaceId :: U'.ReadCtx m => Call msg -> m Word64
+get_Call'interfaceId :: U'.ReadCtx m msg => Call msg -> m Word64
 get_Call'interfaceId (Call struct) = C'.getWordField struct 1 0 0
 
-has_Call'interfaceId :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'interfaceId :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'interfaceId(Call struct) = pure $ 1 < U'.length (U'.dataSection struct)
-get_Call'methodId :: U'.ReadCtx m => Call msg -> m Word16
+get_Call'methodId :: U'.ReadCtx m msg => Call msg -> m Word16
 get_Call'methodId (Call struct) = C'.getWordField struct 0 32 0
 
-has_Call'methodId :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'methodId :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'methodId(Call struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Call'params :: U'.ReadCtx m => Call msg -> m (Payload msg)
+get_Call'params :: U'.ReadCtx m msg => Call msg -> m (Payload msg)
 get_Call'params (Call struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Call'params :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'params :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'params(Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-get_Call'sendResultsTo :: U'.ReadCtx m => Call msg -> m (Call'sendResultsTo msg)
+get_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m (Call'sendResultsTo msg)
 get_Call'sendResultsTo (Call struct) = C'.fromStruct struct
 
-has_Call'sendResultsTo :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'sendResultsTo(Call struct) = pure True
-get_Call'allowThirdPartyTailCall :: U'.ReadCtx m => Call msg -> m Bool
+get_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
 get_Call'allowThirdPartyTailCall (Call struct) = C'.getWordField struct 2 0 0
 
-has_Call'allowThirdPartyTailCall :: U'.ReadCtx m => Call msg -> m Bool
+has_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'allowThirdPartyTailCall(Call struct) = pure $ 2 < U'.length (U'.dataSection struct)
 data CapDescriptor msg
     = CapDescriptor'none
@@ -91,7 +90,7 @@ data CapDescriptor msg
 
 
 
-instance C'.IsStruct (CapDescriptor msg) where
+instance C'.IsStruct msg (CapDescriptor msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
@@ -102,11 +101,16 @@ instance C'.IsStruct (CapDescriptor msg) where
             1 -> CapDescriptor'senderHosted <$>  C'.getWordField struct 0 32 0
             0 -> pure CapDescriptor'none
             _ -> pure $ CapDescriptor'unknown' tag
+instance GB'.ListElem msg (CapDescriptor msg) where
+    newtype List msg (CapDescriptor msg) = List_CapDescriptor (U'.ListOf msg (U'.Struct msg))
+    length (List_CapDescriptor l) = U'.length l
+    index i (List_CapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapDescriptor msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (CapDescriptor msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (CapDescriptor msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (CapDescriptor msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapDescriptor msg); go = C'.fromStruct} in go)
+
+instance C'.IsPtr msg (GB'.List msg (CapDescriptor msg)) where
+    fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
 
 data Message msg
     = Message'unimplemented (Message msg)
@@ -116,9 +120,9 @@ data Message msg
     | Message'finish (Finish msg)
     | Message'resolve (Resolve msg)
     | Message'release (Release msg)
-    | Message'obsoleteSave (Maybe U'.Ptr)
+    | Message'obsoleteSave (Maybe (U'.Ptr msg))
     | Message'bootstrap (Bootstrap msg)
-    | Message'obsoleteDelete (Maybe U'.Ptr)
+    | Message'obsoleteDelete (Maybe (U'.Ptr msg))
     | Message'provide (Provide msg)
     | Message'accept (Accept msg)
     | Message'join (Join msg)
@@ -139,7 +143,7 @@ data Message msg
 
 
 
-instance C'.IsStruct (Message msg) where
+instance C'.IsStruct msg (Message msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
@@ -158,11 +162,16 @@ instance C'.IsStruct (Message msg) where
             1 -> Message'abort <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             0 -> Message'unimplemented <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Message'unknown' tag
+instance GB'.ListElem msg (Message msg) where
+    newtype List msg (Message msg) = List_Message (U'.ListOf msg (U'.Struct msg))
+    length (List_Message l) = U'.length l
+    index i (List_Message l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Message msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (Message msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (Message msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (Message msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Message msg); go = C'.fromStruct} in go)
+
+instance C'.IsPtr msg (GB'.List msg (Message msg)) where
+    fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
 
 data MessageTarget msg
     = MessageTarget'importedCap Word32
@@ -171,115 +180,120 @@ data MessageTarget msg
 
 
 
-instance C'.IsStruct (MessageTarget msg) where
+instance C'.IsStruct msg (MessageTarget msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 32 0
         case tag of
             1 -> MessageTarget'promisedAnswer <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             0 -> MessageTarget'importedCap <$>  C'.getWordField struct 0 0 0
             _ -> pure $ MessageTarget'unknown' tag
+instance GB'.ListElem msg (MessageTarget msg) where
+    newtype List msg (MessageTarget msg) = List_MessageTarget (U'.ListOf msg (U'.Struct msg))
+    length (List_MessageTarget l) = U'.length l
+    index i (List_MessageTarget l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (MessageTarget msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (MessageTarget msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (MessageTarget msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (MessageTarget msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (MessageTarget msg); go = C'.fromStruct} in go)
 
-newtype Payload msg = Payload U'.Struct
+instance C'.IsPtr msg (GB'.List msg (MessageTarget msg)) where
+    fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
 
-instance C'.IsStruct (Payload msg) where
+newtype Payload msg = Payload (U'.Struct msg)
+
+instance C'.IsStruct msg (Payload msg) where
     fromStruct = pure . Payload
-instance C'.IsPtr (Payload msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Payload msg) where
+    fromPtr msg ptr = Payload <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Payload msg) where
-    newtype List msg (Payload msg) = List_Payload (U'.ListOf U'.Struct)
+    newtype List msg (Payload msg) = List_Payload (U'.ListOf msg (U'.Struct msg))
     length (List_Payload l) = U'.length l
-    index i (List_Payload l) = Payload <$> U'.index i l
+    index i (List_Payload l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Payload msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Payload (MM'.Message s)) where
-    setIndex (Payload elt) i (List_Payload l) = error "TODO: Generate code for setIndex"
+    setIndex (Payload elt) i (List_Payload l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Payload msg)) where
-    fromPtr = C'.structListPtr
-get_Payload'content :: U'.ReadCtx m => Payload msg -> m (Maybe U'.Ptr)
+instance C'.IsPtr msg (GB'.List msg (Payload msg)) where
+    fromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
+get_Payload'content :: U'.ReadCtx m msg => Payload msg -> m (Maybe (U'.Ptr msg))
 get_Payload'content (Payload struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Payload'content :: U'.ReadCtx m => Payload msg -> m Bool
+has_Payload'content :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'content(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Payload'capTable :: U'.ReadCtx m => Payload msg -> m (U'.ListOf (CapDescriptor msg))
+get_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m (GB'.List msg (CapDescriptor msg))
 get_Payload'capTable (Payload struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Payload'capTable :: U'.ReadCtx m => Payload msg -> m Bool
+has_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'capTable(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-newtype Provide msg = Provide U'.Struct
+newtype Provide msg = Provide (U'.Struct msg)
 
-instance C'.IsStruct (Provide msg) where
+instance C'.IsStruct msg (Provide msg) where
     fromStruct = pure . Provide
-instance C'.IsPtr (Provide msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Provide msg) where
+    fromPtr msg ptr = Provide <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Provide msg) where
-    newtype List msg (Provide msg) = List_Provide (U'.ListOf U'.Struct)
+    newtype List msg (Provide msg) = List_Provide (U'.ListOf msg (U'.Struct msg))
     length (List_Provide l) = U'.length l
-    index i (List_Provide l) = Provide <$> U'.index i l
+    index i (List_Provide l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Provide msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Provide (MM'.Message s)) where
-    setIndex (Provide elt) i (List_Provide l) = error "TODO: Generate code for setIndex"
+    setIndex (Provide elt) i (List_Provide l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Provide msg)) where
-    fromPtr = C'.structListPtr
-get_Provide'questionId :: U'.ReadCtx m => Provide msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Provide msg)) where
+    fromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
+get_Provide'questionId :: U'.ReadCtx m msg => Provide msg -> m Word32
 get_Provide'questionId (Provide struct) = C'.getWordField struct 0 0 0
 
-has_Provide'questionId :: U'.ReadCtx m => Provide msg -> m Bool
+has_Provide'questionId :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'questionId(Provide struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Provide'target :: U'.ReadCtx m => Provide msg -> m (MessageTarget msg)
+get_Provide'target :: U'.ReadCtx m msg => Provide msg -> m (MessageTarget msg)
 get_Provide'target (Provide struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Provide'target :: U'.ReadCtx m => Provide msg -> m Bool
+has_Provide'target :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'target(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Provide'recipient :: U'.ReadCtx m => Provide msg -> m (Maybe U'.Ptr)
+get_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m (Maybe (U'.Ptr msg))
 get_Provide'recipient (Provide struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Provide'recipient :: U'.ReadCtx m => Provide msg -> m Bool
+has_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'recipient(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-newtype Return msg = Return U'.Struct
+newtype Return msg = Return (U'.Struct msg)
 
-instance C'.IsStruct (Return msg) where
+instance C'.IsStruct msg (Return msg) where
     fromStruct = pure . Return
-instance C'.IsPtr (Return msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Return msg) where
+    fromPtr msg ptr = Return <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Return msg) where
-    newtype List msg (Return msg) = List_Return (U'.ListOf U'.Struct)
+    newtype List msg (Return msg) = List_Return (U'.ListOf msg (U'.Struct msg))
     length (List_Return l) = U'.length l
-    index i (List_Return l) = Return <$> U'.index i l
+    index i (List_Return l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Return (MM'.Message s)) where
-    setIndex (Return elt) i (List_Return l) = error "TODO: Generate code for setIndex"
+    setIndex (Return elt) i (List_Return l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Return msg)) where
-    fromPtr = C'.structListPtr
-get_Return''answerId :: U'.ReadCtx m => Return msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Return msg)) where
+    fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
+get_Return''answerId :: U'.ReadCtx m msg => Return msg -> m Word32
 get_Return''answerId (Return struct) = C'.getWordField struct 0 0 0
 
-has_Return''answerId :: U'.ReadCtx m => Return msg -> m Bool
+has_Return''answerId :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''answerId(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Return''releaseParamCaps :: U'.ReadCtx m => Return msg -> m Bool
+get_Return''releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
 get_Return''releaseParamCaps (Return struct) = C'.getWordField struct 0 32 1
 
-has_Return''releaseParamCaps :: U'.ReadCtx m => Return msg -> m Bool
+has_Return''releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''releaseParamCaps(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Return''union' :: U'.ReadCtx m => Return msg -> m (Return' msg)
+get_Return''union' :: U'.ReadCtx m msg => Return msg -> m (Return' msg)
 get_Return''union' (Return struct) = C'.fromStruct struct
 
-has_Return''union' :: U'.ReadCtx m => Return msg -> m Bool
+has_Return''union' :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''union'(Return struct) = pure True
 data Return' msg
     = Return'results (Payload msg)
@@ -287,7 +301,7 @@ data Return' msg
     | Return'canceled
     | Return'resultsSentElsewhere
     | Return'takeFromOtherQuestion Word32
-    | Return'acceptFromThirdParty (Maybe U'.Ptr)
+    | Return'acceptFromThirdParty (Maybe (U'.Ptr msg))
     | Return'unknown' Word16
 
 
@@ -296,7 +310,7 @@ data Return' msg
 
 
 
-instance C'.IsStruct (Return' msg) where
+instance C'.IsStruct msg (Return' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 48 0
         case tag of
@@ -307,36 +321,41 @@ instance C'.IsStruct (Return' msg) where
             1 -> Return'exception <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             0 -> Return'results <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Return'unknown' tag
+instance GB'.ListElem msg (Return' msg) where
+    newtype List msg (Return' msg) = List_Return' (U'.ListOf msg (U'.Struct msg))
+    length (List_Return' l) = U'.length l
+    index i (List_Return' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (Return' msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (Return' msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (Return' msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 
-newtype Release msg = Release U'.Struct
+instance C'.IsPtr msg (GB'.List msg (Return' msg)) where
+    fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
 
-instance C'.IsStruct (Release msg) where
+newtype Release msg = Release (U'.Struct msg)
+
+instance C'.IsStruct msg (Release msg) where
     fromStruct = pure . Release
-instance C'.IsPtr (Release msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Release msg) where
+    fromPtr msg ptr = Release <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Release msg) where
-    newtype List msg (Release msg) = List_Release (U'.ListOf U'.Struct)
+    newtype List msg (Release msg) = List_Release (U'.ListOf msg (U'.Struct msg))
     length (List_Release l) = U'.length l
-    index i (List_Release l) = Release <$> U'.index i l
+    index i (List_Release l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Release msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Release (MM'.Message s)) where
-    setIndex (Release elt) i (List_Release l) = error "TODO: Generate code for setIndex"
+    setIndex (Release elt) i (List_Release l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Release msg)) where
-    fromPtr = C'.structListPtr
-get_Release'id :: U'.ReadCtx m => Release msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Release msg)) where
+    fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
+get_Release'id :: U'.ReadCtx m msg => Release msg -> m Word32
 get_Release'id (Release struct) = C'.getWordField struct 0 0 0
 
-has_Release'id :: U'.ReadCtx m => Release msg -> m Bool
+has_Release'id :: U'.ReadCtx m msg => Release msg -> m Bool
 has_Release'id(Release struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Release'referenceCount :: U'.ReadCtx m => Release msg -> m Word32
+get_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Word32
 get_Release'referenceCount (Release struct) = C'.getWordField struct 0 32 0
 
-has_Release'referenceCount :: U'.ReadCtx m => Release msg -> m Bool
+has_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Bool
 has_Release'referenceCount(Release struct) = pure $ 0 < U'.length (U'.dataSection struct)
 data Exception'Type
     = Exception'Type'failed
@@ -363,40 +382,38 @@ instance C'.IsWord Exception'Type where
     toWord Exception'Type'failed = 0
     toWord (Exception'Type'unknown' tag) = fromIntegral tag
 instance GB'.ListElem msg Exception'Type where
-    newtype List msg Exception'Type = List_Exception'Type (U'.ListOf Word16)
+    newtype List msg Exception'Type = List_Exception'Type (U'.ListOf msg Word16)
     length (List_Exception'Type l) = U'.length l
     index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance GB'.MutListElem s Exception'Type where
     setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
-instance C'.IsPtr (U'.ListOf Exception'Type) where
-    fromPtr msg ptr = fmap
-       (fmap (toEnum . (fromIntegral :: Word16 -> Int)))
-       (C'.fromPtr msg ptr)
+instance C'.IsPtr msg (GB'.List msg Exception'Type) where
+    fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
 
-newtype Resolve msg = Resolve U'.Struct
+newtype Resolve msg = Resolve (U'.Struct msg)
 
-instance C'.IsStruct (Resolve msg) where
+instance C'.IsStruct msg (Resolve msg) where
     fromStruct = pure . Resolve
-instance C'.IsPtr (Resolve msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Resolve msg) where
+    fromPtr msg ptr = Resolve <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Resolve msg) where
-    newtype List msg (Resolve msg) = List_Resolve (U'.ListOf U'.Struct)
+    newtype List msg (Resolve msg) = List_Resolve (U'.ListOf msg (U'.Struct msg))
     length (List_Resolve l) = U'.length l
-    index i (List_Resolve l) = Resolve <$> U'.index i l
+    index i (List_Resolve l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Resolve (MM'.Message s)) where
-    setIndex (Resolve elt) i (List_Resolve l) = error "TODO: Generate code for setIndex"
+    setIndex (Resolve elt) i (List_Resolve l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Resolve msg)) where
-    fromPtr = C'.structListPtr
-get_Resolve''promiseId :: U'.ReadCtx m => Resolve msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Resolve msg)) where
+    fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
+get_Resolve''promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
 get_Resolve''promiseId (Resolve struct) = C'.getWordField struct 0 0 0
 
-has_Resolve''promiseId :: U'.ReadCtx m => Resolve msg -> m Bool
+has_Resolve''promiseId :: U'.ReadCtx m msg => Resolve msg -> m Bool
 has_Resolve''promiseId(Resolve struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Resolve''union' :: U'.ReadCtx m => Resolve msg -> m (Resolve' msg)
+get_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
 get_Resolve''union' (Resolve struct) = C'.fromStruct struct
 
-has_Resolve''union' :: U'.ReadCtx m => Resolve msg -> m Bool
+has_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
 has_Resolve''union'(Resolve struct) = pure True
 data Resolve' msg
     = Resolve'cap (CapDescriptor msg)
@@ -405,104 +422,109 @@ data Resolve' msg
 
 
 
-instance C'.IsStruct (Resolve' msg) where
+instance C'.IsStruct msg (Resolve' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 32 0
         case tag of
             1 -> Resolve'exception <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             0 -> Resolve'cap <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Resolve'unknown' tag
+instance GB'.ListElem msg (Resolve' msg) where
+    newtype List msg (Resolve' msg) = List_Resolve' (U'.ListOf msg (U'.Struct msg))
+    length (List_Resolve' l) = U'.length l
+    index i (List_Resolve' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (Resolve' msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (Resolve' msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (Resolve' msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 
-newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor U'.Struct
+instance C'.IsPtr msg (GB'.List msg (Resolve' msg)) where
+    fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
 
-instance C'.IsStruct (ThirdPartyCapDescriptor msg) where
+newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor (U'.Struct msg)
+
+instance C'.IsStruct msg (ThirdPartyCapDescriptor msg) where
     fromStruct = pure . ThirdPartyCapDescriptor
-instance C'.IsPtr (ThirdPartyCapDescriptor msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (ThirdPartyCapDescriptor msg) where
+    fromPtr msg ptr = ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (ThirdPartyCapDescriptor msg) where
-    newtype List msg (ThirdPartyCapDescriptor msg) = List_ThirdPartyCapDescriptor (U'.ListOf U'.Struct)
+    newtype List msg (ThirdPartyCapDescriptor msg) = List_ThirdPartyCapDescriptor (U'.ListOf msg (U'.Struct msg))
     length (List_ThirdPartyCapDescriptor l) = U'.length l
-    index i (List_ThirdPartyCapDescriptor l) = ThirdPartyCapDescriptor <$> U'.index i l
+    index i (List_ThirdPartyCapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ThirdPartyCapDescriptor msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (ThirdPartyCapDescriptor (MM'.Message s)) where
-    setIndex (ThirdPartyCapDescriptor elt) i (List_ThirdPartyCapDescriptor l) = error "TODO: Generate code for setIndex"
+    setIndex (ThirdPartyCapDescriptor elt) i (List_ThirdPartyCapDescriptor l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (ThirdPartyCapDescriptor msg)) where
-    fromPtr = C'.structListPtr
-get_ThirdPartyCapDescriptor'id :: U'.ReadCtx m => ThirdPartyCapDescriptor msg -> m (Maybe U'.Ptr)
+instance C'.IsPtr msg (GB'.List msg (ThirdPartyCapDescriptor msg)) where
+    fromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
+get_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m (Maybe (U'.Ptr msg))
 get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_ThirdPartyCapDescriptor'id :: U'.ReadCtx m => ThirdPartyCapDescriptor msg -> m Bool
+has_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Bool
 has_ThirdPartyCapDescriptor'id(ThirdPartyCapDescriptor struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m => ThirdPartyCapDescriptor msg -> m Word32
+get_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Word32
 get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) = C'.getWordField struct 0 0 0
 
-has_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m => ThirdPartyCapDescriptor msg -> m Bool
+has_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Bool
 has_ThirdPartyCapDescriptor'vineId(ThirdPartyCapDescriptor struct) = pure $ 0 < U'.length (U'.dataSection struct)
-newtype Finish msg = Finish U'.Struct
+newtype Finish msg = Finish (U'.Struct msg)
 
-instance C'.IsStruct (Finish msg) where
+instance C'.IsStruct msg (Finish msg) where
     fromStruct = pure . Finish
-instance C'.IsPtr (Finish msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Finish msg) where
+    fromPtr msg ptr = Finish <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Finish msg) where
-    newtype List msg (Finish msg) = List_Finish (U'.ListOf U'.Struct)
+    newtype List msg (Finish msg) = List_Finish (U'.ListOf msg (U'.Struct msg))
     length (List_Finish l) = U'.length l
-    index i (List_Finish l) = Finish <$> U'.index i l
+    index i (List_Finish l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Finish msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Finish (MM'.Message s)) where
-    setIndex (Finish elt) i (List_Finish l) = error "TODO: Generate code for setIndex"
+    setIndex (Finish elt) i (List_Finish l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Finish msg)) where
-    fromPtr = C'.structListPtr
-get_Finish'questionId :: U'.ReadCtx m => Finish msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Finish msg)) where
+    fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
+get_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Word32
 get_Finish'questionId (Finish struct) = C'.getWordField struct 0 0 0
 
-has_Finish'questionId :: U'.ReadCtx m => Finish msg -> m Bool
+has_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Bool
 has_Finish'questionId(Finish struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Finish'releaseResultCaps :: U'.ReadCtx m => Finish msg -> m Bool
+get_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
 get_Finish'releaseResultCaps (Finish struct) = C'.getWordField struct 0 32 1
 
-has_Finish'releaseResultCaps :: U'.ReadCtx m => Finish msg -> m Bool
+has_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
 has_Finish'releaseResultCaps(Finish struct) = pure $ 0 < U'.length (U'.dataSection struct)
-newtype Accept msg = Accept U'.Struct
+newtype Accept msg = Accept (U'.Struct msg)
 
-instance C'.IsStruct (Accept msg) where
+instance C'.IsStruct msg (Accept msg) where
     fromStruct = pure . Accept
-instance C'.IsPtr (Accept msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Accept msg) where
+    fromPtr msg ptr = Accept <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Accept msg) where
-    newtype List msg (Accept msg) = List_Accept (U'.ListOf U'.Struct)
+    newtype List msg (Accept msg) = List_Accept (U'.ListOf msg (U'.Struct msg))
     length (List_Accept l) = U'.length l
-    index i (List_Accept l) = Accept <$> U'.index i l
+    index i (List_Accept l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Accept msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Accept (MM'.Message s)) where
-    setIndex (Accept elt) i (List_Accept l) = error "TODO: Generate code for setIndex"
+    setIndex (Accept elt) i (List_Accept l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Accept msg)) where
-    fromPtr = C'.structListPtr
-get_Accept'questionId :: U'.ReadCtx m => Accept msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Accept msg)) where
+    fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
+get_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Word32
 get_Accept'questionId (Accept struct) = C'.getWordField struct 0 0 0
 
-has_Accept'questionId :: U'.ReadCtx m => Accept msg -> m Bool
+has_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'questionId(Accept struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Accept'provision :: U'.ReadCtx m => Accept msg -> m (Maybe U'.Ptr)
+get_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m (Maybe (U'.Ptr msg))
 get_Accept'provision (Accept struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Accept'provision :: U'.ReadCtx m => Accept msg -> m Bool
+has_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'provision(Accept struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Accept'embargo :: U'.ReadCtx m => Accept msg -> m Bool
+get_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
 get_Accept'embargo (Accept struct) = C'.getWordField struct 0 32 0
 
-has_Accept'embargo :: U'.ReadCtx m => Accept msg -> m Bool
+has_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'embargo(Accept struct) = pure $ 0 < U'.length (U'.dataSection struct)
 data Disembargo'context msg
     = Disembargo'context'senderLoopback Word32
@@ -515,7 +537,7 @@ data Disembargo'context msg
 
 
 
-instance C'.IsStruct (Disembargo'context msg) where
+instance C'.IsStruct msg (Disembargo'context msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 32 0
         case tag of
@@ -524,88 +546,93 @@ instance C'.IsStruct (Disembargo'context msg) where
             1 -> Disembargo'context'receiverLoopback <$>  C'.getWordField struct 0 0 0
             0 -> Disembargo'context'senderLoopback <$>  C'.getWordField struct 0 0 0
             _ -> pure $ Disembargo'context'unknown' tag
+instance GB'.ListElem msg (Disembargo'context msg) where
+    newtype List msg (Disembargo'context msg) = List_Disembargo'context (U'.ListOf msg (U'.Struct msg))
+    length (List_Disembargo'context l) = U'.length l
+    index i (List_Disembargo'context l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo'context msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (Disembargo'context msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (Disembargo'context msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (Disembargo'context msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo'context msg); go = C'.fromStruct} in go)
 
-newtype Exception msg = Exception U'.Struct
+instance C'.IsPtr msg (GB'.List msg (Disembargo'context msg)) where
+    fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
 
-instance C'.IsStruct (Exception msg) where
+newtype Exception msg = Exception (U'.Struct msg)
+
+instance C'.IsStruct msg (Exception msg) where
     fromStruct = pure . Exception
-instance C'.IsPtr (Exception msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Exception msg) where
+    fromPtr msg ptr = Exception <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Exception msg) where
-    newtype List msg (Exception msg) = List_Exception (U'.ListOf U'.Struct)
+    newtype List msg (Exception msg) = List_Exception (U'.ListOf msg (U'.Struct msg))
     length (List_Exception l) = U'.length l
-    index i (List_Exception l) = Exception <$> U'.index i l
+    index i (List_Exception l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Exception msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Exception (MM'.Message s)) where
-    setIndex (Exception elt) i (List_Exception l) = error "TODO: Generate code for setIndex"
+    setIndex (Exception elt) i (List_Exception l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Exception msg)) where
-    fromPtr = C'.structListPtr
-get_Exception'reason :: U'.ReadCtx m => Exception msg -> m B'.Text
+instance C'.IsPtr msg (GB'.List msg (Exception msg)) where
+    fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
+get_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m (GB'.Text msg)
 get_Exception'reason (Exception struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Exception'reason :: U'.ReadCtx m => Exception msg -> m Bool
+has_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'reason(Exception struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m => Exception msg -> m Bool
+get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception struct) = C'.getWordField struct 0 0 0
 
-has_Exception'obsoleteIsCallersFault :: U'.ReadCtx m => Exception msg -> m Bool
+has_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'obsoleteIsCallersFault(Exception struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Exception'obsoleteDurability :: U'.ReadCtx m => Exception msg -> m Word16
+get_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Word16
 get_Exception'obsoleteDurability (Exception struct) = C'.getWordField struct 0 16 0
 
-has_Exception'obsoleteDurability :: U'.ReadCtx m => Exception msg -> m Bool
+has_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'obsoleteDurability(Exception struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Exception'type_ :: U'.ReadCtx m => Exception msg -> m Exception'Type
+get_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Exception'Type
 get_Exception'type_ (Exception struct) = C'.getWordField struct 0 32 0
 
-has_Exception'type_ :: U'.ReadCtx m => Exception msg -> m Bool
+has_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'type_(Exception struct) = pure $ 0 < U'.length (U'.dataSection struct)
-newtype PromisedAnswer msg = PromisedAnswer U'.Struct
+newtype PromisedAnswer msg = PromisedAnswer (U'.Struct msg)
 
-instance C'.IsStruct (PromisedAnswer msg) where
+instance C'.IsStruct msg (PromisedAnswer msg) where
     fromStruct = pure . PromisedAnswer
-instance C'.IsPtr (PromisedAnswer msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (PromisedAnswer msg) where
+    fromPtr msg ptr = PromisedAnswer <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (PromisedAnswer msg) where
-    newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf U'.Struct)
+    newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf msg (U'.Struct msg))
     length (List_PromisedAnswer l) = U'.length l
-    index i (List_PromisedAnswer l) = PromisedAnswer <$> U'.index i l
+    index i (List_PromisedAnswer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (PromisedAnswer (MM'.Message s)) where
-    setIndex (PromisedAnswer elt) i (List_PromisedAnswer l) = error "TODO: Generate code for setIndex"
+    setIndex (PromisedAnswer elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (PromisedAnswer msg)) where
-    fromPtr = C'.structListPtr
-get_PromisedAnswer'questionId :: U'.ReadCtx m => PromisedAnswer msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (PromisedAnswer msg)) where
+    fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
+get_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Word32
 get_PromisedAnswer'questionId (PromisedAnswer struct) = C'.getWordField struct 0 0 0
 
-has_PromisedAnswer'questionId :: U'.ReadCtx m => PromisedAnswer msg -> m Bool
+has_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
 has_PromisedAnswer'questionId(PromisedAnswer struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_PromisedAnswer'transform :: U'.ReadCtx m => PromisedAnswer msg -> m (U'.ListOf (PromisedAnswer'Op msg))
+get_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m (GB'.List msg (PromisedAnswer'Op msg))
 get_PromisedAnswer'transform (PromisedAnswer struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_PromisedAnswer'transform :: U'.ReadCtx m => PromisedAnswer msg -> m Bool
+has_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
 has_PromisedAnswer'transform(PromisedAnswer struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 data Call'sendResultsTo msg
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
-    | Call'sendResultsTo'thirdParty (Maybe U'.Ptr)
+    | Call'sendResultsTo'thirdParty (Maybe (U'.Ptr msg))
     | Call'sendResultsTo'unknown' Word16
 
 
 
 
-instance C'.IsStruct (Call'sendResultsTo msg) where
+instance C'.IsStruct msg (Call'sendResultsTo msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 48 0
         case tag of
@@ -613,39 +640,44 @@ instance C'.IsStruct (Call'sendResultsTo msg) where
             1 -> pure Call'sendResultsTo'yourself
             0 -> pure Call'sendResultsTo'caller
             _ -> pure $ Call'sendResultsTo'unknown' tag
+instance GB'.ListElem msg (Call'sendResultsTo msg) where
+    newtype List msg (Call'sendResultsTo msg) = List_Call'sendResultsTo (U'.ListOf msg (U'.Struct msg))
+    length (List_Call'sendResultsTo l) = U'.length l
+    index i (List_Call'sendResultsTo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (Call'sendResultsTo msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (Call'sendResultsTo msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (Call'sendResultsTo msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
 
-newtype Bootstrap msg = Bootstrap U'.Struct
+instance C'.IsPtr msg (GB'.List msg (Call'sendResultsTo msg)) where
+    fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
 
-instance C'.IsStruct (Bootstrap msg) where
+newtype Bootstrap msg = Bootstrap (U'.Struct msg)
+
+instance C'.IsStruct msg (Bootstrap msg) where
     fromStruct = pure . Bootstrap
-instance C'.IsPtr (Bootstrap msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Bootstrap msg) where
+    fromPtr msg ptr = Bootstrap <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Bootstrap msg) where
-    newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf U'.Struct)
+    newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf msg (U'.Struct msg))
     length (List_Bootstrap l) = U'.length l
-    index i (List_Bootstrap l) = Bootstrap <$> U'.index i l
+    index i (List_Bootstrap l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bootstrap msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Bootstrap (MM'.Message s)) where
-    setIndex (Bootstrap elt) i (List_Bootstrap l) = error "TODO: Generate code for setIndex"
+    setIndex (Bootstrap elt) i (List_Bootstrap l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Bootstrap msg)) where
-    fromPtr = C'.structListPtr
-get_Bootstrap'questionId :: U'.ReadCtx m => Bootstrap msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Bootstrap msg)) where
+    fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
+get_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Word32
 get_Bootstrap'questionId (Bootstrap struct) = C'.getWordField struct 0 0 0
 
-has_Bootstrap'questionId :: U'.ReadCtx m => Bootstrap msg -> m Bool
+has_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
 has_Bootstrap'questionId(Bootstrap struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Bootstrap'deprecatedObjectId :: U'.ReadCtx m => Bootstrap msg -> m (Maybe U'.Ptr)
+get_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m (Maybe (U'.Ptr msg))
 get_Bootstrap'deprecatedObjectId (Bootstrap struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m => Bootstrap msg -> m Bool
+has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
 has_Bootstrap'deprecatedObjectId(Bootstrap struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 data PromisedAnswer'Op msg
     = PromisedAnswer'Op'noop
@@ -654,80 +686,85 @@ data PromisedAnswer'Op msg
 
 
 
-instance C'.IsStruct (PromisedAnswer'Op msg) where
+instance C'.IsStruct msg (PromisedAnswer'Op msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
             1 -> PromisedAnswer'Op'getPointerField <$>  C'.getWordField struct 0 16 0
             0 -> pure PromisedAnswer'Op'noop
             _ -> pure $ PromisedAnswer'Op'unknown' tag
+instance GB'.ListElem msg (PromisedAnswer'Op msg) where
+    newtype List msg (PromisedAnswer'Op msg) = List_PromisedAnswer'Op (U'.ListOf msg (U'.Struct msg))
+    length (List_PromisedAnswer'Op l) = U'.length l
+    index i (List_PromisedAnswer'Op l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer'Op msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr (PromisedAnswer'Op msg) where
-    fromPtr = C'.structPtr
-instance C'.IsPtr (U'.ListOf (PromisedAnswer'Op msg)) where
-    fromPtr = C'.structListPtr
+instance C'.IsPtr msg (PromisedAnswer'Op msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer'Op msg); go = C'.fromStruct} in go)
 
-newtype Disembargo msg = Disembargo U'.Struct
+instance C'.IsPtr msg (GB'.List msg (PromisedAnswer'Op msg)) where
+    fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
 
-instance C'.IsStruct (Disembargo msg) where
+newtype Disembargo msg = Disembargo (U'.Struct msg)
+
+instance C'.IsStruct msg (Disembargo msg) where
     fromStruct = pure . Disembargo
-instance C'.IsPtr (Disembargo msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Disembargo msg) where
+    fromPtr msg ptr = Disembargo <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Disembargo msg) where
-    newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf U'.Struct)
+    newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf msg (U'.Struct msg))
     length (List_Disembargo l) = U'.length l
-    index i (List_Disembargo l) = Disembargo <$> U'.index i l
+    index i (List_Disembargo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Disembargo (MM'.Message s)) where
-    setIndex (Disembargo elt) i (List_Disembargo l) = error "TODO: Generate code for setIndex"
+    setIndex (Disembargo elt) i (List_Disembargo l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Disembargo msg)) where
-    fromPtr = C'.structListPtr
-get_Disembargo'target :: U'.ReadCtx m => Disembargo msg -> m (MessageTarget msg)
+instance C'.IsPtr msg (GB'.List msg (Disembargo msg)) where
+    fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
+get_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m (MessageTarget msg)
 get_Disembargo'target (Disembargo struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Disembargo'target :: U'.ReadCtx m => Disembargo msg -> m Bool
+has_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'target(Disembargo struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Disembargo'context :: U'.ReadCtx m => Disembargo msg -> m (Disembargo'context msg)
+get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
 get_Disembargo'context (Disembargo struct) = C'.fromStruct struct
 
-has_Disembargo'context :: U'.ReadCtx m => Disembargo msg -> m Bool
+has_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'context(Disembargo struct) = pure True
-newtype Join msg = Join U'.Struct
+newtype Join msg = Join (U'.Struct msg)
 
-instance C'.IsStruct (Join msg) where
+instance C'.IsStruct msg (Join msg) where
     fromStruct = pure . Join
-instance C'.IsPtr (Join msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Join msg) where
+    fromPtr msg ptr = Join <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Join msg) where
-    newtype List msg (Join msg) = List_Join (U'.ListOf U'.Struct)
+    newtype List msg (Join msg) = List_Join (U'.ListOf msg (U'.Struct msg))
     length (List_Join l) = U'.length l
-    index i (List_Join l) = Join <$> U'.index i l
+    index i (List_Join l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Join msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Join (MM'.Message s)) where
-    setIndex (Join elt) i (List_Join l) = error "TODO: Generate code for setIndex"
+    setIndex (Join elt) i (List_Join l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Join msg)) where
-    fromPtr = C'.structListPtr
-get_Join'questionId :: U'.ReadCtx m => Join msg -> m Word32
+instance C'.IsPtr msg (GB'.List msg (Join msg)) where
+    fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
+get_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Word32
 get_Join'questionId (Join struct) = C'.getWordField struct 0 0 0
 
-has_Join'questionId :: U'.ReadCtx m => Join msg -> m Bool
+has_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'questionId(Join struct) = pure $ 0 < U'.length (U'.dataSection struct)
-get_Join'target :: U'.ReadCtx m => Join msg -> m (MessageTarget msg)
+get_Join'target :: U'.ReadCtx m msg => Join msg -> m (MessageTarget msg)
 get_Join'target (Join struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Join'target :: U'.ReadCtx m => Join msg -> m Bool
+has_Join'target :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'target(Join struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-get_Join'keyPart :: U'.ReadCtx m => Join msg -> m (Maybe U'.Ptr)
+get_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m (Maybe (U'.Ptr msg))
 get_Join'keyPart (Join struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Join'keyPart :: U'.ReadCtx m => Join msg -> m Bool
+has_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'keyPart(Join struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct

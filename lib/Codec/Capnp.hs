@@ -33,7 +33,7 @@ class MutListElem s e where
     setIndex :: (GU.ReadCtx m (MM.Message s), MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
 
 class Decerialize from to where
-    decerialize :: ReadCtx m => from -> m to
+    decerialize :: GU.ReadCtx m M.Message => from -> m to
 
 -- | Types that can be converted to and from a 64-bit word.
 --
@@ -69,6 +69,8 @@ getWordField struct idx offset def = fmap
     )
     (getData idx struct)
 
+instance Decerialize () () where
+    decerialize = pure
 instance Decerialize Bool Bool where
     decerialize = pure
 instance Decerialize Word8 Word8 where

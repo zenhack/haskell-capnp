@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -7,10 +8,11 @@ module Codec.Capnp.Generic
     , MutListElem(..)
     , IsPtr(..)
     , IsStruct(..)
+    , Decerialize(..)
     , getWordField
     ) where
 
-import Codec.Capnp (IsWord(..), ListElem(..), MutListElem(..))
+import Codec.Capnp (Decerialize(..), IsWord(..), ListElem(..), MutListElem(..))
 
 import Data.Bits
 import Data.Word

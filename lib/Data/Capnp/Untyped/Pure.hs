@@ -25,9 +25,6 @@ module Data.Capnp.Untyped.Pure
     , length
     , sliceIndex
 
-    -- Converting from Data.Capnp.Untyped.
-    , readStruct
-
     -- TODO: figure out a better places to put these:
     , ptrStruct
     , list0
@@ -40,7 +37,7 @@ module Data.Capnp.Untyped.Pure
     )
   where
 
-import Prelude hiding (length, readList)
+import Prelude hiding (length)
 
 import Data.Word
 
@@ -52,9 +49,11 @@ import Data.Primitive.Array          (Array)
 import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
-import qualified Data.ByteString    as BS
-import qualified Data.Capnp.Untyped as U
-import qualified Data.Vector        as V
+import qualified Codec.Capnp.Generic        as C
+import qualified Data.ByteString            as BS
+import qualified Data.Capnp.Message         as M
+import qualified Data.Capnp.Untyped.Generic as U
+import qualified Data.Vector                as V
 
 type Cap = Word32
 
@@ -112,46 +111,33 @@ sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
 
-instance Decerialize U.Struct Struct where
-    decerialize = readStruct
+instance Decerialize (U.Struct M.Message) Struct where
+    decerialize struct = Struct
+        <$> (Slice <$> decerialize (U.dataSection struct))
+        <*> (Slice <$> decerialize (U.ptrSection struct))
 
--- | Parse a struct into its ADT form.
-readStruct :: U.ReadCtx m => U.Struct -> m Struct
-readStruct struct = Struct
-    <$> (Slice <$> readList (U.dataSection struct) pure)
-    <*> (Slice <$> readList (U.ptrSection struct) readPtr)
+instance Decerialize (Maybe (U.Ptr M.Message)) (Maybe PtrType) where
+    decerialize Nothing = pure Nothing
+    decerialize (Just ptr) = Just <$> case ptr of
+        U.PtrCap _ cap     -> return (PtrCap cap)
+        U.PtrStruct struct -> PtrStruct <$> decerialize struct
+        U.PtrList list     -> PtrList <$> decerialize list
 
-instance Decerialize (Maybe U.Ptr) (Maybe PtrType) where
-    decerialize = readPtr
+instance (C.ListElem M.Message a, Decerialize a b) => Decerialize (C.List M.Message a) (List b) where
+    decerialize raw = V.generateM (C.length raw) (\i -> C.index i raw >>= decerialize)
 
--- | Parse a (possibly null) pointer into its ADT form.
-readPtr :: U.ReadCtx m
-    => Maybe U.Ptr
-    -> m (Maybe PtrType)
-readPtr Nothing               = return Nothing
-readPtr (Just ptr) = Just <$> case ptr of
-    U.PtrCap _ cap     -> return (PtrCap cap)
-    U.PtrStruct struct -> PtrStruct <$> readStruct struct
-    U.PtrList list     -> PtrList <$> readList' list
+instance Decerialize a b => Decerialize (U.ListOf M.Message a) (List b) where
+    decerialize raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
 
-instance Decerialize a b => Decerialize (U.ListOf a) (List b) where
-    decerialize raw = readList raw decerialize
-
--- | @'readList' list readElt@ parses a list into its ADT form. @readElt@ is
--- used to parse the elements.
-readList :: U.ReadCtx m => U.ListOf a -> (a -> m b) -> m (List b)
-readList list readElt =
-    V.generateM (U.length list) (\i -> U.index i list >>= readElt)
-
-readList' :: U.ReadCtx m => U.List -> m List'
-readList' (U.List0 l)      = List0' <$> readList l pure
-readList' (U.List1 l)      = List1' <$> readList l pure
-readList' (U.List8 l)      = List8' <$> readList l pure
-readList' (U.List16 l)     = List16' <$> readList l pure
-readList' (U.List32 l)     = List32' <$> readList l pure
-readList' (U.List64 l)     = List64' <$> readList l pure
-readList' (U.ListPtr l)    = ListPtr' <$> readList l readPtr
-readList' (U.ListStruct l) = ListStruct' <$> readList l readStruct
+instance Decerialize (U.List M.Message) List' where
+    decerialize (U.List0 l)      = List0' <$> decerialize l
+    decerialize (U.List1 l)      = List1' <$> decerialize l
+    decerialize (U.List8 l)      = List8' <$> decerialize l
+    decerialize (U.List16 l)     = List16' <$> decerialize l
+    decerialize (U.List32 l)     = List32' <$> decerialize l
+    decerialize (U.List64 l)     = List64' <$> decerialize l
+    decerialize (U.ListPtr l)    = ListPtr' <$> decerialize l
+    decerialize (U.ListStruct l) = ListStruct' <$> decerialize l
 
 ptrStruct :: MonadThrow f => Maybe PtrType -> f Struct
 ptrStruct Nothing              = pure def

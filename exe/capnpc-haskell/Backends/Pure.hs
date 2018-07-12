@@ -77,10 +77,9 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import Control.Monad.Catch (MonadThrow)"
     , "import Data.Capnp.TraversalLimit (MonadLimit)"
     , ""
-    , "import qualified Data.Capnp.Message"
-    , "import qualified Data.Capnp.Untyped.Pure"
-    , "import qualified Data.Capnp.Untyped"
-    , "import qualified Codec.Capnp"
+    , "import qualified Data.Capnp.Message as M'"
+    , "import qualified Data.Capnp.Untyped.Pure as PU'"
+    , "import qualified Codec.Capnp.Generic as C'"
     , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , mintercalate "\n" $ map (fmtImport Pure) modImports
@@ -115,10 +114,10 @@ fmtPrimType PrimData                     = "Data"
 fmtPrimType PrimVoid                     = "()"
 
 fmtUntyped :: Untyped -> TB.Builder
-fmtUntyped Struct = "Data.Capnp.Untyped.Pure.Struct"
-fmtUntyped List   = "Data.Capnp.Untyped.Pure.List'"
-fmtUntyped Cap    = "Data.Capnp.Untyped.Pure.Cap"
-fmtUntyped Ptr    = "Data.Capnp.Untyped.Pure.PtrType"
+fmtUntyped Struct = "PU'.Struct"
+fmtUntyped List   = "PU'.List'"
+fmtUntyped Cap    = "PU'.Cap"
+fmtUntyped Ptr    = "PU'.PtrType"
 
 fmtVariant :: Id -> Variant -> TB.Builder
 fmtVariant thisMod Variant{variantName,variantParams} =
@@ -144,7 +143,7 @@ fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
     let nameText = fmtName Pure thisMod (valueName name)
     in mconcat
         [ nameText, " :: ", fmtType thisMod wordType, "\n"
-        , nameText, " = Codec.Capnp.fromWord ", TB.fromString (show wordValue), "\n"
+        , nameText, " = C'.fromWord ", TB.fromString (show wordValue), "\n"
         ]
 
 fmtDataDef ::  Id -> Name -> DataDef -> TB.Builder
@@ -156,9 +155,9 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
         , "\n    deriving(Show, Read, Eq)"
         , "\n\n"
-        , "instance Codec.Capnp.Decerialize "
+        , "instance C'.Decerialize "
         , case dataCerialType of
-            CTyStruct -> "(" <> rawName <> " msg)"
+            CTyStruct -> "(" <> rawName <> " M'.Message)"
             CTyEnum   -> rawName
         , " "
         , pureName
@@ -175,11 +174,11 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "\n\n"
         , case dataCerialType of
             CTyStruct -> mconcat
-                [ "instance Codec.Capnp.IsStruct "
+                [ "instance C'.IsStruct M'.Message "
                 , pureName, " where\n"
                 , "    fromStruct struct = do\n"
-                , "        raw <- Codec.Capnp.fromStruct struct\n"
-                , "        Codec.Capnp.decerialize (raw :: ", rawName, " Data.Capnp.Message.Message)\n"
+                , "        raw <- C'.fromStruct struct\n"
+                , "        C'.decerialize (raw :: ", rawName, " M'.Message)\n"
                 , "\n"
                 ]
             _ ->
@@ -192,7 +191,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , mintercalate "\n            <*> " $
             flip map fields $ \Field{fieldName} -> mconcat
                 [ "(", fmtName Raw thisMod $ prefixName "get_" (subName variantName fieldName)
-                , " raw >>= Codec.Capnp.decerialize)"
+                , " raw >>= C'.decerialize)"
                 ]
         ]
     fmtDecerializeVariant Variant{variantName,variantParams} =
@@ -204,5 +203,5 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
             _ -> mconcat
                 [ " val -> "
                 , fmtName Pure thisMod variantName
-                , " <$> Codec.Capnp.decerialize val"
+                , " <$> C'.decerialize val"
                 ]

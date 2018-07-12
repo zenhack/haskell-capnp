@@ -17,10 +17,9 @@ import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
-import qualified Data.Capnp.Message
-import qualified Data.Capnp.Untyped.Pure
-import qualified Data.Capnp.Untyped
-import qualified Codec.Capnp
+import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Codec.Capnp.Generic as C'
 
 import qualified Capnp.ById.Xb8630836983feed7
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -28,31 +27,31 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 
 data Persistent'SaveResults
     = Persistent'SaveResults
-        { sturdyRef :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
+        { sturdyRef :: Maybe (PU'.PtrType)
         }
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults msg) Persistent'SaveResults where
+instance C'.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.Message) Persistent'SaveResults where
     decerialize raw = Persistent'SaveResults
-            <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= Codec.Capnp.decerialize)
+            <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= C'.decerialize)
 
-instance Codec.Capnp.IsStruct Persistent'SaveResults where
+instance C'.IsStruct M'.Message Persistent'SaveResults where
     fromStruct struct = do
-        raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults Data.Capnp.Message.Message)
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.Message)
 
 data Persistent'SaveParams
     = Persistent'SaveParams
-        { sealFor :: Maybe (Data.Capnp.Untyped.Pure.PtrType)
+        { sealFor :: Maybe (PU'.PtrType)
         }
     deriving(Show, Read, Eq)
 
-instance Codec.Capnp.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams msg) Persistent'SaveParams where
+instance C'.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.Message) Persistent'SaveParams where
     decerialize raw = Persistent'SaveParams
-            <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= Codec.Capnp.decerialize)
+            <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= C'.decerialize)
 
-instance Codec.Capnp.IsStruct Persistent'SaveParams where
+instance C'.IsStruct M'.Message Persistent'SaveParams where
     fromStruct struct = do
-        raw <- Codec.Capnp.fromStruct struct
-        Codec.Capnp.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams Data.Capnp.Message.Message)
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.Message)
 

@@ -17,10 +17,9 @@ import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
-import qualified Data.Capnp.Message
-import qualified Data.Capnp.Untyped.Pure
-import qualified Data.Capnp.Untyped
-import qualified Codec.Capnp
+import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Codec.Capnp.Generic as C'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 

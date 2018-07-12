@@ -11,58 +11,57 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
-import qualified Codec.Capnp as C'
-import qualified Data.Capnp.Basics as B'
+import qualified Codec.Capnp.Generic as C'
 import qualified Data.Capnp.Basics.Generic as GB'
 import qualified Data.Capnp.TraversalLimit as TL'
-import qualified Data.Capnp.Untyped as U'
+import qualified Data.Capnp.Untyped.Generic as U'
 import qualified Data.Capnp.Message.Mutable as MM'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-newtype Persistent'SaveResults msg = Persistent'SaveResults U'.Struct
+newtype Persistent'SaveResults msg = Persistent'SaveResults (U'.Struct msg)
 
-instance C'.IsStruct (Persistent'SaveResults msg) where
+instance C'.IsStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults
-instance C'.IsPtr (Persistent'SaveResults msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Persistent'SaveResults msg) where
+    fromPtr msg ptr = Persistent'SaveResults <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Persistent'SaveResults msg) where
-    newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf U'.Struct)
+    newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveResults l) = U'.length l
-    index i (List_Persistent'SaveResults l) = Persistent'SaveResults <$> U'.index i l
+    index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Persistent'SaveResults (MM'.Message s)) where
-    setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = error "TODO: Generate code for setIndex"
+    setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Persistent'SaveResults msg)) where
-    fromPtr = C'.structListPtr
-get_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m => Persistent'SaveResults msg -> m (Maybe U'.Ptr)
+instance C'.IsPtr msg (GB'.List msg (Persistent'SaveResults msg)) where
+    fromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
+get_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m (Maybe (U'.Ptr msg))
 get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m => Persistent'SaveResults msg -> m Bool
+has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-newtype Persistent'SaveParams msg = Persistent'SaveParams U'.Struct
+newtype Persistent'SaveParams msg = Persistent'SaveParams (U'.Struct msg)
 
-instance C'.IsStruct (Persistent'SaveParams msg) where
+instance C'.IsStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams
-instance C'.IsPtr (Persistent'SaveParams msg) where
-    fromPtr = C'.structPtr
+instance C'.IsPtr msg (Persistent'SaveParams msg) where
+    fromPtr msg ptr = Persistent'SaveParams <$> C'.fromPtr msg ptr
 instance GB'.ListElem msg (Persistent'SaveParams msg) where
-    newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf U'.Struct)
+    newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveParams l) = U'.length l
-    index i (List_Persistent'SaveParams l) = Persistent'SaveParams <$> U'.index i l
+    index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
 instance GB'.MutListElem s (Persistent'SaveParams (MM'.Message s)) where
-    setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = error "TODO: Generate code for setIndex"
+    setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
 
-instance C'.IsPtr (U'.ListOf (Persistent'SaveParams msg)) where
-    fromPtr = C'.structListPtr
-get_Persistent'SaveParams'sealFor :: U'.ReadCtx m => Persistent'SaveParams msg -> m (Maybe U'.Ptr)
+instance C'.IsPtr msg (GB'.List msg (Persistent'SaveParams msg)) where
+    fromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
+get_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m (Maybe (U'.Ptr msg))
 get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 
-has_Persistent'SaveParams'sealFor :: U'.ReadCtx m => Persistent'SaveParams msg -> m Bool
+has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct

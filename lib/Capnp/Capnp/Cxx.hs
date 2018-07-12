@@ -11,11 +11,10 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
-import qualified Codec.Capnp as C'
-import qualified Data.Capnp.Basics as B'
+import qualified Codec.Capnp.Generic as C'
 import qualified Data.Capnp.Basics.Generic as GB'
 import qualified Data.Capnp.TraversalLimit as TL'
-import qualified Data.Capnp.Untyped as U'
+import qualified Data.Capnp.Untyped.Generic as U'
 import qualified Data.Capnp.Message.Mutable as MM'
 
 
