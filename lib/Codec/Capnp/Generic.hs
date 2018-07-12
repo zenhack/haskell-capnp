@@ -10,21 +10,42 @@ module Codec.Capnp.Generic
     , IsStruct(..)
     , Decerialize(..)
     , getWordField
+    , expected
     ) where
 
-import Codec.Capnp (Decerialize(..), IsWord(..), ListElem(..), MutListElem(..))
-
 import Data.Bits
+import Data.Int
+import Data.ReinterpretCast
 import Data.Word
 
 import Control.Monad.Catch        (MonadThrow(throwM))
-import Data.Capnp.Basics.Generic  (Data, Text)
 import Data.Capnp.Errors          (Error(SchemaViolationError))
 import Data.Capnp.Untyped.Generic
     (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault)
 
-import qualified Data.Capnp.Basics.Generic  as Basics
+import qualified Data.Capnp.Message         as M
+import qualified Data.Capnp.Message.Mutable as MM
 import qualified Data.Capnp.Untyped.Generic as U
+
+-- | Types that can be converted to and from a 64-bit word.
+--
+-- This is mostly a helper for generated code, which uses it to interact
+-- with the data sections of structs.
+class IsWord a where
+    fromWord :: Word64 -> a
+    toWord :: a -> Word64
+
+class ListElem msg e where
+    data List msg e
+    length :: List msg e -> Int
+    index :: U.ReadCtx m msg => Int -> List msg e -> m e
+
+class MutListElem s e where
+    setIndex :: (U.ReadCtx m (MM.Message s), MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
+
+class Decerialize from to where
+    decerialize :: U.ReadCtx m M.Message => from -> m to
+
 
 -- | Types that can be extracted from an untyped pointer.
 --
@@ -51,6 +72,69 @@ getWordField struct idx offset def = fmap
     . (`shiftR` offset)
     )
     (getData idx struct)
+
+instance Decerialize () () where
+    decerialize = pure
+instance Decerialize Bool Bool where
+    decerialize = pure
+instance Decerialize Word8 Word8 where
+    decerialize = pure
+instance Decerialize Word16 Word16 where
+    decerialize = pure
+instance Decerialize Word32 Word32 where
+    decerialize = pure
+instance Decerialize Word64 Word64 where
+    decerialize = pure
+instance Decerialize Int8 Int8 where
+    decerialize = pure
+instance Decerialize Int16 Int16 where
+    decerialize = pure
+instance Decerialize Int32 Int32 where
+    decerialize = pure
+instance Decerialize Int64 Int64 where
+    decerialize = pure
+instance Decerialize Float Float where
+    decerialize = pure
+instance Decerialize Double Double where
+    decerialize = pure
+
+instance IsWord Bool where
+    fromWord n = (n .&. 1) == 1
+    toWord True  = 1
+    toWord False = 0
+
+-- IsWord instances for integral types; they're all the same.
+instance IsWord Int8 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Int16 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Int32 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Int64 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word8 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word16 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word32 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word64 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+
+instance IsWord Float where
+    fromWord = wordToFloat . fromIntegral
+    toWord = fromIntegral . floatToWord
+instance IsWord Double where
+    fromWord = wordToDouble
+    toWord = doubleToWord
 
 -- IsPtr instance for lists of Void/().
 instance IsPtr msg (ListOf msg ()) where
@@ -85,20 +169,6 @@ instance IsPtr msg (ListOf msg (Struct msg)) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
-
--- IsPtr instances for Text and Data. These wrap lists of bytes.
-instance IsPtr msg (Data msg) where
-    fromPtr msg ptr = fromPtr msg ptr >>= Basics.getData
-instance IsPtr msg (Text msg) where
-    fromPtr msg ptr = case ptr of
-        Just _ ->
-            fromPtr msg ptr >>= Basics.getText
-        Nothing -> do
-            -- getText expects and strips off a NUL byte at the end of the
-            -- string. In the case of a null pointer we just want to return
-            -- the empty string, so we bypass it here.
-            Basics.Data bytes <- fromPtr msg ptr
-            pure $ Basics.Text bytes
 
 -- IsStruct instance for Struct; just the identity.
 instance IsStruct msg (Struct msg) where

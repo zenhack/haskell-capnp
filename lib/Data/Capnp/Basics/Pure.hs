@@ -9,7 +9,7 @@ module Data.Capnp.Basics.Pure
     , List(..)
     ) where
 
-import Codec.Capnp hiding (ListElem(List))
+import Codec.Capnp.Generic hiding (ListElem(List))
 
 import Control.Monad.Catch        (MonadThrow(throwM))
 import Data.Capnp.Errors          (Error(InvalidUtf8Error))

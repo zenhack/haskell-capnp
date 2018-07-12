@@ -4,7 +4,7 @@ module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
-import Data.Capnp.Untyped
+import Data.Capnp.Untyped.Generic
 import Tests.Util
 
 import Control.Monad             (forM_, when)

@@ -29,7 +29,7 @@ import Data.Word
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(throwM))
 
-import Codec.Capnp           (ListElem(..), MutListElem(..))
+import Codec.Capnp.Generic   (IsPtr(..), ListElem(..), MutListElem(..))
 import Internal.Gen.ListElem ()
 
 import qualified Data.ByteString            as BS
@@ -80,3 +80,17 @@ dataBytes (Data list) = GU.rawBytes list
 -- (not counting the NUL terminator).
 textBytes :: GU.ReadCtx m msg => Text msg -> m BS.ByteString
 textBytes (Text list) = GU.rawBytes list
+
+-- IsPtr instances for Text and Data. These wrap lists of bytes.
+instance IsPtr msg (Data msg) where
+    fromPtr msg ptr = fromPtr msg ptr >>= getData
+instance IsPtr msg (Text msg) where
+    fromPtr msg ptr = case ptr of
+        Just _ ->
+            fromPtr msg ptr >>= getText
+        Nothing -> do
+            -- getText expects and strips off a NUL byte at the end of the
+            -- string. In the case of a null pointer we just want to return
+            -- the empty string, so we bypass it here.
+            Data bytes <- fromPtr msg ptr
+            pure $ Text bytes

@@ -4,7 +4,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 module Tests.Module.Capnp.Capnp.Schema (schemaTests) where
 
-import Codec.Capnp               (IsStruct(..))
+import Codec.Capnp.Generic       (IsStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
 import Capnp.Capnp.Schema.Pure
@@ -15,7 +15,7 @@ import Test.Framework   (testGroup)
 import Text.Heredoc     (here, there)
 import Text.Show.Pretty (ppShow)
 
-import qualified Data.Capnp.Untyped as U
+import qualified Data.Capnp.Untyped.Generic as U
 
 schemaTests = testGroup "schema decode tests"
     [ decodeTests "CodeGeneratorRequest"

@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- | This module defines a test that tries to walk over the
 -- CodeGeneratorRequest in `tests/data/schema-codegenreq`,
@@ -8,11 +9,11 @@ module Tests.WalkSchemaCodeGenRequest
 
 import Prelude hiding (length)
 
-import Data.Capnp.Untyped
+import Data.Capnp.Untyped.Generic hiding (index, length)
 import Tests.Util
 
 import Control.Monad             (mapM_, when)
-import Data.Capnp.Basics         (Text(..))
+import Data.Capnp.Basics.Generic (Text(..), index, length)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)
@@ -41,10 +42,10 @@ theAssert :: Assertion
 theAssert = do
     bytes <- BS.readFile "tests/data/schema-codegenreq"
     msg <- M.decode bytes
-    endQuota <- execLimitT 1024 (rootPtr msg >>= reader)
-    assertEqual "Correct remaining quota" 641 endQuota
+    endQuota <- execLimitT 4096 (rootPtr msg >>= reader)
+    assertEqual "Correct remaining quota" 2036 endQuota
   where
-    reader :: Struct -> LimitT IO ()
+    reader :: Struct M.Message -> LimitT IO ()
     reader root = do
         let req = Schema.CodeGeneratorRequest root
         nodes <- Schema.get_CodeGeneratorRequest'nodes req
@@ -59,7 +60,8 @@ theAssert = do
         -- And none of them are generic:
         False <- Schema.get_Node''isGeneric node
 
-        Text name <- Schema.get_Node''displayName node
+        Text nameList <- Schema.get_Node''displayName node
+        name <- rawBytes nameList
         prefixLen <- Schema.get_Node''displayNamePrefixLength node
         let baseName = BS.drop (fromIntegral prefixLen) name
 

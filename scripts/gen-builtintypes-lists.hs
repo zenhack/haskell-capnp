@@ -14,7 +14,7 @@ header = unlines
     , "import Data.ReinterpretCast"
     , "import Data.Word"
     , ""
-    , "import Codec.Capnp (ListElem(..), MutListElem(..))"
+    , "import Codec.Capnp.Generic (ListElem(..), MutListElem(..))"
     , ""
     , "import qualified Data.Capnp.Untyped.Generic as GU"
     , ""

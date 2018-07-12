@@ -8,8 +8,9 @@ import Data.Capnp.Errors         (Error)
 import Data.Capnp.Message        as M
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 
-import qualified Capnp.Capnp.Schema as Schema
-import qualified Data.Capnp.Untyped as Untyped
+import qualified Capnp.Capnp.Schema         as Schema
+import qualified Data.Capnp.Basics.Generic  as Basics
+import qualified Data.Capnp.Untyped.Generic as Untyped
 
 -- Testing framework imports
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -31,12 +32,12 @@ generateCGR schema = capnpCompile (show schema) "-"
 
 decodeCGR :: BS.ByteString -> IO (Int, Int)
 decodeCGR bytes = do
-    let reader :: Untyped.Struct -> LimitT IO Int
+    let reader :: Untyped.Struct M.Message -> LimitT IO Int
         reader struct = do
             let req = Schema.CodeGeneratorRequest struct
             nodes <- Schema.get_CodeGeneratorRequest'nodes req
             requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
-            return (Untyped.length nodes)
+            return (Basics.length nodes)
     msg <- M.decode bytes
     (numNodes, endQuota) <- runLimitT 1024 (Untyped.rootPtr msg >>= reader)
     return (endQuota, numNodes)

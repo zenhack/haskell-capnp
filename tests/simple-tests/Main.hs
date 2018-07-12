@@ -5,7 +5,6 @@ import Test.Framework (defaultMain)
 import Tests.Module.Capnp.Capnp.Schema (schemaTests)
 import Tests.Module.Data.Capnp.Bits    (bitsTests)
 -- import Tests.Module.Data.Capnp.Builder      (buildTests)
-import Tests.Module.Data.Capnp.List            (listTests)
 import Tests.Module.Data.Capnp.Pointer         (ptrTests)
 import Tests.Module.Data.Capnp.Untyped         (untypedTests)
 import Tests.Module.Data.Capnp.Untyped.Generic (genericUntypedTests)
@@ -19,7 +18,6 @@ main = defaultMain [ bitsTests
                    , untypedTests
                    , genericUntypedTests
                    , pureUntypedTests
-                   , listTests
                    -- , buildTests
                    -- , encodeDecodeUntypedTests
                    , walkSchemaCodeGenRequestTest

@@ -41,7 +41,7 @@ import Prelude hiding (length)
 
 import Data.Word
 
-import Codec.Capnp                   (Decerialize(..), expected)
+import Codec.Capnp.Generic           (Decerialize(..), expected)
 import Control.Monad.Catch           (MonadThrow)
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()

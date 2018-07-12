@@ -51,24 +51,20 @@ source-repository head
 library
     hs-source-dirs:       lib
     exposed-modules:
-        Codec.Capnp
-      , Codec.Capnp.Generic
+        Codec.Capnp.Generic
       , Data.Capnp.Address
       -- , Data.Capnp.Builder
-      , Data.Capnp.Basics
       , Data.Capnp.Basics.Generic
       , Data.Capnp.Basics.Mutable
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Blob
       , Data.Capnp.Errors
-      , Data.Capnp.List
       , Data.Capnp.Message
       , Data.Capnp.Message.Mutable
       , Data.Capnp.Message.Generic
       , Data.Capnp.Pointer
       , Data.Capnp.Schema
-      , Data.Capnp.Untyped
       , Data.Capnp.Untyped.Generic
       , Data.Capnp.Untyped.Pure
       , Data.Capnp.TraversalLimit
@@ -172,7 +168,6 @@ test-suite simple-tests
       , Tests.Module.Data.Capnp.Untyped
       , Tests.Module.Data.Capnp.Untyped.Generic
       , Tests.Module.Data.Capnp.Untyped.Pure
-      , Tests.Module.Data.Capnp.List
       , Tests.Module.Data.Capnp.Pointer
       , Tests.Module.Data.Capnp.Bits
       -- , Tests.EncodeDecodeUntyped
