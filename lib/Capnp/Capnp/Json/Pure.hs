@@ -36,7 +36,7 @@ data JsonValue
     | JsonValue'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue M'.Message) JsonValue where
+instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMessage) JsonValue where
     decerialize raw = case raw of
 
         Capnp.ById.X8ef99297a43a5e34.JsonValue'null -> pure JsonValue'null
@@ -48,10 +48,10 @@ instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue M'.Message) Json
         Capnp.ById.X8ef99297a43a5e34.JsonValue'call val -> JsonValue'call <$> C'.decerialize val
         Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> JsonValue'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message JsonValue where
+instance C'.IsStruct M'.ConstMessage JsonValue where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.Message)
+        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMessage)
 
 data JsonValue'Call
     = JsonValue'Call
@@ -60,15 +60,15 @@ data JsonValue'Call
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.Message) JsonValue'Call where
+instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMessage) JsonValue'Call where
     decerialize raw = JsonValue'Call
             <$> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= C'.decerialize)
             <*> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message JsonValue'Call where
+instance C'.IsStruct M'.ConstMessage JsonValue'Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.Message)
+        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMessage)
 
 data JsonValue'Field
     = JsonValue'Field
@@ -77,13 +77,13 @@ data JsonValue'Field
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.Message) JsonValue'Field where
+instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMessage) JsonValue'Field where
     decerialize raw = JsonValue'Field
             <$> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= C'.decerialize)
             <*> (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message JsonValue'Field where
+instance C'.IsStruct M'.ConstMessage JsonValue'Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.Message)
+        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMessage)
 

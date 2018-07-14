@@ -15,7 +15,7 @@ The types and functions in this module know about things like structs and
 lists, but are not schema aware.
 
 Each of the data types exported by this module is parametrized over a Message
-type (see 'Data.Capnp.Message.Generic'), used as the underlying storage.
+type (see 'Data.Capnp.Message'), used as the underlying storage.
 -}
 module Data.Capnp.Untyped
     ( Ptr(..), List(..), Struct, ListOf
@@ -44,15 +44,14 @@ import Data.Capnp.Bits
 import Data.Capnp.Pointer        (ElementSize(..))
 import Data.Capnp.TraversalLimit (MonadLimit(invoice))
 
-import qualified Data.ByteString            as BS
-import qualified Data.Capnp.Errors          as E
-import qualified Data.Capnp.Message.Generic as GM
-import qualified Data.Capnp.Message.Mutable as MM
-import qualified Data.Capnp.Pointer         as P
+import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Errors  as E
+import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m msg = (GM.Message m msg, MonadThrow m, MonadLimit m)
+type ReadCtx m msg = (M.Message m msg, MonadThrow m, MonadLimit m)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
@@ -106,84 +105,84 @@ data Struct msg
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (Ptr mmsg) (Ptr cmsg) where
+instance M.Mutable m mmsg cmsg => M.Mutable m (Ptr mmsg) (Ptr cmsg) where
     thaw (PtrCap cmsg n) = do
-        mmsg <- GM.thaw cmsg
+        mmsg <- M.thaw cmsg
         pure $ PtrCap mmsg n
-    thaw (PtrList l) = PtrList <$> GM.thaw l
-    thaw (PtrStruct s) = PtrStruct <$> GM.thaw s
+    thaw (PtrList l) = PtrList <$> M.thaw l
+    thaw (PtrStruct s) = PtrStruct <$> M.thaw s
     freeze (PtrCap mmsg n) = do
-        cmsg <- GM.freeze mmsg
+        cmsg <- M.freeze mmsg
         pure $ PtrCap cmsg n
-    freeze (PtrList l) = PtrList <$> GM.freeze l
-    freeze (PtrStruct s) = PtrStruct <$> GM.freeze s
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (List mmsg) (List cmsg) where
-    thaw (List0 l)      = List0 <$> GM.thaw l
-    thaw (List1 l)      = List1 <$> GM.thaw l
-    thaw (List8 l)      = List8 <$> GM.thaw l
-    thaw (List16 l)     = List16 <$> GM.thaw l
-    thaw (List32 l)     = List32 <$> GM.thaw l
-    thaw (List64 l)     = List64 <$> GM.thaw l
-    thaw (ListPtr l)    = ListPtr <$> GM.thaw l
-    thaw (ListStruct l) = ListStruct <$> GM.thaw l
-    freeze (List0 l)      = List0 <$> GM.freeze l
-    freeze (List1 l)      = List1 <$> GM.freeze l
-    freeze (List8 l)      = List8 <$> GM.freeze l
-    freeze (List16 l)     = List16 <$> GM.freeze l
-    freeze (List32 l)     = List32 <$> GM.freeze l
-    freeze (List64 l)     = List64 <$> GM.freeze l
-    freeze (ListPtr l)    = ListPtr <$> GM.freeze l
-    freeze (ListStruct l) = ListStruct <$> GM.freeze l
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (NormalList mmsg) (NormalList cmsg) where
+    freeze (PtrList l) = PtrList <$> M.freeze l
+    freeze (PtrStruct s) = PtrStruct <$> M.freeze s
+instance M.Mutable m mmsg cmsg => M.Mutable m (List mmsg) (List cmsg) where
+    thaw (List0 l)      = List0 <$> M.thaw l
+    thaw (List1 l)      = List1 <$> M.thaw l
+    thaw (List8 l)      = List8 <$> M.thaw l
+    thaw (List16 l)     = List16 <$> M.thaw l
+    thaw (List32 l)     = List32 <$> M.thaw l
+    thaw (List64 l)     = List64 <$> M.thaw l
+    thaw (ListPtr l)    = ListPtr <$> M.thaw l
+    thaw (ListStruct l) = ListStruct <$> M.thaw l
+    freeze (List0 l)      = List0 <$> M.freeze l
+    freeze (List1 l)      = List1 <$> M.freeze l
+    freeze (List8 l)      = List8 <$> M.freeze l
+    freeze (List16 l)     = List16 <$> M.freeze l
+    freeze (List32 l)     = List32 <$> M.freeze l
+    freeze (List64 l)     = List64 <$> M.freeze l
+    freeze (ListPtr l)    = ListPtr <$> M.freeze l
+    freeze (ListStruct l) = ListStruct <$> M.freeze l
+instance M.Mutable m mmsg cmsg => M.Mutable m (NormalList mmsg) (NormalList cmsg) where
     thaw NormalList{..} = do
-        mmsg <- GM.thaw nMsg
+        mmsg <- M.thaw nMsg
         pure NormalList { nMsg = mmsg, .. }
     freeze NormalList{..} = do
-        cmsg <- GM.freeze nMsg
+        cmsg <- M.freeze nMsg
         pure NormalList { nMsg = cmsg, .. }
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg ()) (ListOf cmsg ()) where
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg ()) (ListOf cmsg ()) where
     thaw (ListOfVoid cmsg n) = do
-        mmsg <- GM.thaw cmsg
+        mmsg <- M.thaw cmsg
         pure $ ListOfVoid mmsg n
     freeze (ListOfVoid mmsg n) = do
-        cmsg <- GM.freeze mmsg
+        cmsg <- M.freeze mmsg
         pure $ ListOfVoid cmsg n
 -- Annoyingly, we can't just have an instance @Mutable m (ListOf mmsg a) (ListOf cmsg a)@,
 -- because that would require that the implementation to be valid for e.g.
 -- @Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct mmsg))@ (note that the type
 -- parameter for 'Struct' does not change). So, instead, we define a separate instance for
 -- each possible parameter type:
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Bool) (ListOf cmsg Bool) where
-    thaw (ListOfBool msg) = ListOfBool <$> GM.thaw msg
-    freeze (ListOfBool msg) = ListOfBool <$> GM.freeze msg
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word8) (ListOf cmsg Word8) where
-    thaw (ListOfWord8 msg) = ListOfWord8 <$> GM.thaw msg
-    freeze (ListOfWord8 msg) = ListOfWord8 <$> GM.freeze msg
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word16) (ListOf cmsg Word16) where
-    thaw (ListOfWord16 msg) = ListOfWord16 <$> GM.thaw msg
-    freeze (ListOfWord16 msg) = ListOfWord16 <$> GM.freeze msg
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word32) (ListOf cmsg Word32) where
-    thaw (ListOfWord32 msg) = ListOfWord32 <$> GM.thaw msg
-    freeze (ListOfWord32 msg) = ListOfWord32 <$> GM.freeze msg
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg Word64) (ListOf cmsg Word64) where
-    thaw (ListOfWord64 msg) = ListOfWord64 <$> GM.thaw msg
-    freeze (ListOfWord64 msg) = ListOfWord64 <$> GM.freeze msg
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct cmsg)) where
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Bool) (ListOf cmsg Bool) where
+    thaw (ListOfBool msg) = ListOfBool <$> M.thaw msg
+    freeze (ListOfBool msg) = ListOfBool <$> M.freeze msg
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word8) (ListOf cmsg Word8) where
+    thaw (ListOfWord8 msg) = ListOfWord8 <$> M.thaw msg
+    freeze (ListOfWord8 msg) = ListOfWord8 <$> M.freeze msg
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word16) (ListOf cmsg Word16) where
+    thaw (ListOfWord16 msg) = ListOfWord16 <$> M.thaw msg
+    freeze (ListOfWord16 msg) = ListOfWord16 <$> M.freeze msg
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word32) (ListOf cmsg Word32) where
+    thaw (ListOfWord32 msg) = ListOfWord32 <$> M.thaw msg
+    freeze (ListOfWord32 msg) = ListOfWord32 <$> M.freeze msg
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word64) (ListOf cmsg Word64) where
+    thaw (ListOfWord64 msg) = ListOfWord64 <$> M.thaw msg
+    freeze (ListOfWord64 msg) = ListOfWord64 <$> M.freeze msg
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct cmsg)) where
     thaw (ListOfStruct ctag size) = do
-        mtag <- GM.thaw ctag
+        mtag <- M.thaw ctag
         pure $ ListOfStruct mtag size
     freeze (ListOfStruct mtag size) = do
-        ctag <- GM.freeze mtag
+        ctag <- M.freeze mtag
         pure $ ListOfStruct ctag size
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (ListOf mmsg (Maybe (Ptr mmsg))) (ListOf cmsg (Maybe (Ptr cmsg))) where
-    thaw (ListOfPtr msg) = ListOfPtr <$> GM.thaw msg
-    freeze (ListOfPtr msg) = ListOfPtr <$> GM.freeze msg
-instance GM.Mutable m mmsg cmsg => GM.Mutable m (Struct mmsg) (Struct cmsg) where
+instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg (Maybe (Ptr mmsg))) (ListOf cmsg (Maybe (Ptr cmsg))) where
+    thaw (ListOfPtr msg) = ListOfPtr <$> M.thaw msg
+    freeze (ListOfPtr msg) = ListOfPtr <$> M.freeze msg
+instance M.Mutable m mmsg cmsg => M.Mutable m (Struct mmsg) (Struct cmsg) where
     thaw (Struct cmsg addr dataSz ptrSz) = do
-        mmsg <- GM.thaw cmsg
+        mmsg <- M.thaw cmsg
         pure $ Struct mmsg addr dataSz ptrSz
     freeze (Struct mmsg addr dataSz ptrSz) = do
-        cmsg <- GM.freeze mmsg
+        cmsg <- M.freeze mmsg
         pure $ Struct cmsg addr dataSz ptrSz
 
 -- | Types @a@ whose storage is owned by a message with blob type @b@.
@@ -308,7 +307,7 @@ get msg addr = do
                                 show ptr
 
   where
-    getWord msg addr = invoice 1 *> GM.getWord msg addr
+    getWord msg addr = invoice 1 *> M.getWord msg addr
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList addr@WordAt{..} eltSpec = PtrList <$>
@@ -367,7 +366,7 @@ ptrAddr (PtrCap _ _) = error "ptrAddr called on a capability pointer."
 ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
-setIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s) => a -> Int -> ListOf (MM.Message s) a -> m ()
+setIndex :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s) => a -> Int -> ListOf (M.MutMessage s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -406,13 +405,13 @@ setIndex value i list = case list of
             forM_ [length src..length dest - 1] $ \i ->
                 setIndex pad i dest
   where
-    setNIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s, Bounded a, Integral a) => NormalList (MM.Message s) -> Int -> a -> m ()
+    setNIndex :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMessage s) -> Int -> a -> m ()
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
         let wordAddr = nAddr { wordIndex = wordIndex + WordCount (i `div` eltsPerWord) }
-        word <- GM.getWord nMsg wordAddr
+        word <- M.getWord nMsg wordAddr
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
-        GM.setWord nMsg wordAddr $ replaceBits value word shift
-    setPtrIndex :: (ReadCtx m (MM.Message s), MM.WriteCtx m s) => NormalList (MM.Message s) -> Ptr (MM.Message s) -> P.Ptr -> m ()
+        M.setWord nMsg wordAddr $ replaceBits value word shift
+    setPtrIndex :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s) => NormalList (M.MutMessage s) -> Ptr (M.MutMessage s) -> P.Ptr -> m ()
     setPtrIndex nlist@NormalList{..} absPtr relPtr =
         let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
         in case pointerFrom srcAddr (ptrAddr absPtr) relPtr of
@@ -443,7 +442,7 @@ index i list = invoice 1 >> index' list
     index' (ListOfWord16 nlist) = indexNList nlist 4
     index' (ListOfWord32 nlist) = indexNList nlist 2
     index' (ListOfWord64 (NormalList msg addr@WordAt{..} len))
-        | i < len = GM.getWord msg addr { wordIndex = wordIndex + WordCount i }
+        | i < len = M.getWord msg addr { wordIndex = wordIndex + WordCount i }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
         | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
@@ -452,7 +451,7 @@ index i list = invoice 1 >> index' list
     indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
-            word <- GM.getWord msg addr { wordIndex = wordIndex' }
+            word <- M.getWord msg addr { wordIndex = wordIndex' }
             let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
             pure $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
@@ -519,7 +518,7 @@ getPtr i struct
 rawBytes :: ReadCtx m msg => ListOf msg Word8 -> m BS.ByteString
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
     invoice len
-    bytes <- GM.getSegment msg segIndex >>= GM.toByteString
+    bytes <- M.getSegment msg segIndex >>= M.toByteString
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
 

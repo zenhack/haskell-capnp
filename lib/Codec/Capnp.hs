@@ -23,9 +23,8 @@ import Data.Capnp.Errors   (Error(SchemaViolationError))
 import Data.Capnp.Untyped
     (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault)
 
-import qualified Data.Capnp.Message         as M
-import qualified Data.Capnp.Message.Mutable as MM
-import qualified Data.Capnp.Untyped         as U
+import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.Untyped as U
 
 -- | Types that can be converted to and from a 64-bit word.
 --
@@ -41,10 +40,10 @@ class ListElem msg e where
     index :: U.ReadCtx m msg => Int -> List msg e -> m e
 
 class MutListElem s e where
-    setIndex :: (U.ReadCtx m (MM.Message s), MM.WriteCtx m s) => e -> Int -> List (MM.Message s) e -> m ()
+    setIndex :: (U.ReadCtx m (M.MutMessage s), M.WriteCtx m s) => e -> Int -> List (M.MutMessage s) e -> m ()
 
 class Decerialize from to where
-    decerialize :: U.ReadCtx m M.Message => from -> m to
+    decerialize :: U.ReadCtx m M.ConstMessage => from -> m to
 
 
 -- | Types that can be extracted from an untyped pointer.

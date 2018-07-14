@@ -15,7 +15,7 @@ import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
-import qualified Data.Capnp.Message.Mutable as MM'
+import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
@@ -29,7 +29,7 @@ instance B'.ListElem msg (JoinKeyPart msg) where
     newtype List msg (JoinKeyPart msg) = List_JoinKeyPart (U'.ListOf msg (U'.Struct msg))
     length (List_JoinKeyPart l) = U'.length l
     index i (List_JoinKeyPart l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinKeyPart msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (JoinKeyPart (MM'.Message s)) where
+instance B'.MutListElem s (JoinKeyPart (M'.MutMessage s)) where
     setIndex (JoinKeyPart elt) i (List_JoinKeyPart l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (JoinKeyPart msg)) where
@@ -59,7 +59,7 @@ instance B'.ListElem msg (JoinResult msg) where
     newtype List msg (JoinResult msg) = List_JoinResult (U'.ListOf msg (U'.Struct msg))
     length (List_JoinResult l) = U'.length l
     index i (List_JoinResult l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinResult msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (JoinResult (MM'.Message s)) where
+instance B'.MutListElem s (JoinResult (M'.MutMessage s)) where
     setIndex (JoinResult elt) i (List_JoinResult l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (JoinResult msg)) where
@@ -119,7 +119,7 @@ instance B'.ListElem msg (ProvisionId msg) where
     newtype List msg (ProvisionId msg) = List_ProvisionId (U'.ListOf msg (U'.Struct msg))
     length (List_ProvisionId l) = U'.length l
     index i (List_ProvisionId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ProvisionId msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (ProvisionId (MM'.Message s)) where
+instance B'.MutListElem s (ProvisionId (M'.MutMessage s)) where
     setIndex (ProvisionId elt) i (List_ProvisionId l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (ProvisionId msg)) where
@@ -139,7 +139,7 @@ instance B'.ListElem msg (VatId msg) where
     newtype List msg (VatId msg) = List_VatId (U'.ListOf msg (U'.Struct msg))
     length (List_VatId l) = U'.length l
     index i (List_VatId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VatId msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (VatId (MM'.Message s)) where
+instance B'.MutListElem s (VatId (M'.MutMessage s)) where
     setIndex (VatId elt) i (List_VatId l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (VatId msg)) where

@@ -111,25 +111,25 @@ sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
 
-instance Decerialize (U.Struct M.Message) Struct where
+instance Decerialize (U.Struct M.ConstMessage) Struct where
     decerialize struct = Struct
         <$> (Slice <$> decerialize (U.dataSection struct))
         <*> (Slice <$> decerialize (U.ptrSection struct))
 
-instance Decerialize (Maybe (U.Ptr M.Message)) (Maybe PtrType) where
+instance Decerialize (Maybe (U.Ptr M.ConstMessage)) (Maybe PtrType) where
     decerialize Nothing = pure Nothing
     decerialize (Just ptr) = Just <$> case ptr of
         U.PtrCap _ cap     -> return (PtrCap cap)
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
 
-instance (C.ListElem M.Message a, Decerialize a b) => Decerialize (C.List M.Message a) (List b) where
+instance (C.ListElem M.ConstMessage a, Decerialize a b) => Decerialize (C.List M.ConstMessage a) (List b) where
     decerialize raw = V.generateM (C.length raw) (\i -> C.index i raw >>= decerialize)
 
-instance Decerialize a b => Decerialize (U.ListOf M.Message a) (List b) where
+instance Decerialize a b => Decerialize (U.ListOf M.ConstMessage a) (List b) where
     decerialize raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
 
-instance Decerialize (U.List M.Message) List' where
+instance Decerialize (U.List M.ConstMessage) List' where
     decerialize (U.List0 l)      = List0' <$> decerialize l
     decerialize (U.List1 l)      = List1' <$> decerialize l
     decerialize (U.List8 l)      = List8' <$> decerialize l

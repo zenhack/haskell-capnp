@@ -54,13 +54,10 @@ library
         Codec.Capnp
       , Data.Capnp.Address
       , Data.Capnp.Basics
-      , Data.Capnp.Basics.Mutable
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Errors
       , Data.Capnp.Message
-      , Data.Capnp.Message.Mutable
-      , Data.Capnp.Message.Generic
       , Data.Capnp.Pointer
       , Data.Capnp.Untyped
       , Data.Capnp.Untyped.Pure

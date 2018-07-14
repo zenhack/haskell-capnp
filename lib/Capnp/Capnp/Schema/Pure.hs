@@ -33,7 +33,7 @@ data Type'anyPointer'unconstrained
     | Type'anyPointer'unconstrained'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.Message) Type'anyPointer'unconstrained where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.ConstMessage) Type'anyPointer'unconstrained where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'anyKind -> pure Type'anyPointer'unconstrained'anyKind
@@ -42,10 +42,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrai
         Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'capability -> pure Type'anyPointer'unconstrained'capability
         Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'unknown' val -> Type'anyPointer'unconstrained'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Type'anyPointer'unconstrained where
+instance C'.IsStruct M'.ConstMessage Type'anyPointer'unconstrained where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.ConstMessage)
 
 data Brand
     = Brand
@@ -53,14 +53,14 @@ data Brand
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand M'.Message) Brand where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand M'.ConstMessage) Brand where
     decerialize raw = Brand
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Brand'scopes raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Brand where
+instance C'.IsStruct M'.ConstMessage Brand where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand M'.ConstMessage)
 
 data Method
     = Method
@@ -75,7 +75,7 @@ data Method
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Method M'.Message) Method where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Method M'.ConstMessage) Method where
     decerialize raw = Method
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Method'name raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Method'codeOrder raw >>= C'.decerialize)
@@ -86,10 +86,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Method M'.Message) Method 
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Method'resultBrand raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Method'implicitParameters raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Method where
+instance C'.IsStruct M'.ConstMessage Method where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Method M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Method M'.ConstMessage)
 
 data Enumerant
     = Enumerant
@@ -99,16 +99,16 @@ data Enumerant
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Enumerant M'.Message) Enumerant where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Enumerant M'.ConstMessage) Enumerant where
     decerialize raw = Enumerant
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Enumerant'name raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Enumerant'codeOrder raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Enumerant'annotations raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Enumerant where
+instance C'.IsStruct M'.ConstMessage Enumerant where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Enumerant M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Enumerant M'.ConstMessage)
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
@@ -123,7 +123,7 @@ data Field
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field M'.Message) Field where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMessage) Field where
     decerialize raw = Field'
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Field''name raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''codeOrder raw >>= C'.decerialize)
@@ -132,10 +132,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field M'.Message) Field wh
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''ordinal raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''union' raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Field where
+instance C'.IsStruct M'.ConstMessage Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMessage)
 
 data Field'
     = Field'slot
@@ -150,7 +150,7 @@ data Field'
     | Field'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field' M'.Message) Field' where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field' M'.ConstMessage) Field' where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Field'slot raw -> Field'slot
@@ -162,10 +162,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field' M'.Message) Field' 
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Field'group'typeId raw >>= C'.decerialize)
         Capnp.ById.Xa93fc509624c72d9.Field'unknown' val -> Field'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Field' where
+instance C'.IsStruct M'.ConstMessage Field' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field' M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field' M'.ConstMessage)
 
 data Superclass
     = Superclass
@@ -174,15 +174,15 @@ data Superclass
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Superclass M'.Message) Superclass where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMessage) Superclass where
     decerialize raw = Superclass
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Superclass'id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Superclass'brand raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Superclass where
+instance C'.IsStruct M'.ConstMessage Superclass where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Superclass M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMessage)
 
 data Brand'Scope
     = Brand'Scope'
@@ -191,15 +191,15 @@ data Brand'Scope
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.Message) Brand'Scope where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMessage) Brand'Scope where
     decerialize raw = Brand'Scope'
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope''scopeId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope''union' raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Brand'Scope where
+instance C'.IsStruct M'.ConstMessage Brand'Scope where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMessage)
 
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
@@ -207,17 +207,17 @@ data Brand'Scope'
     | Brand'Scope'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.Message) Brand'Scope' where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.ConstMessage) Brand'Scope' where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Brand'Scope'bind val -> Brand'Scope'bind <$> C'.decerialize val
         Capnp.ById.Xa93fc509624c72d9.Brand'Scope'inherit -> pure Brand'Scope'inherit
         Capnp.ById.Xa93fc509624c72d9.Brand'Scope'unknown' val -> Brand'Scope'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Brand'Scope' where
+instance C'.IsStruct M'.ConstMessage Brand'Scope' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.ConstMessage)
 
 data CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import
@@ -226,15 +226,15 @@ data CodeGeneratorRequest'RequestedFile'Import
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.Message) CodeGeneratorRequest'RequestedFile'Import where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.ConstMessage) CodeGeneratorRequest'RequestedFile'Import where
     decerialize raw = CodeGeneratorRequest'RequestedFile'Import
             <$> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'name raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message CodeGeneratorRequest'RequestedFile'Import where
+instance C'.IsStruct M'.ConstMessage CodeGeneratorRequest'RequestedFile'Import where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.ConstMessage)
 
 data Node'Parameter
     = Node'Parameter
@@ -242,14 +242,14 @@ data Node'Parameter
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.Message) Node'Parameter where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.ConstMessage) Node'Parameter where
     decerialize raw = Node'Parameter
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Node'Parameter'name raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Node'Parameter where
+instance C'.IsStruct M'.ConstMessage Node'Parameter where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.ConstMessage)
 
 data Field'ordinal
     = Field'ordinal'implicit
@@ -257,17 +257,17 @@ data Field'ordinal
     | Field'ordinal'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.Message) Field'ordinal where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.ConstMessage) Field'ordinal where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Field'ordinal'implicit -> pure Field'ordinal'implicit
         Capnp.ById.Xa93fc509624c72d9.Field'ordinal'explicit val -> Field'ordinal'explicit <$> C'.decerialize val
         Capnp.ById.Xa93fc509624c72d9.Field'ordinal'unknown' val -> Field'ordinal'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Field'ordinal where
+instance C'.IsStruct M'.ConstMessage Field'ordinal where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.ConstMessage)
 
 data CodeGeneratorRequest
     = CodeGeneratorRequest
@@ -277,16 +277,16 @@ data CodeGeneratorRequest
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.Message) CodeGeneratorRequest where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.ConstMessage) CodeGeneratorRequest where
     decerialize raw = CodeGeneratorRequest
             <$> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'nodes raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'requestedFiles raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'capnpVersion raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message CodeGeneratorRequest where
+instance C'.IsStruct M'.ConstMessage CodeGeneratorRequest where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.ConstMessage)
 
 data Type'anyPointer
     = Type'anyPointer'unconstrained
@@ -302,7 +302,7 @@ data Type'anyPointer
     | Type'anyPointer'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.Message) Type'anyPointer where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.ConstMessage) Type'anyPointer where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained raw -> Type'anyPointer'unconstrained
@@ -314,10 +314,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.Message
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'implicitMethodParameter'parameterIndex raw >>= C'.decerialize)
         Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unknown' val -> Type'anyPointer'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Type'anyPointer where
+instance C'.IsStruct M'.ConstMessage Type'anyPointer where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.ConstMessage)
 
 data Brand'Binding
     = Brand'Binding'unbound
@@ -325,17 +325,17 @@ data Brand'Binding
     | Brand'Binding'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.Message) Brand'Binding where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.ConstMessage) Brand'Binding where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Brand'Binding'unbound -> pure Brand'Binding'unbound
         Capnp.ById.Xa93fc509624c72d9.Brand'Binding'type_ val -> Brand'Binding'type_ <$> C'.decerialize val
         Capnp.ById.Xa93fc509624c72d9.Brand'Binding'unknown' val -> Brand'Binding'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Brand'Binding where
+instance C'.IsStruct M'.ConstMessage Brand'Binding where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.ConstMessage)
 
 data Value
     = Value'void
@@ -360,7 +360,7 @@ data Value
     | Value'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Value M'.Message) Value where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Value M'.ConstMessage) Value where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Value'void -> pure Value'void
@@ -384,10 +384,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Value M'.Message) Value wh
         Capnp.ById.Xa93fc509624c72d9.Value'anyPointer val -> Value'anyPointer <$> C'.decerialize val
         Capnp.ById.Xa93fc509624c72d9.Value'unknown' val -> Value'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Value where
+instance C'.IsStruct M'.ConstMessage Value where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Value M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Value M'.ConstMessage)
 
 data CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile
@@ -397,16 +397,16 @@ data CodeGeneratorRequest'RequestedFile
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.Message) CodeGeneratorRequest'RequestedFile where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.ConstMessage) CodeGeneratorRequest'RequestedFile where
     decerialize raw = CodeGeneratorRequest'RequestedFile
             <$> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'filename raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'imports raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message CodeGeneratorRequest'RequestedFile where
+instance C'.IsStruct M'.ConstMessage CodeGeneratorRequest'RequestedFile where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.ConstMessage)
 
 data Type
     = Type'void
@@ -444,7 +444,7 @@ data Type
     | Type'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type M'.Message) Type where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type M'.ConstMessage) Type where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Type'void -> pure Type'void
@@ -476,10 +476,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type M'.Message) Type wher
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw >>= C'.decerialize)
         Capnp.ById.Xa93fc509624c72d9.Type'unknown' val -> Type'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Type where
+instance C'.IsStruct M'.ConstMessage Type where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type M'.ConstMessage)
 
 data ElementSize
     = ElementSize'empty
@@ -514,16 +514,16 @@ data CapnpVersion
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.Message) CapnpVersion where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.ConstMessage) CapnpVersion where
     decerialize raw = CapnpVersion
             <$> (Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'major raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'minor raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'micro raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message CapnpVersion where
+instance C'.IsStruct M'.ConstMessage CapnpVersion where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.ConstMessage)
 
 data Node'NestedNode
     = Node'NestedNode
@@ -532,15 +532,15 @@ data Node'NestedNode
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.Message) Node'NestedNode where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMessage) Node'NestedNode where
     decerialize raw = Node'NestedNode
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Node'NestedNode'name raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'NestedNode'id raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Node'NestedNode where
+instance C'.IsStruct M'.ConstMessage Node'NestedNode where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMessage)
 
 data Node
     = Node'
@@ -556,7 +556,7 @@ data Node
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node M'.Message) Node where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMessage) Node where
     decerialize raw = Node'
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Node''id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''displayName raw >>= C'.decerialize)
@@ -568,10 +568,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node M'.Message) Node wher
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''isGeneric raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''union' raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Node where
+instance C'.IsStruct M'.ConstMessage Node where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMessage)
 
 data Node'
     = Node'file
@@ -613,7 +613,7 @@ data Node'
     | Node'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node' M'.Message) Node' where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node' M'.ConstMessage) Node' where
     decerialize raw = case raw of
 
         Capnp.ById.Xa93fc509624c72d9.Node'file -> pure Node'file
@@ -649,10 +649,10 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node' M'.Message) Node' wh
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'annotation'targetsAnnotation raw >>= C'.decerialize)
         Capnp.ById.Xa93fc509624c72d9.Node'unknown' val -> Node'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Node' where
+instance C'.IsStruct M'.ConstMessage Node' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node' M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node' M'.ConstMessage)
 
 data Annotation
     = Annotation
@@ -662,14 +662,14 @@ data Annotation
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Annotation M'.Message) Annotation where
+instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Annotation M'.ConstMessage) Annotation where
     decerialize raw = Annotation
             <$> (Capnp.ById.Xa93fc509624c72d9.get_Annotation'id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Annotation'value raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa93fc509624c72d9.get_Annotation'brand raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Annotation where
+instance C'.IsStruct M'.ConstMessage Annotation where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Annotation M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Annotation M'.ConstMessage)
 

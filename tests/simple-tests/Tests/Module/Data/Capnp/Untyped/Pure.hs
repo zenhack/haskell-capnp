@@ -54,5 +54,5 @@ pureUntypedTests = assertionsToTest "Untyped ADT Tests"
             actual
     ]
   where
-    readStruct :: U.Struct M.Message -> LimitT IO Struct
+    readStruct :: U.Struct M.ConstMessage -> LimitT IO Struct
     readStruct = decerialize

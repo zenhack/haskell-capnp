@@ -15,7 +15,7 @@ import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
-import qualified Data.Capnp.Message.Mutable as MM'
+import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
@@ -60,7 +60,7 @@ instance B'.ListElem msg (Brand msg) where
     newtype List msg (Brand msg) = List_Brand (U'.ListOf msg (U'.Struct msg))
     length (List_Brand l) = U'.length l
     index i (List_Brand l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand (MM'.Message s)) where
+instance B'.MutListElem s (Brand (M'.MutMessage s)) where
     setIndex (Brand elt) i (List_Brand l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Brand msg)) where
@@ -83,7 +83,7 @@ instance B'.ListElem msg (Method msg) where
     newtype List msg (Method msg) = List_Method (U'.ListOf msg (U'.Struct msg))
     length (List_Method l) = U'.length l
     index i (List_Method l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Method msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Method (MM'.Message s)) where
+instance B'.MutListElem s (Method (M'.MutMessage s)) where
     setIndex (Method elt) i (List_Method l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Method msg)) where
@@ -153,7 +153,7 @@ instance B'.ListElem msg (Enumerant msg) where
     newtype List msg (Enumerant msg) = List_Enumerant (U'.ListOf msg (U'.Struct msg))
     length (List_Enumerant l) = U'.length l
     index i (List_Enumerant l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Enumerant msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Enumerant (MM'.Message s)) where
+instance B'.MutListElem s (Enumerant (M'.MutMessage s)) where
     setIndex (Enumerant elt) i (List_Enumerant l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Enumerant msg)) where
@@ -192,7 +192,7 @@ instance B'.ListElem msg (Field msg) where
     newtype List msg (Field msg) = List_Field (U'.ListOf msg (U'.Struct msg))
     length (List_Field l) = U'.length l
     index i (List_Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field (MM'.Message s)) where
+instance B'.MutListElem s (Field (M'.MutMessage s)) where
     setIndex (Field elt) i (List_Field l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
@@ -247,7 +247,7 @@ instance B'.ListElem msg (Field'slot'group' msg) where
     newtype List msg (Field'slot'group' msg) = List_Field'slot'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Field'slot'group' l) = U'.length l
     index i (List_Field'slot'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'slot'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'slot'group' (MM'.Message s)) where
+instance B'.MutListElem s (Field'slot'group' (M'.MutMessage s)) where
     setIndex (Field'slot'group' elt) i (List_Field'slot'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Field'slot'group' msg)) where
@@ -288,7 +288,7 @@ instance B'.ListElem msg (Field'group'group' msg) where
     newtype List msg (Field'group'group' msg) = List_Field'group'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Field'group'group' l) = U'.length l
     index i (List_Field'group'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'group'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'group'group' (MM'.Message s)) where
+instance B'.MutListElem s (Field'group'group' (M'.MutMessage s)) where
     setIndex (Field'group'group' elt) i (List_Field'group'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Field'group'group' msg)) where
@@ -327,7 +327,7 @@ instance B'.ListElem msg (Superclass msg) where
     newtype List msg (Superclass msg) = List_Superclass (U'.ListOf msg (U'.Struct msg))
     length (List_Superclass l) = U'.length l
     index i (List_Superclass l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Superclass msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Superclass (MM'.Message s)) where
+instance B'.MutListElem s (Superclass (M'.MutMessage s)) where
     setIndex (Superclass elt) i (List_Superclass l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
@@ -355,7 +355,7 @@ instance B'.ListElem msg (Brand'Scope msg) where
     newtype List msg (Brand'Scope msg) = List_Brand'Scope (U'.ListOf msg (U'.Struct msg))
     length (List_Brand'Scope l) = U'.length l
     index i (List_Brand'Scope l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand'Scope (MM'.Message s)) where
+instance B'.MutListElem s (Brand'Scope (M'.MutMessage s)) where
     setIndex (Brand'Scope elt) i (List_Brand'Scope l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
@@ -405,7 +405,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile'Import msg) = List_CodeGeneratorRequest'RequestedFile'Import (U'.ListOf msg (U'.Struct msg))
     length (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.length l
     index i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile'Import msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (MM'.Message s)) where
+instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s)) where
     setIndex (CodeGeneratorRequest'RequestedFile'Import elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
@@ -433,7 +433,7 @@ instance B'.ListElem msg (Node'Parameter msg) where
     newtype List msg (Node'Parameter msg) = List_Node'Parameter (U'.ListOf msg (U'.Struct msg))
     length (List_Node'Parameter l) = U'.length l
     index i (List_Node'Parameter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'Parameter msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'Parameter (MM'.Message s)) where
+instance B'.MutListElem s (Node'Parameter (M'.MutMessage s)) where
     setIndex (Node'Parameter elt) i (List_Node'Parameter l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'Parameter msg)) where
@@ -481,7 +481,7 @@ instance B'.ListElem msg (CodeGeneratorRequest msg) where
     newtype List msg (CodeGeneratorRequest msg) = List_CodeGeneratorRequest (U'.ListOf msg (U'.Struct msg))
     length (List_CodeGeneratorRequest l) = U'.length l
     index i (List_CodeGeneratorRequest l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest (MM'.Message s)) where
+instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMessage s)) where
     setIndex (CodeGeneratorRequest elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest msg)) where
@@ -525,7 +525,7 @@ instance B'.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
     newtype List msg (Type'anyPointer'unconstrained'group' msg) = List_Type'anyPointer'unconstrained'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'unconstrained'group' l) = U'.length l
     index i (List_Type'anyPointer'unconstrained'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMessage s)) where
     setIndex (Type'anyPointer'unconstrained'group' elt) i (List_Type'anyPointer'unconstrained'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained'group' msg)) where
@@ -545,7 +545,7 @@ instance B'.ListElem msg (Type'anyPointer'parameter'group' msg) where
     newtype List msg (Type'anyPointer'parameter'group' msg) = List_Type'anyPointer'parameter'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'parameter'group' l) = U'.length l
     index i (List_Type'anyPointer'parameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'parameter'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'parameter'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMessage s)) where
     setIndex (Type'anyPointer'parameter'group' elt) i (List_Type'anyPointer'parameter'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'parameter'group' msg)) where
@@ -570,7 +570,7 @@ instance B'.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) wh
     newtype List msg (Type'anyPointer'implicitMethodParameter'group' msg) = List_Type'anyPointer'implicitMethodParameter'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.length l
     index i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'implicitMethodParameter'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMessage s)) where
     setIndex (Type'anyPointer'implicitMethodParameter'group' elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'implicitMethodParameter'group' msg)) where
@@ -711,7 +711,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile msg) = List_CodeGeneratorRequest'RequestedFile (U'.ListOf msg (U'.Struct msg))
     length (List_CodeGeneratorRequest'RequestedFile l) = U'.length l
     index i (List_CodeGeneratorRequest'RequestedFile l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (MM'.Message s)) where
+instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMessage s)) where
     setIndex (CodeGeneratorRequest'RequestedFile elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) where
@@ -782,7 +782,7 @@ instance B'.ListElem msg (Type'list'group' msg) where
     newtype List msg (Type'list'group' msg) = List_Type'list'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'list'group' l) = U'.length l
     index i (List_Type'list'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'list'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'list'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'list'group' (M'.MutMessage s)) where
     setIndex (Type'list'group' elt) i (List_Type'list'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'list'group' msg)) where
@@ -805,7 +805,7 @@ instance B'.ListElem msg (Type'enum'group' msg) where
     newtype List msg (Type'enum'group' msg) = List_Type'enum'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'enum'group' l) = U'.length l
     index i (List_Type'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'enum'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'enum'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'enum'group' (M'.MutMessage s)) where
     setIndex (Type'enum'group' elt) i (List_Type'enum'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'enum'group' msg)) where
@@ -833,7 +833,7 @@ instance B'.ListElem msg (Type'struct'group' msg) where
     newtype List msg (Type'struct'group' msg) = List_Type'struct'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'struct'group' l) = U'.length l
     index i (List_Type'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'struct'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'struct'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'struct'group' (M'.MutMessage s)) where
     setIndex (Type'struct'group' elt) i (List_Type'struct'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'struct'group' msg)) where
@@ -861,7 +861,7 @@ instance B'.ListElem msg (Type'interface'group' msg) where
     newtype List msg (Type'interface'group' msg) = List_Type'interface'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'interface'group' l) = U'.length l
     index i (List_Type'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'interface'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'interface'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'interface'group' (M'.MutMessage s)) where
     setIndex (Type'interface'group' elt) i (List_Type'interface'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'interface'group' msg)) where
@@ -889,7 +889,7 @@ instance B'.ListElem msg (Type'anyPointer'group' msg) where
     newtype List msg (Type'anyPointer'group' msg) = List_Type'anyPointer'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'group' l) = U'.length l
     index i (List_Type'anyPointer'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'group' (MM'.Message s)) where
+instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMessage s)) where
     setIndex (Type'anyPointer'group' elt) i (List_Type'anyPointer'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'group' msg)) where
@@ -990,7 +990,7 @@ instance B'.ListElem msg (CapnpVersion msg) where
     newtype List msg (CapnpVersion msg) = List_CapnpVersion (U'.ListOf msg (U'.Struct msg))
     length (List_CapnpVersion l) = U'.length l
     index i (List_CapnpVersion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapnpVersion msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CapnpVersion (MM'.Message s)) where
+instance B'.MutListElem s (CapnpVersion (M'.MutMessage s)) where
     setIndex (CapnpVersion elt) i (List_CapnpVersion l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
@@ -1020,7 +1020,7 @@ instance B'.ListElem msg (Node'NestedNode msg) where
     newtype List msg (Node'NestedNode msg) = List_Node'NestedNode (U'.ListOf msg (U'.Struct msg))
     length (List_Node'NestedNode l) = U'.length l
     index i (List_Node'NestedNode l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'NestedNode msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'NestedNode (MM'.Message s)) where
+instance B'.MutListElem s (Node'NestedNode (M'.MutMessage s)) where
     setIndex (Node'NestedNode elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'NestedNode msg)) where
@@ -1048,7 +1048,7 @@ instance B'.ListElem msg (Node msg) where
     newtype List msg (Node msg) = List_Node (U'.ListOf msg (U'.Struct msg))
     length (List_Node l) = U'.length l
     index i (List_Node l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node (MM'.Message s)) where
+instance B'.MutListElem s (Node (M'.MutMessage s)) where
     setIndex (Node elt) i (List_Node l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
@@ -1129,7 +1129,7 @@ instance B'.ListElem msg (Node'struct'group' msg) where
     newtype List msg (Node'struct'group' msg) = List_Node'struct'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'struct'group' l) = U'.length l
     index i (List_Node'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'struct'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'struct'group' (MM'.Message s)) where
+instance B'.MutListElem s (Node'struct'group' (M'.MutMessage s)) where
     setIndex (Node'struct'group' elt) i (List_Node'struct'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'struct'group' msg)) where
@@ -1182,7 +1182,7 @@ instance B'.ListElem msg (Node'enum'group' msg) where
     newtype List msg (Node'enum'group' msg) = List_Node'enum'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'enum'group' l) = U'.length l
     index i (List_Node'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'enum'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'enum'group' (MM'.Message s)) where
+instance B'.MutListElem s (Node'enum'group' (M'.MutMessage s)) where
     setIndex (Node'enum'group' elt) i (List_Node'enum'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'enum'group' msg)) where
@@ -1205,7 +1205,7 @@ instance B'.ListElem msg (Node'interface'group' msg) where
     newtype List msg (Node'interface'group' msg) = List_Node'interface'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'interface'group' l) = U'.length l
     index i (List_Node'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'interface'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'interface'group' (MM'.Message s)) where
+instance B'.MutListElem s (Node'interface'group' (M'.MutMessage s)) where
     setIndex (Node'interface'group' elt) i (List_Node'interface'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'interface'group' msg)) where
@@ -1236,7 +1236,7 @@ instance B'.ListElem msg (Node'const'group' msg) where
     newtype List msg (Node'const'group' msg) = List_Node'const'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'const'group' l) = U'.length l
     index i (List_Node'const'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'const'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'const'group' (MM'.Message s)) where
+instance B'.MutListElem s (Node'const'group' (M'.MutMessage s)) where
     setIndex (Node'const'group' elt) i (List_Node'const'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'const'group' msg)) where
@@ -1267,7 +1267,7 @@ instance B'.ListElem msg (Node'annotation'group' msg) where
     newtype List msg (Node'annotation'group' msg) = List_Node'annotation'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'annotation'group' l) = U'.length l
     index i (List_Node'annotation'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'annotation'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'annotation'group' (MM'.Message s)) where
+instance B'.MutListElem s (Node'annotation'group' (M'.MutMessage s)) where
     setIndex (Node'annotation'group' elt) i (List_Node'annotation'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'annotation'group' msg)) where
@@ -1373,7 +1373,7 @@ instance B'.ListElem msg (Annotation msg) where
     newtype List msg (Annotation msg) = List_Annotation (U'.ListOf msg (U'.Struct msg))
     length (List_Annotation l) = U'.length l
     index i (List_Annotation l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Annotation msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Annotation (MM'.Message s)) where
+instance B'.MutListElem s (Annotation (M'.MutMessage s)) where
     setIndex (Annotation elt) i (List_Annotation l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Annotation msg)) where

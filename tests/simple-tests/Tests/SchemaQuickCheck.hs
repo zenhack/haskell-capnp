@@ -32,7 +32,7 @@ generateCGR schema = capnpCompile (show schema) "-"
 
 decodeCGR :: BS.ByteString -> IO (Int, Int)
 decodeCGR bytes = do
-    let reader :: Untyped.Struct M.Message -> LimitT IO Int
+    let reader :: Untyped.Struct M.ConstMessage -> LimitT IO Int
         reader struct = do
             let req = Schema.CodeGeneratorRequest struct
             nodes <- Schema.get_CodeGeneratorRequest'nodes req

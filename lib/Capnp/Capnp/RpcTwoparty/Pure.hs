@@ -33,16 +33,16 @@ data JoinKeyPart
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.Message) JoinKeyPart where
+instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMessage) JoinKeyPart where
     decerialize raw = JoinKeyPart
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message JoinKeyPart where
+instance C'.IsStruct M'.ConstMessage JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMessage)
 
 data JoinResult
     = JoinResult
@@ -52,16 +52,16 @@ data JoinResult
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.Message) JoinResult where
+instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMessage) JoinResult where
     decerialize raw = JoinResult
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= C'.decerialize)
             <*> (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message JoinResult where
+instance C'.IsStruct M'.ConstMessage JoinResult where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMessage)
 
 data Side
     = Side'server
@@ -82,14 +82,14 @@ data ProvisionId
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.Message) ProvisionId where
+instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMessage) ProvisionId where
     decerialize raw = ProvisionId
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message ProvisionId where
+instance C'.IsStruct M'.ConstMessage ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMessage)
 
 data VatId
     = VatId
@@ -97,12 +97,12 @@ data VatId
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.VatId M'.Message) VatId where
+instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMessage) VatId where
     decerialize raw = VatId
             <$> (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message VatId where
+instance C'.IsStruct M'.ConstMessage VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMessage)
 

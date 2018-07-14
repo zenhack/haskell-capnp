@@ -15,7 +15,7 @@ import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
-import qualified Data.Capnp.Message.Mutable as MM'
+import qualified Data.Capnp.Message as M'
 
 
 

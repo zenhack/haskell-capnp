@@ -15,9 +15,8 @@ import Test.Framework            (Test, testGroup)
 import Test.HUnit                (assertEqual)
 import Text.Heredoc              (here, there)
 
-import qualified Data.ByteString            as BS
-import qualified Data.Capnp.Message.Generic as GM
-import qualified Data.Capnp.Message.Mutable as MM
+import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Message as M
 
 untypedTests = testGroup "Untyped Tests"
     [ readTests
@@ -82,7 +81,7 @@ readTests = assertionsToTest "read tests"
 
 data ModTest m s = ModTest
     { testIn   :: String
-    , testMod  :: Struct (MM.Message s) -> m ()
+    , testMod  :: Struct (M.MutMessage s) -> m ()
     , testOut  :: String
     , testType :: String
     }
@@ -188,9 +187,9 @@ setIndexTests = assertionsToTest "Test setIndex" $ map testCase
     ]
   where
     testCase ModTest{..} = do
-        msg <- GM.thaw =<< encodeValue schemaText testType testIn
+        msg <- M.thaw =<< encodeValue schemaText testType testIn
         evalLimitT 128 $ rootPtr msg >>= testMod
-        actualOut <- decodeValue schemaText testType =<< GM.freeze msg
+        actualOut <- decodeValue schemaText testType =<< M.freeze msg
         when (actualOut /= testOut) $
             error $ "Expected:\n\n" ++ show testOut ++ "\n\n...but got:\n\n" ++ show actualOut
     schemaText = [there|tests/data/aircraft.capnp|]

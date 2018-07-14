@@ -37,7 +37,7 @@ data Call
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call M'.Message) Call where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call M'.ConstMessage) Call where
     decerialize raw = Call
             <$> (Capnp.ById.Xb312981b2552a250.get_Call'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Call'target raw >>= C'.decerialize)
@@ -47,10 +47,10 @@ instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call M'.Message) Call wher
             <*> (Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Call'allowThirdPartyTailCall raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Call where
+instance C'.IsStruct M'.ConstMessage Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Call M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Call M'.ConstMessage)
 
 data CapDescriptor
     = CapDescriptor'none
@@ -62,7 +62,7 @@ data CapDescriptor
     | CapDescriptor'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.CapDescriptor M'.Message) CapDescriptor where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.CapDescriptor M'.ConstMessage) CapDescriptor where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.CapDescriptor'none -> pure CapDescriptor'none
@@ -73,10 +73,10 @@ instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.CapDescriptor M'.Message) 
         Capnp.ById.Xb312981b2552a250.CapDescriptor'thirdPartyHosted val -> CapDescriptor'thirdPartyHosted <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.CapDescriptor'unknown' val -> CapDescriptor'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message CapDescriptor where
+instance C'.IsStruct M'.ConstMessage CapDescriptor where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.CapDescriptor M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.CapDescriptor M'.ConstMessage)
 
 data Message
     = Message'unimplemented (Message)
@@ -96,7 +96,7 @@ data Message
     | Message'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Message M'.Message) Message where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Message M'.ConstMessage) Message where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.Message'unimplemented val -> Message'unimplemented <$> C'.decerialize val
@@ -115,10 +115,10 @@ instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Message M'.Message) Messag
         Capnp.ById.Xb312981b2552a250.Message'disembargo val -> Message'disembargo <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.Message'unknown' val -> Message'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Message where
+instance C'.IsStruct M'.ConstMessage Message where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Message M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Message M'.ConstMessage)
 
 data MessageTarget
     = MessageTarget'importedCap (Word32)
@@ -126,17 +126,17 @@ data MessageTarget
     | MessageTarget'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.MessageTarget M'.Message) MessageTarget where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.MessageTarget M'.ConstMessage) MessageTarget where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.MessageTarget'importedCap val -> MessageTarget'importedCap <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.MessageTarget'promisedAnswer val -> MessageTarget'promisedAnswer <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.MessageTarget'unknown' val -> MessageTarget'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message MessageTarget where
+instance C'.IsStruct M'.ConstMessage MessageTarget where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.MessageTarget M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.MessageTarget M'.ConstMessage)
 
 data Payload
     = Payload
@@ -145,15 +145,15 @@ data Payload
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Payload M'.Message) Payload where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Payload M'.ConstMessage) Payload where
     decerialize raw = Payload
             <$> (Capnp.ById.Xb312981b2552a250.get_Payload'content raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Payload'capTable raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Payload where
+instance C'.IsStruct M'.ConstMessage Payload where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Payload M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Payload M'.ConstMessage)
 
 data Provide
     = Provide
@@ -163,16 +163,16 @@ data Provide
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Provide M'.Message) Provide where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Provide M'.ConstMessage) Provide where
     decerialize raw = Provide
             <$> (Capnp.ById.Xb312981b2552a250.get_Provide'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Provide'target raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Provide'recipient raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Provide where
+instance C'.IsStruct M'.ConstMessage Provide where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Provide M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Provide M'.ConstMessage)
 
 data Return
     = Return'
@@ -182,16 +182,16 @@ data Return
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return M'.Message) Return where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return M'.ConstMessage) Return where
     decerialize raw = Return'
             <$> (Capnp.ById.Xb312981b2552a250.get_Return''answerId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Return''releaseParamCaps raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Return''union' raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Return where
+instance C'.IsStruct M'.ConstMessage Return where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Return M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Return M'.ConstMessage)
 
 data Return'
     = Return'results (Payload)
@@ -203,7 +203,7 @@ data Return'
     | Return'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return' M'.Message) Return' where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return' M'.ConstMessage) Return' where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.Return'results val -> Return'results <$> C'.decerialize val
@@ -214,10 +214,10 @@ instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return' M'.Message) Return
         Capnp.ById.Xb312981b2552a250.Return'acceptFromThirdParty val -> Return'acceptFromThirdParty <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.Return'unknown' val -> Return'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Return' where
+instance C'.IsStruct M'.ConstMessage Return' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Return' M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Return' M'.ConstMessage)
 
 data Release
     = Release
@@ -226,15 +226,15 @@ data Release
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Release M'.Message) Release where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Release M'.ConstMessage) Release where
     decerialize raw = Release
             <$> (Capnp.ById.Xb312981b2552a250.get_Release'id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Release'referenceCount raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Release where
+instance C'.IsStruct M'.ConstMessage Release where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Release M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Release M'.ConstMessage)
 
 data Exception'Type
     = Exception'Type'failed
@@ -260,15 +260,15 @@ data Resolve
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve M'.Message) Resolve where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve M'.ConstMessage) Resolve where
     decerialize raw = Resolve'
             <$> (Capnp.ById.Xb312981b2552a250.get_Resolve''promiseId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Resolve''union' raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Resolve where
+instance C'.IsStruct M'.ConstMessage Resolve where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Resolve M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Resolve M'.ConstMessage)
 
 data Resolve'
     = Resolve'cap (CapDescriptor)
@@ -276,17 +276,17 @@ data Resolve'
     | Resolve'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve' M'.Message) Resolve' where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve' M'.ConstMessage) Resolve' where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.Resolve'cap val -> Resolve'cap <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.Resolve'exception val -> Resolve'exception <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.Resolve'unknown' val -> Resolve'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Resolve' where
+instance C'.IsStruct M'.ConstMessage Resolve' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Resolve' M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Resolve' M'.ConstMessage)
 
 data ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor
@@ -295,15 +295,15 @@ data ThirdPartyCapDescriptor
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor M'.Message) ThirdPartyCapDescriptor where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor M'.ConstMessage) ThirdPartyCapDescriptor where
     decerialize raw = ThirdPartyCapDescriptor
             <$> (Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'id raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'vineId raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message ThirdPartyCapDescriptor where
+instance C'.IsStruct M'.ConstMessage ThirdPartyCapDescriptor where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor M'.ConstMessage)
 
 data Finish
     = Finish
@@ -312,15 +312,15 @@ data Finish
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Finish M'.Message) Finish where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Finish M'.ConstMessage) Finish where
     decerialize raw = Finish
             <$> (Capnp.ById.Xb312981b2552a250.get_Finish'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Finish'releaseResultCaps raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Finish where
+instance C'.IsStruct M'.ConstMessage Finish where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Finish M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Finish M'.ConstMessage)
 
 data Accept
     = Accept
@@ -330,16 +330,16 @@ data Accept
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Accept M'.Message) Accept where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Accept M'.ConstMessage) Accept where
     decerialize raw = Accept
             <$> (Capnp.ById.Xb312981b2552a250.get_Accept'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Accept'provision raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Accept'embargo raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Accept where
+instance C'.IsStruct M'.ConstMessage Accept where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Accept M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Accept M'.ConstMessage)
 
 data Disembargo'context
     = Disembargo'context'senderLoopback (Word32)
@@ -349,7 +349,7 @@ data Disembargo'context
     | Disembargo'context'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo'context M'.Message) Disembargo'context where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo'context M'.ConstMessage) Disembargo'context where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.Disembargo'context'senderLoopback val -> Disembargo'context'senderLoopback <$> C'.decerialize val
@@ -358,10 +358,10 @@ instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo'context M'.Mess
         Capnp.ById.Xb312981b2552a250.Disembargo'context'provide val -> Disembargo'context'provide <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.Disembargo'context'unknown' val -> Disembargo'context'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Disembargo'context where
+instance C'.IsStruct M'.ConstMessage Disembargo'context where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Disembargo'context M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Disembargo'context M'.ConstMessage)
 
 data Exception
     = Exception
@@ -372,17 +372,17 @@ data Exception
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Exception M'.Message) Exception where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Exception M'.ConstMessage) Exception where
     decerialize raw = Exception
             <$> (Capnp.ById.Xb312981b2552a250.get_Exception'reason raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteIsCallersFault raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteDurability raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Exception'type_ raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Exception where
+instance C'.IsStruct M'.ConstMessage Exception where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Exception M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Exception M'.ConstMessage)
 
 data PromisedAnswer
     = PromisedAnswer
@@ -391,15 +391,15 @@ data PromisedAnswer
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.PromisedAnswer M'.Message) PromisedAnswer where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.PromisedAnswer M'.ConstMessage) PromisedAnswer where
     decerialize raw = PromisedAnswer
             <$> (Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'transform raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message PromisedAnswer where
+instance C'.IsStruct M'.ConstMessage PromisedAnswer where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.PromisedAnswer M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.PromisedAnswer M'.ConstMessage)
 
 data Call'sendResultsTo
     = Call'sendResultsTo'caller
@@ -408,7 +408,7 @@ data Call'sendResultsTo
     | Call'sendResultsTo'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.Message) Call'sendResultsTo where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.ConstMessage) Call'sendResultsTo where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.Call'sendResultsTo'caller -> pure Call'sendResultsTo'caller
@@ -416,10 +416,10 @@ instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.Mess
         Capnp.ById.Xb312981b2552a250.Call'sendResultsTo'thirdParty val -> Call'sendResultsTo'thirdParty <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.Call'sendResultsTo'unknown' val -> Call'sendResultsTo'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message Call'sendResultsTo where
+instance C'.IsStruct M'.ConstMessage Call'sendResultsTo where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.ConstMessage)
 
 data Bootstrap
     = Bootstrap
@@ -428,15 +428,15 @@ data Bootstrap
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Bootstrap M'.Message) Bootstrap where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Bootstrap M'.ConstMessage) Bootstrap where
     decerialize raw = Bootstrap
             <$> (Capnp.ById.Xb312981b2552a250.get_Bootstrap'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Bootstrap'deprecatedObjectId raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Bootstrap where
+instance C'.IsStruct M'.ConstMessage Bootstrap where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Bootstrap M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Bootstrap M'.ConstMessage)
 
 data PromisedAnswer'Op
     = PromisedAnswer'Op'noop
@@ -444,17 +444,17 @@ data PromisedAnswer'Op
     | PromisedAnswer'Op'unknown' (Word16)
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op M'.Message) PromisedAnswer'Op where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op M'.ConstMessage) PromisedAnswer'Op where
     decerialize raw = case raw of
 
         Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op'noop -> pure PromisedAnswer'Op'noop
         Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op'getPointerField val -> PromisedAnswer'Op'getPointerField <$> C'.decerialize val
         Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op'unknown' val -> PromisedAnswer'Op'unknown' <$> C'.decerialize val
 
-instance C'.IsStruct M'.Message PromisedAnswer'Op where
+instance C'.IsStruct M'.ConstMessage PromisedAnswer'Op where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op M'.ConstMessage)
 
 data Disembargo
     = Disembargo
@@ -463,15 +463,15 @@ data Disembargo
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo M'.Message) Disembargo where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo M'.ConstMessage) Disembargo where
     decerialize raw = Disembargo
             <$> (Capnp.ById.Xb312981b2552a250.get_Disembargo'target raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Disembargo where
+instance C'.IsStruct M'.ConstMessage Disembargo where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Disembargo M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Disembargo M'.ConstMessage)
 
 data Join
     = Join
@@ -481,14 +481,14 @@ data Join
         }
     deriving(Show, Read, Eq)
 
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Join M'.Message) Join where
+instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Join M'.ConstMessage) Join where
     decerialize raw = Join
             <$> (Capnp.ById.Xb312981b2552a250.get_Join'questionId raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Join'target raw >>= C'.decerialize)
             <*> (Capnp.ById.Xb312981b2552a250.get_Join'keyPart raw >>= C'.decerialize)
 
-instance C'.IsStruct M'.Message Join where
+instance C'.IsStruct M'.ConstMessage Join where
     fromStruct struct = do
         raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Join M'.Message)
+        C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Join M'.ConstMessage)
 

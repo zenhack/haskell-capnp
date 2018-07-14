@@ -157,7 +157,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "\n\n"
         , "instance C'.Decerialize "
         , case dataCerialType of
-            CTyStruct -> "(" <> rawName <> " M'.Message)"
+            CTyStruct -> "(" <> rawName <> " M'.ConstMessage)"
             CTyEnum   -> rawName
         , " "
         , pureName
@@ -174,11 +174,11 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , "\n\n"
         , case dataCerialType of
             CTyStruct -> mconcat
-                [ "instance C'.IsStruct M'.Message "
+                [ "instance C'.IsStruct M'.ConstMessage "
                 , pureName, " where\n"
                 , "    fromStruct struct = do\n"
                 , "        raw <- C'.fromStruct struct\n"
-                , "        C'.decerialize (raw :: ", rawName, " M'.Message)\n"
+                , "        C'.decerialize (raw :: ", rawName, " M'.ConstMessage)\n"
                 , "\n"
                 ]
             _ ->

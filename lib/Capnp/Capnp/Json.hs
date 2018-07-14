@@ -15,7 +15,7 @@ import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
-import qualified Data.Capnp.Message.Mutable as MM'
+import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
@@ -69,7 +69,7 @@ instance B'.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Call l) = U'.length l
     index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (JsonValue'Call (MM'.Message s)) where
+instance B'.MutListElem s (JsonValue'Call (M'.MutMessage s)) where
     setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
@@ -100,7 +100,7 @@ instance B'.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Field l) = U'.length l
     index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (JsonValue'Field (MM'.Message s)) where
+instance B'.MutListElem s (JsonValue'Field (M'.MutMessage s)) where
     setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where

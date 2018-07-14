@@ -51,7 +51,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Basics as B'"
     , "import qualified Data.Capnp.TraversalLimit as TL'"
     , "import qualified Data.Capnp.Untyped as U'"
-    , "import qualified Data.Capnp.Message.Mutable as MM'"
+    , "import qualified Data.Capnp.Message as M'"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
     , ""
@@ -84,7 +84,7 @@ fmtNewtypeStruct thisMod name =
         , "instance C'.IsPtr msg (", nameText, " msg) where\n"
         , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
         , fmtStructListElem nameText
-        , "instance B'.MutListElem s (", nameText, " (MM'.Message s)) where\n"
+        , "instance B'.MutListElem s (", nameText, " (M'.MutMessage s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
         , "\n"
         , fmtStructListIsPtr nameText

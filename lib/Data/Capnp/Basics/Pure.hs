@@ -25,10 +25,10 @@ import qualified Data.Text          as T
 type Data = BS.ByteString
 type Text = T.Text
 
-instance Decerialize (Basics.Data M.Message) Data where
+instance Decerialize (Basics.Data M.ConstMessage) Data where
     decerialize (Basics.Data list) = rawBytes list
 
-instance Decerialize (Basics.Text M.Message) Text where
+instance Decerialize (Basics.Text M.ConstMessage) Text where
     decerialize (Basics.Text list) = do
             bytes <- rawBytes list
             case decodeUtf8' bytes of

@@ -15,7 +15,7 @@ import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
-import qualified Data.Capnp.Message.Mutable as MM'
+import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
@@ -29,7 +29,7 @@ instance B'.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveResults l) = U'.length l
     index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Persistent'SaveResults (MM'.Message s)) where
+instance B'.MutListElem s (Persistent'SaveResults (M'.MutMessage s)) where
     setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
@@ -52,7 +52,7 @@ instance B'.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveParams l) = U'.length l
     index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Persistent'SaveParams (MM'.Message s)) where
+instance B'.MutListElem s (Persistent'SaveParams (M'.MutMessage s)) where
     setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
