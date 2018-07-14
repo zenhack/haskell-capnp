@@ -1,18 +1,19 @@
+{-|
+Module: Data.Capnp.Basics
+Description: Handling of "basic" capnp datatypes.
+
+In particular
+
+* Text and Data (which are primitive types in the schema language,
+  but are both the same as List(uint8) on the wire).
+* List of types other than those in Data.Capnp.Untyped.
+  Whereas 'U.ListOf' only deals with low-level encodings of lists,
+  this module's 'List' type can represent typed lists.
+-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
-{-| Module: Data.Capnp.Basics
-    Description: Handling of "basic" capnp datatypes.
-
-    In particular
-
-    * Text and Data (which are primitive types in the schema language,
-      but are both the same as List(uint8) on the wire).
-    * List of types other than those in 'Data.Capnp.Untyped'.
-      Whereas 'U.ListOf' only deals with low-level encodings of lists,
-      this module's 'List' type can represent typed lists.
--}
 module Data.Capnp.Basics
     ( Text(..)
     , Data(..)
@@ -37,9 +38,9 @@ import qualified Data.Capnp.Errors  as E
 import qualified Data.Capnp.Untyped as U
 
 
--- | A textual string ("Text" in capnproto's schema language). On the wire,
--- this is NUL-terminated. The encoding should be UTF-8, but the library *does
--- not* verify this; users of the library must do validation themselves, if
+-- | A textual string (@Text@ in capnproto's schema language). On the wire,
+-- this is NUL-terminated. The encoding should be UTF-8, but the library
+-- /does not/ verify this; users of the library must do validation themselves, if
 -- they care about this.
 --
 -- Rationale: validation would require doing an up-front pass over the data,
@@ -49,16 +50,16 @@ import qualified Data.Capnp.Untyped as U
 -- containing the text, excluding the NUL terminator.
 newtype Text msg = Text (U.ListOf msg Word8)
 
--- | A blob of bytes ("Data" in capnproto's schema language). The argument
+-- | A blob of bytes (@Data@ in capnproto's schema language). The argument
 -- to the data constructor is a slice into the message, containing the raw
 -- bytes.
 newtype Data msg = Data (U.ListOf msg Word8)
 
--- | Interpret a list of Word8 as a capnproto 'Data' value.
+-- | Interpret a list of 'Word8' as a capnproto 'Data' value.
 getData :: U.ReadCtx m msg => U.ListOf msg Word8 -> m (Data msg)
 getData = pure . Data
 
--- | Interpret a list of Word8 as a capnproto 'Text' value.
+-- | Interpret a list of 'Word8' as a capnproto 'Text' value.
 --
 -- This vaildates that the list is NUL-terminated, but not that it is valid
 -- UTF-8. If it is not NUL-terminaed, a 'SchemaViolationError' is thrown.
@@ -72,7 +73,7 @@ getText list = do
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
     Text <$> U.take (len - 1) list
 
--- | Convert a 'Data' to a 'BS.ByteString.
+-- | Convert a 'Data' to a 'BS.ByteString'.
 dataBytes :: U.ReadCtx m msg => Data msg -> m BS.ByteString
 dataBytes (Data list) = U.rawBytes list
 

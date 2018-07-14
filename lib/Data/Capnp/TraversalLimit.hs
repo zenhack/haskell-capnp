@@ -3,7 +3,9 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-| Support for managing message traversal limits.
+{- |
+Module: Data.Capnp.TraversalLimit
+Description: Support for managing message traversal limits.
 
 This module is used to mitigate several pitfalls with the capnproto format,
 which could potentially lead to denial of service vulnerabilities.
@@ -52,8 +54,8 @@ class Monad m => MonadLimit m where
     invoice :: Int -> m ()
 
 -- | Monad transformer implementing 'MonadLimit'. The underlying monad
--- must implement 'MonadThrow', which will be used to signal an error when
--- the limit is exhausted.
+-- must implement 'MonadThrow'. 'invoice' calls @'throwM' 'TraversalLimitError'@
+-- when the limit is exhausted.
 newtype LimitT m a = LimitT (StateT Int m a)
     deriving(Functor, Applicative, Monad)
 

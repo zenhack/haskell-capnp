@@ -20,30 +20,30 @@ import Data.Capnp.Bits
 import Data.Int
 import Data.Word
 
--- | A Ptr represents the information in a capnproto pointer.
+-- | A 'Ptr' represents the information in a capnproto pointer.
 data Ptr
     = StructPtr !Int32 !Word16 !Word16
-        -- ^ @StructPtr off dataSz ptrSz@ is a pointer to a struct
+        -- ^ @'StructPtr' off dataSz ptrSz@ is a pointer to a struct
         -- at offset @off@ in words from the end of the pointer, with
         -- a data section of size @dataSz@ words, and a pointer section
         -- of size @ptrSz@ words.
         --
-        -- Note that the value @StructPtr 0 0 0@ is illegal, since
+        -- Note that the value @'StructPtr' 0 0 0@ is illegal, since
         -- its encoding is reserved for the "null" pointer.
     | ListPtr !Int32 !EltSpec
-        -- ^ @ListPtr off eltSpec@ is a pointer to a list starting at
+        -- ^ @'ListPtr' off eltSpec@ is a pointer to a list starting at
         -- offset @off@ in words from the end of the pointer. @eltSpec@
         -- encodes the C and D fields in the encoding spec; see 'EltSpec'
         -- for details
     | FarPtr !Bool !Word32 !Word32
-        -- ^ @FarPtr twoWords off segment@ is a far pointer, whose landing
+        -- ^ @'FarPtr' twoWords off segment@ is a far pointer, whose landing
         -- pad is:
         --
         -- * two words iff @twoWords@,
         -- * @off@ words from the start of the target segment, and
         -- * in segment id @segment@.
     | CapPtr !Word32
-        -- ^ @CapPtr id@ is a pointer to the capability with the id @id@.
+        -- ^ @'CapPtr' id@ is a pointer to the capability with the id @id@.
     deriving(Show, Eq)
 
 
@@ -59,21 +59,21 @@ data ElementSize
     deriving(Show, Eq, Enum)
 
 -- | A combination of the C and D fields in a list pointer, i.e. the element
---   size, and either the number of elements in the list, or the
---   total number of *words* in the list (if size is composite).
+-- size, and either the number of elements in the list, or the total number
+-- of /words/ in the list (if size is composite).
 data EltSpec
     = EltNormal !ElementSize !Word32
-        -- ^ @EltNormal size len@ is a normal (non-composite) element type
-        -- (C /= 7). @size@ is the size of the elements, and @len@ is the
-        -- number of elements in the list.
+    -- ^ @'EltNormal' size len@ is a normal (non-composite) element type
+    -- (C /= 7). @size@ is the size of the elements, and @len@ is the
+    -- number of elements in the list.
     | EltComposite !Int32
-        -- ^ @EltComposite len@ is a composite element (C == 7). @len@ is the
-        -- length of the list in words.
+    -- ^ @EltComposite len@ is a composite element (C == 7). @len@ is the
+    -- length of the list in words.
     deriving(Show, Eq)
 
 
--- | @parsePtr word@ parses word as a capnproto pointer. A null pointer is
--- parsed as @Nothing@.
+-- | @'parsePtr' word@ parses word as a capnproto pointer. A null pointer is
+-- parsed as 'Nothing'.
 parsePtr :: Word64 -> Maybe Ptr
 parsePtr 0 = Nothing
 parsePtr word = Just $
@@ -92,8 +92,8 @@ parsePtr word = Just $
         3 -> CapPtr (bitRange word 32 64)
         _ -> error "unreachable"
 
--- | @serializePtr ptr@ serializes the pointer  as a Word64, translating
--- @Nothing@ to a null pointer.
+-- | @'serializePtr' ptr@ serializes the pointer as a 'Word64', translating
+-- 'Nothing' to a null pointer.
 serializePtr :: Maybe Ptr -> Word64
 serializePtr Nothing  = 0
 serializePtr (Just p) = serializePtr' p
@@ -118,11 +118,15 @@ serializePtr' (CapPtr index) =
     -- (fromIntegral 0 `shiftL` 2) .|.
     (fromIntegral index `shiftL` 32)
 
+-- | @'parseEltSpec' word@ reads the 'EltSpec' from @word@, which must be the
+-- encoding of a list pointer (this is not verified).
 parseEltSpec :: Word64 -> EltSpec
 parseEltSpec word = case bitRange word 32 35 of
     7  -> EltComposite (i29 (hi word))
     sz -> EltNormal (toEnum sz) (bitRange word 35 64)
 
+-- | @'serializeEltSpec' eltSpec@ serializes @eltSpec@ as a 'Word64'. all bits
+-- which are not determined by the 'EltSpec' are zero.
 serializeEltSpec :: EltSpec -> Word64
 serializeEltSpec (EltNormal sz len) =
     (fromIntegral (fromEnum sz) `shiftL` 32) .|.

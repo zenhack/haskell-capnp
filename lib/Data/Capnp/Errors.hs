@@ -19,6 +19,11 @@ data Error
     = BoundsError
         { index    :: !Int
         , maxIndex :: !Int
+        -- TODO: choose a better name than maxIndex; this is confusing
+        -- since it's supposed to be the length, rather than the maximum
+        -- legal index. The latter would make it impossible to represent
+        -- an error for an empty sequence. I(zenhack) also think there may
+        -- be places in the library where we are misusing this field.
         }
     -- | A 'RecursionLimitError' indicates that the recursion depth limit
     -- was exceeded.

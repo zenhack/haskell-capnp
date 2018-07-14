@@ -62,9 +62,9 @@ computeOffset ptrAddr valueAddr
             then Left OutOfRange
             else Right offset
 
--- | @'pointerFrom ptrAddr targetAddr ptr@ updates @ptr@, such that it is
+-- | @'pointerFrom' ptrAddr targetAddr ptr@ updates @ptr@, such that it is
 -- correct to target a value located at @targetAddr@ given that the pointer
--- itself is located at @ptrAddr@. Returns @Left@ if this is not possible.
+-- itself is located at @ptrAddr@. Returns 'Left' if this is not possible.
 --
 -- It is illegal to call this on a capability pointer.
 --
@@ -81,10 +81,10 @@ pointerFrom ptrAddr targetAddr (P.ListPtr _ eltSpec) =
     flip fmap (computeOffset ptrAddr targetAddr) $
         \off -> P.ListPtr (fromIntegral off) eltSpec
 
--- | @resolvePtr from ptr@ Resolves the pointer @ptr@ to an address
--- relative to @from@. Note that inter-segment pointers (FarPtr)
+-- | @'resolvePtr' from ptr@ resolves the pointer @ptr@ to an address
+-- relative to @from@. Note that inter-segment pointers ('P.FarPtr')
 -- resolve to the address of the landing pad, *not* the the final
--- address of the object pointed to, as that would reqiure access
+-- address of the object pointed to, as the latter would reqiure access
 -- to the message.
 resolvePtr :: WordAddr -> P.Ptr -> Addr
 resolvePtr (WordAt seg word) (P.StructPtr off _dataSz _ptrSz) =
