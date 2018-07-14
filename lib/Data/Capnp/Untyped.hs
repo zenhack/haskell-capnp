@@ -21,6 +21,7 @@ module Data.Capnp.Untyped
     ( Ptr(..), List(..), Struct, ListOf
     , dataSection, ptrSection
     , getData, getPtr
+    , setData, setPtr
     , get, index, length
     , setIndex
     , take
@@ -513,6 +514,16 @@ getPtr i struct
     | length (ptrSection struct) <= i = Nothing <$ invoice 1
     | otherwise = index i (ptrSection struct)
 
+-- | @'setData' value i struct@ sets the @i@th word in the struct's data section
+-- to @value@.
+setData :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s)
+    => Word64 -> Int -> Struct (M.MutMessage s) -> m ()
+setData value i = setIndex value i . dataSection
+
+-- | @'setData' value i struct@ sets the @i@th pointer in the struct's pointer
+-- section to @value@.
+setPtr :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s) => Maybe (Ptr (M.MutMessage s)) -> Int -> Struct (M.MutMessage s) -> m ()
+setPtr value i = setIndex value i . ptrSection
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
 rawBytes :: ReadCtx m msg => ListOf msg Word8 -> m BS.ByteString

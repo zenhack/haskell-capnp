@@ -19,9 +19,10 @@ import Data.ReinterpretCast
 import Data.Word
 
 import Control.Monad.Catch (MonadThrow(throwM))
+import Data.Capnp.Bits     (replaceBits)
 import Data.Capnp.Errors   (Error(SchemaViolationError))
 import Data.Capnp.Untyped
-    (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault)
+    (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault, setData)
 
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
@@ -71,6 +72,21 @@ getWordField struct idx offset def = fmap
     . (`shiftR` offset)
     )
     (getData idx struct)
+
+-- | @'setWordField' struct value index offset def@ sets a field in the
+-- struct's data section. The meaning of the parameters are as in
+-- 'getWordField', with @value@ being the value to set. The width of the
+-- value is inferred from its type.
+setWordField ::
+    ( ReadCtx m (M.MutMessage s)
+    , M.WriteCtx m s
+    , Bounded a, Integral a, IsWord a, Bits a
+    )
+    => Struct (M.MutMessage s) -> a -> Int -> Int -> a -> m ()
+setWordField struct value idx offset def = do
+    old <- getWordField struct idx offset (toWord def)
+    let new = replaceBits (value `xor` def) old offset
+    setData new idx struct
 
 instance Decerialize () () where
     decerialize = pure
