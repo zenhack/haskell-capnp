@@ -53,18 +53,15 @@ library
     exposed-modules:
         Codec.Capnp
       , Data.Capnp.Address
-      -- , Data.Capnp.Builder
       , Data.Capnp.Basics
       , Data.Capnp.Basics.Mutable
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
-      , Data.Capnp.Blob
       , Data.Capnp.Errors
       , Data.Capnp.Message
       , Data.Capnp.Message.Mutable
       , Data.Capnp.Message.Generic
       , Data.Capnp.Pointer
-      , Data.Capnp.Schema
       , Data.Capnp.Untyped
       , Data.Capnp.Untyped.Pure
       , Data.Capnp.TraversalLimit
@@ -163,13 +160,11 @@ test-suite simple-tests
     main-is:              Main.hs
     hs-source-dirs:       tests/simple-tests
     other-modules:
-        -- Tests.Module.Data.Capnp.Builder
         Tests.Module.Capnp.Capnp.Schema
       , Tests.Module.Data.Capnp.Untyped
       , Tests.Module.Data.Capnp.Untyped.Pure
       , Tests.Module.Data.Capnp.Pointer
       , Tests.Module.Data.Capnp.Bits
-      -- , Tests.EncodeDecodeUntyped
       , Tests.WalkSchemaCodeGenRequest
       , Tests.SchemaGeneration
       , Tests.SchemaQuickCheck

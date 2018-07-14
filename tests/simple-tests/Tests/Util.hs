@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TypeFamilies      #-}
 module Tests.Util
     ( MsgMetaData(..)
@@ -7,7 +6,6 @@ module Tests.Util
     , decodeValue
     , encodeValue
     , assertionsToTest
-    , freezeAsByteString
     )
     where
 
@@ -16,12 +14,8 @@ import System.IO
 import System.Process                 hiding (readCreateProcessWithExitCode)
 import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 
-import Control.Monad.Primitive        (PrimMonad, PrimState)
 import Control.Monad.Trans            (lift)
 import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
-import Data.Capnp.Bits                (ByteCount(..))
-import Data.Capnp.Blob                (BlobSlice(..))
-import Data.Primitive.ByteArray       (MutableByteArray, readByteArray)
 import System.Directory               (removeFile)
 import Test.Framework                 (Test, testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
@@ -86,15 +80,6 @@ interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
     let saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
     schemaFile <- saveTmpSchema msgSchema
     lift $ readCreateProcessWithExitCode (proc "capnp" ([subCommand, schemaFile] ++ args)) stdInBytes
-
--- | Convert a BlobSlice (MutableByteArray s) to a ByteString. The former is the
--- result of Data.Capnp.Builder.runBuilderT
-freezeAsByteString :: (PrimMonad m, s ~ PrimState m)
-    => BlobSlice (MutableByteArray s) -> m BS.ByteString
-freezeAsByteString BlobSlice{..} = do
-    let ByteCount off = offset
-    let ByteCount len = sliceLen
-    BS.pack <$> mapM (readByteArray blob) [off..off+len-1]
 
 -- | Convert a list of 'Assertion's to a test group with the given name.
 assertionsToTest :: String -> [H.Assertion] -> Test
