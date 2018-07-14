@@ -4,9 +4,9 @@ module Main (main) where
 
 import Capnp.Capnp.Schema.Pure
 
-import Codec.Capnp.Generic        (fromStruct)
-import Data.Capnp.TraversalLimit  (evalLimitT)
-import Data.Capnp.Untyped.Generic (rootPtr)
+import Codec.Capnp               (fromStruct)
+import Data.Capnp.TraversalLimit (evalLimitT)
+import Data.Capnp.Untyped        (rootPtr)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)

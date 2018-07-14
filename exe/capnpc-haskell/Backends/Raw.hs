@@ -47,10 +47,10 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
     -- The trailing ' is to avoid possible name collisions:
-    , "import qualified Codec.Capnp.Generic as C'"
-    , "import qualified Data.Capnp.Basics.Generic as GB'"
+    , "import qualified Codec.Capnp as C'"
+    , "import qualified Data.Capnp.Basics as B'"
     , "import qualified Data.Capnp.TraversalLimit as TL'"
-    , "import qualified Data.Capnp.Untyped.Generic as U'"
+    , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Message.Mutable as MM'"
     , ""
     , mintercalate "\n" $ map fmtImport modImports
@@ -69,7 +69,7 @@ fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 -- the given name.
 fmtStructListIsPtr :: TB.Builder -> TB.Builder
 fmtStructListIsPtr nameText = mconcat
-    [ "instance C'.IsPtr msg (GB'.List msg (", nameText, " msg)) where\n"
+    [ "instance C'.IsPtr msg (B'.List msg (", nameText, " msg)) where\n"
     , "    fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr\n"
     ]
 
@@ -84,7 +84,7 @@ fmtNewtypeStruct thisMod name =
         , "instance C'.IsPtr msg (", nameText, " msg) where\n"
         , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
         , fmtStructListElem nameText
-        , "instance GB'.MutListElem s (", nameText, " (MM'.Message s)) where\n"
+        , "instance B'.MutListElem s (", nameText, " (MM'.Message s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
         , "\n"
         , fmtStructListIsPtr nameText
@@ -94,7 +94,7 @@ fmtNewtypeStruct thisMod name =
 -- the type constructor.
 fmtStructListElem :: TB.Builder -> TB.Builder
 fmtStructListElem nameText = mconcat
-    [ "instance GB'.ListElem msg (", nameText, " msg) where\n"
+    [ "instance B'.ListElem msg (", nameText, " msg) where\n"
     , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
     , "    length (List_", nameText, " l) = U'.length l\n"
     , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText, "\n"
@@ -246,15 +246,15 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , mintercalate "\n    toWord " $
             map fmtEnumToWordCase   $ reverse $ sortOn variantTag dataVariants
         , "\n"
-        , "instance GB'.ListElem msg ", typeName, " where"
+        , "instance B'.ListElem msg ", typeName, " where"
         , "\n    newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)"
         , "\n    length (List_", typeName, " l) = U'.length l"
         , "\n    index i (List_", typeName, " l) = (C'.fromWord . fromIntegral) <$> U'.index i l"
         , "\n"
-        , "instance GB'.MutListElem s ", typeName, " where"
+        , "instance B'.MutListElem s ", typeName, " where"
         , "\n    setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\""
         , "\n"
-        , "instance C'.IsPtr msg (GB'.List msg ", typeName, ") where"
+        , "instance C'.IsPtr msg (B'.List msg ", typeName, ") where"
         , "\n    fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr"
         , "\n"
         ]
@@ -284,7 +284,7 @@ fmtDataDef _ dataName dataDef =
 fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod = \case
     ListOf eltType ->
-        "(GB'.List msg " <> fmtType thisMod eltType <> ")"
+        "(B'.List msg " <> fmtType thisMod eltType <> ")"
     EnumType name ->
         fmtName thisMod name
     StructType name params -> mconcat
@@ -306,8 +306,8 @@ fmtPrimType PrimFloat32                  = "Float"
 fmtPrimType PrimFloat64                  = "Double"
 fmtPrimType PrimBool                     = "Bool"
 fmtPrimType PrimVoid                     = "()"
-fmtPrimType PrimText                     = "(GB'.Text msg)"
-fmtPrimType PrimData                     = "(GB'.Data msg)"
+fmtPrimType PrimText                     = "(B'.Text msg)"
+fmtPrimType PrimData                     = "(B'.Data msg)"
 
 fmtUntyped :: Untyped -> TB.Builder
 fmtUntyped Struct = "(U'.Struct msg)"

@@ -79,7 +79,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , ""
     , "import qualified Data.Capnp.Message as M'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
-    , "import qualified Codec.Capnp.Generic as C'"
+    , "import qualified Codec.Capnp as C'"
     , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , mintercalate "\n" $ map (fmtImport Pure) modImports

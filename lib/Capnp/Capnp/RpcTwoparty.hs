@@ -11,10 +11,10 @@ import Data.Int
 import Data.Word
 import qualified Data.Bits
 import qualified Data.Maybe
-import qualified Codec.Capnp.Generic as C'
-import qualified Data.Capnp.Basics.Generic as GB'
+import qualified Codec.Capnp as C'
+import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.TraversalLimit as TL'
-import qualified Data.Capnp.Untyped.Generic as U'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message.Mutable as MM'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
@@ -25,14 +25,14 @@ instance C'.IsStruct msg (JoinKeyPart msg) where
     fromStruct = pure . JoinKeyPart
 instance C'.IsPtr msg (JoinKeyPart msg) where
     fromPtr msg ptr = JoinKeyPart <$> C'.fromPtr msg ptr
-instance GB'.ListElem msg (JoinKeyPart msg) where
+instance B'.ListElem msg (JoinKeyPart msg) where
     newtype List msg (JoinKeyPart msg) = List_JoinKeyPart (U'.ListOf msg (U'.Struct msg))
     length (List_JoinKeyPart l) = U'.length l
     index i (List_JoinKeyPart l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinKeyPart msg); go = C'.fromStruct} in go)
-instance GB'.MutListElem s (JoinKeyPart (MM'.Message s)) where
+instance B'.MutListElem s (JoinKeyPart (MM'.Message s)) where
     setIndex (JoinKeyPart elt) i (List_JoinKeyPart l) = U'.setIndex elt i l
 
-instance C'.IsPtr msg (GB'.List msg (JoinKeyPart msg)) where
+instance C'.IsPtr msg (B'.List msg (JoinKeyPart msg)) where
     fromPtr msg ptr = List_JoinKeyPart <$> C'.fromPtr msg ptr
 get_JoinKeyPart'joinId :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word32
 get_JoinKeyPart'joinId (JoinKeyPart struct) = C'.getWordField struct 0 0 0
@@ -55,14 +55,14 @@ instance C'.IsStruct msg (JoinResult msg) where
     fromStruct = pure . JoinResult
 instance C'.IsPtr msg (JoinResult msg) where
     fromPtr msg ptr = JoinResult <$> C'.fromPtr msg ptr
-instance GB'.ListElem msg (JoinResult msg) where
+instance B'.ListElem msg (JoinResult msg) where
     newtype List msg (JoinResult msg) = List_JoinResult (U'.ListOf msg (U'.Struct msg))
     length (List_JoinResult l) = U'.length l
     index i (List_JoinResult l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinResult msg); go = C'.fromStruct} in go)
-instance GB'.MutListElem s (JoinResult (MM'.Message s)) where
+instance B'.MutListElem s (JoinResult (MM'.Message s)) where
     setIndex (JoinResult elt) i (List_JoinResult l) = U'.setIndex elt i l
 
-instance C'.IsPtr msg (GB'.List msg (JoinResult msg)) where
+instance C'.IsPtr msg (B'.List msg (JoinResult msg)) where
     fromPtr msg ptr = List_JoinResult <$> C'.fromPtr msg ptr
 get_JoinResult'joinId :: U'.ReadCtx m msg => JoinResult msg -> m Word32
 get_JoinResult'joinId (JoinResult struct) = C'.getWordField struct 0 0 0
@@ -100,13 +100,13 @@ instance C'.IsWord Side where
     toWord Side'client = 1
     toWord Side'server = 0
     toWord (Side'unknown' tag) = fromIntegral tag
-instance GB'.ListElem msg Side where
+instance B'.ListElem msg Side where
     newtype List msg Side = List_Side (U'.ListOf msg Word16)
     length (List_Side l) = U'.length l
     index i (List_Side l) = (C'.fromWord . fromIntegral) <$> U'.index i l
-instance GB'.MutListElem s Side where
+instance B'.MutListElem s Side where
     setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
-instance C'.IsPtr msg (GB'.List msg Side) where
+instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
 
 newtype ProvisionId msg = ProvisionId (U'.Struct msg)
@@ -115,14 +115,14 @@ instance C'.IsStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId
 instance C'.IsPtr msg (ProvisionId msg) where
     fromPtr msg ptr = ProvisionId <$> C'.fromPtr msg ptr
-instance GB'.ListElem msg (ProvisionId msg) where
+instance B'.ListElem msg (ProvisionId msg) where
     newtype List msg (ProvisionId msg) = List_ProvisionId (U'.ListOf msg (U'.Struct msg))
     length (List_ProvisionId l) = U'.length l
     index i (List_ProvisionId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ProvisionId msg); go = C'.fromStruct} in go)
-instance GB'.MutListElem s (ProvisionId (MM'.Message s)) where
+instance B'.MutListElem s (ProvisionId (MM'.Message s)) where
     setIndex (ProvisionId elt) i (List_ProvisionId l) = U'.setIndex elt i l
 
-instance C'.IsPtr msg (GB'.List msg (ProvisionId msg)) where
+instance C'.IsPtr msg (B'.List msg (ProvisionId msg)) where
     fromPtr msg ptr = List_ProvisionId <$> C'.fromPtr msg ptr
 get_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Word32
 get_ProvisionId'joinId (ProvisionId struct) = C'.getWordField struct 0 0 0
@@ -135,14 +135,14 @@ instance C'.IsStruct msg (VatId msg) where
     fromStruct = pure . VatId
 instance C'.IsPtr msg (VatId msg) where
     fromPtr msg ptr = VatId <$> C'.fromPtr msg ptr
-instance GB'.ListElem msg (VatId msg) where
+instance B'.ListElem msg (VatId msg) where
     newtype List msg (VatId msg) = List_VatId (U'.ListOf msg (U'.Struct msg))
     length (List_VatId l) = U'.length l
     index i (List_VatId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VatId msg); go = C'.fromStruct} in go)
-instance GB'.MutListElem s (VatId (MM'.Message s)) where
+instance B'.MutListElem s (VatId (MM'.Message s)) where
     setIndex (VatId elt) i (List_VatId l) = U'.setIndex elt i l
 
-instance C'.IsPtr msg (GB'.List msg (VatId msg)) where
+instance C'.IsPtr msg (B'.List msg (VatId msg)) where
     fromPtr msg ptr = List_VatId <$> C'.fromPtr msg ptr
 get_VatId'side :: U'.ReadCtx m msg => VatId msg -> m Side
 get_VatId'side (VatId struct) = C'.getWordField struct 0 0 0

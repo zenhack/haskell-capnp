@@ -51,10 +51,10 @@ source-repository head
 library
     hs-source-dirs:       lib
     exposed-modules:
-        Codec.Capnp.Generic
+        Codec.Capnp
       , Data.Capnp.Address
       -- , Data.Capnp.Builder
-      , Data.Capnp.Basics.Generic
+      , Data.Capnp.Basics
       , Data.Capnp.Basics.Mutable
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
@@ -65,7 +65,7 @@ library
       , Data.Capnp.Message.Generic
       , Data.Capnp.Pointer
       , Data.Capnp.Schema
-      , Data.Capnp.Untyped.Generic
+      , Data.Capnp.Untyped
       , Data.Capnp.Untyped.Pure
       , Data.Capnp.TraversalLimit
       -- BEGIN GENERATED SCHEMA MODULES

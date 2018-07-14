@@ -9,18 +9,18 @@ module Data.Capnp.Basics.Pure
     , List(..)
     ) where
 
-import Codec.Capnp.Generic hiding (ListElem(List))
+import Codec.Capnp hiding (ListElem(List))
 
-import Control.Monad.Catch        (MonadThrow(throwM))
-import Data.Capnp.Errors          (Error(InvalidUtf8Error))
-import Data.Capnp.Untyped.Generic (rawBytes)
-import Data.Capnp.Untyped.Pure    (List)
-import Data.Text.Encoding         (decodeUtf8')
+import Control.Monad.Catch     (MonadThrow(throwM))
+import Data.Capnp.Errors       (Error(InvalidUtf8Error))
+import Data.Capnp.Untyped      (rawBytes)
+import Data.Capnp.Untyped.Pure (List)
+import Data.Text.Encoding      (decodeUtf8')
 
-import qualified Data.ByteString           as BS
-import qualified Data.Capnp.Basics.Generic as Basics
-import qualified Data.Capnp.Message        as M
-import qualified Data.Text                 as T
+import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Basics  as Basics
+import qualified Data.Capnp.Message as M
+import qualified Data.Text          as T
 
 type Data = BS.ByteString
 type Text = T.Text

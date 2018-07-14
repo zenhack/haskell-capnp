@@ -19,7 +19,7 @@ import Data.Capnp.TraversalLimit (MonadLimit)
 
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
-import qualified Codec.Capnp.Generic as C'
+import qualified Codec.Capnp as C'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 

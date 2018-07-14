@@ -6,16 +6,16 @@ module Tests.Module.Data.Capnp.Untyped.Pure (pureUntypedTests) where
 import Data.Capnp.Untyped.Pure
 import Tests.Util
 
-import Codec.Capnp.Generic       (decerialize)
+import Codec.Capnp               (decerialize)
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 import Data.ReinterpretCast      (doubleToWord)
 import Test.Framework            (Test)
 import Test.HUnit                (assertEqual)
 import Text.Heredoc              (here, there)
 
-import qualified Data.Capnp.Message         as M
-import qualified Data.Capnp.Untyped.Generic as U
-import qualified Data.Vector                as V
+import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.Untyped as U
+import qualified Data.Vector        as V
 
 -- This is analogous to Tests.Module.Data.Capnp.Untyped.untypedTests, but
 -- using the Pure module:

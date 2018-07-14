@@ -1,22 +1,22 @@
 {-|
-Module: Data.Capnp.BuitlinTypes.Mutable
-Description: built-in types backed by mutable messages.
+Module: Data.Capnp.Basics.Mutable
+Description: basic types backed by mutable messages
 -}
 module Data.Capnp.Basics.Mutable
     ( Text(..)
     , Data(..)
     , List(..)
 
-    -- re-exported from Generic.
-    , GB.getText
-    , GB.getData
-    , GB.dataBytes
-    , GB.textBytes
+    -- re-exported from Data.Capnp.Basics.
+    , B.getText
+    , B.getData
+    , B.dataBytes
+    , B.textBytes
     ) where
 
-import qualified Data.Capnp.Basics.Generic  as GB
+import qualified Data.Capnp.Basics          as B
 import qualified Data.Capnp.Message.Mutable as MM
 
-type Text s = GB.Text (MM.Message s)
-type Data s = GB.Data (MM.Message s)
-type List s a = GB.List (MM.Message s) a
+type Text s = B.Text (MM.Message s)
+type Data s = B.Data (MM.Message s)
+type List s a = B.List (MM.Message s) a

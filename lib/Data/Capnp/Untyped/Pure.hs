@@ -41,7 +41,7 @@ import Prelude hiding (length)
 
 import Data.Word
 
-import Codec.Capnp.Generic           (Decerialize(..), expected)
+import Codec.Capnp                   (Decerialize(..), expected)
 import Control.Monad.Catch           (MonadThrow)
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
@@ -49,11 +49,11 @@ import Data.Primitive.Array          (Array)
 import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
-import qualified Codec.Capnp.Generic        as C
-import qualified Data.ByteString            as BS
-import qualified Data.Capnp.Message         as M
-import qualified Data.Capnp.Untyped.Generic as U
-import qualified Data.Vector                as V
+import qualified Codec.Capnp        as C
+import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.Untyped as U
+import qualified Data.Vector        as V
 
 type Cap = Word32
 

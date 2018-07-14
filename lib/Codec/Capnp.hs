@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
-module Codec.Capnp.Generic
+module Codec.Capnp
     ( IsWord(..)
     , ListElem(..)
     , MutListElem(..)
@@ -18,14 +18,14 @@ import Data.Int
 import Data.ReinterpretCast
 import Data.Word
 
-import Control.Monad.Catch        (MonadThrow(throwM))
-import Data.Capnp.Errors          (Error(SchemaViolationError))
-import Data.Capnp.Untyped.Generic
+import Control.Monad.Catch (MonadThrow(throwM))
+import Data.Capnp.Errors   (Error(SchemaViolationError))
+import Data.Capnp.Untyped
     (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault)
 
 import qualified Data.Capnp.Message         as M
 import qualified Data.Capnp.Message.Mutable as MM
-import qualified Data.Capnp.Untyped.Generic as U
+import qualified Data.Capnp.Untyped         as U
 
 -- | Types that can be converted to and from a 64-bit word.
 --

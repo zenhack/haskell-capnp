@@ -9,11 +9,11 @@ module Tests.WalkSchemaCodeGenRequest
 
 import Prelude hiding (length)
 
-import Data.Capnp.Untyped.Generic hiding (index, length)
+import Data.Capnp.Untyped hiding (index, length)
 import Tests.Util
 
 import Control.Monad             (mapM_, when)
-import Data.Capnp.Basics.Generic (Text(..), index, length)
+import Data.Capnp.Basics         (Text(..), index, length)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)

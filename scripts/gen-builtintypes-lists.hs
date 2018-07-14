@@ -14,9 +14,9 @@ header = unlines
     , "import Data.ReinterpretCast"
     , "import Data.Word"
     , ""
-    , "import Codec.Capnp.Generic (ListElem(..), MutListElem(..))"
+    , "import Codec.Capnp (ListElem(..), MutListElem(..))"
     , ""
-    , "import qualified Data.Capnp.Untyped.Generic as GU"
+    , "import qualified Data.Capnp.Untyped as U"
     , ""
     ]
 
@@ -30,11 +30,11 @@ data InstanceParams = P
 
 genInstance P{..} = concat
     [ "instance ListElem msg ", typed, " where\n"
-    , "    newtype List msg ", typed, " = List", typed, " (GU.ListOf msg ", untyped, ")\n"
-    , "    length (List", typed, " l) = GU.length l\n"
-    , "    index i (List", typed, " l) = ", from, " <$> GU.index i l\n"
+    , "    newtype List msg ", typed, " = List", typed, " (U.ListOf msg ", untyped, ")\n"
+    , "    length (List", typed, " l) = U.length l\n"
+    , "    index i (List", typed, " l) = ", from, " <$> U.index i l\n"
     , "instance MutListElem s ", typed, " where\n"
-    , "    setIndex elt i (", dataCon, " l) = GU.setIndex (", to, " elt) i l\n"
+    , "    setIndex elt i (", dataCon, " l) = U.setIndex (", to, " elt) i l\n"
     ]
   where
     dataCon = "List" ++ typed
