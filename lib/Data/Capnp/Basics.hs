@@ -85,6 +85,7 @@ textBytes (Text list) = U.rawBytes list
 -- IsPtr instances for Text and Data. These wrap lists of bytes.
 instance IsPtr msg (Data msg) where
     fromPtr msg ptr = fromPtr msg ptr >>= getData
+    toPtr (Data l) = toPtr l
 instance IsPtr msg (Text msg) where
     fromPtr msg ptr = case ptr of
         Just _ ->
@@ -95,3 +96,4 @@ instance IsPtr msg (Text msg) where
             -- the empty string, so we bypass it here.
             Data bytes <- fromPtr msg ptr
             pure $ Text bytes
+    toPtr (Text l) = toPtr l
