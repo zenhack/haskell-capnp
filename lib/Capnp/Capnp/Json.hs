@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -9,6 +10,9 @@ module Capnp.Capnp.Json where
 
 import Data.Int
 import Data.Word
+
+import Data.Capnp.Bits (Word1)
+
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
@@ -82,6 +86,7 @@ get_JsonValue'Call'function (JsonValue'Call struct) =
 
 has_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.List msg (JsonValue msg))
 get_JsonValue'Call'params (JsonValue'Call struct) =
     U'.getPtr 1 struct
@@ -90,6 +95,7 @@ get_JsonValue'Call'params (JsonValue'Call struct) =
 
 has_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'params(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+
 newtype JsonValue'Field msg = JsonValue'Field (U'.Struct msg)
 
 instance C'.IsStruct msg (JsonValue'Field msg) where
@@ -113,6 +119,7 @@ get_JsonValue'Field'name (JsonValue'Field struct) =
 
 has_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m (JsonValue msg)
 get_JsonValue'Field'value (JsonValue'Field struct) =
     U'.getPtr 1 struct

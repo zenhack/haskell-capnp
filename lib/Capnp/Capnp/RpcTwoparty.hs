@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -9,6 +10,9 @@ module Capnp.Capnp.RpcTwoparty where
 
 import Data.Int
 import Data.Word
+
+import Data.Capnp.Bits (Word1)
+
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
@@ -39,16 +43,25 @@ get_JoinKeyPart'joinId (JoinKeyPart struct) = C'.getWordField struct 0 0 0
 
 has_JoinKeyPart'joinId :: U'.ReadCtx m msg => JoinKeyPart msg -> m Bool
 has_JoinKeyPart'joinId(JoinKeyPart struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_JoinKeyPart'joinId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinKeyPart (M'.MutMessage s) -> Word32 -> m ()
+set_JoinKeyPart'joinId (JoinKeyPart struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_JoinKeyPart'partCount :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word16
 get_JoinKeyPart'partCount (JoinKeyPart struct) = C'.getWordField struct 0 32 0
 
 has_JoinKeyPart'partCount :: U'.ReadCtx m msg => JoinKeyPart msg -> m Bool
 has_JoinKeyPart'partCount(JoinKeyPart struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_JoinKeyPart'partCount :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinKeyPart (M'.MutMessage s) -> Word16 -> m ()
+set_JoinKeyPart'partCount (JoinKeyPart struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
+
 get_JoinKeyPart'partNum :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word16
 get_JoinKeyPart'partNum (JoinKeyPart struct) = C'.getWordField struct 0 48 0
 
 has_JoinKeyPart'partNum :: U'.ReadCtx m msg => JoinKeyPart msg -> m Bool
 has_JoinKeyPart'partNum(JoinKeyPart struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_JoinKeyPart'partNum :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinKeyPart (M'.MutMessage s) -> Word16 -> m ()
+set_JoinKeyPart'partNum (JoinKeyPart struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 48 0
+
 newtype JoinResult msg = JoinResult (U'.Struct msg)
 
 instance C'.IsStruct msg (JoinResult msg) where
@@ -69,11 +82,17 @@ get_JoinResult'joinId (JoinResult struct) = C'.getWordField struct 0 0 0
 
 has_JoinResult'joinId :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 has_JoinResult'joinId(JoinResult struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_JoinResult'joinId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinResult (M'.MutMessage s) -> Word32 -> m ()
+set_JoinResult'joinId (JoinResult struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_JoinResult'succeeded :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 get_JoinResult'succeeded (JoinResult struct) = C'.getWordField struct 0 32 0
 
 has_JoinResult'succeeded :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 has_JoinResult'succeeded(JoinResult struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_JoinResult'succeeded :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinResult (M'.MutMessage s) -> Bool -> m ()
+set_JoinResult'succeeded (JoinResult struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
+
 get_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m (Maybe (U'.Ptr msg))
 get_JoinResult'cap (JoinResult struct) =
     U'.getPtr 0 struct
@@ -82,6 +101,7 @@ get_JoinResult'cap (JoinResult struct) =
 
 has_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 has_JoinResult'cap(JoinResult struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 data Side
     = Side'server
     | Side'client
@@ -129,6 +149,9 @@ get_ProvisionId'joinId (ProvisionId struct) = C'.getWordField struct 0 0 0
 
 has_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Bool
 has_ProvisionId'joinId(ProvisionId struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_ProvisionId'joinId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => ProvisionId (M'.MutMessage s) -> Word32 -> m ()
+set_ProvisionId'joinId (ProvisionId struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 newtype VatId msg = VatId (U'.Struct msg)
 
 instance C'.IsStruct msg (VatId msg) where
@@ -149,3 +172,5 @@ get_VatId'side (VatId struct) = C'.getWordField struct 0 0 0
 
 has_VatId'side :: U'.ReadCtx m msg => VatId msg -> m Bool
 has_VatId'side(VatId struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_VatId'side :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => VatId (M'.MutMessage s) -> Side -> m ()
+set_VatId'side (VatId struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0

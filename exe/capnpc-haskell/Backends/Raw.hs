@@ -34,6 +34,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
   humanParts = "Capnp":modNameParts
   mainContent = mintercalate "\n"
     [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+    , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
     , "{-# LANGUAGE TypeFamilies #-}"
@@ -44,6 +45,9 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , ""
     , "import Data.Int"
     , "import Data.Word"
+    , ""
+    , "import Data.Capnp.Bits (Word1)"
+    , ""
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
     -- The trailing ' is to avoid possible name collisions:
@@ -121,11 +125,27 @@ fmtGetWordField struct DataLoc{..} = mintercalate " "
     , TB.fromString (show dataDef)
     ]
 
+-- | @'fmtSetWordField' struct value loc@ is like 'fmtGetWordField', except that
+-- it generates a call to 'setWordField'. The extra value parameter corresponds
+-- to the extra parameter in 'setWordField'.
+fmtSetWordField :: TB.Builder -> TB.Builder -> DataLoc -> TB.Builder
+fmtSetWordField struct value DataLoc{..} = mintercalate " "
+    [ " C'.setWordField"
+    , struct
+    , value
+    , TB.fromString (show dataIdx)
+    , TB.fromString (show dataOff)
+    , TB.fromString (show dataDef)
+    ]
+
 fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
-    let getName = fmtName thisMod $ prefixName "get_" (subName variantName fieldName)
-        hasName = fmtName thisMod $ prefixName "has_" (subName variantName fieldName)
+    let accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
+        getName = accessorName "get_"
+        hasName = accessorName "has_"
+        setName = accessorName "set_"
     in mconcat
+        -- getter
         [ getName, " :: U'.ReadCtx m msg => "
         , fmtName thisMod typeName, " msg -> m ", fmtType thisMod fieldType, "\n"
         , getName
@@ -139,6 +159,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> " C'.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         , "\n\n"
+        -- has_*
         , hasName, " :: U'.ReadCtx m msg => ", fmtName thisMod typeName, " msg -> m Bool\n"
         , hasName, "(", fmtName thisMod typeName, " struct) = "
         , case fieldLoc of
@@ -148,6 +169,30 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 "Data.Maybe.isJust <$> U'.getPtr " <> TB.fromString (show idx) <> " struct"
             HereField -> "pure True"
             VoidField -> "pure True"
+        , "\n"
+        -- setter
+        , case fieldLoc of
+            DataField loc@DataLoc{..} -> mconcat
+                [ setName, " :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => "
+                , fmtName thisMod typeName, " (M'.MutMessage s) -> "
+                , fmtType thisMod fieldType
+                , " -> m ()\n"
+                , setName, " (", fmtName thisMod typeName, " struct) value = "
+                , let size = case fieldType of
+                        EnumType _           -> 16
+                        PrimType PrimInt{..} -> size
+                        PrimType PrimFloat32 -> 32
+                        PrimType PrimFloat64 -> 64
+                        PrimType PrimBool    -> 1
+                        _ -> error $ "type " ++ show fieldType ++
+                            " does not make sense in the data section!"
+                  in fmtSetWordField
+                        "struct"
+                        ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
+                        loc
+                , "\n"
+                ]
+            _ -> "" -- TODO: generate setters for other field types.
         ]
 
 fmtDecl :: Id -> (Name, Decl) -> TB.Builder

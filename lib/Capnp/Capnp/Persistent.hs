@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -9,6 +10,9 @@ module Capnp.Capnp.Persistent where
 
 import Data.Int
 import Data.Word
+
+import Data.Capnp.Bits (Word1)
+
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
@@ -42,6 +46,7 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
 
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 newtype Persistent'SaveParams msg = Persistent'SaveParams (U'.Struct msg)
 
 instance C'.IsStruct msg (Persistent'SaveParams msg) where

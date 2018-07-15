@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -9,6 +10,9 @@ module Capnp.Capnp.Cxx where
 
 import Data.Int
 import Data.Word
+
+import Data.Capnp.Bits (Word1)
+
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'

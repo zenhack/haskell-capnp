@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -9,6 +10,9 @@ module Capnp.Capnp.Rpc where
 
 import Data.Int
 import Data.Word
+
+import Data.Capnp.Bits (Word1)
+
 import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
@@ -39,6 +43,9 @@ get_Call'questionId (Call struct) = C'.getWordField struct 0 0 0
 
 has_Call'questionId :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'questionId(Call struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Call'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> Word32 -> m ()
+set_Call'questionId (Call struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Call'target :: U'.ReadCtx m msg => Call msg -> m (MessageTarget msg)
 get_Call'target (Call struct) =
     U'.getPtr 0 struct
@@ -47,16 +54,23 @@ get_Call'target (Call struct) =
 
 has_Call'target :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'target(Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Call'interfaceId :: U'.ReadCtx m msg => Call msg -> m Word64
 get_Call'interfaceId (Call struct) = C'.getWordField struct 1 0 0
 
 has_Call'interfaceId :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'interfaceId(Call struct) = pure $ 1 < U'.length (U'.dataSection struct)
+set_Call'interfaceId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> Word64 -> m ()
+set_Call'interfaceId (Call struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+
 get_Call'methodId :: U'.ReadCtx m msg => Call msg -> m Word16
 get_Call'methodId (Call struct) = C'.getWordField struct 0 32 0
 
 has_Call'methodId :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'methodId(Call struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Call'methodId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> Word16 -> m ()
+set_Call'methodId (Call struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
+
 get_Call'params :: U'.ReadCtx m msg => Call msg -> m (Payload msg)
 get_Call'params (Call struct) =
     U'.getPtr 1 struct
@@ -65,16 +79,21 @@ get_Call'params (Call struct) =
 
 has_Call'params :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'params(Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+
 get_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m (Call'sendResultsTo msg)
 get_Call'sendResultsTo (Call struct) = C'.fromStruct struct
 
 has_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'sendResultsTo(Call struct) = pure True
+
 get_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
 get_Call'allowThirdPartyTailCall (Call struct) = C'.getWordField struct 2 0 0
 
 has_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'allowThirdPartyTailCall(Call struct) = pure $ 2 < U'.length (U'.dataSection struct)
+set_Call'allowThirdPartyTailCall :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> Bool -> m ()
+set_Call'allowThirdPartyTailCall (Call struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
+
 data CapDescriptor msg
     = CapDescriptor'none
     | CapDescriptor'senderHosted Word32
@@ -221,6 +240,7 @@ get_Payload'content (Payload struct) =
 
 has_Payload'content :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'content(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m (B'.List msg (CapDescriptor msg))
 get_Payload'capTable (Payload struct) =
     U'.getPtr 1 struct
@@ -229,6 +249,7 @@ get_Payload'capTable (Payload struct) =
 
 has_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'capTable(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+
 newtype Provide msg = Provide (U'.Struct msg)
 
 instance C'.IsStruct msg (Provide msg) where
@@ -249,6 +270,9 @@ get_Provide'questionId (Provide struct) = C'.getWordField struct 0 0 0
 
 has_Provide'questionId :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'questionId(Provide struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Provide'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Provide (M'.MutMessage s) -> Word32 -> m ()
+set_Provide'questionId (Provide struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Provide'target :: U'.ReadCtx m msg => Provide msg -> m (MessageTarget msg)
 get_Provide'target (Provide struct) =
     U'.getPtr 0 struct
@@ -257,6 +281,7 @@ get_Provide'target (Provide struct) =
 
 has_Provide'target :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'target(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m (Maybe (U'.Ptr msg))
 get_Provide'recipient (Provide struct) =
     U'.getPtr 1 struct
@@ -265,6 +290,7 @@ get_Provide'recipient (Provide struct) =
 
 has_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'recipient(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+
 newtype Return msg = Return (U'.Struct msg)
 
 instance C'.IsStruct msg (Return msg) where
@@ -285,16 +311,23 @@ get_Return''answerId (Return struct) = C'.getWordField struct 0 0 0
 
 has_Return''answerId :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''answerId(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Return''answerId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Return (M'.MutMessage s) -> Word32 -> m ()
+set_Return''answerId (Return struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Return''releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
 get_Return''releaseParamCaps (Return struct) = C'.getWordField struct 0 32 1
 
 has_Return''releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''releaseParamCaps(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Return''releaseParamCaps :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Return (M'.MutMessage s) -> Bool -> m ()
+set_Return''releaseParamCaps (Return struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
+
 get_Return''union' :: U'.ReadCtx m msg => Return msg -> m (Return' msg)
 get_Return''union' (Return struct) = C'.fromStruct struct
 
 has_Return''union' :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''union'(Return struct) = pure True
+
 data Return' msg
     = Return'results (Payload msg)
     | Return'exception (Exception msg)
@@ -352,11 +385,17 @@ get_Release'id (Release struct) = C'.getWordField struct 0 0 0
 
 has_Release'id :: U'.ReadCtx m msg => Release msg -> m Bool
 has_Release'id(Release struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Release'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Release (M'.MutMessage s) -> Word32 -> m ()
+set_Release'id (Release struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Word32
 get_Release'referenceCount (Release struct) = C'.getWordField struct 0 32 0
 
 has_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Bool
 has_Release'referenceCount(Release struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Release'referenceCount :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Release (M'.MutMessage s) -> Word32 -> m ()
+set_Release'referenceCount (Release struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+
 data Exception'Type
     = Exception'Type'failed
     | Exception'Type'overloaded
@@ -410,11 +449,15 @@ get_Resolve''promiseId (Resolve struct) = C'.getWordField struct 0 0 0
 
 has_Resolve''promiseId :: U'.ReadCtx m msg => Resolve msg -> m Bool
 has_Resolve''promiseId(Resolve struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Resolve''promiseId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Resolve (M'.MutMessage s) -> Word32 -> m ()
+set_Resolve''promiseId (Resolve struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
 get_Resolve''union' (Resolve struct) = C'.fromStruct struct
 
 has_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
 has_Resolve''union'(Resolve struct) = pure True
+
 data Resolve' msg
     = Resolve'cap (CapDescriptor msg)
     | Resolve'exception (Exception msg)
@@ -463,11 +506,15 @@ get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) =
 
 has_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Bool
 has_ThirdPartyCapDescriptor'id(ThirdPartyCapDescriptor struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Word32
 get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) = C'.getWordField struct 0 0 0
 
 has_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Bool
 has_ThirdPartyCapDescriptor'vineId(ThirdPartyCapDescriptor struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_ThirdPartyCapDescriptor'vineId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => ThirdPartyCapDescriptor (M'.MutMessage s) -> Word32 -> m ()
+set_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 newtype Finish msg = Finish (U'.Struct msg)
 
 instance C'.IsStruct msg (Finish msg) where
@@ -488,11 +535,17 @@ get_Finish'questionId (Finish struct) = C'.getWordField struct 0 0 0
 
 has_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Bool
 has_Finish'questionId(Finish struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Finish'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Finish (M'.MutMessage s) -> Word32 -> m ()
+set_Finish'questionId (Finish struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
 get_Finish'releaseResultCaps (Finish struct) = C'.getWordField struct 0 32 1
 
 has_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
 has_Finish'releaseResultCaps(Finish struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Finish'releaseResultCaps :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Finish (M'.MutMessage s) -> Bool -> m ()
+set_Finish'releaseResultCaps (Finish struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
+
 newtype Accept msg = Accept (U'.Struct msg)
 
 instance C'.IsStruct msg (Accept msg) where
@@ -513,6 +566,9 @@ get_Accept'questionId (Accept struct) = C'.getWordField struct 0 0 0
 
 has_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'questionId(Accept struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Accept'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Accept (M'.MutMessage s) -> Word32 -> m ()
+set_Accept'questionId (Accept struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m (Maybe (U'.Ptr msg))
 get_Accept'provision (Accept struct) =
     U'.getPtr 0 struct
@@ -521,11 +577,15 @@ get_Accept'provision (Accept struct) =
 
 has_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'provision(Accept struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
 get_Accept'embargo (Accept struct) = C'.getWordField struct 0 32 0
 
 has_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'embargo(Accept struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Accept'embargo :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Accept (M'.MutMessage s) -> Bool -> m ()
+set_Accept'embargo (Accept struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
+
 data Disembargo'context msg
     = Disembargo'context'senderLoopback Word32
     | Disembargo'context'receiverLoopback Word32
@@ -580,21 +640,31 @@ get_Exception'reason (Exception struct) =
 
 has_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'reason(Exception struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception struct) = C'.getWordField struct 0 0 0
 
 has_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'obsoleteIsCallersFault(Exception struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Exception'obsoleteIsCallersFault :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Exception (M'.MutMessage s) -> Bool -> m ()
+set_Exception'obsoleteIsCallersFault (Exception struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 0 0
+
 get_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Word16
 get_Exception'obsoleteDurability (Exception struct) = C'.getWordField struct 0 16 0
 
 has_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'obsoleteDurability(Exception struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Exception'obsoleteDurability :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Exception (M'.MutMessage s) -> Word16 -> m ()
+set_Exception'obsoleteDurability (Exception struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+
 get_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Exception'Type
 get_Exception'type_ (Exception struct) = C'.getWordField struct 0 32 0
 
 has_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'type_(Exception struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Exception'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Exception (M'.MutMessage s) -> Exception'Type -> m ()
+set_Exception'type_ (Exception struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
+
 newtype PromisedAnswer msg = PromisedAnswer (U'.Struct msg)
 
 instance C'.IsStruct msg (PromisedAnswer msg) where
@@ -615,6 +685,9 @@ get_PromisedAnswer'questionId (PromisedAnswer struct) = C'.getWordField struct 0
 
 has_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
 has_PromisedAnswer'questionId(PromisedAnswer struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_PromisedAnswer'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMessage s) -> Word32 -> m ()
+set_PromisedAnswer'questionId (PromisedAnswer struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m (B'.List msg (PromisedAnswer'Op msg))
 get_PromisedAnswer'transform (PromisedAnswer struct) =
     U'.getPtr 0 struct
@@ -623,6 +696,7 @@ get_PromisedAnswer'transform (PromisedAnswer struct) =
 
 has_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
 has_PromisedAnswer'transform(PromisedAnswer struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 data Call'sendResultsTo msg
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
@@ -671,6 +745,9 @@ get_Bootstrap'questionId (Bootstrap struct) = C'.getWordField struct 0 0 0
 
 has_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
 has_Bootstrap'questionId(Bootstrap struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Bootstrap'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Bootstrap (M'.MutMessage s) -> Word32 -> m ()
+set_Bootstrap'questionId (Bootstrap struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m (Maybe (U'.Ptr msg))
 get_Bootstrap'deprecatedObjectId (Bootstrap struct) =
     U'.getPtr 0 struct
@@ -679,6 +756,7 @@ get_Bootstrap'deprecatedObjectId (Bootstrap struct) =
 
 has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
 has_Bootstrap'deprecatedObjectId(Bootstrap struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 data PromisedAnswer'Op msg
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField Word16
@@ -727,11 +805,13 @@ get_Disembargo'target (Disembargo struct) =
 
 has_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'target(Disembargo struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
 get_Disembargo'context (Disembargo struct) = C'.fromStruct struct
 
 has_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'context(Disembargo struct) = pure True
+
 newtype Join msg = Join (U'.Struct msg)
 
 instance C'.IsStruct msg (Join msg) where
@@ -752,6 +832,9 @@ get_Join'questionId (Join struct) = C'.getWordField struct 0 0 0
 
 has_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'questionId(Join struct) = pure $ 0 < U'.length (U'.dataSection struct)
+set_Join'questionId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Join (M'.MutMessage s) -> Word32 -> m ()
+set_Join'questionId (Join struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 get_Join'target :: U'.ReadCtx m msg => Join msg -> m (MessageTarget msg)
 get_Join'target (Join struct) =
     U'.getPtr 0 struct
@@ -760,6 +843,7 @@ get_Join'target (Join struct) =
 
 has_Join'target :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'target(Join struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+
 get_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m (Maybe (U'.Ptr msg))
 get_Join'keyPart (Join struct) =
     U'.getPtr 1 struct
