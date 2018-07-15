@@ -171,13 +171,13 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             VoidField -> "pure True"
         , "\n"
         -- setter
+        , setName, " :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => "
+        , fmtName thisMod typeName, " (M'.MutMessage s) -> "
+        , fmtType thisMod fieldType
+        , " -> m ()\n"
         , case fieldLoc of
             DataField loc@DataLoc{..} -> mconcat
-                [ setName, " :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => "
-                , fmtName thisMod typeName, " (M'.MutMessage s) -> "
-                , fmtType thisMod fieldType
-                , " -> m ()\n"
-                , setName, " (", fmtName thisMod typeName, " struct) value = "
+                [ setName, " (", fmtName thisMod typeName, " struct) value = "
                 , let size = case fieldType of
                         EnumType _           -> 16
                         PrimType PrimInt{..} -> size
@@ -190,9 +190,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                         "struct"
                         ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
                         loc
-                , "\n"
                 ]
-            _ -> "" -- TODO: generate setters for other field types.
+            VoidField -> setName <> " _ = pure ()"
+            _ -> setName <> " _ = error " <> TB.fromString (show "TODO: generate more setters.")
+        , "\n"
         ]
 
 fmtDecl :: Id -> (Name, Decl) -> TB.Builder

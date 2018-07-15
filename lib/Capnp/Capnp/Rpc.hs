@@ -54,6 +54,8 @@ get_Call'target (Call struct) =
 
 has_Call'target :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'target(Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Call'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> (MessageTarget msg) -> m ()
+set_Call'target _ = error "TODO: generate more setters."
 
 get_Call'interfaceId :: U'.ReadCtx m msg => Call msg -> m Word64
 get_Call'interfaceId (Call struct) = C'.getWordField struct 1 0 0
@@ -79,12 +81,16 @@ get_Call'params (Call struct) =
 
 has_Call'params :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'params(Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+set_Call'params :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> (Payload msg) -> m ()
+set_Call'params _ = error "TODO: generate more setters."
 
 get_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m (Call'sendResultsTo msg)
 get_Call'sendResultsTo (Call struct) = C'.fromStruct struct
 
 has_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'sendResultsTo(Call struct) = pure True
+set_Call'sendResultsTo :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> (Call'sendResultsTo msg) -> m ()
+set_Call'sendResultsTo _ = error "TODO: generate more setters."
 
 get_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
 get_Call'allowThirdPartyTailCall (Call struct) = C'.getWordField struct 2 0 0
@@ -240,6 +246,8 @@ get_Payload'content (Payload struct) =
 
 has_Payload'content :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'content(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Payload'content :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Payload (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_Payload'content _ = error "TODO: generate more setters."
 
 get_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m (B'.List msg (CapDescriptor msg))
 get_Payload'capTable (Payload struct) =
@@ -249,6 +257,8 @@ get_Payload'capTable (Payload struct) =
 
 has_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'capTable(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+set_Payload'capTable :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Payload (M'.MutMessage s) -> (B'.List msg (CapDescriptor msg)) -> m ()
+set_Payload'capTable _ = error "TODO: generate more setters."
 
 newtype Provide msg = Provide (U'.Struct msg)
 
@@ -281,6 +291,8 @@ get_Provide'target (Provide struct) =
 
 has_Provide'target :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'target(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Provide'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Provide (M'.MutMessage s) -> (MessageTarget msg) -> m ()
+set_Provide'target _ = error "TODO: generate more setters."
 
 get_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m (Maybe (U'.Ptr msg))
 get_Provide'recipient (Provide struct) =
@@ -290,6 +302,8 @@ get_Provide'recipient (Provide struct) =
 
 has_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'recipient(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+set_Provide'recipient :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Provide (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_Provide'recipient _ = error "TODO: generate more setters."
 
 newtype Return msg = Return (U'.Struct msg)
 
@@ -327,6 +341,8 @@ get_Return''union' (Return struct) = C'.fromStruct struct
 
 has_Return''union' :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return''union'(Return struct) = pure True
+set_Return''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Return (M'.MutMessage s) -> (Return' msg) -> m ()
+set_Return''union' _ = error "TODO: generate more setters."
 
 data Return' msg
     = Return'results (Payload msg)
@@ -457,6 +473,8 @@ get_Resolve''union' (Resolve struct) = C'.fromStruct struct
 
 has_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
 has_Resolve''union'(Resolve struct) = pure True
+set_Resolve''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Resolve (M'.MutMessage s) -> (Resolve' msg) -> m ()
+set_Resolve''union' _ = error "TODO: generate more setters."
 
 data Resolve' msg
     = Resolve'cap (CapDescriptor msg)
@@ -506,6 +524,8 @@ get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) =
 
 has_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Bool
 has_ThirdPartyCapDescriptor'id(ThirdPartyCapDescriptor struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_ThirdPartyCapDescriptor'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => ThirdPartyCapDescriptor (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_ThirdPartyCapDescriptor'id _ = error "TODO: generate more setters."
 
 get_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Word32
 get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) = C'.getWordField struct 0 0 0
@@ -577,6 +597,8 @@ get_Accept'provision (Accept struct) =
 
 has_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'provision(Accept struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Accept'provision :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Accept (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_Accept'provision _ = error "TODO: generate more setters."
 
 get_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
 get_Accept'embargo (Accept struct) = C'.getWordField struct 0 32 0
@@ -640,6 +662,8 @@ get_Exception'reason (Exception struct) =
 
 has_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'reason(Exception struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Exception'reason :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Exception (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Exception'reason _ = error "TODO: generate more setters."
 
 get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception struct) = C'.getWordField struct 0 0 0
@@ -696,6 +720,8 @@ get_PromisedAnswer'transform (PromisedAnswer struct) =
 
 has_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
 has_PromisedAnswer'transform(PromisedAnswer struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_PromisedAnswer'transform :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMessage s) -> (B'.List msg (PromisedAnswer'Op msg)) -> m ()
+set_PromisedAnswer'transform _ = error "TODO: generate more setters."
 
 data Call'sendResultsTo msg
     = Call'sendResultsTo'caller
@@ -756,6 +782,8 @@ get_Bootstrap'deprecatedObjectId (Bootstrap struct) =
 
 has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
 has_Bootstrap'deprecatedObjectId(Bootstrap struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Bootstrap'deprecatedObjectId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Bootstrap (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_Bootstrap'deprecatedObjectId _ = error "TODO: generate more setters."
 
 data PromisedAnswer'Op msg
     = PromisedAnswer'Op'noop
@@ -805,12 +833,16 @@ get_Disembargo'target (Disembargo struct) =
 
 has_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'target(Disembargo struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Disembargo'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Disembargo (M'.MutMessage s) -> (MessageTarget msg) -> m ()
+set_Disembargo'target _ = error "TODO: generate more setters."
 
 get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
 get_Disembargo'context (Disembargo struct) = C'.fromStruct struct
 
 has_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'context(Disembargo struct) = pure True
+set_Disembargo'context :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Disembargo (M'.MutMessage s) -> (Disembargo'context msg) -> m ()
+set_Disembargo'context _ = error "TODO: generate more setters."
 
 newtype Join msg = Join (U'.Struct msg)
 
@@ -843,6 +875,8 @@ get_Join'target (Join struct) =
 
 has_Join'target :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'target(Join struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_Join'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Join (M'.MutMessage s) -> (MessageTarget msg) -> m ()
+set_Join'target _ = error "TODO: generate more setters."
 
 get_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m (Maybe (U'.Ptr msg))
 get_Join'keyPart (Join struct) =
@@ -852,3 +886,5 @@ get_Join'keyPart (Join struct) =
 
 has_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'keyPart(Join struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+set_Join'keyPart :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Join (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_Join'keyPart _ = error "TODO: generate more setters."
