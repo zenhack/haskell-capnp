@@ -10,6 +10,7 @@ module Codec.Capnp
     , IsStruct(..)
     , Decerialize(..)
     , getWordField
+    , setWordField
     , expected
     ) where
 
