@@ -98,7 +98,7 @@ getWord msg WordAt{wordIndex=wordIndex@(WordCount i), segIndex} = do
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
 -- in the message. It throws a @BoundsError@ if the address is out of bounds.
-setSegment :: (MonadThrow m, MMessage m msg) => msg -> Int -> Segment m msg -> m ()
+setSegment :: (WriteCtx m s, MonadThrow m) => MutMessage s -> Int -> Segment m (MutMessage s) -> m ()
 setSegment msg i seg = do
     checkIndex i =<< numSegs msg
     internalSetSeg msg i seg
@@ -106,7 +106,7 @@ setSegment msg i seg = do
 -- | @'setWord' message address value@ sets the word at @address@ in the
 -- message to @value@. If the address is not valid in the message, a
 -- @BoundsError@ will be thrown.
-setWord :: (MonadThrow m, MMessage m msg) => msg -> WordAddr -> Word64 -> m ()
+setWord :: (WriteCtx m s, MonadThrow m) => MutMessage s -> WordAddr -> Word64 -> m ()
 setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
     seg <- getSegment msg segIndex
     checkIndex i =<< numWords seg
@@ -232,12 +232,24 @@ instance WriteCtx m s => Message m (MutMessage s) where
     numSegs (MutMessage vec) = pure $ MV.length vec
     internalGetSeg (MutMessage vec) i = MutSegment <$> MV.read vec i
 
-instance WriteCtx m s => MMessage m (MutMessage s) where
-    write (MutSegment vec) i val =
-        SMV.write vec i (toLE64 val)
-    grow (MutSegment vec) amount = MutSegment <$> SMV.grow vec amount
 
-    internalSetSeg (MutMessage msg) i (MutSegment seg) = MV.write msg i seg
+-- | @'internalSetSeg' message index segment@ sets the segment at the given
+-- index in the message. Most callers should use the 'setSegment' wrapper,
+-- instead of calling this directly.
+internalSetSeg :: WriteCtx m s => MutMessage s -> Int -> Segment m (MutMessage s) -> m ()
+internalSetSeg (MutMessage msg) i (MutSegment seg) = MV.write msg i seg
+
+-- | @'write' segment index value@ writes a value to the 64-bit word
+-- at the provided index. Consider using 'setWord' on the message,
+-- instead of calling this directly.
+write :: WriteCtx m s => Segment m (MutMessage s) -> Int -> Word64 -> m ()
+write (MutSegment vec) i val = SMV.write vec i (toLE64 val)
+
+-- | @'grow' segment amount@ grows the segment by the specified number
+-- of 64-bit words. The original segment should not be used afterwards.
+grow  :: WriteCtx m s => Segment m (MutMessage s) -> Int -> m (Segment m (MutMessage s))
+grow (MutSegment vec) amount = MutSegment <$> SMV.grow vec amount
+
 
 instance WriteCtx m s => Mutable m (MutMessage s) ConstMessage where
     thaw (ConstMessage vec) =
@@ -245,17 +257,3 @@ instance WriteCtx m s => Mutable m (MutMessage s) ConstMessage where
     freeze (MutMessage mvec) = do
         vec <- V.freeze mvec
         ConstMessage <$> V.mapM SV.freeze vec
-
--- | An 'MMessage' is a mutable capnproto message.
-class Message m msg => MMessage m msg where
-    -- | @'internalSetSeg' message index segment@ sets the segment at the given
-    -- index in the message. Most callers should use the 'setSegment' wrapper,
-    -- instead of calling this directly.
-    internalSetSeg :: msg -> Int -> Segment m msg -> m ()
-    -- | @'write' segment index value@ writes a value to the 64-bit word
-    -- at the provided index. Consider using 'setWord' on the message,
-    -- instead of calling this directly.
-    write :: Segment m msg -> Int -> Word64 -> m ()
-    -- | @'grow' segment amount@ grows the segment by the specified number
-    -- of 64-bit words. The original segment should not be used afterwards.
-    grow  :: Segment m msg -> Int -> m (Segment m msg)
