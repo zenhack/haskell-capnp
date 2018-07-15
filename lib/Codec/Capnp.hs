@@ -20,7 +20,7 @@ import Data.ReinterpretCast
 import Data.Word
 
 import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Capnp.Bits     (replaceBits)
+import Data.Capnp.Bits     (Word1(..), replaceBits)
 import Data.Capnp.Errors   (Error(SchemaViolationError))
 import Data.Capnp.Untyped
     (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault, setData)
@@ -118,6 +118,10 @@ instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
     toWord True  = 1
     toWord False = 0
+
+instance IsWord Word1 where
+    fromWord = Word1 . fromWord
+    toWord = toWord . word1ToBool
 
 -- IsWord instances for integral types; they're all the same.
 instance IsWord Int8 where
