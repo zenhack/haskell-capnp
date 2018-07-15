@@ -77,7 +77,7 @@ get_Brand'scopes (Brand struct) =
 
 has_Brand'scopes :: U'.ReadCtx m msg => Brand msg -> m Bool
 has_Brand'scopes(Brand struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Brand'scopes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand (M'.MutMessage s) -> (B'.List msg (Brand'Scope msg)) -> m ()
+set_Brand'scopes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Brand'Scope (M'.MutMessage s))) -> m ()
 set_Brand'scopes _ = error "TODO: generate more setters."
 
 newtype Method msg = Method (U'.Struct msg)
@@ -103,7 +103,7 @@ get_Method'name (Method struct) =
 
 has_Method'name :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'name(Method struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Method'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Method'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_Method'name _ = error "TODO: generate more setters."
 
 get_Method'codeOrder :: U'.ReadCtx m msg => Method msg -> m Word16
@@ -138,7 +138,7 @@ get_Method'annotations (Method struct) =
 
 has_Method'annotations :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'annotations(Method struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Method'annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.List msg (Annotation msg)) -> m ()
+set_Method'annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
 set_Method'annotations _ = error "TODO: generate more setters."
 
 get_Method'paramBrand :: U'.ReadCtx m msg => Method msg -> m (Brand msg)
@@ -149,7 +149,7 @@ get_Method'paramBrand (Method struct) =
 
 has_Method'paramBrand :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'paramBrand(Method struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_Method'paramBrand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Method'paramBrand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Method'paramBrand _ = error "TODO: generate more setters."
 
 get_Method'resultBrand :: U'.ReadCtx m msg => Method msg -> m (Brand msg)
@@ -160,7 +160,7 @@ get_Method'resultBrand (Method struct) =
 
 has_Method'resultBrand :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'resultBrand(Method struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Method'resultBrand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Method'resultBrand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Method'resultBrand _ = error "TODO: generate more setters."
 
 get_Method'implicitParameters :: U'.ReadCtx m msg => Method msg -> m (B'.List msg (Node'Parameter msg))
@@ -171,7 +171,7 @@ get_Method'implicitParameters (Method struct) =
 
 has_Method'implicitParameters :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'implicitParameters(Method struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
-set_Method'implicitParameters :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.List msg (Node'Parameter msg)) -> m ()
+set_Method'implicitParameters :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node'Parameter (M'.MutMessage s))) -> m ()
 set_Method'implicitParameters _ = error "TODO: generate more setters."
 
 newtype Enumerant msg = Enumerant (U'.Struct msg)
@@ -197,7 +197,7 @@ get_Enumerant'name (Enumerant struct) =
 
 has_Enumerant'name :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'name(Enumerant struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Enumerant'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Enumerant'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_Enumerant'name _ = error "TODO: generate more setters."
 
 get_Enumerant'codeOrder :: U'.ReadCtx m msg => Enumerant msg -> m Word16
@@ -216,7 +216,7 @@ get_Enumerant'annotations (Enumerant struct) =
 
 has_Enumerant'annotations :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'annotations(Enumerant struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Enumerant'annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> (B'.List msg (Annotation msg)) -> m ()
+set_Enumerant'annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
 set_Enumerant'annotations _ = error "TODO: generate more setters."
 
 field'noDiscriminant :: Word16
@@ -245,7 +245,7 @@ get_Field''name (Field struct) =
 
 has_Field''name :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''name(Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Field''name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Field''name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_Field''name _ = error "TODO: generate more setters."
 
 get_Field''codeOrder :: U'.ReadCtx m msg => Field msg -> m Word16
@@ -264,7 +264,7 @@ get_Field''annotations (Field struct) =
 
 has_Field''annotations :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''annotations(Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Field''annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (B'.List msg (Annotation msg)) -> m ()
+set_Field''annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
 set_Field''annotations _ = error "TODO: generate more setters."
 
 get_Field''discriminantValue :: U'.ReadCtx m msg => Field msg -> m Word16
@@ -280,7 +280,7 @@ get_Field''ordinal (Field struct) = C'.fromStruct struct
 
 has_Field''ordinal :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''ordinal(Field struct) = pure True
-set_Field''ordinal :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (Field'ordinal msg) -> m ()
+set_Field''ordinal :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (Field'ordinal (M'.MutMessage s)) -> m ()
 set_Field''ordinal _ = error "TODO: generate more setters."
 
 get_Field''union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
@@ -288,7 +288,7 @@ get_Field''union' (Field struct) = C'.fromStruct struct
 
 has_Field''union' :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''union'(Field struct) = pure True
-set_Field''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (Field' msg) -> m ()
+set_Field''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (Field' (M'.MutMessage s)) -> m ()
 set_Field''union' _ = error "TODO: generate more setters."
 
 data Field' msg
@@ -326,7 +326,7 @@ get_Field'slot'type_ (Field'slot'group' struct) =
 
 has_Field'slot'type_ :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'type_(Field'slot'group' struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_Field'slot'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> (Type msg) -> m ()
+set_Field'slot'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
 set_Field'slot'type_ _ = error "TODO: generate more setters."
 
 get_Field'slot'defaultValue :: U'.ReadCtx m msg => Field'slot'group' msg -> m (Value msg)
@@ -337,7 +337,7 @@ get_Field'slot'defaultValue (Field'slot'group' struct) =
 
 has_Field'slot'defaultValue :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'defaultValue(Field'slot'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Field'slot'defaultValue :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> (Value msg) -> m ()
+set_Field'slot'defaultValue :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> (Value (M'.MutMessage s)) -> m ()
 set_Field'slot'defaultValue _ = error "TODO: generate more setters."
 
 get_Field'slot'hadExplicitDefault :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
@@ -421,7 +421,7 @@ get_Superclass'brand (Superclass struct) =
 
 has_Superclass'brand :: U'.ReadCtx m msg => Superclass msg -> m Bool
 has_Superclass'brand(Superclass struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Superclass'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Superclass (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Superclass'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Superclass (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Superclass'brand _ = error "TODO: generate more setters."
 
 newtype Brand'Scope msg = Brand'Scope (U'.Struct msg)
@@ -452,7 +452,7 @@ get_Brand'Scope''union' (Brand'Scope struct) = C'.fromStruct struct
 
 has_Brand'Scope''union' :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
 has_Brand'Scope''union'(Brand'Scope struct) = pure True
-set_Brand'Scope''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand'Scope (M'.MutMessage s) -> (Brand'Scope' msg) -> m ()
+set_Brand'Scope''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand'Scope (M'.MutMessage s) -> (Brand'Scope' (M'.MutMessage s)) -> m ()
 set_Brand'Scope''union' _ = error "TODO: generate more setters."
 
 data Brand'Scope' msg
@@ -511,7 +511,7 @@ get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'Request
 
 has_CodeGeneratorRequest'RequestedFile'Import'name :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'name(CodeGeneratorRequest'RequestedFile'Import struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_CodeGeneratorRequest'RequestedFile'Import'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_CodeGeneratorRequest'RequestedFile'Import'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_CodeGeneratorRequest'RequestedFile'Import'name _ = error "TODO: generate more setters."
 
 newtype Node'Parameter msg = Node'Parameter (U'.Struct msg)
@@ -537,7 +537,7 @@ get_Node'Parameter'name (Node'Parameter struct) =
 
 has_Node'Parameter'name :: U'.ReadCtx m msg => Node'Parameter msg -> m Bool
 has_Node'Parameter'name(Node'Parameter struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Node'Parameter'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'Parameter (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Node'Parameter'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'Parameter (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_Node'Parameter'name _ = error "TODO: generate more setters."
 
 data Field'ordinal msg
@@ -588,7 +588,7 @@ get_CodeGeneratorRequest'nodes (CodeGeneratorRequest struct) =
 
 has_CodeGeneratorRequest'nodes :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'nodes(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_CodeGeneratorRequest'nodes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (B'.List msg (Node msg)) -> m ()
+set_CodeGeneratorRequest'nodes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node (M'.MutMessage s))) -> m ()
 set_CodeGeneratorRequest'nodes _ = error "TODO: generate more setters."
 
 get_CodeGeneratorRequest'requestedFiles :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (B'.List msg (CodeGeneratorRequest'RequestedFile msg))
@@ -599,7 +599,7 @@ get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest struct) =
 
 has_CodeGeneratorRequest'requestedFiles :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'requestedFiles(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_CodeGeneratorRequest'requestedFiles :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) -> m ()
+set_CodeGeneratorRequest'requestedFiles :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (CodeGeneratorRequest'RequestedFile (M'.MutMessage s))) -> m ()
 set_CodeGeneratorRequest'requestedFiles _ = error "TODO: generate more setters."
 
 get_CodeGeneratorRequest'capnpVersion :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (CapnpVersion msg)
@@ -610,7 +610,7 @@ get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest struct) =
 
 has_CodeGeneratorRequest'capnpVersion :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'capnpVersion(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_CodeGeneratorRequest'capnpVersion :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (CapnpVersion msg) -> m ()
+set_CodeGeneratorRequest'capnpVersion :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (CapnpVersion (M'.MutMessage s)) -> m ()
 set_CodeGeneratorRequest'capnpVersion _ = error "TODO: generate more setters."
 
 data Type'anyPointer msg
@@ -638,7 +638,7 @@ get_Type'anyPointer'unconstrained'union' (Type'anyPointer'unconstrained'group' s
 
 has_Type'anyPointer'unconstrained'union' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained'group' msg -> m Bool
 has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group' struct) = pure True
-set_Type'anyPointer'unconstrained'union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMessage s) -> (Type'anyPointer'unconstrained msg) -> m ()
+set_Type'anyPointer'unconstrained'union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMessage s) -> (Type'anyPointer'unconstrained (M'.MutMessage s)) -> m ()
 set_Type'anyPointer'unconstrained'union' _ = error "TODO: generate more setters."
 
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group' (U'.Struct msg)
@@ -847,7 +847,7 @@ get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedF
 
 has_CodeGeneratorRequest'RequestedFile'filename :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'filename(CodeGeneratorRequest'RequestedFile struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_CodeGeneratorRequest'RequestedFile'filename :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_CodeGeneratorRequest'RequestedFile'filename :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_CodeGeneratorRequest'RequestedFile'filename _ = error "TODO: generate more setters."
 
 get_CodeGeneratorRequest'RequestedFile'imports :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg))
@@ -858,7 +858,7 @@ get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFi
 
 has_CodeGeneratorRequest'RequestedFile'imports :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'imports(CodeGeneratorRequest'RequestedFile struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_CodeGeneratorRequest'RequestedFile'imports :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) -> m ()
+set_CodeGeneratorRequest'RequestedFile'imports :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s))) -> m ()
 set_CodeGeneratorRequest'RequestedFile'imports _ = error "TODO: generate more setters."
 
 data Type msg
@@ -919,7 +919,7 @@ get_Type'list'elementType (Type'list'group' struct) =
 
 has_Type'list'elementType :: U'.ReadCtx m msg => Type'list'group' msg -> m Bool
 has_Type'list'elementType(Type'list'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'list'elementType :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'list'group' (M'.MutMessage s) -> (Type msg) -> m ()
+set_Type'list'elementType :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'list'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
 set_Type'list'elementType _ = error "TODO: generate more setters."
 
 newtype Type'enum'group' msg = Type'enum'group' (U'.Struct msg)
@@ -953,7 +953,7 @@ get_Type'enum'brand (Type'enum'group' struct) =
 
 has_Type'enum'brand :: U'.ReadCtx m msg => Type'enum'group' msg -> m Bool
 has_Type'enum'brand(Type'enum'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'enum'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Type'enum'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Type'enum'brand _ = error "TODO: generate more setters."
 
 newtype Type'struct'group' msg = Type'struct'group' (U'.Struct msg)
@@ -987,7 +987,7 @@ get_Type'struct'brand (Type'struct'group' struct) =
 
 has_Type'struct'brand :: U'.ReadCtx m msg => Type'struct'group' msg -> m Bool
 has_Type'struct'brand(Type'struct'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'struct'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Type'struct'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Type'struct'brand _ = error "TODO: generate more setters."
 
 newtype Type'interface'group' msg = Type'interface'group' (U'.Struct msg)
@@ -1021,7 +1021,7 @@ get_Type'interface'brand (Type'interface'group' struct) =
 
 has_Type'interface'brand :: U'.ReadCtx m msg => Type'interface'group' msg -> m Bool
 has_Type'interface'brand(Type'interface'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'interface'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Type'interface'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Type'interface'brand _ = error "TODO: generate more setters."
 
 newtype Type'anyPointer'group' msg = Type'anyPointer'group' (U'.Struct msg)
@@ -1044,7 +1044,7 @@ get_Type'anyPointer'union' (Type'anyPointer'group' struct) = C'.fromStruct struc
 
 has_Type'anyPointer'union' :: U'.ReadCtx m msg => Type'anyPointer'group' msg -> m Bool
 has_Type'anyPointer'union'(Type'anyPointer'group' struct) = pure True
-set_Type'anyPointer'union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMessage s) -> (Type'anyPointer msg) -> m ()
+set_Type'anyPointer'union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMessage s) -> (Type'anyPointer (M'.MutMessage s)) -> m ()
 set_Type'anyPointer'union' _ = error "TODO: generate more setters."
 
 
@@ -1190,7 +1190,7 @@ get_Node'NestedNode'name (Node'NestedNode struct) =
 
 has_Node'NestedNode'name :: U'.ReadCtx m msg => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'name(Node'NestedNode struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Node'NestedNode'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Node'NestedNode'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_Node'NestedNode'name _ = error "TODO: generate more setters."
 
 get_Node'NestedNode'id :: U'.ReadCtx m msg => Node'NestedNode msg -> m Word64
@@ -1232,7 +1232,7 @@ get_Node''displayName (Node struct) =
 
 has_Node''displayName :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''displayName(Node struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Node''displayName :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.Text msg) -> m ()
+set_Node''displayName :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
 set_Node''displayName _ = error "TODO: generate more setters."
 
 get_Node''displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Word32
@@ -1259,7 +1259,7 @@ get_Node''nestedNodes (Node struct) =
 
 has_Node''nestedNodes :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''nestedNodes(Node struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Node''nestedNodes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List msg (Node'NestedNode msg)) -> m ()
+set_Node''nestedNodes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node'NestedNode (M'.MutMessage s))) -> m ()
 set_Node''nestedNodes _ = error "TODO: generate more setters."
 
 get_Node''annotations :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Annotation msg))
@@ -1270,7 +1270,7 @@ get_Node''annotations (Node struct) =
 
 has_Node''annotations :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''annotations(Node struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_Node''annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List msg (Annotation msg)) -> m ()
+set_Node''annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
 set_Node''annotations _ = error "TODO: generate more setters."
 
 get_Node''parameters :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'Parameter msg))
@@ -1281,7 +1281,7 @@ get_Node''parameters (Node struct) =
 
 has_Node''parameters :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''parameters(Node struct) = Data.Maybe.isJust <$> U'.getPtr 5 struct
-set_Node''parameters :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List msg (Node'Parameter msg)) -> m ()
+set_Node''parameters :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node'Parameter (M'.MutMessage s))) -> m ()
 set_Node''parameters _ = error "TODO: generate more setters."
 
 get_Node''isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
@@ -1297,7 +1297,7 @@ get_Node''union' (Node struct) = C'.fromStruct struct
 
 has_Node''union' :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''union'(Node struct) = pure True
-set_Node''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (Node' msg) -> m ()
+set_Node''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (Node' (M'.MutMessage s)) -> m ()
 set_Node''union' _ = error "TODO: generate more setters."
 
 data Node' msg
@@ -1380,7 +1380,7 @@ get_Node'struct'fields (Node'struct'group' struct) =
 
 has_Node'struct'fields :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'fields(Node'struct'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'struct'fields :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> (B'.List msg (Field msg)) -> m ()
+set_Node'struct'fields :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Field (M'.MutMessage s))) -> m ()
 set_Node'struct'fields _ = error "TODO: generate more setters."
 
 newtype Node'enum'group' msg = Node'enum'group' (U'.Struct msg)
@@ -1406,7 +1406,7 @@ get_Node'enum'enumerants (Node'enum'group' struct) =
 
 has_Node'enum'enumerants :: U'.ReadCtx m msg => Node'enum'group' msg -> m Bool
 has_Node'enum'enumerants(Node'enum'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'enum'enumerants :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'enum'group' (M'.MutMessage s) -> (B'.List msg (Enumerant msg)) -> m ()
+set_Node'enum'enumerants :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'enum'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Enumerant (M'.MutMessage s))) -> m ()
 set_Node'enum'enumerants _ = error "TODO: generate more setters."
 
 newtype Node'interface'group' msg = Node'interface'group' (U'.Struct msg)
@@ -1432,7 +1432,7 @@ get_Node'interface'methods (Node'interface'group' struct) =
 
 has_Node'interface'methods :: U'.ReadCtx m msg => Node'interface'group' msg -> m Bool
 has_Node'interface'methods(Node'interface'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'interface'methods :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMessage s) -> (B'.List msg (Method msg)) -> m ()
+set_Node'interface'methods :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Method (M'.MutMessage s))) -> m ()
 set_Node'interface'methods _ = error "TODO: generate more setters."
 
 get_Node'interface'superclasses :: U'.ReadCtx m msg => Node'interface'group' msg -> m (B'.List msg (Superclass msg))
@@ -1443,7 +1443,7 @@ get_Node'interface'superclasses (Node'interface'group' struct) =
 
 has_Node'interface'superclasses :: U'.ReadCtx m msg => Node'interface'group' msg -> m Bool
 has_Node'interface'superclasses(Node'interface'group' struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
-set_Node'interface'superclasses :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMessage s) -> (B'.List msg (Superclass msg)) -> m ()
+set_Node'interface'superclasses :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Superclass (M'.MutMessage s))) -> m ()
 set_Node'interface'superclasses _ = error "TODO: generate more setters."
 
 newtype Node'const'group' msg = Node'const'group' (U'.Struct msg)
@@ -1469,7 +1469,7 @@ get_Node'const'type_ (Node'const'group' struct) =
 
 has_Node'const'type_ :: U'.ReadCtx m msg => Node'const'group' msg -> m Bool
 has_Node'const'type_(Node'const'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'const'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'const'group' (M'.MutMessage s) -> (Type msg) -> m ()
+set_Node'const'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'const'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
 set_Node'const'type_ _ = error "TODO: generate more setters."
 
 get_Node'const'value :: U'.ReadCtx m msg => Node'const'group' msg -> m (Value msg)
@@ -1480,7 +1480,7 @@ get_Node'const'value (Node'const'group' struct) =
 
 has_Node'const'value :: U'.ReadCtx m msg => Node'const'group' msg -> m Bool
 has_Node'const'value(Node'const'group' struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
-set_Node'const'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'const'group' (M'.MutMessage s) -> (Value msg) -> m ()
+set_Node'const'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'const'group' (M'.MutMessage s) -> (Value (M'.MutMessage s)) -> m ()
 set_Node'const'value _ = error "TODO: generate more setters."
 
 newtype Node'annotation'group' msg = Node'annotation'group' (U'.Struct msg)
@@ -1506,7 +1506,7 @@ get_Node'annotation'type_ (Node'annotation'group' struct) =
 
 has_Node'annotation'type_ :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'type_(Node'annotation'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'annotation'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> (Type msg) -> m ()
+set_Node'annotation'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
 set_Node'annotation'type_ _ = error "TODO: generate more setters."
 
 get_Node'annotation'targetsFile :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1659,7 +1659,7 @@ get_Annotation'value (Annotation struct) =
 
 has_Annotation'value :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'value(Annotation struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Annotation'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> (Value msg) -> m ()
+set_Annotation'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> (Value (M'.MutMessage s)) -> m ()
 set_Annotation'value _ = error "TODO: generate more setters."
 
 get_Annotation'brand :: U'.ReadCtx m msg => Annotation msg -> m (Brand msg)
@@ -1670,5 +1670,5 @@ get_Annotation'brand (Annotation struct) =
 
 has_Annotation'brand :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'brand(Annotation struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Annotation'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> (Brand msg) -> m ()
+set_Annotation'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
 set_Annotation'brand _ = error "TODO: generate more setters."

@@ -101,7 +101,7 @@ get_JoinResult'cap (JoinResult struct) =
 
 has_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 has_JoinResult'cap(JoinResult struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_JoinResult'cap :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinResult (M'.MutMessage s) -> (Maybe (U'.Ptr msg)) -> m ()
+set_JoinResult'cap :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinResult (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
 set_JoinResult'cap _ = error "TODO: generate more setters."
 
 data Side

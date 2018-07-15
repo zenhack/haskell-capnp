@@ -147,7 +147,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
     in mconcat
         -- getter
         [ getName, " :: U'.ReadCtx m msg => "
-        , fmtName thisMod typeName, " msg -> m ", fmtType thisMod fieldType, "\n"
+        , fmtName thisMod typeName, " msg -> m ", fmtType thisMod "msg" fieldType, "\n"
         , getName
         , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
             DataField loc -> fmtGetWordField "struct" loc
@@ -173,7 +173,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         -- setter
         , setName, " :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => "
         , fmtName thisMod typeName, " (M'.MutMessage s) -> "
-        , fmtType thisMod fieldType
+        , fmtType thisMod "(M'.MutMessage s)" fieldType
         , " -> m ()\n"
         , case fieldLoc of
             DataField loc@DataLoc{..} -> mconcat
@@ -201,7 +201,7 @@ fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
 fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
     let nameText = fmtName thisMod (valueName name)
     in mconcat
-        [ nameText, " :: ", fmtType thisMod wordType, "\n"
+        [ nameText, " :: ", fmtType thisMod "msg" wordType, "\n"
         , nameText, " = C'.fromWord ", TB.fromString (show wordValue), "\n"
         ]
 
@@ -238,7 +238,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         case variantParams of
             Record _   -> " (" <> fmtName thisMod (subName variantName "group' msg)")
             NoParams   -> ""
-            Unnamed ty _ -> " " <> fmtType thisMod ty
+            Unnamed ty _ -> " " <> fmtType thisMod "msg" ty
     fmtVariantCase Variant{..} =
         let nameText = fmtName thisMod variantName
         in "\n            " <>
@@ -309,7 +309,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
     fmtEnumVariant Variant{variantName,variantParams=NoParams,variantTag=Just _} =
         fmtName thisMod variantName
     fmtEnumVariant Variant{variantName,variantParams=Unnamed ty _, variantTag=Nothing} =
-        fmtName thisMod variantName <> " " <> fmtType thisMod ty
+        fmtName thisMod variantName <> " " <> fmtType thisMod "msg" ty
     fmtEnumVariant variant =
         error $ "Unexpected variant for enum: " ++ show variant
     -- | Format an equation in an enum's IsWord.fromWord implementation.
@@ -327,39 +327,41 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
 fmtDataDef _ dataName dataDef =
     error $ "Unexpected data definition: " ++ show (dataName, dataDef)
 
-fmtType :: Id -> Type -> TB.Builder
-fmtType thisMod = \case
+-- | @'fmtType ident msg ty@ formats the type @ty@ from module @ident@,
+-- using @msg@ as the message parameter, if any.
+fmtType :: Id -> TB.Builder -> Type -> TB.Builder
+fmtType thisMod msg = \case
     ListOf eltType ->
-        "(B'.List msg " <> fmtType thisMod eltType <> ")"
+        "(B'.List " <> msg <> " " <> fmtType thisMod msg eltType <> ")"
     EnumType name ->
         fmtName thisMod name
     StructType name params -> mconcat
         [ "("
         , fmtName thisMod name
         , " "
-        , mintercalate " " $ "msg" : map (fmtType thisMod) params
+        , mintercalate " " $ msg : map (fmtType thisMod msg) params
         , ")"
         ]
-    PrimType prim -> fmtPrimType prim
-    Untyped ty -> "(Maybe " <> fmtUntyped ty <> ")"
+    PrimType prim -> fmtPrimType msg prim
+    Untyped ty -> "(Maybe " <> fmtUntyped msg ty <> ")"
 
-fmtPrimType :: PrimType -> TB.Builder
+fmtPrimType :: TB.Builder -> PrimType -> TB.Builder
 -- TODO: most of this (except Text & Data) should probably be shared with the
 -- Pure backend.
-fmtPrimType PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
-fmtPrimType PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
-fmtPrimType PrimFloat32                  = "Float"
-fmtPrimType PrimFloat64                  = "Double"
-fmtPrimType PrimBool                     = "Bool"
-fmtPrimType PrimVoid                     = "()"
-fmtPrimType PrimText                     = "(B'.Text msg)"
-fmtPrimType PrimData                     = "(B'.Data msg)"
+fmtPrimType _ PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
+fmtPrimType _ PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
+fmtPrimType _ PrimFloat32                  = "Float"
+fmtPrimType _ PrimFloat64                  = "Double"
+fmtPrimType _ PrimBool                     = "Bool"
+fmtPrimType _ PrimVoid                     = "()"
+fmtPrimType msg PrimText                   = "(B'.Text " <> msg <> ")"
+fmtPrimType msg PrimData                   = "(B'.Data " <> msg <> ")"
 
-fmtUntyped :: Untyped -> TB.Builder
-fmtUntyped Struct = "(U'.Struct msg)"
-fmtUntyped List   = "(U'.List msg)"
-fmtUntyped Cap    = "Word32"
-fmtUntyped Ptr    = "(U'.Ptr msg)"
+fmtUntyped :: TB.Builder -> Untyped -> TB.Builder
+fmtUntyped msg Struct = "(U'.Struct " <> msg <> ")"
+fmtUntyped msg List   = "(U'.List " <> msg <> ")"
+fmtUntyped _ Cap      = "Word32"
+fmtUntyped msg Ptr    = "(U'.Ptr " <> msg <> ")"
 
 fmtName :: Id -> Name -> TB.Builder
 fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
