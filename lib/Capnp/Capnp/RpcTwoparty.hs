@@ -29,6 +29,7 @@ instance C'.IsStruct msg (JoinKeyPart msg) where
     fromStruct = pure . JoinKeyPart
 instance C'.IsPtr msg (JoinKeyPart msg) where
     fromPtr msg ptr = JoinKeyPart <$> C'.fromPtr msg ptr
+    toPtr (JoinKeyPart struct) = C'.toPtr struct
 instance B'.ListElem msg (JoinKeyPart msg) where
     newtype List msg (JoinKeyPart msg) = List_JoinKeyPart (U'.ListOf msg (U'.Struct msg))
     length (List_JoinKeyPart l) = U'.length l
@@ -38,6 +39,7 @@ instance B'.MutListElem s (JoinKeyPart (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (JoinKeyPart msg)) where
     fromPtr msg ptr = List_JoinKeyPart <$> C'.fromPtr msg ptr
+    toPtr (List_JoinKeyPart l) = C'.toPtr l
 get_JoinKeyPart'joinId :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word32
 get_JoinKeyPart'joinId (JoinKeyPart struct) = C'.getWordField struct 0 0 0
 
@@ -68,6 +70,7 @@ instance C'.IsStruct msg (JoinResult msg) where
     fromStruct = pure . JoinResult
 instance C'.IsPtr msg (JoinResult msg) where
     fromPtr msg ptr = JoinResult <$> C'.fromPtr msg ptr
+    toPtr (JoinResult struct) = C'.toPtr struct
 instance B'.ListElem msg (JoinResult msg) where
     newtype List msg (JoinResult msg) = List_JoinResult (U'.ListOf msg (U'.Struct msg))
     length (List_JoinResult l) = U'.length l
@@ -77,6 +80,7 @@ instance B'.MutListElem s (JoinResult (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (JoinResult msg)) where
     fromPtr msg ptr = List_JoinResult <$> C'.fromPtr msg ptr
+    toPtr (List_JoinResult l) = C'.toPtr l
 get_JoinResult'joinId :: U'.ReadCtx m msg => JoinResult msg -> m Word32
 get_JoinResult'joinId (JoinResult struct) = C'.getWordField struct 0 0 0
 
@@ -102,7 +106,8 @@ get_JoinResult'cap (JoinResult struct) =
 has_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 has_JoinResult'cap(JoinResult struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_JoinResult'cap :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JoinResult (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_JoinResult'cap _ = error "TODO: generate more setters."
+set_JoinResult'cap (JoinResult struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 data Side
     = Side'server
@@ -130,6 +135,7 @@ instance B'.MutListElem s Side where
     setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
 instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
+    toPtr (List_Side l) = C'.toPtr l
 
 newtype ProvisionId msg = ProvisionId (U'.Struct msg)
 
@@ -137,6 +143,7 @@ instance C'.IsStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId
 instance C'.IsPtr msg (ProvisionId msg) where
     fromPtr msg ptr = ProvisionId <$> C'.fromPtr msg ptr
+    toPtr (ProvisionId struct) = C'.toPtr struct
 instance B'.ListElem msg (ProvisionId msg) where
     newtype List msg (ProvisionId msg) = List_ProvisionId (U'.ListOf msg (U'.Struct msg))
     length (List_ProvisionId l) = U'.length l
@@ -146,6 +153,7 @@ instance B'.MutListElem s (ProvisionId (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (ProvisionId msg)) where
     fromPtr msg ptr = List_ProvisionId <$> C'.fromPtr msg ptr
+    toPtr (List_ProvisionId l) = C'.toPtr l
 get_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Word32
 get_ProvisionId'joinId (ProvisionId struct) = C'.getWordField struct 0 0 0
 
@@ -160,6 +168,7 @@ instance C'.IsStruct msg (VatId msg) where
     fromStruct = pure . VatId
 instance C'.IsPtr msg (VatId msg) where
     fromPtr msg ptr = VatId <$> C'.fromPtr msg ptr
+    toPtr (VatId struct) = C'.toPtr struct
 instance B'.ListElem msg (VatId msg) where
     newtype List msg (VatId msg) = List_VatId (U'.ListOf msg (U'.Struct msg))
     length (List_VatId l) = U'.length l
@@ -169,6 +178,7 @@ instance B'.MutListElem s (VatId (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (VatId msg)) where
     fromPtr msg ptr = List_VatId <$> C'.fromPtr msg ptr
+    toPtr (List_VatId l) = C'.toPtr l
 get_VatId'side :: U'.ReadCtx m msg => VatId msg -> m Side
 get_VatId'side (VatId struct) = C'.getWordField struct 0 0 0
 

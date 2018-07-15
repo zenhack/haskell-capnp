@@ -29,6 +29,7 @@ instance C'.IsStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults
 instance C'.IsPtr msg (Persistent'SaveResults msg) where
     fromPtr msg ptr = Persistent'SaveResults <$> C'.fromPtr msg ptr
+    toPtr (Persistent'SaveResults struct) = C'.toPtr struct
 instance B'.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveResults l) = U'.length l
@@ -38,6 +39,7 @@ instance B'.MutListElem s (Persistent'SaveResults (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
     fromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
+    toPtr (List_Persistent'SaveResults l) = C'.toPtr l
 get_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m (Maybe (U'.Ptr msg))
 get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
     U'.getPtr 0 struct
@@ -47,7 +49,8 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Persistent'SaveResults'sturdyRef _ = error "TODO: generate more setters."
+set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 newtype Persistent'SaveParams msg = Persistent'SaveParams (U'.Struct msg)
 
@@ -55,6 +58,7 @@ instance C'.IsStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams
 instance C'.IsPtr msg (Persistent'SaveParams msg) where
     fromPtr msg ptr = Persistent'SaveParams <$> C'.fromPtr msg ptr
+    toPtr (Persistent'SaveParams struct) = C'.toPtr struct
 instance B'.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveParams l) = U'.length l
@@ -64,6 +68,7 @@ instance B'.MutListElem s (Persistent'SaveParams (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
     fromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
+    toPtr (List_Persistent'SaveParams l) = C'.toPtr l
 get_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m (Maybe (U'.Ptr msg))
 get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
     U'.getPtr 0 struct
@@ -73,4 +78,5 @@ get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
 has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Persistent'SaveParams'sealFor _ = error "TODO: generate more setters."
+set_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) value = U'.setPtr (C'.toPtr value) 0 struct
+

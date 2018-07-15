@@ -54,6 +54,7 @@ class Decerialize from to where
 -- with the pointer section of structs.
 class IsPtr msg a where
     fromPtr :: ReadCtx m msg => msg -> Maybe (Ptr msg) -> m a
+    toPtr :: a -> Maybe (Ptr msg)
 
 -- | Types that can be extracted from a struct.
 class IsStruct msg a where
@@ -158,37 +159,44 @@ instance IsWord Double where
 
 -- IsPtr instance for lists of Void/().
 instance IsPtr msg (ListOf msg ()) where
-    fromPtr msg Nothing                       = pure $ messageDefault msg
+    fromPtr msg Nothing                         = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
+    toPtr = Just . PtrList . U.List0
 
 -- IsPtr instances for lists of unsigned integers.
 instance IsPtr msg (ListOf msg Word8) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
+    toPtr = Just . PtrList . U.List8
 instance IsPtr msg (ListOf msg Word16) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
+    toPtr = Just . PtrList . U.List16
 instance IsPtr msg (ListOf msg Word32) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
+    toPtr = Just . PtrList . U.List32
 instance IsPtr msg (ListOf msg Word64) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
+    toPtr = Just . PtrList . U.List64
 
 -- | IsPtr instance for pointers -- this is just the identity.
 instance IsPtr msg (Maybe (Ptr msg)) where
     fromPtr _ = pure
+    toPtr = id
 
 -- IsPtr instance for composite lists.
 instance IsPtr msg (ListOf msg (Struct msg)) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
+    toPtr = Just . PtrList . U.ListStruct
 
 -- IsStruct instance for Struct; just the identity.
 instance IsStruct msg (Struct msg) where
@@ -201,3 +209,4 @@ instance IsPtr msg (Struct msg) where
         go = messageDefault
     fromPtr msg (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                      = expected "pointer to struct"
+    toPtr = Just . PtrStruct

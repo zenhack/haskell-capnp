@@ -60,8 +60,11 @@ instance B'.ListElem msg (JsonValue msg) where
 instance C'.IsPtr msg (JsonValue msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
     fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
+    toPtr (List_JsonValue l) = C'.toPtr l
 
 newtype JsonValue'Call msg = JsonValue'Call (U'.Struct msg)
 
@@ -69,6 +72,7 @@ instance C'.IsStruct msg (JsonValue'Call msg) where
     fromStruct = pure . JsonValue'Call
 instance C'.IsPtr msg (JsonValue'Call msg) where
     fromPtr msg ptr = JsonValue'Call <$> C'.fromPtr msg ptr
+    toPtr (JsonValue'Call struct) = C'.toPtr struct
 instance B'.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Call l) = U'.length l
@@ -78,6 +82,7 @@ instance B'.MutListElem s (JsonValue'Call (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
     fromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
+    toPtr (List_JsonValue'Call l) = C'.toPtr l
 get_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.Text msg)
 get_JsonValue'Call'function (JsonValue'Call struct) =
     U'.getPtr 0 struct
@@ -87,7 +92,8 @@ get_JsonValue'Call'function (JsonValue'Call struct) =
 has_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_JsonValue'Call'function :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
-set_JsonValue'Call'function _ = error "TODO: generate more setters."
+set_JsonValue'Call'function (JsonValue'Call struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.List msg (JsonValue msg))
 get_JsonValue'Call'params (JsonValue'Call struct) =
@@ -98,7 +104,8 @@ get_JsonValue'Call'params (JsonValue'Call struct) =
 has_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'params(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_JsonValue'Call'params :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (JsonValue (M'.MutMessage s))) -> m ()
-set_JsonValue'Call'params _ = error "TODO: generate more setters."
+set_JsonValue'Call'params (JsonValue'Call struct) value = U'.setPtr (C'.toPtr value) 1 struct
+
 
 newtype JsonValue'Field msg = JsonValue'Field (U'.Struct msg)
 
@@ -106,6 +113,7 @@ instance C'.IsStruct msg (JsonValue'Field msg) where
     fromStruct = pure . JsonValue'Field
 instance C'.IsPtr msg (JsonValue'Field msg) where
     fromPtr msg ptr = JsonValue'Field <$> C'.fromPtr msg ptr
+    toPtr (JsonValue'Field struct) = C'.toPtr struct
 instance B'.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Field l) = U'.length l
@@ -115,6 +123,7 @@ instance B'.MutListElem s (JsonValue'Field (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
     fromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
+    toPtr (List_JsonValue'Field l) = C'.toPtr l
 get_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m (B'.Text msg)
 get_JsonValue'Field'name (JsonValue'Field struct) =
     U'.getPtr 0 struct
@@ -124,7 +133,8 @@ get_JsonValue'Field'name (JsonValue'Field struct) =
 has_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_JsonValue'Field'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
-set_JsonValue'Field'name _ = error "TODO: generate more setters."
+set_JsonValue'Field'name (JsonValue'Field struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m (JsonValue msg)
 get_JsonValue'Field'value (JsonValue'Field struct) =
@@ -135,4 +145,5 @@ get_JsonValue'Field'value (JsonValue'Field struct) =
 has_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'value(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMessage s) -> (JsonValue (M'.MutMessage s)) -> m ()
-set_JsonValue'Field'value _ = error "TODO: generate more setters."
+set_JsonValue'Field'value (JsonValue'Field struct) value = U'.setPtr (C'.toPtr value) 1 struct
+

@@ -75,6 +75,7 @@ fmtStructListIsPtr :: TB.Builder -> TB.Builder
 fmtStructListIsPtr nameText = mconcat
     [ "instance C'.IsPtr msg (B'.List msg (", nameText, " msg)) where\n"
     , "    fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr\n"
+    , "    toPtr (List_", nameText, " l) = C'.toPtr l\n"
     ]
 
 fmtNewtypeStruct :: Id -> Name -> TB.Builder
@@ -87,6 +88,7 @@ fmtNewtypeStruct thisMod name =
         , "    fromStruct = pure . ", nameText, "\n"
         , "instance C'.IsPtr msg (", nameText, " msg) where\n"
         , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
+        , "    toPtr (", nameText, " struct) = C'.toPtr struct\n"
         , fmtStructListElem nameText
         , "instance B'.MutListElem s (", nameText, " (M'.MutMessage s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
@@ -192,6 +194,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                         loc
                 ]
             VoidField -> setName <> " _ = pure ()"
+            PtrField idx -> mconcat
+                [ setName, " (", fmtName thisMod typeName, " struct) value = "
+                , "U'.setPtr (C'.toPtr value) ", TB.fromString (show idx), " struct\n"
+                ]
             _ -> setName <> " _ = error " <> TB.fromString (show "TODO: generate more setters.")
         , "\n"
         ]
@@ -230,6 +236,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         , fmtStructListElem nameText
         , "\ninstance C'.IsPtr msg (", nameText, " msg) where"
         , "\n    fromPtr msg ptr = C'.fromPtr msg ptr >>= ", fmtRestrictedFromStruct nameText, "\n"
+        , "\n    toPtr = error \"TODO: toPtr for non-newtype structs.\"\n"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
@@ -302,6 +309,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , "\n"
         , "instance C'.IsPtr msg (B'.List msg ", typeName, ") where"
         , "\n    fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr"
+        , "\n    toPtr (List_", typeName, " l) = C'.toPtr l"
         , "\n"
         ]
   where

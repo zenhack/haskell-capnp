@@ -29,6 +29,7 @@ instance C'.IsStruct msg (Call msg) where
     fromStruct = pure . Call
 instance C'.IsPtr msg (Call msg) where
     fromPtr msg ptr = Call <$> C'.fromPtr msg ptr
+    toPtr (Call struct) = C'.toPtr struct
 instance B'.ListElem msg (Call msg) where
     newtype List msg (Call msg) = List_Call (U'.ListOf msg (U'.Struct msg))
     length (List_Call l) = U'.length l
@@ -38,6 +39,7 @@ instance B'.MutListElem s (Call (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Call msg)) where
     fromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
+    toPtr (List_Call l) = C'.toPtr l
 get_Call'questionId :: U'.ReadCtx m msg => Call msg -> m Word32
 get_Call'questionId (Call struct) = C'.getWordField struct 0 0 0
 
@@ -55,7 +57,8 @@ get_Call'target (Call struct) =
 has_Call'target :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'target(Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Call'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> (MessageTarget (M'.MutMessage s)) -> m ()
-set_Call'target _ = error "TODO: generate more setters."
+set_Call'target (Call struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Call'interfaceId :: U'.ReadCtx m msg => Call msg -> m Word64
 get_Call'interfaceId (Call struct) = C'.getWordField struct 1 0 0
@@ -82,7 +85,8 @@ get_Call'params (Call struct) =
 has_Call'params :: U'.ReadCtx m msg => Call msg -> m Bool
 has_Call'params(Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Call'params :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Call (M'.MutMessage s) -> (Payload (M'.MutMessage s)) -> m ()
-set_Call'params _ = error "TODO: generate more setters."
+set_Call'params (Call struct) value = U'.setPtr (C'.toPtr value) 1 struct
+
 
 get_Call'sendResultsTo :: U'.ReadCtx m msg => Call msg -> m (Call'sendResultsTo msg)
 get_Call'sendResultsTo (Call struct) = C'.fromStruct struct
@@ -134,8 +138,11 @@ instance B'.ListElem msg (CapDescriptor msg) where
 instance C'.IsPtr msg (CapDescriptor msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapDescriptor msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
     fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
+    toPtr (List_CapDescriptor l) = C'.toPtr l
 
 data Message msg
     = Message'unimplemented (Message msg)
@@ -195,8 +202,11 @@ instance B'.ListElem msg (Message msg) where
 instance C'.IsPtr msg (Message msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Message msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (Message msg)) where
     fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
+    toPtr (List_Message l) = C'.toPtr l
 
 data MessageTarget msg
     = MessageTarget'importedCap Word32
@@ -220,8 +230,11 @@ instance B'.ListElem msg (MessageTarget msg) where
 instance C'.IsPtr msg (MessageTarget msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (MessageTarget msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (MessageTarget msg)) where
     fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
+    toPtr (List_MessageTarget l) = C'.toPtr l
 
 newtype Payload msg = Payload (U'.Struct msg)
 
@@ -229,6 +242,7 @@ instance C'.IsStruct msg (Payload msg) where
     fromStruct = pure . Payload
 instance C'.IsPtr msg (Payload msg) where
     fromPtr msg ptr = Payload <$> C'.fromPtr msg ptr
+    toPtr (Payload struct) = C'.toPtr struct
 instance B'.ListElem msg (Payload msg) where
     newtype List msg (Payload msg) = List_Payload (U'.ListOf msg (U'.Struct msg))
     length (List_Payload l) = U'.length l
@@ -238,6 +252,7 @@ instance B'.MutListElem s (Payload (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Payload msg)) where
     fromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
+    toPtr (List_Payload l) = C'.toPtr l
 get_Payload'content :: U'.ReadCtx m msg => Payload msg -> m (Maybe (U'.Ptr msg))
 get_Payload'content (Payload struct) =
     U'.getPtr 0 struct
@@ -247,7 +262,8 @@ get_Payload'content (Payload struct) =
 has_Payload'content :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'content(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Payload'content :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Payload (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Payload'content _ = error "TODO: generate more setters."
+set_Payload'content (Payload struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m (B'.List msg (CapDescriptor msg))
 get_Payload'capTable (Payload struct) =
@@ -258,7 +274,8 @@ get_Payload'capTable (Payload struct) =
 has_Payload'capTable :: U'.ReadCtx m msg => Payload msg -> m Bool
 has_Payload'capTable(Payload struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Payload'capTable :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Payload (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (CapDescriptor (M'.MutMessage s))) -> m ()
-set_Payload'capTable _ = error "TODO: generate more setters."
+set_Payload'capTable (Payload struct) value = U'.setPtr (C'.toPtr value) 1 struct
+
 
 newtype Provide msg = Provide (U'.Struct msg)
 
@@ -266,6 +283,7 @@ instance C'.IsStruct msg (Provide msg) where
     fromStruct = pure . Provide
 instance C'.IsPtr msg (Provide msg) where
     fromPtr msg ptr = Provide <$> C'.fromPtr msg ptr
+    toPtr (Provide struct) = C'.toPtr struct
 instance B'.ListElem msg (Provide msg) where
     newtype List msg (Provide msg) = List_Provide (U'.ListOf msg (U'.Struct msg))
     length (List_Provide l) = U'.length l
@@ -275,6 +293,7 @@ instance B'.MutListElem s (Provide (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Provide msg)) where
     fromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
+    toPtr (List_Provide l) = C'.toPtr l
 get_Provide'questionId :: U'.ReadCtx m msg => Provide msg -> m Word32
 get_Provide'questionId (Provide struct) = C'.getWordField struct 0 0 0
 
@@ -292,7 +311,8 @@ get_Provide'target (Provide struct) =
 has_Provide'target :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'target(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Provide'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Provide (M'.MutMessage s) -> (MessageTarget (M'.MutMessage s)) -> m ()
-set_Provide'target _ = error "TODO: generate more setters."
+set_Provide'target (Provide struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m (Maybe (U'.Ptr msg))
 get_Provide'recipient (Provide struct) =
@@ -303,7 +323,8 @@ get_Provide'recipient (Provide struct) =
 has_Provide'recipient :: U'.ReadCtx m msg => Provide msg -> m Bool
 has_Provide'recipient(Provide struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Provide'recipient :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Provide (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Provide'recipient _ = error "TODO: generate more setters."
+set_Provide'recipient (Provide struct) value = U'.setPtr (C'.toPtr value) 1 struct
+
 
 newtype Return msg = Return (U'.Struct msg)
 
@@ -311,6 +332,7 @@ instance C'.IsStruct msg (Return msg) where
     fromStruct = pure . Return
 instance C'.IsPtr msg (Return msg) where
     fromPtr msg ptr = Return <$> C'.fromPtr msg ptr
+    toPtr (Return struct) = C'.toPtr struct
 instance B'.ListElem msg (Return msg) where
     newtype List msg (Return msg) = List_Return (U'.ListOf msg (U'.Struct msg))
     length (List_Return l) = U'.length l
@@ -320,6 +342,7 @@ instance B'.MutListElem s (Return (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Return msg)) where
     fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
+    toPtr (List_Return l) = C'.toPtr l
 get_Return''answerId :: U'.ReadCtx m msg => Return msg -> m Word32
 get_Return''answerId (Return struct) = C'.getWordField struct 0 0 0
 
@@ -378,8 +401,11 @@ instance B'.ListElem msg (Return' msg) where
 instance C'.IsPtr msg (Return' msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (Return' msg)) where
     fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
+    toPtr (List_Return' l) = C'.toPtr l
 
 newtype Release msg = Release (U'.Struct msg)
 
@@ -387,6 +413,7 @@ instance C'.IsStruct msg (Release msg) where
     fromStruct = pure . Release
 instance C'.IsPtr msg (Release msg) where
     fromPtr msg ptr = Release <$> C'.fromPtr msg ptr
+    toPtr (Release struct) = C'.toPtr struct
 instance B'.ListElem msg (Release msg) where
     newtype List msg (Release msg) = List_Release (U'.ListOf msg (U'.Struct msg))
     length (List_Release l) = U'.length l
@@ -396,6 +423,7 @@ instance B'.MutListElem s (Release (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Release msg)) where
     fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
+    toPtr (List_Release l) = C'.toPtr l
 get_Release'id :: U'.ReadCtx m msg => Release msg -> m Word32
 get_Release'id (Release struct) = C'.getWordField struct 0 0 0
 
@@ -444,6 +472,7 @@ instance B'.MutListElem s Exception'Type where
     setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
 instance C'.IsPtr msg (B'.List msg Exception'Type) where
     fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
+    toPtr (List_Exception'Type l) = C'.toPtr l
 
 newtype Resolve msg = Resolve (U'.Struct msg)
 
@@ -451,6 +480,7 @@ instance C'.IsStruct msg (Resolve msg) where
     fromStruct = pure . Resolve
 instance C'.IsPtr msg (Resolve msg) where
     fromPtr msg ptr = Resolve <$> C'.fromPtr msg ptr
+    toPtr (Resolve struct) = C'.toPtr struct
 instance B'.ListElem msg (Resolve msg) where
     newtype List msg (Resolve msg) = List_Resolve (U'.ListOf msg (U'.Struct msg))
     length (List_Resolve l) = U'.length l
@@ -460,6 +490,7 @@ instance B'.MutListElem s (Resolve (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
     fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
+    toPtr (List_Resolve l) = C'.toPtr l
 get_Resolve''promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
 get_Resolve''promiseId (Resolve struct) = C'.getWordField struct 0 0 0
 
@@ -498,8 +529,11 @@ instance B'.ListElem msg (Resolve' msg) where
 instance C'.IsPtr msg (Resolve' msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
     fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
+    toPtr (List_Resolve' l) = C'.toPtr l
 
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor (U'.Struct msg)
 
@@ -507,6 +541,7 @@ instance C'.IsStruct msg (ThirdPartyCapDescriptor msg) where
     fromStruct = pure . ThirdPartyCapDescriptor
 instance C'.IsPtr msg (ThirdPartyCapDescriptor msg) where
     fromPtr msg ptr = ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
+    toPtr (ThirdPartyCapDescriptor struct) = C'.toPtr struct
 instance B'.ListElem msg (ThirdPartyCapDescriptor msg) where
     newtype List msg (ThirdPartyCapDescriptor msg) = List_ThirdPartyCapDescriptor (U'.ListOf msg (U'.Struct msg))
     length (List_ThirdPartyCapDescriptor l) = U'.length l
@@ -516,6 +551,7 @@ instance B'.MutListElem s (ThirdPartyCapDescriptor (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (ThirdPartyCapDescriptor msg)) where
     fromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
+    toPtr (List_ThirdPartyCapDescriptor l) = C'.toPtr l
 get_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m (Maybe (U'.Ptr msg))
 get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) =
     U'.getPtr 0 struct
@@ -525,7 +561,8 @@ get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) =
 has_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Bool
 has_ThirdPartyCapDescriptor'id(ThirdPartyCapDescriptor struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_ThirdPartyCapDescriptor'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => ThirdPartyCapDescriptor (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_ThirdPartyCapDescriptor'id _ = error "TODO: generate more setters."
+set_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_ThirdPartyCapDescriptor'vineId :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m Word32
 get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor struct) = C'.getWordField struct 0 0 0
@@ -541,6 +578,7 @@ instance C'.IsStruct msg (Finish msg) where
     fromStruct = pure . Finish
 instance C'.IsPtr msg (Finish msg) where
     fromPtr msg ptr = Finish <$> C'.fromPtr msg ptr
+    toPtr (Finish struct) = C'.toPtr struct
 instance B'.ListElem msg (Finish msg) where
     newtype List msg (Finish msg) = List_Finish (U'.ListOf msg (U'.Struct msg))
     length (List_Finish l) = U'.length l
@@ -550,6 +588,7 @@ instance B'.MutListElem s (Finish (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Finish msg)) where
     fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
+    toPtr (List_Finish l) = C'.toPtr l
 get_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Word32
 get_Finish'questionId (Finish struct) = C'.getWordField struct 0 0 0
 
@@ -572,6 +611,7 @@ instance C'.IsStruct msg (Accept msg) where
     fromStruct = pure . Accept
 instance C'.IsPtr msg (Accept msg) where
     fromPtr msg ptr = Accept <$> C'.fromPtr msg ptr
+    toPtr (Accept struct) = C'.toPtr struct
 instance B'.ListElem msg (Accept msg) where
     newtype List msg (Accept msg) = List_Accept (U'.ListOf msg (U'.Struct msg))
     length (List_Accept l) = U'.length l
@@ -581,6 +621,7 @@ instance B'.MutListElem s (Accept (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Accept msg)) where
     fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
+    toPtr (List_Accept l) = C'.toPtr l
 get_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Word32
 get_Accept'questionId (Accept struct) = C'.getWordField struct 0 0 0
 
@@ -598,7 +639,8 @@ get_Accept'provision (Accept struct) =
 has_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m Bool
 has_Accept'provision(Accept struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Accept'provision :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Accept (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Accept'provision _ = error "TODO: generate more setters."
+set_Accept'provision (Accept struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
 get_Accept'embargo (Accept struct) = C'.getWordField struct 0 32 0
@@ -636,8 +678,11 @@ instance B'.ListElem msg (Disembargo'context msg) where
 instance C'.IsPtr msg (Disembargo'context msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo'context msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (Disembargo'context msg)) where
     fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
+    toPtr (List_Disembargo'context l) = C'.toPtr l
 
 newtype Exception msg = Exception (U'.Struct msg)
 
@@ -645,6 +690,7 @@ instance C'.IsStruct msg (Exception msg) where
     fromStruct = pure . Exception
 instance C'.IsPtr msg (Exception msg) where
     fromPtr msg ptr = Exception <$> C'.fromPtr msg ptr
+    toPtr (Exception struct) = C'.toPtr struct
 instance B'.ListElem msg (Exception msg) where
     newtype List msg (Exception msg) = List_Exception (U'.ListOf msg (U'.Struct msg))
     length (List_Exception l) = U'.length l
@@ -654,6 +700,7 @@ instance B'.MutListElem s (Exception (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Exception msg)) where
     fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
+    toPtr (List_Exception l) = C'.toPtr l
 get_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m (B'.Text msg)
 get_Exception'reason (Exception struct) =
     U'.getPtr 0 struct
@@ -663,7 +710,8 @@ get_Exception'reason (Exception struct) =
 has_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m Bool
 has_Exception'reason(Exception struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Exception'reason :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Exception (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
-set_Exception'reason _ = error "TODO: generate more setters."
+set_Exception'reason (Exception struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception struct) = C'.getWordField struct 0 0 0
@@ -695,6 +743,7 @@ instance C'.IsStruct msg (PromisedAnswer msg) where
     fromStruct = pure . PromisedAnswer
 instance C'.IsPtr msg (PromisedAnswer msg) where
     fromPtr msg ptr = PromisedAnswer <$> C'.fromPtr msg ptr
+    toPtr (PromisedAnswer struct) = C'.toPtr struct
 instance B'.ListElem msg (PromisedAnswer msg) where
     newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf msg (U'.Struct msg))
     length (List_PromisedAnswer l) = U'.length l
@@ -704,6 +753,7 @@ instance B'.MutListElem s (PromisedAnswer (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
     fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
+    toPtr (List_PromisedAnswer l) = C'.toPtr l
 get_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Word32
 get_PromisedAnswer'questionId (PromisedAnswer struct) = C'.getWordField struct 0 0 0
 
@@ -721,7 +771,8 @@ get_PromisedAnswer'transform (PromisedAnswer struct) =
 has_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
 has_PromisedAnswer'transform(PromisedAnswer struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_PromisedAnswer'transform :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (PromisedAnswer'Op (M'.MutMessage s))) -> m ()
-set_PromisedAnswer'transform _ = error "TODO: generate more setters."
+set_PromisedAnswer'transform (PromisedAnswer struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 data Call'sendResultsTo msg
     = Call'sendResultsTo'caller
@@ -748,8 +799,11 @@ instance B'.ListElem msg (Call'sendResultsTo msg) where
 instance C'.IsPtr msg (Call'sendResultsTo msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
     fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
+    toPtr (List_Call'sendResultsTo l) = C'.toPtr l
 
 newtype Bootstrap msg = Bootstrap (U'.Struct msg)
 
@@ -757,6 +811,7 @@ instance C'.IsStruct msg (Bootstrap msg) where
     fromStruct = pure . Bootstrap
 instance C'.IsPtr msg (Bootstrap msg) where
     fromPtr msg ptr = Bootstrap <$> C'.fromPtr msg ptr
+    toPtr (Bootstrap struct) = C'.toPtr struct
 instance B'.ListElem msg (Bootstrap msg) where
     newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf msg (U'.Struct msg))
     length (List_Bootstrap l) = U'.length l
@@ -766,6 +821,7 @@ instance B'.MutListElem s (Bootstrap (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
     fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
+    toPtr (List_Bootstrap l) = C'.toPtr l
 get_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Word32
 get_Bootstrap'questionId (Bootstrap struct) = C'.getWordField struct 0 0 0
 
@@ -783,7 +839,8 @@ get_Bootstrap'deprecatedObjectId (Bootstrap struct) =
 has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
 has_Bootstrap'deprecatedObjectId(Bootstrap struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Bootstrap'deprecatedObjectId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Bootstrap (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Bootstrap'deprecatedObjectId _ = error "TODO: generate more setters."
+set_Bootstrap'deprecatedObjectId (Bootstrap struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 data PromisedAnswer'Op msg
     = PromisedAnswer'Op'noop
@@ -807,8 +864,11 @@ instance B'.ListElem msg (PromisedAnswer'Op msg) where
 instance C'.IsPtr msg (PromisedAnswer'Op msg) where
     fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer'Op msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
+
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
+    toPtr (List_PromisedAnswer'Op l) = C'.toPtr l
 
 newtype Disembargo msg = Disembargo (U'.Struct msg)
 
@@ -816,6 +876,7 @@ instance C'.IsStruct msg (Disembargo msg) where
     fromStruct = pure . Disembargo
 instance C'.IsPtr msg (Disembargo msg) where
     fromPtr msg ptr = Disembargo <$> C'.fromPtr msg ptr
+    toPtr (Disembargo struct) = C'.toPtr struct
 instance B'.ListElem msg (Disembargo msg) where
     newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf msg (U'.Struct msg))
     length (List_Disembargo l) = U'.length l
@@ -825,6 +886,7 @@ instance B'.MutListElem s (Disembargo (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
     fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
+    toPtr (List_Disembargo l) = C'.toPtr l
 get_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m (MessageTarget msg)
 get_Disembargo'target (Disembargo struct) =
     U'.getPtr 0 struct
@@ -834,7 +896,8 @@ get_Disembargo'target (Disembargo struct) =
 has_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'target(Disembargo struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Disembargo'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Disembargo (M'.MutMessage s) -> (MessageTarget (M'.MutMessage s)) -> m ()
-set_Disembargo'target _ = error "TODO: generate more setters."
+set_Disembargo'target (Disembargo struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
 get_Disembargo'context (Disembargo struct) = C'.fromStruct struct
@@ -850,6 +913,7 @@ instance C'.IsStruct msg (Join msg) where
     fromStruct = pure . Join
 instance C'.IsPtr msg (Join msg) where
     fromPtr msg ptr = Join <$> C'.fromPtr msg ptr
+    toPtr (Join struct) = C'.toPtr struct
 instance B'.ListElem msg (Join msg) where
     newtype List msg (Join msg) = List_Join (U'.ListOf msg (U'.Struct msg))
     length (List_Join l) = U'.length l
@@ -859,6 +923,7 @@ instance B'.MutListElem s (Join (M'.MutMessage s)) where
 
 instance C'.IsPtr msg (B'.List msg (Join msg)) where
     fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
+    toPtr (List_Join l) = C'.toPtr l
 get_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Word32
 get_Join'questionId (Join struct) = C'.getWordField struct 0 0 0
 
@@ -876,7 +941,8 @@ get_Join'target (Join struct) =
 has_Join'target :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'target(Join struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Join'target :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Join (M'.MutMessage s) -> (MessageTarget (M'.MutMessage s)) -> m ()
-set_Join'target _ = error "TODO: generate more setters."
+set_Join'target (Join struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 get_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m (Maybe (U'.Ptr msg))
 get_Join'keyPart (Join struct) =
@@ -887,4 +953,5 @@ get_Join'keyPart (Join struct) =
 has_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m Bool
 has_Join'keyPart(Join struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Join'keyPart :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Join (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
-set_Join'keyPart _ = error "TODO: generate more setters."
+set_Join'keyPart (Join struct) value = U'.setPtr (C'.toPtr value) 1 struct
+
