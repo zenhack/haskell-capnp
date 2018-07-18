@@ -22,6 +22,7 @@ module Data.Capnp.Untyped
     , dataSection, ptrSection
     , getData, getPtr
     , setData, setPtr
+    , copyStruct
     , get, index, length
     , setIndex
     , take
@@ -385,26 +386,8 @@ setIndex value i list = case list of
         Just p@(PtrStruct (Struct _ addr dataSz ptrSz)) ->
             setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
     list@(ListOfStruct _ _) -> do
-        -- We copy both the data and pointer sections from value to the struct
-        -- at the specified index, padding the tail of the destination section
-        -- with zeros/null pointers as necessary. If the destination section is
-        -- smaller than the source section, this will raise a BoundsError.
-        --
-        -- TODO: possible enhancement: allow the destination section to be
-        -- smaller than the source section if and only if the tail of the
-        -- source section is all zeros (default values).
         dest <- index i list
-        copySection (dataSection dest) (dataSection value) 0
-        copySection (ptrSection  dest) (ptrSection  value) Nothing
-      where
-        copySection dest src pad = do
-            -- Copy the source section to the destination section:
-            forM_ [0..length src - 1] $ \i -> do
-                word <- index i src
-                setIndex word i dest
-            -- Pad the remainder with zeros/default values:
-            forM_ [length src..length dest - 1] $ \i ->
-                setIndex pad i dest
+        copyStruct dest value
   where
     setNIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMsg s) -> Int -> a -> m ()
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
@@ -420,6 +403,31 @@ setIndex value i list = case list of
             Left OutOfRange -> error "BUG: we should be screening messages to make this impossible."
             Right ptr ->
                 setNIndex nlist 1 $ P.serializePtr (Just ptr)
+
+
+-- | @'copyStruct' dest src@ copies the source struct to the destination struct.
+copyStruct :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
+    => Struct (M.MutMsg s) -> Struct (M.MutMsg s) -> m ()
+copyStruct dest src = do
+    -- We copy both the data and pointer sections from src to dest,
+    -- padding the tail of the destination section with zeros/null
+    -- pointers as necessary. If the destination section is
+    -- smaller than the source section, this will raise a BoundsError.
+    --
+    -- TODO: possible enhancement: allow the destination section to be
+    -- smaller than the source section if and only if the tail of the
+    -- source section is all zeros (default values).
+    copySection (dataSection dest) (dataSection src) 0
+    copySection (ptrSection  dest) (ptrSection  src) Nothing
+  where
+    copySection dest src pad = do
+        -- Copy the source section to the destination section:
+        forM_ [0..length src - 1] $ \i -> do
+            value <- index i src
+            setIndex value i dest
+        -- Pad the remainder with zeros/default values:
+        forM_ [length src..length dest - 1] $ \i ->
+            setIndex pad i dest
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
