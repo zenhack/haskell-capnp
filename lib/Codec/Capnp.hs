@@ -48,7 +48,7 @@ class Decerialize from to where
     decerialize :: U.ReadCtx m M.ConstMessage => from -> m to
 
 
--- | Types that can be extracted from an untyped pointer.
+-- | Types that can be converted to and from an untyped pointer.
 --
 -- Similarly to 'IsWord', this is mostly used in generated code, to interact
 -- with the pointer section of structs.
