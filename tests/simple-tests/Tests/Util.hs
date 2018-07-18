@@ -89,7 +89,7 @@ assertionsToTest name =
 -- | @'decodeValue' schema typename message@ decodes the value at the root of
 -- the message and converts it to text. This is a thin wrapper around
 -- 'capnpDecode'.
-decodeValue :: String -> String -> M.ConstMessage -> IO String
+decodeValue :: String -> String -> M.ConstMsg -> IO String
 decodeValue schema typename msg = do
     bytes <- M.encode msg
     capnpDecode
@@ -98,7 +98,7 @@ decodeValue schema typename msg = do
 
 -- | @'encodeValue' schema typename value@ encodes the textual value @value@
 -- as a capnp message. This is a thin wrapper around 'capnpEncode'.
-encodeValue :: String -> String -> String -> IO M.ConstMessage
+encodeValue :: String -> String -> String -> IO M.ConstMsg
 encodeValue schema typename value =
     let meta = MsgMetaData schema typename
     in capnpEncode value meta >>= M.decode

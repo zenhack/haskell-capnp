@@ -77,7 +77,7 @@ instance B'.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Call l) = U'.length l
     index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (JsonValue'Call (M'.MutMessage s)) where
+instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
     setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
@@ -91,7 +91,7 @@ get_JsonValue'Call'function (JsonValue'Call struct) =
 
 has_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_JsonValue'Call'function :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_JsonValue'Call'function :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'Call'function (JsonValue'Call struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -103,7 +103,7 @@ get_JsonValue'Call'params (JsonValue'Call struct) =
 
 has_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'params(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_JsonValue'Call'params :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (JsonValue (M'.MutMessage s))) -> m ()
+set_JsonValue'Call'params :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
 set_JsonValue'Call'params (JsonValue'Call struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -118,7 +118,7 @@ instance B'.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Field l) = U'.length l
     index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (JsonValue'Field (M'.MutMessage s)) where
+instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
     setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
@@ -132,7 +132,7 @@ get_JsonValue'Field'name (JsonValue'Field struct) =
 
 has_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_JsonValue'Field'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_JsonValue'Field'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'Field'name (JsonValue'Field struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -144,6 +144,6 @@ get_JsonValue'Field'value (JsonValue'Field struct) =
 
 has_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'value(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMessage s) -> (JsonValue (M'.MutMessage s)) -> m ()
+set_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ()
 set_JsonValue'Field'value (JsonValue'Field struct) value = U'.setPtr (C'.toPtr value) 1 struct
 

@@ -90,7 +90,7 @@ fmtNewtypeStruct thisMod name =
         , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
         , "    toPtr (", nameText, " struct) = C'.toPtr struct\n"
         , fmtStructListElem nameText
-        , "instance B'.MutListElem s (", nameText, " (M'.MutMessage s)) where\n"
+        , "instance B'.MutListElem s (", nameText, " (M'.MutMsg s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
         , "\n"
         , fmtStructListIsPtr nameText
@@ -173,9 +173,9 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             VoidField -> "pure True"
         , "\n"
         -- setter
-        , setName, " :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => "
-        , fmtName thisMod typeName, " (M'.MutMessage s) -> "
-        , fmtType thisMod "(M'.MutMessage s)" fieldType
+        , setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => "
+        , fmtName thisMod typeName, " (M'.MutMsg s) -> "
+        , fmtType thisMod "(M'.MutMsg s)" fieldType
         , " -> m ()\n"
         , case fieldLoc of
             DataField loc@DataLoc{..} -> mconcat

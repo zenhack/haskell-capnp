@@ -34,7 +34,7 @@ instance B'.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveResults l) = U'.length l
     index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Persistent'SaveResults (M'.MutMessage s)) where
+instance B'.MutListElem s (Persistent'SaveResults (M'.MutMsg s)) where
     setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
@@ -48,7 +48,7 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
 
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
+set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -63,7 +63,7 @@ instance B'.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveParams l) = U'.length l
     index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Persistent'SaveParams (M'.MutMessage s)) where
+instance B'.MutListElem s (Persistent'SaveParams (M'.MutMsg s)) where
     setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
@@ -77,6 +77,6 @@ get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
 
 has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMessage s) -> (Maybe (U'.Ptr (M'.MutMessage s))) -> m ()
+set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) value = U'.setPtr (C'.toPtr value) 0 struct
 

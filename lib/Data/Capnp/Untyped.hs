@@ -367,7 +367,7 @@ ptrAddr (PtrCap _ _) = error "ptrAddr called on a capability pointer."
 ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
-setIndex :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s) => a -> Int -> ListOf (M.MutMessage s) a -> m ()
+setIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => a -> Int -> ListOf (M.MutMsg s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -406,13 +406,13 @@ setIndex value i list = case list of
             forM_ [length src..length dest - 1] $ \i ->
                 setIndex pad i dest
   where
-    setNIndex :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMessage s) -> Int -> a -> m ()
+    setNIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMsg s) -> Int -> a -> m ()
     setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
         let wordAddr = nAddr { wordIndex = wordIndex + WordCount (i `div` eltsPerWord) }
         word <- M.getWord nMsg wordAddr
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         M.setWord nMsg wordAddr $ replaceBits value word shift
-    setPtrIndex :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s) => NormalList (M.MutMessage s) -> Ptr (M.MutMessage s) -> P.Ptr -> m ()
+    setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
     setPtrIndex nlist@NormalList{..} absPtr relPtr =
         let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
         in case pointerFrom srcAddr (ptrAddr absPtr) relPtr of
@@ -516,13 +516,13 @@ getPtr i struct
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
 -- to @value@.
-setData :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s)
-    => Word64 -> Int -> Struct (M.MutMessage s) -> m ()
+setData :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
+    => Word64 -> Int -> Struct (M.MutMsg s) -> m ()
 setData value i = setIndex value i . dataSection
 
 -- | @'setData' value i struct@ sets the @i@th pointer in the struct's pointer
 -- section to @value@.
-setPtr :: (ReadCtx m (M.MutMessage s), M.WriteCtx m s) => Maybe (Ptr (M.MutMessage s)) -> Int -> Struct (M.MutMessage s) -> m ()
+setPtr :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => Maybe (Ptr (M.MutMsg s)) -> Int -> Struct (M.MutMsg s) -> m ()
 setPtr value i = setIndex value i . ptrSection
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.

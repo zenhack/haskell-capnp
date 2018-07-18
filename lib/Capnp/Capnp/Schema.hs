@@ -68,7 +68,7 @@ instance B'.ListElem msg (Brand msg) where
     newtype List msg (Brand msg) = List_Brand (U'.ListOf msg (U'.Struct msg))
     length (List_Brand l) = U'.length l
     index i (List_Brand l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand (M'.MutMessage s)) where
+instance B'.MutListElem s (Brand (M'.MutMsg s)) where
     setIndex (Brand elt) i (List_Brand l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Brand msg)) where
@@ -82,7 +82,7 @@ get_Brand'scopes (Brand struct) =
 
 has_Brand'scopes :: U'.ReadCtx m msg => Brand msg -> m Bool
 has_Brand'scopes(Brand struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Brand'scopes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Brand'Scope (M'.MutMessage s))) -> m ()
+set_Brand'scopes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Scope (M'.MutMsg s))) -> m ()
 set_Brand'scopes (Brand struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -97,7 +97,7 @@ instance B'.ListElem msg (Method msg) where
     newtype List msg (Method msg) = List_Method (U'.ListOf msg (U'.Struct msg))
     length (List_Method l) = U'.length l
     index i (List_Method l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Method msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Method (M'.MutMessage s)) where
+instance B'.MutListElem s (Method (M'.MutMsg s)) where
     setIndex (Method elt) i (List_Method l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Method msg)) where
@@ -111,7 +111,7 @@ get_Method'name (Method struct) =
 
 has_Method'name :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'name(Method struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Method'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_Method'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Method'name (Method struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -120,7 +120,7 @@ get_Method'codeOrder (Method struct) = C'.getWordField struct 0 0 0
 
 has_Method'codeOrder :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'codeOrder(Method struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Method'codeOrder :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> Word16 -> m ()
+set_Method'codeOrder :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> Word16 -> m ()
 set_Method'codeOrder (Method struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 
 get_Method'paramStructType :: U'.ReadCtx m msg => Method msg -> m Word64
@@ -128,7 +128,7 @@ get_Method'paramStructType (Method struct) = C'.getWordField struct 1 0 0
 
 has_Method'paramStructType :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'paramStructType(Method struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Method'paramStructType :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> Word64 -> m ()
+set_Method'paramStructType :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> Word64 -> m ()
 set_Method'paramStructType (Method struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
 get_Method'resultStructType :: U'.ReadCtx m msg => Method msg -> m Word64
@@ -136,7 +136,7 @@ get_Method'resultStructType (Method struct) = C'.getWordField struct 2 0 0
 
 has_Method'resultStructType :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'resultStructType(Method struct) = pure $ 2 < U'.length (U'.dataSection struct)
-set_Method'resultStructType :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> Word64 -> m ()
+set_Method'resultStructType :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> Word64 -> m ()
 set_Method'resultStructType (Method struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 
 get_Method'annotations :: U'.ReadCtx m msg => Method msg -> m (B'.List msg (Annotation msg))
@@ -147,7 +147,7 @@ get_Method'annotations (Method struct) =
 
 has_Method'annotations :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'annotations(Method struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Method'annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
+set_Method'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Method'annotations (Method struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -159,7 +159,7 @@ get_Method'paramBrand (Method struct) =
 
 has_Method'paramBrand :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'paramBrand(Method struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_Method'paramBrand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Method'paramBrand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Method'paramBrand (Method struct) value = U'.setPtr (C'.toPtr value) 2 struct
 
 
@@ -171,7 +171,7 @@ get_Method'resultBrand (Method struct) =
 
 has_Method'resultBrand :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'resultBrand(Method struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Method'resultBrand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Method'resultBrand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Method'resultBrand (Method struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -183,7 +183,7 @@ get_Method'implicitParameters (Method struct) =
 
 has_Method'implicitParameters :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'implicitParameters(Method struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
-set_Method'implicitParameters :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Method (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node'Parameter (M'.MutMessage s))) -> m ()
+set_Method'implicitParameters :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
 set_Method'implicitParameters (Method struct) value = U'.setPtr (C'.toPtr value) 4 struct
 
 
@@ -198,7 +198,7 @@ instance B'.ListElem msg (Enumerant msg) where
     newtype List msg (Enumerant msg) = List_Enumerant (U'.ListOf msg (U'.Struct msg))
     length (List_Enumerant l) = U'.length l
     index i (List_Enumerant l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Enumerant msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Enumerant (M'.MutMessage s)) where
+instance B'.MutListElem s (Enumerant (M'.MutMsg s)) where
     setIndex (Enumerant elt) i (List_Enumerant l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Enumerant msg)) where
@@ -212,7 +212,7 @@ get_Enumerant'name (Enumerant struct) =
 
 has_Enumerant'name :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'name(Enumerant struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Enumerant'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_Enumerant'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Enumerant (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Enumerant'name (Enumerant struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -221,7 +221,7 @@ get_Enumerant'codeOrder (Enumerant struct) = C'.getWordField struct 0 0 0
 
 has_Enumerant'codeOrder :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'codeOrder(Enumerant struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Enumerant'codeOrder :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> Word16 -> m ()
+set_Enumerant'codeOrder :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Enumerant (M'.MutMsg s) -> Word16 -> m ()
 set_Enumerant'codeOrder (Enumerant struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 
 get_Enumerant'annotations :: U'.ReadCtx m msg => Enumerant msg -> m (B'.List msg (Annotation msg))
@@ -232,7 +232,7 @@ get_Enumerant'annotations (Enumerant struct) =
 
 has_Enumerant'annotations :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'annotations(Enumerant struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Enumerant'annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Enumerant (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
+set_Enumerant'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Enumerant (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Enumerant'annotations (Enumerant struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -250,7 +250,7 @@ instance B'.ListElem msg (Field msg) where
     newtype List msg (Field msg) = List_Field (U'.ListOf msg (U'.Struct msg))
     length (List_Field l) = U'.length l
     index i (List_Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field (M'.MutMessage s)) where
+instance B'.MutListElem s (Field (M'.MutMsg s)) where
     setIndex (Field elt) i (List_Field l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
@@ -264,7 +264,7 @@ get_Field''name (Field struct) =
 
 has_Field''name :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''name(Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Field''name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_Field''name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Field''name (Field struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -273,7 +273,7 @@ get_Field''codeOrder (Field struct) = C'.getWordField struct 0 0 0
 
 has_Field''codeOrder :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''codeOrder(Field struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Field''codeOrder :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> Word16 -> m ()
+set_Field''codeOrder :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> Word16 -> m ()
 set_Field''codeOrder (Field struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 
 get_Field''annotations :: U'.ReadCtx m msg => Field msg -> m (B'.List msg (Annotation msg))
@@ -284,7 +284,7 @@ get_Field''annotations (Field struct) =
 
 has_Field''annotations :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''annotations(Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Field''annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
+set_Field''annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Field''annotations (Field struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -293,7 +293,7 @@ get_Field''discriminantValue (Field struct) = C'.getWordField struct 0 16 65535
 
 has_Field''discriminantValue :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''discriminantValue(Field struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Field''discriminantValue :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> Word16 -> m ()
+set_Field''discriminantValue :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> Word16 -> m ()
 set_Field''discriminantValue (Field struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 65535
 
 get_Field''ordinal :: U'.ReadCtx m msg => Field msg -> m (Field'ordinal msg)
@@ -301,7 +301,7 @@ get_Field''ordinal (Field struct) = C'.fromStruct struct
 
 has_Field''ordinal :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''ordinal(Field struct) = pure True
-set_Field''ordinal :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (Field'ordinal (M'.MutMessage s)) -> m ()
+set_Field''ordinal :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field'ordinal (M'.MutMsg s)) -> m ()
 set_Field''ordinal _ = error "TODO: generate more setters."
 
 get_Field''union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
@@ -309,7 +309,7 @@ get_Field''union' (Field struct) = C'.fromStruct struct
 
 has_Field''union' :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field''union'(Field struct) = pure True
-set_Field''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field (M'.MutMessage s) -> (Field' (M'.MutMessage s)) -> m ()
+set_Field''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field' (M'.MutMsg s)) -> m ()
 set_Field''union' _ = error "TODO: generate more setters."
 
 data Field' msg
@@ -327,7 +327,7 @@ instance B'.ListElem msg (Field'slot'group' msg) where
     newtype List msg (Field'slot'group' msg) = List_Field'slot'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Field'slot'group' l) = U'.length l
     index i (List_Field'slot'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'slot'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'slot'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Field'slot'group' (M'.MutMsg s)) where
     setIndex (Field'slot'group' elt) i (List_Field'slot'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Field'slot'group' msg)) where
@@ -338,7 +338,7 @@ get_Field'slot'offset (Field'slot'group' struct) = C'.getWordField struct 0 32 0
 
 has_Field'slot'offset :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'offset(Field'slot'group' struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Field'slot'offset :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> Word32 -> m ()
+set_Field'slot'offset :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMsg s) -> Word32 -> m ()
 set_Field'slot'offset (Field'slot'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 
 get_Field'slot'type_ :: U'.ReadCtx m msg => Field'slot'group' msg -> m (Type msg)
@@ -349,7 +349,7 @@ get_Field'slot'type_ (Field'slot'group' struct) =
 
 has_Field'slot'type_ :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'type_(Field'slot'group' struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_Field'slot'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
+set_Field'slot'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Field'slot'type_ (Field'slot'group' struct) value = U'.setPtr (C'.toPtr value) 2 struct
 
 
@@ -361,7 +361,7 @@ get_Field'slot'defaultValue (Field'slot'group' struct) =
 
 has_Field'slot'defaultValue :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'defaultValue(Field'slot'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Field'slot'defaultValue :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> (Value (M'.MutMessage s)) -> m ()
+set_Field'slot'defaultValue :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
 set_Field'slot'defaultValue (Field'slot'group' struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -370,7 +370,7 @@ get_Field'slot'hadExplicitDefault (Field'slot'group' struct) = C'.getWordField s
 
 has_Field'slot'hadExplicitDefault :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'hadExplicitDefault(Field'slot'group' struct) = pure $ 2 < U'.length (U'.dataSection struct)
-set_Field'slot'hadExplicitDefault :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMessage s) -> Bool -> m ()
+set_Field'slot'hadExplicitDefault :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMsg s) -> Bool -> m ()
 set_Field'slot'hadExplicitDefault (Field'slot'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 
 newtype Field'group'group' msg = Field'group'group' (U'.Struct msg)
@@ -384,7 +384,7 @@ instance B'.ListElem msg (Field'group'group' msg) where
     newtype List msg (Field'group'group' msg) = List_Field'group'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Field'group'group' l) = U'.length l
     index i (List_Field'group'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'group'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'group'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Field'group'group' (M'.MutMsg s)) where
     setIndex (Field'group'group' elt) i (List_Field'group'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Field'group'group' msg)) where
@@ -395,7 +395,7 @@ get_Field'group'typeId (Field'group'group' struct) = C'.getWordField struct 2 0 
 
 has_Field'group'typeId :: U'.ReadCtx m msg => Field'group'group' msg -> m Bool
 has_Field'group'typeId(Field'group'group' struct) = pure $ 2 < U'.length (U'.dataSection struct)
-set_Field'group'typeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Field'group'group' (M'.MutMessage s) -> Word64 -> m ()
+set_Field'group'typeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'group'group' (M'.MutMsg s) -> Word64 -> m ()
 set_Field'group'typeId (Field'group'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 
 
@@ -431,7 +431,7 @@ instance B'.ListElem msg (Superclass msg) where
     newtype List msg (Superclass msg) = List_Superclass (U'.ListOf msg (U'.Struct msg))
     length (List_Superclass l) = U'.length l
     index i (List_Superclass l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Superclass msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Superclass (M'.MutMessage s)) where
+instance B'.MutListElem s (Superclass (M'.MutMsg s)) where
     setIndex (Superclass elt) i (List_Superclass l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
@@ -442,7 +442,7 @@ get_Superclass'id (Superclass struct) = C'.getWordField struct 0 0 0
 
 has_Superclass'id :: U'.ReadCtx m msg => Superclass msg -> m Bool
 has_Superclass'id(Superclass struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Superclass'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Superclass (M'.MutMessage s) -> Word64 -> m ()
+set_Superclass'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Superclass (M'.MutMsg s) -> Word64 -> m ()
 set_Superclass'id (Superclass struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 get_Superclass'brand :: U'.ReadCtx m msg => Superclass msg -> m (Brand msg)
@@ -453,7 +453,7 @@ get_Superclass'brand (Superclass struct) =
 
 has_Superclass'brand :: U'.ReadCtx m msg => Superclass msg -> m Bool
 has_Superclass'brand(Superclass struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Superclass'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Superclass (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Superclass'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Superclass (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Superclass'brand (Superclass struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -468,7 +468,7 @@ instance B'.ListElem msg (Brand'Scope msg) where
     newtype List msg (Brand'Scope msg) = List_Brand'Scope (U'.ListOf msg (U'.Struct msg))
     length (List_Brand'Scope l) = U'.length l
     index i (List_Brand'Scope l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand'Scope (M'.MutMessage s)) where
+instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
     setIndex (Brand'Scope elt) i (List_Brand'Scope l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
@@ -479,7 +479,7 @@ get_Brand'Scope''scopeId (Brand'Scope struct) = C'.getWordField struct 0 0 0
 
 has_Brand'Scope''scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
 has_Brand'Scope''scopeId(Brand'Scope struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Brand'Scope''scopeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand'Scope (M'.MutMessage s) -> Word64 -> m ()
+set_Brand'Scope''scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> Word64 -> m ()
 set_Brand'Scope''scopeId (Brand'Scope struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 get_Brand'Scope''union' :: U'.ReadCtx m msg => Brand'Scope msg -> m (Brand'Scope' msg)
@@ -487,7 +487,7 @@ get_Brand'Scope''union' (Brand'Scope struct) = C'.fromStruct struct
 
 has_Brand'Scope''union' :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
 has_Brand'Scope''union'(Brand'Scope struct) = pure True
-set_Brand'Scope''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Brand'Scope (M'.MutMessage s) -> (Brand'Scope' (M'.MutMessage s)) -> m ()
+set_Brand'Scope''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> (Brand'Scope' (M'.MutMsg s)) -> m ()
 set_Brand'Scope''union' _ = error "TODO: generate more setters."
 
 data Brand'Scope' msg
@@ -529,7 +529,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile'Import msg) = List_CodeGeneratorRequest'RequestedFile'Import (U'.ListOf msg (U'.Struct msg))
     length (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.length l
     index i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile'Import msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s)) where
+instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile'Import elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
@@ -540,7 +540,7 @@ get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'Requested
 
 has_CodeGeneratorRequest'RequestedFile'Import'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'id(CodeGeneratorRequest'RequestedFile'Import struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_CodeGeneratorRequest'RequestedFile'Import'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s) -> Word64 -> m ()
+set_CodeGeneratorRequest'RequestedFile'Import'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> Word64 -> m ()
 set_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 get_CodeGeneratorRequest'RequestedFile'Import'name :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m (B'.Text msg)
@@ -551,7 +551,7 @@ get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'Request
 
 has_CodeGeneratorRequest'RequestedFile'Import'name :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'name(CodeGeneratorRequest'RequestedFile'Import struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_CodeGeneratorRequest'RequestedFile'Import'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_CodeGeneratorRequest'RequestedFile'Import'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -566,7 +566,7 @@ instance B'.ListElem msg (Node'Parameter msg) where
     newtype List msg (Node'Parameter msg) = List_Node'Parameter (U'.ListOf msg (U'.Struct msg))
     length (List_Node'Parameter l) = U'.length l
     index i (List_Node'Parameter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'Parameter msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'Parameter (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'Parameter (M'.MutMsg s)) where
     setIndex (Node'Parameter elt) i (List_Node'Parameter l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'Parameter msg)) where
@@ -580,7 +580,7 @@ get_Node'Parameter'name (Node'Parameter struct) =
 
 has_Node'Parameter'name :: U'.ReadCtx m msg => Node'Parameter msg -> m Bool
 has_Node'Parameter'name(Node'Parameter struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Node'Parameter'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'Parameter (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_Node'Parameter'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'Parameter (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Node'Parameter'name (Node'Parameter struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -623,7 +623,7 @@ instance B'.ListElem msg (CodeGeneratorRequest msg) where
     newtype List msg (CodeGeneratorRequest msg) = List_CodeGeneratorRequest (U'.ListOf msg (U'.Struct msg))
     length (List_CodeGeneratorRequest l) = U'.length l
     index i (List_CodeGeneratorRequest l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMessage s)) where
+instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest msg)) where
@@ -637,7 +637,7 @@ get_CodeGeneratorRequest'nodes (CodeGeneratorRequest struct) =
 
 has_CodeGeneratorRequest'nodes :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'nodes(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_CodeGeneratorRequest'nodes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node (M'.MutMessage s))) -> m ()
+set_CodeGeneratorRequest'nodes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node (M'.MutMsg s))) -> m ()
 set_CodeGeneratorRequest'nodes (CodeGeneratorRequest struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -649,7 +649,7 @@ get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest struct) =
 
 has_CodeGeneratorRequest'requestedFiles :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'requestedFiles(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_CodeGeneratorRequest'requestedFiles :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (CodeGeneratorRequest'RequestedFile (M'.MutMessage s))) -> m ()
+set_CodeGeneratorRequest'requestedFiles :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))) -> m ()
 set_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -661,7 +661,7 @@ get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest struct) =
 
 has_CodeGeneratorRequest'capnpVersion :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'capnpVersion(CodeGeneratorRequest struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_CodeGeneratorRequest'capnpVersion :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMessage s) -> (CapnpVersion (M'.MutMessage s)) -> m ()
+set_CodeGeneratorRequest'capnpVersion :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMsg s) -> (CapnpVersion (M'.MutMsg s)) -> m ()
 set_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest struct) value = U'.setPtr (C'.toPtr value) 2 struct
 
 
@@ -681,7 +681,7 @@ instance B'.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
     newtype List msg (Type'anyPointer'unconstrained'group' msg) = List_Type'anyPointer'unconstrained'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'unconstrained'group' l) = U'.length l
     index i (List_Type'anyPointer'unconstrained'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'unconstrained'group' elt) i (List_Type'anyPointer'unconstrained'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained'group' msg)) where
@@ -692,7 +692,7 @@ get_Type'anyPointer'unconstrained'union' (Type'anyPointer'unconstrained'group' s
 
 has_Type'anyPointer'unconstrained'union' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained'group' msg -> m Bool
 has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group' struct) = pure True
-set_Type'anyPointer'unconstrained'union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMessage s) -> (Type'anyPointer'unconstrained (M'.MutMessage s)) -> m ()
+set_Type'anyPointer'unconstrained'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> (Type'anyPointer'unconstrained (M'.MutMsg s)) -> m ()
 set_Type'anyPointer'unconstrained'union' _ = error "TODO: generate more setters."
 
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group' (U'.Struct msg)
@@ -706,7 +706,7 @@ instance B'.ListElem msg (Type'anyPointer'parameter'group' msg) where
     newtype List msg (Type'anyPointer'parameter'group' msg) = List_Type'anyPointer'parameter'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'parameter'group' l) = U'.length l
     index i (List_Type'anyPointer'parameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'parameter'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'parameter'group' elt) i (List_Type'anyPointer'parameter'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'parameter'group' msg)) where
@@ -717,7 +717,7 @@ get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group' struct) 
 
 has_Type'anyPointer'parameter'scopeId :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Bool
 has_Type'anyPointer'parameter'scopeId(Type'anyPointer'parameter'group' struct) = pure $ 2 < U'.length (U'.dataSection struct)
-set_Type'anyPointer'parameter'scopeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'parameter'group' (M'.MutMessage s) -> Word64 -> m ()
+set_Type'anyPointer'parameter'scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word64 -> m ()
 set_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 
 get_Type'anyPointer'parameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Word16
@@ -725,7 +725,7 @@ get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group' s
 
 has_Type'anyPointer'parameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Bool
 has_Type'anyPointer'parameter'parameterIndex(Type'anyPointer'parameter'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Type'anyPointer'parameter'parameterIndex :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'parameter'group' (M'.MutMessage s) -> Word16 -> m ()
+set_Type'anyPointer'parameter'parameterIndex :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 
 newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group' (U'.Struct msg)
@@ -739,7 +739,7 @@ instance B'.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) wh
     newtype List msg (Type'anyPointer'implicitMethodParameter'group' msg) = List_Type'anyPointer'implicitMethodParameter'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.length l
     index i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'implicitMethodParameter'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'implicitMethodParameter'group' elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'implicitMethodParameter'group' msg)) where
@@ -750,7 +750,7 @@ get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'impl
 
 has_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'implicitMethodParameter'group' msg -> m Bool
 has_Type'anyPointer'implicitMethodParameter'parameterIndex(Type'anyPointer'implicitMethodParameter'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Type'anyPointer'implicitMethodParameter'parameterIndex :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'implicitMethodParameter'group' (M'.MutMessage s) -> Word16 -> m ()
+set_Type'anyPointer'implicitMethodParameter'parameterIndex :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 
 
@@ -894,7 +894,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile msg) = List_CodeGeneratorRequest'RequestedFile (U'.ListOf msg (U'.Struct msg))
     length (List_CodeGeneratorRequest'RequestedFile l) = U'.length l
     index i (List_CodeGeneratorRequest'RequestedFile l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMessage s)) where
+instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) where
@@ -905,7 +905,7 @@ get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile st
 
 has_CodeGeneratorRequest'RequestedFile'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'id(CodeGeneratorRequest'RequestedFile struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_CodeGeneratorRequest'RequestedFile'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> Word64 -> m ()
+set_CodeGeneratorRequest'RequestedFile'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> Word64 -> m ()
 set_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 get_CodeGeneratorRequest'RequestedFile'filename :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m (B'.Text msg)
@@ -916,7 +916,7 @@ get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedF
 
 has_CodeGeneratorRequest'RequestedFile'filename :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'filename(CodeGeneratorRequest'RequestedFile struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_CodeGeneratorRequest'RequestedFile'filename :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_CodeGeneratorRequest'RequestedFile'filename :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -928,7 +928,7 @@ get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFi
 
 has_CodeGeneratorRequest'RequestedFile'imports :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'imports(CodeGeneratorRequest'RequestedFile struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_CodeGeneratorRequest'RequestedFile'imports :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMessage s))) -> m ()
+set_CodeGeneratorRequest'RequestedFile'imports :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))) -> m ()
 set_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -978,7 +978,7 @@ instance B'.ListElem msg (Type'list'group' msg) where
     newtype List msg (Type'list'group' msg) = List_Type'list'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'list'group' l) = U'.length l
     index i (List_Type'list'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'list'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'list'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'list'group' (M'.MutMsg s)) where
     setIndex (Type'list'group' elt) i (List_Type'list'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'list'group' msg)) where
@@ -992,7 +992,7 @@ get_Type'list'elementType (Type'list'group' struct) =
 
 has_Type'list'elementType :: U'.ReadCtx m msg => Type'list'group' msg -> m Bool
 has_Type'list'elementType(Type'list'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'list'elementType :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'list'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
+set_Type'list'elementType :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'list'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Type'list'elementType (Type'list'group' struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1007,7 +1007,7 @@ instance B'.ListElem msg (Type'enum'group' msg) where
     newtype List msg (Type'enum'group' msg) = List_Type'enum'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'enum'group' l) = U'.length l
     index i (List_Type'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'enum'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'enum'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'enum'group' (M'.MutMsg s)) where
     setIndex (Type'enum'group' elt) i (List_Type'enum'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'enum'group' msg)) where
@@ -1018,7 +1018,7 @@ get_Type'enum'typeId (Type'enum'group' struct) = C'.getWordField struct 1 0 0
 
 has_Type'enum'typeId :: U'.ReadCtx m msg => Type'enum'group' msg -> m Bool
 has_Type'enum'typeId(Type'enum'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Type'enum'typeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMessage s) -> Word64 -> m ()
+set_Type'enum'typeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMsg s) -> Word64 -> m ()
 set_Type'enum'typeId (Type'enum'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
 get_Type'enum'brand :: U'.ReadCtx m msg => Type'enum'group' msg -> m (Brand msg)
@@ -1029,7 +1029,7 @@ get_Type'enum'brand (Type'enum'group' struct) =
 
 has_Type'enum'brand :: U'.ReadCtx m msg => Type'enum'group' msg -> m Bool
 has_Type'enum'brand(Type'enum'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'enum'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Type'enum'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Type'enum'brand (Type'enum'group' struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1044,7 +1044,7 @@ instance B'.ListElem msg (Type'struct'group' msg) where
     newtype List msg (Type'struct'group' msg) = List_Type'struct'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'struct'group' l) = U'.length l
     index i (List_Type'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'struct'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'struct'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'struct'group' (M'.MutMsg s)) where
     setIndex (Type'struct'group' elt) i (List_Type'struct'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'struct'group' msg)) where
@@ -1055,7 +1055,7 @@ get_Type'struct'typeId (Type'struct'group' struct) = C'.getWordField struct 1 0 
 
 has_Type'struct'typeId :: U'.ReadCtx m msg => Type'struct'group' msg -> m Bool
 has_Type'struct'typeId(Type'struct'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Type'struct'typeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMessage s) -> Word64 -> m ()
+set_Type'struct'typeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMsg s) -> Word64 -> m ()
 set_Type'struct'typeId (Type'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
 get_Type'struct'brand :: U'.ReadCtx m msg => Type'struct'group' msg -> m (Brand msg)
@@ -1066,7 +1066,7 @@ get_Type'struct'brand (Type'struct'group' struct) =
 
 has_Type'struct'brand :: U'.ReadCtx m msg => Type'struct'group' msg -> m Bool
 has_Type'struct'brand(Type'struct'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'struct'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Type'struct'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Type'struct'brand (Type'struct'group' struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1081,7 +1081,7 @@ instance B'.ListElem msg (Type'interface'group' msg) where
     newtype List msg (Type'interface'group' msg) = List_Type'interface'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'interface'group' l) = U'.length l
     index i (List_Type'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'interface'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'interface'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'interface'group' (M'.MutMsg s)) where
     setIndex (Type'interface'group' elt) i (List_Type'interface'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'interface'group' msg)) where
@@ -1092,7 +1092,7 @@ get_Type'interface'typeId (Type'interface'group' struct) = C'.getWordField struc
 
 has_Type'interface'typeId :: U'.ReadCtx m msg => Type'interface'group' msg -> m Bool
 has_Type'interface'typeId(Type'interface'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Type'interface'typeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMessage s) -> Word64 -> m ()
+set_Type'interface'typeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMsg s) -> Word64 -> m ()
 set_Type'interface'typeId (Type'interface'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
 get_Type'interface'brand :: U'.ReadCtx m msg => Type'interface'group' msg -> m (Brand msg)
@@ -1103,7 +1103,7 @@ get_Type'interface'brand (Type'interface'group' struct) =
 
 has_Type'interface'brand :: U'.ReadCtx m msg => Type'interface'group' msg -> m Bool
 has_Type'interface'brand(Type'interface'group' struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Type'interface'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Type'interface'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Type'interface'brand (Type'interface'group' struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1118,7 +1118,7 @@ instance B'.ListElem msg (Type'anyPointer'group' msg) where
     newtype List msg (Type'anyPointer'group' msg) = List_Type'anyPointer'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Type'anyPointer'group' l) = U'.length l
     index i (List_Type'anyPointer'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'group' elt) i (List_Type'anyPointer'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'group' msg)) where
@@ -1129,7 +1129,7 @@ get_Type'anyPointer'union' (Type'anyPointer'group' struct) = C'.fromStruct struc
 
 has_Type'anyPointer'union' :: U'.ReadCtx m msg => Type'anyPointer'group' msg -> m Bool
 has_Type'anyPointer'union'(Type'anyPointer'group' struct) = pure True
-set_Type'anyPointer'union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMessage s) -> (Type'anyPointer (M'.MutMessage s)) -> m ()
+set_Type'anyPointer'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> (Type'anyPointer (M'.MutMsg s)) -> m ()
 set_Type'anyPointer'union' _ = error "TODO: generate more setters."
 
 
@@ -1228,7 +1228,7 @@ instance B'.ListElem msg (CapnpVersion msg) where
     newtype List msg (CapnpVersion msg) = List_CapnpVersion (U'.ListOf msg (U'.Struct msg))
     length (List_CapnpVersion l) = U'.length l
     index i (List_CapnpVersion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapnpVersion msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CapnpVersion (M'.MutMessage s)) where
+instance B'.MutListElem s (CapnpVersion (M'.MutMsg s)) where
     setIndex (CapnpVersion elt) i (List_CapnpVersion l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
@@ -1239,7 +1239,7 @@ get_CapnpVersion'major (CapnpVersion struct) = C'.getWordField struct 0 0 0
 
 has_CapnpVersion'major :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
 has_CapnpVersion'major(CapnpVersion struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_CapnpVersion'major :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CapnpVersion (M'.MutMessage s) -> Word16 -> m ()
+set_CapnpVersion'major :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapnpVersion (M'.MutMsg s) -> Word16 -> m ()
 set_CapnpVersion'major (CapnpVersion struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 
 get_CapnpVersion'minor :: U'.ReadCtx m msg => CapnpVersion msg -> m Word8
@@ -1247,7 +1247,7 @@ get_CapnpVersion'minor (CapnpVersion struct) = C'.getWordField struct 0 16 0
 
 has_CapnpVersion'minor :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
 has_CapnpVersion'minor(CapnpVersion struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_CapnpVersion'minor :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CapnpVersion (M'.MutMessage s) -> Word8 -> m ()
+set_CapnpVersion'minor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapnpVersion (M'.MutMsg s) -> Word8 -> m ()
 set_CapnpVersion'minor (CapnpVersion struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
 
 get_CapnpVersion'micro :: U'.ReadCtx m msg => CapnpVersion msg -> m Word8
@@ -1255,7 +1255,7 @@ get_CapnpVersion'micro (CapnpVersion struct) = C'.getWordField struct 0 24 0
 
 has_CapnpVersion'micro :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
 has_CapnpVersion'micro(CapnpVersion struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_CapnpVersion'micro :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => CapnpVersion (M'.MutMessage s) -> Word8 -> m ()
+set_CapnpVersion'micro :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapnpVersion (M'.MutMsg s) -> Word8 -> m ()
 set_CapnpVersion'micro (CapnpVersion struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
 
 newtype Node'NestedNode msg = Node'NestedNode (U'.Struct msg)
@@ -1269,7 +1269,7 @@ instance B'.ListElem msg (Node'NestedNode msg) where
     newtype List msg (Node'NestedNode msg) = List_Node'NestedNode (U'.ListOf msg (U'.Struct msg))
     length (List_Node'NestedNode l) = U'.length l
     index i (List_Node'NestedNode l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'NestedNode msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'NestedNode (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'NestedNode (M'.MutMsg s)) where
     setIndex (Node'NestedNode elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'NestedNode msg)) where
@@ -1283,7 +1283,7 @@ get_Node'NestedNode'name (Node'NestedNode struct) =
 
 has_Node'NestedNode'name :: U'.ReadCtx m msg => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'name(Node'NestedNode struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Node'NestedNode'name :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_Node'NestedNode'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Node'NestedNode'name (Node'NestedNode struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1292,7 +1292,7 @@ get_Node'NestedNode'id (Node'NestedNode struct) = C'.getWordField struct 0 0 0
 
 has_Node'NestedNode'id :: U'.ReadCtx m msg => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'id(Node'NestedNode struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Node'NestedNode'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMessage s) -> Word64 -> m ()
+set_Node'NestedNode'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMsg s) -> Word64 -> m ()
 set_Node'NestedNode'id (Node'NestedNode struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 newtype Node msg = Node (U'.Struct msg)
@@ -1306,7 +1306,7 @@ instance B'.ListElem msg (Node msg) where
     newtype List msg (Node msg) = List_Node (U'.ListOf msg (U'.Struct msg))
     length (List_Node l) = U'.length l
     index i (List_Node l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node (M'.MutMessage s)) where
+instance B'.MutListElem s (Node (M'.MutMsg s)) where
     setIndex (Node elt) i (List_Node l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
@@ -1317,7 +1317,7 @@ get_Node''id (Node struct) = C'.getWordField struct 0 0 0
 
 has_Node''id :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''id(Node struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Node''id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> Word64 -> m ()
+set_Node''id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word64 -> m ()
 set_Node''id (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 get_Node''displayName :: U'.ReadCtx m msg => Node msg -> m (B'.Text msg)
@@ -1328,7 +1328,7 @@ get_Node''displayName (Node struct) =
 
 has_Node''displayName :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''displayName(Node struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Node''displayName :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.Text (M'.MutMessage s)) -> m ()
+set_Node''displayName :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Node''displayName (Node struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1337,7 +1337,7 @@ get_Node''displayNamePrefixLength (Node struct) = C'.getWordField struct 1 0 0
 
 has_Node''displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''displayNamePrefixLength(Node struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node''displayNamePrefixLength :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> Word32 -> m ()
+set_Node''displayNamePrefixLength :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word32 -> m ()
 set_Node''displayNamePrefixLength (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
 
 get_Node''scopeId :: U'.ReadCtx m msg => Node msg -> m Word64
@@ -1345,7 +1345,7 @@ get_Node''scopeId (Node struct) = C'.getWordField struct 2 0 0
 
 has_Node''scopeId :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''scopeId(Node struct) = pure $ 2 < U'.length (U'.dataSection struct)
-set_Node''scopeId :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> Word64 -> m ()
+set_Node''scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word64 -> m ()
 set_Node''scopeId (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 
 get_Node''nestedNodes :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'NestedNode msg))
@@ -1356,7 +1356,7 @@ get_Node''nestedNodes (Node struct) =
 
 has_Node''nestedNodes :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''nestedNodes(Node struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Node''nestedNodes :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node'NestedNode (M'.MutMessage s))) -> m ()
+set_Node''nestedNodes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))) -> m ()
 set_Node''nestedNodes (Node struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -1368,7 +1368,7 @@ get_Node''annotations (Node struct) =
 
 has_Node''annotations :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''annotations(Node struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
-set_Node''annotations :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Annotation (M'.MutMessage s))) -> m ()
+set_Node''annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Node''annotations (Node struct) value = U'.setPtr (C'.toPtr value) 2 struct
 
 
@@ -1380,7 +1380,7 @@ get_Node''parameters (Node struct) =
 
 has_Node''parameters :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''parameters(Node struct) = Data.Maybe.isJust <$> U'.getPtr 5 struct
-set_Node''parameters :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Node'Parameter (M'.MutMessage s))) -> m ()
+set_Node''parameters :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
 set_Node''parameters (Node struct) value = U'.setPtr (C'.toPtr value) 5 struct
 
 
@@ -1389,7 +1389,7 @@ get_Node''isGeneric (Node struct) = C'.getWordField struct 4 32 0
 
 has_Node''isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''isGeneric(Node struct) = pure $ 4 < U'.length (U'.dataSection struct)
-set_Node''isGeneric :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> Bool -> m ()
+set_Node''isGeneric :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Bool -> m ()
 set_Node''isGeneric (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 4 32 0
 
 get_Node''union' :: U'.ReadCtx m msg => Node msg -> m (Node' msg)
@@ -1397,7 +1397,7 @@ get_Node''union' (Node struct) = C'.fromStruct struct
 
 has_Node''union' :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node''union'(Node struct) = pure True
-set_Node''union' :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node (M'.MutMessage s) -> (Node' (M'.MutMessage s)) -> m ()
+set_Node''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (Node' (M'.MutMsg s)) -> m ()
 set_Node''union' _ = error "TODO: generate more setters."
 
 data Node' msg
@@ -1420,7 +1420,7 @@ instance B'.ListElem msg (Node'struct'group' msg) where
     newtype List msg (Node'struct'group' msg) = List_Node'struct'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'struct'group' l) = U'.length l
     index i (List_Node'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'struct'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'struct'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'struct'group' (M'.MutMsg s)) where
     setIndex (Node'struct'group' elt) i (List_Node'struct'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'struct'group' msg)) where
@@ -1431,7 +1431,7 @@ get_Node'struct'dataWordCount (Node'struct'group' struct) = C'.getWordField stru
 
 has_Node'struct'dataWordCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'dataWordCount(Node'struct'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'struct'dataWordCount :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> Word16 -> m ()
+set_Node'struct'dataWordCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Node'struct'dataWordCount (Node'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 48 0
 
 get_Node'struct'pointerCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
@@ -1439,7 +1439,7 @@ get_Node'struct'pointerCount (Node'struct'group' struct) = C'.getWordField struc
 
 has_Node'struct'pointerCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'pointerCount(Node'struct'group' struct) = pure $ 3 < U'.length (U'.dataSection struct)
-set_Node'struct'pointerCount :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> Word16 -> m ()
+set_Node'struct'pointerCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Node'struct'pointerCount (Node'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 0 0
 
 get_Node'struct'preferredListEncoding :: U'.ReadCtx m msg => Node'struct'group' msg -> m ElementSize
@@ -1447,7 +1447,7 @@ get_Node'struct'preferredListEncoding (Node'struct'group' struct) = C'.getWordFi
 
 has_Node'struct'preferredListEncoding :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'preferredListEncoding(Node'struct'group' struct) = pure $ 3 < U'.length (U'.dataSection struct)
-set_Node'struct'preferredListEncoding :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> ElementSize -> m ()
+set_Node'struct'preferredListEncoding :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> ElementSize -> m ()
 set_Node'struct'preferredListEncoding (Node'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 16 0
 
 get_Node'struct'isGroup :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
@@ -1455,7 +1455,7 @@ get_Node'struct'isGroup (Node'struct'group' struct) = C'.getWordField struct 3 3
 
 has_Node'struct'isGroup :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'isGroup(Node'struct'group' struct) = pure $ 3 < U'.length (U'.dataSection struct)
-set_Node'struct'isGroup :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'struct'isGroup :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'struct'isGroup (Node'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 3 32 0
 
 get_Node'struct'discriminantCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
@@ -1463,7 +1463,7 @@ get_Node'struct'discriminantCount (Node'struct'group' struct) = C'.getWordField 
 
 has_Node'struct'discriminantCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'discriminantCount(Node'struct'group' struct) = pure $ 3 < U'.length (U'.dataSection struct)
-set_Node'struct'discriminantCount :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> Word16 -> m ()
+set_Node'struct'discriminantCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Node'struct'discriminantCount (Node'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 48 0
 
 get_Node'struct'discriminantOffset :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word32
@@ -1471,7 +1471,7 @@ get_Node'struct'discriminantOffset (Node'struct'group' struct) = C'.getWordField
 
 has_Node'struct'discriminantOffset :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'discriminantOffset(Node'struct'group' struct) = pure $ 4 < U'.length (U'.dataSection struct)
-set_Node'struct'discriminantOffset :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> Word32 -> m ()
+set_Node'struct'discriminantOffset :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> Word32 -> m ()
 set_Node'struct'discriminantOffset (Node'struct'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 4 0 0
 
 get_Node'struct'fields :: U'.ReadCtx m msg => Node'struct'group' msg -> m (B'.List msg (Field msg))
@@ -1482,7 +1482,7 @@ get_Node'struct'fields (Node'struct'group' struct) =
 
 has_Node'struct'fields :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'fields(Node'struct'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'struct'fields :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Field (M'.MutMessage s))) -> m ()
+set_Node'struct'fields :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Field (M'.MutMsg s))) -> m ()
 set_Node'struct'fields (Node'struct'group' struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -1497,7 +1497,7 @@ instance B'.ListElem msg (Node'enum'group' msg) where
     newtype List msg (Node'enum'group' msg) = List_Node'enum'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'enum'group' l) = U'.length l
     index i (List_Node'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'enum'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'enum'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'enum'group' (M'.MutMsg s)) where
     setIndex (Node'enum'group' elt) i (List_Node'enum'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'enum'group' msg)) where
@@ -1511,7 +1511,7 @@ get_Node'enum'enumerants (Node'enum'group' struct) =
 
 has_Node'enum'enumerants :: U'.ReadCtx m msg => Node'enum'group' msg -> m Bool
 has_Node'enum'enumerants(Node'enum'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'enum'enumerants :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'enum'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Enumerant (M'.MutMessage s))) -> m ()
+set_Node'enum'enumerants :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'enum'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Enumerant (M'.MutMsg s))) -> m ()
 set_Node'enum'enumerants (Node'enum'group' struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -1526,7 +1526,7 @@ instance B'.ListElem msg (Node'interface'group' msg) where
     newtype List msg (Node'interface'group' msg) = List_Node'interface'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'interface'group' l) = U'.length l
     index i (List_Node'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'interface'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'interface'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'interface'group' (M'.MutMsg s)) where
     setIndex (Node'interface'group' elt) i (List_Node'interface'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'interface'group' msg)) where
@@ -1540,7 +1540,7 @@ get_Node'interface'methods (Node'interface'group' struct) =
 
 has_Node'interface'methods :: U'.ReadCtx m msg => Node'interface'group' msg -> m Bool
 has_Node'interface'methods(Node'interface'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'interface'methods :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Method (M'.MutMessage s))) -> m ()
+set_Node'interface'methods :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Method (M'.MutMsg s))) -> m ()
 set_Node'interface'methods (Node'interface'group' struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -1552,7 +1552,7 @@ get_Node'interface'superclasses (Node'interface'group' struct) =
 
 has_Node'interface'superclasses :: U'.ReadCtx m msg => Node'interface'group' msg -> m Bool
 has_Node'interface'superclasses(Node'interface'group' struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
-set_Node'interface'superclasses :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMessage s) -> (B'.List (M'.MutMessage s) (Superclass (M'.MutMessage s))) -> m ()
+set_Node'interface'superclasses :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Superclass (M'.MutMsg s))) -> m ()
 set_Node'interface'superclasses (Node'interface'group' struct) value = U'.setPtr (C'.toPtr value) 4 struct
 
 
@@ -1567,7 +1567,7 @@ instance B'.ListElem msg (Node'const'group' msg) where
     newtype List msg (Node'const'group' msg) = List_Node'const'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'const'group' l) = U'.length l
     index i (List_Node'const'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'const'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'const'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'const'group' (M'.MutMsg s)) where
     setIndex (Node'const'group' elt) i (List_Node'const'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'const'group' msg)) where
@@ -1581,7 +1581,7 @@ get_Node'const'type_ (Node'const'group' struct) =
 
 has_Node'const'type_ :: U'.ReadCtx m msg => Node'const'group' msg -> m Bool
 has_Node'const'type_(Node'const'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'const'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'const'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
+set_Node'const'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'const'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Node'const'type_ (Node'const'group' struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -1593,7 +1593,7 @@ get_Node'const'value (Node'const'group' struct) =
 
 has_Node'const'value :: U'.ReadCtx m msg => Node'const'group' msg -> m Bool
 has_Node'const'value(Node'const'group' struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
-set_Node'const'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'const'group' (M'.MutMessage s) -> (Value (M'.MutMessage s)) -> m ()
+set_Node'const'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'const'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
 set_Node'const'value (Node'const'group' struct) value = U'.setPtr (C'.toPtr value) 4 struct
 
 
@@ -1608,7 +1608,7 @@ instance B'.ListElem msg (Node'annotation'group' msg) where
     newtype List msg (Node'annotation'group' msg) = List_Node'annotation'group' (U'.ListOf msg (U'.Struct msg))
     length (List_Node'annotation'group' l) = U'.length l
     index i (List_Node'annotation'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'annotation'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'annotation'group' (M'.MutMessage s)) where
+instance B'.MutListElem s (Node'annotation'group' (M'.MutMsg s)) where
     setIndex (Node'annotation'group' elt) i (List_Node'annotation'group' l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Node'annotation'group' msg)) where
@@ -1622,7 +1622,7 @@ get_Node'annotation'type_ (Node'annotation'group' struct) =
 
 has_Node'annotation'type_ :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'type_(Node'annotation'group' struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
-set_Node'annotation'type_ :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> (Type (M'.MutMessage s)) -> m ()
+set_Node'annotation'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Node'annotation'type_ (Node'annotation'group' struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
@@ -1631,7 +1631,7 @@ get_Node'annotation'targetsFile (Node'annotation'group' struct) = C'.getWordFiel
 
 has_Node'annotation'targetsFile :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsFile(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsFile :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsFile :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsFile (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 48 0
 
 get_Node'annotation'targetsConst :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1639,7 +1639,7 @@ get_Node'annotation'targetsConst (Node'annotation'group' struct) = C'.getWordFie
 
 has_Node'annotation'targetsConst :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsConst(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsConst :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsConst :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsConst (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 49 0
 
 get_Node'annotation'targetsEnum :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1647,7 +1647,7 @@ get_Node'annotation'targetsEnum (Node'annotation'group' struct) = C'.getWordFiel
 
 has_Node'annotation'targetsEnum :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsEnum(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsEnum :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsEnum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsEnum (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 50 0
 
 get_Node'annotation'targetsEnumerant :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1655,7 +1655,7 @@ get_Node'annotation'targetsEnumerant (Node'annotation'group' struct) = C'.getWor
 
 has_Node'annotation'targetsEnumerant :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsEnumerant(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsEnumerant :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsEnumerant :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsEnumerant (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 51 0
 
 get_Node'annotation'targetsStruct :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1663,7 +1663,7 @@ get_Node'annotation'targetsStruct (Node'annotation'group' struct) = C'.getWordFi
 
 has_Node'annotation'targetsStruct :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsStruct(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsStruct :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsStruct :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsStruct (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 52 0
 
 get_Node'annotation'targetsField :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1671,7 +1671,7 @@ get_Node'annotation'targetsField (Node'annotation'group' struct) = C'.getWordFie
 
 has_Node'annotation'targetsField :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsField(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsField :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsField :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsField (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 53 0
 
 get_Node'annotation'targetsUnion :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1679,7 +1679,7 @@ get_Node'annotation'targetsUnion (Node'annotation'group' struct) = C'.getWordFie
 
 has_Node'annotation'targetsUnion :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsUnion(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsUnion :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsUnion :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsUnion (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 54 0
 
 get_Node'annotation'targetsGroup :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1687,7 +1687,7 @@ get_Node'annotation'targetsGroup (Node'annotation'group' struct) = C'.getWordFie
 
 has_Node'annotation'targetsGroup :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsGroup(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsGroup :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsGroup :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsGroup (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 55 0
 
 get_Node'annotation'targetsInterface :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1695,7 +1695,7 @@ get_Node'annotation'targetsInterface (Node'annotation'group' struct) = C'.getWor
 
 has_Node'annotation'targetsInterface :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsInterface(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsInterface :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsInterface :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsInterface (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 56 0
 
 get_Node'annotation'targetsMethod :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1703,7 +1703,7 @@ get_Node'annotation'targetsMethod (Node'annotation'group' struct) = C'.getWordFi
 
 has_Node'annotation'targetsMethod :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsMethod(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsMethod :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsMethod :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsMethod (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 57 0
 
 get_Node'annotation'targetsParam :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1711,7 +1711,7 @@ get_Node'annotation'targetsParam (Node'annotation'group' struct) = C'.getWordFie
 
 has_Node'annotation'targetsParam :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsParam(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsParam :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsParam :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsParam (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 58 0
 
 get_Node'annotation'targetsAnnotation :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -1719,7 +1719,7 @@ get_Node'annotation'targetsAnnotation (Node'annotation'group' struct) = C'.getWo
 
 has_Node'annotation'targetsAnnotation :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsAnnotation(Node'annotation'group' struct) = pure $ 1 < U'.length (U'.dataSection struct)
-set_Node'annotation'targetsAnnotation :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMessage s) -> Bool -> m ()
+set_Node'annotation'targetsAnnotation :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsAnnotation (Node'annotation'group' struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 59 0
 
 
@@ -1759,7 +1759,7 @@ instance B'.ListElem msg (Annotation msg) where
     newtype List msg (Annotation msg) = List_Annotation (U'.ListOf msg (U'.Struct msg))
     length (List_Annotation l) = U'.length l
     index i (List_Annotation l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Annotation msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Annotation (M'.MutMessage s)) where
+instance B'.MutListElem s (Annotation (M'.MutMsg s)) where
     setIndex (Annotation elt) i (List_Annotation l) = U'.setIndex elt i l
 
 instance C'.IsPtr msg (B'.List msg (Annotation msg)) where
@@ -1770,7 +1770,7 @@ get_Annotation'id (Annotation struct) = C'.getWordField struct 0 0 0
 
 has_Annotation'id :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'id(Annotation struct) = pure $ 0 < U'.length (U'.dataSection struct)
-set_Annotation'id :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> Word64 -> m ()
+set_Annotation'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Annotation (M'.MutMsg s) -> Word64 -> m ()
 set_Annotation'id (Annotation struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 
 get_Annotation'value :: U'.ReadCtx m msg => Annotation msg -> m (Value msg)
@@ -1781,7 +1781,7 @@ get_Annotation'value (Annotation struct) =
 
 has_Annotation'value :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'value(Annotation struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_Annotation'value :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> (Value (M'.MutMessage s)) -> m ()
+set_Annotation'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Annotation (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
 set_Annotation'value (Annotation struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -1793,6 +1793,6 @@ get_Annotation'brand (Annotation struct) =
 
 has_Annotation'brand :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'brand(Annotation struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-set_Annotation'brand :: (U'.ReadCtx m (M'.MutMessage s), M'.WriteCtx m s) => Annotation (M'.MutMessage s) -> (Brand (M'.MutMessage s)) -> m ()
+set_Annotation'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Annotation (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Annotation'brand (Annotation struct) value = U'.setPtr (C'.toPtr value) 1 struct
 

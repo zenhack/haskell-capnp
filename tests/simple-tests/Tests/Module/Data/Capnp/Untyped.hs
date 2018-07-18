@@ -81,7 +81,7 @@ readTests = assertionsToTest "read tests"
 
 data ModTest m s = ModTest
     { testIn   :: String
-    , testMod  :: Struct (M.MutMessage s) -> m ()
+    , testMod  :: Struct (M.MutMsg s) -> m ()
     , testOut  :: String
     , testType :: String
     }
