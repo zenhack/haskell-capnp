@@ -13,4 +13,4 @@ newtype Has m parent = Has { has :: parent -> m Bool }
 newtype Set m parent child = Set { set :: parent -> child -> m () }
 
 -- | Like 'Get', but wraps a @new_*@ function instead of a @get_*@ function.
-newtype New m parent child = New { new :: parent -> m child }
+newtype New m parent child info = New { new :: parent -> info -> m child }
