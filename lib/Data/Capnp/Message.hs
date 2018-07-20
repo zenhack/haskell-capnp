@@ -117,7 +117,7 @@ setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
 -- 'ConstMsg' is an instance of the generic 'Message' type class. its
 -- implementations of 'toByteString' and 'fromByteString' are O(1);
 -- the underlying bytes are not copied.
-newtype ConstMsg = ConstMsg (V.Vector (SV.Vector Word64))
+newtype ConstMsg = ConstMsg (V.Vector (Segment ConstMsg))
 
 instance MonadThrow m => Message m ConstMsg where
     newtype Segment ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
@@ -125,7 +125,7 @@ instance MonadThrow m => Message m ConstMsg where
     numSegs (ConstMsg vec) = pure $ V.length vec
     internalGetSeg (ConstMsg vec) i = do
         checkIndex i (V.length vec)
-        ConstSegment <$> vec `V.indexM` i
+        vec `V.indexM` i
 
     numWords (ConstSegment vec) = pure $ SV.length vec
     slice start len (ConstSegment vec) = pure $ ConstSegment (SV.slice start len vec)
@@ -192,7 +192,7 @@ readMessage read32 readSegment = do
     segSizes <- V.replicateM (fromIntegral numSegs) read32
     when (numSegs `mod` 2 == 0) $ void read32
     V.mapM_ (invoice . fromIntegral) segSizes
-    ConstMsg <$> V.mapM (fmap constSegToVec . readSegment . fromIntegral) segSizes
+    ConstMsg <$> V.mapM (readSegment . fromIntegral) segSizes
 
 -- | @writeMesage write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
@@ -201,9 +201,9 @@ writeMessage :: MonadThrow m => ConstMsg -> (Word32 -> m ()) -> (Segment ConstMs
 writeMessage (ConstMsg segs) write32 writeSegment = do
     let numSegs = V.length segs
     write32 (fromIntegral numSegs - 1)
-    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> numWords (ConstSegment seg)
+    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> numWords seg
     when (numSegs `mod` 2 == 0) $ write32 0
-    V.forM_ segs (writeSegment . ConstSegment)
+    V.forM_ segs writeSegment
 
 -- | A 'MutMsg' is a mutable capnproto message. The type parameter 's' is the
 -- state token for the instance of 'PrimMonad' in which the message may be
@@ -211,7 +211,7 @@ writeMessage (ConstMsg segs) write32 writeSegment = do
 --
 -- Due to mutabilty, the implementations of 'toByteString' and 'fromByteString'
 -- must make full copies, and so are O(n) in the length of the segment.
-newtype MutMsg s = MutMsg (MV.MVector s (SMV.MVector s Word64))
+newtype MutMsg s = MutMsg (MV.MVector s (Segment (MutMsg s)))
 
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
@@ -230,14 +230,14 @@ instance WriteCtx m s => Message m (MutMsg s) where
         toByteString seg
 
     numSegs (MutMsg vec) = pure $ MV.length vec
-    internalGetSeg (MutMsg vec) i = MutSegment <$> MV.read vec i
+    internalGetSeg (MutMsg vec) i = MV.read vec i
 
 
 -- | @'internalSetSeg' message index segment@ sets the segment at the given
 -- index in the message. Most callers should use the 'setSegment' wrapper,
 -- instead of calling this directly.
 internalSetSeg :: WriteCtx m s => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
-internalSetSeg (MutMsg msg) i (MutSegment seg) = MV.write msg i seg
+internalSetSeg (MutMsg msg) = MV.write msg
 
 -- | @'write' segment index value@ writes a value to the 64-bit word
 -- at the provided index. Consider using 'setWord' on the message,
@@ -250,10 +250,14 @@ write (MutSegment vec) i val = SMV.write vec i (toLE64 val)
 grow  :: WriteCtx m s => Segment (MutMsg s) -> Int -> m (Segment (MutMsg s))
 grow (MutSegment vec) amount = MutSegment <$> SMV.grow vec amount
 
+instance WriteCtx m s => Mutable m (Segment (MutMsg s)) (Segment ConstMsg) where
+    thaw (ConstSegment vec) = MutSegment <$> SV.thaw vec
+    freeze (MutSegment vec) = ConstSegment <$> SV.freeze vec
+
 
 instance WriteCtx m s => Mutable m (MutMsg s) ConstMsg where
     thaw (ConstMsg vec) =
-        MutMsg <$> (V.mapM SV.thaw vec >>= V.thaw)
+        MutMsg <$> (V.mapM thaw vec >>= V.thaw)
     freeze (MutMsg mvec) = do
         vec <- V.freeze mvec
-        ConstMsg <$> V.mapM SV.freeze vec
+        ConstMsg <$> V.mapM freeze vec
