@@ -147,11 +147,13 @@ fmtSetWordField struct value DataLoc{..} = mintercalate " "
 fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
     let accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
-        getName = accessorName "get_"
-        hasName = accessorName "has_"
-        setName = accessorName "set_"
-    in mconcat
-        -- getter
+    in mintercalate "\n"
+        [ fmtGetter (accessorName "get_")
+        , fmtHas    (accessorName "has_")
+        , fmtSetter (accessorName "set_")
+        ]
+  where
+    fmtGetter getName = mconcat
         [ getName, " :: U'.ReadCtx m msg => "
         , fmtName thisMod typeName, " msg -> m ", fmtType thisMod "msg" fieldType, "\n"
         , getName
@@ -164,9 +166,13 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 ]
             HereField -> " C'.fromStruct struct"
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
-        , "\n\n"
-        -- has_*
-        , hasName, " :: U'.ReadCtx m msg => ", fmtName thisMod typeName, " msg -> m Bool\n"
+        , "\n"
+        , "instance U'.ReadCtx m msg => IsLabel ", TB.fromString (show fieldName)
+        , " (DC'.Get m (", fmtName thisMod typeName, " msg) (", fmtType thisMod "msg" fieldType, ")) where\n"
+        , "    fromLabel = DC'.Get ", getName, "\n"
+        ]
+    fmtHas hasName = mconcat
+        [ hasName, " :: U'.ReadCtx m msg => ", fmtName thisMod typeName, " msg -> m Bool\n"
         , hasName, "(", fmtName thisMod typeName, " struct) = "
         , case fieldLoc of
             DataField DataLoc{dataIdx} ->
@@ -176,8 +182,12 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             HereField -> "pure True"
             VoidField -> "pure True"
         , "\n"
-        -- setter
-        , setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => "
+        , "instance U'.ReadCtx m msg => IsLabel ", TB.fromString (show fieldName)
+        , " (DC'.Has m (", fmtName thisMod typeName, " msg)) where\n"
+        , "    fromLabel = DC'.Has ", hasName, "\n"
+        ]
+    fmtSetter setName = mconcat
+        [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => "
         , fmtName thisMod typeName, " (M'.MutMsg s) -> "
         , fmtType thisMod "(M'.MutMsg s)" fieldType
         , " -> m ()\n"
@@ -204,13 +214,6 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 ]
             _ -> setName <> " _ = error " <> TB.fromString (show "TODO: generate more setters.")
         , "\n"
-        -- IsLabel instances, so we can use this with OverloadedLabels
-        , "instance U'.ReadCtx m msg => IsLabel ", TB.fromString (show fieldName)
-        , " (DC'.Get m (", fmtName thisMod typeName, " msg) (", fmtType thisMod "msg" fieldType, ")) where\n"
-        , "    fromLabel = DC'.Get ", getName, "\n"
-        , "instance U'.ReadCtx m msg => IsLabel ", TB.fromString (show fieldName)
-        , " (DC'.Has m (", fmtName thisMod typeName, " msg)) where\n"
-        , "    fromLabel = DC'.Has ", hasName, "\n"
         , "instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "
         , TB.fromString (show fieldName), " (DC'.Set m (", fmtName thisMod typeName, " (M'.MutMsg s)) ("
         , fmtType thisMod "(M'.MutMsg s)" fieldType, ")) where\n"
