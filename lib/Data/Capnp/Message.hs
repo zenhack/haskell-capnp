@@ -52,27 +52,27 @@ import qualified Data.Vector.Storable.Mutable as SMV
 -- parameterized over a monad in which operations are performed.
 class Monad m => Message m msg where
     -- | The type of segments in the message.
-    data Segment m msg
+    data Segment msg
 
     -- | 'numSegs' gets the number of segments in a message.
     numSegs :: msg -> m Int
     -- | @'internalGetSeg' message index@ gets the segment at index 'index'
     -- in 'message'. Most callers should use the 'getSegment' wrapper, instead
     -- of calling this directly.
-    internalGetSeg :: msg -> Int -> m (Segment m msg)
+    internalGetSeg :: msg -> Int -> m (Segment msg)
     -- | Get the length of the segment, in units of 64-bit words.
-    numWords :: Segment m msg -> m Int
+    numWords :: Segment msg -> m Int
     -- | @'slice' start length segment@ extracts a sub-section of the segment,
     -- starting at index @start@, of length @length@.
-    slice   :: Int -> Int -> Segment m msg -> m (Segment m msg)
+    slice   :: Int -> Int -> Segment msg -> m (Segment msg)
     -- | @'read' segment index@ reads a 64-bit word from the segement at the
     -- given index. Consider using 'getWord' on the message, instead of
     -- calling this directly.
-    read    :: Segment m msg -> Int -> m Word64
+    read    :: Segment msg -> Int -> m Word64
     -- | Convert a ByteString to a segment.
-    fromByteString :: ByteString -> m (Segment m msg)
+    fromByteString :: ByteString -> m (Segment msg)
     -- | Convert a segment to a byte string.
-    toByteString :: Segment m msg -> m ByteString
+    toByteString :: Segment msg -> m ByteString
 
 -- | The 'Mutable' type class relates mutable and immutable versions of a type.
 class PrimMonad m => Mutable m mut const where
@@ -83,7 +83,7 @@ class PrimMonad m => Mutable m mut const where
 
 -- | @'getSegment' message index@ fetches the given segment in the message.
 -- It throws a @BoundsError@ if the address is out of bounds.
-getSegment :: (MonadThrow m, Message m msg) => msg -> Int -> m (Segment m msg)
+getSegment :: (MonadThrow m, Message m msg) => msg -> Int -> m (Segment msg)
 getSegment msg i = do
     checkIndex i =<< numSegs msg
     internalGetSeg msg i
@@ -98,7 +98,7 @@ getWord msg WordAt{wordIndex=wordIndex@(WordCount i), segIndex} = do
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
 -- in the message. It throws a @BoundsError@ if the address is out of bounds.
-setSegment :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Segment m (MutMsg s) -> m ()
+setSegment :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
 setSegment msg i seg = do
     checkIndex i =<< numSegs msg
     internalSetSeg msg i seg
@@ -120,7 +120,7 @@ setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
 newtype ConstMsg = ConstMsg (V.Vector (SV.Vector Word64))
 
 instance MonadThrow m => Message m ConstMsg where
-    newtype Segment m ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
+    newtype Segment ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
 
     numSegs (ConstMsg vec) = pure $ V.length vec
     internalGetSeg (ConstMsg vec) i = do
@@ -154,7 +154,7 @@ encode msg = execWriterT $ writeMessage
 -- it were raw bytes.
 --
 -- this is mostly here as a helper for 'decode'.
-decodeSeg :: MonadThrow m => Segment m ConstMsg -> m ConstMsg
+decodeSeg :: MonadThrow m => Segment ConstMsg -> m ConstMsg
 decodeSeg seg = do
     len <- numWords seg
     flip evalStateT (Nothing, 0) $ evalLimitT len $
@@ -197,7 +197,7 @@ readMessage read32 readSegment = do
 -- | @writeMesage write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
-writeMessage :: MonadThrow m => ConstMsg -> (Word32 -> m ()) -> (Segment m ConstMsg -> m ()) -> m ()
+writeMessage :: MonadThrow m => ConstMsg -> (Word32 -> m ()) -> (Segment ConstMsg -> m ()) -> m ()
 writeMessage (ConstMsg segs) write32 writeSegment = do
     let numSegs = V.length segs
     write32 (fromIntegral numSegs - 1)
@@ -217,7 +217,7 @@ newtype MutMsg s = MutMsg (MV.MVector s (SMV.MVector s Word64))
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 
 instance WriteCtx m s => Message m (MutMsg s) where
-    newtype Segment m (MutMsg s) = MutSegment { mutSegToVec :: SMV.MVector s Word64 }
+    newtype Segment (MutMsg s) = MutSegment { mutSegToVec :: SMV.MVector s Word64 }
 
     numWords (MutSegment vec) = pure $ SMV.length vec
     slice start len (MutSegment vec) = pure $ MutSegment (SMV.slice start len vec)
@@ -236,18 +236,18 @@ instance WriteCtx m s => Message m (MutMsg s) where
 -- | @'internalSetSeg' message index segment@ sets the segment at the given
 -- index in the message. Most callers should use the 'setSegment' wrapper,
 -- instead of calling this directly.
-internalSetSeg :: WriteCtx m s => MutMsg s -> Int -> Segment m (MutMsg s) -> m ()
+internalSetSeg :: WriteCtx m s => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
 internalSetSeg (MutMsg msg) i (MutSegment seg) = MV.write msg i seg
 
 -- | @'write' segment index value@ writes a value to the 64-bit word
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
-write :: WriteCtx m s => Segment m (MutMsg s) -> Int -> Word64 -> m ()
+write :: WriteCtx m s => Segment (MutMsg s) -> Int -> Word64 -> m ()
 write (MutSegment vec) i val = SMV.write vec i (toLE64 val)
 
 -- | @'grow' segment amount@ grows the segment by the specified number
 -- of 64-bit words. The original segment should not be used afterwards.
-grow  :: WriteCtx m s => Segment m (MutMsg s) -> Int -> m (Segment m (MutMsg s))
+grow  :: WriteCtx m s => Segment (MutMsg s) -> Int -> m (Segment (MutMsg s))
 grow (MutSegment vec) amount = MutSegment <$> SMV.grow vec amount
 
 
