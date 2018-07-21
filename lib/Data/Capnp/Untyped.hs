@@ -30,6 +30,9 @@ module Data.Capnp.Untyped
     , rawBytes
     , ReadCtx
     , HasMessage(..), MessageDefault(..)
+    , allocStruct
+    -- , allocCompositeList
+    -- , allocNormalList
     )
   where
 
@@ -550,3 +553,10 @@ rootPtr msg = do
         Just (PtrStruct struct) -> pure struct
         _ -> throwM $ E.SchemaViolationError
                 "Unexpected root type; expected struct."
+
+-- | Allocate a struct in the message.
+allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))
+allocStruct msg dataSz ptrSz = do
+    let totalSz = fromIntegral dataSz + fromIntegral ptrSz
+    addr <- M.alloc msg totalSz
+    pure $ Struct msg addr dataSz ptrSz

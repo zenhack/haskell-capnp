@@ -23,6 +23,7 @@ module Data.Capnp.Message
     , decode
     , readMessage
     , writeMessage
+    , alloc
     )
   where
 
@@ -271,6 +272,18 @@ grow MutSegment{mutSegVec} amount = do
         { mutSegVec = newVec
         , mutSegLen = SMV.length newVec
         }
+
+-- | @'alloc' size@ allocates 'size' words within a message. it returns the
+-- starting address of the allocated memory.
+alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
+alloc msg (WordCount size) = do
+    -- TODO: check for and deal with segments that are "too big."
+    segIndex <- pred <$> numSegs msg
+    oldSeg@MutSegment{mutSegLen} <- getSegment msg segIndex
+    let ret = WordAt { segIndex, wordIndex = WordCount mutSegLen }
+    newSeg <- grow oldSeg size
+    setSegment msg segIndex newSeg
+    pure ret
 
 instance WriteCtx m s => Mutable m (Segment (MutMsg s)) (Segment ConstMsg) where
     thaw (ConstSegment vec) = do
