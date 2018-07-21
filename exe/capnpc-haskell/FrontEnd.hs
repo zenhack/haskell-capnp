@@ -203,6 +203,29 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                         , variantTag = Nothing
                         }
                     ]
+                bodyFields variantName =
+                    ( typeName
+                    , IR.DeclDef IR.DataDef
+                          { dataVariants =
+                              [ IR.Variant
+                                  { variantName = variantName
+                                  , variantParams = formatStructBody thisModule nodeMap variantName allFields
+                                  , variantTag = Nothing
+                                  }
+                              ]
+                          , dataTagLoc = Nothing
+                          , dataCerialType = IR.CTyStruct
+                          }
+                    )
+                bodyUnion = IR.DeclDef IR.DataDef
+                    { dataVariants = unionVariants
+                    , dataTagLoc = Just $ dataLoc
+                        discriminantOffset
+                        Type'uint16
+                        -- The default value for a union tag is always zero:
+                        (Value'uint16 0)
+                    , dataCerialType = IR.CTyStruct
+                    }
             in case (unionFields, commonFields) of
                 ([], []) ->
                     -- I(zenhack) don't fully understand this case. It seems like
@@ -215,63 +238,17 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ ( typeName
-                      , IR.DeclDef IR.DataDef
-                            { dataVariants =
-                                [ IR.Variant
-                                    { variantName = typeName
-                                    , variantParams = formatStructBody thisModule nodeMap typeName allFields
-                                    , variantTag = Nothing
-                                    }
-                                ]
-                            , dataTagLoc = Nothing
-                            , dataCerialType = IR.CTyStruct
-                            }
-                      )
-                    ]
+                    [ bodyFields  typeName ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [ ( typeName
-                      , IR.DeclDef IR.DataDef
-                            { dataVariants = unionVariants
-                            , dataTagLoc = Just $ dataLoc
-                                discriminantOffset
-                                Type'uint16
-                                -- The default value for a union tag is always zero:
-                                (Value'uint16 0)
-                            , dataCerialType = IR.CTyStruct
-                            }
-                      )
-                    ]
+                    [ ( typeName, bodyUnion) ]
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
                     let unionName = IR.subName name ""
-                    in  [ ( typeName
-                          , IR.DeclDef IR.DataDef
-                                { dataVariants =
-                                    [ IR.Variant
-                                        { variantName = unionName
-                                        , variantParams = formatStructBody thisModule nodeMap unionName allFields
-                                        , variantTag = Nothing
-                                        }
-                                    ]
-                                , dataTagLoc = Nothing
-                                , dataCerialType = IR.CTyStruct
-                                }
-                          )
-                        , ( unionName
-                          , IR.DeclDef IR.DataDef
-                                { dataVariants = unionVariants
-                                , dataTagLoc = Just $ dataLoc
-                                    discriminantOffset
-                                    Type'uint16
-                                    -- Default value for a union tag is always zero:
-                                    (Value'uint16 0)
-                                , dataCerialType = IR.CTyStruct
-                                }
-                          )
+                    in  [ bodyFields unionName
+                        , (unionName, bodyUnion)
                         ]
         Node'enum{..} ->
             [ ( name
