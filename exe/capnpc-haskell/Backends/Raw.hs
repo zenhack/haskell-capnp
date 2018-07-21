@@ -12,10 +12,14 @@ import Util
 
 import Data.List   (sortOn)
 import Data.Monoid ((<>))
+import Data.Ord    (Down(..))
 import Text.Printf (printf)
 
 import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as TB
+
+-- | Sort varaints by their tag, in decending order (with no tag at all being last).
+sortVariants = sortOn (Down . variantTag)
 
 fmtModule :: Module -> [(FilePath, TB.Builder)]
 fmtModule Module{modName=Namespace modNameParts,..} =
@@ -250,7 +254,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tag
         , "\n    fromStruct struct = do"
         , "\n        tag <- ", fmtGetWordField "struct" tagLoc
         , "\n        case tag of"
-        , mconcat $ map fmtVariantCase $ reverse $ sortOn variantTag dataVariants
+        , mconcat $ map fmtVariantCase $ sortVariants dataVariants
         , "\n"
         , fmtStructListElem nameText
         , "\ninstance C'.IsPtr msg (", nameText, " msg) where"
@@ -313,10 +317,10 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , "\n      where"
         , "\n        go "
         , mintercalate "\n        go " $
-            map fmtEnumFromWordCase $ reverse $ sortOn variantTag dataVariants
+            map fmtEnumFromWordCase $ sortVariants dataVariants
         , "\n    toWord "
         , mintercalate "\n    toWord " $
-            map fmtEnumToWordCase   $ reverse $ sortOn variantTag dataVariants
+            map fmtEnumToWordCase   $ sortVariants dataVariants
         , "\n"
         , "instance B'.ListElem msg ", typeName, " where"
         , "\n    newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)"
