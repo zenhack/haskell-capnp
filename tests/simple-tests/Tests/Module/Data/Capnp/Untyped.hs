@@ -184,6 +184,26 @@ setIndexTests = assertionsToTest "Test setIndex" $ map testCase
             src <- index 0 list
             setIndex src 1 list
         }
+    , ModTest
+        { testIn = "()"
+        , testType = "StackingRoot"
+        , testOut = "( aWithDefault = (num = 6400),\n  a = (num = 65, b = (num = 90000)) )\n"
+
+        , testMod = \struct -> do
+            when (length (ptrSection struct) /= 2) $
+                error "struct's pointer section is unexpedly small"
+
+            let msg = message struct
+            a <- allocStruct msg 1 1
+            aWithDefault <- allocStruct msg 1 1
+            b <- allocStruct msg 1 0
+            setPtr (Just (PtrStruct b)) 0 a
+            setPtr (Just (PtrStruct aWithDefault)) 0 struct
+            setPtr (Just (PtrStruct a)) 1 struct
+            setData 65 0 a
+            setData 6400 0 aWithDefault
+            setData 90000 0 b
+        }
     ]
   where
     testCase ModTest{..} = do
