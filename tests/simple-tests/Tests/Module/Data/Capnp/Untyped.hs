@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE RecordWildCards   #-}
@@ -9,7 +10,8 @@ import Data.Capnp.Untyped
 import Tests.Util
 
 import Control.Monad             (forM_, when)
-import Data.Capnp.TraversalLimit (evalLimitT, execLimitT)
+import Control.Monad.Primitive   (RealWorld)
+import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 import Data.ReinterpretCast      (doubleToWord, wordToDouble)
 import Test.Framework            (Test, testGroup)
 import Test.HUnit                (assertEqual)
@@ -79,9 +81,9 @@ readTests = assertionsToTest "read tests"
         assertEqual "endQuota == 110" 110 endQuota
     ]
 
-data ModTest m s = ModTest
+data ModTest s = ModTest
     { testIn   :: String
-    , testMod  :: Struct (M.MutMsg s) -> m ()
+    , testMod  :: Struct (M.MutMsg RealWorld) -> LimitT IO ()
     , testOut  :: String
     , testType :: String
     }
@@ -215,8 +217,32 @@ setIndexTests = assertionsToTest "Test setIndex" $ map testCase
             forM_ [0..3] $ \i ->
                 index i mylist >>= setData (70 + fromIntegral i) 1
         }
+    , allocNormalListTest "u64vec" 22 allocList64
+    , allocNormalListTest "u32vec" 22 allocList32
+    , allocNormalListTest "u16vec" 23 allocList16
+    , allocNormalListTest "u8vec"  24 allocList8
+    , ModTest
+        { testIn = "()"
+        , testType = "Z"
+        , testOut = "( boolvec = [true, false, true] )\n"
+        , testMod = \struct -> do
+            setData 39 0 struct -- Set the union tag.
+            boolvec <- allocList1 (message struct) 3
+            forM_ [0..2] $ \i ->
+                setIndex (even i) i boolvec
+        }
     ]
   where
+    allocNormalListTest tagname tagvalue allocList =
+        ModTest
+            { testIn = "()"
+            , testType = "Z"
+            , testOut = "( " ++ tagname ++ " = [1, 2, 3, 4, 5] )\n"
+            , testMod = \struct -> do
+                setData tagvalue 0 struct
+                u32vec <- allocList (message struct) 5
+                forM_ [0..4] $ \i -> setIndex (fromIntegral i) i u32vec
+            }
     testCase ModTest{..} = do
         msg <- M.thaw =<< encodeValue schemaText testType testIn
         evalLimitT 128 $ rootPtr msg >>= testMod

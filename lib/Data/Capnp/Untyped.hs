@@ -32,7 +32,13 @@ module Data.Capnp.Untyped
     , HasMessage(..), MessageDefault(..)
     , allocStruct
     , allocCompositeList
-    -- , allocNormalList
+    , allocList0
+    , allocList1
+    , allocList8
+    , allocList16
+    , allocList32
+    , allocList64
+    , allocListPtr
     )
   where
 
@@ -582,3 +588,37 @@ allocCompositeList msg dataSz ptrSz len = do
             dataSz
             ptrSz
     pure $ ListOfStruct firstStruct len
+
+allocList0   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) ())
+allocList1   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Bool)
+allocList8   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word8)
+allocList16  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word16)
+allocList32  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word32)
+allocList64  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word64)
+allocListPtr :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) (Maybe (Ptr (M.MutMsg s))))
+
+allocList0   msg len = pure $ ListOfVoid msg len
+allocList1   msg len = ListOfBool   <$> allocNormalList 64 msg len
+allocList8   msg len = ListOfWord8  <$> allocNormalList 8 msg len
+allocList16  msg len = ListOfWord16 <$> allocNormalList 4 msg len
+allocList32  msg len = ListOfWord32 <$> allocNormalList 2 msg len
+allocList64  msg len = ListOfWord64 <$> allocNormalList 1 msg len
+allocListPtr msg len = ListOfPtr    <$> allocNormalList 1 msg len
+
+-- | Allocate a NormalList
+allocNormalList
+    :: M.WriteCtx m s
+    => Int        -- ^ The number of elements per 64-bit word
+    -> M.MutMsg s -- ^ The message to allocate in
+    -> Int        -- ^ The number of elements in the list.
+    -> m (NormalList (M.MutMsg s))
+allocNormalList eltsPerWord msg len = do
+    -- round 'len' up to the nearest word boundary.
+    let mask = eltsPerWord - 1
+        wordCount = WordCount $ (len + mask) .&. complement mask
+    addr <- M.alloc msg wordCount
+    pure NormalList
+        { nMsg = msg
+        , nAddr = addr
+        , nLen = len
+        }
