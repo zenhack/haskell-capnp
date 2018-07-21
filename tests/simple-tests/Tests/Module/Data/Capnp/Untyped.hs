@@ -22,7 +22,7 @@ import qualified Data.Capnp.Message as M
 
 untypedTests = testGroup "Untyped Tests"
     [ readTests
-    , setIndexTests
+    , modifyTests
     ]
 
 readTests :: Test
@@ -88,8 +88,9 @@ data ModTest s = ModTest
     , testType :: String
     }
 
-setIndexTests :: Test
-setIndexTests = assertionsToTest "Test setIndex" $ map testCase
+modifyTests :: Test
+modifyTests = assertionsToTest "Test modification" $ map testCase
+    -- tests for setIndex
     [ ModTest
         { testIn = "(year = 2018, month = 6, day = 20)\n"
         , testType = "Zdate"
@@ -186,6 +187,7 @@ setIndexTests = assertionsToTest "Test setIndex" $ map testCase
             src <- index 0 list
             setIndex src 1 list
         }
+    -- tests for allocation functions
     , ModTest
         { testIn = "()"
         , testType = "StackingRoot"
@@ -233,6 +235,13 @@ setIndexTests = assertionsToTest "Test setIndex" $ map testCase
         }
     ]
   where
+    -- generate a ModTest for a (normal) list allocation function.
+    --
+    -- parameters:
+    --
+    -- * tagname - the name of the union variant
+    -- * tagvalue - the numeric value of the tag for this variant
+    -- * allocList - the allocation function
     allocNormalListTest tagname tagvalue allocList =
         ModTest
             { testIn = "()"
