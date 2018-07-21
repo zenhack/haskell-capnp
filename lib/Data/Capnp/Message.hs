@@ -217,17 +217,32 @@ newtype MutMsg s = MutMsg (MV.MVector s (Segment (MutMsg s)))
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 
 instance WriteCtx m s => Message m (MutMsg s) where
-    newtype Segment (MutMsg s) = MutSegment { mutSegToVec :: SMV.MVector s Word64 }
+    data Segment (MutMsg s) = MutSegment
+        { mutSegVec :: !(SMV.MVector s Word64)
+        -- ^ The underlying vector of words storing segment's data.
+        , mutSegLen :: !Int
+        -- ^ The "true" length fo the segment. This may be shorter
+        -- than @'SMV.length' mutSegVec@; the remainder is considered
+        -- unallocated space, and is used for amortized O(1) appending.
+        }
 
-    numWords (MutSegment vec) = pure $ SMV.length vec
-    slice start len (MutSegment vec) = pure $ MutSegment (SMV.slice start len vec)
-    read (MutSegment vec) i = fromLE64 <$> SMV.read vec i
+    numWords MutSegment{mutSegLen} = pure mutSegLen
+    slice start len MutSegment{mutSegVec,mutSegLen} =
+        pure MutSegment
+            { mutSegVec = SMV.slice start len mutSegVec
+            , mutSegLen = len
+            }
+    read MutSegment{mutSegVec} i = fromLE64 <$> SMV.read mutSegVec i
     fromByteString bytes = do
         vec <- constSegToVec <$> fromByteString bytes
-        MutSegment <$> SV.thaw vec
-    toByteString (MutSegment vec) = do
-        seg <- ConstSegment <$> SV.freeze vec
-        toByteString seg
+        mvec <- SV.thaw vec
+        pure MutSegment
+            { mutSegVec = mvec
+            , mutSegLen = SV.length vec
+            }
+    toByteString mseg = do
+        seg <- freeze mseg
+        toByteString (seg :: Segment ConstMsg)
 
     numSegs (MutMsg vec) = pure $ MV.length vec
     internalGetSeg (MutMsg vec) i = MV.read vec i
@@ -243,16 +258,32 @@ internalSetSeg (MutMsg msg) = MV.write msg
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
 write :: WriteCtx m s => Segment (MutMsg s) -> Int -> Word64 -> m ()
-write (MutSegment vec) i val = SMV.write vec i (toLE64 val)
+write MutSegment{mutSegVec} i val = do
+    SMV.write mutSegVec i (toLE64 val)
 
 -- | @'grow' segment amount@ grows the segment by the specified number
 -- of 64-bit words. The original segment should not be used afterwards.
 grow  :: WriteCtx m s => Segment (MutMsg s) -> Int -> m (Segment (MutMsg s))
-grow (MutSegment vec) amount = MutSegment <$> SMV.grow vec amount
+grow MutSegment{mutSegVec} amount = do
+    -- TODO: use unallocated space if available, instead of actually resizing.
+    newVec <- SMV.grow mutSegVec amount
+    pure MutSegment
+        { mutSegVec = newVec
+        , mutSegLen = SMV.length newVec
+        }
 
 instance WriteCtx m s => Mutable m (Segment (MutMsg s)) (Segment ConstMsg) where
-    thaw (ConstSegment vec) = MutSegment <$> SV.thaw vec
-    freeze (MutSegment vec) = ConstSegment <$> SV.freeze vec
+    thaw (ConstSegment vec) = do
+        mvec <- SV.thaw vec
+        pure MutSegment
+            { mutSegVec = mvec
+            , mutSegLen = SV.length vec
+            }
+    freeze seg@MutSegment{mutSegLen} = do
+        -- Slice before freezing, so we don't waste time copying
+        -- the unallocated portion:
+        MutSegment{mutSegVec} <- slice 0 mutSegLen seg
+        ConstSegment <$> SV.freeze mutSegVec
 
 
 instance WriteCtx m s => Mutable m (MutMsg s) ConstMsg where
