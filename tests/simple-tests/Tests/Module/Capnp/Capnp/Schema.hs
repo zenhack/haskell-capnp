@@ -57,7 +57,7 @@ schemaTests = testGroup "schema decode tests"
                 , |] ++ unionText ++ [here|
                 )
             |]
-          , Node'
+          , Node
                 7
                 "foo:MyType"
                 4
@@ -96,7 +96,7 @@ schemaTests = testGroup "schema decode tests"
                     , discriminantCount = 4
                     , discriminantOffset = 2
                     , fields =
-                        [ Field'
+                        [ Field
                             "fieldName"
                             3
                             [ Annotation
@@ -202,7 +202,7 @@ schemaTests = testGroup "schema decode tests"
                 , ordinal = (implicit = void)
                 )
             |]
-          , Field'
+          , Field
                 "fieldName"
                 3
                 [Annotation 2 (Value'bool True) (Brand [])]
@@ -224,7 +224,7 @@ schemaTests = testGroup "schema decode tests"
                 , ordinal = (explicit = 7)
                 )
             |]
-          , Field'
+          , Field
                 "fieldName"
                 3
                 [Annotation 2 (Value'bool True) (Brand [])]
@@ -311,8 +311,8 @@ schemaTests = testGroup "schema decode tests"
                 )
             |]
           , Brand
-                [ Brand'Scope' 32 Brand'Scope'inherit
-                , Brand'Scope' 23 $ Brand'Scope'bind
+                [ Brand'Scope 32 Brand'Scope'inherit
+                , Brand'Scope 23 $ Brand'Scope'bind
                     [ Brand'Binding'unbound
                     , Brand'Binding'type_ Type'bool
                     ]

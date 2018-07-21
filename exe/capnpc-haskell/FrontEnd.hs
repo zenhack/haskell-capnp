@@ -11,6 +11,7 @@ import Data.Word
 
 import Data.Char            (toUpper)
 import Data.Function        ((&))
+import Data.List            (partition)
 import Data.Monoid          ((<>))
 import Data.ReinterpretCast (doubleToWord, floatToWord)
 import Util                 (Id, splitOn)
@@ -51,7 +52,7 @@ identifierFromMetaData _ meta =
 -- Helper for makeNodeMap; recursively collect metadata for a node and
 -- all of its descendants in the tree.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
-collectMetaData nodeMap meta@NodeMetaData{node=node@Node'{..}, ..} = concat
+collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
     [ [(id, meta)]
     , concatMap collectNested $ V.toList nestedNodes
     -- Child nodes can be in two places: most are in nestedNodes, but
@@ -65,7 +66,7 @@ collectMetaData nodeMap meta@NodeMetaData{node=node@Node'{..}, ..} = concat
     ]
   where
     -- Collect metadata for nodes under a Field.
-    collectField Field'{..} = case union' of
+    collectField Field{..} = case union' of
         Field'group{..} -> collectMetaData nodeMap
             meta
                 { node = nodeMap M.! typeId
@@ -106,7 +107,7 @@ makeLegalName txt
 -- | Build a NodeMap for all of the nodes in the CodeGeneratorRequest.
 makeNodeMap :: CodeGeneratorRequest -> NodeMap
 makeNodeMap CodeGeneratorRequest{..} =
-    V.map (\node@Node'{..} -> collectMetaData baseMap NodeMetaData
+    V.map (\node@Node{..} -> collectMetaData baseMap NodeMetaData
         { moduleId = id
         , namespace = []
         , node = node
@@ -116,10 +117,10 @@ makeNodeMap CodeGeneratorRequest{..} =
     & concat
     & M.fromList
   where
-    rootNodes = V.filter (\Node'{..} -> scopeId == 0) nodes
+    rootNodes = V.filter (\Node{..} -> scopeId == 0) nodes
     baseMap =
         V.toList nodes
-        & map (\node@Node'{..} -> (id, node))
+        & map (\node@Node{..} -> (id, node))
         & M.fromList
 
 generateModule :: NodeMap -> CodeGeneratorRequest'RequestedFile -> IR.Module
@@ -155,7 +156,7 @@ generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
 -- has no anonymous union. In that case we just inline the fields, like:
 --
 -- @@@
--- data MyUnion
+-- data MyUnion =
 --     MyUnion'variant1
 --        { foo :: Bar
 --        , baz :: Quux
@@ -164,12 +165,12 @@ generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
 --
 -- ...and thus don't need an intervening type definition.
 neededByParent :: NodeMap -> Node -> Bool
-neededByParent nodeMap Node'{id,scopeId,union'=Node'struct{isGroup,discriminantCount}} | isGroup =
+neededByParent nodeMap Node{id,scopeId,union'=Node'struct{isGroup,discriminantCount}} | isGroup =
     case nodeMap M.! scopeId of
-        NodeMetaData{node=Node'{union'=Node'struct{fields}}} ->
+        NodeMetaData{node=Node{union'=Node'struct{fields}}} ->
             let me = V.filter
                         (\case
-                            Field'{union'=Field'group{typeId}} -> typeId == id
+                            Field{union'=Field'group{typeId}} -> typeId == id
                             _ -> False)
                         fields
             in if V.length me /= 1
@@ -180,7 +181,7 @@ neededByParent _ _ = True
 
 generateDecls :: Id -> NodeMap -> NodeMetaData -> [(IR.Name, IR.Decl)]
 generateDecls thisModule nodeMap meta@NodeMetaData{..} =
-    let Node'{..} = node
+    let Node{..} = node
         name = identifierFromMetaData moduleId meta
     in case union' of
         Node'struct{..} | neededByParent nodeMap node ->
@@ -203,13 +204,13 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                         , variantTag = Nothing
                         }
                     ]
-                bodyFields variantName =
+                bodyFields =
                     ( typeName
                     , IR.DeclDef IR.DataDef
                           { dataVariants =
                               [ IR.Variant
-                                  { variantName = variantName
-                                  , variantParams = formatStructBody thisModule nodeMap variantName allFields
+                                  { variantName = typeName
+                                  , variantParams = formatStructBody thisModule nodeMap typeName allFields
                                   , variantTag = Nothing
                                   }
                               ]
@@ -226,6 +227,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                         (Value'uint16 0)
                     , dataCerialType = IR.CTyStruct
                     }
+                unionName = IR.subName name ""
             in case (unionFields, commonFields) of
                 ([], []) ->
                     -- I(zenhack) don't fully understand this case. It seems like
@@ -238,18 +240,17 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ bodyFields  typeName ]
+                    [ bodyFields ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [ ( typeName, bodyUnion) ]
+                    [ (typeName, bodyUnion) ]
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
-                    let unionName = IR.subName name ""
-                    in  [ bodyFields unionName
-                        , (unionName, bodyUnion)
-                        ]
+                    [ bodyFields
+                    , (unionName, bodyUnion)
+                    ]
         Node'enum{..} ->
             [ ( name
               , IR.DeclDef IR.DataDef
@@ -322,17 +323,36 @@ generateEnum thisModule nodeMap parentName Enumerant{..} =
 
 -- | Return whether the field is part of a union within its struct.
 isUnionField :: Field -> Bool
-isUnionField Field'{..} = discriminantValue /= field'noDiscriminant
+isUnionField Field{..} = discriminantValue /= field'noDiscriminant
 
 formatStructBody :: Id -> NodeMap -> IR.Name -> [Field] -> IR.VariantParams
 formatStructBody thisModule nodeMap parentName fields = IR.Record $
-    map (generateField thisModule nodeMap) (filter (not . isUnionField) fields)
-    <> case filter isUnionField fields of
+    let (unionFields, commonFields) = partition isUnionField fields in
+    map (generateField thisModule nodeMap) commonFields
+    <> case unionFields of
         [] -> [] -- no union
         _  ->
             [ IR.Field
                 { fieldName = "union'"
-                , fieldType = IR.StructType parentName []
+                , fieldType =
+                    -- This could use a bit of refactoring. Right now we call
+                    -- formatSturctBody in two cases:
+                    let fieldTypeName = case commonFields of
+                            -- 1. A top-level struct, which also has non anonymous-union
+                            --    fields. In this case, the anonymous union for a struct
+                            --    named Foo will have a type named Foo'; we add an empty
+                            --    segment to the union' field's type name.
+
+                            _:_ -> IR.subName parentName ""
+
+                            -- 2. An argument of a named union variant, which itself is
+                            --    a union. In this case, parentName is the name of the outer
+                            --    union's data constructor, and the *inner* union's type
+                            --    constructor; we use parentName unchanged.
+
+                            []  -> parentName
+
+                    in IR.StructType fieldTypeName []
                 , fieldLoc = IR.HereField
                 }
             ]
@@ -340,7 +360,7 @@ formatStructBody thisModule nodeMap parentName fields = IR.Record $
 -- | Generate a variant of a type corresponding to an anonymous union in a
 -- struct.
 generateVariant :: Id -> NodeMap -> IR.Name -> Field -> IR.Variant
-generateVariant thisModule nodeMap parentName Field'{..} = case union' of
+generateVariant thisModule nodeMap parentName Field{..} = case union' of
     Field'slot{..} -> IR.Variant
         { variantName
         , variantParams = case type_ of
@@ -349,7 +369,7 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
         , variantTag = Just discriminantValue
         }
     Field'group{..} ->
-        let NodeMetaData{node=node@Node'{..},..} = nodeMap M.! typeId
+        let NodeMetaData{node=node@Node{..},..} = nodeMap M.! typeId
         in case union' of
             Node'struct{..} -> IR.Variant
                 { variantName = variantName
@@ -373,7 +393,7 @@ generateVariant thisModule nodeMap parentName Field'{..} = case union' of
 
 
 generateField :: Id -> NodeMap -> Field -> IR.Field
-generateField thisModule nodeMap Field'{..} =
+generateField thisModule nodeMap Field{..} =
     IR.Field
         { fieldName = makeLegalName name
         , fieldType = case union' of

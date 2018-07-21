@@ -356,108 +356,108 @@ instance B'.MutListElem s (Field (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
     fromPtr msg ptr = List_Field <$> C'.fromPtr msg ptr
     toPtr (List_Field l) = C'.toPtr l
-get_Field''name :: U'.ReadCtx m msg => Field msg -> m (B'.Text msg)
-get_Field''name (Field struct) =
+get_Field'name :: U'.ReadCtx m msg => Field msg -> m (B'.Text msg)
+get_Field'name (Field struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 instance U'.ReadCtx m msg => IsLabel "name" (DC'.Get m (Field msg) ((B'.Text msg))) where
-    fromLabel = DC'.Get get_Field''name
+    fromLabel = DC'.Get get_Field'name
 
-has_Field''name :: U'.ReadCtx m msg => Field msg -> m Bool
-has_Field''name(Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+has_Field'name :: U'.ReadCtx m msg => Field msg -> m Bool
+has_Field'name(Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has m (Field msg)) where
-    fromLabel = DC'.Has has_Field''name
+    fromLabel = DC'.Has has_Field'name
 
-set_Field''name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Field''name (Field struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Field'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_Field'name (Field struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set m (Field (M'.MutMsg s)) ((B'.Text (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Field''name
+    fromLabel = DC'.Set set_Field'name
 
 
-get_Field''codeOrder :: U'.ReadCtx m msg => Field msg -> m Word16
-get_Field''codeOrder (Field struct) = C'.getWordField struct 0 0 0
+get_Field'codeOrder :: U'.ReadCtx m msg => Field msg -> m Word16
+get_Field'codeOrder (Field struct) = C'.getWordField struct 0 0 0
 instance U'.ReadCtx m msg => IsLabel "codeOrder" (DC'.Get m (Field msg) (Word16)) where
-    fromLabel = DC'.Get get_Field''codeOrder
+    fromLabel = DC'.Get get_Field'codeOrder
 
-has_Field''codeOrder :: U'.ReadCtx m msg => Field msg -> m Bool
-has_Field''codeOrder(Field struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Field'codeOrder :: U'.ReadCtx m msg => Field msg -> m Bool
+has_Field'codeOrder(Field struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "codeOrder" (DC'.Has m (Field msg)) where
-    fromLabel = DC'.Has has_Field''codeOrder
+    fromLabel = DC'.Has has_Field'codeOrder
 
-set_Field''codeOrder :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> Word16 -> m ()
-set_Field''codeOrder (Field struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
+set_Field'codeOrder :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> Word16 -> m ()
+set_Field'codeOrder (Field struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "codeOrder" (DC'.Set m (Field (M'.MutMsg s)) (Word16)) where
-    fromLabel = DC'.Set set_Field''codeOrder
+    fromLabel = DC'.Set set_Field'codeOrder
 
 
-get_Field''annotations :: U'.ReadCtx m msg => Field msg -> m (B'.List msg (Annotation msg))
-get_Field''annotations (Field struct) =
+get_Field'annotations :: U'.ReadCtx m msg => Field msg -> m (B'.List msg (Annotation msg))
+get_Field'annotations (Field struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
 instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Get m (Field msg) ((B'.List msg (Annotation msg)))) where
-    fromLabel = DC'.Get get_Field''annotations
+    fromLabel = DC'.Get get_Field'annotations
 
-has_Field''annotations :: U'.ReadCtx m msg => Field msg -> m Bool
-has_Field''annotations(Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+has_Field'annotations :: U'.ReadCtx m msg => Field msg -> m Bool
+has_Field'annotations(Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Has m (Field msg)) where
-    fromLabel = DC'.Has has_Field''annotations
+    fromLabel = DC'.Has has_Field'annotations
 
-set_Field''annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
-set_Field''annotations (Field struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Field'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
+set_Field'annotations (Field struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "annotations" (DC'.Set m (Field (M'.MutMsg s)) ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))) where
-    fromLabel = DC'.Set set_Field''annotations
+    fromLabel = DC'.Set set_Field'annotations
 
 
-get_Field''discriminantValue :: U'.ReadCtx m msg => Field msg -> m Word16
-get_Field''discriminantValue (Field struct) = C'.getWordField struct 0 16 65535
+get_Field'discriminantValue :: U'.ReadCtx m msg => Field msg -> m Word16
+get_Field'discriminantValue (Field struct) = C'.getWordField struct 0 16 65535
 instance U'.ReadCtx m msg => IsLabel "discriminantValue" (DC'.Get m (Field msg) (Word16)) where
-    fromLabel = DC'.Get get_Field''discriminantValue
+    fromLabel = DC'.Get get_Field'discriminantValue
 
-has_Field''discriminantValue :: U'.ReadCtx m msg => Field msg -> m Bool
-has_Field''discriminantValue(Field struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Field'discriminantValue :: U'.ReadCtx m msg => Field msg -> m Bool
+has_Field'discriminantValue(Field struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "discriminantValue" (DC'.Has m (Field msg)) where
-    fromLabel = DC'.Has has_Field''discriminantValue
+    fromLabel = DC'.Has has_Field'discriminantValue
 
-set_Field''discriminantValue :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> Word16 -> m ()
-set_Field''discriminantValue (Field struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 65535
+set_Field'discriminantValue :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> Word16 -> m ()
+set_Field'discriminantValue (Field struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 65535
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "discriminantValue" (DC'.Set m (Field (M'.MutMsg s)) (Word16)) where
-    fromLabel = DC'.Set set_Field''discriminantValue
+    fromLabel = DC'.Set set_Field'discriminantValue
 
 
-get_Field''ordinal :: U'.ReadCtx m msg => Field msg -> m (Field'ordinal msg)
-get_Field''ordinal (Field struct) = C'.fromStruct struct
+get_Field'ordinal :: U'.ReadCtx m msg => Field msg -> m (Field'ordinal msg)
+get_Field'ordinal (Field struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "ordinal" (DC'.Get m (Field msg) ((Field'ordinal msg))) where
-    fromLabel = DC'.Get get_Field''ordinal
+    fromLabel = DC'.Get get_Field'ordinal
 
-has_Field''ordinal :: U'.ReadCtx m msg => Field msg -> m Bool
-has_Field''ordinal(Field struct) = pure True
+has_Field'ordinal :: U'.ReadCtx m msg => Field msg -> m Bool
+has_Field'ordinal(Field struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "ordinal" (DC'.Has m (Field msg)) where
-    fromLabel = DC'.Has has_Field''ordinal
+    fromLabel = DC'.Has has_Field'ordinal
 
-set_Field''ordinal :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field'ordinal (M'.MutMsg s)) -> m ()
-set_Field''ordinal _ = error "TODO: generate more setters."
+set_Field'ordinal :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field'ordinal (M'.MutMsg s)) -> m ()
+set_Field'ordinal _ = error "TODO: generate more setters."
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "ordinal" (DC'.Set m (Field (M'.MutMsg s)) ((Field'ordinal (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Field''ordinal
+    fromLabel = DC'.Set set_Field'ordinal
 
 
-get_Field''union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
-get_Field''union' (Field struct) = C'.fromStruct struct
+get_Field'union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
+get_Field'union' (Field struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get m (Field msg) ((Field' msg))) where
-    fromLabel = DC'.Get get_Field''union'
+    fromLabel = DC'.Get get_Field'union'
 
-has_Field''union' :: U'.ReadCtx m msg => Field msg -> m Bool
-has_Field''union'(Field struct) = pure True
+has_Field'union' :: U'.ReadCtx m msg => Field msg -> m Bool
+has_Field'union'(Field struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has m (Field msg)) where
-    fromLabel = DC'.Has has_Field''union'
+    fromLabel = DC'.Has has_Field'union'
 
-set_Field''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field' (M'.MutMsg s)) -> m ()
-set_Field''union' _ = error "TODO: generate more setters."
+set_Field'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field' (M'.MutMsg s)) -> m ()
+set_Field'union' _ = error "TODO: generate more setters."
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set m (Field (M'.MutMsg s)) ((Field' (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Field''union'
+    fromLabel = DC'.Set set_Field'union'
 
 
 data Field' msg
@@ -678,36 +678,36 @@ instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
     fromPtr msg ptr = List_Brand'Scope <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope l) = C'.toPtr l
-get_Brand'Scope''scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Word64
-get_Brand'Scope''scopeId (Brand'Scope struct) = C'.getWordField struct 0 0 0
+get_Brand'Scope'scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Word64
+get_Brand'Scope'scopeId (Brand'Scope struct) = C'.getWordField struct 0 0 0
 instance U'.ReadCtx m msg => IsLabel "scopeId" (DC'.Get m (Brand'Scope msg) (Word64)) where
-    fromLabel = DC'.Get get_Brand'Scope''scopeId
+    fromLabel = DC'.Get get_Brand'Scope'scopeId
 
-has_Brand'Scope''scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
-has_Brand'Scope''scopeId(Brand'Scope struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Brand'Scope'scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
+has_Brand'Scope'scopeId(Brand'Scope struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "scopeId" (DC'.Has m (Brand'Scope msg)) where
-    fromLabel = DC'.Has has_Brand'Scope''scopeId
+    fromLabel = DC'.Has has_Brand'Scope'scopeId
 
-set_Brand'Scope''scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> Word64 -> m ()
-set_Brand'Scope''scopeId (Brand'Scope struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Brand'Scope'scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> Word64 -> m ()
+set_Brand'Scope'scopeId (Brand'Scope struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "scopeId" (DC'.Set m (Brand'Scope (M'.MutMsg s)) (Word64)) where
-    fromLabel = DC'.Set set_Brand'Scope''scopeId
+    fromLabel = DC'.Set set_Brand'Scope'scopeId
 
 
-get_Brand'Scope''union' :: U'.ReadCtx m msg => Brand'Scope msg -> m (Brand'Scope' msg)
-get_Brand'Scope''union' (Brand'Scope struct) = C'.fromStruct struct
+get_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m (Brand'Scope' msg)
+get_Brand'Scope'union' (Brand'Scope struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get m (Brand'Scope msg) ((Brand'Scope' msg))) where
-    fromLabel = DC'.Get get_Brand'Scope''union'
+    fromLabel = DC'.Get get_Brand'Scope'union'
 
-has_Brand'Scope''union' :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
-has_Brand'Scope''union'(Brand'Scope struct) = pure True
+has_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
+has_Brand'Scope'union'(Brand'Scope struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has m (Brand'Scope msg)) where
-    fromLabel = DC'.Has has_Brand'Scope''union'
+    fromLabel = DC'.Has has_Brand'Scope'union'
 
-set_Brand'Scope''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> (Brand'Scope' (M'.MutMsg s)) -> m ()
-set_Brand'Scope''union' _ = error "TODO: generate more setters."
+set_Brand'Scope'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> (Brand'Scope' (M'.MutMsg s)) -> m ()
+set_Brand'Scope'union' _ = error "TODO: generate more setters."
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set m (Brand'Scope (M'.MutMsg s)) ((Brand'Scope' (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Brand'Scope''union'
+    fromLabel = DC'.Set set_Brand'Scope'union'
 
 
 data Brand'Scope' msg
@@ -1740,164 +1740,164 @@ instance B'.MutListElem s (Node (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
     fromPtr msg ptr = List_Node <$> C'.fromPtr msg ptr
     toPtr (List_Node l) = C'.toPtr l
-get_Node''id :: U'.ReadCtx m msg => Node msg -> m Word64
-get_Node''id (Node struct) = C'.getWordField struct 0 0 0
+get_Node'id :: U'.ReadCtx m msg => Node msg -> m Word64
+get_Node'id (Node struct) = C'.getWordField struct 0 0 0
 instance U'.ReadCtx m msg => IsLabel "id" (DC'.Get m (Node msg) (Word64)) where
-    fromLabel = DC'.Get get_Node''id
+    fromLabel = DC'.Get get_Node'id
 
-has_Node''id :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''id(Node struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Node'id :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'id(Node struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "id" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''id
+    fromLabel = DC'.Has has_Node'id
 
-set_Node''id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word64 -> m ()
-set_Node''id (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Node'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word64 -> m ()
+set_Node'id (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set m (Node (M'.MutMsg s)) (Word64)) where
-    fromLabel = DC'.Set set_Node''id
+    fromLabel = DC'.Set set_Node'id
 
 
-get_Node''displayName :: U'.ReadCtx m msg => Node msg -> m (B'.Text msg)
-get_Node''displayName (Node struct) =
+get_Node'displayName :: U'.ReadCtx m msg => Node msg -> m (B'.Text msg)
+get_Node'displayName (Node struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
 instance U'.ReadCtx m msg => IsLabel "displayName" (DC'.Get m (Node msg) ((B'.Text msg))) where
-    fromLabel = DC'.Get get_Node''displayName
+    fromLabel = DC'.Get get_Node'displayName
 
-has_Node''displayName :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''displayName(Node struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+has_Node'displayName :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'displayName(Node struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 instance U'.ReadCtx m msg => IsLabel "displayName" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''displayName
+    fromLabel = DC'.Has has_Node'displayName
 
-set_Node''displayName :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Node''displayName (Node struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Node'displayName :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_Node'displayName (Node struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "displayName" (DC'.Set m (Node (M'.MutMsg s)) ((B'.Text (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Node''displayName
+    fromLabel = DC'.Set set_Node'displayName
 
 
-get_Node''displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Word32
-get_Node''displayNamePrefixLength (Node struct) = C'.getWordField struct 1 0 0
+get_Node'displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Word32
+get_Node'displayNamePrefixLength (Node struct) = C'.getWordField struct 1 0 0
 instance U'.ReadCtx m msg => IsLabel "displayNamePrefixLength" (DC'.Get m (Node msg) (Word32)) where
-    fromLabel = DC'.Get get_Node''displayNamePrefixLength
+    fromLabel = DC'.Get get_Node'displayNamePrefixLength
 
-has_Node''displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''displayNamePrefixLength(Node struct) = pure $ 1 < U'.length (U'.dataSection struct)
+has_Node'displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'displayNamePrefixLength(Node struct) = pure $ 1 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "displayNamePrefixLength" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''displayNamePrefixLength
+    fromLabel = DC'.Has has_Node'displayNamePrefixLength
 
-set_Node''displayNamePrefixLength :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word32 -> m ()
-set_Node''displayNamePrefixLength (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
+set_Node'displayNamePrefixLength :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word32 -> m ()
+set_Node'displayNamePrefixLength (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "displayNamePrefixLength" (DC'.Set m (Node (M'.MutMsg s)) (Word32)) where
-    fromLabel = DC'.Set set_Node''displayNamePrefixLength
+    fromLabel = DC'.Set set_Node'displayNamePrefixLength
 
 
-get_Node''scopeId :: U'.ReadCtx m msg => Node msg -> m Word64
-get_Node''scopeId (Node struct) = C'.getWordField struct 2 0 0
+get_Node'scopeId :: U'.ReadCtx m msg => Node msg -> m Word64
+get_Node'scopeId (Node struct) = C'.getWordField struct 2 0 0
 instance U'.ReadCtx m msg => IsLabel "scopeId" (DC'.Get m (Node msg) (Word64)) where
-    fromLabel = DC'.Get get_Node''scopeId
+    fromLabel = DC'.Get get_Node'scopeId
 
-has_Node''scopeId :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''scopeId(Node struct) = pure $ 2 < U'.length (U'.dataSection struct)
+has_Node'scopeId :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'scopeId(Node struct) = pure $ 2 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "scopeId" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''scopeId
+    fromLabel = DC'.Has has_Node'scopeId
 
-set_Node''scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word64 -> m ()
-set_Node''scopeId (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
+set_Node'scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Word64 -> m ()
+set_Node'scopeId (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "scopeId" (DC'.Set m (Node (M'.MutMsg s)) (Word64)) where
-    fromLabel = DC'.Set set_Node''scopeId
+    fromLabel = DC'.Set set_Node'scopeId
 
 
-get_Node''nestedNodes :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'NestedNode msg))
-get_Node''nestedNodes (Node struct) =
+get_Node'nestedNodes :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'NestedNode msg))
+get_Node'nestedNodes (Node struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
 instance U'.ReadCtx m msg => IsLabel "nestedNodes" (DC'.Get m (Node msg) ((B'.List msg (Node'NestedNode msg)))) where
-    fromLabel = DC'.Get get_Node''nestedNodes
+    fromLabel = DC'.Get get_Node'nestedNodes
 
-has_Node''nestedNodes :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''nestedNodes(Node struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+has_Node'nestedNodes :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'nestedNodes(Node struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 instance U'.ReadCtx m msg => IsLabel "nestedNodes" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''nestedNodes
+    fromLabel = DC'.Has has_Node'nestedNodes
 
-set_Node''nestedNodes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))) -> m ()
-set_Node''nestedNodes (Node struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Node'nestedNodes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))) -> m ()
+set_Node'nestedNodes (Node struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "nestedNodes" (DC'.Set m (Node (M'.MutMsg s)) ((B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))))) where
-    fromLabel = DC'.Set set_Node''nestedNodes
+    fromLabel = DC'.Set set_Node'nestedNodes
 
 
-get_Node''annotations :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Annotation msg))
-get_Node''annotations (Node struct) =
+get_Node'annotations :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Annotation msg))
+get_Node'annotations (Node struct) =
     U'.getPtr 2 struct
     >>= C'.fromPtr (U'.message struct)
 
 instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Get m (Node msg) ((B'.List msg (Annotation msg)))) where
-    fromLabel = DC'.Get get_Node''annotations
+    fromLabel = DC'.Get get_Node'annotations
 
-has_Node''annotations :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''annotations(Node struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
+has_Node'annotations :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'annotations(Node struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
 instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''annotations
+    fromLabel = DC'.Has has_Node'annotations
 
-set_Node''annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
-set_Node''annotations (Node struct) value = U'.setPtr (C'.toPtr value) 2 struct
+set_Node'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
+set_Node'annotations (Node struct) value = U'.setPtr (C'.toPtr value) 2 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "annotations" (DC'.Set m (Node (M'.MutMsg s)) ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))) where
-    fromLabel = DC'.Set set_Node''annotations
+    fromLabel = DC'.Set set_Node'annotations
 
 
-get_Node''parameters :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'Parameter msg))
-get_Node''parameters (Node struct) =
+get_Node'parameters :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'Parameter msg))
+get_Node'parameters (Node struct) =
     U'.getPtr 5 struct
     >>= C'.fromPtr (U'.message struct)
 
 instance U'.ReadCtx m msg => IsLabel "parameters" (DC'.Get m (Node msg) ((B'.List msg (Node'Parameter msg)))) where
-    fromLabel = DC'.Get get_Node''parameters
+    fromLabel = DC'.Get get_Node'parameters
 
-has_Node''parameters :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''parameters(Node struct) = Data.Maybe.isJust <$> U'.getPtr 5 struct
+has_Node'parameters :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'parameters(Node struct) = Data.Maybe.isJust <$> U'.getPtr 5 struct
 instance U'.ReadCtx m msg => IsLabel "parameters" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''parameters
+    fromLabel = DC'.Has has_Node'parameters
 
-set_Node''parameters :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
-set_Node''parameters (Node struct) value = U'.setPtr (C'.toPtr value) 5 struct
+set_Node'parameters :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
+set_Node'parameters (Node struct) value = U'.setPtr (C'.toPtr value) 5 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "parameters" (DC'.Set m (Node (M'.MutMsg s)) ((B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))))) where
-    fromLabel = DC'.Set set_Node''parameters
+    fromLabel = DC'.Set set_Node'parameters
 
 
-get_Node''isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
-get_Node''isGeneric (Node struct) = C'.getWordField struct 4 32 0
+get_Node'isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
+get_Node'isGeneric (Node struct) = C'.getWordField struct 4 32 0
 instance U'.ReadCtx m msg => IsLabel "isGeneric" (DC'.Get m (Node msg) (Bool)) where
-    fromLabel = DC'.Get get_Node''isGeneric
+    fromLabel = DC'.Get get_Node'isGeneric
 
-has_Node''isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''isGeneric(Node struct) = pure $ 4 < U'.length (U'.dataSection struct)
+has_Node'isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'isGeneric(Node struct) = pure $ 4 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "isGeneric" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''isGeneric
+    fromLabel = DC'.Has has_Node'isGeneric
 
-set_Node''isGeneric :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Bool -> m ()
-set_Node''isGeneric (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 4 32 0
+set_Node'isGeneric :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> Bool -> m ()
+set_Node'isGeneric (Node struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 4 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "isGeneric" (DC'.Set m (Node (M'.MutMsg s)) (Bool)) where
-    fromLabel = DC'.Set set_Node''isGeneric
+    fromLabel = DC'.Set set_Node'isGeneric
 
 
-get_Node''union' :: U'.ReadCtx m msg => Node msg -> m (Node' msg)
-get_Node''union' (Node struct) = C'.fromStruct struct
+get_Node'union' :: U'.ReadCtx m msg => Node msg -> m (Node' msg)
+get_Node'union' (Node struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get m (Node msg) ((Node' msg))) where
-    fromLabel = DC'.Get get_Node''union'
+    fromLabel = DC'.Get get_Node'union'
 
-has_Node''union' :: U'.ReadCtx m msg => Node msg -> m Bool
-has_Node''union'(Node struct) = pure True
+has_Node'union' :: U'.ReadCtx m msg => Node msg -> m Bool
+has_Node'union'(Node struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has m (Node msg)) where
-    fromLabel = DC'.Has has_Node''union'
+    fromLabel = DC'.Has has_Node'union'
 
-set_Node''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (Node' (M'.MutMsg s)) -> m ()
-set_Node''union' _ = error "TODO: generate more setters."
+set_Node'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (Node' (M'.MutMsg s)) -> m ()
+set_Node'union' _ = error "TODO: generate more setters."
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set m (Node (M'.MutMsg s)) ((Node' (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Node''union'
+    fromLabel = DC'.Set set_Node'union'
 
 
 data Node' msg

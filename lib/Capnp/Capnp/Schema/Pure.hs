@@ -113,7 +113,7 @@ instance C'.IsStruct M'.ConstMsg Enumerant where
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 data Field
-    = Field'
+    = Field
         { name :: Text
         , codeOrder :: Word16
         , annotations :: List (Annotation)
@@ -124,13 +124,13 @@ data Field
     deriving(Show, Read, Eq)
 
 instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMsg) Field where
-    decerialize raw = Field'
-            <$> (Capnp.ById.Xa93fc509624c72d9.get_Field''name raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''codeOrder raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''annotations raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''discriminantValue raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''ordinal raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field''union' raw >>= C'.decerialize)
+    decerialize raw = Field
+            <$> (Capnp.ById.Xa93fc509624c72d9.get_Field'name raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field'codeOrder raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field'annotations raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field'discriminantValue raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field'ordinal raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Field'union' raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Field where
     fromStruct struct = do
@@ -185,16 +185,16 @@ instance C'.IsStruct M'.ConstMsg Superclass where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMsg)
 
 data Brand'Scope
-    = Brand'Scope'
+    = Brand'Scope
         { scopeId :: Word64
         , union' :: Brand'Scope'
         }
     deriving(Show, Read, Eq)
 
 instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMsg) Brand'Scope where
-    decerialize raw = Brand'Scope'
-            <$> (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope''scopeId raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope''union' raw >>= C'.decerialize)
+    decerialize raw = Brand'Scope
+            <$> (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'scopeId raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'union' raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Brand'Scope where
     fromStruct struct = do
@@ -543,7 +543,7 @@ instance C'.IsStruct M'.ConstMsg Node'NestedNode where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMsg)
 
 data Node
-    = Node'
+    = Node
         { id :: Word64
         , displayName :: Text
         , displayNamePrefixLength :: Word32
@@ -557,16 +557,16 @@ data Node
     deriving(Show, Read, Eq)
 
 instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMsg) Node where
-    decerialize raw = Node'
-            <$> (Capnp.ById.Xa93fc509624c72d9.get_Node''id raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''displayName raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''displayNamePrefixLength raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''scopeId raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''nestedNodes raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''annotations raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''parameters raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''isGeneric raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node''union' raw >>= C'.decerialize)
+    decerialize raw = Node
+            <$> (Capnp.ById.Xa93fc509624c72d9.get_Node'id raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'displayName raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'displayNamePrefixLength raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'scopeId raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'nestedNodes raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'annotations raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'parameters raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'isGeneric raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xa93fc509624c72d9.get_Node'union' raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Node where
     fromStruct struct = do

@@ -175,7 +175,7 @@ instance C'.IsStruct M'.ConstMsg Provide where
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Provide M'.ConstMsg)
 
 data Return
-    = Return'
+    = Return
         { answerId :: Word32
         , releaseParamCaps :: Bool
         , union' :: Return'
@@ -183,10 +183,10 @@ data Return
     deriving(Show, Read, Eq)
 
 instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return M'.ConstMsg) Return where
-    decerialize raw = Return'
-            <$> (Capnp.ById.Xb312981b2552a250.get_Return''answerId raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xb312981b2552a250.get_Return''releaseParamCaps raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xb312981b2552a250.get_Return''union' raw >>= C'.decerialize)
+    decerialize raw = Return
+            <$> (Capnp.ById.Xb312981b2552a250.get_Return'answerId raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xb312981b2552a250.get_Return'releaseParamCaps raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xb312981b2552a250.get_Return'union' raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Return where
     fromStruct struct = do
@@ -254,16 +254,16 @@ instance C'.Decerialize Capnp.ById.Xb312981b2552a250.Exception'Type Exception'Ty
         Capnp.ById.Xb312981b2552a250.Exception'Type'unknown' val -> Exception'Type'unknown' <$> C'.decerialize val
 
 data Resolve
-    = Resolve'
+    = Resolve
         { promiseId :: Word32
         , union' :: Resolve'
         }
     deriving(Show, Read, Eq)
 
 instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve M'.ConstMsg) Resolve where
-    decerialize raw = Resolve'
-            <$> (Capnp.ById.Xb312981b2552a250.get_Resolve''promiseId raw >>= C'.decerialize)
-            <*> (Capnp.ById.Xb312981b2552a250.get_Resolve''union' raw >>= C'.decerialize)
+    decerialize raw = Resolve
+            <$> (Capnp.ById.Xb312981b2552a250.get_Resolve'promiseId raw >>= C'.decerialize)
+            <*> (Capnp.ById.Xb312981b2552a250.get_Resolve'union' raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Resolve where
     fromStruct struct = do

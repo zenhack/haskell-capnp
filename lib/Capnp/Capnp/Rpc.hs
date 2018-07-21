@@ -443,52 +443,52 @@ instance B'.MutListElem s (Return (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Return msg)) where
     fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
     toPtr (List_Return l) = C'.toPtr l
-get_Return''answerId :: U'.ReadCtx m msg => Return msg -> m Word32
-get_Return''answerId (Return struct) = C'.getWordField struct 0 0 0
+get_Return'answerId :: U'.ReadCtx m msg => Return msg -> m Word32
+get_Return'answerId (Return struct) = C'.getWordField struct 0 0 0
 instance U'.ReadCtx m msg => IsLabel "answerId" (DC'.Get m (Return msg) (Word32)) where
-    fromLabel = DC'.Get get_Return''answerId
+    fromLabel = DC'.Get get_Return'answerId
 
-has_Return''answerId :: U'.ReadCtx m msg => Return msg -> m Bool
-has_Return''answerId(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Return'answerId :: U'.ReadCtx m msg => Return msg -> m Bool
+has_Return'answerId(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "answerId" (DC'.Has m (Return msg)) where
-    fromLabel = DC'.Has has_Return''answerId
+    fromLabel = DC'.Has has_Return'answerId
 
-set_Return''answerId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> Word32 -> m ()
-set_Return''answerId (Return struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Return'answerId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> Word32 -> m ()
+set_Return'answerId (Return struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "answerId" (DC'.Set m (Return (M'.MutMsg s)) (Word32)) where
-    fromLabel = DC'.Set set_Return''answerId
+    fromLabel = DC'.Set set_Return'answerId
 
 
-get_Return''releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
-get_Return''releaseParamCaps (Return struct) = C'.getWordField struct 0 32 1
+get_Return'releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
+get_Return'releaseParamCaps (Return struct) = C'.getWordField struct 0 32 1
 instance U'.ReadCtx m msg => IsLabel "releaseParamCaps" (DC'.Get m (Return msg) (Bool)) where
-    fromLabel = DC'.Get get_Return''releaseParamCaps
+    fromLabel = DC'.Get get_Return'releaseParamCaps
 
-has_Return''releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
-has_Return''releaseParamCaps(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Return'releaseParamCaps :: U'.ReadCtx m msg => Return msg -> m Bool
+has_Return'releaseParamCaps(Return struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "releaseParamCaps" (DC'.Has m (Return msg)) where
-    fromLabel = DC'.Has has_Return''releaseParamCaps
+    fromLabel = DC'.Has has_Return'releaseParamCaps
 
-set_Return''releaseParamCaps :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> Bool -> m ()
-set_Return''releaseParamCaps (Return struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
+set_Return'releaseParamCaps :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> Bool -> m ()
+set_Return'releaseParamCaps (Return struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "releaseParamCaps" (DC'.Set m (Return (M'.MutMsg s)) (Bool)) where
-    fromLabel = DC'.Set set_Return''releaseParamCaps
+    fromLabel = DC'.Set set_Return'releaseParamCaps
 
 
-get_Return''union' :: U'.ReadCtx m msg => Return msg -> m (Return' msg)
-get_Return''union' (Return struct) = C'.fromStruct struct
+get_Return'union' :: U'.ReadCtx m msg => Return msg -> m (Return' msg)
+get_Return'union' (Return struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get m (Return msg) ((Return' msg))) where
-    fromLabel = DC'.Get get_Return''union'
+    fromLabel = DC'.Get get_Return'union'
 
-has_Return''union' :: U'.ReadCtx m msg => Return msg -> m Bool
-has_Return''union'(Return struct) = pure True
+has_Return'union' :: U'.ReadCtx m msg => Return msg -> m Bool
+has_Return'union'(Return struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has m (Return msg)) where
-    fromLabel = DC'.Has has_Return''union'
+    fromLabel = DC'.Has has_Return'union'
 
-set_Return''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> (Return' (M'.MutMsg s)) -> m ()
-set_Return''union' _ = error "TODO: generate more setters."
+set_Return'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> (Return' (M'.MutMsg s)) -> m ()
+set_Return'union' _ = error "TODO: generate more setters."
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set m (Return (M'.MutMsg s)) ((Return' (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Return''union'
+    fromLabel = DC'.Set set_Return'union'
 
 
 data Return' msg
@@ -631,36 +631,36 @@ instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
     fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
     toPtr (List_Resolve l) = C'.toPtr l
-get_Resolve''promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
-get_Resolve''promiseId (Resolve struct) = C'.getWordField struct 0 0 0
+get_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
+get_Resolve'promiseId (Resolve struct) = C'.getWordField struct 0 0 0
 instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Get m (Resolve msg) (Word32)) where
-    fromLabel = DC'.Get get_Resolve''promiseId
+    fromLabel = DC'.Get get_Resolve'promiseId
 
-has_Resolve''promiseId :: U'.ReadCtx m msg => Resolve msg -> m Bool
-has_Resolve''promiseId(Resolve struct) = pure $ 0 < U'.length (U'.dataSection struct)
+has_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Bool
+has_Resolve'promiseId(Resolve struct) = pure $ 0 < U'.length (U'.dataSection struct)
 instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Has m (Resolve msg)) where
-    fromLabel = DC'.Has has_Resolve''promiseId
+    fromLabel = DC'.Has has_Resolve'promiseId
 
-set_Resolve''promiseId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> Word32 -> m ()
-set_Resolve''promiseId (Resolve struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Resolve'promiseId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> Word32 -> m ()
+set_Resolve'promiseId (Resolve struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "promiseId" (DC'.Set m (Resolve (M'.MutMsg s)) (Word32)) where
-    fromLabel = DC'.Set set_Resolve''promiseId
+    fromLabel = DC'.Set set_Resolve'promiseId
 
 
-get_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
-get_Resolve''union' (Resolve struct) = C'.fromStruct struct
+get_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
+get_Resolve'union' (Resolve struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get m (Resolve msg) ((Resolve' msg))) where
-    fromLabel = DC'.Get get_Resolve''union'
+    fromLabel = DC'.Get get_Resolve'union'
 
-has_Resolve''union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
-has_Resolve''union'(Resolve struct) = pure True
+has_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
+has_Resolve'union'(Resolve struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has m (Resolve msg)) where
-    fromLabel = DC'.Has has_Resolve''union'
+    fromLabel = DC'.Has has_Resolve'union'
 
-set_Resolve''union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> (Resolve' (M'.MutMsg s)) -> m ()
-set_Resolve''union' _ = error "TODO: generate more setters."
+set_Resolve'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> (Resolve' (M'.MutMsg s)) -> m ()
+set_Resolve'union' _ = error "TODO: generate more setters."
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set m (Resolve (M'.MutMsg s)) ((Resolve' (M'.MutMsg s)))) where
-    fromLabel = DC'.Set set_Resolve''union'
+    fromLabel = DC'.Set set_Resolve'union'
 
 
 data Resolve' msg
