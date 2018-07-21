@@ -443,7 +443,7 @@ index i list = invoice 1 >> index' list
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
     index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
-            let offset = WordCount $ i * fromIntegral (dataSz + ptrSz)
+            let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
             return $ Struct msg addr' dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
