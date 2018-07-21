@@ -246,7 +246,7 @@ instance WriteCtx m s => Message m (MutMsg s) where
         toByteString (seg :: Segment ConstMsg)
 
     numSegs (MutMsg vec) = pure $ MV.length vec
-    internalGetSeg (MutMsg vec) i = MV.read vec i
+    internalGetSeg (MutMsg vec) = MV.read vec
 
 
 -- | @'internalSetSeg' message index segment@ sets the segment at the given
@@ -259,7 +259,7 @@ internalSetSeg (MutMsg msg) = MV.write msg
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
 write :: WriteCtx m s => Segment (MutMsg s) -> Int -> Word64 -> m ()
-write MutSegment{mutSegVec} i val = do
+write MutSegment{mutSegVec} i val =
     SMV.write mutSegVec i (toLE64 val)
 
 -- | @'grow' segment amount@ grows the segment by the specified number
