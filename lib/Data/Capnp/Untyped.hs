@@ -31,7 +31,7 @@ module Data.Capnp.Untyped
     , ReadCtx
     , HasMessage(..), MessageDefault(..)
     , allocStruct
-    -- , allocCompositeList
+    , allocCompositeList
     -- , allocNormalList
     )
   where
@@ -355,7 +355,10 @@ listEltSpec (ListPtr list) = P.EltNormal SzPtr $ fromIntegral (length list)
 
 -- | Return the starting address of the list.
 listAddr :: List msg -> WordAddr
-listAddr (ListStruct (ListOfStruct (Struct _ addr _ _) _)) = addr
+listAddr (ListStruct (ListOfStruct (Struct _ addr _ _) _)) =
+    -- addr is the address of the first element of the list, but
+    -- composite lists start with a tag word:
+    addr { wordIndex = wordIndex addr - 1 }
 listAddr (List0 _) = WordAt { segIndex = 0, wordIndex = 1 }
 listAddr (List1 (ListOfBool NormalList{nAddr})) = nAddr
 listAddr (List8 (ListOfWord8 NormalList{nAddr})) = nAddr
@@ -560,3 +563,22 @@ allocStruct msg dataSz ptrSz = do
     let totalSz = fromIntegral dataSz + fromIntegral ptrSz
     addr <- M.alloc msg totalSz
     pure $ Struct msg addr dataSz ptrSz
+
+-- | Allocate a composite list.
+allocCompositeList
+    :: M.WriteCtx m s
+    => M.MutMsg s -- ^ The message to allocate in.
+    -> Word16     -- ^ The size of the data sections
+    -> Word16     -- ^ The size of the pointer sections
+    -> Int        -- ^ The length of the list in elements.
+    -> m (ListOf (M.MutMsg s) (Struct (M.MutMsg s)))
+allocCompositeList msg dataSz ptrSz len = do
+    let eltSize = fromIntegral dataSz + fromIntegral ptrSz
+    addr <- M.alloc msg (WordCount $ len * eltSize + 1) -- + 1 for the tag word.
+    M.setWord msg addr $ P.serializePtr $ Just $ P.StructPtr 0 dataSz ptrSz
+    let firstStruct = Struct
+            msg
+            addr { wordIndex = wordIndex addr + 1 }
+            dataSz
+            ptrSz
+    pure $ ListOfStruct firstStruct len

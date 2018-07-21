@@ -204,6 +204,17 @@ setIndexTests = assertionsToTest "Test setIndex" $ map testCase
             setData 6400 0 aWithDefault
             setData 90000 0 b
         }
+    , ModTest
+        { testIn = "()"
+        , testType = "HoldsVerTwoTwoList"
+        , testOut = "( mylist = [(duo = 70), (duo = 71), (duo = 72), (duo = 73)] )\n"
+        , testMod = \struct -> do
+            let msg = message struct
+            mylist <- allocCompositeList msg 2 2 4
+            setPtr (Just (PtrList (ListStruct mylist))) 0 struct
+            forM_ [0..3] $ \i ->
+                index i mylist >>= setData (70 + fromIntegral i) 1
+        }
     ]
   where
     testCase ModTest{..} = do
