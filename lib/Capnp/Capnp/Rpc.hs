@@ -40,7 +40,7 @@ instance B'.ListElem msg (Call msg) where
     index i (List_Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Call (M'.MutMsg s)) where
     setIndex (Call elt) i (List_Call l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Call msg)) where
     fromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
     toPtr (List_Call l) = C'.toPtr l
@@ -309,7 +309,7 @@ instance B'.ListElem msg (Payload msg) where
     index i (List_Payload l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Payload msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Payload (M'.MutMsg s)) where
     setIndex (Payload elt) i (List_Payload l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Payload msg)) where
     fromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
     toPtr (List_Payload l) = C'.toPtr l
@@ -366,7 +366,7 @@ instance B'.ListElem msg (Provide msg) where
     index i (List_Provide l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Provide msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Provide (M'.MutMsg s)) where
     setIndex (Provide elt) i (List_Provide l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Provide msg)) where
     fromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
     toPtr (List_Provide l) = C'.toPtr l
@@ -439,7 +439,7 @@ instance B'.ListElem msg (Return msg) where
     index i (List_Return l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Return (M'.MutMsg s)) where
     setIndex (Return elt) i (List_Return l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Return msg)) where
     fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
     toPtr (List_Return l) = C'.toPtr l
@@ -544,7 +544,7 @@ instance B'.ListElem msg (Release msg) where
     index i (List_Release l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Release msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Release (M'.MutMsg s)) where
     setIndex (Release elt) i (List_Release l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Release msg)) where
     fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
     toPtr (List_Release l) = C'.toPtr l
@@ -610,6 +610,7 @@ instance B'.ListElem msg Exception'Type where
     index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s Exception'Type where
     setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
+    allocList msg size = List_Exception'Type <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg Exception'Type) where
     fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
     toPtr (List_Exception'Type l) = C'.toPtr l
@@ -627,7 +628,7 @@ instance B'.ListElem msg (Resolve msg) where
     index i (List_Resolve l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
     setIndex (Resolve elt) i (List_Resolve l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
     fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
     toPtr (List_Resolve l) = C'.toPtr l
@@ -704,7 +705,7 @@ instance B'.ListElem msg (ThirdPartyCapDescriptor msg) where
     index i (List_ThirdPartyCapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ThirdPartyCapDescriptor msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
     setIndex (ThirdPartyCapDescriptor elt) i (List_ThirdPartyCapDescriptor l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (ThirdPartyCapDescriptor msg)) where
     fromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_ThirdPartyCapDescriptor l) = C'.toPtr l
@@ -757,7 +758,7 @@ instance B'.ListElem msg (Finish msg) where
     index i (List_Finish l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Finish msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Finish (M'.MutMsg s)) where
     setIndex (Finish elt) i (List_Finish l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Finish msg)) where
     fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
     toPtr (List_Finish l) = C'.toPtr l
@@ -806,7 +807,7 @@ instance B'.ListElem msg (Accept msg) where
     index i (List_Accept l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Accept msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Accept (M'.MutMsg s)) where
     setIndex (Accept elt) i (List_Accept l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Accept msg)) where
     fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
     toPtr (List_Accept l) = C'.toPtr l
@@ -909,7 +910,7 @@ instance B'.ListElem msg (Exception msg) where
     index i (List_Exception l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Exception msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Exception (M'.MutMsg s)) where
     setIndex (Exception elt) i (List_Exception l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Exception msg)) where
     fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
     toPtr (List_Exception l) = C'.toPtr l
@@ -994,7 +995,7 @@ instance B'.ListElem msg (PromisedAnswer msg) where
     index i (List_PromisedAnswer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
     setIndex (PromisedAnswer elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
     fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer l) = C'.toPtr l
@@ -1078,7 +1079,7 @@ instance B'.ListElem msg (Bootstrap msg) where
     index i (List_Bootstrap l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bootstrap msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
     setIndex (Bootstrap elt) i (List_Bootstrap l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
     fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
     toPtr (List_Bootstrap l) = C'.toPtr l
@@ -1159,7 +1160,7 @@ instance B'.ListElem msg (Disembargo msg) where
     index i (List_Disembargo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
     setIndex (Disembargo elt) i (List_Disembargo l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
     fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo l) = C'.toPtr l
@@ -1212,7 +1213,7 @@ instance B'.ListElem msg (Join msg) where
     index i (List_Join l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Join msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Join (M'.MutMsg s)) where
     setIndex (Join elt) i (List_Join l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Join msg)) where
     fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
     toPtr (List_Join l) = C'.toPtr l

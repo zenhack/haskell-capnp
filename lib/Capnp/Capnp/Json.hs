@@ -83,7 +83,7 @@ instance B'.ListElem msg (JsonValue'Call msg) where
     index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
     setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
     fromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Call l) = C'.toPtr l
@@ -140,7 +140,7 @@ instance B'.ListElem msg (JsonValue'Field msg) where
     index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
     setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
     fromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Field l) = C'.toPtr l

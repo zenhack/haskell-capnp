@@ -43,6 +43,7 @@ class ListElem msg e where
 
 class MutListElem s e where
     setIndex :: (U.ReadCtx m (M.MutMsg s), M.WriteCtx m s) => e -> Int -> List (M.MutMsg s) e -> m ()
+    allocList :: M.WriteCtx m s => M.MutMsg s -> Int -> m (List (M.MutMsg s) e)
 
 class Decerialize from to where
     decerialize :: U.ReadCtx m M.ConstMsg => from -> m to

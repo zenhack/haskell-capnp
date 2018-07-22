@@ -74,7 +74,7 @@ instance B'.ListElem msg (Brand msg) where
     index i (List_Brand l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Brand (M'.MutMsg s)) where
     setIndex (Brand elt) i (List_Brand l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Brand msg)) where
     fromPtr msg ptr = List_Brand <$> C'.fromPtr msg ptr
     toPtr (List_Brand l) = C'.toPtr l
@@ -111,7 +111,7 @@ instance B'.ListElem msg (Method msg) where
     index i (List_Method l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Method msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Method (M'.MutMsg s)) where
     setIndex (Method elt) i (List_Method l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Method msg)) where
     fromPtr msg ptr = List_Method <$> C'.fromPtr msg ptr
     toPtr (List_Method l) = C'.toPtr l
@@ -276,7 +276,7 @@ instance B'.ListElem msg (Enumerant msg) where
     index i (List_Enumerant l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Enumerant msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Enumerant (M'.MutMsg s)) where
     setIndex (Enumerant elt) i (List_Enumerant l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Enumerant msg)) where
     fromPtr msg ptr = List_Enumerant <$> C'.fromPtr msg ptr
     toPtr (List_Enumerant l) = C'.toPtr l
@@ -352,7 +352,7 @@ instance B'.ListElem msg (Field msg) where
     index i (List_Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Field (M'.MutMsg s)) where
     setIndex (Field elt) i (List_Field l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
     fromPtr msg ptr = List_Field <$> C'.fromPtr msg ptr
     toPtr (List_Field l) = C'.toPtr l
@@ -477,7 +477,7 @@ instance B'.ListElem msg (Field'slot'group' msg) where
     index i (List_Field'slot'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'slot'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Field'slot'group' (M'.MutMsg s)) where
     setIndex (Field'slot'group' elt) i (List_Field'slot'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Field'slot'group' msg)) where
     fromPtr msg ptr = List_Field'slot'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'slot'group' l) = C'.toPtr l
@@ -566,7 +566,7 @@ instance B'.ListElem msg (Field'group'group' msg) where
     index i (List_Field'group'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'group'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Field'group'group' (M'.MutMsg s)) where
     setIndex (Field'group'group' elt) i (List_Field'group'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Field'group'group' msg)) where
     fromPtr msg ptr = List_Field'group'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'group'group' l) = C'.toPtr l
@@ -621,7 +621,7 @@ instance B'.ListElem msg (Superclass msg) where
     index i (List_Superclass l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Superclass msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Superclass (M'.MutMsg s)) where
     setIndex (Superclass elt) i (List_Superclass l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
     fromPtr msg ptr = List_Superclass <$> C'.fromPtr msg ptr
     toPtr (List_Superclass l) = C'.toPtr l
@@ -674,7 +674,7 @@ instance B'.ListElem msg (Brand'Scope msg) where
     index i (List_Brand'Scope l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
     setIndex (Brand'Scope elt) i (List_Brand'Scope l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
     fromPtr msg ptr = List_Brand'Scope <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope l) = C'.toPtr l
@@ -751,7 +751,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     index i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile'Import msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile'Import elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile'Import <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest'RequestedFile'Import l) = C'.toPtr l
@@ -804,7 +804,7 @@ instance B'.ListElem msg (Node'Parameter msg) where
     index i (List_Node'Parameter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'Parameter msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'Parameter (M'.MutMsg s)) where
     setIndex (Node'Parameter elt) i (List_Node'Parameter l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'Parameter msg)) where
     fromPtr msg ptr = List_Node'Parameter <$> C'.fromPtr msg ptr
     toPtr (List_Node'Parameter l) = C'.toPtr l
@@ -869,7 +869,7 @@ instance B'.ListElem msg (CodeGeneratorRequest msg) where
     index i (List_CodeGeneratorRequest l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest l) = C'.toPtr l
@@ -951,7 +951,7 @@ instance B'.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
     index i (List_Type'anyPointer'unconstrained'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'unconstrained'group' elt) i (List_Type'anyPointer'unconstrained'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained'group' l) = C'.toPtr l
@@ -984,7 +984,7 @@ instance B'.ListElem msg (Type'anyPointer'parameter'group' msg) where
     index i (List_Type'anyPointer'parameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'parameter'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'parameter'group' elt) i (List_Type'anyPointer'parameter'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'parameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'parameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'parameter'group' l) = C'.toPtr l
@@ -1033,7 +1033,7 @@ instance B'.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) wh
     index i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'implicitMethodParameter'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'implicitMethodParameter'group' elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'implicitMethodParameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'implicitMethodParameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'implicitMethodParameter'group' l) = C'.toPtr l
@@ -1196,7 +1196,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
     index i (List_CodeGeneratorRequest'RequestedFile l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest'RequestedFile l) = C'.toPtr l
@@ -1304,7 +1304,7 @@ instance B'.ListElem msg (Type'list'group' msg) where
     index i (List_Type'list'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'list'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'list'group' (M'.MutMsg s)) where
     setIndex (Type'list'group' elt) i (List_Type'list'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'list'group' msg)) where
     fromPtr msg ptr = List_Type'list'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'list'group' l) = C'.toPtr l
@@ -1341,7 +1341,7 @@ instance B'.ListElem msg (Type'enum'group' msg) where
     index i (List_Type'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'enum'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'enum'group' (M'.MutMsg s)) where
     setIndex (Type'enum'group' elt) i (List_Type'enum'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'enum'group' msg)) where
     fromPtr msg ptr = List_Type'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'enum'group' l) = C'.toPtr l
@@ -1394,7 +1394,7 @@ instance B'.ListElem msg (Type'struct'group' msg) where
     index i (List_Type'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'struct'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'struct'group' (M'.MutMsg s)) where
     setIndex (Type'struct'group' elt) i (List_Type'struct'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'struct'group' msg)) where
     fromPtr msg ptr = List_Type'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'struct'group' l) = C'.toPtr l
@@ -1447,7 +1447,7 @@ instance B'.ListElem msg (Type'interface'group' msg) where
     index i (List_Type'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'interface'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'interface'group' (M'.MutMsg s)) where
     setIndex (Type'interface'group' elt) i (List_Type'interface'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'interface'group' msg)) where
     fromPtr msg ptr = List_Type'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'interface'group' l) = C'.toPtr l
@@ -1500,7 +1500,7 @@ instance B'.ListElem msg (Type'anyPointer'group' msg) where
     index i (List_Type'anyPointer'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'group' elt) i (List_Type'anyPointer'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'group' l) = C'.toPtr l
@@ -1601,6 +1601,7 @@ instance B'.ListElem msg ElementSize where
     index i (List_ElementSize l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s ElementSize where
     setIndex elt i (List_ElementSize l) = error "TODO: generate code for setIndex"
+    allocList msg size = List_ElementSize <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg ElementSize) where
     fromPtr msg ptr = List_ElementSize <$> C'.fromPtr msg ptr
     toPtr (List_ElementSize l) = C'.toPtr l
@@ -1618,7 +1619,7 @@ instance B'.ListElem msg (CapnpVersion msg) where
     index i (List_CapnpVersion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapnpVersion msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (CapnpVersion (M'.MutMsg s)) where
     setIndex (CapnpVersion elt) i (List_CapnpVersion l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
     fromPtr msg ptr = List_CapnpVersion <$> C'.fromPtr msg ptr
     toPtr (List_CapnpVersion l) = C'.toPtr l
@@ -1683,7 +1684,7 @@ instance B'.ListElem msg (Node'NestedNode msg) where
     index i (List_Node'NestedNode l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'NestedNode msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'NestedNode (M'.MutMsg s)) where
     setIndex (Node'NestedNode elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'NestedNode msg)) where
     fromPtr msg ptr = List_Node'NestedNode <$> C'.fromPtr msg ptr
     toPtr (List_Node'NestedNode l) = C'.toPtr l
@@ -1736,7 +1737,7 @@ instance B'.ListElem msg (Node msg) where
     index i (List_Node l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node (M'.MutMsg s)) where
     setIndex (Node elt) i (List_Node l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
     fromPtr msg ptr = List_Node <$> C'.fromPtr msg ptr
     toPtr (List_Node l) = C'.toPtr l
@@ -1922,7 +1923,7 @@ instance B'.ListElem msg (Node'struct'group' msg) where
     index i (List_Node'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'struct'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'struct'group' (M'.MutMsg s)) where
     setIndex (Node'struct'group' elt) i (List_Node'struct'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'struct'group' msg)) where
     fromPtr msg ptr = List_Node'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'struct'group' l) = C'.toPtr l
@@ -2055,7 +2056,7 @@ instance B'.ListElem msg (Node'enum'group' msg) where
     index i (List_Node'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'enum'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'enum'group' (M'.MutMsg s)) where
     setIndex (Node'enum'group' elt) i (List_Node'enum'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'enum'group' msg)) where
     fromPtr msg ptr = List_Node'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'enum'group' l) = C'.toPtr l
@@ -2092,7 +2093,7 @@ instance B'.ListElem msg (Node'interface'group' msg) where
     index i (List_Node'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'interface'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'interface'group' (M'.MutMsg s)) where
     setIndex (Node'interface'group' elt) i (List_Node'interface'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'interface'group' msg)) where
     fromPtr msg ptr = List_Node'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'interface'group' l) = C'.toPtr l
@@ -2149,7 +2150,7 @@ instance B'.ListElem msg (Node'const'group' msg) where
     index i (List_Node'const'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'const'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'const'group' (M'.MutMsg s)) where
     setIndex (Node'const'group' elt) i (List_Node'const'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'const'group' msg)) where
     fromPtr msg ptr = List_Node'const'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'const'group' l) = C'.toPtr l
@@ -2206,7 +2207,7 @@ instance B'.ListElem msg (Node'annotation'group' msg) where
     index i (List_Node'annotation'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'annotation'group' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Node'annotation'group' (M'.MutMsg s)) where
     setIndex (Node'annotation'group' elt) i (List_Node'annotation'group' l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Node'annotation'group' msg)) where
     fromPtr msg ptr = List_Node'annotation'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'annotation'group' l) = C'.toPtr l
@@ -2461,7 +2462,7 @@ instance B'.ListElem msg (Annotation msg) where
     index i (List_Annotation l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Annotation msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Annotation (M'.MutMsg s)) where
     setIndex (Annotation elt) i (List_Annotation l) = U'.setIndex elt i l
-
+    allocList = error "TODO: implement allocList for structs."
 instance C'.IsPtr msg (B'.List msg (Annotation msg)) where
     fromPtr msg ptr = List_Annotation <$> C'.fromPtr msg ptr
     toPtr (List_Annotation l) = C'.toPtr l

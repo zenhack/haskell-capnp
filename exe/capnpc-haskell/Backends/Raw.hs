@@ -100,6 +100,7 @@ fmtNewtypeStruct thisMod name =
         , fmtStructListElem nameText
         , "instance B'.MutListElem s (", nameText, " (M'.MutMsg s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
+        , "    allocList = error \"TODO: implement allocList for structs.\""
         , "\n"
         , fmtStructListIsPtr nameText
         ]
@@ -329,6 +330,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , "\n"
         , "instance B'.MutListElem s ", typeName, " where"
         , "\n    setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\""
+        , "\n    allocList msg size = List_", typeName, " <$> U'.allocList16 msg size"
         , "\n"
         , "instance C'.IsPtr msg (B'.List msg ", typeName, ") where"
         , "\n    fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr"

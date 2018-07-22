@@ -21,10 +21,11 @@ header = unlines
     ]
 
 data InstanceParams = P
-    { to      :: String
-    , from    :: String
-    , typed   :: String
-    , untyped :: String
+    { to         :: String
+    , from       :: String
+    , typed      :: String
+    , untyped    :: String
+    , listSuffix :: String
     }
 
 
@@ -35,6 +36,7 @@ genInstance P{..} = concat
     , "    index i (List", typed, " l) = ", from, " <$> U.index i l\n"
     , "instance MutListElem s ", typed, " where\n"
     , "    setIndex elt i (", dataCon, " l) = U.setIndex (", to, " elt) i l\n"
+    , "    allocList msg size = List", typed, " <$> U.allocList", listSuffix, " msg size\n"
     ]
   where
     dataCon = "List" ++ typed
@@ -46,6 +48,7 @@ intInstance size = P
     , from = "fromIntegral"
     , typed = "Int" ++ show size
     , untyped = "Word" ++ show size
+    , listSuffix = show size
     }
 
 wordInstance size = P
@@ -53,6 +56,7 @@ wordInstance size = P
     , from = "id"
     , typed = "Word" ++ show size
     , untyped = "Word" ++ show size
+    , listSuffix = show size
     }
 
 instances =
@@ -62,16 +66,19 @@ instances =
         , from = "wordToFloat"
         , typed = "Float"
         , untyped = "Word32"
+        , listSuffix = "32"
         }
     , P { to = "doubleToWord"
         , from = "wordToDouble"
         , typed = "Double"
         , untyped = "Word64"
+        , listSuffix = "64"
         }
     , P { to = "id"
         , from = "id"
         , typed = "Bool"
         , untyped = "Bool"
+        , listSuffix = "1"
         }
     ]
 
