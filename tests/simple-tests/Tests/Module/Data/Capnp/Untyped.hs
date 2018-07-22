@@ -213,11 +213,10 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
         , testType = "HoldsVerTwoTwoList"
         , testOut = "( mylist = [(duo = 70), (duo = 71), (duo = 72), (duo = 73)] )\n"
         , testMod = \struct -> do
-            let msg = message struct
-            mylist <- allocCompositeList msg 2 2 4
-            setPtr (Just (PtrList (ListStruct mylist))) 0 struct
+            mylist <- allocCompositeList (message struct) 2 2 4
             forM_ [0..3] $ \i ->
                 index i mylist >>= setData (70 + fromIntegral i) 1
+            setPtr (Just $ PtrList $ ListStruct mylist) 0 struct
         }
     , allocNormalListTest "u64vec" 21 allocList64 List64
     , allocNormalListTest "u32vec" 22 allocList32 List32
