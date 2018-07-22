@@ -7,6 +7,7 @@ module Backends.Raw
     ( fmtModule
     ) where
 
+import Data.Word
 import IR
 import Util
 
@@ -86,8 +87,8 @@ fmtStructListIsPtr nameText = mconcat
     , "    toPtr (List_", nameText, " l) = C'.toPtr l\n"
     ]
 
-fmtNewtypeStruct :: Id -> Name -> TB.Builder
-fmtNewtypeStruct thisMod name =
+fmtNewtypeStruct :: Id -> Name -> Word16 -> Word16 -> TB.Builder
+fmtNewtypeStruct thisMod name dataSz ptrSz =
     let nameText = fmtName thisMod name
     in mconcat
         [ "newtype ", nameText, " msg = ", nameText, " (U'.Struct msg)"
@@ -100,7 +101,9 @@ fmtNewtypeStruct thisMod name =
         , fmtStructListElem nameText
         , "instance B'.MutListElem s (", nameText, " (M'.MutMsg s)) where\n"
         , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
-        , "    allocList = error \"TODO: implement allocList for structs.\""
+        , "    allocList msg len = List_", nameText, " <$> U'.allocCompositeList msg "
+        ,           TB.fromString (show dataSz), " "
+        ,           TB.fromString (show ptrSz), " len\n"
         , "\n"
         , fmtStructListIsPtr nameText
         ]
@@ -236,13 +239,13 @@ fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
         ]
 
 fmtDataDef :: Id -> Name -> DataDef -> TB.Builder
-fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct _ _, ..} =
-    fmtNewtypeStruct thisMod dataName <>
+fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct dataSz ptrSz, ..} =
+    fmtNewtypeStruct thisMod dataName dataSz ptrSz <>
     case variantParams of
         Record fields ->
             mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
         _ -> ""
-fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct _ _,dataTagLoc=Just tagLoc,dataVariants} =
+fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTagLoc=Just tagLoc,dataVariants} =
     let nameText = fmtName thisMod dataName
     in mconcat
         [ "data ", nameText, " msg"
@@ -296,7 +299,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct _ _,dataTagLoc=Just
                     "_ -> pure $ " <> nameText <> " tag"
     fmtVariantAuxNewtype Variant{variantName, variantParams=Record fields} =
         let typeName = subName variantName "group'"
-        in fmtNewtypeStruct thisMod typeName <>
+        in fmtNewtypeStruct thisMod typeName dataSz ptrSz <>
             mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
     fmtVariantAuxNewtype _ = ""
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
