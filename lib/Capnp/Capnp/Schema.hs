@@ -75,6 +75,10 @@ instance B'.ListElem msg (Brand msg) where
 instance B'.MutListElem s (Brand (M'.MutMsg s)) where
     setIndex (Brand elt) i (List_Brand l) = U'.setIndex elt i l
     allocList msg len = List_Brand <$> U'.allocCompositeList msg 0 1 len
+instance U'.HasMessage (Brand msg) msg where
+    message (Brand struct) = U'.message struct
+instance U'.MessageDefault (Brand msg) msg where
+    messageDefault = Brand . U'.messageDefault
 
 -- | Allocate a new 'Brand' inside the message.
 new_Brand :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand (M'.MutMsg s))
@@ -116,6 +120,10 @@ instance B'.ListElem msg (Method msg) where
 instance B'.MutListElem s (Method (M'.MutMsg s)) where
     setIndex (Method elt) i (List_Method l) = U'.setIndex elt i l
     allocList msg len = List_Method <$> U'.allocCompositeList msg 3 5 len
+instance U'.HasMessage (Method msg) msg where
+    message (Method struct) = U'.message struct
+instance U'.MessageDefault (Method msg) msg where
+    messageDefault = Method . U'.messageDefault
 
 -- | Allocate a new 'Method' inside the message.
 new_Method :: M'.WriteCtx m s => M'.MutMsg s -> m (Method (M'.MutMsg s))
@@ -285,6 +293,10 @@ instance B'.ListElem msg (Enumerant msg) where
 instance B'.MutListElem s (Enumerant (M'.MutMsg s)) where
     setIndex (Enumerant elt) i (List_Enumerant l) = U'.setIndex elt i l
     allocList msg len = List_Enumerant <$> U'.allocCompositeList msg 1 2 len
+instance U'.HasMessage (Enumerant msg) msg where
+    message (Enumerant struct) = U'.message struct
+instance U'.MessageDefault (Enumerant msg) msg where
+    messageDefault = Enumerant . U'.messageDefault
 
 -- | Allocate a new 'Enumerant' inside the message.
 new_Enumerant :: M'.WriteCtx m s => M'.MutMsg s -> m (Enumerant (M'.MutMsg s))
@@ -365,6 +377,10 @@ instance B'.ListElem msg (Field msg) where
 instance B'.MutListElem s (Field (M'.MutMsg s)) where
     setIndex (Field elt) i (List_Field l) = U'.setIndex elt i l
     allocList msg len = List_Field <$> U'.allocCompositeList msg 3 4 len
+instance U'.HasMessage (Field msg) msg where
+    message (Field struct) = U'.message struct
+instance U'.MessageDefault (Field msg) msg where
+    messageDefault = Field . U'.messageDefault
 
 -- | Allocate a new 'Field' inside the message.
 new_Field :: M'.WriteCtx m s => M'.MutMsg s -> m (Field (M'.MutMsg s))
@@ -494,6 +510,10 @@ instance B'.ListElem msg (Field'slot'group' msg) where
 instance B'.MutListElem s (Field'slot'group' (M'.MutMsg s)) where
     setIndex (Field'slot'group' elt) i (List_Field'slot'group' l) = U'.setIndex elt i l
     allocList msg len = List_Field'slot'group' <$> U'.allocCompositeList msg 3 4 len
+instance U'.HasMessage (Field'slot'group' msg) msg where
+    message (Field'slot'group' struct) = U'.message struct
+instance U'.MessageDefault (Field'slot'group' msg) msg where
+    messageDefault = Field'slot'group' . U'.messageDefault
 
 -- | Allocate a new 'Field'slot'group'' inside the message.
 new_Field'slot'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Field'slot'group' (M'.MutMsg s))
@@ -587,6 +607,10 @@ instance B'.ListElem msg (Field'group'group' msg) where
 instance B'.MutListElem s (Field'group'group' (M'.MutMsg s)) where
     setIndex (Field'group'group' elt) i (List_Field'group'group' l) = U'.setIndex elt i l
     allocList msg len = List_Field'group'group' <$> U'.allocCompositeList msg 3 4 len
+instance U'.HasMessage (Field'group'group' msg) msg where
+    message (Field'group'group' struct) = U'.message struct
+instance U'.MessageDefault (Field'group'group' msg) msg where
+    messageDefault = Field'group'group' . U'.messageDefault
 
 -- | Allocate a new 'Field'group'group'' inside the message.
 new_Field'group'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Field'group'group' (M'.MutMsg s))
@@ -646,6 +670,10 @@ instance B'.ListElem msg (Superclass msg) where
 instance B'.MutListElem s (Superclass (M'.MutMsg s)) where
     setIndex (Superclass elt) i (List_Superclass l) = U'.setIndex elt i l
     allocList msg len = List_Superclass <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Superclass msg) msg where
+    message (Superclass struct) = U'.message struct
+instance U'.MessageDefault (Superclass msg) msg where
+    messageDefault = Superclass . U'.messageDefault
 
 -- | Allocate a new 'Superclass' inside the message.
 new_Superclass :: M'.WriteCtx m s => M'.MutMsg s -> m (Superclass (M'.MutMsg s))
@@ -703,6 +731,10 @@ instance B'.ListElem msg (Brand'Scope msg) where
 instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
     setIndex (Brand'Scope elt) i (List_Brand'Scope l) = U'.setIndex elt i l
     allocList msg len = List_Brand'Scope <$> U'.allocCompositeList msg 2 1 len
+instance U'.HasMessage (Brand'Scope msg) msg where
+    message (Brand'Scope struct) = U'.message struct
+instance U'.MessageDefault (Brand'Scope msg) msg where
+    messageDefault = Brand'Scope . U'.messageDefault
 
 -- | Allocate a new 'Brand'Scope' inside the message.
 new_Brand'Scope :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand'Scope (M'.MutMsg s))
@@ -784,6 +816,10 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
 instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile'Import elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
     allocList msg len = List_CodeGeneratorRequest'RequestedFile'Import <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (CodeGeneratorRequest'RequestedFile'Import msg) msg where
+    message (CodeGeneratorRequest'RequestedFile'Import struct) = U'.message struct
+instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile'Import msg) msg where
+    messageDefault = CodeGeneratorRequest'RequestedFile'Import . U'.messageDefault
 
 -- | Allocate a new 'CodeGeneratorRequest'RequestedFile'Import' inside the message.
 new_CodeGeneratorRequest'RequestedFile'Import :: M'.WriteCtx m s => M'.MutMsg s -> m (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))
@@ -841,6 +877,10 @@ instance B'.ListElem msg (Node'Parameter msg) where
 instance B'.MutListElem s (Node'Parameter (M'.MutMsg s)) where
     setIndex (Node'Parameter elt) i (List_Node'Parameter l) = U'.setIndex elt i l
     allocList msg len = List_Node'Parameter <$> U'.allocCompositeList msg 0 1 len
+instance U'.HasMessage (Node'Parameter msg) msg where
+    message (Node'Parameter struct) = U'.message struct
+instance U'.MessageDefault (Node'Parameter msg) msg where
+    messageDefault = Node'Parameter . U'.messageDefault
 
 -- | Allocate a new 'Node'Parameter' inside the message.
 new_Node'Parameter :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'Parameter (M'.MutMsg s))
@@ -910,6 +950,10 @@ instance B'.ListElem msg (CodeGeneratorRequest msg) where
 instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
     allocList msg len = List_CodeGeneratorRequest <$> U'.allocCompositeList msg 0 3 len
+instance U'.HasMessage (CodeGeneratorRequest msg) msg where
+    message (CodeGeneratorRequest struct) = U'.message struct
+instance U'.MessageDefault (CodeGeneratorRequest msg) msg where
+    messageDefault = CodeGeneratorRequest . U'.messageDefault
 
 -- | Allocate a new 'CodeGeneratorRequest' inside the message.
 new_CodeGeneratorRequest :: M'.WriteCtx m s => M'.MutMsg s -> m (CodeGeneratorRequest (M'.MutMsg s))
@@ -996,6 +1040,10 @@ instance B'.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
 instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'unconstrained'group' elt) i (List_Type'anyPointer'unconstrained'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'anyPointer'unconstrained'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'anyPointer'unconstrained'group' msg) msg where
+    message (Type'anyPointer'unconstrained'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'anyPointer'unconstrained'group' msg) msg where
+    messageDefault = Type'anyPointer'unconstrained'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'anyPointer'unconstrained'group'' inside the message.
 new_Type'anyPointer'unconstrained'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'unconstrained'group' (M'.MutMsg s))
@@ -1033,6 +1081,10 @@ instance B'.ListElem msg (Type'anyPointer'parameter'group' msg) where
 instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'parameter'group' elt) i (List_Type'anyPointer'parameter'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'anyPointer'parameter'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'anyPointer'parameter'group' msg) msg where
+    message (Type'anyPointer'parameter'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'anyPointer'parameter'group' msg) msg where
+    messageDefault = Type'anyPointer'parameter'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'anyPointer'parameter'group'' inside the message.
 new_Type'anyPointer'parameter'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'parameter'group' (M'.MutMsg s))
@@ -1086,6 +1138,10 @@ instance B'.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) wh
 instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'implicitMethodParameter'group' elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'anyPointer'implicitMethodParameter'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'anyPointer'implicitMethodParameter'group' msg) msg where
+    message (Type'anyPointer'implicitMethodParameter'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'anyPointer'implicitMethodParameter'group' msg) msg where
+    messageDefault = Type'anyPointer'implicitMethodParameter'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'anyPointer'implicitMethodParameter'group'' inside the message.
 new_Type'anyPointer'implicitMethodParameter'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s))
@@ -1253,6 +1309,10 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
 instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
     allocList msg len = List_CodeGeneratorRequest'RequestedFile <$> U'.allocCompositeList msg 1 2 len
+instance U'.HasMessage (CodeGeneratorRequest'RequestedFile msg) msg where
+    message (CodeGeneratorRequest'RequestedFile struct) = U'.message struct
+instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile msg) msg where
+    messageDefault = CodeGeneratorRequest'RequestedFile . U'.messageDefault
 
 -- | Allocate a new 'CodeGeneratorRequest'RequestedFile' inside the message.
 new_CodeGeneratorRequest'RequestedFile :: M'.WriteCtx m s => M'.MutMsg s -> m (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))
@@ -1365,6 +1425,10 @@ instance B'.ListElem msg (Type'list'group' msg) where
 instance B'.MutListElem s (Type'list'group' (M'.MutMsg s)) where
     setIndex (Type'list'group' elt) i (List_Type'list'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'list'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'list'group' msg) msg where
+    message (Type'list'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'list'group' msg) msg where
+    messageDefault = Type'list'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'list'group'' inside the message.
 new_Type'list'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'list'group' (M'.MutMsg s))
@@ -1406,6 +1470,10 @@ instance B'.ListElem msg (Type'enum'group' msg) where
 instance B'.MutListElem s (Type'enum'group' (M'.MutMsg s)) where
     setIndex (Type'enum'group' elt) i (List_Type'enum'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'enum'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'enum'group' msg) msg where
+    message (Type'enum'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'enum'group' msg) msg where
+    messageDefault = Type'enum'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'enum'group'' inside the message.
 new_Type'enum'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'enum'group' (M'.MutMsg s))
@@ -1463,6 +1531,10 @@ instance B'.ListElem msg (Type'struct'group' msg) where
 instance B'.MutListElem s (Type'struct'group' (M'.MutMsg s)) where
     setIndex (Type'struct'group' elt) i (List_Type'struct'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'struct'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'struct'group' msg) msg where
+    message (Type'struct'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'struct'group' msg) msg where
+    messageDefault = Type'struct'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'struct'group'' inside the message.
 new_Type'struct'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'struct'group' (M'.MutMsg s))
@@ -1520,6 +1592,10 @@ instance B'.ListElem msg (Type'interface'group' msg) where
 instance B'.MutListElem s (Type'interface'group' (M'.MutMsg s)) where
     setIndex (Type'interface'group' elt) i (List_Type'interface'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'interface'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'interface'group' msg) msg where
+    message (Type'interface'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'interface'group' msg) msg where
+    messageDefault = Type'interface'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'interface'group'' inside the message.
 new_Type'interface'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'interface'group' (M'.MutMsg s))
@@ -1577,6 +1653,10 @@ instance B'.ListElem msg (Type'anyPointer'group' msg) where
 instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMsg s)) where
     setIndex (Type'anyPointer'group' elt) i (List_Type'anyPointer'group' l) = U'.setIndex elt i l
     allocList msg len = List_Type'anyPointer'group' <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'anyPointer'group' msg) msg where
+    message (Type'anyPointer'group' struct) = U'.message struct
+instance U'.MessageDefault (Type'anyPointer'group' msg) msg where
+    messageDefault = Type'anyPointer'group' . U'.messageDefault
 
 -- | Allocate a new 'Type'anyPointer'group'' inside the message.
 new_Type'anyPointer'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'group' (M'.MutMsg s))
@@ -1700,6 +1780,10 @@ instance B'.ListElem msg (CapnpVersion msg) where
 instance B'.MutListElem s (CapnpVersion (M'.MutMsg s)) where
     setIndex (CapnpVersion elt) i (List_CapnpVersion l) = U'.setIndex elt i l
     allocList msg len = List_CapnpVersion <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (CapnpVersion msg) msg where
+    message (CapnpVersion struct) = U'.message struct
+instance U'.MessageDefault (CapnpVersion msg) msg where
+    messageDefault = CapnpVersion . U'.messageDefault
 
 -- | Allocate a new 'CapnpVersion' inside the message.
 new_CapnpVersion :: M'.WriteCtx m s => M'.MutMsg s -> m (CapnpVersion (M'.MutMsg s))
@@ -1769,6 +1853,10 @@ instance B'.ListElem msg (Node'NestedNode msg) where
 instance B'.MutListElem s (Node'NestedNode (M'.MutMsg s)) where
     setIndex (Node'NestedNode elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
     allocList msg len = List_Node'NestedNode <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Node'NestedNode msg) msg where
+    message (Node'NestedNode struct) = U'.message struct
+instance U'.MessageDefault (Node'NestedNode msg) msg where
+    messageDefault = Node'NestedNode . U'.messageDefault
 
 -- | Allocate a new 'Node'NestedNode' inside the message.
 new_Node'NestedNode :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'NestedNode (M'.MutMsg s))
@@ -1826,6 +1914,10 @@ instance B'.ListElem msg (Node msg) where
 instance B'.MutListElem s (Node (M'.MutMsg s)) where
     setIndex (Node elt) i (List_Node l) = U'.setIndex elt i l
     allocList msg len = List_Node <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node msg) msg where
+    message (Node struct) = U'.message struct
+instance U'.MessageDefault (Node msg) msg where
+    messageDefault = Node . U'.messageDefault
 
 -- | Allocate a new 'Node' inside the message.
 new_Node :: M'.WriteCtx m s => M'.MutMsg s -> m (Node (M'.MutMsg s))
@@ -2016,6 +2108,10 @@ instance B'.ListElem msg (Node'struct'group' msg) where
 instance B'.MutListElem s (Node'struct'group' (M'.MutMsg s)) where
     setIndex (Node'struct'group' elt) i (List_Node'struct'group' l) = U'.setIndex elt i l
     allocList msg len = List_Node'struct'group' <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node'struct'group' msg) msg where
+    message (Node'struct'group' struct) = U'.message struct
+instance U'.MessageDefault (Node'struct'group' msg) msg where
+    messageDefault = Node'struct'group' . U'.messageDefault
 
 -- | Allocate a new 'Node'struct'group'' inside the message.
 new_Node'struct'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'struct'group' (M'.MutMsg s))
@@ -2153,6 +2249,10 @@ instance B'.ListElem msg (Node'enum'group' msg) where
 instance B'.MutListElem s (Node'enum'group' (M'.MutMsg s)) where
     setIndex (Node'enum'group' elt) i (List_Node'enum'group' l) = U'.setIndex elt i l
     allocList msg len = List_Node'enum'group' <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node'enum'group' msg) msg where
+    message (Node'enum'group' struct) = U'.message struct
+instance U'.MessageDefault (Node'enum'group' msg) msg where
+    messageDefault = Node'enum'group' . U'.messageDefault
 
 -- | Allocate a new 'Node'enum'group'' inside the message.
 new_Node'enum'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'enum'group' (M'.MutMsg s))
@@ -2194,6 +2294,10 @@ instance B'.ListElem msg (Node'interface'group' msg) where
 instance B'.MutListElem s (Node'interface'group' (M'.MutMsg s)) where
     setIndex (Node'interface'group' elt) i (List_Node'interface'group' l) = U'.setIndex elt i l
     allocList msg len = List_Node'interface'group' <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node'interface'group' msg) msg where
+    message (Node'interface'group' struct) = U'.message struct
+instance U'.MessageDefault (Node'interface'group' msg) msg where
+    messageDefault = Node'interface'group' . U'.messageDefault
 
 -- | Allocate a new 'Node'interface'group'' inside the message.
 new_Node'interface'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'interface'group' (M'.MutMsg s))
@@ -2255,6 +2359,10 @@ instance B'.ListElem msg (Node'const'group' msg) where
 instance B'.MutListElem s (Node'const'group' (M'.MutMsg s)) where
     setIndex (Node'const'group' elt) i (List_Node'const'group' l) = U'.setIndex elt i l
     allocList msg len = List_Node'const'group' <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node'const'group' msg) msg where
+    message (Node'const'group' struct) = U'.message struct
+instance U'.MessageDefault (Node'const'group' msg) msg where
+    messageDefault = Node'const'group' . U'.messageDefault
 
 -- | Allocate a new 'Node'const'group'' inside the message.
 new_Node'const'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'const'group' (M'.MutMsg s))
@@ -2316,6 +2424,10 @@ instance B'.ListElem msg (Node'annotation'group' msg) where
 instance B'.MutListElem s (Node'annotation'group' (M'.MutMsg s)) where
     setIndex (Node'annotation'group' elt) i (List_Node'annotation'group' l) = U'.setIndex elt i l
     allocList msg len = List_Node'annotation'group' <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node'annotation'group' msg) msg where
+    message (Node'annotation'group' struct) = U'.message struct
+instance U'.MessageDefault (Node'annotation'group' msg) msg where
+    messageDefault = Node'annotation'group' . U'.messageDefault
 
 -- | Allocate a new 'Node'annotation'group'' inside the message.
 new_Node'annotation'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'annotation'group' (M'.MutMsg s))
@@ -2575,6 +2687,10 @@ instance B'.ListElem msg (Annotation msg) where
 instance B'.MutListElem s (Annotation (M'.MutMsg s)) where
     setIndex (Annotation elt) i (List_Annotation l) = U'.setIndex elt i l
     allocList msg len = List_Annotation <$> U'.allocCompositeList msg 1 2 len
+instance U'.HasMessage (Annotation msg) msg where
+    message (Annotation struct) = U'.message struct
+instance U'.MessageDefault (Annotation msg) msg where
+    messageDefault = Annotation . U'.messageDefault
 
 -- | Allocate a new 'Annotation' inside the message.
 new_Annotation :: M'.WriteCtx m s => M'.MutMsg s -> m (Annotation (M'.MutMsg s))

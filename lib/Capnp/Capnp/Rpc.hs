@@ -41,6 +41,10 @@ instance B'.ListElem msg (Call msg) where
 instance B'.MutListElem s (Call (M'.MutMsg s)) where
     setIndex (Call elt) i (List_Call l) = U'.setIndex elt i l
     allocList msg len = List_Call <$> U'.allocCompositeList msg 3 3 len
+instance U'.HasMessage (Call msg) msg where
+    message (Call struct) = U'.message struct
+instance U'.MessageDefault (Call msg) msg where
+    messageDefault = Call . U'.messageDefault
 
 -- | Allocate a new 'Call' inside the message.
 new_Call :: M'.WriteCtx m s => M'.MutMsg s -> m (Call (M'.MutMsg s))
@@ -314,6 +318,10 @@ instance B'.ListElem msg (Payload msg) where
 instance B'.MutListElem s (Payload (M'.MutMsg s)) where
     setIndex (Payload elt) i (List_Payload l) = U'.setIndex elt i l
     allocList msg len = List_Payload <$> U'.allocCompositeList msg 0 2 len
+instance U'.HasMessage (Payload msg) msg where
+    message (Payload struct) = U'.message struct
+instance U'.MessageDefault (Payload msg) msg where
+    messageDefault = Payload . U'.messageDefault
 
 -- | Allocate a new 'Payload' inside the message.
 new_Payload :: M'.WriteCtx m s => M'.MutMsg s -> m (Payload (M'.MutMsg s))
@@ -375,6 +383,10 @@ instance B'.ListElem msg (Provide msg) where
 instance B'.MutListElem s (Provide (M'.MutMsg s)) where
     setIndex (Provide elt) i (List_Provide l) = U'.setIndex elt i l
     allocList msg len = List_Provide <$> U'.allocCompositeList msg 1 2 len
+instance U'.HasMessage (Provide msg) msg where
+    message (Provide struct) = U'.message struct
+instance U'.MessageDefault (Provide msg) msg where
+    messageDefault = Provide . U'.messageDefault
 
 -- | Allocate a new 'Provide' inside the message.
 new_Provide :: M'.WriteCtx m s => M'.MutMsg s -> m (Provide (M'.MutMsg s))
@@ -452,6 +464,10 @@ instance B'.ListElem msg (Return msg) where
 instance B'.MutListElem s (Return (M'.MutMsg s)) where
     setIndex (Return elt) i (List_Return l) = U'.setIndex elt i l
     allocList msg len = List_Return <$> U'.allocCompositeList msg 2 1 len
+instance U'.HasMessage (Return msg) msg where
+    message (Return struct) = U'.message struct
+instance U'.MessageDefault (Return msg) msg where
+    messageDefault = Return . U'.messageDefault
 
 -- | Allocate a new 'Return' inside the message.
 new_Return :: M'.WriteCtx m s => M'.MutMsg s -> m (Return (M'.MutMsg s))
@@ -561,6 +577,10 @@ instance B'.ListElem msg (Release msg) where
 instance B'.MutListElem s (Release (M'.MutMsg s)) where
     setIndex (Release elt) i (List_Release l) = U'.setIndex elt i l
     allocList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (Release msg) msg where
+    message (Release struct) = U'.message struct
+instance U'.MessageDefault (Release msg) msg where
+    messageDefault = Release . U'.messageDefault
 
 -- | Allocate a new 'Release' inside the message.
 new_Release :: M'.WriteCtx m s => M'.MutMsg s -> m (Release (M'.MutMsg s))
@@ -649,6 +669,10 @@ instance B'.ListElem msg (Resolve msg) where
 instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
     setIndex (Resolve elt) i (List_Resolve l) = U'.setIndex elt i l
     allocList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Resolve msg) msg where
+    message (Resolve struct) = U'.message struct
+instance U'.MessageDefault (Resolve msg) msg where
+    messageDefault = Resolve . U'.messageDefault
 
 -- | Allocate a new 'Resolve' inside the message.
 new_Resolve :: M'.WriteCtx m s => M'.MutMsg s -> m (Resolve (M'.MutMsg s))
@@ -730,6 +754,10 @@ instance B'.ListElem msg (ThirdPartyCapDescriptor msg) where
 instance B'.MutListElem s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
     setIndex (ThirdPartyCapDescriptor elt) i (List_ThirdPartyCapDescriptor l) = U'.setIndex elt i l
     allocList msg len = List_ThirdPartyCapDescriptor <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (ThirdPartyCapDescriptor msg) msg where
+    message (ThirdPartyCapDescriptor struct) = U'.message struct
+instance U'.MessageDefault (ThirdPartyCapDescriptor msg) msg where
+    messageDefault = ThirdPartyCapDescriptor . U'.messageDefault
 
 -- | Allocate a new 'ThirdPartyCapDescriptor' inside the message.
 new_ThirdPartyCapDescriptor :: M'.WriteCtx m s => M'.MutMsg s -> m (ThirdPartyCapDescriptor (M'.MutMsg s))
@@ -787,6 +815,10 @@ instance B'.ListElem msg (Finish msg) where
 instance B'.MutListElem s (Finish (M'.MutMsg s)) where
     setIndex (Finish elt) i (List_Finish l) = U'.setIndex elt i l
     allocList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (Finish msg) msg where
+    message (Finish struct) = U'.message struct
+instance U'.MessageDefault (Finish msg) msg where
+    messageDefault = Finish . U'.messageDefault
 
 -- | Allocate a new 'Finish' inside the message.
 new_Finish :: M'.WriteCtx m s => M'.MutMsg s -> m (Finish (M'.MutMsg s))
@@ -840,6 +872,10 @@ instance B'.ListElem msg (Accept msg) where
 instance B'.MutListElem s (Accept (M'.MutMsg s)) where
     setIndex (Accept elt) i (List_Accept l) = U'.setIndex elt i l
     allocList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Accept msg) msg where
+    message (Accept struct) = U'.message struct
+instance U'.MessageDefault (Accept msg) msg where
+    messageDefault = Accept . U'.messageDefault
 
 -- | Allocate a new 'Accept' inside the message.
 new_Accept :: M'.WriteCtx m s => M'.MutMsg s -> m (Accept (M'.MutMsg s))
@@ -947,6 +983,10 @@ instance B'.ListElem msg (Exception msg) where
 instance B'.MutListElem s (Exception (M'.MutMsg s)) where
     setIndex (Exception elt) i (List_Exception l) = U'.setIndex elt i l
     allocList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Exception msg) msg where
+    message (Exception struct) = U'.message struct
+instance U'.MessageDefault (Exception msg) msg where
+    messageDefault = Exception . U'.messageDefault
 
 -- | Allocate a new 'Exception' inside the message.
 new_Exception :: M'.WriteCtx m s => M'.MutMsg s -> m (Exception (M'.MutMsg s))
@@ -1036,6 +1076,10 @@ instance B'.ListElem msg (PromisedAnswer msg) where
 instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
     setIndex (PromisedAnswer elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
     allocList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (PromisedAnswer msg) msg where
+    message (PromisedAnswer struct) = U'.message struct
+instance U'.MessageDefault (PromisedAnswer msg) msg where
+    messageDefault = PromisedAnswer . U'.messageDefault
 
 -- | Allocate a new 'PromisedAnswer' inside the message.
 new_PromisedAnswer :: M'.WriteCtx m s => M'.MutMsg s -> m (PromisedAnswer (M'.MutMsg s))
@@ -1124,6 +1168,10 @@ instance B'.ListElem msg (Bootstrap msg) where
 instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
     setIndex (Bootstrap elt) i (List_Bootstrap l) = U'.setIndex elt i l
     allocList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Bootstrap msg) msg where
+    message (Bootstrap struct) = U'.message struct
+instance U'.MessageDefault (Bootstrap msg) msg where
+    messageDefault = Bootstrap . U'.messageDefault
 
 -- | Allocate a new 'Bootstrap' inside the message.
 new_Bootstrap :: M'.WriteCtx m s => M'.MutMsg s -> m (Bootstrap (M'.MutMsg s))
@@ -1209,6 +1257,10 @@ instance B'.ListElem msg (Disembargo msg) where
 instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
     setIndex (Disembargo elt) i (List_Disembargo l) = U'.setIndex elt i l
     allocList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Disembargo msg) msg where
+    message (Disembargo struct) = U'.message struct
+instance U'.MessageDefault (Disembargo msg) msg where
+    messageDefault = Disembargo . U'.messageDefault
 
 -- | Allocate a new 'Disembargo' inside the message.
 new_Disembargo :: M'.WriteCtx m s => M'.MutMsg s -> m (Disembargo (M'.MutMsg s))
@@ -1266,6 +1318,10 @@ instance B'.ListElem msg (Join msg) where
 instance B'.MutListElem s (Join (M'.MutMsg s)) where
     setIndex (Join elt) i (List_Join l) = U'.setIndex elt i l
     allocList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
+instance U'.HasMessage (Join msg) msg where
+    message (Join struct) = U'.message struct
+instance U'.MessageDefault (Join msg) msg where
+    messageDefault = Join . U'.messageDefault
 
 -- | Allocate a new 'Join' inside the message.
 new_Join :: M'.WriteCtx m s => M'.MutMsg s -> m (Join (M'.MutMsg s))

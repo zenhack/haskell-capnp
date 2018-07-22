@@ -41,6 +41,10 @@ instance B'.ListElem msg (JoinKeyPart msg) where
 instance B'.MutListElem s (JoinKeyPart (M'.MutMsg s)) where
     setIndex (JoinKeyPart elt) i (List_JoinKeyPart l) = U'.setIndex elt i l
     allocList msg len = List_JoinKeyPart <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (JoinKeyPart msg) msg where
+    message (JoinKeyPart struct) = U'.message struct
+instance U'.MessageDefault (JoinKeyPart msg) msg where
+    messageDefault = JoinKeyPart . U'.messageDefault
 
 -- | Allocate a new 'JoinKeyPart' inside the message.
 new_JoinKeyPart :: M'.WriteCtx m s => M'.MutMsg s -> m (JoinKeyPart (M'.MutMsg s))
@@ -110,6 +114,10 @@ instance B'.ListElem msg (JoinResult msg) where
 instance B'.MutListElem s (JoinResult (M'.MutMsg s)) where
     setIndex (JoinResult elt) i (List_JoinResult l) = U'.setIndex elt i l
     allocList msg len = List_JoinResult <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (JoinResult msg) msg where
+    message (JoinResult struct) = U'.message struct
+instance U'.MessageDefault (JoinResult msg) msg where
+    messageDefault = JoinResult . U'.messageDefault
 
 -- | Allocate a new 'JoinResult' inside the message.
 new_JoinResult :: M'.WriteCtx m s => M'.MutMsg s -> m (JoinResult (M'.MutMsg s))
@@ -212,6 +220,10 @@ instance B'.ListElem msg (ProvisionId msg) where
 instance B'.MutListElem s (ProvisionId (M'.MutMsg s)) where
     setIndex (ProvisionId elt) i (List_ProvisionId l) = U'.setIndex elt i l
     allocList msg len = List_ProvisionId <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (ProvisionId msg) msg where
+    message (ProvisionId struct) = U'.message struct
+instance U'.MessageDefault (ProvisionId msg) msg where
+    messageDefault = ProvisionId . U'.messageDefault
 
 -- | Allocate a new 'ProvisionId' inside the message.
 new_ProvisionId :: M'.WriteCtx m s => M'.MutMsg s -> m (ProvisionId (M'.MutMsg s))
@@ -249,6 +261,10 @@ instance B'.ListElem msg (VatId msg) where
 instance B'.MutListElem s (VatId (M'.MutMsg s)) where
     setIndex (VatId elt) i (List_VatId l) = U'.setIndex elt i l
     allocList msg len = List_VatId <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (VatId msg) msg where
+    message (VatId struct) = U'.message struct
+instance U'.MessageDefault (VatId msg) msg where
+    messageDefault = VatId . U'.messageDefault
 
 -- | Allocate a new 'VatId' inside the message.
 new_VatId :: M'.WriteCtx m s => M'.MutMsg s -> m (VatId (M'.MutMsg s))

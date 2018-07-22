@@ -84,6 +84,10 @@ instance B'.ListElem msg (JsonValue'Call msg) where
 instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
     setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
     allocList msg len = List_JsonValue'Call <$> U'.allocCompositeList msg 0 2 len
+instance U'.HasMessage (JsonValue'Call msg) msg where
+    message (JsonValue'Call struct) = U'.message struct
+instance U'.MessageDefault (JsonValue'Call msg) msg where
+    messageDefault = JsonValue'Call . U'.messageDefault
 
 -- | Allocate a new 'JsonValue'Call' inside the message.
 new_JsonValue'Call :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Call (M'.MutMsg s))
@@ -145,6 +149,10 @@ instance B'.ListElem msg (JsonValue'Field msg) where
 instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
     setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
     allocList msg len = List_JsonValue'Field <$> U'.allocCompositeList msg 0 2 len
+instance U'.HasMessage (JsonValue'Field msg) msg where
+    message (JsonValue'Field struct) = U'.message struct
+instance U'.MessageDefault (JsonValue'Field msg) msg where
+    messageDefault = JsonValue'Field . U'.messageDefault
 
 -- | Allocate a new 'JsonValue'Field' inside the message.
 new_JsonValue'Field :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Field (M'.MutMsg s))
