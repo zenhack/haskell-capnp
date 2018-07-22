@@ -85,6 +85,9 @@ instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
     setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
     allocList msg len = List_JsonValue'Call <$> U'.allocCompositeList msg 0 2 len
 
+-- | Allocate a new 'JsonValue'Call' inside the message.
+new_JsonValue'Call :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Call (M'.MutMsg s))
+new_JsonValue'Call msg = JsonValue'Call <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
     fromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Call l) = C'.toPtr l
@@ -143,6 +146,9 @@ instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
     setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
     allocList msg len = List_JsonValue'Field <$> U'.allocCompositeList msg 0 2 len
 
+-- | Allocate a new 'JsonValue'Field' inside the message.
+new_JsonValue'Field :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Field (M'.MutMsg s))
+new_JsonValue'Field msg = JsonValue'Field <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
     fromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Field l) = C'.toPtr l

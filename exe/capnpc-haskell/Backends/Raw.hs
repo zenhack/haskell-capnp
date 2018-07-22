@@ -105,6 +105,11 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
         ,           TB.fromString (show dataSz), " "
         ,           TB.fromString (show ptrSz), " len\n"
         , "\n"
+        , "-- | Allocate a new '", nameText, "' inside the message.\n"
+        , "new_", nameText, " :: M'.WriteCtx m s => M'.MutMsg s -> m (", nameText, " (M'.MutMsg s))\n"
+        , "new_", nameText, " msg = ", nameText, " <$> U'.allocStruct msg "
+        ,           TB.fromString (show dataSz), " "
+        ,           TB.fromString (show ptrSz), "\n"
         , fmtStructListIsPtr nameText
         ]
 

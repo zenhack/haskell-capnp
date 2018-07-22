@@ -42,6 +42,9 @@ instance B'.MutListElem s (Persistent'SaveResults (M'.MutMsg s)) where
     setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
     allocList msg len = List_Persistent'SaveResults <$> U'.allocCompositeList msg 0 1 len
 
+-- | Allocate a new 'Persistent'SaveResults' inside the message.
+new_Persistent'SaveResults :: M'.WriteCtx m s => M'.MutMsg s -> m (Persistent'SaveResults (M'.MutMsg s))
+new_Persistent'SaveResults msg = Persistent'SaveResults <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
     fromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
     toPtr (List_Persistent'SaveResults l) = C'.toPtr l
@@ -80,6 +83,9 @@ instance B'.MutListElem s (Persistent'SaveParams (M'.MutMsg s)) where
     setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
     allocList msg len = List_Persistent'SaveParams <$> U'.allocCompositeList msg 0 1 len
 
+-- | Allocate a new 'Persistent'SaveParams' inside the message.
+new_Persistent'SaveParams :: M'.WriteCtx m s => M'.MutMsg s -> m (Persistent'SaveParams (M'.MutMsg s))
+new_Persistent'SaveParams msg = Persistent'SaveParams <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
     fromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
     toPtr (List_Persistent'SaveParams l) = C'.toPtr l

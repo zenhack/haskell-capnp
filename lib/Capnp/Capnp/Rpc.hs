@@ -42,6 +42,9 @@ instance B'.MutListElem s (Call (M'.MutMsg s)) where
     setIndex (Call elt) i (List_Call l) = U'.setIndex elt i l
     allocList msg len = List_Call <$> U'.allocCompositeList msg 3 3 len
 
+-- | Allocate a new 'Call' inside the message.
+new_Call :: M'.WriteCtx m s => M'.MutMsg s -> m (Call (M'.MutMsg s))
+new_Call msg = Call <$> U'.allocStruct msg 3 3
 instance C'.IsPtr msg (B'.List msg (Call msg)) where
     fromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
     toPtr (List_Call l) = C'.toPtr l
@@ -312,6 +315,9 @@ instance B'.MutListElem s (Payload (M'.MutMsg s)) where
     setIndex (Payload elt) i (List_Payload l) = U'.setIndex elt i l
     allocList msg len = List_Payload <$> U'.allocCompositeList msg 0 2 len
 
+-- | Allocate a new 'Payload' inside the message.
+new_Payload :: M'.WriteCtx m s => M'.MutMsg s -> m (Payload (M'.MutMsg s))
+new_Payload msg = Payload <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (Payload msg)) where
     fromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
     toPtr (List_Payload l) = C'.toPtr l
@@ -370,6 +376,9 @@ instance B'.MutListElem s (Provide (M'.MutMsg s)) where
     setIndex (Provide elt) i (List_Provide l) = U'.setIndex elt i l
     allocList msg len = List_Provide <$> U'.allocCompositeList msg 1 2 len
 
+-- | Allocate a new 'Provide' inside the message.
+new_Provide :: M'.WriteCtx m s => M'.MutMsg s -> m (Provide (M'.MutMsg s))
+new_Provide msg = Provide <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Provide msg)) where
     fromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
     toPtr (List_Provide l) = C'.toPtr l
@@ -444,6 +453,9 @@ instance B'.MutListElem s (Return (M'.MutMsg s)) where
     setIndex (Return elt) i (List_Return l) = U'.setIndex elt i l
     allocList msg len = List_Return <$> U'.allocCompositeList msg 2 1 len
 
+-- | Allocate a new 'Return' inside the message.
+new_Return :: M'.WriteCtx m s => M'.MutMsg s -> m (Return (M'.MutMsg s))
+new_Return msg = Return <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Return msg)) where
     fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
     toPtr (List_Return l) = C'.toPtr l
@@ -550,6 +562,9 @@ instance B'.MutListElem s (Release (M'.MutMsg s)) where
     setIndex (Release elt) i (List_Release l) = U'.setIndex elt i l
     allocList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
 
+-- | Allocate a new 'Release' inside the message.
+new_Release :: M'.WriteCtx m s => M'.MutMsg s -> m (Release (M'.MutMsg s))
+new_Release msg = Release <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (Release msg)) where
     fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
     toPtr (List_Release l) = C'.toPtr l
@@ -635,6 +650,9 @@ instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
     setIndex (Resolve elt) i (List_Resolve l) = U'.setIndex elt i l
     allocList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'Resolve' inside the message.
+new_Resolve :: M'.WriteCtx m s => M'.MutMsg s -> m (Resolve (M'.MutMsg s))
+new_Resolve msg = Resolve <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
     fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
     toPtr (List_Resolve l) = C'.toPtr l
@@ -713,6 +731,9 @@ instance B'.MutListElem s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
     setIndex (ThirdPartyCapDescriptor elt) i (List_ThirdPartyCapDescriptor l) = U'.setIndex elt i l
     allocList msg len = List_ThirdPartyCapDescriptor <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'ThirdPartyCapDescriptor' inside the message.
+new_ThirdPartyCapDescriptor :: M'.WriteCtx m s => M'.MutMsg s -> m (ThirdPartyCapDescriptor (M'.MutMsg s))
+new_ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (ThirdPartyCapDescriptor msg)) where
     fromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_ThirdPartyCapDescriptor l) = C'.toPtr l
@@ -767,6 +788,9 @@ instance B'.MutListElem s (Finish (M'.MutMsg s)) where
     setIndex (Finish elt) i (List_Finish l) = U'.setIndex elt i l
     allocList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
 
+-- | Allocate a new 'Finish' inside the message.
+new_Finish :: M'.WriteCtx m s => M'.MutMsg s -> m (Finish (M'.MutMsg s))
+new_Finish msg = Finish <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (Finish msg)) where
     fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
     toPtr (List_Finish l) = C'.toPtr l
@@ -817,6 +841,9 @@ instance B'.MutListElem s (Accept (M'.MutMsg s)) where
     setIndex (Accept elt) i (List_Accept l) = U'.setIndex elt i l
     allocList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'Accept' inside the message.
+new_Accept :: M'.WriteCtx m s => M'.MutMsg s -> m (Accept (M'.MutMsg s))
+new_Accept msg = Accept <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Accept msg)) where
     fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
     toPtr (List_Accept l) = C'.toPtr l
@@ -921,6 +948,9 @@ instance B'.MutListElem s (Exception (M'.MutMsg s)) where
     setIndex (Exception elt) i (List_Exception l) = U'.setIndex elt i l
     allocList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'Exception' inside the message.
+new_Exception :: M'.WriteCtx m s => M'.MutMsg s -> m (Exception (M'.MutMsg s))
+new_Exception msg = Exception <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Exception msg)) where
     fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
     toPtr (List_Exception l) = C'.toPtr l
@@ -1007,6 +1037,9 @@ instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
     setIndex (PromisedAnswer elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
     allocList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'PromisedAnswer' inside the message.
+new_PromisedAnswer :: M'.WriteCtx m s => M'.MutMsg s -> m (PromisedAnswer (M'.MutMsg s))
+new_PromisedAnswer msg = PromisedAnswer <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
     fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer l) = C'.toPtr l
@@ -1092,6 +1125,9 @@ instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
     setIndex (Bootstrap elt) i (List_Bootstrap l) = U'.setIndex elt i l
     allocList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'Bootstrap' inside the message.
+new_Bootstrap :: M'.WriteCtx m s => M'.MutMsg s -> m (Bootstrap (M'.MutMsg s))
+new_Bootstrap msg = Bootstrap <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
     fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
     toPtr (List_Bootstrap l) = C'.toPtr l
@@ -1174,6 +1210,9 @@ instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
     setIndex (Disembargo elt) i (List_Disembargo l) = U'.setIndex elt i l
     allocList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
 
+-- | Allocate a new 'Disembargo' inside the message.
+new_Disembargo :: M'.WriteCtx m s => M'.MutMsg s -> m (Disembargo (M'.MutMsg s))
+new_Disembargo msg = Disembargo <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
     fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo l) = C'.toPtr l
@@ -1228,6 +1267,9 @@ instance B'.MutListElem s (Join (M'.MutMsg s)) where
     setIndex (Join elt) i (List_Join l) = U'.setIndex elt i l
     allocList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
 
+-- | Allocate a new 'Join' inside the message.
+new_Join :: M'.WriteCtx m s => M'.MutMsg s -> m (Join (M'.MutMsg s))
+new_Join msg = Join <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Join msg)) where
     fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
     toPtr (List_Join l) = C'.toPtr l
