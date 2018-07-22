@@ -219,10 +219,10 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
             forM_ [0..3] $ \i ->
                 index i mylist >>= setData (70 + fromIntegral i) 1
         }
-    , allocNormalListTest "u64vec" 22 allocList64
-    , allocNormalListTest "u32vec" 22 allocList32
-    , allocNormalListTest "u16vec" 23 allocList16
-    , allocNormalListTest "u8vec"  24 allocList8
+    , allocNormalListTest "u64vec" 21 allocList64 List64
+    , allocNormalListTest "u32vec" 22 allocList32 List32
+    , allocNormalListTest "u16vec" 23 allocList16 List16
+    , allocNormalListTest "u8vec"  24 allocList8  List8
     , ModTest
         { testIn = "()"
         , testType = "Z"
@@ -232,6 +232,7 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
             boolvec <- allocList1 (message struct) 3
             forM_ [0..2] $ \i ->
                 setIndex (even i) i boolvec
+            setPtr (Just $ PtrList $ List1 boolvec) 0 struct
         }
     ]
   where
@@ -239,18 +240,20 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
     --
     -- parameters:
     --
-    -- * tagname - the name of the union variant
-    -- * tagvalue - the numeric value of the tag for this variant
+    -- * tagname   - the name of the union variant
+    -- * tagvalue  - the numeric value of the tag for this variant
     -- * allocList - the allocation function
-    allocNormalListTest tagname tagvalue allocList =
+    -- * dataCon   - the data constructor for 'List' to use.
+    allocNormalListTest tagname tagvalue allocList dataCon =
         ModTest
             { testIn = "()"
             , testType = "Z"
-            , testOut = "( " ++ tagname ++ " = [1, 2, 3, 4, 5] )\n"
+            , testOut = "(" ++ tagname ++ " = [0, 1, 2, 3, 4])\n"
             , testMod = \struct -> do
                 setData tagvalue 0 struct
                 u32vec <- allocList (message struct) 5
                 forM_ [0..4] $ \i -> setIndex (fromIntegral i) i u32vec
+                setPtr (Just $ PtrList $ dataCon u32vec) 0 struct
             }
     testCase ModTest{..} = do
         msg <- M.thaw =<< encodeValue schemaText testType testIn
