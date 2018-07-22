@@ -215,7 +215,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                                   }
                               ]
                           , dataTagLoc = Nothing
-                          , dataCerialType = IR.CTyStruct
+                          , dataCerialType = IR.CTyStruct dataWordCount pointerCount
                           }
                     )
                 bodyUnion = IR.DeclDef IR.DataDef
@@ -225,7 +225,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                         Type'uint16
                         -- The default value for a union tag is always zero:
                         (Value'uint16 0)
-                    , dataCerialType = IR.CTyStruct
+                    , dataCerialType = IR.CTyStruct dataWordCount pointerCount
                     }
                 unionName = IR.subName name ""
             in case (unionFields, commonFields) of

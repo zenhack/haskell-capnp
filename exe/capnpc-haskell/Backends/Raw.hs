@@ -236,13 +236,13 @@ fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
         ]
 
 fmtDataDef :: Id -> Name -> DataDef -> TB.Builder
-fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct, ..} =
+fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct _ _, ..} =
     fmtNewtypeStruct thisMod dataName <>
     case variantParams of
         Record fields ->
             mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
         _ -> ""
-fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct,dataTagLoc=Just tagLoc,dataVariants} =
+fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct _ _,dataTagLoc=Just tagLoc,dataVariants} =
     let nameText = fmtName thisMod dataName
     in mconcat
         [ "data ", nameText, " msg"

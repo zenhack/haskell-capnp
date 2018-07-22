@@ -186,9 +186,10 @@ data DataDef = DataDef
 -- Unlike 'Type', this only encodes types of values that we may be asked to
 -- define, and encodes less detail (no type parameters, name etc).
 data CerialType
-    -- | Stored as a struct
-    = CTyStruct
-    -- | Stored in the data section (i.e. an integer-like type).
+    -- | A struct. Arguments are the size of the data and pointer
+    -- sections, respectively.
+    = CTyStruct !Word16 !Word16
+    -- | An Enum. Stored in the data section of a struct as a 16-bit value.
     | CTyEnum
     deriving(Show, Read, Eq)
 
