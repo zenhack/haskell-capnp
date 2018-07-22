@@ -87,6 +87,15 @@ fmtStructListIsPtr nameText = mconcat
     , "    toPtr (List_", nameText, " l) = C'.toPtr l\n"
     ]
 
+-- | Generate declarations common to all types which are represented
+-- by 'Untyped.Struct'.
+--
+-- parameters:
+--
+-- * thisMod - the id of the module that we are generating.
+-- * name    - the name of the type.
+-- * dataSz  - the size of the data section, in words.
+-- * ptrSz   - the size of the pointer section.
 fmtNewtypeStruct :: Id -> Name -> Word16 -> Word16 -> TB.Builder
 fmtNewtypeStruct thisMod name dataSz ptrSz =
     let nameText = fmtName thisMod name
