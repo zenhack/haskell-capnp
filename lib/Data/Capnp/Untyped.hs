@@ -581,7 +581,7 @@ allocCompositeList
 allocCompositeList msg dataSz ptrSz len = do
     let eltSize = fromIntegral dataSz + fromIntegral ptrSz
     addr <- M.alloc msg (WordCount $ len * eltSize + 1) -- + 1 for the tag word.
-    M.setWord msg addr $ P.serializePtr $ Just $ P.StructPtr 0 dataSz ptrSz
+    M.setWord msg addr $ P.serializePtr $ Just $ P.StructPtr (fromIntegral len) dataSz ptrSz
     let firstStruct = Struct
             msg
             addr { wordIndex = wordIndex addr + 1 }

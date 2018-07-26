@@ -211,7 +211,7 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
     , ModTest
         { testIn = "()"
         , testType = "HoldsVerTwoTwoList"
-        , testOut = "( mylist = [(duo = 70), (duo = 71), (duo = 72), (duo = 73)] )\n"
+        , testOut = "( mylist = [(val = 0, duo = 70), (val = 0, duo = 71), (val = 0, duo = 72), (val = 0, duo = 73)] )\n"
         , testMod = \struct -> do
             mylist <- allocCompositeList (message struct) 2 2 4
             forM_ [0..3] $ \i ->
