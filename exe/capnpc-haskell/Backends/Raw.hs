@@ -98,32 +98,33 @@ fmtStructListIsPtr nameText = mconcat
 -- * ptrSz   - the size of the pointer section.
 fmtNewtypeStruct :: Id -> Name -> Word16 -> Word16 -> TB.Builder
 fmtNewtypeStruct thisMod name dataSz ptrSz =
-    let nameText = fmtName thisMod name
+    let typeCon = fmtName thisMod name
+        dataCon = typeCon <> "_newtype_"
     in mconcat
-        [ "newtype ", nameText, " msg = ", nameText, " (U'.Struct msg)"
+        [ "newtype ", typeCon, " msg = ", dataCon, " (U'.Struct msg)"
         , "\n\n"
-        , "instance C'.IsStruct msg (", nameText, " msg) where\n"
-        , "    fromStruct = pure . ", nameText, "\n"
-        , "instance C'.IsPtr msg (", nameText, " msg) where\n"
-        , "    fromPtr msg ptr = ", nameText, " <$> C'.fromPtr msg ptr\n"
-        , "    toPtr (", nameText, " struct) = C'.toPtr struct\n"
-        , fmtStructListElem nameText
-        , "instance B'.MutListElem s (", nameText, " (M'.MutMsg s)) where\n"
-        , "    setIndex (", nameText, " elt) i (List_", nameText, " l) = U'.setIndex elt i l\n"
-        , "    allocList msg len = List_", nameText, " <$> U'.allocCompositeList msg "
+        , "instance C'.IsStruct msg (", typeCon, " msg) where\n"
+        , "    fromStruct = pure . ", dataCon, "\n"
+        , "instance C'.IsPtr msg (", typeCon, " msg) where\n"
+        , "    fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr\n"
+        , "    toPtr (", dataCon, " struct) = C'.toPtr struct\n"
+        , fmtStructListElem typeCon
+        , "instance B'.MutListElem s (", typeCon, " (M'.MutMsg s)) where\n"
+        , "    setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l\n"
+        , "    allocList msg len = List_", typeCon, " <$> U'.allocCompositeList msg "
         ,           TB.fromString (show dataSz), " "
         ,           TB.fromString (show ptrSz), " len\n"
-        , "instance U'.HasMessage (", nameText, " msg) msg where\n"
-        , "    message (", nameText, " struct) = U'.message struct\n"
-        , "instance U'.MessageDefault (", nameText, " msg) msg where\n"
-        , "    messageDefault = ", nameText, " . U'.messageDefault\n"
+        , "instance U'.HasMessage (", typeCon, " msg) msg where\n"
+        , "    message (", dataCon, " struct) = U'.message struct\n"
+        , "instance U'.MessageDefault (", typeCon, " msg) msg where\n"
+        , "    messageDefault = ", dataCon, " . U'.messageDefault\n"
         , "\n"
-        , "-- | Allocate a new '", nameText, "' inside the message.\n"
-        , "new_", nameText, " :: M'.WriteCtx m s => M'.MutMsg s -> m (", nameText, " (M'.MutMsg s))\n"
-        , "new_", nameText, " msg = ", nameText, " <$> U'.allocStruct msg "
+        , "-- | Allocate a new '", typeCon, "' inside the message.\n"
+        , "new_", typeCon, " :: M'.WriteCtx m s => M'.MutMsg s -> m (", typeCon, " (M'.MutMsg s))\n"
+        , "new_", typeCon, " msg = ", dataCon , " <$> U'.allocStruct msg "
         ,           TB.fromString (show dataSz), " "
         ,           TB.fromString (show ptrSz), "\n"
-        , fmtStructListIsPtr nameText
+        , fmtStructListIsPtr typeCon
         ]
 
 -- | Generate an instance of ListElem for a struct type. The parameter is the name of
@@ -133,7 +134,7 @@ fmtStructListElem nameText = mconcat
     [ "instance B'.ListElem msg (", nameText, " msg) where\n"
     , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
     , "    length (List_", nameText, " l) = U'.length l\n"
-    , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText, "\n"
+    , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText , "\n"
     ]
 
 -- | Output an expression equivalent to fromStruct, but restricted to the type
@@ -179,12 +180,14 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , fmtSetter (accessorName "set_")
         ]
   where
+    typeCon = fmtName thisMod typeName
+    dataCon = typeCon <> "_newtype_"
     fmtGetter getName =
-        let getType = fmtName thisMod typeName <> " msg -> m " <> fmtType thisMod "msg" fieldType
+        let getType = typeCon <> " msg -> m " <> fmtType thisMod "msg" fieldType
         in mconcat
         [ getName, " :: U'.ReadCtx m msg => ", getType, "\n"
         , getName
-        , " (", fmtName thisMod typeName, " struct) =", case fieldLoc of
+        , " (", dataCon, " struct) =", case fieldLoc of
             DataField loc -> fmtGetWordField "struct" loc
             PtrField idx -> mconcat
                 [ "\n    U'.getPtr ", TB.fromString (show idx), " struct"
@@ -198,10 +201,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , "    fromLabel = DC'.Get ", getName, "\n"
         ]
     fmtHas hasName =
-        let hasType = fmtName thisMod typeName <> " msg -> m Bool"
+        let hasType = typeCon <> " msg -> m Bool"
         in mconcat
         [ hasName, " :: U'.ReadCtx m msg => ", hasType, "\n"
-        , hasName, "(", fmtName thisMod typeName, " struct) = "
+        , hasName, "(", dataCon, " struct) = "
         , case fieldLoc of
             DataField DataLoc{dataIdx} ->
                 "pure $ " <> TB.fromString (show dataIdx) <> " < U'.length (U'.dataSection struct)"
@@ -214,12 +217,12 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , "    fromLabel = DC'.Has ", hasName, "\n"
         ]
     fmtSetter setName =
-        let setType = fmtName thisMod typeName <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
+        let setType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
         in mconcat
         [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", setType, "\n"
         , case fieldLoc of
             DataField loc@DataLoc{..} -> mconcat
-                [ setName, " (", fmtName thisMod typeName, " struct) value = "
+                [ setName, " (", dataCon, " struct) value = "
                 , let size = case fieldType of
                         EnumType _           -> 16
                         PrimType PrimInt{..} -> size
@@ -235,7 +238,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 ]
             VoidField -> setName <> " _ = pure ()"
             PtrField idx -> mconcat
-                [ setName, " (", fmtName thisMod typeName, " struct) value = "
+                [ setName, " (", dataCon, " struct) value = "
                 , "U'.setPtr (C'.toPtr value) ", TB.fromString (show idx), " struct\n"
                 ]
             _ -> setName <> " _ = error " <> TB.fromString (show "TODO: generate more setters.")

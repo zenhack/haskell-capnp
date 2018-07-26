@@ -1,5 +1,6 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- | This module defines a test that tries to walk over the
 -- CodeGeneratorRequest in `tests/data/schema-codegenreq`,
 -- failing if any of the data is not as expected.
@@ -12,6 +13,7 @@ import Prelude hiding (length)
 import Data.Capnp.Untyped hiding (index, length)
 import Tests.Util
 
+import Codec.Capnp               (fromStruct)
 import Control.Monad             (mapM_, when)
 import Data.Capnp.Basics         (Text(..), index, length)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
@@ -47,7 +49,7 @@ theAssert = do
   where
     reader :: Struct M.ConstMsg -> LimitT IO ()
     reader root = do
-        let req = Schema.CodeGeneratorRequest root
+        req :: Schema.CodeGeneratorRequest M.ConstMsg <- fromStruct root
         nodes <- Schema.get_CodeGeneratorRequest'nodes req
         requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
         let 37 = length nodes

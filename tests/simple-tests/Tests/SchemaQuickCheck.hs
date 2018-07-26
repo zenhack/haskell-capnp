@@ -1,9 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Tests.SchemaQuickCheck
     (schemaCGRQuickCheck)
     where
 
 import qualified Data.ByteString as BS
 
+import Codec.Capnp               (fromStruct)
 import Data.Capnp.Errors         (Error)
 import Data.Capnp.Message        as M
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)
@@ -34,7 +36,7 @@ decodeCGR :: BS.ByteString -> IO (Int, Int)
 decodeCGR bytes = do
     let reader :: Untyped.Struct M.ConstMsg -> LimitT IO Int
         reader struct = do
-            let req = Schema.CodeGeneratorRequest struct
+            req :: Schema.CodeGeneratorRequest M.ConstMsg <- fromStruct struct
             nodes <- Schema.get_CodeGeneratorRequest'nodes req
             requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
             return (Basics.length nodes)

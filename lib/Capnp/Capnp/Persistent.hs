@@ -27,33 +27,33 @@ import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-newtype Persistent'SaveResults msg = Persistent'SaveResults (U'.Struct msg)
+newtype Persistent'SaveResults msg = Persistent'SaveResults_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Persistent'SaveResults msg) where
-    fromStruct = pure . Persistent'SaveResults
+    fromStruct = pure . Persistent'SaveResults_newtype_
 instance C'.IsPtr msg (Persistent'SaveResults msg) where
-    fromPtr msg ptr = Persistent'SaveResults <$> C'.fromPtr msg ptr
-    toPtr (Persistent'SaveResults struct) = C'.toPtr struct
+    fromPtr msg ptr = Persistent'SaveResults_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Persistent'SaveResults_newtype_ struct) = C'.toPtr struct
 instance B'.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveResults l) = U'.length l
     index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Persistent'SaveResults (M'.MutMsg s)) where
-    setIndex (Persistent'SaveResults elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
+    setIndex (Persistent'SaveResults_newtype_ elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
     allocList msg len = List_Persistent'SaveResults <$> U'.allocCompositeList msg 0 1 len
 instance U'.HasMessage (Persistent'SaveResults msg) msg where
-    message (Persistent'SaveResults struct) = U'.message struct
+    message (Persistent'SaveResults_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Persistent'SaveResults msg) msg where
-    messageDefault = Persistent'SaveResults . U'.messageDefault
+    messageDefault = Persistent'SaveResults_newtype_ . U'.messageDefault
 
 -- | Allocate a new 'Persistent'SaveResults' inside the message.
 new_Persistent'SaveResults :: M'.WriteCtx m s => M'.MutMsg s -> m (Persistent'SaveResults (M'.MutMsg s))
-new_Persistent'SaveResults msg = Persistent'SaveResults <$> U'.allocStruct msg 0 1
+new_Persistent'SaveResults msg = Persistent'SaveResults_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
     fromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
     toPtr (List_Persistent'SaveResults l) = C'.toPtr l
 get_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m (Maybe (U'.Ptr msg))
-get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
+get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
@@ -61,44 +61,44 @@ instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Get (Persistent'SaveResult
     fromLabel = DC'.Get get_Persistent'SaveResults'sturdyRef
 
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
-has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Has (Persistent'SaveResults msg -> m Bool)) where
     fromLabel = DC'.Has has_Persistent'SaveResults'sturdyRef
 
 set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sturdyRef" (DC'.Set (Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Persistent'SaveResults'sturdyRef
 
 
-newtype Persistent'SaveParams msg = Persistent'SaveParams (U'.Struct msg)
+newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Persistent'SaveParams msg) where
-    fromStruct = pure . Persistent'SaveParams
+    fromStruct = pure . Persistent'SaveParams_newtype_
 instance C'.IsPtr msg (Persistent'SaveParams msg) where
-    fromPtr msg ptr = Persistent'SaveParams <$> C'.fromPtr msg ptr
-    toPtr (Persistent'SaveParams struct) = C'.toPtr struct
+    fromPtr msg ptr = Persistent'SaveParams_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Persistent'SaveParams_newtype_ struct) = C'.toPtr struct
 instance B'.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
     length (List_Persistent'SaveParams l) = U'.length l
     index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Persistent'SaveParams (M'.MutMsg s)) where
-    setIndex (Persistent'SaveParams elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
+    setIndex (Persistent'SaveParams_newtype_ elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
     allocList msg len = List_Persistent'SaveParams <$> U'.allocCompositeList msg 0 1 len
 instance U'.HasMessage (Persistent'SaveParams msg) msg where
-    message (Persistent'SaveParams struct) = U'.message struct
+    message (Persistent'SaveParams_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Persistent'SaveParams msg) msg where
-    messageDefault = Persistent'SaveParams . U'.messageDefault
+    messageDefault = Persistent'SaveParams_newtype_ . U'.messageDefault
 
 -- | Allocate a new 'Persistent'SaveParams' inside the message.
 new_Persistent'SaveParams :: M'.WriteCtx m s => M'.MutMsg s -> m (Persistent'SaveParams (M'.MutMsg s))
-new_Persistent'SaveParams msg = Persistent'SaveParams <$> U'.allocStruct msg 0 1
+new_Persistent'SaveParams msg = Persistent'SaveParams_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
     fromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
     toPtr (List_Persistent'SaveParams l) = C'.toPtr l
 get_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m (Maybe (U'.Ptr msg))
-get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
+get_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
@@ -106,12 +106,12 @@ instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Get (Persistent'SaveParams m
     fromLabel = DC'.Get get_Persistent'SaveParams'sealFor
 
 has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
-has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+has_Persistent'SaveParams'sealFor(Persistent'SaveParams_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Has (Persistent'SaveParams msg -> m Bool)) where
     fromLabel = DC'.Has has_Persistent'SaveParams'sealFor
 
 set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sealFor" (DC'.Set (Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Persistent'SaveParams'sealFor

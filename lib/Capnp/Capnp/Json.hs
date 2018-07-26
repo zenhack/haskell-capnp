@@ -70,33 +70,33 @@ instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
     fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue l) = C'.toPtr l
 
-newtype JsonValue'Call msg = JsonValue'Call (U'.Struct msg)
+newtype JsonValue'Call msg = JsonValue'Call_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (JsonValue'Call msg) where
-    fromStruct = pure . JsonValue'Call
+    fromStruct = pure . JsonValue'Call_newtype_
 instance C'.IsPtr msg (JsonValue'Call msg) where
-    fromPtr msg ptr = JsonValue'Call <$> C'.fromPtr msg ptr
-    toPtr (JsonValue'Call struct) = C'.toPtr struct
+    fromPtr msg ptr = JsonValue'Call_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (JsonValue'Call_newtype_ struct) = C'.toPtr struct
 instance B'.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Call l) = U'.length l
     index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
-    setIndex (JsonValue'Call elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
+    setIndex (JsonValue'Call_newtype_ elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
     allocList msg len = List_JsonValue'Call <$> U'.allocCompositeList msg 0 2 len
 instance U'.HasMessage (JsonValue'Call msg) msg where
-    message (JsonValue'Call struct) = U'.message struct
+    message (JsonValue'Call_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (JsonValue'Call msg) msg where
-    messageDefault = JsonValue'Call . U'.messageDefault
+    messageDefault = JsonValue'Call_newtype_ . U'.messageDefault
 
 -- | Allocate a new 'JsonValue'Call' inside the message.
 new_JsonValue'Call :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Call (M'.MutMsg s))
-new_JsonValue'Call msg = JsonValue'Call <$> U'.allocStruct msg 0 2
+new_JsonValue'Call msg = JsonValue'Call_newtype_ <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
     fromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Call l) = C'.toPtr l
 get_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.Text msg)
-get_JsonValue'Call'function (JsonValue'Call struct) =
+get_JsonValue'Call'function (JsonValue'Call_newtype_ struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
@@ -104,19 +104,19 @@ instance U'.ReadCtx m msg => IsLabel "function" (DC'.Get (JsonValue'Call msg -> 
     fromLabel = DC'.Get get_JsonValue'Call'function
 
 has_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
-has_JsonValue'Call'function(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+has_JsonValue'Call'function(JsonValue'Call_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 instance U'.ReadCtx m msg => IsLabel "function" (DC'.Has (JsonValue'Call msg -> m Bool)) where
     fromLabel = DC'.Has has_JsonValue'Call'function
 
 set_JsonValue'Call'function :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_JsonValue'Call'function (JsonValue'Call struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_JsonValue'Call'function (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "function" (DC'.Set (JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Call'function
 
 
 get_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.List msg (JsonValue msg))
-get_JsonValue'Call'params (JsonValue'Call struct) =
+get_JsonValue'Call'params (JsonValue'Call_newtype_ struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
@@ -124,44 +124,44 @@ instance U'.ReadCtx m msg => IsLabel "params" (DC'.Get (JsonValue'Call msg -> m 
     fromLabel = DC'.Get get_JsonValue'Call'params
 
 has_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
-has_JsonValue'Call'params(JsonValue'Call struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+has_JsonValue'Call'params(JsonValue'Call_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 instance U'.ReadCtx m msg => IsLabel "params" (DC'.Has (JsonValue'Call msg -> m Bool)) where
     fromLabel = DC'.Has has_JsonValue'Call'params
 
 set_JsonValue'Call'params :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
-set_JsonValue'Call'params (JsonValue'Call struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_JsonValue'Call'params (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "params" (DC'.Set (JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Call'params
 
 
-newtype JsonValue'Field msg = JsonValue'Field (U'.Struct msg)
+newtype JsonValue'Field msg = JsonValue'Field_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (JsonValue'Field msg) where
-    fromStruct = pure . JsonValue'Field
+    fromStruct = pure . JsonValue'Field_newtype_
 instance C'.IsPtr msg (JsonValue'Field msg) where
-    fromPtr msg ptr = JsonValue'Field <$> C'.fromPtr msg ptr
-    toPtr (JsonValue'Field struct) = C'.toPtr struct
+    fromPtr msg ptr = JsonValue'Field_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (JsonValue'Field_newtype_ struct) = C'.toPtr struct
 instance B'.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (U'.ListOf msg (U'.Struct msg))
     length (List_JsonValue'Field l) = U'.length l
     index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
-    setIndex (JsonValue'Field elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
+    setIndex (JsonValue'Field_newtype_ elt) i (List_JsonValue'Field l) = U'.setIndex elt i l
     allocList msg len = List_JsonValue'Field <$> U'.allocCompositeList msg 0 2 len
 instance U'.HasMessage (JsonValue'Field msg) msg where
-    message (JsonValue'Field struct) = U'.message struct
+    message (JsonValue'Field_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (JsonValue'Field msg) msg where
-    messageDefault = JsonValue'Field . U'.messageDefault
+    messageDefault = JsonValue'Field_newtype_ . U'.messageDefault
 
 -- | Allocate a new 'JsonValue'Field' inside the message.
 new_JsonValue'Field :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Field (M'.MutMsg s))
-new_JsonValue'Field msg = JsonValue'Field <$> U'.allocStruct msg 0 2
+new_JsonValue'Field msg = JsonValue'Field_newtype_ <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
     fromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Field l) = C'.toPtr l
 get_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m (B'.Text msg)
-get_JsonValue'Field'name (JsonValue'Field struct) =
+get_JsonValue'Field'name (JsonValue'Field_newtype_ struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
@@ -169,19 +169,19 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Get (JsonValue'Field msg -> m (
     fromLabel = DC'.Get get_JsonValue'Field'name
 
 has_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
-has_JsonValue'Field'name(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+has_JsonValue'Field'name(JsonValue'Field_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (JsonValue'Field msg -> m Bool)) where
     fromLabel = DC'.Has has_JsonValue'Field'name
 
 set_JsonValue'Field'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_JsonValue'Field'name (JsonValue'Field struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_JsonValue'Field'name (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Field'name
 
 
 get_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m (JsonValue msg)
-get_JsonValue'Field'value (JsonValue'Field struct) =
+get_JsonValue'Field'value (JsonValue'Field_newtype_ struct) =
     U'.getPtr 1 struct
     >>= C'.fromPtr (U'.message struct)
 
@@ -189,12 +189,12 @@ instance U'.ReadCtx m msg => IsLabel "value" (DC'.Get (JsonValue'Field msg -> m 
     fromLabel = DC'.Get get_JsonValue'Field'value
 
 has_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
-has_JsonValue'Field'value(JsonValue'Field struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+has_JsonValue'Field'value(JsonValue'Field_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 instance U'.ReadCtx m msg => IsLabel "value" (DC'.Has (JsonValue'Field msg -> m Bool)) where
     fromLabel = DC'.Has has_JsonValue'Field'value
 
 set_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ()
-set_JsonValue'Field'value (JsonValue'Field struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_JsonValue'Field'value (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "value" (DC'.Set (JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Field'value
