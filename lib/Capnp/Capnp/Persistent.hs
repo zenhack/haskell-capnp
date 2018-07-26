@@ -57,18 +57,18 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
-instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Get m (Persistent'SaveResults msg) ((Maybe (U'.Ptr msg)))) where
+instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Get (Persistent'SaveResults msg -> m (Maybe (U'.Ptr msg)))) where
     fromLabel = DC'.Get get_Persistent'SaveResults'sturdyRef
 
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Has m (Persistent'SaveResults msg)) where
+instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Has (Persistent'SaveResults msg -> m Bool)) where
     fromLabel = DC'.Has has_Persistent'SaveResults'sturdyRef
 
 set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sturdyRef" (DC'.Set m (Persistent'SaveResults (M'.MutMsg s)) ((Maybe (U'.Ptr (M'.MutMsg s))))) where
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sturdyRef" (DC'.Set (Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Persistent'SaveResults'sturdyRef
 
 
@@ -102,17 +102,17 @@ get_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 
-instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Get m (Persistent'SaveParams msg) ((Maybe (U'.Ptr msg)))) where
+instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Get (Persistent'SaveParams msg -> m (Maybe (U'.Ptr msg)))) where
     fromLabel = DC'.Get get_Persistent'SaveParams'sealFor
 
 has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Has m (Persistent'SaveParams msg)) where
+instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Has (Persistent'SaveParams msg -> m Bool)) where
     fromLabel = DC'.Has has_Persistent'SaveParams'sealFor
 
 set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveParams'sealFor (Persistent'SaveParams struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sealFor" (DC'.Set m (Persistent'SaveParams (M'.MutMsg s)) ((Maybe (U'.Ptr (M'.MutMsg s))))) where
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sealFor" (DC'.Set (Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Persistent'SaveParams'sealFor
 

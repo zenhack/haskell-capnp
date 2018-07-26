@@ -4,13 +4,13 @@ module Data.Capnp where
 -- intended to be used with the OverloadedLabels extension, like
 -- @'get' #myField struct@. The newtype wrapper and 'get' function allow
 -- us to disambiguate between different uses of @#myField@.
-newtype Get m parent child = Get { get :: parent -> m child }
+newtype Get a = Get { get :: a }
 
 -- | Like 'Get', but wraps a @has_*@ function instead of a @get_*@ function.
-newtype Has m parent = Has { has :: parent -> m Bool }
+newtype Has a = Has { has :: a }
 
 -- | Like 'Get', but wraps a @set_*@ function instead of a @get_*@ function.
-newtype Set m parent child = Set { set :: parent -> child -> m () }
+newtype Set a = Set { set :: a }
 
 -- | Like 'Get', but wraps a @new_*@ function instead of a @get_*@ function.
-newtype New m parent child info = New { new :: parent -> info -> m child }
+newtype New a = New { new :: a }
