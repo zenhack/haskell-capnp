@@ -186,8 +186,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
     in case union' of
         Node'struct{..} | neededByParent nodeMap node ->
             let allFields = V.toList fields
-                unionFields = filter isUnionField allFields
-                commonFields = filter (not . isUnionField) allFields
+                (unionFields, commonFields) = partition isUnionField allFields
                 typeName = name
                 -- variants to generate that go inside the union:
                 unionVariants =
