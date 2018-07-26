@@ -164,7 +164,7 @@ fmtGetWordField struct DataLoc{..} = mintercalate " "
 -- to the extra parameter in 'setWordField'.
 fmtSetWordField :: TB.Builder -> TB.Builder -> DataLoc -> TB.Builder
 fmtSetWordField struct value DataLoc{..} = mintercalate " "
-    [ " C'.setWordField"
+    [ "C'.setWordField"
     , struct
     , value
     , TB.fromString (show dataIdx)

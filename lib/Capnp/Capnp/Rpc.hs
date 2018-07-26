@@ -63,7 +63,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Accept msg -> m Bool
     fromLabel = DC'.Has has_Accept'questionId
 
 set_Accept'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> Word32 -> m ()
-set_Accept'questionId (Accept_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Accept'questionId (Accept_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Accept (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Accept'questionId
 
@@ -100,7 +100,7 @@ instance U'.ReadCtx m msg => IsLabel "embargo" (DC'.Has (Accept msg -> m Bool)) 
     fromLabel = DC'.Has has_Accept'embargo
 
 set_Accept'embargo :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> Bool -> m ()
-set_Accept'embargo (Accept_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
+set_Accept'embargo (Accept_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "embargo" (DC'.Set (Accept (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Accept'embargo
 
@@ -142,7 +142,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Bootstrap msg -> m B
     fromLabel = DC'.Has has_Bootstrap'questionId
 
 set_Bootstrap'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Bootstrap (M'.MutMsg s) -> Word32 -> m ()
-set_Bootstrap'questionId (Bootstrap_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Bootstrap'questionId (Bootstrap_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Bootstrap (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Bootstrap'questionId
 
@@ -204,7 +204,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Call msg -> m Bool))
     fromLabel = DC'.Has has_Call'questionId
 
 set_Call'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> Word32 -> m ()
-set_Call'questionId (Call_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Call'questionId (Call_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Call (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Call'questionId
 
@@ -241,7 +241,7 @@ instance U'.ReadCtx m msg => IsLabel "interfaceId" (DC'.Has (Call msg -> m Bool)
     fromLabel = DC'.Has has_Call'interfaceId
 
 set_Call'interfaceId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> Word64 -> m ()
-set_Call'interfaceId (Call_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+set_Call'interfaceId (Call_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "interfaceId" (DC'.Set (Call (M'.MutMsg s) -> Word64 -> m ())) where
     fromLabel = DC'.Set set_Call'interfaceId
 
@@ -258,7 +258,7 @@ instance U'.ReadCtx m msg => IsLabel "methodId" (DC'.Has (Call msg -> m Bool)) w
     fromLabel = DC'.Has has_Call'methodId
 
 set_Call'methodId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> Word16 -> m ()
-set_Call'methodId (Call_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
+set_Call'methodId (Call_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "methodId" (DC'.Set (Call (M'.MutMsg s) -> Word16 -> m ())) where
     fromLabel = DC'.Set set_Call'methodId
 
@@ -295,9 +295,9 @@ instance U'.ReadCtx m msg => IsLabel "sendResultsTo" (DC'.Has (Call msg -> m Boo
     fromLabel = DC'.Has has_Call'sendResultsTo
 
 set_Call'sendResultsTo'caller :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> m ()
-set_Call'sendResultsTo'caller (Call_newtype_ struct) =  C'.setWordField struct (0 :: Word16) 0 48 0
+set_Call'sendResultsTo'caller (Call_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 48 0
 set_Call'sendResultsTo'yourself :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> m ()
-set_Call'sendResultsTo'yourself (Call_newtype_ struct) =  C'.setWordField struct (1 :: Word16) 0 48 0
+set_Call'sendResultsTo'yourself (Call_newtype_ struct) = C'.setWordField struct (1 :: Word16) 0 48 0
 
 
 get_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
@@ -311,7 +311,7 @@ instance U'.ReadCtx m msg => IsLabel "allowThirdPartyTailCall" (DC'.Has (Call ms
     fromLabel = DC'.Has has_Call'allowThirdPartyTailCall
 
 set_Call'allowThirdPartyTailCall :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> Bool -> m ()
-set_Call'allowThirdPartyTailCall (Call_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
+set_Call'allowThirdPartyTailCall (Call_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "allowThirdPartyTailCall" (DC'.Set (Call (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Call'allowThirdPartyTailCall
 
@@ -413,7 +413,7 @@ instance U'.ReadCtx m msg => IsLabel "context" (DC'.Has (Disembargo msg -> m Boo
     fromLabel = DC'.Has has_Disembargo'context
 
 set_Disembargo'context'accept :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo (M'.MutMsg s) -> m ()
-set_Disembargo'context'accept (Disembargo_newtype_ struct) =  C'.setWordField struct (2 :: Word16) 0 32 0
+set_Disembargo'context'accept (Disembargo_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 32 0
 
 
 newtype Exception msg = Exception_newtype_ (U'.Struct msg)
@@ -472,7 +472,7 @@ instance U'.ReadCtx m msg => IsLabel "obsoleteIsCallersFault" (DC'.Has (Exceptio
     fromLabel = DC'.Has has_Exception'obsoleteIsCallersFault
 
 set_Exception'obsoleteIsCallersFault :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Bool -> m ()
-set_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 0 0
+set_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "obsoleteIsCallersFault" (DC'.Set (Exception (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Exception'obsoleteIsCallersFault
 
@@ -489,7 +489,7 @@ instance U'.ReadCtx m msg => IsLabel "obsoleteDurability" (DC'.Has (Exception ms
     fromLabel = DC'.Has has_Exception'obsoleteDurability
 
 set_Exception'obsoleteDurability :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Word16 -> m ()
-set_Exception'obsoleteDurability (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+set_Exception'obsoleteDurability (Exception_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "obsoleteDurability" (DC'.Set (Exception (M'.MutMsg s) -> Word16 -> m ())) where
     fromLabel = DC'.Set set_Exception'obsoleteDurability
 
@@ -506,7 +506,7 @@ instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Has (Exception msg -> m Bool))
     fromLabel = DC'.Has has_Exception'type_
 
 set_Exception'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Exception'Type -> m ()
-set_Exception'type_ (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
+set_Exception'type_ (Exception_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "type_" (DC'.Set (Exception (M'.MutMsg s) -> Exception'Type -> m ())) where
     fromLabel = DC'.Set set_Exception'type_
 
@@ -548,7 +548,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Finish msg -> m Bool
     fromLabel = DC'.Has has_Finish'questionId
 
 set_Finish'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Finish (M'.MutMsg s) -> Word32 -> m ()
-set_Finish'questionId (Finish_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Finish'questionId (Finish_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Finish (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Finish'questionId
 
@@ -565,7 +565,7 @@ instance U'.ReadCtx m msg => IsLabel "releaseResultCaps" (DC'.Has (Finish msg ->
     fromLabel = DC'.Has has_Finish'releaseResultCaps
 
 set_Finish'releaseResultCaps :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Finish (M'.MutMsg s) -> Bool -> m ()
-set_Finish'releaseResultCaps (Finish_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
+set_Finish'releaseResultCaps (Finish_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "releaseResultCaps" (DC'.Set (Finish (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Finish'releaseResultCaps
 
@@ -607,7 +607,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Join msg -> m Bool))
     fromLabel = DC'.Has has_Join'questionId
 
 set_Join'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> Word32 -> m ()
-set_Join'questionId (Join_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Join'questionId (Join_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Join (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Join'questionId
 
@@ -846,7 +846,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (PromisedAnswer msg -
     fromLabel = DC'.Has has_PromisedAnswer'questionId
 
 set_PromisedAnswer'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMsg s) -> Word32 -> m ()
-set_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (PromisedAnswer (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_PromisedAnswer'questionId
 
@@ -908,7 +908,7 @@ instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Provide msg -> m Boo
     fromLabel = DC'.Has has_Provide'questionId
 
 set_Provide'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Provide (M'.MutMsg s) -> Word32 -> m ()
-set_Provide'questionId (Provide_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Provide'questionId (Provide_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Provide (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Provide'questionId
 
@@ -990,7 +990,7 @@ instance U'.ReadCtx m msg => IsLabel "id" (DC'.Has (Release msg -> m Bool)) wher
     fromLabel = DC'.Has has_Release'id
 
 set_Release'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Release (M'.MutMsg s) -> Word32 -> m ()
-set_Release'id (Release_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Release'id (Release_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set (Release (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Release'id
 
@@ -1007,7 +1007,7 @@ instance U'.ReadCtx m msg => IsLabel "referenceCount" (DC'.Has (Release msg -> m
     fromLabel = DC'.Has has_Release'referenceCount
 
 set_Release'referenceCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Release (M'.MutMsg s) -> Word32 -> m ()
-set_Release'referenceCount (Release_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+set_Release'referenceCount (Release_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "referenceCount" (DC'.Set (Release (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Release'referenceCount
 
@@ -1049,7 +1049,7 @@ instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Has (Resolve msg -> m Bool
     fromLabel = DC'.Has has_Resolve'promiseId
 
 set_Resolve'promiseId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> Word32 -> m ()
-set_Resolve'promiseId (Resolve_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Resolve'promiseId (Resolve_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "promiseId" (DC'.Set (Resolve (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Resolve'promiseId
 
@@ -1103,7 +1103,7 @@ instance U'.ReadCtx m msg => IsLabel "answerId" (DC'.Has (Return msg -> m Bool))
     fromLabel = DC'.Has has_Return'answerId
 
 set_Return'answerId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> Word32 -> m ()
-set_Return'answerId (Return_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Return'answerId (Return_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "answerId" (DC'.Set (Return (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Return'answerId
 
@@ -1120,7 +1120,7 @@ instance U'.ReadCtx m msg => IsLabel "releaseParamCaps" (DC'.Has (Return msg -> 
     fromLabel = DC'.Has has_Return'releaseParamCaps
 
 set_Return'releaseParamCaps :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> Bool -> m ()
-set_Return'releaseParamCaps (Return_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
+set_Return'releaseParamCaps (Return_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "releaseParamCaps" (DC'.Set (Return (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Return'releaseParamCaps
 
@@ -1137,9 +1137,9 @@ instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Return msg -> m Bool)) w
     fromLabel = DC'.Has has_Return'union'
 
 set_Return'canceled :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> m ()
-set_Return'canceled (Return_newtype_ struct) =  C'.setWordField struct (2 :: Word16) 0 48 0
+set_Return'canceled (Return_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 48 0
 set_Return'resultsSentElsewhere :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> m ()
-set_Return'resultsSentElsewhere (Return_newtype_ struct) =  C'.setWordField struct (3 :: Word16) 0 48 0
+set_Return'resultsSentElsewhere (Return_newtype_ struct) = C'.setWordField struct (3 :: Word16) 0 48 0
 
 
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ (U'.Struct msg)
@@ -1198,7 +1198,7 @@ instance U'.ReadCtx m msg => IsLabel "vineId" (DC'.Has (ThirdPartyCapDescriptor 
     fromLabel = DC'.Has has_ThirdPartyCapDescriptor'vineId
 
 set_ThirdPartyCapDescriptor'vineId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ThirdPartyCapDescriptor (M'.MutMsg s) -> Word32 -> m ()
-set_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "vineId" (DC'.Set (ThirdPartyCapDescriptor (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_ThirdPartyCapDescriptor'vineId
 
