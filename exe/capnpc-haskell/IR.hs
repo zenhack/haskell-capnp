@@ -55,10 +55,11 @@ import Data.Text   (Text)
 import Data.Monoid ((<>))
 import GHC.Exts    (IsList(..))
 
-import qualified Data.Text as T
+import qualified Data.Map.Strict as M
+import qualified Data.Text       as T
 
 newtype Namespace = Namespace [Text]
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Ord)
 
 instance IsList Namespace where
     type Item Namespace = Text
@@ -70,7 +71,12 @@ data Module = Module
     , modName    :: Namespace
     , modFile    :: Text
     , modImports :: [Import]
-    , modDecls   :: [(Name, Decl)]
+    -- XXX TODO: 'Name' includes a 'ModuleRef', which means it is possible
+    -- for two different 'Name's to refer to the same actual variable; using
+    -- them as map keys is questionable. In practice, when building a module
+    -- all of the ModuleRefs are the same, though, so this won't *break*
+    -- anything -- but ideally we'd remove that information from the key.
+    , modDecls   :: M.Map Name Decl
     }
     deriving(Show, Read, Eq)
 
@@ -85,14 +91,14 @@ newtype Import = Import ModuleRef
 data ModuleRef
     = FullyQualified Namespace
     | ByCapnpId Id
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Ord)
 
 data Name = Name
     { nameModule      :: ModuleRef
     , nameLocalNS     :: Namespace
     , nameUnqualified :: Text
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Ord)
 
 subName :: Name -> Text -> Name
 subName name@Name{..} nextPart = name

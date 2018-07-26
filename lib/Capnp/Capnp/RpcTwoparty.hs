@@ -182,35 +182,6 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "cap" (DC'.Set
 
 
 
-data Side
-    = Side'server
-    | Side'client
-    | Side'unknown' Word16
-instance Enum Side where
-    toEnum = C'.fromWord . fromIntegral
-    fromEnum = fromIntegral . C'.toWord
-
-
-instance C'.IsWord Side where
-    fromWord n = go (fromIntegral n :: Word16)
-      where
-        go 1 = Side'client
-        go 0 = Side'server
-        go tag = Side'unknown' (fromIntegral tag)
-    toWord Side'client = 1
-    toWord Side'server = 0
-    toWord (Side'unknown' tag) = fromIntegral tag
-instance B'.ListElem msg Side where
-    newtype List msg Side = List_Side (U'.ListOf msg Word16)
-    length (List_Side l) = U'.length l
-    index i (List_Side l) = (C'.fromWord . fromIntegral) <$> U'.index i l
-instance B'.MutListElem s Side where
-    setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
-    allocList msg size = List_Side <$> U'.allocList16 msg size
-instance C'.IsPtr msg (B'.List msg Side) where
-    fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
-    toPtr (List_Side l) = C'.toPtr l
-
 newtype ProvisionId msg = ProvisionId_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (ProvisionId msg) where
@@ -252,6 +223,35 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "joinId" (DC'.
     fromLabel = DC'.Set set_ProvisionId'joinId
 
 
+
+data Side
+    = Side'server
+    | Side'client
+    | Side'unknown' Word16
+instance Enum Side where
+    toEnum = C'.fromWord . fromIntegral
+    fromEnum = fromIntegral . C'.toWord
+
+
+instance C'.IsWord Side where
+    fromWord n = go (fromIntegral n :: Word16)
+      where
+        go 1 = Side'client
+        go 0 = Side'server
+        go tag = Side'unknown' (fromIntegral tag)
+    toWord Side'client = 1
+    toWord Side'server = 0
+    toWord (Side'unknown' tag) = fromIntegral tag
+instance B'.ListElem msg Side where
+    newtype List msg Side = List_Side (U'.ListOf msg Word16)
+    length (List_Side l) = U'.length l
+    index i (List_Side l) = (C'.fromWord . fromIntegral) <$> U'.index i l
+instance B'.MutListElem s Side where
+    setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
+    allocList msg size = List_Side <$> U'.allocList16 msg size
+instance C'.IsPtr msg (B'.List msg Side) where
+    fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
+    toPtr (List_Side l) = C'.toPtr l
 
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
 

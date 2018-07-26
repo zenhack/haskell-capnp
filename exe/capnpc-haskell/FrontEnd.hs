@@ -133,7 +133,7 @@ generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
             $ splitOn '/' (T.unpack filename)
         , modFile = filename
         , modImports = map generateImport $ V.toList imports
-        , modDecls = concatMap (generateDecls id nodeMap)
+        , modDecls = M.fromList $ concatMap (generateDecls id nodeMap)
             $ filter (\NodeMetaData{..} -> moduleId == id)
             $ map snd
             $ M.toList nodeMap

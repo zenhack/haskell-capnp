@@ -63,19 +63,6 @@ instance C'.IsStruct M'.ConstMsg JoinResult where
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
 
-data Side
-    = Side'server
-    | Side'client
-    | Side'unknown' (Word16)
-    deriving(Show, Read, Eq)
-
-instance C'.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side Side where
-    decerialize raw = case raw of
-
-        Capnp.ById.Xa184c7885cdaf2a1.Side'server -> pure Side'server
-        Capnp.ById.Xa184c7885cdaf2a1.Side'client -> pure Side'client
-        Capnp.ById.Xa184c7885cdaf2a1.Side'unknown' val -> Side'unknown' <$> C'.decerialize val
-
 data ProvisionId
     = ProvisionId
         { joinId :: Word32
@@ -90,6 +77,19 @@ instance C'.IsStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
+
+data Side
+    = Side'server
+    | Side'client
+    | Side'unknown' (Word16)
+    deriving(Show, Read, Eq)
+
+instance C'.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side Side where
+    decerialize raw = case raw of
+
+        Capnp.ById.Xa184c7885cdaf2a1.Side'server -> pure Side'server
+        Capnp.ById.Xa184c7885cdaf2a1.Side'client -> pure Side'client
+        Capnp.ById.Xa184c7885cdaf2a1.Side'unknown' val -> Side'unknown' <$> C'.decerialize val
 
 data VatId
     = VatId

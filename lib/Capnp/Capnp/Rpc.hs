@@ -27,6 +27,147 @@ import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
+newtype Accept msg = Accept_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Accept msg) where
+    fromStruct = pure . Accept_newtype_
+instance C'.IsPtr msg (Accept msg) where
+    fromPtr msg ptr = Accept_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Accept_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Accept msg) where
+    newtype List msg (Accept msg) = List_Accept (U'.ListOf msg (U'.Struct msg))
+    length (List_Accept l) = U'.length l
+    index i (List_Accept l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Accept msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Accept (M'.MutMsg s)) where
+    setIndex (Accept_newtype_ elt) i (List_Accept l) = U'.setIndex elt i l
+    allocList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Accept msg) msg where
+    message (Accept_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Accept msg) msg where
+    messageDefault = Accept_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Accept' inside the message.
+new_Accept :: M'.WriteCtx m s => M'.MutMsg s -> m (Accept (M'.MutMsg s))
+new_Accept msg = Accept_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (Accept msg)) where
+    fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
+    toPtr (List_Accept l) = C'.toPtr l
+get_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Word32
+get_Accept'questionId (Accept_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Accept msg -> m Word32)) where
+    fromLabel = DC'.Get get_Accept'questionId
+
+has_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Bool
+has_Accept'questionId(Accept_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Accept msg -> m Bool)) where
+    fromLabel = DC'.Has has_Accept'questionId
+
+set_Accept'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> Word32 -> m ()
+set_Accept'questionId (Accept_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Accept (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Accept'questionId
+
+
+
+get_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m (Maybe (U'.Ptr msg))
+get_Accept'provision (Accept_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "provision" (DC'.Get (Accept msg -> m (Maybe (U'.Ptr msg)))) where
+    fromLabel = DC'.Get get_Accept'provision
+
+has_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m Bool
+has_Accept'provision(Accept_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+instance U'.ReadCtx m msg => IsLabel "provision" (DC'.Has (Accept msg -> m Bool)) where
+    fromLabel = DC'.Has has_Accept'provision
+
+set_Accept'provision :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Accept'provision (Accept_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "provision" (DC'.Set (Accept (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
+    fromLabel = DC'.Set set_Accept'provision
+
+
+
+get_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
+get_Accept'embargo (Accept_newtype_ struct) = C'.getWordField struct 0 32 0
+instance U'.ReadCtx m msg => IsLabel "embargo" (DC'.Get (Accept msg -> m Bool)) where
+    fromLabel = DC'.Get get_Accept'embargo
+
+has_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
+has_Accept'embargo(Accept_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "embargo" (DC'.Has (Accept msg -> m Bool)) where
+    fromLabel = DC'.Has has_Accept'embargo
+
+set_Accept'embargo :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> Bool -> m ()
+set_Accept'embargo (Accept_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "embargo" (DC'.Set (Accept (M'.MutMsg s) -> Bool -> m ())) where
+    fromLabel = DC'.Set set_Accept'embargo
+
+
+
+newtype Bootstrap msg = Bootstrap_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Bootstrap msg) where
+    fromStruct = pure . Bootstrap_newtype_
+instance C'.IsPtr msg (Bootstrap msg) where
+    fromPtr msg ptr = Bootstrap_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Bootstrap_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Bootstrap msg) where
+    newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf msg (U'.Struct msg))
+    length (List_Bootstrap l) = U'.length l
+    index i (List_Bootstrap l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bootstrap msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
+    setIndex (Bootstrap_newtype_ elt) i (List_Bootstrap l) = U'.setIndex elt i l
+    allocList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Bootstrap msg) msg where
+    message (Bootstrap_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Bootstrap msg) msg where
+    messageDefault = Bootstrap_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Bootstrap' inside the message.
+new_Bootstrap :: M'.WriteCtx m s => M'.MutMsg s -> m (Bootstrap (M'.MutMsg s))
+new_Bootstrap msg = Bootstrap_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
+    fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
+    toPtr (List_Bootstrap l) = C'.toPtr l
+get_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Word32
+get_Bootstrap'questionId (Bootstrap_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Bootstrap msg -> m Word32)) where
+    fromLabel = DC'.Get get_Bootstrap'questionId
+
+has_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
+has_Bootstrap'questionId(Bootstrap_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Bootstrap msg -> m Bool)) where
+    fromLabel = DC'.Has has_Bootstrap'questionId
+
+set_Bootstrap'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Bootstrap (M'.MutMsg s) -> Word32 -> m ()
+set_Bootstrap'questionId (Bootstrap_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Bootstrap (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Bootstrap'questionId
+
+
+
+get_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m (Maybe (U'.Ptr msg))
+get_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "deprecatedObjectId" (DC'.Get (Bootstrap msg -> m (Maybe (U'.Ptr msg)))) where
+    fromLabel = DC'.Get get_Bootstrap'deprecatedObjectId
+
+has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
+has_Bootstrap'deprecatedObjectId(Bootstrap_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+instance U'.ReadCtx m msg => IsLabel "deprecatedObjectId" (DC'.Has (Bootstrap msg -> m Bool)) where
+    fromLabel = DC'.Has has_Bootstrap'deprecatedObjectId
+
+set_Bootstrap'deprecatedObjectId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Bootstrap (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "deprecatedObjectId" (DC'.Set (Bootstrap (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
+    fromLabel = DC'.Set set_Bootstrap'deprecatedObjectId
+
+
+
 newtype Call msg = Call_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Call msg) where
@@ -212,6 +353,300 @@ instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
     fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_CapDescriptor l) = C'.toPtr l
 
+newtype Disembargo msg = Disembargo_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Disembargo msg) where
+    fromStruct = pure . Disembargo_newtype_
+instance C'.IsPtr msg (Disembargo msg) where
+    fromPtr msg ptr = Disembargo_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Disembargo_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Disembargo msg) where
+    newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf msg (U'.Struct msg))
+    length (List_Disembargo l) = U'.length l
+    index i (List_Disembargo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
+    setIndex (Disembargo_newtype_ elt) i (List_Disembargo l) = U'.setIndex elt i l
+    allocList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Disembargo msg) msg where
+    message (Disembargo_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Disembargo msg) msg where
+    messageDefault = Disembargo_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Disembargo' inside the message.
+new_Disembargo :: M'.WriteCtx m s => M'.MutMsg s -> m (Disembargo (M'.MutMsg s))
+new_Disembargo msg = Disembargo_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
+    fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
+    toPtr (List_Disembargo l) = C'.toPtr l
+get_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m (MessageTarget msg)
+get_Disembargo'target (Disembargo_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "target" (DC'.Get (Disembargo msg -> m (MessageTarget msg))) where
+    fromLabel = DC'.Get get_Disembargo'target
+
+has_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m Bool
+has_Disembargo'target(Disembargo_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+instance U'.ReadCtx m msg => IsLabel "target" (DC'.Has (Disembargo msg -> m Bool)) where
+    fromLabel = DC'.Has has_Disembargo'target
+
+set_Disembargo'target :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ()
+set_Disembargo'target (Disembargo_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "target" (DC'.Set (Disembargo (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ())) where
+    fromLabel = DC'.Set set_Disembargo'target
+
+
+
+get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
+get_Disembargo'context (Disembargo_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "context" (DC'.Get (Disembargo msg -> m (Disembargo'context msg))) where
+    fromLabel = DC'.Get get_Disembargo'context
+
+has_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m Bool
+has_Disembargo'context(Disembargo_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "context" (DC'.Has (Disembargo msg -> m Bool)) where
+    fromLabel = DC'.Has has_Disembargo'context
+
+
+
+newtype Exception msg = Exception_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Exception msg) where
+    fromStruct = pure . Exception_newtype_
+instance C'.IsPtr msg (Exception msg) where
+    fromPtr msg ptr = Exception_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Exception_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Exception msg) where
+    newtype List msg (Exception msg) = List_Exception (U'.ListOf msg (U'.Struct msg))
+    length (List_Exception l) = U'.length l
+    index i (List_Exception l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Exception msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Exception (M'.MutMsg s)) where
+    setIndex (Exception_newtype_ elt) i (List_Exception l) = U'.setIndex elt i l
+    allocList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Exception msg) msg where
+    message (Exception_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Exception msg) msg where
+    messageDefault = Exception_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Exception' inside the message.
+new_Exception :: M'.WriteCtx m s => M'.MutMsg s -> m (Exception (M'.MutMsg s))
+new_Exception msg = Exception_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (Exception msg)) where
+    fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
+    toPtr (List_Exception l) = C'.toPtr l
+get_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m (B'.Text msg)
+get_Exception'reason (Exception_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "reason" (DC'.Get (Exception msg -> m (B'.Text msg))) where
+    fromLabel = DC'.Get get_Exception'reason
+
+has_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m Bool
+has_Exception'reason(Exception_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+instance U'.ReadCtx m msg => IsLabel "reason" (DC'.Has (Exception msg -> m Bool)) where
+    fromLabel = DC'.Has has_Exception'reason
+
+set_Exception'reason :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_Exception'reason (Exception_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "reason" (DC'.Set (Exception (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
+    fromLabel = DC'.Set set_Exception'reason
+
+
+
+get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
+get_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "obsoleteIsCallersFault" (DC'.Get (Exception msg -> m Bool)) where
+    fromLabel = DC'.Get get_Exception'obsoleteIsCallersFault
+
+has_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
+has_Exception'obsoleteIsCallersFault(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "obsoleteIsCallersFault" (DC'.Has (Exception msg -> m Bool)) where
+    fromLabel = DC'.Has has_Exception'obsoleteIsCallersFault
+
+set_Exception'obsoleteIsCallersFault :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Bool -> m ()
+set_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "obsoleteIsCallersFault" (DC'.Set (Exception (M'.MutMsg s) -> Bool -> m ())) where
+    fromLabel = DC'.Set set_Exception'obsoleteIsCallersFault
+
+
+
+get_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Word16
+get_Exception'obsoleteDurability (Exception_newtype_ struct) = C'.getWordField struct 0 16 0
+instance U'.ReadCtx m msg => IsLabel "obsoleteDurability" (DC'.Get (Exception msg -> m Word16)) where
+    fromLabel = DC'.Get get_Exception'obsoleteDurability
+
+has_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Bool
+has_Exception'obsoleteDurability(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "obsoleteDurability" (DC'.Has (Exception msg -> m Bool)) where
+    fromLabel = DC'.Has has_Exception'obsoleteDurability
+
+set_Exception'obsoleteDurability :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Word16 -> m ()
+set_Exception'obsoleteDurability (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "obsoleteDurability" (DC'.Set (Exception (M'.MutMsg s) -> Word16 -> m ())) where
+    fromLabel = DC'.Set set_Exception'obsoleteDurability
+
+
+
+get_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Exception'Type
+get_Exception'type_ (Exception_newtype_ struct) = C'.getWordField struct 0 32 0
+instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Get (Exception msg -> m Exception'Type)) where
+    fromLabel = DC'.Get get_Exception'type_
+
+has_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Bool
+has_Exception'type_(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Has (Exception msg -> m Bool)) where
+    fromLabel = DC'.Has has_Exception'type_
+
+set_Exception'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Exception'Type -> m ()
+set_Exception'type_ (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "type_" (DC'.Set (Exception (M'.MutMsg s) -> Exception'Type -> m ())) where
+    fromLabel = DC'.Set set_Exception'type_
+
+
+
+newtype Finish msg = Finish_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Finish msg) where
+    fromStruct = pure . Finish_newtype_
+instance C'.IsPtr msg (Finish msg) where
+    fromPtr msg ptr = Finish_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Finish_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Finish msg) where
+    newtype List msg (Finish msg) = List_Finish (U'.ListOf msg (U'.Struct msg))
+    length (List_Finish l) = U'.length l
+    index i (List_Finish l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Finish msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Finish (M'.MutMsg s)) where
+    setIndex (Finish_newtype_ elt) i (List_Finish l) = U'.setIndex elt i l
+    allocList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (Finish msg) msg where
+    message (Finish_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Finish msg) msg where
+    messageDefault = Finish_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Finish' inside the message.
+new_Finish :: M'.WriteCtx m s => M'.MutMsg s -> m (Finish (M'.MutMsg s))
+new_Finish msg = Finish_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.IsPtr msg (B'.List msg (Finish msg)) where
+    fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
+    toPtr (List_Finish l) = C'.toPtr l
+get_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Word32
+get_Finish'questionId (Finish_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Finish msg -> m Word32)) where
+    fromLabel = DC'.Get get_Finish'questionId
+
+has_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Bool
+has_Finish'questionId(Finish_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Finish msg -> m Bool)) where
+    fromLabel = DC'.Has has_Finish'questionId
+
+set_Finish'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Finish (M'.MutMsg s) -> Word32 -> m ()
+set_Finish'questionId (Finish_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Finish (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Finish'questionId
+
+
+
+get_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
+get_Finish'releaseResultCaps (Finish_newtype_ struct) = C'.getWordField struct 0 32 1
+instance U'.ReadCtx m msg => IsLabel "releaseResultCaps" (DC'.Get (Finish msg -> m Bool)) where
+    fromLabel = DC'.Get get_Finish'releaseResultCaps
+
+has_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
+has_Finish'releaseResultCaps(Finish_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "releaseResultCaps" (DC'.Has (Finish msg -> m Bool)) where
+    fromLabel = DC'.Has has_Finish'releaseResultCaps
+
+set_Finish'releaseResultCaps :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Finish (M'.MutMsg s) -> Bool -> m ()
+set_Finish'releaseResultCaps (Finish_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "releaseResultCaps" (DC'.Set (Finish (M'.MutMsg s) -> Bool -> m ())) where
+    fromLabel = DC'.Set set_Finish'releaseResultCaps
+
+
+
+newtype Join msg = Join_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Join msg) where
+    fromStruct = pure . Join_newtype_
+instance C'.IsPtr msg (Join msg) where
+    fromPtr msg ptr = Join_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Join_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Join msg) where
+    newtype List msg (Join msg) = List_Join (U'.ListOf msg (U'.Struct msg))
+    length (List_Join l) = U'.length l
+    index i (List_Join l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Join msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Join (M'.MutMsg s)) where
+    setIndex (Join_newtype_ elt) i (List_Join l) = U'.setIndex elt i l
+    allocList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
+instance U'.HasMessage (Join msg) msg where
+    message (Join_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Join msg) msg where
+    messageDefault = Join_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Join' inside the message.
+new_Join :: M'.WriteCtx m s => M'.MutMsg s -> m (Join (M'.MutMsg s))
+new_Join msg = Join_newtype_ <$> U'.allocStruct msg 1 2
+instance C'.IsPtr msg (B'.List msg (Join msg)) where
+    fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
+    toPtr (List_Join l) = C'.toPtr l
+get_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Word32
+get_Join'questionId (Join_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Join msg -> m Word32)) where
+    fromLabel = DC'.Get get_Join'questionId
+
+has_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Bool
+has_Join'questionId(Join_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Join msg -> m Bool)) where
+    fromLabel = DC'.Has has_Join'questionId
+
+set_Join'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> Word32 -> m ()
+set_Join'questionId (Join_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Join (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Join'questionId
+
+
+
+get_Join'target :: U'.ReadCtx m msg => Join msg -> m (MessageTarget msg)
+get_Join'target (Join_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "target" (DC'.Get (Join msg -> m (MessageTarget msg))) where
+    fromLabel = DC'.Get get_Join'target
+
+has_Join'target :: U'.ReadCtx m msg => Join msg -> m Bool
+has_Join'target(Join_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+instance U'.ReadCtx m msg => IsLabel "target" (DC'.Has (Join msg -> m Bool)) where
+    fromLabel = DC'.Has has_Join'target
+
+set_Join'target :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ()
+set_Join'target (Join_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "target" (DC'.Set (Join (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ())) where
+    fromLabel = DC'.Set set_Join'target
+
+
+
+get_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m (Maybe (U'.Ptr msg))
+get_Join'keyPart (Join_newtype_ struct) =
+    U'.getPtr 1 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "keyPart" (DC'.Get (Join msg -> m (Maybe (U'.Ptr msg)))) where
+    fromLabel = DC'.Get get_Join'keyPart
+
+has_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m Bool
+has_Join'keyPart(Join_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+instance U'.ReadCtx m msg => IsLabel "keyPart" (DC'.Has (Join msg -> m Bool)) where
+    fromLabel = DC'.Has has_Join'keyPart
+
+set_Join'keyPart :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Join'keyPart (Join_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "keyPart" (DC'.Set (Join (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
+    fromLabel = DC'.Set set_Join'keyPart
+
+
+
 data Message msg
     = Message'unimplemented (Message msg)
     | Message'abort (Exception msg)
@@ -369,6 +804,68 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "capTable" (DC
 
 
 
+newtype PromisedAnswer msg = PromisedAnswer_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (PromisedAnswer msg) where
+    fromStruct = pure . PromisedAnswer_newtype_
+instance C'.IsPtr msg (PromisedAnswer msg) where
+    fromPtr msg ptr = PromisedAnswer_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (PromisedAnswer_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (PromisedAnswer msg) where
+    newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf msg (U'.Struct msg))
+    length (List_PromisedAnswer l) = U'.length l
+    index i (List_PromisedAnswer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
+    setIndex (PromisedAnswer_newtype_ elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
+    allocList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (PromisedAnswer msg) msg where
+    message (PromisedAnswer_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (PromisedAnswer msg) msg where
+    messageDefault = PromisedAnswer_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'PromisedAnswer' inside the message.
+new_PromisedAnswer :: M'.WriteCtx m s => M'.MutMsg s -> m (PromisedAnswer (M'.MutMsg s))
+new_PromisedAnswer msg = PromisedAnswer_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
+    fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
+    toPtr (List_PromisedAnswer l) = C'.toPtr l
+get_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Word32
+get_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (PromisedAnswer msg -> m Word32)) where
+    fromLabel = DC'.Get get_PromisedAnswer'questionId
+
+has_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
+has_PromisedAnswer'questionId(PromisedAnswer_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (PromisedAnswer msg -> m Bool)) where
+    fromLabel = DC'.Has has_PromisedAnswer'questionId
+
+set_PromisedAnswer'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMsg s) -> Word32 -> m ()
+set_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (PromisedAnswer (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_PromisedAnswer'questionId
+
+
+
+get_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m (B'.List msg (PromisedAnswer'Op msg))
+get_PromisedAnswer'transform (PromisedAnswer_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+
+instance U'.ReadCtx m msg => IsLabel "transform" (DC'.Get (PromisedAnswer msg -> m (B'.List msg (PromisedAnswer'Op msg)))) where
+    fromLabel = DC'.Get get_PromisedAnswer'transform
+
+has_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
+has_PromisedAnswer'transform(PromisedAnswer_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+instance U'.ReadCtx m msg => IsLabel "transform" (DC'.Has (PromisedAnswer msg -> m Bool)) where
+    fromLabel = DC'.Has has_PromisedAnswer'transform
+
+set_PromisedAnswer'transform :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (PromisedAnswer'Op (M'.MutMsg s))) -> m ()
+set_PromisedAnswer'transform (PromisedAnswer_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "transform" (DC'.Set (PromisedAnswer (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (PromisedAnswer'Op (M'.MutMsg s))) -> m ())) where
+    fromLabel = DC'.Set set_PromisedAnswer'transform
+
+
+
 newtype Provide msg = Provide_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Provide msg) where
@@ -451,6 +948,119 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "recipient" (D
 
 
 
+newtype Release msg = Release_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Release msg) where
+    fromStruct = pure . Release_newtype_
+instance C'.IsPtr msg (Release msg) where
+    fromPtr msg ptr = Release_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Release_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Release msg) where
+    newtype List msg (Release msg) = List_Release (U'.ListOf msg (U'.Struct msg))
+    length (List_Release l) = U'.length l
+    index i (List_Release l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Release msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Release (M'.MutMsg s)) where
+    setIndex (Release_newtype_ elt) i (List_Release l) = U'.setIndex elt i l
+    allocList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
+instance U'.HasMessage (Release msg) msg where
+    message (Release_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Release msg) msg where
+    messageDefault = Release_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Release' inside the message.
+new_Release :: M'.WriteCtx m s => M'.MutMsg s -> m (Release (M'.MutMsg s))
+new_Release msg = Release_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.IsPtr msg (B'.List msg (Release msg)) where
+    fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
+    toPtr (List_Release l) = C'.toPtr l
+get_Release'id :: U'.ReadCtx m msg => Release msg -> m Word32
+get_Release'id (Release_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "id" (DC'.Get (Release msg -> m Word32)) where
+    fromLabel = DC'.Get get_Release'id
+
+has_Release'id :: U'.ReadCtx m msg => Release msg -> m Bool
+has_Release'id(Release_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "id" (DC'.Has (Release msg -> m Bool)) where
+    fromLabel = DC'.Has has_Release'id
+
+set_Release'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Release (M'.MutMsg s) -> Word32 -> m ()
+set_Release'id (Release_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set (Release (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Release'id
+
+
+
+get_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Word32
+get_Release'referenceCount (Release_newtype_ struct) = C'.getWordField struct 0 32 0
+instance U'.ReadCtx m msg => IsLabel "referenceCount" (DC'.Get (Release msg -> m Word32)) where
+    fromLabel = DC'.Get get_Release'referenceCount
+
+has_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Bool
+has_Release'referenceCount(Release_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "referenceCount" (DC'.Has (Release msg -> m Bool)) where
+    fromLabel = DC'.Has has_Release'referenceCount
+
+set_Release'referenceCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Release (M'.MutMsg s) -> Word32 -> m ()
+set_Release'referenceCount (Release_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "referenceCount" (DC'.Set (Release (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Release'referenceCount
+
+
+
+newtype Resolve msg = Resolve_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Resolve msg) where
+    fromStruct = pure . Resolve_newtype_
+instance C'.IsPtr msg (Resolve msg) where
+    fromPtr msg ptr = Resolve_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Resolve_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Resolve msg) where
+    newtype List msg (Resolve msg) = List_Resolve (U'.ListOf msg (U'.Struct msg))
+    length (List_Resolve l) = U'.length l
+    index i (List_Resolve l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
+    setIndex (Resolve_newtype_ elt) i (List_Resolve l) = U'.setIndex elt i l
+    allocList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Resolve msg) msg where
+    message (Resolve_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Resolve msg) msg where
+    messageDefault = Resolve_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Resolve' inside the message.
+new_Resolve :: M'.WriteCtx m s => M'.MutMsg s -> m (Resolve (M'.MutMsg s))
+new_Resolve msg = Resolve_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
+    fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
+    toPtr (List_Resolve l) = C'.toPtr l
+get_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
+get_Resolve'promiseId (Resolve_newtype_ struct) = C'.getWordField struct 0 0 0
+instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Get (Resolve msg -> m Word32)) where
+    fromLabel = DC'.Get get_Resolve'promiseId
+
+has_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Bool
+has_Resolve'promiseId(Resolve_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
+instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Has (Resolve msg -> m Bool)) where
+    fromLabel = DC'.Has has_Resolve'promiseId
+
+set_Resolve'promiseId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> Word32 -> m ()
+set_Resolve'promiseId (Resolve_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "promiseId" (DC'.Set (Resolve (M'.MutMsg s) -> Word32 -> m ())) where
+    fromLabel = DC'.Set set_Resolve'promiseId
+
+
+
+get_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
+get_Resolve'union' (Resolve_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get (Resolve msg -> m (Resolve' msg))) where
+    fromLabel = DC'.Get get_Resolve'union'
+
+has_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
+has_Resolve'union'(Resolve_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Resolve msg -> m Bool)) where
+    fromLabel = DC'.Has has_Resolve'union'
+
+
+
 newtype Return msg = Return_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Return msg) where
@@ -522,222 +1132,6 @@ instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Return msg -> m Bool)) w
 
 
 
-data Return' msg
-    = Return'results (Payload msg)
-    | Return'exception (Exception msg)
-    | Return'canceled
-    | Return'resultsSentElsewhere
-    | Return'takeFromOtherQuestion Word32
-    | Return'acceptFromThirdParty (Maybe (U'.Ptr msg))
-    | Return'unknown' Word16
-
-
-
-
-
-
-
-instance C'.IsStruct msg (Return' msg) where
-    fromStruct struct = do
-        tag <-  C'.getWordField struct 0 48 0
-        case tag of
-            5 -> Return'acceptFromThirdParty <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            4 -> Return'takeFromOtherQuestion <$>  C'.getWordField struct 1 0 0
-            3 -> pure Return'resultsSentElsewhere
-            2 -> pure Return'canceled
-            1 -> Return'exception <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            0 -> Return'results <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            _ -> pure $ Return'unknown' tag
-instance B'.ListElem msg (Return' msg) where
-    newtype List msg (Return' msg) = List_Return' (U'.ListOf msg (U'.Struct msg))
-    length (List_Return' l) = U'.length l
-    index i (List_Return' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Return' msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Return' msg)) where
-    fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
-    toPtr (List_Return' l) = C'.toPtr l
-
-newtype Release msg = Release_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Release msg) where
-    fromStruct = pure . Release_newtype_
-instance C'.IsPtr msg (Release msg) where
-    fromPtr msg ptr = Release_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Release_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Release msg) where
-    newtype List msg (Release msg) = List_Release (U'.ListOf msg (U'.Struct msg))
-    length (List_Release l) = U'.length l
-    index i (List_Release l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Release msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Release (M'.MutMsg s)) where
-    setIndex (Release_newtype_ elt) i (List_Release l) = U'.setIndex elt i l
-    allocList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
-instance U'.HasMessage (Release msg) msg where
-    message (Release_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Release msg) msg where
-    messageDefault = Release_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Release' inside the message.
-new_Release :: M'.WriteCtx m s => M'.MutMsg s -> m (Release (M'.MutMsg s))
-new_Release msg = Release_newtype_ <$> U'.allocStruct msg 1 0
-instance C'.IsPtr msg (B'.List msg (Release msg)) where
-    fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
-    toPtr (List_Release l) = C'.toPtr l
-get_Release'id :: U'.ReadCtx m msg => Release msg -> m Word32
-get_Release'id (Release_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "id" (DC'.Get (Release msg -> m Word32)) where
-    fromLabel = DC'.Get get_Release'id
-
-has_Release'id :: U'.ReadCtx m msg => Release msg -> m Bool
-has_Release'id(Release_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "id" (DC'.Has (Release msg -> m Bool)) where
-    fromLabel = DC'.Has has_Release'id
-
-set_Release'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Release (M'.MutMsg s) -> Word32 -> m ()
-set_Release'id (Release_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set (Release (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Release'id
-
-
-
-get_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Word32
-get_Release'referenceCount (Release_newtype_ struct) = C'.getWordField struct 0 32 0
-instance U'.ReadCtx m msg => IsLabel "referenceCount" (DC'.Get (Release msg -> m Word32)) where
-    fromLabel = DC'.Get get_Release'referenceCount
-
-has_Release'referenceCount :: U'.ReadCtx m msg => Release msg -> m Bool
-has_Release'referenceCount(Release_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "referenceCount" (DC'.Has (Release msg -> m Bool)) where
-    fromLabel = DC'.Has has_Release'referenceCount
-
-set_Release'referenceCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Release (M'.MutMsg s) -> Word32 -> m ()
-set_Release'referenceCount (Release_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "referenceCount" (DC'.Set (Release (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Release'referenceCount
-
-
-
-data Exception'Type
-    = Exception'Type'failed
-    | Exception'Type'overloaded
-    | Exception'Type'disconnected
-    | Exception'Type'unimplemented
-    | Exception'Type'unknown' Word16
-instance Enum Exception'Type where
-    toEnum = C'.fromWord . fromIntegral
-    fromEnum = fromIntegral . C'.toWord
-
-
-instance C'.IsWord Exception'Type where
-    fromWord n = go (fromIntegral n :: Word16)
-      where
-        go 3 = Exception'Type'unimplemented
-        go 2 = Exception'Type'disconnected
-        go 1 = Exception'Type'overloaded
-        go 0 = Exception'Type'failed
-        go tag = Exception'Type'unknown' (fromIntegral tag)
-    toWord Exception'Type'unimplemented = 3
-    toWord Exception'Type'disconnected = 2
-    toWord Exception'Type'overloaded = 1
-    toWord Exception'Type'failed = 0
-    toWord (Exception'Type'unknown' tag) = fromIntegral tag
-instance B'.ListElem msg Exception'Type where
-    newtype List msg Exception'Type = List_Exception'Type (U'.ListOf msg Word16)
-    length (List_Exception'Type l) = U'.length l
-    index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
-instance B'.MutListElem s Exception'Type where
-    setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
-    allocList msg size = List_Exception'Type <$> U'.allocList16 msg size
-instance C'.IsPtr msg (B'.List msg Exception'Type) where
-    fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
-    toPtr (List_Exception'Type l) = C'.toPtr l
-
-newtype Resolve msg = Resolve_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Resolve msg) where
-    fromStruct = pure . Resolve_newtype_
-instance C'.IsPtr msg (Resolve msg) where
-    fromPtr msg ptr = Resolve_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Resolve_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Resolve msg) where
-    newtype List msg (Resolve msg) = List_Resolve (U'.ListOf msg (U'.Struct msg))
-    length (List_Resolve l) = U'.length l
-    index i (List_Resolve l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
-    setIndex (Resolve_newtype_ elt) i (List_Resolve l) = U'.setIndex elt i l
-    allocList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
-instance U'.HasMessage (Resolve msg) msg where
-    message (Resolve_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Resolve msg) msg where
-    messageDefault = Resolve_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Resolve' inside the message.
-new_Resolve :: M'.WriteCtx m s => M'.MutMsg s -> m (Resolve (M'.MutMsg s))
-new_Resolve msg = Resolve_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
-    fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
-    toPtr (List_Resolve l) = C'.toPtr l
-get_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
-get_Resolve'promiseId (Resolve_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Get (Resolve msg -> m Word32)) where
-    fromLabel = DC'.Get get_Resolve'promiseId
-
-has_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Bool
-has_Resolve'promiseId(Resolve_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "promiseId" (DC'.Has (Resolve msg -> m Bool)) where
-    fromLabel = DC'.Has has_Resolve'promiseId
-
-set_Resolve'promiseId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve (M'.MutMsg s) -> Word32 -> m ()
-set_Resolve'promiseId (Resolve_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "promiseId" (DC'.Set (Resolve (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Resolve'promiseId
-
-
-
-get_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
-get_Resolve'union' (Resolve_newtype_ struct) = C'.fromStruct struct
-instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get (Resolve msg -> m (Resolve' msg))) where
-    fromLabel = DC'.Get get_Resolve'union'
-
-has_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
-has_Resolve'union'(Resolve_newtype_ struct) = pure True
-instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Resolve msg -> m Bool)) where
-    fromLabel = DC'.Has has_Resolve'union'
-
-
-
-data Resolve' msg
-    = Resolve'cap (CapDescriptor msg)
-    | Resolve'exception (Exception msg)
-    | Resolve'unknown' Word16
-
-
-
-instance C'.IsStruct msg (Resolve' msg) where
-    fromStruct struct = do
-        tag <-  C'.getWordField struct 0 32 0
-        case tag of
-            1 -> Resolve'exception <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            0 -> Resolve'cap <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            _ -> pure $ Resolve'unknown' tag
-instance B'.ListElem msg (Resolve' msg) where
-    newtype List msg (Resolve' msg) = List_Resolve' (U'.ListOf msg (U'.Struct msg))
-    length (List_Resolve' l) = U'.length l
-    index i (List_Resolve' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Resolve' msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
-    fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
-    toPtr (List_Resolve' l) = C'.toPtr l
-
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (ThirdPartyCapDescriptor msg) where
@@ -800,143 +1194,36 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "vineId" (DC'.
 
 
 
-newtype Finish msg = Finish_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Finish msg) where
-    fromStruct = pure . Finish_newtype_
-instance C'.IsPtr msg (Finish msg) where
-    fromPtr msg ptr = Finish_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Finish_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Finish msg) where
-    newtype List msg (Finish msg) = List_Finish (U'.ListOf msg (U'.Struct msg))
-    length (List_Finish l) = U'.length l
-    index i (List_Finish l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Finish msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Finish (M'.MutMsg s)) where
-    setIndex (Finish_newtype_ elt) i (List_Finish l) = U'.setIndex elt i l
-    allocList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
-instance U'.HasMessage (Finish msg) msg where
-    message (Finish_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Finish msg) msg where
-    messageDefault = Finish_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Finish' inside the message.
-new_Finish :: M'.WriteCtx m s => M'.MutMsg s -> m (Finish (M'.MutMsg s))
-new_Finish msg = Finish_newtype_ <$> U'.allocStruct msg 1 0
-instance C'.IsPtr msg (B'.List msg (Finish msg)) where
-    fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
-    toPtr (List_Finish l) = C'.toPtr l
-get_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Word32
-get_Finish'questionId (Finish_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Finish msg -> m Word32)) where
-    fromLabel = DC'.Get get_Finish'questionId
-
-has_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Bool
-has_Finish'questionId(Finish_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Finish msg -> m Bool)) where
-    fromLabel = DC'.Has has_Finish'questionId
-
-set_Finish'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Finish (M'.MutMsg s) -> Word32 -> m ()
-set_Finish'questionId (Finish_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Finish (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Finish'questionId
+data Call'sendResultsTo msg
+    = Call'sendResultsTo'caller
+    | Call'sendResultsTo'yourself
+    | Call'sendResultsTo'thirdParty (Maybe (U'.Ptr msg))
+    | Call'sendResultsTo'unknown' Word16
 
 
 
-get_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
-get_Finish'releaseResultCaps (Finish_newtype_ struct) = C'.getWordField struct 0 32 1
-instance U'.ReadCtx m msg => IsLabel "releaseResultCaps" (DC'.Get (Finish msg -> m Bool)) where
-    fromLabel = DC'.Get get_Finish'releaseResultCaps
 
-has_Finish'releaseResultCaps :: U'.ReadCtx m msg => Finish msg -> m Bool
-has_Finish'releaseResultCaps(Finish_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "releaseResultCaps" (DC'.Has (Finish msg -> m Bool)) where
-    fromLabel = DC'.Has has_Finish'releaseResultCaps
+instance C'.IsStruct msg (Call'sendResultsTo msg) where
+    fromStruct struct = do
+        tag <-  C'.getWordField struct 0 48 0
+        case tag of
+            2 -> Call'sendResultsTo'thirdParty <$>  (U'.getPtr 2 struct >>= C'.fromPtr (U'.message struct))
+            1 -> pure Call'sendResultsTo'yourself
+            0 -> pure Call'sendResultsTo'caller
+            _ -> pure $ Call'sendResultsTo'unknown' tag
+instance B'.ListElem msg (Call'sendResultsTo msg) where
+    newtype List msg (Call'sendResultsTo msg) = List_Call'sendResultsTo (U'.ListOf msg (U'.Struct msg))
+    length (List_Call'sendResultsTo l) = U'.length l
+    index i (List_Call'sendResultsTo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
 
-set_Finish'releaseResultCaps :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Finish (M'.MutMsg s) -> Bool -> m ()
-set_Finish'releaseResultCaps (Finish_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "releaseResultCaps" (DC'.Set (Finish (M'.MutMsg s) -> Bool -> m ())) where
-    fromLabel = DC'.Set set_Finish'releaseResultCaps
+instance C'.IsPtr msg (Call'sendResultsTo msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
 
-
-newtype Accept msg = Accept_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Accept msg) where
-    fromStruct = pure . Accept_newtype_
-instance C'.IsPtr msg (Accept msg) where
-    fromPtr msg ptr = Accept_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Accept_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Accept msg) where
-    newtype List msg (Accept msg) = List_Accept (U'.ListOf msg (U'.Struct msg))
-    length (List_Accept l) = U'.length l
-    index i (List_Accept l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Accept msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Accept (M'.MutMsg s)) where
-    setIndex (Accept_newtype_ elt) i (List_Accept l) = U'.setIndex elt i l
-    allocList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
-instance U'.HasMessage (Accept msg) msg where
-    message (Accept_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Accept msg) msg where
-    messageDefault = Accept_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Accept' inside the message.
-new_Accept :: M'.WriteCtx m s => M'.MutMsg s -> m (Accept (M'.MutMsg s))
-new_Accept msg = Accept_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Accept msg)) where
-    fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
-    toPtr (List_Accept l) = C'.toPtr l
-get_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Word32
-get_Accept'questionId (Accept_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Accept msg -> m Word32)) where
-    fromLabel = DC'.Get get_Accept'questionId
-
-has_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Bool
-has_Accept'questionId(Accept_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Accept msg -> m Bool)) where
-    fromLabel = DC'.Has has_Accept'questionId
-
-set_Accept'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> Word32 -> m ()
-set_Accept'questionId (Accept_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Accept (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Accept'questionId
-
-
-
-get_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m (Maybe (U'.Ptr msg))
-get_Accept'provision (Accept_newtype_ struct) =
-    U'.getPtr 0 struct
-    >>= C'.fromPtr (U'.message struct)
-
-instance U'.ReadCtx m msg => IsLabel "provision" (DC'.Get (Accept msg -> m (Maybe (U'.Ptr msg)))) where
-    fromLabel = DC'.Get get_Accept'provision
-
-has_Accept'provision :: U'.ReadCtx m msg => Accept msg -> m Bool
-has_Accept'provision(Accept_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "provision" (DC'.Has (Accept msg -> m Bool)) where
-    fromLabel = DC'.Has has_Accept'provision
-
-set_Accept'provision :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Accept'provision (Accept_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "provision" (DC'.Set (Accept (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
-    fromLabel = DC'.Set set_Accept'provision
-
-
-
-get_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
-get_Accept'embargo (Accept_newtype_ struct) = C'.getWordField struct 0 32 0
-instance U'.ReadCtx m msg => IsLabel "embargo" (DC'.Get (Accept msg -> m Bool)) where
-    fromLabel = DC'.Get get_Accept'embargo
-
-has_Accept'embargo :: U'.ReadCtx m msg => Accept msg -> m Bool
-has_Accept'embargo(Accept_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "embargo" (DC'.Has (Accept msg -> m Bool)) where
-    fromLabel = DC'.Has has_Accept'embargo
-
-set_Accept'embargo :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Accept (M'.MutMsg s) -> Bool -> m ()
-set_Accept'embargo (Accept_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "embargo" (DC'.Set (Accept (M'.MutMsg s) -> Bool -> m ())) where
-    fromLabel = DC'.Set set_Accept'embargo
-
-
+instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
+    fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
+    toPtr (List_Call'sendResultsTo l) = C'.toPtr l
 
 data Disembargo'context msg
     = Disembargo'context'senderLoopback Word32
@@ -972,256 +1259,40 @@ instance C'.IsPtr msg (B'.List msg (Disembargo'context msg)) where
     fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo'context l) = C'.toPtr l
 
-newtype Exception msg = Exception_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Exception msg) where
-    fromStruct = pure . Exception_newtype_
-instance C'.IsPtr msg (Exception msg) where
-    fromPtr msg ptr = Exception_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Exception_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Exception msg) where
-    newtype List msg (Exception msg) = List_Exception (U'.ListOf msg (U'.Struct msg))
-    length (List_Exception l) = U'.length l
-    index i (List_Exception l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Exception msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Exception (M'.MutMsg s)) where
-    setIndex (Exception_newtype_ elt) i (List_Exception l) = U'.setIndex elt i l
-    allocList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
-instance U'.HasMessage (Exception msg) msg where
-    message (Exception_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Exception msg) msg where
-    messageDefault = Exception_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Exception' inside the message.
-new_Exception :: M'.WriteCtx m s => M'.MutMsg s -> m (Exception (M'.MutMsg s))
-new_Exception msg = Exception_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Exception msg)) where
-    fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
-    toPtr (List_Exception l) = C'.toPtr l
-get_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m (B'.Text msg)
-get_Exception'reason (Exception_newtype_ struct) =
-    U'.getPtr 0 struct
-    >>= C'.fromPtr (U'.message struct)
-
-instance U'.ReadCtx m msg => IsLabel "reason" (DC'.Get (Exception msg -> m (B'.Text msg))) where
-    fromLabel = DC'.Get get_Exception'reason
-
-has_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m Bool
-has_Exception'reason(Exception_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "reason" (DC'.Has (Exception msg -> m Bool)) where
-    fromLabel = DC'.Has has_Exception'reason
-
-set_Exception'reason :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Exception'reason (Exception_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "reason" (DC'.Set (Exception (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Exception'reason
+data Exception'Type
+    = Exception'Type'failed
+    | Exception'Type'overloaded
+    | Exception'Type'disconnected
+    | Exception'Type'unimplemented
+    | Exception'Type'unknown' Word16
+instance Enum Exception'Type where
+    toEnum = C'.fromWord . fromIntegral
+    fromEnum = fromIntegral . C'.toWord
 
 
-
-get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
-get_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "obsoleteIsCallersFault" (DC'.Get (Exception msg -> m Bool)) where
-    fromLabel = DC'.Get get_Exception'obsoleteIsCallersFault
-
-has_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
-has_Exception'obsoleteIsCallersFault(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "obsoleteIsCallersFault" (DC'.Has (Exception msg -> m Bool)) where
-    fromLabel = DC'.Has has_Exception'obsoleteIsCallersFault
-
-set_Exception'obsoleteIsCallersFault :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Bool -> m ()
-set_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "obsoleteIsCallersFault" (DC'.Set (Exception (M'.MutMsg s) -> Bool -> m ())) where
-    fromLabel = DC'.Set set_Exception'obsoleteIsCallersFault
-
-
-
-get_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Word16
-get_Exception'obsoleteDurability (Exception_newtype_ struct) = C'.getWordField struct 0 16 0
-instance U'.ReadCtx m msg => IsLabel "obsoleteDurability" (DC'.Get (Exception msg -> m Word16)) where
-    fromLabel = DC'.Get get_Exception'obsoleteDurability
-
-has_Exception'obsoleteDurability :: U'.ReadCtx m msg => Exception msg -> m Bool
-has_Exception'obsoleteDurability(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "obsoleteDurability" (DC'.Has (Exception msg -> m Bool)) where
-    fromLabel = DC'.Has has_Exception'obsoleteDurability
-
-set_Exception'obsoleteDurability :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Word16 -> m ()
-set_Exception'obsoleteDurability (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "obsoleteDurability" (DC'.Set (Exception (M'.MutMsg s) -> Word16 -> m ())) where
-    fromLabel = DC'.Set set_Exception'obsoleteDurability
-
-
-
-get_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Exception'Type
-get_Exception'type_ (Exception_newtype_ struct) = C'.getWordField struct 0 32 0
-instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Get (Exception msg -> m Exception'Type)) where
-    fromLabel = DC'.Get get_Exception'type_
-
-has_Exception'type_ :: U'.ReadCtx m msg => Exception msg -> m Bool
-has_Exception'type_(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Has (Exception msg -> m Bool)) where
-    fromLabel = DC'.Has has_Exception'type_
-
-set_Exception'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Exception (M'.MutMsg s) -> Exception'Type -> m ()
-set_Exception'type_ (Exception_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "type_" (DC'.Set (Exception (M'.MutMsg s) -> Exception'Type -> m ())) where
-    fromLabel = DC'.Set set_Exception'type_
-
-
-
-newtype PromisedAnswer msg = PromisedAnswer_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (PromisedAnswer msg) where
-    fromStruct = pure . PromisedAnswer_newtype_
-instance C'.IsPtr msg (PromisedAnswer msg) where
-    fromPtr msg ptr = PromisedAnswer_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (PromisedAnswer_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (PromisedAnswer msg) where
-    newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf msg (U'.Struct msg))
-    length (List_PromisedAnswer l) = U'.length l
-    index i (List_PromisedAnswer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
-    setIndex (PromisedAnswer_newtype_ elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
-    allocList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
-instance U'.HasMessage (PromisedAnswer msg) msg where
-    message (PromisedAnswer_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (PromisedAnswer msg) msg where
-    messageDefault = PromisedAnswer_newtype_ . U'.messageDefault
-
--- | Allocate a new 'PromisedAnswer' inside the message.
-new_PromisedAnswer :: M'.WriteCtx m s => M'.MutMsg s -> m (PromisedAnswer (M'.MutMsg s))
-new_PromisedAnswer msg = PromisedAnswer_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
-    fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
-    toPtr (List_PromisedAnswer l) = C'.toPtr l
-get_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Word32
-get_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (PromisedAnswer msg -> m Word32)) where
-    fromLabel = DC'.Get get_PromisedAnswer'questionId
-
-has_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
-has_PromisedAnswer'questionId(PromisedAnswer_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (PromisedAnswer msg -> m Bool)) where
-    fromLabel = DC'.Has has_PromisedAnswer'questionId
-
-set_PromisedAnswer'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMsg s) -> Word32 -> m ()
-set_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (PromisedAnswer (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_PromisedAnswer'questionId
-
-
-
-get_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m (B'.List msg (PromisedAnswer'Op msg))
-get_PromisedAnswer'transform (PromisedAnswer_newtype_ struct) =
-    U'.getPtr 0 struct
-    >>= C'.fromPtr (U'.message struct)
-
-instance U'.ReadCtx m msg => IsLabel "transform" (DC'.Get (PromisedAnswer msg -> m (B'.List msg (PromisedAnswer'Op msg)))) where
-    fromLabel = DC'.Get get_PromisedAnswer'transform
-
-has_PromisedAnswer'transform :: U'.ReadCtx m msg => PromisedAnswer msg -> m Bool
-has_PromisedAnswer'transform(PromisedAnswer_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "transform" (DC'.Has (PromisedAnswer msg -> m Bool)) where
-    fromLabel = DC'.Has has_PromisedAnswer'transform
-
-set_PromisedAnswer'transform :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (PromisedAnswer'Op (M'.MutMsg s))) -> m ()
-set_PromisedAnswer'transform (PromisedAnswer_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "transform" (DC'.Set (PromisedAnswer (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (PromisedAnswer'Op (M'.MutMsg s))) -> m ())) where
-    fromLabel = DC'.Set set_PromisedAnswer'transform
-
-
-
-data Call'sendResultsTo msg
-    = Call'sendResultsTo'caller
-    | Call'sendResultsTo'yourself
-    | Call'sendResultsTo'thirdParty (Maybe (U'.Ptr msg))
-    | Call'sendResultsTo'unknown' Word16
-
-
-
-
-instance C'.IsStruct msg (Call'sendResultsTo msg) where
-    fromStruct struct = do
-        tag <-  C'.getWordField struct 0 48 0
-        case tag of
-            2 -> Call'sendResultsTo'thirdParty <$>  (U'.getPtr 2 struct >>= C'.fromPtr (U'.message struct))
-            1 -> pure Call'sendResultsTo'yourself
-            0 -> pure Call'sendResultsTo'caller
-            _ -> pure $ Call'sendResultsTo'unknown' tag
-instance B'.ListElem msg (Call'sendResultsTo msg) where
-    newtype List msg (Call'sendResultsTo msg) = List_Call'sendResultsTo (U'.ListOf msg (U'.Struct msg))
-    length (List_Call'sendResultsTo l) = U'.length l
-    index i (List_Call'sendResultsTo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Call'sendResultsTo msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
-    fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
-    toPtr (List_Call'sendResultsTo l) = C'.toPtr l
-
-newtype Bootstrap msg = Bootstrap_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Bootstrap msg) where
-    fromStruct = pure . Bootstrap_newtype_
-instance C'.IsPtr msg (Bootstrap msg) where
-    fromPtr msg ptr = Bootstrap_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Bootstrap_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Bootstrap msg) where
-    newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf msg (U'.Struct msg))
-    length (List_Bootstrap l) = U'.length l
-    index i (List_Bootstrap l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bootstrap msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
-    setIndex (Bootstrap_newtype_ elt) i (List_Bootstrap l) = U'.setIndex elt i l
-    allocList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
-instance U'.HasMessage (Bootstrap msg) msg where
-    message (Bootstrap_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Bootstrap msg) msg where
-    messageDefault = Bootstrap_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Bootstrap' inside the message.
-new_Bootstrap :: M'.WriteCtx m s => M'.MutMsg s -> m (Bootstrap (M'.MutMsg s))
-new_Bootstrap msg = Bootstrap_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
-    fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
-    toPtr (List_Bootstrap l) = C'.toPtr l
-get_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Word32
-get_Bootstrap'questionId (Bootstrap_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Bootstrap msg -> m Word32)) where
-    fromLabel = DC'.Get get_Bootstrap'questionId
-
-has_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
-has_Bootstrap'questionId(Bootstrap_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Bootstrap msg -> m Bool)) where
-    fromLabel = DC'.Has has_Bootstrap'questionId
-
-set_Bootstrap'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Bootstrap (M'.MutMsg s) -> Word32 -> m ()
-set_Bootstrap'questionId (Bootstrap_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Bootstrap (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Bootstrap'questionId
-
-
-
-get_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m (Maybe (U'.Ptr msg))
-get_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) =
-    U'.getPtr 0 struct
-    >>= C'.fromPtr (U'.message struct)
-
-instance U'.ReadCtx m msg => IsLabel "deprecatedObjectId" (DC'.Get (Bootstrap msg -> m (Maybe (U'.Ptr msg)))) where
-    fromLabel = DC'.Get get_Bootstrap'deprecatedObjectId
-
-has_Bootstrap'deprecatedObjectId :: U'.ReadCtx m msg => Bootstrap msg -> m Bool
-has_Bootstrap'deprecatedObjectId(Bootstrap_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "deprecatedObjectId" (DC'.Has (Bootstrap msg -> m Bool)) where
-    fromLabel = DC'.Has has_Bootstrap'deprecatedObjectId
-
-set_Bootstrap'deprecatedObjectId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Bootstrap (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "deprecatedObjectId" (DC'.Set (Bootstrap (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
-    fromLabel = DC'.Set set_Bootstrap'deprecatedObjectId
-
-
+instance C'.IsWord Exception'Type where
+    fromWord n = go (fromIntegral n :: Word16)
+      where
+        go 3 = Exception'Type'unimplemented
+        go 2 = Exception'Type'disconnected
+        go 1 = Exception'Type'overloaded
+        go 0 = Exception'Type'failed
+        go tag = Exception'Type'unknown' (fromIntegral tag)
+    toWord Exception'Type'unimplemented = 3
+    toWord Exception'Type'disconnected = 2
+    toWord Exception'Type'overloaded = 1
+    toWord Exception'Type'failed = 0
+    toWord (Exception'Type'unknown' tag) = fromIntegral tag
+instance B'.ListElem msg Exception'Type where
+    newtype List msg Exception'Type = List_Exception'Type (U'.ListOf msg Word16)
+    length (List_Exception'Type l) = U'.length l
+    index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
+instance B'.MutListElem s Exception'Type where
+    setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
+    allocList msg size = List_Exception'Type <$> U'.allocList16 msg size
+instance C'.IsPtr msg (B'.List msg Exception'Type) where
+    fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
+    toPtr (List_Exception'Type l) = C'.toPtr l
 
 data PromisedAnswer'Op msg
     = PromisedAnswer'Op'noop
@@ -1251,141 +1322,70 @@ instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer'Op l) = C'.toPtr l
 
-newtype Disembargo msg = Disembargo_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Disembargo msg) where
-    fromStruct = pure . Disembargo_newtype_
-instance C'.IsPtr msg (Disembargo msg) where
-    fromPtr msg ptr = Disembargo_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Disembargo_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Disembargo msg) where
-    newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf msg (U'.Struct msg))
-    length (List_Disembargo l) = U'.length l
-    index i (List_Disembargo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
-    setIndex (Disembargo_newtype_ elt) i (List_Disembargo l) = U'.setIndex elt i l
-    allocList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
-instance U'.HasMessage (Disembargo msg) msg where
-    message (Disembargo_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Disembargo msg) msg where
-    messageDefault = Disembargo_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Disembargo' inside the message.
-new_Disembargo :: M'.WriteCtx m s => M'.MutMsg s -> m (Disembargo (M'.MutMsg s))
-new_Disembargo msg = Disembargo_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
-    fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
-    toPtr (List_Disembargo l) = C'.toPtr l
-get_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m (MessageTarget msg)
-get_Disembargo'target (Disembargo_newtype_ struct) =
-    U'.getPtr 0 struct
-    >>= C'.fromPtr (U'.message struct)
-
-instance U'.ReadCtx m msg => IsLabel "target" (DC'.Get (Disembargo msg -> m (MessageTarget msg))) where
-    fromLabel = DC'.Get get_Disembargo'target
-
-has_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m Bool
-has_Disembargo'target(Disembargo_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "target" (DC'.Has (Disembargo msg -> m Bool)) where
-    fromLabel = DC'.Has has_Disembargo'target
-
-set_Disembargo'target :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ()
-set_Disembargo'target (Disembargo_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "target" (DC'.Set (Disembargo (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Disembargo'target
+data Resolve' msg
+    = Resolve'cap (CapDescriptor msg)
+    | Resolve'exception (Exception msg)
+    | Resolve'unknown' Word16
 
 
 
-get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
-get_Disembargo'context (Disembargo_newtype_ struct) = C'.fromStruct struct
-instance U'.ReadCtx m msg => IsLabel "context" (DC'.Get (Disembargo msg -> m (Disembargo'context msg))) where
-    fromLabel = DC'.Get get_Disembargo'context
+instance C'.IsStruct msg (Resolve' msg) where
+    fromStruct struct = do
+        tag <-  C'.getWordField struct 0 32 0
+        case tag of
+            1 -> Resolve'exception <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
+            0 -> Resolve'cap <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
+            _ -> pure $ Resolve'unknown' tag
+instance B'.ListElem msg (Resolve' msg) where
+    newtype List msg (Resolve' msg) = List_Resolve' (U'.ListOf msg (U'.Struct msg))
+    length (List_Resolve' l) = U'.length l
+    index i (List_Resolve' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 
-has_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m Bool
-has_Disembargo'context(Disembargo_newtype_ struct) = pure True
-instance U'.ReadCtx m msg => IsLabel "context" (DC'.Has (Disembargo msg -> m Bool)) where
-    fromLabel = DC'.Has has_Disembargo'context
+instance C'.IsPtr msg (Resolve' msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 
+    toPtr = error "TODO: toPtr for non-newtype structs."
 
+instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
+    fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
+    toPtr (List_Resolve' l) = C'.toPtr l
 
-newtype Join msg = Join_newtype_ (U'.Struct msg)
-
-instance C'.IsStruct msg (Join msg) where
-    fromStruct = pure . Join_newtype_
-instance C'.IsPtr msg (Join msg) where
-    fromPtr msg ptr = Join_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Join_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Join msg) where
-    newtype List msg (Join msg) = List_Join (U'.ListOf msg (U'.Struct msg))
-    length (List_Join l) = U'.length l
-    index i (List_Join l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Join msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Join (M'.MutMsg s)) where
-    setIndex (Join_newtype_ elt) i (List_Join l) = U'.setIndex elt i l
-    allocList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
-instance U'.HasMessage (Join msg) msg where
-    message (Join_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Join msg) msg where
-    messageDefault = Join_newtype_ . U'.messageDefault
-
--- | Allocate a new 'Join' inside the message.
-new_Join :: M'.WriteCtx m s => M'.MutMsg s -> m (Join (M'.MutMsg s))
-new_Join msg = Join_newtype_ <$> U'.allocStruct msg 1 2
-instance C'.IsPtr msg (B'.List msg (Join msg)) where
-    fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
-    toPtr (List_Join l) = C'.toPtr l
-get_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Word32
-get_Join'questionId (Join_newtype_ struct) = C'.getWordField struct 0 0 0
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Get (Join msg -> m Word32)) where
-    fromLabel = DC'.Get get_Join'questionId
-
-has_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Bool
-has_Join'questionId(Join_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
-instance U'.ReadCtx m msg => IsLabel "questionId" (DC'.Has (Join msg -> m Bool)) where
-    fromLabel = DC'.Has has_Join'questionId
-
-set_Join'questionId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> Word32 -> m ()
-set_Join'questionId (Join_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "questionId" (DC'.Set (Join (M'.MutMsg s) -> Word32 -> m ())) where
-    fromLabel = DC'.Set set_Join'questionId
+data Return' msg
+    = Return'results (Payload msg)
+    | Return'exception (Exception msg)
+    | Return'canceled
+    | Return'resultsSentElsewhere
+    | Return'takeFromOtherQuestion Word32
+    | Return'acceptFromThirdParty (Maybe (U'.Ptr msg))
+    | Return'unknown' Word16
 
 
 
-get_Join'target :: U'.ReadCtx m msg => Join msg -> m (MessageTarget msg)
-get_Join'target (Join_newtype_ struct) =
-    U'.getPtr 0 struct
-    >>= C'.fromPtr (U'.message struct)
-
-instance U'.ReadCtx m msg => IsLabel "target" (DC'.Get (Join msg -> m (MessageTarget msg))) where
-    fromLabel = DC'.Get get_Join'target
-
-has_Join'target :: U'.ReadCtx m msg => Join msg -> m Bool
-has_Join'target(Join_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-instance U'.ReadCtx m msg => IsLabel "target" (DC'.Has (Join msg -> m Bool)) where
-    fromLabel = DC'.Has has_Join'target
-
-set_Join'target :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ()
-set_Join'target (Join_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "target" (DC'.Set (Join (M'.MutMsg s) -> (MessageTarget (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Join'target
 
 
 
-get_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m (Maybe (U'.Ptr msg))
-get_Join'keyPart (Join_newtype_ struct) =
-    U'.getPtr 1 struct
-    >>= C'.fromPtr (U'.message struct)
 
-instance U'.ReadCtx m msg => IsLabel "keyPart" (DC'.Get (Join msg -> m (Maybe (U'.Ptr msg)))) where
-    fromLabel = DC'.Get get_Join'keyPart
+instance C'.IsStruct msg (Return' msg) where
+    fromStruct struct = do
+        tag <-  C'.getWordField struct 0 48 0
+        case tag of
+            5 -> Return'acceptFromThirdParty <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
+            4 -> Return'takeFromOtherQuestion <$>  C'.getWordField struct 1 0 0
+            3 -> pure Return'resultsSentElsewhere
+            2 -> pure Return'canceled
+            1 -> Return'exception <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
+            0 -> Return'results <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
+            _ -> pure $ Return'unknown' tag
+instance B'.ListElem msg (Return' msg) where
+    newtype List msg (Return' msg) = List_Return' (U'.ListOf msg (U'.Struct msg))
+    length (List_Return' l) = U'.length l
+    index i (List_Return' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 
-has_Join'keyPart :: U'.ReadCtx m msg => Join msg -> m Bool
-has_Join'keyPart(Join_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
-instance U'.ReadCtx m msg => IsLabel "keyPart" (DC'.Has (Join msg -> m Bool)) where
-    fromLabel = DC'.Has has_Join'keyPart
+instance C'.IsPtr msg (Return' msg) where
+    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 
-set_Join'keyPart :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Join'keyPart (Join_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "keyPart" (DC'.Set (Join (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
-    fromLabel = DC'.Set set_Join'keyPart
+    toPtr = error "TODO: toPtr for non-newtype structs."
 
-
+instance C'.IsPtr msg (B'.List msg (Return' msg)) where
+    fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
+    toPtr (List_Return' l) = C'.toPtr l

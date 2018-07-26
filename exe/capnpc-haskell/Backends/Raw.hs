@@ -16,6 +16,7 @@ import Data.Monoid ((<>))
 import Data.Ord    (Down(..))
 import Text.Printf (printf)
 
+import qualified Data.Map.Strict        as M
 import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as TB
 
@@ -68,7 +69,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , ""
     , mintercalate "\n" $ map fmtImport modImports
     , ""
-    , mintercalate "\n" $ map (fmtDecl modId) modDecls
+    , mintercalate "\n" $ map (fmtDecl modId) (M.toList modDecls)
     ]
 
 fmtModRef :: ModuleRef -> TB.Builder
