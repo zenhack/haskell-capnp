@@ -24,7 +24,7 @@ import qualified Data.Text.Lazy.Builder as TB
 sortVariants = sortOn (Down . variantTag)
 
 fmtModule :: Module -> [(FilePath, TB.Builder)]
-fmtModule Module{modName=Namespace modNameParts,..} =
+fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     [ ( T.unpack $ mintercalate "/" humanParts <> ".hs"
       , mainContent
       )
@@ -69,7 +69,7 @@ fmtModule Module{modName=Namespace modNameParts,..} =
     , ""
     , mintercalate "\n" $ map fmtImport modImports
     , ""
-    , mintercalate "\n" $ map (fmtDecl modId) (M.toList modDecls)
+    , mintercalate "\n" $ map (fmtDecl thisMod) (M.toList modDecls)
     ]
 
 fmtModRef :: ModuleRef -> TB.Builder
@@ -93,11 +93,11 @@ fmtStructListIsPtr nameText = mconcat
 --
 -- parameters:
 --
--- * thisMod - the id of the module that we are generating.
+-- * thisMod - the module that we are generating.
 -- * name    - the name of the type.
 -- * dataSz  - the size of the data section, in words.
 -- * ptrSz   - the size of the pointer section.
-fmtNewtypeStruct :: Id -> Name -> Word16 -> Word16 -> TB.Builder
+fmtNewtypeStruct :: Module -> Name -> Word16 -> Word16 -> TB.Builder
 fmtNewtypeStruct thisMod name dataSz ptrSz =
     let typeCon = fmtName thisMod name
         dataCon = typeCon <> "_newtype_"
@@ -172,7 +172,7 @@ fmtSetWordField struct value DataLoc{..} = mintercalate " "
     , TB.fromString (show dataDef)
     ]
 
-fmtFieldAccessor :: Id -> Name -> Name -> Field -> TB.Builder
+fmtFieldAccessor :: Module -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
     let accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
     in mintercalate "\n"
@@ -267,7 +267,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , "\n"
         ]
 
-fmtDecl :: Id -> (Name, Decl) -> TB.Builder
+fmtDecl :: Module -> (Name, Decl) -> TB.Builder
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
 fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
     let nameText = fmtName thisMod (valueName name)
@@ -276,7 +276,7 @@ fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
         , nameText, " = C'.fromWord ", TB.fromString (show wordValue), "\n"
         ]
 
-fmtDataDef :: Id -> Name -> DataDef -> TB.Builder
+fmtDataDef :: Module -> Name -> DataDef -> TB.Builder
 fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct dataSz ptrSz, ..} =
     fmtNewtypeStruct thisMod dataName dataSz ptrSz <>
     case variantParams of
@@ -403,7 +403,7 @@ fmtDataDef _ dataName dataDef =
 
 -- | @'fmtType ident msg ty@ formats the type @ty@ from module @ident@,
 -- using @msg@ as the message parameter, if any.
-fmtType :: Id -> TB.Builder -> Type -> TB.Builder
+fmtType :: Module -> TB.Builder -> Type -> TB.Builder
 fmtType thisMod msg = \case
     ListOf eltType ->
         "(B'.List " <> msg <> " " <> fmtType thisMod msg eltType <> ")"
@@ -437,8 +437,8 @@ fmtUntyped msg List   = "(U'.List " <> msg <> ")"
 fmtUntyped _ Cap      = "Word32"
 fmtUntyped msg Ptr    = "(U'.Ptr " <> msg <> ")"
 
-fmtName :: Id -> Name -> TB.Builder
-fmtName thisMod Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
+fmtName :: Module -> Name -> TB.Builder
+fmtName Module{modId=thisMod} Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
     modPrefix <> mintercalate "'" (map TB.fromText $ parts <> [localName])
   where
     modPrefix = case nameModule of
