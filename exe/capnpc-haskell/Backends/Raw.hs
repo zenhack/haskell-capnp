@@ -258,14 +258,49 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 , isLabelInstance
                 ]
             HereField ->
-                -- This is either a group or a union. If it's the latter we don't
-                -- want a setter at all; the user must get_ the group and set its
-                -- individual fields. If it's a union, we do need something like a
-                -- setter, but it needs to look a bit different based on what the
-                -- type of each union field is. TODO.
-                ""
+                let fieldTypeName = case fieldType of
+                        StructType name _ -> name
+                        _ -> error $ "Unexpected field type " ++ show fieldType ++ " for field at HereField"
+                in case modDecls thisMod M.! fieldTypeName of
+                    -- Note that it is only valid to assume that the above lookup will
+                    -- always succeed becasue fields with location 'HereField' aren't
+                    -- first-class capnproto types (unions and groups), and so can't be
+                    -- defined anywhere other than this module.
+                    DeclDef DataDef{dataVariants=[_]} ->
+                        -- This is a group; we don't want a setter. the user
+                        -- must 'get_*' the group and set its individual fields.
+                        ""
+                    DeclDef DataDef{dataTagLoc=Just tagLoc,dataVariants} ->
+                        mconcat $ map (fmtUnionSetter thisMod typeName fieldTypeName tagLoc) dataVariants
+                    value ->
+                        error $ "Expected union or group declaration, but got " ++ show value
         , "\n"
         ]
+
+fmtUnionSetter :: Module -> Name -> Name -> DataLoc -> Variant -> TB.Builder
+fmtUnionSetter thisMod parentType childType tagLoc Variant{variantTag=Just tagValue,..} =
+    let setName = "set_" <> fmtName thisMod variantName
+        parentTypeCon = fmtName thisMod parentType
+        parentDataCon = parentTypeCon <> "_newtype_"
+    in case variantParams of
+        NoParams -> mconcat
+            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
+            , setName, " (", parentDataCon, " struct) = "
+            , fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
+            , "\n"
+            ]
+        Record _ -> mconcat
+            -- Variant is a group; we return a reference to the group so the user can
+            -- modify it.
+            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> "
+            , "m (", fmtName thisMod childType, " (M'.MutMsg s))\n"
+            , setName, " = error \"TODO\"\n"
+            ]
+        _ ->
+            "" -- TODO
+fmtUnionSetter _ _ _ _ Variant{variantTag=Nothing} =
+    -- This happens for the unknown' variants; just ignore them:
+    ""
 
 fmtDecl :: Module -> (Name, Decl) -> TB.Builder
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d

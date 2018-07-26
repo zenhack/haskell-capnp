@@ -553,6 +553,8 @@ has_Field'ordinal(Field_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "ordinal" (DC'.Has (Field msg -> m Bool)) where
     fromLabel = DC'.Has has_Field'ordinal
 
+set_Field'ordinal'implicit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> m ()
+set_Field'ordinal'implicit (Field_newtype_ struct) =  C'.setWordField struct (0 :: Word16) 1 16 0
 
 
 get_Field'union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
@@ -565,6 +567,10 @@ has_Field'union'(Field_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Field msg -> m Bool)) where
     fromLabel = DC'.Has has_Field'union'
 
+set_Field'slot :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> m (Field' (M'.MutMsg s))
+set_Field'slot = error "TODO"
+set_Field'group :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> m (Field' (M'.MutMsg s))
+set_Field'group = error "TODO"
 
 
 newtype Method msg = Method_newtype_ (U'.Struct msg)
@@ -926,6 +932,18 @@ has_Node'union'(Node_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Node msg -> m Bool)) where
     fromLabel = DC'.Has has_Node'union'
 
+set_Node'file :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m ()
+set_Node'file (Node_newtype_ struct) =  C'.setWordField struct (0 :: Word16) 1 32 0
+set_Node'struct :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
+set_Node'struct = error "TODO"
+set_Node'enum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
+set_Node'enum = error "TODO"
+set_Node'interface :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
+set_Node'interface = error "TODO"
+set_Node'const :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
+set_Node'const = error "TODO"
+set_Node'annotation :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
+set_Node'annotation = error "TODO"
 
 
 newtype Superclass msg = Superclass_newtype_ (U'.Struct msg)
@@ -1291,6 +1309,12 @@ has_Type'anyPointer'union'(Type'anyPointer'group'_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Type'anyPointer'group' msg -> m Bool)) where
     fromLabel = DC'.Has has_Type'anyPointer'union'
 
+set_Type'anyPointer'unconstrained :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> m (Type'anyPointer (M'.MutMsg s))
+set_Type'anyPointer'unconstrained = error "TODO"
+set_Type'anyPointer'parameter :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> m (Type'anyPointer (M'.MutMsg s))
+set_Type'anyPointer'parameter = error "TODO"
+set_Type'anyPointer'implicitMethodParameter :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> m (Type'anyPointer (M'.MutMsg s))
+set_Type'anyPointer'implicitMethodParameter = error "TODO"
 
 
 
@@ -1491,6 +1515,8 @@ has_Brand'Scope'union'(Brand'Scope_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Brand'Scope msg -> m Bool)) where
     fromLabel = DC'.Has has_Brand'Scope'union'
 
+set_Brand'Scope'inherit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> m ()
+set_Brand'Scope'inherit (Brand'Scope_newtype_ struct) =  C'.setWordField struct (1 :: Word16) 1 0 0
 
 
 data Brand'Scope' msg
@@ -2616,6 +2642,14 @@ has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group'_ne
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Type'anyPointer'unconstrained'group' msg -> m Bool)) where
     fromLabel = DC'.Has has_Type'anyPointer'unconstrained'union'
 
+set_Type'anyPointer'unconstrained'anyKind :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
+set_Type'anyPointer'unconstrained'anyKind (Type'anyPointer'unconstrained'group'_newtype_ struct) =  C'.setWordField struct (0 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'struct :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
+set_Type'anyPointer'unconstrained'struct (Type'anyPointer'unconstrained'group'_newtype_ struct) =  C'.setWordField struct (1 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'list :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
+set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained'group'_newtype_ struct) =  C'.setWordField struct (2 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'capability :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
+set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained'group'_newtype_ struct) =  C'.setWordField struct (3 :: Word16) 1 16 0
 
 
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ (U'.Struct msg)

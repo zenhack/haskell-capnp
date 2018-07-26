@@ -294,6 +294,10 @@ has_Call'sendResultsTo(Call_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "sendResultsTo" (DC'.Has (Call msg -> m Bool)) where
     fromLabel = DC'.Has has_Call'sendResultsTo
 
+set_Call'sendResultsTo'caller :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> m ()
+set_Call'sendResultsTo'caller (Call_newtype_ struct) =  C'.setWordField struct (0 :: Word16) 0 48 0
+set_Call'sendResultsTo'yourself :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call (M'.MutMsg s) -> m ()
+set_Call'sendResultsTo'yourself (Call_newtype_ struct) =  C'.setWordField struct (1 :: Word16) 0 48 0
 
 
 get_Call'allowThirdPartyTailCall :: U'.ReadCtx m msg => Call msg -> m Bool
@@ -408,6 +412,8 @@ has_Disembargo'context(Disembargo_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "context" (DC'.Has (Disembargo msg -> m Bool)) where
     fromLabel = DC'.Has has_Disembargo'context
 
+set_Disembargo'context'accept :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo (M'.MutMsg s) -> m ()
+set_Disembargo'context'accept (Disembargo_newtype_ struct) =  C'.setWordField struct (2 :: Word16) 0 32 0
 
 
 newtype Exception msg = Exception_newtype_ (U'.Struct msg)
@@ -1130,6 +1136,10 @@ has_Return'union'(Return_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Return msg -> m Bool)) where
     fromLabel = DC'.Has has_Return'union'
 
+set_Return'canceled :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> m ()
+set_Return'canceled (Return_newtype_ struct) =  C'.setWordField struct (2 :: Word16) 0 48 0
+set_Return'resultsSentElsewhere :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return (M'.MutMsg s) -> m ()
+set_Return'resultsSentElsewhere (Return_newtype_ struct) =  C'.setWordField struct (3 :: Word16) 0 48 0
 
 
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ (U'.Struct msg)
