@@ -67,9 +67,9 @@ instance U'.ReadCtx m msg => IsLabel "sturdyRef" (DC'.Has (Persistent'SaveResult
 
 set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sturdyRef" (DC'.Set (Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Persistent'SaveResults'sturdyRef
+
 
 
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
@@ -112,7 +112,7 @@ instance U'.ReadCtx m msg => IsLabel "sealFor" (DC'.Has (Persistent'SaveParams m
 
 set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "sealFor" (DC'.Set (Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Persistent'SaveParams'sealFor
+
 

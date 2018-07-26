@@ -110,9 +110,9 @@ instance U'.ReadCtx m msg => IsLabel "function" (DC'.Has (JsonValue'Call msg -> 
 
 set_JsonValue'Call'function :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'Call'function (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "function" (DC'.Set (JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Call'function
+
 
 
 get_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.List msg (JsonValue msg))
@@ -130,9 +130,9 @@ instance U'.ReadCtx m msg => IsLabel "params" (DC'.Has (JsonValue'Call msg -> m 
 
 set_JsonValue'Call'params :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
 set_JsonValue'Call'params (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "params" (DC'.Set (JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Call'params
+
 
 
 newtype JsonValue'Field msg = JsonValue'Field_newtype_ (U'.Struct msg)
@@ -175,9 +175,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (JsonValue'Field msg -> m B
 
 set_JsonValue'Field'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'Field'name (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Field'name
+
 
 
 get_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m (JsonValue msg)
@@ -195,7 +195,7 @@ instance U'.ReadCtx m msg => IsLabel "value" (DC'.Has (JsonValue'Field msg -> m 
 
 set_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ()
 set_JsonValue'Field'value (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "value" (DC'.Set (JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_JsonValue'Field'value
+
 

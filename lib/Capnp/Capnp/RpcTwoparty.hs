@@ -68,6 +68,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "joinId" (DC'.
     fromLabel = DC'.Set set_JoinKeyPart'joinId
 
 
+
 get_JoinKeyPart'partCount :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word16
 get_JoinKeyPart'partCount (JoinKeyPart_newtype_ struct) = C'.getWordField struct 0 32 0
 instance U'.ReadCtx m msg => IsLabel "partCount" (DC'.Get (JoinKeyPart msg -> m Word16)) where
@@ -84,6 +85,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "partCount" (D
     fromLabel = DC'.Set set_JoinKeyPart'partCount
 
 
+
 get_JoinKeyPart'partNum :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word16
 get_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) = C'.getWordField struct 0 48 0
 instance U'.ReadCtx m msg => IsLabel "partNum" (DC'.Get (JoinKeyPart msg -> m Word16)) where
@@ -98,6 +100,7 @@ set_JoinKeyPart'partNum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Join
 set_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 48 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "partNum" (DC'.Set (JoinKeyPart (M'.MutMsg s) -> Word16 -> m ())) where
     fromLabel = DC'.Set set_JoinKeyPart'partNum
+
 
 
 newtype JoinResult msg = JoinResult_newtype_ (U'.Struct msg)
@@ -141,6 +144,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "joinId" (DC'.
     fromLabel = DC'.Set set_JoinResult'joinId
 
 
+
 get_JoinResult'succeeded :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 get_JoinResult'succeeded (JoinResult_newtype_ struct) = C'.getWordField struct 0 32 0
 instance U'.ReadCtx m msg => IsLabel "succeeded" (DC'.Get (JoinResult msg -> m Bool)) where
@@ -155,6 +159,7 @@ set_JoinResult'succeeded :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Joi
 set_JoinResult'succeeded (JoinResult_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "succeeded" (DC'.Set (JoinResult (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_JoinResult'succeeded
+
 
 
 get_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m (Maybe (U'.Ptr msg))
@@ -172,9 +177,9 @@ instance U'.ReadCtx m msg => IsLabel "cap" (DC'.Has (JoinResult msg -> m Bool)) 
 
 set_JoinResult'cap :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JoinResult (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_JoinResult'cap (JoinResult_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "cap" (DC'.Set (JoinResult (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_JoinResult'cap
+
 
 
 data Side
@@ -247,6 +252,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "joinId" (DC'.
     fromLabel = DC'.Set set_ProvisionId'joinId
 
 
+
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (VatId msg) where
@@ -286,4 +292,5 @@ set_VatId'side :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => VatId (M'.Mut
 set_VatId'side (VatId_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "side" (DC'.Set (VatId (M'.MutMsg s) -> Side -> m ())) where
     fromLabel = DC'.Set set_VatId'side
+
 

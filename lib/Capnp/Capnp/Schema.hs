@@ -101,9 +101,9 @@ instance U'.ReadCtx m msg => IsLabel "scopes" (DC'.Has (Brand msg -> m Bool)) wh
 
 set_Brand'scopes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Scope (M'.MutMsg s))) -> m ()
 set_Brand'scopes (Brand_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "scopes" (DC'.Set (Brand (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Scope (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Brand'scopes
+
 
 
 newtype Method msg = Method_newtype_ (U'.Struct msg)
@@ -146,9 +146,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (Method msg -> m Bool)) whe
 
 set_Method'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Method'name (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (Method (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Method'name
+
 
 
 get_Method'codeOrder :: U'.ReadCtx m msg => Method msg -> m Word16
@@ -167,6 +167,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "codeOrder" (D
     fromLabel = DC'.Set set_Method'codeOrder
 
 
+
 get_Method'paramStructType :: U'.ReadCtx m msg => Method msg -> m Word64
 get_Method'paramStructType (Method_newtype_ struct) = C'.getWordField struct 1 0 0
 instance U'.ReadCtx m msg => IsLabel "paramStructType" (DC'.Get (Method msg -> m Word64)) where
@@ -181,6 +182,7 @@ set_Method'paramStructType :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => M
 set_Method'paramStructType (Method_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "paramStructType" (DC'.Set (Method (M'.MutMsg s) -> Word64 -> m ())) where
     fromLabel = DC'.Set set_Method'paramStructType
+
 
 
 get_Method'resultStructType :: U'.ReadCtx m msg => Method msg -> m Word64
@@ -199,6 +201,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "resultStructT
     fromLabel = DC'.Set set_Method'resultStructType
 
 
+
 get_Method'annotations :: U'.ReadCtx m msg => Method msg -> m (B'.List msg (Annotation msg))
 get_Method'annotations (Method_newtype_ struct) =
     U'.getPtr 1 struct
@@ -214,9 +217,9 @@ instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Has (Method msg -> m Boo
 
 set_Method'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Method'annotations (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "annotations" (DC'.Set (Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Method'annotations
+
 
 
 get_Method'paramBrand :: U'.ReadCtx m msg => Method msg -> m (Brand msg)
@@ -234,9 +237,9 @@ instance U'.ReadCtx m msg => IsLabel "paramBrand" (DC'.Has (Method msg -> m Bool
 
 set_Method'paramBrand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Method'paramBrand (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "paramBrand" (DC'.Set (Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Method'paramBrand
+
 
 
 get_Method'resultBrand :: U'.ReadCtx m msg => Method msg -> m (Brand msg)
@@ -254,9 +257,9 @@ instance U'.ReadCtx m msg => IsLabel "resultBrand" (DC'.Has (Method msg -> m Boo
 
 set_Method'resultBrand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Method'resultBrand (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "resultBrand" (DC'.Set (Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Method'resultBrand
+
 
 
 get_Method'implicitParameters :: U'.ReadCtx m msg => Method msg -> m (B'.List msg (Node'Parameter msg))
@@ -274,9 +277,9 @@ instance U'.ReadCtx m msg => IsLabel "implicitParameters" (DC'.Has (Method msg -
 
 set_Method'implicitParameters :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
 set_Method'implicitParameters (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "implicitParameters" (DC'.Set (Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Method'implicitParameters
+
 
 
 newtype Enumerant msg = Enumerant_newtype_ (U'.Struct msg)
@@ -319,9 +322,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (Enumerant msg -> m Bool)) 
 
 set_Enumerant'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Enumerant (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Enumerant'name (Enumerant_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (Enumerant (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Enumerant'name
+
 
 
 get_Enumerant'codeOrder :: U'.ReadCtx m msg => Enumerant msg -> m Word16
@@ -340,6 +343,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "codeOrder" (D
     fromLabel = DC'.Set set_Enumerant'codeOrder
 
 
+
 get_Enumerant'annotations :: U'.ReadCtx m msg => Enumerant msg -> m (B'.List msg (Annotation msg))
 get_Enumerant'annotations (Enumerant_newtype_ struct) =
     U'.getPtr 1 struct
@@ -355,9 +359,9 @@ instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Has (Enumerant msg -> m 
 
 set_Enumerant'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Enumerant (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Enumerant'annotations (Enumerant_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "annotations" (DC'.Set (Enumerant (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Enumerant'annotations
+
 
 
 field'noDiscriminant :: Word16
@@ -403,9 +407,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (Field msg -> m Bool)) wher
 
 set_Field'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Field'name (Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Field'name
+
 
 
 get_Field'codeOrder :: U'.ReadCtx m msg => Field msg -> m Word16
@@ -424,6 +428,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "codeOrder" (D
     fromLabel = DC'.Set set_Field'codeOrder
 
 
+
 get_Field'annotations :: U'.ReadCtx m msg => Field msg -> m (B'.List msg (Annotation msg))
 get_Field'annotations (Field_newtype_ struct) =
     U'.getPtr 1 struct
@@ -439,9 +444,9 @@ instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Has (Field msg -> m Bool
 
 set_Field'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Field'annotations (Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "annotations" (DC'.Set (Field (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Field'annotations
+
 
 
 get_Field'discriminantValue :: U'.ReadCtx m msg => Field msg -> m Word16
@@ -460,6 +465,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "discriminantV
     fromLabel = DC'.Set set_Field'discriminantValue
 
 
+
 get_Field'ordinal :: U'.ReadCtx m msg => Field msg -> m (Field'ordinal msg)
 get_Field'ordinal (Field_newtype_ struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "ordinal" (DC'.Get (Field msg -> m (Field'ordinal msg))) where
@@ -470,10 +476,6 @@ has_Field'ordinal(Field_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "ordinal" (DC'.Has (Field msg -> m Bool)) where
     fromLabel = DC'.Has has_Field'ordinal
 
-set_Field'ordinal :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field'ordinal (M'.MutMsg s)) -> m ()
-set_Field'ordinal _ = error "TODO: generate more setters."
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "ordinal" (DC'.Set (Field (M'.MutMsg s) -> (Field'ordinal (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Field'ordinal
 
 
 get_Field'union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
@@ -486,10 +488,6 @@ has_Field'union'(Field_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Field msg -> m Bool)) where
     fromLabel = DC'.Has has_Field'union'
 
-set_Field'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> (Field' (M'.MutMsg s)) -> m ()
-set_Field'union' _ = error "TODO: generate more setters."
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set (Field (M'.MutMsg s) -> (Field' (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Field'union'
 
 
 data Field' msg
@@ -537,6 +535,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "offset" (DC'.
     fromLabel = DC'.Set set_Field'slot'offset
 
 
+
 get_Field'slot'type_ :: U'.ReadCtx m msg => Field'slot'group' msg -> m (Type msg)
 get_Field'slot'type_ (Field'slot'group'_newtype_ struct) =
     U'.getPtr 2 struct
@@ -552,9 +551,9 @@ instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Has (Field'slot'group' msg -> 
 
 set_Field'slot'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Field'slot'type_ (Field'slot'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "type_" (DC'.Set (Field'slot'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Field'slot'type_
+
 
 
 get_Field'slot'defaultValue :: U'.ReadCtx m msg => Field'slot'group' msg -> m (Value msg)
@@ -572,9 +571,9 @@ instance U'.ReadCtx m msg => IsLabel "defaultValue" (DC'.Has (Field'slot'group' 
 
 set_Field'slot'defaultValue :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'slot'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
 set_Field'slot'defaultValue (Field'slot'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "defaultValue" (DC'.Set (Field'slot'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Field'slot'defaultValue
+
 
 
 get_Field'slot'hadExplicitDefault :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
@@ -591,6 +590,7 @@ set_Field'slot'hadExplicitDefault :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m 
 set_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "hadExplicitDefault" (DC'.Set (Field'slot'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Field'slot'hadExplicitDefault
+
 
 
 newtype Field'group'group' msg = Field'group'group'_newtype_ (U'.Struct msg)
@@ -632,6 +632,7 @@ set_Field'group'typeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field
 set_Field'group'typeId (Field'group'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "typeId" (DC'.Set (Field'group'group' (M'.MutMsg s) -> Word64 -> m ())) where
     fromLabel = DC'.Set set_Field'group'typeId
+
 
 
 
@@ -697,6 +698,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set 
     fromLabel = DC'.Set set_Superclass'id
 
 
+
 get_Superclass'brand :: U'.ReadCtx m msg => Superclass msg -> m (Brand msg)
 get_Superclass'brand (Superclass_newtype_ struct) =
     U'.getPtr 0 struct
@@ -712,9 +714,9 @@ instance U'.ReadCtx m msg => IsLabel "brand" (DC'.Has (Superclass msg -> m Bool)
 
 set_Superclass'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Superclass (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Superclass'brand (Superclass_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "brand" (DC'.Set (Superclass (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Superclass'brand
+
 
 
 newtype Brand'Scope msg = Brand'Scope_newtype_ (U'.Struct msg)
@@ -758,6 +760,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "scopeId" (DC'
     fromLabel = DC'.Set set_Brand'Scope'scopeId
 
 
+
 get_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m (Brand'Scope' msg)
 get_Brand'Scope'union' (Brand'Scope_newtype_ struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get (Brand'Scope msg -> m (Brand'Scope' msg))) where
@@ -768,10 +771,6 @@ has_Brand'Scope'union'(Brand'Scope_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Brand'Scope msg -> m Bool)) where
     fromLabel = DC'.Has has_Brand'Scope'union'
 
-set_Brand'Scope'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> (Brand'Scope' (M'.MutMsg s)) -> m ()
-set_Brand'Scope'union' _ = error "TODO: generate more setters."
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set (Brand'Scope (M'.MutMsg s) -> (Brand'Scope' (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Brand'Scope'union'
 
 
 data Brand'Scope' msg
@@ -843,6 +842,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set 
     fromLabel = DC'.Set set_CodeGeneratorRequest'RequestedFile'Import'id
 
 
+
 get_CodeGeneratorRequest'RequestedFile'Import'name :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m (B'.Text msg)
 get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) =
     U'.getPtr 0 struct
@@ -858,9 +858,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (CodeGeneratorRequest'Reque
 
 set_CodeGeneratorRequest'RequestedFile'Import'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_CodeGeneratorRequest'RequestedFile'Import'name
+
 
 
 newtype Node'Parameter msg = Node'Parameter_newtype_ (U'.Struct msg)
@@ -903,9 +903,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (Node'Parameter msg -> m Bo
 
 set_Node'Parameter'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'Parameter (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Node'Parameter'name (Node'Parameter_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (Node'Parameter (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Node'Parameter'name
+
 
 
 data Field'ordinal msg
@@ -976,9 +976,9 @@ instance U'.ReadCtx m msg => IsLabel "nodes" (DC'.Has (CodeGeneratorRequest msg 
 
 set_CodeGeneratorRequest'nodes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node (M'.MutMsg s))) -> m ()
 set_CodeGeneratorRequest'nodes (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "nodes" (DC'.Set (CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_CodeGeneratorRequest'nodes
+
 
 
 get_CodeGeneratorRequest'requestedFiles :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (B'.List msg (CodeGeneratorRequest'RequestedFile msg))
@@ -996,9 +996,9 @@ instance U'.ReadCtx m msg => IsLabel "requestedFiles" (DC'.Has (CodeGeneratorReq
 
 set_CodeGeneratorRequest'requestedFiles :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))) -> m ()
 set_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "requestedFiles" (DC'.Set (CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_CodeGeneratorRequest'requestedFiles
+
 
 
 get_CodeGeneratorRequest'capnpVersion :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (CapnpVersion msg)
@@ -1016,9 +1016,9 @@ instance U'.ReadCtx m msg => IsLabel "capnpVersion" (DC'.Has (CodeGeneratorReque
 
 set_CodeGeneratorRequest'capnpVersion :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest (M'.MutMsg s) -> (CapnpVersion (M'.MutMsg s)) -> m ()
 set_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "capnpVersion" (DC'.Set (CodeGeneratorRequest (M'.MutMsg s) -> (CapnpVersion (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_CodeGeneratorRequest'capnpVersion
+
 
 
 data Type'anyPointer msg
@@ -1061,10 +1061,6 @@ has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group'_ne
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Type'anyPointer'unconstrained'group' msg -> m Bool)) where
     fromLabel = DC'.Has has_Type'anyPointer'unconstrained'union'
 
-set_Type'anyPointer'unconstrained'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> (Type'anyPointer'unconstrained (M'.MutMsg s)) -> m ()
-set_Type'anyPointer'unconstrained'union' _ = error "TODO: generate more setters."
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set (Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> (Type'anyPointer'unconstrained (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Type'anyPointer'unconstrained'union'
 
 
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ (U'.Struct msg)
@@ -1108,6 +1104,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "scopeId" (DC'
     fromLabel = DC'.Set set_Type'anyPointer'parameter'scopeId
 
 
+
 get_Type'anyPointer'parameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Word16
 get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) = C'.getWordField struct 1 16 0
 instance U'.ReadCtx m msg => IsLabel "parameterIndex" (DC'.Get (Type'anyPointer'parameter'group' msg -> m Word16)) where
@@ -1122,6 +1119,7 @@ set_Type'anyPointer'parameter'parameterIndex :: (U'.ReadCtx m (M'.MutMsg s), M'.
 set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "parameterIndex" (DC'.Set (Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word16 -> m ())) where
     fromLabel = DC'.Set set_Type'anyPointer'parameter'parameterIndex
+
 
 
 newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ (U'.Struct msg)
@@ -1163,6 +1161,7 @@ set_Type'anyPointer'implicitMethodParameter'parameterIndex :: (U'.ReadCtx m (M'.
 set_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "parameterIndex" (DC'.Set (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s) -> Word16 -> m ())) where
     fromLabel = DC'.Set set_Type'anyPointer'implicitMethodParameter'parameterIndex
+
 
 
 
@@ -1336,6 +1335,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set 
     fromLabel = DC'.Set set_CodeGeneratorRequest'RequestedFile'id
 
 
+
 get_CodeGeneratorRequest'RequestedFile'filename :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m (B'.Text msg)
 get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1351,9 +1351,9 @@ instance U'.ReadCtx m msg => IsLabel "filename" (DC'.Has (CodeGeneratorRequest'R
 
 set_CodeGeneratorRequest'RequestedFile'filename :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "filename" (DC'.Set (CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_CodeGeneratorRequest'RequestedFile'filename
+
 
 
 get_CodeGeneratorRequest'RequestedFile'imports :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg))
@@ -1371,9 +1371,9 @@ instance U'.ReadCtx m msg => IsLabel "imports" (DC'.Has (CodeGeneratorRequest'Re
 
 set_CodeGeneratorRequest'RequestedFile'imports :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))) -> m ()
 set_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "imports" (DC'.Set (CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_CodeGeneratorRequest'RequestedFile'imports
+
 
 
 data Type msg
@@ -1451,9 +1451,9 @@ instance U'.ReadCtx m msg => IsLabel "elementType" (DC'.Has (Type'list'group' ms
 
 set_Type'list'elementType :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'list'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Type'list'elementType (Type'list'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "elementType" (DC'.Set (Type'list'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Type'list'elementType
+
 
 
 newtype Type'enum'group' msg = Type'enum'group'_newtype_ (U'.Struct msg)
@@ -1497,6 +1497,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "typeId" (DC'.
     fromLabel = DC'.Set set_Type'enum'typeId
 
 
+
 get_Type'enum'brand :: U'.ReadCtx m msg => Type'enum'group' msg -> m (Brand msg)
 get_Type'enum'brand (Type'enum'group'_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1512,9 +1513,9 @@ instance U'.ReadCtx m msg => IsLabel "brand" (DC'.Has (Type'enum'group' msg -> m
 
 set_Type'enum'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'enum'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Type'enum'brand (Type'enum'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "brand" (DC'.Set (Type'enum'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Type'enum'brand
+
 
 
 newtype Type'struct'group' msg = Type'struct'group'_newtype_ (U'.Struct msg)
@@ -1558,6 +1559,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "typeId" (DC'.
     fromLabel = DC'.Set set_Type'struct'typeId
 
 
+
 get_Type'struct'brand :: U'.ReadCtx m msg => Type'struct'group' msg -> m (Brand msg)
 get_Type'struct'brand (Type'struct'group'_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1573,9 +1575,9 @@ instance U'.ReadCtx m msg => IsLabel "brand" (DC'.Has (Type'struct'group' msg ->
 
 set_Type'struct'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'struct'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Type'struct'brand (Type'struct'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "brand" (DC'.Set (Type'struct'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Type'struct'brand
+
 
 
 newtype Type'interface'group' msg = Type'interface'group'_newtype_ (U'.Struct msg)
@@ -1619,6 +1621,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "typeId" (DC'.
     fromLabel = DC'.Set set_Type'interface'typeId
 
 
+
 get_Type'interface'brand :: U'.ReadCtx m msg => Type'interface'group' msg -> m (Brand msg)
 get_Type'interface'brand (Type'interface'group'_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1634,9 +1637,9 @@ instance U'.ReadCtx m msg => IsLabel "brand" (DC'.Has (Type'interface'group' msg
 
 set_Type'interface'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'interface'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Type'interface'brand (Type'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "brand" (DC'.Set (Type'interface'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Type'interface'brand
+
 
 
 newtype Type'anyPointer'group' msg = Type'anyPointer'group'_newtype_ (U'.Struct msg)
@@ -1674,10 +1677,6 @@ has_Type'anyPointer'union'(Type'anyPointer'group'_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Type'anyPointer'group' msg -> m Bool)) where
     fromLabel = DC'.Has has_Type'anyPointer'union'
 
-set_Type'anyPointer'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> (Type'anyPointer (M'.MutMsg s)) -> m ()
-set_Type'anyPointer'union' _ = error "TODO: generate more setters."
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set (Type'anyPointer'group' (M'.MutMsg s) -> (Type'anyPointer (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Type'anyPointer'union'
 
 
 
@@ -1807,6 +1806,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "major" (DC'.S
     fromLabel = DC'.Set set_CapnpVersion'major
 
 
+
 get_CapnpVersion'minor :: U'.ReadCtx m msg => CapnpVersion msg -> m Word8
 get_CapnpVersion'minor (CapnpVersion_newtype_ struct) = C'.getWordField struct 0 16 0
 instance U'.ReadCtx m msg => IsLabel "minor" (DC'.Get (CapnpVersion msg -> m Word8)) where
@@ -1823,6 +1823,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "minor" (DC'.S
     fromLabel = DC'.Set set_CapnpVersion'minor
 
 
+
 get_CapnpVersion'micro :: U'.ReadCtx m msg => CapnpVersion msg -> m Word8
 get_CapnpVersion'micro (CapnpVersion_newtype_ struct) = C'.getWordField struct 0 24 0
 instance U'.ReadCtx m msg => IsLabel "micro" (DC'.Get (CapnpVersion msg -> m Word8)) where
@@ -1837,6 +1838,7 @@ set_CapnpVersion'micro :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Capnp
 set_CapnpVersion'micro (CapnpVersion_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "micro" (DC'.Set (CapnpVersion (M'.MutMsg s) -> Word8 -> m ())) where
     fromLabel = DC'.Set set_CapnpVersion'micro
+
 
 
 newtype Node'NestedNode msg = Node'NestedNode_newtype_ (U'.Struct msg)
@@ -1879,9 +1881,9 @@ instance U'.ReadCtx m msg => IsLabel "name" (DC'.Has (Node'NestedNode msg -> m B
 
 set_Node'NestedNode'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'NestedNode (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Node'NestedNode'name (Node'NestedNode_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Set (Node'NestedNode (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Node'NestedNode'name
+
 
 
 get_Node'NestedNode'id :: U'.ReadCtx m msg => Node'NestedNode msg -> m Word64
@@ -1898,6 +1900,7 @@ set_Node'NestedNode'id :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'
 set_Node'NestedNode'id (Node'NestedNode_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set (Node'NestedNode (M'.MutMsg s) -> Word64 -> m ())) where
     fromLabel = DC'.Set set_Node'NestedNode'id
+
 
 
 newtype Node msg = Node_newtype_ (U'.Struct msg)
@@ -1941,6 +1944,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set 
     fromLabel = DC'.Set set_Node'id
 
 
+
 get_Node'displayName :: U'.ReadCtx m msg => Node msg -> m (B'.Text msg)
 get_Node'displayName (Node_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1956,9 +1960,9 @@ instance U'.ReadCtx m msg => IsLabel "displayName" (DC'.Has (Node msg -> m Bool)
 
 set_Node'displayName :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Node'displayName (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "displayName" (DC'.Set (Node (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Node'displayName
+
 
 
 get_Node'displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Word32
@@ -1977,6 +1981,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "displayNamePr
     fromLabel = DC'.Set set_Node'displayNamePrefixLength
 
 
+
 get_Node'scopeId :: U'.ReadCtx m msg => Node msg -> m Word64
 get_Node'scopeId (Node_newtype_ struct) = C'.getWordField struct 2 0 0
 instance U'.ReadCtx m msg => IsLabel "scopeId" (DC'.Get (Node msg -> m Word64)) where
@@ -1991,6 +1996,7 @@ set_Node'scopeId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.Mu
 set_Node'scopeId (Node_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "scopeId" (DC'.Set (Node (M'.MutMsg s) -> Word64 -> m ())) where
     fromLabel = DC'.Set set_Node'scopeId
+
 
 
 get_Node'nestedNodes :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'NestedNode msg))
@@ -2008,9 +2014,9 @@ instance U'.ReadCtx m msg => IsLabel "nestedNodes" (DC'.Has (Node msg -> m Bool)
 
 set_Node'nestedNodes :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))) -> m ()
 set_Node'nestedNodes (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "nestedNodes" (DC'.Set (Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'nestedNodes
+
 
 
 get_Node'annotations :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Annotation msg))
@@ -2028,9 +2034,9 @@ instance U'.ReadCtx m msg => IsLabel "annotations" (DC'.Has (Node msg -> m Bool)
 
 set_Node'annotations :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
 set_Node'annotations (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "annotations" (DC'.Set (Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'annotations
+
 
 
 get_Node'parameters :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'Parameter msg))
@@ -2048,9 +2054,9 @@ instance U'.ReadCtx m msg => IsLabel "parameters" (DC'.Has (Node msg -> m Bool))
 
 set_Node'parameters :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
 set_Node'parameters (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 5 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "parameters" (DC'.Set (Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'parameters
+
 
 
 get_Node'isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
@@ -2069,6 +2075,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "isGeneric" (D
     fromLabel = DC'.Set set_Node'isGeneric
 
 
+
 get_Node'union' :: U'.ReadCtx m msg => Node msg -> m (Node' msg)
 get_Node'union' (Node_newtype_ struct) = C'.fromStruct struct
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Get (Node msg -> m (Node' msg))) where
@@ -2079,10 +2086,6 @@ has_Node'union'(Node_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Node msg -> m Bool)) where
     fromLabel = DC'.Has has_Node'union'
 
-set_Node'union' :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> (Node' (M'.MutMsg s)) -> m ()
-set_Node'union' _ = error "TODO: generate more setters."
-instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "union'" (DC'.Set (Node (M'.MutMsg s) -> (Node' (M'.MutMsg s)) -> m ())) where
-    fromLabel = DC'.Set set_Node'union'
 
 
 data Node' msg
@@ -2135,6 +2138,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "dataWordCount
     fromLabel = DC'.Set set_Node'struct'dataWordCount
 
 
+
 get_Node'struct'pointerCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
 get_Node'struct'pointerCount (Node'struct'group'_newtype_ struct) = C'.getWordField struct 3 0 0
 instance U'.ReadCtx m msg => IsLabel "pointerCount" (DC'.Get (Node'struct'group' msg -> m Word16)) where
@@ -2149,6 +2153,7 @@ set_Node'struct'pointerCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) =>
 set_Node'struct'pointerCount (Node'struct'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "pointerCount" (DC'.Set (Node'struct'group' (M'.MutMsg s) -> Word16 -> m ())) where
     fromLabel = DC'.Set set_Node'struct'pointerCount
+
 
 
 get_Node'struct'preferredListEncoding :: U'.ReadCtx m msg => Node'struct'group' msg -> m ElementSize
@@ -2167,6 +2172,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "preferredList
     fromLabel = DC'.Set set_Node'struct'preferredListEncoding
 
 
+
 get_Node'struct'isGroup :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 get_Node'struct'isGroup (Node'struct'group'_newtype_ struct) = C'.getWordField struct 3 32 0
 instance U'.ReadCtx m msg => IsLabel "isGroup" (DC'.Get (Node'struct'group' msg -> m Bool)) where
@@ -2181,6 +2187,7 @@ set_Node'struct'isGroup :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node
 set_Node'struct'isGroup (Node'struct'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 3 32 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "isGroup" (DC'.Set (Node'struct'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'struct'isGroup
+
 
 
 get_Node'struct'discriminantCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
@@ -2199,6 +2206,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "discriminantC
     fromLabel = DC'.Set set_Node'struct'discriminantCount
 
 
+
 get_Node'struct'discriminantOffset :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word32
 get_Node'struct'discriminantOffset (Node'struct'group'_newtype_ struct) = C'.getWordField struct 4 0 0
 instance U'.ReadCtx m msg => IsLabel "discriminantOffset" (DC'.Get (Node'struct'group' msg -> m Word32)) where
@@ -2213,6 +2221,7 @@ set_Node'struct'discriminantOffset :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m
 set_Node'struct'discriminantOffset (Node'struct'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 4 0 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "discriminantOffset" (DC'.Set (Node'struct'group' (M'.MutMsg s) -> Word32 -> m ())) where
     fromLabel = DC'.Set set_Node'struct'discriminantOffset
+
 
 
 get_Node'struct'fields :: U'.ReadCtx m msg => Node'struct'group' msg -> m (B'.List msg (Field msg))
@@ -2230,9 +2239,9 @@ instance U'.ReadCtx m msg => IsLabel "fields" (DC'.Has (Node'struct'group' msg -
 
 set_Node'struct'fields :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'struct'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Field (M'.MutMsg s))) -> m ()
 set_Node'struct'fields (Node'struct'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "fields" (DC'.Set (Node'struct'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Field (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'struct'fields
+
 
 
 newtype Node'enum'group' msg = Node'enum'group'_newtype_ (U'.Struct msg)
@@ -2275,9 +2284,9 @@ instance U'.ReadCtx m msg => IsLabel "enumerants" (DC'.Has (Node'enum'group' msg
 
 set_Node'enum'enumerants :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'enum'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Enumerant (M'.MutMsg s))) -> m ()
 set_Node'enum'enumerants (Node'enum'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "enumerants" (DC'.Set (Node'enum'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Enumerant (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'enum'enumerants
+
 
 
 newtype Node'interface'group' msg = Node'interface'group'_newtype_ (U'.Struct msg)
@@ -2320,9 +2329,9 @@ instance U'.ReadCtx m msg => IsLabel "methods" (DC'.Has (Node'interface'group' m
 
 set_Node'interface'methods :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Method (M'.MutMsg s))) -> m ()
 set_Node'interface'methods (Node'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "methods" (DC'.Set (Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Method (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'interface'methods
+
 
 
 get_Node'interface'superclasses :: U'.ReadCtx m msg => Node'interface'group' msg -> m (B'.List msg (Superclass msg))
@@ -2340,9 +2349,9 @@ instance U'.ReadCtx m msg => IsLabel "superclasses" (DC'.Has (Node'interface'gro
 
 set_Node'interface'superclasses :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Superclass (M'.MutMsg s))) -> m ()
 set_Node'interface'superclasses (Node'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "superclasses" (DC'.Set (Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Superclass (M'.MutMsg s))) -> m ())) where
     fromLabel = DC'.Set set_Node'interface'superclasses
+
 
 
 newtype Node'const'group' msg = Node'const'group'_newtype_ (U'.Struct msg)
@@ -2385,9 +2394,9 @@ instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Has (Node'const'group' msg -> 
 
 set_Node'const'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'const'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Node'const'type_ (Node'const'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "type_" (DC'.Set (Node'const'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Node'const'type_
+
 
 
 get_Node'const'value :: U'.ReadCtx m msg => Node'const'group' msg -> m (Value msg)
@@ -2405,9 +2414,9 @@ instance U'.ReadCtx m msg => IsLabel "value" (DC'.Has (Node'const'group' msg -> 
 
 set_Node'const'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'const'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
 set_Node'const'value (Node'const'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "value" (DC'.Set (Node'const'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Node'const'value
+
 
 
 newtype Node'annotation'group' msg = Node'annotation'group'_newtype_ (U'.Struct msg)
@@ -2450,9 +2459,9 @@ instance U'.ReadCtx m msg => IsLabel "type_" (DC'.Has (Node'annotation'group' ms
 
 set_Node'annotation'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node'annotation'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Node'annotation'type_ (Node'annotation'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "type_" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'type_
+
 
 
 get_Node'annotation'targetsFile :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -2471,6 +2480,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsFile" 
     fromLabel = DC'.Set set_Node'annotation'targetsFile
 
 
+
 get_Node'annotation'targetsConst :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsConst (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 49 0
 instance U'.ReadCtx m msg => IsLabel "targetsConst" (DC'.Get (Node'annotation'group' msg -> m Bool)) where
@@ -2485,6 +2495,7 @@ set_Node'annotation'targetsConst :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s
 set_Node'annotation'targetsConst (Node'annotation'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 49 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsConst" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'targetsConst
+
 
 
 get_Node'annotation'targetsEnum :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -2503,6 +2514,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsEnum" 
     fromLabel = DC'.Set set_Node'annotation'targetsEnum
 
 
+
 get_Node'annotation'targetsEnumerant :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsEnumerant (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 51 0
 instance U'.ReadCtx m msg => IsLabel "targetsEnumerant" (DC'.Get (Node'annotation'group' msg -> m Bool)) where
@@ -2517,6 +2529,7 @@ set_Node'annotation'targetsEnumerant :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx
 set_Node'annotation'targetsEnumerant (Node'annotation'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 51 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsEnumerant" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'targetsEnumerant
+
 
 
 get_Node'annotation'targetsStruct :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -2535,6 +2548,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsStruct
     fromLabel = DC'.Set set_Node'annotation'targetsStruct
 
 
+
 get_Node'annotation'targetsField :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsField (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 53 0
 instance U'.ReadCtx m msg => IsLabel "targetsField" (DC'.Get (Node'annotation'group' msg -> m Bool)) where
@@ -2549,6 +2563,7 @@ set_Node'annotation'targetsField :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s
 set_Node'annotation'targetsField (Node'annotation'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 53 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsField" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'targetsField
+
 
 
 get_Node'annotation'targetsUnion :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -2567,6 +2582,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsUnion"
     fromLabel = DC'.Set set_Node'annotation'targetsUnion
 
 
+
 get_Node'annotation'targetsGroup :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsGroup (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 55 0
 instance U'.ReadCtx m msg => IsLabel "targetsGroup" (DC'.Get (Node'annotation'group' msg -> m Bool)) where
@@ -2581,6 +2597,7 @@ set_Node'annotation'targetsGroup :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s
 set_Node'annotation'targetsGroup (Node'annotation'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 55 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsGroup" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'targetsGroup
+
 
 
 get_Node'annotation'targetsInterface :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -2599,6 +2616,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsInterf
     fromLabel = DC'.Set set_Node'annotation'targetsInterface
 
 
+
 get_Node'annotation'targetsMethod :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsMethod (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 57 0
 instance U'.ReadCtx m msg => IsLabel "targetsMethod" (DC'.Get (Node'annotation'group' msg -> m Bool)) where
@@ -2613,6 +2631,7 @@ set_Node'annotation'targetsMethod :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m 
 set_Node'annotation'targetsMethod (Node'annotation'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 57 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsMethod" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'targetsMethod
+
 
 
 get_Node'annotation'targetsParam :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
@@ -2631,6 +2650,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsParam"
     fromLabel = DC'.Set set_Node'annotation'targetsParam
 
 
+
 get_Node'annotation'targetsAnnotation :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 get_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 59 0
 instance U'.ReadCtx m msg => IsLabel "targetsAnnotation" (DC'.Get (Node'annotation'group' msg -> m Bool)) where
@@ -2645,6 +2665,7 @@ set_Node'annotation'targetsAnnotation :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCt
 set_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) value =  C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 59 0
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsAnnotation" (DC'.Set (Node'annotation'group' (M'.MutMsg s) -> Bool -> m ())) where
     fromLabel = DC'.Set set_Node'annotation'targetsAnnotation
+
 
 
 
@@ -2714,6 +2735,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "id" (DC'.Set 
     fromLabel = DC'.Set set_Annotation'id
 
 
+
 get_Annotation'value :: U'.ReadCtx m msg => Annotation msg -> m (Value msg)
 get_Annotation'value (Annotation_newtype_ struct) =
     U'.getPtr 0 struct
@@ -2729,9 +2751,9 @@ instance U'.ReadCtx m msg => IsLabel "value" (DC'.Has (Annotation msg -> m Bool)
 
 set_Annotation'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Annotation (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
 set_Annotation'value (Annotation_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "value" (DC'.Set (Annotation (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Annotation'value
+
 
 
 get_Annotation'brand :: U'.ReadCtx m msg => Annotation msg -> m (Brand msg)
@@ -2749,7 +2771,7 @@ instance U'.ReadCtx m msg => IsLabel "brand" (DC'.Has (Annotation msg -> m Bool)
 
 set_Annotation'brand :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Annotation (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
 set_Annotation'brand (Annotation_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
-
 instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "brand" (DC'.Set (Annotation (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ())) where
     fromLabel = DC'.Set set_Annotation'brand
+
 

@@ -218,11 +218,18 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         ]
     fmtSetter setName =
         let setType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
+            typeAnnotation = setName <> " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => " <> setType
+            isLabelInstance = mconcat
+                [ "instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "
+                ,       TB.fromString (show fieldName), " (DC'.Set (", setType, ")) where\n"
+                , "    fromLabel = DC'.Set ", setName, "\n"
+                , "\n"
+                ]
         in mconcat
-        [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", setType, "\n"
-        , case fieldLoc of
+        [ case fieldLoc of
             DataField loc@DataLoc{..} -> mconcat
-                [ setName, " (", dataCon, " struct) value = "
+                [ typeAnnotation, "\n"
+                , setName, " (", dataCon, " struct) value = "
                 , let size = case fieldType of
                         EnumType _           -> 16
                         PrimType PrimInt{..} -> size
@@ -235,17 +242,27 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                         "struct"
                         ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
                         loc
+                , "\n"
+                , isLabelInstance
                 ]
-            VoidField -> setName <> " _ = pure ()"
+            VoidField -> mconcat
+                [ typeAnnotation, "\n"
+                , setName <> " _ = pure ()\n"
+                , isLabelInstance
+                ]
             PtrField idx -> mconcat
-                [ setName, " (", dataCon, " struct) value = "
+                [ typeAnnotation, "\n"
+                , setName, " (", dataCon, " struct) value = "
                 , "U'.setPtr (C'.toPtr value) ", TB.fromString (show idx), " struct\n"
+                , isLabelInstance
                 ]
-            _ -> setName <> " _ = error " <> TB.fromString (show "TODO: generate more setters.")
-        , "\n"
-        , "instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "
-        ,       TB.fromString (show fieldName), " (DC'.Set (", setType, ")) where\n"
-        , "    fromLabel = DC'.Set ", setName, "\n"
+            HereField ->
+                -- This is either a group or a union. If it's the latter we don't
+                -- want a setter at all; the user must get_ the group and set its
+                -- individual fields. If it's a union, we do need something like a
+                -- setter, but it needs to look a bit different based on what the
+                -- type of each union field is. TODO.
+                ""
         , "\n"
         ]
 
