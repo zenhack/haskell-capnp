@@ -269,22 +269,27 @@ fmtUnionSetter thisMod parentType childType tagLoc Variant{variantTag=Just tagVa
     let setName = "set_" <> fmtName thisMod variantName
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
+        childTypeCon = fmtName thisMod childType
+        childDataCon = childTypeCon  <> "_newtype_"
     in case variantParams of
         NoParams -> mconcat
             [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
-            , setName, " (", parentDataCon, " struct) = "
-            , fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
-            , "\n"
+            , setName, " (", parentDataCon, " struct) = ", fmtSetTag, "\n"
             ]
-        Record _ -> mconcat
+        Record _ ->
             -- Variant is a group; we return a reference to the group so the user can
             -- modify it.
-            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> "
-            , "m (", fmtName thisMod childType, " (M'.MutMsg s))\n"
-            , setName, " = error \"TODO\"\n"
+            mconcat
+            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", childTypeCon, " (M'.MutMsg s) -> "
+            , "m (", fmtName thisMod variantName, "'group' (M'.MutMsg s))\n"
+            , setName, " (", parentDataCon, " struct) = do\n"
+            , "    ", fmtSetTag, "\n"
+            , "    pure $ ", childDataCon, " struct\n"
             ]
         _ ->
             "" -- TODO
+   where
+     fmtSetTag = fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
 fmtUnionSetter _ _ _ _ Variant{variantTag=Nothing} =
     -- This happens for the unknown' variants; just ignore them:
     ""
