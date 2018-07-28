@@ -360,8 +360,20 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (CapDescriptor msg -> m Bool)) 
 set_CapDescriptor'none :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> m ()
 set_CapDescriptor'none (CapDescriptor_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
 
+set_CapDescriptor'senderHosted :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> Word32 -> m ()
+set_CapDescriptor'senderHosted (CapDescriptor_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 
+set_CapDescriptor'senderPromise :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> Word32 -> m ()
+set_CapDescriptor'senderPromise (CapDescriptor_newtype_ struct) value = do
+    C'.setWordField struct (2 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 
+set_CapDescriptor'receiverHosted :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> Word32 -> m ()
+set_CapDescriptor'receiverHosted (CapDescriptor_newtype_ struct) value = do
+    C'.setWordField struct (3 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 
 
 
@@ -819,6 +831,10 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (MessageTarget msg -> m Bool)) 
     fromLabel = DC'.Has has_MessageTarget'
 
 
+set_MessageTarget'importedCap :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => MessageTarget (M'.MutMsg s) -> Word32 -> m ()
+set_MessageTarget'importedCap (MessageTarget_newtype_ struct) value = do
+    C'.setWordField struct (0 :: Word16) 0 32 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
 
 
@@ -1390,11 +1406,23 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Disembargo'context msg -> m Bo
     fromLabel = DC'.Has has_Disembargo'context'
 
 
+set_Disembargo'context'senderLoopback :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo'context (M'.MutMsg s) -> Word32 -> m ()
+set_Disembargo'context'senderLoopback (Disembargo'context_newtype_ struct) value = do
+    C'.setWordField struct (0 :: Word16) 0 32 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
+set_Disembargo'context'receiverLoopback :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo'context (M'.MutMsg s) -> Word32 -> m ()
+set_Disembargo'context'receiverLoopback (Disembargo'context_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 32 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
 set_Disembargo'context'accept :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo'context (M'.MutMsg s) -> m ()
 set_Disembargo'context'accept (Disembargo'context_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 32 0
 
+set_Disembargo'context'provide :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo'context (M'.MutMsg s) -> Word32 -> m ()
+set_Disembargo'context'provide (Disembargo'context_newtype_ struct) value = do
+    C'.setWordField struct (3 :: Word16) 0 32 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
 
 
@@ -1489,6 +1517,10 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (PromisedAnswer'Op msg -> m Boo
 set_PromisedAnswer'Op'noop :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer'Op (M'.MutMsg s) -> m ()
 set_PromisedAnswer'Op'noop (PromisedAnswer'Op_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
 
+set_PromisedAnswer'Op'getPointerField :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer'Op (M'.MutMsg s) -> Word16 -> m ()
+set_PromisedAnswer'Op'getPointerField (PromisedAnswer'Op_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 
 
 
@@ -1606,6 +1638,10 @@ set_Return'canceled (Return'_newtype_ struct) = C'.setWordField struct (2 :: Wor
 set_Return'resultsSentElsewhere :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> m ()
 set_Return'resultsSentElsewhere (Return'_newtype_ struct) = C'.setWordField struct (3 :: Word16) 0 48 0
 
+set_Return'takeFromOtherQuestion :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> Word32 -> m ()
+set_Return'takeFromOtherQuestion (Return'_newtype_ struct) value = do
+    C'.setWordField struct (4 :: Word16) 0 48 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
 
 
 

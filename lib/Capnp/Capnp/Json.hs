@@ -75,7 +75,15 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (JsonValue msg -> m Bool)) wher
 set_JsonValue'null :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> m ()
 set_JsonValue'null (JsonValue_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
 
+set_JsonValue'boolean :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> Bool -> m ()
+set_JsonValue'boolean (JsonValue_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
 
+set_JsonValue'number :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> Double -> m ()
+set_JsonValue'number (JsonValue_newtype_ struct) value = do
+    C'.setWordField struct (2 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
 
 

@@ -1482,20 +1482,68 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Value msg -> m Bool)) where
 set_Value'void :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> m ()
 set_Value'void (Value_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
 
+set_Value'bool :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Bool -> m ()
+set_Value'bool (Value_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
+
+set_Value'int8 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Int8 -> m ()
+set_Value'int8 (Value_newtype_ struct) value = do
+    C'.setWordField struct (2 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
+
+set_Value'int16 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Int16 -> m ()
+set_Value'int16 (Value_newtype_ struct) value = do
+    C'.setWordField struct (3 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+
+set_Value'int32 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Int32 -> m ()
+set_Value'int32 (Value_newtype_ struct) value = do
+    C'.setWordField struct (4 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+
+set_Value'int64 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Int64 -> m ()
+set_Value'int64 (Value_newtype_ struct) value = do
+    C'.setWordField struct (5 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+
+set_Value'uint8 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Word8 -> m ()
+set_Value'uint8 (Value_newtype_ struct) value = do
+    C'.setWordField struct (6 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
+
+set_Value'uint16 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Word16 -> m ()
+set_Value'uint16 (Value_newtype_ struct) value = do
+    C'.setWordField struct (7 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+
+set_Value'uint32 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Word32 -> m ()
+set_Value'uint32 (Value_newtype_ struct) value = do
+    C'.setWordField struct (8 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+
+set_Value'uint64 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Word64 -> m ()
+set_Value'uint64 (Value_newtype_ struct) value = do
+    C'.setWordField struct (9 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+
+set_Value'float32 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Float -> m ()
+set_Value'float32 (Value_newtype_ struct) value = do
+    C'.setWordField struct (10 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+
+set_Value'float64 :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Double -> m ()
+set_Value'float64 (Value_newtype_ struct) value = do
+    C'.setWordField struct (11 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
 
 
 
-
-
-
-
-
-
-
-
-
-
+set_Value'enum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Word16 -> m ()
+set_Value'enum (Value_newtype_ struct) value = do
+    C'.setWordField struct (15 :: Word16) 0 0 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 
 
 set_Value'interface :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> m ()
@@ -2101,6 +2149,10 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Field'ordinal msg -> m Bool)) 
 set_Field'ordinal'implicit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'ordinal (M'.MutMsg s) -> m ()
 set_Field'ordinal'implicit (Field'ordinal_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 16 0
 
+set_Field'ordinal'explicit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field'ordinal (M'.MutMsg s) -> Word16 -> m ()
+set_Field'ordinal'explicit (Field'ordinal_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 1 16 0
+    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 32 0
 
 
 

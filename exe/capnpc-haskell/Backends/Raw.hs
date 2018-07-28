@@ -231,14 +231,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             DataField loc@DataLoc{..} -> mconcat
                 [ typeAnnotation, "\n"
                 , setName, " (", dataCon, " struct) value = "
-                , let size = case fieldType of
-                        EnumType _           -> 16
-                        PrimType PrimInt{..} -> size
-                        PrimType PrimFloat32 -> 32
-                        PrimType PrimFloat64 -> 64
-                        PrimType PrimBool    -> 1
-                        _ -> error $ "type " ++ show fieldType ++
-                            " does not make sense in the data section!"
+                , let size = dataFieldSize fieldType
                   in fmtSetWordField
                         "struct"
                         ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
@@ -264,6 +257,18 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , "\n"
         ]
 
+-- | Return the size in bits of a type that belongs in the data section of a struct.
+-- calls error if the type does not make sense in a data section.
+dataFieldSize :: Type -> Int
+dataFieldSize fieldType = case fieldType of
+    EnumType _           -> 16
+    PrimType PrimInt{..} -> size
+    PrimType PrimFloat32 -> 32
+    PrimType PrimFloat64 -> 64
+    PrimType PrimBool    -> 1
+    _ -> error $ "type " ++ show fieldType ++
+        " does not make sense in the data section!"
+
 fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> TB.Builder
 fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
     let setName = "set_" <> fmtName thisMod variantName
@@ -285,6 +290,18 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
             , setName, " (", parentDataCon, " struct) = do\n"
             , "    ", fmtSetTag, "\n"
             , "    pure $ ", childDataCon, " struct\n"
+            ]
+        Unnamed typ (DataField loc) -> mconcat
+            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()\n"
+            , setName, " (", parentDataCon, " struct) value = do\n"
+            , "    ", fmtSetTag, "\n"
+            , "    "
+            , let size = dataFieldSize typ
+              in fmtSetWordField "struct"
+                    ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
+                    loc
+            , "\n"
             ]
         _ ->
             "" -- TODO
