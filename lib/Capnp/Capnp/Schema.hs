@@ -1537,18 +1537,38 @@ set_Value'float64 (Value_newtype_ struct) value = do
     C'.setWordField struct (11 :: Word16) 0 0 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
+set_Value'text :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_Value'text(Value_newtype_ struct) value = do
+    C'.setWordField struct (12 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Value'data_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> (B'.Data (M'.MutMsg s)) -> m ()
+set_Value'data_(Value_newtype_ struct) value = do
+    C'.setWordField struct (13 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Value'list :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Value'list(Value_newtype_ struct) value = do
+    C'.setWordField struct (14 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 set_Value'enum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> Word16 -> m ()
 set_Value'enum (Value_newtype_ struct) value = do
     C'.setWordField struct (15 :: Word16) 0 0 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 
+set_Value'struct :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Value'struct(Value_newtype_ struct) value = do
+    C'.setWordField struct (16 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 set_Value'interface :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> m ()
 set_Value'interface (Value_newtype_ struct) = C'.setWordField struct (17 :: Word16) 0 0 0
 
+set_Value'anyPointer :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Value'anyPointer(Value_newtype_ struct) value = do
+    C'.setWordField struct (18 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
@@ -1638,6 +1658,10 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Brand'Binding msg -> m Bool)) 
 set_Brand'Binding'unbound :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Binding (M'.MutMsg s) -> m ()
 set_Brand'Binding'unbound (Brand'Binding_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
 
+set_Brand'Binding'type_ :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Binding (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
+set_Brand'Binding'type_(Brand'Binding_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
@@ -1744,6 +1768,10 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Brand'Scope' msg -> m Bool)) w
     fromLabel = DC'.Has has_Brand'Scope''
 
 
+set_Brand'Scope'bind :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Binding (M'.MutMsg s))) -> m ()
+set_Brand'Scope'bind(Brand'Scope'_newtype_ struct) value = do
+    C'.setWordField struct (0 :: Word16) 1 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 set_Brand'Scope'inherit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope' (M'.MutMsg s) -> m ()
 set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = C'.setWordField struct (1 :: Word16) 1 0 0

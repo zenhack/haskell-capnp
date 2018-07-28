@@ -303,6 +303,13 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                     loc
             , "\n"
             ]
+        Unnamed typ (PtrField index) -> mconcat
+            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()\n"
+            , setName, "(", parentDataCon, " struct) value = do\n"
+            , "    ", fmtSetTag, "\n"
+            , "    U'.setPtr (C'.toPtr value) ", TB.fromString (show index), " struct\n"
+            ]
         _ ->
             "" -- TODO
    where

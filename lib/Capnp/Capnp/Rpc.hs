@@ -375,7 +375,15 @@ set_CapDescriptor'receiverHosted (CapDescriptor_newtype_ struct) value = do
     C'.setWordField struct (3 :: Word16) 0 0 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 
+set_CapDescriptor'receiverAnswer :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> (PromisedAnswer (M'.MutMsg s)) -> m ()
+set_CapDescriptor'receiverAnswer(CapDescriptor_newtype_ struct) value = do
+    C'.setWordField struct (4 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_CapDescriptor'thirdPartyHosted :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> (ThirdPartyCapDescriptor (M'.MutMsg s)) -> m ()
+set_CapDescriptor'thirdPartyHosted(CapDescriptor_newtype_ struct) value = do
+    C'.setWordField struct (5 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
@@ -742,19 +750,75 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Message msg -> m Bool)) where
     fromLabel = DC'.Has has_Message'
 
 
+set_Message'unimplemented :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Message (M'.MutMsg s)) -> m ()
+set_Message'unimplemented(Message_newtype_ struct) value = do
+    C'.setWordField struct (0 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'abort :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Exception (M'.MutMsg s)) -> m ()
+set_Message'abort(Message_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'call :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Call (M'.MutMsg s)) -> m ()
+set_Message'call(Message_newtype_ struct) value = do
+    C'.setWordField struct (2 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'return :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Return (M'.MutMsg s)) -> m ()
+set_Message'return(Message_newtype_ struct) value = do
+    C'.setWordField struct (3 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'finish :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Finish (M'.MutMsg s)) -> m ()
+set_Message'finish(Message_newtype_ struct) value = do
+    C'.setWordField struct (4 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'resolve :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Resolve (M'.MutMsg s)) -> m ()
+set_Message'resolve(Message_newtype_ struct) value = do
+    C'.setWordField struct (5 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'release :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Release (M'.MutMsg s)) -> m ()
+set_Message'release(Message_newtype_ struct) value = do
+    C'.setWordField struct (6 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'obsoleteSave :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Message'obsoleteSave(Message_newtype_ struct) value = do
+    C'.setWordField struct (7 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'bootstrap :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Bootstrap (M'.MutMsg s)) -> m ()
+set_Message'bootstrap(Message_newtype_ struct) value = do
+    C'.setWordField struct (8 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'obsoleteDelete :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Message'obsoleteDelete(Message_newtype_ struct) value = do
+    C'.setWordField struct (9 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'provide :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Provide (M'.MutMsg s)) -> m ()
+set_Message'provide(Message_newtype_ struct) value = do
+    C'.setWordField struct (10 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'accept :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Accept (M'.MutMsg s)) -> m ()
+set_Message'accept(Message_newtype_ struct) value = do
+    C'.setWordField struct (11 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'join :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Join (M'.MutMsg s)) -> m ()
+set_Message'join(Message_newtype_ struct) value = do
+    C'.setWordField struct (12 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Message'disembargo :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Message (M'.MutMsg s) -> (Disembargo (M'.MutMsg s)) -> m ()
+set_Message'disembargo(Message_newtype_ struct) value = do
+    C'.setWordField struct (13 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
@@ -836,6 +900,10 @@ set_MessageTarget'importedCap (MessageTarget_newtype_ struct) value = do
     C'.setWordField struct (0 :: Word16) 0 32 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
+set_MessageTarget'promisedAnswer :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => MessageTarget (M'.MutMsg s) -> (PromisedAnswer (M'.MutMsg s)) -> m ()
+set_MessageTarget'promisedAnswer(MessageTarget_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 32 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
@@ -1350,6 +1418,10 @@ set_Call'sendResultsTo'caller (Call'sendResultsTo_newtype_ struct) = C'.setWordF
 set_Call'sendResultsTo'yourself :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call'sendResultsTo (M'.MutMsg s) -> m ()
 set_Call'sendResultsTo'yourself (Call'sendResultsTo_newtype_ struct) = C'.setWordField struct (1 :: Word16) 0 48 0
 
+set_Call'sendResultsTo'thirdParty :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call'sendResultsTo (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Call'sendResultsTo'thirdParty(Call'sendResultsTo_newtype_ struct) value = do
+    C'.setWordField struct (2 :: Word16) 0 48 0
+    U'.setPtr (C'.toPtr value) 2 struct
 
 
 
@@ -1573,7 +1645,15 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Resolve' msg -> m Bool)) where
     fromLabel = DC'.Has has_Resolve''
 
 
+set_Resolve'cap :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve' (M'.MutMsg s) -> (CapDescriptor (M'.MutMsg s)) -> m ()
+set_Resolve'cap(Resolve'_newtype_ struct) value = do
+    C'.setWordField struct (0 :: Word16) 0 32 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Resolve'exception :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Resolve' (M'.MutMsg s) -> (Exception (M'.MutMsg s)) -> m ()
+set_Resolve'exception(Resolve'_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 32 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
@@ -1630,7 +1710,15 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Return' msg -> m Bool)) where
     fromLabel = DC'.Has has_Return''
 
 
+set_Return'results :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> (Payload (M'.MutMsg s)) -> m ()
+set_Return'results(Return'_newtype_ struct) value = do
+    C'.setWordField struct (0 :: Word16) 0 48 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_Return'exception :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> (Exception (M'.MutMsg s)) -> m ()
+set_Return'exception(Return'_newtype_ struct) value = do
+    C'.setWordField struct (1 :: Word16) 0 48 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 set_Return'canceled :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> m ()
 set_Return'canceled (Return'_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 48 0
@@ -1643,6 +1731,10 @@ set_Return'takeFromOtherQuestion (Return'_newtype_ struct) value = do
     C'.setWordField struct (4 :: Word16) 0 48 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
 
+set_Return'acceptFromThirdParty :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Return'acceptFromThirdParty(Return'_newtype_ struct) value = do
+    C'.setWordField struct (5 :: Word16) 0 48 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 

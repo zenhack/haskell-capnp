@@ -85,9 +85,25 @@ set_JsonValue'number (JsonValue_newtype_ struct) value = do
     C'.setWordField struct (2 :: Word16) 0 0 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
+set_JsonValue'string :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_JsonValue'string(JsonValue_newtype_ struct) value = do
+    C'.setWordField struct (3 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_JsonValue'array :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
+set_JsonValue'array(JsonValue_newtype_ struct) value = do
+    C'.setWordField struct (4 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_JsonValue'object :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue'Field (M'.MutMsg s))) -> m ()
+set_JsonValue'object(JsonValue_newtype_ struct) value = do
+    C'.setWordField struct (5 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
+set_JsonValue'call :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (JsonValue'Call (M'.MutMsg s)) -> m ()
+set_JsonValue'call(JsonValue_newtype_ struct) value = do
+    C'.setWordField struct (6 :: Word16) 0 0 0
+    U'.setPtr (C'.toPtr value) 0 struct
 
 
 
