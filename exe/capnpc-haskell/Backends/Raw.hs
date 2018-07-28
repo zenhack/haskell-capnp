@@ -258,25 +258,9 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 , isLabelInstance
                 ]
             HereField ->
+                -- We don't generate setters for these fields; instead, the
+                -- user should call the getter and then modify the child in-place.
                 ""
-{-
-                let fieldTypeName = case fieldType of
-                        StructType name _ -> name
-                        _ -> error $ "Unexpected field type " ++ show fieldType ++ " for field at HereField"
-                in case modDecls thisMod M.! fieldTypeName of
-                    -- Note that it is only valid to assume that the above lookup will
-                    -- always succeed becasue fields with location 'HereField' aren't
-                    -- first-class capnproto types (unions and groups), and so can't be
-                    -- defined anywhere other than this module.
-                    DeclDef DataDef{dataVariants=[_]} ->
-                        -- This is a group; we don't want a setter. the user
-                        -- must 'get_*' the group and set its individual fields.
-                        ""
-                    DeclDef DataDef{dataTagLoc=Just tagLoc,dataVariants} ->
-                        mconcat $ map (fmtUnionSetter thisMod typeName fieldTypeName tagLoc) dataVariants
-                    value ->
-                        error $ "Expected union or group declaration, but got " ++ show value
--}
         , "\n"
         ]
 
