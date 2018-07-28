@@ -271,7 +271,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
         parentDataCon = parentTypeCon <> "_newtype_"
     in case variantParams of
         NoParams -> mconcat
-            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
+            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
             , setName, " (", parentDataCon, " struct) = ", fmtSetTag, "\n"
             ]
         Record _ ->
@@ -280,7 +280,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
             let childTypeCon = fmtName thisMod (subName variantName "group'")
                 childDataCon = childTypeCon <> "_newtype_"
             in mconcat
-            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> "
+            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
             , "m (", childTypeCon, " (M'.MutMsg s))\n"
             , setName, " (", parentDataCon, " struct) = do\n"
             , "    ", fmtSetTag, "\n"
@@ -289,6 +289,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
         _ ->
             "" -- TODO
    where
+     classConstraints = "(U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) =>"
      fmtSetTag = fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
 fmtUnionSetter _ _ _ Variant{variantTag=Nothing} =
     -- This happens for the unknown' variants; just ignore them:
