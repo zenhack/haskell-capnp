@@ -553,8 +553,6 @@ has_Field'ordinal(Field_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "ordinal" (DC'.Has (Field msg -> m Bool)) where
     fromLabel = DC'.Has has_Field'ordinal
 
-set_Field'ordinal'implicit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> m ()
-set_Field'ordinal'implicit (Field_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 16 0
 
 
 get_Field'union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
@@ -567,10 +565,6 @@ has_Field'union'(Field_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Field msg -> m Bool)) where
     fromLabel = DC'.Has has_Field'union'
 
-set_Field'slot :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> m (Field' (M'.MutMsg s))
-set_Field'slot = error "TODO"
-set_Field'group :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Field (M'.MutMsg s) -> m (Field' (M'.MutMsg s))
-set_Field'group = error "TODO"
 
 
 newtype Method msg = Method_newtype_ (U'.Struct msg)
@@ -932,18 +926,6 @@ has_Node'union'(Node_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Node msg -> m Bool)) where
     fromLabel = DC'.Has has_Node'union'
 
-set_Node'file :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m ()
-set_Node'file (Node_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 32 0
-set_Node'struct :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
-set_Node'struct = error "TODO"
-set_Node'enum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
-set_Node'enum = error "TODO"
-set_Node'interface :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
-set_Node'interface = error "TODO"
-set_Node'const :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
-set_Node'const = error "TODO"
-set_Node'annotation :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Node (M'.MutMsg s) -> m (Node' (M'.MutMsg s))
-set_Node'annotation = error "TODO"
 
 
 newtype Superclass msg = Superclass_newtype_ (U'.Struct msg)
@@ -1008,7 +990,32 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "brand" (DC'.S
 
 
 
-data Type msg
+newtype Type msg = Type_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Type msg) where
+    fromStruct = pure . Type_newtype_
+instance C'.IsPtr msg (Type msg) where
+    fromPtr msg ptr = Type_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Type msg) where
+    newtype List msg (Type msg) = List_Type (U'.ListOf msg (U'.Struct msg))
+    length (List_Type l) = U'.length l
+    index i (List_Type l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Type (M'.MutMsg s)) where
+    setIndex (Type_newtype_ elt) i (List_Type l) = U'.setIndex elt i l
+    allocList msg len = List_Type <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type msg) msg where
+    message (Type_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Type msg) msg where
+    messageDefault = Type_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Type' inside the message.
+new_Type :: M'.WriteCtx m s => M'.MutMsg s -> m (Type (M'.MutMsg s))
+new_Type msg = Type_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.IsPtr msg (B'.List msg (Type msg)) where
+    fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
+    toPtr (List_Type l) = C'.toPtr l
+data Type' msg
     = Type'void
     | Type'bool
     | Type'int8
@@ -1029,6 +1036,17 @@ data Type msg
     | Type'interface (Type'interface'group' msg)
     | Type'anyPointer (Type'anyPointer'group' msg)
     | Type'unknown' Word16
+get_Type' :: U'.ReadCtx m msg => Type msg -> m (Type' msg)
+get_Type' (Type_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Type msg -> m (Type' msg))) where
+    fromLabel = DC'.Get get_Type'
+
+has_Type' :: U'.ReadCtx m msg => Type msg -> m Bool
+has_Type'(Type_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Type msg -> m Bool)) where
+    fromLabel = DC'.Has has_Type'
+
+
 
 
 
@@ -1309,16 +1327,10 @@ has_Type'anyPointer'union'(Type'anyPointer'group'_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Type'anyPointer'group' msg -> m Bool)) where
     fromLabel = DC'.Has has_Type'anyPointer'union'
 
-set_Type'anyPointer'unconstrained :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> m (Type'anyPointer (M'.MutMsg s))
-set_Type'anyPointer'unconstrained = error "TODO"
-set_Type'anyPointer'parameter :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> m (Type'anyPointer (M'.MutMsg s))
-set_Type'anyPointer'parameter = error "TODO"
-set_Type'anyPointer'implicitMethodParameter :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'group' (M'.MutMsg s) -> m (Type'anyPointer (M'.MutMsg s))
-set_Type'anyPointer'implicitMethodParameter = error "TODO"
 
 
 
-instance C'.IsStruct msg (Type msg) where
+instance C'.IsStruct msg (Type' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
@@ -1342,21 +1354,33 @@ instance C'.IsStruct msg (Type msg) where
             1 -> pure Type'bool
             0 -> pure Type'void
             _ -> pure $ Type'unknown' tag
-instance B'.ListElem msg (Type msg) where
-    newtype List msg (Type msg) = List_Type (U'.ListOf msg (U'.Struct msg))
-    length (List_Type l) = U'.length l
-    index i (List_Type l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr msg (Type msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type msg); go = C'.fromStruct} in go)
+newtype Value msg = Value_newtype_ (U'.Struct msg)
 
-    toPtr = error "TODO: toPtr for non-newtype structs."
+instance C'.IsStruct msg (Value msg) where
+    fromStruct = pure . Value_newtype_
+instance C'.IsPtr msg (Value msg) where
+    fromPtr msg ptr = Value_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Value_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Value msg) where
+    newtype List msg (Value msg) = List_Value (U'.ListOf msg (U'.Struct msg))
+    length (List_Value l) = U'.length l
+    index i (List_Value l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Value msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Value (M'.MutMsg s)) where
+    setIndex (Value_newtype_ elt) i (List_Value l) = U'.setIndex elt i l
+    allocList msg len = List_Value <$> U'.allocCompositeList msg 2 1 len
+instance U'.HasMessage (Value msg) msg where
+    message (Value_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Value msg) msg where
+    messageDefault = Value_newtype_ . U'.messageDefault
 
-instance C'.IsPtr msg (B'.List msg (Type msg)) where
-    fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
-    toPtr (List_Type l) = C'.toPtr l
-
-data Value msg
+-- | Allocate a new 'Value' inside the message.
+new_Value :: M'.WriteCtx m s => M'.MutMsg s -> m (Value (M'.MutMsg s))
+new_Value msg = Value_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.IsPtr msg (B'.List msg (Value msg)) where
+    fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
+    toPtr (List_Value l) = C'.toPtr l
+data Value' msg
     = Value'void
     | Value'bool Bool
     | Value'int8 Int8
@@ -1377,6 +1401,15 @@ data Value msg
     | Value'interface
     | Value'anyPointer (Maybe (U'.Ptr msg))
     | Value'unknown' Word16
+get_Value' :: U'.ReadCtx m msg => Value msg -> m (Value' msg)
+get_Value' (Value_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Value msg -> m (Value' msg))) where
+    fromLabel = DC'.Get get_Value'
+
+has_Value' :: U'.ReadCtx m msg => Value msg -> m Bool
+has_Value'(Value_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Value msg -> m Bool)) where
+    fromLabel = DC'.Has has_Value'
 
 
 
@@ -1397,7 +1430,9 @@ data Value msg
 
 
 
-instance C'.IsStruct msg (Value msg) where
+
+
+instance C'.IsStruct msg (Value' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
@@ -1421,47 +1456,57 @@ instance C'.IsStruct msg (Value msg) where
             1 -> Value'bool <$>  C'.getWordField struct 0 16 0
             0 -> pure Value'void
             _ -> pure $ Value'unknown' tag
-instance B'.ListElem msg (Value msg) where
-    newtype List msg (Value msg) = List_Value (U'.ListOf msg (U'.Struct msg))
-    length (List_Value l) = U'.length l
-    index i (List_Value l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Value msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr msg (Value msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Value msg); go = C'.fromStruct} in go)
+newtype Brand'Binding msg = Brand'Binding_newtype_ (U'.Struct msg)
 
-    toPtr = error "TODO: toPtr for non-newtype structs."
+instance C'.IsStruct msg (Brand'Binding msg) where
+    fromStruct = pure . Brand'Binding_newtype_
+instance C'.IsPtr msg (Brand'Binding msg) where
+    fromPtr msg ptr = Brand'Binding_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Brand'Binding_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Brand'Binding msg) where
+    newtype List msg (Brand'Binding msg) = List_Brand'Binding (U'.ListOf msg (U'.Struct msg))
+    length (List_Brand'Binding l) = U'.length l
+    index i (List_Brand'Binding l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Binding msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Brand'Binding (M'.MutMsg s)) where
+    setIndex (Brand'Binding_newtype_ elt) i (List_Brand'Binding l) = U'.setIndex elt i l
+    allocList msg len = List_Brand'Binding <$> U'.allocCompositeList msg 1 1 len
+instance U'.HasMessage (Brand'Binding msg) msg where
+    message (Brand'Binding_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Brand'Binding msg) msg where
+    messageDefault = Brand'Binding_newtype_ . U'.messageDefault
 
-instance C'.IsPtr msg (B'.List msg (Value msg)) where
-    fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
-    toPtr (List_Value l) = C'.toPtr l
-
-data Brand'Binding msg
+-- | Allocate a new 'Brand'Binding' inside the message.
+new_Brand'Binding :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand'Binding (M'.MutMsg s))
+new_Brand'Binding msg = Brand'Binding_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
+    fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
+    toPtr (List_Brand'Binding l) = C'.toPtr l
+data Brand'Binding' msg
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type msg)
     | Brand'Binding'unknown' Word16
+get_Brand'Binding' :: U'.ReadCtx m msg => Brand'Binding msg -> m (Brand'Binding' msg)
+get_Brand'Binding' (Brand'Binding_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Brand'Binding msg -> m (Brand'Binding' msg))) where
+    fromLabel = DC'.Get get_Brand'Binding'
+
+has_Brand'Binding' :: U'.ReadCtx m msg => Brand'Binding msg -> m Bool
+has_Brand'Binding'(Brand'Binding_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Brand'Binding msg -> m Bool)) where
+    fromLabel = DC'.Has has_Brand'Binding'
 
 
 
-instance C'.IsStruct msg (Brand'Binding msg) where
+
+
+instance C'.IsStruct msg (Brand'Binding' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
             1 -> Brand'Binding'type_ <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             0 -> pure Brand'Binding'unbound
             _ -> pure $ Brand'Binding'unknown' tag
-instance B'.ListElem msg (Brand'Binding msg) where
-    newtype List msg (Brand'Binding msg) = List_Brand'Binding (U'.ListOf msg (U'.Struct msg))
-    length (List_Brand'Binding l) = U'.length l
-    index i (List_Brand'Binding l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Binding msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Brand'Binding msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Binding msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
-    fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
-    toPtr (List_Brand'Binding l) = C'.toPtr l
 
 newtype Brand'Scope msg = Brand'Scope_newtype_ (U'.Struct msg)
 
@@ -1515,37 +1560,58 @@ has_Brand'Scope'union'(Brand'Scope_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Brand'Scope msg -> m Bool)) where
     fromLabel = DC'.Has has_Brand'Scope'union'
 
-set_Brand'Scope'inherit :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Brand'Scope (M'.MutMsg s) -> m ()
-set_Brand'Scope'inherit (Brand'Scope_newtype_ struct) = C'.setWordField struct (1 :: Word16) 1 0 0
 
 
-data Brand'Scope' msg
+newtype Brand'Scope' msg = Brand'Scope'_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Brand'Scope' msg) where
+    fromStruct = pure . Brand'Scope'_newtype_
+instance C'.IsPtr msg (Brand'Scope' msg) where
+    fromPtr msg ptr = Brand'Scope'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Brand'Scope'_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Brand'Scope' msg) where
+    newtype List msg (Brand'Scope' msg) = List_Brand'Scope' (U'.ListOf msg (U'.Struct msg))
+    length (List_Brand'Scope' l) = U'.length l
+    index i (List_Brand'Scope' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope' msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Brand'Scope' (M'.MutMsg s)) where
+    setIndex (Brand'Scope'_newtype_ elt) i (List_Brand'Scope' l) = U'.setIndex elt i l
+    allocList msg len = List_Brand'Scope' <$> U'.allocCompositeList msg 2 1 len
+instance U'.HasMessage (Brand'Scope' msg) msg where
+    message (Brand'Scope'_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Brand'Scope' msg) msg where
+    messageDefault = Brand'Scope'_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Brand'Scope'' inside the message.
+new_Brand'Scope' :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand'Scope' (M'.MutMsg s))
+new_Brand'Scope' msg = Brand'Scope'_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
+    fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
+    toPtr (List_Brand'Scope' l) = C'.toPtr l
+data Brand'Scope'' msg
     = Brand'Scope'bind (B'.List msg (Brand'Binding msg))
     | Brand'Scope'inherit
     | Brand'Scope'unknown' Word16
+get_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m (Brand'Scope'' msg)
+get_Brand'Scope'' (Brand'Scope'_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Brand'Scope' msg -> m (Brand'Scope'' msg))) where
+    fromLabel = DC'.Get get_Brand'Scope''
+
+has_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m Bool
+has_Brand'Scope''(Brand'Scope'_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Brand'Scope' msg -> m Bool)) where
+    fromLabel = DC'.Has has_Brand'Scope''
 
 
 
-instance C'.IsStruct msg (Brand'Scope' msg) where
+
+
+instance C'.IsStruct msg (Brand'Scope'' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 1 0 0
         case tag of
             1 -> pure Brand'Scope'inherit
             0 -> Brand'Scope'bind <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Brand'Scope'unknown' tag
-instance B'.ListElem msg (Brand'Scope' msg) where
-    newtype List msg (Brand'Scope' msg) = List_Brand'Scope' (U'.ListOf msg (U'.Struct msg))
-    length (List_Brand'Scope' l) = U'.length l
-    index i (List_Brand'Scope' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope' msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Brand'Scope' msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope' msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
-    fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
-    toPtr (List_Brand'Scope' l) = C'.toPtr l
 
 newtype CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile_newtype_ (U'.Struct msg)
 
@@ -1691,10 +1757,46 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Se
 
 
 
-data Field' msg
+newtype Field' msg = Field'_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Field' msg) where
+    fromStruct = pure . Field'_newtype_
+instance C'.IsPtr msg (Field' msg) where
+    fromPtr msg ptr = Field'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field'_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Field' msg) where
+    newtype List msg (Field' msg) = List_Field' (U'.ListOf msg (U'.Struct msg))
+    length (List_Field' l) = U'.length l
+    index i (List_Field' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field' msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Field' (M'.MutMsg s)) where
+    setIndex (Field'_newtype_ elt) i (List_Field' l) = U'.setIndex elt i l
+    allocList msg len = List_Field' <$> U'.allocCompositeList msg 3 4 len
+instance U'.HasMessage (Field' msg) msg where
+    message (Field'_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Field' msg) msg where
+    messageDefault = Field'_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Field'' inside the message.
+new_Field' :: M'.WriteCtx m s => M'.MutMsg s -> m (Field' (M'.MutMsg s))
+new_Field' msg = Field'_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.IsPtr msg (B'.List msg (Field' msg)) where
+    fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
+    toPtr (List_Field' l) = C'.toPtr l
+data Field'' msg
     = Field'slot (Field'slot'group' msg)
     | Field'group (Field'group'group' msg)
     | Field'unknown' Word16
+get_Field'' :: U'.ReadCtx m msg => Field' msg -> m (Field'' msg)
+get_Field'' (Field'_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Field' msg -> m (Field'' msg))) where
+    fromLabel = DC'.Get get_Field''
+
+has_Field'' :: U'.ReadCtx m msg => Field' msg -> m Bool
+has_Field''(Field'_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Field' msg -> m Bool)) where
+    fromLabel = DC'.Has has_Field''
+
+
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Field'slot'group' msg) where
@@ -1837,59 +1939,94 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "typeId" (DC'.
 
 
 
-instance C'.IsStruct msg (Field' msg) where
+instance C'.IsStruct msg (Field'' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 1 0 0
         case tag of
             1 -> Field'group <$> C'.fromStruct struct
             0 -> Field'slot <$> C'.fromStruct struct
             _ -> pure $ Field'unknown' tag
-instance B'.ListElem msg (Field' msg) where
-    newtype List msg (Field' msg) = List_Field' (U'.ListOf msg (U'.Struct msg))
-    length (List_Field' l) = U'.length l
-    index i (List_Field' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field' msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Field' msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field' msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Field' msg)) where
-    fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
-    toPtr (List_Field' l) = C'.toPtr l
 
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 
-data Field'ordinal msg
+newtype Field'ordinal msg = Field'ordinal_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Field'ordinal msg) where
+    fromStruct = pure . Field'ordinal_newtype_
+instance C'.IsPtr msg (Field'ordinal msg) where
+    fromPtr msg ptr = Field'ordinal_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field'ordinal_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Field'ordinal msg) where
+    newtype List msg (Field'ordinal msg) = List_Field'ordinal (U'.ListOf msg (U'.Struct msg))
+    length (List_Field'ordinal l) = U'.length l
+    index i (List_Field'ordinal l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'ordinal msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Field'ordinal (M'.MutMsg s)) where
+    setIndex (Field'ordinal_newtype_ elt) i (List_Field'ordinal l) = U'.setIndex elt i l
+    allocList msg len = List_Field'ordinal <$> U'.allocCompositeList msg 3 4 len
+instance U'.HasMessage (Field'ordinal msg) msg where
+    message (Field'ordinal_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Field'ordinal msg) msg where
+    messageDefault = Field'ordinal_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Field'ordinal' inside the message.
+new_Field'ordinal :: M'.WriteCtx m s => M'.MutMsg s -> m (Field'ordinal (M'.MutMsg s))
+new_Field'ordinal msg = Field'ordinal_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.IsPtr msg (B'.List msg (Field'ordinal msg)) where
+    fromPtr msg ptr = List_Field'ordinal <$> C'.fromPtr msg ptr
+    toPtr (List_Field'ordinal l) = C'.toPtr l
+data Field'ordinal' msg
     = Field'ordinal'implicit
     | Field'ordinal'explicit Word16
     | Field'ordinal'unknown' Word16
+get_Field'ordinal' :: U'.ReadCtx m msg => Field'ordinal msg -> m (Field'ordinal' msg)
+get_Field'ordinal' (Field'ordinal_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Field'ordinal msg -> m (Field'ordinal' msg))) where
+    fromLabel = DC'.Get get_Field'ordinal'
+
+has_Field'ordinal' :: U'.ReadCtx m msg => Field'ordinal msg -> m Bool
+has_Field'ordinal'(Field'ordinal_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Field'ordinal msg -> m Bool)) where
+    fromLabel = DC'.Has has_Field'ordinal'
 
 
 
-instance C'.IsStruct msg (Field'ordinal msg) where
+
+
+instance C'.IsStruct msg (Field'ordinal' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 1 16 0
         case tag of
             1 -> Field'ordinal'explicit <$>  C'.getWordField struct 1 32 0
             0 -> pure Field'ordinal'implicit
             _ -> pure $ Field'ordinal'unknown' tag
-instance B'.ListElem msg (Field'ordinal msg) where
-    newtype List msg (Field'ordinal msg) = List_Field'ordinal (U'.ListOf msg (U'.Struct msg))
-    length (List_Field'ordinal l) = U'.length l
-    index i (List_Field'ordinal l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'ordinal msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr msg (Field'ordinal msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'ordinal msg); go = C'.fromStruct} in go)
+newtype Node' msg = Node'_newtype_ (U'.Struct msg)
 
-    toPtr = error "TODO: toPtr for non-newtype structs."
+instance C'.IsStruct msg (Node' msg) where
+    fromStruct = pure . Node'_newtype_
+instance C'.IsPtr msg (Node' msg) where
+    fromPtr msg ptr = Node'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Node' msg) where
+    newtype List msg (Node' msg) = List_Node' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node' l) = U'.length l
+    index i (List_Node' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node' msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Node' (M'.MutMsg s)) where
+    setIndex (Node'_newtype_ elt) i (List_Node' l) = U'.setIndex elt i l
+    allocList msg len = List_Node' <$> U'.allocCompositeList msg 5 6 len
+instance U'.HasMessage (Node' msg) msg where
+    message (Node'_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Node' msg) msg where
+    messageDefault = Node'_newtype_ . U'.messageDefault
 
-instance C'.IsPtr msg (B'.List msg (Field'ordinal msg)) where
-    fromPtr msg ptr = List_Field'ordinal <$> C'.fromPtr msg ptr
-    toPtr (List_Field'ordinal l) = C'.toPtr l
-
-data Node' msg
+-- | Allocate a new 'Node'' inside the message.
+new_Node' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node' (M'.MutMsg s))
+new_Node' msg = Node'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.IsPtr msg (B'.List msg (Node' msg)) where
+    fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
+    toPtr (List_Node' l) = C'.toPtr l
+data Node'' msg
     = Node'file
     | Node'struct (Node'struct'group' msg)
     | Node'enum (Node'enum'group' msg)
@@ -1897,6 +2034,17 @@ data Node' msg
     | Node'const (Node'const'group' msg)
     | Node'annotation (Node'annotation'group' msg)
     | Node'unknown' Word16
+get_Node'' :: U'.ReadCtx m msg => Node' msg -> m (Node'' msg)
+get_Node'' (Node'_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Node' msg -> m (Node'' msg))) where
+    fromLabel = DC'.Get get_Node''
+
+has_Node'' :: U'.ReadCtx m msg => Node' msg -> m Bool
+has_Node''(Node'_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Node' msg -> m Bool)) where
+    fromLabel = DC'.Has has_Node''
+
+
 
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
 
@@ -2470,7 +2618,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "targetsAnnota
 
 
 
-instance C'.IsStruct msg (Node' msg) where
+instance C'.IsStruct msg (Node'' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 1 32 0
         case tag of
@@ -2481,19 +2629,6 @@ instance C'.IsStruct msg (Node' msg) where
             1 -> Node'struct <$> C'.fromStruct struct
             0 -> pure Node'file
             _ -> pure $ Node'unknown' tag
-instance B'.ListElem msg (Node' msg) where
-    newtype List msg (Node' msg) = List_Node' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node' l) = U'.length l
-    index i (List_Node' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node' msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Node' msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node' msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Node' msg)) where
-    fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
-    toPtr (List_Node' l) = C'.toPtr l
 
 newtype Node'NestedNode msg = Node'NestedNode_newtype_ (U'.Struct msg)
 
@@ -2602,11 +2737,47 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "name" (DC'.Se
 
 
 
-data Type'anyPointer msg
+newtype Type'anyPointer msg = Type'anyPointer_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (Type'anyPointer msg) where
+    fromStruct = pure . Type'anyPointer_newtype_
+instance C'.IsPtr msg (Type'anyPointer msg) where
+    fromPtr msg ptr = Type'anyPointer_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Type'anyPointer msg) where
+    newtype List msg (Type'anyPointer msg) = List_Type'anyPointer (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer l) = U'.length l
+    index i (List_Type'anyPointer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Type'anyPointer (M'.MutMsg s)) where
+    setIndex (Type'anyPointer_newtype_ elt) i (List_Type'anyPointer l) = U'.setIndex elt i l
+    allocList msg len = List_Type'anyPointer <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'anyPointer msg) msg where
+    message (Type'anyPointer_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Type'anyPointer msg) msg where
+    messageDefault = Type'anyPointer_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'Type'anyPointer' inside the message.
+new_Type'anyPointer :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer (M'.MutMsg s))
+new_Type'anyPointer msg = Type'anyPointer_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.IsPtr msg (B'.List msg (Type'anyPointer msg)) where
+    fromPtr msg ptr = List_Type'anyPointer <$> C'.fromPtr msg ptr
+    toPtr (List_Type'anyPointer l) = C'.toPtr l
+data Type'anyPointer' msg
     = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg)
     | Type'anyPointer'parameter (Type'anyPointer'parameter'group' msg)
     | Type'anyPointer'implicitMethodParameter (Type'anyPointer'implicitMethodParameter'group' msg)
     | Type'anyPointer'unknown' Word16
+get_Type'anyPointer' :: U'.ReadCtx m msg => Type'anyPointer msg -> m (Type'anyPointer' msg)
+get_Type'anyPointer' (Type'anyPointer_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Type'anyPointer msg -> m (Type'anyPointer' msg))) where
+    fromLabel = DC'.Get get_Type'anyPointer'
+
+has_Type'anyPointer' :: U'.ReadCtx m msg => Type'anyPointer msg -> m Bool
+has_Type'anyPointer'(Type'anyPointer_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Type'anyPointer msg -> m Bool)) where
+    fromLabel = DC'.Has has_Type'anyPointer'
+
+
 newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Type'anyPointer'unconstrained'group' msg) where
@@ -2642,14 +2813,6 @@ has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group'_ne
 instance U'.ReadCtx m msg => IsLabel "union'" (DC'.Has (Type'anyPointer'unconstrained'group' msg -> m Bool)) where
     fromLabel = DC'.Has has_Type'anyPointer'unconstrained'union'
 
-set_Type'anyPointer'unconstrained'anyKind :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'anyKind (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 16 0
-set_Type'anyPointer'unconstrained'struct :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'struct (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.setWordField struct (1 :: Word16) 1 16 0
-set_Type'anyPointer'unconstrained'list :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.setWordField struct (2 :: Word16) 1 16 0
-set_Type'anyPointer'unconstrained'capability :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Type'anyPointer'unconstrained'group' (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.setWordField struct (3 :: Word16) 1 16 0
 
 
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ (U'.Struct msg)
@@ -2754,7 +2917,7 @@ instance (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => IsLabel "parameterInde
 
 
 
-instance C'.IsStruct msg (Type'anyPointer msg) where
+instance C'.IsStruct msg (Type'anyPointer' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 1 0 0
         case tag of
@@ -2762,32 +2925,55 @@ instance C'.IsStruct msg (Type'anyPointer msg) where
             1 -> Type'anyPointer'parameter <$> C'.fromStruct struct
             0 -> Type'anyPointer'unconstrained <$> C'.fromStruct struct
             _ -> pure $ Type'anyPointer'unknown' tag
-instance B'.ListElem msg (Type'anyPointer msg) where
-    newtype List msg (Type'anyPointer msg) = List_Type'anyPointer (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer l) = U'.length l
-    index i (List_Type'anyPointer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer msg); go = C'.fromStruct} in go)
 
-instance C'.IsPtr msg (Type'anyPointer msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer msg); go = C'.fromStruct} in go)
+newtype Type'anyPointer'unconstrained msg = Type'anyPointer'unconstrained_newtype_ (U'.Struct msg)
 
-    toPtr = error "TODO: toPtr for non-newtype structs."
+instance C'.IsStruct msg (Type'anyPointer'unconstrained msg) where
+    fromStruct = pure . Type'anyPointer'unconstrained_newtype_
+instance C'.IsPtr msg (Type'anyPointer'unconstrained msg) where
+    fromPtr msg ptr = Type'anyPointer'unconstrained_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer'unconstrained_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (Type'anyPointer'unconstrained msg) where
+    newtype List msg (Type'anyPointer'unconstrained msg) = List_Type'anyPointer'unconstrained (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer'unconstrained l) = U'.length l
+    index i (List_Type'anyPointer'unconstrained l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (Type'anyPointer'unconstrained (M'.MutMsg s)) where
+    setIndex (Type'anyPointer'unconstrained_newtype_ elt) i (List_Type'anyPointer'unconstrained l) = U'.setIndex elt i l
+    allocList msg len = List_Type'anyPointer'unconstrained <$> U'.allocCompositeList msg 3 1 len
+instance U'.HasMessage (Type'anyPointer'unconstrained msg) msg where
+    message (Type'anyPointer'unconstrained_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (Type'anyPointer'unconstrained msg) msg where
+    messageDefault = Type'anyPointer'unconstrained_newtype_ . U'.messageDefault
 
-instance C'.IsPtr msg (B'.List msg (Type'anyPointer msg)) where
-    fromPtr msg ptr = List_Type'anyPointer <$> C'.fromPtr msg ptr
-    toPtr (List_Type'anyPointer l) = C'.toPtr l
-
-data Type'anyPointer'unconstrained msg
+-- | Allocate a new 'Type'anyPointer'unconstrained' inside the message.
+new_Type'anyPointer'unconstrained :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'unconstrained (M'.MutMsg s))
+new_Type'anyPointer'unconstrained msg = Type'anyPointer'unconstrained_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained msg)) where
+    fromPtr msg ptr = List_Type'anyPointer'unconstrained <$> C'.fromPtr msg ptr
+    toPtr (List_Type'anyPointer'unconstrained l) = C'.toPtr l
+data Type'anyPointer'unconstrained' msg
     = Type'anyPointer'unconstrained'anyKind
     | Type'anyPointer'unconstrained'struct
     | Type'anyPointer'unconstrained'list
     | Type'anyPointer'unconstrained'capability
     | Type'anyPointer'unconstrained'unknown' Word16
+get_Type'anyPointer'unconstrained' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained msg -> m (Type'anyPointer'unconstrained' msg)
+get_Type'anyPointer'unconstrained' (Type'anyPointer'unconstrained_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (Type'anyPointer'unconstrained msg -> m (Type'anyPointer'unconstrained' msg))) where
+    fromLabel = DC'.Get get_Type'anyPointer'unconstrained'
+
+has_Type'anyPointer'unconstrained' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained msg -> m Bool
+has_Type'anyPointer'unconstrained'(Type'anyPointer'unconstrained_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Type'anyPointer'unconstrained msg -> m Bool)) where
+    fromLabel = DC'.Has has_Type'anyPointer'unconstrained'
 
 
 
 
 
-instance C'.IsStruct msg (Type'anyPointer'unconstrained msg) where
+
+
+instance C'.IsStruct msg (Type'anyPointer'unconstrained' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 1 16 0
         case tag of
@@ -2796,16 +2982,3 @@ instance C'.IsStruct msg (Type'anyPointer'unconstrained msg) where
             1 -> pure Type'anyPointer'unconstrained'struct
             0 -> pure Type'anyPointer'unconstrained'anyKind
             _ -> pure $ Type'anyPointer'unconstrained'unknown' tag
-instance B'.ListElem msg (Type'anyPointer'unconstrained msg) where
-    newtype List msg (Type'anyPointer'unconstrained msg) = List_Type'anyPointer'unconstrained (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer'unconstrained l) = U'.length l
-    index i (List_Type'anyPointer'unconstrained l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (Type'anyPointer'unconstrained msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained msg)) where
-    fromPtr msg ptr = List_Type'anyPointer'unconstrained <$> C'.fromPtr msg ptr
-    toPtr (List_Type'anyPointer'unconstrained l) = C'.toPtr l

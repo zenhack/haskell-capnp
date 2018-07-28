@@ -168,9 +168,15 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
             [Variant{variantName,variantParams=Record fields}] ->
                 fmtDecerializeArgs variantName fields
             _ -> mconcat
-                [ "case raw of\n"
-                , "\n        "
-                , mintercalate "\n        " (map fmtDecerializeVariant dataVariants)
+                [ "do\n"
+                , if dataCerialType == CTyEnum then
+                    ""
+                  else mconcat [
+                  "        raw <- ", fmtName Raw thisMod $ prefixName "get_" (subName dataName ""), " raw\n"
+                  ]
+                , "        case raw of\n"
+                , "            "
+                , mintercalate "\n            " (map fmtDecerializeVariant dataVariants)
                 ]
         , "\n\n"
         , case dataCerialType of
@@ -188,8 +194,8 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
   where
     fmtDecerializeArgs variantName fields = mconcat
         [ fmtName Pure thisMod variantName
-        , "\n            <$> "
-        , mintercalate "\n            <*> " $
+        , "\n                <$> "
+        , mintercalate "\n                <*> " $
             flip map fields $ \Field{fieldName} -> mconcat
                 [ "(", fmtName Raw thisMod $ prefixName "get_" (subName variantName fieldName)
                 , " raw >>= C'.decerialize)"

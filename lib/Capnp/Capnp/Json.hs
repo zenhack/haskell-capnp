@@ -27,7 +27,32 @@ import qualified Data.Capnp.Message as M'
 
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 
-data JsonValue msg
+newtype JsonValue msg = JsonValue_newtype_ (U'.Struct msg)
+
+instance C'.IsStruct msg (JsonValue msg) where
+    fromStruct = pure . JsonValue_newtype_
+instance C'.IsPtr msg (JsonValue msg) where
+    fromPtr msg ptr = JsonValue_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (JsonValue_newtype_ struct) = C'.toPtr struct
+instance B'.ListElem msg (JsonValue msg) where
+    newtype List msg (JsonValue msg) = List_JsonValue (U'.ListOf msg (U'.Struct msg))
+    length (List_JsonValue l) = U'.length l
+    index i (List_JsonValue l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
+instance B'.MutListElem s (JsonValue (M'.MutMsg s)) where
+    setIndex (JsonValue_newtype_ elt) i (List_JsonValue l) = U'.setIndex elt i l
+    allocList msg len = List_JsonValue <$> U'.allocCompositeList msg 2 1 len
+instance U'.HasMessage (JsonValue msg) msg where
+    message (JsonValue_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (JsonValue msg) msg where
+    messageDefault = JsonValue_newtype_ . U'.messageDefault
+
+-- | Allocate a new 'JsonValue' inside the message.
+new_JsonValue :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue (M'.MutMsg s))
+new_JsonValue msg = JsonValue_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
+    fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
+    toPtr (List_JsonValue l) = C'.toPtr l
+data JsonValue' msg
     = JsonValue'null
     | JsonValue'boolean Bool
     | JsonValue'number Double
@@ -36,6 +61,15 @@ data JsonValue msg
     | JsonValue'object (B'.List msg (JsonValue'Field msg))
     | JsonValue'call (JsonValue'Call msg)
     | JsonValue'unknown' Word16
+get_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m (JsonValue' msg)
+get_JsonValue' (JsonValue_newtype_ struct) = C'.fromStruct struct
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Get (JsonValue msg -> m (JsonValue' msg))) where
+    fromLabel = DC'.Get get_JsonValue'
+
+has_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m Bool
+has_JsonValue'(JsonValue_newtype_ struct) = pure True
+instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (JsonValue msg -> m Bool)) where
+    fromLabel = DC'.Has has_JsonValue'
 
 
 
@@ -44,7 +78,9 @@ data JsonValue msg
 
 
 
-instance C'.IsStruct msg (JsonValue msg) where
+
+
+instance C'.IsStruct msg (JsonValue' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
         case tag of
@@ -56,19 +92,6 @@ instance C'.IsStruct msg (JsonValue msg) where
             1 -> JsonValue'boolean <$>  C'.getWordField struct 0 16 0
             0 -> pure JsonValue'null
             _ -> pure $ JsonValue'unknown' tag
-instance B'.ListElem msg (JsonValue msg) where
-    newtype List msg (JsonValue msg) = List_JsonValue (U'.ListOf msg (U'.Struct msg))
-    length (List_JsonValue l) = U'.length l
-    index i (List_JsonValue l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
-
-instance C'.IsPtr msg (JsonValue msg) where
-    fromPtr msg ptr = C'.fromPtr msg ptr >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
-
-    toPtr = error "TODO: toPtr for non-newtype structs."
-
-instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
-    fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
-    toPtr (List_JsonValue l) = C'.toPtr l
 
 newtype JsonValue'Call msg = JsonValue'Call_newtype_ (U'.Struct msg)
 

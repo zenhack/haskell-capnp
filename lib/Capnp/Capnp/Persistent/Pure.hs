@@ -33,7 +33,7 @@ data Persistent'SaveParams
 
 instance C'.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg) Persistent'SaveParams where
     decerialize raw = Persistent'SaveParams
-            <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= C'.decerialize)
+                <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Persistent'SaveParams where
     fromStruct struct = do
@@ -48,7 +48,7 @@ data Persistent'SaveResults
 
 instance C'.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg) Persistent'SaveResults where
     decerialize raw = Persistent'SaveResults
-            <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= C'.decerialize)
+                <$> (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= C'.decerialize)
 
 instance C'.IsStruct M'.ConstMsg Persistent'SaveResults where
     fromStruct struct = do

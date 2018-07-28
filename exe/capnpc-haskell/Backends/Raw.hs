@@ -258,6 +258,8 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 , isLabelInstance
                 ]
             HereField ->
+                ""
+{-
                 let fieldTypeName = case fieldType of
                         StructType name _ -> name
                         _ -> error $ "Unexpected field type " ++ show fieldType ++ " for field at HereField"
@@ -274,6 +276,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                         mconcat $ map (fmtUnionSetter thisMod typeName fieldTypeName tagLoc) dataVariants
                     value ->
                         error $ "Expected union or group declaration, but got " ++ show value
+-}
         , "\n"
         ]
 
@@ -319,26 +322,27 @@ fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=C
             mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
         _ -> ""
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTagLoc=Just tagLoc,dataVariants} =
-    let nameText = fmtName thisMod dataName
+    let unionName = subName dataName ""
+        unionNameText = fmtName thisMod unionName
     in mconcat
-        [ "data ", nameText, " msg"
+        [ fmtNewtypeStruct thisMod dataName dataSz ptrSz
+        , "data ", unionNameText, " msg"
         , "\n    = "
         , mintercalate "\n    | " (map fmtDataVariant dataVariants)
         , "\n"
+        , fmtFieldAccessor thisMod dataName dataName Field
+            { fieldName = ""
+            , fieldType = StructType unionName []
+            , fieldLoc = HereField
+            }
         -- Generate auxiliary newtype definitions for group fields:
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
-        , "\ninstance C'.IsStruct msg (", nameText, " msg) where"
+        , "\ninstance C'.IsStruct msg (", unionNameText, " msg) where"
         , "\n    fromStruct struct = do"
         , "\n        tag <- ", fmtGetWordField "struct" tagLoc
         , "\n        case tag of"
         , mconcat $ map fmtVariantCase $ sortVariants dataVariants
         , "\n"
-        , fmtStructListElem nameText
-        , "\ninstance C'.IsPtr msg (", nameText, " msg) where"
-        , "\n    fromPtr msg ptr = C'.fromPtr msg ptr >>= ", fmtRestrictedFromStruct nameText, "\n"
-        , "\n    toPtr = error \"TODO: toPtr for non-newtype structs.\"\n"
-        , "\n"
-        , fmtStructListIsPtr nameText
         ]
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
