@@ -357,6 +357,14 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (CapDescriptor msg -> m Bool)) 
     fromLabel = DC'.Has has_CapDescriptor'
 
 
+set_CapDescriptor'none :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => CapDescriptor (M'.MutMsg s) -> m ()
+set_CapDescriptor'none (CapDescriptor_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+
+
+
+
+
+
 
 
 
@@ -737,6 +745,20 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Message msg -> m Bool)) where
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 instance C'.IsStruct msg (Message' msg) where
     fromStruct struct = do
         tag <-  C'.getWordField struct 0 0 0
@@ -795,6 +817,8 @@ has_MessageTarget' :: U'.ReadCtx m msg => MessageTarget msg -> m Bool
 has_MessageTarget'(MessageTarget_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (MessageTarget msg -> m Bool)) where
     fromLabel = DC'.Has has_MessageTarget'
+
+
 
 
 
@@ -1304,6 +1328,13 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Call'sendResultsTo msg -> m Bo
     fromLabel = DC'.Has has_Call'sendResultsTo'
 
 
+set_Call'sendResultsTo'caller :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call'sendResultsTo (M'.MutMsg s) -> m ()
+set_Call'sendResultsTo'caller (Call'sendResultsTo_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 48 0
+
+set_Call'sendResultsTo'yourself :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Call'sendResultsTo (M'.MutMsg s) -> m ()
+set_Call'sendResultsTo'yourself (Call'sendResultsTo_newtype_ struct) = C'.setWordField struct (1 :: Word16) 0 48 0
+
+
 
 
 
@@ -1357,6 +1388,12 @@ has_Disembargo'context' :: U'.ReadCtx m msg => Disembargo'context msg -> m Bool
 has_Disembargo'context'(Disembargo'context_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Disembargo'context msg -> m Bool)) where
     fromLabel = DC'.Has has_Disembargo'context'
+
+
+
+
+set_Disembargo'context'accept :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Disembargo'context (M'.MutMsg s) -> m ()
+set_Disembargo'context'accept (Disembargo'context_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 32 0
 
 
 
@@ -1449,6 +1486,10 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (PromisedAnswer'Op msg -> m Boo
     fromLabel = DC'.Has has_PromisedAnswer'Op'
 
 
+set_PromisedAnswer'Op'noop :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => PromisedAnswer'Op (M'.MutMsg s) -> m ()
+set_PromisedAnswer'Op'noop (PromisedAnswer'Op_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+
+
 
 
 
@@ -1498,6 +1539,8 @@ has_Resolve'' :: U'.ReadCtx m msg => Resolve' msg -> m Bool
 has_Resolve''(Resolve'_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Resolve' msg -> m Bool)) where
     fromLabel = DC'.Has has_Resolve''
+
+
 
 
 
@@ -1553,6 +1596,16 @@ has_Return'' :: U'.ReadCtx m msg => Return' msg -> m Bool
 has_Return''(Return'_newtype_ struct) = pure True
 instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (Return' msg -> m Bool)) where
     fromLabel = DC'.Has has_Return''
+
+
+
+
+set_Return'canceled :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> m ()
+set_Return'canceled (Return'_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 48 0
+
+set_Return'resultsSentElsewhere :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Return' (M'.MutMsg s) -> m ()
+set_Return'resultsSentElsewhere (Return'_newtype_ struct) = C'.setWordField struct (3 :: Word16) 0 48 0
+
 
 
 

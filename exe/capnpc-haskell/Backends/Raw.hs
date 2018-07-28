@@ -264,13 +264,11 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         , "\n"
         ]
 
-fmtUnionSetter :: Module -> Name -> Name -> DataLoc -> Variant -> TB.Builder
-fmtUnionSetter thisMod parentType childType tagLoc Variant{variantTag=Just tagValue,..} =
+fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> TB.Builder
+fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
     let setName = "set_" <> fmtName thisMod variantName
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
-        childTypeCon = fmtName thisMod childType
-        childDataCon = childTypeCon  <> "_newtype_"
     in case variantParams of
         NoParams -> mconcat
             [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
@@ -279,9 +277,11 @@ fmtUnionSetter thisMod parentType childType tagLoc Variant{variantTag=Just tagVa
         Record _ ->
             -- Variant is a group; we return a reference to the group so the user can
             -- modify it.
-            mconcat
-            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", childTypeCon, " (M'.MutMsg s) -> "
-            , "m (", fmtName thisMod variantName, "'group' (M'.MutMsg s))\n"
+            let childTypeCon = fmtName thisMod (subName variantName "group'")
+                childDataCon = childTypeCon <> "_newtype_"
+            in mconcat
+            [ setName, " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ", parentTypeCon, " (M'.MutMsg s) -> "
+            , "m (", childTypeCon, " (M'.MutMsg s))\n"
             , setName, " (", parentDataCon, " struct) = do\n"
             , "    ", fmtSetTag, "\n"
             , "    pure $ ", childDataCon, " struct\n"
@@ -290,7 +290,7 @@ fmtUnionSetter thisMod parentType childType tagLoc Variant{variantTag=Just tagVa
             "" -- TODO
    where
      fmtSetTag = fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
-fmtUnionSetter _ _ _ _ Variant{variantTag=Nothing} =
+fmtUnionSetter _ _ _ Variant{variantTag=Nothing} =
     -- This happens for the unknown' variants; just ignore them:
     ""
 
@@ -324,6 +324,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
             , fieldType = StructType unionName []
             , fieldLoc = HereField
             }
+        , mintercalate "\n" (map (fmtUnionSetter thisMod dataName tagLoc) dataVariants)
         -- Generate auxiliary newtype definitions for group fields:
         , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
         , "\ninstance C'.IsStruct msg (", unionNameText, " msg) where"

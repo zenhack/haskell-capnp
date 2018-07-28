@@ -72,6 +72,15 @@ instance U'.ReadCtx m msg => IsLabel "" (DC'.Has (JsonValue msg -> m Bool)) wher
     fromLabel = DC'.Has has_JsonValue'
 
 
+set_JsonValue'null :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> m ()
+set_JsonValue'null (JsonValue_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+
+
+
+
+
+
+
 
 
 
