@@ -310,8 +310,15 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
             , "    ", fmtSetTag, "\n"
             , "    U'.setPtr (C'.toPtr value) ", TB.fromString (show index), " struct\n"
             ]
-        _ ->
-            "" -- TODO
+        Unnamed typ VoidField ->
+            error "BUG: void field should have been NoParams"
+        Unnamed typ HereField -> mconcat
+            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            , "m (", fmtType thisMod " (M'.MutMsg s)" typ, ")\n"
+            , setName, "(", parentDataCon, " struct) value = do\n"
+            , "    ", fmtSetTag, "\n"
+            , "    fromStruct struct\n"
+            ]
    where
      classConstraints = "(U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) =>"
      fmtSetTag = fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
