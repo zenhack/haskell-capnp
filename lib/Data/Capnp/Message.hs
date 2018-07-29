@@ -24,6 +24,7 @@ module Data.Capnp.Message
     , readMessage
     , writeMessage
     , alloc
+    , newMessage
     )
   where
 
@@ -284,6 +285,9 @@ alloc msg (WordCount size) = do
     newSeg <- grow oldSeg size
     setSegment msg segIndex newSeg
     pure ret
+
+newMessage :: WriteCtx m s => m (MutMsg s)
+newMessage = thaw $ ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
 
 instance WriteCtx m s => Mutable m (Segment (MutMsg s)) (Segment ConstMsg) where
     thaw (ConstSegment vec) = do

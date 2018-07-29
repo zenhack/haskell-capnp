@@ -27,6 +27,7 @@ module Data.Capnp.Untyped
     , setIndex
     , take
     , rootPtr
+    , setRoot
     , rawBytes
     , ReadCtx
     , HasMessage(..), MessageDefault(..)
@@ -562,6 +563,19 @@ rootPtr msg = do
         Just (PtrStruct struct) -> pure struct
         _ -> throwM $ E.SchemaViolationError
                 "Unexpected root type; expected struct."
+
+
+-- | Make the given struct the root object of its message.
+setRoot :: M.WriteCtx m s => Struct (M.MutMsg s) -> m ()
+setRoot (Struct msg addr dataSz ptrSz) =
+    case pointerFrom (WordAt 0 0) addr (P.StructPtr 0 dataSz ptrSz) of
+        Right ptr ->
+            M.setWord msg (WordAt 0 0) (P.serializePtr $ Just ptr)
+        Left DifferentSegments ->
+            error $ "TODO: handle setting the root struct to something "
+                ++ "outside the first segment."
+        Left OutOfRange ->
+            error $ "BUG(TODO): segment is too large to set the root pointer."
 
 -- | Allocate a struct in the message.
 allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))

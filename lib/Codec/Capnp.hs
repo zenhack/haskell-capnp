@@ -87,7 +87,7 @@ setWordField ::
     )
     => Struct (M.MutMsg s) -> a -> Int -> Int -> a -> m ()
 setWordField struct value idx offset def = do
-    old <- getWordField struct idx offset (toWord def)
+    old <- getData idx struct
     let new = replaceBits (value `xor` def) old offset
     setData new idx struct
 
