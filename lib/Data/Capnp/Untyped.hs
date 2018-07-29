@@ -575,7 +575,7 @@ setRoot (Struct msg addr dataSz ptrSz) =
             error $ "TODO: handle setting the root struct to something "
                 ++ "outside the first segment."
         Left OutOfRange ->
-            error $ "BUG(TODO): segment is too large to set the root pointer."
+            error "BUG(TODO): segment is too large to set the root pointer."
 
 -- | Allocate a struct in the message.
 allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))
