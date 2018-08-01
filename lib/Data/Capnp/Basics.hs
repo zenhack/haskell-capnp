@@ -30,8 +30,8 @@ import Data.Word
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(throwM))
 
-import Codec.Capnp           (IsPtr(..), ListElem(..), MutListElem(..))
-import Internal.Gen.ListElem ()
+import Codec.Capnp            (IsPtr(..), ListElem(..), MutListElem(..))
+import Internal.Gen.Instances ()
 
 import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Errors  as E

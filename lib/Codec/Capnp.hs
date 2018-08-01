@@ -93,28 +93,6 @@ setWordField struct value idx offset def = do
 
 instance Decerialize () () where
     decerialize = pure
-instance Decerialize Bool Bool where
-    decerialize = pure
-instance Decerialize Word8 Word8 where
-    decerialize = pure
-instance Decerialize Word16 Word16 where
-    decerialize = pure
-instance Decerialize Word32 Word32 where
-    decerialize = pure
-instance Decerialize Word64 Word64 where
-    decerialize = pure
-instance Decerialize Int8 Int8 where
-    decerialize = pure
-instance Decerialize Int16 Int16 where
-    decerialize = pure
-instance Decerialize Int32 Int32 where
-    decerialize = pure
-instance Decerialize Int64 Int64 where
-    decerialize = pure
-instance Decerialize Float Float where
-    decerialize = pure
-instance Decerialize Double Double where
-    decerialize = pure
 
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
