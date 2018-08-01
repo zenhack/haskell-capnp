@@ -59,6 +59,7 @@ set_JoinKeyPart'joinId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JoinK
 set_JoinKeyPart'joinId (JoinKeyPart_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
 
+
 get_JoinKeyPart'partCount :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word16
 get_JoinKeyPart'partCount (JoinKeyPart_newtype_ struct) = C'.getWordField struct 0 32 0
 
@@ -69,6 +70,7 @@ set_JoinKeyPart'partCount :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Jo
 set_JoinKeyPart'partCount (JoinKeyPart_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
 
 
+
 get_JoinKeyPart'partNum :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word16
 get_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) = C'.getWordField struct 0 48 0
 
@@ -77,6 +79,7 @@ has_JoinKeyPart'partNum(JoinKeyPart_newtype_ struct) = pure $ 0 < U'.length (U'.
 
 set_JoinKeyPart'partNum :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JoinKeyPart (M'.MutMsg s) -> Word16 -> m ()
 set_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 48 0
+
 
 
 newtype JoinResult msg = JoinResult_newtype_ (U'.Struct msg)
@@ -113,6 +116,7 @@ set_JoinResult'joinId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JoinRe
 set_JoinResult'joinId (JoinResult_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 
 
+
 get_JoinResult'succeeded :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 get_JoinResult'succeeded (JoinResult_newtype_ struct) = C'.getWordField struct 0 32 0
 
@@ -121,6 +125,7 @@ has_JoinResult'succeeded(JoinResult_newtype_ struct) = pure $ 0 < U'.length (U'.
 
 set_JoinResult'succeeded :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JoinResult (M'.MutMsg s) -> Bool -> m ()
 set_JoinResult'succeeded (JoinResult_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
+
 
 
 get_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m (Maybe (U'.Ptr msg))
@@ -134,6 +139,7 @@ has_JoinResult'cap(JoinResult_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr
 
 set_JoinResult'cap :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JoinResult (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_JoinResult'cap (JoinResult_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 
 
 newtype ProvisionId msg = ProvisionId_newtype_ (U'.Struct msg)
@@ -168,6 +174,7 @@ has_ProvisionId'joinId(ProvisionId_newtype_ struct) = pure $ 0 < U'.length (U'.d
 
 set_ProvisionId'joinId :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => ProvisionId (M'.MutMsg s) -> Word32 -> m ()
 set_ProvisionId'joinId (ProvisionId_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+
 
 
 data Side
@@ -231,4 +238,5 @@ has_VatId'side(VatId_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection str
 
 set_VatId'side :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => VatId (M'.MutMsg s) -> Side -> m ()
 set_VatId'side (VatId_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
+
 

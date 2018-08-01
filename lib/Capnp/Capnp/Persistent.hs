@@ -62,6 +62,7 @@ set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m 
 set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+
 newtype Persistent'SaveResults msg = Persistent'SaveResults_newtype_ (U'.Struct msg)
 
 instance C'.IsStruct msg (Persistent'SaveResults msg) where
@@ -97,4 +98,5 @@ has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults_newtype_ struct) = D
 
 set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+
 

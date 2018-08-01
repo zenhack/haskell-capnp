@@ -175,6 +175,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         [ fmtGetter
         , fmtHas
         , fmtSetter
+        , fmtNew
         ]
   where
     accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
@@ -182,6 +183,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
     getName = accessorName "get_"
     hasName = accessorName "has_"
     setName = accessorName "set_"
+    newName = accessorName "new_"
 
     typeCon = fmtName thisMod typeName
     dataCon = typeCon <> "_newtype_"
@@ -246,6 +248,25 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                 ""
         , "\n"
         ]
+    fmtNew =
+        let newType = typeCon <> " (M'.MutMsg s) -> m (" <> fmtType thisMod "(M'.MutMsg s)" fieldType <> ")"
+            typeAnnotation = newName <> " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => " <> newType
+        in case fieldLoc of
+            PtrField _ ->
+                case fieldType of
+                    ListOf _ -> ""
+                    PrimType PrimText -> ""
+                    PrimType PrimData -> ""
+                    Untyped _ -> ""
+                    _ -> mconcat
+                        [ typeAnnotation, "\n"
+                        , newName, " struct = do\n"
+                        , "    result <- C'.new (U'.message struct)\n"
+                        , "    ", setName, " struct result\n"
+                        , "    pure result\n"
+                        ]
+            _ ->
+                ""
 
 -- | Return the size in bits of a type that belongs in the data section of a struct.
 -- calls error if the type does not make sense in a data section.
