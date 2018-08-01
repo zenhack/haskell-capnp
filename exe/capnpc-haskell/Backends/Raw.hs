@@ -171,16 +171,22 @@ fmtSetWordField struct value DataLoc{..} = mintercalate " "
 
 fmtFieldAccessor :: Module -> Name -> Name -> Field -> TB.Builder
 fmtFieldAccessor thisMod typeName variantName Field{..} =
-    let accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
-    in mintercalate "\n"
-        [ fmtGetter (accessorName "get_")
-        , fmtHas    (accessorName "has_")
-        , fmtSetter (accessorName "set_")
+    mintercalate "\n"
+        [ fmtGetter
+        , fmtHas
+        , fmtSetter
         ]
   where
+    accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
+
+    getName = accessorName "get_"
+    hasName = accessorName "has_"
+    setName = accessorName "set_"
+
     typeCon = fmtName thisMod typeName
     dataCon = typeCon <> "_newtype_"
-    fmtGetter getName =
+
+    fmtGetter =
         let getType = typeCon <> " msg -> m " <> fmtType thisMod "msg" fieldType
         in mconcat
         [ getName, " :: U'.ReadCtx m msg => ", getType, "\n"
@@ -196,7 +202,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
         , "\n"
         ]
-    fmtHas hasName =
+    fmtHas =
         let hasType = typeCon <> " msg -> m Bool"
         in mconcat
         [ hasName, " :: U'.ReadCtx m msg => ", hasType, "\n"
@@ -210,7 +216,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
             VoidField -> "pure True"
         , "\n"
         ]
-    fmtSetter setName =
+    fmtSetter =
         let setType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
             typeAnnotation = setName <> " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => " <> setType
         in mconcat
