@@ -171,6 +171,11 @@ set_JsonValue'Call'params :: U'.RWCtx m s => JsonValue'Call (M'.MutMsg s) -> (B'
 set_JsonValue'Call'params (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_JsonValue'Call'params :: U'.RWCtx m s => Int -> JsonValue'Call (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))))
+new_JsonValue'Call'params len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_JsonValue'Call'params struct result
+    pure result
 
 newtype JsonValue'Field msg = JsonValue'Field_newtype_ (U'.Struct msg)
 

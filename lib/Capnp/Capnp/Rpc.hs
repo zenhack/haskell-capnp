@@ -834,6 +834,11 @@ set_Payload'capTable :: U'.RWCtx m s => Payload (M'.MutMsg s) -> (B'.List (M'.Mu
 set_Payload'capTable (Payload_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_Payload'capTable :: U'.RWCtx m s => Int -> Payload (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (CapDescriptor (M'.MutMsg s))))
+new_Payload'capTable len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Payload'capTable struct result
+    pure result
 
 newtype PromisedAnswer msg = PromisedAnswer_newtype_ (U'.Struct msg)
 
@@ -883,6 +888,11 @@ set_PromisedAnswer'transform :: U'.RWCtx m s => PromisedAnswer (M'.MutMsg s) -> 
 set_PromisedAnswer'transform (PromisedAnswer_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_PromisedAnswer'transform :: U'.RWCtx m s => Int -> PromisedAnswer (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (PromisedAnswer'Op (M'.MutMsg s))))
+new_PromisedAnswer'transform len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_PromisedAnswer'transform struct result
+    pure result
 
 newtype Provide msg = Provide_newtype_ (U'.Struct msg)
 

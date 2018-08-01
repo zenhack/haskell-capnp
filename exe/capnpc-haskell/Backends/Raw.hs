@@ -250,16 +250,24 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         ]
     fmtNew =
         let newType = typeCon <> " (M'.MutMsg s) -> m (" <> fmtType thisMod "(M'.MutMsg s)" fieldType <> ")"
-            typeAnnotation = newName <> " :: U'.RWCtx m s => " <> newType
         in case fieldLoc of
             PtrField _ ->
                 case fieldType of
-                    ListOf _ -> ""
-                    PrimType PrimText -> ""
-                    PrimType PrimData -> ""
-                    Untyped _ -> ""
+                    ListOf _ -> mconcat
+                        [ newName, " :: U'.RWCtx m s => Int -> ", newType, "\n"
+                        , newName, " len struct = do\n"
+                        , "    result <- C'.allocList (U'.message struct) len\n"
+                        , "    ", setName, " struct result\n"
+                        , "    pure result\n"
+                        ]
+                    PrimType PrimText ->
+                        ""
+                    PrimType PrimData ->
+                        ""
+                    Untyped _ ->
+                        ""
                     _ -> mconcat
-                        [ typeAnnotation, "\n"
+                        [ newName, " :: U'.RWCtx m s => ", newType, "\n"
                         , newName, " struct = do\n"
                         , "    result <- C'.new (U'.message struct)\n"
                         , "    ", setName, " struct result\n"

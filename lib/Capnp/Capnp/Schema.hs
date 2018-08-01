@@ -135,6 +135,11 @@ set_Brand'scopes :: U'.RWCtx m s => Brand (M'.MutMsg s) -> (B'.List (M'.MutMsg s
 set_Brand'scopes (Brand_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Brand'scopes :: U'.RWCtx m s => Int -> Brand (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Brand'Scope (M'.MutMsg s))))
+new_Brand'scopes len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Brand'scopes struct result
+    pure result
 
 newtype CapnpVersion msg = CapnpVersion_newtype_ (U'.Struct msg)
 
@@ -230,6 +235,11 @@ set_CodeGeneratorRequest'nodes :: U'.RWCtx m s => CodeGeneratorRequest (M'.MutMs
 set_CodeGeneratorRequest'nodes (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_CodeGeneratorRequest'nodes :: U'.RWCtx m s => Int -> CodeGeneratorRequest (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node (M'.MutMsg s))))
+new_CodeGeneratorRequest'nodes len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_CodeGeneratorRequest'nodes struct result
+    pure result
 
 get_CodeGeneratorRequest'requestedFiles :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (B'.List msg (CodeGeneratorRequest'RequestedFile msg))
 get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest_newtype_ struct) =
@@ -244,6 +254,11 @@ set_CodeGeneratorRequest'requestedFiles :: U'.RWCtx m s => CodeGeneratorRequest 
 set_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_CodeGeneratorRequest'requestedFiles :: U'.RWCtx m s => Int -> CodeGeneratorRequest (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))))
+new_CodeGeneratorRequest'requestedFiles len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_CodeGeneratorRequest'requestedFiles struct result
+    pure result
 
 get_CodeGeneratorRequest'capnpVersion :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (CapnpVersion msg)
 get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest_newtype_ struct) =
@@ -373,6 +388,11 @@ set_Enumerant'annotations :: U'.RWCtx m s => Enumerant (M'.MutMsg s) -> (B'.List
 set_Enumerant'annotations (Enumerant_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_Enumerant'annotations :: U'.RWCtx m s => Int -> Enumerant (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
+new_Enumerant'annotations len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Enumerant'annotations struct result
+    pure result
 
 newtype Field msg = Field_newtype_ (U'.Struct msg)
 
@@ -436,6 +456,11 @@ set_Field'annotations :: U'.RWCtx m s => Field (M'.MutMsg s) -> (B'.List (M'.Mut
 set_Field'annotations (Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_Field'annotations :: U'.RWCtx m s => Int -> Field (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
+new_Field'annotations len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Field'annotations struct result
+    pure result
 
 get_Field'discriminantValue :: U'.ReadCtx m msg => Field msg -> m Word16
 get_Field'discriminantValue (Field_newtype_ struct) = C'.getWordField struct 0 16 65535
@@ -550,6 +575,11 @@ set_Method'annotations :: U'.RWCtx m s => Method (M'.MutMsg s) -> (B'.List (M'.M
 set_Method'annotations (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_Method'annotations :: U'.RWCtx m s => Int -> Method (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
+new_Method'annotations len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Method'annotations struct result
+    pure result
 
 get_Method'paramBrand :: U'.ReadCtx m msg => Method msg -> m (Brand msg)
 get_Method'paramBrand (Method_newtype_ struct) =
@@ -602,6 +632,11 @@ set_Method'implicitParameters :: U'.RWCtx m s => Method (M'.MutMsg s) -> (B'.Lis
 set_Method'implicitParameters (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
 
 
+new_Method'implicitParameters :: U'.RWCtx m s => Int -> Method (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))))
+new_Method'implicitParameters len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Method'implicitParameters struct result
+    pure result
 
 newtype Node msg = Node_newtype_ (U'.Struct msg)
 
@@ -687,6 +722,11 @@ set_Node'nestedNodes :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.List (M'.MutMs
 set_Node'nestedNodes (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_Node'nestedNodes :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))))
+new_Node'nestedNodes len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'nestedNodes struct result
+    pure result
 
 get_Node'annotations :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Annotation msg))
 get_Node'annotations (Node_newtype_ struct) =
@@ -701,6 +741,11 @@ set_Node'annotations :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.List (M'.MutMs
 set_Node'annotations (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
 
 
+new_Node'annotations :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
+new_Node'annotations len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'annotations struct result
+    pure result
 
 get_Node'parameters :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'Parameter msg))
 get_Node'parameters (Node_newtype_ struct) =
@@ -715,6 +760,11 @@ set_Node'parameters :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg
 set_Node'parameters (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 5 struct
 
 
+new_Node'parameters :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))))
+new_Node'parameters len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'parameters struct result
+    pure result
 
 get_Node'isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
 get_Node'isGeneric (Node_newtype_ struct) = C'.getWordField struct 4 32 0
@@ -1593,6 +1643,11 @@ set_CodeGeneratorRequest'RequestedFile'imports :: U'.RWCtx m s => CodeGeneratorR
 set_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
+new_CodeGeneratorRequest'RequestedFile'imports :: U'.RWCtx m s => Int -> CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))))
+new_CodeGeneratorRequest'RequestedFile'imports len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_CodeGeneratorRequest'RequestedFile'imports struct result
+    pure result
 
 newtype CodeGeneratorRequest'RequestedFile'Import msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ (U'.Struct msg)
 
@@ -2047,6 +2102,11 @@ set_Node'struct'fields :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> (B
 set_Node'struct'fields (Node'struct'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
+new_Node'struct'fields :: U'.RWCtx m s => Int -> Node'struct'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Field (M'.MutMsg s))))
+new_Node'struct'fields len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'struct'fields struct result
+    pure result
 
 newtype Node'enum'group' msg = Node'enum'group'_newtype_ (U'.Struct msg)
 
@@ -2085,6 +2145,11 @@ set_Node'enum'enumerants :: U'.RWCtx m s => Node'enum'group' (M'.MutMsg s) -> (B
 set_Node'enum'enumerants (Node'enum'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
+new_Node'enum'enumerants :: U'.RWCtx m s => Int -> Node'enum'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Enumerant (M'.MutMsg s))))
+new_Node'enum'enumerants len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'enum'enumerants struct result
+    pure result
 
 newtype Node'interface'group' msg = Node'interface'group'_newtype_ (U'.Struct msg)
 
@@ -2123,6 +2188,11 @@ set_Node'interface'methods :: U'.RWCtx m s => Node'interface'group' (M'.MutMsg s
 set_Node'interface'methods (Node'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
 
 
+new_Node'interface'methods :: U'.RWCtx m s => Int -> Node'interface'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Method (M'.MutMsg s))))
+new_Node'interface'methods len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'interface'methods struct result
+    pure result
 
 get_Node'interface'superclasses :: U'.ReadCtx m msg => Node'interface'group' msg -> m (B'.List msg (Superclass msg))
 get_Node'interface'superclasses (Node'interface'group'_newtype_ struct) =
@@ -2137,6 +2207,11 @@ set_Node'interface'superclasses :: U'.RWCtx m s => Node'interface'group' (M'.Mut
 set_Node'interface'superclasses (Node'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
 
 
+new_Node'interface'superclasses :: U'.RWCtx m s => Int -> Node'interface'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Superclass (M'.MutMsg s))))
+new_Node'interface'superclasses len struct = do
+    result <- C'.allocList (U'.message struct) len
+    set_Node'interface'superclasses struct result
+    pure result
 
 newtype Node'const'group' msg = Node'const'group'_newtype_ (U'.Struct msg)
 
