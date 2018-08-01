@@ -38,7 +38,7 @@ instance B'.ListElem msg (JoinKeyPart msg) where
     index i (List_JoinKeyPart l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinKeyPart msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (JoinKeyPart (M'.MutMsg s)) where
     setIndex (JoinKeyPart_newtype_ elt) i (List_JoinKeyPart l) = U'.setIndex elt i l
-    allocList msg len = List_JoinKeyPart <$> U'.allocCompositeList msg 1 0 len
+    newList msg len = List_JoinKeyPart <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (JoinKeyPart msg) msg where
     message (JoinKeyPart_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (JoinKeyPart msg) msg where
@@ -95,7 +95,7 @@ instance B'.ListElem msg (JoinResult msg) where
     index i (List_JoinResult l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinResult msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (JoinResult (M'.MutMsg s)) where
     setIndex (JoinResult_newtype_ elt) i (List_JoinResult l) = U'.setIndex elt i l
-    allocList msg len = List_JoinResult <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_JoinResult <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (JoinResult msg) msg where
     message (JoinResult_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (JoinResult msg) msg where
@@ -155,7 +155,7 @@ instance B'.ListElem msg (ProvisionId msg) where
     index i (List_ProvisionId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ProvisionId msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (ProvisionId (M'.MutMsg s)) where
     setIndex (ProvisionId_newtype_ elt) i (List_ProvisionId l) = U'.setIndex elt i l
-    allocList msg len = List_ProvisionId <$> U'.allocCompositeList msg 1 0 len
+    newList msg len = List_ProvisionId <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (ProvisionId msg) msg where
     message (ProvisionId_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (ProvisionId msg) msg where
@@ -201,7 +201,7 @@ instance B'.ListElem msg Side where
     index i (List_Side l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s Side where
     setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
-    allocList msg size = List_Side <$> U'.allocList16 msg size
+    newList msg size = List_Side <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
     toPtr (List_Side l) = C'.toPtr l
@@ -219,7 +219,7 @@ instance B'.ListElem msg (VatId msg) where
     index i (List_VatId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VatId msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (VatId (M'.MutMsg s)) where
     setIndex (VatId_newtype_ elt) i (List_VatId l) = U'.setIndex elt i l
-    allocList msg len = List_VatId <$> U'.allocCompositeList msg 1 0 len
+    newList msg len = List_VatId <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (VatId msg) msg where
     message (VatId_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (VatId msg) msg where

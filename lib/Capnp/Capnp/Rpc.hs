@@ -38,7 +38,7 @@ instance B'.ListElem msg (Accept msg) where
     index i (List_Accept l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Accept msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Accept (M'.MutMsg s)) where
     setIndex (Accept_newtype_ elt) i (List_Accept l) = U'.setIndex elt i l
-    allocList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Accept msg) msg where
     message (Accept_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Accept msg) msg where
@@ -98,7 +98,7 @@ instance B'.ListElem msg (Bootstrap msg) where
     index i (List_Bootstrap l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bootstrap msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
     setIndex (Bootstrap_newtype_ elt) i (List_Bootstrap l) = U'.setIndex elt i l
-    allocList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Bootstrap msg) msg where
     message (Bootstrap_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Bootstrap msg) msg where
@@ -147,7 +147,7 @@ instance B'.ListElem msg (Call msg) where
     index i (List_Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Call (M'.MutMsg s)) where
     setIndex (Call_newtype_ elt) i (List_Call l) = U'.setIndex elt i l
-    allocList msg len = List_Call <$> U'.allocCompositeList msg 3 3 len
+    newList msg len = List_Call <$> U'.allocCompositeList msg 3 3 len
 instance U'.HasMessage (Call msg) msg where
     message (Call_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Call msg) msg where
@@ -262,7 +262,7 @@ instance B'.ListElem msg (CapDescriptor msg) where
     index i (List_CapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapDescriptor msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (CapDescriptor (M'.MutMsg s)) where
     setIndex (CapDescriptor_newtype_ elt) i (List_CapDescriptor l) = U'.setIndex elt i l
-    allocList msg len = List_CapDescriptor <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_CapDescriptor <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (CapDescriptor msg) msg where
     message (CapDescriptor_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (CapDescriptor msg) msg where
@@ -349,7 +349,7 @@ instance B'.ListElem msg (Disembargo msg) where
     index i (List_Disembargo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
     setIndex (Disembargo_newtype_ elt) i (List_Disembargo l) = U'.setIndex elt i l
-    allocList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Disembargo msg) msg where
     message (Disembargo_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Disembargo msg) msg where
@@ -401,7 +401,7 @@ instance B'.ListElem msg (Exception msg) where
     index i (List_Exception l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Exception msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Exception (M'.MutMsg s)) where
     setIndex (Exception_newtype_ elt) i (List_Exception l) = U'.setIndex elt i l
-    allocList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Exception msg) msg where
     message (Exception_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Exception msg) msg where
@@ -472,7 +472,7 @@ instance B'.ListElem msg (Finish msg) where
     index i (List_Finish l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Finish msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Finish (M'.MutMsg s)) where
     setIndex (Finish_newtype_ elt) i (List_Finish l) = U'.setIndex elt i l
-    allocList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
+    newList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (Finish msg) msg where
     message (Finish_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Finish msg) msg where
@@ -518,7 +518,7 @@ instance B'.ListElem msg (Join msg) where
     index i (List_Join l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Join msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Join (M'.MutMsg s)) where
     setIndex (Join_newtype_ elt) i (List_Join l) = U'.setIndex elt i l
-    allocList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
+    newList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
 instance U'.HasMessage (Join msg) msg where
     message (Join_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Join msg) msg where
@@ -586,7 +586,7 @@ instance B'.ListElem msg (Message msg) where
     index i (List_Message l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Message msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Message (M'.MutMsg s)) where
     setIndex (Message_newtype_ elt) i (List_Message l) = U'.setIndex elt i l
-    allocList msg len = List_Message <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Message <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Message msg) msg where
     message (Message_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Message msg) msg where
@@ -739,7 +739,7 @@ instance B'.ListElem msg (MessageTarget msg) where
     index i (List_MessageTarget l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (MessageTarget msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (MessageTarget (M'.MutMsg s)) where
     setIndex (MessageTarget_newtype_ elt) i (List_MessageTarget l) = U'.setIndex elt i l
-    allocList msg len = List_MessageTarget <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_MessageTarget <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (MessageTarget msg) msg where
     message (MessageTarget_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (MessageTarget msg) msg where
@@ -796,7 +796,7 @@ instance B'.ListElem msg (Payload msg) where
     index i (List_Payload l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Payload msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Payload (M'.MutMsg s)) where
     setIndex (Payload_newtype_ elt) i (List_Payload l) = U'.setIndex elt i l
-    allocList msg len = List_Payload <$> U'.allocCompositeList msg 0 2 len
+    newList msg len = List_Payload <$> U'.allocCompositeList msg 0 2 len
 instance U'.HasMessage (Payload msg) msg where
     message (Payload_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Payload msg) msg where
@@ -836,7 +836,7 @@ set_Payload'capTable (Payload_newtype_ struct) value = U'.setPtr (C'.toPtr value
 
 new_Payload'capTable :: U'.RWCtx m s => Int -> Payload (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (CapDescriptor (M'.MutMsg s))))
 new_Payload'capTable len struct = do
-    result <- C'.allocList (U'.message struct) len
+    result <- C'.newList (U'.message struct) len
     set_Payload'capTable struct result
     pure result
 
@@ -853,7 +853,7 @@ instance B'.ListElem msg (PromisedAnswer msg) where
     index i (List_PromisedAnswer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
     setIndex (PromisedAnswer_newtype_ elt) i (List_PromisedAnswer l) = U'.setIndex elt i l
-    allocList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (PromisedAnswer msg) msg where
     message (PromisedAnswer_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (PromisedAnswer msg) msg where
@@ -890,7 +890,7 @@ set_PromisedAnswer'transform (PromisedAnswer_newtype_ struct) value = U'.setPtr 
 
 new_PromisedAnswer'transform :: U'.RWCtx m s => Int -> PromisedAnswer (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (PromisedAnswer'Op (M'.MutMsg s))))
 new_PromisedAnswer'transform len struct = do
-    result <- C'.allocList (U'.message struct) len
+    result <- C'.newList (U'.message struct) len
     set_PromisedAnswer'transform struct result
     pure result
 
@@ -907,7 +907,7 @@ instance B'.ListElem msg (Provide msg) where
     index i (List_Provide l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Provide msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Provide (M'.MutMsg s)) where
     setIndex (Provide_newtype_ elt) i (List_Provide l) = U'.setIndex elt i l
-    allocList msg len = List_Provide <$> U'.allocCompositeList msg 1 2 len
+    newList msg len = List_Provide <$> U'.allocCompositeList msg 1 2 len
 instance U'.HasMessage (Provide msg) msg where
     message (Provide_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Provide msg) msg where
@@ -975,7 +975,7 @@ instance B'.ListElem msg (Release msg) where
     index i (List_Release l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Release msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Release (M'.MutMsg s)) where
     setIndex (Release_newtype_ elt) i (List_Release l) = U'.setIndex elt i l
-    allocList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
+    newList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (Release msg) msg where
     message (Release_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Release msg) msg where
@@ -1021,7 +1021,7 @@ instance B'.ListElem msg (Resolve msg) where
     index i (List_Resolve l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
     setIndex (Resolve_newtype_ elt) i (List_Resolve l) = U'.setIndex elt i l
-    allocList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Resolve msg) msg where
     message (Resolve_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Resolve msg) msg where
@@ -1065,7 +1065,7 @@ instance B'.ListElem msg (Return msg) where
     index i (List_Return l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Return (M'.MutMsg s)) where
     setIndex (Return_newtype_ elt) i (List_Return l) = U'.setIndex elt i l
-    allocList msg len = List_Return <$> U'.allocCompositeList msg 2 1 len
+    newList msg len = List_Return <$> U'.allocCompositeList msg 2 1 len
 instance U'.HasMessage (Return msg) msg where
     message (Return_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Return msg) msg where
@@ -1120,7 +1120,7 @@ instance B'.ListElem msg (ThirdPartyCapDescriptor msg) where
     index i (List_ThirdPartyCapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ThirdPartyCapDescriptor msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
     setIndex (ThirdPartyCapDescriptor_newtype_ elt) i (List_ThirdPartyCapDescriptor l) = U'.setIndex elt i l
-    allocList msg len = List_ThirdPartyCapDescriptor <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_ThirdPartyCapDescriptor <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (ThirdPartyCapDescriptor msg) msg where
     message (ThirdPartyCapDescriptor_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (ThirdPartyCapDescriptor msg) msg where
@@ -1169,7 +1169,7 @@ instance B'.ListElem msg (Call'sendResultsTo msg) where
     index i (List_Call'sendResultsTo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Call'sendResultsTo (M'.MutMsg s)) where
     setIndex (Call'sendResultsTo_newtype_ elt) i (List_Call'sendResultsTo l) = U'.setIndex elt i l
-    allocList msg len = List_Call'sendResultsTo <$> U'.allocCompositeList msg 3 3 len
+    newList msg len = List_Call'sendResultsTo <$> U'.allocCompositeList msg 3 3 len
 instance U'.HasMessage (Call'sendResultsTo msg) msg where
     message (Call'sendResultsTo_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Call'sendResultsTo msg) msg where
@@ -1230,7 +1230,7 @@ instance B'.ListElem msg (Disembargo'context msg) where
     index i (List_Disembargo'context l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo'context msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Disembargo'context (M'.MutMsg s)) where
     setIndex (Disembargo'context_newtype_ elt) i (List_Disembargo'context l) = U'.setIndex elt i l
-    allocList msg len = List_Disembargo'context <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Disembargo'context <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Disembargo'context msg) msg where
     message (Disembargo'context_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Disembargo'context msg) msg where
@@ -1318,7 +1318,7 @@ instance B'.ListElem msg Exception'Type where
     index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s Exception'Type where
     setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
-    allocList msg size = List_Exception'Type <$> U'.allocList16 msg size
+    newList msg size = List_Exception'Type <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg Exception'Type) where
     fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
     toPtr (List_Exception'Type l) = C'.toPtr l
@@ -1336,7 +1336,7 @@ instance B'.ListElem msg (PromisedAnswer'Op msg) where
     index i (List_PromisedAnswer'Op l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer'Op msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (PromisedAnswer'Op (M'.MutMsg s)) where
     setIndex (PromisedAnswer'Op_newtype_ elt) i (List_PromisedAnswer'Op l) = U'.setIndex elt i l
-    allocList msg len = List_PromisedAnswer'Op <$> U'.allocCompositeList msg 1 0 len
+    newList msg len = List_PromisedAnswer'Op <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (PromisedAnswer'Op msg) msg where
     message (PromisedAnswer'Op_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (PromisedAnswer'Op msg) msg where
@@ -1391,7 +1391,7 @@ instance B'.ListElem msg (Resolve' msg) where
     index i (List_Resolve' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Resolve' (M'.MutMsg s)) where
     setIndex (Resolve'_newtype_ elt) i (List_Resolve' l) = U'.setIndex elt i l
-    allocList msg len = List_Resolve' <$> U'.allocCompositeList msg 1 1 len
+    newList msg len = List_Resolve' <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Resolve' msg) msg where
     message (Resolve'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Resolve' msg) msg where
@@ -1448,7 +1448,7 @@ instance B'.ListElem msg (Return' msg) where
     index i (List_Return' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Return' (M'.MutMsg s)) where
     setIndex (Return'_newtype_ elt) i (List_Return' l) = U'.setIndex elt i l
-    allocList msg len = List_Return' <$> U'.allocCompositeList msg 2 1 len
+    newList msg len = List_Return' <$> U'.allocCompositeList msg 2 1 len
 instance U'.HasMessage (Return' msg) msg where
     message (Return'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Return' msg) msg where

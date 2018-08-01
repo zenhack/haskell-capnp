@@ -36,7 +36,7 @@ genInstance P{..} = concat
     , "    index i (List", typed, " l) = ", from, " <$> U.index i l\n"
     , "instance MutListElem s ", typed, " where\n"
     , "    setIndex elt i (", dataCon, " l) = U.setIndex (", to, " elt) i l\n"
-    , "    allocList msg size = List", typed, " <$> U.allocList", listSuffix, " msg size\n"
+    , "    newList msg size = List", typed, " <$> U.allocList", listSuffix, " msg size\n"
     , "instance Decerialize ", typed, " ", typed, " where\n"
     , "    decerialize = pure\n"
     , "instance Cerialize s ", typed, " ", typed, " where\n"

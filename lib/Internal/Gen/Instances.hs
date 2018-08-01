@@ -18,7 +18,7 @@ instance ListElem msg Int8 where
     index i (ListInt8 l) = fromIntegral <$> U.index i l
 instance MutListElem s Int8 where
     setIndex elt i (ListInt8 l) = U.setIndex (fromIntegral elt) i l
-    allocList msg size = ListInt8 <$> U.allocList8 msg size
+    newList msg size = ListInt8 <$> U.allocList8 msg size
 instance Decerialize Int8 Int8 where
     decerialize = pure
 instance Cerialize s Int8 Int8 where
@@ -29,7 +29,7 @@ instance ListElem msg Int16 where
     index i (ListInt16 l) = fromIntegral <$> U.index i l
 instance MutListElem s Int16 where
     setIndex elt i (ListInt16 l) = U.setIndex (fromIntegral elt) i l
-    allocList msg size = ListInt16 <$> U.allocList16 msg size
+    newList msg size = ListInt16 <$> U.allocList16 msg size
 instance Decerialize Int16 Int16 where
     decerialize = pure
 instance Cerialize s Int16 Int16 where
@@ -40,7 +40,7 @@ instance ListElem msg Int32 where
     index i (ListInt32 l) = fromIntegral <$> U.index i l
 instance MutListElem s Int32 where
     setIndex elt i (ListInt32 l) = U.setIndex (fromIntegral elt) i l
-    allocList msg size = ListInt32 <$> U.allocList32 msg size
+    newList msg size = ListInt32 <$> U.allocList32 msg size
 instance Decerialize Int32 Int32 where
     decerialize = pure
 instance Cerialize s Int32 Int32 where
@@ -51,7 +51,7 @@ instance ListElem msg Int64 where
     index i (ListInt64 l) = fromIntegral <$> U.index i l
 instance MutListElem s Int64 where
     setIndex elt i (ListInt64 l) = U.setIndex (fromIntegral elt) i l
-    allocList msg size = ListInt64 <$> U.allocList64 msg size
+    newList msg size = ListInt64 <$> U.allocList64 msg size
 instance Decerialize Int64 Int64 where
     decerialize = pure
 instance Cerialize s Int64 Int64 where
@@ -62,7 +62,7 @@ instance ListElem msg Word8 where
     index i (ListWord8 l) = id <$> U.index i l
 instance MutListElem s Word8 where
     setIndex elt i (ListWord8 l) = U.setIndex (id elt) i l
-    allocList msg size = ListWord8 <$> U.allocList8 msg size
+    newList msg size = ListWord8 <$> U.allocList8 msg size
 instance Decerialize Word8 Word8 where
     decerialize = pure
 instance Cerialize s Word8 Word8 where
@@ -73,7 +73,7 @@ instance ListElem msg Word16 where
     index i (ListWord16 l) = id <$> U.index i l
 instance MutListElem s Word16 where
     setIndex elt i (ListWord16 l) = U.setIndex (id elt) i l
-    allocList msg size = ListWord16 <$> U.allocList16 msg size
+    newList msg size = ListWord16 <$> U.allocList16 msg size
 instance Decerialize Word16 Word16 where
     decerialize = pure
 instance Cerialize s Word16 Word16 where
@@ -84,7 +84,7 @@ instance ListElem msg Word32 where
     index i (ListWord32 l) = id <$> U.index i l
 instance MutListElem s Word32 where
     setIndex elt i (ListWord32 l) = U.setIndex (id elt) i l
-    allocList msg size = ListWord32 <$> U.allocList32 msg size
+    newList msg size = ListWord32 <$> U.allocList32 msg size
 instance Decerialize Word32 Word32 where
     decerialize = pure
 instance Cerialize s Word32 Word32 where
@@ -95,7 +95,7 @@ instance ListElem msg Word64 where
     index i (ListWord64 l) = id <$> U.index i l
 instance MutListElem s Word64 where
     setIndex elt i (ListWord64 l) = U.setIndex (id elt) i l
-    allocList msg size = ListWord64 <$> U.allocList64 msg size
+    newList msg size = ListWord64 <$> U.allocList64 msg size
 instance Decerialize Word64 Word64 where
     decerialize = pure
 instance Cerialize s Word64 Word64 where
@@ -106,7 +106,7 @@ instance ListElem msg Float where
     index i (ListFloat l) = wordToFloat <$> U.index i l
 instance MutListElem s Float where
     setIndex elt i (ListFloat l) = U.setIndex (floatToWord elt) i l
-    allocList msg size = ListFloat <$> U.allocList32 msg size
+    newList msg size = ListFloat <$> U.allocList32 msg size
 instance Decerialize Float Float where
     decerialize = pure
 instance Cerialize s Float Float where
@@ -117,7 +117,7 @@ instance ListElem msg Double where
     index i (ListDouble l) = wordToDouble <$> U.index i l
 instance MutListElem s Double where
     setIndex elt i (ListDouble l) = U.setIndex (doubleToWord elt) i l
-    allocList msg size = ListDouble <$> U.allocList64 msg size
+    newList msg size = ListDouble <$> U.allocList64 msg size
 instance Decerialize Double Double where
     decerialize = pure
 instance Cerialize s Double Double where
@@ -128,7 +128,7 @@ instance ListElem msg Bool where
     index i (ListBool l) = id <$> U.index i l
 instance MutListElem s Bool where
     setIndex elt i (ListBool l) = U.setIndex (id elt) i l
-    allocList msg size = ListBool <$> U.allocList1 msg size
+    newList msg size = ListBool <$> U.allocList1 msg size
 instance Decerialize Bool Bool where
     decerialize = pure
 instance Cerialize s Bool Bool where

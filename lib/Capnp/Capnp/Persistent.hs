@@ -38,7 +38,7 @@ instance B'.ListElem msg (Persistent'SaveParams msg) where
     index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Persistent'SaveParams (M'.MutMsg s)) where
     setIndex (Persistent'SaveParams_newtype_ elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
-    allocList msg len = List_Persistent'SaveParams <$> U'.allocCompositeList msg 0 1 len
+    newList msg len = List_Persistent'SaveParams <$> U'.allocCompositeList msg 0 1 len
 instance U'.HasMessage (Persistent'SaveParams msg) msg where
     message (Persistent'SaveParams_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Persistent'SaveParams msg) msg where
@@ -76,7 +76,7 @@ instance B'.ListElem msg (Persistent'SaveResults msg) where
     index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
 instance B'.MutListElem s (Persistent'SaveResults (M'.MutMsg s)) where
     setIndex (Persistent'SaveResults_newtype_ elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
-    allocList msg len = List_Persistent'SaveResults <$> U'.allocCompositeList msg 0 1 len
+    newList msg len = List_Persistent'SaveResults <$> U'.allocCompositeList msg 0 1 len
 instance U'.HasMessage (Persistent'SaveResults msg) msg where
     message (Persistent'SaveResults_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Persistent'SaveResults msg) msg where

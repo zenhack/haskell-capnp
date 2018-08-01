@@ -110,7 +110,7 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
         , fmtStructListElem typeCon
         , "instance B'.MutListElem s (", typeCon, " (M'.MutMsg s)) where\n"
         , "    setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l\n"
-        , "    allocList msg len = List_", typeCon, " <$> U'.allocCompositeList msg "
+        , "    newList msg len = List_", typeCon, " <$> U'.allocCompositeList msg "
         ,           TB.fromString (show dataSz), " "
         ,           TB.fromString (show ptrSz), " len\n"
         , "instance U'.HasMessage (", typeCon, " msg) msg where\n"
@@ -256,7 +256,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                     ListOf _ -> mconcat
                         [ newName, " :: U'.RWCtx m s => Int -> ", newType, "\n"
                         , newName, " len struct = do\n"
-                        , "    result <- C'.allocList (U'.message struct) len\n"
+                        , "    result <- C'.newList (U'.message struct) len\n"
                         , "    ", setName, " struct result\n"
                         , "    pure result\n"
                         ]
@@ -450,7 +450,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , "\n"
         , "instance B'.MutListElem s ", typeName, " where"
         , "\n    setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\""
-        , "\n    allocList msg size = List_", typeName, " <$> U'.allocList16 msg size"
+        , "\n    newList msg size = List_", typeName, " <$> U'.allocList16 msg size"
         , "\n"
         , "instance C'.IsPtr msg (B'.List msg ", typeName, ") where"
         , "\n    fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr"
