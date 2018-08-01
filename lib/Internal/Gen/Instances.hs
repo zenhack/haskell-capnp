@@ -8,7 +8,7 @@ import Data.Int
 import Data.ReinterpretCast
 import Data.Word
 
-import Codec.Capnp (ListElem(..), MutListElem(..), Decerialize(..))
+import Codec.Capnp (ListElem(..), MutListElem(..), Cerialize(..), Decerialize(..))
 
 import qualified Data.Capnp.Untyped as U
 
@@ -21,6 +21,8 @@ instance MutListElem s Int8 where
     allocList msg size = ListInt8 <$> U.allocList8 msg size
 instance Decerialize Int8 Int8 where
     decerialize = pure
+instance Cerialize s Int8 Int8 where
+    cerialize _ = pure
 instance ListElem msg Int16 where
     newtype List msg Int16 = ListInt16 (U.ListOf msg Word16)
     length (ListInt16 l) = U.length l
@@ -30,6 +32,8 @@ instance MutListElem s Int16 where
     allocList msg size = ListInt16 <$> U.allocList16 msg size
 instance Decerialize Int16 Int16 where
     decerialize = pure
+instance Cerialize s Int16 Int16 where
+    cerialize _ = pure
 instance ListElem msg Int32 where
     newtype List msg Int32 = ListInt32 (U.ListOf msg Word32)
     length (ListInt32 l) = U.length l
@@ -39,6 +43,8 @@ instance MutListElem s Int32 where
     allocList msg size = ListInt32 <$> U.allocList32 msg size
 instance Decerialize Int32 Int32 where
     decerialize = pure
+instance Cerialize s Int32 Int32 where
+    cerialize _ = pure
 instance ListElem msg Int64 where
     newtype List msg Int64 = ListInt64 (U.ListOf msg Word64)
     length (ListInt64 l) = U.length l
@@ -48,6 +54,8 @@ instance MutListElem s Int64 where
     allocList msg size = ListInt64 <$> U.allocList64 msg size
 instance Decerialize Int64 Int64 where
     decerialize = pure
+instance Cerialize s Int64 Int64 where
+    cerialize _ = pure
 instance ListElem msg Word8 where
     newtype List msg Word8 = ListWord8 (U.ListOf msg Word8)
     length (ListWord8 l) = U.length l
@@ -57,6 +65,8 @@ instance MutListElem s Word8 where
     allocList msg size = ListWord8 <$> U.allocList8 msg size
 instance Decerialize Word8 Word8 where
     decerialize = pure
+instance Cerialize s Word8 Word8 where
+    cerialize _ = pure
 instance ListElem msg Word16 where
     newtype List msg Word16 = ListWord16 (U.ListOf msg Word16)
     length (ListWord16 l) = U.length l
@@ -66,6 +76,8 @@ instance MutListElem s Word16 where
     allocList msg size = ListWord16 <$> U.allocList16 msg size
 instance Decerialize Word16 Word16 where
     decerialize = pure
+instance Cerialize s Word16 Word16 where
+    cerialize _ = pure
 instance ListElem msg Word32 where
     newtype List msg Word32 = ListWord32 (U.ListOf msg Word32)
     length (ListWord32 l) = U.length l
@@ -75,6 +87,8 @@ instance MutListElem s Word32 where
     allocList msg size = ListWord32 <$> U.allocList32 msg size
 instance Decerialize Word32 Word32 where
     decerialize = pure
+instance Cerialize s Word32 Word32 where
+    cerialize _ = pure
 instance ListElem msg Word64 where
     newtype List msg Word64 = ListWord64 (U.ListOf msg Word64)
     length (ListWord64 l) = U.length l
@@ -84,6 +98,8 @@ instance MutListElem s Word64 where
     allocList msg size = ListWord64 <$> U.allocList64 msg size
 instance Decerialize Word64 Word64 where
     decerialize = pure
+instance Cerialize s Word64 Word64 where
+    cerialize _ = pure
 instance ListElem msg Float where
     newtype List msg Float = ListFloat (U.ListOf msg Word32)
     length (ListFloat l) = U.length l
@@ -93,6 +109,8 @@ instance MutListElem s Float where
     allocList msg size = ListFloat <$> U.allocList32 msg size
 instance Decerialize Float Float where
     decerialize = pure
+instance Cerialize s Float Float where
+    cerialize _ = pure
 instance ListElem msg Double where
     newtype List msg Double = ListDouble (U.ListOf msg Word64)
     length (ListDouble l) = U.length l
@@ -102,6 +120,8 @@ instance MutListElem s Double where
     allocList msg size = ListDouble <$> U.allocList64 msg size
 instance Decerialize Double Double where
     decerialize = pure
+instance Cerialize s Double Double where
+    cerialize _ = pure
 instance ListElem msg Bool where
     newtype List msg Bool = ListBool (U.ListOf msg Bool)
     length (ListBool l) = U.length l
@@ -111,3 +131,5 @@ instance MutListElem s Bool where
     allocList msg size = ListBool <$> U.allocList1 msg size
 instance Decerialize Bool Bool where
     decerialize = pure
+instance Cerialize s Bool Bool where
+    cerialize _ = pure

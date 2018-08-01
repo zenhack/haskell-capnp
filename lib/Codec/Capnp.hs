@@ -8,6 +8,7 @@ module Codec.Capnp
     , MutListElem(..)
     , IsPtr(..)
     , IsStruct(..)
+    , Cerialize(..)
     , Decerialize(..)
     , getWordField
     , setWordField
@@ -48,6 +49,8 @@ class MutListElem s e where
 class Decerialize from to where
     decerialize :: U.ReadCtx m M.ConstMsg => from -> m to
 
+class Cerialize s from to where
+    cerialize :: (U.ReadCtx m (M.MutMsg s), M.WriteCtx m s) => M.MutMsg s -> from -> m to
 
 -- | Types that can be converted to and from an untyped pointer.
 --
@@ -93,6 +96,8 @@ setWordField struct value idx offset def = do
 
 instance Decerialize () () where
     decerialize = pure
+instance Cerialize s () () where
+    cerialize _ = pure
 
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1

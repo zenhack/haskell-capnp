@@ -14,7 +14,7 @@ header = unlines
     , "import Data.ReinterpretCast"
     , "import Data.Word"
     , ""
-    , "import Codec.Capnp (ListElem(..), MutListElem(..), Decerialize(..))"
+    , "import Codec.Capnp (ListElem(..), MutListElem(..), Cerialize(..), Decerialize(..))"
     , ""
     , "import qualified Data.Capnp.Untyped as U"
     , ""
@@ -39,6 +39,8 @@ genInstance P{..} = concat
     , "    allocList msg size = List", typed, " <$> U.allocList", listSuffix, " msg size\n"
     , "instance Decerialize ", typed, " ", typed, " where\n"
     , "    decerialize = pure\n"
+    , "instance Cerialize s ", typed, " ", typed, " where\n"
+    , "    cerialize _ = pure\n"
     ]
   where
     dataCon = "List" ++ typed
