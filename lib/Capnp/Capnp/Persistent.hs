@@ -58,7 +58,7 @@ get_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) =
 has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 
-set_Persistent'SaveParams'sealFor :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Persistent'SaveParams'sealFor :: U'.RWCtx m s => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -96,7 +96,7 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) =
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 
-set_Persistent'SaveResults'sturdyRef :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
+set_Persistent'SaveResults'sturdyRef :: U'.RWCtx m s => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 

@@ -30,6 +30,7 @@ module Data.Capnp.Untyped
     , setRoot
     , rawBytes
     , ReadCtx
+    , RWCtx
     , HasMessage(..), MessageDefault(..)
     , allocStruct
     , allocCompositeList
@@ -64,6 +65,9 @@ import qualified Data.Capnp.Pointer as P
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
 type ReadCtx m msg = (M.Message m msg, MonadThrow m, MonadLimit m)
+
+-- | Synonym for ReadCtx + WriteCtx
+type RWCtx m s = (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense

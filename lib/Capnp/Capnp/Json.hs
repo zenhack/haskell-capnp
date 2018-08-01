@@ -66,35 +66,35 @@ has_JsonValue'(JsonValue_newtype_ struct) = pure True
 
 
 
-set_JsonValue'null :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> m ()
+set_JsonValue'null :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> m ()
 set_JsonValue'null (JsonValue_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
 
-set_JsonValue'boolean :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> Bool -> m ()
+set_JsonValue'boolean :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> Bool -> m ()
 set_JsonValue'boolean (JsonValue_newtype_ struct) value = do
     C'.setWordField struct (1 :: Word16) 0 0 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
 
-set_JsonValue'number :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> Double -> m ()
+set_JsonValue'number :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> Double -> m ()
 set_JsonValue'number (JsonValue_newtype_ struct) value = do
     C'.setWordField struct (2 :: Word16) 0 0 0
     C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 
-set_JsonValue'string :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_JsonValue'string :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'string(JsonValue_newtype_ struct) value = do
     C'.setWordField struct (3 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 
-set_JsonValue'array :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
+set_JsonValue'array :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
 set_JsonValue'array(JsonValue_newtype_ struct) value = do
     C'.setWordField struct (4 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 
-set_JsonValue'object :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue'Field (M'.MutMsg s))) -> m ()
+set_JsonValue'object :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue'Field (M'.MutMsg s))) -> m ()
 set_JsonValue'object(JsonValue_newtype_ struct) value = do
     C'.setWordField struct (5 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 
-set_JsonValue'call :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue (M'.MutMsg s) -> (JsonValue'Call (M'.MutMsg s)) -> m ()
+set_JsonValue'call :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (JsonValue'Call (M'.MutMsg s)) -> m ()
 set_JsonValue'call(JsonValue_newtype_ struct) value = do
     C'.setWordField struct (6 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
@@ -153,7 +153,7 @@ get_JsonValue'Call'function (JsonValue'Call_newtype_ struct) =
 has_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'function(JsonValue'Call_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 
-set_JsonValue'Call'function :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_JsonValue'Call'function :: U'.RWCtx m s => JsonValue'Call (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'Call'function (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -167,7 +167,7 @@ get_JsonValue'Call'params (JsonValue'Call_newtype_ struct) =
 has_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m Bool
 has_JsonValue'Call'params(JsonValue'Call_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 
-set_JsonValue'Call'params :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
+set_JsonValue'Call'params :: U'.RWCtx m s => JsonValue'Call (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
 set_JsonValue'Call'params (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
@@ -205,7 +205,7 @@ get_JsonValue'Field'name (JsonValue'Field_newtype_ struct) =
 has_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'name(JsonValue'Field_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 
-set_JsonValue'Field'name :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
+set_JsonValue'Field'name :: U'.RWCtx m s => JsonValue'Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'Field'name (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
@@ -219,11 +219,11 @@ get_JsonValue'Field'value (JsonValue'Field_newtype_ struct) =
 has_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m Bool
 has_JsonValue'Field'value(JsonValue'Field_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 
-set_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ()
+set_JsonValue'Field'value :: U'.RWCtx m s => JsonValue'Field (M'.MutMsg s) -> (JsonValue (M'.MutMsg s)) -> m ()
 set_JsonValue'Field'value (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 
 
-new_JsonValue'Field'value :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => JsonValue'Field (M'.MutMsg s) -> m ((JsonValue (M'.MutMsg s)))
+new_JsonValue'Field'value :: U'.RWCtx m s => JsonValue'Field (M'.MutMsg s) -> m ((JsonValue (M'.MutMsg s)))
 new_JsonValue'Field'value struct = do
     result <- C'.new (U'.message struct)
     set_JsonValue'Field'value struct result

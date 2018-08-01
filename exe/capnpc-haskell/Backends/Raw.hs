@@ -220,7 +220,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         ]
     fmtSetter =
         let setType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
-            typeAnnotation = setName <> " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => " <> setType
+            typeAnnotation = setName <> " :: U'.RWCtx m s => " <> setType
         in mconcat
         [ case fieldLoc of
             DataField loc@DataLoc{..} -> mconcat
@@ -250,7 +250,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         ]
     fmtNew =
         let newType = typeCon <> " (M'.MutMsg s) -> m (" <> fmtType thisMod "(M'.MutMsg s)" fieldType <> ")"
-            typeAnnotation = newName <> " :: (U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) => " <> newType
+            typeAnnotation = newName <> " :: U'.RWCtx m s => " <> newType
         in case fieldLoc of
             PtrField _ ->
                 case fieldType of
@@ -287,7 +287,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
         parentDataCon = parentTypeCon <> "_newtype_"
     in case variantParams of
         NoParams -> mconcat
-            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
+            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
             , setName, " (", parentDataCon, " struct) = ", fmtSetTag, "\n"
             ]
         Record _ ->
@@ -296,14 +296,14 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
             let childTypeCon = fmtName thisMod (subName variantName "group'")
                 childDataCon = childTypeCon <> "_newtype_"
             in mconcat
-            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
             , "m (", childTypeCon, " (M'.MutMsg s))\n"
             , setName, " (", parentDataCon, " struct) = do\n"
             , "    ", fmtSetTag, "\n"
             , "    pure $ ", childDataCon, " struct\n"
             ]
         Unnamed typ (DataField loc) -> mconcat
-            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
             , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()\n"
             , setName, " (", parentDataCon, " struct) value = do\n"
             , "    ", fmtSetTag, "\n"
@@ -315,7 +315,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
             , "\n"
             ]
         Unnamed typ (PtrField index) -> mconcat
-            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
             , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()\n"
             , setName, "(", parentDataCon, " struct) value = do\n"
             , "    ", fmtSetTag, "\n"
@@ -324,14 +324,13 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
         Unnamed typ VoidField ->
             error "BUG: void field should have been NoParams"
         Unnamed typ HereField -> mconcat
-            [ setName, " :: ", classConstraints, " ", parentTypeCon, " (M'.MutMsg s) -> "
+            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
             , "m (", fmtType thisMod " (M'.MutMsg s)" typ, ")\n"
             , setName, "(", parentDataCon, " struct) value = do\n"
             , "    ", fmtSetTag, "\n"
             , "    fromStruct struct\n"
             ]
    where
-     classConstraints = "(U'.ReadCtx m (M'.MutMsg s), M'.WriteCtx m s) =>"
      fmtSetTag = fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
 fmtUnionSetter _ _ _ Variant{variantTag=Nothing} =
     -- This happens for the unknown' variants; just ignore them:
