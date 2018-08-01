@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Script that generates 'Internal.Gen.Instance', which is mostly a
+-- | Script that generates 'Internal.Gen.Instances', which is mostly a
 -- bunch of tedious instances for basic types for our various type classes.
 module Main where
 
