@@ -62,8 +62,8 @@ wordInstance size = P
     }
 
 instances =
-    (map intInstance sizes) ++
-    (map wordInstance sizes) ++
+    map intInstance sizes ++
+    map wordInstance sizes ++
     [ P { to = "floatToWord"
         , from = "wordToFloat"
         , typed = "Float"
