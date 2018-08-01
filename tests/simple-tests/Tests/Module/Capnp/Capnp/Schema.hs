@@ -4,6 +4,7 @@ module Tests.Module.Capnp.Capnp.Schema (schemaTests) where
 
 import Capnp.Capnp.Schema
 
+import Codec.Capnp               (Allocate(..))
 import Control.Monad             (when)
 import Control.Monad.Primitive   (RealWorld)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
@@ -29,7 +30,7 @@ schemaTests = assertionsToTest "Test typed setters" $ map testCase
             , "  ordinal = (explicit = 22) )\n"
             ]
         , builder = \msg -> do
-            field@(Field_newtype_ struct) <- new_Field msg
+            field@(Field_newtype_ struct) <- new msg
             U.setRoot struct
             set_Field'codeOrder field 4
             set_Field'discriminantValue field 6

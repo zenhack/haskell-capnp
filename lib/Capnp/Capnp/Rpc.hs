@@ -44,9 +44,8 @@ instance U'.HasMessage (Accept msg) msg where
 instance U'.MessageDefault (Accept msg) msg where
     messageDefault = Accept_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Accept' inside the message.
-new_Accept :: M'.WriteCtx m s => M'.MutMsg s -> m (Accept (M'.MutMsg s))
-new_Accept msg = Accept_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Accept (M'.MutMsg s)) where
+    new msg = Accept_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Accept msg)) where
     fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
     toPtr (List_Accept l) = C'.toPtr l
@@ -102,9 +101,8 @@ instance U'.HasMessage (Bootstrap msg) msg where
 instance U'.MessageDefault (Bootstrap msg) msg where
     messageDefault = Bootstrap_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Bootstrap' inside the message.
-new_Bootstrap :: M'.WriteCtx m s => M'.MutMsg s -> m (Bootstrap (M'.MutMsg s))
-new_Bootstrap msg = Bootstrap_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Bootstrap (M'.MutMsg s)) where
+    new msg = Bootstrap_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
     fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
     toPtr (List_Bootstrap l) = C'.toPtr l
@@ -150,9 +148,8 @@ instance U'.HasMessage (Call msg) msg where
 instance U'.MessageDefault (Call msg) msg where
     messageDefault = Call_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Call' inside the message.
-new_Call :: M'.WriteCtx m s => M'.MutMsg s -> m (Call (M'.MutMsg s))
-new_Call msg = Call_newtype_ <$> U'.allocStruct msg 3 3
+instance C'.Allocate s (Call (M'.MutMsg s)) where
+    new msg = Call_newtype_ <$> U'.allocStruct msg 3 3
 instance C'.IsPtr msg (B'.List msg (Call msg)) where
     fromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
     toPtr (List_Call l) = C'.toPtr l
@@ -249,9 +246,8 @@ instance U'.HasMessage (CapDescriptor msg) msg where
 instance U'.MessageDefault (CapDescriptor msg) msg where
     messageDefault = CapDescriptor_newtype_ . U'.messageDefault
 
--- | Allocate a new 'CapDescriptor' inside the message.
-new_CapDescriptor :: M'.WriteCtx m s => M'.MutMsg s -> m (CapDescriptor (M'.MutMsg s))
-new_CapDescriptor msg = CapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (CapDescriptor (M'.MutMsg s)) where
+    new msg = CapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
     fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_CapDescriptor l) = C'.toPtr l
@@ -336,9 +332,8 @@ instance U'.HasMessage (Disembargo msg) msg where
 instance U'.MessageDefault (Disembargo msg) msg where
     messageDefault = Disembargo_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Disembargo' inside the message.
-new_Disembargo :: M'.WriteCtx m s => M'.MutMsg s -> m (Disembargo (M'.MutMsg s))
-new_Disembargo msg = Disembargo_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Disembargo (M'.MutMsg s)) where
+    new msg = Disembargo_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
     fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo l) = C'.toPtr l
@@ -382,9 +377,8 @@ instance U'.HasMessage (Exception msg) msg where
 instance U'.MessageDefault (Exception msg) msg where
     messageDefault = Exception_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Exception' inside the message.
-new_Exception :: M'.WriteCtx m s => M'.MutMsg s -> m (Exception (M'.MutMsg s))
-new_Exception msg = Exception_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Exception (M'.MutMsg s)) where
+    new msg = Exception_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Exception msg)) where
     fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
     toPtr (List_Exception l) = C'.toPtr l
@@ -450,9 +444,8 @@ instance U'.HasMessage (Finish msg) msg where
 instance U'.MessageDefault (Finish msg) msg where
     messageDefault = Finish_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Finish' inside the message.
-new_Finish :: M'.WriteCtx m s => M'.MutMsg s -> m (Finish (M'.MutMsg s))
-new_Finish msg = Finish_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (Finish (M'.MutMsg s)) where
+    new msg = Finish_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (Finish msg)) where
     fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
     toPtr (List_Finish l) = C'.toPtr l
@@ -495,9 +488,8 @@ instance U'.HasMessage (Join msg) msg where
 instance U'.MessageDefault (Join msg) msg where
     messageDefault = Join_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Join' inside the message.
-new_Join :: M'.WriteCtx m s => M'.MutMsg s -> m (Join (M'.MutMsg s))
-new_Join msg = Join_newtype_ <$> U'.allocStruct msg 1 2
+instance C'.Allocate s (Join (M'.MutMsg s)) where
+    new msg = Join_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Join msg)) where
     fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
     toPtr (List_Join l) = C'.toPtr l
@@ -556,9 +548,8 @@ instance U'.HasMessage (Message msg) msg where
 instance U'.MessageDefault (Message msg) msg where
     messageDefault = Message_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Message' inside the message.
-new_Message :: M'.WriteCtx m s => M'.MutMsg s -> m (Message (M'.MutMsg s))
-new_Message msg = Message_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Message (M'.MutMsg s)) where
+    new msg = Message_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Message msg)) where
     fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
     toPtr (List_Message l) = C'.toPtr l
@@ -709,9 +700,8 @@ instance U'.HasMessage (MessageTarget msg) msg where
 instance U'.MessageDefault (MessageTarget msg) msg where
     messageDefault = MessageTarget_newtype_ . U'.messageDefault
 
--- | Allocate a new 'MessageTarget' inside the message.
-new_MessageTarget :: M'.WriteCtx m s => M'.MutMsg s -> m (MessageTarget (M'.MutMsg s))
-new_MessageTarget msg = MessageTarget_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (MessageTarget (M'.MutMsg s)) where
+    new msg = MessageTarget_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (MessageTarget msg)) where
     fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
     toPtr (List_MessageTarget l) = C'.toPtr l
@@ -766,9 +756,8 @@ instance U'.HasMessage (Payload msg) msg where
 instance U'.MessageDefault (Payload msg) msg where
     messageDefault = Payload_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Payload' inside the message.
-new_Payload :: M'.WriteCtx m s => M'.MutMsg s -> m (Payload (M'.MutMsg s))
-new_Payload msg = Payload_newtype_ <$> U'.allocStruct msg 0 2
+instance C'.Allocate s (Payload (M'.MutMsg s)) where
+    new msg = Payload_newtype_ <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (Payload msg)) where
     fromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
     toPtr (List_Payload l) = C'.toPtr l
@@ -817,9 +806,8 @@ instance U'.HasMessage (PromisedAnswer msg) msg where
 instance U'.MessageDefault (PromisedAnswer msg) msg where
     messageDefault = PromisedAnswer_newtype_ . U'.messageDefault
 
--- | Allocate a new 'PromisedAnswer' inside the message.
-new_PromisedAnswer :: M'.WriteCtx m s => M'.MutMsg s -> m (PromisedAnswer (M'.MutMsg s))
-new_PromisedAnswer msg = PromisedAnswer_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (PromisedAnswer (M'.MutMsg s)) where
+    new msg = PromisedAnswer_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
     fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer l) = C'.toPtr l
@@ -865,9 +853,8 @@ instance U'.HasMessage (Provide msg) msg where
 instance U'.MessageDefault (Provide msg) msg where
     messageDefault = Provide_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Provide' inside the message.
-new_Provide :: M'.WriteCtx m s => M'.MutMsg s -> m (Provide (M'.MutMsg s))
-new_Provide msg = Provide_newtype_ <$> U'.allocStruct msg 1 2
+instance C'.Allocate s (Provide (M'.MutMsg s)) where
+    new msg = Provide_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Provide msg)) where
     fromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
     toPtr (List_Provide l) = C'.toPtr l
@@ -926,9 +913,8 @@ instance U'.HasMessage (Release msg) msg where
 instance U'.MessageDefault (Release msg) msg where
     messageDefault = Release_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Release' inside the message.
-new_Release :: M'.WriteCtx m s => M'.MutMsg s -> m (Release (M'.MutMsg s))
-new_Release msg = Release_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (Release (M'.MutMsg s)) where
+    new msg = Release_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (Release msg)) where
     fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
     toPtr (List_Release l) = C'.toPtr l
@@ -971,9 +957,8 @@ instance U'.HasMessage (Resolve msg) msg where
 instance U'.MessageDefault (Resolve msg) msg where
     messageDefault = Resolve_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Resolve' inside the message.
-new_Resolve :: M'.WriteCtx m s => M'.MutMsg s -> m (Resolve (M'.MutMsg s))
-new_Resolve msg = Resolve_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Resolve (M'.MutMsg s)) where
+    new msg = Resolve_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
     fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
     toPtr (List_Resolve l) = C'.toPtr l
@@ -1014,9 +999,8 @@ instance U'.HasMessage (Return msg) msg where
 instance U'.MessageDefault (Return msg) msg where
     messageDefault = Return_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Return' inside the message.
-new_Return :: M'.WriteCtx m s => M'.MutMsg s -> m (Return (M'.MutMsg s))
-new_Return msg = Return_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.Allocate s (Return (M'.MutMsg s)) where
+    new msg = Return_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Return msg)) where
     fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
     toPtr (List_Return l) = C'.toPtr l
@@ -1067,9 +1051,8 @@ instance U'.HasMessage (ThirdPartyCapDescriptor msg) msg where
 instance U'.MessageDefault (ThirdPartyCapDescriptor msg) msg where
     messageDefault = ThirdPartyCapDescriptor_newtype_ . U'.messageDefault
 
--- | Allocate a new 'ThirdPartyCapDescriptor' inside the message.
-new_ThirdPartyCapDescriptor :: M'.WriteCtx m s => M'.MutMsg s -> m (ThirdPartyCapDescriptor (M'.MutMsg s))
-new_ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
+    new msg = ThirdPartyCapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (ThirdPartyCapDescriptor msg)) where
     fromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_ThirdPartyCapDescriptor l) = C'.toPtr l
@@ -1115,9 +1098,8 @@ instance U'.HasMessage (Call'sendResultsTo msg) msg where
 instance U'.MessageDefault (Call'sendResultsTo msg) msg where
     messageDefault = Call'sendResultsTo_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Call'sendResultsTo' inside the message.
-new_Call'sendResultsTo :: M'.WriteCtx m s => M'.MutMsg s -> m (Call'sendResultsTo (M'.MutMsg s))
-new_Call'sendResultsTo msg = Call'sendResultsTo_newtype_ <$> U'.allocStruct msg 3 3
+instance C'.Allocate s (Call'sendResultsTo (M'.MutMsg s)) where
+    new msg = Call'sendResultsTo_newtype_ <$> U'.allocStruct msg 3 3
 instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
     fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
     toPtr (List_Call'sendResultsTo l) = C'.toPtr l
@@ -1176,9 +1158,8 @@ instance U'.HasMessage (Disembargo'context msg) msg where
 instance U'.MessageDefault (Disembargo'context msg) msg where
     messageDefault = Disembargo'context_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Disembargo'context' inside the message.
-new_Disembargo'context :: M'.WriteCtx m s => M'.MutMsg s -> m (Disembargo'context (M'.MutMsg s))
-new_Disembargo'context msg = Disembargo'context_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Disembargo'context (M'.MutMsg s)) where
+    new msg = Disembargo'context_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Disembargo'context msg)) where
     fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo'context l) = C'.toPtr l
@@ -1282,9 +1263,8 @@ instance U'.HasMessage (PromisedAnswer'Op msg) msg where
 instance U'.MessageDefault (PromisedAnswer'Op msg) msg where
     messageDefault = PromisedAnswer'Op_newtype_ . U'.messageDefault
 
--- | Allocate a new 'PromisedAnswer'Op' inside the message.
-new_PromisedAnswer'Op :: M'.WriteCtx m s => M'.MutMsg s -> m (PromisedAnswer'Op (M'.MutMsg s))
-new_PromisedAnswer'Op msg = PromisedAnswer'Op_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (PromisedAnswer'Op (M'.MutMsg s)) where
+    new msg = PromisedAnswer'Op_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer'Op l) = C'.toPtr l
@@ -1337,9 +1317,8 @@ instance U'.HasMessage (Resolve' msg) msg where
 instance U'.MessageDefault (Resolve' msg) msg where
     messageDefault = Resolve'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Resolve'' inside the message.
-new_Resolve' :: M'.WriteCtx m s => M'.MutMsg s -> m (Resolve' (M'.MutMsg s))
-new_Resolve' msg = Resolve'_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Resolve' (M'.MutMsg s)) where
+    new msg = Resolve'_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
     fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
     toPtr (List_Resolve' l) = C'.toPtr l
@@ -1394,9 +1373,8 @@ instance U'.HasMessage (Return' msg) msg where
 instance U'.MessageDefault (Return' msg) msg where
     messageDefault = Return'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Return'' inside the message.
-new_Return' :: M'.WriteCtx m s => M'.MutMsg s -> m (Return' (M'.MutMsg s))
-new_Return' msg = Return'_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.Allocate s (Return' (M'.MutMsg s)) where
+    new msg = Return'_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Return' msg)) where
     fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
     toPtr (List_Return' l) = C'.toPtr l

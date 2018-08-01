@@ -44,9 +44,8 @@ instance U'.HasMessage (Annotation msg) msg where
 instance U'.MessageDefault (Annotation msg) msg where
     messageDefault = Annotation_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Annotation' inside the message.
-new_Annotation :: M'.WriteCtx m s => M'.MutMsg s -> m (Annotation (M'.MutMsg s))
-new_Annotation msg = Annotation_newtype_ <$> U'.allocStruct msg 1 2
+instance C'.Allocate s (Annotation (M'.MutMsg s)) where
+    new msg = Annotation_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Annotation msg)) where
     fromPtr msg ptr = List_Annotation <$> C'.fromPtr msg ptr
     toPtr (List_Annotation l) = C'.toPtr l
@@ -105,9 +104,8 @@ instance U'.HasMessage (Brand msg) msg where
 instance U'.MessageDefault (Brand msg) msg where
     messageDefault = Brand_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Brand' inside the message.
-new_Brand :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand (M'.MutMsg s))
-new_Brand msg = Brand_newtype_ <$> U'.allocStruct msg 0 1
+instance C'.Allocate s (Brand (M'.MutMsg s)) where
+    new msg = Brand_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Brand msg)) where
     fromPtr msg ptr = List_Brand <$> C'.fromPtr msg ptr
     toPtr (List_Brand l) = C'.toPtr l
@@ -143,9 +141,8 @@ instance U'.HasMessage (CapnpVersion msg) msg where
 instance U'.MessageDefault (CapnpVersion msg) msg where
     messageDefault = CapnpVersion_newtype_ . U'.messageDefault
 
--- | Allocate a new 'CapnpVersion' inside the message.
-new_CapnpVersion :: M'.WriteCtx m s => M'.MutMsg s -> m (CapnpVersion (M'.MutMsg s))
-new_CapnpVersion msg = CapnpVersion_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (CapnpVersion (M'.MutMsg s)) where
+    new msg = CapnpVersion_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
     fromPtr msg ptr = List_CapnpVersion <$> C'.fromPtr msg ptr
     toPtr (List_CapnpVersion l) = C'.toPtr l
@@ -198,9 +195,8 @@ instance U'.HasMessage (CodeGeneratorRequest msg) msg where
 instance U'.MessageDefault (CodeGeneratorRequest msg) msg where
     messageDefault = CodeGeneratorRequest_newtype_ . U'.messageDefault
 
--- | Allocate a new 'CodeGeneratorRequest' inside the message.
-new_CodeGeneratorRequest :: M'.WriteCtx m s => M'.MutMsg s -> m (CodeGeneratorRequest (M'.MutMsg s))
-new_CodeGeneratorRequest msg = CodeGeneratorRequest_newtype_ <$> U'.allocStruct msg 0 3
+instance C'.Allocate s (CodeGeneratorRequest (M'.MutMsg s)) where
+    new msg = CodeGeneratorRequest_newtype_ <$> U'.allocStruct msg 0 3
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest l) = C'.toPtr l
@@ -309,9 +305,8 @@ instance U'.HasMessage (Enumerant msg) msg where
 instance U'.MessageDefault (Enumerant msg) msg where
     messageDefault = Enumerant_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Enumerant' inside the message.
-new_Enumerant :: M'.WriteCtx m s => M'.MutMsg s -> m (Enumerant (M'.MutMsg s))
-new_Enumerant msg = Enumerant_newtype_ <$> U'.allocStruct msg 1 2
+instance C'.Allocate s (Enumerant (M'.MutMsg s)) where
+    new msg = Enumerant_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Enumerant msg)) where
     fromPtr msg ptr = List_Enumerant <$> C'.fromPtr msg ptr
     toPtr (List_Enumerant l) = C'.toPtr l
@@ -370,9 +365,8 @@ instance U'.HasMessage (Field msg) msg where
 instance U'.MessageDefault (Field msg) msg where
     messageDefault = Field_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Field' inside the message.
-new_Field :: M'.WriteCtx m s => M'.MutMsg s -> m (Field (M'.MutMsg s))
-new_Field msg = Field_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.Allocate s (Field (M'.MutMsg s)) where
+    new msg = Field_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
     fromPtr msg ptr = List_Field <$> C'.fromPtr msg ptr
     toPtr (List_Field l) = C'.toPtr l
@@ -457,9 +451,8 @@ instance U'.HasMessage (Method msg) msg where
 instance U'.MessageDefault (Method msg) msg where
     messageDefault = Method_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Method' inside the message.
-new_Method :: M'.WriteCtx m s => M'.MutMsg s -> m (Method (M'.MutMsg s))
-new_Method msg = Method_newtype_ <$> U'.allocStruct msg 3 5
+instance C'.Allocate s (Method (M'.MutMsg s)) where
+    new msg = Method_newtype_ <$> U'.allocStruct msg 3 5
 instance C'.IsPtr msg (B'.List msg (Method msg)) where
     fromPtr msg ptr = List_Method <$> C'.fromPtr msg ptr
     toPtr (List_Method l) = C'.toPtr l
@@ -577,9 +570,8 @@ instance U'.HasMessage (Node msg) msg where
 instance U'.MessageDefault (Node msg) msg where
     messageDefault = Node_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node' inside the message.
-new_Node :: M'.WriteCtx m s => M'.MutMsg s -> m (Node (M'.MutMsg s))
-new_Node msg = Node_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node (M'.MutMsg s)) where
+    new msg = Node_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
     fromPtr msg ptr = List_Node <$> C'.fromPtr msg ptr
     toPtr (List_Node l) = C'.toPtr l
@@ -702,9 +694,8 @@ instance U'.HasMessage (Superclass msg) msg where
 instance U'.MessageDefault (Superclass msg) msg where
     messageDefault = Superclass_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Superclass' inside the message.
-new_Superclass :: M'.WriteCtx m s => M'.MutMsg s -> m (Superclass (M'.MutMsg s))
-new_Superclass msg = Superclass_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Superclass (M'.MutMsg s)) where
+    new msg = Superclass_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
     fromPtr msg ptr = List_Superclass <$> C'.fromPtr msg ptr
     toPtr (List_Superclass l) = C'.toPtr l
@@ -750,9 +741,8 @@ instance U'.HasMessage (Type msg) msg where
 instance U'.MessageDefault (Type msg) msg where
     messageDefault = Type_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type' inside the message.
-new_Type :: M'.WriteCtx m s => M'.MutMsg s -> m (Type (M'.MutMsg s))
-new_Type msg = Type_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type (M'.MutMsg s)) where
+    new msg = Type_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type msg)) where
     fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
     toPtr (List_Type l) = C'.toPtr l
@@ -884,9 +874,8 @@ instance U'.HasMessage (Type'list'group' msg) msg where
 instance U'.MessageDefault (Type'list'group' msg) msg where
     messageDefault = Type'list'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'list'group'' inside the message.
-new_Type'list'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'list'group' (M'.MutMsg s))
-new_Type'list'group' msg = Type'list'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'list'group' (M'.MutMsg s)) where
+    new msg = Type'list'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'list'group' msg)) where
     fromPtr msg ptr = List_Type'list'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'list'group' l) = C'.toPtr l
@@ -922,9 +911,8 @@ instance U'.HasMessage (Type'enum'group' msg) msg where
 instance U'.MessageDefault (Type'enum'group' msg) msg where
     messageDefault = Type'enum'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'enum'group'' inside the message.
-new_Type'enum'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'enum'group' (M'.MutMsg s))
-new_Type'enum'group' msg = Type'enum'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'enum'group' (M'.MutMsg s)) where
+    new msg = Type'enum'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'enum'group' msg)) where
     fromPtr msg ptr = List_Type'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'enum'group' l) = C'.toPtr l
@@ -970,9 +958,8 @@ instance U'.HasMessage (Type'struct'group' msg) msg where
 instance U'.MessageDefault (Type'struct'group' msg) msg where
     messageDefault = Type'struct'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'struct'group'' inside the message.
-new_Type'struct'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'struct'group' (M'.MutMsg s))
-new_Type'struct'group' msg = Type'struct'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'struct'group' (M'.MutMsg s)) where
+    new msg = Type'struct'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'struct'group' msg)) where
     fromPtr msg ptr = List_Type'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'struct'group' l) = C'.toPtr l
@@ -1018,9 +1005,8 @@ instance U'.HasMessage (Type'interface'group' msg) msg where
 instance U'.MessageDefault (Type'interface'group' msg) msg where
     messageDefault = Type'interface'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'interface'group'' inside the message.
-new_Type'interface'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'interface'group' (M'.MutMsg s))
-new_Type'interface'group' msg = Type'interface'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'interface'group' (M'.MutMsg s)) where
+    new msg = Type'interface'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'interface'group' msg)) where
     fromPtr msg ptr = List_Type'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'interface'group' l) = C'.toPtr l
@@ -1066,9 +1052,8 @@ instance U'.HasMessage (Type'anyPointer'group' msg) msg where
 instance U'.MessageDefault (Type'anyPointer'group' msg) msg where
     messageDefault = Type'anyPointer'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'anyPointer'group'' inside the message.
-new_Type'anyPointer'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'group' (M'.MutMsg s))
-new_Type'anyPointer'group' msg = Type'anyPointer'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'anyPointer'group' (M'.MutMsg s)) where
+    new msg = Type'anyPointer'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'group' l) = C'.toPtr l
@@ -1125,9 +1110,8 @@ instance U'.HasMessage (Value msg) msg where
 instance U'.MessageDefault (Value msg) msg where
     messageDefault = Value_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Value' inside the message.
-new_Value :: M'.WriteCtx m s => M'.MutMsg s -> m (Value (M'.MutMsg s))
-new_Value msg = Value_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.Allocate s (Value (M'.MutMsg s)) where
+    new msg = Value_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Value msg)) where
     fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
     toPtr (List_Value l) = C'.toPtr l
@@ -1314,9 +1298,8 @@ instance U'.HasMessage (Brand'Binding msg) msg where
 instance U'.MessageDefault (Brand'Binding msg) msg where
     messageDefault = Brand'Binding_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Brand'Binding' inside the message.
-new_Brand'Binding :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand'Binding (M'.MutMsg s))
-new_Brand'Binding msg = Brand'Binding_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Brand'Binding (M'.MutMsg s)) where
+    new msg = Brand'Binding_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
     fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Binding l) = C'.toPtr l
@@ -1369,9 +1352,8 @@ instance U'.HasMessage (Brand'Scope msg) msg where
 instance U'.MessageDefault (Brand'Scope msg) msg where
     messageDefault = Brand'Scope_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Brand'Scope' inside the message.
-new_Brand'Scope :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand'Scope (M'.MutMsg s))
-new_Brand'Scope msg = Brand'Scope_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.Allocate s (Brand'Scope (M'.MutMsg s)) where
+    new msg = Brand'Scope_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
     fromPtr msg ptr = List_Brand'Scope <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope l) = C'.toPtr l
@@ -1412,9 +1394,8 @@ instance U'.HasMessage (Brand'Scope' msg) msg where
 instance U'.MessageDefault (Brand'Scope' msg) msg where
     messageDefault = Brand'Scope'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Brand'Scope'' inside the message.
-new_Brand'Scope' :: M'.WriteCtx m s => M'.MutMsg s -> m (Brand'Scope' (M'.MutMsg s))
-new_Brand'Scope' msg = Brand'Scope'_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.Allocate s (Brand'Scope' (M'.MutMsg s)) where
+    new msg = Brand'Scope'_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
     fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope' l) = C'.toPtr l
@@ -1467,9 +1448,8 @@ instance U'.HasMessage (CodeGeneratorRequest'RequestedFile msg) msg where
 instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile msg) msg where
     messageDefault = CodeGeneratorRequest'RequestedFile_newtype_ . U'.messageDefault
 
--- | Allocate a new 'CodeGeneratorRequest'RequestedFile' inside the message.
-new_CodeGeneratorRequest'RequestedFile :: M'.WriteCtx m s => M'.MutMsg s -> m (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))
-new_CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile_newtype_ <$> U'.allocStruct msg 1 2
+instance C'.Allocate s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
+    new msg = CodeGeneratorRequest'RequestedFile_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest'RequestedFile l) = C'.toPtr l
@@ -1528,9 +1508,8 @@ instance U'.HasMessage (CodeGeneratorRequest'RequestedFile'Import msg) msg where
 instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile'Import msg) msg where
     messageDefault = CodeGeneratorRequest'RequestedFile'Import_newtype_ . U'.messageDefault
 
--- | Allocate a new 'CodeGeneratorRequest'RequestedFile'Import' inside the message.
-new_CodeGeneratorRequest'RequestedFile'Import :: M'.WriteCtx m s => M'.MutMsg s -> m (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))
-new_CodeGeneratorRequest'RequestedFile'Import msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
+    new msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile'Import <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest'RequestedFile'Import l) = C'.toPtr l
@@ -1576,9 +1555,8 @@ instance U'.HasMessage (Field' msg) msg where
 instance U'.MessageDefault (Field' msg) msg where
     messageDefault = Field'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Field'' inside the message.
-new_Field' :: M'.WriteCtx m s => M'.MutMsg s -> m (Field' (M'.MutMsg s))
-new_Field' msg = Field'_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.Allocate s (Field' (M'.MutMsg s)) where
+    new msg = Field'_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field' msg)) where
     fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
     toPtr (List_Field' l) = C'.toPtr l
@@ -1622,9 +1600,8 @@ instance U'.HasMessage (Field'slot'group' msg) msg where
 instance U'.MessageDefault (Field'slot'group' msg) msg where
     messageDefault = Field'slot'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Field'slot'group'' inside the message.
-new_Field'slot'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Field'slot'group' (M'.MutMsg s))
-new_Field'slot'group' msg = Field'slot'group'_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.Allocate s (Field'slot'group' (M'.MutMsg s)) where
+    new msg = Field'slot'group'_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field'slot'group' msg)) where
     fromPtr msg ptr = List_Field'slot'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'slot'group' l) = C'.toPtr l
@@ -1693,9 +1670,8 @@ instance U'.HasMessage (Field'group'group' msg) msg where
 instance U'.MessageDefault (Field'group'group' msg) msg where
     messageDefault = Field'group'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Field'group'group'' inside the message.
-new_Field'group'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Field'group'group' (M'.MutMsg s))
-new_Field'group'group' msg = Field'group'group'_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.Allocate s (Field'group'group' (M'.MutMsg s)) where
+    new msg = Field'group'group'_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field'group'group' msg)) where
     fromPtr msg ptr = List_Field'group'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'group'group' l) = C'.toPtr l
@@ -1740,9 +1716,8 @@ instance U'.HasMessage (Field'ordinal msg) msg where
 instance U'.MessageDefault (Field'ordinal msg) msg where
     messageDefault = Field'ordinal_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Field'ordinal' inside the message.
-new_Field'ordinal :: M'.WriteCtx m s => M'.MutMsg s -> m (Field'ordinal (M'.MutMsg s))
-new_Field'ordinal msg = Field'ordinal_newtype_ <$> U'.allocStruct msg 3 4
+instance C'.Allocate s (Field'ordinal (M'.MutMsg s)) where
+    new msg = Field'ordinal_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field'ordinal msg)) where
     fromPtr msg ptr = List_Field'ordinal <$> C'.fromPtr msg ptr
     toPtr (List_Field'ordinal l) = C'.toPtr l
@@ -1795,9 +1770,8 @@ instance U'.HasMessage (Node' msg) msg where
 instance U'.MessageDefault (Node' msg) msg where
     messageDefault = Node'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'' inside the message.
-new_Node' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node' (M'.MutMsg s))
-new_Node' msg = Node'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node' (M'.MutMsg s)) where
+    new msg = Node'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node' msg)) where
     fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
     toPtr (List_Node' l) = C'.toPtr l
@@ -1864,9 +1838,8 @@ instance U'.HasMessage (Node'struct'group' msg) msg where
 instance U'.MessageDefault (Node'struct'group' msg) msg where
     messageDefault = Node'struct'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'struct'group'' inside the message.
-new_Node'struct'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'struct'group' (M'.MutMsg s))
-new_Node'struct'group' msg = Node'struct'group'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node'struct'group' (M'.MutMsg s)) where
+    new msg = Node'struct'group'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node'struct'group' msg)) where
     fromPtr msg ptr = List_Node'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'struct'group' l) = C'.toPtr l
@@ -1962,9 +1935,8 @@ instance U'.HasMessage (Node'enum'group' msg) msg where
 instance U'.MessageDefault (Node'enum'group' msg) msg where
     messageDefault = Node'enum'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'enum'group'' inside the message.
-new_Node'enum'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'enum'group' (M'.MutMsg s))
-new_Node'enum'group' msg = Node'enum'group'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node'enum'group' (M'.MutMsg s)) where
+    new msg = Node'enum'group'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node'enum'group' msg)) where
     fromPtr msg ptr = List_Node'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'enum'group' l) = C'.toPtr l
@@ -2000,9 +1972,8 @@ instance U'.HasMessage (Node'interface'group' msg) msg where
 instance U'.MessageDefault (Node'interface'group' msg) msg where
     messageDefault = Node'interface'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'interface'group'' inside the message.
-new_Node'interface'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'interface'group' (M'.MutMsg s))
-new_Node'interface'group' msg = Node'interface'group'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node'interface'group' (M'.MutMsg s)) where
+    new msg = Node'interface'group'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node'interface'group' msg)) where
     fromPtr msg ptr = List_Node'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'interface'group' l) = C'.toPtr l
@@ -2051,9 +2022,8 @@ instance U'.HasMessage (Node'const'group' msg) msg where
 instance U'.MessageDefault (Node'const'group' msg) msg where
     messageDefault = Node'const'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'const'group'' inside the message.
-new_Node'const'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'const'group' (M'.MutMsg s))
-new_Node'const'group' msg = Node'const'group'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node'const'group' (M'.MutMsg s)) where
+    new msg = Node'const'group'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node'const'group' msg)) where
     fromPtr msg ptr = List_Node'const'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'const'group' l) = C'.toPtr l
@@ -2102,9 +2072,8 @@ instance U'.HasMessage (Node'annotation'group' msg) msg where
 instance U'.MessageDefault (Node'annotation'group' msg) msg where
     messageDefault = Node'annotation'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'annotation'group'' inside the message.
-new_Node'annotation'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'annotation'group' (M'.MutMsg s))
-new_Node'annotation'group' msg = Node'annotation'group'_newtype_ <$> U'.allocStruct msg 5 6
+instance C'.Allocate s (Node'annotation'group' (M'.MutMsg s)) where
+    new msg = Node'annotation'group'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node'annotation'group' msg)) where
     fromPtr msg ptr = List_Node'annotation'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'annotation'group' l) = C'.toPtr l
@@ -2273,9 +2242,8 @@ instance U'.HasMessage (Node'NestedNode msg) msg where
 instance U'.MessageDefault (Node'NestedNode msg) msg where
     messageDefault = Node'NestedNode_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'NestedNode' inside the message.
-new_Node'NestedNode :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'NestedNode (M'.MutMsg s))
-new_Node'NestedNode msg = Node'NestedNode_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (Node'NestedNode (M'.MutMsg s)) where
+    new msg = Node'NestedNode_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Node'NestedNode msg)) where
     fromPtr msg ptr = List_Node'NestedNode <$> C'.fromPtr msg ptr
     toPtr (List_Node'NestedNode l) = C'.toPtr l
@@ -2321,9 +2289,8 @@ instance U'.HasMessage (Node'Parameter msg) msg where
 instance U'.MessageDefault (Node'Parameter msg) msg where
     messageDefault = Node'Parameter_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Node'Parameter' inside the message.
-new_Node'Parameter :: M'.WriteCtx m s => M'.MutMsg s -> m (Node'Parameter (M'.MutMsg s))
-new_Node'Parameter msg = Node'Parameter_newtype_ <$> U'.allocStruct msg 0 1
+instance C'.Allocate s (Node'Parameter (M'.MutMsg s)) where
+    new msg = Node'Parameter_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Node'Parameter msg)) where
     fromPtr msg ptr = List_Node'Parameter <$> C'.fromPtr msg ptr
     toPtr (List_Node'Parameter l) = C'.toPtr l
@@ -2359,9 +2326,8 @@ instance U'.HasMessage (Type'anyPointer msg) msg where
 instance U'.MessageDefault (Type'anyPointer msg) msg where
     messageDefault = Type'anyPointer_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'anyPointer' inside the message.
-new_Type'anyPointer :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer (M'.MutMsg s))
-new_Type'anyPointer msg = Type'anyPointer_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'anyPointer (M'.MutMsg s)) where
+    new msg = Type'anyPointer_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer msg)) where
     fromPtr msg ptr = List_Type'anyPointer <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer l) = C'.toPtr l
@@ -2411,9 +2377,8 @@ instance U'.HasMessage (Type'anyPointer'unconstrained'group' msg) msg where
 instance U'.MessageDefault (Type'anyPointer'unconstrained'group' msg) msg where
     messageDefault = Type'anyPointer'unconstrained'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'anyPointer'unconstrained'group'' inside the message.
-new_Type'anyPointer'unconstrained'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'unconstrained'group' (M'.MutMsg s))
-new_Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
+    new msg = Type'anyPointer'unconstrained'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained'group' l) = C'.toPtr l
@@ -2444,9 +2409,8 @@ instance U'.HasMessage (Type'anyPointer'parameter'group' msg) msg where
 instance U'.MessageDefault (Type'anyPointer'parameter'group' msg) msg where
     messageDefault = Type'anyPointer'parameter'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'anyPointer'parameter'group'' inside the message.
-new_Type'anyPointer'parameter'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'parameter'group' (M'.MutMsg s))
-new_Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
+    new msg = Type'anyPointer'parameter'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'parameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'parameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'parameter'group' l) = C'.toPtr l
@@ -2489,9 +2453,8 @@ instance U'.HasMessage (Type'anyPointer'implicitMethodParameter'group' msg) msg 
 instance U'.MessageDefault (Type'anyPointer'implicitMethodParameter'group' msg) msg where
     messageDefault = Type'anyPointer'implicitMethodParameter'group'_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'anyPointer'implicitMethodParameter'group'' inside the message.
-new_Type'anyPointer'implicitMethodParameter'group' :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s))
-new_Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
+    new msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'implicitMethodParameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'implicitMethodParameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'implicitMethodParameter'group' l) = C'.toPtr l
@@ -2534,9 +2497,8 @@ instance U'.HasMessage (Type'anyPointer'unconstrained msg) msg where
 instance U'.MessageDefault (Type'anyPointer'unconstrained msg) msg where
     messageDefault = Type'anyPointer'unconstrained_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Type'anyPointer'unconstrained' inside the message.
-new_Type'anyPointer'unconstrained :: M'.WriteCtx m s => M'.MutMsg s -> m (Type'anyPointer'unconstrained (M'.MutMsg s))
-new_Type'anyPointer'unconstrained msg = Type'anyPointer'unconstrained_newtype_ <$> U'.allocStruct msg 3 1
+instance C'.Allocate s (Type'anyPointer'unconstrained (M'.MutMsg s)) where
+    new msg = Type'anyPointer'unconstrained_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained l) = C'.toPtr l

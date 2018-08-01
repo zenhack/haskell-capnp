@@ -44,9 +44,8 @@ instance U'.HasMessage (JsonValue msg) msg where
 instance U'.MessageDefault (JsonValue msg) msg where
     messageDefault = JsonValue_newtype_ . U'.messageDefault
 
--- | Allocate a new 'JsonValue' inside the message.
-new_JsonValue :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue (M'.MutMsg s))
-new_JsonValue msg = JsonValue_newtype_ <$> U'.allocStruct msg 2 1
+instance C'.Allocate s (JsonValue (M'.MutMsg s)) where
+    new msg = JsonValue_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
     fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue l) = C'.toPtr l
@@ -139,9 +138,8 @@ instance U'.HasMessage (JsonValue'Call msg) msg where
 instance U'.MessageDefault (JsonValue'Call msg) msg where
     messageDefault = JsonValue'Call_newtype_ . U'.messageDefault
 
--- | Allocate a new 'JsonValue'Call' inside the message.
-new_JsonValue'Call :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Call (M'.MutMsg s))
-new_JsonValue'Call msg = JsonValue'Call_newtype_ <$> U'.allocStruct msg 0 2
+instance C'.Allocate s (JsonValue'Call (M'.MutMsg s)) where
+    new msg = JsonValue'Call_newtype_ <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
     fromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Call l) = C'.toPtr l
@@ -190,9 +188,8 @@ instance U'.HasMessage (JsonValue'Field msg) msg where
 instance U'.MessageDefault (JsonValue'Field msg) msg where
     messageDefault = JsonValue'Field_newtype_ . U'.messageDefault
 
--- | Allocate a new 'JsonValue'Field' inside the message.
-new_JsonValue'Field :: M'.WriteCtx m s => M'.MutMsg s -> m (JsonValue'Field (M'.MutMsg s))
-new_JsonValue'Field msg = JsonValue'Field_newtype_ <$> U'.allocStruct msg 0 2
+instance C'.Allocate s (JsonValue'Field (M'.MutMsg s)) where
+    new msg = JsonValue'Field_newtype_ <$> U'.allocStruct msg 0 2
 instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
     fromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue'Field l) = C'.toPtr l

@@ -118,9 +118,8 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
         , "instance U'.MessageDefault (", typeCon, " msg) msg where\n"
         , "    messageDefault = ", dataCon, " . U'.messageDefault\n"
         , "\n"
-        , "-- | Allocate a new '", typeCon, "' inside the message.\n"
-        , "new_", typeCon, " :: M'.WriteCtx m s => M'.MutMsg s -> m (", typeCon, " (M'.MutMsg s))\n"
-        , "new_", typeCon, " msg = ", dataCon , " <$> U'.allocStruct msg "
+        , "instance C'.Allocate s (", typeCon, " (M'.MutMsg s)) where\n"
+        , "    new msg = ", dataCon , " <$> U'.allocStruct msg "
         ,           TB.fromString (show dataSz), " "
         ,           TB.fromString (show ptrSz), "\n"
         , fmtStructListIsPtr typeCon

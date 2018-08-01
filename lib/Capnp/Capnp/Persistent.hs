@@ -44,9 +44,8 @@ instance U'.HasMessage (Persistent'SaveParams msg) msg where
 instance U'.MessageDefault (Persistent'SaveParams msg) msg where
     messageDefault = Persistent'SaveParams_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Persistent'SaveParams' inside the message.
-new_Persistent'SaveParams :: M'.WriteCtx m s => M'.MutMsg s -> m (Persistent'SaveParams (M'.MutMsg s))
-new_Persistent'SaveParams msg = Persistent'SaveParams_newtype_ <$> U'.allocStruct msg 0 1
+instance C'.Allocate s (Persistent'SaveParams (M'.MutMsg s)) where
+    new msg = Persistent'SaveParams_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
     fromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
     toPtr (List_Persistent'SaveParams l) = C'.toPtr l
@@ -82,9 +81,8 @@ instance U'.HasMessage (Persistent'SaveResults msg) msg where
 instance U'.MessageDefault (Persistent'SaveResults msg) msg where
     messageDefault = Persistent'SaveResults_newtype_ . U'.messageDefault
 
--- | Allocate a new 'Persistent'SaveResults' inside the message.
-new_Persistent'SaveResults :: M'.WriteCtx m s => M'.MutMsg s -> m (Persistent'SaveResults (M'.MutMsg s))
-new_Persistent'SaveResults msg = Persistent'SaveResults_newtype_ <$> U'.allocStruct msg 0 1
+instance C'.Allocate s (Persistent'SaveResults (M'.MutMsg s)) where
+    new msg = Persistent'SaveResults_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
     fromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
     toPtr (List_Persistent'SaveResults l) = C'.toPtr l

@@ -44,9 +44,8 @@ instance U'.HasMessage (JoinKeyPart msg) msg where
 instance U'.MessageDefault (JoinKeyPart msg) msg where
     messageDefault = JoinKeyPart_newtype_ . U'.messageDefault
 
--- | Allocate a new 'JoinKeyPart' inside the message.
-new_JoinKeyPart :: M'.WriteCtx m s => M'.MutMsg s -> m (JoinKeyPart (M'.MutMsg s))
-new_JoinKeyPart msg = JoinKeyPart_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (JoinKeyPart (M'.MutMsg s)) where
+    new msg = JoinKeyPart_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (JoinKeyPart msg)) where
     fromPtr msg ptr = List_JoinKeyPart <$> C'.fromPtr msg ptr
     toPtr (List_JoinKeyPart l) = C'.toPtr l
@@ -99,9 +98,8 @@ instance U'.HasMessage (JoinResult msg) msg where
 instance U'.MessageDefault (JoinResult msg) msg where
     messageDefault = JoinResult_newtype_ . U'.messageDefault
 
--- | Allocate a new 'JoinResult' inside the message.
-new_JoinResult :: M'.WriteCtx m s => M'.MutMsg s -> m (JoinResult (M'.MutMsg s))
-new_JoinResult msg = JoinResult_newtype_ <$> U'.allocStruct msg 1 1
+instance C'.Allocate s (JoinResult (M'.MutMsg s)) where
+    new msg = JoinResult_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (JoinResult msg)) where
     fromPtr msg ptr = List_JoinResult <$> C'.fromPtr msg ptr
     toPtr (List_JoinResult l) = C'.toPtr l
@@ -157,9 +155,8 @@ instance U'.HasMessage (ProvisionId msg) msg where
 instance U'.MessageDefault (ProvisionId msg) msg where
     messageDefault = ProvisionId_newtype_ . U'.messageDefault
 
--- | Allocate a new 'ProvisionId' inside the message.
-new_ProvisionId :: M'.WriteCtx m s => M'.MutMsg s -> m (ProvisionId (M'.MutMsg s))
-new_ProvisionId msg = ProvisionId_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (ProvisionId (M'.MutMsg s)) where
+    new msg = ProvisionId_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (ProvisionId msg)) where
     fromPtr msg ptr = List_ProvisionId <$> C'.fromPtr msg ptr
     toPtr (List_ProvisionId l) = C'.toPtr l
@@ -221,9 +218,8 @@ instance U'.HasMessage (VatId msg) msg where
 instance U'.MessageDefault (VatId msg) msg where
     messageDefault = VatId_newtype_ . U'.messageDefault
 
--- | Allocate a new 'VatId' inside the message.
-new_VatId :: M'.WriteCtx m s => M'.MutMsg s -> m (VatId (M'.MutMsg s))
-new_VatId msg = VatId_newtype_ <$> U'.allocStruct msg 1 0
+instance C'.Allocate s (VatId (M'.MutMsg s)) where
+    new msg = VatId_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (VatId msg)) where
     fromPtr msg ptr = List_VatId <$> C'.fromPtr msg ptr
     toPtr (List_VatId l) = C'.toPtr l
