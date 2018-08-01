@@ -56,8 +56,6 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import Data.Capnp.Bits (Word1)"
     , ""
-    , "import Internal.Gen.Instances ()"
-    , ""
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
     -- The trailing ' is to avoid possible name collisions:
