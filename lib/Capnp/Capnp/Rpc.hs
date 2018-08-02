@@ -425,6 +425,11 @@ set_Exception'reason :: U'.RWCtx m s => Exception (M'.MutMsg s) -> (B'.Text (M'.
 set_Exception'reason (Exception_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Exception'reason :: U'.RWCtx m s => Int -> Exception (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Exception'reason len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Exception'reason struct result
+    pure result
 
 get_Exception'obsoleteIsCallersFault :: U'.ReadCtx m msg => Exception msg -> m Bool
 get_Exception'obsoleteIsCallersFault (Exception_newtype_ struct) = C'.getWordField struct 0 0 0

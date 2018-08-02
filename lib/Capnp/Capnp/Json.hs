@@ -157,6 +157,11 @@ set_JsonValue'Call'function :: U'.RWCtx m s => JsonValue'Call (M'.MutMsg s) -> (
 set_JsonValue'Call'function (JsonValue'Call_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_JsonValue'Call'function :: U'.RWCtx m s => Int -> JsonValue'Call (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_JsonValue'Call'function len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_JsonValue'Call'function struct result
+    pure result
 
 get_JsonValue'Call'params :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.List msg (JsonValue msg))
 get_JsonValue'Call'params (JsonValue'Call_newtype_ struct) =
@@ -214,6 +219,11 @@ set_JsonValue'Field'name :: U'.RWCtx m s => JsonValue'Field (M'.MutMsg s) -> (B'
 set_JsonValue'Field'name (JsonValue'Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_JsonValue'Field'name :: U'.RWCtx m s => Int -> JsonValue'Field (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_JsonValue'Field'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_JsonValue'Field'name struct result
+    pure result
 
 get_JsonValue'Field'value :: U'.ReadCtx m msg => JsonValue'Field msg -> m (JsonValue msg)
 get_JsonValue'Field'value (JsonValue'Field_newtype_ struct) =

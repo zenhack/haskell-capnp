@@ -21,6 +21,8 @@ module Data.Capnp.Basics
     , MutListElem(..)
     , getData
     , getText
+    , newData
+    , newText
     , dataBytes
     , textBytes
     ) where

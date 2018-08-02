@@ -363,6 +363,11 @@ set_Enumerant'name :: U'.RWCtx m s => Enumerant (M'.MutMsg s) -> (B'.Text (M'.Mu
 set_Enumerant'name (Enumerant_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Enumerant'name :: U'.RWCtx m s => Int -> Enumerant (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Enumerant'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Enumerant'name struct result
+    pure result
 
 get_Enumerant'codeOrder :: U'.ReadCtx m msg => Enumerant msg -> m Word16
 get_Enumerant'codeOrder (Enumerant_newtype_ struct) = C'.getWordField struct 0 0 0
@@ -431,6 +436,11 @@ set_Field'name :: U'.RWCtx m s => Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s))
 set_Field'name (Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Field'name :: U'.RWCtx m s => Int -> Field (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Field'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Field'name struct result
+    pure result
 
 get_Field'codeOrder :: U'.ReadCtx m msg => Field msg -> m Word16
 get_Field'codeOrder (Field_newtype_ struct) = C'.getWordField struct 0 0 0
@@ -528,6 +538,11 @@ set_Method'name :: U'.RWCtx m s => Method (M'.MutMsg s) -> (B'.Text (M'.MutMsg s
 set_Method'name (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Method'name :: U'.RWCtx m s => Int -> Method (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Method'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Method'name struct result
+    pure result
 
 get_Method'codeOrder :: U'.ReadCtx m msg => Method msg -> m Word16
 get_Method'codeOrder (Method_newtype_ struct) = C'.getWordField struct 0 0 0
@@ -686,6 +701,11 @@ set_Node'displayName :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.Text (M'.MutMs
 set_Node'displayName (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Node'displayName :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Node'displayName len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Node'displayName struct result
+    pure result
 
 get_Node'displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Word32
 get_Node'displayNamePrefixLength (Node_newtype_ struct) = C'.getWordField struct 1 0 0
@@ -1629,6 +1649,11 @@ set_CodeGeneratorRequest'RequestedFile'filename :: U'.RWCtx m s => CodeGenerator
 set_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_CodeGeneratorRequest'RequestedFile'filename :: U'.RWCtx m s => Int -> CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_CodeGeneratorRequest'RequestedFile'filename len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_CodeGeneratorRequest'RequestedFile'filename struct result
+    pure result
 
 get_CodeGeneratorRequest'RequestedFile'imports :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg))
 get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile_newtype_ struct) =
@@ -1697,6 +1722,11 @@ set_CodeGeneratorRequest'RequestedFile'Import'name :: U'.RWCtx m s => CodeGenera
 set_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_CodeGeneratorRequest'RequestedFile'Import'name :: U'.RWCtx m s => Int -> CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_CodeGeneratorRequest'RequestedFile'Import'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_CodeGeneratorRequest'RequestedFile'Import'name struct result
+    pure result
 
 newtype Field' msg = Field'_newtype_ (U'.Struct msg)
 
@@ -2500,6 +2530,11 @@ set_Node'NestedNode'name :: U'.RWCtx m s => Node'NestedNode (M'.MutMsg s) -> (B'
 set_Node'NestedNode'name (Node'NestedNode_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Node'NestedNode'name :: U'.RWCtx m s => Int -> Node'NestedNode (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Node'NestedNode'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Node'NestedNode'name struct result
+    pure result
 
 get_Node'NestedNode'id :: U'.ReadCtx m msg => Node'NestedNode msg -> m Word64
 get_Node'NestedNode'id (Node'NestedNode_newtype_ struct) = C'.getWordField struct 0 0 0
@@ -2549,6 +2584,11 @@ set_Node'Parameter'name :: U'.RWCtx m s => Node'Parameter (M'.MutMsg s) -> (B'.T
 set_Node'Parameter'name (Node'Parameter_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 
 
+new_Node'Parameter'name :: U'.RWCtx m s => Int -> Node'Parameter (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Node'Parameter'name len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Node'Parameter'name struct result
+    pure result
 
 newtype Type'anyPointer msg = Type'anyPointer_newtype_ (U'.Struct msg)
 

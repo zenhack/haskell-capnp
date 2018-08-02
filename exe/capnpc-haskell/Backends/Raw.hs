@@ -253,17 +253,12 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
         in case fieldLoc of
             PtrField _ ->
                 case fieldType of
-                    ListOf _ -> mconcat
-                        [ newName, " :: U'.RWCtx m s => Int -> ", newType, "\n"
-                        , newName, " len struct = do\n"
-                        , "    result <- C'.newList (U'.message struct) len\n"
-                        , "    ", setName, " struct result\n"
-                        , "    pure result\n"
-                        ]
+                    ListOf _ ->
+                        fmtNewListLike newType "C'.newList"
                     PrimType PrimText ->
-                        ""
+                        fmtNewListLike newType "B'.newText"
                     PrimType PrimData ->
-                        ""
+                        fmtNewListLike newType "B'.newData"
                     Untyped _ ->
                         ""
                     _ -> mconcat
@@ -275,6 +270,14 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                         ]
             _ ->
                 ""
+    fmtNewListLike newType allocFn = mconcat
+        [ newName, " :: U'.RWCtx m s => Int -> ", newType, "\n"
+        , newName, " len struct = do\n"
+        , "    result <- ", allocFn, " (U'.message struct) len\n"
+        , "    ", setName, " struct result\n"
+        , "    pure result\n"
+        ]
+
 
 -- | Return the size in bits of a type that belongs in the data section of a struct.
 -- calls error if the type does not make sense in a data section.
