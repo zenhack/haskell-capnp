@@ -35,6 +35,7 @@ import Internal.Gen.Instances ()
 
 import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Errors  as E
+import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 
 
@@ -55,9 +56,20 @@ newtype Text msg = Text (U.ListOf msg Word8)
 -- bytes.
 newtype Data msg = Data (U.ListOf msg Word8)
 
+-- | @'newData' msg len@ Allocates a new data blob of length @len@ bytes
+-- inside the message.
+newData :: M.WriteCtx m s => M.MutMsg s -> Int -> m (Data (M.MutMsg s))
+newData msg len = Data <$> U.allocList8 msg len
+
 -- | Interpret a list of 'Word8' as a capnproto 'Data' value.
 getData :: U.ReadCtx m msg => U.ListOf msg Word8 -> m (Data msg)
 getData = pure . Data
+
+-- | @'newText' msg len@ Allocates a new 'Text' inside the message. The
+-- value has space for @len@ *bytes* (not characters).
+newText :: M.WriteCtx m s => M.MutMsg s -> Int -> m (Text (M.MutMsg s))
+newText msg len =
+    Text <$> (U.allocList8 msg (len+1) >>= U.take len)
 
 -- | Interpret a list of 'Word8' as a capnproto 'Text' value.
 --
