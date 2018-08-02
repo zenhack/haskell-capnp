@@ -14,7 +14,13 @@ header = unlines
     , "import Data.ReinterpretCast"
     , "import Data.Word"
     , ""
-    , "import Codec.Capnp (ListElem(..), MutListElem(..), Cerialize(..), Decerialize(..))"
+    , "import Codec.Capnp"
+    , "    ( ListElem(..)"
+    , "    , MutListElem(..)"
+    , "    , Cerialize(..)"
+    , "    , Decerialize(..)"
+    , "    , IsPtr(..)"
+    , "    )"
     , ""
     , "import qualified Data.Capnp.Untyped as U"
     , ""
@@ -41,6 +47,9 @@ genInstance P{..} = concat
     , "    decerialize = pure\n"
     , "instance Cerialize s ", typed, " ", typed, " where\n"
     , "    cerialize _ = pure\n"
+    , "instance IsPtr msg (List msg ", typed, ") where\n"
+    , "    fromPtr msg ptr = List", typed, " <$> fromPtr msg ptr\n"
+    , "    toPtr (List", typed, " list) = Just (U.PtrList (U.List", listSuffix, " list))\n"
     ]
   where
     dataCon = "List" ++ typed

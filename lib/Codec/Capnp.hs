@@ -174,6 +174,13 @@ instance IsPtr msg (ListOf msg Word64) where
     fromPtr _ _ = expected "pointer to list with element size 64"
     toPtr = Just . PtrList . U.List64
 
+
+instance IsPtr msg (ListOf msg Bool) where
+    fromPtr msg Nothing = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (U.List1 list))) = pure list
+    fromPtr _ _ = expected "pointer to list with element size 1."
+    toPtr = Just . PtrList . U.List1
+
 -- | IsPtr instance for pointers -- this is just the identity.
 instance IsPtr msg (Maybe (Ptr msg)) where
     fromPtr _ = pure
