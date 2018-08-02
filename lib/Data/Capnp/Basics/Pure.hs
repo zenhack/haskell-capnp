@@ -33,7 +33,7 @@ instance Decerialize (Basics.Data M.ConstMsg) Data where
 instance Cerialize s Data (Basics.Data (M.MutMsg s)) where
     cerialize msg bytes = do
         list <- Untyped.allocList8 msg (BS.length bytes)
-        forM_ [0..BS.length bytes - 1] $ \i -> do
+        forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list
         pure $ Basics.Data list
 
