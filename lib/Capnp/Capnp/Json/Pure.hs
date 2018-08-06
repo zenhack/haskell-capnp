@@ -61,6 +61,10 @@ instance C'.IsStruct M'.ConstMsg JsonValue where
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg)
 
+instance C'.Cerialize s JsonValue (Capnp.ById.X8ef99297a43a5e34.JsonValue (M'.MutMsg s)) where
+    cerialize msg value_ = do
+        raw <- C'.new msg
+        pure raw
 data JsonValue'Call
     = JsonValue'Call
         { function :: Text
@@ -78,6 +82,10 @@ instance C'.IsStruct M'.ConstMsg JsonValue'Call where
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg)
 
+instance C'.Cerialize s JsonValue'Call (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call (M'.MutMsg s)) where
+    cerialize msg value_ = do
+        raw <- C'.new msg
+        pure raw
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text
@@ -95,3 +103,7 @@ instance C'.IsStruct M'.ConstMsg JsonValue'Field where
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMsg)
 
+instance C'.Cerialize s JsonValue'Field (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field (M'.MutMsg s)) where
+    cerialize msg value_ = do
+        raw <- C'.new msg
+        pure raw

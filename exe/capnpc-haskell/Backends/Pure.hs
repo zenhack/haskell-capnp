@@ -203,6 +203,15 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
                 ]
             _ ->
                 ""
+        , case dataCerialType of
+            CTyEnum -> ""
+            CTyStruct _ _ -> mconcat
+                [ "instance C'.Cerialize s ", pureName, " (", rawName, " (M'.MutMsg s)) where\n"
+                , "    cerialize msg value_ = do\n"
+                , "        raw <- C'.new msg\n"
+                -- TODO: fill in fields
+                , "        pure raw\n"
+                ]
         ]
   where
     fmtDecerializeArgs variantName fields = mconcat
