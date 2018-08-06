@@ -44,7 +44,7 @@ class ListElem msg e where
     index :: U.ReadCtx m msg => Int -> List msg e -> m e
 
 class MutListElem s e where
-    setIndex :: (U.ReadCtx m (M.MutMsg s), M.WriteCtx m s) => e -> Int -> List (M.MutMsg s) e -> m ()
+    setIndex :: U.RWCtx m s => e -> Int -> List (M.MutMsg s) e -> m ()
     newList :: M.WriteCtx m s => M.MutMsg s -> Int -> m (List (M.MutMsg s) e)
 
 class Allocate s e where
@@ -54,7 +54,7 @@ class Decerialize from to where
     decerialize :: U.ReadCtx m M.ConstMsg => from -> m to
 
 class Cerialize s from to where
-    cerialize :: (U.ReadCtx m (M.MutMsg s), M.WriteCtx m s) => M.MutMsg s -> from -> m to
+    cerialize :: U.RWCtx m s => M.MutMsg s -> from -> m to
 
 -- | Types that can be converted to and from an untyped pointer.
 --
@@ -88,8 +88,7 @@ getWordField struct idx offset def = fmap
 -- 'getWordField', with @value@ being the value to set. The width of the
 -- value is inferred from its type.
 setWordField ::
-    ( ReadCtx m (M.MutMsg s)
-    , M.WriteCtx m s
+    ( U.RWCtx m s
     , Bounded a, Integral a, IsWord a, Bits a
     )
     => Struct (M.MutMsg s) -> a -> Int -> Int -> a -> m ()
