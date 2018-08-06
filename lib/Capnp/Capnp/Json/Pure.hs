@@ -26,9 +26,13 @@ import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
+import Control.Monad (forM_)
+
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
+
+import qualified Data.Vector as V
 
 import qualified Capnp.ById.X8ef99297a43a5e34
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -96,7 +100,11 @@ instance C'.Cerialize s JsonValue'Call (Capnp.ById.X8ef99297a43a5e34.JsonValue'C
         case value of
             JsonValue'Call{..} -> do
                 pure ()
-                pure ()
+                let len_ = V.length params
+                field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Call'params len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (params V.! i)
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text

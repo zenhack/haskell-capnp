@@ -92,9 +92,13 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import Control.Monad.Catch (MonadThrow)"
     , "import Data.Capnp.TraversalLimit (MonadLimit)"
     , ""
+    , "import Control.Monad (forM_)"
+    , ""
     , "import qualified Data.Capnp.Message as M'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
     , "import qualified Codec.Capnp as C'"
+    , ""
+    , "import qualified Data.Vector as V"
     , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , mintercalate "\n" $ map (fmtImport Pure) modImports
@@ -258,9 +262,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
             setterName = accessorName "set_"
             getterName = accessorName "get_"
             newName = accessorName "new_"
+            fieldNameText = TB.fromText fieldName
         in case fieldLoc of
             DataField _ -> mconcat
-                [ "                ", setterName, " raw ", TB.fromText fieldName, "\n"
+                [ "                ", setterName, " raw ", fieldNameText, "\n"
                 ]
             VoidField -> mconcat
                 [ "                ", setterName, " raw\n"
@@ -272,13 +277,26 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
             HereField -> mconcat
                 [ "                ", setterName, " raw\n"
                 , "                field_ <- ", getterName, " raw\n"
-                , "                C'.marshalInto field_ ", TB.fromText fieldName, "\n"
+                , "                C'.marshalInto field_ ", fieldNameText, "\n"
                 ]
 -}
             PtrField _ -> case fieldType of
                 PrimType PrimData -> mconcat
-                    [ "                field_ <- newData (BS.length ", TB.fromText fieldName, ")\n"
-                    , "                marshalInto field_ ", TB.fromText fieldName, "\n"
+                    [ "                field_ <- newData (BS.length ", fieldNameText, ")\n"
+                    , "                C'.marshalInto field_ ", fieldNameText, "\n"
+                    ]
+                ListOf eltType -> mconcat
+                    [ "                let len_ = V.length ", fieldNameText, "\n"
+                    , "                field_ <- ", newName, " len_ raw\n"
+                    , case eltType of
+                        StructType _ _ -> mconcat
+                            [ "                forM_ [0..len_ - 1] $ \\i -> do\n"
+                            , "                    elt <- C'.index i field_\n"
+                            , "                    C'.marshalInto elt (", fieldNameText, " V.! i)\n"
+                            ]
+                        _ -> mconcat
+                            [ "                pure ()\n" -- TODO
+                            ]
                     ]
                 _ -> mconcat
                     [ "                pure ()\n"

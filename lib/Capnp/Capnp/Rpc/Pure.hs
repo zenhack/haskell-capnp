@@ -26,9 +26,13 @@ import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
+import Control.Monad (forM_)
+
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
+
+import qualified Data.Vector as V
 
 import qualified Capnp.ById.Xb312981b2552a250
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -367,7 +371,11 @@ instance C'.Cerialize s Payload (Capnp.ById.Xb312981b2552a250.Payload (M'.MutMsg
         case value of
             Payload{..} -> do
                 pure ()
-                pure ()
+                let len_ = V.length capTable
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Payload'capTable len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (capTable V.! i)
 data PromisedAnswer
     = PromisedAnswer
         { questionId :: Word32
@@ -390,7 +398,11 @@ instance C'.Cerialize s PromisedAnswer (Capnp.ById.Xb312981b2552a250.PromisedAns
         case value of
             PromisedAnswer{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'questionId raw questionId
-                pure ()
+                let len_ = V.length transform
+                field_ <- Capnp.ById.Xb312981b2552a250.new_PromisedAnswer'transform len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (transform V.! i)
 data Provide
     = Provide
         { questionId :: Word32

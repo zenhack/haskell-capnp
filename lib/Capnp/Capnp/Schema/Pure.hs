@@ -26,9 +26,13 @@ import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 
+import Control.Monad (forM_)
+
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
+
+import qualified Data.Vector as V
 
 import qualified Capnp.ById.Xa93fc509624c72d9
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -79,7 +83,11 @@ instance C'.Cerialize s Brand (Capnp.ById.Xa93fc509624c72d9.Brand (M'.MutMsg s))
     marshalInto raw value = do
         case value of
             Brand{..} -> do
-                pure ()
+                let len_ = V.length scopes
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Brand'scopes len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (scopes V.! i)
 data CapnpVersion
     = CapnpVersion
         { major :: Word16
@@ -129,8 +137,16 @@ instance C'.Cerialize s CodeGeneratorRequest (Capnp.ById.Xa93fc509624c72d9.CodeG
     marshalInto raw value = do
         case value of
             CodeGeneratorRequest{..} -> do
-                pure ()
-                pure ()
+                let len_ = V.length nodes
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'nodes len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (nodes V.! i)
+                let len_ = V.length requestedFiles
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'requestedFiles len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (requestedFiles V.! i)
                 pure ()
 instance C'.Decerialize Capnp.ById.Xa93fc509624c72d9.ElementSize Capnp.ById.Xa93fc509624c72d9.ElementSize where
      decerialize = pure
@@ -159,7 +175,11 @@ instance C'.Cerialize s Enumerant (Capnp.ById.Xa93fc509624c72d9.Enumerant (M'.Mu
             Enumerant{..} -> do
                 pure ()
                 Capnp.ById.Xa93fc509624c72d9.set_Enumerant'codeOrder raw codeOrder
-                pure ()
+                let len_ = V.length annotations
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Enumerant'annotations len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (annotations V.! i)
 data Field
     = Field
         { name :: Text
@@ -191,7 +211,11 @@ instance C'.Cerialize s Field (Capnp.ById.Xa93fc509624c72d9.Field (M'.MutMsg s))
             Field{..} -> do
                 pure ()
                 Capnp.ById.Xa93fc509624c72d9.set_Field'codeOrder raw codeOrder
-                pure ()
+                let len_ = V.length annotations
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Field'annotations len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (annotations V.! i)
                 Capnp.ById.Xa93fc509624c72d9.set_Field'discriminantValue raw discriminantValue
                 pure ()
                 pure ()
@@ -232,10 +256,18 @@ instance C'.Cerialize s Method (Capnp.ById.Xa93fc509624c72d9.Method (M'.MutMsg s
                 Capnp.ById.Xa93fc509624c72d9.set_Method'codeOrder raw codeOrder
                 Capnp.ById.Xa93fc509624c72d9.set_Method'paramStructType raw paramStructType
                 Capnp.ById.Xa93fc509624c72d9.set_Method'resultStructType raw resultStructType
+                let len_ = V.length annotations
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Method'annotations len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (annotations V.! i)
                 pure ()
                 pure ()
-                pure ()
-                pure ()
+                let len_ = V.length implicitParameters
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Method'implicitParameters len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (implicitParameters V.! i)
 data Node
     = Node
         { id :: Word64
@@ -275,9 +307,21 @@ instance C'.Cerialize s Node (Capnp.ById.Xa93fc509624c72d9.Node (M'.MutMsg s)) w
                 pure ()
                 Capnp.ById.Xa93fc509624c72d9.set_Node'displayNamePrefixLength raw displayNamePrefixLength
                 Capnp.ById.Xa93fc509624c72d9.set_Node'scopeId raw scopeId
-                pure ()
-                pure ()
-                pure ()
+                let len_ = V.length nestedNodes
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'nestedNodes len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (nestedNodes V.! i)
+                let len_ = V.length annotations
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'annotations len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (annotations V.! i)
+                let len_ = V.length parameters
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'parameters len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (parameters V.! i)
                 Capnp.ById.Xa93fc509624c72d9.set_Node'isGeneric raw isGeneric
                 pure ()
 data Superclass
@@ -587,7 +631,11 @@ instance C'.Cerialize s CodeGeneratorRequest'RequestedFile (Capnp.ById.Xa93fc509
             CodeGeneratorRequest'RequestedFile{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'id raw id
                 pure ()
-                pure ()
+                let len_ = V.length imports
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'RequestedFile'imports len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (imports V.! i)
 data CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import
         { id :: Word64
@@ -776,14 +824,30 @@ instance C'.Cerialize s Node' (Capnp.ById.Xa93fc509624c72d9.Node' (M'.MutMsg s))
                 Capnp.ById.Xa93fc509624c72d9.set_Node'struct'isGroup raw isGroup
                 Capnp.ById.Xa93fc509624c72d9.set_Node'struct'discriminantCount raw discriminantCount
                 Capnp.ById.Xa93fc509624c72d9.set_Node'struct'discriminantOffset raw discriminantOffset
-                pure ()
+                let len_ = V.length fields
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'struct'fields len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (fields V.! i)
             Node'enum{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'enum raw
-                pure ()
+                let len_ = V.length enumerants
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'enum'enumerants len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (enumerants V.! i)
             Node'interface{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'interface raw
-                pure ()
-                pure ()
+                let len_ = V.length methods
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'interface'methods len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (methods V.! i)
+                let len_ = V.length superclasses
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'interface'superclasses len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (superclasses V.! i)
             Node'const{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'const raw
                 pure ()
