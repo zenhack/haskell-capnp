@@ -253,7 +253,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
             _ ->
                 " _ -> pure ()\n" -- TODO
         ]
-    fmtCerializeField variantName Field{fieldName,fieldLoc} =
+    fmtCerializeField variantName Field{fieldName,fieldType,fieldLoc} =
         let accessorName prefix = fmtName Raw thisMod $ prefixName prefix (subName variantName fieldName)
             setterName = accessorName "set_"
             getterName = accessorName "get_"
@@ -275,13 +275,11 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 , "                C'.marshalInto field_ ", TB.fromText fieldName, "\n"
                 ]
 -}
-            PtrField _ -> mconcat
-                [ "                pure ()\n"
-                ]
-{-
-            -- TODO: need to look at type for this.
-            PtrField _ -> mconcat
-                [ "            field_", newName, " raw\n"
-                , "            C'.marshalInto field_ ", TB.fromText fieldName, "\n"
-                ]
--}
+            PtrField _ -> case fieldType of
+                PrimType PrimData -> mconcat
+                    [ "                field_ <- newData (BS.length ", TB.fromText fieldName, ")\n"
+                    , "                marshalInto field_ ", TB.fromText fieldName, "\n"
+                    ]
+                _ -> mconcat
+                    [ "                pure ()\n"
+                    ]
