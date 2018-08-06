@@ -52,9 +52,8 @@ instance C'.IsStruct M'.ConstMsg Annotation where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Annotation M'.ConstMsg)
 
 instance C'.Cerialize s Annotation (Capnp.ById.Xa93fc509624c72d9.Annotation (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Brand
     = Brand
         { scopes :: List (Brand'Scope)
@@ -71,9 +70,8 @@ instance C'.IsStruct M'.ConstMsg Brand where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand M'.ConstMsg)
 
 instance C'.Cerialize s Brand (Capnp.ById.Xa93fc509624c72d9.Brand (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data CapnpVersion
     = CapnpVersion
         { major :: Word16
@@ -94,9 +92,8 @@ instance C'.IsStruct M'.ConstMsg CapnpVersion where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.ConstMsg)
 
 instance C'.Cerialize s CapnpVersion (Capnp.ById.Xa93fc509624c72d9.CapnpVersion (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data CodeGeneratorRequest
     = CodeGeneratorRequest
         { nodes :: List (Node)
@@ -117,9 +114,8 @@ instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.ConstMsg)
 
 instance C'.Cerialize s CodeGeneratorRequest (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data ElementSize
     = ElementSize'empty
     | ElementSize'bit
@@ -165,9 +161,8 @@ instance C'.IsStruct M'.ConstMsg Enumerant where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Enumerant M'.ConstMsg)
 
 instance C'.Cerialize s Enumerant (Capnp.ById.Xa93fc509624c72d9.Enumerant (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Field
     = Field
         { name :: Text
@@ -194,9 +189,8 @@ instance C'.IsStruct M'.ConstMsg Field where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMsg)
 
 instance C'.Cerialize s Field (Capnp.ById.Xa93fc509624c72d9.Field (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Method
     = Method
         { name :: Text
@@ -227,9 +221,8 @@ instance C'.IsStruct M'.ConstMsg Method where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Method M'.ConstMsg)
 
 instance C'.Cerialize s Method (Capnp.ById.Xa93fc509624c72d9.Method (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Node
     = Node
         { id :: Word64
@@ -262,9 +255,8 @@ instance C'.IsStruct M'.ConstMsg Node where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMsg)
 
 instance C'.Cerialize s Node (Capnp.ById.Xa93fc509624c72d9.Node (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Superclass
     = Superclass
         { id :: Word64
@@ -283,9 +275,8 @@ instance C'.IsStruct M'.ConstMsg Superclass where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMsg)
 
 instance C'.Cerialize s Superclass (Capnp.ById.Xa93fc509624c72d9.Superclass (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Type
     = Type'void
     | Type'bool
@@ -361,9 +352,8 @@ instance C'.IsStruct M'.ConstMsg Type where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type M'.ConstMsg)
 
 instance C'.Cerialize s Type (Capnp.ById.Xa93fc509624c72d9.Type (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Value
     = Value'void
     | Value'bool (Bool)
@@ -418,9 +408,8 @@ instance C'.IsStruct M'.ConstMsg Value where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Value M'.ConstMsg)
 
 instance C'.Cerialize s Value (Capnp.ById.Xa93fc509624c72d9.Value (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Brand'Binding
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type)
@@ -441,9 +430,8 @@ instance C'.IsStruct M'.ConstMsg Brand'Binding where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.ConstMsg)
 
 instance C'.Cerialize s Brand'Binding (Capnp.ById.Xa93fc509624c72d9.Brand'Binding (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Brand'Scope
     = Brand'Scope
         { scopeId :: Word64
@@ -462,9 +450,8 @@ instance C'.IsStruct M'.ConstMsg Brand'Scope where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMsg)
 
 instance C'.Cerialize s Brand'Scope (Capnp.ById.Xa93fc509624c72d9.Brand'Scope (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
     | Brand'Scope'inherit
@@ -485,9 +472,8 @@ instance C'.IsStruct M'.ConstMsg Brand'Scope' where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.ConstMsg)
 
 instance C'.Cerialize s Brand'Scope' (Capnp.ById.Xa93fc509624c72d9.Brand'Scope' (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile
         { id :: Word64
@@ -508,9 +494,8 @@ instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.ConstMsg)
 
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import
         { id :: Word64
@@ -529,9 +514,8 @@ instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile'Import where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.ConstMsg)
 
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile'Import (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Field'
     = Field'slot
         { offset :: Word32
@@ -564,9 +548,8 @@ instance C'.IsStruct M'.ConstMsg Field' where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field' M'.ConstMsg)
 
 instance C'.Cerialize s Field' (Capnp.ById.Xa93fc509624c72d9.Field' (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 data Field'ordinal
@@ -589,9 +572,8 @@ instance C'.IsStruct M'.ConstMsg Field'ordinal where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.ConstMsg)
 
 instance C'.Cerialize s Field'ordinal (Capnp.ById.Xa93fc509624c72d9.Field'ordinal (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Node'
     = Node'file
     | Node'struct
@@ -675,9 +657,8 @@ instance C'.IsStruct M'.ConstMsg Node' where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node' M'.ConstMsg)
 
 instance C'.Cerialize s Node' (Capnp.ById.Xa93fc509624c72d9.Node' (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Node'NestedNode
     = Node'NestedNode
         { name :: Text
@@ -696,9 +677,8 @@ instance C'.IsStruct M'.ConstMsg Node'NestedNode where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMsg)
 
 instance C'.Cerialize s Node'NestedNode (Capnp.ById.Xa93fc509624c72d9.Node'NestedNode (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Node'Parameter
     = Node'Parameter
         { name :: Text
@@ -715,9 +695,8 @@ instance C'.IsStruct M'.ConstMsg Node'Parameter where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.ConstMsg)
 
 instance C'.Cerialize s Node'Parameter (Capnp.ById.Xa93fc509624c72d9.Node'Parameter (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Type'anyPointer
     = Type'anyPointer'unconstrained
         { union' :: Type'anyPointer'unconstrained
@@ -751,9 +730,8 @@ instance C'.IsStruct M'.ConstMsg Type'anyPointer where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.ConstMsg)
 
 instance C'.Cerialize s Type'anyPointer (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Type'anyPointer'unconstrained
     = Type'anyPointer'unconstrained'anyKind
     | Type'anyPointer'unconstrained'struct
@@ -778,6 +756,5 @@ instance C'.IsStruct M'.ConstMsg Type'anyPointer'unconstrained where
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.ConstMsg)
 
 instance C'.Cerialize s Type'anyPointer'unconstrained (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()

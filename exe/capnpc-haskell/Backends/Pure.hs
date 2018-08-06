@@ -207,10 +207,9 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
             CTyEnum -> ""
             CTyStruct _ _ -> mconcat
                 [ "instance C'.Cerialize s ", pureName, " (", rawName, " (M'.MutMsg s)) where\n"
-                , "    cerialize msg value_ = do\n"
-                , "        raw <- C'.new msg\n"
+                , "    marshalInto raw value = do\n"
                 -- TODO: fill in fields
-                , "        pure raw\n"
+                , "        pure ()\n"
                 ]
         ]
   where

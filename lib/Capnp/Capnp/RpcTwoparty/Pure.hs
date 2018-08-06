@@ -52,9 +52,8 @@ instance C'.IsStruct M'.ConstMsg JoinKeyPart where
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg)
 
 instance C'.Cerialize s JoinKeyPart (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data JoinResult
     = JoinResult
         { joinId :: Word32
@@ -75,9 +74,8 @@ instance C'.IsStruct M'.ConstMsg JoinResult where
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
 
 instance C'.Cerialize s JoinResult (Capnp.ById.Xa184c7885cdaf2a1.JoinResult (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data ProvisionId
     = ProvisionId
         { joinId :: Word32
@@ -94,9 +92,8 @@ instance C'.IsStruct M'.ConstMsg ProvisionId where
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
 
 instance C'.Cerialize s ProvisionId (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Side
     = Side'server
     | Side'client
@@ -126,6 +123,5 @@ instance C'.IsStruct M'.ConstMsg VatId where
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg)
 
 instance C'.Cerialize s VatId (Capnp.ById.Xa184c7885cdaf2a1.VatId (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()

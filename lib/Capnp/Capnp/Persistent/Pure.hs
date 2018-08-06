@@ -48,9 +48,8 @@ instance C'.IsStruct M'.ConstMsg Persistent'SaveParams where
         C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg)
 
 instance C'.Cerialize s Persistent'SaveParams (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
 data Persistent'SaveResults
     = Persistent'SaveResults
         { sturdyRef :: Maybe (PU'.PtrType)
@@ -67,6 +66,5 @@ instance C'.IsStruct M'.ConstMsg Persistent'SaveResults where
         C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg)
 
 instance C'.Cerialize s Persistent'SaveResults (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults (M'.MutMsg s)) where
-    cerialize msg value_ = do
-        raw <- C'.new msg
-        pure raw
+    marshalInto raw value = do
+        pure ()
