@@ -296,6 +296,7 @@ data ElementSize
     | ElementSize'pointer
     | ElementSize'inlineComposite
     | ElementSize'unknown' Word16
+    deriving(Show, Read, Eq)
 instance Enum ElementSize where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord

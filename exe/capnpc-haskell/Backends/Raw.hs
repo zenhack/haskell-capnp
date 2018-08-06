@@ -442,6 +442,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , "\n    = "
         , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
         , "\n"
+        , "    deriving(Show, Read, Eq)\n"
         -- Generate an Enum instance. This is a trivial wrapper around the
         -- IsWord instance, below.
         , "instance Enum ", typeName, " where\n"

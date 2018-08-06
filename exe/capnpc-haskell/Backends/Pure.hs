@@ -107,7 +107,12 @@ fmtExportList Module{modId,modDecls} =
     mintercalate ", " (map (fmtExport modId) (M.toList modDecls))
 
 fmtExport :: Id -> (Name, Decl) -> TB.Builder
-fmtExport thisMod (name, DeclDef _)   = fmtName Pure thisMod name <> "(..)"
+fmtExport thisMod (name, DeclDef DataDef{dataCerialType}) = case dataCerialType of
+    CTyStruct _ _ ->
+        fmtName Pure thisMod name <> "(..)"
+    CTyEnum ->
+        -- This one is 'Raw' because we're just re-exporting these.
+        fmtName Raw thisMod name <> "(..)"
 fmtExport thisMod (name, DeclConst _) = fmtName Pure thisMod (valueName name)
 
 fmtImport :: ModRefType -> Import -> TB.Builder
@@ -120,7 +125,7 @@ fmtType :: Id -> Type -> TB.Builder
 fmtType thisMod (StructType name params) =
     fmtName Pure thisMod name
     <> mconcat [" (" <> fmtType thisMod ty <> ")" | ty <- params]
-fmtType thisMod (EnumType name)  = fmtName Pure thisMod name
+fmtType thisMod (EnumType name)  = fmtName Raw thisMod name
 fmtType thisMod (ListOf eltType) = "List (" <> fmtType thisMod eltType <> ")"
 fmtType thisMod (PrimType prim)  = fmtPrimType prim
 fmtType thisMod (Untyped ty)     = "Maybe (" <> fmtUntyped ty <> ")"
@@ -169,7 +174,13 @@ fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
         ]
 
 fmtDataDef ::  Id -> Name -> DataDef -> TB.Builder
-fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
+fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum} =
+    let rawName = fmtName Raw thisMod dataName in
+    mconcat
+        [ "instance C'.Decerialize ", rawName, " ", rawName, " where\n"
+        , "     decerialize = pure\n"
+        ]
+fmtDataDef thisMod dataName DataDef{dataVariants} =
     let rawName = fmtName Raw thisMod dataName
         pureName = fmtName Pure thisMod dataName
     in mconcat
@@ -177,48 +188,29 @@ fmtDataDef thisMod dataName DataDef{dataVariants,dataCerialType} =
         , mintercalate "\n    | " $ map (fmtVariant thisMod) dataVariants
         , "\n    deriving(Show, Read, Eq)"
         , "\n\n"
-        , "instance C'.Decerialize "
-        , case dataCerialType of
-            CTyStruct _ _ -> "(" <> rawName <> " M'.ConstMsg)"
-            CTyEnum       -> rawName
-        , " "
-        , pureName
-        , " where\n"
+        , "instance C'.Decerialize (" <> rawName <> " M'.ConstMsg) ", pureName, " where\n"
         , "    decerialize raw = "
         , case dataVariants of
             [Variant{variantName,variantParams=Record fields}] ->
                 fmtDecerializeArgs variantName fields
             _ -> mconcat
                 [ "do\n"
-                , if dataCerialType == CTyEnum then
-                    ""
-                  else mconcat [
-                  "        raw <- ", fmtName Raw thisMod $ prefixName "get_" (subName dataName ""), " raw\n"
-                  ]
+                , "        raw <- ", fmtName Raw thisMod $ prefixName "get_" (subName dataName ""), " raw\n"
                 , "        case raw of\n"
                 , "            "
                 , mintercalate "\n            " (map fmtDecerializeVariant dataVariants)
                 ]
         , "\n\n"
-        , case dataCerialType of
-            CTyStruct _ _ -> mconcat
-                [ "instance C'.IsStruct M'.ConstMsg "
-                , pureName, " where\n"
-                , "    fromStruct struct = do\n"
-                , "        raw <- C'.fromStruct struct\n"
-                , "        C'.decerialize (raw :: ", rawName, " M'.ConstMsg)\n"
-                , "\n"
-                ]
-            _ ->
-                ""
-        , case dataCerialType of
-            CTyEnum -> ""
-            CTyStruct _ _ -> mconcat
-                [ "instance C'.Cerialize s ", pureName, " (", rawName, " (M'.MutMsg s)) where\n"
-                , "    marshalInto raw value = do\n"
-                -- TODO: fill in fields
-                , "        pure ()\n"
-                ]
+        , "instance C'.IsStruct M'.ConstMsg "
+        , pureName, " where\n"
+        , "    fromStruct struct = do\n"
+        , "        raw <- C'.fromStruct struct\n"
+        , "        C'.decerialize (raw :: ", rawName, " M'.ConstMsg)\n"
+        , "\n"
+        , "instance C'.Cerialize s ", pureName, " (", rawName, " (M'.MutMsg s)) where\n"
+        , "    marshalInto raw value = do\n"
+        -- TODO: fill in fields
+        , "        pure ()\n"
         ]
   where
     fmtDecerializeArgs variantName fields = mconcat

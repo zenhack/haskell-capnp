@@ -188,6 +188,7 @@ data Side
     = Side'server
     | Side'client
     | Side'unknown' Word16
+    deriving(Show, Read, Eq)
 instance Enum Side where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord

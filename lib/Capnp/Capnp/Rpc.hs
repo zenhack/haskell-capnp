@@ -1306,6 +1306,7 @@ data Exception'Type
     | Exception'Type'disconnected
     | Exception'Type'unimplemented
     | Exception'Type'unknown' Word16
+    deriving(Show, Read, Eq)
 instance Enum Exception'Type where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord
