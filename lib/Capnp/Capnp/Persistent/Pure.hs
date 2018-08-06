@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -50,7 +51,9 @@ instance C'.IsStruct M'.ConstMsg Persistent'SaveParams where
 
 instance C'.Cerialize s Persistent'SaveParams (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Persistent'SaveParams{..} -> do
+                pure ()
 data Persistent'SaveResults
     = Persistent'SaveResults
         { sturdyRef :: Maybe (PU'.PtrType)
@@ -68,4 +71,6 @@ instance C'.IsStruct M'.ConstMsg Persistent'SaveResults where
 
 instance C'.Cerialize s Persistent'SaveResults (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Persistent'SaveResults{..} -> do
+                pure ()

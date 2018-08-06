@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -64,7 +65,15 @@ instance C'.IsStruct M'.ConstMsg JsonValue where
 
 instance C'.Cerialize s JsonValue (Capnp.ById.X8ef99297a43a5e34.JsonValue (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            JsonValue'null -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'null raw
+            JsonValue'boolean _ -> pure ()
+            JsonValue'number _ -> pure ()
+            JsonValue'string _ -> pure ()
+            JsonValue'array _ -> pure ()
+            JsonValue'object _ -> pure ()
+            JsonValue'call _ -> pure ()
+            JsonValue'unknown' _ -> pure ()
 data JsonValue'Call
     = JsonValue'Call
         { function :: Text
@@ -84,7 +93,10 @@ instance C'.IsStruct M'.ConstMsg JsonValue'Call where
 
 instance C'.Cerialize s JsonValue'Call (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            JsonValue'Call{..} -> do
+                pure ()
+                pure ()
 data JsonValue'Field
     = JsonValue'Field
         { name :: Text
@@ -104,4 +116,7 @@ instance C'.IsStruct M'.ConstMsg JsonValue'Field where
 
 instance C'.Cerialize s JsonValue'Field (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            JsonValue'Field{..} -> do
+                pure ()
+                pure ()

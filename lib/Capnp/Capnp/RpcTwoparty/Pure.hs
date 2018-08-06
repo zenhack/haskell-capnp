@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -54,7 +55,11 @@ instance C'.IsStruct M'.ConstMsg JoinKeyPart where
 
 instance C'.Cerialize s JoinKeyPart (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            JoinKeyPart{..} -> do
+                Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'joinId raw joinId
+                Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partCount raw partCount
+                Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partNum raw partNum
 data JoinResult
     = JoinResult
         { joinId :: Word32
@@ -76,7 +81,11 @@ instance C'.IsStruct M'.ConstMsg JoinResult where
 
 instance C'.Cerialize s JoinResult (Capnp.ById.Xa184c7885cdaf2a1.JoinResult (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            JoinResult{..} -> do
+                Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'joinId raw joinId
+                Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'succeeded raw succeeded
+                pure ()
 data ProvisionId
     = ProvisionId
         { joinId :: Word32
@@ -94,7 +103,9 @@ instance C'.IsStruct M'.ConstMsg ProvisionId where
 
 instance C'.Cerialize s ProvisionId (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            ProvisionId{..} -> do
+                Capnp.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
 instance C'.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side Capnp.ById.Xa184c7885cdaf2a1.Side where
      decerialize = pure
 data VatId
@@ -114,4 +125,6 @@ instance C'.IsStruct M'.ConstMsg VatId where
 
 instance C'.Cerialize s VatId (Capnp.ById.Xa184c7885cdaf2a1.VatId (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            VatId{..} -> do
+                Capnp.ById.Xa184c7885cdaf2a1.set_VatId'side raw side

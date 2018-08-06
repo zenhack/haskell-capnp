@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -54,7 +55,11 @@ instance C'.IsStruct M'.ConstMsg Accept where
 
 instance C'.Cerialize s Accept (Capnp.ById.Xb312981b2552a250.Accept (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Accept{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Accept'questionId raw questionId
+                pure ()
+                Capnp.ById.Xb312981b2552a250.set_Accept'embargo raw embargo
 data Bootstrap
     = Bootstrap
         { questionId :: Word32
@@ -74,7 +79,10 @@ instance C'.IsStruct M'.ConstMsg Bootstrap where
 
 instance C'.Cerialize s Bootstrap (Capnp.ById.Xb312981b2552a250.Bootstrap (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Bootstrap{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Bootstrap'questionId raw questionId
+                pure ()
 data Call
     = Call
         { questionId :: Word32
@@ -104,7 +112,15 @@ instance C'.IsStruct M'.ConstMsg Call where
 
 instance C'.Cerialize s Call (Capnp.ById.Xb312981b2552a250.Call (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Call{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Call'questionId raw questionId
+                pure ()
+                Capnp.ById.Xb312981b2552a250.set_Call'interfaceId raw interfaceId
+                Capnp.ById.Xb312981b2552a250.set_Call'methodId raw methodId
+                pure ()
+                pure ()
+                Capnp.ById.Xb312981b2552a250.set_Call'allowThirdPartyTailCall raw allowThirdPartyTailCall
 data CapDescriptor
     = CapDescriptor'none
     | CapDescriptor'senderHosted (Word32)
@@ -134,7 +150,14 @@ instance C'.IsStruct M'.ConstMsg CapDescriptor where
 
 instance C'.Cerialize s CapDescriptor (Capnp.ById.Xb312981b2552a250.CapDescriptor (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            CapDescriptor'none -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'none raw
+            CapDescriptor'senderHosted _ -> pure ()
+            CapDescriptor'senderPromise _ -> pure ()
+            CapDescriptor'receiverHosted _ -> pure ()
+            CapDescriptor'receiverAnswer _ -> pure ()
+            CapDescriptor'thirdPartyHosted _ -> pure ()
+            CapDescriptor'unknown' _ -> pure ()
 data Disembargo
     = Disembargo
         { target :: MessageTarget
@@ -154,7 +177,10 @@ instance C'.IsStruct M'.ConstMsg Disembargo where
 
 instance C'.Cerialize s Disembargo (Capnp.ById.Xb312981b2552a250.Disembargo (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Disembargo{..} -> do
+                pure ()
+                pure ()
 data Exception
     = Exception
         { reason :: Text
@@ -178,7 +204,12 @@ instance C'.IsStruct M'.ConstMsg Exception where
 
 instance C'.Cerialize s Exception (Capnp.ById.Xb312981b2552a250.Exception (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Exception{..} -> do
+                pure ()
+                Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteIsCallersFault raw obsoleteIsCallersFault
+                Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteDurability raw obsoleteDurability
+                Capnp.ById.Xb312981b2552a250.set_Exception'type_ raw type_
 data Finish
     = Finish
         { questionId :: Word32
@@ -198,7 +229,10 @@ instance C'.IsStruct M'.ConstMsg Finish where
 
 instance C'.Cerialize s Finish (Capnp.ById.Xb312981b2552a250.Finish (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Finish{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Finish'questionId raw questionId
+                Capnp.ById.Xb312981b2552a250.set_Finish'releaseResultCaps raw releaseResultCaps
 data Join
     = Join
         { questionId :: Word32
@@ -220,7 +254,11 @@ instance C'.IsStruct M'.ConstMsg Join where
 
 instance C'.Cerialize s Join (Capnp.ById.Xb312981b2552a250.Join (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Join{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Join'questionId raw questionId
+                pure ()
+                pure ()
 data Message
     = Message'unimplemented (Message)
     | Message'abort (Exception)
@@ -266,7 +304,22 @@ instance C'.IsStruct M'.ConstMsg Message where
 
 instance C'.Cerialize s Message (Capnp.ById.Xb312981b2552a250.Message (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Message'unimplemented _ -> pure ()
+            Message'abort _ -> pure ()
+            Message'call _ -> pure ()
+            Message'return _ -> pure ()
+            Message'finish _ -> pure ()
+            Message'resolve _ -> pure ()
+            Message'release _ -> pure ()
+            Message'obsoleteSave _ -> pure ()
+            Message'bootstrap _ -> pure ()
+            Message'obsoleteDelete _ -> pure ()
+            Message'provide _ -> pure ()
+            Message'accept _ -> pure ()
+            Message'join _ -> pure ()
+            Message'disembargo _ -> pure ()
+            Message'unknown' _ -> pure ()
 data MessageTarget
     = MessageTarget'importedCap (Word32)
     | MessageTarget'promisedAnswer (PromisedAnswer)
@@ -288,7 +341,10 @@ instance C'.IsStruct M'.ConstMsg MessageTarget where
 
 instance C'.Cerialize s MessageTarget (Capnp.ById.Xb312981b2552a250.MessageTarget (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            MessageTarget'importedCap _ -> pure ()
+            MessageTarget'promisedAnswer _ -> pure ()
+            MessageTarget'unknown' _ -> pure ()
 data Payload
     = Payload
         { content :: Maybe (PU'.PtrType)
@@ -308,7 +364,10 @@ instance C'.IsStruct M'.ConstMsg Payload where
 
 instance C'.Cerialize s Payload (Capnp.ById.Xb312981b2552a250.Payload (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Payload{..} -> do
+                pure ()
+                pure ()
 data PromisedAnswer
     = PromisedAnswer
         { questionId :: Word32
@@ -328,7 +387,10 @@ instance C'.IsStruct M'.ConstMsg PromisedAnswer where
 
 instance C'.Cerialize s PromisedAnswer (Capnp.ById.Xb312981b2552a250.PromisedAnswer (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            PromisedAnswer{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'questionId raw questionId
+                pure ()
 data Provide
     = Provide
         { questionId :: Word32
@@ -350,7 +412,11 @@ instance C'.IsStruct M'.ConstMsg Provide where
 
 instance C'.Cerialize s Provide (Capnp.ById.Xb312981b2552a250.Provide (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Provide{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Provide'questionId raw questionId
+                pure ()
+                pure ()
 data Release
     = Release
         { id :: Word32
@@ -370,7 +436,10 @@ instance C'.IsStruct M'.ConstMsg Release where
 
 instance C'.Cerialize s Release (Capnp.ById.Xb312981b2552a250.Release (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Release{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Release'id raw id
+                Capnp.ById.Xb312981b2552a250.set_Release'referenceCount raw referenceCount
 data Resolve
     = Resolve
         { promiseId :: Word32
@@ -390,7 +459,10 @@ instance C'.IsStruct M'.ConstMsg Resolve where
 
 instance C'.Cerialize s Resolve (Capnp.ById.Xb312981b2552a250.Resolve (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Resolve{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Resolve'promiseId raw promiseId
+                pure ()
 data Return
     = Return
         { answerId :: Word32
@@ -412,7 +484,11 @@ instance C'.IsStruct M'.ConstMsg Return where
 
 instance C'.Cerialize s Return (Capnp.ById.Xb312981b2552a250.Return (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Return{..} -> do
+                Capnp.ById.Xb312981b2552a250.set_Return'answerId raw answerId
+                Capnp.ById.Xb312981b2552a250.set_Return'releaseParamCaps raw releaseParamCaps
+                pure ()
 data ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor
         { id :: Maybe (PU'.PtrType)
@@ -432,7 +508,10 @@ instance C'.IsStruct M'.ConstMsg ThirdPartyCapDescriptor where
 
 instance C'.Cerialize s ThirdPartyCapDescriptor (Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            ThirdPartyCapDescriptor{..} -> do
+                pure ()
+                Capnp.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'vineId raw vineId
 data Call'sendResultsTo
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
@@ -456,7 +535,11 @@ instance C'.IsStruct M'.ConstMsg Call'sendResultsTo where
 
 instance C'.Cerialize s Call'sendResultsTo (Capnp.ById.Xb312981b2552a250.Call'sendResultsTo (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Call'sendResultsTo'caller -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw
+            Call'sendResultsTo'yourself -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'yourself raw
+            Call'sendResultsTo'thirdParty _ -> pure ()
+            Call'sendResultsTo'unknown' _ -> pure ()
 data Disembargo'context
     = Disembargo'context'senderLoopback (Word32)
     | Disembargo'context'receiverLoopback (Word32)
@@ -482,7 +565,12 @@ instance C'.IsStruct M'.ConstMsg Disembargo'context where
 
 instance C'.Cerialize s Disembargo'context (Capnp.ById.Xb312981b2552a250.Disembargo'context (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Disembargo'context'senderLoopback _ -> pure ()
+            Disembargo'context'receiverLoopback _ -> pure ()
+            Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
+            Disembargo'context'provide _ -> pure ()
+            Disembargo'context'unknown' _ -> pure ()
 instance C'.Decerialize Capnp.ById.Xb312981b2552a250.Exception'Type Capnp.ById.Xb312981b2552a250.Exception'Type where
      decerialize = pure
 data PromisedAnswer'Op
@@ -506,7 +594,10 @@ instance C'.IsStruct M'.ConstMsg PromisedAnswer'Op where
 
 instance C'.Cerialize s PromisedAnswer'Op (Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            PromisedAnswer'Op'noop -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw
+            PromisedAnswer'Op'getPointerField _ -> pure ()
+            PromisedAnswer'Op'unknown' _ -> pure ()
 data Resolve'
     = Resolve'cap (CapDescriptor)
     | Resolve'exception (Exception)
@@ -528,7 +619,10 @@ instance C'.IsStruct M'.ConstMsg Resolve' where
 
 instance C'.Cerialize s Resolve' (Capnp.ById.Xb312981b2552a250.Resolve' (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Resolve'cap _ -> pure ()
+            Resolve'exception _ -> pure ()
+            Resolve'unknown' _ -> pure ()
 data Return'
     = Return'results (Payload)
     | Return'exception (Exception)
@@ -558,4 +652,11 @@ instance C'.IsStruct M'.ConstMsg Return' where
 
 instance C'.Cerialize s Return' (Capnp.ById.Xb312981b2552a250.Return' (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Return'results _ -> pure ()
+            Return'exception _ -> pure ()
+            Return'canceled -> Capnp.ById.Xb312981b2552a250.set_Return'canceled raw
+            Return'resultsSentElsewhere -> Capnp.ById.Xb312981b2552a250.set_Return'resultsSentElsewhere raw
+            Return'takeFromOtherQuestion _ -> pure ()
+            Return'acceptFromThirdParty _ -> pure ()
+            Return'unknown' _ -> pure ()

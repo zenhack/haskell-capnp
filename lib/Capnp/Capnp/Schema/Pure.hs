@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -54,7 +55,11 @@ instance C'.IsStruct M'.ConstMsg Annotation where
 
 instance C'.Cerialize s Annotation (Capnp.ById.Xa93fc509624c72d9.Annotation (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Annotation{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_Annotation'id raw id
+                pure ()
+                pure ()
 data Brand
     = Brand
         { scopes :: List (Brand'Scope)
@@ -72,7 +77,9 @@ instance C'.IsStruct M'.ConstMsg Brand where
 
 instance C'.Cerialize s Brand (Capnp.ById.Xa93fc509624c72d9.Brand (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Brand{..} -> do
+                pure ()
 data CapnpVersion
     = CapnpVersion
         { major :: Word16
@@ -94,7 +101,11 @@ instance C'.IsStruct M'.ConstMsg CapnpVersion where
 
 instance C'.Cerialize s CapnpVersion (Capnp.ById.Xa93fc509624c72d9.CapnpVersion (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            CapnpVersion{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'major raw major
+                Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'minor raw minor
+                Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'micro raw micro
 data CodeGeneratorRequest
     = CodeGeneratorRequest
         { nodes :: List (Node)
@@ -116,7 +127,11 @@ instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest where
 
 instance C'.Cerialize s CodeGeneratorRequest (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            CodeGeneratorRequest{..} -> do
+                pure ()
+                pure ()
+                pure ()
 instance C'.Decerialize Capnp.ById.Xa93fc509624c72d9.ElementSize Capnp.ById.Xa93fc509624c72d9.ElementSize where
      decerialize = pure
 data Enumerant
@@ -140,7 +155,11 @@ instance C'.IsStruct M'.ConstMsg Enumerant where
 
 instance C'.Cerialize s Enumerant (Capnp.ById.Xa93fc509624c72d9.Enumerant (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Enumerant{..} -> do
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Enumerant'codeOrder raw codeOrder
+                pure ()
 data Field
     = Field
         { name :: Text
@@ -168,7 +187,14 @@ instance C'.IsStruct M'.ConstMsg Field where
 
 instance C'.Cerialize s Field (Capnp.ById.Xa93fc509624c72d9.Field (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Field{..} -> do
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Field'codeOrder raw codeOrder
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Field'discriminantValue raw discriminantValue
+                pure ()
+                pure ()
 data Method
     = Method
         { name :: Text
@@ -200,7 +226,16 @@ instance C'.IsStruct M'.ConstMsg Method where
 
 instance C'.Cerialize s Method (Capnp.ById.Xa93fc509624c72d9.Method (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Method{..} -> do
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Method'codeOrder raw codeOrder
+                Capnp.ById.Xa93fc509624c72d9.set_Method'paramStructType raw paramStructType
+                Capnp.ById.Xa93fc509624c72d9.set_Method'resultStructType raw resultStructType
+                pure ()
+                pure ()
+                pure ()
+                pure ()
 data Node
     = Node
         { id :: Word64
@@ -234,7 +269,17 @@ instance C'.IsStruct M'.ConstMsg Node where
 
 instance C'.Cerialize s Node (Capnp.ById.Xa93fc509624c72d9.Node (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Node{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_Node'id raw id
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Node'displayNamePrefixLength raw displayNamePrefixLength
+                Capnp.ById.Xa93fc509624c72d9.set_Node'scopeId raw scopeId
+                pure ()
+                pure ()
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Node'isGeneric raw isGeneric
+                pure ()
 data Superclass
     = Superclass
         { id :: Word64
@@ -254,7 +299,10 @@ instance C'.IsStruct M'.ConstMsg Superclass where
 
 instance C'.Cerialize s Superclass (Capnp.ById.Xa93fc509624c72d9.Superclass (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Superclass{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_Superclass'id raw id
+                pure ()
 data Type
     = Type'void
     | Type'bool
@@ -331,7 +379,40 @@ instance C'.IsStruct M'.ConstMsg Type where
 
 instance C'.Cerialize s Type (Capnp.ById.Xa93fc509624c72d9.Type (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Type'void -> Capnp.ById.Xa93fc509624c72d9.set_Type'void raw
+            Type'bool -> Capnp.ById.Xa93fc509624c72d9.set_Type'bool raw
+            Type'int8 -> Capnp.ById.Xa93fc509624c72d9.set_Type'int8 raw
+            Type'int16 -> Capnp.ById.Xa93fc509624c72d9.set_Type'int16 raw
+            Type'int32 -> Capnp.ById.Xa93fc509624c72d9.set_Type'int32 raw
+            Type'int64 -> Capnp.ById.Xa93fc509624c72d9.set_Type'int64 raw
+            Type'uint8 -> Capnp.ById.Xa93fc509624c72d9.set_Type'uint8 raw
+            Type'uint16 -> Capnp.ById.Xa93fc509624c72d9.set_Type'uint16 raw
+            Type'uint32 -> Capnp.ById.Xa93fc509624c72d9.set_Type'uint32 raw
+            Type'uint64 -> Capnp.ById.Xa93fc509624c72d9.set_Type'uint64 raw
+            Type'float32 -> Capnp.ById.Xa93fc509624c72d9.set_Type'float32 raw
+            Type'float64 -> Capnp.ById.Xa93fc509624c72d9.set_Type'float64 raw
+            Type'text -> Capnp.ById.Xa93fc509624c72d9.set_Type'text raw
+            Type'data_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'data_ raw
+            Type'list{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'list raw
+                pure ()
+            Type'enum{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'enum raw
+                Capnp.ById.Xa93fc509624c72d9.set_Type'enum'typeId raw typeId
+                pure ()
+            Type'struct{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'struct raw
+                Capnp.ById.Xa93fc509624c72d9.set_Type'struct'typeId raw typeId
+                pure ()
+            Type'interface{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'interface raw
+                Capnp.ById.Xa93fc509624c72d9.set_Type'interface'typeId raw typeId
+                pure ()
+            Type'anyPointer{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer raw
+                pure ()
+            Type'unknown' _ -> pure ()
 data Value
     = Value'void
     | Value'bool (Bool)
@@ -387,7 +468,27 @@ instance C'.IsStruct M'.ConstMsg Value where
 
 instance C'.Cerialize s Value (Capnp.ById.Xa93fc509624c72d9.Value (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Value'void -> Capnp.ById.Xa93fc509624c72d9.set_Value'void raw
+            Value'bool _ -> pure ()
+            Value'int8 _ -> pure ()
+            Value'int16 _ -> pure ()
+            Value'int32 _ -> pure ()
+            Value'int64 _ -> pure ()
+            Value'uint8 _ -> pure ()
+            Value'uint16 _ -> pure ()
+            Value'uint32 _ -> pure ()
+            Value'uint64 _ -> pure ()
+            Value'float32 _ -> pure ()
+            Value'float64 _ -> pure ()
+            Value'text _ -> pure ()
+            Value'data_ _ -> pure ()
+            Value'list _ -> pure ()
+            Value'enum _ -> pure ()
+            Value'struct _ -> pure ()
+            Value'interface -> Capnp.ById.Xa93fc509624c72d9.set_Value'interface raw
+            Value'anyPointer _ -> pure ()
+            Value'unknown' _ -> pure ()
 data Brand'Binding
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type)
@@ -409,7 +510,10 @@ instance C'.IsStruct M'.ConstMsg Brand'Binding where
 
 instance C'.Cerialize s Brand'Binding (Capnp.ById.Xa93fc509624c72d9.Brand'Binding (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Brand'Binding'unbound -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Binding'unbound raw
+            Brand'Binding'type_ _ -> pure ()
+            Brand'Binding'unknown' _ -> pure ()
 data Brand'Scope
     = Brand'Scope
         { scopeId :: Word64
@@ -429,7 +533,10 @@ instance C'.IsStruct M'.ConstMsg Brand'Scope where
 
 instance C'.Cerialize s Brand'Scope (Capnp.ById.Xa93fc509624c72d9.Brand'Scope (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Brand'Scope{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'scopeId raw scopeId
+                pure ()
 data Brand'Scope'
     = Brand'Scope'bind (List (Brand'Binding))
     | Brand'Scope'inherit
@@ -451,7 +558,10 @@ instance C'.IsStruct M'.ConstMsg Brand'Scope' where
 
 instance C'.Cerialize s Brand'Scope' (Capnp.ById.Xa93fc509624c72d9.Brand'Scope' (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Brand'Scope'bind _ -> pure ()
+            Brand'Scope'inherit -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw
+            Brand'Scope'unknown' _ -> pure ()
 data CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile
         { id :: Word64
@@ -473,7 +583,11 @@ instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile where
 
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            CodeGeneratorRequest'RequestedFile{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'id raw id
+                pure ()
+                pure ()
 data CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import
         { id :: Word64
@@ -493,7 +607,10 @@ instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile'Import where
 
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile'Import (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            CodeGeneratorRequest'RequestedFile'Import{..} -> do
+                Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'id raw id
+                pure ()
 data Field'
     = Field'slot
         { offset :: Word32
@@ -527,7 +644,17 @@ instance C'.IsStruct M'.ConstMsg Field' where
 
 instance C'.Cerialize s Field' (Capnp.ById.Xa93fc509624c72d9.Field' (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Field'slot{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Field'slot raw
+                Capnp.ById.Xa93fc509624c72d9.set_Field'slot'offset raw offset
+                pure ()
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Field'slot'hadExplicitDefault raw hadExplicitDefault
+            Field'group{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Field'group raw
+                Capnp.ById.Xa93fc509624c72d9.set_Field'group'typeId raw typeId
+            Field'unknown' _ -> pure ()
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 data Field'ordinal
@@ -551,7 +678,10 @@ instance C'.IsStruct M'.ConstMsg Field'ordinal where
 
 instance C'.Cerialize s Field'ordinal (Capnp.ById.Xa93fc509624c72d9.Field'ordinal (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Field'ordinal'implicit -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw
+            Field'ordinal'explicit _ -> pure ()
+            Field'ordinal'unknown' _ -> pure ()
 data Node'
     = Node'file
     | Node'struct
@@ -636,7 +766,44 @@ instance C'.IsStruct M'.ConstMsg Node' where
 
 instance C'.Cerialize s Node' (Capnp.ById.Xa93fc509624c72d9.Node' (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Node'file -> Capnp.ById.Xa93fc509624c72d9.set_Node'file raw
+            Node'struct{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'struct raw
+                Capnp.ById.Xa93fc509624c72d9.set_Node'struct'dataWordCount raw dataWordCount
+                Capnp.ById.Xa93fc509624c72d9.set_Node'struct'pointerCount raw pointerCount
+                Capnp.ById.Xa93fc509624c72d9.set_Node'struct'preferredListEncoding raw preferredListEncoding
+                Capnp.ById.Xa93fc509624c72d9.set_Node'struct'isGroup raw isGroup
+                Capnp.ById.Xa93fc509624c72d9.set_Node'struct'discriminantCount raw discriminantCount
+                Capnp.ById.Xa93fc509624c72d9.set_Node'struct'discriminantOffset raw discriminantOffset
+                pure ()
+            Node'enum{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'enum raw
+                pure ()
+            Node'interface{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'interface raw
+                pure ()
+                pure ()
+            Node'const{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'const raw
+                pure ()
+                pure ()
+            Node'annotation{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'annotation raw
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsFile raw targetsFile
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsConst raw targetsConst
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsEnum raw targetsEnum
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsEnumerant raw targetsEnumerant
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsStruct raw targetsStruct
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsField raw targetsField
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsUnion raw targetsUnion
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsGroup raw targetsGroup
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsInterface raw targetsInterface
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsMethod raw targetsMethod
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsParam raw targetsParam
+                Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsAnnotation raw targetsAnnotation
+            Node'unknown' _ -> pure ()
 data Node'NestedNode
     = Node'NestedNode
         { name :: Text
@@ -656,7 +823,10 @@ instance C'.IsStruct M'.ConstMsg Node'NestedNode where
 
 instance C'.Cerialize s Node'NestedNode (Capnp.ById.Xa93fc509624c72d9.Node'NestedNode (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Node'NestedNode{..} -> do
+                pure ()
+                Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'id raw id
 data Node'Parameter
     = Node'Parameter
         { name :: Text
@@ -674,7 +844,9 @@ instance C'.IsStruct M'.ConstMsg Node'Parameter where
 
 instance C'.Cerialize s Node'Parameter (Capnp.ById.Xa93fc509624c72d9.Node'Parameter (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Node'Parameter{..} -> do
+                pure ()
 data Type'anyPointer
     = Type'anyPointer'unconstrained
         { union' :: Type'anyPointer'unconstrained
@@ -709,7 +881,18 @@ instance C'.IsStruct M'.ConstMsg Type'anyPointer where
 
 instance C'.Cerialize s Type'anyPointer (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Type'anyPointer'unconstrained{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained raw
+                pure ()
+            Type'anyPointer'parameter{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter raw
+                Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'scopeId raw scopeId
+                Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'parameterIndex raw parameterIndex
+            Type'anyPointer'implicitMethodParameter{..} -> do
+                raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter raw
+                Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter'parameterIndex raw parameterIndex
+            Type'anyPointer'unknown' _ -> pure ()
 data Type'anyPointer'unconstrained
     = Type'anyPointer'unconstrained'anyKind
     | Type'anyPointer'unconstrained'struct
@@ -735,4 +918,9 @@ instance C'.IsStruct M'.ConstMsg Type'anyPointer'unconstrained where
 
 instance C'.Cerialize s Type'anyPointer'unconstrained (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained (M'.MutMsg s)) where
     marshalInto raw value = do
-        pure ()
+        case value of
+            Type'anyPointer'unconstrained'anyKind -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'anyKind raw
+            Type'anyPointer'unconstrained'struct -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'struct raw
+            Type'anyPointer'unconstrained'list -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'list raw
+            Type'anyPointer'unconstrained'capability -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw
+            Type'anyPointer'unconstrained'unknown' _ -> pure ()

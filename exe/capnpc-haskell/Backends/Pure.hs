@@ -66,6 +66,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
   modFileText = TB.fromText modFile
   mainContent = mintercalate "\n"
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
+    , "{-# LANGUAGE RecordWildCards #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
@@ -209,8 +210,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
         , "\n"
         , "instance C'.Cerialize s ", pureName, " (", rawName, " (M'.MutMsg s)) where\n"
         , "    marshalInto raw value = do\n"
-        -- TODO: fill in fields
-        , "        pure ()\n"
+        , "        case value of\n"
+        , mconcat $ map
+            (fmtCerializeVariant (length dataVariants /= 1))
+            dataVariants
         ]
   where
     fmtDecerializeArgs variantName fields = mconcat
@@ -233,3 +236,52 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 , fmtName Pure thisMod variantName
                 , " <$> C'.decerialize val"
                 ]
+    fmtCerializeVariant isUnion Variant{variantName, variantParams} = mconcat
+        [ "            ", fmtName Pure thisMod variantName
+        , let setterName = fmtName Raw thisMod (prefixName "set_" variantName)
+              setTag = if isUnion
+                then "                raw <- " <> setterName <> " raw\n"
+                else ""
+          in case variantParams of
+            NoParams -> mconcat
+                [ " -> ", setterName, " raw\n" ]
+            Record fields -> mconcat
+                [ "{..} -> do\n"
+                , setTag
+                , mconcat (map (fmtCerializeField variantName) fields)
+                ]
+            _ ->
+                " _ -> pure ()\n" -- TODO
+        ]
+    fmtCerializeField variantName Field{fieldName,fieldLoc} =
+        let accessorName prefix = fmtName Raw thisMod $ prefixName prefix (subName variantName fieldName)
+            setterName = accessorName "set_"
+            getterName = accessorName "get_"
+            newName = accessorName "new_"
+        in case fieldLoc of
+            DataField _ -> mconcat
+                [ "                ", setterName, " raw ", TB.fromText fieldName, "\n"
+                ]
+            VoidField -> mconcat
+                [ "                ", setterName, " raw\n"
+                ]
+            HereField -> mconcat
+                [ "                pure ()\n"
+                ]
+{-          -- TODO: need to treat unions vs. groups differently.
+            HereField -> mconcat
+                [ "                ", setterName, " raw\n"
+                , "                field_ <- ", getterName, " raw\n"
+                , "                C'.marshalInto field_ ", TB.fromText fieldName, "\n"
+                ]
+-}
+            PtrField _ -> mconcat
+                [ "                pure ()\n"
+                ]
+{-
+            -- TODO: need to look at type for this.
+            PtrField _ -> mconcat
+                [ "            field_", newName, " raw\n"
+                , "            C'.marshalInto field_ ", TB.fromText fieldName, "\n"
+                ]
+-}
