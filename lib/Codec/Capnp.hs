@@ -55,6 +55,7 @@ class Decerialize from to where
 
 class Cerialize s from to where
     cerialize :: U.RWCtx m s => M.MutMsg s -> from -> m to
+    marshalInto :: U.RWCtx m s => to -> from -> m ()
 
 -- | Types that can be converted to and from an untyped pointer.
 --

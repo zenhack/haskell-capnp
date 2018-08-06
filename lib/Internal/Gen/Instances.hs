@@ -11,7 +11,6 @@ import Data.Word
 import Codec.Capnp
     ( ListElem(..)
     , MutListElem(..)
-    , Cerialize(..)
     , Decerialize(..)
     , IsPtr(..)
     )
@@ -27,8 +26,6 @@ instance MutListElem s Int8 where
     newList msg size = ListInt8 <$> U.allocList8 msg size
 instance Decerialize Int8 Int8 where
     decerialize = pure
-instance Cerialize s Int8 Int8 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Int8) where
     fromPtr msg ptr = ListInt8 <$> fromPtr msg ptr
     toPtr (ListInt8 list) = Just (U.PtrList (U.List8 list))
@@ -41,8 +38,6 @@ instance MutListElem s Int16 where
     newList msg size = ListInt16 <$> U.allocList16 msg size
 instance Decerialize Int16 Int16 where
     decerialize = pure
-instance Cerialize s Int16 Int16 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Int16) where
     fromPtr msg ptr = ListInt16 <$> fromPtr msg ptr
     toPtr (ListInt16 list) = Just (U.PtrList (U.List16 list))
@@ -55,8 +50,6 @@ instance MutListElem s Int32 where
     newList msg size = ListInt32 <$> U.allocList32 msg size
 instance Decerialize Int32 Int32 where
     decerialize = pure
-instance Cerialize s Int32 Int32 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Int32) where
     fromPtr msg ptr = ListInt32 <$> fromPtr msg ptr
     toPtr (ListInt32 list) = Just (U.PtrList (U.List32 list))
@@ -69,8 +62,6 @@ instance MutListElem s Int64 where
     newList msg size = ListInt64 <$> U.allocList64 msg size
 instance Decerialize Int64 Int64 where
     decerialize = pure
-instance Cerialize s Int64 Int64 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Int64) where
     fromPtr msg ptr = ListInt64 <$> fromPtr msg ptr
     toPtr (ListInt64 list) = Just (U.PtrList (U.List64 list))
@@ -83,8 +74,6 @@ instance MutListElem s Word8 where
     newList msg size = ListWord8 <$> U.allocList8 msg size
 instance Decerialize Word8 Word8 where
     decerialize = pure
-instance Cerialize s Word8 Word8 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Word8) where
     fromPtr msg ptr = ListWord8 <$> fromPtr msg ptr
     toPtr (ListWord8 list) = Just (U.PtrList (U.List8 list))
@@ -97,8 +86,6 @@ instance MutListElem s Word16 where
     newList msg size = ListWord16 <$> U.allocList16 msg size
 instance Decerialize Word16 Word16 where
     decerialize = pure
-instance Cerialize s Word16 Word16 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Word16) where
     fromPtr msg ptr = ListWord16 <$> fromPtr msg ptr
     toPtr (ListWord16 list) = Just (U.PtrList (U.List16 list))
@@ -111,8 +98,6 @@ instance MutListElem s Word32 where
     newList msg size = ListWord32 <$> U.allocList32 msg size
 instance Decerialize Word32 Word32 where
     decerialize = pure
-instance Cerialize s Word32 Word32 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Word32) where
     fromPtr msg ptr = ListWord32 <$> fromPtr msg ptr
     toPtr (ListWord32 list) = Just (U.PtrList (U.List32 list))
@@ -125,8 +110,6 @@ instance MutListElem s Word64 where
     newList msg size = ListWord64 <$> U.allocList64 msg size
 instance Decerialize Word64 Word64 where
     decerialize = pure
-instance Cerialize s Word64 Word64 where
-    cerialize _ = pure
 instance IsPtr msg (List msg Word64) where
     fromPtr msg ptr = ListWord64 <$> fromPtr msg ptr
     toPtr (ListWord64 list) = Just (U.PtrList (U.List64 list))
@@ -139,8 +122,6 @@ instance MutListElem s Float where
     newList msg size = ListFloat <$> U.allocList32 msg size
 instance Decerialize Float Float where
     decerialize = pure
-instance Cerialize s Float Float where
-    cerialize _ = pure
 instance IsPtr msg (List msg Float) where
     fromPtr msg ptr = ListFloat <$> fromPtr msg ptr
     toPtr (ListFloat list) = Just (U.PtrList (U.List32 list))
@@ -153,8 +134,6 @@ instance MutListElem s Double where
     newList msg size = ListDouble <$> U.allocList64 msg size
 instance Decerialize Double Double where
     decerialize = pure
-instance Cerialize s Double Double where
-    cerialize _ = pure
 instance IsPtr msg (List msg Double) where
     fromPtr msg ptr = ListDouble <$> fromPtr msg ptr
     toPtr (ListDouble list) = Just (U.PtrList (U.List64 list))
@@ -167,8 +146,6 @@ instance MutListElem s Bool where
     newList msg size = ListBool <$> U.allocList1 msg size
 instance Decerialize Bool Bool where
     decerialize = pure
-instance Cerialize s Bool Bool where
-    cerialize _ = pure
 instance IsPtr msg (List msg Bool) where
     fromPtr msg ptr = ListBool <$> fromPtr msg ptr
     toPtr (ListBool list) = Just (U.PtrList (U.List1 list))
