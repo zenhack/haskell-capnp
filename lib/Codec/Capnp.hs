@@ -14,6 +14,7 @@ module Codec.Capnp
     , getWordField
     , setWordField
     , expected
+    , cerialize
     ) where
 
 import Data.Bits
