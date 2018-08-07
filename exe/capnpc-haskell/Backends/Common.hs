@@ -9,6 +9,7 @@ module Backends.Common where
 
 import IR
 
+import Data.Monoid ((<>))
 import Data.String (IsString(..))
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
