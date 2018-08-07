@@ -164,8 +164,8 @@ fmtVariant thisMod Variant{variantName,variantParams} =
         NoParams -> ""
         Unnamed ty _ -> " (" <> fmtType thisMod ty <> ")"
         Record [] -> ""
-        Record fields -> PP.line <>
-            (indent $ PP.braces $ vcat $
+        Record fields -> PP.line <> indent
+            (PP.braces $ vcat $
                 PP.punctuate "," $ map (fmtField thisMod) fields)
 
 fmtField :: Id -> Field -> PP.Doc

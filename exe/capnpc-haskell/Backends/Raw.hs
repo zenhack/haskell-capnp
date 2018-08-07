@@ -504,11 +504,10 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         , hcat [ "instance C'.IsWord ", typeName, " where" ]
         , indent $ vcat
             [ "fromWord n = go (fromIntegral n :: Word16) where"
-            , indent $ vcat $ map ("go " <>) $
-                map fmtEnumFromWordCase $ sortVariants dataVariants
+            , indent $ vcat $
+                map (("go "     <>) . fmtEnumFromWordCase) $ sortVariants dataVariants
             , vcat $
-                map ("toWord " <>) $
-                map fmtEnumToWordCase   $ sortVariants dataVariants
+                map (("toWord " <>) .   fmtEnumToWordCase) $ sortVariants dataVariants
             ]
         , hcat [ "instance B'.ListElem msg ", typeName, " where" ]
         , indent $ vcat
