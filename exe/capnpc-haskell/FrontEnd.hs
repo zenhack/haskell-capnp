@@ -363,10 +363,9 @@ generateVariant :: Id -> NodeMap -> IR.Name -> Field -> IR.Variant
 generateVariant thisModule nodeMap parentName Field{..} = case union' of
     Field'slot{..} -> IR.Variant
         { variantName
-        , variantParams = case type_ of
-            _         -> IR.Unnamed
-                (formatType thisModule nodeMap type_)
-                (getFieldLoc thisModule nodeMap union')
+        , variantParams = IR.Unnamed
+            (formatType thisModule nodeMap type_)
+            (getFieldLoc thisModule nodeMap union')
         , variantTag = Just discriminantValue
         }
     Field'group{..} ->
