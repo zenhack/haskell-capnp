@@ -122,6 +122,7 @@ executable capnpc-haskell
     other-modules:
         FrontEnd
       , IR
+      , Backends.Common
       , Backends.Pure
       , Backends.Raw
       , Util

@@ -625,7 +625,7 @@ instance C'.Cerialize s Field' (Capnp.ById.Xa93fc509624c72d9.Field' (M'.MutMsg s
                 Capnp.ById.Xa93fc509624c72d9.set_Field'group'typeId raw typeId
             Field'unknown' _ -> pure ()
 field'noDiscriminant :: Word16
-field'noDiscriminant = C'.fromWord 65535
+field'noDiscriminant = Capnp.ById.Xa93fc509624c72d9.field'noDiscriminant
 data Field'ordinal
      = Field'ordinal'implicit |
     Field'ordinal'explicit (Word16) |

@@ -139,7 +139,6 @@ data Type
 
 data CompositeType
     = StructType Name [Type]
-    | UntypedStruct
     deriving(Show, Read, Eq)
 
 data WordType

@@ -133,29 +133,29 @@ fmtModRef :: ModRefType -> ModuleRef -> PP.Doc
 fmtModRef ty ref = mintercalate "." (map PP.textStrict $ toList $ modRefToNS ty ref)
 
 fmtType :: Id -> Type -> PP.Doc
-fmtType thisMod (StructType name params) =
+fmtType thisMod (CompositeType (StructType name params)) =
     fmtName Pure thisMod name
     <> hcat [" (" <> fmtType thisMod ty <> ")" | ty <- params]
-fmtType thisMod (EnumType name)  = fmtName Raw thisMod name
-fmtType thisMod (ListOf eltType) = "List (" <> fmtType thisMod eltType <> ")"
-fmtType thisMod (PrimType prim)  = fmtPrimType prim
-fmtType thisMod (Untyped ty)     = "Maybe (" <> fmtUntyped ty <> ")"
+fmtType thisMod (WordType (EnumType name)) = fmtName Raw thisMod name
+fmtType thisMod (PtrType (ListOf eltType)) = "List (" <> fmtType thisMod eltType <> ")"
+fmtType _ VoidType = "()"
+fmtType _ (WordType (PrimWord prim)) = fmtPrimWord prim
+fmtType _ (PtrType (PrimPtr PrimText)) = "Text"
+fmtType _ (PtrType (PrimPtr PrimData)) = "Data"
+fmtType _ (PtrType (PrimPtr (PrimAnyPtr ty))) = "Maybe (" <> fmtAnyPtr ty <> ")"
 
-fmtPrimType :: PrimType -> PP.Doc
-fmtPrimType PrimInt{isSigned=True,size}  = "Int" <> fromString (show size)
-fmtPrimType PrimInt{isSigned=False,size} = "Word" <> fromString (show size)
-fmtPrimType PrimFloat32                  = "Float"
-fmtPrimType PrimFloat64                  = "Double"
-fmtPrimType PrimBool                     = "Bool"
-fmtPrimType PrimText                     = "Text"
-fmtPrimType PrimData                     = "Data"
-fmtPrimType PrimVoid                     = "()"
+fmtPrimWord :: PrimWord -> PP.Doc
+fmtPrimWord PrimInt{isSigned=True,size}  = "Int" <> fromString (show size)
+fmtPrimWord PrimInt{isSigned=False,size} = "Word" <> fromString (show size)
+fmtPrimWord PrimFloat32                  = "Float"
+fmtPrimWord PrimFloat64                  = "Double"
+fmtPrimWord PrimBool                     = "Bool"
 
-fmtUntyped :: Untyped -> PP.Doc
-fmtUntyped Struct = "PU'.Struct"
-fmtUntyped List   = "PU'.List'"
-fmtUntyped Cap    = "PU'.Cap"
-fmtUntyped Ptr    = "PU'.PtrType"
+fmtAnyPtr :: AnyPtr -> PP.Doc
+fmtAnyPtr Struct = "PU'.Struct"
+fmtAnyPtr List   = "PU'.List'"
+fmtAnyPtr Cap    = "PU'.Cap"
+fmtAnyPtr Ptr    = "PU'.PtrType"
 
 fmtVariant :: Id -> Variant -> PP.Doc
 fmtVariant thisMod Variant{variantName,variantParams} =
@@ -173,16 +173,29 @@ fmtField thisMod Field{fieldName,fieldType} =
     PP.textStrict fieldName <> " :: " <> fmtType thisMod fieldType
 
 fmtDecl :: Id -> (Name, Decl) -> PP.Doc
-fmtDecl thisMod (name, DeclDef d) = fmtDataDef thisMod name d
--- TODO: this is copypasta from the Raw backend. We should factor this out.
-fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
-    let nameText = fmtName Pure thisMod (valueName name)
+fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
+fmtDecl thisMod (name, DeclConst c) = fmtConst thisMod name c
+
+-- | Format a constant declaration.
+fmtConst :: Id -> Name -> Const -> PP.Doc
+fmtConst thisMod name value =
+    let pureName = fmtName Pure thisMod (valueName name)
+        rawName = fmtName Raw thisMod (valueName name)
     in vcat
-        [ hcat [ nameText, " :: ", fmtType thisMod wordType ]
-        , hcat [ nameText, " = C'.fromWord ", fromString (show wordValue) ]
+        -- We just define this as an alias for the one in the raw module.
+        -- TODO: we should just re-export the existing constant instead
+        -- (but note that when we support struct and list constants we'll
+        -- have to handle those separately).
+        [ hcat
+            [ pureName, " :: ", case value of
+                VoidConst -> "()"
+                WordConst{wordType=PrimWord ty} -> fmtPrimWord ty
+                WordConst{wordType=EnumType typeName} -> fmtName Raw thisMod typeName
+            ]
+        , hcat [ pureName, " = ", rawName ]
         ]
 
-fmtDataDef ::  Id -> Name -> DataDef -> PP.Doc
+fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum} =
     let rawName = fmtName Raw thisMod dataName in
     vcat
@@ -282,15 +295,15 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 ]
 -}
             PtrField _ -> case fieldType of
-                PrimType PrimData -> vcat
+                PtrType (PrimPtr PrimData) -> vcat
                     [ hcat [ "field_ <- newData (BS.length ", fieldNameText, ")"]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                     ]
-                ListOf eltType -> vcat
+                PtrType (ListOf eltType) -> vcat
                     [ hcat [ "let len_ = V.length ", fieldNameText ]
                     , hcat [ "field_ <- ", newName, " len_ raw" ]
                     , case eltType of
-                        StructType _ _ -> vcat
+                        (CompositeType (StructType _ _)) -> vcat
                             [ "forM_ [0..len_ - 1] $ \\i -> do"
                             , indent $ vcat
                                 [ "elt <- C'.index i field_"

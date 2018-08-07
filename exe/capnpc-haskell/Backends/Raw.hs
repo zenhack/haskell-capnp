@@ -7,6 +7,7 @@ module Backends.Raw
     ( fmtModule
     ) where
 
+import Backends.Common (fmtPrimWord)
 import Data.Word
 import IR
 import Util
@@ -268,7 +269,9 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                 [ typeAnnotation
                 , hcat
                     [ setName, " (", dataCon, " struct) value = "
-                    , let size = dataFieldSize fieldType
+                    , let size = case fieldType of
+                            WordType ty -> dataFieldSize ty
+                            _ -> error $ "Mismatch between field type and field loc: " ++ show (fieldType, loc)
                       in fmtSetWordField
                         "struct"
                         ("(fromIntegral (C'.toWord value) :: Word" <> fromString (show size) <> ")")
@@ -295,15 +298,15 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
         in case fieldLoc of
             PtrField _ ->
                 case fieldType of
-                    ListOf _ ->
+                    PtrType (ListOf _) ->
                         fmtNewListLike newType "C'.newList"
-                    PrimType PrimText ->
+                    PtrType (PrimPtr PrimText) ->
                         fmtNewListLike newType "B'.newText"
-                    PrimType PrimData ->
+                    PtrType (PrimPtr PrimData) ->
                         fmtNewListLike newType "B'.newData"
-                    Untyped _ ->
+                    PtrType (PrimPtr (PrimAnyPtr _)) ->
                         ""
-                    _ -> vcat
+                    CompositeType _ -> vcat
                         [ hcat [ newName, " :: U'.RWCtx m s => ", newType ]
                         , hcat [ newName, " struct = do" ]
                         , indent $ vcat
@@ -312,6 +315,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                             , "pure result"
                             ]
                         ]
+                    _ ->
+                        error "Mismatch between fieldType and fieldLoc."
+                        -- TODO: we should adjust the IR so these are always
+                        -- paired correctly.
             _ ->
                 ""
     fmtNewListLike newType allocFn = vcat
@@ -326,16 +333,13 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
 
 
 -- | Return the size in bits of a type that belongs in the data section of a struct.
--- calls error if the type does not make sense in a data section.
-dataFieldSize :: Type -> Int
+dataFieldSize :: WordType -> Int
 dataFieldSize fieldType = case fieldType of
     EnumType _           -> 16
-    PrimType PrimInt{..} -> size
-    PrimType PrimFloat32 -> 32
-    PrimType PrimFloat64 -> 64
-    PrimType PrimBool    -> 1
-    _ -> error $ "type " ++ show fieldType ++
-        " does not make sense in the data section!"
+    PrimWord PrimInt{..} -> size
+    PrimWord PrimFloat32 -> 32
+    PrimWord PrimFloat64 -> 64
+    PrimWord PrimBool    -> 1
 
 fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
 fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
@@ -363,10 +367,10 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                 , hcat [ "pure $ ", childDataCon, " struct" ]
                 ]
             ]
-        Unnamed typ (DataField loc) -> vcat
+        Unnamed (WordType typ) (DataField loc) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-                , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()"
+                , fmtType thisMod "(M'.MutMsg s)" (WordType typ), " -> m ()"
                 ]
             , hcat [ setName, " (", parentDataCon, " struct) value = do" ]
             , indent $ vcat
@@ -377,6 +381,9 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                         loc
                 ]
             ]
+        Unnamed typ loc@(DataField _) ->
+            -- TODO: refactor so this can't happen:
+            error $ "Mismatch between type and loc: " ++ show (typ, loc)
         Unnamed typ (PtrField index) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
@@ -409,12 +416,26 @@ fmtUnionSetter _ _ _ Variant{variantTag=Nothing} =
 
 fmtDecl :: Module -> (Name, Decl) -> PP.Doc
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
-fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
+fmtDecl thisMod (name, DeclConst c) = fmtConst thisMod name c
+
+-- | Format a constant declaration.
+fmtConst :: Module -> Name -> Const -> PP.Doc
+fmtConst thisMod name value =
     let nameText = fmtName thisMod (valueName name)
-    in vcat
-        [ hcat [ nameText, " :: ", fmtType thisMod "msg" wordType ]
-        , hcat [ nameText, " = C'.fromWord ", fromString (show wordValue) ]
-        ]
+    in case value of
+        WordConst{wordType,wordValue} -> vcat
+            [ hcat
+                [ nameText, " :: "
+                , case wordType of
+                    PrimWord ty     -> fmtPrimWord ty
+                    EnumType tyName -> fmtName thisMod tyName
+                ]
+            , hcat [ nameText, " = C'.fromWord ", fromString (show wordValue) ]
+            ]
+        VoidConst -> vcat
+            [ hcat [ nameText, " :: ()" ]
+            , hcat [ nameText, " = ()" ]
+            ]
 
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct dataSz ptrSz, ..} =
@@ -434,7 +455,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
         , indent $ vcat $ PP.punctuate " |" (map fmtDataVariant dataVariants)
         , fmtFieldAccessor thisMod dataName dataName Field
             { fieldName = ""
-            , fieldType = StructType unionName []
+            , fieldType = CompositeType $ StructType unionName []
             , fieldLoc = HereField
             }
         , vcat $ map (fmtUnionSetter thisMod dataName tagLoc) dataVariants
@@ -554,37 +575,33 @@ fmtDataDef _ dataName dataDef =
 -- using @msg@ as the message parameter, if any.
 fmtType :: Module -> PP.Doc -> Type -> PP.Doc
 fmtType thisMod msg = \case
-    ListOf eltType ->
-        "(B'.List " <> msg <> " " <> fmtType thisMod msg eltType <> ")"
-    EnumType name ->
+    WordType (EnumType name) ->
         fmtName thisMod name
-    StructType name params -> hcat
+    WordType (PrimWord ty) ->
+        fmtPrimWord ty
+    VoidType ->
+        "()"
+    PtrType (ListOf eltType) ->
+        "(B'.List " <> msg <> " " <> fmtType thisMod msg eltType <> ")"
+    PtrType (PrimPtr PrimText) ->
+        "(B'.Text " <> msg <> ")"
+    PtrType (PrimPtr PrimData) ->
+        "(B'.Data " <> msg <> ")"
+    PtrType (PrimPtr (PrimAnyPtr anyPtr)) ->
+        "(Maybe " <> fmtAnyPtr msg anyPtr <> ")"
+    CompositeType (StructType name params) -> hcat
         [ "("
         , fmtName thisMod name
         , " "
         , mintercalate " " $ msg : map (fmtType thisMod msg) params
         , ")"
         ]
-    PrimType prim -> fmtPrimType msg prim
-    Untyped ty -> "(Maybe " <> fmtUntyped msg ty <> ")"
 
-fmtPrimType :: PP.Doc -> PrimType -> PP.Doc
--- TODO: most of this (except Text & Data) should probably be shared with the
--- Pure backend.
-fmtPrimType _ PrimInt{isSigned=True,size}  = "Int" <> fromString (show size)
-fmtPrimType _ PrimInt{isSigned=False,size} = "Word" <> fromString (show size)
-fmtPrimType _ PrimFloat32                  = "Float"
-fmtPrimType _ PrimFloat64                  = "Double"
-fmtPrimType _ PrimBool                     = "Bool"
-fmtPrimType _ PrimVoid                     = "()"
-fmtPrimType msg PrimText                   = "(B'.Text " <> msg <> ")"
-fmtPrimType msg PrimData                   = "(B'.Data " <> msg <> ")"
-
-fmtUntyped :: PP.Doc -> Untyped -> PP.Doc
-fmtUntyped msg Struct = "(U'.Struct " <> msg <> ")"
-fmtUntyped msg List   = "(U'.List " <> msg <> ")"
-fmtUntyped _ Cap      = "Word32"
-fmtUntyped msg Ptr    = "(U'.Ptr " <> msg <> ")"
+fmtAnyPtr :: PP.Doc -> AnyPtr -> PP.Doc
+fmtAnyPtr msg Struct = "(U'.Struct " <> msg <> ")"
+fmtAnyPtr msg List   = "(U'.List " <> msg <> ")"
+fmtAnyPtr _ Cap      = "Word32"
+fmtAnyPtr msg Ptr    = "(U'.Ptr " <> msg <> ")"
 
 fmtName :: Module -> Name -> PP.Doc
 fmtName Module{modId=thisMod} Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
