@@ -37,7 +37,7 @@ tested-with:
   -- Our Gitlab CI uses this version:
     GHC == 8.2.1
   -- @zenhack currently uses this version:
-  , GHC == 8.4.2
+  , GHC == 8.4.3
 
 --------------------------------------------------------------------------------
 
