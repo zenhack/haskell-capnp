@@ -44,7 +44,7 @@ class ListElem msg e where
     length :: List msg e -> Int
     index :: U.ReadCtx m msg => Int -> List msg e -> m e
 
-class MutListElem s e where
+class (ListElem (M.MutMsg s) e) => MutListElem s e where
     setIndex :: U.RWCtx m s => e -> Int -> List (M.MutMsg s) e -> m ()
     newList :: M.WriteCtx m s => M.MutMsg s -> Int -> m (List (M.MutMsg s) e)
 
