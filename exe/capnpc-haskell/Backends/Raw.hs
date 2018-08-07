@@ -7,7 +7,7 @@ module Backends.Raw
     ( fmtModule
     ) where
 
-import Backends.Common (fmtPrimWord)
+import Backends.Common (dataFieldSize, fmtPrimWord)
 import Data.Word
 import IR
 import Util
@@ -232,95 +232,102 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
     dataCon = typeCon <> "_newtype_"
 
     fmtGetter =
-        let getType = typeCon <> " msg -> m " <> fmtType thisMod "msg" fieldType
-        in vcat
-        [ hcat [ getName, " :: U'.ReadCtx m msg => ", getType ]
-        , hcat
-            [ getName, " (", dataCon, " struct) =", case fieldLoc of
-                DataField loc -> fmtGetWordField "struct" loc
-                PtrField idx -> PP.line <> indent (vcat
+        let getType fieldType = typeCon <> " msg -> m " <> fmtType thisMod "msg" fieldType
+            typeAnnotation fieldType =
+                hcat [ getName, " :: U'.ReadCtx m msg => ", getType fieldType ]
+            getDef def = hcat [ getName, " (", dataCon, " struct) =", def ]
+        in case fieldLocType of
+            DataField loc ty -> vcat
+                [ typeAnnotation (WordType ty)
+                , getDef $ fmtGetWordField "struct" loc
+                ]
+            PtrField idx ty -> vcat
+                [ typeAnnotation (PtrType ty)
+                , getDef $ PP.line <> indent (vcat
                     [ hcat [ "U'.getPtr ", fromString (show idx), " struct" ]
                     , hcat [ ">>= C'.fromPtr (U'.message struct)" ]
                     ])
-                HereField -> " C'.fromStruct struct"
-                VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
-            ]
-        ]
+                ]
+            HereField ty -> vcat
+                [ typeAnnotation (CompositeType ty)
+                , getDef " C'.fromStruct struct"
+                ]
+            VoidField -> vcat
+                [ typeAnnotation VoidType
+                , getDef " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
+                ]
     fmtHas =
         let hasType = typeCon <> " msg -> m Bool"
         in vcat
         [ hcat [ hasName, " :: U'.ReadCtx m msg => ", hasType ]
         , hcat
-            [ hasName, "(", dataCon, " struct) = ", case fieldLoc of
-                DataField DataLoc{dataIdx} ->
+            [ hasName, "(", dataCon, " struct) = ", case fieldLocType of
+                DataField DataLoc{dataIdx} _ ->
                     "pure $ " <> fromString (show dataIdx) <> " < U'.length (U'.dataSection struct)"
-                PtrField idx ->
+                PtrField idx _ ->
                     "Data.Maybe.isJust <$> U'.getPtr " <> fromString (show idx) <> " struct"
-                HereField -> "pure True"
+                HereField _ -> "pure True"
                 VoidField -> "pure True"
             ]
         ]
     fmtSetter =
-        let setType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
-            typeAnnotation = setName <> " :: U'.RWCtx m s => " <> setType
+        let setType fieldType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
+            typeAnnotation fieldType = setName <> " :: U'.RWCtx m s => " <> setType fieldType
         in
-        case fieldLoc of
-            DataField loc@DataLoc{..} -> vcat
-                [ typeAnnotation
+        case fieldLocType of
+            DataField loc@DataLoc{..} ty -> vcat
+                [ typeAnnotation (WordType ty)
                 , hcat
                     [ setName, " (", dataCon, " struct) value = "
-                    , let size = case fieldType of
-                            WordType ty -> dataFieldSize ty
-                            _ -> error $ "Mismatch between field type and field loc: " ++ show (fieldType, loc)
-                      in fmtSetWordField
+                    , fmtSetWordField
                         "struct"
-                        ("(fromIntegral (C'.toWord value) :: Word" <> fromString (show size) <> ")")
+                        ("(fromIntegral (C'.toWord value) :: Word" <> fromString (show $ dataFieldSize ty) <> ")")
                         loc
                     ]
                 ]
             VoidField -> vcat
-                [ typeAnnotation
+                [ typeAnnotation VoidType
                 , setName <> " _ = pure ()"
                 ]
-            PtrField idx -> vcat
-                [ typeAnnotation
+            PtrField idx ty -> vcat
+                [ typeAnnotation (PtrType ty)
                 , hcat
                     [ setName, " (", dataCon, " struct) value = "
                     , "U'.setPtr (C'.toPtr value) ", fromString (show idx), " struct"
                     ]
                 ]
-            HereField ->
+            HereField _ ->
                 -- We don't generate setters for these fields; instead, the
                 -- user should call the getter and then modify the child in-place.
                 ""
-    fmtNew =
-        let newType = typeCon <> " (M'.MutMsg s) -> m (" <> fmtType thisMod "(M'.MutMsg s)" fieldType <> ")"
-        in case fieldLoc of
-            PtrField _ ->
-                case fieldType of
-                    PtrType (ListOf _) ->
-                        fmtNewListLike newType "C'.newList"
-                    PtrType (PrimPtr PrimText) ->
-                        fmtNewListLike newType "B'.newText"
-                    PtrType (PrimPtr PrimData) ->
-                        fmtNewListLike newType "B'.newData"
-                    PtrType (PrimPtr (PrimAnyPtr _)) ->
-                        ""
-                    CompositeType _ -> vcat
-                        [ hcat [ newName, " :: U'.RWCtx m s => ", newType ]
-                        , hcat [ newName, " struct = do" ]
-                        , indent $ vcat
-                            [ hcat [ "result <- C'.new (U'.message struct)" ]
-                            , hcat [ setName, " struct result" ]
-                            , "pure result"
-                            ]
+    fmtNew = case fieldLocType of
+        PtrField _ fieldType ->
+            let newType = hcat
+                    [ typeCon
+                    , " (M'.MutMsg s) -> m ("
+                    , fmtType thisMod "(M'.MutMsg s)" (PtrType fieldType)
+                    , ")"
+                    ]
+            in case fieldType of
+                ListOf _ ->
+                    fmtNewListLike newType "C'.newList"
+                PrimPtr PrimText ->
+                    fmtNewListLike newType "B'.newText"
+                PrimPtr PrimData ->
+                    fmtNewListLike newType "B'.newData"
+                PrimPtr (PrimAnyPtr _) ->
+                    ""
+                PtrComposite _ -> vcat
+                    [ hcat [ newName, " :: U'.RWCtx m s => ", newType ]
+                    , hcat [ newName, " struct = do" ]
+                    , indent $ vcat
+                        [ hcat [ "result <- C'.new (U'.message struct)" ]
+                        , hcat [ setName, " struct result" ]
+                        , "pure result"
                         ]
-                    _ ->
-                        error "Mismatch between fieldType and fieldLoc."
-                        -- TODO: we should adjust the IR so these are always
-                        -- paired correctly.
-            _ ->
-                ""
+                    ]
+        _ ->
+            ""
     fmtNewListLike newType allocFn = vcat
         [ hcat [ newName, " :: U'.RWCtx m s => Int -> ", newType ]
         , hcat [ newName, " len struct = do" ]
@@ -331,15 +338,6 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
             ]
         ]
 
-
--- | Return the size in bits of a type that belongs in the data section of a struct.
-dataFieldSize :: WordType -> Int
-dataFieldSize fieldType = case fieldType of
-    EnumType _           -> 16
-    PrimWord PrimInt{..} -> size
-    PrimWord PrimFloat32 -> 32
-    PrimWord PrimFloat64 -> 64
-    PrimWord PrimBool    -> 1
 
 fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
 fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
@@ -367,7 +365,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                 , hcat [ "pure $ ", childDataCon, " struct" ]
                 ]
             ]
-        Unnamed (WordType typ) (DataField loc) -> vcat
+        Unnamed _ (DataField loc typ) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
                 , fmtType thisMod "(M'.MutMsg s)" (WordType typ), " -> m ()"
@@ -381,13 +379,10 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                         loc
                 ]
             ]
-        Unnamed typ loc@(DataField _) ->
-            -- TODO: refactor so this can't happen:
-            error $ "Mismatch between type and loc: " ++ show (typ, loc)
-        Unnamed typ (PtrField index) -> vcat
+        Unnamed _ (PtrField index typ) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-                , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()"
+                , fmtType thisMod "(M'.MutMsg s)" (PtrType typ), " -> m ()"
                 ]
             , hcat [ setName, "(", parentDataCon, " struct) value = do" ]
             , indent $ vcat
@@ -395,12 +390,12 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                 , hcat [ "U'.setPtr (C'.toPtr value) ", fromString (show index), " struct" ]
                 ]
             ]
-        Unnamed typ VoidField ->
+        Unnamed _ VoidField ->
             error "BUG: void field should have been NoParams"
-        Unnamed typ HereField -> vcat
+        Unnamed _ (HereField typ) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-                , "m (", fmtType thisMod " (M'.MutMsg s)" typ, ")"
+                , "m (", fmtType thisMod " (M'.MutMsg s)" (CompositeType typ), ")"
                 ]
             , hcat [ setName, "(", parentDataCon, " struct) value = do" ]
             , indent $ vcat
@@ -455,8 +450,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
         , indent $ vcat $ PP.punctuate " |" (map fmtDataVariant dataVariants)
         , fmtFieldAccessor thisMod dataName dataName Field
             { fieldName = ""
-            , fieldType = CompositeType $ StructType unionName []
-            , fieldLoc = HereField
+            , fieldLocType = HereField $ StructType unionName []
             }
         , vcat $ map (fmtUnionSetter thisMod dataName tagLoc) dataVariants
         -- Generate auxiliary newtype definitions for group fields:
@@ -486,13 +480,13 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
                         , case variantParams of
                             Record _  -> nameText <> " <$> C'.fromStruct struct"
                             NoParams  -> "pure " <> nameText
-                            Unnamed _ HereField -> nameText <> " <$> C'.fromStruct struct"
+                            Unnamed _ (HereField _) -> nameText <> " <$> C'.fromStruct struct"
                             Unnamed _ VoidField -> error
                                 "Shouldn't happen; this should be NoParams."
                                 -- TODO: rule this out statically if possible.
-                            Unnamed _ (DataField loc) ->
+                            Unnamed _ (DataField loc _) ->
                                 nameText <> " <$> " <> fmtGetWordField "struct" loc
-                            Unnamed _ (PtrField idx) -> hcat
+                            Unnamed _ (PtrField idx _) -> hcat
                                 [ nameText," <$> "
                                 , " (U'.getPtr ", fromString (show idx), " struct"
                                 , " >>= C'.fromPtr (U'.message struct))"
@@ -589,6 +583,8 @@ fmtType thisMod msg = \case
         "(B'.Data " <> msg <> ")"
     PtrType (PrimPtr (PrimAnyPtr anyPtr)) ->
         "(Maybe " <> fmtAnyPtr msg anyPtr <> ")"
+    PtrType (PtrComposite ty) ->
+        fmtType thisMod msg (CompositeType ty)
     CompositeType (StructType name params) -> hcat
         [ "("
         , fmtName thisMod name

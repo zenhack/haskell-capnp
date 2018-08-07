@@ -41,7 +41,7 @@ module IR
     , DataDef(..)
     , CerialType(..)
     , Const(..)
-    , FieldLoc(..)
+    , FieldLocType(..)
     , DataLoc(..)
     , subName
     , prefixName
@@ -149,6 +149,7 @@ data WordType
 data PtrType
     = ListOf Type
     | PrimPtr PrimPtr
+    | PtrComposite CompositeType
     deriving(Show, Read, Eq)
 
 data PrimWord
@@ -179,15 +180,14 @@ data Variant = Variant
     deriving(Show, Read, Eq)
 
 data VariantParams
-    = Unnamed Type FieldLoc
+    = Unnamed Type FieldLocType
     | Record [Field]
     | NoParams
     deriving(Show, Read, Eq)
 
 data Field = Field
-    { fieldName :: Text
-    , fieldType :: Type
-    , fieldLoc  :: FieldLoc
+    { fieldName    :: Text
+    , fieldLocType :: FieldLocType
     }
     deriving(Show, Read, Eq)
 
@@ -220,16 +220,16 @@ data CerialType
     | CTyEnum
     deriving(Show, Read, Eq)
 
--- | The location of a field within a struct
-data FieldLoc
+-- | The type and location of a field.
+data FieldLocType
     -- | The field is in the struct's data section.
-    = DataField DataLoc
+    = DataField DataLoc WordType
     -- | The field is in the struct's pointer section (the argument is the
     -- index).
-    | PtrField !Word16
+    | PtrField !Word16 PtrType
     -- | The field is a group or union; it's "location" is the whole struct.
-    | HereField
-    -- | The field is zero-size (and has no argument)
+    | HereField CompositeType
+    -- | The field is of type void (and thus is zero-size).
     | VoidField
     deriving(Show, Read, Eq)
 

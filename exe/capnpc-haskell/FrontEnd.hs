@@ -9,6 +9,8 @@ module FrontEnd
 import Capnp.Capnp.Schema.Pure
 import Data.Word
 
+import Backends.Common (dataFieldSize)
+
 import Data.Char            (toUpper)
 import Data.Function        ((&))
 import Data.List            (partition)
@@ -221,7 +223,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     { dataVariants = unionVariants
                     , dataTagLoc = Just $ dataLoc
                         discriminantOffset
-                        Type'uint16
+                        (IR.PrimWord IR.PrimInt{isSigned = False, size = 16})
                         -- The default value for a union tag is always zero:
                         (Value'uint16 0)
                     , dataCerialType = IR.CTyStruct dataWordCount pointerCount
@@ -303,9 +305,9 @@ primWordConst ty val = IR.DeclConst IR.WordConst
 
 -- | Given the offset field from the capnp schema, a type, and a
 -- default value, return a DataLoc describing the location of a field.
-dataLoc :: Word32 -> Type -> Value -> IR.DataLoc
+dataLoc :: Word32 -> IR.WordType -> Value -> IR.DataLoc
 dataLoc offset ty defaultVal =
-    let bitsOffset = fromIntegral offset * typeSize ty
+    let bitsOffset = fromIntegral offset * dataFieldSize ty
     in IR.DataLoc
         { dataIdx = bitsOffset `div` 64
         , dataOff = bitsOffset `mod` 64
@@ -333,7 +335,7 @@ formatStructBody thisModule nodeMap parentName fields = IR.Record $
         _  ->
             [ IR.Field
                 { fieldName = "union'"
-                , fieldType =
+                , fieldLocType =
                     -- This could use a bit of refactoring. Right now we call
                     -- formatSturctBody in two cases:
                     let fieldTypeName = case commonFields of
@@ -351,8 +353,7 @@ formatStructBody thisModule nodeMap parentName fields = IR.Record $
 
                             []  -> parentName
 
-                    in IR.CompositeType $ IR.StructType fieldTypeName []
-                , fieldLoc = IR.HereField
+                    in IR.HereField $ IR.StructType fieldTypeName []
                 }
             ]
 
@@ -364,7 +365,9 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
         { variantName
         , variantParams = case type_ of
             Type'void -> IR.NoParams
-            _         -> IR.Unnamed (formatType thisModule nodeMap type_) (getFieldLoc union')
+            _         -> IR.Unnamed
+                (formatType thisModule nodeMap type_)
+                (getFieldLoc thisModule nodeMap union')
         , variantTag = Just discriminantValue
         }
     Field'group{..} ->
@@ -395,64 +398,35 @@ generateField :: Id -> NodeMap -> Field -> IR.Field
 generateField thisModule nodeMap Field{..} =
     IR.Field
         { fieldName = makeLegalName name
-        , fieldType = case union' of
-            Field'slot{..}   -> formatType thisModule nodeMap type_
-            Field'group{..} ->
-                IR.CompositeType $ IR.StructType (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
-            Field'unknown' _ ->
-                -- Don't know how to interpret this; we'll have to leave the argument
-                -- opaque.
-                IR.VoidType
-        , fieldLoc = getFieldLoc union'
+        , fieldLocType = getFieldLoc thisModule nodeMap union'
         }
 
-getFieldLoc :: Field' -> IR.FieldLoc
-getFieldLoc Field'group{} = IR.HereField
-getFieldLoc Field'slot{offset,type_,defaultValue,hadExplicitDefault} =
-    case typeSection type_ of
-        VoidSec ->
-            IR.VoidField
-        PtrSec
-            | hadExplicitDefault -> error $
-                "Error: capnpc-haskell does not support explicit default " ++
-                "field values for pointer types. See:\n" ++
-                "\n" ++
-                "    https://github.com/zenhack/haskell-capnp/issues/28"
-            | otherwise -> IR.PtrField (fromIntegral offset)
-        DataSec ->
-            IR.DataField (dataLoc offset type_ defaultValue)
-getFieldLoc (Field'unknown' _) =
-    -- Some field type we don't know about; we can't
-    -- give a location for it, so call it void
-    IR.VoidField
-
--- | Return the size of the type in units of the minimum size that makes
--- sense for the section of a struct in which it belongs -- bits for the
--- data section, and pointers for the pointer section.
-typeSize :: Type -> Int
-typeSize = \case
-    Type'void -> 0
-    Type'bool -> 1
-    Type'int8 -> 8
-    Type'int16 -> 16
-    Type'int32 -> 32
-    Type'int64 -> 64
-    Type'uint8 -> 8
-    Type'uint16 -> 16
-    Type'uint32 -> 32
-    Type'uint64 -> 64
-    Type'float32 -> 32
-    Type'float64 -> 64
-    Type'text -> 1
-    Type'enum{} -> 16
-    Type'data_ -> 1
-    Type'list{} -> 1
-    Type'struct{} -> 1
-    Type'interface{} -> 1
-    Type'anyPointer{} -> 1
-    -- something we don't know about; just call it 0, since we're not
-    -- generating code for it anyway.
-    Type'unknown' _ -> 0
+getFieldLoc :: Id -> NodeMap -> Field' -> IR.FieldLocType
+getFieldLoc thisModule nodeMap = \case
+    Field'slot{..} ->
+        case formatType thisModule nodeMap type_ of
+            IR.VoidType ->
+                IR.VoidField
+            IR.PtrType ty
+                | hadExplicitDefault -> error $
+                    "Error: capnpc-haskell does not support explicit default " ++
+                    "field values for pointer types. See:\n" ++
+                    "\n" ++
+                    "    https://github.com/zenhack/haskell-capnp/issues/28"
+                | otherwise ->
+                    IR.PtrField (fromIntegral offset) ty
+            IR.WordType ty ->
+                IR.DataField
+                    (dataLoc offset ty defaultValue)
+                    ty
+            IR.CompositeType ty ->
+                IR.PtrField (fromIntegral offset) (IR.PtrComposite ty)
+    Field'group{..} ->
+        IR.HereField $ IR.StructType (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
+    Field'unknown' _ ->
+        -- Don't know how to interpret this; we'll have to leave the argument
+        -- opaque.
+        IR.VoidField
 
 -- | Return the raw bit-level representation of a value that is stored
 -- in a struct's data section.
@@ -474,15 +448,6 @@ valueBits = \case
     Value'float64 n -> doubleToWord n
     Value'enum n -> fromIntegral n
     _ -> 0 -- some non-word type.
-
-typeSection :: Type -> Section
-typeSection ty = case (typeSize ty, ty) of
-    (0, _)         -> VoidSec
-    (_, Type'bool) -> DataSec
-    (1, _)         -> PtrSec
-    _              -> DataSec
-
-data Section = DataSec | PtrSec | VoidSec
 
 formatType :: Id -> NodeMap -> Type -> IR.Type
 formatType thisModule nodeMap ty = case ty of

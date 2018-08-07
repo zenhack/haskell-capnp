@@ -138,6 +138,7 @@ fmtType thisMod (CompositeType (StructType name params)) =
     <> hcat [" (" <> fmtType thisMod ty <> ")" | ty <- params]
 fmtType thisMod (WordType (EnumType name)) = fmtName Raw thisMod name
 fmtType thisMod (PtrType (ListOf eltType)) = "List (" <> fmtType thisMod eltType <> ")"
+fmtType thisMod (PtrType (PtrComposite ty)) = fmtType thisMod (CompositeType ty)
 fmtType _ VoidType = "()"
 fmtType _ (WordType (PrimWord prim)) = fmtPrimWord prim
 fmtType _ (PtrType (PrimPtr PrimText)) = "Text"
@@ -169,8 +170,14 @@ fmtVariant thisMod Variant{variantName,variantParams} =
                 PP.punctuate "," $ map (fmtField thisMod) fields)
 
 fmtField :: Id -> Field -> PP.Doc
-fmtField thisMod Field{fieldName,fieldType} =
+fmtField thisMod Field{fieldName,fieldLocType} =
     PP.textStrict fieldName <> " :: " <> fmtType thisMod fieldType
+  where
+    fieldType = case fieldLocType of
+        VoidField      -> VoidType
+        DataField _ ty -> WordType ty
+        PtrField _ ty  -> PtrType ty
+        HereField ty   -> CompositeType ty
 
 fmtDecl :: Id -> (Name, Decl) -> PP.Doc
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
@@ -277,29 +284,29 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 ]
             _ ->
                 " _ -> pure ()" -- TODO
-    fmtCerializeField variantName Field{fieldName,fieldType,fieldLoc} =
+    fmtCerializeField variantName Field{fieldName,fieldLocType} =
         let accessorName prefix = fmtName Raw thisMod $ prefixName prefix (subName variantName fieldName)
             setterName = accessorName "set_"
             getterName = accessorName "get_"
             newName = accessorName "new_"
             fieldNameText = PP.textStrict fieldName
-        in case fieldLoc of
-            DataField _ -> hcat [ setterName, " raw ", fieldNameText ]
+        in case fieldLocType of
+            DataField _ _ -> hcat [ setterName, " raw ", fieldNameText ]
             VoidField -> hcat [ setterName, " raw" ]
-            HereField -> "pure ()"
+            HereField _ -> "pure ()"
 {-          -- TODO: need to treat unions vs. groups differently.
-            HereField -> vcat
+            HereField _ -> vcat
                 [ hcat [ setterName, " raw" ]
                 , hcat [ "field_ <- ", getterName, " raw" ]
                 , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                 ]
 -}
-            PtrField _ -> case fieldType of
-                PtrType (PrimPtr PrimData) -> vcat
+            PtrField _ ty -> case ty of
+                PrimPtr PrimData -> vcat
                     [ hcat [ "field_ <- newData (BS.length ", fieldNameText, ")"]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                     ]
-                PtrType (ListOf eltType) -> vcat
+                ListOf eltType -> vcat
                     [ hcat [ "let len_ = V.length ", fieldNameText ]
                     , hcat [ "field_ <- ", newName, " len_ raw" ]
                     , case eltType of
