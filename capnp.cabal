@@ -144,6 +144,7 @@ executable capnpc-haskell
       , utf8-string                       >= 1.0.1 && < 1.1
       , vector                            >= 0.12.0 && < 0.13
       , reinterpret-cast                  >= 0.1 && < 0.2
+      , wl-pprint-text                    >= 1.2 && <1.3
     ghc-options:
       -Wnoncanonical-monad-instances
       -Wincomplete-patterns
