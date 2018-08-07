@@ -10,7 +10,6 @@ import IR
 
 import Data.String (IsString(..))
 
-import           Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 -- | Format a primitive word type.
