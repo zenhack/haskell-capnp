@@ -14,37 +14,42 @@ import Util
 import Data.List   (sortOn)
 import Data.Monoid ((<>))
 import Data.Ord    (Down(..))
+import Data.String (IsString(..))
 import Text.Printf (printf)
 
-import qualified Data.Map.Strict        as M
-import qualified Data.Text              as T
-import qualified Data.Text.Lazy.Builder as TB
+import qualified Data.Map.Strict as M
+import qualified Data.Text       as T
+
+import           Text.PrettyPrint.Leijen.Text (hcat, vcat)
+import qualified Text.PrettyPrint.Leijen.Text as PP
+
+indent = PP.indent 4
 
 -- | Sort varaints by their tag, in decending order (with no tag at all being last).
 sortVariants = sortOn (Down . variantTag)
 
-fmtModule :: Module -> [(FilePath, TB.Builder)]
+fmtModule :: Module -> [(FilePath, PP.Doc)]
 fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     [ ( T.unpack $ mintercalate "/" humanParts <> ".hs"
       , mainContent
       )
     , ( printf "Capnp/ById/X%x.hs" modId
-      , mconcat
-        [ "{-# OPTIONS_GHC -Wno-unused-imports #-}\n"
-        , "{- |\n"
-        , "Module: ", machineMod, "\n"
-        , "Description: machine-addressable alias for '", humanMod, "'.\n"
-        , "-}\n"
-        , "module ", machineMod, " (module ", humanMod, ") where\n"
-        , "import ", humanMod
+      , vcat
+        [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+        , "{- |"
+        , hcat [ "Module: ", machineMod ]
+        , hcat [ "Description: machine-addressable alias for '", humanMod, "'." ]
+        , "-}"
+        , hcat [ "module ", machineMod, " (module ", humanMod, ") where" ]
+        , hcat [ "import ", humanMod ]
         ]
       )
     ] where
-  machineMod = TB.fromString (printf "Capnp.ById.X%x" modId)
+  machineMod = fromString (printf "Capnp.ById.X%x" modId)
   humanMod = fmtModRef $ FullyQualified $ Namespace humanParts
   humanParts = "Capnp":modNameParts
-  modFileText = TB.fromText modFile
-  mainContent = mintercalate "\n"
+  modFileText = PP.textStrict modFile
+  mainContent = vcat
     [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
@@ -78,25 +83,27 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Message as M'"
     , ""
-    , mintercalate "\n" $ map fmtImport modImports
+    , vcat $ map fmtImport modImports
     , ""
-    , mintercalate "\n" $ map (fmtDecl thisMod) (M.toList modDecls)
+    , vcat $ map (fmtDecl thisMod) (M.toList modDecls)
     ]
 
-fmtModRef :: ModuleRef -> TB.Builder
-fmtModRef (ByCapnpId id) = TB.fromString $ printf "Capnp.ById.X%x" id
-fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map TB.fromText ns)
+fmtModRef :: ModuleRef -> PP.Doc
+fmtModRef (ByCapnpId id) = fromString $ printf "Capnp.ById.X%x" id
+fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map PP.textStrict ns)
 
-fmtImport :: Import -> TB.Builder
+fmtImport :: Import -> PP.Doc
 fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 
 -- | format the IsPtr instance for a list of the struct type with
 -- the given name.
-fmtStructListIsPtr :: TB.Builder -> TB.Builder
-fmtStructListIsPtr nameText = mconcat
-    [ "instance C'.IsPtr msg (B'.List msg (", nameText, " msg)) where\n"
-    , "    fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr\n"
-    , "    toPtr (List_", nameText, " l) = C'.toPtr l\n"
+fmtStructListIsPtr :: PP.Doc -> PP.Doc
+fmtStructListIsPtr nameText = vcat
+    [ hcat [ "instance C'.IsPtr msg (B'.List msg (", nameText, " msg)) where" ]
+    , indent $ vcat
+        [ hcat [ "fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr" ]
+        , hcat [ "toPtr (List_", nameText, " l) = C'.toPtr l" ]
+        ]
     ]
 
 -- | Generate declarations common to all types which are represented
@@ -108,50 +115,72 @@ fmtStructListIsPtr nameText = mconcat
 -- * name    - the name of the type.
 -- * dataSz  - the size of the data section, in words.
 -- * ptrSz   - the size of the pointer section.
-fmtNewtypeStruct :: Module -> Name -> Word16 -> Word16 -> TB.Builder
+fmtNewtypeStruct :: Module -> Name -> Word16 -> Word16 -> PP.Doc
 fmtNewtypeStruct thisMod name dataSz ptrSz =
     let typeCon = fmtName thisMod name
         dataCon = typeCon <> "_newtype_"
-    in mconcat
-        [ "newtype ", typeCon, " msg = ", dataCon, " (U'.Struct msg)"
-        , "\n\n"
-        , "instance C'.IsStruct msg (", typeCon, " msg) where\n"
-        , "    fromStruct = pure . ", dataCon, "\n"
-        , "instance C'.IsPtr msg (", typeCon, " msg) where\n"
-        , "    fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr\n"
-        , "    toPtr (", dataCon, " struct) = C'.toPtr struct\n"
+    in vcat
+        [ hcat [ "newtype ", typeCon, " msg = ", dataCon, " (U'.Struct msg)" ]
+
+        , hcat [ "instance C'.IsStruct msg (", typeCon, " msg) where" ]
+        , indent $ vcat
+                [ hcat [ "fromStruct = pure . ", dataCon ]
+                ]
+
+        , hcat [ "instance C'.IsPtr msg (", typeCon, " msg) where" ]
+        , indent $ vcat
+            [ hcat [ "fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr" ]
+            , hcat [ "toPtr (", dataCon, " struct) = C'.toPtr struct" ]
+            ]
         , fmtStructListElem typeCon
-        , "instance B'.MutListElem s (", typeCon, " (M'.MutMsg s)) where\n"
-        , "    setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l\n"
-        , "    newList msg len = List_", typeCon, " <$> U'.allocCompositeList msg "
-        ,           TB.fromString (show dataSz), " "
-        ,           TB.fromString (show ptrSz), " len\n"
-        , "instance U'.HasMessage (", typeCon, " msg) msg where\n"
-        , "    message (", dataCon, " struct) = U'.message struct\n"
-        , "instance U'.MessageDefault (", typeCon, " msg) msg where\n"
-        , "    messageDefault = ", dataCon, " . U'.messageDefault\n"
-        , "\n"
-        , "instance C'.Allocate s (", typeCon, " (M'.MutMsg s)) where\n"
-        , "    new msg = ", dataCon , " <$> U'.allocStruct msg "
-        ,           TB.fromString (show dataSz), " "
-        ,           TB.fromString (show ptrSz), "\n"
+
+        , hcat [ "instance B'.MutListElem s (", typeCon, " (M'.MutMsg s)) where" ]
+        , indent $ vcat
+            [ hcat [ "setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l" ]
+            , hcat
+                [ "newList msg len = List_", typeCon, " <$> U'.allocCompositeList msg "
+                , fromString (show dataSz), " "
+                , fromString (show ptrSz), " len"
+                ]
+            ]
+
+        , hcat [ "instance U'.HasMessage (", typeCon, " msg) msg where" ]
+        , indent $ vcat
+            [ hcat [ "message (", dataCon, " struct) = U'.message struct" ]
+            ]
+
+        , hcat [ "instance U'.MessageDefault (", typeCon, " msg) msg where" ]
+        , indent $ vcat
+            [ hcat [ "messageDefault = ", dataCon, " . U'.messageDefault" ]
+            ]
+
+        , hcat [ "instance C'.Allocate s (", typeCon, " (M'.MutMsg s)) where" ]
+        , indent $ vcat
+            [ hcat
+                [ "new msg = ", dataCon , " <$> U'.allocStruct msg "
+                , fromString (show dataSz), " "
+                , fromString (show ptrSz)
+                ]
+            ]
         , fmtStructListIsPtr typeCon
         ]
 
 -- | Generate an instance of ListElem for a struct type. The parameter is the name of
 -- the type constructor.
-fmtStructListElem :: TB.Builder -> TB.Builder
-fmtStructListElem nameText = mconcat
-    [ "instance B'.ListElem msg (", nameText, " msg) where\n"
-    , "    newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))\n"
-    , "    length (List_", nameText, " l) = U'.length l\n"
-    , "    index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText , "\n"
+fmtStructListElem :: PP.Doc -> PP.Doc
+fmtStructListElem nameText = vcat
+    [ hcat [ "instance B'.ListElem msg (", nameText, " msg) where" ]
+    , indent $ vcat
+        [ hcat [ "newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))" ]
+        , hcat [ "length (List_", nameText, " l) = U'.length l" ]
+        , hcat [ "index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText ]
+        ]
     ]
 
 -- | Output an expression equivalent to fromStruct, but restricted to the type
 -- with the given type constructor (which must have kind * -> *).
-fmtRestrictedFromStruct :: TB.Builder -> TB.Builder
-fmtRestrictedFromStruct nameText = mconcat
+fmtRestrictedFromStruct :: PP.Doc -> PP.Doc
+fmtRestrictedFromStruct nameText = hcat
     [ "(let {"
     , "go :: U'.ReadCtx m msg => U'.Struct msg -> m (", nameText, " msg); "
     , "go = C'.fromStruct"
@@ -160,36 +189,35 @@ fmtRestrictedFromStruct nameText = mconcat
 
 -- | Generate a call to 'C'.getWordField' based on a 'DataLoc'.
 -- The first argument is an expression for the struct.
-fmtGetWordField :: TB.Builder -> DataLoc -> TB.Builder
+fmtGetWordField :: PP.Doc -> DataLoc -> PP.Doc
 fmtGetWordField struct DataLoc{..} = mintercalate " "
     [ " C'.getWordField"
     , struct
-    , TB.fromString (show dataIdx)
-    , TB.fromString (show dataOff)
-    , TB.fromString (show dataDef)
+    , fromString (show dataIdx)
+    , fromString (show dataOff)
+    , fromString (show dataDef)
     ]
 
 -- | @'fmtSetWordField' struct value loc@ is like 'fmtGetWordField', except that
 -- it generates a call to 'setWordField'. The extra value parameter corresponds
 -- to the extra parameter in 'setWordField'.
-fmtSetWordField :: TB.Builder -> TB.Builder -> DataLoc -> TB.Builder
+fmtSetWordField :: PP.Doc -> PP.Doc -> DataLoc -> PP.Doc
 fmtSetWordField struct value DataLoc{..} = mintercalate " "
     [ "C'.setWordField"
     , struct
     , value
-    , TB.fromString (show dataIdx)
-    , TB.fromString (show dataOff)
-    , TB.fromString (show dataDef)
+    , fromString (show dataIdx)
+    , fromString (show dataOff)
+    , fromString (show dataDef)
     ]
 
-fmtFieldAccessor :: Module -> Name -> Name -> Field -> TB.Builder
-fmtFieldAccessor thisMod typeName variantName Field{..} =
-    mintercalate "\n"
-        [ fmtGetter
-        , fmtHas
-        , fmtSetter
-        , fmtNew
-        ]
+fmtFieldAccessor :: Module -> Name -> Name -> Field -> PP.Doc
+fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
+    [ fmtGetter
+    , fmtHas
+    , fmtSetter
+    , fmtNew
+    ]
   where
     accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
 
@@ -203,64 +231,64 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
 
     fmtGetter =
         let getType = typeCon <> " msg -> m " <> fmtType thisMod "msg" fieldType
-        in mconcat
-        [ getName, " :: U'.ReadCtx m msg => ", getType, "\n"
-        , getName
-        , " (", dataCon, " struct) =", case fieldLoc of
-            DataField loc -> fmtGetWordField "struct" loc
-            PtrField idx -> mconcat
-                [ "\n    U'.getPtr ", TB.fromString (show idx), " struct"
-                , "\n    >>= C'.fromPtr (U'.message struct)"
-                , "\n"
-                ]
-            HereField -> " C'.fromStruct struct"
-            VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
-        , "\n"
+        in vcat
+        [ hcat [ getName, " :: U'.ReadCtx m msg => ", getType ]
+        , hcat
+            [ getName, " (", dataCon, " struct) =", case fieldLoc of
+                DataField loc -> fmtGetWordField "struct" loc
+                PtrField idx -> PP.line <> indent (vcat
+                    [ hcat [ "U'.getPtr ", fromString (show idx), " struct" ]
+                    , hcat [ ">>= C'.fromPtr (U'.message struct)" ]
+                    ])
+                HereField -> " C'.fromStruct struct"
+                VoidField -> " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
+            ]
         ]
     fmtHas =
         let hasType = typeCon <> " msg -> m Bool"
-        in mconcat
-        [ hasName, " :: U'.ReadCtx m msg => ", hasType, "\n"
-        , hasName, "(", dataCon, " struct) = "
-        , case fieldLoc of
-            DataField DataLoc{dataIdx} ->
-                "pure $ " <> TB.fromString (show dataIdx) <> " < U'.length (U'.dataSection struct)"
-            PtrField idx ->
-                "Data.Maybe.isJust <$> U'.getPtr " <> TB.fromString (show idx) <> " struct"
-            HereField -> "pure True"
-            VoidField -> "pure True"
-        , "\n"
+        in vcat
+        [ hcat [ hasName, " :: U'.ReadCtx m msg => ", hasType ]
+        , hcat
+            [ hasName, "(", dataCon, " struct) = ", case fieldLoc of
+                DataField DataLoc{dataIdx} ->
+                    "pure $ " <> fromString (show dataIdx) <> " < U'.length (U'.dataSection struct)"
+                PtrField idx ->
+                    "Data.Maybe.isJust <$> U'.getPtr " <> fromString (show idx) <> " struct"
+                HereField -> "pure True"
+                VoidField -> "pure True"
+            ]
         ]
     fmtSetter =
         let setType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
             typeAnnotation = setName <> " :: U'.RWCtx m s => " <> setType
-        in mconcat
-        [ case fieldLoc of
-            DataField loc@DataLoc{..} -> mconcat
-                [ typeAnnotation, "\n"
-                , setName, " (", dataCon, " struct) value = "
-                , let size = dataFieldSize fieldType
-                  in fmtSetWordField
+        in
+        case fieldLoc of
+            DataField loc@DataLoc{..} -> vcat
+                [ typeAnnotation
+                , hcat
+                    [ setName, " (", dataCon, " struct) value = "
+                    , let size = dataFieldSize fieldType
+                      in fmtSetWordField
                         "struct"
-                        ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
+                        ("(fromIntegral (C'.toWord value) :: Word" <> fromString (show size) <> ")")
                         loc
-                , "\n"
+                    ]
                 ]
-            VoidField -> mconcat
-                [ typeAnnotation, "\n"
-                , setName <> " _ = pure ()\n"
+            VoidField -> vcat
+                [ typeAnnotation
+                , setName <> " _ = pure ()"
                 ]
-            PtrField idx -> mconcat
-                [ typeAnnotation, "\n"
-                , setName, " (", dataCon, " struct) value = "
-                , "U'.setPtr (C'.toPtr value) ", TB.fromString (show idx), " struct\n"
+            PtrField idx -> vcat
+                [ typeAnnotation
+                , hcat
+                    [ setName, " (", dataCon, " struct) value = "
+                    , "U'.setPtr (C'.toPtr value) ", fromString (show idx), " struct"
+                    ]
                 ]
             HereField ->
                 -- We don't generate setters for these fields; instead, the
                 -- user should call the getter and then modify the child in-place.
                 ""
-        , "\n"
-        ]
     fmtNew =
         let newType = typeCon <> " (M'.MutMsg s) -> m (" <> fmtType thisMod "(M'.MutMsg s)" fieldType <> ")"
         in case fieldLoc of
@@ -274,21 +302,25 @@ fmtFieldAccessor thisMod typeName variantName Field{..} =
                         fmtNewListLike newType "B'.newData"
                     Untyped _ ->
                         ""
-                    _ -> mconcat
-                        [ newName, " :: U'.RWCtx m s => ", newType, "\n"
-                        , newName, " struct = do\n"
-                        , "    result <- C'.new (U'.message struct)\n"
-                        , "    ", setName, " struct result\n"
-                        , "    pure result\n"
+                    _ -> vcat
+                        [ hcat [ newName, " :: U'.RWCtx m s => ", newType ]
+                        , hcat [ newName, " struct = do" ]
+                        , indent $ vcat
+                            [ hcat [ "result <- C'.new (U'.message struct)" ]
+                            , hcat [ setName, " struct result" ]
+                            , "pure result"
+                            ]
                         ]
             _ ->
                 ""
-    fmtNewListLike newType allocFn = mconcat
-        [ newName, " :: U'.RWCtx m s => Int -> ", newType, "\n"
-        , newName, " len struct = do\n"
-        , "    result <- ", allocFn, " (U'.message struct) len\n"
-        , "    ", setName, " struct result\n"
-        , "    pure result\n"
+    fmtNewListLike newType allocFn = vcat
+        [ hcat [ newName, " :: U'.RWCtx m s => Int -> ", newType ]
+        , hcat [ newName, " len struct = do" ]
+        , indent $ vcat
+            [ hcat [ "result <- ", allocFn, " (U'.message struct) len" ]
+            , hcat [ setName, " struct result" ]
+            , "pure result"
+            ]
         ]
 
 
@@ -304,101 +336,118 @@ dataFieldSize fieldType = case fieldType of
     _ -> error $ "type " ++ show fieldType ++
         " does not make sense in the data section!"
 
-fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> TB.Builder
+fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
 fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
     let setName = "set_" <> fmtName thisMod variantName
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
     in case variantParams of
-        NoParams -> mconcat
-            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()\n"
-            , setName, " (", parentDataCon, " struct) = ", fmtSetTag, "\n"
+        NoParams -> vcat
+            [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()" ]
+            , hcat [ setName, " (", parentDataCon, " struct) = ", fmtSetTag ]
             ]
         Record _ ->
             -- Variant is a group; we return a reference to the group so the user can
             -- modify it.
             let childTypeCon = fmtName thisMod (subName variantName "group'")
                 childDataCon = childTypeCon <> "_newtype_"
-            in mconcat
-            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-            , "m (", childTypeCon, " (M'.MutMsg s))\n"
-            , setName, " (", parentDataCon, " struct) = do\n"
-            , "    ", fmtSetTag, "\n"
-            , "    pure $ ", childDataCon, " struct\n"
+            in vcat
+            [ hcat
+                [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
+                , "m (", childTypeCon, " (M'.MutMsg s))"
+                ]
+            , hcat [ setName, " (", parentDataCon, " struct) = do" ]
+            , indent $ vcat
+                [ fmtSetTag
+                , hcat [ "pure $ ", childDataCon, " struct" ]
+                ]
             ]
-        Unnamed typ (DataField loc) -> mconcat
-            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-            , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()\n"
-            , setName, " (", parentDataCon, " struct) value = do\n"
-            , "    ", fmtSetTag, "\n"
-            , "    "
-            , let size = dataFieldSize typ
-              in fmtSetWordField "struct"
-                    ("(fromIntegral (C'.toWord value) :: Word" <> TB.fromString (show size) <> ")")
-                    loc
-            , "\n"
+        Unnamed typ (DataField loc) -> vcat
+            [ hcat
+                [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
+                , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()"
+                ]
+            , hcat [ setName, " (", parentDataCon, " struct) value = do" ]
+            , indent $ vcat
+                [ fmtSetTag
+                , let size = dataFieldSize typ
+                  in fmtSetWordField "struct"
+                        ("(fromIntegral (C'.toWord value) :: Word" <> fromString (show size) <> ")")
+                        loc
+                ]
             ]
-        Unnamed typ (PtrField index) -> mconcat
-            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-            , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()\n"
-            , setName, "(", parentDataCon, " struct) value = do\n"
-            , "    ", fmtSetTag, "\n"
-            , "    U'.setPtr (C'.toPtr value) ", TB.fromString (show index), " struct\n"
+        Unnamed typ (PtrField index) -> vcat
+            [ hcat
+                [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
+                , fmtType thisMod "(M'.MutMsg s)" typ, " -> m ()"
+                ]
+            , hcat [ setName, "(", parentDataCon, " struct) value = do" ]
+            , indent $ vcat
+                [ fmtSetTag
+                , hcat [ "U'.setPtr (C'.toPtr value) ", fromString (show index), " struct" ]
+                ]
             ]
         Unnamed typ VoidField ->
             error "BUG: void field should have been NoParams"
-        Unnamed typ HereField -> mconcat
-            [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-            , "m (", fmtType thisMod " (M'.MutMsg s)" typ, ")\n"
-            , setName, "(", parentDataCon, " struct) value = do\n"
-            , "    ", fmtSetTag, "\n"
-            , "    fromStruct struct\n"
+        Unnamed typ HereField -> vcat
+            [ hcat
+                [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
+                , "m (", fmtType thisMod " (M'.MutMsg s)" typ, ")"
+                ]
+            , hcat [ setName, "(", parentDataCon, " struct) value = do" ]
+            , indent $ vcat
+                [ fmtSetTag
+                , "fromStruct struct"
+                ]
             ]
    where
-     fmtSetTag = fmtSetWordField "struct" ("(" <> TB.fromString (show tagValue) <> " :: Word16)") tagLoc
+     fmtSetTag = fmtSetWordField "struct" ("(" <> fromString (show tagValue) <> " :: Word16)") tagLoc
 fmtUnionSetter _ _ _ Variant{variantTag=Nothing} =
     -- This happens for the unknown' variants; just ignore them:
     ""
 
-fmtDecl :: Module -> (Name, Decl) -> TB.Builder
+fmtDecl :: Module -> (Name, Decl) -> PP.Doc
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
 fmtDecl thisMod (name, DeclConst WordConst{wordType,wordValue}) =
     let nameText = fmtName thisMod (valueName name)
-    in mconcat
-        [ nameText, " :: ", fmtType thisMod "msg" wordType, "\n"
-        , nameText, " = C'.fromWord ", TB.fromString (show wordValue), "\n"
+    in vcat
+        [ hcat [ nameText, " :: ", fmtType thisMod "msg" wordType ]
+        , hcat [ nameText, " = C'.fromWord ", fromString (show wordValue) ]
         ]
 
-fmtDataDef :: Module -> Name -> DataDef -> TB.Builder
+fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DataDef{dataVariants=[Variant{..}], dataCerialType=CTyStruct dataSz ptrSz, ..} =
-    fmtNewtypeStruct thisMod dataName dataSz ptrSz <>
-    case variantParams of
-        Record fields ->
-            mintercalate "\n" $ map (fmtFieldAccessor thisMod dataName variantName) fields
-        _ -> ""
+    vcat
+        [ fmtNewtypeStruct thisMod dataName dataSz ptrSz
+        , case variantParams of
+            Record fields ->
+                vcat $ map (fmtFieldAccessor thisMod dataName variantName) fields
+            _ -> ""
+        ]
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTagLoc=Just tagLoc,dataVariants} =
     let unionName = subName dataName ""
         unionNameText = fmtName thisMod unionName
-    in mconcat
+    in vcat
         [ fmtNewtypeStruct thisMod dataName dataSz ptrSz
-        , "data ", unionNameText, " msg"
-        , "\n    = "
-        , mintercalate "\n    | " (map fmtDataVariant dataVariants)
-        , "\n"
+        , hcat [ "data ", unionNameText, " msg =" ]
+        , indent $ vcat $ PP.punctuate " |" (map fmtDataVariant dataVariants)
         , fmtFieldAccessor thisMod dataName dataName Field
             { fieldName = ""
             , fieldType = StructType unionName []
             , fieldLoc = HereField
             }
-        , mintercalate "\n" (map (fmtUnionSetter thisMod dataName tagLoc) dataVariants)
+        , vcat $ map (fmtUnionSetter thisMod dataName tagLoc) dataVariants
         -- Generate auxiliary newtype definitions for group fields:
-        , mintercalate "\n" (map fmtVariantAuxNewtype dataVariants)
-        , "\ninstance C'.IsStruct msg (", unionNameText, " msg) where"
-        , "\n    fromStruct struct = do"
-        , "\n        tag <- ", fmtGetWordField "struct" tagLoc
-        , "\n        case tag of"
-        , mconcat $ map fmtVariantCase $ sortVariants dataVariants
-        , "\n"
+        , vcat $ map fmtVariantAuxNewtype dataVariants
+        , hcat [ "instance C'.IsStruct msg (", unionNameText, " msg) where" ]
+        , indent $ vcat
+            [ "fromStruct struct = do"
+            , indent $ vcat
+                [ hcat [ "tag <- ", fmtGetWordField "struct" tagLoc ]
+                , "case tag of"
+                , indent $ vcat $ map fmtVariantCase $ sortVariants dataVariants
+                ]
+            ]
         ]
   where
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
@@ -408,11 +457,10 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
             Unnamed ty _ -> " " <> fmtType thisMod "msg" ty
     fmtVariantCase Variant{..} =
         let nameText = fmtName thisMod variantName
-        in "\n            " <>
-            case variantTag of
+        in case variantTag of
                 Just tag ->
-                    mconcat
-                        [ TB.fromString (show tag), " -> "
+                    hcat
+                        [ fromString (show tag), " -> "
                         , case variantParams of
                             Record _  -> nameText <> " <$> C'.fromStruct struct"
                             NoParams  -> "pure " <> nameText
@@ -422,9 +470,9 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
                                 -- TODO: rule this out statically if possible.
                             Unnamed _ (DataField loc) ->
                                 nameText <> " <$> " <> fmtGetWordField "struct" loc
-                            Unnamed _ (PtrField idx) -> mconcat
-                                [ nameText <> " <$> "
-                                , " (U'.getPtr ", TB.fromString (show idx), " struct"
+                            Unnamed _ (PtrField idx) -> hcat
+                                [ nameText," <$> "
+                                , " (U'.getPtr ", fromString (show idx), " struct"
                                 , " >>= C'.fromPtr (U'.message struct))"
                                 ]
                         ]
@@ -432,47 +480,52 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
                     "_ -> pure $ " <> nameText <> " tag"
     fmtVariantAuxNewtype Variant{variantName, variantParams=Record fields} =
         let typeName = subName variantName "group'"
-        in fmtNewtypeStruct thisMod typeName dataSz ptrSz <>
-            mintercalate "\n" (map (fmtFieldAccessor thisMod typeName variantName) fields)
+        in vcat
+            [ fmtNewtypeStruct thisMod typeName dataSz ptrSz
+            , vcat $ map (fmtFieldAccessor thisMod typeName variantName) fields
+            ]
     fmtVariantAuxNewtype _ = ""
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
     let typeName = fmtName thisMod dataName
-    in mconcat
-        [ "data ", typeName
-        , "\n    = "
-        , mintercalate "\n    | " (map fmtEnumVariant dataVariants)
-        , "\n"
-        , "    deriving(Show, Read, Eq)\n"
+    in vcat
+        [ hcat [ "data ", typeName, " =" ]
+        , indent $ vcat
+            [ vcat $ PP.punctuate " |" $ map fmtEnumVariant dataVariants
+            , "deriving(Show, Read, Eq)"
+            ]
         -- Generate an Enum instance. This is a trivial wrapper around the
         -- IsWord instance, below.
-        , "instance Enum ", typeName, " where\n"
-        , "    toEnum = C'.fromWord . fromIntegral\n"
-        , "    fromEnum = fromIntegral . C'.toWord\n"
-        , "\n\n"
+        , hcat [ "instance Enum ", typeName, " where" ]
+        , indent $ vcat
+            [ "toEnum = C'.fromWord . fromIntegral"
+            , "fromEnum = fromIntegral . C'.toWord"
+            ]
         -- Generate an IsWord instance.
-        , "instance C'.IsWord ", typeName, " where"
-        , "\n    fromWord n = go (fromIntegral n :: Word16)"
-        , "\n      where"
-        , "\n        go "
-        , mintercalate "\n        go " $
-            map fmtEnumFromWordCase $ sortVariants dataVariants
-        , "\n    toWord "
-        , mintercalate "\n    toWord " $
-            map fmtEnumToWordCase   $ sortVariants dataVariants
-        , "\n"
-        , "instance B'.ListElem msg ", typeName, " where"
-        , "\n    newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)"
-        , "\n    length (List_", typeName, " l) = U'.length l"
-        , "\n    index i (List_", typeName, " l) = (C'.fromWord . fromIntegral) <$> U'.index i l"
-        , "\n"
-        , "instance B'.MutListElem s ", typeName, " where"
-        , "\n    setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\""
-        , "\n    newList msg size = List_", typeName, " <$> U'.allocList16 msg size"
-        , "\n"
-        , "instance C'.IsPtr msg (B'.List msg ", typeName, ") where"
-        , "\n    fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr"
-        , "\n    toPtr (List_", typeName, " l) = C'.toPtr l"
-        , "\n"
+        , hcat [ "instance C'.IsWord ", typeName, " where" ]
+        , indent $ vcat
+            [ "fromWord n = go (fromIntegral n :: Word16) where"
+            , indent $ vcat $ map ("go " <>) $
+                map fmtEnumFromWordCase $ sortVariants dataVariants
+            , vcat $
+                map ("toWord " <>) $
+                map fmtEnumToWordCase   $ sortVariants dataVariants
+            ]
+        , hcat [ "instance B'.ListElem msg ", typeName, " where" ]
+        , indent $ vcat
+            [ hcat [ "newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)" ]
+            , hcat [ "length (List_", typeName, " l) = U'.length l" ]
+            , hcat [ "index i (List_", typeName, " l) = (C'.fromWord . fromIntegral) <$> U'.index i l" ]
+            ]
+        , hcat [ "instance B'.MutListElem s ", typeName, " where" ]
+        , indent $ vcat
+            [ hcat [ "setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\"" ]
+            , hcat [ "newList msg size = List_", typeName, " <$> U'.allocList16 msg size" ]
+            ]
+        , hcat [ "instance C'.IsPtr msg (B'.List msg ", typeName, ") where" ]
+        , indent $ vcat
+            [ hcat [ "fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr" ]
+            , hcat [ "toPtr (List_", typeName, " l) = C'.toPtr l" ]
+            ]
         ]
   where
     -- | Format a data constructor in the definition of a data type for an enum.
@@ -485,13 +538,13 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
     -- | Format an equation in an enum's IsWord.fromWord implementation.
     fmtEnumFromWordCase Variant{variantTag=Just tag,variantName} =
         -- For the tags we know about:
-        TB.fromString (show tag) <> " = " <> fmtName thisMod variantName
+        fromString (show tag) <> " = " <> fmtName thisMod variantName
     fmtEnumFromWordCase Variant{variantTag=Nothing,variantName} =
         -- For other tags:
         "tag = " <> fmtName thisMod variantName <> " (fromIntegral tag)"
     -- | Format an equation in an enum's IsWord.toWord implementation.
     fmtEnumToWordCase Variant{variantTag=Just tag,variantName} =
-        fmtName thisMod variantName <> " = " <> TB.fromString (show tag)
+        fmtName thisMod variantName <> " = " <> fromString (show tag)
     fmtEnumToWordCase Variant{variantTag=Nothing,variantName} =
         "(" <> fmtName thisMod variantName <> " tag) = fromIntegral tag"
 fmtDataDef _ dataName dataDef =
@@ -499,13 +552,13 @@ fmtDataDef _ dataName dataDef =
 
 -- | @'fmtType ident msg ty@ formats the type @ty@ from module @ident@,
 -- using @msg@ as the message parameter, if any.
-fmtType :: Module -> TB.Builder -> Type -> TB.Builder
+fmtType :: Module -> PP.Doc -> Type -> PP.Doc
 fmtType thisMod msg = \case
     ListOf eltType ->
         "(B'.List " <> msg <> " " <> fmtType thisMod msg eltType <> ")"
     EnumType name ->
         fmtName thisMod name
-    StructType name params -> mconcat
+    StructType name params -> hcat
         [ "("
         , fmtName thisMod name
         , " "
@@ -515,11 +568,11 @@ fmtType thisMod msg = \case
     PrimType prim -> fmtPrimType msg prim
     Untyped ty -> "(Maybe " <> fmtUntyped msg ty <> ")"
 
-fmtPrimType :: TB.Builder -> PrimType -> TB.Builder
+fmtPrimType :: PP.Doc -> PrimType -> PP.Doc
 -- TODO: most of this (except Text & Data) should probably be shared with the
 -- Pure backend.
-fmtPrimType _ PrimInt{isSigned=True,size}  = "Int" <> TB.fromString (show size)
-fmtPrimType _ PrimInt{isSigned=False,size} = "Word" <> TB.fromString (show size)
+fmtPrimType _ PrimInt{isSigned=True,size}  = "Int" <> fromString (show size)
+fmtPrimType _ PrimInt{isSigned=False,size} = "Word" <> fromString (show size)
 fmtPrimType _ PrimFloat32                  = "Float"
 fmtPrimType _ PrimFloat64                  = "Double"
 fmtPrimType _ PrimBool                     = "Bool"
@@ -527,15 +580,15 @@ fmtPrimType _ PrimVoid                     = "()"
 fmtPrimType msg PrimText                   = "(B'.Text " <> msg <> ")"
 fmtPrimType msg PrimData                   = "(B'.Data " <> msg <> ")"
 
-fmtUntyped :: TB.Builder -> Untyped -> TB.Builder
+fmtUntyped :: PP.Doc -> Untyped -> PP.Doc
 fmtUntyped msg Struct = "(U'.Struct " <> msg <> ")"
 fmtUntyped msg List   = "(U'.List " <> msg <> ")"
 fmtUntyped _ Cap      = "Word32"
 fmtUntyped msg Ptr    = "(U'.Ptr " <> msg <> ")"
 
-fmtName :: Module -> Name -> TB.Builder
+fmtName :: Module -> Name -> PP.Doc
 fmtName Module{modId=thisMod} Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
-    modPrefix <> mintercalate "'" (map TB.fromText $ parts <> [localName])
+    modPrefix <> mintercalate "'" (map PP.textStrict $ parts <> [localName])
   where
     modPrefix = case nameModule of
         ByCapnpId id                  | id == thisMod -> ""

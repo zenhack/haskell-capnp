@@ -15,9 +15,8 @@ import Data.String (IsString(..))
 import GHC.Exts    (IsList(..))
 import Text.Printf (printf)
 
-import qualified Data.Map.Strict        as M
-import qualified Data.Text              as T
-import qualified Data.Text.Lazy.Builder as TB
+import qualified Data.Map.Strict as M
+import qualified Data.Text       as T
 
 import           Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import qualified Text.PrettyPrint.Leijen.Text as PP
@@ -48,16 +47,13 @@ modRefToNS ty (ByCapnpId id) = Namespace $ case ty of
     Raw  -> ["Capnp", "ById", T.pack (printf "X%x" id)]
 
 
-render :: PP.Doc -> TB.Builder
-render = PP.displayB . PP.renderPretty 0.8 100
-
-fmtModule :: Module -> [(FilePath, TB.Builder)]
+fmtModule :: Module -> [(FilePath, PP.Doc)]
 fmtModule mod@Module{modName=Namespace modNameParts,..} =
     [ ( T.unpack $ mintercalate "/" humanParts <> ".hs"
-      , render mainContent
+      , mainContent
       )
     , ( printf "Capnp/ById/X%x/Pure.hs" modId
-      , render $ vcat
+      , vcat
             [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
             , "{- |"
             , hcat [ "Module: ", machineMod ]
