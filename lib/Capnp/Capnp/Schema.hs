@@ -20,6 +20,7 @@ import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.GenHelpers as H'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
@@ -47,11 +48,11 @@ instance C'.IsPtr msg (B'.List msg (Annotation msg)) where
     fromPtr msg ptr = List_Annotation <$> C'.fromPtr msg ptr
     toPtr (List_Annotation l) = C'.toPtr l
 get_Annotation'id :: U'.ReadCtx m msg => Annotation msg -> m Word64
-get_Annotation'id (Annotation_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Annotation'id (Annotation_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Annotation'id :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'id(Annotation_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Annotation'id :: U'.RWCtx m s => Annotation (M'.MutMsg s) -> Word64 -> m ()
-set_Annotation'id (Annotation_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Annotation'id (Annotation_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 get_Annotation'value :: U'.ReadCtx m msg => Annotation msg -> m (Value msg)
 get_Annotation'value (Annotation_newtype_ struct) =
     U'.getPtr 0 struct
@@ -136,23 +137,23 @@ instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
     fromPtr msg ptr = List_CapnpVersion <$> C'.fromPtr msg ptr
     toPtr (List_CapnpVersion l) = C'.toPtr l
 get_CapnpVersion'major :: U'.ReadCtx m msg => CapnpVersion msg -> m Word16
-get_CapnpVersion'major (CapnpVersion_newtype_ struct) = C'.getWordField struct 0 0 0
+get_CapnpVersion'major (CapnpVersion_newtype_ struct) = H'.getWordField struct 0 0 0
 has_CapnpVersion'major :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
 has_CapnpVersion'major(CapnpVersion_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_CapnpVersion'major :: U'.RWCtx m s => CapnpVersion (M'.MutMsg s) -> Word16 -> m ()
-set_CapnpVersion'major (CapnpVersion_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
+set_CapnpVersion'major (CapnpVersion_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 get_CapnpVersion'minor :: U'.ReadCtx m msg => CapnpVersion msg -> m Word8
-get_CapnpVersion'minor (CapnpVersion_newtype_ struct) = C'.getWordField struct 0 16 0
+get_CapnpVersion'minor (CapnpVersion_newtype_ struct) = H'.getWordField struct 0 16 0
 has_CapnpVersion'minor :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
 has_CapnpVersion'minor(CapnpVersion_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_CapnpVersion'minor :: U'.RWCtx m s => CapnpVersion (M'.MutMsg s) -> Word8 -> m ()
-set_CapnpVersion'minor (CapnpVersion_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
+set_CapnpVersion'minor (CapnpVersion_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
 get_CapnpVersion'micro :: U'.ReadCtx m msg => CapnpVersion msg -> m Word8
-get_CapnpVersion'micro (CapnpVersion_newtype_ struct) = C'.getWordField struct 0 24 0
+get_CapnpVersion'micro (CapnpVersion_newtype_ struct) = H'.getWordField struct 0 24 0
 has_CapnpVersion'micro :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
 has_CapnpVersion'micro(CapnpVersion_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_CapnpVersion'micro :: U'.RWCtx m s => CapnpVersion (M'.MutMsg s) -> Word8 -> m ()
-set_CapnpVersion'micro (CapnpVersion_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
+set_CapnpVersion'micro (CapnpVersion_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
 newtype CodeGeneratorRequest msg = CodeGeneratorRequest_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest_newtype_
@@ -294,11 +295,11 @@ new_Enumerant'name len struct = do
     set_Enumerant'name struct result
     pure result
 get_Enumerant'codeOrder :: U'.ReadCtx m msg => Enumerant msg -> m Word16
-get_Enumerant'codeOrder (Enumerant_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Enumerant'codeOrder (Enumerant_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Enumerant'codeOrder :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'codeOrder(Enumerant_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Enumerant'codeOrder :: U'.RWCtx m s => Enumerant (M'.MutMsg s) -> Word16 -> m ()
-set_Enumerant'codeOrder (Enumerant_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
+set_Enumerant'codeOrder (Enumerant_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 get_Enumerant'annotations :: U'.ReadCtx m msg => Enumerant msg -> m (B'.List msg (Annotation msg))
 get_Enumerant'annotations (Enumerant_newtype_ struct) =
     U'.getPtr 1 struct
@@ -348,11 +349,11 @@ new_Field'name len struct = do
     set_Field'name struct result
     pure result
 get_Field'codeOrder :: U'.ReadCtx m msg => Field msg -> m Word16
-get_Field'codeOrder (Field_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Field'codeOrder (Field_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Field'codeOrder :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field'codeOrder(Field_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Field'codeOrder :: U'.RWCtx m s => Field (M'.MutMsg s) -> Word16 -> m ()
-set_Field'codeOrder (Field_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
+set_Field'codeOrder (Field_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 get_Field'annotations :: U'.ReadCtx m msg => Field msg -> m (B'.List msg (Annotation msg))
 get_Field'annotations (Field_newtype_ struct) =
     U'.getPtr 1 struct
@@ -367,11 +368,11 @@ new_Field'annotations len struct = do
     set_Field'annotations struct result
     pure result
 get_Field'discriminantValue :: U'.ReadCtx m msg => Field msg -> m Word16
-get_Field'discriminantValue (Field_newtype_ struct) = C'.getWordField struct 0 16 65535
+get_Field'discriminantValue (Field_newtype_ struct) = H'.getWordField struct 0 16 65535
 has_Field'discriminantValue :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field'discriminantValue(Field_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Field'discriminantValue :: U'.RWCtx m s => Field (M'.MutMsg s) -> Word16 -> m ()
-set_Field'discriminantValue (Field_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 65535
+set_Field'discriminantValue (Field_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 65535
 get_Field'ordinal :: U'.ReadCtx m msg => Field msg -> m (Field'ordinal msg)
 get_Field'ordinal (Field_newtype_ struct) = C'.fromStruct struct
 has_Field'ordinal :: U'.ReadCtx m msg => Field msg -> m Bool
@@ -416,23 +417,23 @@ new_Method'name len struct = do
     set_Method'name struct result
     pure result
 get_Method'codeOrder :: U'.ReadCtx m msg => Method msg -> m Word16
-get_Method'codeOrder (Method_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Method'codeOrder (Method_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Method'codeOrder :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'codeOrder(Method_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Method'codeOrder :: U'.RWCtx m s => Method (M'.MutMsg s) -> Word16 -> m ()
-set_Method'codeOrder (Method_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
+set_Method'codeOrder (Method_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 get_Method'paramStructType :: U'.ReadCtx m msg => Method msg -> m Word64
-get_Method'paramStructType (Method_newtype_ struct) = C'.getWordField struct 1 0 0
+get_Method'paramStructType (Method_newtype_ struct) = H'.getWordField struct 1 0 0
 has_Method'paramStructType :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'paramStructType(Method_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Method'paramStructType :: U'.RWCtx m s => Method (M'.MutMsg s) -> Word64 -> m ()
-set_Method'paramStructType (Method_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+set_Method'paramStructType (Method_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 get_Method'resultStructType :: U'.ReadCtx m msg => Method msg -> m Word64
-get_Method'resultStructType (Method_newtype_ struct) = C'.getWordField struct 2 0 0
+get_Method'resultStructType (Method_newtype_ struct) = H'.getWordField struct 2 0 0
 has_Method'resultStructType :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'resultStructType(Method_newtype_ struct) = pure $ 2 < U'.length (U'.dataSection struct)
 set_Method'resultStructType :: U'.RWCtx m s => Method (M'.MutMsg s) -> Word64 -> m ()
-set_Method'resultStructType (Method_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
+set_Method'resultStructType (Method_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 get_Method'annotations :: U'.ReadCtx m msg => Method msg -> m (B'.List msg (Annotation msg))
 get_Method'annotations (Method_newtype_ struct) =
     U'.getPtr 1 struct
@@ -508,11 +509,11 @@ instance C'.IsPtr msg (B'.List msg (Node msg)) where
     fromPtr msg ptr = List_Node <$> C'.fromPtr msg ptr
     toPtr (List_Node l) = C'.toPtr l
 get_Node'id :: U'.ReadCtx m msg => Node msg -> m Word64
-get_Node'id (Node_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Node'id (Node_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Node'id :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'id(Node_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Node'id :: U'.RWCtx m s => Node (M'.MutMsg s) -> Word64 -> m ()
-set_Node'id (Node_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Node'id (Node_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 get_Node'displayName :: U'.ReadCtx m msg => Node msg -> m (B'.Text msg)
 get_Node'displayName (Node_newtype_ struct) =
     U'.getPtr 0 struct
@@ -527,17 +528,17 @@ new_Node'displayName len struct = do
     set_Node'displayName struct result
     pure result
 get_Node'displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Word32
-get_Node'displayNamePrefixLength (Node_newtype_ struct) = C'.getWordField struct 1 0 0
+get_Node'displayNamePrefixLength (Node_newtype_ struct) = H'.getWordField struct 1 0 0
 has_Node'displayNamePrefixLength :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'displayNamePrefixLength(Node_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'displayNamePrefixLength :: U'.RWCtx m s => Node (M'.MutMsg s) -> Word32 -> m ()
-set_Node'displayNamePrefixLength (Node_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
+set_Node'displayNamePrefixLength (Node_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 0
 get_Node'scopeId :: U'.ReadCtx m msg => Node msg -> m Word64
-get_Node'scopeId (Node_newtype_ struct) = C'.getWordField struct 2 0 0
+get_Node'scopeId (Node_newtype_ struct) = H'.getWordField struct 2 0 0
 has_Node'scopeId :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'scopeId(Node_newtype_ struct) = pure $ 2 < U'.length (U'.dataSection struct)
 set_Node'scopeId :: U'.RWCtx m s => Node (M'.MutMsg s) -> Word64 -> m ()
-set_Node'scopeId (Node_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
+set_Node'scopeId (Node_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 get_Node'nestedNodes :: U'.ReadCtx m msg => Node msg -> m (B'.List msg (Node'NestedNode msg))
 get_Node'nestedNodes (Node_newtype_ struct) =
     U'.getPtr 1 struct
@@ -578,11 +579,11 @@ new_Node'parameters len struct = do
     set_Node'parameters struct result
     pure result
 get_Node'isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
-get_Node'isGeneric (Node_newtype_ struct) = C'.getWordField struct 4 32 0
+get_Node'isGeneric (Node_newtype_ struct) = H'.getWordField struct 4 32 0
 has_Node'isGeneric :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'isGeneric(Node_newtype_ struct) = pure $ 4 < U'.length (U'.dataSection struct)
 set_Node'isGeneric :: U'.RWCtx m s => Node (M'.MutMsg s) -> Bool -> m ()
-set_Node'isGeneric (Node_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 4 32 0
+set_Node'isGeneric (Node_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 4 32 0
 get_Node'union' :: U'.ReadCtx m msg => Node msg -> m (Node' msg)
 get_Node'union' (Node_newtype_ struct) = C'.fromStruct struct
 has_Node'union' :: U'.ReadCtx m msg => Node msg -> m Bool
@@ -610,11 +611,11 @@ instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
     fromPtr msg ptr = List_Superclass <$> C'.fromPtr msg ptr
     toPtr (List_Superclass l) = C'.toPtr l
 get_Superclass'id :: U'.ReadCtx m msg => Superclass msg -> m Word64
-get_Superclass'id (Superclass_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Superclass'id (Superclass_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Superclass'id :: U'.ReadCtx m msg => Superclass msg -> m Bool
 has_Superclass'id(Superclass_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Superclass'id :: U'.RWCtx m s => Superclass (M'.MutMsg s) -> Word64 -> m ()
-set_Superclass'id (Superclass_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Superclass'id (Superclass_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 get_Superclass'brand :: U'.ReadCtx m msg => Superclass msg -> m (Brand msg)
 get_Superclass'brand (Superclass_newtype_ struct) =
     U'.getPtr 0 struct
@@ -676,52 +677,52 @@ get_Type' (Type_newtype_ struct) = C'.fromStruct struct
 has_Type' :: U'.ReadCtx m msg => Type msg -> m Bool
 has_Type'(Type_newtype_ struct) = pure True
 set_Type'void :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'void (Type_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+set_Type'void (Type_newtype_ struct) = H'.setWordField struct (0 :: Word16) 0 0 0
 set_Type'bool :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'bool (Type_newtype_ struct) = C'.setWordField struct (1 :: Word16) 0 0 0
+set_Type'bool (Type_newtype_ struct) = H'.setWordField struct (1 :: Word16) 0 0 0
 set_Type'int8 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'int8 (Type_newtype_ struct) = C'.setWordField struct (2 :: Word16) 0 0 0
+set_Type'int8 (Type_newtype_ struct) = H'.setWordField struct (2 :: Word16) 0 0 0
 set_Type'int16 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'int16 (Type_newtype_ struct) = C'.setWordField struct (3 :: Word16) 0 0 0
+set_Type'int16 (Type_newtype_ struct) = H'.setWordField struct (3 :: Word16) 0 0 0
 set_Type'int32 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'int32 (Type_newtype_ struct) = C'.setWordField struct (4 :: Word16) 0 0 0
+set_Type'int32 (Type_newtype_ struct) = H'.setWordField struct (4 :: Word16) 0 0 0
 set_Type'int64 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'int64 (Type_newtype_ struct) = C'.setWordField struct (5 :: Word16) 0 0 0
+set_Type'int64 (Type_newtype_ struct) = H'.setWordField struct (5 :: Word16) 0 0 0
 set_Type'uint8 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'uint8 (Type_newtype_ struct) = C'.setWordField struct (6 :: Word16) 0 0 0
+set_Type'uint8 (Type_newtype_ struct) = H'.setWordField struct (6 :: Word16) 0 0 0
 set_Type'uint16 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'uint16 (Type_newtype_ struct) = C'.setWordField struct (7 :: Word16) 0 0 0
+set_Type'uint16 (Type_newtype_ struct) = H'.setWordField struct (7 :: Word16) 0 0 0
 set_Type'uint32 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'uint32 (Type_newtype_ struct) = C'.setWordField struct (8 :: Word16) 0 0 0
+set_Type'uint32 (Type_newtype_ struct) = H'.setWordField struct (8 :: Word16) 0 0 0
 set_Type'uint64 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'uint64 (Type_newtype_ struct) = C'.setWordField struct (9 :: Word16) 0 0 0
+set_Type'uint64 (Type_newtype_ struct) = H'.setWordField struct (9 :: Word16) 0 0 0
 set_Type'float32 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'float32 (Type_newtype_ struct) = C'.setWordField struct (10 :: Word16) 0 0 0
+set_Type'float32 (Type_newtype_ struct) = H'.setWordField struct (10 :: Word16) 0 0 0
 set_Type'float64 :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'float64 (Type_newtype_ struct) = C'.setWordField struct (11 :: Word16) 0 0 0
+set_Type'float64 (Type_newtype_ struct) = H'.setWordField struct (11 :: Word16) 0 0 0
 set_Type'text :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'text (Type_newtype_ struct) = C'.setWordField struct (12 :: Word16) 0 0 0
+set_Type'text (Type_newtype_ struct) = H'.setWordField struct (12 :: Word16) 0 0 0
 set_Type'data_ :: U'.RWCtx m s => Type (M'.MutMsg s) -> m ()
-set_Type'data_ (Type_newtype_ struct) = C'.setWordField struct (13 :: Word16) 0 0 0
+set_Type'data_ (Type_newtype_ struct) = H'.setWordField struct (13 :: Word16) 0 0 0
 set_Type'list :: U'.RWCtx m s => Type (M'.MutMsg s) -> m (Type'list'group' (M'.MutMsg s))
 set_Type'list (Type_newtype_ struct) = do
-    C'.setWordField struct (14 :: Word16) 0 0 0
+    H'.setWordField struct (14 :: Word16) 0 0 0
     pure $ Type'list'group'_newtype_ struct
 set_Type'enum :: U'.RWCtx m s => Type (M'.MutMsg s) -> m (Type'enum'group' (M'.MutMsg s))
 set_Type'enum (Type_newtype_ struct) = do
-    C'.setWordField struct (15 :: Word16) 0 0 0
+    H'.setWordField struct (15 :: Word16) 0 0 0
     pure $ Type'enum'group'_newtype_ struct
 set_Type'struct :: U'.RWCtx m s => Type (M'.MutMsg s) -> m (Type'struct'group' (M'.MutMsg s))
 set_Type'struct (Type_newtype_ struct) = do
-    C'.setWordField struct (16 :: Word16) 0 0 0
+    H'.setWordField struct (16 :: Word16) 0 0 0
     pure $ Type'struct'group'_newtype_ struct
 set_Type'interface :: U'.RWCtx m s => Type (M'.MutMsg s) -> m (Type'interface'group' (M'.MutMsg s))
 set_Type'interface (Type_newtype_ struct) = do
-    C'.setWordField struct (17 :: Word16) 0 0 0
+    H'.setWordField struct (17 :: Word16) 0 0 0
     pure $ Type'interface'group'_newtype_ struct
 set_Type'anyPointer :: U'.RWCtx m s => Type (M'.MutMsg s) -> m (Type'anyPointer'group' (M'.MutMsg s))
 set_Type'anyPointer (Type_newtype_ struct) = do
-    C'.setWordField struct (18 :: Word16) 0 0 0
+    H'.setWordField struct (18 :: Word16) 0 0 0
     pure $ Type'anyPointer'group'_newtype_ struct
 newtype Type'list'group' msg = Type'list'group'_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Type'list'group' msg) where
@@ -781,11 +782,11 @@ instance C'.IsPtr msg (B'.List msg (Type'enum'group' msg)) where
     fromPtr msg ptr = List_Type'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'enum'group' l) = C'.toPtr l
 get_Type'enum'typeId :: U'.ReadCtx m msg => Type'enum'group' msg -> m Word64
-get_Type'enum'typeId (Type'enum'group'_newtype_ struct) = C'.getWordField struct 1 0 0
+get_Type'enum'typeId (Type'enum'group'_newtype_ struct) = H'.getWordField struct 1 0 0
 has_Type'enum'typeId :: U'.ReadCtx m msg => Type'enum'group' msg -> m Bool
 has_Type'enum'typeId(Type'enum'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Type'enum'typeId :: U'.RWCtx m s => Type'enum'group' (M'.MutMsg s) -> Word64 -> m ()
-set_Type'enum'typeId (Type'enum'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+set_Type'enum'typeId (Type'enum'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 get_Type'enum'brand :: U'.ReadCtx m msg => Type'enum'group' msg -> m (Brand msg)
 get_Type'enum'brand (Type'enum'group'_newtype_ struct) =
     U'.getPtr 0 struct
@@ -822,11 +823,11 @@ instance C'.IsPtr msg (B'.List msg (Type'struct'group' msg)) where
     fromPtr msg ptr = List_Type'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'struct'group' l) = C'.toPtr l
 get_Type'struct'typeId :: U'.ReadCtx m msg => Type'struct'group' msg -> m Word64
-get_Type'struct'typeId (Type'struct'group'_newtype_ struct) = C'.getWordField struct 1 0 0
+get_Type'struct'typeId (Type'struct'group'_newtype_ struct) = H'.getWordField struct 1 0 0
 has_Type'struct'typeId :: U'.ReadCtx m msg => Type'struct'group' msg -> m Bool
 has_Type'struct'typeId(Type'struct'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Type'struct'typeId :: U'.RWCtx m s => Type'struct'group' (M'.MutMsg s) -> Word64 -> m ()
-set_Type'struct'typeId (Type'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+set_Type'struct'typeId (Type'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 get_Type'struct'brand :: U'.ReadCtx m msg => Type'struct'group' msg -> m (Brand msg)
 get_Type'struct'brand (Type'struct'group'_newtype_ struct) =
     U'.getPtr 0 struct
@@ -863,11 +864,11 @@ instance C'.IsPtr msg (B'.List msg (Type'interface'group' msg)) where
     fromPtr msg ptr = List_Type'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'interface'group' l) = C'.toPtr l
 get_Type'interface'typeId :: U'.ReadCtx m msg => Type'interface'group' msg -> m Word64
-get_Type'interface'typeId (Type'interface'group'_newtype_ struct) = C'.getWordField struct 1 0 0
+get_Type'interface'typeId (Type'interface'group'_newtype_ struct) = H'.getWordField struct 1 0 0
 has_Type'interface'typeId :: U'.ReadCtx m msg => Type'interface'group' msg -> m Bool
 has_Type'interface'typeId(Type'interface'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Type'interface'typeId :: U'.RWCtx m s => Type'interface'group' (M'.MutMsg s) -> Word64 -> m ()
-set_Type'interface'typeId (Type'interface'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+set_Type'interface'typeId (Type'interface'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 get_Type'interface'brand :: U'.ReadCtx m msg => Type'interface'group' msg -> m (Brand msg)
 get_Type'interface'brand (Type'interface'group'_newtype_ struct) =
     U'.getPtr 0 struct
@@ -909,7 +910,7 @@ has_Type'anyPointer'union' :: U'.ReadCtx m msg => Type'anyPointer'group' msg -> 
 has_Type'anyPointer'union'(Type'anyPointer'group'_newtype_ struct) = pure True
 instance C'.IsStruct msg (Type' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 0 0 0
+        tag <-  H'.getWordField struct 0 0 0
         case tag of
             18 -> Type'anyPointer <$> C'.fromStruct struct
             17 -> Type'interface <$> C'.fromStruct struct
@@ -979,99 +980,99 @@ get_Value' (Value_newtype_ struct) = C'.fromStruct struct
 has_Value' :: U'.ReadCtx m msg => Value msg -> m Bool
 has_Value'(Value_newtype_ struct) = pure True
 set_Value'void :: U'.RWCtx m s => Value (M'.MutMsg s) -> m ()
-set_Value'void (Value_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+set_Value'void (Value_newtype_ struct) = H'.setWordField struct (0 :: Word16) 0 0 0
 set_Value'bool :: U'.RWCtx m s => Value (M'.MutMsg s) -> Bool -> m ()
 set_Value'bool (Value_newtype_ struct) value = do
-    C'.setWordField struct (1 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
+    H'.setWordField struct (1 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
 set_Value'int8 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Int8 -> m ()
 set_Value'int8 (Value_newtype_ struct) value = do
-    C'.setWordField struct (2 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
+    H'.setWordField struct (2 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
 set_Value'int16 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Int16 -> m ()
 set_Value'int16 (Value_newtype_ struct) value = do
-    C'.setWordField struct (3 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+    H'.setWordField struct (3 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 set_Value'int32 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Int32 -> m ()
 set_Value'int32 (Value_newtype_ struct) value = do
-    C'.setWordField struct (4 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+    H'.setWordField struct (4 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 set_Value'int64 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Int64 -> m ()
 set_Value'int64 (Value_newtype_ struct) value = do
-    C'.setWordField struct (5 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+    H'.setWordField struct (5 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 set_Value'uint8 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word8 -> m ()
 set_Value'uint8 (Value_newtype_ struct) value = do
-    C'.setWordField struct (6 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
+    H'.setWordField struct (6 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 16 0
 set_Value'uint16 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word16 -> m ()
 set_Value'uint16 (Value_newtype_ struct) value = do
-    C'.setWordField struct (7 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+    H'.setWordField struct (7 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 set_Value'uint32 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word32 -> m ()
 set_Value'uint32 (Value_newtype_ struct) value = do
-    C'.setWordField struct (8 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+    H'.setWordField struct (8 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 set_Value'uint64 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word64 -> m ()
 set_Value'uint64 (Value_newtype_ struct) value = do
-    C'.setWordField struct (9 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+    H'.setWordField struct (9 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 set_Value'float32 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Float -> m ()
 set_Value'float32 (Value_newtype_ struct) value = do
-    C'.setWordField struct (10 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+    H'.setWordField struct (10 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 set_Value'float64 :: U'.RWCtx m s => Value (M'.MutMsg s) -> Double -> m ()
 set_Value'float64 (Value_newtype_ struct) value = do
-    C'.setWordField struct (11 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+    H'.setWordField struct (11 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 set_Value'text :: U'.RWCtx m s => Value (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Value'text(Value_newtype_ struct) value = do
-    C'.setWordField struct (12 :: Word16) 0 0 0
+    H'.setWordField struct (12 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_Value'data_ :: U'.RWCtx m s => Value (M'.MutMsg s) -> (B'.Data (M'.MutMsg s)) -> m ()
 set_Value'data_(Value_newtype_ struct) value = do
-    C'.setWordField struct (13 :: Word16) 0 0 0
+    H'.setWordField struct (13 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_Value'list :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'list(Value_newtype_ struct) value = do
-    C'.setWordField struct (14 :: Word16) 0 0 0
+    H'.setWordField struct (14 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_Value'enum :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word16 -> m ()
 set_Value'enum (Value_newtype_ struct) value = do
-    C'.setWordField struct (15 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+    H'.setWordField struct (15 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
 set_Value'struct :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'struct(Value_newtype_ struct) value = do
-    C'.setWordField struct (16 :: Word16) 0 0 0
+    H'.setWordField struct (16 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_Value'interface :: U'.RWCtx m s => Value (M'.MutMsg s) -> m ()
-set_Value'interface (Value_newtype_ struct) = C'.setWordField struct (17 :: Word16) 0 0 0
+set_Value'interface (Value_newtype_ struct) = H'.setWordField struct (17 :: Word16) 0 0 0
 set_Value'anyPointer :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'anyPointer(Value_newtype_ struct) value = do
-    C'.setWordField struct (18 :: Word16) 0 0 0
+    H'.setWordField struct (18 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 instance C'.IsStruct msg (Value' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 0 0 0
+        tag <-  H'.getWordField struct 0 0 0
         case tag of
             18 -> Value'anyPointer <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             17 -> pure Value'interface
             16 -> Value'struct <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            15 -> Value'enum <$>  C'.getWordField struct 0 16 0
+            15 -> Value'enum <$>  H'.getWordField struct 0 16 0
             14 -> Value'list <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             13 -> Value'data_ <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             12 -> Value'text <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            11 -> Value'float64 <$>  C'.getWordField struct 1 0 0
-            10 -> Value'float32 <$>  C'.getWordField struct 0 32 0
-            9 -> Value'uint64 <$>  C'.getWordField struct 1 0 0
-            8 -> Value'uint32 <$>  C'.getWordField struct 0 32 0
-            7 -> Value'uint16 <$>  C'.getWordField struct 0 16 0
-            6 -> Value'uint8 <$>  C'.getWordField struct 0 16 0
-            5 -> Value'int64 <$>  C'.getWordField struct 1 0 0
-            4 -> Value'int32 <$>  C'.getWordField struct 0 32 0
-            3 -> Value'int16 <$>  C'.getWordField struct 0 16 0
-            2 -> Value'int8 <$>  C'.getWordField struct 0 16 0
-            1 -> Value'bool <$>  C'.getWordField struct 0 16 0
+            11 -> Value'float64 <$>  H'.getWordField struct 1 0 0
+            10 -> Value'float32 <$>  H'.getWordField struct 0 32 0
+            9 -> Value'uint64 <$>  H'.getWordField struct 1 0 0
+            8 -> Value'uint32 <$>  H'.getWordField struct 0 32 0
+            7 -> Value'uint16 <$>  H'.getWordField struct 0 16 0
+            6 -> Value'uint8 <$>  H'.getWordField struct 0 16 0
+            5 -> Value'int64 <$>  H'.getWordField struct 1 0 0
+            4 -> Value'int32 <$>  H'.getWordField struct 0 32 0
+            3 -> Value'int16 <$>  H'.getWordField struct 0 16 0
+            2 -> Value'int8 <$>  H'.getWordField struct 0 16 0
+            1 -> Value'bool <$>  H'.getWordField struct 0 16 0
             0 -> pure Value'void
             _ -> pure $ Value'unknown' tag
 newtype Brand'Binding msg = Brand'Binding_newtype_ (U'.Struct msg)
@@ -1105,14 +1106,14 @@ get_Brand'Binding' (Brand'Binding_newtype_ struct) = C'.fromStruct struct
 has_Brand'Binding' :: U'.ReadCtx m msg => Brand'Binding msg -> m Bool
 has_Brand'Binding'(Brand'Binding_newtype_ struct) = pure True
 set_Brand'Binding'unbound :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> m ()
-set_Brand'Binding'unbound (Brand'Binding_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+set_Brand'Binding'unbound (Brand'Binding_newtype_ struct) = H'.setWordField struct (0 :: Word16) 0 0 0
 set_Brand'Binding'type_ :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Brand'Binding'type_(Brand'Binding_newtype_ struct) value = do
-    C'.setWordField struct (1 :: Word16) 0 0 0
+    H'.setWordField struct (1 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 instance C'.IsStruct msg (Brand'Binding' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 0 0 0
+        tag <-  H'.getWordField struct 0 0 0
         case tag of
             1 -> Brand'Binding'type_ <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             0 -> pure Brand'Binding'unbound
@@ -1140,11 +1141,11 @@ instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
     fromPtr msg ptr = List_Brand'Scope <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope l) = C'.toPtr l
 get_Brand'Scope'scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Word64
-get_Brand'Scope'scopeId (Brand'Scope_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Brand'Scope'scopeId (Brand'Scope_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Brand'Scope'scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
 has_Brand'Scope'scopeId(Brand'Scope_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Brand'Scope'scopeId :: U'.RWCtx m s => Brand'Scope (M'.MutMsg s) -> Word64 -> m ()
-set_Brand'Scope'scopeId (Brand'Scope_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Brand'Scope'scopeId (Brand'Scope_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 get_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m (Brand'Scope' msg)
 get_Brand'Scope'union' (Brand'Scope_newtype_ struct) = C'.fromStruct struct
 has_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
@@ -1181,13 +1182,13 @@ has_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m Bool
 has_Brand'Scope''(Brand'Scope'_newtype_ struct) = pure True
 set_Brand'Scope'bind :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Binding (M'.MutMsg s))) -> m ()
 set_Brand'Scope'bind(Brand'Scope'_newtype_ struct) value = do
-    C'.setWordField struct (0 :: Word16) 1 0 0
+    H'.setWordField struct (0 :: Word16) 1 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_Brand'Scope'inherit :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> m ()
-set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = C'.setWordField struct (1 :: Word16) 1 0 0
+set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = H'.setWordField struct (1 :: Word16) 1 0 0
 instance C'.IsStruct msg (Brand'Scope'' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 1 0 0
+        tag <-  H'.getWordField struct 1 0 0
         case tag of
             1 -> pure Brand'Scope'inherit
             0 -> Brand'Scope'bind <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
@@ -1215,11 +1216,11 @@ instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) whe
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest'RequestedFile l) = C'.toPtr l
 get_CodeGeneratorRequest'RequestedFile'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Word64
-get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile_newtype_ struct) = C'.getWordField struct 0 0 0
+get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile_newtype_ struct) = H'.getWordField struct 0 0 0
 has_CodeGeneratorRequest'RequestedFile'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'id(CodeGeneratorRequest'RequestedFile_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_CodeGeneratorRequest'RequestedFile'id :: U'.RWCtx m s => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> Word64 -> m ()
-set_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 get_CodeGeneratorRequest'RequestedFile'filename :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m (B'.Text msg)
 get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1269,11 +1270,11 @@ instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import ms
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile'Import <$> C'.fromPtr msg ptr
     toPtr (List_CodeGeneratorRequest'RequestedFile'Import l) = C'.toPtr l
 get_CodeGeneratorRequest'RequestedFile'Import'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Word64
-get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = C'.getWordField struct 0 0 0
+get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = H'.getWordField struct 0 0 0
 has_CodeGeneratorRequest'RequestedFile'Import'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'id(CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_CodeGeneratorRequest'RequestedFile'Import'id :: U'.RWCtx m s => CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> Word64 -> m ()
-set_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 get_CodeGeneratorRequest'RequestedFile'Import'name :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m (B'.Text msg)
 get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1319,11 +1320,11 @@ has_Field'' :: U'.ReadCtx m msg => Field' msg -> m Bool
 has_Field''(Field'_newtype_ struct) = pure True
 set_Field'slot :: U'.RWCtx m s => Field' (M'.MutMsg s) -> m (Field'slot'group' (M'.MutMsg s))
 set_Field'slot (Field'_newtype_ struct) = do
-    C'.setWordField struct (0 :: Word16) 1 0 0
+    H'.setWordField struct (0 :: Word16) 1 0 0
     pure $ Field'slot'group'_newtype_ struct
 set_Field'group :: U'.RWCtx m s => Field' (M'.MutMsg s) -> m (Field'group'group' (M'.MutMsg s))
 set_Field'group (Field'_newtype_ struct) = do
-    C'.setWordField struct (1 :: Word16) 1 0 0
+    H'.setWordField struct (1 :: Word16) 1 0 0
     pure $ Field'group'group'_newtype_ struct
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Field'slot'group' msg) where
@@ -1348,11 +1349,11 @@ instance C'.IsPtr msg (B'.List msg (Field'slot'group' msg)) where
     fromPtr msg ptr = List_Field'slot'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'slot'group' l) = C'.toPtr l
 get_Field'slot'offset :: U'.ReadCtx m msg => Field'slot'group' msg -> m Word32
-get_Field'slot'offset (Field'slot'group'_newtype_ struct) = C'.getWordField struct 0 32 0
+get_Field'slot'offset (Field'slot'group'_newtype_ struct) = H'.getWordField struct 0 32 0
 has_Field'slot'offset :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'offset(Field'slot'group'_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Field'slot'offset :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> Word32 -> m ()
-set_Field'slot'offset (Field'slot'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
+set_Field'slot'offset (Field'slot'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 get_Field'slot'type_ :: U'.ReadCtx m msg => Field'slot'group' msg -> m (Type msg)
 get_Field'slot'type_ (Field'slot'group'_newtype_ struct) =
     U'.getPtr 2 struct
@@ -1380,11 +1381,11 @@ new_Field'slot'defaultValue struct = do
     set_Field'slot'defaultValue struct result
     pure result
 get_Field'slot'hadExplicitDefault :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
-get_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) = C'.getWordField struct 2 0 0
+get_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) = H'.getWordField struct 2 0 0
 has_Field'slot'hadExplicitDefault :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'hadExplicitDefault(Field'slot'group'_newtype_ struct) = pure $ 2 < U'.length (U'.dataSection struct)
 set_Field'slot'hadExplicitDefault :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> Bool -> m ()
-set_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
+set_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 newtype Field'group'group' msg = Field'group'group'_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'_newtype_
@@ -1408,14 +1409,14 @@ instance C'.IsPtr msg (B'.List msg (Field'group'group' msg)) where
     fromPtr msg ptr = List_Field'group'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'group'group' l) = C'.toPtr l
 get_Field'group'typeId :: U'.ReadCtx m msg => Field'group'group' msg -> m Word64
-get_Field'group'typeId (Field'group'group'_newtype_ struct) = C'.getWordField struct 2 0 0
+get_Field'group'typeId (Field'group'group'_newtype_ struct) = H'.getWordField struct 2 0 0
 has_Field'group'typeId :: U'.ReadCtx m msg => Field'group'group' msg -> m Bool
 has_Field'group'typeId(Field'group'group'_newtype_ struct) = pure $ 2 < U'.length (U'.dataSection struct)
 set_Field'group'typeId :: U'.RWCtx m s => Field'group'group' (M'.MutMsg s) -> Word64 -> m ()
-set_Field'group'typeId (Field'group'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
+set_Field'group'typeId (Field'group'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 instance C'.IsStruct msg (Field'' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 1 0 0
+        tag <-  H'.getWordField struct 1 0 0
         case tag of
             1 -> Field'group <$> C'.fromStruct struct
             0 -> Field'slot <$> C'.fromStruct struct
@@ -1453,16 +1454,16 @@ get_Field'ordinal' (Field'ordinal_newtype_ struct) = C'.fromStruct struct
 has_Field'ordinal' :: U'.ReadCtx m msg => Field'ordinal msg -> m Bool
 has_Field'ordinal'(Field'ordinal_newtype_ struct) = pure True
 set_Field'ordinal'implicit :: U'.RWCtx m s => Field'ordinal (M'.MutMsg s) -> m ()
-set_Field'ordinal'implicit (Field'ordinal_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 16 0
+set_Field'ordinal'implicit (Field'ordinal_newtype_ struct) = H'.setWordField struct (0 :: Word16) 1 16 0
 set_Field'ordinal'explicit :: U'.RWCtx m s => Field'ordinal (M'.MutMsg s) -> Word16 -> m ()
 set_Field'ordinal'explicit (Field'ordinal_newtype_ struct) value = do
-    C'.setWordField struct (1 :: Word16) 1 16 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 32 0
+    H'.setWordField struct (1 :: Word16) 1 16 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 32 0
 instance C'.IsStruct msg (Field'ordinal' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 1 16 0
+        tag <-  H'.getWordField struct 1 16 0
         case tag of
-            1 -> Field'ordinal'explicit <$>  C'.getWordField struct 1 32 0
+            1 -> Field'ordinal'explicit <$>  H'.getWordField struct 1 32 0
             0 -> pure Field'ordinal'implicit
             _ -> pure $ Field'ordinal'unknown' tag
 newtype Node' msg = Node'_newtype_ (U'.Struct msg)
@@ -1500,26 +1501,26 @@ get_Node'' (Node'_newtype_ struct) = C'.fromStruct struct
 has_Node'' :: U'.ReadCtx m msg => Node' msg -> m Bool
 has_Node''(Node'_newtype_ struct) = pure True
 set_Node'file :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m ()
-set_Node'file (Node'_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 32 0
+set_Node'file (Node'_newtype_ struct) = H'.setWordField struct (0 :: Word16) 1 32 0
 set_Node'struct :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'struct'group' (M'.MutMsg s))
 set_Node'struct (Node'_newtype_ struct) = do
-    C'.setWordField struct (1 :: Word16) 1 32 0
+    H'.setWordField struct (1 :: Word16) 1 32 0
     pure $ Node'struct'group'_newtype_ struct
 set_Node'enum :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'enum'group' (M'.MutMsg s))
 set_Node'enum (Node'_newtype_ struct) = do
-    C'.setWordField struct (2 :: Word16) 1 32 0
+    H'.setWordField struct (2 :: Word16) 1 32 0
     pure $ Node'enum'group'_newtype_ struct
 set_Node'interface :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'interface'group' (M'.MutMsg s))
 set_Node'interface (Node'_newtype_ struct) = do
-    C'.setWordField struct (3 :: Word16) 1 32 0
+    H'.setWordField struct (3 :: Word16) 1 32 0
     pure $ Node'interface'group'_newtype_ struct
 set_Node'const :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'const'group' (M'.MutMsg s))
 set_Node'const (Node'_newtype_ struct) = do
-    C'.setWordField struct (4 :: Word16) 1 32 0
+    H'.setWordField struct (4 :: Word16) 1 32 0
     pure $ Node'const'group'_newtype_ struct
 set_Node'annotation :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'annotation'group' (M'.MutMsg s))
 set_Node'annotation (Node'_newtype_ struct) = do
-    C'.setWordField struct (5 :: Word16) 1 32 0
+    H'.setWordField struct (5 :: Word16) 1 32 0
     pure $ Node'annotation'group'_newtype_ struct
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Node'struct'group' msg) where
@@ -1544,41 +1545,41 @@ instance C'.IsPtr msg (B'.List msg (Node'struct'group' msg)) where
     fromPtr msg ptr = List_Node'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'struct'group' l) = C'.toPtr l
 get_Node'struct'dataWordCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
-get_Node'struct'dataWordCount (Node'struct'group'_newtype_ struct) = C'.getWordField struct 1 48 0
+get_Node'struct'dataWordCount (Node'struct'group'_newtype_ struct) = H'.getWordField struct 1 48 0
 has_Node'struct'dataWordCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'dataWordCount(Node'struct'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'struct'dataWordCount :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> Word16 -> m ()
-set_Node'struct'dataWordCount (Node'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 48 0
+set_Node'struct'dataWordCount (Node'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 48 0
 get_Node'struct'pointerCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
-get_Node'struct'pointerCount (Node'struct'group'_newtype_ struct) = C'.getWordField struct 3 0 0
+get_Node'struct'pointerCount (Node'struct'group'_newtype_ struct) = H'.getWordField struct 3 0 0
 has_Node'struct'pointerCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'pointerCount(Node'struct'group'_newtype_ struct) = pure $ 3 < U'.length (U'.dataSection struct)
 set_Node'struct'pointerCount :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> Word16 -> m ()
-set_Node'struct'pointerCount (Node'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 0 0
+set_Node'struct'pointerCount (Node'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 0 0
 get_Node'struct'preferredListEncoding :: U'.ReadCtx m msg => Node'struct'group' msg -> m ElementSize
-get_Node'struct'preferredListEncoding (Node'struct'group'_newtype_ struct) = C'.getWordField struct 3 16 0
+get_Node'struct'preferredListEncoding (Node'struct'group'_newtype_ struct) = H'.getWordField struct 3 16 0
 has_Node'struct'preferredListEncoding :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'preferredListEncoding(Node'struct'group'_newtype_ struct) = pure $ 3 < U'.length (U'.dataSection struct)
 set_Node'struct'preferredListEncoding :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> ElementSize -> m ()
-set_Node'struct'preferredListEncoding (Node'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 16 0
+set_Node'struct'preferredListEncoding (Node'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 16 0
 get_Node'struct'isGroup :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
-get_Node'struct'isGroup (Node'struct'group'_newtype_ struct) = C'.getWordField struct 3 32 0
+get_Node'struct'isGroup (Node'struct'group'_newtype_ struct) = H'.getWordField struct 3 32 0
 has_Node'struct'isGroup :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'isGroup(Node'struct'group'_newtype_ struct) = pure $ 3 < U'.length (U'.dataSection struct)
 set_Node'struct'isGroup :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'struct'isGroup (Node'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 3 32 0
+set_Node'struct'isGroup (Node'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 3 32 0
 get_Node'struct'discriminantCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
-get_Node'struct'discriminantCount (Node'struct'group'_newtype_ struct) = C'.getWordField struct 3 48 0
+get_Node'struct'discriminantCount (Node'struct'group'_newtype_ struct) = H'.getWordField struct 3 48 0
 has_Node'struct'discriminantCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'discriminantCount(Node'struct'group'_newtype_ struct) = pure $ 3 < U'.length (U'.dataSection struct)
 set_Node'struct'discriminantCount :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> Word16 -> m ()
-set_Node'struct'discriminantCount (Node'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 48 0
+set_Node'struct'discriminantCount (Node'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 3 48 0
 get_Node'struct'discriminantOffset :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word32
-get_Node'struct'discriminantOffset (Node'struct'group'_newtype_ struct) = C'.getWordField struct 4 0 0
+get_Node'struct'discriminantOffset (Node'struct'group'_newtype_ struct) = H'.getWordField struct 4 0 0
 has_Node'struct'discriminantOffset :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'discriminantOffset(Node'struct'group'_newtype_ struct) = pure $ 4 < U'.length (U'.dataSection struct)
 set_Node'struct'discriminantOffset :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> Word32 -> m ()
-set_Node'struct'discriminantOffset (Node'struct'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 4 0 0
+set_Node'struct'discriminantOffset (Node'struct'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 4 0 0
 get_Node'struct'fields :: U'.ReadCtx m msg => Node'struct'group' msg -> m (B'.List msg (Field msg))
 get_Node'struct'fields (Node'struct'group'_newtype_ struct) =
     U'.getPtr 3 struct
@@ -1759,80 +1760,80 @@ new_Node'annotation'type_ struct = do
     set_Node'annotation'type_ struct result
     pure result
 get_Node'annotation'targetsFile :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsFile (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 48 0
+get_Node'annotation'targetsFile (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 48 0
 has_Node'annotation'targetsFile :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsFile(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsFile :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsFile (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 48 0
+set_Node'annotation'targetsFile (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 48 0
 get_Node'annotation'targetsConst :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsConst (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 49 0
+get_Node'annotation'targetsConst (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 49 0
 has_Node'annotation'targetsConst :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsConst(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsConst :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsConst (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 49 0
+set_Node'annotation'targetsConst (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 49 0
 get_Node'annotation'targetsEnum :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsEnum (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 50 0
+get_Node'annotation'targetsEnum (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 50 0
 has_Node'annotation'targetsEnum :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsEnum(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsEnum :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsEnum (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 50 0
+set_Node'annotation'targetsEnum (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 50 0
 get_Node'annotation'targetsEnumerant :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsEnumerant (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 51 0
+get_Node'annotation'targetsEnumerant (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 51 0
 has_Node'annotation'targetsEnumerant :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsEnumerant(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsEnumerant :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsEnumerant (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 51 0
+set_Node'annotation'targetsEnumerant (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 51 0
 get_Node'annotation'targetsStruct :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsStruct (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 52 0
+get_Node'annotation'targetsStruct (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 52 0
 has_Node'annotation'targetsStruct :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsStruct(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsStruct :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsStruct (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 52 0
+set_Node'annotation'targetsStruct (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 52 0
 get_Node'annotation'targetsField :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsField (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 53 0
+get_Node'annotation'targetsField (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 53 0
 has_Node'annotation'targetsField :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsField(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsField :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsField (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 53 0
+set_Node'annotation'targetsField (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 53 0
 get_Node'annotation'targetsUnion :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsUnion (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 54 0
+get_Node'annotation'targetsUnion (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 54 0
 has_Node'annotation'targetsUnion :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsUnion(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsUnion :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsUnion (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 54 0
+set_Node'annotation'targetsUnion (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 54 0
 get_Node'annotation'targetsGroup :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsGroup (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 55 0
+get_Node'annotation'targetsGroup (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 55 0
 has_Node'annotation'targetsGroup :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsGroup(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsGroup :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsGroup (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 55 0
+set_Node'annotation'targetsGroup (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 55 0
 get_Node'annotation'targetsInterface :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsInterface (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 56 0
+get_Node'annotation'targetsInterface (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 56 0
 has_Node'annotation'targetsInterface :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsInterface(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsInterface :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsInterface (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 56 0
+set_Node'annotation'targetsInterface (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 56 0
 get_Node'annotation'targetsMethod :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsMethod (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 57 0
+get_Node'annotation'targetsMethod (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 57 0
 has_Node'annotation'targetsMethod :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsMethod(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsMethod :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsMethod (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 57 0
+set_Node'annotation'targetsMethod (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 57 0
 get_Node'annotation'targetsParam :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsParam (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 58 0
+get_Node'annotation'targetsParam (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 58 0
 has_Node'annotation'targetsParam :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsParam(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsParam :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsParam (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 58 0
+set_Node'annotation'targetsParam (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 58 0
 get_Node'annotation'targetsAnnotation :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
-get_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) = C'.getWordField struct 1 59 0
+get_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) = H'.getWordField struct 1 59 0
 has_Node'annotation'targetsAnnotation :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'targetsAnnotation(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsAnnotation :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
-set_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 59 0
+set_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 59 0
 instance C'.IsStruct msg (Node'' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 1 32 0
+        tag <-  H'.getWordField struct 1 32 0
         case tag of
             5 -> Node'annotation <$> C'.fromStruct struct
             4 -> Node'const <$> C'.fromStruct struct
@@ -1877,11 +1878,11 @@ new_Node'NestedNode'name len struct = do
     set_Node'NestedNode'name struct result
     pure result
 get_Node'NestedNode'id :: U'.ReadCtx m msg => Node'NestedNode msg -> m Word64
-get_Node'NestedNode'id (Node'NestedNode_newtype_ struct) = C'.getWordField struct 0 0 0
+get_Node'NestedNode'id (Node'NestedNode_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Node'NestedNode'id :: U'.ReadCtx m msg => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'id(Node'NestedNode_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_Node'NestedNode'id :: U'.RWCtx m s => Node'NestedNode (M'.MutMsg s) -> Word64 -> m ()
-set_Node'NestedNode'id (Node'NestedNode_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
+set_Node'NestedNode'id (Node'NestedNode_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 newtype Node'Parameter msg = Node'Parameter_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter_newtype_
@@ -1950,15 +1951,15 @@ has_Type'anyPointer' :: U'.ReadCtx m msg => Type'anyPointer msg -> m Bool
 has_Type'anyPointer'(Type'anyPointer_newtype_ struct) = pure True
 set_Type'anyPointer'unconstrained :: U'.RWCtx m s => Type'anyPointer (M'.MutMsg s) -> m (Type'anyPointer'unconstrained'group' (M'.MutMsg s))
 set_Type'anyPointer'unconstrained (Type'anyPointer_newtype_ struct) = do
-    C'.setWordField struct (0 :: Word16) 1 0 0
+    H'.setWordField struct (0 :: Word16) 1 0 0
     pure $ Type'anyPointer'unconstrained'group'_newtype_ struct
 set_Type'anyPointer'parameter :: U'.RWCtx m s => Type'anyPointer (M'.MutMsg s) -> m (Type'anyPointer'parameter'group' (M'.MutMsg s))
 set_Type'anyPointer'parameter (Type'anyPointer_newtype_ struct) = do
-    C'.setWordField struct (1 :: Word16) 1 0 0
+    H'.setWordField struct (1 :: Word16) 1 0 0
     pure $ Type'anyPointer'parameter'group'_newtype_ struct
 set_Type'anyPointer'implicitMethodParameter :: U'.RWCtx m s => Type'anyPointer (M'.MutMsg s) -> m (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s))
 set_Type'anyPointer'implicitMethodParameter (Type'anyPointer_newtype_ struct) = do
-    C'.setWordField struct (2 :: Word16) 1 0 0
+    H'.setWordField struct (2 :: Word16) 1 0 0
     pure $ Type'anyPointer'implicitMethodParameter'group'_newtype_ struct
 newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Type'anyPointer'unconstrained'group' msg) where
@@ -2009,17 +2010,17 @@ instance C'.IsPtr msg (B'.List msg (Type'anyPointer'parameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'parameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'parameter'group' l) = C'.toPtr l
 get_Type'anyPointer'parameter'scopeId :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Word64
-get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group'_newtype_ struct) = C'.getWordField struct 2 0 0
+get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group'_newtype_ struct) = H'.getWordField struct 2 0 0
 has_Type'anyPointer'parameter'scopeId :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Bool
 has_Type'anyPointer'parameter'scopeId(Type'anyPointer'parameter'group'_newtype_ struct) = pure $ 2 < U'.length (U'.dataSection struct)
 set_Type'anyPointer'parameter'scopeId :: U'.RWCtx m s => Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word64 -> m ()
-set_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
+set_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 get_Type'anyPointer'parameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Word16
-get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) = C'.getWordField struct 1 16 0
+get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) = H'.getWordField struct 1 16 0
 has_Type'anyPointer'parameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Bool
 has_Type'anyPointer'parameter'parameterIndex(Type'anyPointer'parameter'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Type'anyPointer'parameter'parameterIndex :: U'.RWCtx m s => Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word16 -> m ()
-set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
+set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ (U'.Struct msg)
 instance C'.IsStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'_newtype_
@@ -2043,14 +2044,14 @@ instance C'.IsPtr msg (B'.List msg (Type'anyPointer'implicitMethodParameter'grou
     fromPtr msg ptr = List_Type'anyPointer'implicitMethodParameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'implicitMethodParameter'group' l) = C'.toPtr l
 get_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'implicitMethodParameter'group' msg -> m Word16
-get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = C'.getWordField struct 1 16 0
+get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = H'.getWordField struct 1 16 0
 has_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'implicitMethodParameter'group' msg -> m Bool
 has_Type'anyPointer'implicitMethodParameter'parameterIndex(Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.RWCtx m s => Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s) -> Word16 -> m ()
-set_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) value = C'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
+set_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 instance C'.IsStruct msg (Type'anyPointer' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 1 0 0
+        tag <-  H'.getWordField struct 1 0 0
         case tag of
             2 -> Type'anyPointer'implicitMethodParameter <$> C'.fromStruct struct
             1 -> Type'anyPointer'parameter <$> C'.fromStruct struct
@@ -2089,16 +2090,16 @@ get_Type'anyPointer'unconstrained' (Type'anyPointer'unconstrained_newtype_ struc
 has_Type'anyPointer'unconstrained' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained msg -> m Bool
 has_Type'anyPointer'unconstrained'(Type'anyPointer'unconstrained_newtype_ struct) = pure True
 set_Type'anyPointer'unconstrained'anyKind :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'anyKind (Type'anyPointer'unconstrained_newtype_ struct) = C'.setWordField struct (0 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'anyKind (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (0 :: Word16) 1 16 0
 set_Type'anyPointer'unconstrained'struct :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'struct (Type'anyPointer'unconstrained_newtype_ struct) = C'.setWordField struct (1 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'struct (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (1 :: Word16) 1 16 0
 set_Type'anyPointer'unconstrained'list :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained_newtype_ struct) = C'.setWordField struct (2 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (2 :: Word16) 1 16 0
 set_Type'anyPointer'unconstrained'capability :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> m ()
-set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained_newtype_ struct) = C'.setWordField struct (3 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (3 :: Word16) 1 16 0
 instance C'.IsStruct msg (Type'anyPointer'unconstrained' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 1 16 0
+        tag <-  H'.getWordField struct 1 16 0
         case tag of
             3 -> pure Type'anyPointer'unconstrained'capability
             2 -> pure Type'anyPointer'unconstrained'list

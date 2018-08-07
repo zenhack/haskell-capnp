@@ -20,6 +20,7 @@ import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.GenHelpers as H'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
@@ -60,41 +61,41 @@ get_JsonValue' (JsonValue_newtype_ struct) = C'.fromStruct struct
 has_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m Bool
 has_JsonValue'(JsonValue_newtype_ struct) = pure True
 set_JsonValue'null :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> m ()
-set_JsonValue'null (JsonValue_newtype_ struct) = C'.setWordField struct (0 :: Word16) 0 0 0
+set_JsonValue'null (JsonValue_newtype_ struct) = H'.setWordField struct (0 :: Word16) 0 0 0
 set_JsonValue'boolean :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> Bool -> m ()
 set_JsonValue'boolean (JsonValue_newtype_ struct) value = do
-    C'.setWordField struct (1 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
+    H'.setWordField struct (1 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 16 0
 set_JsonValue'number :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> Double -> m ()
 set_JsonValue'number (JsonValue_newtype_ struct) value = do
-    C'.setWordField struct (2 :: Word16) 0 0 0
-    C'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
+    H'.setWordField struct (2 :: Word16) 0 0 0
+    H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 set_JsonValue'string :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_JsonValue'string(JsonValue_newtype_ struct) value = do
-    C'.setWordField struct (3 :: Word16) 0 0 0
+    H'.setWordField struct (3 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_JsonValue'array :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
 set_JsonValue'array(JsonValue_newtype_ struct) value = do
-    C'.setWordField struct (4 :: Word16) 0 0 0
+    H'.setWordField struct (4 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_JsonValue'object :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue'Field (M'.MutMsg s))) -> m ()
 set_JsonValue'object(JsonValue_newtype_ struct) value = do
-    C'.setWordField struct (5 :: Word16) 0 0 0
+    H'.setWordField struct (5 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 set_JsonValue'call :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (JsonValue'Call (M'.MutMsg s)) -> m ()
 set_JsonValue'call(JsonValue_newtype_ struct) value = do
-    C'.setWordField struct (6 :: Word16) 0 0 0
+    H'.setWordField struct (6 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
 instance C'.IsStruct msg (JsonValue' msg) where
     fromStruct struct = do
-        tag <-  C'.getWordField struct 0 0 0
+        tag <-  H'.getWordField struct 0 0 0
         case tag of
             6 -> JsonValue'call <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             5 -> JsonValue'object <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             4 -> JsonValue'array <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             3 -> JsonValue'string <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            2 -> JsonValue'number <$>  C'.getWordField struct 1 0 0
-            1 -> JsonValue'boolean <$>  C'.getWordField struct 0 16 0
+            2 -> JsonValue'number <$>  H'.getWordField struct 1 0 0
+            1 -> JsonValue'boolean <$>  H'.getWordField struct 0 16 0
             0 -> pure JsonValue'null
             _ -> pure $ JsonValue'unknown' tag
 newtype JsonValue'Call msg = JsonValue'Call_newtype_ (U'.Struct msg)

@@ -79,6 +79,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     -- The trailing ' is to avoid possible name collisions:
     , "import qualified Codec.Capnp as C'"
     , "import qualified Data.Capnp.Basics as B'"
+    , "import qualified Data.Capnp.GenHelpers as H'"
     , "import qualified Data.Capnp.TraversalLimit as TL'"
     , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Message as M'"
@@ -187,11 +188,11 @@ fmtRestrictedFromStruct nameText = hcat
     , "} in go)"
     ]
 
--- | Generate a call to 'C'.getWordField' based on a 'DataLoc'.
+-- | Generate a call to 'H'.getWordField' based on a 'DataLoc'.
 -- The first argument is an expression for the struct.
 fmtGetWordField :: PP.Doc -> DataLoc -> PP.Doc
 fmtGetWordField struct DataLoc{..} = mintercalate " "
-    [ " C'.getWordField"
+    [ " H'.getWordField"
     , struct
     , fromString (show dataIdx)
     , fromString (show dataOff)
@@ -199,11 +200,11 @@ fmtGetWordField struct DataLoc{..} = mintercalate " "
     ]
 
 -- | @'fmtSetWordField' struct value loc@ is like 'fmtGetWordField', except that
--- it generates a call to 'setWordField'. The extra value parameter corresponds
--- to the extra parameter in 'setWordField'.
+-- it generates a call to 'H'.setWordField'. The extra value parameter corresponds
+-- to the extra parameter in 'H'.setWordField'.
 fmtSetWordField :: PP.Doc -> PP.Doc -> DataLoc -> PP.Doc
 fmtSetWordField struct value DataLoc{..} = mintercalate " "
-    [ "C'.setWordField"
+    [ "H'.setWordField"
     , struct
     , value
     , fromString (show dataIdx)

@@ -20,6 +20,7 @@ import qualified Data.Bits
 import qualified Data.Maybe
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.GenHelpers as H'
 import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'

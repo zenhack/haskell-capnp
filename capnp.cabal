@@ -57,6 +57,8 @@ library
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
       , Data.Capnp.Errors
+      , Data.Capnp.GenHelpers
+      , Data.Capnp.GenHelpers.Pure
       , Data.Capnp.Message
       , Data.Capnp.Pointer
       , Data.Capnp.Untyped

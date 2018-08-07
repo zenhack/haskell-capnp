@@ -11,8 +11,6 @@ module Codec.Capnp
     , Allocate(..)
     , Cerialize(..)
     , Decerialize(..)
-    , getWordField
-    , setWordField
     , expected
     , cerialize
     ) where
@@ -23,10 +21,9 @@ import Data.ReinterpretCast
 import Data.Word
 
 import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Capnp.Bits     (Word1(..), replaceBits)
+import Data.Capnp.Bits     (Word1(..))
 import Data.Capnp.Errors   (Error(SchemaViolationError))
-import Data.Capnp.Untyped
-    (ListOf, Ptr(..), ReadCtx, Struct, getData, messageDefault, setData)
+import Data.Capnp.Untyped  (ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
 
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
@@ -79,32 +76,6 @@ class IsStruct msg a where
 
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
-
--- | @'getWordField' struct index offset def@ fetches a field from the
--- struct's data section. @index@ is the index of the 64-bit word in the data
--- section in which the field resides. @offset@ is the offset in bits from the
--- start of that word to the field. @def@ is the default value for this field.
-getWordField :: (ReadCtx m msg, IsWord a) => Struct msg -> Int -> Int -> Word64 -> m a
-getWordField struct idx offset def = fmap
-    ( fromWord
-    . xor def
-    . (`shiftR` offset)
-    )
-    (getData idx struct)
-
--- | @'setWordField' struct value index offset def@ sets a field in the
--- struct's data section. The meaning of the parameters are as in
--- 'getWordField', with @value@ being the value to set. The width of the
--- value is inferred from its type.
-setWordField ::
-    ( U.RWCtx m s
-    , Bounded a, Integral a, IsWord a, Bits a
-    )
-    => Struct (M.MutMsg s) -> a -> Int -> Int -> a -> m ()
-setWordField struct value idx offset def = do
-    old <- getData idx struct
-    let new = replaceBits (value `xor` def) old offset
-    setData new idx struct
 
 instance Decerialize () () where
     decerialize = pure
