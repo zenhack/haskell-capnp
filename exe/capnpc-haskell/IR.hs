@@ -182,7 +182,6 @@ data Variant = Variant
 data VariantParams
     = Unnamed Type FieldLocType
     | Record [Field]
-    | NoParams
     deriving(Show, Read, Eq)
 
 data Field = Field

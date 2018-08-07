@@ -345,10 +345,6 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
     in case variantParams of
-        NoParams -> vcat
-            [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()" ]
-            , hcat [ setName, " (", parentDataCon, " struct) = ", fmtSetTag ]
-            ]
         Record _ ->
             -- Variant is a group; we return a reference to the group so the user can
             -- modify it.
@@ -390,8 +386,10 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                 , hcat [ "U'.setPtr (C'.toPtr value) ", fromString (show index), " struct" ]
                 ]
             ]
-        Unnamed _ VoidField ->
-            error "BUG: void field should have been NoParams"
+        Unnamed _ VoidField -> vcat
+            [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()" ]
+            , hcat [ setName, " (", parentDataCon, " struct) = ", fmtSetTag ]
+            ]
         Unnamed _ (HereField typ) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
@@ -469,7 +467,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
     fmtDataVariant Variant{..} = fmtName thisMod variantName <>
         case variantParams of
             Record _   -> " (" <> fmtName thisMod (subName variantName "group' msg)")
-            NoParams   -> ""
+            Unnamed VoidType _ -> ""
             Unnamed ty _ -> " " <> fmtType thisMod "msg" ty
     fmtVariantCase Variant{..} =
         let nameText = fmtName thisMod variantName
@@ -479,11 +477,9 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
                         [ fromString (show tag), " -> "
                         , case variantParams of
                             Record _  -> nameText <> " <$> C'.fromStruct struct"
-                            NoParams  -> "pure " <> nameText
                             Unnamed _ (HereField _) -> nameText <> " <$> C'.fromStruct struct"
-                            Unnamed _ VoidField -> error
-                                "Shouldn't happen; this should be NoParams."
-                                -- TODO: rule this out statically if possible.
+                            Unnamed _ VoidField ->
+                                "pure " <> nameText
                             Unnamed _ (DataField loc _) ->
                                 nameText <> " <$> " <> fmtGetWordField "struct" loc
                             Unnamed _ (PtrField idx _) -> hcat
@@ -544,7 +540,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         ]
   where
     -- | Format a data constructor in the definition of a data type for an enum.
-    fmtEnumVariant Variant{variantName,variantParams=NoParams,variantTag=Just _} =
+    fmtEnumVariant Variant{variantName,variantParams=Unnamed VoidType _,variantTag=Just _} =
         fmtName thisMod variantName
     fmtEnumVariant Variant{variantName,variantParams=Unnamed ty _, variantTag=Nothing} =
         fmtName thisMod variantName <> " " <> fmtType thisMod "msg" ty

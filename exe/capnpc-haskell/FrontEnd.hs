@@ -318,7 +318,7 @@ generateEnum :: Id -> NodeMap -> IR.Name -> Enumerant -> IR.Variant
 generateEnum thisModule nodeMap parentName Enumerant{..} =
     IR.Variant
         { variantName = IR.subName parentName name
-        , variantParams = IR.NoParams
+        , variantParams = IR.Unnamed IR.VoidType IR.VoidField
         , variantTag = Just codeOrder
         }
 
@@ -364,7 +364,6 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
     Field'slot{..} -> IR.Variant
         { variantName
         , variantParams = case type_ of
-            Type'void -> IR.NoParams
             _         -> IR.Unnamed
                 (formatType thisModule nodeMap type_)
                 (getFieldLoc thisModule nodeMap union')
@@ -387,7 +386,7 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
         -- so leave it out.
         IR.Variant
             { variantName
-            , variantParams = IR.NoParams
+            , variantParams = IR.Unnamed IR.VoidType IR.VoidField
             , variantTag = Nothing
             }
   where

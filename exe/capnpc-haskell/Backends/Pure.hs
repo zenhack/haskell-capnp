@@ -162,7 +162,7 @@ fmtVariant :: Id -> Variant -> PP.Doc
 fmtVariant thisMod Variant{variantName,variantParams} =
     fmtName Pure thisMod variantName
     <> case variantParams of
-        NoParams -> ""
+        Unnamed VoidType _ -> ""
         Unnamed ty _ -> " (" <> fmtType thisMod ty <> ")"
         Record [] -> ""
         Record fields -> PP.line <> indent
@@ -259,7 +259,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
     fmtDecerializeVariant Variant{variantName,variantParams} =
         fmtName Raw thisMod variantName <>
         case variantParams of
-            NoParams -> " -> pure " <> fmtName Pure thisMod variantName
+            Unnamed VoidType _ -> " -> pure " <> fmtName Pure thisMod variantName
             Record fields ->
               " raw -> " <> fmtDecerializeArgs variantName fields
             _ -> hcat
@@ -274,7 +274,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 then "raw <- " <> setterName <> " raw"
                 else ""
         in case variantParams of
-            NoParams -> hcat [ " -> ", setterName, " raw" ]
+            Unnamed VoidType _ -> hcat [ " -> ", setterName, " raw" ]
             Record fields -> vcat
                 [ "{..} -> do"
                 , indent $ vcat
