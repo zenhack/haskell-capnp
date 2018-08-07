@@ -28,8 +28,12 @@ module IR
     , ModuleRef(..)
     , Import(..)
     , Type(..)
-    , PrimType(..)
-    , Untyped(..)
+    , CompositeType(..)
+    , WordType(..)
+    , PtrType(..)
+    , PrimWord(..)
+    , PrimPtr(..)
+    , AnyPtr(..)
     , Variant(..)
     , VariantParams(..)
     , Field(..)
@@ -127,24 +131,41 @@ instance IsString Name where
         }
 
 data Type
-    = StructType Name [Type]
-    | EnumType Name
-    | ListOf Type
-    | PrimType PrimType
-    | Untyped Untyped
+    = CompositeType CompositeType
+    | VoidType
+    | WordType WordType
+    | PtrType PtrType
     deriving(Show, Read, Eq)
 
-data PrimType
+data CompositeType
+    = StructType Name [Type]
+    | UntypedStruct
+    deriving(Show, Read, Eq)
+
+data WordType
+    = EnumType Name
+    | PrimWord PrimWord
+    deriving(Show, Read, Eq)
+
+data PtrType
+    = ListOf Type
+    | PrimPtr PrimPtr
+    deriving(Show, Read, Eq)
+
+data PrimWord
     = PrimInt { isSigned :: !Bool, size :: !Int }
     | PrimFloat32
     | PrimFloat64
-    | PrimText
-    | PrimData
     | PrimBool
-    | PrimVoid
     deriving(Show, Read, Eq)
 
-data Untyped
+data PrimPtr
+    = PrimText
+    | PrimData
+    | PrimAnyPtr AnyPtr
+    deriving(Show, Read, Eq)
+
+data AnyPtr
     = Struct
     | List
     | Cap
@@ -174,8 +195,9 @@ data Field = Field
 data Const
     = WordConst
         { wordValue :: Word64
-        , wordType  :: Type
+        , wordType  :: WordType
         }
+    | VoidConst
     -- TODO: support pointer types.
     deriving(Show, Read, Eq)
 

@@ -198,7 +198,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     [ IR.Variant
                         { variantName = IR.subName name "unknown'"
                         , variantParams = IR.Unnamed
-                            (IR.PrimType IR.PrimInt{isSigned=False, size=16})
+                            (IR.WordType $ IR.PrimWord IR.PrimInt{isSigned=False, size=16})
                             IR.VoidField -- We won't end up actually fetching this from anywhere.
                         , variantTag = Nothing
                         }
@@ -258,7 +258,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                         <> [ IR.Variant
                                 { variantName = IR.subName name "unknown'"
                                 , variantParams = IR.Unnamed
-                                    (IR.PrimType IR.PrimInt {isSigned=False, size=16})
+                                    (IR.WordType $ IR.PrimWord IR.PrimInt {isSigned=False, size=16})
                                     IR.VoidField
                                 , variantTag = Nothing
                                 }
@@ -269,36 +269,36 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
               )
             ]
         Node'const{type_=Type'void,value=Value'void} ->
-            [(name, primTypeConst IR.PrimVoid 0)]
+            [(name, IR.DeclConst IR.VoidConst)]
         Node'const{type_=Type'bool,value=Value'bool v} ->
-            [(name, primTypeConst IR.PrimBool (fromEnum v))]
+            [(name, primWordConst IR.PrimBool (fromEnum v))]
         Node'const{type_=Type'int8,value=Value'int8 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 8 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = True, size = 8 } v)]
         Node'const{type_=Type'int16,value=Value'int16 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 16 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = True, size = 16 } v)]
         Node'const{type_=Type'int32,value=Value'int32 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 32 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = True, size = 32 } v)]
         Node'const{type_=Type'int64,value=Value'int64 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = True, size = 64 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = True, size = 64 } v)]
         Node'const{type_=Type'uint8,value=Value'uint8 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 8 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = False, size = 8 } v)]
         Node'const{type_=Type'uint16,value=Value'uint16 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 16 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = False, size = 16 } v)]
         Node'const{type_=Type'uint32,value=Value'uint32 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 32 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = False, size = 32 } v)]
         Node'const{type_=Type'uint64,value=Value'uint64 v} ->
-            [(name, primTypeConst IR.PrimInt { isSigned = False, size = 64 } v)]
+            [(name, primWordConst IR.PrimInt { isSigned = False, size = 64 } v)]
         Node'const{type_=Type'float32,value=Value'float32 v} ->
-            [(name, primTypeConst IR.PrimFloat32 (floatToWord v))]
+            [(name, primWordConst IR.PrimFloat32 (floatToWord v))]
         Node'const{type_=Type'float64,value=Value'float64 v} ->
-            [(name, primTypeConst IR.PrimFloat64 (doubleToWord v))]
+            [(name, primWordConst IR.PrimFloat64 (doubleToWord v))]
         -- TODO: other constants.
         _ -> [] -- TODO
 
-primTypeConst :: Integral a => IR.PrimType -> a -> IR.Decl
-primTypeConst ty val = IR.DeclConst IR.WordConst
+primWordConst :: Integral a => IR.PrimWord -> a -> IR.Decl
+primWordConst ty val = IR.DeclConst IR.WordConst
     { wordValue = fromIntegral val
-    , wordType = IR.PrimType ty
+    , wordType = IR.PrimWord ty
     }
 
 -- | Given the offset field from the capnp schema, a type, and a
@@ -351,7 +351,7 @@ formatStructBody thisModule nodeMap parentName fields = IR.Record $
 
                             []  -> parentName
 
-                    in IR.StructType fieldTypeName []
+                    in IR.CompositeType $ IR.StructType fieldTypeName []
                 , fieldLoc = IR.HereField
                 }
             ]
@@ -398,11 +398,11 @@ generateField thisModule nodeMap Field{..} =
         , fieldType = case union' of
             Field'slot{..}   -> formatType thisModule nodeMap type_
             Field'group{..} ->
-                IR.StructType (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
+                IR.CompositeType $ IR.StructType (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
             Field'unknown' _ ->
                 -- Don't know how to interpret this; we'll have to leave the argument
                 -- opaque.
-                IR.PrimType IR.PrimVoid
+                IR.VoidType
         , fieldLoc = getFieldLoc union'
         }
 
@@ -486,27 +486,27 @@ data Section = DataSec | PtrSec | VoidSec
 
 formatType :: Id -> NodeMap -> Type -> IR.Type
 formatType thisModule nodeMap ty = case ty of
-    Type'void       -> IR.PrimType IR.PrimVoid
-    Type'bool       -> IR.PrimType IR.PrimBool
-    Type'int8       -> IR.PrimType IR.PrimInt {isSigned = True, size = 8}
-    Type'int16      -> IR.PrimType IR.PrimInt {isSigned = True, size = 16}
-    Type'int32      -> IR.PrimType IR.PrimInt {isSigned = True, size = 32}
-    Type'int64      -> IR.PrimType IR.PrimInt {isSigned = True, size = 64}
-    Type'uint8      -> IR.PrimType IR.PrimInt {isSigned = False, size = 8}
-    Type'uint16     -> IR.PrimType IR.PrimInt {isSigned = False, size = 16}
-    Type'uint32     -> IR.PrimType IR.PrimInt {isSigned = False, size = 32}
-    Type'uint64     -> IR.PrimType IR.PrimInt {isSigned = False, size = 64}
-    Type'float32    -> IR.PrimType IR.PrimFloat32
-    Type'float64    -> IR.PrimType IR.PrimFloat64
-    Type'text       -> IR.PrimType IR.PrimText
-    Type'data_      -> IR.PrimType IR.PrimData
-    Type'list elt   -> IR.ListOf (formatType thisModule nodeMap elt)
+    Type'void       -> IR.VoidType
+    Type'bool       -> IR.WordType $ IR.PrimWord IR.PrimBool
+    Type'int8       -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = True, size = 8}
+    Type'int16      -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = True, size = 16}
+    Type'int32      -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = True, size = 32}
+    Type'int64      -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = True, size = 64}
+    Type'uint8      -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = False, size = 8}
+    Type'uint16     -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = False, size = 16}
+    Type'uint32     -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = False, size = 32}
+    Type'uint64     -> IR.WordType $ IR.PrimWord IR.PrimInt {isSigned = False, size = 64}
+    Type'float32    -> IR.WordType $ IR.PrimWord IR.PrimFloat32
+    Type'float64    -> IR.WordType $ IR.PrimWord IR.PrimFloat64
+    Type'text       -> IR.PtrType $ IR.PrimPtr IR.PrimText
+    Type'data_      -> IR.PtrType $ IR.PrimPtr IR.PrimData
+    Type'list elt   -> IR.PtrType $ IR.ListOf (formatType thisModule nodeMap elt)
     -- TODO: use 'brand' to generate type parameters.
-    Type'enum{..}   -> IR.EnumType (typeName typeId)
-    Type'struct{..} -> IR.StructType (typeName typeId) []
+    Type'enum{..}   -> IR.WordType $ IR.EnumType (typeName typeId)
+    Type'struct{..} -> IR.CompositeType $ IR.StructType (typeName typeId) []
     -- TODO: interfaces are not structs; handle them separately.
-    Type'interface{..} -> IR.StructType (typeName typeId) []
-    Type'anyPointer anyPtr -> IR.Untyped $
+    Type'interface{..} -> IR.CompositeType $ IR.StructType (typeName typeId) []
+    Type'anyPointer anyPtr -> IR.PtrType $ IR.PrimPtr $ IR.PrimAnyPtr $
         case anyPtr of
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
                 IR.Ptr
@@ -519,7 +519,7 @@ formatType thisModule nodeMap ty = case ty of
             _ ->
                 -- Something we don't know about; assume it could be anything.
                 IR.Ptr
-    _ -> IR.PrimType IR.PrimVoid -- TODO: constrained anyPointers
+    _ -> IR.VoidType -- TODO: constrained anyPointers
   where
     typeName typeId =
         identifierFromMetaData thisModule (nodeMap M.! typeId)
