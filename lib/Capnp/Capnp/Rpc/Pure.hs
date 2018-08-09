@@ -102,7 +102,8 @@ instance C'.Cerialize s Call (Capnp.ById.Xb312981b2552a250.Call (M'.MutMsg s)) w
                 Capnp.ById.Xb312981b2552a250.set_Call'interfaceId raw interfaceId
                 Capnp.ById.Xb312981b2552a250.set_Call'methodId raw methodId
                 pure ()
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw
+                C'.marshalInto field_ sendResultsTo
                 Capnp.ById.Xb312981b2552a250.set_Call'allowThirdPartyTailCall raw allowThirdPartyTailCall
 data CapDescriptor
      = CapDescriptor'none |
@@ -156,7 +157,8 @@ instance C'.Cerialize s Disembargo (Capnp.ById.Xb312981b2552a250.Disembargo (M'.
         case value of
             Disembargo{..} -> do
                 pure ()
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw
+                C'.marshalInto field_ context
 data Exception
      = Exception
         {reason :: Text,
@@ -408,7 +410,8 @@ instance C'.Cerialize s Resolve (Capnp.ById.Xb312981b2552a250.Resolve (M'.MutMsg
         case value of
             Resolve{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Resolve'promiseId raw promiseId
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.get_Resolve'union' raw
+                C'.marshalInto field_ union'
 data Return
      = Return
         {answerId :: Word32,
@@ -430,7 +433,8 @@ instance C'.Cerialize s Return (Capnp.ById.Xb312981b2552a250.Return (M'.MutMsg s
             Return{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Return'answerId raw answerId
                 Capnp.ById.Xb312981b2552a250.set_Return'releaseParamCaps raw releaseParamCaps
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.get_Return'union' raw
+                C'.marshalInto field_ union'
 data ThirdPartyCapDescriptor
      = ThirdPartyCapDescriptor
         {id :: Maybe (PU'.PtrType),

@@ -293,14 +293,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
         in case fieldLocType of
             DataField _ _ -> hcat [ setterName, " raw ", fieldNameText ]
             VoidField -> hcat [ setterName, " raw" ]
-            HereField _ -> "pure ()"
-{-          -- TODO: need to treat unions vs. groups differently.
             HereField _ -> vcat
-                [ hcat [ setterName, " raw" ]
-                , hcat [ "field_ <- ", getterName, " raw" ]
+                [ hcat [ "field_ <- ", getterName, " raw" ]
                 , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                 ]
--}
             PtrField _ ty -> case ty of
                 PrimPtr PrimData -> vcat
                     [ hcat [ "field_ <- newData (BS.length ", fieldNameText, ")"]

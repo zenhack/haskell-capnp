@@ -184,8 +184,10 @@ instance C'.Cerialize s Field (Capnp.ById.Xa93fc509624c72d9.Field (M'.MutMsg s))
                     elt <- C'.index i field_
                     C'.marshalInto elt (annotations V.! i)
                 Capnp.ById.Xa93fc509624c72d9.set_Field'discriminantValue raw discriminantValue
-                pure ()
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.get_Field'ordinal raw
+                C'.marshalInto field_ ordinal
+                field_ <- Capnp.ById.Xa93fc509624c72d9.get_Field'union' raw
+                C'.marshalInto field_ union'
 data Method
      = Method
         {name :: Text,
@@ -282,7 +284,8 @@ instance C'.Cerialize s Node (Capnp.ById.Xa93fc509624c72d9.Node (M'.MutMsg s)) w
                     elt <- C'.index i field_
                     C'.marshalInto elt (parameters V.! i)
                 Capnp.ById.Xa93fc509624c72d9.set_Node'isGeneric raw isGeneric
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.get_Node'union' raw
+                C'.marshalInto field_ union'
 data Superclass
      = Superclass
         {id :: Word64,
@@ -402,7 +405,8 @@ instance C'.Cerialize s Type (Capnp.ById.Xa93fc509624c72d9.Type (M'.MutMsg s)) w
                 pure ()
             Type'anyPointer{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer raw
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw
+                C'.marshalInto field_ union'
             Type'unknown' _ -> pure ()
 data Value
      = Value'void |
@@ -517,7 +521,8 @@ instance C'.Cerialize s Brand'Scope (Capnp.ById.Xa93fc509624c72d9.Brand'Scope (M
         case value of
             Brand'Scope{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'scopeId raw scopeId
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'union' raw
+                C'.marshalInto field_ union'
 data Brand'Scope'
      = Brand'Scope'bind (List (Brand'Binding)) |
     Brand'Scope'inherit |
@@ -844,7 +849,8 @@ instance C'.Cerialize s Type'anyPointer (Capnp.ById.Xa93fc509624c72d9.Type'anyPo
         case value of
             Type'anyPointer'unconstrained{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained raw
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'unconstrained'union' raw
+                C'.marshalInto field_ union'
             Type'anyPointer'parameter{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter raw
                 Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'scopeId raw scopeId
