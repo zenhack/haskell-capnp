@@ -49,8 +49,10 @@ instance C'.Cerialize s Annotation (Capnp.ById.Xa93fc509624c72d9.Annotation (M'.
         case value of
             Annotation{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_Annotation'id raw id
-                pure ()
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Annotation'value raw
+                C'.marshalInto field_ value
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Annotation'brand raw
+                C'.marshalInto field_ brand
 data Brand
      = Brand
         {scopes :: List (Brand'Scope)}
@@ -122,7 +124,8 @@ instance C'.Cerialize s CodeGeneratorRequest (Capnp.ById.Xa93fc509624c72d9.CodeG
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (requestedFiles V.! i)
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'capnpVersion raw
+                C'.marshalInto field_ capnpVersion
 instance C'.Decerialize Capnp.ById.Xa93fc509624c72d9.ElementSize Capnp.ById.Xa93fc509624c72d9.ElementSize where
     decerialize = pure
 data Enumerant
@@ -226,8 +229,10 @@ instance C'.Cerialize s Method (Capnp.ById.Xa93fc509624c72d9.Method (M'.MutMsg s
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (annotations V.! i)
-                pure ()
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Method'paramBrand raw
+                C'.marshalInto field_ paramBrand
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Method'resultBrand raw
+                C'.marshalInto field_ resultBrand
                 let len_ = V.length implicitParameters
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Method'implicitParameters len_ raw
                 forM_ [0..len_ - 1] $ \i -> do
@@ -304,7 +309,8 @@ instance C'.Cerialize s Superclass (Capnp.ById.Xa93fc509624c72d9.Superclass (M'.
         case value of
             Superclass{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_Superclass'id raw id
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Superclass'brand raw
+                C'.marshalInto field_ brand
 data Type
      = Type'void |
     Type'bool |
@@ -390,19 +396,23 @@ instance C'.Cerialize s Type (Capnp.ById.Xa93fc509624c72d9.Type (M'.MutMsg s)) w
             Type'data_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'data_ raw
             Type'list{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'list raw
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Type'list'elementType raw
+                C'.marshalInto field_ elementType
             Type'enum{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'enum raw
                 Capnp.ById.Xa93fc509624c72d9.set_Type'enum'typeId raw typeId
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Type'enum'brand raw
+                C'.marshalInto field_ brand
             Type'struct{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'struct raw
                 Capnp.ById.Xa93fc509624c72d9.set_Type'struct'typeId raw typeId
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Type'struct'brand raw
+                C'.marshalInto field_ brand
             Type'interface{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'interface raw
                 Capnp.ById.Xa93fc509624c72d9.set_Type'interface'typeId raw typeId
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Type'interface'brand raw
+                C'.marshalInto field_ brand
             Type'anyPointer{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer raw
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw
@@ -622,8 +632,10 @@ instance C'.Cerialize s Field' (Capnp.ById.Xa93fc509624c72d9.Field' (M'.MutMsg s
             Field'slot{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Field'slot raw
                 Capnp.ById.Xa93fc509624c72d9.set_Field'slot'offset raw offset
-                pure ()
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Field'slot'type_ raw
+                C'.marshalInto field_ type_
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Field'slot'defaultValue raw
+                C'.marshalInto field_ defaultValue
                 Capnp.ById.Xa93fc509624c72d9.set_Field'slot'hadExplicitDefault raw hadExplicitDefault
             Field'group{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Field'group raw
@@ -765,11 +777,14 @@ instance C'.Cerialize s Node' (Capnp.ById.Xa93fc509624c72d9.Node' (M'.MutMsg s))
                     C'.marshalInto elt (superclasses V.! i)
             Node'const{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'const raw
-                pure ()
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'const'type_ raw
+                C'.marshalInto field_ type_
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'const'value raw
+                C'.marshalInto field_ value
             Node'annotation{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Node'annotation raw
-                pure ()
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Node'annotation'type_ raw
+                C'.marshalInto field_ type_
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsFile raw targetsFile
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsConst raw targetsConst
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsEnum raw targetsEnum

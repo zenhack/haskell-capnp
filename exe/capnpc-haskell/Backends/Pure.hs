@@ -318,4 +318,8 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                             ]
                         _ ->  "pure ()" -- TODO
                     ]
+                PtrComposite _ -> vcat
+                    [ hcat [ "field_ <- ", newName, " raw" ]
+                    , hcat [ "C'.marshalInto field_ ", fieldNameText ]
+                    ]
                 _ -> "pure ()"

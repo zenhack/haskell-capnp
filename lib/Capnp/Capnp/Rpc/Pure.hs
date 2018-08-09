@@ -98,10 +98,12 @@ instance C'.Cerialize s Call (Capnp.ById.Xb312981b2552a250.Call (M'.MutMsg s)) w
         case value of
             Call{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Call'questionId raw questionId
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Call'target raw
+                C'.marshalInto field_ target
                 Capnp.ById.Xb312981b2552a250.set_Call'interfaceId raw interfaceId
                 Capnp.ById.Xb312981b2552a250.set_Call'methodId raw methodId
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Call'params raw
+                C'.marshalInto field_ params
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw
                 C'.marshalInto field_ sendResultsTo
                 Capnp.ById.Xb312981b2552a250.set_Call'allowThirdPartyTailCall raw allowThirdPartyTailCall
@@ -156,7 +158,8 @@ instance C'.Cerialize s Disembargo (Capnp.ById.Xb312981b2552a250.Disembargo (M'.
     marshalInto raw value = do
         case value of
             Disembargo{..} -> do
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Disembargo'target raw
+                C'.marshalInto field_ target
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw
                 C'.marshalInto field_ context
 data Exception
@@ -223,7 +226,8 @@ instance C'.Cerialize s Join (Capnp.ById.Xb312981b2552a250.Join (M'.MutMsg s)) w
         case value of
             Join{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Join'questionId raw questionId
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Join'target raw
+                C'.marshalInto field_ target
                 pure ()
 data Message
      = Message'unimplemented (Message) |
@@ -371,7 +375,8 @@ instance C'.Cerialize s Provide (Capnp.ById.Xb312981b2552a250.Provide (M'.MutMsg
         case value of
             Provide{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Provide'questionId raw questionId
-                pure ()
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Provide'target raw
+                C'.marshalInto field_ target
                 pure ()
 data Release
      = Release

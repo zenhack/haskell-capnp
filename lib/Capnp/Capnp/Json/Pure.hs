@@ -107,4 +107,5 @@ instance C'.Cerialize s JsonValue'Field (Capnp.ById.X8ef99297a43a5e34.JsonValue'
         case value of
             JsonValue'Field{..} -> do
                 pure ()
-                pure ()
+                field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
+                C'.marshalInto field_ value
