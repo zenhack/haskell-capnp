@@ -316,14 +316,22 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     [ hcat [ "let len_ = V.length ", fieldNameText ]
                     , hcat [ "field_ <- ", newName, " len_ raw" ]
                     , case eltType of
-                        (CompositeType (StructType _ _)) -> vcat
+                        VoidType ->
+                            ""
+                        CompositeType (StructType _ _) -> vcat
                             [ "forM_ [0..len_ - 1] $ \\i -> do"
                             , indent $ vcat
                                 [ "elt <- C'.index i field_"
                                 , hcat [ "C'.marshalInto elt (", fieldNameText, " V.! i)" ]
                                 ]
                             ]
-                        _ ->  "pure ()" -- TODO
+                        WordType _ -> vcat
+                            [ "forM_ [0..len_ - 1] $ \\i -> do"
+                            , indent $ vcat
+                                [ hcat [ "C'.setIndex (", fieldNameText, " V.! i) i field_" ] ]
+                            ]
+                        PtrType _ ->
+                            "pure ()" -- TODO
                     ]
                 PtrComposite _ -> vcat
                     [ hcat [ "field_ <- ", newName, " raw" ]
