@@ -462,21 +462,21 @@ instance C'.Cerialize s Value (Capnp.ById.Xa93fc509624c72d9.Value (M'.MutMsg s))
     marshalInto raw value = do
         case value of
             Value'void -> Capnp.ById.Xa93fc509624c72d9.set_Value'void raw
-            Value'bool _ -> pure ()
-            Value'int8 _ -> pure ()
-            Value'int16 _ -> pure ()
-            Value'int32 _ -> pure ()
-            Value'int64 _ -> pure ()
-            Value'uint8 _ -> pure ()
-            Value'uint16 _ -> pure ()
-            Value'uint32 _ -> pure ()
-            Value'uint64 _ -> pure ()
-            Value'float32 _ -> pure ()
-            Value'float64 _ -> pure ()
+            Value'bool field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'bool raw field_
+            Value'int8 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int8 raw field_
+            Value'int16 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int16 raw field_
+            Value'int32 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int32 raw field_
+            Value'int64 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int64 raw field_
+            Value'uint8 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint8 raw field_
+            Value'uint16 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint16 raw field_
+            Value'uint32 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint32 raw field_
+            Value'uint64 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint64 raw field_
+            Value'float32 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float32 raw field_
+            Value'float64 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float64 raw field_
             Value'text _ -> pure ()
             Value'data_ _ -> pure ()
             Value'list _ -> pure ()
-            Value'enum _ -> pure ()
+            Value'enum field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'enum raw field_
             Value'struct _ -> pure ()
             Value'interface -> Capnp.ById.Xa93fc509624c72d9.set_Value'interface raw
             Value'anyPointer _ -> pure ()
@@ -651,7 +651,7 @@ instance C'.Cerialize s Field'ordinal (Capnp.ById.Xa93fc509624c72d9.Field'ordina
     marshalInto raw value = do
         case value of
             Field'ordinal'implicit -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw
-            Field'ordinal'explicit _ -> pure ()
+            Field'ordinal'explicit field_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw field_
             Field'ordinal'unknown' _ -> pure ()
 data Node'
      = Node'file |

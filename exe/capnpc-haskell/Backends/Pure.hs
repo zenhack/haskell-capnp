@@ -274,7 +274,12 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 then "raw <- " <> setterName <> " raw"
                 else ""
         in case variantParams of
-            Unnamed VoidType _ -> hcat [ " -> ", setterName, " raw" ]
+            Unnamed VoidType VoidField ->
+                hcat [ " -> ", setterName, " raw" ]
+            Unnamed _ (DataField _ _) ->
+                hcat [ " field_ -> ", setterName, " raw field_"]
+            Unnamed _ _ ->
+                " _ -> pure ()" -- TODO
             Record fields -> vcat
                 [ "{..} -> do"
                 , indent $ vcat
@@ -282,8 +287,6 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     , vcat (map (fmtCerializeField variantName) fields)
                     ]
                 ]
-            _ ->
-                " _ -> pure ()" -- TODO
     fmtCerializeField variantName Field{fieldName,fieldLocType} =
         let accessorName prefix = fmtName Raw thisMod $ prefixName prefix (subName variantName fieldName)
             setterName = accessorName "set_"

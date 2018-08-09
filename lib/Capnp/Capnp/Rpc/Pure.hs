@@ -133,9 +133,9 @@ instance C'.Cerialize s CapDescriptor (Capnp.ById.Xb312981b2552a250.CapDescripto
     marshalInto raw value = do
         case value of
             CapDescriptor'none -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'none raw
-            CapDescriptor'senderHosted _ -> pure ()
-            CapDescriptor'senderPromise _ -> pure ()
-            CapDescriptor'receiverHosted _ -> pure ()
+            CapDescriptor'senderHosted field_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'senderHosted raw field_
+            CapDescriptor'senderPromise field_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'senderPromise raw field_
+            CapDescriptor'receiverHosted field_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'receiverHosted raw field_
             CapDescriptor'receiverAnswer _ -> pure ()
             CapDescriptor'thirdPartyHosted _ -> pure ()
             CapDescriptor'unknown' _ -> pure ()
@@ -302,7 +302,7 @@ instance C'.IsStruct M'.ConstMsg MessageTarget where
 instance C'.Cerialize s MessageTarget (Capnp.ById.Xb312981b2552a250.MessageTarget (M'.MutMsg s)) where
     marshalInto raw value = do
         case value of
-            MessageTarget'importedCap _ -> pure ()
+            MessageTarget'importedCap field_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'importedCap raw field_
             MessageTarget'promisedAnswer _ -> pure ()
             MessageTarget'unknown' _ -> pure ()
 data Payload
@@ -502,10 +502,10 @@ instance C'.IsStruct M'.ConstMsg Disembargo'context where
 instance C'.Cerialize s Disembargo'context (Capnp.ById.Xb312981b2552a250.Disembargo'context (M'.MutMsg s)) where
     marshalInto raw value = do
         case value of
-            Disembargo'context'senderLoopback _ -> pure ()
-            Disembargo'context'receiverLoopback _ -> pure ()
+            Disembargo'context'senderLoopback field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'senderLoopback raw field_
+            Disembargo'context'receiverLoopback field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'receiverLoopback raw field_
             Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
-            Disembargo'context'provide _ -> pure ()
+            Disembargo'context'provide field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw field_
             Disembargo'context'unknown' _ -> pure ()
 instance C'.Decerialize Capnp.ById.Xb312981b2552a250.Exception'Type Capnp.ById.Xb312981b2552a250.Exception'Type where
     decerialize = pure
@@ -529,7 +529,7 @@ instance C'.Cerialize s PromisedAnswer'Op (Capnp.ById.Xb312981b2552a250.Promised
     marshalInto raw value = do
         case value of
             PromisedAnswer'Op'noop -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw
-            PromisedAnswer'Op'getPointerField _ -> pure ()
+            PromisedAnswer'Op'getPointerField field_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw field_
             PromisedAnswer'Op'unknown' _ -> pure ()
 data Resolve'
      = Resolve'cap (CapDescriptor) |
@@ -584,6 +584,6 @@ instance C'.Cerialize s Return' (Capnp.ById.Xb312981b2552a250.Return' (M'.MutMsg
             Return'exception _ -> pure ()
             Return'canceled -> Capnp.ById.Xb312981b2552a250.set_Return'canceled raw
             Return'resultsSentElsewhere -> Capnp.ById.Xb312981b2552a250.set_Return'resultsSentElsewhere raw
-            Return'takeFromOtherQuestion _ -> pure ()
+            Return'takeFromOtherQuestion field_ -> Capnp.ById.Xb312981b2552a250.set_Return'takeFromOtherQuestion raw field_
             Return'acceptFromThirdParty _ -> pure ()
             Return'unknown' _ -> pure ()

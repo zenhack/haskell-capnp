@@ -59,8 +59,8 @@ instance C'.Cerialize s JsonValue (Capnp.ById.X8ef99297a43a5e34.JsonValue (M'.Mu
     marshalInto raw value = do
         case value of
             JsonValue'null -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'null raw
-            JsonValue'boolean _ -> pure ()
-            JsonValue'number _ -> pure ()
+            JsonValue'boolean field_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'boolean raw field_
+            JsonValue'number field_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'number raw field_
             JsonValue'string _ -> pure ()
             JsonValue'array _ -> pure ()
             JsonValue'object _ -> pure ()
