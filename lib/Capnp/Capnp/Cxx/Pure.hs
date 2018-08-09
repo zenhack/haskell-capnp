@@ -25,5 +25,6 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
 import qualified Capnp.ById.Xbdf87d7bb8304e81

@@ -103,6 +103,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Message as M'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
     , "import qualified Codec.Capnp as C'"
+    , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
     , ""
     , "import qualified Data.Vector as V"
     , ""
@@ -305,6 +306,12 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     [ hcat [ "field_ <- newData (BS.length ", fieldNameText, ")"]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                     ]
+                PrimPtr PrimText -> vcat
+                    [ hcat [ "field_ <- PH'.marshalText raw ", fieldNameText ]
+                    , hcat [ setterName, " raw field_" ]
+                    ]
+                PrimPtr (PrimAnyPtr _) ->
+                    "pure ()" -- TODO
                 ListOf eltType -> vcat
                     [ hcat [ "let len_ = V.length ", fieldNameText ]
                     , hcat [ "field_ <- ", newName, " len_ raw" ]
@@ -322,4 +329,3 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     [ hcat [ "field_ <- ", newName, " raw" ]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                     ]
-                _ -> "pure ()"

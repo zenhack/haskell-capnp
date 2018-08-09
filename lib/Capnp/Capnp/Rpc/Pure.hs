@@ -25,6 +25,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
 import qualified Capnp.ById.Xb312981b2552a250
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -183,7 +184,8 @@ instance C'.Cerialize s Exception (Capnp.ById.Xb312981b2552a250.Exception (M'.Mu
     marshalInto raw value = do
         case value of
             Exception{..} -> do
-                pure ()
+                field_ <- PH'.marshalText raw reason
+                Capnp.ById.Xb312981b2552a250.set_Exception'reason raw field_
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteIsCallersFault raw obsoleteIsCallersFault
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteDurability raw obsoleteDurability
                 Capnp.ById.Xb312981b2552a250.set_Exception'type_ raw type_

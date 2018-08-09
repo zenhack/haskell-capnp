@@ -25,6 +25,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
 import qualified Capnp.ById.X8ef99297a43a5e34
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
@@ -83,7 +84,8 @@ instance C'.Cerialize s JsonValue'Call (Capnp.ById.X8ef99297a43a5e34.JsonValue'C
     marshalInto raw value = do
         case value of
             JsonValue'Call{..} -> do
-                pure ()
+                field_ <- PH'.marshalText raw function
+                Capnp.ById.X8ef99297a43a5e34.set_JsonValue'Call'function raw field_
                 let len_ = V.length params
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Call'params len_ raw
                 forM_ [0..len_ - 1] $ \i -> do
@@ -106,6 +108,7 @@ instance C'.Cerialize s JsonValue'Field (Capnp.ById.X8ef99297a43a5e34.JsonValue'
     marshalInto raw value = do
         case value of
             JsonValue'Field{..} -> do
-                pure ()
+                field_ <- PH'.marshalText raw name
+                Capnp.ById.X8ef99297a43a5e34.set_JsonValue'Field'name raw field_
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
                 C'.marshalInto field_ value
