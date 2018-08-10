@@ -28,6 +28,8 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Accept msg = Accept_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Accept msg) where
     fromStruct = pure . Accept_newtype_
+instance C'.ToStruct msg (Accept msg) where
+    toStruct (Accept_newtype_ struct) = struct
 instance C'.IsPtr msg (Accept msg) where
     fromPtr msg ptr = Accept_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Accept_newtype_ struct) = C'.toPtr struct
@@ -70,6 +72,8 @@ set_Accept'embargo (Accept_newtype_ struct) value = H'.setWordField struct (from
 newtype Bootstrap msg = Bootstrap_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Bootstrap msg) where
     fromStruct = pure . Bootstrap_newtype_
+instance C'.ToStruct msg (Bootstrap msg) where
+    toStruct (Bootstrap_newtype_ struct) = struct
 instance C'.IsPtr msg (Bootstrap msg) where
     fromPtr msg ptr = Bootstrap_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Bootstrap_newtype_ struct) = C'.toPtr struct
@@ -106,6 +110,8 @@ set_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) value = U'.setPtr (
 newtype Call msg = Call_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Call msg) where
     fromStruct = pure . Call_newtype_
+instance C'.ToStruct msg (Call msg) where
+    toStruct (Call_newtype_ struct) = struct
 instance C'.IsPtr msg (Call msg) where
     fromPtr msg ptr = Call_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Call_newtype_ struct) = C'.toPtr struct
@@ -182,6 +188,8 @@ set_Call'allowThirdPartyTailCall (Call_newtype_ struct) value = H'.setWordField 
 newtype CapDescriptor msg = CapDescriptor_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CapDescriptor msg) where
     fromStruct = pure . CapDescriptor_newtype_
+instance C'.ToStruct msg (CapDescriptor msg) where
+    toStruct (CapDescriptor_newtype_ struct) = struct
 instance C'.IsPtr msg (CapDescriptor msg) where
     fromPtr msg ptr = CapDescriptor_newtype_ <$> C'.fromPtr msg ptr
     toPtr (CapDescriptor_newtype_ struct) = C'.toPtr struct
@@ -249,6 +257,8 @@ instance C'.FromStruct msg (CapDescriptor' msg) where
 newtype Disembargo msg = Disembargo_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Disembargo msg) where
     fromStruct = pure . Disembargo_newtype_
+instance C'.ToStruct msg (Disembargo msg) where
+    toStruct (Disembargo_newtype_ struct) = struct
 instance C'.IsPtr msg (Disembargo msg) where
     fromPtr msg ptr = Disembargo_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Disembargo_newtype_ struct) = C'.toPtr struct
@@ -288,6 +298,8 @@ has_Disembargo'context(Disembargo_newtype_ struct) = pure True
 newtype Exception msg = Exception_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Exception msg) where
     fromStruct = pure . Exception_newtype_
+instance C'.ToStruct msg (Exception msg) where
+    toStruct (Exception_newtype_ struct) = struct
 instance C'.IsPtr msg (Exception msg) where
     fromPtr msg ptr = Exception_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Exception_newtype_ struct) = C'.toPtr struct
@@ -341,6 +353,8 @@ set_Exception'type_ (Exception_newtype_ struct) value = H'.setWordField struct (
 newtype Finish msg = Finish_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Finish msg) where
     fromStruct = pure . Finish_newtype_
+instance C'.ToStruct msg (Finish msg) where
+    toStruct (Finish_newtype_ struct) = struct
 instance C'.IsPtr msg (Finish msg) where
     fromPtr msg ptr = Finish_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Finish_newtype_ struct) = C'.toPtr struct
@@ -375,6 +389,8 @@ set_Finish'releaseResultCaps (Finish_newtype_ struct) value = H'.setWordField st
 newtype Join msg = Join_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Join msg) where
     fromStruct = pure . Join_newtype_
+instance C'.ToStruct msg (Join msg) where
+    toStruct (Join_newtype_ struct) = struct
 instance C'.IsPtr msg (Join msg) where
     fromPtr msg ptr = Join_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Join_newtype_ struct) = C'.toPtr struct
@@ -424,6 +440,8 @@ set_Join'keyPart (Join_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 str
 newtype Message msg = Message_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Message msg) where
     fromStruct = pure . Message_newtype_
+instance C'.ToStruct msg (Message msg) where
+    toStruct (Message_newtype_ struct) = struct
 instance C'.IsPtr msg (Message msg) where
     fromPtr msg ptr = Message_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Message_newtype_ struct) = C'.toPtr struct
@@ -541,6 +559,8 @@ instance C'.FromStruct msg (Message' msg) where
 newtype MessageTarget msg = MessageTarget_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (MessageTarget msg) where
     fromStruct = pure . MessageTarget_newtype_
+instance C'.ToStruct msg (MessageTarget msg) where
+    toStruct (MessageTarget_newtype_ struct) = struct
 instance C'.IsPtr msg (MessageTarget msg) where
     fromPtr msg ptr = MessageTarget_newtype_ <$> C'.fromPtr msg ptr
     toPtr (MessageTarget_newtype_ struct) = C'.toPtr struct
@@ -586,6 +606,8 @@ instance C'.FromStruct msg (MessageTarget' msg) where
 newtype Payload msg = Payload_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Payload msg) where
     fromStruct = pure . Payload_newtype_
+instance C'.ToStruct msg (Payload msg) where
+    toStruct (Payload_newtype_ struct) = struct
 instance C'.IsPtr msg (Payload msg) where
     fromPtr msg ptr = Payload_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Payload_newtype_ struct) = C'.toPtr struct
@@ -629,6 +651,8 @@ new_Payload'capTable len struct = do
 newtype PromisedAnswer msg = PromisedAnswer_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (PromisedAnswer msg) where
     fromStruct = pure . PromisedAnswer_newtype_
+instance C'.ToStruct msg (PromisedAnswer msg) where
+    toStruct (PromisedAnswer_newtype_ struct) = struct
 instance C'.IsPtr msg (PromisedAnswer msg) where
     fromPtr msg ptr = PromisedAnswer_newtype_ <$> C'.fromPtr msg ptr
     toPtr (PromisedAnswer_newtype_ struct) = C'.toPtr struct
@@ -670,6 +694,8 @@ new_PromisedAnswer'transform len struct = do
 newtype Provide msg = Provide_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Provide msg) where
     fromStruct = pure . Provide_newtype_
+instance C'.ToStruct msg (Provide msg) where
+    toStruct (Provide_newtype_ struct) = struct
 instance C'.IsPtr msg (Provide msg) where
     fromPtr msg ptr = Provide_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Provide_newtype_ struct) = C'.toPtr struct
@@ -719,6 +745,8 @@ set_Provide'recipient (Provide_newtype_ struct) value = U'.setPtr (C'.toPtr valu
 newtype Release msg = Release_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Release msg) where
     fromStruct = pure . Release_newtype_
+instance C'.ToStruct msg (Release msg) where
+    toStruct (Release_newtype_ struct) = struct
 instance C'.IsPtr msg (Release msg) where
     fromPtr msg ptr = Release_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Release_newtype_ struct) = C'.toPtr struct
@@ -753,6 +781,8 @@ set_Release'referenceCount (Release_newtype_ struct) value = H'.setWordField str
 newtype Resolve msg = Resolve_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Resolve msg) where
     fromStruct = pure . Resolve_newtype_
+instance C'.ToStruct msg (Resolve msg) where
+    toStruct (Resolve_newtype_ struct) = struct
 instance C'.IsPtr msg (Resolve msg) where
     fromPtr msg ptr = Resolve_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Resolve_newtype_ struct) = C'.toPtr struct
@@ -785,6 +815,8 @@ has_Resolve'union'(Resolve_newtype_ struct) = pure True
 newtype Return msg = Return_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Return msg) where
     fromStruct = pure . Return_newtype_
+instance C'.ToStruct msg (Return msg) where
+    toStruct (Return_newtype_ struct) = struct
 instance C'.IsPtr msg (Return msg) where
     fromPtr msg ptr = Return_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Return_newtype_ struct) = C'.toPtr struct
@@ -823,6 +855,8 @@ has_Return'union'(Return_newtype_ struct) = pure True
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (ThirdPartyCapDescriptor msg) where
     fromStruct = pure . ThirdPartyCapDescriptor_newtype_
+instance C'.ToStruct msg (ThirdPartyCapDescriptor msg) where
+    toStruct (ThirdPartyCapDescriptor_newtype_ struct) = struct
 instance C'.IsPtr msg (ThirdPartyCapDescriptor msg) where
     fromPtr msg ptr = ThirdPartyCapDescriptor_newtype_ <$> C'.fromPtr msg ptr
     toPtr (ThirdPartyCapDescriptor_newtype_ struct) = C'.toPtr struct
@@ -859,6 +893,8 @@ set_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor_newtype_ struct) val
 newtype Call'sendResultsTo msg = Call'sendResultsTo_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Call'sendResultsTo msg) where
     fromStruct = pure . Call'sendResultsTo_newtype_
+instance C'.ToStruct msg (Call'sendResultsTo msg) where
+    toStruct (Call'sendResultsTo_newtype_ struct) = struct
 instance C'.IsPtr msg (Call'sendResultsTo msg) where
     fromPtr msg ptr = Call'sendResultsTo_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Call'sendResultsTo_newtype_ struct) = C'.toPtr struct
@@ -906,6 +942,8 @@ instance C'.FromStruct msg (Call'sendResultsTo' msg) where
 newtype Disembargo'context msg = Disembargo'context_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Disembargo'context msg) where
     fromStruct = pure . Disembargo'context_newtype_
+instance C'.ToStruct msg (Disembargo'context msg) where
+    toStruct (Disembargo'context_newtype_ struct) = struct
 instance C'.IsPtr msg (Disembargo'context msg) where
     fromPtr msg ptr = Disembargo'context_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Disembargo'context_newtype_ struct) = C'.toPtr struct
@@ -993,6 +1031,8 @@ instance C'.IsPtr msg (B'.List msg Exception'Type) where
 newtype PromisedAnswer'Op msg = PromisedAnswer'Op_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (PromisedAnswer'Op msg) where
     fromStruct = pure . PromisedAnswer'Op_newtype_
+instance C'.ToStruct msg (PromisedAnswer'Op msg) where
+    toStruct (PromisedAnswer'Op_newtype_ struct) = struct
 instance C'.IsPtr msg (PromisedAnswer'Op msg) where
     fromPtr msg ptr = PromisedAnswer'Op_newtype_ <$> C'.fromPtr msg ptr
     toPtr (PromisedAnswer'Op_newtype_ struct) = C'.toPtr struct
@@ -1036,6 +1076,8 @@ instance C'.FromStruct msg (PromisedAnswer'Op' msg) where
 newtype Resolve' msg = Resolve'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Resolve' msg) where
     fromStruct = pure . Resolve'_newtype_
+instance C'.ToStruct msg (Resolve' msg) where
+    toStruct (Resolve'_newtype_ struct) = struct
 instance C'.IsPtr msg (Resolve' msg) where
     fromPtr msg ptr = Resolve'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Resolve'_newtype_ struct) = C'.toPtr struct
@@ -1081,6 +1123,8 @@ instance C'.FromStruct msg (Resolve'' msg) where
 newtype Return' msg = Return'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Return' msg) where
     fromStruct = pure . Return'_newtype_
+instance C'.ToStruct msg (Return' msg) where
+    toStruct (Return'_newtype_ struct) = struct
 instance C'.IsPtr msg (Return' msg) where
     fromPtr msg ptr = Return'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Return'_newtype_ struct) = C'.toPtr struct

@@ -8,6 +8,7 @@ module Codec.Capnp
     , MutListElem(..)
     , IsPtr(..)
     , FromStruct(..)
+    , ToStruct(..)
     , Allocate(..)
     , Cerialize(..)
     , Decerialize(..)
@@ -73,6 +74,10 @@ class IsPtr msg a where
 -- | Types that can be extracted from a struct.
 class FromStruct msg a where
     fromStruct :: ReadCtx m msg => Struct msg -> m a
+
+-- | Types that can be converted to a struct.
+class ToStruct msg a where
+    toStruct :: a -> Struct msg
 
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
@@ -173,6 +178,9 @@ instance IsPtr msg (ListOf msg (Struct msg)) where
 -- FromStruct instance for Struct; just the identity.
 instance FromStruct msg (Struct msg) where
     fromStruct = pure
+
+instance ToStruct msg (Struct msg) where
+    toStruct = id
 
 instance IsPtr msg (Struct msg) where
     fromPtr msg Nothing              = fromStruct (go msg) where

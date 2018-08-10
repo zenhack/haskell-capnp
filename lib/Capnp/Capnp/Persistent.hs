@@ -28,6 +28,8 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
+instance C'.ToStruct msg (Persistent'SaveParams msg) where
+    toStruct (Persistent'SaveParams_newtype_ struct) = struct
 instance C'.IsPtr msg (Persistent'SaveParams msg) where
     fromPtr msg ptr = Persistent'SaveParams_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Persistent'SaveParams_newtype_ struct) = C'.toPtr struct
@@ -58,6 +60,8 @@ set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value 
 newtype Persistent'SaveResults msg = Persistent'SaveResults_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults_newtype_
+instance C'.ToStruct msg (Persistent'SaveResults msg) where
+    toStruct (Persistent'SaveResults_newtype_ struct) = struct
 instance C'.IsPtr msg (Persistent'SaveResults msg) where
     fromPtr msg ptr = Persistent'SaveResults_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Persistent'SaveResults_newtype_ struct) = C'.toPtr struct

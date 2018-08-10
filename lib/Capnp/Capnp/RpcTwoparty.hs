@@ -28,6 +28,8 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype JoinKeyPart msg = JoinKeyPart_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (JoinKeyPart msg) where
     fromStruct = pure . JoinKeyPart_newtype_
+instance C'.ToStruct msg (JoinKeyPart msg) where
+    toStruct (JoinKeyPart_newtype_ struct) = struct
 instance C'.IsPtr msg (JoinKeyPart msg) where
     fromPtr msg ptr = JoinKeyPart_newtype_ <$> C'.fromPtr msg ptr
     toPtr (JoinKeyPart_newtype_ struct) = C'.toPtr struct
@@ -68,6 +70,8 @@ set_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) value = H'.setWordField st
 newtype JoinResult msg = JoinResult_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (JoinResult msg) where
     fromStruct = pure . JoinResult_newtype_
+instance C'.ToStruct msg (JoinResult msg) where
+    toStruct (JoinResult_newtype_ struct) = struct
 instance C'.IsPtr msg (JoinResult msg) where
     fromPtr msg ptr = JoinResult_newtype_ <$> C'.fromPtr msg ptr
     toPtr (JoinResult_newtype_ struct) = C'.toPtr struct
@@ -110,6 +114,8 @@ set_JoinResult'cap (JoinResult_newtype_ struct) value = U'.setPtr (C'.toPtr valu
 newtype ProvisionId msg = ProvisionId_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId_newtype_
+instance C'.ToStruct msg (ProvisionId msg) where
+    toStruct (ProvisionId_newtype_ struct) = struct
 instance C'.IsPtr msg (ProvisionId msg) where
     fromPtr msg ptr = ProvisionId_newtype_ <$> C'.fromPtr msg ptr
     toPtr (ProvisionId_newtype_ struct) = C'.toPtr struct
@@ -164,6 +170,8 @@ instance C'.IsPtr msg (B'.List msg Side) where
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (VatId msg) where
     fromStruct = pure . VatId_newtype_
+instance C'.ToStruct msg (VatId msg) where
+    toStruct (VatId_newtype_ struct) = struct
 instance C'.IsPtr msg (VatId msg) where
     fromPtr msg ptr = VatId_newtype_ <$> C'.fromPtr msg ptr
     toPtr (VatId_newtype_ struct) = C'.toPtr struct

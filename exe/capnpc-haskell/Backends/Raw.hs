@@ -126,8 +126,13 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
 
         , hcat [ "instance C'.FromStruct msg (", typeCon, " msg) where" ]
         , indent $ vcat
-                [ hcat [ "fromStruct = pure . ", dataCon ]
-                ]
+            [ hcat [ "fromStruct = pure . ", dataCon ]
+            ]
+
+        , hcat [ "instance C'.ToStruct msg (", typeCon, " msg) where" ]
+        , indent $ vcat
+            [ hcat [ "toStruct (", dataCon, " struct) = struct" ]
+            ]
 
         , hcat [ "instance C'.IsPtr msg (", typeCon, " msg) where" ]
         , indent $ vcat

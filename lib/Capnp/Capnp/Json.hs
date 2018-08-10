@@ -28,6 +28,8 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype JsonValue msg = JsonValue_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (JsonValue msg) where
     fromStruct = pure . JsonValue_newtype_
+instance C'.ToStruct msg (JsonValue msg) where
+    toStruct (JsonValue_newtype_ struct) = struct
 instance C'.IsPtr msg (JsonValue msg) where
     fromPtr msg ptr = JsonValue_newtype_ <$> C'.fromPtr msg ptr
     toPtr (JsonValue_newtype_ struct) = C'.toPtr struct
@@ -101,6 +103,8 @@ instance C'.FromStruct msg (JsonValue' msg) where
 newtype JsonValue'Call msg = JsonValue'Call_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (JsonValue'Call msg) where
     fromStruct = pure . JsonValue'Call_newtype_
+instance C'.ToStruct msg (JsonValue'Call msg) where
+    toStruct (JsonValue'Call_newtype_ struct) = struct
 instance C'.IsPtr msg (JsonValue'Call msg) where
     fromPtr msg ptr = JsonValue'Call_newtype_ <$> C'.fromPtr msg ptr
     toPtr (JsonValue'Call_newtype_ struct) = C'.toPtr struct
@@ -149,6 +153,8 @@ new_JsonValue'Call'params len struct = do
 newtype JsonValue'Field msg = JsonValue'Field_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (JsonValue'Field msg) where
     fromStruct = pure . JsonValue'Field_newtype_
+instance C'.ToStruct msg (JsonValue'Field msg) where
+    toStruct (JsonValue'Field_newtype_ struct) = struct
 instance C'.IsPtr msg (JsonValue'Field msg) where
     fromPtr msg ptr = JsonValue'Field_newtype_ <$> C'.fromPtr msg ptr
     toPtr (JsonValue'Field_newtype_ struct) = C'.toPtr struct

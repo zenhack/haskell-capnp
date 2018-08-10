@@ -28,6 +28,8 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Annotation msg = Annotation_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Annotation msg) where
     fromStruct = pure . Annotation_newtype_
+instance C'.ToStruct msg (Annotation msg) where
+    toStruct (Annotation_newtype_ struct) = struct
 instance C'.IsPtr msg (Annotation msg) where
     fromPtr msg ptr = Annotation_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Annotation_newtype_ struct) = C'.toPtr struct
@@ -82,6 +84,8 @@ new_Annotation'brand struct = do
 newtype Brand msg = Brand_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Brand msg) where
     fromStruct = pure . Brand_newtype_
+instance C'.ToStruct msg (Brand msg) where
+    toStruct (Brand_newtype_ struct) = struct
 instance C'.IsPtr msg (Brand msg) where
     fromPtr msg ptr = Brand_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Brand_newtype_ struct) = C'.toPtr struct
@@ -117,6 +121,8 @@ new_Brand'scopes len struct = do
 newtype CapnpVersion msg = CapnpVersion_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion_newtype_
+instance C'.ToStruct msg (CapnpVersion msg) where
+    toStruct (CapnpVersion_newtype_ struct) = struct
 instance C'.IsPtr msg (CapnpVersion msg) where
     fromPtr msg ptr = CapnpVersion_newtype_ <$> C'.fromPtr msg ptr
     toPtr (CapnpVersion_newtype_ struct) = C'.toPtr struct
@@ -157,6 +163,8 @@ set_CapnpVersion'micro (CapnpVersion_newtype_ struct) value = H'.setWordField st
 newtype CodeGeneratorRequest msg = CodeGeneratorRequest_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest_newtype_
+instance C'.ToStruct msg (CodeGeneratorRequest msg) where
+    toStruct (CodeGeneratorRequest_newtype_ struct) = struct
 instance C'.IsPtr msg (CodeGeneratorRequest msg) where
     fromPtr msg ptr = CodeGeneratorRequest_newtype_ <$> C'.fromPtr msg ptr
     toPtr (CodeGeneratorRequest_newtype_ struct) = C'.toPtr struct
@@ -262,6 +270,8 @@ instance C'.IsPtr msg (B'.List msg ElementSize) where
 newtype Enumerant msg = Enumerant_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Enumerant msg) where
     fromStruct = pure . Enumerant_newtype_
+instance C'.ToStruct msg (Enumerant msg) where
+    toStruct (Enumerant_newtype_ struct) = struct
 instance C'.IsPtr msg (Enumerant msg) where
     fromPtr msg ptr = Enumerant_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Enumerant_newtype_ struct) = C'.toPtr struct
@@ -316,6 +326,8 @@ new_Enumerant'annotations len struct = do
 newtype Field msg = Field_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field msg) where
     fromStruct = pure . Field_newtype_
+instance C'.ToStruct msg (Field msg) where
+    toStruct (Field_newtype_ struct) = struct
 instance C'.IsPtr msg (Field msg) where
     fromPtr msg ptr = Field_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Field_newtype_ struct) = C'.toPtr struct
@@ -384,6 +396,8 @@ has_Field'union'(Field_newtype_ struct) = pure True
 newtype Method msg = Method_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Method msg) where
     fromStruct = pure . Method_newtype_
+instance C'.ToStruct msg (Method msg) where
+    toStruct (Method_newtype_ struct) = struct
 instance C'.IsPtr msg (Method msg) where
     fromPtr msg ptr = Method_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Method_newtype_ struct) = C'.toPtr struct
@@ -489,6 +503,8 @@ new_Method'implicitParameters len struct = do
 newtype Node msg = Node_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node msg) where
     fromStruct = pure . Node_newtype_
+instance C'.ToStruct msg (Node msg) where
+    toStruct (Node_newtype_ struct) = struct
 instance C'.IsPtr msg (Node msg) where
     fromPtr msg ptr = Node_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node_newtype_ struct) = C'.toPtr struct
@@ -591,6 +607,8 @@ has_Node'union'(Node_newtype_ struct) = pure True
 newtype Superclass msg = Superclass_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Superclass msg) where
     fromStruct = pure . Superclass_newtype_
+instance C'.ToStruct msg (Superclass msg) where
+    toStruct (Superclass_newtype_ struct) = struct
 instance C'.IsPtr msg (Superclass msg) where
     fromPtr msg ptr = Superclass_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Superclass_newtype_ struct) = C'.toPtr struct
@@ -632,6 +650,8 @@ new_Superclass'brand struct = do
 newtype Type msg = Type_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type msg) where
     fromStruct = pure . Type_newtype_
+instance C'.ToStruct msg (Type msg) where
+    toStruct (Type_newtype_ struct) = struct
 instance C'.IsPtr msg (Type msg) where
     fromPtr msg ptr = Type_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type_newtype_ struct) = C'.toPtr struct
@@ -727,6 +747,8 @@ set_Type'anyPointer (Type_newtype_ struct) = do
 newtype Type'list'group' msg = Type'list'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'_newtype_
+instance C'.ToStruct msg (Type'list'group' msg) where
+    toStruct (Type'list'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'list'group' msg) where
     fromPtr msg ptr = Type'list'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'list'group'_newtype_ struct) = C'.toPtr struct
@@ -762,6 +784,8 @@ new_Type'list'elementType struct = do
 newtype Type'enum'group' msg = Type'enum'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'_newtype_
+instance C'.ToStruct msg (Type'enum'group' msg) where
+    toStruct (Type'enum'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'enum'group' msg) where
     fromPtr msg ptr = Type'enum'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'enum'group'_newtype_ struct) = C'.toPtr struct
@@ -803,6 +827,8 @@ new_Type'enum'brand struct = do
 newtype Type'struct'group' msg = Type'struct'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'_newtype_
+instance C'.ToStruct msg (Type'struct'group' msg) where
+    toStruct (Type'struct'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'struct'group' msg) where
     fromPtr msg ptr = Type'struct'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'struct'group'_newtype_ struct) = C'.toPtr struct
@@ -844,6 +870,8 @@ new_Type'struct'brand struct = do
 newtype Type'interface'group' msg = Type'interface'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'_newtype_
+instance C'.ToStruct msg (Type'interface'group' msg) where
+    toStruct (Type'interface'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'interface'group' msg) where
     fromPtr msg ptr = Type'interface'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'interface'group'_newtype_ struct) = C'.toPtr struct
@@ -885,6 +913,8 @@ new_Type'interface'brand struct = do
 newtype Type'anyPointer'group' msg = Type'anyPointer'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'_newtype_
+instance C'.ToStruct msg (Type'anyPointer'group' msg) where
+    toStruct (Type'anyPointer'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'anyPointer'group' msg) where
     fromPtr msg ptr = Type'anyPointer'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'anyPointer'group'_newtype_ struct) = C'.toPtr struct
@@ -935,6 +965,8 @@ instance C'.FromStruct msg (Type' msg) where
 newtype Value msg = Value_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Value msg) where
     fromStruct = pure . Value_newtype_
+instance C'.ToStruct msg (Value msg) where
+    toStruct (Value_newtype_ struct) = struct
 instance C'.IsPtr msg (Value msg) where
     fromPtr msg ptr = Value_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Value_newtype_ struct) = C'.toPtr struct
@@ -1078,6 +1110,8 @@ instance C'.FromStruct msg (Value' msg) where
 newtype Brand'Binding msg = Brand'Binding_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Brand'Binding msg) where
     fromStruct = pure . Brand'Binding_newtype_
+instance C'.ToStruct msg (Brand'Binding msg) where
+    toStruct (Brand'Binding_newtype_ struct) = struct
 instance C'.IsPtr msg (Brand'Binding msg) where
     fromPtr msg ptr = Brand'Binding_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Brand'Binding_newtype_ struct) = C'.toPtr struct
@@ -1121,6 +1155,8 @@ instance C'.FromStruct msg (Brand'Binding' msg) where
 newtype Brand'Scope msg = Brand'Scope_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope_newtype_
+instance C'.ToStruct msg (Brand'Scope msg) where
+    toStruct (Brand'Scope_newtype_ struct) = struct
 instance C'.IsPtr msg (Brand'Scope msg) where
     fromPtr msg ptr = Brand'Scope_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Brand'Scope_newtype_ struct) = C'.toPtr struct
@@ -1153,6 +1189,8 @@ has_Brand'Scope'union'(Brand'Scope_newtype_ struct) = pure True
 newtype Brand'Scope' msg = Brand'Scope'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Brand'Scope' msg) where
     fromStruct = pure . Brand'Scope'_newtype_
+instance C'.ToStruct msg (Brand'Scope' msg) where
+    toStruct (Brand'Scope'_newtype_ struct) = struct
 instance C'.IsPtr msg (Brand'Scope' msg) where
     fromPtr msg ptr = Brand'Scope'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Brand'Scope'_newtype_ struct) = C'.toPtr struct
@@ -1196,6 +1234,8 @@ instance C'.FromStruct msg (Brand'Scope'' msg) where
 newtype CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile_newtype_
+instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile msg) where
+    toStruct (CodeGeneratorRequest'RequestedFile_newtype_ struct) = struct
 instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile msg) where
     fromPtr msg ptr = CodeGeneratorRequest'RequestedFile_newtype_ <$> C'.fromPtr msg ptr
     toPtr (CodeGeneratorRequest'RequestedFile_newtype_ struct) = C'.toPtr struct
@@ -1250,6 +1290,8 @@ new_CodeGeneratorRequest'RequestedFile'imports len struct = do
 newtype CodeGeneratorRequest'RequestedFile'Import msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import_newtype_
+instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
+    toStruct (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = struct
 instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromPtr msg ptr = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> C'.fromPtr msg ptr
     toPtr (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = C'.toPtr struct
@@ -1291,6 +1333,8 @@ new_CodeGeneratorRequest'RequestedFile'Import'name len struct = do
 newtype Field' msg = Field'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field' msg) where
     fromStruct = pure . Field'_newtype_
+instance C'.ToStruct msg (Field' msg) where
+    toStruct (Field'_newtype_ struct) = struct
 instance C'.IsPtr msg (Field' msg) where
     fromPtr msg ptr = Field'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Field'_newtype_ struct) = C'.toPtr struct
@@ -1329,6 +1373,8 @@ set_Field'group (Field'_newtype_ struct) = do
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'_newtype_
+instance C'.ToStruct msg (Field'slot'group' msg) where
+    toStruct (Field'slot'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Field'slot'group' msg) where
     fromPtr msg ptr = Field'slot'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Field'slot'group'_newtype_ struct) = C'.toPtr struct
@@ -1389,6 +1435,8 @@ set_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) value = H'
 newtype Field'group'group' msg = Field'group'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'_newtype_
+instance C'.ToStruct msg (Field'group'group' msg) where
+    toStruct (Field'group'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Field'group'group' msg) where
     fromPtr msg ptr = Field'group'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Field'group'group'_newtype_ struct) = C'.toPtr struct
@@ -1426,6 +1474,8 @@ field'noDiscriminant = C'.fromWord 65535
 newtype Field'ordinal msg = Field'ordinal_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field'ordinal msg) where
     fromStruct = pure . Field'ordinal_newtype_
+instance C'.ToStruct msg (Field'ordinal msg) where
+    toStruct (Field'ordinal_newtype_ struct) = struct
 instance C'.IsPtr msg (Field'ordinal msg) where
     fromPtr msg ptr = Field'ordinal_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Field'ordinal_newtype_ struct) = C'.toPtr struct
@@ -1469,6 +1519,8 @@ instance C'.FromStruct msg (Field'ordinal' msg) where
 newtype Node' msg = Node'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node' msg) where
     fromStruct = pure . Node'_newtype_
+instance C'.ToStruct msg (Node' msg) where
+    toStruct (Node'_newtype_ struct) = struct
 instance C'.IsPtr msg (Node' msg) where
     fromPtr msg ptr = Node'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'_newtype_ struct) = C'.toPtr struct
@@ -1525,6 +1577,8 @@ set_Node'annotation (Node'_newtype_ struct) = do
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'_newtype_
+instance C'.ToStruct msg (Node'struct'group' msg) where
+    toStruct (Node'struct'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'struct'group' msg) where
     fromPtr msg ptr = Node'struct'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'struct'group'_newtype_ struct) = C'.toPtr struct
@@ -1596,6 +1650,8 @@ new_Node'struct'fields len struct = do
 newtype Node'enum'group' msg = Node'enum'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'_newtype_
+instance C'.ToStruct msg (Node'enum'group' msg) where
+    toStruct (Node'enum'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'enum'group' msg) where
     fromPtr msg ptr = Node'enum'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'enum'group'_newtype_ struct) = C'.toPtr struct
@@ -1631,6 +1687,8 @@ new_Node'enum'enumerants len struct = do
 newtype Node'interface'group' msg = Node'interface'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'_newtype_
+instance C'.ToStruct msg (Node'interface'group' msg) where
+    toStruct (Node'interface'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'interface'group' msg) where
     fromPtr msg ptr = Node'interface'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'interface'group'_newtype_ struct) = C'.toPtr struct
@@ -1679,6 +1737,8 @@ new_Node'interface'superclasses len struct = do
 newtype Node'const'group' msg = Node'const'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'_newtype_
+instance C'.ToStruct msg (Node'const'group' msg) where
+    toStruct (Node'const'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'const'group' msg) where
     fromPtr msg ptr = Node'const'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'const'group'_newtype_ struct) = C'.toPtr struct
@@ -1727,6 +1787,8 @@ new_Node'const'value struct = do
 newtype Node'annotation'group' msg = Node'annotation'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'_newtype_
+instance C'.ToStruct msg (Node'annotation'group' msg) where
+    toStruct (Node'annotation'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'annotation'group' msg) where
     fromPtr msg ptr = Node'annotation'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'annotation'group'_newtype_ struct) = C'.toPtr struct
@@ -1845,6 +1907,8 @@ instance C'.FromStruct msg (Node'' msg) where
 newtype Node'NestedNode msg = Node'NestedNode_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode_newtype_
+instance C'.ToStruct msg (Node'NestedNode msg) where
+    toStruct (Node'NestedNode_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'NestedNode msg) where
     fromPtr msg ptr = Node'NestedNode_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'NestedNode_newtype_ struct) = C'.toPtr struct
@@ -1886,6 +1950,8 @@ set_Node'NestedNode'id (Node'NestedNode_newtype_ struct) value = H'.setWordField
 newtype Node'Parameter msg = Node'Parameter_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter_newtype_
+instance C'.ToStruct msg (Node'Parameter msg) where
+    toStruct (Node'Parameter_newtype_ struct) = struct
 instance C'.IsPtr msg (Node'Parameter msg) where
     fromPtr msg ptr = Node'Parameter_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Node'Parameter_newtype_ struct) = C'.toPtr struct
@@ -1921,6 +1987,8 @@ new_Node'Parameter'name len struct = do
 newtype Type'anyPointer msg = Type'anyPointer_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer msg) where
     fromStruct = pure . Type'anyPointer_newtype_
+instance C'.ToStruct msg (Type'anyPointer msg) where
+    toStruct (Type'anyPointer_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'anyPointer msg) where
     fromPtr msg ptr = Type'anyPointer_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'anyPointer_newtype_ struct) = C'.toPtr struct
@@ -1964,6 +2032,8 @@ set_Type'anyPointer'implicitMethodParameter (Type'anyPointer_newtype_ struct) = 
 newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'_newtype_
+instance C'.ToStruct msg (Type'anyPointer'unconstrained'group' msg) where
+    toStruct (Type'anyPointer'unconstrained'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'anyPointer'unconstrained'group' msg) where
     fromPtr msg ptr = Type'anyPointer'unconstrained'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.toPtr struct
@@ -1990,6 +2060,8 @@ has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group'_ne
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'_newtype_
+instance C'.ToStruct msg (Type'anyPointer'parameter'group' msg) where
+    toStruct (Type'anyPointer'parameter'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'anyPointer'parameter'group' msg) where
     fromPtr msg ptr = Type'anyPointer'parameter'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'anyPointer'parameter'group'_newtype_ struct) = C'.toPtr struct
@@ -2024,6 +2096,8 @@ set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_n
 newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'_newtype_
+instance C'.ToStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
+    toStruct (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromPtr msg ptr = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = C'.toPtr struct
@@ -2060,6 +2134,8 @@ instance C'.FromStruct msg (Type'anyPointer' msg) where
 newtype Type'anyPointer'unconstrained msg = Type'anyPointer'unconstrained_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer'unconstrained msg) where
     fromStruct = pure . Type'anyPointer'unconstrained_newtype_
+instance C'.ToStruct msg (Type'anyPointer'unconstrained msg) where
+    toStruct (Type'anyPointer'unconstrained_newtype_ struct) = struct
 instance C'.IsPtr msg (Type'anyPointer'unconstrained msg) where
     fromPtr msg ptr = Type'anyPointer'unconstrained_newtype_ <$> C'.fromPtr msg ptr
     toPtr (Type'anyPointer'unconstrained_newtype_ struct) = C'.toPtr struct
