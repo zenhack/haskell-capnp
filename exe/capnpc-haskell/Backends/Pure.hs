@@ -77,6 +77,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
     , "{-# LANGUAGE ScopedTypeVariables #-}"
+    , "{-# LANGUAGE TypeFamilies #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "{- |"
     , "Module: " <> humanMod
@@ -207,8 +208,11 @@ fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum} =
     let rawName = fmtName Raw thisMod dataName in
     vcat
-        [ hcat [ "instance C'.Decerialize ", rawName, " ", rawName, " where" ]
-        , indent "decerialize = pure"
+        [ hcat [ "instance C'.Decerialize ", rawName, " where" ]
+        , indent $ vcat
+            [ hcat [ "type Cerial msg ", rawName, " = ", rawName ]
+            , "decerialize = pure"
+            ]
         ]
 fmtDataDef thisMod dataName DataDef{dataVariants} =
     let rawName = fmtName Raw thisMod dataName
@@ -217,18 +221,19 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
         [ hcat [ "data ", fmtName Pure thisMod dataName ]
         , indent $ " = " <> vcat (PP.punctuate " |" $ map (fmtVariant thisMod) dataVariants)
         , indent "deriving(Show, Read, Eq)"
-        , hcat [ "instance C'.Decerialize (", rawName, " M'.ConstMsg) ", pureName, " where" ]
-        , indent $ "decerialize raw = " <> case dataVariants of
-            [Variant{variantName,variantParams=Record fields}] ->
-                fmtDecerializeArgs variantName fields
-            _ -> vcat
-                [ "do"
-                , indent $ vcat
+        , hcat [ "instance C'.Decerialize ", pureName, " where" ]
+        , indent $ vcat
+            [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
+            , "decerialize raw = do"
+            , indent $ case dataVariants of
+                [Variant{variantName,variantParams=Record fields}] ->
+                    fmtDecerializeArgs variantName fields
+                _ -> vcat
                     [ hcat [ "raw <- ", fmtName Raw thisMod $ prefixName "get_" (subName dataName ""), " raw" ]
                     , "case raw of"
                     , indent $ vcat (map fmtDecerializeVariant dataVariants)
                     ]
-                ]
+            ]
         , hcat [ "instance C'.FromStruct M'.ConstMsg ", pureName, " where" ]
         , indent $ vcat
             [ "fromStruct struct = do"

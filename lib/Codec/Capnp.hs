@@ -51,8 +51,9 @@ class (ListElem (M.MutMsg s) e) => MutListElem s e where
 class Allocate s e where
     new :: M.WriteCtx m s => M.MutMsg s -> m e
 
-class Decerialize from to where
-    decerialize :: U.ReadCtx m M.ConstMsg => from -> m to
+class Decerialize a where
+    type Cerial msg a
+    decerialize :: U.ReadCtx m M.ConstMsg => Cerial M.ConstMsg a -> m a
 
 class Cerialize s from to where
     -- | Marshal a value into the pre-allocated object of type @to@.
@@ -97,7 +98,8 @@ class FromStruct msg a where
 class ToStruct msg a where
     toStruct :: a -> Struct msg
 
-instance Decerialize () () where
+instance Decerialize () where
+    type Cerial msg () = ()
     decerialize = pure
 
 instance IsWord Bool where

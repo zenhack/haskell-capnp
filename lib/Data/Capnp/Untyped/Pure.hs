@@ -51,11 +51,12 @@ import Data.Primitive.Array          (Array)
 import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
-import qualified Codec.Capnp        as C
 import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector        as V
+
+import qualified Codec.Capnp as C
 
 type Cap = Word32
 
@@ -113,33 +114,45 @@ sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
 
-instance Decerialize (U.Struct M.ConstMsg) Struct where
-    decerialize struct = Struct
-        <$> (Slice <$> decerialize (U.dataSection struct))
-        <*> (Slice <$> decerialize (U.ptrSection struct))
+instance Decerialize Struct where
+    type Cerial msg Struct = U.Struct msg
 
-instance Decerialize (Maybe (U.Ptr M.ConstMsg)) (Maybe PtrType) where
+    decerialize struct = Struct
+        <$> (Slice <$> decerializeListOf (U.dataSection struct))
+        <*> (Slice <$> decerializeListOf (U.ptrSection struct))
+
+instance Decerialize (Maybe PtrType) where
+    type Cerial msg (Maybe PtrType) = Maybe (U.Ptr msg)
+
     decerialize Nothing = pure Nothing
     decerialize (Just ptr) = Just <$> case ptr of
         U.PtrCap _ cap     -> return (PtrCap cap)
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
 
-instance (C.ListElem M.ConstMsg a, Decerialize a b) => Decerialize (C.List M.ConstMsg a) (List b) where
+instance
+    ( C.ListElem M.ConstMsg (Cerial M.ConstMsg a)
+    , Decerialize a
+    ) => Decerialize (List a)
+  where
+    type Cerial msg (List a) = C.List msg (Cerial msg a)
     decerialize raw = V.generateM (C.length raw) (\i -> C.index i raw >>= decerialize)
 
-instance Decerialize a b => Decerialize (U.ListOf M.ConstMsg a) (List b) where
-    decerialize raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
+decerializeListOf :: (U.ReadCtx m M.ConstMsg, Decerialize a)
+    => U.ListOf M.ConstMsg (Cerial M.ConstMsg a) -> m (List a)
+decerializeListOf raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
 
-instance Decerialize (U.List M.ConstMsg) List' where
-    decerialize (U.List0 l)      = List0' <$> decerialize l
-    decerialize (U.List1 l)      = List1' <$> decerialize l
-    decerialize (U.List8 l)      = List8' <$> decerialize l
-    decerialize (U.List16 l)     = List16' <$> decerialize l
-    decerialize (U.List32 l)     = List32' <$> decerialize l
-    decerialize (U.List64 l)     = List64' <$> decerialize l
-    decerialize (U.ListPtr l)    = ListPtr' <$> decerialize l
-    decerialize (U.ListStruct l) = ListStruct' <$> decerialize l
+instance Decerialize List' where
+    type Cerial msg List' = U.List msg
+
+    decerialize (U.List0 l)      = List0' <$> decerializeListOf l
+    decerialize (U.List1 l)      = List1' <$> decerializeListOf l
+    decerialize (U.List8 l)      = List8' <$> decerializeListOf l
+    decerialize (U.List16 l)     = List16' <$> decerializeListOf l
+    decerialize (U.List32 l)     = List32' <$> decerializeListOf l
+    decerialize (U.List64 l)     = List64' <$> decerializeListOf l
+    decerialize (U.ListPtr l)    = ListPtr' <$> decerializeListOf l
+    decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
 
 ptrStruct :: MonadThrow f => Maybe PtrType -> f Struct
 ptrStruct Nothing              = pure def

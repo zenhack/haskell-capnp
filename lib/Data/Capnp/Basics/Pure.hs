@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 module Data.Capnp.Basics.Pure
     ( Data(..)
@@ -27,7 +28,8 @@ import qualified Data.Text          as T
 type Data = BS.ByteString
 type Text = T.Text
 
-instance Decerialize (Basics.Data M.ConstMsg) Data where
+instance Decerialize Data where
+    type Cerial msg Data = Basics.Data msg
     decerialize (Basics.Data list) = rawBytes list
 
 instance Cerialize s Data (Basics.Data (M.MutMsg s)) where
@@ -35,7 +37,8 @@ instance Cerialize s Data (Basics.Data (M.MutMsg s)) where
         forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list
 
-instance Decerialize (Basics.Text M.ConstMsg) Text where
+instance Decerialize Text where
+    type Cerial msg Text = Basics.Text msg
     decerialize (Basics.Text list) = do
             bytes <- rawBytes list
             case decodeUtf8' bytes of

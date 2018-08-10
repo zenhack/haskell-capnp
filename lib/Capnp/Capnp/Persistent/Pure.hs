@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Persistent.Pure
@@ -34,9 +35,11 @@ data Persistent'SaveParams
      = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg) Persistent'SaveParams where
-    decerialize raw = Persistent'SaveParams <$>
-        (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= C'.decerialize)
+instance C'.Decerialize Persistent'SaveParams where
+    type Cerial msg Persistent'SaveParams = Capnp.ById.Xb8630836983feed7.Persistent'SaveParams msg
+    decerialize raw = do
+        Persistent'SaveParams <$>
+            (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Persistent'SaveParams where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -50,9 +53,11 @@ data Persistent'SaveResults
      = Persistent'SaveResults
         {sturdyRef :: Maybe (PU'.PtrType)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg) Persistent'SaveResults where
-    decerialize raw = Persistent'SaveResults <$>
-        (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= C'.decerialize)
+instance C'.Decerialize Persistent'SaveResults where
+    type Cerial msg Persistent'SaveResults = Capnp.ById.Xb8630836983feed7.Persistent'SaveResults msg
+    decerialize raw = do
+        Persistent'SaveResults <$>
+            (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Persistent'SaveResults where
     fromStruct struct = do
         raw <- C'.fromStruct struct

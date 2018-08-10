@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Json.Pure
@@ -40,7 +41,8 @@ data JsonValue
     JsonValue'call (JsonValue'Call) |
     JsonValue'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg) JsonValue where
+instance C'.Decerialize JsonValue where
+    type Cerial msg JsonValue = Capnp.ById.X8ef99297a43a5e34.JsonValue msg
     decerialize raw = do
         raw <- Capnp.ById.X8ef99297a43a5e34.get_JsonValue' raw
         case raw of
@@ -72,10 +74,12 @@ data JsonValue'Call
         {function :: Text,
         params :: List (JsonValue)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg) JsonValue'Call where
-    decerialize raw = JsonValue'Call <$>
-        (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= C'.decerialize) <*>
-        (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= C'.decerialize)
+instance C'.Decerialize JsonValue'Call where
+    type Cerial msg JsonValue'Call = Capnp.ById.X8ef99297a43a5e34.JsonValue'Call msg
+    decerialize raw = do
+        JsonValue'Call <$>
+            (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= C'.decerialize) <*>
+            (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg JsonValue'Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -96,10 +100,12 @@ data JsonValue'Field
         {name :: Text,
         value :: JsonValue}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMsg) JsonValue'Field where
-    decerialize raw = JsonValue'Field <$>
-        (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= C'.decerialize) <*>
-        (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= C'.decerialize)
+instance C'.Decerialize JsonValue'Field where
+    type Cerial msg JsonValue'Field = Capnp.ById.X8ef99297a43a5e34.JsonValue'Field msg
+    decerialize raw = do
+        JsonValue'Field <$>
+            (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= C'.decerialize) <*>
+            (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg JsonValue'Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct

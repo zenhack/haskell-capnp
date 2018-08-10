@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.RpcTwoparty.Pure
@@ -36,11 +37,13 @@ data JoinKeyPart
         partCount :: Word16,
         partNum :: Word16}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg) JoinKeyPart where
-    decerialize raw = JoinKeyPart <$>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= C'.decerialize)
+instance C'.Decerialize JoinKeyPart where
+    type Cerial msg JoinKeyPart = Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart msg
+    decerialize raw = do
+        JoinKeyPart <$>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -58,11 +61,13 @@ data JoinResult
         succeeded :: Bool,
         cap :: Maybe (PU'.PtrType)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg) JoinResult where
-    decerialize raw = JoinResult <$>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= C'.decerialize)
+instance C'.Decerialize JoinResult where
+    type Cerial msg JoinResult = Capnp.ById.Xa184c7885cdaf2a1.JoinResult msg
+    decerialize raw = do
+        JoinResult <$>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg JoinResult where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -78,9 +83,11 @@ data ProvisionId
      = ProvisionId
         {joinId :: Word32}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg) ProvisionId where
-    decerialize raw = ProvisionId <$>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= C'.decerialize)
+instance C'.Decerialize ProvisionId where
+    type Cerial msg ProvisionId = Capnp.ById.Xa184c7885cdaf2a1.ProvisionId msg
+    decerialize raw = do
+        ProvisionId <$>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -90,15 +97,18 @@ instance C'.Cerialize s ProvisionId (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId (M
         case value of
             ProvisionId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
-instance C'.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side Capnp.ById.Xa184c7885cdaf2a1.Side where
+instance C'.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side where
+    type Cerial msg Capnp.ById.Xa184c7885cdaf2a1.Side = Capnp.ById.Xa184c7885cdaf2a1.Side
     decerialize = pure
 data VatId
      = VatId
         {side :: Capnp.ById.Xa184c7885cdaf2a1.Side}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg) VatId where
-    decerialize raw = VatId <$>
-        (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= C'.decerialize)
+instance C'.Decerialize VatId where
+    type Cerial msg VatId = Capnp.ById.Xa184c7885cdaf2a1.VatId msg
+    decerialize raw = do
+        VatId <$>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct

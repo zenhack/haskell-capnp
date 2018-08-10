@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Rpc.Pure
@@ -36,11 +37,13 @@ data Accept
         provision :: Maybe (PU'.PtrType),
         embargo :: Bool}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Accept M'.ConstMsg) Accept where
-    decerialize raw = Accept <$>
-        (Capnp.ById.Xb312981b2552a250.get_Accept'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Accept'provision raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Accept'embargo raw >>= C'.decerialize)
+instance C'.Decerialize Accept where
+    type Cerial msg Accept = Capnp.ById.Xb312981b2552a250.Accept msg
+    decerialize raw = do
+        Accept <$>
+            (Capnp.ById.Xb312981b2552a250.get_Accept'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Accept'provision raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Accept'embargo raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Accept where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -57,10 +60,12 @@ data Bootstrap
         {questionId :: Word32,
         deprecatedObjectId :: Maybe (PU'.PtrType)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Bootstrap M'.ConstMsg) Bootstrap where
-    decerialize raw = Bootstrap <$>
-        (Capnp.ById.Xb312981b2552a250.get_Bootstrap'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Bootstrap'deprecatedObjectId raw >>= C'.decerialize)
+instance C'.Decerialize Bootstrap where
+    type Cerial msg Bootstrap = Capnp.ById.Xb312981b2552a250.Bootstrap msg
+    decerialize raw = do
+        Bootstrap <$>
+            (Capnp.ById.Xb312981b2552a250.get_Bootstrap'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Bootstrap'deprecatedObjectId raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Bootstrap where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -81,15 +86,17 @@ data Call
         sendResultsTo :: Call'sendResultsTo,
         allowThirdPartyTailCall :: Bool}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call M'.ConstMsg) Call where
-    decerialize raw = Call <$>
-        (Capnp.ById.Xb312981b2552a250.get_Call'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Call'target raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Call'interfaceId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Call'methodId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Call'params raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Call'allowThirdPartyTailCall raw >>= C'.decerialize)
+instance C'.Decerialize Call where
+    type Cerial msg Call = Capnp.ById.Xb312981b2552a250.Call msg
+    decerialize raw = do
+        Call <$>
+            (Capnp.ById.Xb312981b2552a250.get_Call'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Call'target raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Call'interfaceId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Call'methodId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Call'params raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Call'allowThirdPartyTailCall raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -117,7 +124,8 @@ data CapDescriptor
     CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor) |
     CapDescriptor'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.CapDescriptor M'.ConstMsg) CapDescriptor where
+instance C'.Decerialize CapDescriptor where
+    type Cerial msg CapDescriptor = Capnp.ById.Xb312981b2552a250.CapDescriptor msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_CapDescriptor' raw
         case raw of
@@ -147,10 +155,12 @@ data Disembargo
         {target :: MessageTarget,
         context :: Disembargo'context}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo M'.ConstMsg) Disembargo where
-    decerialize raw = Disembargo <$>
-        (Capnp.ById.Xb312981b2552a250.get_Disembargo'target raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw >>= C'.decerialize)
+instance C'.Decerialize Disembargo where
+    type Cerial msg Disembargo = Capnp.ById.Xb312981b2552a250.Disembargo msg
+    decerialize raw = do
+        Disembargo <$>
+            (Capnp.ById.Xb312981b2552a250.get_Disembargo'target raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Disembargo where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -170,12 +180,14 @@ data Exception
         obsoleteDurability :: Word16,
         type_ :: Capnp.ById.Xb312981b2552a250.Exception'Type}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Exception M'.ConstMsg) Exception where
-    decerialize raw = Exception <$>
-        (Capnp.ById.Xb312981b2552a250.get_Exception'reason raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteIsCallersFault raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteDurability raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Exception'type_ raw >>= C'.decerialize)
+instance C'.Decerialize Exception where
+    type Cerial msg Exception = Capnp.ById.Xb312981b2552a250.Exception msg
+    decerialize raw = do
+        Exception <$>
+            (Capnp.ById.Xb312981b2552a250.get_Exception'reason raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteIsCallersFault raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Exception'obsoleteDurability raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Exception'type_ raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Exception where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -194,10 +206,12 @@ data Finish
         {questionId :: Word32,
         releaseResultCaps :: Bool}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Finish M'.ConstMsg) Finish where
-    decerialize raw = Finish <$>
-        (Capnp.ById.Xb312981b2552a250.get_Finish'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Finish'releaseResultCaps raw >>= C'.decerialize)
+instance C'.Decerialize Finish where
+    type Cerial msg Finish = Capnp.ById.Xb312981b2552a250.Finish msg
+    decerialize raw = do
+        Finish <$>
+            (Capnp.ById.Xb312981b2552a250.get_Finish'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Finish'releaseResultCaps raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Finish where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -214,11 +228,13 @@ data Join
         target :: MessageTarget,
         keyPart :: Maybe (PU'.PtrType)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Join M'.ConstMsg) Join where
-    decerialize raw = Join <$>
-        (Capnp.ById.Xb312981b2552a250.get_Join'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Join'target raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Join'keyPart raw >>= C'.decerialize)
+instance C'.Decerialize Join where
+    type Cerial msg Join = Capnp.ById.Xb312981b2552a250.Join msg
+    decerialize raw = do
+        Join <$>
+            (Capnp.ById.Xb312981b2552a250.get_Join'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Join'target raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Join'keyPart raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Join where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -248,7 +264,8 @@ data Message
     Message'disembargo (Disembargo) |
     Message'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Message M'.ConstMsg) Message where
+instance C'.Decerialize Message where
+    type Cerial msg Message = Capnp.ById.Xb312981b2552a250.Message msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_Message' raw
         case raw of
@@ -294,7 +311,8 @@ data MessageTarget
     MessageTarget'promisedAnswer (PromisedAnswer) |
     MessageTarget'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.MessageTarget M'.ConstMsg) MessageTarget where
+instance C'.Decerialize MessageTarget where
+    type Cerial msg MessageTarget = Capnp.ById.Xb312981b2552a250.MessageTarget msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_MessageTarget' raw
         case raw of
@@ -316,10 +334,12 @@ data Payload
         {content :: Maybe (PU'.PtrType),
         capTable :: List (CapDescriptor)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Payload M'.ConstMsg) Payload where
-    decerialize raw = Payload <$>
-        (Capnp.ById.Xb312981b2552a250.get_Payload'content raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Payload'capTable raw >>= C'.decerialize)
+instance C'.Decerialize Payload where
+    type Cerial msg Payload = Capnp.ById.Xb312981b2552a250.Payload msg
+    decerialize raw = do
+        Payload <$>
+            (Capnp.ById.Xb312981b2552a250.get_Payload'content raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Payload'capTable raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Payload where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -339,10 +359,12 @@ data PromisedAnswer
         {questionId :: Word32,
         transform :: List (PromisedAnswer'Op)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.PromisedAnswer M'.ConstMsg) PromisedAnswer where
-    decerialize raw = PromisedAnswer <$>
-        (Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'transform raw >>= C'.decerialize)
+instance C'.Decerialize PromisedAnswer where
+    type Cerial msg PromisedAnswer = Capnp.ById.Xb312981b2552a250.PromisedAnswer msg
+    decerialize raw = do
+        PromisedAnswer <$>
+            (Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'transform raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg PromisedAnswer where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -363,11 +385,13 @@ data Provide
         target :: MessageTarget,
         recipient :: Maybe (PU'.PtrType)}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Provide M'.ConstMsg) Provide where
-    decerialize raw = Provide <$>
-        (Capnp.ById.Xb312981b2552a250.get_Provide'questionId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Provide'target raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Provide'recipient raw >>= C'.decerialize)
+instance C'.Decerialize Provide where
+    type Cerial msg Provide = Capnp.ById.Xb312981b2552a250.Provide msg
+    decerialize raw = do
+        Provide <$>
+            (Capnp.ById.Xb312981b2552a250.get_Provide'questionId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Provide'target raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Provide'recipient raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Provide where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -385,10 +409,12 @@ data Release
         {id :: Word32,
         referenceCount :: Word32}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Release M'.ConstMsg) Release where
-    decerialize raw = Release <$>
-        (Capnp.ById.Xb312981b2552a250.get_Release'id raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Release'referenceCount raw >>= C'.decerialize)
+instance C'.Decerialize Release where
+    type Cerial msg Release = Capnp.ById.Xb312981b2552a250.Release msg
+    decerialize raw = do
+        Release <$>
+            (Capnp.ById.Xb312981b2552a250.get_Release'id raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Release'referenceCount raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Release where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -404,10 +430,12 @@ data Resolve
         {promiseId :: Word32,
         union' :: Resolve'}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve M'.ConstMsg) Resolve where
-    decerialize raw = Resolve <$>
-        (Capnp.ById.Xb312981b2552a250.get_Resolve'promiseId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Resolve'union' raw >>= C'.decerialize)
+instance C'.Decerialize Resolve where
+    type Cerial msg Resolve = Capnp.ById.Xb312981b2552a250.Resolve msg
+    decerialize raw = do
+        Resolve <$>
+            (Capnp.ById.Xb312981b2552a250.get_Resolve'promiseId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Resolve'union' raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Resolve where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -425,11 +453,13 @@ data Return
         releaseParamCaps :: Bool,
         union' :: Return'}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return M'.ConstMsg) Return where
-    decerialize raw = Return <$>
-        (Capnp.ById.Xb312981b2552a250.get_Return'answerId raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Return'releaseParamCaps raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_Return'union' raw >>= C'.decerialize)
+instance C'.Decerialize Return where
+    type Cerial msg Return = Capnp.ById.Xb312981b2552a250.Return msg
+    decerialize raw = do
+        Return <$>
+            (Capnp.ById.Xb312981b2552a250.get_Return'answerId raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Return'releaseParamCaps raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_Return'union' raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg Return where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -447,10 +477,12 @@ data ThirdPartyCapDescriptor
         {id :: Maybe (PU'.PtrType),
         vineId :: Word32}
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor M'.ConstMsg) ThirdPartyCapDescriptor where
-    decerialize raw = ThirdPartyCapDescriptor <$>
-        (Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'id raw >>= C'.decerialize) <*>
-        (Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'vineId raw >>= C'.decerialize)
+instance C'.Decerialize ThirdPartyCapDescriptor where
+    type Cerial msg ThirdPartyCapDescriptor = Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor msg
+    decerialize raw = do
+        ThirdPartyCapDescriptor <$>
+            (Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'id raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'vineId raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg ThirdPartyCapDescriptor where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -467,7 +499,8 @@ data Call'sendResultsTo
     Call'sendResultsTo'thirdParty (Maybe (PU'.PtrType)) |
     Call'sendResultsTo'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.ConstMsg) Call'sendResultsTo where
+instance C'.Decerialize Call'sendResultsTo where
+    type Cerial msg Call'sendResultsTo = Capnp.ById.Xb312981b2552a250.Call'sendResultsTo msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo' raw
         case raw of
@@ -493,7 +526,8 @@ data Disembargo'context
     Disembargo'context'provide (Word32) |
     Disembargo'context'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Disembargo'context M'.ConstMsg) Disembargo'context where
+instance C'.Decerialize Disembargo'context where
+    type Cerial msg Disembargo'context = Capnp.ById.Xb312981b2552a250.Disembargo'context msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_Disembargo'context' raw
         case raw of
@@ -514,14 +548,16 @@ instance C'.Cerialize s Disembargo'context (Capnp.ById.Xb312981b2552a250.Disemba
             Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
             Disembargo'context'provide field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw field_
             Disembargo'context'unknown' _ -> pure ()
-instance C'.Decerialize Capnp.ById.Xb312981b2552a250.Exception'Type Capnp.ById.Xb312981b2552a250.Exception'Type where
+instance C'.Decerialize Capnp.ById.Xb312981b2552a250.Exception'Type where
+    type Cerial msg Capnp.ById.Xb312981b2552a250.Exception'Type = Capnp.ById.Xb312981b2552a250.Exception'Type
     decerialize = pure
 data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField (Word16) |
     PromisedAnswer'Op'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op M'.ConstMsg) PromisedAnswer'Op where
+instance C'.Decerialize PromisedAnswer'Op where
+    type Cerial msg PromisedAnswer'Op = Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_PromisedAnswer'Op' raw
         case raw of
@@ -543,7 +579,8 @@ data Resolve'
     Resolve'exception (Exception) |
     Resolve'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Resolve' M'.ConstMsg) Resolve' where
+instance C'.Decerialize Resolve' where
+    type Cerial msg Resolve' = Capnp.ById.Xb312981b2552a250.Resolve' msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_Resolve'' raw
         case raw of
@@ -569,7 +606,8 @@ data Return'
     Return'acceptFromThirdParty (Maybe (PU'.PtrType)) |
     Return'unknown' (Word16)
     deriving(Show, Read, Eq)
-instance C'.Decerialize (Capnp.ById.Xb312981b2552a250.Return' M'.ConstMsg) Return' where
+instance C'.Decerialize Return' where
+    type Cerial msg Return' = Capnp.ById.Xb312981b2552a250.Return' msg
     decerialize raw = do
         raw <- Capnp.ById.Xb312981b2552a250.get_Return'' raw
         case raw of
