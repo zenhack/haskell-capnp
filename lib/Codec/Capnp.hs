@@ -98,10 +98,6 @@ class FromStruct msg a where
 class ToStruct msg a where
     toStruct :: a -> Struct msg
 
-instance Decerialize () where
-    type Cerial msg () = ()
-    decerialize = pure
-
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
     toWord True  = 1

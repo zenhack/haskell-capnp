@@ -118,8 +118,8 @@ instance Decerialize Struct where
     type Cerial msg Struct = U.Struct msg
 
     decerialize struct = Struct
-        <$> (Slice <$> decerializeListOf (U.dataSection struct))
-        <*> (Slice <$> decerializeListOf (U.ptrSection struct))
+        <$> (Slice <$> decerializeListOfWord (U.dataSection struct))
+        <*> (Slice <$> decerializeListOf     (U.ptrSection struct))
 
 instance Decerialize (Maybe PtrType) where
     type Cerial msg (Maybe PtrType) = Maybe (U.Ptr msg)
@@ -130,6 +130,8 @@ instance Decerialize (Maybe PtrType) where
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
 
+-- Generic decerialize instances for lists. TODO: this doesn't really belong
+-- in Untyped, since this is mostly used for typed lists. maybe Basics.
 instance
     ( C.ListElem M.ConstMsg (Cerial M.ConstMsg a)
     , Decerialize a
@@ -138,19 +140,28 @@ instance
     type Cerial msg (List a) = C.List msg (Cerial msg a)
     decerialize raw = V.generateM (C.length raw) (\i -> C.index i raw >>= decerialize)
 
+-- | Decerialize an untyped list, whose elements are instances of Decerialize. This isn't
+-- an instance, since it would have to be an instance of (List a), which conflicts with
+-- the above.
 decerializeListOf :: (U.ReadCtx m M.ConstMsg, Decerialize a)
     => U.ListOf M.ConstMsg (Cerial M.ConstMsg a) -> m (List a)
 decerializeListOf raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
 
+-- | Decerialize an untyped list, leaving the elements of the list as-is. The is most
+-- interesting for types that go in the data section of a struct, hence the name.
+decerializeListOfWord :: (U.ReadCtx m M.ConstMsg)
+    => U.ListOf M.ConstMsg a -> m (List a)
+decerializeListOfWord raw = V.generateM (U.length raw) (`U.index` raw)
+
 instance Decerialize List' where
     type Cerial msg List' = U.List msg
 
-    decerialize (U.List0 l)      = List0' <$> decerializeListOf l
-    decerialize (U.List1 l)      = List1' <$> decerializeListOf l
-    decerialize (U.List8 l)      = List8' <$> decerializeListOf l
-    decerialize (U.List16 l)     = List16' <$> decerializeListOf l
-    decerialize (U.List32 l)     = List32' <$> decerializeListOf l
-    decerialize (U.List64 l)     = List64' <$> decerializeListOf l
+    decerialize (U.List0 l)      = List0' <$> decerializeListOfWord l
+    decerialize (U.List1 l)      = List1' <$> decerializeListOfWord l
+    decerialize (U.List8 l)      = List8' <$> decerializeListOfWord l
+    decerialize (U.List16 l)     = List16' <$> decerializeListOfWord l
+    decerialize (U.List32 l)     = List32' <$> decerializeListOfWord l
+    decerialize (U.List64 l)     = List64' <$> decerializeListOfWord l
     decerialize (U.ListPtr l)    = ListPtr' <$> decerializeListOf l
     decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
 
