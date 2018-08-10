@@ -136,9 +136,6 @@ instance C'.Cerialize s CodeGeneratorRequest (Capnp.ById.Xa93fc509624c72d9.CodeG
                     C'.marshalInto elt (requestedFiles V.! i)
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'capnpVersion raw
                 C'.marshalInto field_ capnpVersion
-instance C'.Decerialize Capnp.ById.Xa93fc509624c72d9.ElementSize where
-    type Cerial msg Capnp.ById.Xa93fc509624c72d9.ElementSize = Capnp.ById.Xa93fc509624c72d9.ElementSize
-    decerialize = pure
 data Enumerant
      = Enumerant
         {name :: Text,

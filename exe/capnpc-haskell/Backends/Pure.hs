@@ -206,14 +206,8 @@ fmtConst thisMod name value =
 
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum} =
-    let rawName = fmtName Raw thisMod dataName in
-    vcat
-        [ hcat [ "instance C'.Decerialize ", rawName, " where" ]
-        , indent $ vcat
-            [ hcat [ "type Cerial msg ", rawName, " = ", rawName ]
-            , "decerialize = pure"
-            ]
-        ]
+    -- We end up re-exporting these, but doing nothing else.
+    ""
 fmtDataDef thisMod dataName DataDef{dataVariants} =
     let rawName = fmtName Raw thisMod dataName
         pureName = fmtName Pure thisMod dataName

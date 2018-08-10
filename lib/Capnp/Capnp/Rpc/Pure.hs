@@ -548,9 +548,6 @@ instance C'.Cerialize s Disembargo'context (Capnp.ById.Xb312981b2552a250.Disemba
             Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
             Disembargo'context'provide field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw field_
             Disembargo'context'unknown' _ -> pure ()
-instance C'.Decerialize Capnp.ById.Xb312981b2552a250.Exception'Type where
-    type Cerial msg Capnp.ById.Xb312981b2552a250.Exception'Type = Capnp.ById.Xb312981b2552a250.Exception'Type
-    decerialize = pure
 data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField (Word16) |

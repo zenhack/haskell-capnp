@@ -97,9 +97,6 @@ instance C'.Cerialize s ProvisionId (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId (M
         case value of
             ProvisionId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
-instance C'.Decerialize Capnp.ById.Xa184c7885cdaf2a1.Side where
-    type Cerial msg Capnp.ById.Xa184c7885cdaf2a1.Side = Capnp.ById.Xa184c7885cdaf2a1.Side
-    decerialize = pure
 data VatId
      = VatId
         {side :: Capnp.ById.Xa184c7885cdaf2a1.Side}
