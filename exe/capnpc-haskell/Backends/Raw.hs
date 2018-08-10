@@ -124,7 +124,7 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
     in vcat
         [ hcat [ "newtype ", typeCon, " msg = ", dataCon, " (U'.Struct msg)" ]
 
-        , hcat [ "instance C'.IsStruct msg (", typeCon, " msg) where" ]
+        , hcat [ "instance C'.FromStruct msg (", typeCon, " msg) where" ]
         , indent $ vcat
                 [ hcat [ "fromStruct = pure . ", dataCon ]
                 ]
@@ -453,7 +453,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
         , vcat $ map (fmtUnionSetter thisMod dataName tagLoc) dataVariants
         -- Generate auxiliary newtype definitions for group fields:
         , vcat $ map fmtVariantAuxNewtype dataVariants
-        , hcat [ "instance C'.IsStruct msg (", unionNameText, " msg) where" ]
+        , hcat [ "instance C'.FromStruct msg (", unionNameText, " msg) where" ]
         , indent $ vcat
             [ "fromStruct struct = do"
             , indent $ vcat

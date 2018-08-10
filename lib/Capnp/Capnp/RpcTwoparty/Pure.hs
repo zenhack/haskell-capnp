@@ -41,7 +41,7 @@ instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg) J
         (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg JoinKeyPart where
+instance C'.FromStruct M'.ConstMsg JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg)
@@ -63,7 +63,7 @@ instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg) Jo
         (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg JoinResult where
+instance C'.FromStruct M'.ConstMsg JoinResult where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
@@ -81,7 +81,7 @@ data ProvisionId
 instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg) ProvisionId where
     decerialize raw = ProvisionId <$>
         (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg ProvisionId where
+instance C'.FromStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
@@ -99,7 +99,7 @@ data VatId
 instance C'.Decerialize (Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg) VatId where
     decerialize raw = VatId <$>
         (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg VatId where
+instance C'.FromStruct M'.ConstMsg VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg)

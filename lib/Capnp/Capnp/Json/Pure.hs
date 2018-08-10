@@ -52,7 +52,7 @@ instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg) Jso
             Capnp.ById.X8ef99297a43a5e34.JsonValue'object val -> JsonValue'object <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'call val -> JsonValue'call <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> JsonValue'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg JsonValue where
+instance C'.FromStruct M'.ConstMsg JsonValue where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg)
@@ -76,7 +76,7 @@ instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg
     decerialize raw = JsonValue'Call <$>
         (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= C'.decerialize) <*>
         (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg JsonValue'Call where
+instance C'.FromStruct M'.ConstMsg JsonValue'Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg)
@@ -100,7 +100,7 @@ instance C'.Decerialize (Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMs
     decerialize raw = JsonValue'Field <$>
         (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= C'.decerialize) <*>
         (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg JsonValue'Field where
+instance C'.FromStruct M'.ConstMsg JsonValue'Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMsg)

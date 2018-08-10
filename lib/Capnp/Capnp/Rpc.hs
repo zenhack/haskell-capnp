@@ -26,7 +26,7 @@ import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Accept msg = Accept_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Accept msg) where
+instance C'.FromStruct msg (Accept msg) where
     fromStruct = pure . Accept_newtype_
 instance C'.IsPtr msg (Accept msg) where
     fromPtr msg ptr = Accept_newtype_ <$> C'.fromPtr msg ptr
@@ -68,7 +68,7 @@ has_Accept'embargo(Accept_newtype_ struct) = pure $ 0 < U'.length (U'.dataSectio
 set_Accept'embargo :: U'.RWCtx m s => Accept (M'.MutMsg s) -> Bool -> m ()
 set_Accept'embargo (Accept_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
 newtype Bootstrap msg = Bootstrap_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Bootstrap msg) where
+instance C'.FromStruct msg (Bootstrap msg) where
     fromStruct = pure . Bootstrap_newtype_
 instance C'.IsPtr msg (Bootstrap msg) where
     fromPtr msg ptr = Bootstrap_newtype_ <$> C'.fromPtr msg ptr
@@ -104,7 +104,7 @@ has_Bootstrap'deprecatedObjectId(Bootstrap_newtype_ struct) = Data.Maybe.isJust 
 set_Bootstrap'deprecatedObjectId :: U'.RWCtx m s => Bootstrap (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 newtype Call msg = Call_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Call msg) where
+instance C'.FromStruct msg (Call msg) where
     fromStruct = pure . Call_newtype_
 instance C'.IsPtr msg (Call msg) where
     fromPtr msg ptr = Call_newtype_ <$> C'.fromPtr msg ptr
@@ -180,7 +180,7 @@ has_Call'allowThirdPartyTailCall(Call_newtype_ struct) = pure $ 2 < U'.length (U
 set_Call'allowThirdPartyTailCall :: U'.RWCtx m s => Call (M'.MutMsg s) -> Bool -> m ()
 set_Call'allowThirdPartyTailCall (Call_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 newtype CapDescriptor msg = CapDescriptor_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (CapDescriptor msg) where
+instance C'.FromStruct msg (CapDescriptor msg) where
     fromStruct = pure . CapDescriptor_newtype_
 instance C'.IsPtr msg (CapDescriptor msg) where
     fromPtr msg ptr = CapDescriptor_newtype_ <$> C'.fromPtr msg ptr
@@ -235,7 +235,7 @@ set_CapDescriptor'thirdPartyHosted :: U'.RWCtx m s => CapDescriptor (M'.MutMsg s
 set_CapDescriptor'thirdPartyHosted(CapDescriptor_newtype_ struct) value = do
     H'.setWordField struct (5 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (CapDescriptor' msg) where
+instance C'.FromStruct msg (CapDescriptor' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -247,7 +247,7 @@ instance C'.IsStruct msg (CapDescriptor' msg) where
             0 -> pure CapDescriptor'none
             _ -> pure $ CapDescriptor'unknown' tag
 newtype Disembargo msg = Disembargo_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Disembargo msg) where
+instance C'.FromStruct msg (Disembargo msg) where
     fromStruct = pure . Disembargo_newtype_
 instance C'.IsPtr msg (Disembargo msg) where
     fromPtr msg ptr = Disembargo_newtype_ <$> C'.fromPtr msg ptr
@@ -286,7 +286,7 @@ get_Disembargo'context (Disembargo_newtype_ struct) = C'.fromStruct struct
 has_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m Bool
 has_Disembargo'context(Disembargo_newtype_ struct) = pure True
 newtype Exception msg = Exception_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Exception msg) where
+instance C'.FromStruct msg (Exception msg) where
     fromStruct = pure . Exception_newtype_
 instance C'.IsPtr msg (Exception msg) where
     fromPtr msg ptr = Exception_newtype_ <$> C'.fromPtr msg ptr
@@ -339,7 +339,7 @@ has_Exception'type_(Exception_newtype_ struct) = pure $ 0 < U'.length (U'.dataSe
 set_Exception'type_ :: U'.RWCtx m s => Exception (M'.MutMsg s) -> Exception'Type -> m ()
 set_Exception'type_ (Exception_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
 newtype Finish msg = Finish_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Finish msg) where
+instance C'.FromStruct msg (Finish msg) where
     fromStruct = pure . Finish_newtype_
 instance C'.IsPtr msg (Finish msg) where
     fromPtr msg ptr = Finish_newtype_ <$> C'.fromPtr msg ptr
@@ -373,7 +373,7 @@ has_Finish'releaseResultCaps(Finish_newtype_ struct) = pure $ 0 < U'.length (U'.
 set_Finish'releaseResultCaps :: U'.RWCtx m s => Finish (M'.MutMsg s) -> Bool -> m ()
 set_Finish'releaseResultCaps (Finish_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
 newtype Join msg = Join_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Join msg) where
+instance C'.FromStruct msg (Join msg) where
     fromStruct = pure . Join_newtype_
 instance C'.IsPtr msg (Join msg) where
     fromPtr msg ptr = Join_newtype_ <$> C'.fromPtr msg ptr
@@ -422,7 +422,7 @@ has_Join'keyPart(Join_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struc
 set_Join'keyPart :: U'.RWCtx m s => Join (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Join'keyPart (Join_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 newtype Message msg = Message_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Message msg) where
+instance C'.FromStruct msg (Message msg) where
     fromStruct = pure . Message_newtype_
 instance C'.IsPtr msg (Message msg) where
     fromPtr msg ptr = Message_newtype_ <$> C'.fromPtr msg ptr
@@ -519,7 +519,7 @@ set_Message'disembargo :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Disembargo (
 set_Message'disembargo(Message_newtype_ struct) value = do
     H'.setWordField struct (13 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (Message' msg) where
+instance C'.FromStruct msg (Message' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -539,7 +539,7 @@ instance C'.IsStruct msg (Message' msg) where
             0 -> Message'unimplemented <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Message'unknown' tag
 newtype MessageTarget msg = MessageTarget_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (MessageTarget msg) where
+instance C'.FromStruct msg (MessageTarget msg) where
     fromStruct = pure . MessageTarget_newtype_
 instance C'.IsPtr msg (MessageTarget msg) where
     fromPtr msg ptr = MessageTarget_newtype_ <$> C'.fromPtr msg ptr
@@ -576,7 +576,7 @@ set_MessageTarget'promisedAnswer :: U'.RWCtx m s => MessageTarget (M'.MutMsg s) 
 set_MessageTarget'promisedAnswer(MessageTarget_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 32 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (MessageTarget' msg) where
+instance C'.FromStruct msg (MessageTarget' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
         case tag of
@@ -584,7 +584,7 @@ instance C'.IsStruct msg (MessageTarget' msg) where
             0 -> MessageTarget'importedCap <$>  H'.getWordField struct 0 0 0
             _ -> pure $ MessageTarget'unknown' tag
 newtype Payload msg = Payload_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Payload msg) where
+instance C'.FromStruct msg (Payload msg) where
     fromStruct = pure . Payload_newtype_
 instance C'.IsPtr msg (Payload msg) where
     fromPtr msg ptr = Payload_newtype_ <$> C'.fromPtr msg ptr
@@ -627,7 +627,7 @@ new_Payload'capTable len struct = do
     set_Payload'capTable struct result
     pure result
 newtype PromisedAnswer msg = PromisedAnswer_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (PromisedAnswer msg) where
+instance C'.FromStruct msg (PromisedAnswer msg) where
     fromStruct = pure . PromisedAnswer_newtype_
 instance C'.IsPtr msg (PromisedAnswer msg) where
     fromPtr msg ptr = PromisedAnswer_newtype_ <$> C'.fromPtr msg ptr
@@ -668,7 +668,7 @@ new_PromisedAnswer'transform len struct = do
     set_PromisedAnswer'transform struct result
     pure result
 newtype Provide msg = Provide_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Provide msg) where
+instance C'.FromStruct msg (Provide msg) where
     fromStruct = pure . Provide_newtype_
 instance C'.IsPtr msg (Provide msg) where
     fromPtr msg ptr = Provide_newtype_ <$> C'.fromPtr msg ptr
@@ -717,7 +717,7 @@ has_Provide'recipient(Provide_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr
 set_Provide'recipient :: U'.RWCtx m s => Provide (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Provide'recipient (Provide_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
 newtype Release msg = Release_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Release msg) where
+instance C'.FromStruct msg (Release msg) where
     fromStruct = pure . Release_newtype_
 instance C'.IsPtr msg (Release msg) where
     fromPtr msg ptr = Release_newtype_ <$> C'.fromPtr msg ptr
@@ -751,7 +751,7 @@ has_Release'referenceCount(Release_newtype_ struct) = pure $ 0 < U'.length (U'.d
 set_Release'referenceCount :: U'.RWCtx m s => Release (M'.MutMsg s) -> Word32 -> m ()
 set_Release'referenceCount (Release_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 newtype Resolve msg = Resolve_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Resolve msg) where
+instance C'.FromStruct msg (Resolve msg) where
     fromStruct = pure . Resolve_newtype_
 instance C'.IsPtr msg (Resolve msg) where
     fromPtr msg ptr = Resolve_newtype_ <$> C'.fromPtr msg ptr
@@ -783,7 +783,7 @@ get_Resolve'union' (Resolve_newtype_ struct) = C'.fromStruct struct
 has_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m Bool
 has_Resolve'union'(Resolve_newtype_ struct) = pure True
 newtype Return msg = Return_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Return msg) where
+instance C'.FromStruct msg (Return msg) where
     fromStruct = pure . Return_newtype_
 instance C'.IsPtr msg (Return msg) where
     fromPtr msg ptr = Return_newtype_ <$> C'.fromPtr msg ptr
@@ -821,7 +821,7 @@ get_Return'union' (Return_newtype_ struct) = C'.fromStruct struct
 has_Return'union' :: U'.ReadCtx m msg => Return msg -> m Bool
 has_Return'union'(Return_newtype_ struct) = pure True
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (ThirdPartyCapDescriptor msg) where
+instance C'.FromStruct msg (ThirdPartyCapDescriptor msg) where
     fromStruct = pure . ThirdPartyCapDescriptor_newtype_
 instance C'.IsPtr msg (ThirdPartyCapDescriptor msg) where
     fromPtr msg ptr = ThirdPartyCapDescriptor_newtype_ <$> C'.fromPtr msg ptr
@@ -857,7 +857,7 @@ has_ThirdPartyCapDescriptor'vineId(ThirdPartyCapDescriptor_newtype_ struct) = pu
 set_ThirdPartyCapDescriptor'vineId :: U'.RWCtx m s => ThirdPartyCapDescriptor (M'.MutMsg s) -> Word32 -> m ()
 set_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 newtype Call'sendResultsTo msg = Call'sendResultsTo_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Call'sendResultsTo msg) where
+instance C'.FromStruct msg (Call'sendResultsTo msg) where
     fromStruct = pure . Call'sendResultsTo_newtype_
 instance C'.IsPtr msg (Call'sendResultsTo msg) where
     fromPtr msg ptr = Call'sendResultsTo_newtype_ <$> C'.fromPtr msg ptr
@@ -895,7 +895,7 @@ set_Call'sendResultsTo'thirdParty :: U'.RWCtx m s => Call'sendResultsTo (M'.MutM
 set_Call'sendResultsTo'thirdParty(Call'sendResultsTo_newtype_ struct) value = do
     H'.setWordField struct (2 :: Word16) 0 48 0
     U'.setPtr (C'.toPtr value) 2 struct
-instance C'.IsStruct msg (Call'sendResultsTo' msg) where
+instance C'.FromStruct msg (Call'sendResultsTo' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 48 0
         case tag of
@@ -904,7 +904,7 @@ instance C'.IsStruct msg (Call'sendResultsTo' msg) where
             0 -> pure Call'sendResultsTo'caller
             _ -> pure $ Call'sendResultsTo'unknown' tag
 newtype Disembargo'context msg = Disembargo'context_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Disembargo'context msg) where
+instance C'.FromStruct msg (Disembargo'context msg) where
     fromStruct = pure . Disembargo'context_newtype_
 instance C'.IsPtr msg (Disembargo'context msg) where
     fromPtr msg ptr = Disembargo'context_newtype_ <$> C'.fromPtr msg ptr
@@ -949,7 +949,7 @@ set_Disembargo'context'provide :: U'.RWCtx m s => Disembargo'context (M'.MutMsg 
 set_Disembargo'context'provide (Disembargo'context_newtype_ struct) value = do
     H'.setWordField struct (3 :: Word16) 0 32 0
     H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-instance C'.IsStruct msg (Disembargo'context' msg) where
+instance C'.FromStruct msg (Disembargo'context' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
         case tag of
@@ -991,7 +991,7 @@ instance C'.IsPtr msg (B'.List msg Exception'Type) where
     fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
     toPtr (List_Exception'Type l) = C'.toPtr l
 newtype PromisedAnswer'Op msg = PromisedAnswer'Op_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (PromisedAnswer'Op msg) where
+instance C'.FromStruct msg (PromisedAnswer'Op msg) where
     fromStruct = pure . PromisedAnswer'Op_newtype_
 instance C'.IsPtr msg (PromisedAnswer'Op msg) where
     fromPtr msg ptr = PromisedAnswer'Op_newtype_ <$> C'.fromPtr msg ptr
@@ -1026,7 +1026,7 @@ set_PromisedAnswer'Op'getPointerField :: U'.RWCtx m s => PromisedAnswer'Op (M'.M
 set_PromisedAnswer'Op'getPointerField (PromisedAnswer'Op_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 0 0
     H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
-instance C'.IsStruct msg (PromisedAnswer'Op' msg) where
+instance C'.FromStruct msg (PromisedAnswer'Op' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -1034,7 +1034,7 @@ instance C'.IsStruct msg (PromisedAnswer'Op' msg) where
             0 -> pure PromisedAnswer'Op'noop
             _ -> pure $ PromisedAnswer'Op'unknown' tag
 newtype Resolve' msg = Resolve'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Resolve' msg) where
+instance C'.FromStruct msg (Resolve' msg) where
     fromStruct = pure . Resolve'_newtype_
 instance C'.IsPtr msg (Resolve' msg) where
     fromPtr msg ptr = Resolve'_newtype_ <$> C'.fromPtr msg ptr
@@ -1071,7 +1071,7 @@ set_Resolve'exception :: U'.RWCtx m s => Resolve' (M'.MutMsg s) -> (Exception (M
 set_Resolve'exception(Resolve'_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 32 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (Resolve'' msg) where
+instance C'.FromStruct msg (Resolve'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
         case tag of
@@ -1079,7 +1079,7 @@ instance C'.IsStruct msg (Resolve'' msg) where
             0 -> Resolve'cap <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Resolve'unknown' tag
 newtype Return' msg = Return'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Return' msg) where
+instance C'.FromStruct msg (Return' msg) where
     fromStruct = pure . Return'_newtype_
 instance C'.IsPtr msg (Return' msg) where
     fromPtr msg ptr = Return'_newtype_ <$> C'.fromPtr msg ptr
@@ -1132,7 +1132,7 @@ set_Return'acceptFromThirdParty :: U'.RWCtx m s => Return' (M'.MutMsg s) -> (May
 set_Return'acceptFromThirdParty(Return'_newtype_ struct) value = do
     H'.setWordField struct (5 :: Word16) 0 48 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (Return'' msg) where
+instance C'.FromStruct msg (Return'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 48 0
         case tag of

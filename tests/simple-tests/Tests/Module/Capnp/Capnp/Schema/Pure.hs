@@ -4,7 +4,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 
-import Codec.Capnp               (IsStruct(..))
+import Codec.Capnp               (FromStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
 import Capnp.Capnp.Schema.Pure

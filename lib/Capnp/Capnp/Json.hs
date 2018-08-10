@@ -26,7 +26,7 @@ import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype JsonValue msg = JsonValue_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (JsonValue msg) where
+instance C'.FromStruct msg (JsonValue msg) where
     fromStruct = pure . JsonValue_newtype_
 instance C'.IsPtr msg (JsonValue msg) where
     fromPtr msg ptr = JsonValue_newtype_ <$> C'.fromPtr msg ptr
@@ -86,7 +86,7 @@ set_JsonValue'call :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (JsonValue'Call
 set_JsonValue'call(JsonValue_newtype_ struct) value = do
     H'.setWordField struct (6 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (JsonValue' msg) where
+instance C'.FromStruct msg (JsonValue' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -99,7 +99,7 @@ instance C'.IsStruct msg (JsonValue' msg) where
             0 -> pure JsonValue'null
             _ -> pure $ JsonValue'unknown' tag
 newtype JsonValue'Call msg = JsonValue'Call_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (JsonValue'Call msg) where
+instance C'.FromStruct msg (JsonValue'Call msg) where
     fromStruct = pure . JsonValue'Call_newtype_
 instance C'.IsPtr msg (JsonValue'Call msg) where
     fromPtr msg ptr = JsonValue'Call_newtype_ <$> C'.fromPtr msg ptr
@@ -147,7 +147,7 @@ new_JsonValue'Call'params len struct = do
     set_JsonValue'Call'params struct result
     pure result
 newtype JsonValue'Field msg = JsonValue'Field_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (JsonValue'Field msg) where
+instance C'.FromStruct msg (JsonValue'Field msg) where
     fromStruct = pure . JsonValue'Field_newtype_
 instance C'.IsPtr msg (JsonValue'Field msg) where
     fromPtr msg ptr = JsonValue'Field_newtype_ <$> C'.fromPtr msg ptr

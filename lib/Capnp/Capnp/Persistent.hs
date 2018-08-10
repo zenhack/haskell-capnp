@@ -26,7 +26,7 @@ import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Persistent'SaveParams msg) where
+instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
 instance C'.IsPtr msg (Persistent'SaveParams msg) where
     fromPtr msg ptr = Persistent'SaveParams_newtype_ <$> C'.fromPtr msg ptr
@@ -56,7 +56,7 @@ has_Persistent'SaveParams'sealFor(Persistent'SaveParams_newtype_ struct) = Data.
 set_Persistent'SaveParams'sealFor :: U'.RWCtx m s => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 newtype Persistent'SaveResults msg = Persistent'SaveResults_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Persistent'SaveResults msg) where
+instance C'.FromStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults_newtype_
 instance C'.IsPtr msg (Persistent'SaveResults msg) where
     fromPtr msg ptr = Persistent'SaveResults_newtype_ <$> C'.fromPtr msg ptr

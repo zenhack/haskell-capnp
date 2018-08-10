@@ -229,7 +229,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     , indent $ vcat (map fmtDecerializeVariant dataVariants)
                     ]
                 ]
-        , hcat [ "instance C'.IsStruct M'.ConstMsg ", pureName, " where" ]
+        , hcat [ "instance C'.FromStruct M'.ConstMsg ", pureName, " where" ]
         , indent $ vcat
             [ "fromStruct struct = do"
             , indent $ vcat

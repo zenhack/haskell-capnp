@@ -7,7 +7,7 @@ module Codec.Capnp
     , ListElem(..)
     , MutListElem(..)
     , IsPtr(..)
-    , IsStruct(..)
+    , FromStruct(..)
     , Allocate(..)
     , Cerialize(..)
     , Decerialize(..)
@@ -71,7 +71,7 @@ class IsPtr msg a where
     toPtr :: a -> Maybe (Ptr msg)
 
 -- | Types that can be extracted from a struct.
-class IsStruct msg a where
+class FromStruct msg a where
     fromStruct :: ReadCtx m msg => Struct msg -> m a
 
 expected :: MonadThrow m => String -> m a
@@ -170,8 +170,8 @@ instance IsPtr msg (ListOf msg (Struct msg)) where
     fromPtr _ _ = expected "pointer to list of structs"
     toPtr = Just . PtrList . U.ListStruct
 
--- IsStruct instance for Struct; just the identity.
-instance IsStruct msg (Struct msg) where
+-- FromStruct instance for Struct; just the identity.
+instance FromStruct msg (Struct msg) where
     fromStruct = pure
 
 instance IsPtr msg (Struct msg) where

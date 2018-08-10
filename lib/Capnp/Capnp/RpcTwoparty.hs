@@ -26,7 +26,7 @@ import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype JoinKeyPart msg = JoinKeyPart_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (JoinKeyPart msg) where
+instance C'.FromStruct msg (JoinKeyPart msg) where
     fromStruct = pure . JoinKeyPart_newtype_
 instance C'.IsPtr msg (JoinKeyPart msg) where
     fromPtr msg ptr = JoinKeyPart_newtype_ <$> C'.fromPtr msg ptr
@@ -66,7 +66,7 @@ has_JoinKeyPart'partNum(JoinKeyPart_newtype_ struct) = pure $ 0 < U'.length (U'.
 set_JoinKeyPart'partNum :: U'.RWCtx m s => JoinKeyPart (M'.MutMsg s) -> Word16 -> m ()
 set_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 48 0
 newtype JoinResult msg = JoinResult_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (JoinResult msg) where
+instance C'.FromStruct msg (JoinResult msg) where
     fromStruct = pure . JoinResult_newtype_
 instance C'.IsPtr msg (JoinResult msg) where
     fromPtr msg ptr = JoinResult_newtype_ <$> C'.fromPtr msg ptr
@@ -108,7 +108,7 @@ has_JoinResult'cap(JoinResult_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr
 set_JoinResult'cap :: U'.RWCtx m s => JoinResult (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_JoinResult'cap (JoinResult_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
 newtype ProvisionId msg = ProvisionId_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (ProvisionId msg) where
+instance C'.FromStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId_newtype_
 instance C'.IsPtr msg (ProvisionId msg) where
     fromPtr msg ptr = ProvisionId_newtype_ <$> C'.fromPtr msg ptr
@@ -162,7 +162,7 @@ instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
     toPtr (List_Side l) = C'.toPtr l
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (VatId msg) where
+instance C'.FromStruct msg (VatId msg) where
     fromStruct = pure . VatId_newtype_
 instance C'.IsPtr msg (VatId msg) where
     fromPtr msg ptr = VatId_newtype_ <$> C'.fromPtr msg ptr

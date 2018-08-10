@@ -26,7 +26,7 @@ import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Annotation msg = Annotation_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Annotation msg) where
+instance C'.FromStruct msg (Annotation msg) where
     fromStruct = pure . Annotation_newtype_
 instance C'.IsPtr msg (Annotation msg) where
     fromPtr msg ptr = Annotation_newtype_ <$> C'.fromPtr msg ptr
@@ -80,7 +80,7 @@ new_Annotation'brand struct = do
     set_Annotation'brand struct result
     pure result
 newtype Brand msg = Brand_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Brand msg) where
+instance C'.FromStruct msg (Brand msg) where
     fromStruct = pure . Brand_newtype_
 instance C'.IsPtr msg (Brand msg) where
     fromPtr msg ptr = Brand_newtype_ <$> C'.fromPtr msg ptr
@@ -115,7 +115,7 @@ new_Brand'scopes len struct = do
     set_Brand'scopes struct result
     pure result
 newtype CapnpVersion msg = CapnpVersion_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (CapnpVersion msg) where
+instance C'.FromStruct msg (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion_newtype_
 instance C'.IsPtr msg (CapnpVersion msg) where
     fromPtr msg ptr = CapnpVersion_newtype_ <$> C'.fromPtr msg ptr
@@ -155,7 +155,7 @@ has_CapnpVersion'micro(CapnpVersion_newtype_ struct) = pure $ 0 < U'.length (U'.
 set_CapnpVersion'micro :: U'.RWCtx m s => CapnpVersion (M'.MutMsg s) -> Word8 -> m ()
 set_CapnpVersion'micro (CapnpVersion_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
 newtype CodeGeneratorRequest msg = CodeGeneratorRequest_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (CodeGeneratorRequest msg) where
+instance C'.FromStruct msg (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest_newtype_
 instance C'.IsPtr msg (CodeGeneratorRequest msg) where
     fromPtr msg ptr = CodeGeneratorRequest_newtype_ <$> C'.fromPtr msg ptr
@@ -260,7 +260,7 @@ instance C'.IsPtr msg (B'.List msg ElementSize) where
     fromPtr msg ptr = List_ElementSize <$> C'.fromPtr msg ptr
     toPtr (List_ElementSize l) = C'.toPtr l
 newtype Enumerant msg = Enumerant_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Enumerant msg) where
+instance C'.FromStruct msg (Enumerant msg) where
     fromStruct = pure . Enumerant_newtype_
 instance C'.IsPtr msg (Enumerant msg) where
     fromPtr msg ptr = Enumerant_newtype_ <$> C'.fromPtr msg ptr
@@ -314,7 +314,7 @@ new_Enumerant'annotations len struct = do
     set_Enumerant'annotations struct result
     pure result
 newtype Field msg = Field_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Field msg) where
+instance C'.FromStruct msg (Field msg) where
     fromStruct = pure . Field_newtype_
 instance C'.IsPtr msg (Field msg) where
     fromPtr msg ptr = Field_newtype_ <$> C'.fromPtr msg ptr
@@ -382,7 +382,7 @@ get_Field'union' (Field_newtype_ struct) = C'.fromStruct struct
 has_Field'union' :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field'union'(Field_newtype_ struct) = pure True
 newtype Method msg = Method_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Method msg) where
+instance C'.FromStruct msg (Method msg) where
     fromStruct = pure . Method_newtype_
 instance C'.IsPtr msg (Method msg) where
     fromPtr msg ptr = Method_newtype_ <$> C'.fromPtr msg ptr
@@ -487,7 +487,7 @@ new_Method'implicitParameters len struct = do
     set_Method'implicitParameters struct result
     pure result
 newtype Node msg = Node_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node msg) where
+instance C'.FromStruct msg (Node msg) where
     fromStruct = pure . Node_newtype_
 instance C'.IsPtr msg (Node msg) where
     fromPtr msg ptr = Node_newtype_ <$> C'.fromPtr msg ptr
@@ -589,7 +589,7 @@ get_Node'union' (Node_newtype_ struct) = C'.fromStruct struct
 has_Node'union' :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'union'(Node_newtype_ struct) = pure True
 newtype Superclass msg = Superclass_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Superclass msg) where
+instance C'.FromStruct msg (Superclass msg) where
     fromStruct = pure . Superclass_newtype_
 instance C'.IsPtr msg (Superclass msg) where
     fromPtr msg ptr = Superclass_newtype_ <$> C'.fromPtr msg ptr
@@ -630,7 +630,7 @@ new_Superclass'brand struct = do
     set_Superclass'brand struct result
     pure result
 newtype Type msg = Type_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type msg) where
+instance C'.FromStruct msg (Type msg) where
     fromStruct = pure . Type_newtype_
 instance C'.IsPtr msg (Type msg) where
     fromPtr msg ptr = Type_newtype_ <$> C'.fromPtr msg ptr
@@ -725,7 +725,7 @@ set_Type'anyPointer (Type_newtype_ struct) = do
     H'.setWordField struct (18 :: Word16) 0 0 0
     pure $ Type'anyPointer'group'_newtype_ struct
 newtype Type'list'group' msg = Type'list'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'list'group' msg) where
+instance C'.FromStruct msg (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'_newtype_
 instance C'.IsPtr msg (Type'list'group' msg) where
     fromPtr msg ptr = Type'list'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -760,7 +760,7 @@ new_Type'list'elementType struct = do
     set_Type'list'elementType struct result
     pure result
 newtype Type'enum'group' msg = Type'enum'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'enum'group' msg) where
+instance C'.FromStruct msg (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'_newtype_
 instance C'.IsPtr msg (Type'enum'group' msg) where
     fromPtr msg ptr = Type'enum'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -801,7 +801,7 @@ new_Type'enum'brand struct = do
     set_Type'enum'brand struct result
     pure result
 newtype Type'struct'group' msg = Type'struct'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'struct'group' msg) where
+instance C'.FromStruct msg (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'_newtype_
 instance C'.IsPtr msg (Type'struct'group' msg) where
     fromPtr msg ptr = Type'struct'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -842,7 +842,7 @@ new_Type'struct'brand struct = do
     set_Type'struct'brand struct result
     pure result
 newtype Type'interface'group' msg = Type'interface'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'interface'group' msg) where
+instance C'.FromStruct msg (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'_newtype_
 instance C'.IsPtr msg (Type'interface'group' msg) where
     fromPtr msg ptr = Type'interface'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -883,7 +883,7 @@ new_Type'interface'brand struct = do
     set_Type'interface'brand struct result
     pure result
 newtype Type'anyPointer'group' msg = Type'anyPointer'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'anyPointer'group' msg) where
+instance C'.FromStruct msg (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'_newtype_
 instance C'.IsPtr msg (Type'anyPointer'group' msg) where
     fromPtr msg ptr = Type'anyPointer'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -908,7 +908,7 @@ get_Type'anyPointer'union' :: U'.ReadCtx m msg => Type'anyPointer'group' msg -> 
 get_Type'anyPointer'union' (Type'anyPointer'group'_newtype_ struct) = C'.fromStruct struct
 has_Type'anyPointer'union' :: U'.ReadCtx m msg => Type'anyPointer'group' msg -> m Bool
 has_Type'anyPointer'union'(Type'anyPointer'group'_newtype_ struct) = pure True
-instance C'.IsStruct msg (Type' msg) where
+instance C'.FromStruct msg (Type' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -933,7 +933,7 @@ instance C'.IsStruct msg (Type' msg) where
             0 -> pure Type'void
             _ -> pure $ Type'unknown' tag
 newtype Value msg = Value_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Value msg) where
+instance C'.FromStruct msg (Value msg) where
     fromStruct = pure . Value_newtype_
 instance C'.IsPtr msg (Value msg) where
     fromPtr msg ptr = Value_newtype_ <$> C'.fromPtr msg ptr
@@ -1051,7 +1051,7 @@ set_Value'anyPointer :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M
 set_Value'anyPointer(Value_newtype_ struct) value = do
     H'.setWordField struct (18 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (Value' msg) where
+instance C'.FromStruct msg (Value' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -1076,7 +1076,7 @@ instance C'.IsStruct msg (Value' msg) where
             0 -> pure Value'void
             _ -> pure $ Value'unknown' tag
 newtype Brand'Binding msg = Brand'Binding_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Brand'Binding msg) where
+instance C'.FromStruct msg (Brand'Binding msg) where
     fromStruct = pure . Brand'Binding_newtype_
 instance C'.IsPtr msg (Brand'Binding msg) where
     fromPtr msg ptr = Brand'Binding_newtype_ <$> C'.fromPtr msg ptr
@@ -1111,7 +1111,7 @@ set_Brand'Binding'type_ :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> (Type 
 set_Brand'Binding'type_(Brand'Binding_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
-instance C'.IsStruct msg (Brand'Binding' msg) where
+instance C'.FromStruct msg (Brand'Binding' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
         case tag of
@@ -1119,7 +1119,7 @@ instance C'.IsStruct msg (Brand'Binding' msg) where
             0 -> pure Brand'Binding'unbound
             _ -> pure $ Brand'Binding'unknown' tag
 newtype Brand'Scope msg = Brand'Scope_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Brand'Scope msg) where
+instance C'.FromStruct msg (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope_newtype_
 instance C'.IsPtr msg (Brand'Scope msg) where
     fromPtr msg ptr = Brand'Scope_newtype_ <$> C'.fromPtr msg ptr
@@ -1151,7 +1151,7 @@ get_Brand'Scope'union' (Brand'Scope_newtype_ struct) = C'.fromStruct struct
 has_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
 has_Brand'Scope'union'(Brand'Scope_newtype_ struct) = pure True
 newtype Brand'Scope' msg = Brand'Scope'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Brand'Scope' msg) where
+instance C'.FromStruct msg (Brand'Scope' msg) where
     fromStruct = pure . Brand'Scope'_newtype_
 instance C'.IsPtr msg (Brand'Scope' msg) where
     fromPtr msg ptr = Brand'Scope'_newtype_ <$> C'.fromPtr msg ptr
@@ -1186,7 +1186,7 @@ set_Brand'Scope'bind(Brand'Scope'_newtype_ struct) value = do
     U'.setPtr (C'.toPtr value) 0 struct
 set_Brand'Scope'inherit :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> m ()
 set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = H'.setWordField struct (1 :: Word16) 1 0 0
-instance C'.IsStruct msg (Brand'Scope'' msg) where
+instance C'.FromStruct msg (Brand'Scope'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 0 0
         case tag of
@@ -1194,7 +1194,7 @@ instance C'.IsStruct msg (Brand'Scope'' msg) where
             0 -> Brand'Scope'bind <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Brand'Scope'unknown' tag
 newtype CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (CodeGeneratorRequest'RequestedFile msg) where
+instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile_newtype_
 instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile msg) where
     fromPtr msg ptr = CodeGeneratorRequest'RequestedFile_newtype_ <$> C'.fromPtr msg ptr
@@ -1248,7 +1248,7 @@ new_CodeGeneratorRequest'RequestedFile'imports len struct = do
     set_CodeGeneratorRequest'RequestedFile'imports struct result
     pure result
 newtype CodeGeneratorRequest'RequestedFile'Import msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
+instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import_newtype_
 instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromPtr msg ptr = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> C'.fromPtr msg ptr
@@ -1289,7 +1289,7 @@ new_CodeGeneratorRequest'RequestedFile'Import'name len struct = do
     set_CodeGeneratorRequest'RequestedFile'Import'name struct result
     pure result
 newtype Field' msg = Field'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Field' msg) where
+instance C'.FromStruct msg (Field' msg) where
     fromStruct = pure . Field'_newtype_
 instance C'.IsPtr msg (Field' msg) where
     fromPtr msg ptr = Field'_newtype_ <$> C'.fromPtr msg ptr
@@ -1327,7 +1327,7 @@ set_Field'group (Field'_newtype_ struct) = do
     H'.setWordField struct (1 :: Word16) 1 0 0
     pure $ Field'group'group'_newtype_ struct
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Field'slot'group' msg) where
+instance C'.FromStruct msg (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'_newtype_
 instance C'.IsPtr msg (Field'slot'group' msg) where
     fromPtr msg ptr = Field'slot'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1387,7 +1387,7 @@ has_Field'slot'hadExplicitDefault(Field'slot'group'_newtype_ struct) = pure $ 2 
 set_Field'slot'hadExplicitDefault :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> Bool -> m ()
 set_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 newtype Field'group'group' msg = Field'group'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Field'group'group' msg) where
+instance C'.FromStruct msg (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'_newtype_
 instance C'.IsPtr msg (Field'group'group' msg) where
     fromPtr msg ptr = Field'group'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1414,7 +1414,7 @@ has_Field'group'typeId :: U'.ReadCtx m msg => Field'group'group' msg -> m Bool
 has_Field'group'typeId(Field'group'group'_newtype_ struct) = pure $ 2 < U'.length (U'.dataSection struct)
 set_Field'group'typeId :: U'.RWCtx m s => Field'group'group' (M'.MutMsg s) -> Word64 -> m ()
 set_Field'group'typeId (Field'group'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
-instance C'.IsStruct msg (Field'' msg) where
+instance C'.FromStruct msg (Field'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 0 0
         case tag of
@@ -1424,7 +1424,7 @@ instance C'.IsStruct msg (Field'' msg) where
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 newtype Field'ordinal msg = Field'ordinal_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Field'ordinal msg) where
+instance C'.FromStruct msg (Field'ordinal msg) where
     fromStruct = pure . Field'ordinal_newtype_
 instance C'.IsPtr msg (Field'ordinal msg) where
     fromPtr msg ptr = Field'ordinal_newtype_ <$> C'.fromPtr msg ptr
@@ -1459,7 +1459,7 @@ set_Field'ordinal'explicit :: U'.RWCtx m s => Field'ordinal (M'.MutMsg s) -> Wor
 set_Field'ordinal'explicit (Field'ordinal_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 1 16 0
     H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 32 0
-instance C'.IsStruct msg (Field'ordinal' msg) where
+instance C'.FromStruct msg (Field'ordinal' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 16 0
         case tag of
@@ -1467,7 +1467,7 @@ instance C'.IsStruct msg (Field'ordinal' msg) where
             0 -> pure Field'ordinal'implicit
             _ -> pure $ Field'ordinal'unknown' tag
 newtype Node' msg = Node'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node' msg) where
+instance C'.FromStruct msg (Node' msg) where
     fromStruct = pure . Node'_newtype_
 instance C'.IsPtr msg (Node' msg) where
     fromPtr msg ptr = Node'_newtype_ <$> C'.fromPtr msg ptr
@@ -1523,7 +1523,7 @@ set_Node'annotation (Node'_newtype_ struct) = do
     H'.setWordField struct (5 :: Word16) 1 32 0
     pure $ Node'annotation'group'_newtype_ struct
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'struct'group' msg) where
+instance C'.FromStruct msg (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'_newtype_
 instance C'.IsPtr msg (Node'struct'group' msg) where
     fromPtr msg ptr = Node'struct'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1594,7 +1594,7 @@ new_Node'struct'fields len struct = do
     set_Node'struct'fields struct result
     pure result
 newtype Node'enum'group' msg = Node'enum'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'enum'group' msg) where
+instance C'.FromStruct msg (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'_newtype_
 instance C'.IsPtr msg (Node'enum'group' msg) where
     fromPtr msg ptr = Node'enum'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1629,7 +1629,7 @@ new_Node'enum'enumerants len struct = do
     set_Node'enum'enumerants struct result
     pure result
 newtype Node'interface'group' msg = Node'interface'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'interface'group' msg) where
+instance C'.FromStruct msg (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'_newtype_
 instance C'.IsPtr msg (Node'interface'group' msg) where
     fromPtr msg ptr = Node'interface'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1677,7 +1677,7 @@ new_Node'interface'superclasses len struct = do
     set_Node'interface'superclasses struct result
     pure result
 newtype Node'const'group' msg = Node'const'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'const'group' msg) where
+instance C'.FromStruct msg (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'_newtype_
 instance C'.IsPtr msg (Node'const'group' msg) where
     fromPtr msg ptr = Node'const'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1725,7 +1725,7 @@ new_Node'const'value struct = do
     set_Node'const'value struct result
     pure result
 newtype Node'annotation'group' msg = Node'annotation'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'annotation'group' msg) where
+instance C'.FromStruct msg (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'_newtype_
 instance C'.IsPtr msg (Node'annotation'group' msg) where
     fromPtr msg ptr = Node'annotation'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1831,7 +1831,7 @@ has_Node'annotation'targetsAnnotation :: U'.ReadCtx m msg => Node'annotation'gro
 has_Node'annotation'targetsAnnotation(Node'annotation'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Node'annotation'targetsAnnotation :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> Bool -> m ()
 set_Node'annotation'targetsAnnotation (Node'annotation'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 1 59 0
-instance C'.IsStruct msg (Node'' msg) where
+instance C'.FromStruct msg (Node'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 32 0
         case tag of
@@ -1843,7 +1843,7 @@ instance C'.IsStruct msg (Node'' msg) where
             0 -> pure Node'file
             _ -> pure $ Node'unknown' tag
 newtype Node'NestedNode msg = Node'NestedNode_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'NestedNode msg) where
+instance C'.FromStruct msg (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode_newtype_
 instance C'.IsPtr msg (Node'NestedNode msg) where
     fromPtr msg ptr = Node'NestedNode_newtype_ <$> C'.fromPtr msg ptr
@@ -1884,7 +1884,7 @@ has_Node'NestedNode'id(Node'NestedNode_newtype_ struct) = pure $ 0 < U'.length (
 set_Node'NestedNode'id :: U'.RWCtx m s => Node'NestedNode (M'.MutMsg s) -> Word64 -> m ()
 set_Node'NestedNode'id (Node'NestedNode_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 newtype Node'Parameter msg = Node'Parameter_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Node'Parameter msg) where
+instance C'.FromStruct msg (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter_newtype_
 instance C'.IsPtr msg (Node'Parameter msg) where
     fromPtr msg ptr = Node'Parameter_newtype_ <$> C'.fromPtr msg ptr
@@ -1919,7 +1919,7 @@ new_Node'Parameter'name len struct = do
     set_Node'Parameter'name struct result
     pure result
 newtype Type'anyPointer msg = Type'anyPointer_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'anyPointer msg) where
+instance C'.FromStruct msg (Type'anyPointer msg) where
     fromStruct = pure . Type'anyPointer_newtype_
 instance C'.IsPtr msg (Type'anyPointer msg) where
     fromPtr msg ptr = Type'anyPointer_newtype_ <$> C'.fromPtr msg ptr
@@ -1962,7 +1962,7 @@ set_Type'anyPointer'implicitMethodParameter (Type'anyPointer_newtype_ struct) = 
     H'.setWordField struct (2 :: Word16) 1 0 0
     pure $ Type'anyPointer'implicitMethodParameter'group'_newtype_ struct
 newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'anyPointer'unconstrained'group' msg) where
+instance C'.FromStruct msg (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'_newtype_
 instance C'.IsPtr msg (Type'anyPointer'unconstrained'group' msg) where
     fromPtr msg ptr = Type'anyPointer'unconstrained'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -1988,7 +1988,7 @@ get_Type'anyPointer'unconstrained'union' (Type'anyPointer'unconstrained'group'_n
 has_Type'anyPointer'unconstrained'union' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained'group' msg -> m Bool
 has_Type'anyPointer'unconstrained'union'(Type'anyPointer'unconstrained'group'_newtype_ struct) = pure True
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'anyPointer'parameter'group' msg) where
+instance C'.FromStruct msg (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'_newtype_
 instance C'.IsPtr msg (Type'anyPointer'parameter'group' msg) where
     fromPtr msg ptr = Type'anyPointer'parameter'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -2022,7 +2022,7 @@ has_Type'anyPointer'parameter'parameterIndex(Type'anyPointer'parameter'group'_ne
 set_Type'anyPointer'parameter'parameterIndex :: U'.RWCtx m s => Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
+instance C'.FromStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'_newtype_
 instance C'.IsPtr msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromPtr msg ptr = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> C'.fromPtr msg ptr
@@ -2049,7 +2049,7 @@ has_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.ReadCtx m msg =
 has_Type'anyPointer'implicitMethodParameter'parameterIndex(Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = pure $ 1 < U'.length (U'.dataSection struct)
 set_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.RWCtx m s => Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
-instance C'.IsStruct msg (Type'anyPointer' msg) where
+instance C'.FromStruct msg (Type'anyPointer' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 0 0
         case tag of
@@ -2058,7 +2058,7 @@ instance C'.IsStruct msg (Type'anyPointer' msg) where
             0 -> Type'anyPointer'unconstrained <$> C'.fromStruct struct
             _ -> pure $ Type'anyPointer'unknown' tag
 newtype Type'anyPointer'unconstrained msg = Type'anyPointer'unconstrained_newtype_ (U'.Struct msg)
-instance C'.IsStruct msg (Type'anyPointer'unconstrained msg) where
+instance C'.FromStruct msg (Type'anyPointer'unconstrained msg) where
     fromStruct = pure . Type'anyPointer'unconstrained_newtype_
 instance C'.IsPtr msg (Type'anyPointer'unconstrained msg) where
     fromPtr msg ptr = Type'anyPointer'unconstrained_newtype_ <$> C'.fromPtr msg ptr
@@ -2097,7 +2097,7 @@ set_Type'anyPointer'unconstrained'list :: U'.RWCtx m s => Type'anyPointer'uncons
 set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (2 :: Word16) 1 16 0
 set_Type'anyPointer'unconstrained'capability :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> m ()
 set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (3 :: Word16) 1 16 0
-instance C'.IsStruct msg (Type'anyPointer'unconstrained' msg) where
+instance C'.FromStruct msg (Type'anyPointer'unconstrained' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 16 0
         case tag of

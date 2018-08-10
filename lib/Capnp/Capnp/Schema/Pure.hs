@@ -41,7 +41,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Annotation M'.ConstMsg) An
         (Capnp.ById.Xa93fc509624c72d9.get_Annotation'id raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Annotation'value raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Annotation'brand raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Annotation where
+instance C'.FromStruct M'.ConstMsg Annotation where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Annotation M'.ConstMsg)
@@ -61,7 +61,7 @@ data Brand
 instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand M'.ConstMsg) Brand where
     decerialize raw = Brand <$>
         (Capnp.ById.Xa93fc509624c72d9.get_Brand'scopes raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Brand where
+instance C'.FromStruct M'.ConstMsg Brand where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand M'.ConstMsg)
@@ -85,7 +85,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.ConstMsg) 
         (Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'major raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'minor raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CapnpVersion'micro raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg CapnpVersion where
+instance C'.FromStruct M'.ConstMsg CapnpVersion where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.ConstMsg)
@@ -107,7 +107,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.Co
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'nodes raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'requestedFiles raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'capnpVersion raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest where
+instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.ConstMsg)
@@ -140,7 +140,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Enumerant M'.ConstMsg) Enu
         (Capnp.ById.Xa93fc509624c72d9.get_Enumerant'name raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Enumerant'codeOrder raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Enumerant'annotations raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Enumerant where
+instance C'.FromStruct M'.ConstMsg Enumerant where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Enumerant M'.ConstMsg)
@@ -173,7 +173,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMsg) Field w
         (Capnp.ById.Xa93fc509624c72d9.get_Field'discriminantValue raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Field'ordinal raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Field'union' raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Field where
+instance C'.FromStruct M'.ConstMsg Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMsg)
@@ -215,7 +215,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Method M'.ConstMsg) Method
         (Capnp.ById.Xa93fc509624c72d9.get_Method'paramBrand raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Method'resultBrand raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Method'implicitParameters raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Method where
+instance C'.FromStruct M'.ConstMsg Method where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Method M'.ConstMsg)
@@ -265,7 +265,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMsg) Node whe
         (Capnp.ById.Xa93fc509624c72d9.get_Node'parameters raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Node'isGeneric raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Node'union' raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Node where
+instance C'.FromStruct M'.ConstMsg Node where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMsg)
@@ -305,7 +305,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMsg) Su
     decerialize raw = Superclass <$>
         (Capnp.ById.Xa93fc509624c72d9.get_Superclass'id raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Superclass'brand raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Superclass where
+instance C'.FromStruct M'.ConstMsg Superclass where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMsg)
@@ -378,7 +378,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type M'.ConstMsg) Type whe
             Capnp.ById.Xa93fc509624c72d9.Type'anyPointer raw -> Type'anyPointer <$>
                 (Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw >>= C'.decerialize)
             Capnp.ById.Xa93fc509624c72d9.Type'unknown' val -> Type'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Type where
+instance C'.FromStruct M'.ConstMsg Type where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type M'.ConstMsg)
@@ -469,7 +469,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Value M'.ConstMsg) Value w
             Capnp.ById.Xa93fc509624c72d9.Value'interface -> pure Value'interface
             Capnp.ById.Xa93fc509624c72d9.Value'anyPointer val -> Value'anyPointer <$> C'.decerialize val
             Capnp.ById.Xa93fc509624c72d9.Value'unknown' val -> Value'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Value where
+instance C'.FromStruct M'.ConstMsg Value where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Value M'.ConstMsg)
@@ -508,7 +508,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.ConstMsg)
             Capnp.ById.Xa93fc509624c72d9.Brand'Binding'unbound -> pure Brand'Binding'unbound
             Capnp.ById.Xa93fc509624c72d9.Brand'Binding'type_ val -> Brand'Binding'type_ <$> C'.decerialize val
             Capnp.ById.Xa93fc509624c72d9.Brand'Binding'unknown' val -> Brand'Binding'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Brand'Binding where
+instance C'.FromStruct M'.ConstMsg Brand'Binding where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.ConstMsg)
@@ -527,7 +527,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMsg) B
     decerialize raw = Brand'Scope <$>
         (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'scopeId raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'union' raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Brand'Scope where
+instance C'.FromStruct M'.ConstMsg Brand'Scope where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMsg)
@@ -550,7 +550,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.ConstMsg) 
             Capnp.ById.Xa93fc509624c72d9.Brand'Scope'bind val -> Brand'Scope'bind <$> C'.decerialize val
             Capnp.ById.Xa93fc509624c72d9.Brand'Scope'inherit -> pure Brand'Scope'inherit
             Capnp.ById.Xa93fc509624c72d9.Brand'Scope'unknown' val -> Brand'Scope'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Brand'Scope' where
+instance C'.FromStruct M'.ConstMsg Brand'Scope' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.ConstMsg)
@@ -571,7 +571,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'Reque
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'id raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'filename raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'imports raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile where
+instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.ConstMsg)
@@ -596,7 +596,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'Reque
     decerialize raw = CodeGeneratorRequest'RequestedFile'Import <$>
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'id raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'name raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile'Import where
+instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile'Import where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.ConstMsg)
@@ -629,7 +629,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field' M'.ConstMsg) Field'
             Capnp.ById.Xa93fc509624c72d9.Field'group raw -> Field'group <$>
                 (Capnp.ById.Xa93fc509624c72d9.get_Field'group'typeId raw >>= C'.decerialize)
             Capnp.ById.Xa93fc509624c72d9.Field'unknown' val -> Field'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Field' where
+instance C'.FromStruct M'.ConstMsg Field' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field' M'.ConstMsg)
@@ -662,7 +662,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.ConstMsg)
             Capnp.ById.Xa93fc509624c72d9.Field'ordinal'implicit -> pure Field'ordinal'implicit
             Capnp.ById.Xa93fc509624c72d9.Field'ordinal'explicit val -> Field'ordinal'explicit <$> C'.decerialize val
             Capnp.ById.Xa93fc509624c72d9.Field'ordinal'unknown' val -> Field'ordinal'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Field'ordinal where
+instance C'.FromStruct M'.ConstMsg Field'ordinal where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.ConstMsg)
@@ -742,7 +742,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node' M'.ConstMsg) Node' w
                 (Capnp.ById.Xa93fc509624c72d9.get_Node'annotation'targetsParam raw >>= C'.decerialize) <*>
                 (Capnp.ById.Xa93fc509624c72d9.get_Node'annotation'targetsAnnotation raw >>= C'.decerialize)
             Capnp.ById.Xa93fc509624c72d9.Node'unknown' val -> Node'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Node' where
+instance C'.FromStruct M'.ConstMsg Node' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node' M'.ConstMsg)
@@ -814,7 +814,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMs
     decerialize raw = Node'NestedNode <$>
         (Capnp.ById.Xa93fc509624c72d9.get_Node'NestedNode'name raw >>= C'.decerialize) <*>
         (Capnp.ById.Xa93fc509624c72d9.get_Node'NestedNode'id raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Node'NestedNode where
+instance C'.FromStruct M'.ConstMsg Node'NestedNode where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMsg)
@@ -832,7 +832,7 @@ data Node'Parameter
 instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.ConstMsg) Node'Parameter where
     decerialize raw = Node'Parameter <$>
         (Capnp.ById.Xa93fc509624c72d9.get_Node'Parameter'name raw >>= C'.decerialize)
-instance C'.IsStruct M'.ConstMsg Node'Parameter where
+instance C'.FromStruct M'.ConstMsg Node'Parameter where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.ConstMsg)
@@ -864,7 +864,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.ConstMs
             Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'implicitMethodParameter raw -> Type'anyPointer'implicitMethodParameter <$>
                 (Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'implicitMethodParameter'parameterIndex raw >>= C'.decerialize)
             Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unknown' val -> Type'anyPointer'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Type'anyPointer where
+instance C'.FromStruct M'.ConstMsg Type'anyPointer where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.ConstMsg)
@@ -899,7 +899,7 @@ instance C'.Decerialize (Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrai
             Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'list -> pure Type'anyPointer'unconstrained'list
             Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'capability -> pure Type'anyPointer'unconstrained'capability
             Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'unknown' val -> Type'anyPointer'unconstrained'unknown' <$> C'.decerialize val
-instance C'.IsStruct M'.ConstMsg Type'anyPointer'unconstrained where
+instance C'.FromStruct M'.ConstMsg Type'anyPointer'unconstrained where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.ConstMsg)
