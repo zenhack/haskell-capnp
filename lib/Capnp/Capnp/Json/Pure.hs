@@ -47,13 +47,13 @@ instance C'.Decerialize JsonValue where
         raw <- Capnp.ById.X8ef99297a43a5e34.get_JsonValue' raw
         case raw of
             Capnp.ById.X8ef99297a43a5e34.JsonValue'null -> pure JsonValue'null
-            Capnp.ById.X8ef99297a43a5e34.JsonValue'boolean val -> JsonValue'boolean <$> C'.decerialize val
-            Capnp.ById.X8ef99297a43a5e34.JsonValue'number val -> JsonValue'number <$> C'.decerialize val
+            Capnp.ById.X8ef99297a43a5e34.JsonValue'boolean val -> pure (JsonValue'boolean val)
+            Capnp.ById.X8ef99297a43a5e34.JsonValue'number val -> pure (JsonValue'number val)
             Capnp.ById.X8ef99297a43a5e34.JsonValue'string val -> JsonValue'string <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'array val -> JsonValue'array <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'object val -> JsonValue'object <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'call val -> JsonValue'call <$> C'.decerialize val
-            Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> JsonValue'unknown' <$> C'.decerialize val
+            Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> pure (JsonValue'unknown' val)
 instance C'.FromStruct M'.ConstMsg JsonValue where
     fromStruct struct = do
         raw <- C'.fromStruct struct

@@ -41,9 +41,9 @@ instance C'.Decerialize JoinKeyPart where
     type Cerial msg JoinKeyPart = Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart msg
     decerialize raw = do
         JoinKeyPart <$>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw >>= C'.decerialize) <*>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw >>= C'.decerialize) <*>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw >>= C'.decerialize)
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw)
 instance C'.FromStruct M'.ConstMsg JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -65,8 +65,8 @@ instance C'.Decerialize JoinResult where
     type Cerial msg JoinResult = Capnp.ById.Xa184c7885cdaf2a1.JoinResult msg
     decerialize raw = do
         JoinResult <$>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw >>= C'.decerialize) <*>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw >>= C'.decerialize) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw) <*>
+            (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw) <*>
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= C'.decerialize)
 instance C'.FromStruct M'.ConstMsg JoinResult where
     fromStruct struct = do
@@ -87,7 +87,7 @@ instance C'.Decerialize ProvisionId where
     type Cerial msg ProvisionId = Capnp.ById.Xa184c7885cdaf2a1.ProvisionId msg
     decerialize raw = do
         ProvisionId <$>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw >>= C'.decerialize)
+            (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw)
 instance C'.FromStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -108,7 +108,7 @@ instance C'.Decerialize VatId where
     type Cerial msg VatId = Capnp.ById.Xa184c7885cdaf2a1.VatId msg
     decerialize raw = do
         VatId <$>
-            (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw >>= C'.decerialize)
+            (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw)
 instance C'.FromStruct M'.ConstMsg VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct

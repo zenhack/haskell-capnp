@@ -257,9 +257,15 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
     fmtDecerializeArgs variantName fields = vcat
         [ hcat [ fmtName Pure thisMod variantName, " <$>" ]
         , indent $ vcat $ PP.punctuate " <*>" $
-            flip map fields $ \Field{fieldName} -> hcat
+            flip map fields $ \Field{fieldName,fieldLocType} -> hcat
                 [ "(", fmtName Raw thisMod $ prefixName "get_" (subName variantName fieldName)
-                , " raw >>= C'.decerialize)"
+                , " raw", case fieldLocType of
+                    -- Data and void fields are always the same type in Raw and Pure forms,
+                    -- so we don't need to convert them.
+                    DataField _ _ -> ""
+                    VoidField     -> ""
+                    _             -> " >>= C'.decerialize"
+                , ")"
                 ]
         ]
     fmtDecerializeVariant Variant{variantName,variantParams} =
@@ -268,11 +274,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
             Unnamed VoidType _ -> " -> pure " <> fmtName Pure thisMod variantName
             Record fields ->
               " raw -> " <> fmtDecerializeArgs variantName fields
+            Unnamed (WordType _) _ -> hcat
+                [ " val -> pure (", fmtName Pure thisMod variantName, " val)" ]
             _ -> hcat
-                [ " val -> "
-                , fmtName Pure thisMod variantName
-                , " <$> C'.decerialize val"
-                ]
+                [ " val -> ", fmtName Pure thisMod variantName, " <$> C'.decerialize val" ]
     fmtCerializeVariant isUnion Variant{variantName, variantParams} =
         fmtName Pure thisMod variantName <>
         let setterName = fmtName Raw thisMod (prefixName "set_" variantName)
