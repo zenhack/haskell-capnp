@@ -14,6 +14,8 @@ module Codec.Capnp
     , Decerialize(..)
     , expected
     , cerialize
+    , newRoot
+    , setRoot
     ) where
 
 import Data.Bits
@@ -63,6 +65,22 @@ cerialize msg value = do
     marshalInto raw value
     pure raw
 
+expected :: MonadThrow m => String -> m a
+expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
+
+-- | 'newRoot' allocates and returns a new value inside the message, setting
+-- it as the root object of the message.
+newRoot :: (ToStruct (M.MutMsg s) a, Allocate s a, M.WriteCtx m s)
+    => M.MutMsg s -> m a
+newRoot msg = do
+    ret <- new msg
+    setRoot ret
+    pure ret
+
+-- | 'setRoot' sets its argument to be the root object in its message.
+setRoot :: (ToStruct (M.MutMsg s) a, M.WriteCtx m s) => a -> m ()
+setRoot = U.setRoot . toStruct
+
 -- | Types that can be converted to and from an untyped pointer.
 --
 -- Similarly to 'IsWord', this is mostly used in generated code, to interact
@@ -78,9 +96,6 @@ class FromStruct msg a where
 -- | Types that can be converted to a struct.
 class ToStruct msg a where
     toStruct :: a -> Struct msg
-
-expected :: MonadThrow m => String -> m a
-expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 
 instance Decerialize () () where
     decerialize = pure
