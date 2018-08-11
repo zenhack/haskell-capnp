@@ -21,7 +21,6 @@ import Data.Text.Encoding      (decodeUtf8')
 
 import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Basics  as Basics
-import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as Untyped
 import qualified Data.Text          as T
 
@@ -32,7 +31,7 @@ instance Decerialize Data where
     type Cerial msg Data = Basics.Data msg
     decerialize (Basics.Data list) = rawBytes list
 
-instance Cerialize s Data (Basics.Data (M.MutMsg s)) where
+instance Cerialize Data where
     marshalInto (Basics.Data list) bytes =
         forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list

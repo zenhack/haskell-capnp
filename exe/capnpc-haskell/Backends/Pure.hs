@@ -236,7 +236,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 , hcat [ "C'.decerialize (raw :: ", rawName, " M'.ConstMsg)" ]
                 ]
             ]
-        , hcat [ "instance C'.Cerialize s ", pureName, " (", rawName, " (M'.MutMsg s)) where" ]
+        , hcat [ "instance C'.Cerialize ", pureName, " where" ]
         , indent $ vcat
             [ "marshalInto raw value = do"
             , indent $ vcat

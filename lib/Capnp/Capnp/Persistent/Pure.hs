@@ -44,7 +44,7 @@ instance C'.FromStruct M'.ConstMsg Persistent'SaveParams where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg)
-instance C'.Cerialize s Persistent'SaveParams (Capnp.ById.Xb8630836983feed7.Persistent'SaveParams (M'.MutMsg s)) where
+instance C'.Cerialize Persistent'SaveParams where
     marshalInto raw value = do
         case value of
             Persistent'SaveParams{..} -> do
@@ -62,7 +62,7 @@ instance C'.FromStruct M'.ConstMsg Persistent'SaveResults where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg)
-instance C'.Cerialize s Persistent'SaveResults (Capnp.ById.Xb8630836983feed7.Persistent'SaveResults (M'.MutMsg s)) where
+instance C'.Cerialize Persistent'SaveResults where
     marshalInto raw value = do
         case value of
             Persistent'SaveResults{..} -> do

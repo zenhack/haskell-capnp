@@ -48,7 +48,7 @@ instance C'.FromStruct M'.ConstMsg JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg)
-instance C'.Cerialize s JoinKeyPart (Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart (M'.MutMsg s)) where
+instance C'.Cerialize JoinKeyPart where
     marshalInto raw value = do
         case value of
             JoinKeyPart{..} -> do
@@ -72,7 +72,7 @@ instance C'.FromStruct M'.ConstMsg JoinResult where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
-instance C'.Cerialize s JoinResult (Capnp.ById.Xa184c7885cdaf2a1.JoinResult (M'.MutMsg s)) where
+instance C'.Cerialize JoinResult where
     marshalInto raw value = do
         case value of
             JoinResult{..} -> do
@@ -92,7 +92,7 @@ instance C'.FromStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
-instance C'.Cerialize s ProvisionId (Capnp.ById.Xa184c7885cdaf2a1.ProvisionId (M'.MutMsg s)) where
+instance C'.Cerialize ProvisionId where
     marshalInto raw value = do
         case value of
             ProvisionId{..} -> do
@@ -110,7 +110,7 @@ instance C'.FromStruct M'.ConstMsg VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg)
-instance C'.Cerialize s VatId (Capnp.ById.Xa184c7885cdaf2a1.VatId (M'.MutMsg s)) where
+instance C'.Cerialize VatId where
     marshalInto raw value = do
         case value of
             VatId{..} -> do
