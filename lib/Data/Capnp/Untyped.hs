@@ -54,7 +54,13 @@ import Control.Monad             (forM_)
 import Control.Monad.Catch       (MonadThrow(throwM))
 import Data.Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
 import Data.Capnp.Bits
-    (ByteCount(..), Word1(..), WordCount(..), replaceBits, wordsToBytes)
+    ( ByteCount(..)
+    , Word1(..)
+    , WordCount(..)
+    , bytesToWordsFloor
+    , replaceBits
+    , wordsToBytes
+    )
 import Data.Capnp.Pointer        (ElementSize(..))
 import Data.Capnp.TraversalLimit (MonadLimit(invoice))
 
@@ -665,8 +671,8 @@ allocNormalList
 allocNormalList eltsPerWord msg len = do
     -- round 'len' up to the nearest word boundary.
     let mask = eltsPerWord - 1
-        wordCount = WordCount $ (len + mask) .&. complement mask
-    addr <- M.alloc msg wordCount
+        byteCount = ByteCount $ (len + mask) .&. complement mask
+    addr <- M.alloc msg (bytesToWordsFloor byteCount)
     pure NormalList
         { nMsg = msg
         , nAddr = addr
