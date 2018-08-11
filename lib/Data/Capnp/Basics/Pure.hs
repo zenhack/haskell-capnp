@@ -38,8 +38,8 @@ instance Cerialize Data where
 
 instance Decerialize Text where
     type Cerial msg Text = Basics.Text msg
-    decerialize (Basics.Text list) = do
-            bytes <- rawBytes list
+    decerialize text = do
+            bytes <- Basics.textBytes text
             case decodeUtf8' bytes of
                 Left e    -> throwM $ InvalidUtf8Error e
                 Right txt -> pure txt

@@ -15,7 +15,7 @@ In particular
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Data.Capnp.Basics
-    ( Text(..)
+    ( Text
     , Data(..)
     , ListElem(..)
     , MutListElem(..)
@@ -24,6 +24,7 @@ module Data.Capnp.Basics
     , newData
     , newText
     , dataBytes
+    , textBuffer
     , textBytes
     ) where
 
@@ -48,10 +49,9 @@ import qualified Data.Capnp.Untyped as U
 --
 -- Rationale: validation would require doing an up-front pass over the data,
 -- which runs counter to the overall design of capnproto.
---
--- The argument to the data constructor is the slice of the original message
--- containing the text, excluding the NUL terminator.
 newtype Text msg = Text (U.ListOf msg Word8)
+-- The argument to the data constructor is the slice of the original message
+-- containing the text, including the NUL terminator.
 
 -- | A blob of bytes (@Data@ in capnproto's schema language). The argument
 -- to the data constructor is a slice into the message, containing the raw
@@ -71,7 +71,7 @@ getData = pure . Data
 -- value has space for @len@ *bytes* (not characters).
 newText :: M.WriteCtx m s => M.MutMsg s -> Int -> m (Text (M.MutMsg s))
 newText msg len =
-    Text <$> (U.allocList8 msg (len+1) >>= U.take len)
+    Text <$> U.allocList8 msg (len+1)
 
 -- | Interpret a list of 'Word8' as a capnproto 'Text' value.
 --
@@ -90,6 +90,11 @@ getText list = do
 -- | Convert a 'Data' to a 'BS.ByteString'.
 dataBytes :: U.ReadCtx m msg => Data msg -> m BS.ByteString
 dataBytes (Data list) = U.rawBytes list
+
+-- | Return the underlying buffer containing the text. This does not include the
+-- null terminator.
+textBuffer :: U.ReadCtx m msg => Text msg -> m (U.ListOf msg Word8)
+textBuffer (Text list) = U.take (U.length list - 1) list
 
 -- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
 -- (not counting the NUL terminator).

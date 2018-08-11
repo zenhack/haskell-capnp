@@ -28,6 +28,7 @@ marshalText :: (U.RWCtx m s, U.HasMessage parent (M.MutMsg s))
     => parent -> T.Text -> m (B.Text (M.MutMsg s))
 marshalText msg text = do
     let bytes = encodeUtf8 text
-    ret@(B.Text buffer) <- B.newText (U.message msg) (BS.length bytes)
+    ret <- B.newText (U.message msg) (BS.length bytes)
+    buffer <- B.textBuffer ret
     C.marshalInto (B.Data buffer) bytes
     pure ret

@@ -15,7 +15,7 @@ import Tests.Util
 
 import Codec.Capnp               (fromStruct)
 import Control.Monad             (mapM_, when)
-import Data.Capnp.Basics         (Text(..), index, length)
+import Data.Capnp.Basics         (index, length, textBytes)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 import Test.Framework            (Test)
 import Test.HUnit                (Assertion, assertEqual)
@@ -62,8 +62,8 @@ theAssert = do
         -- And none of them are generic:
         False <- Schema.get_Node'isGeneric node
 
-        Text nameList <- Schema.get_Node'displayName node
-        name <- rawBytes nameList
+        nameList <- Schema.get_Node'displayName node
+        name <- textBytes nameList
         prefixLen <- Schema.get_Node'displayNamePrefixLength node
         let baseName = BS.drop (fromIntegral prefixLen) name
 
