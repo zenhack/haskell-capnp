@@ -15,7 +15,7 @@ import Codec.Capnp
     , cerialize
     , setRoot
     )
-import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
+import Data.Capnp.TraversalLimit (evalLimitT)
 
 import Capnp.Capnp.Schema.Pure
 import Tests.Util
@@ -25,15 +25,14 @@ import Control.Monad.Primitive              (RealWorld)
 import Test.Framework                       (testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit.Lang                      (assertEqual)
-import Test.QuickCheck                      (Arbitrary(..), Property)
+import Test.QuickCheck                      (Arbitrary(..), Property, oneof)
+import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO                   (propertyIO)
 import Text.Heredoc                         (here, there)
 import Text.Show.Pretty                     (ppShow)
 
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
-
-import qualified Capnp.Capnp.Schema as Raw
 
 pureSchemaTests = testGroup "Tests for generated .Pure modules."
     [ decodeTests
@@ -355,8 +354,14 @@ decodeTests = testGroup "schema decode tests"
     schemaText = [there|tests/data/schema.capnp|]
 
 propTests = testGroup "check that cerialize and decerialize are inverses."
-    [ testProperty "...for CapnpVersion" prop_cerializeDecerializeInverses
+    [ propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
+    , propCase "Node.Parameter" (Proxy :: Proxy Node'Parameter)
+    , propCase "Type" (Proxy :: Proxy Type)
+    , propCase "Brand.Binding" (Proxy :: Proxy Brand'Binding)
     ]
+
+propCase name proxy =
+    testProperty ("...for " ++ name) (prop_cerializeDecerializeInverses proxy)
 
 instance Arbitrary CapnpVersion where
     arbitrary = CapnpVersion
@@ -364,8 +369,56 @@ instance Arbitrary CapnpVersion where
         <*> arbitrary
         <*> arbitrary
 
-prop_cerializeDecerializeInverses :: CapnpVersion -> Property
-prop_cerializeDecerializeInverses expected = propertyIO $ do
+instance Arbitrary Node'Parameter where
+    arbitrary = Node'Parameter <$> arbitrary
+
+instance Arbitrary Brand'Binding where
+    arbitrary = oneof
+        [ pure Brand'Binding'unbound
+        , Brand'Binding'type_ <$> arbitrary
+        ]
+
+instance Arbitrary Type where
+    arbitrary = oneof
+        [ pure Type'void
+        , pure Type'bool
+        , pure Type'int8
+        , pure Type'int16
+        , pure Type'int32
+        , pure Type'int64
+        , pure Type'uint8
+        , pure Type'uint16
+        , pure Type'uint32
+        , pure Type'uint64
+        , pure Type'float32
+        , pure Type'float64
+        , pure Type'text
+        , pure Type'data_
+        -- TODO: list, enum, struct, interface
+        , Type'anyPointer <$> oneof
+            [ Type'anyPointer'unconstrained <$> oneof
+                [ pure Type'anyPointer'unconstrained'anyKind
+                , pure Type'anyPointer'unconstrained'struct
+                , pure Type'anyPointer'unconstrained'list
+                , pure Type'anyPointer'unconstrained'capability
+                ]
+            , Type'anyPointer'parameter
+                <$> arbitrary
+                <*> arbitrary
+            , Type'anyPointer'implicitMethodParameter
+                <$> arbitrary
+            ]
+        ]
+
+prop_cerializeDecerializeInverses ::
+    ( Show a
+    , Eq a
+    , Cerialize a
+    , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
+    , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
+    , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
+    ) => Proxy a -> a -> Property
+prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
     actual <- evalLimitT maxBound $ do
         -- TODO: add some helpers for all this.
         msg <- M.newMessage

@@ -181,6 +181,7 @@ test-suite simple-tests
       , exceptions
       , QuickCheck
       , quickcheck-io
+      , quickcheck-instances
       , mtl
       , HUnit
       , test-framework
