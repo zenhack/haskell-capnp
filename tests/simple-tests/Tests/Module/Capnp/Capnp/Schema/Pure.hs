@@ -4,20 +4,43 @@
 {-# LANGUAGE QuasiQuotes       #-}
 module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 
-import Codec.Capnp               (FromStruct(..))
-import Data.Capnp.TraversalLimit (evalLimitT)
+import Data.Proxy
+
+import Codec.Capnp
+    ( Allocate(..)
+    , Cerialize(..)
+    , Decerialize(..)
+    , FromStruct(..)
+    , ToStruct(..)
+    , cerialize
+    , setRoot
+    )
+import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
 
 import Capnp.Capnp.Schema.Pure
 import Tests.Util
 
-import Control.Monad    (when)
-import Test.Framework   (testGroup)
-import Text.Heredoc     (here, there)
-import Text.Show.Pretty (ppShow)
+import Control.Monad                        (when)
+import Control.Monad.Primitive              (RealWorld)
+import Test.Framework                       (testGroup)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.HUnit.Lang                      (assertEqual)
+import Test.QuickCheck                      (Arbitrary(..), Property)
+import Test.QuickCheck.IO                   (propertyIO)
+import Text.Heredoc                         (here, there)
+import Text.Show.Pretty                     (ppShow)
 
+import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 
-pureSchemaTests = testGroup "schema decode tests"
+import qualified Capnp.Capnp.Schema as Raw
+
+pureSchemaTests = testGroup "Tests for generated .Pure modules."
+    [ decodeTests
+    , propTests
+    ]
+
+decodeTests = testGroup "schema decode tests"
     [ decodeTests "CodeGeneratorRequest"
         [ ( [here|
                 ( capnpVersion = (major = 0, minor = 6, micro = 1)
@@ -330,3 +353,29 @@ pureSchemaTests = testGroup "schema decode tests"
         when (actual /= expected) $ error $
             "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
     schemaText = [there|tests/data/schema.capnp|]
+
+propTests = testGroup "check that cerialize and decerialize are inverses."
+    [ testProperty "...for CapnpVersion" prop_cerializeDecerializeInverses
+    ]
+
+instance Arbitrary CapnpVersion where
+    arbitrary = CapnpVersion
+        <$> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+
+prop_cerializeDecerializeInverses :: CapnpVersion -> Property
+prop_cerializeDecerializeInverses expected = propertyIO $ do
+    actual <- evalLimitT maxBound $ do
+        -- TODO: add some helpers for all this.
+        msg <- M.newMessage
+        cerialOut <- cerialize msg expected
+        setRoot cerialOut
+        constMsg <- M.freeze msg
+        root <- U.rootPtr constMsg
+        cerialIn <- fromStruct root
+        decerialize cerialIn
+    assertEqual
+        ("decerialize (cerialize " ++ show expected ++ ") == " ++ show actual)
+        expected
+        actual
