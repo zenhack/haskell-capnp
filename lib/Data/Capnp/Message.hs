@@ -77,11 +77,15 @@ class Monad m => Message m msg where
     toByteString :: Segment msg -> m ByteString
 
 -- | The 'Mutable' type class relates mutable and immutable versions of a type.
-class PrimMonad m => Mutable m mut const where
+class Mutable a where
+    type Scope a
+    type Frozen a
+
     -- | Convert an immutable value to a mutable one.
-    thaw :: const -> m mut
+    thaw :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
+
     -- | Convert a mutable value to an immutable one.
-    freeze :: mut -> m const
+    freeze :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
 
 -- | @'getSegment' message index@ fetches the given segment in the message.
 -- It throws a @BoundsError@ if the address is out of bounds.
@@ -289,7 +293,10 @@ alloc msg (WordCount size) = do
 newMessage :: WriteCtx m s => m (MutMsg s)
 newMessage = thaw $ ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
 
-instance WriteCtx m s => Mutable m (Segment (MutMsg s)) (Segment ConstMsg) where
+instance Mutable (Segment (MutMsg s)) where
+    type Scope (Segment (MutMsg s)) = s
+    type Frozen (Segment (MutMsg s)) = Segment ConstMsg
+
     thaw (ConstSegment vec) = do
         mvec <- SV.thaw vec
         pure MutSegment
@@ -303,7 +310,10 @@ instance WriteCtx m s => Mutable m (Segment (MutMsg s)) (Segment ConstMsg) where
         ConstSegment <$> SV.freeze mutSegVec
 
 
-instance WriteCtx m s => Mutable m (MutMsg s) ConstMsg where
+instance Mutable (MutMsg s) where
+    type Scope (MutMsg s) = s
+    type Frozen (MutMsg s) = ConstMsg
+
     thaw (ConstMsg vec) =
         MutMsg <$> (V.mapM thaw vec >>= V.thaw)
     freeze (MutMsg mvec) = do

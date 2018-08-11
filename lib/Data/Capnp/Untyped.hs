@@ -7,6 +7,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-|
 Module: Data.Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.
@@ -121,7 +122,9 @@ data Struct msg
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
-instance M.Mutable m mmsg cmsg => M.Mutable m (Ptr mmsg) (Ptr cmsg) where
+instance M.Mutable msg => M.Mutable (Ptr msg) where
+    type Scope (Ptr msg) = M.Scope msg
+    type Frozen (Ptr msg) = Ptr (M.Frozen msg)
     thaw (PtrCap cmsg n) = do
         mmsg <- M.thaw cmsg
         pure $ PtrCap mmsg n
@@ -132,7 +135,9 @@ instance M.Mutable m mmsg cmsg => M.Mutable m (Ptr mmsg) (Ptr cmsg) where
         pure $ PtrCap cmsg n
     freeze (PtrList l) = PtrList <$> M.freeze l
     freeze (PtrStruct s) = PtrStruct <$> M.freeze s
-instance M.Mutable m mmsg cmsg => M.Mutable m (List mmsg) (List cmsg) where
+instance M.Mutable msg => M.Mutable (List msg) where
+    type Scope (List msg) = M.Scope msg
+    type Frozen (List msg) = List (M.Frozen msg)
     thaw (List0 l)      = List0 <$> M.thaw l
     thaw (List1 l)      = List1 <$> M.thaw l
     thaw (List8 l)      = List8 <$> M.thaw l
@@ -149,51 +154,78 @@ instance M.Mutable m mmsg cmsg => M.Mutable m (List mmsg) (List cmsg) where
     freeze (List64 l)     = List64 <$> M.freeze l
     freeze (ListPtr l)    = ListPtr <$> M.freeze l
     freeze (ListStruct l) = ListStruct <$> M.freeze l
-instance M.Mutable m mmsg cmsg => M.Mutable m (NormalList mmsg) (NormalList cmsg) where
+instance M.Mutable msg => M.Mutable (NormalList msg) where
+    type Scope (NormalList msg) = M.Scope msg
+    type Frozen (NormalList msg) = NormalList (M.Frozen msg)
     thaw NormalList{..} = do
         mmsg <- M.thaw nMsg
         pure NormalList { nMsg = mmsg, .. }
     freeze NormalList{..} = do
         cmsg <- M.freeze nMsg
         pure NormalList { nMsg = cmsg, .. }
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg ()) (ListOf cmsg ()) where
+instance M.Mutable msg => M.Mutable (ListOf msg ()) where
+    type Scope (ListOf msg ()) = M.Scope msg
+    type Frozen (ListOf msg ()) = ListOf (M.Frozen msg) ()
     thaw (ListOfVoid cmsg n) = do
         mmsg <- M.thaw cmsg
         pure $ ListOfVoid mmsg n
     freeze (ListOfVoid mmsg n) = do
         cmsg <- M.freeze mmsg
         pure $ ListOfVoid cmsg n
--- Annoyingly, we can't just have an instance @Mutable m (ListOf mmsg a) (ListOf cmsg a)@,
+
+-- Annoyingly, we can't just have an instance @Mutable (ListOf msg a)@
 -- because that would require that the implementation to be valid for e.g.
 -- @Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct mmsg))@ (note that the type
 -- parameter for 'Struct' does not change). So, instead, we define a separate instance for
--- each possible parameter type:
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Bool) (ListOf cmsg Bool) where
+-- each possible parameter type.
+--
+-- TODO: generate this automatically.
+instance M.Mutable msg => M.Mutable (ListOf msg Bool) where
+    type Scope (ListOf msg Bool) = M.Scope msg
+    type Frozen (ListOf msg Bool) = ListOf (M.Frozen msg) Bool
     thaw (ListOfBool msg) = ListOfBool <$> M.thaw msg
     freeze (ListOfBool msg) = ListOfBool <$> M.freeze msg
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word8) (ListOf cmsg Word8) where
+instance M.Mutable msg => M.Mutable (ListOf msg Word8) where
+    type Scope (ListOf msg Word8) = M.Scope msg
+    type Frozen (ListOf msg Word8) = ListOf (M.Frozen msg) Word8
     thaw (ListOfWord8 msg) = ListOfWord8 <$> M.thaw msg
     freeze (ListOfWord8 msg) = ListOfWord8 <$> M.freeze msg
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word16) (ListOf cmsg Word16) where
+instance M.Mutable msg => M.Mutable (ListOf msg Word16) where
+    type Scope (ListOf msg Word16) = M.Scope msg
+    type Frozen (ListOf msg Word16) = ListOf (M.Frozen msg) Word16
     thaw (ListOfWord16 msg) = ListOfWord16 <$> M.thaw msg
     freeze (ListOfWord16 msg) = ListOfWord16 <$> M.freeze msg
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word32) (ListOf cmsg Word32) where
+instance M.Mutable msg => M.Mutable (ListOf msg Word32) where
+    type Scope (ListOf msg Word32) = M.Scope msg
+    type Frozen (ListOf msg Word32) = ListOf (M.Frozen msg) Word32
     thaw (ListOfWord32 msg) = ListOfWord32 <$> M.thaw msg
     freeze (ListOfWord32 msg) = ListOfWord32 <$> M.freeze msg
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg Word64) (ListOf cmsg Word64) where
+instance M.Mutable msg => M.Mutable (ListOf msg Word64) where
+    type Scope (ListOf msg Word64) = M.Scope msg
+    type Frozen (ListOf msg Word64) = ListOf (M.Frozen msg) Word64
     thaw (ListOfWord64 msg) = ListOfWord64 <$> M.thaw msg
     freeze (ListOfWord64 msg) = ListOfWord64 <$> M.freeze msg
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct cmsg)) where
+instance M.Mutable msg => M.Mutable (ListOf msg (Struct msg)) where
+    type Scope (ListOf msg (Struct msg)) = M.Scope msg
+    type Frozen (ListOf msg (Struct msg)) = ListOf (M.Frozen msg) (Struct (M.Frozen msg))
     thaw (ListOfStruct ctag size) = do
         mtag <- M.thaw ctag
         pure $ ListOfStruct mtag size
     freeze (ListOfStruct mtag size) = do
         ctag <- M.freeze mtag
         pure $ ListOfStruct ctag size
-instance M.Mutable m mmsg cmsg => M.Mutable m (ListOf mmsg (Maybe (Ptr mmsg))) (ListOf cmsg (Maybe (Ptr cmsg))) where
+
+instance M.Mutable msg => M.Mutable (ListOf msg (Maybe (Ptr msg))) where
+    type Scope (ListOf msg (Maybe (Ptr msg))) = M.Scope msg
+    type Frozen (ListOf msg (Maybe (Ptr msg))) = ListOf (M.Frozen msg) (Maybe (Ptr (M.Frozen msg)))
+
     thaw (ListOfPtr msg) = ListOfPtr <$> M.thaw msg
     freeze (ListOfPtr msg) = ListOfPtr <$> M.freeze msg
-instance M.Mutable m mmsg cmsg => M.Mutable m (Struct mmsg) (Struct cmsg) where
+
+instance M.Mutable msg => M.Mutable (Struct msg) where
+    type Scope (Struct msg) = M.Scope msg
+    type Frozen (Struct msg) = Struct (M.Frozen msg)
+
     thaw (Struct cmsg addr dataSz ptrSz) = do
         mmsg <- M.thaw cmsg
         pure $ Struct mmsg addr dataSz ptrSz
