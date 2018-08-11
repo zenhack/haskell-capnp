@@ -107,6 +107,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
     , ""
     , "import qualified Data.Vector as V"
+    , "import qualified Data.ByteString as BS"
     , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , vcat $ map (fmtImport Pure) modImports
@@ -274,30 +275,40 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 [ " val -> ", fmtName Pure thisMod variantName, " <$> C'.decerialize val" ]
     fmtCerializeVariant isUnion Variant{variantName, variantParams} =
         fmtName Pure thisMod variantName <>
-        let setterName = fmtName Raw thisMod (prefixName "set_" variantName)
-            setTag = if isUnion
-                then "raw <- " <> setterName <> " raw"
-                else ""
+        let accessorName prefix = fmtName Raw thisMod (prefixName prefix variantName)
+            setterName = accessorName "set_"
         in case variantParams of
             Unnamed VoidType VoidField ->
                 hcat [ " -> ", setterName, " raw" ]
             Unnamed _ (DataField _ _) ->
                 hcat [ " field_ -> ", setterName, " raw field_"]
-            Unnamed _ _ ->
-                " _ -> pure ()" -- TODO
+            Unnamed (WordType _) VoidField ->
+                -- TODO: this is the unknown variant. We should find a better
+                -- way to represent this; the structure of the IR here is sloppy
+                -- work. For now, we just skip this; we need to generate the
+                -- setters first.
+                " _ -> pure ()"
+            Unnamed _ fieldLocType -> vcat
+                [ " field_ -> do"
+                , indent (fmtUseAccessors accessorName "field_" fieldLocType)
+                ]
             Record fields -> vcat
                 [ "{..} -> do"
                 , indent $ vcat
-                    [ setTag
+                    [ if isUnion
+                        then "raw <- " <> setterName <> " raw"
+                        else ""
                     , vcat (map (fmtCerializeField variantName) fields)
                     ]
                 ]
     fmtCerializeField variantName Field{fieldName,fieldLocType} =
         let accessorName prefix = fmtName Raw thisMod $ prefixName prefix (subName variantName fieldName)
-            setterName = accessorName "set_"
+        in fmtUseAccessors accessorName fieldName fieldLocType
+    fmtUseAccessors accessorName fieldVarName fieldLocType =
+        let setterName = accessorName "set_"
             getterName = accessorName "get_"
             newName = accessorName "new_"
-            fieldNameText = PP.textStrict fieldName
+            fieldNameText = PP.textStrict fieldVarName
         in case fieldLocType of
             DataField _ _ -> hcat [ setterName, " raw ", fieldNameText ]
             VoidField -> hcat [ setterName, " raw" ]
