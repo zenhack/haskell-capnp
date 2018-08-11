@@ -50,7 +50,7 @@ encodeTests = testGroup "schema encode tests"
     [ testCase
         ( "Node.Parameter"
         , Node'Parameter { name = "Bob" }
-        , [here|( name = "Bob" )|]
+        , "(name = \"Bob\")\n"
         )
     ]
   where
