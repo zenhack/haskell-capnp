@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedLists       #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE QuasiQuotes           #-}
 module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
@@ -22,7 +23,7 @@ import Tests.Util
 
 import Control.Monad                        (when)
 import Control.Monad.Primitive              (RealWorld)
-import Test.Framework                       (testGroup)
+import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit.Lang                      (assertEqual)
 import Test.QuickCheck                      (Arbitrary(..), Property, oneof)
@@ -34,10 +35,57 @@ import Text.Show.Pretty                     (ppShow)
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy    as LBS
+
+schemaText = [there|tests/data/schema.capnp|]
+
 pureSchemaTests = testGroup "Tests for generated .Pure modules."
     [ decodeTests
+    , encodeTests
     , propTests
     ]
+
+encodeTests = testGroup "schema encode tests"
+    [ testCase
+        ( "Node.Parameter"
+        , Node'Parameter { name = "Bob" }
+        , [here|( name = "Bob" )|]
+        )
+    ]
+  where
+    testCase ::
+        -- TODO: the size of this context is *stupid*
+        ( Show a
+        , Eq a
+        , Cerialize a
+        , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
+        , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
+        , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
+        ) => (String, a, String) -> Test
+    testCase (name, expectedValue, expectedText) =
+        assertionsToTest ("Check cerialize against capnp decode (" ++ name ++ ")") $ pure $ do
+            msg <- evalLimitT maxBound $ do
+                -- TODO: add some helpers for all this.
+                msg <- M.newMessage
+                cerialOut <- cerialize msg expectedValue
+                setRoot cerialOut
+                M.freeze msg
+            builder <- M.encode msg
+            actualText <- capnpDecode
+                (LBS.toStrict $ BB.toLazyByteString builder)
+                (MsgMetaData schemaText name)
+            assertEqual ("Encode " ++ show expectedValue)
+                expectedText
+                actualText
+            actualValue <- evalLimitT maxBound $ do
+                root <- U.rootPtr msg
+                cerialIn <- fromStruct root
+                decerialize cerialIn
+            assertEqual
+                ("decerialize (cerialize " ++ show expectedValue ++ ") == " ++ show actualValue)
+                expectedValue
+                actualValue
 
 decodeTests = testGroup "schema decode tests"
     [ decodeTests "CodeGeneratorRequest"
@@ -351,7 +399,7 @@ decodeTests = testGroup "schema decode tests"
         actual <- evalLimitT 128 $ U.rootPtr msg >>= fromStruct
         when (actual /= expected) $ error $
             "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
-    schemaText = [there|tests/data/schema.capnp|]
+
 
 propTests = testGroup "check that cerialize and decerialize are inverses."
     [ propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
