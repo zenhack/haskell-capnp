@@ -156,7 +156,7 @@ instance C'.Cerialize CapDescriptor where
             CapDescriptor'thirdPartyHosted arg_ -> do
                 field_ <- Capnp.ById.Xb312981b2552a250.new_CapDescriptor'thirdPartyHosted raw
                 C'.marshalInto field_ arg_
-            CapDescriptor'unknown' _ -> pure ()
+            CapDescriptor'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'unknown' raw arg_
 data Disembargo
      = Disembargo
         {target :: MessageTarget,
@@ -338,7 +338,7 @@ instance C'.Cerialize Message where
             Message'disembargo arg_ -> do
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Message'disembargo raw
                 C'.marshalInto field_ arg_
-            Message'unknown' _ -> pure ()
+            Message'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Message'unknown' raw arg_
 data MessageTarget
      = MessageTarget'importedCap (Word32) |
     MessageTarget'promisedAnswer (PromisedAnswer) |
@@ -363,7 +363,7 @@ instance C'.Cerialize MessageTarget where
             MessageTarget'promisedAnswer arg_ -> do
                 field_ <- Capnp.ById.Xb312981b2552a250.new_MessageTarget'promisedAnswer raw
                 C'.marshalInto field_ arg_
-            MessageTarget'unknown' _ -> pure ()
+            MessageTarget'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'unknown' raw arg_
 data Payload
      = Payload
         {content :: Maybe (PU'.PtrType),
@@ -554,7 +554,7 @@ instance C'.Cerialize Call'sendResultsTo where
             Call'sendResultsTo'yourself -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'yourself raw
             Call'sendResultsTo'thirdParty arg_ -> do
                 pure ()
-            Call'sendResultsTo'unknown' _ -> pure ()
+            Call'sendResultsTo'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'unknown' raw arg_
 data Disembargo'context
      = Disembargo'context'senderLoopback (Word32) |
     Disembargo'context'receiverLoopback (Word32) |
@@ -583,7 +583,7 @@ instance C'.Cerialize Disembargo'context where
             Disembargo'context'receiverLoopback arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'receiverLoopback raw arg_
             Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
             Disembargo'context'provide arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw arg_
-            Disembargo'context'unknown' _ -> pure ()
+            Disembargo'context'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'unknown' raw arg_
 data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField (Word16) |
@@ -606,7 +606,7 @@ instance C'.Cerialize PromisedAnswer'Op where
         case value of
             PromisedAnswer'Op'noop -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw
             PromisedAnswer'Op'getPointerField arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw arg_
-            PromisedAnswer'Op'unknown' _ -> pure ()
+            PromisedAnswer'Op'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'unknown' raw arg_
 data Resolve'
      = Resolve'cap (CapDescriptor) |
     Resolve'exception (Exception) |
@@ -633,7 +633,7 @@ instance C'.Cerialize Resolve' where
             Resolve'exception arg_ -> do
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Resolve'exception raw
                 C'.marshalInto field_ arg_
-            Resolve'unknown' _ -> pure ()
+            Resolve'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Resolve'unknown' raw arg_
 data Return'
      = Return'results (Payload) |
     Return'exception (Exception) |
@@ -673,4 +673,4 @@ instance C'.Cerialize Return' where
             Return'takeFromOtherQuestion arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'takeFromOtherQuestion raw arg_
             Return'acceptFromThirdParty arg_ -> do
                 pure ()
-            Return'unknown' _ -> pure ()
+            Return'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'unknown' raw arg_

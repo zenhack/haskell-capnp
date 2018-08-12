@@ -6,6 +6,7 @@
 module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
+import Data.Word
 
 import Codec.Capnp
     ( Allocate(..)
@@ -26,7 +27,8 @@ import Control.Monad.Primitive              (RealWorld)
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit.Lang                      (assertEqual)
-import Test.QuickCheck                      (Arbitrary(..), Property, oneof)
+import Test.QuickCheck
+    (Arbitrary(..), Gen, Property, oneof)
 import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO                   (propertyIO)
 import Text.Heredoc                         (here, there)
@@ -426,6 +428,11 @@ instance Arbitrary Brand'Binding where
         , Brand'Binding'type_ <$> arbitrary
         ]
 
+-- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
+-- by the schema. The parameter is the number of tags assigned by the schema.
+arbitraryTag :: Word16 -> Gen Word16
+arbitraryTag numTags = max numTags <$> arbitrary
+
 instance Arbitrary Type where
     arbitrary = oneof
         [ pure Type'void
@@ -456,6 +463,7 @@ instance Arbitrary Type where
             , Type'anyPointer'implicitMethodParameter
                 <$> arbitrary
             ]
+        , Type'unknown' <$> arbitraryTag 21
         ]
 
 prop_cerializeDecerializeInverses ::

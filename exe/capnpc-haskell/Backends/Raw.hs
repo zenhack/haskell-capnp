@@ -371,12 +371,29 @@ fmtNew thisMod accessorName typeCon fieldLocType =
 -- Generate setters for union variants, plus new_* functions where the argument
 -- is a pointer type.
 fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
-fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
-    let accessorName prefix = prefix <> fmtName thisMod variantName
-        setName = "set_" <> fmtName thisMod variantName
-        parentTypeCon = fmtName thisMod parentType
-        parentDataCon = parentTypeCon <> "_newtype_"
-    in case variantParams of
+fmtUnionSetter thisMod parentType tagLoc Variant{..} = go variantTag
+  where
+    accessorName prefix = prefix <> fmtName thisMod variantName
+    setName = "set_" <> fmtName thisMod variantName
+    parentTypeCon = fmtName thisMod parentType
+    parentDataCon = parentTypeCon <> "_newtype_"
+    fmtSetTag = fmtSetWordField "struct"
+        (hcat
+            [ "("
+            , case variantTag of
+                Just tagValue ->
+                    fromString (show tagValue)
+                Nothing ->
+                    "tagValue"
+            , " :: Word16)"
+            ])
+        tagLoc
+    go Nothing = vcat
+        -- this is the unknown' variant; we just accept the tag as an argument.
+        [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> Word16 -> m ()" ]
+        , hcat [ setName, "(", parentDataCon, " struct) tagValue = ", fmtSetTag ]
+        ]
+    go (Just _) = case variantParams of
         Record _ ->
             -- Variant is a group; we return a reference to the group so the user can
             -- modify it.
@@ -436,11 +453,6 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                 , "fromStruct struct"
                 ]
             ]
-   where
-     fmtSetTag = fmtSetWordField "struct" ("(" <> fromString (show tagValue) <> " :: Word16)") tagLoc
-fmtUnionSetter _ _ _ Variant{variantTag=Nothing} =
-    -- This happens for the unknown' variants; just ignore them:
-    ""
 
 fmtDecl :: Module -> (Name, Decl) -> PP.Doc
 fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d

@@ -253,6 +253,8 @@ new_CapDescriptor'thirdPartyHosted struct = do
     result <- C'.new (U'.message struct)
     set_CapDescriptor'thirdPartyHosted struct result
     pure result
+set_CapDescriptor'unknown' :: U'.RWCtx m s => CapDescriptor (M'.MutMsg s) -> Word16 -> m ()
+set_CapDescriptor'unknown'(CapDescriptor_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (CapDescriptor' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -607,6 +609,8 @@ new_Message'disembargo struct = do
     result <- C'.new (U'.message struct)
     set_Message'disembargo struct result
     pure result
+set_Message'unknown' :: U'.RWCtx m s => Message (M'.MutMsg s) -> Word16 -> m ()
+set_Message'unknown'(Message_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (Message' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -671,6 +675,8 @@ new_MessageTarget'promisedAnswer struct = do
     result <- C'.new (U'.message struct)
     set_MessageTarget'promisedAnswer struct result
     pure result
+set_MessageTarget'unknown' :: U'.RWCtx m s => MessageTarget (M'.MutMsg s) -> Word16 -> m ()
+set_MessageTarget'unknown'(MessageTarget_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 32 0
 instance C'.FromStruct msg (MessageTarget' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
@@ -1006,6 +1012,8 @@ set_Call'sendResultsTo'thirdParty :: U'.RWCtx m s => Call'sendResultsTo (M'.MutM
 set_Call'sendResultsTo'thirdParty(Call'sendResultsTo_newtype_ struct) value = do
     H'.setWordField struct (2 :: Word16) 0 48 0
     U'.setPtr (C'.toPtr value) 2 struct
+set_Call'sendResultsTo'unknown' :: U'.RWCtx m s => Call'sendResultsTo (M'.MutMsg s) -> Word16 -> m ()
+set_Call'sendResultsTo'unknown'(Call'sendResultsTo_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 48 0
 instance C'.FromStruct msg (Call'sendResultsTo' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 48 0
@@ -1062,6 +1070,8 @@ set_Disembargo'context'provide :: U'.RWCtx m s => Disembargo'context (M'.MutMsg 
 set_Disembargo'context'provide (Disembargo'context_newtype_ struct) value = do
     H'.setWordField struct (3 :: Word16) 0 32 0
     H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+set_Disembargo'context'unknown' :: U'.RWCtx m s => Disembargo'context (M'.MutMsg s) -> Word16 -> m ()
+set_Disembargo'context'unknown'(Disembargo'context_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 32 0
 instance C'.FromStruct msg (Disembargo'context' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
@@ -1141,6 +1151,8 @@ set_PromisedAnswer'Op'getPointerField :: U'.RWCtx m s => PromisedAnswer'Op (M'.M
 set_PromisedAnswer'Op'getPointerField (PromisedAnswer'Op_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 0 0
     H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 16 0
+set_PromisedAnswer'Op'unknown' :: U'.RWCtx m s => PromisedAnswer'Op (M'.MutMsg s) -> Word16 -> m ()
+set_PromisedAnswer'Op'unknown'(PromisedAnswer'Op_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (PromisedAnswer'Op' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -1198,6 +1210,8 @@ new_Resolve'exception struct = do
     result <- C'.new (U'.message struct)
     set_Resolve'exception struct result
     pure result
+set_Resolve'unknown' :: U'.RWCtx m s => Resolve' (M'.MutMsg s) -> Word16 -> m ()
+set_Resolve'unknown'(Resolve'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 32 0
 instance C'.FromStruct msg (Resolve'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
@@ -1271,6 +1285,8 @@ set_Return'acceptFromThirdParty :: U'.RWCtx m s => Return' (M'.MutMsg s) -> (May
 set_Return'acceptFromThirdParty(Return'_newtype_ struct) value = do
     H'.setWordField struct (5 :: Word16) 0 48 0
     U'.setPtr (C'.toPtr value) 0 struct
+set_Return'unknown' :: U'.RWCtx m s => Return' (M'.MutMsg s) -> Word16 -> m ()
+set_Return'unknown'(Return'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 48 0
 instance C'.FromStruct msg (Return'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 48 0

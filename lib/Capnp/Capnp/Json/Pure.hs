@@ -85,7 +85,7 @@ instance C'.Cerialize JsonValue where
             JsonValue'call arg_ -> do
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'call raw
                 C'.marshalInto field_ arg_
-            JsonValue'unknown' _ -> pure ()
+            JsonValue'unknown' arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'unknown' raw arg_
 data JsonValue'Call
      = JsonValue'Call
         {function :: Text,

@@ -108,6 +108,8 @@ new_JsonValue'call struct = do
     result <- C'.new (U'.message struct)
     set_JsonValue'call struct result
     pure result
+set_JsonValue'unknown' :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> Word16 -> m ()
+set_JsonValue'unknown'(JsonValue_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (JsonValue' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0

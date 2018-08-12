@@ -744,6 +744,8 @@ set_Type'anyPointer :: U'.RWCtx m s => Type (M'.MutMsg s) -> m (Type'anyPointer'
 set_Type'anyPointer (Type_newtype_ struct) = do
     H'.setWordField struct (18 :: Word16) 0 0 0
     pure $ Type'anyPointer'group'_newtype_ struct
+set_Type'unknown' :: U'.RWCtx m s => Type (M'.MutMsg s) -> Word16 -> m ()
+set_Type'unknown'(Type_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 newtype Type'list'group' msg = Type'list'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'_newtype_
@@ -1093,6 +1095,8 @@ set_Value'anyPointer :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M
 set_Value'anyPointer(Value_newtype_ struct) value = do
     H'.setWordField struct (18 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+set_Value'unknown' :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word16 -> m ()
+set_Value'unknown'(Value_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (Value' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -1160,6 +1164,8 @@ new_Brand'Binding'type_ struct = do
     result <- C'.new (U'.message struct)
     set_Brand'Binding'type_ struct result
     pure result
+set_Brand'Binding'unknown' :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> Word16 -> m ()
+set_Brand'Binding'unknown'(Brand'Binding_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (Brand'Binding' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -1244,6 +1250,8 @@ new_Brand'Scope'bind len struct = do
     pure result
 set_Brand'Scope'inherit :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> m ()
 set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = H'.setWordField struct (1 :: Word16) 1 0 0
+set_Brand'Scope'unknown' :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> Word16 -> m ()
+set_Brand'Scope'unknown'(Brand'Scope'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 instance C'.FromStruct msg (Brand'Scope'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 0 0
@@ -1390,6 +1398,8 @@ set_Field'group :: U'.RWCtx m s => Field' (M'.MutMsg s) -> m (Field'group'group'
 set_Field'group (Field'_newtype_ struct) = do
     H'.setWordField struct (1 :: Word16) 1 0 0
     pure $ Field'group'group'_newtype_ struct
+set_Field'unknown' :: U'.RWCtx m s => Field' (M'.MutMsg s) -> Word16 -> m ()
+set_Field'unknown'(Field'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'_newtype_
@@ -1529,6 +1539,8 @@ set_Field'ordinal'explicit :: U'.RWCtx m s => Field'ordinal (M'.MutMsg s) -> Wor
 set_Field'ordinal'explicit (Field'ordinal_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 1 16 0
     H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 32 0
+set_Field'ordinal'unknown' :: U'.RWCtx m s => Field'ordinal (M'.MutMsg s) -> Word16 -> m ()
+set_Field'ordinal'unknown'(Field'ordinal_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 16 0
 instance C'.FromStruct msg (Field'ordinal' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 16 0
@@ -1594,6 +1606,8 @@ set_Node'annotation :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'annotation
 set_Node'annotation (Node'_newtype_ struct) = do
     H'.setWordField struct (5 :: Word16) 1 32 0
     pure $ Node'annotation'group'_newtype_ struct
+set_Node'unknown' :: U'.RWCtx m s => Node' (M'.MutMsg s) -> Word16 -> m ()
+set_Node'unknown'(Node'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 32 0
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'_newtype_
@@ -2049,6 +2063,8 @@ set_Type'anyPointer'implicitMethodParameter :: U'.RWCtx m s => Type'anyPointer (
 set_Type'anyPointer'implicitMethodParameter (Type'anyPointer_newtype_ struct) = do
     H'.setWordField struct (2 :: Word16) 1 0 0
     pure $ Type'anyPointer'implicitMethodParameter'group'_newtype_ struct
+set_Type'anyPointer'unknown' :: U'.RWCtx m s => Type'anyPointer (M'.MutMsg s) -> Word16 -> m ()
+set_Type'anyPointer'unknown'(Type'anyPointer_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'_newtype_
@@ -2193,6 +2209,8 @@ set_Type'anyPointer'unconstrained'list :: U'.RWCtx m s => Type'anyPointer'uncons
 set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (2 :: Word16) 1 16 0
 set_Type'anyPointer'unconstrained'capability :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> m ()
 set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained_newtype_ struct) = H'.setWordField struct (3 :: Word16) 1 16 0
+set_Type'anyPointer'unconstrained'unknown' :: U'.RWCtx m s => Type'anyPointer'unconstrained (M'.MutMsg s) -> Word16 -> m ()
+set_Type'anyPointer'unconstrained'unknown'(Type'anyPointer'unconstrained_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 16 0
 instance C'.FromStruct msg (Type'anyPointer'unconstrained' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 16 0

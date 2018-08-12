@@ -443,7 +443,7 @@ instance C'.Cerialize Type where
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer raw
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw
                 C'.marshalInto field_ union'
-            Type'unknown' _ -> pure ()
+            Type'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'unknown' raw arg_
 data Value
      = Value'void |
     Value'bool (Bool) |
@@ -524,7 +524,7 @@ instance C'.Cerialize Value where
             Value'interface -> Capnp.ById.Xa93fc509624c72d9.set_Value'interface raw
             Value'anyPointer arg_ -> do
                 pure ()
-            Value'unknown' _ -> pure ()
+            Value'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'unknown' raw arg_
 data Brand'Binding
      = Brand'Binding'unbound |
     Brand'Binding'type_ (Type) |
@@ -549,7 +549,7 @@ instance C'.Cerialize Brand'Binding where
             Brand'Binding'type_ arg_ -> do
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Brand'Binding'type_ raw
                 C'.marshalInto field_ arg_
-            Brand'Binding'unknown' _ -> pure ()
+            Brand'Binding'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Binding'unknown' raw arg_
 data Brand'Scope
      = Brand'Scope
         {scopeId :: Word64,
@@ -599,7 +599,7 @@ instance C'.Cerialize Brand'Scope' where
                     elt <- C'.index i field_
                     C'.marshalInto elt (arg_ V.! i)
             Brand'Scope'inherit -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw
-            Brand'Scope'unknown' _ -> pure ()
+            Brand'Scope'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'unknown' raw arg_
 data CodeGeneratorRequest'RequestedFile
      = CodeGeneratorRequest'RequestedFile
         {id :: Word64,
@@ -692,7 +692,7 @@ instance C'.Cerialize Field' where
             Field'group{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Field'group raw
                 Capnp.ById.Xa93fc509624c72d9.set_Field'group'typeId raw typeId
-            Field'unknown' _ -> pure ()
+            Field'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'unknown' raw arg_
 field'noDiscriminant :: Word16
 field'noDiscriminant = Capnp.ById.Xa93fc509624c72d9.field'noDiscriminant
 data Field'ordinal
@@ -717,7 +717,7 @@ instance C'.Cerialize Field'ordinal where
         case value of
             Field'ordinal'implicit -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw
             Field'ordinal'explicit arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw arg_
-            Field'ordinal'unknown' _ -> pure ()
+            Field'ordinal'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'unknown' raw arg_
 data Node'
      = Node'file |
     Node'struct
@@ -851,7 +851,7 @@ instance C'.Cerialize Node' where
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsMethod raw targetsMethod
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsParam raw targetsParam
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsAnnotation raw targetsAnnotation
-            Node'unknown' _ -> pure ()
+            Node'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Node'unknown' raw arg_
 data Node'NestedNode
      = Node'NestedNode
         {name :: Text,
@@ -934,7 +934,7 @@ instance C'.Cerialize Type'anyPointer where
             Type'anyPointer'implicitMethodParameter{..} -> do
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter raw
                 Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter'parameterIndex raw parameterIndex
-            Type'anyPointer'unknown' _ -> pure ()
+            Type'anyPointer'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unknown' raw arg_
 data Type'anyPointer'unconstrained
      = Type'anyPointer'unconstrained'anyKind |
     Type'anyPointer'unconstrained'struct |
@@ -963,4 +963,4 @@ instance C'.Cerialize Type'anyPointer'unconstrained where
             Type'anyPointer'unconstrained'struct -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'struct raw
             Type'anyPointer'unconstrained'list -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'list raw
             Type'anyPointer'unconstrained'capability -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw
-            Type'anyPointer'unconstrained'unknown' _ -> pure ()
+            Type'anyPointer'unconstrained'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'unknown' raw arg_

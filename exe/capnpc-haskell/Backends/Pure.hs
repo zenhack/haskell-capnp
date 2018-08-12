@@ -287,9 +287,8 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
             Unnamed (WordType _) VoidField ->
                 -- TODO: this is the unknown variant. We should find a better
                 -- way to represent this; the structure of the IR here is sloppy
-                -- work. For now, we just skip this; we need to generate the
-                -- setters first.
-                " _ -> pure ()"
+                -- work.
+                hcat [ " arg_ -> ", setterName, " raw arg_" ]
             Unnamed _ fieldLocType -> vcat
                 [ " arg_ -> do"
                 , indent (fmtUseAccessors accessorName "arg_" fieldLocType)
