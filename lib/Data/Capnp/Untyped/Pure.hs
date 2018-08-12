@@ -39,12 +39,14 @@ module Data.Capnp.Untyped.Pure
 
 import Prelude hiding (length)
 
+import Control.Monad (forM_)
 import Data.Word
 
 import Internal.Gen.Instances ()
 
-import Codec.Capnp                   (Decerialize(..), expected)
-import Control.Monad.Catch           (MonadThrow)
+import Codec.Capnp
+    (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..), expected)
+import Control.Monad.Catch           (MonadThrow(..))
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
 import Data.Primitive.Array          (Array)
@@ -52,6 +54,7 @@ import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
 import qualified Data.ByteString    as BS
+import qualified Data.Capnp.Errors  as E
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector        as V
@@ -121,6 +124,23 @@ instance Decerialize Struct where
         <$> (Slice <$> decerializeListOfWord (U.dataSection struct))
         <*> (Slice <$> decerializeListOf     (U.ptrSection struct))
 
+instance Marshal Struct where
+    marshalInto raw (Struct (Slice dataSec) (Slice ptrSec)) = do
+        forM_ [0..V.length dataSec - 1] $ \i ->
+            U.setData (dataSec V.! i) i raw
+        forM_ [0..V.length ptrSec - 1] $ \i -> do
+            ptr <- cerialize (U.message raw) (ptrSec V.! i)
+            U.setPtr ptr i raw
+
+instance Cerialize s Struct where
+    cerialize msg struct@(Struct (Slice dataSec) (Slice ptrSec)) = do
+        raw <- U.allocStruct
+            msg
+            (fromIntegral $ V.length dataSec)
+            (fromIntegral $ V.length ptrSec)
+        marshalInto raw struct
+        pure raw
+
 instance Decerialize (Maybe PtrType) where
     type Cerial msg (Maybe PtrType) = Maybe (U.Ptr msg)
 
@@ -129,6 +149,20 @@ instance Decerialize (Maybe PtrType) where
         U.PtrCap _ cap     -> return (PtrCap cap)
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
+
+instance Marshal (Maybe PtrType) where
+    marshalInto Nothing Nothing = pure ()
+    marshalInto (Just (U.PtrStruct   raw)) (Just (PtrStruct struct)) = marshalInto raw struct
+    marshalInto (Just (U.PtrList     raw)) (Just (PtrList     list)) = marshalInto raw list
+    marshalInto (Just (U.PtrCap _msg raw)) (Just (PtrCap       cap)) = pure () -- TODO
+    marshalInto _ _ = throwM $ E.SchemaViolationError "Mismatched pointer types"
+
+instance Cerialize s (Maybe PtrType) where
+    cerialize _ Nothing                     = pure Nothing
+    cerialize msg (Just (PtrStruct struct)) = toPtr <$> cerialize msg struct
+    cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
+    -- TODO: when we actually support it, we need to insert the cap into the message:
+    cerialize msg (Just (PtrCap       cap)) = pure $ Just (U.PtrCap msg cap)
 
 -- Generic decerialize instances for lists. TODO: this doesn't really belong
 -- in Untyped, since this is mostly used for typed lists. maybe Basics.
@@ -164,6 +198,12 @@ instance Decerialize List' where
     decerialize (U.List64 l)     = List64' <$> decerializeListOfWord l
     decerialize (U.ListPtr l)    = ListPtr' <$> decerializeListOf l
     decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
+
+instance Marshal List' where
+    marshalInto = error "TODO"
+
+instance Cerialize s List' where
+    cerialize = error "TODO"
 
 ptrStruct :: MonadThrow f => Maybe PtrType -> f Struct
 ptrStruct Nothing              = pure def

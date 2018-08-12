@@ -24,6 +24,7 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
@@ -54,7 +55,8 @@ instance C'.Marshal Accept where
         case value of
             Accept{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Accept'questionId raw questionId
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) provision
+                Capnp.ById.Xb312981b2552a250.set_Accept'provision raw field_
                 Capnp.ById.Xb312981b2552a250.set_Accept'embargo raw embargo
 instance C'.Cerialize s Accept
 data Bootstrap
@@ -77,7 +79,8 @@ instance C'.Marshal Bootstrap where
         case value of
             Bootstrap{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Bootstrap'questionId raw questionId
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) deprecatedObjectId
+                Capnp.ById.Xb312981b2552a250.set_Bootstrap'deprecatedObjectId raw field_
 instance C'.Cerialize s Bootstrap
 data Call
      = Call
@@ -258,7 +261,8 @@ instance C'.Marshal Join where
                 Capnp.ById.Xb312981b2552a250.set_Join'questionId raw questionId
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Join'target raw
                 C'.marshalInto field_ target
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) keyPart
+                Capnp.ById.Xb312981b2552a250.set_Join'keyPart raw field_
 instance C'.Cerialize s Join
 data Message
      = Message'unimplemented (Message) |
@@ -326,12 +330,14 @@ instance C'.Marshal Message where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Message'release raw
                 C'.marshalInto field_ arg_
             Message'obsoleteSave arg_ -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) arg_
+                Capnp.ById.Xb312981b2552a250.set_Message'obsoleteSave raw field_
             Message'bootstrap arg_ -> do
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Message'bootstrap raw
                 C'.marshalInto field_ arg_
             Message'obsoleteDelete arg_ -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) arg_
+                Capnp.ById.Xb312981b2552a250.set_Message'obsoleteDelete raw field_
             Message'provide arg_ -> do
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Message'provide raw
                 C'.marshalInto field_ arg_
@@ -391,7 +397,8 @@ instance C'.Marshal Payload where
     marshalInto raw value = do
         case value of
             Payload{..} -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) content
+                Capnp.ById.Xb312981b2552a250.set_Payload'content raw field_
                 let len_ = V.length capTable
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Payload'capTable len_ raw
                 forM_ [0..len_ - 1] $ \i -> do
@@ -448,7 +455,8 @@ instance C'.Marshal Provide where
                 Capnp.ById.Xb312981b2552a250.set_Provide'questionId raw questionId
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Provide'target raw
                 C'.marshalInto field_ target
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) recipient
+                Capnp.ById.Xb312981b2552a250.set_Provide'recipient raw field_
 instance C'.Cerialize s Provide
 data Release
      = Release
@@ -540,7 +548,8 @@ instance C'.Marshal ThirdPartyCapDescriptor where
     marshalInto raw value = do
         case value of
             ThirdPartyCapDescriptor{..} -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) id
+                Capnp.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'id raw field_
                 Capnp.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'vineId raw vineId
 instance C'.Cerialize s ThirdPartyCapDescriptor
 data Call'sendResultsTo
@@ -568,7 +577,8 @@ instance C'.Marshal Call'sendResultsTo where
             Call'sendResultsTo'caller -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw
             Call'sendResultsTo'yourself -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'yourself raw
             Call'sendResultsTo'thirdParty arg_ -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) arg_
+                Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'thirdParty raw field_
             Call'sendResultsTo'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'unknown' raw arg_
 instance C'.Cerialize s Call'sendResultsTo
 data Disembargo'context
@@ -691,6 +701,7 @@ instance C'.Marshal Return' where
             Return'resultsSentElsewhere -> Capnp.ById.Xb312981b2552a250.set_Return'resultsSentElsewhere raw
             Return'takeFromOtherQuestion arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'takeFromOtherQuestion raw arg_
             Return'acceptFromThirdParty arg_ -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) arg_
+                Capnp.ById.Xb312981b2552a250.set_Return'acceptFromThirdParty raw field_
             Return'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'unknown' raw arg_
 instance C'.Cerialize s Return'

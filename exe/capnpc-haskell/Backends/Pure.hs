@@ -102,6 +102,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import Control.Monad (forM_)"
     , ""
     , "import qualified Data.Capnp.Message as M'"
+    , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
     , "import qualified Codec.Capnp as C'"
     , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
@@ -326,8 +327,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     [ hcat [ "field_ <- PH'.marshalText raw ", fieldNameText ]
                     , hcat [ setterName, " raw field_" ]
                     ]
-                PrimPtr (PrimAnyPtr _) ->
-                    "pure ()" -- TODO
+                PrimPtr (PrimAnyPtr _) -> vcat
+                    [ hcat [ "field_ <- C'.cerialize (U'.message raw) ", fieldNameText ]
+                    , hcat [ setterName, " raw field_" ]
+                    ]
                 ListOf eltType -> vcat
                     [ hcat [ "let len_ = V.length ", fieldNameText ]
                     , hcat [ "field_ <- ", newName, " len_ raw" ]

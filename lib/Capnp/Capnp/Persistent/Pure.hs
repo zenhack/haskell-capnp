@@ -24,6 +24,7 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
@@ -49,7 +50,8 @@ instance C'.Marshal Persistent'SaveParams where
     marshalInto raw value = do
         case value of
             Persistent'SaveParams{..} -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) sealFor
+                Capnp.ById.Xb8630836983feed7.set_Persistent'SaveParams'sealFor raw field_
 instance C'.Cerialize s Persistent'SaveParams
 data Persistent'SaveResults
      = Persistent'SaveResults
@@ -68,5 +70,6 @@ instance C'.Marshal Persistent'SaveResults where
     marshalInto raw value = do
         case value of
             Persistent'SaveResults{..} -> do
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) sturdyRef
+                Capnp.ById.Xb8630836983feed7.set_Persistent'SaveResults'sturdyRef raw field_
 instance C'.Cerialize s Persistent'SaveResults

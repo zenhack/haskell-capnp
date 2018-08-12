@@ -24,6 +24,7 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
@@ -80,7 +81,8 @@ instance C'.Marshal JoinResult where
             JoinResult{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'joinId raw joinId
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'succeeded raw succeeded
-                pure ()
+                field_ <- C'.cerialize (U'.message raw) cap
+                Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'cap raw field_
 instance C'.Cerialize s JoinResult
 data ProvisionId
      = ProvisionId

@@ -1,5 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies     #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
 {- |
 Module: Data.Capnp.GenHelpers.Pure
 Description: Misc. helpers for generated code.
@@ -12,10 +14,7 @@ defines helpers used by the low-level api.
 -}
 module Data.Capnp.GenHelpers.Pure where
 
-import Data.Text.Encoding (encodeUtf8)
-
-import qualified Data.ByteString as BS
-import qualified Data.Text       as T
+import qualified Data.Text as T
 
 import Data.Capnp.Basics.Pure ()
 
@@ -26,9 +25,4 @@ import qualified Data.Capnp.Untyped as U
 
 marshalText :: (U.RWCtx m s, U.HasMessage parent (M.MutMsg s))
     => parent -> T.Text -> m (B.Text (M.MutMsg s))
-marshalText msg text = do
-    let bytes = encodeUtf8 text
-    ret <- B.newText (U.message msg) (BS.length bytes)
-    buffer <- B.textBuffer ret
-    C.marshalInto (B.Data buffer) bytes
-    pure ret
+marshalText parent = C.cerialize (U.message parent)

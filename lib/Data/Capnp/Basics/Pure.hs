@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -17,10 +18,11 @@ import Control.Monad.Catch     (MonadThrow(throwM))
 import Data.Capnp.Errors       (Error(InvalidUtf8Error))
 import Data.Capnp.Untyped      (rawBytes)
 import Data.Capnp.Untyped.Pure (List)
-import Data.Text.Encoding      (decodeUtf8')
+import Data.Text.Encoding      (decodeUtf8', encodeUtf8)
 
 import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Basics  as Basics
+import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as Untyped
 import qualified Data.Text          as T
 
@@ -43,3 +45,18 @@ instance Decerialize Text where
             case decodeUtf8' bytes of
                 Left e    -> throwM $ InvalidUtf8Error e
                 Right txt -> pure txt
+
+instance Marshal Text where
+    marshalInto dest text = marshalTextBytes (encodeUtf8 text) dest
+
+instance Cerialize s Text where
+    cerialize msg text = do
+        let bytes = encodeUtf8 text
+        ret <- Basics.newText msg (BS.length bytes)
+        marshalTextBytes bytes ret
+        pure ret
+
+marshalTextBytes :: Untyped.RWCtx m s => BS.ByteString -> Basics.Text (M.MutMsg s) -> m ()
+marshalTextBytes bytes text = do
+    buffer <- Basics.textBuffer text
+    marshalInto (Basics.Data buffer) bytes
