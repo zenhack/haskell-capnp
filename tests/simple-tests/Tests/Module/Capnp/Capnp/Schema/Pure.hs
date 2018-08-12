@@ -477,7 +477,9 @@ instance Arbitrary Value where
         , Value'float64 <$> arbitrary
         , Value'text <$> arbitrary
         , Value'data_ <$> arbitrary
-        -- TODO: list, enum, struct, interface, anyPointer
+        -- TODO: list
+        , Value'enum <$> arbitrary
+        -- TODO: struct, interface, anyPointer
         , Value'unknown' <$> arbitraryTag 19
         ]
 
