@@ -24,10 +24,13 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
+import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xa93fc509624c72d9
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
@@ -496,24 +499,31 @@ instance C'.Cerialize Value where
     marshalInto raw value = do
         case value of
             Value'void -> Capnp.ById.Xa93fc509624c72d9.set_Value'void raw
-            Value'bool field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'bool raw field_
-            Value'int8 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int8 raw field_
-            Value'int16 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int16 raw field_
-            Value'int32 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int32 raw field_
-            Value'int64 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int64 raw field_
-            Value'uint8 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint8 raw field_
-            Value'uint16 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint16 raw field_
-            Value'uint32 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint32 raw field_
-            Value'uint64 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint64 raw field_
-            Value'float32 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float32 raw field_
-            Value'float64 field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float64 raw field_
-            Value'text _ -> pure ()
-            Value'data_ _ -> pure ()
-            Value'list _ -> pure ()
-            Value'enum field_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'enum raw field_
-            Value'struct _ -> pure ()
+            Value'bool arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'bool raw arg_
+            Value'int8 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int8 raw arg_
+            Value'int16 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int16 raw arg_
+            Value'int32 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int32 raw arg_
+            Value'int64 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'int64 raw arg_
+            Value'uint8 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint8 raw arg_
+            Value'uint16 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint16 raw arg_
+            Value'uint32 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint32 raw arg_
+            Value'uint64 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'uint64 raw arg_
+            Value'float32 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float32 raw arg_
+            Value'float64 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float64 raw arg_
+            Value'text arg_ -> do
+                field_ <- PH'.marshalText raw arg_
+                Capnp.ById.Xa93fc509624c72d9.set_Value'text raw field_
+            Value'data_ arg_ -> do
+                field_ <- B'.newData (U'.message raw) (BS.length arg_)
+                C'.marshalInto field_ arg_
+            Value'list arg_ -> do
+                pure ()
+            Value'enum arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'enum raw arg_
+            Value'struct arg_ -> do
+                pure ()
             Value'interface -> Capnp.ById.Xa93fc509624c72d9.set_Value'interface raw
-            Value'anyPointer _ -> pure ()
+            Value'anyPointer arg_ -> do
+                pure ()
             Value'unknown' _ -> pure ()
 data Brand'Binding
      = Brand'Binding'unbound |
@@ -536,7 +546,9 @@ instance C'.Cerialize Brand'Binding where
     marshalInto raw value = do
         case value of
             Brand'Binding'unbound -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Binding'unbound raw
-            Brand'Binding'type_ _ -> pure ()
+            Brand'Binding'type_ arg_ -> do
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Brand'Binding'type_ raw
+                C'.marshalInto field_ arg_
             Brand'Binding'unknown' _ -> pure ()
 data Brand'Scope
      = Brand'Scope
@@ -580,7 +592,12 @@ instance C'.FromStruct M'.ConstMsg Brand'Scope' where
 instance C'.Cerialize Brand'Scope' where
     marshalInto raw value = do
         case value of
-            Brand'Scope'bind _ -> pure ()
+            Brand'Scope'bind arg_ -> do
+                let len_ = V.length arg_
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Brand'Scope'bind len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (arg_ V.! i)
             Brand'Scope'inherit -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw
             Brand'Scope'unknown' _ -> pure ()
 data CodeGeneratorRequest'RequestedFile
@@ -699,7 +716,7 @@ instance C'.Cerialize Field'ordinal where
     marshalInto raw value = do
         case value of
             Field'ordinal'implicit -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw
-            Field'ordinal'explicit field_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw field_
+            Field'ordinal'explicit arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw arg_
             Field'ordinal'unknown' _ -> pure ()
 data Node'
      = Node'file |

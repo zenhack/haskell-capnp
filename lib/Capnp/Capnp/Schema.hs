@@ -1061,10 +1061,20 @@ set_Value'text :: U'.RWCtx m s => Value (M'.MutMsg s) -> (B'.Text (M'.MutMsg s))
 set_Value'text(Value_newtype_ struct) value = do
     H'.setWordField struct (12 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Value'text :: U'.RWCtx m s => Int -> Value (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_Value'text len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_Value'text struct result
+    pure result
 set_Value'data_ :: U'.RWCtx m s => Value (M'.MutMsg s) -> (B'.Data (M'.MutMsg s)) -> m ()
 set_Value'data_(Value_newtype_ struct) value = do
     H'.setWordField struct (13 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Value'data_ :: U'.RWCtx m s => Int -> Value (M'.MutMsg s) -> m ((B'.Data (M'.MutMsg s)))
+new_Value'data_ len struct = do
+    result <- B'.newData (U'.message struct) len
+    set_Value'data_ struct result
+    pure result
 set_Value'list :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'list(Value_newtype_ struct) value = do
     H'.setWordField struct (14 :: Word16) 0 0 0
@@ -1145,6 +1155,11 @@ set_Brand'Binding'type_ :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> (Type 
 set_Brand'Binding'type_(Brand'Binding_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Brand'Binding'type_ :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> m ((Type (M'.MutMsg s)))
+new_Brand'Binding'type_ struct = do
+    result <- C'.new (U'.message struct)
+    set_Brand'Binding'type_ struct result
+    pure result
 instance C'.FromStruct msg (Brand'Binding' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -1222,6 +1237,11 @@ set_Brand'Scope'bind :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> (B'.List (
 set_Brand'Scope'bind(Brand'Scope'_newtype_ struct) value = do
     H'.setWordField struct (0 :: Word16) 1 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Brand'Scope'bind :: U'.RWCtx m s => Int -> Brand'Scope' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Brand'Binding (M'.MutMsg s))))
+new_Brand'Scope'bind len struct = do
+    result <- C'.newList (U'.message struct) len
+    set_Brand'Scope'bind struct result
+    pure result
 set_Brand'Scope'inherit :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> m ()
 set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = H'.setWordField struct (1 :: Word16) 1 0 0
 instance C'.FromStruct msg (Brand'Scope'' msg) where

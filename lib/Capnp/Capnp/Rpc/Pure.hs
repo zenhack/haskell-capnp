@@ -24,10 +24,13 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
+import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xb312981b2552a250
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
@@ -144,11 +147,15 @@ instance C'.Cerialize CapDescriptor where
     marshalInto raw value = do
         case value of
             CapDescriptor'none -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'none raw
-            CapDescriptor'senderHosted field_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'senderHosted raw field_
-            CapDescriptor'senderPromise field_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'senderPromise raw field_
-            CapDescriptor'receiverHosted field_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'receiverHosted raw field_
-            CapDescriptor'receiverAnswer _ -> pure ()
-            CapDescriptor'thirdPartyHosted _ -> pure ()
+            CapDescriptor'senderHosted arg_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'senderHosted raw arg_
+            CapDescriptor'senderPromise arg_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'senderPromise raw arg_
+            CapDescriptor'receiverHosted arg_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'receiverHosted raw arg_
+            CapDescriptor'receiverAnswer arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_CapDescriptor'receiverAnswer raw
+                C'.marshalInto field_ arg_
+            CapDescriptor'thirdPartyHosted arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_CapDescriptor'thirdPartyHosted raw
+                C'.marshalInto field_ arg_
             CapDescriptor'unknown' _ -> pure ()
 data Disembargo
      = Disembargo
@@ -291,20 +298,46 @@ instance C'.FromStruct M'.ConstMsg Message where
 instance C'.Cerialize Message where
     marshalInto raw value = do
         case value of
-            Message'unimplemented _ -> pure ()
-            Message'abort _ -> pure ()
-            Message'call _ -> pure ()
-            Message'return _ -> pure ()
-            Message'finish _ -> pure ()
-            Message'resolve _ -> pure ()
-            Message'release _ -> pure ()
-            Message'obsoleteSave _ -> pure ()
-            Message'bootstrap _ -> pure ()
-            Message'obsoleteDelete _ -> pure ()
-            Message'provide _ -> pure ()
-            Message'accept _ -> pure ()
-            Message'join _ -> pure ()
-            Message'disembargo _ -> pure ()
+            Message'unimplemented arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'unimplemented raw
+                C'.marshalInto field_ arg_
+            Message'abort arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'abort raw
+                C'.marshalInto field_ arg_
+            Message'call arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'call raw
+                C'.marshalInto field_ arg_
+            Message'return arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'return raw
+                C'.marshalInto field_ arg_
+            Message'finish arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'finish raw
+                C'.marshalInto field_ arg_
+            Message'resolve arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'resolve raw
+                C'.marshalInto field_ arg_
+            Message'release arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'release raw
+                C'.marshalInto field_ arg_
+            Message'obsoleteSave arg_ -> do
+                pure ()
+            Message'bootstrap arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'bootstrap raw
+                C'.marshalInto field_ arg_
+            Message'obsoleteDelete arg_ -> do
+                pure ()
+            Message'provide arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'provide raw
+                C'.marshalInto field_ arg_
+            Message'accept arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'accept raw
+                C'.marshalInto field_ arg_
+            Message'join arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'join raw
+                C'.marshalInto field_ arg_
+            Message'disembargo arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Message'disembargo raw
+                C'.marshalInto field_ arg_
             Message'unknown' _ -> pure ()
 data MessageTarget
      = MessageTarget'importedCap (Word32) |
@@ -326,8 +359,10 @@ instance C'.FromStruct M'.ConstMsg MessageTarget where
 instance C'.Cerialize MessageTarget where
     marshalInto raw value = do
         case value of
-            MessageTarget'importedCap field_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'importedCap raw field_
-            MessageTarget'promisedAnswer _ -> pure ()
+            MessageTarget'importedCap arg_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'importedCap raw arg_
+            MessageTarget'promisedAnswer arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_MessageTarget'promisedAnswer raw
+                C'.marshalInto field_ arg_
             MessageTarget'unknown' _ -> pure ()
 data Payload
      = Payload
@@ -517,7 +552,8 @@ instance C'.Cerialize Call'sendResultsTo where
         case value of
             Call'sendResultsTo'caller -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw
             Call'sendResultsTo'yourself -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'yourself raw
-            Call'sendResultsTo'thirdParty _ -> pure ()
+            Call'sendResultsTo'thirdParty arg_ -> do
+                pure ()
             Call'sendResultsTo'unknown' _ -> pure ()
 data Disembargo'context
      = Disembargo'context'senderLoopback (Word32) |
@@ -543,10 +579,10 @@ instance C'.FromStruct M'.ConstMsg Disembargo'context where
 instance C'.Cerialize Disembargo'context where
     marshalInto raw value = do
         case value of
-            Disembargo'context'senderLoopback field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'senderLoopback raw field_
-            Disembargo'context'receiverLoopback field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'receiverLoopback raw field_
+            Disembargo'context'senderLoopback arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'senderLoopback raw arg_
+            Disembargo'context'receiverLoopback arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'receiverLoopback raw arg_
             Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
-            Disembargo'context'provide field_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw field_
+            Disembargo'context'provide arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw arg_
             Disembargo'context'unknown' _ -> pure ()
 data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
@@ -569,7 +605,7 @@ instance C'.Cerialize PromisedAnswer'Op where
     marshalInto raw value = do
         case value of
             PromisedAnswer'Op'noop -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw
-            PromisedAnswer'Op'getPointerField field_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw field_
+            PromisedAnswer'Op'getPointerField arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw arg_
             PromisedAnswer'Op'unknown' _ -> pure ()
 data Resolve'
      = Resolve'cap (CapDescriptor) |
@@ -591,8 +627,12 @@ instance C'.FromStruct M'.ConstMsg Resolve' where
 instance C'.Cerialize Resolve' where
     marshalInto raw value = do
         case value of
-            Resolve'cap _ -> pure ()
-            Resolve'exception _ -> pure ()
+            Resolve'cap arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Resolve'cap raw
+                C'.marshalInto field_ arg_
+            Resolve'exception arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Resolve'exception raw
+                C'.marshalInto field_ arg_
             Resolve'unknown' _ -> pure ()
 data Return'
      = Return'results (Payload) |
@@ -622,10 +662,15 @@ instance C'.FromStruct M'.ConstMsg Return' where
 instance C'.Cerialize Return' where
     marshalInto raw value = do
         case value of
-            Return'results _ -> pure ()
-            Return'exception _ -> pure ()
+            Return'results arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Return'results raw
+                C'.marshalInto field_ arg_
+            Return'exception arg_ -> do
+                field_ <- Capnp.ById.Xb312981b2552a250.new_Return'exception raw
+                C'.marshalInto field_ arg_
             Return'canceled -> Capnp.ById.Xb312981b2552a250.set_Return'canceled raw
             Return'resultsSentElsewhere -> Capnp.ById.Xb312981b2552a250.set_Return'resultsSentElsewhere raw
-            Return'takeFromOtherQuestion field_ -> Capnp.ById.Xb312981b2552a250.set_Return'takeFromOtherQuestion raw field_
-            Return'acceptFromThirdParty _ -> pure ()
+            Return'takeFromOtherQuestion arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'takeFromOtherQuestion raw arg_
+            Return'acceptFromThirdParty arg_ -> do
+                pure ()
             Return'unknown' _ -> pure ()

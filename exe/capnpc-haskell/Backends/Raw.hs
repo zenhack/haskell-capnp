@@ -372,8 +372,8 @@ fmtNew thisMod accessorName typeCon fieldLocType =
 -- is a pointer type.
 fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
 fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
-    let setName = "set_" <> fmtName thisMod variantName
-        newName = "new_" <> fmtName thisMod variantName
+    let accessorName prefix = prefix <> fmtName thisMod variantName
+        setName = "set_" <> fmtName thisMod variantName
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
     in case variantParams of
@@ -407,7 +407,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                         loc
                 ]
             ]
-        Unnamed _ (PtrField index typ) -> vcat
+        Unnamed _ fieldLocType@(PtrField index typ) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
                 , fmtType thisMod "(M'.MutMsg s)" (PtrType typ), " -> m ()"
@@ -419,16 +419,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
                 ]
 
             -- Also generate a new_* function.
-            , hcat
-                [ newName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
-                , "m (", fmtType thisMod "(M'.MutMsg s)" (PtrType typ), ")"
-                ]
-            , hcat [ newName, " parent_ = do" ]
-            , indent $ vcat
-                [ "field_ <- C'.new (U'.message parent_)"
-                , hcat [ setName, " parent_ field_" ]
-                , "pure field_"
-                ]
+            , fmtNew thisMod accessorName parentTypeCon fieldLocType
             ]
         Unnamed _ VoidField -> vcat
             [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()" ]

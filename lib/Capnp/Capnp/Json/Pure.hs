@@ -24,10 +24,13 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
+import qualified Data.ByteString as BS
 import qualified Capnp.ById.X8ef99297a43a5e34
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
@@ -62,12 +65,26 @@ instance C'.Cerialize JsonValue where
     marshalInto raw value = do
         case value of
             JsonValue'null -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'null raw
-            JsonValue'boolean field_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'boolean raw field_
-            JsonValue'number field_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'number raw field_
-            JsonValue'string _ -> pure ()
-            JsonValue'array _ -> pure ()
-            JsonValue'object _ -> pure ()
-            JsonValue'call _ -> pure ()
+            JsonValue'boolean arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'boolean raw arg_
+            JsonValue'number arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'number raw arg_
+            JsonValue'string arg_ -> do
+                field_ <- PH'.marshalText raw arg_
+                Capnp.ById.X8ef99297a43a5e34.set_JsonValue'string raw field_
+            JsonValue'array arg_ -> do
+                let len_ = V.length arg_
+                field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'array len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (arg_ V.! i)
+            JsonValue'object arg_ -> do
+                let len_ = V.length arg_
+                field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'object len_ raw
+                forM_ [0..len_ - 1] $ \i -> do
+                    elt <- C'.index i field_
+                    C'.marshalInto elt (arg_ V.! i)
+            JsonValue'call arg_ -> do
+                field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'call raw
+                C'.marshalInto field_ arg_
             JsonValue'unknown' _ -> pure ()
 data JsonValue'Call
      = JsonValue'Call

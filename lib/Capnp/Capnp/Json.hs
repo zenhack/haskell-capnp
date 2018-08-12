@@ -76,18 +76,38 @@ set_JsonValue'string :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.Text (M'.
 set_JsonValue'string(JsonValue_newtype_ struct) value = do
     H'.setWordField struct (3 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_JsonValue'string :: U'.RWCtx m s => Int -> JsonValue (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
+new_JsonValue'string len struct = do
+    result <- B'.newText (U'.message struct) len
+    set_JsonValue'string struct result
+    pure result
 set_JsonValue'array :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))) -> m ()
 set_JsonValue'array(JsonValue_newtype_ struct) value = do
     H'.setWordField struct (4 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_JsonValue'array :: U'.RWCtx m s => Int -> JsonValue (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (JsonValue (M'.MutMsg s))))
+new_JsonValue'array len struct = do
+    result <- C'.newList (U'.message struct) len
+    set_JsonValue'array struct result
+    pure result
 set_JsonValue'object :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (JsonValue'Field (M'.MutMsg s))) -> m ()
 set_JsonValue'object(JsonValue_newtype_ struct) value = do
     H'.setWordField struct (5 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_JsonValue'object :: U'.RWCtx m s => Int -> JsonValue (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (JsonValue'Field (M'.MutMsg s))))
+new_JsonValue'object len struct = do
+    result <- C'.newList (U'.message struct) len
+    set_JsonValue'object struct result
+    pure result
 set_JsonValue'call :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> (JsonValue'Call (M'.MutMsg s)) -> m ()
 set_JsonValue'call(JsonValue_newtype_ struct) value = do
     H'.setWordField struct (6 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_JsonValue'call :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> m ((JsonValue'Call (M'.MutMsg s)))
+new_JsonValue'call struct = do
+    result <- C'.new (U'.message struct)
+    set_JsonValue'call struct result
+    pure result
 instance C'.FromStruct msg (JsonValue' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0

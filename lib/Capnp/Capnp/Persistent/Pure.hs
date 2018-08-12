@@ -24,10 +24,13 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
+import qualified Data.Capnp.Basics as B'
+import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
+import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xb8630836983feed7
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81

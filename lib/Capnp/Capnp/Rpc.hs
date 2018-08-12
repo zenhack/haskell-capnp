@@ -239,10 +239,20 @@ set_CapDescriptor'receiverAnswer :: U'.RWCtx m s => CapDescriptor (M'.MutMsg s) 
 set_CapDescriptor'receiverAnswer(CapDescriptor_newtype_ struct) value = do
     H'.setWordField struct (4 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_CapDescriptor'receiverAnswer :: U'.RWCtx m s => CapDescriptor (M'.MutMsg s) -> m ((PromisedAnswer (M'.MutMsg s)))
+new_CapDescriptor'receiverAnswer struct = do
+    result <- C'.new (U'.message struct)
+    set_CapDescriptor'receiverAnswer struct result
+    pure result
 set_CapDescriptor'thirdPartyHosted :: U'.RWCtx m s => CapDescriptor (M'.MutMsg s) -> (ThirdPartyCapDescriptor (M'.MutMsg s)) -> m ()
 set_CapDescriptor'thirdPartyHosted(CapDescriptor_newtype_ struct) value = do
     H'.setWordField struct (5 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_CapDescriptor'thirdPartyHosted :: U'.RWCtx m s => CapDescriptor (M'.MutMsg s) -> m ((ThirdPartyCapDescriptor (M'.MutMsg s)))
+new_CapDescriptor'thirdPartyHosted struct = do
+    result <- C'.new (U'.message struct)
+    set_CapDescriptor'thirdPartyHosted struct result
+    pure result
 instance C'.FromStruct msg (CapDescriptor' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -485,30 +495,65 @@ set_Message'unimplemented :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Message (
 set_Message'unimplemented(Message_newtype_ struct) value = do
     H'.setWordField struct (0 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'unimplemented :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Message (M'.MutMsg s)))
+new_Message'unimplemented struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'unimplemented struct result
+    pure result
 set_Message'abort :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Exception (M'.MutMsg s)) -> m ()
 set_Message'abort(Message_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'abort :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Exception (M'.MutMsg s)))
+new_Message'abort struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'abort struct result
+    pure result
 set_Message'call :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Call (M'.MutMsg s)) -> m ()
 set_Message'call(Message_newtype_ struct) value = do
     H'.setWordField struct (2 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'call :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Call (M'.MutMsg s)))
+new_Message'call struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'call struct result
+    pure result
 set_Message'return :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Return (M'.MutMsg s)) -> m ()
 set_Message'return(Message_newtype_ struct) value = do
     H'.setWordField struct (3 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'return :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Return (M'.MutMsg s)))
+new_Message'return struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'return struct result
+    pure result
 set_Message'finish :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Finish (M'.MutMsg s)) -> m ()
 set_Message'finish(Message_newtype_ struct) value = do
     H'.setWordField struct (4 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'finish :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Finish (M'.MutMsg s)))
+new_Message'finish struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'finish struct result
+    pure result
 set_Message'resolve :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Resolve (M'.MutMsg s)) -> m ()
 set_Message'resolve(Message_newtype_ struct) value = do
     H'.setWordField struct (5 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'resolve :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Resolve (M'.MutMsg s)))
+new_Message'resolve struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'resolve struct result
+    pure result
 set_Message'release :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Release (M'.MutMsg s)) -> m ()
 set_Message'release(Message_newtype_ struct) value = do
     H'.setWordField struct (6 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'release :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Release (M'.MutMsg s)))
+new_Message'release struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'release struct result
+    pure result
 set_Message'obsoleteSave :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Message'obsoleteSave(Message_newtype_ struct) value = do
     H'.setWordField struct (7 :: Word16) 0 0 0
@@ -517,6 +562,11 @@ set_Message'bootstrap :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Bootstrap (M'
 set_Message'bootstrap(Message_newtype_ struct) value = do
     H'.setWordField struct (8 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'bootstrap :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Bootstrap (M'.MutMsg s)))
+new_Message'bootstrap struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'bootstrap struct result
+    pure result
 set_Message'obsoleteDelete :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Message'obsoleteDelete(Message_newtype_ struct) value = do
     H'.setWordField struct (9 :: Word16) 0 0 0
@@ -525,18 +575,38 @@ set_Message'provide :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Provide (M'.Mut
 set_Message'provide(Message_newtype_ struct) value = do
     H'.setWordField struct (10 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'provide :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Provide (M'.MutMsg s)))
+new_Message'provide struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'provide struct result
+    pure result
 set_Message'accept :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Accept (M'.MutMsg s)) -> m ()
 set_Message'accept(Message_newtype_ struct) value = do
     H'.setWordField struct (11 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'accept :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Accept (M'.MutMsg s)))
+new_Message'accept struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'accept struct result
+    pure result
 set_Message'join :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Join (M'.MutMsg s)) -> m ()
 set_Message'join(Message_newtype_ struct) value = do
     H'.setWordField struct (12 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'join :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Join (M'.MutMsg s)))
+new_Message'join struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'join struct result
+    pure result
 set_Message'disembargo :: U'.RWCtx m s => Message (M'.MutMsg s) -> (Disembargo (M'.MutMsg s)) -> m ()
 set_Message'disembargo(Message_newtype_ struct) value = do
     H'.setWordField struct (13 :: Word16) 0 0 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Message'disembargo :: U'.RWCtx m s => Message (M'.MutMsg s) -> m ((Disembargo (M'.MutMsg s)))
+new_Message'disembargo struct = do
+    result <- C'.new (U'.message struct)
+    set_Message'disembargo struct result
+    pure result
 instance C'.FromStruct msg (Message' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 0 0
@@ -596,6 +666,11 @@ set_MessageTarget'promisedAnswer :: U'.RWCtx m s => MessageTarget (M'.MutMsg s) 
 set_MessageTarget'promisedAnswer(MessageTarget_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 32 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_MessageTarget'promisedAnswer :: U'.RWCtx m s => MessageTarget (M'.MutMsg s) -> m ((PromisedAnswer (M'.MutMsg s)))
+new_MessageTarget'promisedAnswer struct = do
+    result <- C'.new (U'.message struct)
+    set_MessageTarget'promisedAnswer struct result
+    pure result
 instance C'.FromStruct msg (MessageTarget' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
@@ -1109,10 +1184,20 @@ set_Resolve'cap :: U'.RWCtx m s => Resolve' (M'.MutMsg s) -> (CapDescriptor (M'.
 set_Resolve'cap(Resolve'_newtype_ struct) value = do
     H'.setWordField struct (0 :: Word16) 0 32 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Resolve'cap :: U'.RWCtx m s => Resolve' (M'.MutMsg s) -> m ((CapDescriptor (M'.MutMsg s)))
+new_Resolve'cap struct = do
+    result <- C'.new (U'.message struct)
+    set_Resolve'cap struct result
+    pure result
 set_Resolve'exception :: U'.RWCtx m s => Resolve' (M'.MutMsg s) -> (Exception (M'.MutMsg s)) -> m ()
 set_Resolve'exception(Resolve'_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 32 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Resolve'exception :: U'.RWCtx m s => Resolve' (M'.MutMsg s) -> m ((Exception (M'.MutMsg s)))
+new_Resolve'exception struct = do
+    result <- C'.new (U'.message struct)
+    set_Resolve'exception struct result
+    pure result
 instance C'.FromStruct msg (Resolve'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 0 32 0
@@ -1160,10 +1245,20 @@ set_Return'results :: U'.RWCtx m s => Return' (M'.MutMsg s) -> (Payload (M'.MutM
 set_Return'results(Return'_newtype_ struct) value = do
     H'.setWordField struct (0 :: Word16) 0 48 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Return'results :: U'.RWCtx m s => Return' (M'.MutMsg s) -> m ((Payload (M'.MutMsg s)))
+new_Return'results struct = do
+    result <- C'.new (U'.message struct)
+    set_Return'results struct result
+    pure result
 set_Return'exception :: U'.RWCtx m s => Return' (M'.MutMsg s) -> (Exception (M'.MutMsg s)) -> m ()
 set_Return'exception(Return'_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 48 0
     U'.setPtr (C'.toPtr value) 0 struct
+new_Return'exception :: U'.RWCtx m s => Return' (M'.MutMsg s) -> m ((Exception (M'.MutMsg s)))
+new_Return'exception struct = do
+    result <- C'.new (U'.message struct)
+    set_Return'exception struct result
+    pure result
 set_Return'canceled :: U'.RWCtx m s => Return' (M'.MutMsg s) -> m ()
 set_Return'canceled (Return'_newtype_ struct) = H'.setWordField struct (2 :: Word16) 0 48 0
 set_Return'resultsSentElsewhere :: U'.RWCtx m s => Return' (M'.MutMsg s) -> m ()
