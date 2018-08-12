@@ -54,10 +54,12 @@ import Control.Monad             (forM_)
 import Control.Monad.Catch       (MonadThrow(throwM))
 import Data.Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
 import Data.Capnp.Bits
-    ( ByteCount(..)
+    ( BitCount(..)
+    , ByteCount(..)
     , Word1(..)
     , WordCount(..)
-    , bytesToWordsFloor
+    , bitsToBytesCeil
+    , bytesToWordsCeil
     , replaceBits
     , wordsToBytes
     )
@@ -654,25 +656,25 @@ allocList64  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Wo
 allocListPtr :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) (Maybe (Ptr (M.MutMsg s))))
 
 allocList0   msg len = pure $ ListOfVoid msg len
-allocList1   msg len = ListOfBool   <$> allocNormalList 64 msg len
-allocList8   msg len = ListOfWord8  <$> allocNormalList 8 msg len
-allocList16  msg len = ListOfWord16 <$> allocNormalList 4 msg len
-allocList32  msg len = ListOfWord32 <$> allocNormalList 2 msg len
-allocList64  msg len = ListOfWord64 <$> allocNormalList 1 msg len
-allocListPtr msg len = ListOfPtr    <$> allocNormalList 1 msg len
+allocList1   msg len = ListOfBool   <$> allocNormalList 1  msg len
+allocList8   msg len = ListOfWord8  <$> allocNormalList 8  msg len
+allocList16  msg len = ListOfWord16 <$> allocNormalList 16 msg len
+allocList32  msg len = ListOfWord32 <$> allocNormalList 32 msg len
+allocList64  msg len = ListOfWord64 <$> allocNormalList 64 msg len
+allocListPtr msg len = ListOfPtr    <$> allocNormalList 64 msg len
 
 -- | Allocate a NormalList
 allocNormalList
     :: M.WriteCtx m s
     => Int        -- ^ The number of elements per 64-bit word
     -> M.MutMsg s -- ^ The message to allocate in
-    -> Int        -- ^ The number of elements in the list.
+    -> Int        -- ^ The number of bits per element
     -> m (NormalList (M.MutMsg s))
-allocNormalList eltsPerWord msg len = do
+allocNormalList bitsPerElt msg len = do
     -- round 'len' up to the nearest word boundary.
-    let mask = eltsPerWord - 1
-        byteCount = ByteCount $ (len + mask) .&. complement mask
-    addr <- M.alloc msg (bytesToWordsFloor byteCount)
+    let totalBits = BitCount (len * bitsPerElt)
+        totalWords = bytesToWordsCeil $ bitsToBytesCeil totalBits
+    addr <- M.alloc msg totalWords
     pure NormalList
         { nMsg = msg
         , nAddr = addr

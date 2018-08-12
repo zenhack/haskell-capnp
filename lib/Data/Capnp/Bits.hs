@@ -4,9 +4,14 @@ Description: Utilities for bitwhacking useful for capnproto.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Data.Capnp.Bits
-    ( ByteCount(..), WordCount(..)
+    ( BitCount(..)
+    , ByteCount(..)
+    , WordCount(..)
     , Word1(..)
-    , bytesToWordsFloor, wordsToBytes
+    , bitsToBytesCeil
+    , bytesToWordsCeil
+    , bytesToWordsFloor
+    , wordsToBytes
     , lo, hi
     , i32, i30, i29
     , fromLo, fromHi
@@ -20,12 +25,22 @@ import Data.Bits
 import Data.Int
 import Data.Word
 
--- wrapper types for numbers of bytes & words -- helpful for avoiding mixing
--- up units:
+-- wrapper types for numbers of bits, bytes & words -- helpful for avoiding
+-- mixingup units:
+newtype BitCount = BitCount Int
+    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
 newtype ByteCount = ByteCount Int
     deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
 newtype WordCount = WordCount Int
     deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
+
+-- | Convert bits to bytes. Rounds up.
+bitsToBytesCeil :: BitCount -> ByteCount
+bitsToBytesCeil (BitCount n) = ByteCount ((n + 7) `div` 8)
+
+-- | Convert bytes to words. Rounds up.
+bytesToWordsCeil :: ByteCount -> WordCount
+bytesToWordsCeil (ByteCount n) = WordCount ((n + 7) `div` 8)
 
 -- | Convert bytes to words. Rounds down.
 bytesToWordsFloor :: ByteCount -> WordCount
