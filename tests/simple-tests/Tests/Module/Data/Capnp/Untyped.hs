@@ -89,7 +89,7 @@ data ModTest s = ModTest
     }
 
 modifyTests :: Test
-modifyTests = assertionsToTest "Test modification" $ map testCase
+modifyTests = testGroup "Test modification" $ map testCase
     -- tests for setIndex
     [ ModTest
         { testIn = "(year = 2018, month = 6, day = 20)\n"
@@ -254,7 +254,9 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
                 forM_ [0..4] $ \i -> setIndex (fromIntegral i) i u32vec
                 setPtr (Just $ PtrList $ dataCon u32vec) 0 struct
             }
-    testCase ModTest{..} = do
+    testCase ModTest{..} = assertionsToTest
+            (show testIn ++ " : " ++ testType ++ " == " ++ show testOut) $
+            pure $ do
         msg <- M.thaw =<< encodeValue schemaText testType testIn
         evalLimitT 128 $ rootPtr msg >>= testMod
         actualOut <- decodeValue schemaText testType =<< M.freeze msg
