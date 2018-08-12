@@ -218,12 +218,20 @@ fmtSetWordField struct value DataLoc{..} = mintercalate " "
     , fromString (show dataDef)
     ]
 
+-- | Format the various accessors @(set_*, get_*, has_*, new_*)@ for a field.
+-- .
+-- Parameters (in order):
+-- .
+-- * @thisMod@: the module we're generating.
+-- * @typeName@: the name of the type to which the field belongs.
+-- * @variantName@: the name of the variant of @typeName@.
+-- * @field@: the field to format.
 fmtFieldAccessor :: Module -> Name -> Name -> Field -> PP.Doc
 fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
     [ fmtGetter
     , fmtHas
     , fmtSetter
-    , fmtNew thisMod accessorName typeCon dataCon fieldLocType
+    , fmtNew thisMod accessorName typeCon fieldLocType
     ]
   where
     accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
@@ -306,7 +314,17 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                 -- user should call the getter and then modify the child in-place.
                 ""
 
-fmtNew thisMod accessorName typeCon dataCon fieldLocType =
+-- | format a @new_*@ function for a field.
+-- .
+-- Parameters (in order):
+-- .
+-- * @thisMod@: The module we're generating.
+-- * @accessorName@: function getting the accessor for a specific prefix;
+--   takes an argument that is @"set_"@, @"get_"@, etc.
+-- * @typeCon@: The name of the type constructor for the type owning the
+--   field.
+-- * @fieldLocType@: the field location and type.
+fmtNew thisMod accessorName typeCon fieldLocType =
     case fieldLocType of
         PtrField _ fieldType ->
             let newType = hcat
