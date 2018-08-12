@@ -223,7 +223,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
     [ fmtGetter
     , fmtHas
     , fmtSetter
-    , fmtNew
+    , fmtNew thisMod accessorName typeCon dataCon fieldLocType
     ]
   where
     accessorName prefix = fmtName thisMod $ prefixName prefix (subName variantName fieldName)
@@ -305,7 +305,9 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                 -- We don't generate setters for these fields; instead, the
                 -- user should call the getter and then modify the child in-place.
                 ""
-    fmtNew = case fieldLocType of
+
+fmtNew thisMod accessorName typeCon dataCon fieldLocType =
+    case fieldLocType of
         PtrField _ fieldType ->
             let newType = hcat
                     [ typeCon
@@ -333,6 +335,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                     ]
         _ ->
             ""
+  where
+    newName = accessorName "new_"
+    setName = accessorName "set_"
+
     fmtNewListLike newType allocFn = vcat
         [ hcat [ newName, " :: U'.RWCtx m s => Int -> ", newType ]
         , hcat [ newName, " len struct = do" ]
@@ -344,9 +350,12 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
         ]
 
 
+-- Generate setters for union variants, plus new_* functions where the argument
+-- is a pointer type.
 fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
 fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
     let setName = "set_" <> fmtName thisMod variantName
+        newName = "new_" <> fmtName thisMod variantName
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
     in case variantParams of
@@ -389,6 +398,18 @@ fmtUnionSetter thisMod parentType tagLoc Variant{variantTag=Just tagValue,..} =
             , indent $ vcat
                 [ fmtSetTag
                 , hcat [ "U'.setPtr (C'.toPtr value) ", fromString (show index), " struct" ]
+                ]
+
+            -- Also generate a new_* function.
+            , hcat
+                [ newName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
+                , "m (", fmtType thisMod "(M'.MutMsg s)" (PtrType typ), ")"
+                ]
+            , hcat [ newName, " parent_ = do" ]
+            , indent $ vcat
+                [ "field_ <- C'.new (U'.message parent_)"
+                , hcat [ setName, " parent_ field_" ]
+                , "pure field_"
                 ]
             ]
         Unnamed _ VoidField -> vcat
