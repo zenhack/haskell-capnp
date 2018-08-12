@@ -27,7 +27,6 @@ import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
-import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Capnp.ById.X8ef99297a43a5e34
@@ -67,7 +66,7 @@ instance C'.Marshal JsonValue where
             JsonValue'boolean arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'boolean raw arg_
             JsonValue'number arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'number raw arg_
             JsonValue'string arg_ -> do
-                field_ <- PH'.marshalText raw arg_
+                field_ <- C'.cerialize (U'.message raw) arg_
                 Capnp.ById.X8ef99297a43a5e34.set_JsonValue'string raw field_
             JsonValue'array arg_ -> do
                 let len_ = V.length arg_
@@ -105,7 +104,7 @@ instance C'.Marshal JsonValue'Call where
     marshalInto raw value = do
         case value of
             JsonValue'Call{..} -> do
-                field_ <- PH'.marshalText raw function
+                field_ <- C'.cerialize (U'.message raw) function
                 Capnp.ById.X8ef99297a43a5e34.set_JsonValue'Call'function raw field_
                 let len_ = V.length params
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Call'params len_ raw
@@ -132,7 +131,7 @@ instance C'.Marshal JsonValue'Field where
     marshalInto raw value = do
         case value of
             JsonValue'Field{..} -> do
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.X8ef99297a43a5e34.set_JsonValue'Field'name raw field_
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
                 C'.marshalInto field_ value

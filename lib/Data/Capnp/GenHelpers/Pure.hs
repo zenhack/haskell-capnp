@@ -13,16 +13,3 @@ These helpers are only used by the high-level api. 'Data.Capnp.GenHelpers'
 defines helpers used by the low-level api.
 -}
 module Data.Capnp.GenHelpers.Pure where
-
-import qualified Data.Text as T
-
-import Data.Capnp.Basics.Pure ()
-
-import qualified Codec.Capnp        as C
-import qualified Data.Capnp.Basics  as B
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
-
-marshalText :: (U.RWCtx m s, U.HasMessage parent (M.MutMsg s))
-    => parent -> T.Text -> m (B.Text (M.MutMsg s))
-marshalText parent = C.cerialize (U.message parent)

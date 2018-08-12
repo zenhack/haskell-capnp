@@ -27,7 +27,6 @@ import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
-import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xa93fc509624c72d9
@@ -163,7 +162,7 @@ instance C'.Marshal Enumerant where
     marshalInto raw value = do
         case value of
             Enumerant{..} -> do
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_Enumerant'name raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Enumerant'codeOrder raw codeOrder
                 let len_ = V.length annotations
@@ -199,7 +198,7 @@ instance C'.Marshal Field where
     marshalInto raw value = do
         case value of
             Field{..} -> do
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_Field'name raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Field'codeOrder raw codeOrder
                 let len_ = V.length annotations
@@ -244,7 +243,7 @@ instance C'.Marshal Method where
     marshalInto raw value = do
         case value of
             Method{..} -> do
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_Method'name raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Method'codeOrder raw codeOrder
                 Capnp.ById.Xa93fc509624c72d9.set_Method'paramStructType raw paramStructType
@@ -298,7 +297,7 @@ instance C'.Marshal Node where
         case value of
             Node{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_Node'id raw id
-                field_ <- PH'.marshalText raw displayName
+                field_ <- C'.cerialize (U'.message raw) displayName
                 Capnp.ById.Xa93fc509624c72d9.set_Node'displayName raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Node'displayNamePrefixLength raw displayNamePrefixLength
                 Capnp.ById.Xa93fc509624c72d9.set_Node'scopeId raw scopeId
@@ -520,7 +519,7 @@ instance C'.Marshal Value where
             Value'float32 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float32 raw arg_
             Value'float64 arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'float64 raw arg_
             Value'text arg_ -> do
-                field_ <- PH'.marshalText raw arg_
+                field_ <- C'.cerialize (U'.message raw) arg_
                 Capnp.ById.Xa93fc509624c72d9.set_Value'text raw field_
             Value'data_ arg_ -> do
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Value'data_ (BS.length arg_) raw
@@ -638,7 +637,7 @@ instance C'.Marshal CodeGeneratorRequest'RequestedFile where
         case value of
             CodeGeneratorRequest'RequestedFile{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'id raw id
-                field_ <- PH'.marshalText raw filename
+                field_ <- C'.cerialize (U'.message raw) filename
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'filename raw field_
                 let len_ = V.length imports
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'RequestedFile'imports len_ raw
@@ -666,7 +665,7 @@ instance C'.Marshal CodeGeneratorRequest'RequestedFile'Import where
         case value of
             CodeGeneratorRequest'RequestedFile'Import{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'id raw id
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'name raw field_
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile'Import
 data Field'
@@ -892,7 +891,7 @@ instance C'.Marshal Node'NestedNode where
     marshalInto raw value = do
         case value of
             Node'NestedNode{..} -> do
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'name raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'id raw id
 instance C'.Cerialize s Node'NestedNode
@@ -913,7 +912,7 @@ instance C'.Marshal Node'Parameter where
     marshalInto raw value = do
         case value of
             Node'Parameter{..} -> do
-                field_ <- PH'.marshalText raw name
+                field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_Node'Parameter'name raw field_
 instance C'.Cerialize s Node'Parameter
 data Type'anyPointer

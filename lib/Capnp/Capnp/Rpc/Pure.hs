@@ -27,7 +27,6 @@ import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
-import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xb312981b2552a250
@@ -209,7 +208,7 @@ instance C'.Marshal Exception where
     marshalInto raw value = do
         case value of
             Exception{..} -> do
-                field_ <- PH'.marshalText raw reason
+                field_ <- C'.cerialize (U'.message raw) reason
                 Capnp.ById.Xb312981b2552a250.set_Exception'reason raw field_
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteIsCallersFault raw obsoleteIsCallersFault
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteDurability raw obsoleteDurability
