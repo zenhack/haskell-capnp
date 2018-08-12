@@ -402,16 +402,32 @@ decodeTests = testGroup "schema decode tests"
         when (actual /= expected) $ error $
             "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
 
-
 propTests = testGroup "check that cerialize and decerialize are inverses."
-    [ propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
+    [ propCase "Superclass" (Proxy :: Proxy Superclass)
+    , propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
     , propCase "Node.Parameter" (Proxy :: Proxy Node'Parameter)
     , propCase "Type" (Proxy :: Proxy Type)
+    , propCase "Brand" (Proxy :: Proxy Brand)
+    , propCase "Brand.Scope" (Proxy :: Proxy Brand'Scope)
     , propCase "Brand.Binding" (Proxy :: Proxy Brand'Binding)
+    , propCase "CodeGeneratorRequest.RequestedFile"
+        (Proxy :: Proxy CodeGeneratorRequest'RequestedFile)
+    , propCase "CodeGeneratorRequest.RequestedFile.Import"
+        (Proxy :: Proxy CodeGeneratorRequest'RequestedFile'Import)
     ]
 
 propCase name proxy =
     testProperty ("...for " ++ name) (prop_cerializeDecerializeInverses proxy)
+
+-- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
+-- by the schema. The parameter is the number of tags assigned by the schema.
+arbitraryTag :: Word16 -> Gen Word16
+arbitraryTag numTags = max numTags <$> arbitrary
+
+instance Arbitrary Superclass where
+    arbitrary = Superclass
+        <$> arbitrary
+        <*> arbitrary
 
 instance Arbitrary CapnpVersion where
     arbitrary = CapnpVersion
@@ -422,16 +438,27 @@ instance Arbitrary CapnpVersion where
 instance Arbitrary Node'Parameter where
     arbitrary = Node'Parameter <$> arbitrary
 
+instance Arbitrary Brand where
+    arbitrary = Brand <$> arbitrary
+
+instance Arbitrary Brand'Scope where
+    arbitrary = Brand'Scope
+        <$> arbitrary
+        <*> arbitrary
+
+instance Arbitrary Brand'Scope' where
+    arbitrary = oneof
+        [ Brand'Scope'bind <$> arbitrary
+        , pure Brand'Scope'inherit
+        , Brand'Scope'unknown' <$> arbitraryTag 2
+        ]
+
 instance Arbitrary Brand'Binding where
     arbitrary = oneof
         [ pure Brand'Binding'unbound
         , Brand'Binding'type_ <$> arbitrary
+        , Brand'Binding'unknown' <$> arbitraryTag 2
         ]
-
--- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
--- by the schema. The parameter is the number of tags assigned by the schema.
-arbitraryTag :: Word16 -> Gen Word16
-arbitraryTag numTags = max numTags <$> arbitrary
 
 instance Arbitrary Type where
     arbitrary = oneof
@@ -465,6 +492,17 @@ instance Arbitrary Type where
             ]
         , Type'unknown' <$> arbitraryTag 21
         ]
+
+instance Arbitrary CodeGeneratorRequest'RequestedFile where
+    arbitrary = CodeGeneratorRequest'RequestedFile
+        <$> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+
+instance Arbitrary CodeGeneratorRequest'RequestedFile'Import where
+    arbitrary = CodeGeneratorRequest'RequestedFile'Import
+        <$> arbitrary
+        <*> arbitrary
 
 prop_cerializeDecerializeInverses ::
     ( Show a
