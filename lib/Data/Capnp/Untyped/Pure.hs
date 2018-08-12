@@ -153,14 +153,14 @@ instance Decerialize (Maybe PtrType) where
 instance Marshal (Maybe PtrType) where
     marshalInto Nothing Nothing = pure ()
     marshalInto (Just (U.PtrStruct   raw)) (Just (PtrStruct struct)) = marshalInto raw struct
-    marshalInto (Just (U.PtrList     raw)) (Just (PtrList     list)) = marshalInto raw list
+    marshalInto (Just (U.PtrList     raw)) (Just (PtrList     list)) = marshalList' raw list
     marshalInto (Just (U.PtrCap _msg raw)) (Just (PtrCap       cap)) = pure () -- TODO
     marshalInto _ _ = throwM $ E.SchemaViolationError "Mismatched pointer types"
 
 instance Cerialize s (Maybe PtrType) where
     cerialize _ Nothing                     = pure Nothing
     cerialize msg (Just (PtrStruct struct)) = toPtr <$> cerialize msg struct
-    cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
+    cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerializeList' msg list
     -- TODO: when we actually support it, we need to insert the cap into the message:
     cerialize msg (Just (PtrCap       cap)) = pure $ Just (U.PtrCap msg cap)
 
@@ -199,11 +199,24 @@ instance Decerialize List' where
     decerialize (U.ListPtr l)    = ListPtr' <$> decerializeListOf l
     decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
 
-instance Marshal List' where
-    marshalInto = error "TODO"
+marshalList' :: U.RWCtx m s => U.List (M.MutMsg s) -> List' -> m ()
+marshalList' (U.List0  _) (List0' _)            = pure ()
+marshalList' (U.List1 raw) (List1' l)           = marshalListOfWord raw l
+marshalList' (U.List8 raw) (List8' l)           = marshalListOfWord raw l
+marshalList' (U.List16 raw) (List16' l)         = marshalListOfWord raw l
+marshalList' (U.List32 raw) (List32' l)         = marshalListOfWord raw l
+marshalList' (U.List64 raw) (List64' l)         = marshalListOfWord raw l
+marshalList' (U.ListPtr raw) (ListPtr' l)       = error "TODO"
+marshalList' (U.ListStruct raw) (ListStruct' l) = error "TODO"
+marshalList' _ _ = throwM $ E.SchemaViolationError "mismatched list types"
 
-instance Cerialize s List' where
-    cerialize = error "TODO"
+marshalListOfWord :: U.RWCtx m s => U.ListOf (M.MutMsg s) a -> List a -> m ()
+marshalListOfWord raw l =
+    forM_ [0..length l - 1] $ \i ->
+        U.setIndex (l V.! i) i raw
+
+cerializeList' :: U.RWCtx m s => M.MutMsg s -> List' -> m (U.List (M.MutMsg s))
+cerializeList' = error "TODO"
 
 ptrStruct :: MonadThrow f => Maybe PtrType -> f Struct
 ptrStruct Nothing              = pure def
