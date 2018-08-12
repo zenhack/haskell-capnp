@@ -31,7 +31,7 @@ instance Decerialize Data where
     type Cerial msg Data = Basics.Data msg
     decerialize (Basics.Data list) = rawBytes list
 
-instance Cerialize Data where
+instance Marshal Data where
     marshalInto (Basics.Data list) bytes =
         forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list

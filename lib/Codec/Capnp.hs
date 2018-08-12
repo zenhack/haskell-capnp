@@ -1,3 +1,4 @@
+{-# LANGUAGE DefaultSignatures     #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -10,10 +11,10 @@ module Codec.Capnp
     , FromStruct(..)
     , ToStruct(..)
     , Allocate(..)
+    , Marshal(..)
     , Cerialize(..)
     , Decerialize(..)
     , expected
-    , cerialize
     , newRoot
     , setRoot
     ) where
@@ -55,17 +56,20 @@ class Decerialize a where
     type Cerial msg a
     decerialize :: U.ReadCtx m M.ConstMsg => Cerial M.ConstMsg a -> m a
 
-class Decerialize a => Cerialize a where
+class Decerialize a => Marshal a where
     -- | Marshal a value into the pre-allocated object of type @to@.
     marshalInto :: U.RWCtx m s => Cerial (M.MutMsg s) a -> a -> m ()
 
--- | Cerialize a value into the supplied message, returning the result.
-cerialize :: (U.RWCtx m s, Cerialize a, Allocate s (Cerial (M.MutMsg s) a))
-    => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
-cerialize msg value = do
-    raw <- new msg
-    marshalInto raw value
-    pure raw
+class Marshal a => Cerialize s a where
+    -- | Cerialize a value into the supplied message, returning the result.
+    cerialize :: U.RWCtx m s => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
+
+    default cerialize :: (U.RWCtx m s, Allocate s (Cerial (M.MutMsg s) a))
+        => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
+    cerialize msg value = do
+        raw <- new msg
+        marshalInto raw value
+        pure raw
 
 expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg

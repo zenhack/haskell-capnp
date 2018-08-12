@@ -45,11 +45,12 @@ instance C'.FromStruct M'.ConstMsg Persistent'SaveParams where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg)
-instance C'.Cerialize Persistent'SaveParams where
+instance C'.Marshal Persistent'SaveParams where
     marshalInto raw value = do
         case value of
             Persistent'SaveParams{..} -> do
                 pure ()
+instance C'.Cerialize s Persistent'SaveParams
 data Persistent'SaveResults
      = Persistent'SaveResults
         {sturdyRef :: Maybe (PU'.PtrType)}
@@ -63,8 +64,9 @@ instance C'.FromStruct M'.ConstMsg Persistent'SaveResults where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg)
-instance C'.Cerialize Persistent'SaveResults where
+instance C'.Marshal Persistent'SaveResults where
     marshalInto raw value = do
         case value of
             Persistent'SaveResults{..} -> do
                 pure ()
+instance C'.Cerialize s Persistent'SaveResults

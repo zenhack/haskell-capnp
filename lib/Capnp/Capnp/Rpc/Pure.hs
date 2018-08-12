@@ -49,13 +49,14 @@ instance C'.FromStruct M'.ConstMsg Accept where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Accept M'.ConstMsg)
-instance C'.Cerialize Accept where
+instance C'.Marshal Accept where
     marshalInto raw value = do
         case value of
             Accept{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Accept'questionId raw questionId
                 pure ()
                 Capnp.ById.Xb312981b2552a250.set_Accept'embargo raw embargo
+instance C'.Cerialize s Accept
 data Bootstrap
      = Bootstrap
         {questionId :: Word32,
@@ -71,12 +72,13 @@ instance C'.FromStruct M'.ConstMsg Bootstrap where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Bootstrap M'.ConstMsg)
-instance C'.Cerialize Bootstrap where
+instance C'.Marshal Bootstrap where
     marshalInto raw value = do
         case value of
             Bootstrap{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Bootstrap'questionId raw questionId
                 pure ()
+instance C'.Cerialize s Bootstrap
 data Call
      = Call
         {questionId :: Word32,
@@ -102,7 +104,7 @@ instance C'.FromStruct M'.ConstMsg Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Call M'.ConstMsg)
-instance C'.Cerialize Call where
+instance C'.Marshal Call where
     marshalInto raw value = do
         case value of
             Call{..} -> do
@@ -116,6 +118,7 @@ instance C'.Cerialize Call where
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Call'sendResultsTo raw
                 C'.marshalInto field_ sendResultsTo
                 Capnp.ById.Xb312981b2552a250.set_Call'allowThirdPartyTailCall raw allowThirdPartyTailCall
+instance C'.Cerialize s Call
 data CapDescriptor
      = CapDescriptor'none |
     CapDescriptor'senderHosted (Word32) |
@@ -141,7 +144,7 @@ instance C'.FromStruct M'.ConstMsg CapDescriptor where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.CapDescriptor M'.ConstMsg)
-instance C'.Cerialize CapDescriptor where
+instance C'.Marshal CapDescriptor where
     marshalInto raw value = do
         case value of
             CapDescriptor'none -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'none raw
@@ -155,6 +158,7 @@ instance C'.Cerialize CapDescriptor where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_CapDescriptor'thirdPartyHosted raw
                 C'.marshalInto field_ arg_
             CapDescriptor'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'unknown' raw arg_
+instance C'.Cerialize s CapDescriptor
 data Disembargo
      = Disembargo
         {target :: MessageTarget,
@@ -170,7 +174,7 @@ instance C'.FromStruct M'.ConstMsg Disembargo where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Disembargo M'.ConstMsg)
-instance C'.Cerialize Disembargo where
+instance C'.Marshal Disembargo where
     marshalInto raw value = do
         case value of
             Disembargo{..} -> do
@@ -178,6 +182,7 @@ instance C'.Cerialize Disembargo where
                 C'.marshalInto field_ target
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw
                 C'.marshalInto field_ context
+instance C'.Cerialize s Disembargo
 data Exception
      = Exception
         {reason :: Text,
@@ -197,7 +202,7 @@ instance C'.FromStruct M'.ConstMsg Exception where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Exception M'.ConstMsg)
-instance C'.Cerialize Exception where
+instance C'.Marshal Exception where
     marshalInto raw value = do
         case value of
             Exception{..} -> do
@@ -206,6 +211,7 @@ instance C'.Cerialize Exception where
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteIsCallersFault raw obsoleteIsCallersFault
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteDurability raw obsoleteDurability
                 Capnp.ById.Xb312981b2552a250.set_Exception'type_ raw type_
+instance C'.Cerialize s Exception
 data Finish
      = Finish
         {questionId :: Word32,
@@ -221,12 +227,13 @@ instance C'.FromStruct M'.ConstMsg Finish where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Finish M'.ConstMsg)
-instance C'.Cerialize Finish where
+instance C'.Marshal Finish where
     marshalInto raw value = do
         case value of
             Finish{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Finish'questionId raw questionId
                 Capnp.ById.Xb312981b2552a250.set_Finish'releaseResultCaps raw releaseResultCaps
+instance C'.Cerialize s Finish
 data Join
      = Join
         {questionId :: Word32,
@@ -244,7 +251,7 @@ instance C'.FromStruct M'.ConstMsg Join where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Join M'.ConstMsg)
-instance C'.Cerialize Join where
+instance C'.Marshal Join where
     marshalInto raw value = do
         case value of
             Join{..} -> do
@@ -252,6 +259,7 @@ instance C'.Cerialize Join where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Join'target raw
                 C'.marshalInto field_ target
                 pure ()
+instance C'.Cerialize s Join
 data Message
      = Message'unimplemented (Message) |
     Message'abort (Exception) |
@@ -293,7 +301,7 @@ instance C'.FromStruct M'.ConstMsg Message where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Message M'.ConstMsg)
-instance C'.Cerialize Message where
+instance C'.Marshal Message where
     marshalInto raw value = do
         case value of
             Message'unimplemented arg_ -> do
@@ -337,6 +345,7 @@ instance C'.Cerialize Message where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Message'disembargo raw
                 C'.marshalInto field_ arg_
             Message'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Message'unknown' raw arg_
+instance C'.Cerialize s Message
 data MessageTarget
      = MessageTarget'importedCap (Word32) |
     MessageTarget'promisedAnswer (PromisedAnswer) |
@@ -354,7 +363,7 @@ instance C'.FromStruct M'.ConstMsg MessageTarget where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.MessageTarget M'.ConstMsg)
-instance C'.Cerialize MessageTarget where
+instance C'.Marshal MessageTarget where
     marshalInto raw value = do
         case value of
             MessageTarget'importedCap arg_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'importedCap raw arg_
@@ -362,6 +371,7 @@ instance C'.Cerialize MessageTarget where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_MessageTarget'promisedAnswer raw
                 C'.marshalInto field_ arg_
             MessageTarget'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'unknown' raw arg_
+instance C'.Cerialize s MessageTarget
 data Payload
      = Payload
         {content :: Maybe (PU'.PtrType),
@@ -377,7 +387,7 @@ instance C'.FromStruct M'.ConstMsg Payload where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Payload M'.ConstMsg)
-instance C'.Cerialize Payload where
+instance C'.Marshal Payload where
     marshalInto raw value = do
         case value of
             Payload{..} -> do
@@ -387,6 +397,7 @@ instance C'.Cerialize Payload where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (capTable V.! i)
+instance C'.Cerialize s Payload
 data PromisedAnswer
      = PromisedAnswer
         {questionId :: Word32,
@@ -402,7 +413,7 @@ instance C'.FromStruct M'.ConstMsg PromisedAnswer where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.PromisedAnswer M'.ConstMsg)
-instance C'.Cerialize PromisedAnswer where
+instance C'.Marshal PromisedAnswer where
     marshalInto raw value = do
         case value of
             PromisedAnswer{..} -> do
@@ -412,6 +423,7 @@ instance C'.Cerialize PromisedAnswer where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (transform V.! i)
+instance C'.Cerialize s PromisedAnswer
 data Provide
      = Provide
         {questionId :: Word32,
@@ -429,7 +441,7 @@ instance C'.FromStruct M'.ConstMsg Provide where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Provide M'.ConstMsg)
-instance C'.Cerialize Provide where
+instance C'.Marshal Provide where
     marshalInto raw value = do
         case value of
             Provide{..} -> do
@@ -437,6 +449,7 @@ instance C'.Cerialize Provide where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Provide'target raw
                 C'.marshalInto field_ target
                 pure ()
+instance C'.Cerialize s Provide
 data Release
      = Release
         {id :: Word32,
@@ -452,12 +465,13 @@ instance C'.FromStruct M'.ConstMsg Release where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Release M'.ConstMsg)
-instance C'.Cerialize Release where
+instance C'.Marshal Release where
     marshalInto raw value = do
         case value of
             Release{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Release'id raw id
                 Capnp.ById.Xb312981b2552a250.set_Release'referenceCount raw referenceCount
+instance C'.Cerialize s Release
 data Resolve
      = Resolve
         {promiseId :: Word32,
@@ -473,13 +487,14 @@ instance C'.FromStruct M'.ConstMsg Resolve where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Resolve M'.ConstMsg)
-instance C'.Cerialize Resolve where
+instance C'.Marshal Resolve where
     marshalInto raw value = do
         case value of
             Resolve{..} -> do
                 Capnp.ById.Xb312981b2552a250.set_Resolve'promiseId raw promiseId
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Resolve'union' raw
                 C'.marshalInto field_ union'
+instance C'.Cerialize s Resolve
 data Return
      = Return
         {answerId :: Word32,
@@ -497,7 +512,7 @@ instance C'.FromStruct M'.ConstMsg Return where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Return M'.ConstMsg)
-instance C'.Cerialize Return where
+instance C'.Marshal Return where
     marshalInto raw value = do
         case value of
             Return{..} -> do
@@ -505,6 +520,7 @@ instance C'.Cerialize Return where
                 Capnp.ById.Xb312981b2552a250.set_Return'releaseParamCaps raw releaseParamCaps
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Return'union' raw
                 C'.marshalInto field_ union'
+instance C'.Cerialize s Return
 data ThirdPartyCapDescriptor
      = ThirdPartyCapDescriptor
         {id :: Maybe (PU'.PtrType),
@@ -520,12 +536,13 @@ instance C'.FromStruct M'.ConstMsg ThirdPartyCapDescriptor where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor M'.ConstMsg)
-instance C'.Cerialize ThirdPartyCapDescriptor where
+instance C'.Marshal ThirdPartyCapDescriptor where
     marshalInto raw value = do
         case value of
             ThirdPartyCapDescriptor{..} -> do
                 pure ()
                 Capnp.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'vineId raw vineId
+instance C'.Cerialize s ThirdPartyCapDescriptor
 data Call'sendResultsTo
      = Call'sendResultsTo'caller |
     Call'sendResultsTo'yourself |
@@ -545,7 +562,7 @@ instance C'.FromStruct M'.ConstMsg Call'sendResultsTo where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Call'sendResultsTo M'.ConstMsg)
-instance C'.Cerialize Call'sendResultsTo where
+instance C'.Marshal Call'sendResultsTo where
     marshalInto raw value = do
         case value of
             Call'sendResultsTo'caller -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw
@@ -553,6 +570,7 @@ instance C'.Cerialize Call'sendResultsTo where
             Call'sendResultsTo'thirdParty arg_ -> do
                 pure ()
             Call'sendResultsTo'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'unknown' raw arg_
+instance C'.Cerialize s Call'sendResultsTo
 data Disembargo'context
      = Disembargo'context'senderLoopback (Word32) |
     Disembargo'context'receiverLoopback (Word32) |
@@ -574,7 +592,7 @@ instance C'.FromStruct M'.ConstMsg Disembargo'context where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Disembargo'context M'.ConstMsg)
-instance C'.Cerialize Disembargo'context where
+instance C'.Marshal Disembargo'context where
     marshalInto raw value = do
         case value of
             Disembargo'context'senderLoopback arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'senderLoopback raw arg_
@@ -582,6 +600,7 @@ instance C'.Cerialize Disembargo'context where
             Disembargo'context'accept -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'accept raw
             Disembargo'context'provide arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw arg_
             Disembargo'context'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'unknown' raw arg_
+instance C'.Cerialize s Disembargo'context
 data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField (Word16) |
@@ -599,12 +618,13 @@ instance C'.FromStruct M'.ConstMsg PromisedAnswer'Op where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op M'.ConstMsg)
-instance C'.Cerialize PromisedAnswer'Op where
+instance C'.Marshal PromisedAnswer'Op where
     marshalInto raw value = do
         case value of
             PromisedAnswer'Op'noop -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw
             PromisedAnswer'Op'getPointerField arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw arg_
             PromisedAnswer'Op'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'unknown' raw arg_
+instance C'.Cerialize s PromisedAnswer'Op
 data Resolve'
      = Resolve'cap (CapDescriptor) |
     Resolve'exception (Exception) |
@@ -622,7 +642,7 @@ instance C'.FromStruct M'.ConstMsg Resolve' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Resolve' M'.ConstMsg)
-instance C'.Cerialize Resolve' where
+instance C'.Marshal Resolve' where
     marshalInto raw value = do
         case value of
             Resolve'cap arg_ -> do
@@ -632,6 +652,7 @@ instance C'.Cerialize Resolve' where
                 field_ <- Capnp.ById.Xb312981b2552a250.new_Resolve'exception raw
                 C'.marshalInto field_ arg_
             Resolve'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Resolve'unknown' raw arg_
+instance C'.Cerialize s Resolve'
 data Return'
      = Return'results (Payload) |
     Return'exception (Exception) |
@@ -657,7 +678,7 @@ instance C'.FromStruct M'.ConstMsg Return' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xb312981b2552a250.Return' M'.ConstMsg)
-instance C'.Cerialize Return' where
+instance C'.Marshal Return' where
     marshalInto raw value = do
         case value of
             Return'results arg_ -> do
@@ -672,3 +693,4 @@ instance C'.Cerialize Return' where
             Return'acceptFromThirdParty arg_ -> do
                 pure ()
             Return'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'unknown' raw arg_
+instance C'.Cerialize s Return'

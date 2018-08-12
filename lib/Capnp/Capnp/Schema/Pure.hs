@@ -49,7 +49,7 @@ instance C'.FromStruct M'.ConstMsg Annotation where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Annotation M'.ConstMsg)
-instance C'.Cerialize Annotation where
+instance C'.Marshal Annotation where
     marshalInto raw value = do
         case value of
             Annotation{..} -> do
@@ -58,6 +58,7 @@ instance C'.Cerialize Annotation where
                 C'.marshalInto field_ value
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Annotation'brand raw
                 C'.marshalInto field_ brand
+instance C'.Cerialize s Annotation
 data Brand
      = Brand
         {scopes :: List (Brand'Scope)}
@@ -71,7 +72,7 @@ instance C'.FromStruct M'.ConstMsg Brand where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand M'.ConstMsg)
-instance C'.Cerialize Brand where
+instance C'.Marshal Brand where
     marshalInto raw value = do
         case value of
             Brand{..} -> do
@@ -80,6 +81,7 @@ instance C'.Cerialize Brand where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (scopes V.! i)
+instance C'.Cerialize s Brand
 data CapnpVersion
      = CapnpVersion
         {major :: Word16,
@@ -97,13 +99,14 @@ instance C'.FromStruct M'.ConstMsg CapnpVersion where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CapnpVersion M'.ConstMsg)
-instance C'.Cerialize CapnpVersion where
+instance C'.Marshal CapnpVersion where
     marshalInto raw value = do
         case value of
             CapnpVersion{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'major raw major
                 Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'minor raw minor
                 Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'micro raw micro
+instance C'.Cerialize s CapnpVersion
 data CodeGeneratorRequest
      = CodeGeneratorRequest
         {nodes :: List (Node),
@@ -121,7 +124,7 @@ instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.ConstMsg)
-instance C'.Cerialize CodeGeneratorRequest where
+instance C'.Marshal CodeGeneratorRequest where
     marshalInto raw value = do
         case value of
             CodeGeneratorRequest{..} -> do
@@ -137,6 +140,7 @@ instance C'.Cerialize CodeGeneratorRequest where
                     C'.marshalInto elt (requestedFiles V.! i)
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'capnpVersion raw
                 C'.marshalInto field_ capnpVersion
+instance C'.Cerialize s CodeGeneratorRequest
 data Enumerant
      = Enumerant
         {name :: Text,
@@ -154,7 +158,7 @@ instance C'.FromStruct M'.ConstMsg Enumerant where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Enumerant M'.ConstMsg)
-instance C'.Cerialize Enumerant where
+instance C'.Marshal Enumerant where
     marshalInto raw value = do
         case value of
             Enumerant{..} -> do
@@ -166,6 +170,7 @@ instance C'.Cerialize Enumerant where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (annotations V.! i)
+instance C'.Cerialize s Enumerant
 data Field
      = Field
         {name :: Text,
@@ -189,7 +194,7 @@ instance C'.FromStruct M'.ConstMsg Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field M'.ConstMsg)
-instance C'.Cerialize Field where
+instance C'.Marshal Field where
     marshalInto raw value = do
         case value of
             Field{..} -> do
@@ -206,6 +211,7 @@ instance C'.Cerialize Field where
                 C'.marshalInto field_ ordinal
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Field'union' raw
                 C'.marshalInto field_ union'
+instance C'.Cerialize s Field
 data Method
      = Method
         {name :: Text,
@@ -233,7 +239,7 @@ instance C'.FromStruct M'.ConstMsg Method where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Method M'.ConstMsg)
-instance C'.Cerialize Method where
+instance C'.Marshal Method where
     marshalInto raw value = do
         case value of
             Method{..} -> do
@@ -256,6 +262,7 @@ instance C'.Cerialize Method where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (implicitParameters V.! i)
+instance C'.Cerialize s Method
 data Node
      = Node
         {id :: Word64,
@@ -285,7 +292,7 @@ instance C'.FromStruct M'.ConstMsg Node where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node M'.ConstMsg)
-instance C'.Cerialize Node where
+instance C'.Marshal Node where
     marshalInto raw value = do
         case value of
             Node{..} -> do
@@ -312,6 +319,7 @@ instance C'.Cerialize Node where
                 Capnp.ById.Xa93fc509624c72d9.set_Node'isGeneric raw isGeneric
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Node'union' raw
                 C'.marshalInto field_ union'
+instance C'.Cerialize s Node
 data Superclass
      = Superclass
         {id :: Word64,
@@ -327,13 +335,14 @@ instance C'.FromStruct M'.ConstMsg Superclass where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Superclass M'.ConstMsg)
-instance C'.Cerialize Superclass where
+instance C'.Marshal Superclass where
     marshalInto raw value = do
         case value of
             Superclass{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_Superclass'id raw id
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Superclass'brand raw
                 C'.marshalInto field_ brand
+instance C'.Cerialize s Superclass
 data Type
      = Type'void |
     Type'bool |
@@ -401,7 +410,7 @@ instance C'.FromStruct M'.ConstMsg Type where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type M'.ConstMsg)
-instance C'.Cerialize Type where
+instance C'.Marshal Type where
     marshalInto raw value = do
         case value of
             Type'void -> Capnp.ById.Xa93fc509624c72d9.set_Type'void raw
@@ -442,6 +451,7 @@ instance C'.Cerialize Type where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Type'anyPointer'union' raw
                 C'.marshalInto field_ union'
             Type'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'unknown' raw arg_
+instance C'.Cerialize s Type
 data Value
      = Value'void |
     Value'bool (Bool) |
@@ -493,7 +503,7 @@ instance C'.FromStruct M'.ConstMsg Value where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Value M'.ConstMsg)
-instance C'.Cerialize Value where
+instance C'.Marshal Value where
     marshalInto raw value = do
         case value of
             Value'void -> Capnp.ById.Xa93fc509624c72d9.set_Value'void raw
@@ -523,6 +533,7 @@ instance C'.Cerialize Value where
             Value'anyPointer arg_ -> do
                 pure ()
             Value'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'unknown' raw arg_
+instance C'.Cerialize s Value
 data Brand'Binding
      = Brand'Binding'unbound |
     Brand'Binding'type_ (Type) |
@@ -540,7 +551,7 @@ instance C'.FromStruct M'.ConstMsg Brand'Binding where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Binding M'.ConstMsg)
-instance C'.Cerialize Brand'Binding where
+instance C'.Marshal Brand'Binding where
     marshalInto raw value = do
         case value of
             Brand'Binding'unbound -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Binding'unbound raw
@@ -548,6 +559,7 @@ instance C'.Cerialize Brand'Binding where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Brand'Binding'type_ raw
                 C'.marshalInto field_ arg_
             Brand'Binding'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Binding'unknown' raw arg_
+instance C'.Cerialize s Brand'Binding
 data Brand'Scope
      = Brand'Scope
         {scopeId :: Word64,
@@ -563,13 +575,14 @@ instance C'.FromStruct M'.ConstMsg Brand'Scope where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope M'.ConstMsg)
-instance C'.Cerialize Brand'Scope where
+instance C'.Marshal Brand'Scope where
     marshalInto raw value = do
         case value of
             Brand'Scope{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'scopeId raw scopeId
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'union' raw
                 C'.marshalInto field_ union'
+instance C'.Cerialize s Brand'Scope
 data Brand'Scope'
      = Brand'Scope'bind (List (Brand'Binding)) |
     Brand'Scope'inherit |
@@ -587,7 +600,7 @@ instance C'.FromStruct M'.ConstMsg Brand'Scope' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Brand'Scope' M'.ConstMsg)
-instance C'.Cerialize Brand'Scope' where
+instance C'.Marshal Brand'Scope' where
     marshalInto raw value = do
         case value of
             Brand'Scope'bind arg_ -> do
@@ -598,6 +611,7 @@ instance C'.Cerialize Brand'Scope' where
                     C'.marshalInto elt (arg_ V.! i)
             Brand'Scope'inherit -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw
             Brand'Scope'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'unknown' raw arg_
+instance C'.Cerialize s Brand'Scope'
 data CodeGeneratorRequest'RequestedFile
      = CodeGeneratorRequest'RequestedFile
         {id :: Word64,
@@ -615,7 +629,7 @@ instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile M'.ConstMsg)
-instance C'.Cerialize CodeGeneratorRequest'RequestedFile where
+instance C'.Marshal CodeGeneratorRequest'RequestedFile where
     marshalInto raw value = do
         case value of
             CodeGeneratorRequest'RequestedFile{..} -> do
@@ -627,6 +641,7 @@ instance C'.Cerialize CodeGeneratorRequest'RequestedFile where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (imports V.! i)
+instance C'.Cerialize s CodeGeneratorRequest'RequestedFile
 data CodeGeneratorRequest'RequestedFile'Import
      = CodeGeneratorRequest'RequestedFile'Import
         {id :: Word64,
@@ -642,13 +657,14 @@ instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest'RequestedFile'Import whe
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import M'.ConstMsg)
-instance C'.Cerialize CodeGeneratorRequest'RequestedFile'Import where
+instance C'.Marshal CodeGeneratorRequest'RequestedFile'Import where
     marshalInto raw value = do
         case value of
             CodeGeneratorRequest'RequestedFile'Import{..} -> do
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'id raw id
                 field_ <- PH'.marshalText raw name
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'name raw field_
+instance C'.Cerialize s CodeGeneratorRequest'RequestedFile'Import
 data Field'
      = Field'slot
         {offset :: Word32,
@@ -676,7 +692,7 @@ instance C'.FromStruct M'.ConstMsg Field' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field' M'.ConstMsg)
-instance C'.Cerialize Field' where
+instance C'.Marshal Field' where
     marshalInto raw value = do
         case value of
             Field'slot{..} -> do
@@ -691,6 +707,7 @@ instance C'.Cerialize Field' where
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Field'group raw
                 Capnp.ById.Xa93fc509624c72d9.set_Field'group'typeId raw typeId
             Field'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'unknown' raw arg_
+instance C'.Cerialize s Field'
 field'noDiscriminant :: Word16
 field'noDiscriminant = Capnp.ById.Xa93fc509624c72d9.field'noDiscriminant
 data Field'ordinal
@@ -710,12 +727,13 @@ instance C'.FromStruct M'.ConstMsg Field'ordinal where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Field'ordinal M'.ConstMsg)
-instance C'.Cerialize Field'ordinal where
+instance C'.Marshal Field'ordinal where
     marshalInto raw value = do
         case value of
             Field'ordinal'implicit -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw
             Field'ordinal'explicit arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw arg_
             Field'ordinal'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'unknown' raw arg_
+instance C'.Cerialize s Field'ordinal
 data Node'
      = Node'file |
     Node'struct
@@ -791,7 +809,7 @@ instance C'.FromStruct M'.ConstMsg Node' where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node' M'.ConstMsg)
-instance C'.Cerialize Node' where
+instance C'.Marshal Node' where
     marshalInto raw value = do
         case value of
             Node'file -> Capnp.ById.Xa93fc509624c72d9.set_Node'file raw
@@ -850,6 +868,7 @@ instance C'.Cerialize Node' where
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsParam raw targetsParam
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsAnnotation raw targetsAnnotation
             Node'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Node'unknown' raw arg_
+instance C'.Cerialize s Node'
 data Node'NestedNode
      = Node'NestedNode
         {name :: Text,
@@ -865,13 +884,14 @@ instance C'.FromStruct M'.ConstMsg Node'NestedNode where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'NestedNode M'.ConstMsg)
-instance C'.Cerialize Node'NestedNode where
+instance C'.Marshal Node'NestedNode where
     marshalInto raw value = do
         case value of
             Node'NestedNode{..} -> do
                 field_ <- PH'.marshalText raw name
                 Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'name raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'id raw id
+instance C'.Cerialize s Node'NestedNode
 data Node'Parameter
      = Node'Parameter
         {name :: Text}
@@ -885,12 +905,13 @@ instance C'.FromStruct M'.ConstMsg Node'Parameter where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Node'Parameter M'.ConstMsg)
-instance C'.Cerialize Node'Parameter where
+instance C'.Marshal Node'Parameter where
     marshalInto raw value = do
         case value of
             Node'Parameter{..} -> do
                 field_ <- PH'.marshalText raw name
                 Capnp.ById.Xa93fc509624c72d9.set_Node'Parameter'name raw field_
+instance C'.Cerialize s Node'Parameter
 data Type'anyPointer
      = Type'anyPointer'unconstrained
         {union' :: Type'anyPointer'unconstrained} |
@@ -918,7 +939,7 @@ instance C'.FromStruct M'.ConstMsg Type'anyPointer where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer M'.ConstMsg)
-instance C'.Cerialize Type'anyPointer where
+instance C'.Marshal Type'anyPointer where
     marshalInto raw value = do
         case value of
             Type'anyPointer'unconstrained{..} -> do
@@ -933,6 +954,7 @@ instance C'.Cerialize Type'anyPointer where
                 raw <- Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter raw
                 Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter'parameterIndex raw parameterIndex
             Type'anyPointer'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unknown' raw arg_
+instance C'.Cerialize s Type'anyPointer
 data Type'anyPointer'unconstrained
      = Type'anyPointer'unconstrained'anyKind |
     Type'anyPointer'unconstrained'struct |
@@ -954,7 +976,7 @@ instance C'.FromStruct M'.ConstMsg Type'anyPointer'unconstrained where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained M'.ConstMsg)
-instance C'.Cerialize Type'anyPointer'unconstrained where
+instance C'.Marshal Type'anyPointer'unconstrained where
     marshalInto raw value = do
         case value of
             Type'anyPointer'unconstrained'anyKind -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'anyKind raw
@@ -962,3 +984,4 @@ instance C'.Cerialize Type'anyPointer'unconstrained where
             Type'anyPointer'unconstrained'list -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'list raw
             Type'anyPointer'unconstrained'capability -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw
             Type'anyPointer'unconstrained'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'unknown' raw arg_
+instance C'.Cerialize s Type'anyPointer'unconstrained

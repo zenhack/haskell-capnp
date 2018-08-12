@@ -60,7 +60,7 @@ encodeTests = testGroup "schema encode tests"
         -- TODO: the size of this context is *stupid*
         ( Show a
         , Eq a
-        , Cerialize a
+        , Cerialize RealWorld a
         , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
         , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
         , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
@@ -530,7 +530,7 @@ instance Arbitrary CodeGeneratorRequest'RequestedFile'Import where
 prop_cerializeDecerializeInverses ::
     ( Show a
     , Eq a
-    , Cerialize a
+    , Cerialize RealWorld a
     , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
     , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
     , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)

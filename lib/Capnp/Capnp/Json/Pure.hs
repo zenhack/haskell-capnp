@@ -59,7 +59,7 @@ instance C'.FromStruct M'.ConstMsg JsonValue where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg)
-instance C'.Cerialize JsonValue where
+instance C'.Marshal JsonValue where
     marshalInto raw value = do
         case value of
             JsonValue'null -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'null raw
@@ -84,6 +84,7 @@ instance C'.Cerialize JsonValue where
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'call raw
                 C'.marshalInto field_ arg_
             JsonValue'unknown' arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'unknown' raw arg_
+instance C'.Cerialize s JsonValue
 data JsonValue'Call
      = JsonValue'Call
         {function :: Text,
@@ -99,7 +100,7 @@ instance C'.FromStruct M'.ConstMsg JsonValue'Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg)
-instance C'.Cerialize JsonValue'Call where
+instance C'.Marshal JsonValue'Call where
     marshalInto raw value = do
         case value of
             JsonValue'Call{..} -> do
@@ -110,6 +111,7 @@ instance C'.Cerialize JsonValue'Call where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (params V.! i)
+instance C'.Cerialize s JsonValue'Call
 data JsonValue'Field
      = JsonValue'Field
         {name :: Text,
@@ -125,7 +127,7 @@ instance C'.FromStruct M'.ConstMsg JsonValue'Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMsg)
-instance C'.Cerialize JsonValue'Field where
+instance C'.Marshal JsonValue'Field where
     marshalInto raw value = do
         case value of
             JsonValue'Field{..} -> do
@@ -133,3 +135,4 @@ instance C'.Cerialize JsonValue'Field where
                 Capnp.ById.X8ef99297a43a5e34.set_JsonValue'Field'name raw field_
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
                 C'.marshalInto field_ value
+instance C'.Cerialize s JsonValue'Field
