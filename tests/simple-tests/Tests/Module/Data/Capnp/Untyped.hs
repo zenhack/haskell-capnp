@@ -258,6 +258,5 @@ modifyTests = assertionsToTest "Test modification" $ map testCase
         msg <- M.thaw =<< encodeValue schemaText testType testIn
         evalLimitT 128 $ rootPtr msg >>= testMod
         actualOut <- decodeValue schemaText testType =<< M.freeze msg
-        when (actualOut /= testOut) $
-            error $ "Expected:\n\n" ++ show testOut ++ "\n\n...but got:\n\n" ++ show actualOut
+        assertEqual ( actualOut ++ " == " ++ testOut) actualOut testOut
     schemaText = [there|tests/data/aircraft.capnp|]
