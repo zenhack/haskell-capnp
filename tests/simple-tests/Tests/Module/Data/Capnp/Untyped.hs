@@ -250,9 +250,9 @@ modifyTests = testGroup "Test modification" $ map testCase
             , testOut = "(" ++ tagname ++ " = [0, 1, 2, 3, 4])\n"
             , testMod = \struct -> do
                 setData tagvalue 0 struct
-                u32vec <- allocList (message struct) 5
-                forM_ [0..4] $ \i -> setIndex (fromIntegral i) i u32vec
-                setPtr (Just $ PtrList $ dataCon u32vec) 0 struct
+                vec <- allocList (message struct) 5
+                forM_ [0..4] $ \i -> setIndex (fromIntegral i) i vec
+                setPtr (Just $ PtrList $ dataCon vec) 0 struct
             }
     testCase ModTest{..} = assertionsToTest
             (show testIn ++ " : " ++ testType ++ " == " ++ show testOut) $
