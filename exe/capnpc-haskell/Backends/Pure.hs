@@ -102,8 +102,6 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import Control.Monad (forM_)"
     , ""
     , "import qualified Data.Capnp.Message as M'"
-    , "import qualified Data.Capnp.Basics as B'"
-    , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
     , "import qualified Codec.Capnp as C'"
     , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
@@ -319,7 +317,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                 ]
             PtrField _ ty -> case ty of
                 PrimPtr PrimData -> vcat
-                    [ hcat [ "field_ <- B'.newData (U'.message raw) (BS.length ", fieldNameText, ")"]
+                    [ hcat [ "field_ <- ", newName, " (BS.length ", fieldNameText, ") raw" ]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                     ]
                 PrimPtr PrimText -> vcat

@@ -24,8 +24,6 @@ import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
-import qualified Data.Capnp.Basics as B'
-import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Codec.Capnp as C'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
@@ -514,7 +512,7 @@ instance C'.Cerialize Value where
                 field_ <- PH'.marshalText raw arg_
                 Capnp.ById.Xa93fc509624c72d9.set_Value'text raw field_
             Value'data_ arg_ -> do
-                field_ <- B'.newData (U'.message raw) (BS.length arg_)
+                field_ <- Capnp.ById.Xa93fc509624c72d9.new_Value'data_ (BS.length arg_) raw
                 C'.marshalInto field_ arg_
             Value'list arg_ -> do
                 pure ()

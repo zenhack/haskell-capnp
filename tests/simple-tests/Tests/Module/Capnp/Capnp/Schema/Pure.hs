@@ -410,6 +410,7 @@ propTests = testGroup "check that cerialize and decerialize are inverses."
     , propCase "Brand" (Proxy :: Proxy Brand)
     , propCase "Brand.Scope" (Proxy :: Proxy Brand'Scope)
     , propCase "Brand.Binding" (Proxy :: Proxy Brand'Binding)
+    , propCase "Value" (Proxy :: Proxy Value)
     , propCase "CodeGeneratorRequest.RequestedFile"
         (Proxy :: Proxy CodeGeneratorRequest'RequestedFile)
     , propCase "CodeGeneratorRequest.RequestedFile.Import"
@@ -458,6 +459,26 @@ instance Arbitrary Brand'Binding where
         [ pure Brand'Binding'unbound
         , Brand'Binding'type_ <$> arbitrary
         , Brand'Binding'unknown' <$> arbitraryTag 2
+        ]
+
+instance Arbitrary Value where
+    arbitrary = oneof
+        [ pure Value'void
+        , Value'bool <$> arbitrary
+        , Value'int8 <$> arbitrary
+        , Value'int16 <$> arbitrary
+        , Value'int32 <$> arbitrary
+        , Value'int64 <$> arbitrary
+        , Value'uint8 <$> arbitrary
+        , Value'uint16 <$> arbitrary
+        , Value'uint32 <$> arbitrary
+        , Value'uint64 <$> arbitrary
+        , Value'float32 <$> arbitrary
+        , Value'float64 <$> arbitrary
+        , Value'text <$> arbitrary
+        , Value'data_ <$> arbitrary
+        -- TODO: list, enum, struct, interface, anyPointer
+        , Value'unknown' <$> arbitraryTag 19
         ]
 
 instance Arbitrary Type where
