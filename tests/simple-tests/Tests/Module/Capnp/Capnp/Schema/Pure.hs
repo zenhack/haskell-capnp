@@ -28,17 +28,19 @@ import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit.Lang                      (assertEqual)
 import Test.QuickCheck
-    (Arbitrary(..), Gen, Property, oneof)
+    (Arbitrary(..), Gen, Property, oneof, resize, sized)
 import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO                   (propertyIO)
 import Text.Heredoc                         (here, there)
 import Text.Show.Pretty                     (ppShow)
 
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Data.Capnp.Message      as M
+import qualified Data.Capnp.Untyped      as U
+import qualified Data.Capnp.Untyped.Pure as PU
 
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
+import qualified Data.Vector             as V
 
 schemaText = [there|tests/data/schema.capnp|]
 
@@ -477,9 +479,11 @@ instance Arbitrary Value where
         , Value'float64 <$> arbitrary
         , Value'text <$> arbitrary
         , Value'data_ <$> arbitrary
-        -- TODO: list
+        , Value'list <$> arbitrary
         , Value'enum <$> arbitrary
-        -- TODO: struct, interface, anyPointer
+        , Value'struct <$> arbitrary
+        , pure Value'interface
+        , Value'anyPointer <$> arbitrary
         , Value'unknown' <$> arbitraryTag 19
         ]
 
@@ -526,6 +530,26 @@ instance Arbitrary CodeGeneratorRequest'RequestedFile'Import where
     arbitrary = CodeGeneratorRequest'RequestedFile'Import
         <$> arbitrary
         <*> arbitrary
+
+instance Arbitrary a => Arbitrary (PU.Slice a) where
+    arbitrary = sized $ \size -> do
+        -- Make sure the elements are scaled down relative to
+        -- the size of the vector:
+        vec <- arbitrary :: Gen (V.Vector ())
+        let gen = resize (size `div` V.length vec) arbitrary
+        PU.Slice <$> traverse (const gen) vec
+
+instance Arbitrary PU.Struct where
+    arbitrary = sized $ \size -> PU.Struct
+        <$> arbitrary
+        <*> arbitrary
+
+instance Arbitrary PU.PtrType where
+    arbitrary = oneof
+        [ PU.PtrStruct <$> arbitrary
+        -- TODO: lists
+        , PU.PtrCap <$> arbitrary
+        ]
 
 prop_cerializeDecerializeInverses ::
     ( Show a
