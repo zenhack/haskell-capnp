@@ -17,6 +17,7 @@ import Test.Framework            (Test, testGroup)
 import Test.HUnit                (assertEqual)
 import Text.Heredoc              (here, there)
 
+import qualified Codec.Capnp        as C
 import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Message as M
 
@@ -266,7 +267,7 @@ modifyTests = testGroup "Test modification" $ map testCase
 
 
 farPtrTest = assertionsToTest
-    "Setting the root pointer to something in another segment should work."
+    "Setting cross-segment pointers should work."
     [ do
         msg <- M.newMessage
         -- The allocator always allocates new objects in the last segment, so
@@ -275,4 +276,10 @@ farPtrTest = assertionsToTest
         (1, _) <- M.newSegment msg 16
         struct <- allocStruct msg 3 4
         setRoot struct
+    , evalLimitT maxBound $ do
+        msg <- M.newMessage
+        srcStruct <- allocStruct msg 4 4
+        (1, _) <- M.newSegment msg 10
+        dstStruct <- allocStruct msg 2 2
+        setPtr (C.toPtr dstStruct) 0 srcStruct
     ]

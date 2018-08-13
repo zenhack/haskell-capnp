@@ -455,11 +455,35 @@ setIndex value i list = case list of
     setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
     setPtrIndex nlist@NormalList{..} absPtr relPtr =
         let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
-        in case pointerFrom srcAddr (ptrAddr absPtr) relPtr of
-            Left DifferentSegments -> error "TODO: handle setIndex when we need a far pointer."
-            Left OutOfRange -> error "BUG: we should be screening messages to make this impossible."
-            Right ptr ->
-                setNIndex nlist 1 $ P.serializePtr (Just ptr)
+        in setPointerTo nMsg srcAddr (ptrAddr absPtr) relPtr
+
+-- | @'setPointerTo' msg srcAddr dstAddr relPtr@ sets the word at @srcAddr@ in @msg@ to a
+-- pointer like @relPtr@, but pointing to @dstAddr@. @relPtr@ should not be a far pointer.
+-- If the two addresses are in different segments, a landing pad will be allocated and
+-- @dstAddr@ will contain a far pointer.
+setPointerTo :: M.WriteCtx m s => M.MutMsg s -> WordAddr -> WordAddr -> P.Ptr -> m ()
+setPointerTo msg srcAddr dstAddr relPtr =
+    case pointerFrom srcAddr dstAddr relPtr of
+        Right absPtr ->
+            M.setWord msg srcAddr (P.serializePtr $ Just absPtr)
+        Left OutOfRange ->
+            error "BUG(TODO): segment is too large to set the pointer."
+        Left DifferentSegments -> do
+            -- We need a far pointer; allocate a landing pad in the target segment,
+            -- set it to point to the final destination, an then set the source pointer
+            -- pointer to point to the landing pad.
+            let WordAt{segIndex} = dstAddr
+            landingPadAddr <- M.allocInSeg msg segIndex 1
+            case pointerFrom landingPadAddr dstAddr relPtr of
+                Right landingPad -> do
+                    M.setWord msg landingPadAddr (P.serializePtr $ Just landingPad)
+                    let WordAt{segIndex,wordIndex} = landingPadAddr
+                    M.setWord msg srcAddr $
+                        P.serializePtr $ Just $ P.FarPtr False (fromIntegral wordIndex) (fromIntegral segIndex)
+                Left DifferentSegments ->
+                    error "BUG: allocated a landing pad in the wrong segment!"
+                Left OutOfRange ->
+                    error "BUG(TODO): segment is too large to set the pointer."
 
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.
@@ -612,27 +636,7 @@ rootPtr msg = do
 -- | Make the given struct the root object of its message.
 setRoot :: M.WriteCtx m s => Struct (M.MutMsg s) -> m ()
 setRoot (Struct msg addr dataSz ptrSz) =
-    case pointerFrom (WordAt 0 0) addr (P.StructPtr 0 dataSz ptrSz) of
-        Right ptr ->
-            M.setWord msg (WordAt 0 0) (P.serializePtr $ Just ptr)
-        Left OutOfRange ->
-            error "BUG(TODO): segment is too large to set the root pointer."
-        Left DifferentSegments -> do
-            -- We need a far pointer; allocate a landing pad in the target segment,
-            -- set it to point to the final destination, an then set the root to
-            -- point to the landing pad.
-            let WordAt{segIndex} = addr
-            landingPadAddr <- M.allocInSeg msg segIndex 1
-            case pointerFrom landingPadAddr addr (P.StructPtr 0 dataSz ptrSz) of
-                Right landingPad -> do
-                    M.setWord msg landingPadAddr (P.serializePtr $ Just landingPad)
-                    let WordAt{segIndex,wordIndex} = landingPadAddr
-                    M.setWord msg (WordAt 0 0) $
-                        P.serializePtr $ Just $ P.FarPtr False (fromIntegral wordIndex) (fromIntegral segIndex)
-                Left DifferentSegments ->
-                    error "BUG: allocated a landing pad in the wrong segment!"
-                Left OutOfRange ->
-                    error "BUG(TODO): segment is too large to set the root pointer."
+    setPointerTo msg (WordAt 0 0) addr (P.StructPtr 0 dataSz ptrSz)
 
 -- | Allocate a struct in the message.
 allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))
