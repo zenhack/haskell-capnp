@@ -615,11 +615,24 @@ setRoot (Struct msg addr dataSz ptrSz) =
     case pointerFrom (WordAt 0 0) addr (P.StructPtr 0 dataSz ptrSz) of
         Right ptr ->
             M.setWord msg (WordAt 0 0) (P.serializePtr $ Just ptr)
-        Left DifferentSegments ->
-            error $ "TODO: handle setting the root struct to something "
-                ++ "outside the first segment."
         Left OutOfRange ->
             error "BUG(TODO): segment is too large to set the root pointer."
+        Left DifferentSegments -> do
+            -- We need a far pointer; allocate a landing pad in the target segment,
+            -- set it to point to the final destination, an then set the root to
+            -- point to the landing pad.
+            let WordAt{segIndex} = addr
+            landingPadAddr <- M.allocInSeg msg segIndex 1
+            case pointerFrom landingPadAddr addr (P.StructPtr 0 dataSz ptrSz) of
+                Right landingPad -> do
+                    M.setWord msg landingPadAddr (P.serializePtr $ Just landingPad)
+                    let WordAt{segIndex,wordIndex} = landingPadAddr
+                    M.setWord msg (WordAt 0 0) $
+                        P.serializePtr $ Just $ P.FarPtr False (fromIntegral wordIndex) (fromIntegral segIndex)
+                Left DifferentSegments ->
+                    error "BUG: allocated a landing pad in the wrong segment!"
+                Left OutOfRange ->
+                    error "BUG(TODO): segment is too large to set the root pointer."
 
 -- | Allocate a struct in the message.
 allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))
