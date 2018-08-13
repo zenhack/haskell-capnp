@@ -60,11 +60,11 @@ class Decerialize a => Marshal a where
     -- | Marshal a value into the pre-allocated object of type @to@.
     marshalInto :: U.RWCtx m s => Cerial (M.MutMsg s) a -> a -> m ()
 
-class Marshal a => Cerialize s a where
+class Decerialize a => Cerialize s a where
     -- | Cerialize a value into the supplied message, returning the result.
     cerialize :: U.RWCtx m s => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
 
-    default cerialize :: (U.RWCtx m s, Allocate s (Cerial (M.MutMsg s) a))
+    default cerialize :: (U.RWCtx m s, Marshal a, Allocate s (Cerial (M.MutMsg s) a))
         => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
     cerialize msg value = do
         raw <- new msg
