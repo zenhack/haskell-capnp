@@ -35,6 +35,10 @@ data Error
     -- parsed was malformed. The argument to the data constructor is a
     -- human-readable error message.
     | InvalidDataError String
+    -- | A 'SizeError' indicates that an operation would have resulted in
+    -- a message that violated the library's limit on either segment size
+    -- or number of segments.
+    | SizeError
     -- | A 'SchemaViolationError' indicates that part of the message does
     -- not match the schema. The argument to the data construtor is a
     -- human-readable error message.

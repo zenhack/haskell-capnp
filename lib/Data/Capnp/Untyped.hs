@@ -467,7 +467,7 @@ setPointerTo msg srcAddr dstAddr relPtr =
         Right absPtr ->
             M.setWord msg srcAddr (P.serializePtr $ Just absPtr)
         Left OutOfRange ->
-            error "BUG(TODO): segment is too large to set the pointer."
+            error "BUG: segment is too large to set the pointer."
         Left DifferentSegments -> do
             -- We need a far pointer; allocate a landing pad in the target segment,
             -- set it to point to the final destination, an then set the source pointer
@@ -483,7 +483,7 @@ setPointerTo msg srcAddr dstAddr relPtr =
                 Left DifferentSegments ->
                     error "BUG: allocated a landing pad in the wrong segment!"
                 Left OutOfRange ->
-                    error "BUG(TODO): segment is too large to set the pointer."
+                    error "BUG: segment is too large to set the pointer."
 
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.

@@ -28,10 +28,14 @@ module Data.Capnp.Message
     , newMessage
     , newSegment
     , empty
+    , maxSegmentSize
+    , maxSegments
     )
   where
 
 import Prelude hiding (read)
+
+import Data.Bits (shiftL)
 
 import Control.Monad             (void, when, (>=>))
 import Control.Monad.Catch       (MonadThrow(..))
@@ -42,6 +46,7 @@ import Control.Monad.Writer      (execWriterT, tell)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
+import Data.Capnp.Errors         (Error(..))
 import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64)
@@ -53,6 +58,15 @@ import qualified Data.Vector                  as V
 import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
+
+
+-- | The maximum size of a segment supported by this libarary, in words.
+maxSegmentSize :: Int
+maxSegmentSize = 1 `shiftL` 28 -- 2 GiB.
+
+-- | The maximum number of segments allowed in a message by this library.
+maxSegments :: Int
+maxSegments = 1024
 
 -- | A 'Message' is a (possibly read-only) capnproto message. It is
 -- parameterized over a monad in which operations are performed.
@@ -287,6 +301,8 @@ write MutSegment{mutSegVec} i val =
 grow  :: WriteCtx m s => Segment (MutMsg s) -> Int -> m (Segment (MutMsg s))
 grow MutSegment{mutSegVec} amount = do
     -- TODO: use unallocated space if available, instead of actually resizing.
+    when (maxSegmentSize - amount < SMV.length mutSegVec) $
+        throwM SizeError
     newVec <- SMV.grow mutSegVec amount
     pure MutSegment
         { mutSegVec = newVec
@@ -300,6 +316,8 @@ newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
 newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
     newSegVec <- SMV.new sizeHint
     segIndex <- numSegs msg
+    when (segIndex >= maxSegments) $
+        throwM SizeError
     segs <- readMutVar mutMsgSegs
     when (MV.length segs == segIndex) $ do
         -- out of space; double the length of the message.
