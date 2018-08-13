@@ -200,12 +200,18 @@ instance Decerialize List' where
     decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
 
 instance Cerialize s List' where
-    cerialize msg (List0' l)  = U.List0  <$> U.allocList0 msg (length l)
-    cerialize msg (List1' l)  = U.List1  <$> cerializeListOfWord (U.allocList1  msg) l
-    cerialize msg (List8' l)  = U.List8  <$> cerializeListOfWord (U.allocList8  msg) l
-    cerialize msg (List16' l) = U.List16 <$> cerializeListOfWord (U.allocList16 msg) l
-    cerialize msg (List32' l) = U.List32 <$> cerializeListOfWord (U.allocList32 msg) l
-    cerialize msg (List64' l) = U.List64 <$> cerializeListOfWord (U.allocList64 msg) l
+    cerialize msg (List0'   l) = U.List0  <$> U.allocList0 msg (length l)
+    cerialize msg (List1'   l) = U.List1  <$> cerializeListOfWord (U.allocList1  msg) l
+    cerialize msg (List8'   l) = U.List8  <$> cerializeListOfWord (U.allocList8  msg) l
+    cerialize msg (List16'  l) = U.List16 <$> cerializeListOfWord (U.allocList16 msg) l
+    cerialize msg (List32'  l) = U.List32 <$> cerializeListOfWord (U.allocList32 msg) l
+    cerialize msg (List64'  l) = U.List64 <$> cerializeListOfWord (U.allocList64 msg) l
+    cerialize msg (ListPtr' l) = do
+        raw <- U.allocListPtr msg (length l)
+        forM_ [0..length l - 1] $ \i -> do
+            ptr <- cerialize msg (l V.! i)
+            U.setIndex ptr i raw
+        pure $ U.ListPtr raw
     cerialize msg _           = error "TODO"
 
 cerializeListOfWord :: U.RWCtx m s => (Int -> m (U.ListOf (M.MutMsg s) a)) -> List a -> m (U.ListOf (M.MutMsg s) a)

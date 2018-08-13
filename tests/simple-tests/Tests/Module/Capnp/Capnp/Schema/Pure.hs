@@ -559,7 +559,7 @@ instance Arbitrary PU.List' where
         , PU.List16' <$> arbitrarySmallerVec
         , PU.List32' <$> arbitrarySmallerVec
         , PU.List64' <$> arbitrarySmallerVec
-        -- , PU.ListPtr' <$> arbitrarySmallerVec
+        , PU.ListPtr' <$> arbitrarySmallerVec
         -- , PU.ListStruct' <$> arbitrarySmallerVec
         ]
 
