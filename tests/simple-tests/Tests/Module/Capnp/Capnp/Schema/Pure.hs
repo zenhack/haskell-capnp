@@ -608,4 +608,4 @@ prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
         root <- U.rootPtr constMsg
         cerialIn <- fromStruct root
         decerialize cerialIn
-    ppAssertEqual expected actual
+    ppAssertEqual actual expected
