@@ -401,8 +401,12 @@ decodeTests = testGroup "schema decode tests"
     testCase typename (capnpText, expected) = do
         msg <- encodeValue schemaText typename capnpText
         actual <- evalLimitT 128 $ U.rootPtr msg >>= fromStruct
-        when (actual /= expected) $ error $
-            "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
+        ppAssertEqual actual expected
+
+ppAssertEqual :: (Show a, Eq a) => a -> a -> IO ()
+ppAssertEqual actual expected =
+    when (actual /= expected) $ error $
+        "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
 
 propTests = testGroup "check that cerialize and decerialize are inverses."
     [ propCase "Superclass" (Proxy :: Proxy Superclass)
@@ -569,7 +573,4 @@ prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
         root <- U.rootPtr constMsg
         cerialIn <- fromStruct root
         decerialize cerialIn
-    assertEqual
-        ("decerialize (cerialize " ++ show expected ++ ") == " ++ show actual)
-        expected
-        actual
+    ppAssertEqual expected actual
