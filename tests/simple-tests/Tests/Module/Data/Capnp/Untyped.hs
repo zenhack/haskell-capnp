@@ -23,6 +23,7 @@ import qualified Data.Capnp.Message as M
 untypedTests = testGroup "Untyped Tests"
     [ readTests
     , modifyTests
+    , farPtrTest
     ]
 
 readTests :: Test
@@ -262,3 +263,16 @@ modifyTests = testGroup "Test modification" $ map testCase
         actualOut <- decodeValue schemaText testType =<< M.freeze msg
         assertEqual ( actualOut ++ " == " ++ testOut) actualOut testOut
     schemaText = [there|tests/data/aircraft.capnp|]
+
+
+farPtrTest = assertionsToTest
+    "Setting the root pointer to something in another segment should work."
+    [ do
+        msg <- M.newMessage
+        -- The allocator always allocates new objects in the last segment, so
+        -- if we create a new segment, the call to allocStruct below should
+        -- allocate there:
+        (1, _) <- M.newSegment msg 16
+        struct <- allocStruct msg 3 4
+        setRoot struct
+    ]

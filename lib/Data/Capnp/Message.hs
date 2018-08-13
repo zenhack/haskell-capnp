@@ -24,7 +24,9 @@ module Data.Capnp.Message
     , readMessage
     , writeMessage
     , alloc
+    , allocInSeg
     , newMessage
+    , newSegment
     , empty
     )
   where
@@ -41,6 +43,7 @@ import Data.ByteString.Internal  (ByteString(..))
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
 import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
+import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64)
 import Internal.Util             (checkIndex)
 import System.Endian             (fromLE64, toLE64)
@@ -218,7 +221,14 @@ writeMessage (ConstMsg segs) write32 writeSegment = do
 --
 -- Due to mutabilty, the implementations of 'toByteString' and 'fromByteString'
 -- must make full copies, and so are O(n) in the length of the segment.
-newtype MutMsg s = MutMsg (MV.MVector s (Segment (MutMsg s)))
+data MutMsg s = MutMsg
+    { mutMsgSegs :: MutVar s (MV.MVector s (Segment (MutMsg s)))
+    -- ^ A vector of segments. A suffix of this may be unused; see below.
+    , mutMsgLen  :: MutVar s Int
+    -- ^ The "true" number of segments in the message. This may be shorter
+    -- than @'MV.length' mutMsgSegs@; the remainder is considered
+    -- unallocated space, and is used for amortized O(1) appending.
+    }
 
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
@@ -229,8 +239,8 @@ instance WriteCtx m s => Message m (MutMsg s) where
         -- ^ The underlying vector of words storing segment's data.
         , mutSegLen :: !Int
         -- ^ The "true" length fo the segment. This may be shorter
-        -- than @'SMV.length' mutSegVec@; the remainder is considered
-        -- unallocated space, and is used for amortized O(1) appending.
+        -- than @'SMV.length' mutSegVec@; it is analogous to 'mutMsgLen'
+        -- at the message level.
         }
 
     numWords MutSegment{mutSegLen} = pure mutSegLen
@@ -251,15 +261,19 @@ instance WriteCtx m s => Message m (MutMsg s) where
         seg <- freeze mseg
         toByteString (seg :: Segment ConstMsg)
 
-    numSegs (MutMsg vec) = pure $ MV.length vec
-    internalGetSeg (MutMsg vec) = MV.read vec
+    numSegs = readMutVar . mutMsgLen
+    internalGetSeg MutMsg{mutMsgSegs} i = do
+        segs <- readMutVar mutMsgSegs
+        MV.read segs i
 
 
 -- | @'internalSetSeg' message index segment@ sets the segment at the given
 -- index in the message. Most callers should use the 'setSegment' wrapper,
 -- instead of calling this directly.
 internalSetSeg :: WriteCtx m s => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
-internalSetSeg (MutMsg msg) = MV.write msg
+internalSetSeg MutMsg{mutMsgSegs} segIndex seg = do
+    segs <- readMutVar mutMsgSegs
+    MV.write segs segIndex seg
 
 -- | @'write' segment index value@ writes a value to the 64-bit word
 -- at the provided index. Consider using 'setWord' on the message,
@@ -279,17 +293,40 @@ grow MutSegment{mutSegVec} amount = do
         , mutSegLen = SMV.length newVec
         }
 
--- | @'alloc' size@ allocates 'size' words within a message. it returns the
--- starting address of the allocated memory.
-alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
-alloc msg (WordCount size) = do
-    -- TODO: check for and deal with segments that are "too big."
-    segIndex <- pred <$> numSegs msg
+-- | @'newSegment' msg sizeHint@ allocates a new, initially empty segment in
+-- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
+-- number and the segment itself. Amortized O(1).
+newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
+newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
+    newSegVec <- SMV.new sizeHint
+    segIndex <- numSegs msg
+    segs <- readMutVar mutMsgSegs
+    when (MV.length segs == segIndex) $ do
+        -- out of space; double the length of the message.
+        MV.grow segs segIndex >>= writeMutVar mutMsgSegs
+        writeMutVar mutMsgLen (segIndex * 2)
+    let newSeg = MutSegment
+            { mutSegVec = newSegVec
+            , mutSegLen = 0
+            }
+    setSegment msg segIndex newSeg
+    pure (segIndex, newSeg)
+
+allocInSeg :: WriteCtx m s => MutMsg s -> Int -> WordCount -> m WordAddr
+allocInSeg msg segIndex (WordCount size) = do
     oldSeg@MutSegment{mutSegLen} <- getSegment msg segIndex
     let ret = WordAt { segIndex, wordIndex = WordCount mutSegLen }
     newSeg <- grow oldSeg size
     setSegment msg segIndex newSeg
     pure ret
+
+-- | @'alloc' size@ allocates 'size' words within a message. it returns the
+-- starting address of the allocated memory.
+alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
+alloc msg size = do
+    -- TODO: check for and deal with segments that are "too big."
+    segIndex <- pred <$> numSegs msg
+    allocInSeg msg segIndex size
 
 empty :: ConstMsg
 empty = ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
@@ -318,8 +355,11 @@ instance Mutable (MutMsg s) where
     type Scope (MutMsg s) = s
     type Frozen (MutMsg s) = ConstMsg
 
-    thaw (ConstMsg vec) =
-        MutMsg <$> (V.mapM thaw vec >>= V.thaw)
-    freeze (MutMsg mvec) = do
-        vec <- V.freeze mvec
-        ConstMsg <$> V.mapM freeze vec
+    thaw (ConstMsg vec) = do
+        segments <- V.mapM thaw vec >>= V.thaw
+        MutMsg
+            <$> newMutVar segments
+            <*> newMutVar (MV.length segments)
+    freeze msg@MutMsg{mutMsgLen} = do
+        len <- readMutVar mutMsgLen
+        ConstMsg <$> V.generateM len (getSegment msg >=> freeze)
