@@ -28,7 +28,7 @@ import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit.Lang                      (assertEqual)
 import Test.QuickCheck
-    (Arbitrary(..), Gen, Property, oneof, resize, sized)
+    (Arbitrary(..), Gen, Property, genericShrink, oneof, resize, sized)
 import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO                   (propertyIO)
 import Text.Heredoc                         (here, there)
@@ -432,28 +432,34 @@ arbitraryTag :: Word16 -> Gen Word16
 arbitraryTag numTags = max numTags <$> arbitrary
 
 instance Arbitrary Superclass where
+    shrink = genericShrink
     arbitrary = Superclass
         <$> arbitrary
         <*> arbitrary
 
 instance Arbitrary CapnpVersion where
+    shrink = genericShrink
     arbitrary = CapnpVersion
         <$> arbitrary
         <*> arbitrary
         <*> arbitrary
 
 instance Arbitrary Node'Parameter where
+    shrink = genericShrink
     arbitrary = Node'Parameter <$> arbitrary
 
 instance Arbitrary Brand where
+    shrink = genericShrink
     arbitrary = Brand <$> arbitrary
 
 instance Arbitrary Brand'Scope where
+    shrink = genericShrink
     arbitrary = Brand'Scope
         <$> arbitrary
         <*> arbitrary
 
 instance Arbitrary Brand'Scope' where
+    shrink = genericShrink
     arbitrary = oneof
         [ Brand'Scope'bind <$> arbitrary
         , pure Brand'Scope'inherit
@@ -461,6 +467,7 @@ instance Arbitrary Brand'Scope' where
         ]
 
 instance Arbitrary Brand'Binding where
+    shrink = genericShrink
     arbitrary = oneof
         [ pure Brand'Binding'unbound
         , Brand'Binding'type_ <$> arbitrary
@@ -468,6 +475,7 @@ instance Arbitrary Brand'Binding where
         ]
 
 instance Arbitrary Value where
+    shrink = genericShrink
     arbitrary = oneof
         [ pure Value'void
         , Value'bool <$> arbitrary
@@ -491,7 +499,25 @@ instance Arbitrary Value where
         , Value'unknown' <$> arbitraryTag 19
         ]
 
+instance Arbitrary Type'anyPointer where
+    shrink = genericShrink
+    arbitrary = oneof
+        [ Type'anyPointer'unconstrained <$> arbitrary
+        , Type'anyPointer'parameter <$> arbitrary <*> arbitrary
+        , Type'anyPointer'implicitMethodParameter <$> arbitrary
+        ]
+
+instance Arbitrary Type'anyPointer'unconstrained where
+    shrink = genericShrink
+    arbitrary = oneof
+        [ pure Type'anyPointer'unconstrained'anyKind
+        , pure Type'anyPointer'unconstrained'struct
+        , pure Type'anyPointer'unconstrained'list
+        , pure Type'anyPointer'unconstrained'capability
+        ]
+
 instance Arbitrary Type where
+    shrink = genericShrink
     arbitrary = oneof
         [ pure Type'void
         , pure Type'bool
@@ -508,34 +534,25 @@ instance Arbitrary Type where
         , pure Type'text
         , pure Type'data_
         -- TODO: list, enum, struct, interface
-        , Type'anyPointer <$> oneof
-            [ Type'anyPointer'unconstrained <$> oneof
-                [ pure Type'anyPointer'unconstrained'anyKind
-                , pure Type'anyPointer'unconstrained'struct
-                , pure Type'anyPointer'unconstrained'list
-                , pure Type'anyPointer'unconstrained'capability
-                ]
-            , Type'anyPointer'parameter
-                <$> arbitrary
-                <*> arbitrary
-            , Type'anyPointer'implicitMethodParameter
-                <$> arbitrary
-            ]
+        , Type'anyPointer <$> arbitrary
         , Type'unknown' <$> arbitraryTag 21
         ]
 
 instance Arbitrary CodeGeneratorRequest'RequestedFile where
+    shrink = genericShrink
     arbitrary = CodeGeneratorRequest'RequestedFile
         <$> arbitrary
         <*> arbitrary
         <*> arbitrary
 
 instance Arbitrary CodeGeneratorRequest'RequestedFile'Import where
+    shrink = genericShrink
     arbitrary = CodeGeneratorRequest'RequestedFile'Import
         <$> arbitrary
         <*> arbitrary
 
 instance Arbitrary a => Arbitrary (PU.Slice a) where
+    shrink = genericShrink
     arbitrary = PU.Slice <$> arbitrarySmallerVec
 
 arbitrarySmallerVec :: Arbitrary a => Gen (V.Vector a)
@@ -547,11 +564,13 @@ arbitrarySmallerVec = sized $ \size -> do
     traverse (const gen) vec
 
 instance Arbitrary PU.Struct where
+    shrink = genericShrink
     arbitrary = sized $ \size -> PU.Struct
         <$> arbitrary
         <*> arbitrary
 
 instance Arbitrary PU.List' where
+    shrink = genericShrink
     arbitrary = oneof
         [ PU.List0' <$> arbitrarySmallerVec
         , PU.List1' <$> arbitrarySmallerVec
@@ -564,6 +583,7 @@ instance Arbitrary PU.List' where
         ]
 
 instance Arbitrary PU.PtrType where
+    shrink = genericShrink
     arbitrary = oneof
         [ PU.PtrStruct <$> arbitrary
         , PU.PtrList <$> arbitrary
