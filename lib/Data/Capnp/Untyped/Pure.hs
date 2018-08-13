@@ -64,7 +64,7 @@ import qualified Codec.Capnp as C
 type Cap = Word32
 
 newtype Slice a = Slice (List a)
-    deriving(Generic, Show, Read, Eq, Ord, Functor, Default)
+    deriving(Generic, Show, Read, Ord, Functor, Default)
 
 newtype Message = Message (Array BS.ByteString)
     deriving(Generic, Show, Read, Eq, Ord)
@@ -116,6 +116,15 @@ sliceIndex :: Default a => Int -> Slice a -> a
 sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i
     | otherwise = def
+
+instance (Default a, Eq a) => Eq (Slice a) where
+    -- We define equality specially (rather than just deriving), such that
+    -- slices are padded out with the default values of their elements.
+    l@(Slice vl) == r@(Slice vr) = go (max (length vl) (length vr) - 1)
+      where
+        go (-1) = True -- can happen if both slices are empty.
+        go 0    = True
+        go i    = sliceIndex i l == sliceIndex i r && go (i-1)
 
 instance Decerialize Struct where
     type Cerial msg Struct = U.Struct msg
