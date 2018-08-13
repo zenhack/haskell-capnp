@@ -536,22 +536,37 @@ instance Arbitrary CodeGeneratorRequest'RequestedFile'Import where
         <*> arbitrary
 
 instance Arbitrary a => Arbitrary (PU.Slice a) where
-    arbitrary = sized $ \size -> do
-        -- Make sure the elements are scaled down relative to
-        -- the size of the vector:
-        vec <- arbitrary :: Gen (V.Vector ())
-        let gen = resize (size `div` V.length vec) arbitrary
-        PU.Slice <$> traverse (const gen) vec
+    arbitrary = PU.Slice <$> arbitrarySmallerVec
+
+arbitrarySmallerVec :: Arbitrary a => Gen (V.Vector a)
+arbitrarySmallerVec = sized $ \size -> do
+    -- Make sure the elements are scaled down relative to
+    -- the size of the vector:
+    vec <- arbitrary :: Gen (V.Vector ())
+    let gen = resize (size `div` V.length vec) arbitrary
+    traverse (const gen) vec
 
 instance Arbitrary PU.Struct where
     arbitrary = sized $ \size -> PU.Struct
         <$> arbitrary
         <*> arbitrary
 
+instance Arbitrary PU.List' where
+    arbitrary = oneof
+        [ PU.List0' <$> arbitrarySmallerVec
+        , PU.List1' <$> arbitrarySmallerVec
+        , PU.List8' <$> arbitrarySmallerVec
+        , PU.List16' <$> arbitrarySmallerVec
+        , PU.List32' <$> arbitrarySmallerVec
+        , PU.List64' <$> arbitrarySmallerVec
+        , PU.ListPtr' <$> arbitrarySmallerVec
+        , PU.ListStruct' <$> arbitrarySmallerVec
+        ]
+
 instance Arbitrary PU.PtrType where
     arbitrary = oneof
         [ PU.PtrStruct <$> arbitrary
-        -- TODO: lists
+        , PU.PtrList <$> arbitrary
         , PU.PtrCap <$> arbitrary
         ]
 
