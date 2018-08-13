@@ -99,6 +99,11 @@ serializePtr Nothing  = 0
 serializePtr (Just p) = serializePtr' p
 
 serializePtr' :: Ptr -> Word64
+serializePtr' (StructPtr 0 0 0) =
+    -- We need to handle this specially, since the normal encoding
+    -- would be interpreted as null. We can get around this by changing
+    -- the offset.
+    serializePtr' (StructPtr (-1) 0 0)
 serializePtr' (StructPtr off dataSz ptrSz) =
     -- 0 .|.
     fromLo (fromI30 off) .|.
