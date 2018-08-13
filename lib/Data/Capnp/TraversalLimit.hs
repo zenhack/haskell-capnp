@@ -29,6 +29,7 @@ module Data.Capnp.TraversalLimit
     , runLimitT
     , evalLimitT
     , execLimitT
+    , defaultLimit
     ) where
 
 import Control.Monad              (when)
@@ -71,6 +72,10 @@ evalLimitT limit (LimitT stateT) = evalStateT stateT limit
 -- | Run a 'LimitT', returning the remaining traversal limit.
 execLimitT :: MonadThrow m => Int -> LimitT m a -> m Int
 execLimitT limit (LimitT stateT) = execStateT stateT limit
+
+-- | A sensible default traversal limit. Currently 64 MiB.
+defaultLimit :: Int
+defaultLimit = 64 * 1024 * 1024
 
 ------ Instances of mtl type classes for 'LimitT'.
 

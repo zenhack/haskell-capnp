@@ -5,7 +5,7 @@ module Main (main) where
 import Capnp.Capnp.Schema.Pure
 
 import Codec.Capnp               (fromStruct)
-import Data.Capnp.TraversalLimit (evalLimitT)
+import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Data.Capnp.Untyped        (rootPtr)
 
 import System.Directory (createDirectoryIfMissing)
@@ -23,8 +23,7 @@ import qualified FrontEnd
 main :: IO ()
 main = do
     msg <- Message.decode =<< BS.getContents
-    -- Traversal limit is 64 MiB. Somewhat aribtrary.
-    cgr <- evalLimitT (64 * 1024 * 1024) (rootPtr msg >>= fromStruct)
+    cgr <- evalLimitT defaultLimit (rootPtr msg >>= fromStruct)
     mapM_ saveResult (handleCGR cgr)
   where
     saveResult (filename, contents) = do
