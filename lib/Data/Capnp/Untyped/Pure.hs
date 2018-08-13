@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -212,7 +213,25 @@ instance Cerialize s List' where
             ptr <- cerialize msg (l V.! i)
             U.setIndex ptr i raw
         pure $ U.ListPtr raw
-    cerialize msg _           = error "TODO"
+    cerialize msg (ListStruct' l) = do
+        let (maxData, maxPtrs) = measureStructSizes l
+        raw <- U.allocCompositeList msg maxData maxPtrs (length l)
+        forM_ [0..length l - 1] $ \i -> do
+            elt <- U.index i raw
+            marshalInto elt (l V.! i)
+        pure $ U.ListStruct raw
+      where
+        -- Find the maximum sizes of each section of any of the structs
+        -- in the list. This is the size we need to set in the tag word.
+        measureStructSizes :: List Struct -> (Word16, Word16)
+        measureStructSizes = foldl
+            (\(!dataSz, !ptrSz) (Struct (Slice dataSec) (Slice ptrSec)) ->
+                ( max dataSz (fromIntegral $ length dataSec)
+                , max ptrSz  (fromIntegral $ length ptrSec)
+                )
+            )
+            (0, 0)
+
 
 cerializeListOfWord :: U.RWCtx m s => (Int -> m (U.ListOf (M.MutMsg s) a)) -> List a -> m (U.ListOf (M.MutMsg s) a)
 cerializeListOfWord alloc list = do
