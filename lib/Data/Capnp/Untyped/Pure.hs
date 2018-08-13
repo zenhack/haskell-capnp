@@ -160,7 +160,7 @@ instance Marshal (Maybe PtrType) where
 instance Cerialize s (Maybe PtrType) where
     cerialize _ Nothing                     = pure Nothing
     cerialize msg (Just (PtrStruct struct)) = toPtr <$> cerialize msg struct
-    cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerializeList' msg list
+    cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
     -- TODO: when we actually support it, we need to insert the cap into the message:
     cerialize msg (Just (PtrCap       cap)) = pure $ Just (U.PtrCap msg cap)
 
@@ -199,6 +199,21 @@ instance Decerialize List' where
     decerialize (U.ListPtr l)    = ListPtr' <$> decerializeListOf l
     decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
 
+instance Cerialize s List' where
+    cerialize msg (List0' l)  = U.List0  <$> U.allocList0 msg (length l)
+    cerialize msg (List1' l)  = U.List1  <$> cerializeListOfWord (U.allocList1  msg) l
+    cerialize msg (List8' l)  = U.List8  <$> cerializeListOfWord (U.allocList8  msg) l
+    cerialize msg (List16' l) = U.List16 <$> cerializeListOfWord (U.allocList16 msg) l
+    cerialize msg (List32' l) = U.List32 <$> cerializeListOfWord (U.allocList32 msg) l
+    cerialize msg (List64' l) = U.List64 <$> cerializeListOfWord (U.allocList64 msg) l
+    cerialize msg _           = error "TODO"
+
+cerializeListOfWord :: U.RWCtx m s => (Int -> m (U.ListOf (M.MutMsg s) a)) -> List a -> m (U.ListOf (M.MutMsg s) a)
+cerializeListOfWord alloc list = do
+    ret <- alloc (length list)
+    marshalListOfWord ret list
+    pure ret
+
 marshalList' :: U.RWCtx m s => U.List (M.MutMsg s) -> List' -> m ()
 marshalList' (U.List0  _) (List0' _)            = pure ()
 marshalList' (U.List1 raw) (List1' l)           = marshalListOfWord raw l
@@ -214,9 +229,6 @@ marshalListOfWord :: U.RWCtx m s => U.ListOf (M.MutMsg s) a -> List a -> m ()
 marshalListOfWord raw l =
     forM_ [0..length l - 1] $ \i ->
         U.setIndex (l V.! i) i raw
-
-cerializeList' :: U.RWCtx m s => M.MutMsg s -> List' -> m (U.List (M.MutMsg s))
-cerializeList' = error "TODO"
 
 ptrStruct :: MonadThrow f => Maybe PtrType -> f Struct
 ptrStruct Nothing              = pure def
