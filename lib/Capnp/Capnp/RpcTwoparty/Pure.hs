@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.RpcTwoparty.Pure
@@ -18,6 +19,7 @@ module Capnp.Capnp.RpcTwoparty.Pure (JoinKeyPart(..), JoinResult(..), ProvisionI
 -- Generated from schema file: capnp/rpc-twoparty.capnp
 import Data.Int
 import Data.Word
+import GHC.Generics (Generic)
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -37,7 +39,7 @@ data JoinKeyPart
         {joinId :: Word32,
         partCount :: Word16,
         partNum :: Word16}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize JoinKeyPart where
     type Cerial msg JoinKeyPart = Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart msg
     decerialize raw = do
@@ -62,7 +64,7 @@ data JoinResult
         {joinId :: Word32,
         succeeded :: Bool,
         cap :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize JoinResult where
     type Cerial msg JoinResult = Capnp.ById.Xa184c7885cdaf2a1.JoinResult msg
     decerialize raw = do
@@ -86,7 +88,7 @@ instance C'.Cerialize s JoinResult
 data ProvisionId
      = ProvisionId
         {joinId :: Word32}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize ProvisionId where
     type Cerial msg ProvisionId = Capnp.ById.Xa184c7885cdaf2a1.ProvisionId msg
     decerialize raw = do
@@ -105,7 +107,7 @@ instance C'.Cerialize s ProvisionId
 data VatId
      = VatId
         {side :: Capnp.ById.Xa184c7885cdaf2a1.Side}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize VatId where
     type Cerial msg VatId = Capnp.ById.Xa184c7885cdaf2a1.VatId msg
     decerialize raw = do

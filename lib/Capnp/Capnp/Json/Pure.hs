@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Json.Pure
@@ -18,6 +19,7 @@ module Capnp.Capnp.Json.Pure (JsonValue(..), JsonValue'Call(..), JsonValue'Field
 -- Generated from schema file: capnp/json.capnp
 import Data.Int
 import Data.Word
+import GHC.Generics (Generic)
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -41,7 +43,7 @@ data JsonValue
     JsonValue'object (List (JsonValue'Field)) |
     JsonValue'call (JsonValue'Call) |
     JsonValue'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize JsonValue where
     type Cerial msg JsonValue = Capnp.ById.X8ef99297a43a5e34.JsonValue msg
     decerialize raw = do
@@ -89,7 +91,7 @@ data JsonValue'Call
      = JsonValue'Call
         {function :: Text,
         params :: List (JsonValue)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize JsonValue'Call where
     type Cerial msg JsonValue'Call = Capnp.ById.X8ef99297a43a5e34.JsonValue'Call msg
     decerialize raw = do
@@ -116,7 +118,7 @@ data JsonValue'Field
      = JsonValue'Field
         {name :: Text,
         value :: JsonValue}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize JsonValue'Field where
     type Cerial msg JsonValue'Field = Capnp.ById.X8ef99297a43a5e34.JsonValue'Field msg
     decerialize raw = do

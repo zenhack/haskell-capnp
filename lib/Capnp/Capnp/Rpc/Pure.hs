@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Rpc.Pure
@@ -18,6 +19,7 @@ module Capnp.Capnp.Rpc.Pure (Accept(..), Bootstrap(..), Call(..), CapDescriptor(
 -- Generated from schema file: capnp/rpc.capnp
 import Data.Int
 import Data.Word
+import GHC.Generics (Generic)
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -37,7 +39,7 @@ data Accept
         {questionId :: Word32,
         provision :: Maybe (PU'.PtrType),
         embargo :: Bool}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Accept where
     type Cerial msg Accept = Capnp.ById.Xb312981b2552a250.Accept msg
     decerialize raw = do
@@ -62,7 +64,7 @@ data Bootstrap
      = Bootstrap
         {questionId :: Word32,
         deprecatedObjectId :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Bootstrap where
     type Cerial msg Bootstrap = Capnp.ById.Xb312981b2552a250.Bootstrap msg
     decerialize raw = do
@@ -90,7 +92,7 @@ data Call
         params :: Payload,
         sendResultsTo :: Call'sendResultsTo,
         allowThirdPartyTailCall :: Bool}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Call where
     type Cerial msg Call = Capnp.ById.Xb312981b2552a250.Call msg
     decerialize raw = do
@@ -129,7 +131,7 @@ data CapDescriptor
     CapDescriptor'receiverAnswer (PromisedAnswer) |
     CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor) |
     CapDescriptor'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CapDescriptor where
     type Cerial msg CapDescriptor = Capnp.ById.Xb312981b2552a250.CapDescriptor msg
     decerialize raw = do
@@ -165,7 +167,7 @@ data Disembargo
      = Disembargo
         {target :: MessageTarget,
         context :: Disembargo'context}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Disembargo where
     type Cerial msg Disembargo = Capnp.ById.Xb312981b2552a250.Disembargo msg
     decerialize raw = do
@@ -191,7 +193,7 @@ data Exception
         obsoleteIsCallersFault :: Bool,
         obsoleteDurability :: Word16,
         type_ :: Capnp.ById.Xb312981b2552a250.Exception'Type}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Exception where
     type Cerial msg Exception = Capnp.ById.Xb312981b2552a250.Exception msg
     decerialize raw = do
@@ -218,7 +220,7 @@ data Finish
      = Finish
         {questionId :: Word32,
         releaseResultCaps :: Bool}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Finish where
     type Cerial msg Finish = Capnp.ById.Xb312981b2552a250.Finish msg
     decerialize raw = do
@@ -241,7 +243,7 @@ data Join
         {questionId :: Word32,
         target :: MessageTarget,
         keyPart :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Join where
     type Cerial msg Join = Capnp.ById.Xb312981b2552a250.Join msg
     decerialize raw = do
@@ -279,7 +281,7 @@ data Message
     Message'join (Join) |
     Message'disembargo (Disembargo) |
     Message'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Message where
     type Cerial msg Message = Capnp.ById.Xb312981b2552a250.Message msg
     decerialize raw = do
@@ -355,7 +357,7 @@ data MessageTarget
      = MessageTarget'importedCap (Word32) |
     MessageTarget'promisedAnswer (PromisedAnswer) |
     MessageTarget'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize MessageTarget where
     type Cerial msg MessageTarget = Capnp.ById.Xb312981b2552a250.MessageTarget msg
     decerialize raw = do
@@ -381,7 +383,7 @@ data Payload
      = Payload
         {content :: Maybe (PU'.PtrType),
         capTable :: List (CapDescriptor)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Payload where
     type Cerial msg Payload = Capnp.ById.Xb312981b2552a250.Payload msg
     decerialize raw = do
@@ -408,7 +410,7 @@ data PromisedAnswer
      = PromisedAnswer
         {questionId :: Word32,
         transform :: List (PromisedAnswer'Op)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize PromisedAnswer where
     type Cerial msg PromisedAnswer = Capnp.ById.Xb312981b2552a250.PromisedAnswer msg
     decerialize raw = do
@@ -435,7 +437,7 @@ data Provide
         {questionId :: Word32,
         target :: MessageTarget,
         recipient :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Provide where
     type Cerial msg Provide = Capnp.ById.Xb312981b2552a250.Provide msg
     decerialize raw = do
@@ -461,7 +463,7 @@ data Release
      = Release
         {id :: Word32,
         referenceCount :: Word32}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Release where
     type Cerial msg Release = Capnp.ById.Xb312981b2552a250.Release msg
     decerialize raw = do
@@ -483,7 +485,7 @@ data Resolve
      = Resolve
         {promiseId :: Word32,
         union' :: Resolve'}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Resolve where
     type Cerial msg Resolve = Capnp.ById.Xb312981b2552a250.Resolve msg
     decerialize raw = do
@@ -507,7 +509,7 @@ data Return
         {answerId :: Word32,
         releaseParamCaps :: Bool,
         union' :: Return'}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Return where
     type Cerial msg Return = Capnp.ById.Xb312981b2552a250.Return msg
     decerialize raw = do
@@ -532,7 +534,7 @@ data ThirdPartyCapDescriptor
      = ThirdPartyCapDescriptor
         {id :: Maybe (PU'.PtrType),
         vineId :: Word32}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize ThirdPartyCapDescriptor where
     type Cerial msg ThirdPartyCapDescriptor = Capnp.ById.Xb312981b2552a250.ThirdPartyCapDescriptor msg
     decerialize raw = do
@@ -556,7 +558,7 @@ data Call'sendResultsTo
     Call'sendResultsTo'yourself |
     Call'sendResultsTo'thirdParty (Maybe (PU'.PtrType)) |
     Call'sendResultsTo'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Call'sendResultsTo where
     type Cerial msg Call'sendResultsTo = Capnp.ById.Xb312981b2552a250.Call'sendResultsTo msg
     decerialize raw = do
@@ -586,7 +588,7 @@ data Disembargo'context
     Disembargo'context'accept |
     Disembargo'context'provide (Word32) |
     Disembargo'context'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Disembargo'context where
     type Cerial msg Disembargo'context = Capnp.ById.Xb312981b2552a250.Disembargo'context msg
     decerialize raw = do
@@ -614,7 +616,7 @@ data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField (Word16) |
     PromisedAnswer'Op'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize PromisedAnswer'Op where
     type Cerial msg PromisedAnswer'Op = Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op msg
     decerialize raw = do
@@ -638,7 +640,7 @@ data Resolve'
      = Resolve'cap (CapDescriptor) |
     Resolve'exception (Exception) |
     Resolve'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Resolve' where
     type Cerial msg Resolve' = Capnp.ById.Xb312981b2552a250.Resolve' msg
     decerialize raw = do
@@ -670,7 +672,7 @@ data Return'
     Return'takeFromOtherQuestion (Word32) |
     Return'acceptFromThirdParty (Maybe (PU'.PtrType)) |
     Return'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Return' where
     type Cerial msg Return' = Capnp.ById.Xb312981b2552a250.Return' msg
     decerialize raw = do

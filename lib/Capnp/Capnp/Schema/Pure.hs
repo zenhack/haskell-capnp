@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Schema.Pure
@@ -18,6 +19,7 @@ module Capnp.Capnp.Schema.Pure (Annotation(..), Brand(..), CapnpVersion(..), Cod
 -- Generated from schema file: capnp/schema.capnp
 import Data.Int
 import Data.Word
+import GHC.Generics (Generic)
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -37,7 +39,7 @@ data Annotation
         {id :: Word64,
         value :: Value,
         brand :: Brand}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Annotation where
     type Cerial msg Annotation = Capnp.ById.Xa93fc509624c72d9.Annotation msg
     decerialize raw = do
@@ -62,7 +64,7 @@ instance C'.Cerialize s Annotation
 data Brand
      = Brand
         {scopes :: List (Brand'Scope)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Brand where
     type Cerial msg Brand = Capnp.ById.Xa93fc509624c72d9.Brand msg
     decerialize raw = do
@@ -87,7 +89,7 @@ data CapnpVersion
         {major :: Word16,
         minor :: Word8,
         micro :: Word8}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CapnpVersion where
     type Cerial msg CapnpVersion = Capnp.ById.Xa93fc509624c72d9.CapnpVersion msg
     decerialize raw = do
@@ -112,7 +114,7 @@ data CodeGeneratorRequest
         {nodes :: List (Node),
         requestedFiles :: List (CodeGeneratorRequest'RequestedFile),
         capnpVersion :: CapnpVersion}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CodeGeneratorRequest where
     type Cerial msg CodeGeneratorRequest = Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest msg
     decerialize raw = do
@@ -146,7 +148,7 @@ data Enumerant
         {name :: Text,
         codeOrder :: Word16,
         annotations :: List (Annotation)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Enumerant where
     type Cerial msg Enumerant = Capnp.ById.Xa93fc509624c72d9.Enumerant msg
     decerialize raw = do
@@ -179,7 +181,7 @@ data Field
         discriminantValue :: Word16,
         ordinal :: Field'ordinal,
         union' :: Field'}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Field where
     type Cerial msg Field = Capnp.ById.Xa93fc509624c72d9.Field msg
     decerialize raw = do
@@ -222,7 +224,7 @@ data Method
         paramBrand :: Brand,
         resultBrand :: Brand,
         implicitParameters :: List (Node'Parameter)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Method where
     type Cerial msg Method = Capnp.ById.Xa93fc509624c72d9.Method msg
     decerialize raw = do
@@ -274,7 +276,7 @@ data Node
         parameters :: List (Node'Parameter),
         isGeneric :: Bool,
         union' :: Node'}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Node where
     type Cerial msg Node = Capnp.ById.Xa93fc509624c72d9.Node msg
     decerialize raw = do
@@ -324,7 +326,7 @@ data Superclass
      = Superclass
         {id :: Word64,
         brand :: Brand}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Superclass where
     type Cerial msg Superclass = Capnp.ById.Xa93fc509624c72d9.Superclass msg
     decerialize raw = do
@@ -372,7 +374,7 @@ data Type
     Type'anyPointer
         {union' :: Type'anyPointer} |
     Type'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Type where
     type Cerial msg Type = Capnp.ById.Xa93fc509624c72d9.Type msg
     decerialize raw = do
@@ -473,7 +475,7 @@ data Value
     Value'interface |
     Value'anyPointer (Maybe (PU'.PtrType)) |
     Value'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Value where
     type Cerial msg Value = Capnp.ById.Xa93fc509624c72d9.Value msg
     decerialize raw = do
@@ -541,7 +543,7 @@ data Brand'Binding
      = Brand'Binding'unbound |
     Brand'Binding'type_ (Type) |
     Brand'Binding'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Brand'Binding where
     type Cerial msg Brand'Binding = Capnp.ById.Xa93fc509624c72d9.Brand'Binding msg
     decerialize raw = do
@@ -567,7 +569,7 @@ data Brand'Scope
      = Brand'Scope
         {scopeId :: Word64,
         union' :: Brand'Scope'}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Brand'Scope where
     type Cerial msg Brand'Scope = Capnp.ById.Xa93fc509624c72d9.Brand'Scope msg
     decerialize raw = do
@@ -590,7 +592,7 @@ data Brand'Scope'
      = Brand'Scope'bind (List (Brand'Binding)) |
     Brand'Scope'inherit |
     Brand'Scope'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Brand'Scope' where
     type Cerial msg Brand'Scope' = Capnp.ById.Xa93fc509624c72d9.Brand'Scope' msg
     decerialize raw = do
@@ -620,7 +622,7 @@ data CodeGeneratorRequest'RequestedFile
         {id :: Word64,
         filename :: Text,
         imports :: List (CodeGeneratorRequest'RequestedFile'Import)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CodeGeneratorRequest'RequestedFile where
     type Cerial msg CodeGeneratorRequest'RequestedFile = Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile msg
     decerialize raw = do
@@ -649,7 +651,7 @@ data CodeGeneratorRequest'RequestedFile'Import
      = CodeGeneratorRequest'RequestedFile'Import
         {id :: Word64,
         name :: Text}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CodeGeneratorRequest'RequestedFile'Import where
     type Cerial msg CodeGeneratorRequest'RequestedFile'Import = Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import msg
     decerialize raw = do
@@ -677,7 +679,7 @@ data Field'
     Field'group
         {typeId :: Word64} |
     Field'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Field' where
     type Cerial msg Field' = Capnp.ById.Xa93fc509624c72d9.Field' msg
     decerialize raw = do
@@ -717,7 +719,7 @@ data Field'ordinal
      = Field'ordinal'implicit |
     Field'ordinal'explicit (Word16) |
     Field'ordinal'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Field'ordinal where
     type Cerial msg Field'ordinal = Capnp.ById.Xa93fc509624c72d9.Field'ordinal msg
     decerialize raw = do
@@ -770,7 +772,7 @@ data Node'
         targetsParam :: Bool,
         targetsAnnotation :: Bool} |
     Node'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Node' where
     type Cerial msg Node' = Capnp.ById.Xa93fc509624c72d9.Node' msg
     decerialize raw = do
@@ -876,7 +878,7 @@ data Node'NestedNode
      = Node'NestedNode
         {name :: Text,
         id :: Word64}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Node'NestedNode where
     type Cerial msg Node'NestedNode = Capnp.ById.Xa93fc509624c72d9.Node'NestedNode msg
     decerialize raw = do
@@ -898,7 +900,7 @@ instance C'.Cerialize s Node'NestedNode
 data Node'Parameter
      = Node'Parameter
         {name :: Text}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Node'Parameter where
     type Cerial msg Node'Parameter = Capnp.ById.Xa93fc509624c72d9.Node'Parameter msg
     decerialize raw = do
@@ -924,7 +926,7 @@ data Type'anyPointer
     Type'anyPointer'implicitMethodParameter
         {parameterIndex :: Word16} |
     Type'anyPointer'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Type'anyPointer where
     type Cerial msg Type'anyPointer = Capnp.ById.Xa93fc509624c72d9.Type'anyPointer msg
     decerialize raw = do
@@ -964,7 +966,7 @@ data Type'anyPointer'unconstrained
     Type'anyPointer'unconstrained'list |
     Type'anyPointer'unconstrained'capability |
     Type'anyPointer'unconstrained'unknown' (Word16)
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Type'anyPointer'unconstrained where
     type Cerial msg Type'anyPointer'unconstrained = Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained msg
     decerialize raw = do

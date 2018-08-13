@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Persistent.Pure
@@ -18,6 +19,7 @@ module Capnp.Capnp.Persistent.Pure (Persistent'SaveParams(..), Persistent'SaveRe
 -- Generated from schema file: capnp/persistent.capnp
 import Data.Int
 import Data.Word
+import GHC.Generics (Generic)
 import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -35,7 +37,7 @@ import qualified Capnp.ById.Xbdf87d7bb8304e81
 data Persistent'SaveParams
      = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Persistent'SaveParams where
     type Cerial msg Persistent'SaveParams = Capnp.ById.Xb8630836983feed7.Persistent'SaveParams msg
     decerialize raw = do
@@ -55,7 +57,7 @@ instance C'.Cerialize s Persistent'SaveParams
 data Persistent'SaveResults
      = Persistent'SaveResults
         {sturdyRef :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Persistent'SaveResults where
     type Cerial msg Persistent'SaveResults = Capnp.ById.Xb8630836983feed7.Persistent'SaveResults msg
     decerialize raw = do

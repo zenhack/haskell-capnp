@@ -78,6 +78,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
     , "{-# LANGUAGE ScopedTypeVariables #-}"
     , "{-# LANGUAGE TypeFamilies #-}"
+    , "{-# LANGUAGE DeriveGeneric #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "{- |"
     , "Module: " <> humanMod
@@ -93,6 +94,8 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import Data.Int"
     , "import Data.Word"
+    , ""
+    , "import GHC.Generics (Generic)"
     , ""
     , "import Data.Capnp.Untyped.Pure (List)"
     , "import Data.Capnp.Basics.Pure (Data, Text)"
@@ -215,7 +218,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
     in vcat
         [ hcat [ "data ", fmtName Pure thisMod dataName ]
         , indent $ " = " <> vcat (PP.punctuate " |" $ map (fmtVariant thisMod) dataVariants)
-        , indent "deriving(Show, Read, Eq)"
+        , indent "deriving(Show, Read, Eq, Generic)"
         , hcat [ "instance C'.Decerialize ", pureName, " where" ]
         , indent $ vcat
             [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
