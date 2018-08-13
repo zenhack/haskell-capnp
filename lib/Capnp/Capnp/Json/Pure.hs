@@ -19,6 +19,7 @@ module Capnp.Capnp.Json.Pure (JsonValue(..), JsonValue'Call(..), JsonValue'Field
 -- Generated from schema file: capnp/json.capnp
 import Data.Int
 import Data.Word
+import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -27,6 +28,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Codec.Capnp as C'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
@@ -86,6 +88,8 @@ instance C'.Marshal JsonValue where
                 C'.marshalInto field_ arg_
             JsonValue'unknown' arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'unknown' raw arg_
 instance C'.Cerialize s JsonValue
+instance Default JsonValue where
+    def = PH'.defaultStruct
 data JsonValue'Call
      = JsonValue'Call
         {function :: Text,
@@ -113,6 +117,8 @@ instance C'.Marshal JsonValue'Call where
                     elt <- C'.index i field_
                     C'.marshalInto elt (params V.! i)
 instance C'.Cerialize s JsonValue'Call
+instance Default JsonValue'Call where
+    def = PH'.defaultStruct
 data JsonValue'Field
      = JsonValue'Field
         {name :: Text,
@@ -137,3 +143,5 @@ instance C'.Marshal JsonValue'Field where
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
                 C'.marshalInto field_ value
 instance C'.Cerialize s JsonValue'Field
+instance Default JsonValue'Field where
+    def = PH'.defaultStruct

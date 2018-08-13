@@ -25,6 +25,7 @@ module Data.Capnp.Message
     , writeMessage
     , alloc
     , newMessage
+    , empty
     )
   where
 
@@ -290,8 +291,11 @@ alloc msg (WordCount size) = do
     setSegment msg segIndex newSeg
     pure ret
 
+empty :: ConstMsg
+empty = ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
+
 newMessage :: WriteCtx m s => m (MutMsg s)
-newMessage = thaw $ ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
+newMessage = thaw empty
 
 instance Mutable (Segment (MutMsg s)) where
     type Scope (Segment (MutMsg s)) = s

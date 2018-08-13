@@ -95,6 +95,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import Data.Int"
     , "import Data.Word"
     , ""
+    , "import Data.Default (Default(def))"
     , "import GHC.Generics (Generic)"
     , ""
     , "import Data.Capnp.Basics.Pure (Data, Text)"
@@ -106,6 +107,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Message as M'"
     , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
+    , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
     , "import qualified Codec.Capnp as C'"
     , ""
     , "import qualified Data.Vector as V"
@@ -249,8 +251,11 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     dataVariants
                 ]
             ]
-
         , hcat [ "instance C'.Cerialize s ", pureName ]
+        , hcat [ "instance Default ", pureName, " where" ]
+        , indent $ vcat
+            [ "def = PH'.defaultStruct"
+            ]
         ]
   where
     fmtDecerializeArgs variantName fields = vcat

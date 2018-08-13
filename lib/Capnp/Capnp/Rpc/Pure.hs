@@ -19,6 +19,7 @@ module Capnp.Capnp.Rpc.Pure (Accept(..), Bootstrap(..), Call(..), CapDescriptor(
 -- Generated from schema file: capnp/rpc.capnp
 import Data.Int
 import Data.Word
+import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -27,6 +28,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Codec.Capnp as C'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
@@ -59,6 +61,8 @@ instance C'.Marshal Accept where
                 Capnp.ById.Xb312981b2552a250.set_Accept'provision raw field_
                 Capnp.ById.Xb312981b2552a250.set_Accept'embargo raw embargo
 instance C'.Cerialize s Accept
+instance Default Accept where
+    def = PH'.defaultStruct
 data Bootstrap
      = Bootstrap
         {questionId :: Word32,
@@ -82,6 +86,8 @@ instance C'.Marshal Bootstrap where
                 field_ <- C'.cerialize (U'.message raw) deprecatedObjectId
                 Capnp.ById.Xb312981b2552a250.set_Bootstrap'deprecatedObjectId raw field_
 instance C'.Cerialize s Bootstrap
+instance Default Bootstrap where
+    def = PH'.defaultStruct
 data Call
      = Call
         {questionId :: Word32,
@@ -122,6 +128,8 @@ instance C'.Marshal Call where
                 C'.marshalInto field_ sendResultsTo
                 Capnp.ById.Xb312981b2552a250.set_Call'allowThirdPartyTailCall raw allowThirdPartyTailCall
 instance C'.Cerialize s Call
+instance Default Call where
+    def = PH'.defaultStruct
 data CapDescriptor
      = CapDescriptor'none |
     CapDescriptor'senderHosted (Word32) |
@@ -162,6 +170,8 @@ instance C'.Marshal CapDescriptor where
                 C'.marshalInto field_ arg_
             CapDescriptor'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_CapDescriptor'unknown' raw arg_
 instance C'.Cerialize s CapDescriptor
+instance Default CapDescriptor where
+    def = PH'.defaultStruct
 data Disembargo
      = Disembargo
         {target :: MessageTarget,
@@ -186,6 +196,8 @@ instance C'.Marshal Disembargo where
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Disembargo'context raw
                 C'.marshalInto field_ context
 instance C'.Cerialize s Disembargo
+instance Default Disembargo where
+    def = PH'.defaultStruct
 data Exception
      = Exception
         {reason :: Text,
@@ -215,6 +227,8 @@ instance C'.Marshal Exception where
                 Capnp.ById.Xb312981b2552a250.set_Exception'obsoleteDurability raw obsoleteDurability
                 Capnp.ById.Xb312981b2552a250.set_Exception'type_ raw type_
 instance C'.Cerialize s Exception
+instance Default Exception where
+    def = PH'.defaultStruct
 data Finish
      = Finish
         {questionId :: Word32,
@@ -237,6 +251,8 @@ instance C'.Marshal Finish where
                 Capnp.ById.Xb312981b2552a250.set_Finish'questionId raw questionId
                 Capnp.ById.Xb312981b2552a250.set_Finish'releaseResultCaps raw releaseResultCaps
 instance C'.Cerialize s Finish
+instance Default Finish where
+    def = PH'.defaultStruct
 data Join
      = Join
         {questionId :: Word32,
@@ -264,6 +280,8 @@ instance C'.Marshal Join where
                 field_ <- C'.cerialize (U'.message raw) keyPart
                 Capnp.ById.Xb312981b2552a250.set_Join'keyPart raw field_
 instance C'.Cerialize s Join
+instance Default Join where
+    def = PH'.defaultStruct
 data Message
      = Message'unimplemented (Message) |
     Message'abort (Exception) |
@@ -352,6 +370,8 @@ instance C'.Marshal Message where
                 C'.marshalInto field_ arg_
             Message'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Message'unknown' raw arg_
 instance C'.Cerialize s Message
+instance Default Message where
+    def = PH'.defaultStruct
 data MessageTarget
      = MessageTarget'importedCap (Word32) |
     MessageTarget'promisedAnswer (PromisedAnswer) |
@@ -378,6 +398,8 @@ instance C'.Marshal MessageTarget where
                 C'.marshalInto field_ arg_
             MessageTarget'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_MessageTarget'unknown' raw arg_
 instance C'.Cerialize s MessageTarget
+instance Default MessageTarget where
+    def = PH'.defaultStruct
 data Payload
      = Payload
         {content :: Maybe (PU'.PtrType),
@@ -405,6 +427,8 @@ instance C'.Marshal Payload where
                     elt <- C'.index i field_
                     C'.marshalInto elt (capTable V.! i)
 instance C'.Cerialize s Payload
+instance Default Payload where
+    def = PH'.defaultStruct
 data PromisedAnswer
      = PromisedAnswer
         {questionId :: Word32,
@@ -431,6 +455,8 @@ instance C'.Marshal PromisedAnswer where
                     elt <- C'.index i field_
                     C'.marshalInto elt (transform V.! i)
 instance C'.Cerialize s PromisedAnswer
+instance Default PromisedAnswer where
+    def = PH'.defaultStruct
 data Provide
      = Provide
         {questionId :: Word32,
@@ -458,6 +484,8 @@ instance C'.Marshal Provide where
                 field_ <- C'.cerialize (U'.message raw) recipient
                 Capnp.ById.Xb312981b2552a250.set_Provide'recipient raw field_
 instance C'.Cerialize s Provide
+instance Default Provide where
+    def = PH'.defaultStruct
 data Release
      = Release
         {id :: Word32,
@@ -480,6 +508,8 @@ instance C'.Marshal Release where
                 Capnp.ById.Xb312981b2552a250.set_Release'id raw id
                 Capnp.ById.Xb312981b2552a250.set_Release'referenceCount raw referenceCount
 instance C'.Cerialize s Release
+instance Default Release where
+    def = PH'.defaultStruct
 data Resolve
      = Resolve
         {promiseId :: Word32,
@@ -503,6 +533,8 @@ instance C'.Marshal Resolve where
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Resolve'union' raw
                 C'.marshalInto field_ union'
 instance C'.Cerialize s Resolve
+instance Default Resolve where
+    def = PH'.defaultStruct
 data Return
      = Return
         {answerId :: Word32,
@@ -529,6 +561,8 @@ instance C'.Marshal Return where
                 field_ <- Capnp.ById.Xb312981b2552a250.get_Return'union' raw
                 C'.marshalInto field_ union'
 instance C'.Cerialize s Return
+instance Default Return where
+    def = PH'.defaultStruct
 data ThirdPartyCapDescriptor
      = ThirdPartyCapDescriptor
         {id :: Maybe (PU'.PtrType),
@@ -552,6 +586,8 @@ instance C'.Marshal ThirdPartyCapDescriptor where
                 Capnp.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'id raw field_
                 Capnp.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'vineId raw vineId
 instance C'.Cerialize s ThirdPartyCapDescriptor
+instance Default ThirdPartyCapDescriptor where
+    def = PH'.defaultStruct
 data Call'sendResultsTo
      = Call'sendResultsTo'caller |
     Call'sendResultsTo'yourself |
@@ -581,6 +617,8 @@ instance C'.Marshal Call'sendResultsTo where
                 Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'thirdParty raw field_
             Call'sendResultsTo'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Call'sendResultsTo'unknown' raw arg_
 instance C'.Cerialize s Call'sendResultsTo
+instance Default Call'sendResultsTo where
+    def = PH'.defaultStruct
 data Disembargo'context
      = Disembargo'context'senderLoopback (Word32) |
     Disembargo'context'receiverLoopback (Word32) |
@@ -611,6 +649,8 @@ instance C'.Marshal Disembargo'context where
             Disembargo'context'provide arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'provide raw arg_
             Disembargo'context'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Disembargo'context'unknown' raw arg_
 instance C'.Cerialize s Disembargo'context
+instance Default Disembargo'context where
+    def = PH'.defaultStruct
 data PromisedAnswer'Op
      = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField (Word16) |
@@ -635,6 +675,8 @@ instance C'.Marshal PromisedAnswer'Op where
             PromisedAnswer'Op'getPointerField arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw arg_
             PromisedAnswer'Op'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_PromisedAnswer'Op'unknown' raw arg_
 instance C'.Cerialize s PromisedAnswer'Op
+instance Default PromisedAnswer'Op where
+    def = PH'.defaultStruct
 data Resolve'
      = Resolve'cap (CapDescriptor) |
     Resolve'exception (Exception) |
@@ -663,6 +705,8 @@ instance C'.Marshal Resolve' where
                 C'.marshalInto field_ arg_
             Resolve'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Resolve'unknown' raw arg_
 instance C'.Cerialize s Resolve'
+instance Default Resolve' where
+    def = PH'.defaultStruct
 data Return'
      = Return'results (Payload) |
     Return'exception (Exception) |
@@ -705,3 +749,5 @@ instance C'.Marshal Return' where
                 Capnp.ById.Xb312981b2552a250.set_Return'acceptFromThirdParty raw field_
             Return'unknown' arg_ -> Capnp.ById.Xb312981b2552a250.set_Return'unknown' raw arg_
 instance C'.Cerialize s Return'
+instance Default Return' where
+    def = PH'.defaultStruct

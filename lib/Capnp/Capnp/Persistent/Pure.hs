@@ -19,6 +19,7 @@ module Capnp.Capnp.Persistent.Pure (Persistent'SaveParams(..), Persistent'SaveRe
 -- Generated from schema file: capnp/persistent.capnp
 import Data.Int
 import Data.Word
+import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -27,6 +28,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Codec.Capnp as C'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
@@ -53,6 +55,8 @@ instance C'.Marshal Persistent'SaveParams where
                 field_ <- C'.cerialize (U'.message raw) sealFor
                 Capnp.ById.Xb8630836983feed7.set_Persistent'SaveParams'sealFor raw field_
 instance C'.Cerialize s Persistent'SaveParams
+instance Default Persistent'SaveParams where
+    def = PH'.defaultStruct
 data Persistent'SaveResults
      = Persistent'SaveResults
         {sturdyRef :: Maybe (PU'.PtrType)}
@@ -73,3 +77,5 @@ instance C'.Marshal Persistent'SaveResults where
                 field_ <- C'.cerialize (U'.message raw) sturdyRef
                 Capnp.ById.Xb8630836983feed7.set_Persistent'SaveResults'sturdyRef raw field_
 instance C'.Cerialize s Persistent'SaveResults
+instance Default Persistent'SaveResults where
+    def = PH'.defaultStruct

@@ -19,6 +19,7 @@ module Capnp.Capnp.RpcTwoparty.Pure (JoinKeyPart(..), JoinResult(..), ProvisionI
 -- Generated from schema file: capnp/rpc-twoparty.capnp
 import Data.Int
 import Data.Word
+import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -27,6 +28,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Codec.Capnp as C'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
@@ -58,6 +60,8 @@ instance C'.Marshal JoinKeyPart where
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partCount raw partCount
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partNum raw partNum
 instance C'.Cerialize s JoinKeyPart
+instance Default JoinKeyPart where
+    def = PH'.defaultStruct
 data JoinResult
      = JoinResult
         {joinId :: Word32,
@@ -84,6 +88,8 @@ instance C'.Marshal JoinResult where
                 field_ <- C'.cerialize (U'.message raw) cap
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'cap raw field_
 instance C'.Cerialize s JoinResult
+instance Default JoinResult where
+    def = PH'.defaultStruct
 data ProvisionId
      = ProvisionId
         {joinId :: Word32}
@@ -103,6 +109,8 @@ instance C'.Marshal ProvisionId where
             ProvisionId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
 instance C'.Cerialize s ProvisionId
+instance Default ProvisionId where
+    def = PH'.defaultStruct
 data VatId
      = VatId
         {side :: Capnp.ById.Xa184c7885cdaf2a1.Side}
@@ -122,3 +130,5 @@ instance C'.Marshal VatId where
             VatId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_VatId'side raw side
 instance C'.Cerialize s VatId
+instance Default VatId where
+    def = PH'.defaultStruct

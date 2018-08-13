@@ -19,6 +19,7 @@ module Capnp.Capnp.Schema.Pure (Annotation(..), Brand(..), CapnpVersion(..), Cod
 -- Generated from schema file: capnp/schema.capnp
 import Data.Int
 import Data.Word
+import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
@@ -27,6 +28,7 @@ import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
+import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Codec.Capnp as C'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
@@ -60,6 +62,8 @@ instance C'.Marshal Annotation where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Annotation'brand raw
                 C'.marshalInto field_ brand
 instance C'.Cerialize s Annotation
+instance Default Annotation where
+    def = PH'.defaultStruct
 data Brand
      = Brand
         {scopes :: PU'.ListOf (Brand'Scope)}
@@ -83,6 +87,8 @@ instance C'.Marshal Brand where
                     elt <- C'.index i field_
                     C'.marshalInto elt (scopes V.! i)
 instance C'.Cerialize s Brand
+instance Default Brand where
+    def = PH'.defaultStruct
 data CapnpVersion
      = CapnpVersion
         {major :: Word16,
@@ -108,6 +114,8 @@ instance C'.Marshal CapnpVersion where
                 Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'minor raw minor
                 Capnp.ById.Xa93fc509624c72d9.set_CapnpVersion'micro raw micro
 instance C'.Cerialize s CapnpVersion
+instance Default CapnpVersion where
+    def = PH'.defaultStruct
 data CodeGeneratorRequest
      = CodeGeneratorRequest
         {nodes :: PU'.ListOf (Node),
@@ -142,6 +150,8 @@ instance C'.Marshal CodeGeneratorRequest where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_CodeGeneratorRequest'capnpVersion raw
                 C'.marshalInto field_ capnpVersion
 instance C'.Cerialize s CodeGeneratorRequest
+instance Default CodeGeneratorRequest where
+    def = PH'.defaultStruct
 data Enumerant
      = Enumerant
         {name :: Text,
@@ -172,6 +182,8 @@ instance C'.Marshal Enumerant where
                     elt <- C'.index i field_
                     C'.marshalInto elt (annotations V.! i)
 instance C'.Cerialize s Enumerant
+instance Default Enumerant where
+    def = PH'.defaultStruct
 data Field
      = Field
         {name :: Text,
@@ -213,6 +225,8 @@ instance C'.Marshal Field where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Field'union' raw
                 C'.marshalInto field_ union'
 instance C'.Cerialize s Field
+instance Default Field where
+    def = PH'.defaultStruct
 data Method
      = Method
         {name :: Text,
@@ -264,6 +278,8 @@ instance C'.Marshal Method where
                     elt <- C'.index i field_
                     C'.marshalInto elt (implicitParameters V.! i)
 instance C'.Cerialize s Method
+instance Default Method where
+    def = PH'.defaultStruct
 data Node
      = Node
         {id :: Word64,
@@ -321,6 +337,8 @@ instance C'.Marshal Node where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Node'union' raw
                 C'.marshalInto field_ union'
 instance C'.Cerialize s Node
+instance Default Node where
+    def = PH'.defaultStruct
 data Superclass
      = Superclass
         {id :: Word64,
@@ -344,6 +362,8 @@ instance C'.Marshal Superclass where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.new_Superclass'brand raw
                 C'.marshalInto field_ brand
 instance C'.Cerialize s Superclass
+instance Default Superclass where
+    def = PH'.defaultStruct
 data Type
      = Type'void |
     Type'bool |
@@ -453,6 +473,8 @@ instance C'.Marshal Type where
                 C'.marshalInto field_ union'
             Type'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'unknown' raw arg_
 instance C'.Cerialize s Type
+instance Default Type where
+    def = PH'.defaultStruct
 data Value
      = Value'void |
     Value'bool (Bool) |
@@ -538,6 +560,8 @@ instance C'.Marshal Value where
                 Capnp.ById.Xa93fc509624c72d9.set_Value'anyPointer raw field_
             Value'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Value'unknown' raw arg_
 instance C'.Cerialize s Value
+instance Default Value where
+    def = PH'.defaultStruct
 data Brand'Binding
      = Brand'Binding'unbound |
     Brand'Binding'type_ (Type) |
@@ -564,6 +588,8 @@ instance C'.Marshal Brand'Binding where
                 C'.marshalInto field_ arg_
             Brand'Binding'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Binding'unknown' raw arg_
 instance C'.Cerialize s Brand'Binding
+instance Default Brand'Binding where
+    def = PH'.defaultStruct
 data Brand'Scope
      = Brand'Scope
         {scopeId :: Word64,
@@ -587,6 +613,8 @@ instance C'.Marshal Brand'Scope where
                 field_ <- Capnp.ById.Xa93fc509624c72d9.get_Brand'Scope'union' raw
                 C'.marshalInto field_ union'
 instance C'.Cerialize s Brand'Scope
+instance Default Brand'Scope where
+    def = PH'.defaultStruct
 data Brand'Scope'
      = Brand'Scope'bind (PU'.ListOf (Brand'Binding)) |
     Brand'Scope'inherit |
@@ -616,6 +644,8 @@ instance C'.Marshal Brand'Scope' where
             Brand'Scope'inherit -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw
             Brand'Scope'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Brand'Scope'unknown' raw arg_
 instance C'.Cerialize s Brand'Scope'
+instance Default Brand'Scope' where
+    def = PH'.defaultStruct
 data CodeGeneratorRequest'RequestedFile
      = CodeGeneratorRequest'RequestedFile
         {id :: Word64,
@@ -646,6 +676,8 @@ instance C'.Marshal CodeGeneratorRequest'RequestedFile where
                     elt <- C'.index i field_
                     C'.marshalInto elt (imports V.! i)
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile
+instance Default CodeGeneratorRequest'RequestedFile where
+    def = PH'.defaultStruct
 data CodeGeneratorRequest'RequestedFile'Import
      = CodeGeneratorRequest'RequestedFile'Import
         {id :: Word64,
@@ -669,6 +701,8 @@ instance C'.Marshal CodeGeneratorRequest'RequestedFile'Import where
                 field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'name raw field_
 instance C'.Cerialize s CodeGeneratorRequest'RequestedFile'Import
+instance Default CodeGeneratorRequest'RequestedFile'Import where
+    def = PH'.defaultStruct
 data Field'
      = Field'slot
         {offset :: Word32,
@@ -712,6 +746,8 @@ instance C'.Marshal Field' where
                 Capnp.ById.Xa93fc509624c72d9.set_Field'group'typeId raw typeId
             Field'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'unknown' raw arg_
 instance C'.Cerialize s Field'
+instance Default Field' where
+    def = PH'.defaultStruct
 field'noDiscriminant :: Word16
 field'noDiscriminant = Capnp.ById.Xa93fc509624c72d9.field'noDiscriminant
 data Field'ordinal
@@ -738,6 +774,8 @@ instance C'.Marshal Field'ordinal where
             Field'ordinal'explicit arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw arg_
             Field'ordinal'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Field'ordinal'unknown' raw arg_
 instance C'.Cerialize s Field'ordinal
+instance Default Field'ordinal where
+    def = PH'.defaultStruct
 data Node'
      = Node'file |
     Node'struct
@@ -873,6 +911,8 @@ instance C'.Marshal Node' where
                 Capnp.ById.Xa93fc509624c72d9.set_Node'annotation'targetsAnnotation raw targetsAnnotation
             Node'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Node'unknown' raw arg_
 instance C'.Cerialize s Node'
+instance Default Node' where
+    def = PH'.defaultStruct
 data Node'NestedNode
      = Node'NestedNode
         {name :: Text,
@@ -896,6 +936,8 @@ instance C'.Marshal Node'NestedNode where
                 Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'name raw field_
                 Capnp.ById.Xa93fc509624c72d9.set_Node'NestedNode'id raw id
 instance C'.Cerialize s Node'NestedNode
+instance Default Node'NestedNode where
+    def = PH'.defaultStruct
 data Node'Parameter
      = Node'Parameter
         {name :: Text}
@@ -916,6 +958,8 @@ instance C'.Marshal Node'Parameter where
                 field_ <- C'.cerialize (U'.message raw) name
                 Capnp.ById.Xa93fc509624c72d9.set_Node'Parameter'name raw field_
 instance C'.Cerialize s Node'Parameter
+instance Default Node'Parameter where
+    def = PH'.defaultStruct
 data Type'anyPointer
      = Type'anyPointer'unconstrained
         {union' :: Type'anyPointer'unconstrained} |
@@ -959,6 +1003,8 @@ instance C'.Marshal Type'anyPointer where
                 Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter'parameterIndex raw parameterIndex
             Type'anyPointer'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unknown' raw arg_
 instance C'.Cerialize s Type'anyPointer
+instance Default Type'anyPointer where
+    def = PH'.defaultStruct
 data Type'anyPointer'unconstrained
      = Type'anyPointer'unconstrained'anyKind |
     Type'anyPointer'unconstrained'struct |
@@ -989,3 +1035,5 @@ instance C'.Marshal Type'anyPointer'unconstrained where
             Type'anyPointer'unconstrained'capability -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw
             Type'anyPointer'unconstrained'unknown' arg_ -> Capnp.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'unknown' raw arg_
 instance C'.Cerialize s Type'anyPointer'unconstrained
+instance Default Type'anyPointer'unconstrained where
+    def = PH'.defaultStruct
