@@ -20,7 +20,6 @@ module Capnp.Capnp.Rpc.Pure (Accept(..), Bootstrap(..), Call(..), CapDescriptor(
 import Data.Int
 import Data.Word
 import GHC.Generics (Generic)
-import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
@@ -382,7 +381,7 @@ instance C'.Cerialize s MessageTarget
 data Payload
      = Payload
         {content :: Maybe (PU'.PtrType),
-        capTable :: List (CapDescriptor)}
+        capTable :: PU'.ListOf (CapDescriptor)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Payload where
     type Cerial msg Payload = Capnp.ById.Xb312981b2552a250.Payload msg
@@ -409,7 +408,7 @@ instance C'.Cerialize s Payload
 data PromisedAnswer
      = PromisedAnswer
         {questionId :: Word32,
-        transform :: List (PromisedAnswer'Op)}
+        transform :: PU'.ListOf (PromisedAnswer'Op)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize PromisedAnswer where
     type Cerial msg PromisedAnswer = Capnp.ById.Xb312981b2552a250.PromisedAnswer msg

@@ -20,7 +20,6 @@ module Capnp.Capnp.Json.Pure (JsonValue(..), JsonValue'Call(..), JsonValue'Field
 import Data.Int
 import Data.Word
 import GHC.Generics (Generic)
-import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
@@ -39,8 +38,8 @@ data JsonValue
     JsonValue'boolean (Bool) |
     JsonValue'number (Double) |
     JsonValue'string (Text) |
-    JsonValue'array (List (JsonValue)) |
-    JsonValue'object (List (JsonValue'Field)) |
+    JsonValue'array (PU'.ListOf (JsonValue)) |
+    JsonValue'object (PU'.ListOf (JsonValue'Field)) |
     JsonValue'call (JsonValue'Call) |
     JsonValue'unknown' (Word16)
     deriving(Show, Read, Eq, Generic)
@@ -90,7 +89,7 @@ instance C'.Cerialize s JsonValue
 data JsonValue'Call
      = JsonValue'Call
         {function :: Text,
-        params :: List (JsonValue)}
+        params :: PU'.ListOf (JsonValue)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize JsonValue'Call where
     type Cerial msg JsonValue'Call = Capnp.ById.X8ef99297a43a5e34.JsonValue'Call msg

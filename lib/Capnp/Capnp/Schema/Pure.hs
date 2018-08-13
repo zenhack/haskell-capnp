@@ -20,7 +20,6 @@ module Capnp.Capnp.Schema.Pure (Annotation(..), Brand(..), CapnpVersion(..), Cod
 import Data.Int
 import Data.Word
 import GHC.Generics (Generic)
-import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
@@ -63,7 +62,7 @@ instance C'.Marshal Annotation where
 instance C'.Cerialize s Annotation
 data Brand
      = Brand
-        {scopes :: List (Brand'Scope)}
+        {scopes :: PU'.ListOf (Brand'Scope)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Brand where
     type Cerial msg Brand = Capnp.ById.Xa93fc509624c72d9.Brand msg
@@ -111,8 +110,8 @@ instance C'.Marshal CapnpVersion where
 instance C'.Cerialize s CapnpVersion
 data CodeGeneratorRequest
      = CodeGeneratorRequest
-        {nodes :: List (Node),
-        requestedFiles :: List (CodeGeneratorRequest'RequestedFile),
+        {nodes :: PU'.ListOf (Node),
+        requestedFiles :: PU'.ListOf (CodeGeneratorRequest'RequestedFile),
         capnpVersion :: CapnpVersion}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CodeGeneratorRequest where
@@ -147,7 +146,7 @@ data Enumerant
      = Enumerant
         {name :: Text,
         codeOrder :: Word16,
-        annotations :: List (Annotation)}
+        annotations :: PU'.ListOf (Annotation)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Enumerant where
     type Cerial msg Enumerant = Capnp.ById.Xa93fc509624c72d9.Enumerant msg
@@ -177,7 +176,7 @@ data Field
      = Field
         {name :: Text,
         codeOrder :: Word16,
-        annotations :: List (Annotation),
+        annotations :: PU'.ListOf (Annotation),
         discriminantValue :: Word16,
         ordinal :: Field'ordinal,
         union' :: Field'}
@@ -220,10 +219,10 @@ data Method
         codeOrder :: Word16,
         paramStructType :: Word64,
         resultStructType :: Word64,
-        annotations :: List (Annotation),
+        annotations :: PU'.ListOf (Annotation),
         paramBrand :: Brand,
         resultBrand :: Brand,
-        implicitParameters :: List (Node'Parameter)}
+        implicitParameters :: PU'.ListOf (Node'Parameter)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize Method where
     type Cerial msg Method = Capnp.ById.Xa93fc509624c72d9.Method msg
@@ -271,9 +270,9 @@ data Node
         displayName :: Text,
         displayNamePrefixLength :: Word32,
         scopeId :: Word64,
-        nestedNodes :: List (Node'NestedNode),
-        annotations :: List (Annotation),
-        parameters :: List (Node'Parameter),
+        nestedNodes :: PU'.ListOf (Node'NestedNode),
+        annotations :: PU'.ListOf (Annotation),
+        parameters :: PU'.ListOf (Node'Parameter),
         isGeneric :: Bool,
         union' :: Node'}
     deriving(Show, Read, Eq, Generic)
@@ -589,7 +588,7 @@ instance C'.Marshal Brand'Scope where
                 C'.marshalInto field_ union'
 instance C'.Cerialize s Brand'Scope
 data Brand'Scope'
-     = Brand'Scope'bind (List (Brand'Binding)) |
+     = Brand'Scope'bind (PU'.ListOf (Brand'Binding)) |
     Brand'Scope'inherit |
     Brand'Scope'unknown' (Word16)
     deriving(Show, Read, Eq, Generic)
@@ -621,7 +620,7 @@ data CodeGeneratorRequest'RequestedFile
      = CodeGeneratorRequest'RequestedFile
         {id :: Word64,
         filename :: Text,
-        imports :: List (CodeGeneratorRequest'RequestedFile'Import)}
+        imports :: PU'.ListOf (CodeGeneratorRequest'RequestedFile'Import)}
     deriving(Show, Read, Eq, Generic)
 instance C'.Decerialize CodeGeneratorRequest'RequestedFile where
     type Cerial msg CodeGeneratorRequest'RequestedFile = Capnp.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile msg
@@ -748,12 +747,12 @@ data Node'
         isGroup :: Bool,
         discriminantCount :: Word16,
         discriminantOffset :: Word32,
-        fields :: List (Field)} |
+        fields :: PU'.ListOf (Field)} |
     Node'enum
-        {enumerants :: List (Enumerant)} |
+        {enumerants :: PU'.ListOf (Enumerant)} |
     Node'interface
-        {methods :: List (Method),
-        superclasses :: List (Superclass)} |
+        {methods :: PU'.ListOf (Method),
+        superclasses :: PU'.ListOf (Superclass)} |
     Node'const
         {type_ :: Type,
         value :: Value} |

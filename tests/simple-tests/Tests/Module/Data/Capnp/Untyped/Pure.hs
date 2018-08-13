@@ -46,8 +46,8 @@ pureUntypedTests = assertionsToTest "Untyped ADT Tests"
                         , 5173
                         , doubleToWord 12.0
                         ]
-                        [ Just $ PtrList $ List8' $ V.fromList $ map (fromIntegral . fromEnum) "bob\0"
-                        , Just $ PtrList $ List16' []
+                        [ Just $ PtrList $ List8 $ V.fromList $ map (fromIntegral . fromEnum) "bob\0"
+                        , Just $ PtrList $ List16 []
                         ]
                     ]
                 ])

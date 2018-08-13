@@ -21,8 +21,8 @@ module Data.Capnp.Untyped.Pure
     , Message(..)
     , PtrType(..)
     , Struct(..)
-    , List'(..)
     , List(..)
+    , ListOf(..)
     , length
     , sliceIndex
 
@@ -63,7 +63,7 @@ import qualified Codec.Capnp as C
 
 type Cap = Word32
 
-newtype Slice a = Slice (List a)
+newtype Slice a = Slice (ListOf a)
     deriving(Generic, Show, Read, Ord, Functor, Default)
 
 newtype Message = Message (Array BS.ByteString)
@@ -71,7 +71,7 @@ newtype Message = Message (Array BS.ByteString)
 
 data PtrType
     = PtrStruct !Struct
-    | PtrList   !List'
+    | PtrList   !List
     | PtrCap    !Cap
     deriving(Generic, Show, Read, Eq)
 
@@ -82,18 +82,18 @@ data Struct = Struct
     deriving(Generic, Show, Read, Eq)
 instance Default Struct
 
-data List'
-    = List0'  (List ())
-    | List1'  (List Bool)
-    | List8'  (List Word8)
-    | List16' (List Word16)
-    | List32' (List Word32)
-    | List64' (List Word64)
-    | ListPtr' (List (Maybe PtrType))
-    | ListStruct' (List Struct)
+data List
+    = List0  (ListOf ())
+    | List1  (ListOf Bool)
+    | List8  (ListOf Word8)
+    | List16 (ListOf Word16)
+    | List32 (ListOf Word32)
+    | List64 (ListOf Word64)
+    | ListPtr (ListOf (Maybe PtrType))
+    | ListStruct (ListOf Struct)
     deriving(Generic, Show, Read, Eq)
 
-type List a = V.Vector a
+type ListOf a = V.Vector a
 
 -- Cookie-cutter IsList instances. These are derivable with
 -- GeneralizedNewtypeDeriving as of ghc >= 8.2.1, but not on
@@ -109,7 +109,7 @@ instance IsList (Slice a) where
     fromList = Slice . fromList
     fromListN n = Slice . fromListN n
 
-length :: List a -> Int
+length :: ListOf a -> Int
 length = V.length
 
 sliceIndex :: Default a => Int -> Slice a -> a
@@ -171,50 +171,50 @@ instance Cerialize s (Maybe PtrType) where
 instance
     ( C.ListElem M.ConstMsg (Cerial M.ConstMsg a)
     , Decerialize a
-    ) => Decerialize (List a)
+    ) => Decerialize (ListOf a)
   where
-    type Cerial msg (List a) = C.List msg (Cerial msg a)
+    type Cerial msg (ListOf a) = C.List msg (Cerial msg a)
     decerialize raw = V.generateM (C.length raw) (\i -> C.index i raw >>= decerialize)
 
 -- | Decerialize an untyped list, whose elements are instances of Decerialize. This isn't
 -- an instance, since it would have to be an instance of (List a), which conflicts with
 -- the above.
 decerializeListOf :: (U.ReadCtx m M.ConstMsg, Decerialize a)
-    => U.ListOf M.ConstMsg (Cerial M.ConstMsg a) -> m (List a)
+    => U.ListOf M.ConstMsg (Cerial M.ConstMsg a) -> m (ListOf a)
 decerializeListOf raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
 
 -- | Decerialize an untyped list, leaving the elements of the list as-is. The is most
 -- interesting for types that go in the data section of a struct, hence the name.
 decerializeListOfWord :: (U.ReadCtx m M.ConstMsg)
-    => U.ListOf M.ConstMsg a -> m (List a)
+    => U.ListOf M.ConstMsg a -> m (ListOf a)
 decerializeListOfWord raw = V.generateM (U.length raw) (`U.index` raw)
 
-instance Decerialize List' where
-    type Cerial msg List' = U.List msg
+instance Decerialize List where
+    type Cerial msg List = U.List msg
 
-    decerialize (U.List0 l)      = List0' <$> decerializeListOfWord l
-    decerialize (U.List1 l)      = List1' <$> decerializeListOfWord l
-    decerialize (U.List8 l)      = List8' <$> decerializeListOfWord l
-    decerialize (U.List16 l)     = List16' <$> decerializeListOfWord l
-    decerialize (U.List32 l)     = List32' <$> decerializeListOfWord l
-    decerialize (U.List64 l)     = List64' <$> decerializeListOfWord l
-    decerialize (U.ListPtr l)    = ListPtr' <$> decerializeListOf l
-    decerialize (U.ListStruct l) = ListStruct' <$> decerializeListOf l
+    decerialize (U.List0 l)      = List0 <$> decerializeListOfWord l
+    decerialize (U.List1 l)      = List1 <$> decerializeListOfWord l
+    decerialize (U.List8 l)      = List8 <$> decerializeListOfWord l
+    decerialize (U.List16 l)     = List16 <$> decerializeListOfWord l
+    decerialize (U.List32 l)     = List32 <$> decerializeListOfWord l
+    decerialize (U.List64 l)     = List64 <$> decerializeListOfWord l
+    decerialize (U.ListPtr l)    = ListPtr <$> decerializeListOf l
+    decerialize (U.ListStruct l) = ListStruct <$> decerializeListOf l
 
-instance Cerialize s List' where
-    cerialize msg (List0'   l) = U.List0  <$> U.allocList0 msg (length l)
-    cerialize msg (List1'   l) = U.List1  <$> cerializeListOfWord (U.allocList1  msg) l
-    cerialize msg (List8'   l) = U.List8  <$> cerializeListOfWord (U.allocList8  msg) l
-    cerialize msg (List16'  l) = U.List16 <$> cerializeListOfWord (U.allocList16 msg) l
-    cerialize msg (List32'  l) = U.List32 <$> cerializeListOfWord (U.allocList32 msg) l
-    cerialize msg (List64'  l) = U.List64 <$> cerializeListOfWord (U.allocList64 msg) l
-    cerialize msg (ListPtr' l) = do
+instance Cerialize s List where
+    cerialize msg (List0   l) = U.List0  <$> U.allocList0 msg (length l)
+    cerialize msg (List1   l) = U.List1  <$> cerializeListOfWord (U.allocList1  msg) l
+    cerialize msg (List8   l) = U.List8  <$> cerializeListOfWord (U.allocList8  msg) l
+    cerialize msg (List16  l) = U.List16 <$> cerializeListOfWord (U.allocList16 msg) l
+    cerialize msg (List32  l) = U.List32 <$> cerializeListOfWord (U.allocList32 msg) l
+    cerialize msg (List64  l) = U.List64 <$> cerializeListOfWord (U.allocList64 msg) l
+    cerialize msg (ListPtr l) = do
         raw <- U.allocListPtr msg (length l)
         forM_ [0..length l - 1] $ \i -> do
             ptr <- cerialize msg (l V.! i)
             U.setIndex ptr i raw
         pure $ U.ListPtr raw
-    cerialize msg (ListStruct' l) = do
+    cerialize msg (ListStruct l) = do
         let (maxData, maxPtrs) = measureStructSizes l
         raw <- U.allocCompositeList msg maxData maxPtrs (length l)
         forM_ [0..length l - 1] $ \i -> do
@@ -224,7 +224,7 @@ instance Cerialize s List' where
       where
         -- Find the maximum sizes of each section of any of the structs
         -- in the list. This is the size we need to set in the tag word.
-        measureStructSizes :: List Struct -> (Word16, Word16)
+        measureStructSizes :: ListOf Struct -> (Word16, Word16)
         measureStructSizes = foldl
             (\(!dataSz, !ptrSz) (Struct (Slice dataSec) (Slice ptrSec)) ->
                 ( max dataSz (fromIntegral $ length dataSec)
@@ -234,13 +234,13 @@ instance Cerialize s List' where
             (0, 0)
 
 
-cerializeListOfWord :: U.RWCtx m s => (Int -> m (U.ListOf (M.MutMsg s) a)) -> List a -> m (U.ListOf (M.MutMsg s) a)
+cerializeListOfWord :: U.RWCtx m s => (Int -> m (U.ListOf (M.MutMsg s) a)) -> ListOf a -> m (U.ListOf (M.MutMsg s) a)
 cerializeListOfWord alloc list = do
     ret <- alloc (length list)
     marshalListOfWord ret list
     pure ret
 
-marshalListOfWord :: U.RWCtx m s => U.ListOf (M.MutMsg s) a -> List a -> m ()
+marshalListOfWord :: U.RWCtx m s => U.ListOf (M.MutMsg s) a -> ListOf a -> m ()
 marshalListOfWord raw l =
     forM_ [0..length l - 1] $ \i ->
         U.setIndex (l V.! i) i raw
@@ -250,42 +250,42 @@ ptrStruct Nothing              = pure def
 ptrStruct (Just (PtrStruct s)) = pure s
 ptrStruct (Just _)             = expected "pointer to struct"
 
-list0 :: MonadThrow f => Maybe PtrType -> f (List ())
+list0 :: MonadThrow f => Maybe PtrType -> f (ListOf ())
 list0 Nothing                     = pure def
-list0 (Just (PtrList (List0' l))) = pure l
+list0 (Just (PtrList (List0 l))) = pure l
 list0 _                           = expected "pointer to list with element size 0"
 
-list1 :: MonadThrow f => Maybe PtrType -> f (List Bool)
+list1 :: MonadThrow f => Maybe PtrType -> f (ListOf Bool)
 list1 Nothing                     = pure def
-list1 (Just (PtrList (List1' l))) = pure l
+list1 (Just (PtrList (List1 l))) = pure l
 list1 _                           = expected "pointer to list with element size 1"
 
-list8 :: MonadThrow f => Maybe PtrType -> f (List Word8)
+list8 :: MonadThrow f => Maybe PtrType -> f (ListOf Word8)
 list8 Nothing                     = pure def
-list8 (Just (PtrList (List8' l))) = pure l
+list8 (Just (PtrList (List8 l))) = pure l
 list8 _                           = expected "pointer to list with element size 8"
 
-list16 :: MonadThrow f => Maybe PtrType -> f (List Word16)
+list16 :: MonadThrow f => Maybe PtrType -> f (ListOf Word16)
 list16 Nothing                      = pure def
-list16 (Just (PtrList (List16' l))) = pure l
+list16 (Just (PtrList (List16 l))) = pure l
 list16 _                            = expected "pointer to list with element size 16"
 
-list32 :: MonadThrow f => Maybe PtrType -> f (List Word32)
+list32 :: MonadThrow f => Maybe PtrType -> f (ListOf Word32)
 list32 Nothing                      = pure def
-list32 (Just (PtrList (List32' l))) = pure l
+list32 (Just (PtrList (List32 l))) = pure l
 list32 _                            = expected "pointer to list with element size 32"
 
-list64 :: MonadThrow f => Maybe PtrType -> f (List Word64)
+list64 :: MonadThrow f => Maybe PtrType -> f (ListOf Word64)
 list64 Nothing                      = pure def
-list64 (Just (PtrList (List64' l))) = pure l
+list64 (Just (PtrList (List64 l))) = pure l
 list64 _                            = expected "pointer to list with element size 64"
 
-listPtr :: MonadThrow f => Maybe PtrType -> f (List (Maybe PtrType))
-listPtr Nothing                       = pure def
-listPtr (Just (PtrList (ListPtr' l))) = pure l
-listPtr _                             = expected "pointer to list of pointers"
+listPtr :: MonadThrow f => Maybe PtrType -> f (ListOf (Maybe PtrType))
+listPtr Nothing                      = pure def
+listPtr (Just (PtrList (ListPtr l))) = pure l
+listPtr _                            = expected "pointer to list of pointers"
 
-listStruct :: MonadThrow f => Maybe PtrType -> f (List Struct)
+listStruct :: MonadThrow f => Maybe PtrType -> f (ListOf Struct)
 listStruct Nothing         = pure def
-listStruct (Just (PtrList (ListStruct' l))) = pure l
+listStruct (Just (PtrList (ListStruct l))) = pure l
 listStruct _               = expected "pointer to list of structs"

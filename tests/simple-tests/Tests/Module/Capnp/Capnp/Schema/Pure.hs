@@ -569,17 +569,17 @@ instance Arbitrary PU.Struct where
         <$> arbitrary
         <*> arbitrary
 
-instance Arbitrary PU.List' where
+instance Arbitrary PU.List where
     shrink = genericShrink
     arbitrary = oneof
-        [ PU.List0' <$> arbitrarySmallerVec
-        , PU.List1' <$> arbitrarySmallerVec
-        , PU.List8' <$> arbitrarySmallerVec
-        , PU.List16' <$> arbitrarySmallerVec
-        , PU.List32' <$> arbitrarySmallerVec
-        , PU.List64' <$> arbitrarySmallerVec
-        , PU.ListPtr' <$> arbitrarySmallerVec
-        , PU.ListStruct' <$> arbitrarySmallerVec
+        [ PU.List0 <$> arbitrarySmallerVec
+        , PU.List1 <$> arbitrarySmallerVec
+        , PU.List8 <$> arbitrarySmallerVec
+        , PU.List16 <$> arbitrarySmallerVec
+        , PU.List32 <$> arbitrarySmallerVec
+        , PU.List64 <$> arbitrarySmallerVec
+        , PU.ListPtr <$> arbitrarySmallerVec
+        , PU.ListStruct <$> arbitrarySmallerVec
         ]
 
 instance Arbitrary PU.PtrType where

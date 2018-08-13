@@ -97,7 +97,6 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import GHC.Generics (Generic)"
     , ""
-    , "import Data.Capnp.Untyped.Pure (List)"
     , "import Data.Capnp.Basics.Pure (Data, Text)"
     , "import Control.Monad.Catch (MonadThrow)"
     , "import Data.Capnp.TraversalLimit (MonadLimit)"
@@ -143,7 +142,7 @@ fmtType thisMod (CompositeType (StructType name params)) =
     fmtName Pure thisMod name
     <> hcat [" (" <> fmtType thisMod ty <> ")" | ty <- params]
 fmtType thisMod (WordType (EnumType name)) = fmtName Raw thisMod name
-fmtType thisMod (PtrType (ListOf eltType)) = "List (" <> fmtType thisMod eltType <> ")"
+fmtType thisMod (PtrType (ListOf eltType)) = "PU'.ListOf (" <> fmtType thisMod eltType <> ")"
 fmtType thisMod (PtrType (PtrComposite ty)) = fmtType thisMod (CompositeType ty)
 fmtType _ VoidType = "()"
 fmtType _ (WordType (PrimWord prim)) = fmtPrimWord prim
@@ -160,7 +159,7 @@ fmtPrimWord PrimBool                     = "Bool"
 
 fmtAnyPtr :: AnyPtr -> PP.Doc
 fmtAnyPtr Struct = "PU'.Struct"
-fmtAnyPtr List   = "PU'.List'"
+fmtAnyPtr List   = "PU'.List"
 fmtAnyPtr Cap    = "PU'.Cap"
 fmtAnyPtr Ptr    = "PU'.PtrType"
 

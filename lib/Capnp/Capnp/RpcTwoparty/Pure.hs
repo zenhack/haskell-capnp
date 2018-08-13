@@ -20,7 +20,6 @@ module Capnp.Capnp.RpcTwoparty.Pure (JoinKeyPart(..), JoinResult(..), ProvisionI
 import Data.Int
 import Data.Word
 import GHC.Generics (Generic)
-import Data.Capnp.Untyped.Pure (List)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow)
 import Data.Capnp.TraversalLimit (MonadLimit)
