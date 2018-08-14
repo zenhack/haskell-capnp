@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE RecordWildCards       #-}
 module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
@@ -409,14 +410,21 @@ ppAssertEqual actual expected =
         "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
 
 propTests = testGroup "check that cerialize and decerialize are inverses."
-    [ propCase "Superclass" (Proxy :: Proxy Superclass)
-    , propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
+    [ propCase "Node" (Proxy :: Proxy Node)
     , propCase "Node.Parameter" (Proxy :: Proxy Node'Parameter)
+    , propCase "Node.NestedNode" (Proxy :: Proxy Node'NestedNode)
+    , propCase "Field" (Proxy :: Proxy Field)
+    , propCase "Enumerant" (Proxy :: Proxy Enumerant)
+    , propCase "Superclass" (Proxy :: Proxy Superclass)
+    , propCase "Method" (Proxy :: Proxy Method)
     , propCase "Type" (Proxy :: Proxy Type)
     , propCase "Brand" (Proxy :: Proxy Brand)
     , propCase "Brand.Scope" (Proxy :: Proxy Brand'Scope)
     , propCase "Brand.Binding" (Proxy :: Proxy Brand'Binding)
     , propCase "Value" (Proxy :: Proxy Value)
+    , propCase "Annotation" (Proxy :: Proxy Annotation)
+    , propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
+    , propCase "CodeGeneratorRequest" (Proxy :: Proxy CodeGeneratorRequest)
     , propCase "CodeGeneratorRequest.RequestedFile"
         (Proxy :: Proxy CodeGeneratorRequest'RequestedFile)
     , propCase "CodeGeneratorRequest.RequestedFile.Import"
@@ -431,11 +439,115 @@ propCase name proxy =
 arbitraryTag :: Word16 -> Gen Word16
 arbitraryTag numTags = max numTags <$> arbitrary
 
+instance Arbitrary Node where
+    shrink = genericShrink
+    arbitrary = do
+        id <- arbitrary
+        displayName <- arbitrary
+        displayNamePrefixLength <- arbitrary
+        scopeId <- arbitrary
+        parameters <- arbitrarySmallerVec
+        isGeneric <- arbitrary
+        nestedNodes <- arbitrarySmallerVec
+        annotations <- arbitrarySmallerVec
+        union' <- arbitrary
+        pure Node{..}
+
+instance Arbitrary Node' where
+    shrink = genericShrink
+    arbitrary = oneof
+        [ pure Node'file
+        , do
+            dataWordCount <- arbitrary
+            pointerCount <- arbitrary
+            preferredListEncoding <- arbitrary
+            isGroup <- arbitrary
+            discriminantCount <- arbitrary
+            discriminantOffset <- arbitrary
+            fields <- arbitrarySmallerVec
+            pure Node'struct{..}
+        , Node'enum <$> arbitrarySmallerVec
+        , Node'interface <$> arbitrarySmallerVec <*> arbitrarySmallerVec
+        , Node'const <$> arbitrary <*> arbitrary
+        , do
+            type_ <- arbitrary
+            targetsFile <- arbitrary
+            targetsConst <- arbitrary
+            targetsEnum <- arbitrary
+            targetsEnumerant <- arbitrary
+            targetsStruct <- arbitrary
+            targetsField <- arbitrary
+            targetsUnion <- arbitrary
+            targetsGroup <- arbitrary
+            targetsInterface <- arbitrary
+            targetsMethod <- arbitrary
+            targetsParam <- arbitrary
+            targetsAnnotation <- arbitrary
+            pure Node'annotation{..}
+        , Node'unknown' <$> arbitraryTag 6
+        ]
+
+instance Arbitrary Node'NestedNode where
+    shrink = genericShrink
+    arbitrary = Node'NestedNode
+        <$> arbitrary
+        <*> arbitrary
+
+instance Arbitrary Field where
+    shrink = genericShrink
+    arbitrary = do
+        name <- arbitrary
+        codeOrder <- arbitrary
+        annotations <- arbitrary
+        discriminantValue <- arbitrary
+        union' <- arbitrary
+        ordinal <- arbitrary
+        pure Field{..}
+
+instance Arbitrary Field' where
+    shrink = genericShrink
+    arbitrary = oneof
+        [ do
+            offset <- arbitrary
+            type_ <- arbitrary
+            defaultValue <- arbitrary
+            hadExplicitDefault <- arbitrary
+            pure Field'slot{..}
+        , Field'group <$> arbitrary
+        ]
+
+instance Arbitrary Field'ordinal where
+    shrink = genericShrink
+    arbitrary = oneof
+        [ pure Field'ordinal'implicit
+        , Field'ordinal'explicit <$> arbitrary
+        ]
+
+instance Arbitrary Enumerant where
+    shrink = genericShrink
+    arbitrary = Enumerant
+        <$> arbitrary
+        <*> arbitrary
+        <*> arbitrarySmallerVec
+
 instance Arbitrary Superclass where
     shrink = genericShrink
     arbitrary = Superclass
         <$> arbitrary
         <*> arbitrary
+
+instance Arbitrary Method where
+    shrink = genericShrink
+    arbitrary = do
+        name <- arbitrary
+        codeOrder <- arbitrary
+        implicitParameters <- arbitrary
+        paramStructType <- arbitrary
+        paramBrand <- arbitrary
+        resultStructType <- arbitrary
+        resultBrand <- arbitrary
+        annotations <- arbitrary
+        pure Method{..}
 
 instance Arbitrary CapnpVersion where
     shrink = genericShrink
@@ -450,7 +562,7 @@ instance Arbitrary Node'Parameter where
 
 instance Arbitrary Brand where
     shrink = genericShrink
-    arbitrary = Brand <$> arbitrary
+    arbitrary = Brand <$> arbitrarySmallerVec
 
 instance Arbitrary Brand'Scope where
     shrink = genericShrink
@@ -461,7 +573,7 @@ instance Arbitrary Brand'Scope where
 instance Arbitrary Brand'Scope' where
     shrink = genericShrink
     arbitrary = oneof
-        [ Brand'Scope'bind <$> arbitrary
+        [ Brand'Scope'bind <$> arbitrarySmallerVec
         , pure Brand'Scope'inherit
         , Brand'Scope'unknown' <$> arbitraryTag 2
         ]
@@ -499,6 +611,27 @@ instance Arbitrary Value where
         , Value'unknown' <$> arbitraryTag 19
         ]
 
+instance Arbitrary Annotation where
+    shrink = genericShrink
+    arbitrary = Annotation
+        <$> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+
+instance Arbitrary ElementSize where
+    -- shrink = genericShrink
+    arbitrary = oneof
+        [ pure ElementSize'empty
+        , pure ElementSize'bit
+        , pure ElementSize'byte
+        , pure ElementSize'twoBytes
+        , pure ElementSize'fourBytes
+        , pure ElementSize'eightBytes
+        , pure ElementSize'pointer
+        , pure ElementSize'inlineComposite
+        , ElementSize'unknown' <$> arbitraryTag 8
+        ]
+
 instance Arbitrary Type'anyPointer where
     shrink = genericShrink
     arbitrary = oneof
@@ -533,10 +666,20 @@ instance Arbitrary Type where
         , pure Type'float64
         , pure Type'text
         , pure Type'data_
-        -- TODO: list, enum, struct, interface
+        , Type'list <$> arbitrary
+        , Type'enum <$> arbitrary <*> arbitrary
+        , Type'interface <$> arbitrary <*> arbitrary
         , Type'anyPointer <$> arbitrary
         , Type'unknown' <$> arbitraryTag 21
         ]
+
+instance Arbitrary CodeGeneratorRequest where
+    shrink = genericShrink
+    arbitrary = do
+        capnpVersion <- arbitrary
+        nodes <- arbitrarySmallerVec
+        requestedFiles <- arbitrarySmallerVec
+        pure CodeGeneratorRequest{..}
 
 instance Arbitrary CodeGeneratorRequest'RequestedFile where
     shrink = genericShrink
