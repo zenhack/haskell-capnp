@@ -1108,7 +1108,7 @@ instance B'.ListElem msg Exception'Type where
     length (List_Exception'Type l) = U'.length l
     index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s Exception'Type where
-    setIndex elt i (List_Exception'Type l) = error "TODO: generate code for setIndex"
+    setIndex elt i (List_Exception'Type l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_Exception'Type <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg Exception'Type) where
     fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr

@@ -576,7 +576,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
             ]
         , hcat [ "instance B'.MutListElem s ", typeName, " where" ]
         , indent $ vcat
-            [ hcat [ "setIndex elt i (List_", typeName, " l) = error \"TODO: generate code for setIndex\"" ]
+            [ hcat [ "setIndex elt i (List_", typeName, " l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l" ]
             , hcat [ "newList msg size = List_", typeName, " <$> U'.allocList16 msg size" ]
             ]
         , hcat [ "instance C'.IsPtr msg (B'.List msg ", typeName, ") where" ]

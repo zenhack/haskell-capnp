@@ -162,7 +162,7 @@ instance B'.ListElem msg Side where
     length (List_Side l) = U'.length l
     index i (List_Side l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s Side where
-    setIndex elt i (List_Side l) = error "TODO: generate code for setIndex"
+    setIndex elt i (List_Side l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_Side <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
