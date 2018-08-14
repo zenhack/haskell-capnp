@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {- |
 Module: Capnp.Capnp.Persistent
 Description: Low-level generated module for capnp/persistent.capnp
@@ -14,7 +15,7 @@ module Capnp.Capnp.Persistent where
 -- Generated from schema file: capnp/persistent.capnp
 import Data.Int
 import Data.Word
-import GHC.OverloadedLabels
+import GHC.Generics (Generic)
 import Data.Capnp.Bits (Word1)
 import qualified Data.Bits
 import qualified Data.Maybe

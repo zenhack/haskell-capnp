@@ -619,7 +619,7 @@ instance Arbitrary Annotation where
         <*> arbitrary
 
 instance Arbitrary ElementSize where
-    -- shrink = genericShrink
+    shrink = genericShrink
     arbitrary = oneof
         [ pure ElementSize'empty
         , pure ElementSize'bit

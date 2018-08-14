@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {- |
 Module: Capnp.Capnp.RpcTwoparty
 Description: Low-level generated module for capnp/rpc-twoparty.capnp
@@ -14,7 +15,7 @@ module Capnp.Capnp.RpcTwoparty where
 -- Generated from schema file: capnp/rpc-twoparty.capnp
 import Data.Int
 import Data.Word
-import GHC.OverloadedLabels
+import GHC.Generics (Generic)
 import Data.Capnp.Bits (Word1)
 import qualified Data.Bits
 import qualified Data.Maybe
@@ -145,7 +146,7 @@ data Side =
     Side'server |
     Side'client |
     Side'unknown' Word16
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance Enum Side where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord

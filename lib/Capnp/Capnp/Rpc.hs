@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {- |
 Module: Capnp.Capnp.Rpc
 Description: Low-level generated module for capnp/rpc.capnp
@@ -14,7 +15,7 @@ module Capnp.Capnp.Rpc where
 -- Generated from schema file: capnp/rpc.capnp
 import Data.Int
 import Data.Word
-import GHC.OverloadedLabels
+import GHC.Generics (Generic)
 import Data.Capnp.Bits (Word1)
 import qualified Data.Bits
 import qualified Data.Maybe
@@ -1087,7 +1088,7 @@ data Exception'Type =
     Exception'Type'disconnected |
     Exception'Type'unimplemented |
     Exception'Type'unknown' Word16
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Generic)
 instance Enum Exception'Type where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord

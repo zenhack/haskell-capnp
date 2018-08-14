@@ -56,6 +56,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
     , "{-# LANGUAGE TypeFamilies #-}"
+    , "{-# LANGUAGE DeriveGeneric #-}"
     , "{- |"
     , "Module: " <> humanMod
     , "Description: Low-level generated module for " <> modFileText
@@ -71,7 +72,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , "import Data.Int"
     , "import Data.Word"
     , ""
-    , "import GHC.OverloadedLabels"
+    , "import GHC.Generics (Generic)"
     , ""
     , "import Data.Capnp.Bits (Word1)"
     , ""
@@ -550,7 +551,7 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
         [ hcat [ "data ", typeName, " =" ]
         , indent $ vcat
             [ vcat $ PP.punctuate " |" $ map fmtEnumVariant dataVariants
-            , "deriving(Show, Read, Eq)"
+            , "deriving(Show, Read, Eq, Generic)"
             ]
         -- Generate an Enum instance. This is a trivial wrapper around the
         -- IsWord instance, below.
