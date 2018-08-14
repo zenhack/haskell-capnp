@@ -342,7 +342,6 @@ allocInSeg msg segIndex (WordCount size) = do
 -- starting address of the allocated memory.
 alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
 alloc msg size = do
-    -- TODO: check for and deal with segments that are "too big."
     segIndex <- pred <$> numSegs msg
     allocInSeg msg segIndex size
 

@@ -44,8 +44,7 @@ data OffsetError
     -- | The pointer is in the correct segment, but too far away to encode the
     -- offset. (more than 30 bits would be required). This can only happen with
     -- segments that are > 8 GiB, which this library refuses to either decode
-    -- or generate, so this should not come up in practice (TODO: actually add
-    -- the code to enforce this).
+    -- or generate, so this should not come up in practice.
     | OutOfRange
 
 -- | @'computeOffset' ptrAddr valueAddr@ computes the offset that should be
