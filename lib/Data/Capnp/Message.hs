@@ -206,8 +206,8 @@ decodeSeg seg = do
 -- monadic context, which should manage the current read position,
 -- into a message. read32 should read a 32-bit little-endian integer,
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
--- The size of the message (in 64-bit words) is deducted from the quota,
--- which can be used to set the maximum message size.
+-- The size of the message (in 64-bit words) is deducted from the traversal,
+-- limit which can be used to set the maximum message size.
 readMessage read32 readSegment = do
     invoice 1
     numSegs' <- read32
