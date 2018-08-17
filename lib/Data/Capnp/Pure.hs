@@ -6,6 +6,11 @@ module Data.Capnp.Pure
     ( Basics.Text(..)
     , Basics.Data(..)
 
+    , Codec.getValue
+    , Codec.hGetValue
+    , Codec.putValue
+    , Codec.hPutValue
+
     , Capnp.ConstMsg
     , Capnp.Message(..)
     , Capnp.decodeMessage
@@ -14,7 +19,12 @@ module Data.Capnp.Pure
 
     , Codec.Decerialize(..)
     , Codec.Cerialize(..)
+
+    , module Data.Capnp.TraversalLimit
     ) where
+
+
+import Data.Capnp.TraversalLimit
 
 import qualified Codec.Capnp            as Codec
 import qualified Data.Capnp             as Capnp

@@ -3,14 +3,12 @@
 module Main (main) where
 
 import Capnp.Capnp.Schema.Pure (CodeGeneratorRequest)
-
-import Data.Capnp (decodeMessage, defaultLimit, evalLimitT, getRoot)
+import Data.Capnp.Pure         (defaultLimit, getValue)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
 import System.IO        (IOMode(WriteMode), withFile)
 
-import qualified Data.ByteString              as BS
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import qualified Backends.Pure
@@ -19,8 +17,7 @@ import qualified FrontEnd
 
 main :: IO ()
 main = do
-    msg <- decodeMessage =<< BS.getContents
-    cgr <- evalLimitT defaultLimit (getRoot msg)
+    cgr <- getValue defaultLimit
     mapM_ saveResult (handleCGR cgr)
   where
     saveResult (filename, contents) = do

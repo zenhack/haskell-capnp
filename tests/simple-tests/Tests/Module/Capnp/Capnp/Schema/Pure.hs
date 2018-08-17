@@ -19,13 +19,19 @@ import Codec.Capnp
     , getRoot
     , setRoot
     )
-import Data.Capnp.TraversalLimit (evalLimitT)
+import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
+
+import Data.Capnp.Pure (hGetValue, hPutValue)
 
 import Capnp.Capnp.Schema.Pure
 import Tests.Util
 
+import Control.Exception                    (bracket)
 import Control.Monad                        (when)
 import Control.Monad.Primitive              (RealWorld)
+import System.Directory                     (removeFile)
+import System.IO
+    (IOMode(ReadMode, WriteMode), hClose, openBinaryTempFile, withBinaryFile)
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit.Lang                      (assertEqual)
@@ -410,7 +416,7 @@ ppAssertEqual actual expected =
     when (actual /= expected) $ error $
         "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
 
-propTests = testGroup "check that cerialize and decerialize are inverses."
+propTests = testGroup "Various quickcheck properties"
     [ propCase "Node" (Proxy :: Proxy Node)
     , propCase "Node.Parameter" (Proxy :: Proxy Node'Parameter)
     , propCase "Node.NestedNode" (Proxy :: Proxy Node'NestedNode)
@@ -432,8 +438,36 @@ propTests = testGroup "check that cerialize and decerialize are inverses."
         (Proxy :: Proxy CodeGeneratorRequest'RequestedFile'Import)
     ]
 
-propCase name proxy =
-    testProperty ("...for " ++ name) (prop_cerializeDecerializeInverses proxy)
+propCase name proxy = testGroup ("...for " ++ name)
+    [ testProperty "check that cerialize and decerialize are inverses." (prop_cerializeDecerializeInverses proxy)
+    , testProperty "check that hPutValue and hGetValue are inverses." (prop_hGetPutInverses proxy)
+    ]
+
+prop_hGetPutInverses ::
+    ( Show a
+    , Eq a
+    , FromStruct M.ConstMsg a
+    , Cerialize RealWorld a
+    , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
+    ) => Proxy a -> a -> Property
+prop_hGetPutInverses proxy expected = propertyIO $ do
+    -- This is a little more complicated than I'd like due to resource
+    -- management issues. We create a temporary file, then immediately
+    -- close the handle to it, and open it again in a separate call to
+    -- bracket. This allows us to decouple the lifetimes of the file and
+    -- the handle.
+    actual <- bracket
+        (do
+            (filename, handle) <- openBinaryTempFile "/tmp" "hPutValue-output"
+            hClose handle
+            pure filename)
+        removeFile
+        (\filename -> do
+            withBinaryFile filename WriteMode
+                (`hPutValue` expected)
+            withBinaryFile filename ReadMode
+                (hGetValue defaultLimit))
+    ppAssertEqual actual expected
 
 -- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
 -- by the schema. The parameter is the number of tags assigned by the schema.
