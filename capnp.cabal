@@ -53,6 +53,7 @@ library
     exposed-modules:
         Codec.Capnp
       , Data.Capnp
+      , Data.Capnp.Pure
       , Data.Capnp.Address
       , Data.Capnp.Basics
       , Data.Capnp.Basics.Pure
