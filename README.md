@@ -278,6 +278,9 @@ argument both to catch values that would cause excessive resource usage,
 and to simply limit the overall size of the incoming message. The
 default is approximately 64 MiB.
 
+If an error occurs, an exception will be thrown of type `Error` from the
+`Data.Capnp.Errors` module.
+
 ### Code generation rules.
 
 The complete rules for how capnproto types map to Haskell are as follows:
