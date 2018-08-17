@@ -158,22 +158,6 @@ generating excessively long names. For the example schema I would suggest
 moving the definition of the `PhoneNumber` struct outside of `Person`,
 which results in:
 
-The module also exports instances of several type classes:
-
-* `Show`
-* `Read`
-* `Eq`
-* `Generic` from `GHC.Generics`
-* `Default` from the `data-default` package.
-* A number of type classes defined by the `capnp` package.
-* Capnproto enums additionally implement the `Enum` type class.
-
-Using the `Default` instance to construct values means that your
-existing code will continue to work if new fields are added in the
-schema, but it also makes it easier to forget to set a field if you had
-intended to. The instance maps `def` to the default value as defined by
-capnproto, so leaving out newly-added fields will do The Right Thing.
-
 ```haskell
 -- ...
 
@@ -198,6 +182,22 @@ data PhoneNumber'Type
 
 -- ...
 ```
+
+The module also exports instances of several type classes:
+
+* `Show`
+* `Read`
+* `Eq`
+* `Generic` from `GHC.Generics`
+* `Default` from the `data-default` package.
+* A number of type classes defined by the `capnp` package.
+* Capnproto enums additionally implement the `Enum` type class.
+
+Using the `Default` instance to construct values means that your
+existing code will continue to work if new fields are added in the
+schema, but it also makes it easier to forget to set a field if you had
+intended to. The instance maps `def` to the default value as defined by
+capnproto, so leaving out newly-added fields will do The Right Thing.
 
 The module `Data.Capnp.Pure` exposes the most frequently used
 functionality from the high level API. We can output an address book
@@ -225,7 +225,7 @@ main = putValue AddressBook
             , phones = V.fromList
                 [ def
                     { number = "555-1212"
-                    , type_ =  Person'PhoneNumber'mobile
+                    , type_ =  Person'PhoneNumber'Type'mobile
                     }
                 ]
             , employment = Person'employment'school "MIT"
