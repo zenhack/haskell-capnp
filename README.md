@@ -331,6 +331,25 @@ The complete rules for how capnproto types map to Haskell are as follows:
 * No code is currently generated for interfaces; this will change once
   we implement RPC.
 
+## Low Level API
+
+The low level API exposes a much more imperative interface than the
+high-level API. Instead of algebraic data types, types are exposed as
+opaque wrappers around references into a message, and accessors are
+generated for the fields. This API is much closer in spirit to that of
+the C++ reference implementation.
+
+Because the low level interfaces do not parse and validate the message
+up front, accesses to the message can result in errors. Furthermore, the
+traversal limit needs to be tracked to avoid denial of service attacks.
+
+Because of this, access to the message must occur inside of a monad
+which is an instance of `MonadThrow` from the exceptions package, and
+`MonadLimit`, which is defined in `Data.Capnp.TraversalLimit`. We define
+a monad transformer `LimitT` for the latter.
+
+### Example
+
 # License
 
 MIT
