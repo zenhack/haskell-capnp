@@ -21,8 +21,12 @@ module Data.Capnp.Pure
     , Codec.Cerialize(..)
 
     , module Data.Capnp.TraversalLimit
+
+    , def
     ) where
 
+
+import Data.Default (def)
 
 import Data.Capnp.TraversalLimit
 
