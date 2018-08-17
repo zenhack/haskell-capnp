@@ -51,7 +51,7 @@ properties of the wire format. In particular:
 * You can't mmap a file and read in only part of it.
 * You can't modify a message in-place.
 
-## Example
+### Example
 
 As a running example, we'll use the following schema (borrowed from the
 C++ implementation's documentation):
@@ -278,7 +278,7 @@ argument both to catch values that would cause excessive resource usage,
 and to simply limit the overall size of the incoming message. The
 default is approximately 64 MiB.
 
-## Code generation rules.
+### Code generation rules.
 
 The complete rules for how capnproto types map to Haskell are as follows:
 
