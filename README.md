@@ -15,10 +15,10 @@ usable, with some limitations:
   evolution rules][2], it is not safe to change a field from type
   List(T) (where T is any non-struct type) to a list of a struct type.
 
-The API is considered unstable. It will likely see changes both for the
-sake of polish, consistency, etc. and to accommodate more features as we
-add them (RPC in particular will probably require changing some
-interfaces).
+The API is considered unstable. It will likely see changes, for the
+sake of polish, consistency, etc. as well as to improve performance and
+accommodate more features as we add them (RPC in particular will
+probably require changing some interfaces).
 
 # License
 
