@@ -7,13 +7,14 @@ A Haskell [capnproto][1] library.
 Serialization (read & write) support is mostly finished, and already
 usable, with some limitations:
 
-* Generated schema currently ignore type parameters (#29).
+* Generated schema currently ignore type parameters ([#29][issue29]).
 * Schema which define custom default values for fields of pointer type
-  are rejected (#28).
+  are rejected ([#28][issue28]).
 * We currently do not correctly handle decoding lists of structs from
-  non-composite lists (#27). This means that, contrary to the [protocol
-  evolution rules][2], it is not safe to change a field from type
-  List(T) (where T is any non-struct type) to a list of a struct type.
+  non-composite lists ([#27][issue27]). This means that, contrary to the
+  [protocol evolution rules][2], it is not safe to change a field from
+  type List(T) (where T is any non-struct type) to a list of a struct
+  type.
 
 The API is considered unstable. It will likely see changes, for the
 sake of polish, consistency, etc. as well as to improve performance and
@@ -26,6 +27,10 @@ MIT
 
 [1]: https://capnproto.org/
 [2]: https://capnproto.org/language.html#evolving-your-protocol
+
+[issue27]: https://github.com/zenhack/haskell-capnp/issues/27
+[issue28]: https://github.com/zenhack/haskell-capnp/issues/28
+[issue29]: https://github.com/zenhack/haskell-capnp/issues/29
 
 [ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
 [ci]: https://gitlab.com/isd/haskell-capnp/pipelines
