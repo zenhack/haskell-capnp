@@ -2,17 +2,15 @@
 -}
 module Main (main) where
 
-import Capnp.Capnp.Schema.Pure
+import Capnp.Capnp.Schema.Pure (CodeGeneratorRequest)
 
-import Codec.Capnp               (getRoot)
-import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
+import Data.Capnp (decodeMessage, defaultLimit, evalLimitT, getRoot)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
 import System.IO        (IOMode(WriteMode), withFile)
 
 import qualified Data.ByteString              as BS
-import qualified Data.Capnp.Message           as Message
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import qualified Backends.Pure
@@ -21,7 +19,7 @@ import qualified FrontEnd
 
 main :: IO ()
 main = do
-    msg <- Message.decode =<< BS.getContents
+    msg <- decodeMessage =<< BS.getContents
     cgr <- evalLimitT defaultLimit (getRoot msg)
     mapM_ saveResult (handleCGR cgr)
   where
