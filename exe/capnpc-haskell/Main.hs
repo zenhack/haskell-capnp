@@ -4,9 +4,8 @@ module Main (main) where
 
 import Capnp.Capnp.Schema.Pure
 
-import Codec.Capnp               (fromStruct)
+import Codec.Capnp               (getRoot)
 import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
-import Data.Capnp.Untyped        (rootPtr)
 
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
@@ -23,7 +22,7 @@ import qualified FrontEnd
 main :: IO ()
 main = do
     msg <- Message.decode =<< BS.getContents
-    cgr <- evalLimitT defaultLimit (rootPtr msg >>= fromStruct)
+    cgr <- evalLimitT defaultLimit (getRoot msg)
     mapM_ saveResult (handleCGR cgr)
   where
     saveResult (filename, contents) = do

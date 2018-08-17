@@ -17,6 +17,7 @@ module Codec.Capnp
     , expected
     , newRoot
     , setRoot
+    , getRoot
     ) where
 
 import Data.Bits
@@ -86,6 +87,10 @@ newRoot msg = do
 -- | 'setRoot' sets its argument to be the root object in its message.
 setRoot :: (ToStruct (M.MutMsg s) a, M.WriteCtx m s) => a -> m ()
 setRoot = U.setRoot . toStruct
+
+-- | 'getRoot' returns the root object of a message.
+getRoot :: (FromStruct msg a, U.ReadCtx m msg) => msg -> m a
+getRoot msg = U.rootPtr msg >>= fromStruct
 
 -- | Types that can be converted to and from an untyped pointer.
 --

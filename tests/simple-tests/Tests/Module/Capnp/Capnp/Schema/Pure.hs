@@ -16,6 +16,7 @@ import Codec.Capnp
     , FromStruct(..)
     , ToStruct(..)
     , cerialize
+    , getRoot
     , setRoot
     )
 import Data.Capnp.TraversalLimit (evalLimitT)
@@ -401,7 +402,7 @@ decodeTests = testGroup "schema decode tests"
         assertionsToTest ("Decode " ++ typename) $ map (testCase typename) cases
     testCase typename (capnpText, expected) = do
         msg <- encodeValue schemaText typename capnpText
-        actual <- evalLimitT 128 $ U.rootPtr msg >>= fromStruct
+        actual <- evalLimitT 128 $ getRoot msg
         ppAssertEqual actual expected
 
 ppAssertEqual :: (Show a, Eq a) => a -> a -> IO ()
