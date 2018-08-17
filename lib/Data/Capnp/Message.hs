@@ -21,8 +21,6 @@ module Data.Capnp.Message
     , setWord
     , encode
     , decode
-    , readMessage
-    , writeMessage
     , alloc
     , allocInSeg
     , newMessage
