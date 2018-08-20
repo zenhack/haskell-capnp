@@ -209,7 +209,7 @@ message to standard output like so:
 -- code relys on it to resolve collisions in capnproto struct field
 -- names:
 {-# LANGUAGE DuplicateRecordFields #-}
-import Capnp.Addressbook
+import Capnp.Addressbook.Pure
 
 -- Note that Data.Capnp.Pure re-exports `def`, as a convienence
 import Data.Capnp.Pure (putValue, def)
@@ -240,10 +240,11 @@ main = putValue AddressBook
                     , type_ = Person'PhoneNumber'Type'home
                     }
                 , def
-                    { number = "555-7654
+                    { number = "555-7654"
                     , type_ = Person'PhoneNumber'Type'work
                     }
                 ]
+            , employment = Person'employment'selfEmployed
             }
         ]
     }
