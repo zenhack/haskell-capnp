@@ -29,12 +29,13 @@ import Tests.Util
 import Control.Exception                    (bracket)
 import Control.Monad                        (when)
 import Control.Monad.Primitive              (RealWorld)
+import Data.Default                         (Default(..))
 import System.Directory                     (removeFile)
 import System.IO
     (IOMode(ReadMode, WriteMode), hClose, openBinaryTempFile, withBinaryFile)
 import Test.Framework                       (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit.Lang                      (assertEqual)
+import Test.HUnit.Lang                      (Assertion, assertEqual)
 import Test.QuickCheck
     (Arbitrary(..), Gen, Property, genericShrink, oneof, resize, sized)
 import Test.QuickCheck.Instances ()
@@ -54,6 +55,7 @@ schemaText = [there|tests/data/schema.capnp|]
 
 pureSchemaTests = testGroup "Tests for generated .Pure modules."
     [ decodeTests
+    , decodeDefaultTests
     , encodeTests
     , propTests
     ]
@@ -410,6 +412,25 @@ decodeTests = testGroup "schema decode tests"
         msg <- encodeValue schemaText typename capnpText
         actual <- evalLimitT 128 $ getRoot msg
         ppAssertEqual actual expected
+
+decodeDefaultTests = assertionsToTest
+    "Check that the empty struct decodes to the default value"
+    [ decodeDefault "Type" (Proxy :: Proxy Type)
+    , decodeDefault "Value" (Proxy :: Proxy Value)
+    , decodeDefault "Node" (Proxy :: Proxy Node)
+    ]
+
+decodeDefault ::
+    ( Show a
+    , Eq a
+    , Default a
+    , FromStruct M.ConstMsg a
+    , Cerialize RealWorld a
+    , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
+    ) => String -> Proxy a -> Assertion
+decodeDefault typename proxy = do
+    actual <- evalLimitT defaultLimit (getRoot M.empty)
+    ppAssertEqual (actual `asProxyTypeOf` proxy) def
 
 ppAssertEqual :: (Show a, Eq a) => a -> a -> IO ()
 ppAssertEqual actual expected =

@@ -343,9 +343,12 @@ alloc msg size = do
     segIndex <- pred <$> numSegs msg
     allocInSeg msg segIndex size
 
+-- | 'empty' is an empty message, i.e. a minimal message with a null pointer as
+-- its root object.
 empty :: ConstMsg
 empty = ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
 
+-- | Allocate a new empty message.
 newMessage :: WriteCtx m s => m (MutMsg s)
 newMessage = thaw empty
 

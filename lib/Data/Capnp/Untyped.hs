@@ -629,6 +629,7 @@ rootPtr msg = do
     root <- get msg (WordAt 0 0)
     case root of
         Just (PtrStruct struct) -> pure struct
+        Nothing -> pure (messageDefault msg)
         _ -> throwM $ E.SchemaViolationError
                 "Unexpected root type; expected struct."
 

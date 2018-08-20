@@ -177,6 +177,7 @@ test-suite simple-tests
         capnp
       , base       >= 4.8  && < 5.0
       , bytestring >= 0.10 && < 0.11
+      , data-default
       , vector
       , process
       , process-extras
