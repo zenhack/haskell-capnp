@@ -19,9 +19,13 @@ module Data.Capnp
     , Message.Mutable(..)
     , Message.MutMsg
     , Message.newMessage
+    , Message.WriteCtx
 
     , decodeMessage
     , encodeMessage
+
+    , Untyped.ReadCtx
+    , Untyped.RWCtx
 
     , module Data.Capnp.TraversalLimit
     ) where
@@ -36,6 +40,7 @@ import qualified Data.ByteString.Builder as BB
 import qualified Codec.Capnp        as Codec
 import qualified Data.Capnp.Basics  as Basics
 import qualified Data.Capnp.Message as Message
+import qualified Data.Capnp.Untyped as Untyped
 
 -- | Alias for 'Message.encode'
 encodeMessage :: MonadThrow m => Message.ConstMsg -> m BB.Builder
