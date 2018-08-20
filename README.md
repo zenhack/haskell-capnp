@@ -350,6 +350,64 @@ a monad transformer `LimitT` for the latter.
 
 ### Example
 
+We'll use the same schema as above for our example. Instead of standard
+algebraic data types, the module `Capnp.Addressbook` primarily defines
+newtype wrappers, which should be treated as opaque, and accessor
+functions for the various fields.
+
+```haskell
+newtype AddressBook msg = ...
+
+get_Addressbook'people :: ReadCtx m msg => AddressBook msg -> m (List msg (Person msg))
+
+newtype Person msg = ...
+
+get_Person'id   :: ReadCtx m msg => Person msg -> m Word32
+get_Person'name :: ReadCtx m msg => Person msg -> m (Text msg)
+```
+
+`ReadCtx` is a type synonym:
+
+```haskell
+type ReadCtx m msg = (Message m msg, MonadThrow m, MonadLimit m)
+```
+
+Note the following:
+
+* The generated data types are parametrized over `msg` type. This is the
+  type of the message in which the value is contained. This can be either
+  `ConstMsg` in the case of an immutable message, or `MutMsg s` for a
+  mutable message (where is is the state token for the monad in which the
+  message may be mutated).
+* The `Text` and `List` types mentioned in the type signatures are types
+  defined within the capnp library, and are similarly views into the
+  underlying message.
+* Access to the message happens in a Monad which affords throwing
+  exceptions, tracking the traversal limit, and of course reading the
+  message.
+
+The snippet below walks through the people in the message, and computes
+the average length of a person's name:
+
+```haskell
+import Prelude hiding (length)
+
+import Data.Capnp (decodeMessage, getRoot, evalLimitT, defaultLimit, length)
+
+import qualified Data.ByteString as BS
+
+main = do
+    bytes <- BS.getContents
+    msg <- decodeMessage bytes
+    result <- evalLimitT defaultLimit $ do
+        people <- getRoot msg >>= get_AddressBook'people
+        total <- sum <$> forM [i..length people - 1] $ \i -> do
+            -- TODO: finish example
+            ...
+        pure (total / length people)
+```
+
+
 # License
 
 MIT
