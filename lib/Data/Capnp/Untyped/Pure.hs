@@ -18,7 +18,6 @@
 module Data.Capnp.Untyped.Pure
     ( Cap(..)
     , Slice(..)
-    , Message(..)
     , PtrType(..)
     , Struct(..)
     , List(..)
@@ -35,11 +34,8 @@ import Data.Word
 import Control.Monad                 (forM_)
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
-import Data.Primitive.Array          (Array)
 import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
-
-import qualified Data.ByteString as BS
 
 import Data.Capnp.Classes
     (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..))
@@ -54,9 +50,6 @@ type Cap = Word32
 
 newtype Slice a = Slice (ListOf a)
     deriving(Generic, Show, Read, Ord, Functor, Default)
-
-newtype Message = Message (Array BS.ByteString)
-    deriving(Generic, Show, Read, Eq, Ord)
 
 data PtrType
     = PtrStruct !Struct
@@ -84,14 +77,9 @@ data List
 
 type ListOf a = V.Vector a
 
--- Cookie-cutter IsList instances. These are derivable with
+-- Cookie-cutter IsList instance. This is derivable with
 -- GeneralizedNewtypeDeriving as of ghc >= 8.2.1, but not on
 -- 8.0.x, due to the associated type.
-instance IsList Message where
-    type Item Message = BS.ByteString
-    toList (Message segs) = toList segs
-    fromList = Message . fromList
-    fromListN n = Message . fromListN n
 instance IsList (Slice a) where
     type Item (Slice a) = a
     toList (Slice list) = toList list
