@@ -58,6 +58,7 @@ library
       , Data.Capnp.Basics
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
+      , Data.Capnp.Classes
       , Data.Capnp.Errors
       , Data.Capnp.GenHelpers
       , Data.Capnp.GenHelpers.Pure
