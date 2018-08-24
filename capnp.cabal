@@ -51,8 +51,7 @@ source-repository head
 library
     hs-source-dirs:       lib
     exposed-modules:
-        Codec.Capnp
-      , Data.Capnp
+        Data.Capnp
       , Data.Capnp.Pure
       , Data.Capnp.Address
       , Data.Capnp.Basics
@@ -97,6 +96,7 @@ library
     other-modules:
         Internal.Util
       , Internal.Gen.Instances
+      , Codec.Capnp
     -- other-extensions:
     build-depends:
         base                              >= 4.8  && < 5.0

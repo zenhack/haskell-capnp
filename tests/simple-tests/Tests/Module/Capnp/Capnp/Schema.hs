@@ -8,7 +8,7 @@ import Text.Heredoc            (there)
 
 import Capnp.Capnp.Schema
 
-import Codec.Capnp               (newRoot)
+import Data.Capnp                (newRoot)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
 import Tests.Util                (assertionsToTest, decodeValue)
 

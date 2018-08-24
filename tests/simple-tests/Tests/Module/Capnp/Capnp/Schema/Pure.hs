@@ -33,7 +33,7 @@ import qualified Data.Vector             as V
 import Capnp.Capnp.Schema.Pure
 import Tests.Util
 
-import Codec.Capnp               (getRoot, setRoot)
+import Data.Capnp                (getRoot, setRoot)
 import Data.Capnp.Classes
     ( Allocate(..)
     , Cerialize(..)
