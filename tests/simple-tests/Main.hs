@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Test.Framework                       (defaultMain)
+import Test.Framework (defaultMain)
+
 import Tests.Module.Capnp.Capnp.Schema      (schemaTests)
 import Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests)
 import Tests.Module.Data.Capnp.Bits         (bitsTests)

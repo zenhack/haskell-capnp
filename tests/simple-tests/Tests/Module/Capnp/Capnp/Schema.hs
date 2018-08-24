@@ -2,14 +2,15 @@
 {-# LANGUAGE RecordWildCards #-}
 module Tests.Module.Capnp.Capnp.Schema (schemaTests) where
 
+import Control.Monad           (when)
+import Control.Monad.Primitive (RealWorld)
+import Text.Heredoc            (there)
+
 import Capnp.Capnp.Schema
 
 import Codec.Capnp               (newRoot)
-import Control.Monad             (when)
-import Control.Monad.Primitive   (RealWorld)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
 import Tests.Util                (assertionsToTest, decodeValue)
-import Text.Heredoc              (there)
 
 import qualified Data.Capnp.Message as M
 

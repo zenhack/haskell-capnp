@@ -33,10 +33,11 @@ import Data.Word
 import Control.Monad       (when)
 import Control.Monad.Catch (MonadThrow(throwM))
 
+import qualified Data.ByteString as BS
+
 import Codec.Capnp            (IsPtr(..), ListElem(..), MutListElem(..))
 import Internal.Gen.Instances ()
 
-import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Errors  as E
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U

@@ -10,20 +10,23 @@ module Tests.WalkSchemaCodeGenRequest
 
 import Prelude hiding (length)
 
+import Control.Monad  (mapM_, when)
+import Test.Framework (Test)
+import Test.HUnit     (Assertion, assertEqual)
+
+import qualified Data.ByteString as BS
+import qualified Prelude
+
 import Data.Capnp.Untyped hiding (index, length)
+
 import Tests.Util
 
 import Codec.Capnp               (fromStruct)
-import Control.Monad             (mapM_, when)
 import Data.Capnp.Basics         (index, length, textBytes)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
-import Test.Framework            (Test)
-import Test.HUnit                (Assertion, assertEqual)
 
 import qualified Capnp.Capnp.Schema as Schema
-import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Message as M
-import qualified Prelude
 
 
 -- | TODO: make this an array; we're doing random access to it below.

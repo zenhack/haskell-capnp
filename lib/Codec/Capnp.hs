@@ -33,14 +33,14 @@ import Control.Monad.Catch     (MonadThrow(throwM))
 import Control.Monad.Primitive (RealWorld)
 import System.IO               (Handle, stdin, stdout)
 
+import qualified Data.ByteString         as BS
+import qualified Data.ByteString.Builder as BB
+
 import Data.Capnp.Bits           (Word1(..))
 import Data.Capnp.Errors         (Error(SchemaViolationError))
 import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Capnp.Untyped
     (ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
-
-import qualified Data.ByteString         as BS
-import qualified Data.ByteString.Builder as BB
 
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U

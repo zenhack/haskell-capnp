@@ -50,8 +50,11 @@ import Prelude hiding (length, take)
 import Data.Bits
 import Data.Word
 
-import Control.Monad             (forM_)
-import Control.Monad.Catch       (MonadThrow(throwM))
+import Control.Monad       (forM_)
+import Control.Monad.Catch (MonadThrow(throwM))
+
+import qualified Data.ByteString as BS
+
 import Data.Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
 import Data.Capnp.Bits
     ( BitCount(..)
@@ -66,7 +69,6 @@ import Data.Capnp.Bits
 import Data.Capnp.Pointer        (ElementSize(..))
 import Data.Capnp.TraversalLimit (MonadLimit(invoice))
 
-import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Errors  as E
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Pointer as P

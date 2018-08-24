@@ -4,13 +4,13 @@ module Tests.SchemaGeneration
     ( Schema (..), genSchema
     ) where
 
-import           Control.Monad   (replicateM)
-import qualified Test.QuickCheck as QC
-
-import           Data.List.NonEmpty (NonEmpty((:|)))
-import qualified Data.List.NonEmpty as NE
-
 import Control.Monad.State.Strict
+
+import Control.Monad      (replicateM)
+import Data.List.NonEmpty (NonEmpty((:|)))
+
+import qualified Data.List.NonEmpty as NE
+import qualified Test.QuickCheck    as QC
 
 -- Definitions
 

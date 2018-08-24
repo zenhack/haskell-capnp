@@ -7,22 +7,23 @@ module Backends.Raw
     ( fmtModule
     ) where
 
-import Backends.Common (dataFieldSize, fmtPrimWord)
 import Data.Word
+
+import Data.List                    (sortOn)
+import Data.Monoid                  ((<>))
+import Data.Ord                     (Down(..))
+import Data.String                  (IsString(..))
+import Text.PrettyPrint.Leijen.Text (hcat, vcat)
+import Text.Printf                  (printf)
+
+import qualified Data.Map.Strict              as M
+import qualified Data.Text                    as T
+import qualified Text.PrettyPrint.Leijen.Text as PP
+
 import IR
 import Util
 
-import Data.List   (sortOn)
-import Data.Monoid ((<>))
-import Data.Ord    (Down(..))
-import Data.String (IsString(..))
-import Text.Printf (printf)
-
-import qualified Data.Map.Strict as M
-import qualified Data.Text       as T
-
-import           Text.PrettyPrint.Leijen.Text (hcat, vcat)
-import qualified Text.PrettyPrint.Leijen.Text as PP
+import Backends.Common (dataFieldSize, fmtPrimWord)
 
 indent = PP.indent 4
 

@@ -8,19 +8,21 @@ module Data.Capnp.Basics.Pure
     , Text(..)
     ) where
 
-import Codec.Capnp hiding (ListElem(List))
-
 import Control.Monad       (forM_)
 import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Capnp.Errors   (Error(InvalidUtf8Error))
-import Data.Capnp.Untyped  (rawBytes)
 import Data.Text.Encoding  (decodeUtf8', encodeUtf8)
 
-import qualified Data.ByteString    as BS
+import qualified Data.ByteString as BS
+import qualified Data.Text       as T
+
+import Codec.Capnp hiding (ListElem(List))
+
+import Data.Capnp.Errors  (Error(InvalidUtf8Error))
+import Data.Capnp.Untyped (rawBytes)
+
 import qualified Data.Capnp.Basics  as Basics
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as Untyped
-import qualified Data.Text          as T
 
 type Data = BS.ByteString
 type Text = T.Text

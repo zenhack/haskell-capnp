@@ -40,13 +40,9 @@ module Data.Capnp.Untyped.Pure
 
 import Prelude hiding (length)
 
-import Control.Monad (forM_)
 import Data.Word
 
-import Internal.Gen.Instances ()
-
-import Codec.Capnp
-    (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..), expected)
+import Control.Monad                 (forM_)
 import Control.Monad.Catch           (MonadThrow(..))
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
@@ -54,12 +50,16 @@ import Data.Primitive.Array          (Array)
 import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
-import qualified Data.ByteString    as BS
+import qualified Data.ByteString as BS
+
+import Codec.Capnp
+    (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..), expected)
+import Internal.Gen.Instances ()
+
+import qualified Codec.Capnp        as C
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector        as V
-
-import qualified Codec.Capnp as C
 
 type Cap = Word32
 

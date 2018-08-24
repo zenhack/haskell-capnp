@@ -1,7 +1,6 @@
 module Tests.Module.Data.Capnp.Pointer (ptrTests) where
 
 import Data.Bits
-import Data.Capnp.Pointer
 import Data.Int
 import Data.Word
 
@@ -10,7 +9,10 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit                           (assertEqual)
 import Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen                  (Gen, oneof)
-import Tests.Util                           (assertionsToTest)
+
+import Data.Capnp.Pointer
+
+import Tests.Util (assertionsToTest)
 
 instance Arbitrary EltSpec where
     arbitrary = oneof [ EltNormal <$> arbitrary <*> arbitraryU29

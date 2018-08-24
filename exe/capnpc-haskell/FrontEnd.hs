@@ -6,10 +6,7 @@ module FrontEnd
     ( cgrToIR
     ) where
 
-import Capnp.Capnp.Schema.Pure
 import Data.Word
-
-import Backends.Common (dataFieldSize)
 
 import Data.Char            (toUpper)
 import Data.Function        ((&))
@@ -21,6 +18,10 @@ import Util                 (Id, splitOn)
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
+
+import Capnp.Capnp.Schema.Pure
+
+import Backends.Common (dataFieldSize)
 
 import qualified IR
 

@@ -34,10 +34,10 @@ module Data.Capnp
 
 import Control.Monad.Catch (MonadThrow)
 
-import Data.Capnp.TraversalLimit
-
 import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
+
+import Data.Capnp.TraversalLimit
 
 import qualified Codec.Capnp        as Codec
 import qualified Data.Capnp.Basics  as Basics

@@ -48,8 +48,6 @@ module IR
     , valueName
     ) where
 
-import Util
-
 import Data.Word
 
 import Data.Char   (toLower)
@@ -61,6 +59,8 @@ import GHC.Exts    (IsList(..))
 
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
+
+import Util
 
 newtype Namespace = Namespace [Text]
     deriving(Show, Read, Eq, Ord)

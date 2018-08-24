@@ -9,23 +9,6 @@ module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 import Data.Proxy
 import Data.Word
 
-import Codec.Capnp
-    ( Allocate(..)
-    , Cerialize(..)
-    , Decerialize(..)
-    , FromStruct(..)
-    , ToStruct(..)
-    , cerialize
-    , getRoot
-    , setRoot
-    )
-import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
-
-import Data.Capnp.Pure (hGetValue, hPutValue)
-
-import Capnp.Capnp.Schema.Pure
-import Tests.Util
-
 import Control.Exception                    (bracket)
 import Control.Monad                        (when)
 import Control.Monad.Primitive              (RealWorld)
@@ -43,13 +26,29 @@ import Test.QuickCheck.IO                   (propertyIO)
 import Text.Heredoc                         (here, there)
 import Text.Show.Pretty                     (ppShow)
 
-import qualified Data.Capnp.Message      as M
-import qualified Data.Capnp.Untyped      as U
-import qualified Data.Capnp.Untyped.Pure as PU
-
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 import qualified Data.Vector             as V
+
+import Capnp.Capnp.Schema.Pure
+import Tests.Util
+
+import Codec.Capnp
+    ( Allocate(..)
+    , Cerialize(..)
+    , Decerialize(..)
+    , FromStruct(..)
+    , ToStruct(..)
+    , cerialize
+    , getRoot
+    , setRoot
+    )
+import Data.Capnp.Pure           (hGetValue, hPutValue)
+import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
+
+import qualified Data.Capnp.Message      as M
+import qualified Data.Capnp.Untyped      as U
+import qualified Data.Capnp.Untyped.Pure as PU
 
 schemaText = [there|tests/data/schema.capnp|]
 

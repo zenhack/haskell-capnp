@@ -7,12 +7,12 @@ Description: Bits of code generation common to both backends.
 -}
 module Backends.Common where
 
-import IR
-
 import Data.Monoid ((<>))
 import Data.String (IsString(..))
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
+
+import IR
 
 -- | Format a primitive word type.
 fmtPrimWord :: PrimWord -> PP.Doc

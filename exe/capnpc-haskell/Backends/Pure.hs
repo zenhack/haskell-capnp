@@ -7,19 +7,18 @@ module Backends.Pure
     ( fmtModule
     ) where
 
+import Data.Monoid                  ((<>))
+import Data.String                  (IsString(..))
+import GHC.Exts                     (IsList(..))
+import Text.PrettyPrint.Leijen.Text (hcat, vcat)
+import Text.Printf                  (printf)
+
+import qualified Data.Map.Strict              as M
+import qualified Data.Text                    as T
+import qualified Text.PrettyPrint.Leijen.Text as PP
+
 import IR
 import Util
-
-import Data.Monoid ((<>))
-import Data.String (IsString(..))
-import GHC.Exts    (IsList(..))
-import Text.Printf (printf)
-
-import qualified Data.Map.Strict as M
-import qualified Data.Text       as T
-
-import           Text.PrettyPrint.Leijen.Text (hcat, vcat)
-import qualified Text.PrettyPrint.Leijen.Text as PP
 
 indent = PP.indent 4
 

@@ -42,13 +42,8 @@ import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
 import Data.ByteString.Internal  (ByteString(..))
-import Data.Capnp.Address        (WordAddr(..))
-import Data.Capnp.Bits           (WordCount(..), hi, lo)
-import Data.Capnp.Errors         (Error(..))
-import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64)
-import Internal.Util             (checkIndex)
 import System.Endian             (fromLE64, toLE64)
 
 import qualified Data.ByteString.Builder      as BB
@@ -56,6 +51,12 @@ import qualified Data.Vector                  as V
 import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
+
+import Data.Capnp.Address        (WordAddr(..))
+import Data.Capnp.Bits           (WordCount(..), hi, lo)
+import Data.Capnp.Errors         (Error(..))
+import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
+import Internal.Util             (checkIndex)
 
 
 -- | The maximum size of a segment supported by this libarary, in words.

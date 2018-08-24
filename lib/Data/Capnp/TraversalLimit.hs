@@ -38,7 +38,6 @@ import Control.Monad.Primitive    (PrimMonad(primitive), PrimState)
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
 import Control.Monad.Trans.Class  (MonadTrans(lift))
-import Data.Capnp.Errors          (Error(TraversalLimitError))
 
 -- Just to define 'MonadLimit' instances:
 import Control.Monad.Reader (ReaderT)
@@ -46,6 +45,8 @@ import Control.Monad.RWS    (RWST)
 import Control.Monad.Writer (WriterT)
 
 import qualified Control.Monad.State.Lazy as LazyState
+
+import Data.Capnp.Errors (Error(TraversalLimitError))
 
 -- | mtl-style type class to track the traversal limit. This is used
 -- by other parts of the library which actually do the reading.

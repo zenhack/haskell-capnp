@@ -94,8 +94,11 @@ Some guidelines re: imports:
 * Wildcard imports of all of a type's data constructors/type class's
   methods (`MonadThrow(..)`) are more acceptable, though still prefer
   specifying specific ones if you're only using a couple.
-* Group imports into four distinct sections, separated by a single blank
-  line (some of these may be absent):
+* Separate imports of modules within our own codebase from ones from
+  outside of it.
+* Within each of those groups, group imports into four distinct
+  sections, separated by a single blank line (some of these may be
+  absent):
 
 ```haskell
 -- "negative" imports:
@@ -112,6 +115,17 @@ import Control.Monad.Catch(throwM)
 
 -- qualified module imports:
 import qualified Data.ByteString as BS
+
+-- same structure for modules within our library:
+
+import Data.Capnp.Untyped hiding (length)
+
+import Data.Capnp.Bits
+
+import Data.Capnp.TraversalLimit(defaultLimit, evalLimitT)
+
+import qualified Data.Capnp.Message as M
+import qualified Data.Capnp.Basics as B
 ```
 
 The formatter will take care of formatting the sections correctly, as

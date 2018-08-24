@@ -9,14 +9,15 @@ module Tests.Util
     )
     where
 
-import System.Exit                    (ExitCode(..))
+import System.Process hiding (readCreateProcessWithExitCode)
+
 import System.IO
-import System.Process                 hiding (readCreateProcessWithExitCode)
-import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 
 import Control.Monad.Trans            (lift)
 import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
 import System.Directory               (removeFile)
+import System.Exit                    (ExitCode(..))
+import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 import Test.Framework                 (Test, testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
@@ -24,8 +25,9 @@ import qualified Data.ByteString            as BS
 import qualified Data.ByteString.Builder    as BB
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
-import qualified Data.Capnp.Message         as M
 import qualified Test.HUnit                 as H
+
+import qualified Data.Capnp.Message as M
 
 -- | Information about the contents of a capnp message. This is enough
 -- to encode/decode both textual and binary forms.

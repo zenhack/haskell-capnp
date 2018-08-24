@@ -6,19 +6,21 @@ module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
+import Control.Monad           (forM_, when)
+import Control.Monad.Primitive (RealWorld)
+import Data.ReinterpretCast    (doubleToWord, wordToDouble)
+import Test.Framework          (Test, testGroup)
+import Test.HUnit              (assertEqual)
+import Text.Heredoc            (here, there)
+
+import qualified Data.ByteString as BS
+
 import Data.Capnp.Untyped
 import Tests.Util
 
-import Control.Monad             (forM_, when)
-import Control.Monad.Primitive   (RealWorld)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
-import Data.ReinterpretCast      (doubleToWord, wordToDouble)
-import Test.Framework            (Test, testGroup)
-import Test.HUnit                (assertEqual)
-import Text.Heredoc              (here, there)
 
 import qualified Codec.Capnp        as C
-import qualified Data.ByteString    as BS
 import qualified Data.Capnp.Message as M
 
 untypedTests = testGroup "Untyped Tests"

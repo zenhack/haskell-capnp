@@ -16,9 +16,10 @@ module Data.Capnp.Pointer
   where
 
 import Data.Bits
-import Data.Capnp.Bits
 import Data.Int
 import Data.Word
+
+import Data.Capnp.Bits
 
 -- | A 'Ptr' represents the information in a capnproto pointer.
 data Ptr
