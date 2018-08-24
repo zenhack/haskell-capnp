@@ -25,16 +25,6 @@ module Data.Capnp.Untyped.Pure
     , ListOf(..)
     , length
     , sliceIndex
-
-    -- TODO: figure out a better places to put these:
-    , ptrStruct
-    , list0
-    , list1
-    , list8
-    , list16
-    , list32
-    , list64
-    , listStruct
     )
   where
 
@@ -43,7 +33,6 @@ import Prelude hiding (length)
 import Data.Word
 
 import Control.Monad                 (forM_)
-import Control.Monad.Catch           (MonadThrow(..))
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
 import Data.Primitive.Array          (Array)
@@ -53,7 +42,7 @@ import GHC.Generics                  (Generic)
 import qualified Data.ByteString as BS
 
 import Codec.Capnp
-    (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..), expected)
+    (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..))
 import Internal.Gen.Instances ()
 
 import qualified Codec.Capnp        as C
@@ -244,48 +233,3 @@ marshalListOfWord :: U.RWCtx m s => U.ListOf (M.MutMsg s) a -> ListOf a -> m ()
 marshalListOfWord raw l =
     forM_ [0..length l - 1] $ \i ->
         U.setIndex (l V.! i) i raw
-
-ptrStruct :: MonadThrow f => Maybe PtrType -> f Struct
-ptrStruct Nothing              = pure def
-ptrStruct (Just (PtrStruct s)) = pure s
-ptrStruct (Just _)             = expected "pointer to struct"
-
-list0 :: MonadThrow f => Maybe PtrType -> f (ListOf ())
-list0 Nothing                     = pure def
-list0 (Just (PtrList (List0 l))) = pure l
-list0 _                           = expected "pointer to list with element size 0"
-
-list1 :: MonadThrow f => Maybe PtrType -> f (ListOf Bool)
-list1 Nothing                     = pure def
-list1 (Just (PtrList (List1 l))) = pure l
-list1 _                           = expected "pointer to list with element size 1"
-
-list8 :: MonadThrow f => Maybe PtrType -> f (ListOf Word8)
-list8 Nothing                     = pure def
-list8 (Just (PtrList (List8 l))) = pure l
-list8 _                           = expected "pointer to list with element size 8"
-
-list16 :: MonadThrow f => Maybe PtrType -> f (ListOf Word16)
-list16 Nothing                      = pure def
-list16 (Just (PtrList (List16 l))) = pure l
-list16 _                            = expected "pointer to list with element size 16"
-
-list32 :: MonadThrow f => Maybe PtrType -> f (ListOf Word32)
-list32 Nothing                      = pure def
-list32 (Just (PtrList (List32 l))) = pure l
-list32 _                            = expected "pointer to list with element size 32"
-
-list64 :: MonadThrow f => Maybe PtrType -> f (ListOf Word64)
-list64 Nothing                      = pure def
-list64 (Just (PtrList (List64 l))) = pure l
-list64 _                            = expected "pointer to list with element size 64"
-
-listPtr :: MonadThrow f => Maybe PtrType -> f (ListOf (Maybe PtrType))
-listPtr Nothing                      = pure def
-listPtr (Just (PtrList (ListPtr l))) = pure l
-listPtr _                            = expected "pointer to list of pointers"
-
-listStruct :: MonadThrow f => Maybe PtrType -> f (ListOf Struct)
-listStruct Nothing         = pure def
-listStruct (Just (PtrList (ListStruct l))) = pure l
-listStruct _               = expected "pointer to list of structs"
