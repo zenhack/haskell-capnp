@@ -378,12 +378,12 @@ Note the following:
 * The generated data types are parametrized over `msg` type. This is the
   type of the message in which the value is contained. This can be either
   `ConstMsg` in the case of an immutable message, or `MutMsg s` for a
-  mutable message (where is is the state token for the monad in which the
-  message may be mutated).
+  mutable message (where `s` is the state token for the monad in which
+  the message may be mutated).
 * The `Text` and `List` types mentioned in the type signatures are types
   defined within the capnp library, and are similarly views into the
   underlying message.
-* Access to the message happens in a Monad which affords throwing
+* Access to the message happens in a monad which affords throwing
   exceptions, tracking the traversal limit, and of course reading the
   message.
 
