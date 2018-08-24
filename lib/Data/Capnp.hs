@@ -8,6 +8,8 @@ module Data.Capnp
     , Codec.MutListElem(..)
     , Codec.newRoot
     , Codec.setRoot
+    , Codec.getValue
+    , Codec.hGetValue
 
     , Basics.Data
     , Basics.dataBytes

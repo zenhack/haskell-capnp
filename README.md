@@ -271,6 +271,13 @@ main = do
 Note the type annotation; there are a number of interfaces in the
 library which dispatch on return types, and depending on how they are
 used you may have to give GHC a hint for type inference to succeed.
+The type of `getValue` is:
+
+```haskell
+getValue :: FromStruct ConstMsg a => Int -> IO a
+```
+
+...and so it may be used to read in any struct type.
 
 `defaultLimit` is a default value for the traversal limit, which acts to
 prevent denial of service vulnerabilities; See the documentation in
@@ -387,27 +394,31 @@ Note the following:
   exceptions, tracking the traversal limit, and of course reading the
   message.
 
-The snippet below walks through the people in the message, and computes
-the average length of a person's name:
+The snippet below prints the names of each person in the address book:
 
 ```haskell
+{-# LANGUAGE ScopedTypeVariables #-}
 import Prelude hiding (length)
 
-import Data.Capnp (decodeMessage, getRoot, evalLimitT, defaultLimit, length)
+import Capnp.Addressbook
+import Data.Capnp
+    (ConstMsg, defaultLimit, evalLimitT, getValue, index, length, textBytes)
 
-import qualified Data.ByteString as BS
+import           Control.Monad         (forM_)
+import           Control.Monad.Trans   (lift)
+import qualified Data.ByteString.Char8 as BS8
 
 main = do
-    bytes <- BS.getContents
-    msg <- decodeMessage bytes
-    result <- evalLimitT defaultLimit $ do
-        people <- getRoot msg >>= get_AddressBook'people
-        total <- sum <$> forM [i..length people - 1] $ \i -> do
-            -- TODO: finish example
-            ...
-        pure (total / length people)
+    addressbook :: AddressBook ConstMsg <- getValue defaultLimit
+    evalLimitT defaultLimit $ do
+        people <- get_AddressBook'people addressbook
+        forM_ [0..length people - 1] $ \i -> do
+            name <- index i people >>= get_Person'name >>= textBytes
+            lift $ BS8.putStrLn name
 ```
 
+Note that we use the same `getValue` function as in the high-level
+example above.
 
 # License
 
