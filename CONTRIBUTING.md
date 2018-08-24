@@ -111,7 +111,7 @@ import Control.Monad(when, void)
 import Control.Monad.Catch(throwM)
 
 -- qualified module imports:
-import Data.ByteString as BS
+import qualified Data.ByteString as BS
 ```
 
 The formatter will take care of formatting the sections correctly, as
