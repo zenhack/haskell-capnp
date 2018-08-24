@@ -14,7 +14,6 @@ module Codec.Capnp
     , Marshal(..)
     , Cerialize(..)
     , Decerialize(..)
-    , expected
     , newRoot
     , setRoot
     , getRoot
