@@ -21,8 +21,8 @@ import Data.Capnp.Untyped hiding (index, length)
 
 import Tests.Util
 
-import Codec.Capnp               (fromStruct)
 import Data.Capnp.Basics         (index, length, textBytes)
+import Data.Capnp.Classes        (fromStruct)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 
 import qualified Capnp.Capnp.Schema as Schema

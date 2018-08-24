@@ -2,8 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Codec.Capnp
-    ( module Data.Capnp.Classes
-    , newRoot
+    ( newRoot
     , setRoot
     , getRoot
     ) where

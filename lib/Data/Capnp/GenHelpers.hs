@@ -17,7 +17,7 @@ import Data.Word
 
 import Data.Capnp.Bits
 
-import qualified Codec.Capnp        as C
+import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 

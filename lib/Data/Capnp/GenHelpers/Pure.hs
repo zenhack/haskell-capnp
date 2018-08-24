@@ -20,7 +20,7 @@ import Data.Functor.Identity    (runIdentity)
 
 import Data.Capnp.TraversalLimit (evalLimitT)
 
-import qualified Codec.Capnp        as C
+import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 

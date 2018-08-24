@@ -4,10 +4,11 @@ Description: The most commonly used functionality from the low-level API.
 -}
 module Data.Capnp
     ( Codec.getRoot
-    , Codec.ListElem(..)
-    , Codec.MutListElem(..)
     , Codec.newRoot
     , Codec.setRoot
+
+    , Classes.ListElem(..)
+    , Classes.MutListElem(..)
 
     , Basics.Data
     , Basics.dataBytes
@@ -48,6 +49,7 @@ import Data.Capnp.IO (getValue, hGetValue)
 
 import qualified Codec.Capnp        as Codec
 import qualified Data.Capnp.Basics  as Basics
+import qualified Data.Capnp.Classes as Classes
 import qualified Data.Capnp.Message as Message
 import qualified Data.Capnp.Untyped as Untyped
 

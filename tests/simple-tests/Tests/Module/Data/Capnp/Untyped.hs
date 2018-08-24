@@ -20,7 +20,7 @@ import Tests.Util
 
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 
-import qualified Codec.Capnp        as C
+import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
 
 untypedTests = testGroup "Untyped Tests"

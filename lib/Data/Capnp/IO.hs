@@ -13,14 +13,9 @@ module Data.Capnp.IO
 import Control.Monad.Primitive (RealWorld)
 import System.IO               (Handle, stdin, stdout)
 
-import Codec.Capnp
-    ( Cerialize(..)
-    , Decerialize(..)
-    , FromStruct(..)
-    , ToStruct(..)
-    , getRoot
-    , setRoot
-    )
+import Codec.Capnp               (getRoot, setRoot)
+import Data.Capnp.Classes
+    (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
 import qualified Data.Capnp.Message as M

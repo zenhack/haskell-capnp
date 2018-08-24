@@ -5,7 +5,7 @@ module Tests.SchemaQuickCheck
 
 import qualified Data.ByteString as BS
 
-import Codec.Capnp               (fromStruct)
+import Data.Capnp.Classes        (fromStruct)
 import Data.Capnp.Errors         (Error)
 import Data.Capnp.Message        as M
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)

@@ -16,8 +16,8 @@ module Data.Capnp.Pure
     , putValue
     , hPutValue
 
-    , Codec.Decerialize(..)
-    , Codec.Cerialize(..)
+    , Classes.Decerialize(..)
+    , Classes.Cerialize(..)
 
     , module Data.Capnp.TraversalLimit
 
@@ -31,6 +31,6 @@ import Data.Capnp.TraversalLimit
 
 import Data.Capnp.IO (hPutValue, putValue)
 
-import qualified Codec.Capnp            as Codec
 import qualified Data.Capnp             as Capnp
 import qualified Data.Capnp.Basics.Pure as Basics
+import qualified Data.Capnp.Classes     as Classes

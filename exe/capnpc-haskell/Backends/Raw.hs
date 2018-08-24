@@ -80,7 +80,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
     -- The trailing ' is to avoid possible name collisions:
-    , "import qualified Codec.Capnp as C'"
+    , "import qualified Data.Capnp.Classes as C'"
     , "import qualified Data.Capnp.Basics as B'"
     , "import qualified Data.Capnp.GenHelpers as H'"
     , "import qualified Data.Capnp.TraversalLimit as TL'"

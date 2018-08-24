@@ -8,7 +8,7 @@ import Data.Int
 import Data.ReinterpretCast
 import Data.Word
 
-import Codec.Capnp
+import Data.Capnp.Classes
     ( ListElem(..)
     , MutListElem(..)
     , IsPtr(..)

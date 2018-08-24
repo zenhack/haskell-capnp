@@ -33,15 +33,14 @@ import qualified Data.Vector             as V
 import Capnp.Capnp.Schema.Pure
 import Tests.Util
 
-import Codec.Capnp
+import Codec.Capnp               (getRoot, setRoot)
+import Data.Capnp.Classes
     ( Allocate(..)
     , Cerialize(..)
     , Decerialize(..)
     , FromStruct(..)
     , ToStruct(..)
     , cerialize
-    , getRoot
-    , setRoot
     )
 import Data.Capnp.Pure           (hGetValue, hPutValue)
 import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)

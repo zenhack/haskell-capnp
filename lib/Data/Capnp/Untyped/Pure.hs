@@ -41,11 +41,11 @@ import GHC.Generics                  (Generic)
 
 import qualified Data.ByteString as BS
 
-import Codec.Capnp
+import Data.Capnp.Classes
     (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..))
 import Internal.Gen.Instances ()
 
-import qualified Codec.Capnp        as C
+import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector        as V

@@ -107,7 +107,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
     , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
-    , "import qualified Codec.Capnp as C'"
+    , "import qualified Data.Capnp.Classes as C'"
     , ""
     , "import qualified Data.Vector as V"
     , "import qualified Data.ByteString as BS"

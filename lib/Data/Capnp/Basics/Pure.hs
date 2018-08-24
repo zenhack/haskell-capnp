@@ -15,7 +15,7 @@ import Data.Text.Encoding  (decodeUtf8', encodeUtf8)
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
-import Codec.Capnp hiding (ListElem(List))
+import Data.Capnp.Classes hiding (ListElem(List))
 
 import Data.Capnp.Errors  (Error(InvalidUtf8Error))
 import Data.Capnp.Untyped (rawBytes)

@@ -13,7 +13,7 @@ import qualified Data.Vector as V
 import Data.Capnp.Untyped.Pure
 import Tests.Util
 
-import Codec.Capnp               (decerialize)
+import Data.Capnp.Classes        (decerialize)
 import Data.Capnp.TraversalLimit (LimitT, runLimitT)
 
 import qualified Data.Capnp.Message as M
