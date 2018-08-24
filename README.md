@@ -382,11 +382,11 @@ type ReadCtx m msg = (Message m msg, MonadThrow m, MonadLimit m)
 
 Note the following:
 
-* The generated data types are parametrized over `msg` type. This is the
-  type of the message in which the value is contained. This can be either
-  `ConstMsg` in the case of an immutable message, or `MutMsg s` for a
-  mutable message (where `s` is the state token for the monad in which
-  the message may be mutated).
+* The generated data types are parametrized over a `msg` type. This is
+  the type of the message in which the value is contained. This can be
+  either `ConstMsg` in the case of an immutable message, or `MutMsg s`
+  for a mutable message (where `s` is the state token for the monad in
+  which the message may be mutated).
 * The `Text` and `List` types mentioned in the type signatures are types
   defined within the capnp library, and are similarly views into the
   underlying message.
