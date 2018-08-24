@@ -1,11 +1,50 @@
 {-|
-# Overview
+Module: Data.Capnp.Tutorial
+Description: Tutorial for the Haskell Cap'N Proto library.
+
+-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+module Data.Capnp.Tutorial (
+    -- * Overview
+    -- $overview
+
+    -- * High Level API
+    -- $highlevel
+
+    -- ** Example
+    -- $highlevel-example
+
+    -- ** Code Generation Rules
+    -- $highlevel-codegen-rules
+
+    -- * Low Level API
+    -- $lowlevel
+
+    -- ** Example
+    -- $lowlevel-example
+    ) where
+
+-- So haddock references work:
+import System.IO (stdin, stdout)
+
+import qualified Data.ByteString as BS
+import qualified Data.Text       as T
+
+import Data.Capnp
+import Data.Capnp.Pure
+
+import Data.Capnp.Classes (FromStruct)
+
+import qualified Data.Capnp.TraversalLimit
+
+{- $overview
 
 The API is roughly divided into two parts: a low level API and a high
 level API. The high level API eschews some of the benefits of the wire
 format in favor of a more convenient interface.
+-}
 
-## High Level API
+{- $highlevel
 
 The high level API exposes capnproto values as regular algebraic data
 types.
@@ -29,14 +68,16 @@ properties of the wire format. In particular:
 * You can't mmap a file and read in only part of it.
 * You can't modify a message in-place.
 
-### Example
+-}
+
+{- $highlevel-example
 
 As a running example, we'll use the following schema (borrowed from the
 C++ implementation's documentation):
 
-```capnp
+@
 # addressbook.capnp
-@0xcd6db6afb4a0cf5c;
+\@0xcd6db6afb4a0cf5c;
 
 struct Person {
   id @0 :UInt32;
@@ -67,29 +108,29 @@ struct Person {
 struct AddressBook {
   people @0 :List(Person);
 }
-```
+@
 
-Once the `capnp` and `capnpc-haskell` executables are installed and in
-your `$PATH`, you can generate code for this schema by running:
+Once the @capnp@ and @capnpc-haskell@ executables are installed and in
+your @$PATH@, you can generate code for this schema by running:
 
-```
+@
 capnp compile -ohaskell addressbook.capnp
-```
+@
 
 This will create the following files relative to the current directory:
 
-* `Capnp/Addressbook.hs`
-* `Capnp/Addressbook/Pure.hs`
-* `Capnp/ById/Xcd6db6afb4a0cf5c/Pure.hs`
-* `Capnp/ById/Xcd6db6afb4a0cf5c.hs`
+* Capnp\/Addressbook.hs
+* Capnp\/Addressbook\/Pure.hs
+* Capnp\/ById\/Xcd6db6afb4a0cf5c/Pure.hs
+* Capnp\/ById\/Xcd6db6afb4a0cf5c.hs
 
-The modules under `ById` are an implementation detail.
-`Capnp/Addressbook.hs` is generated code for use with the low level API.
-`Capnp/Addressbook/Pure.hs` is generated code for use with the high
+The modules under @ById@ are an implementation detail.
+@Capnp/Addressbook.hs@ is generated code for use with the low level API.
+@Capnp/Addressbook/Pure.hs@ is generated code for use with the high
 level API. It will export the following data declarations (cleaned up
 for readability).
 
-```haskell
+@
 module Capnp.Addressbook where
 
 import Data.Int
@@ -126,32 +167,32 @@ data Person'PhoneNumber'Type
     | Person'PhoneNumber'Type'home
     | Person'PhoneNumber'Type'work
     | Person'PhoneNumber'Type'unknown' Word16
-```
+@
 
 Note that we use the single quote character as a namespace separator for
 namespaces within a single capnproto schema.
 
 The module also exports instances of several type classes:
 
-* `Show`
-* `Read`
-* `Eq`
-* `Generic` from `GHC.Generics`
-* `Default` from the `data-default` package.
-* A number of type classes defined by the `capnp` package.
-* Capnproto enums additionally implement the `Enum` type class.
+* 'Show'
+* 'Read'
+* 'Eq'
+* 'Generic' from 'GHC.Generics'
+* 'Default' from the @data-default@ package.
+* A number of type classes defined by the @capnp@ package.
+* Capnproto enums additionally implement the 'Enum' type class.
 
-Using the `Default` instance to construct values means that your
+Using the @Default@ instance to construct values means that your
 existing code will continue to work if new fields are added in the
 schema, but it also makes it easier to forget to set a field if you had
-intended to. The instance maps `def` to the default value as defined by
+intended to. The instance maps @'def'@ to the default value as defined by
 capnproto, so leaving out newly-added fields will do The Right Thing.
 
 The module `Data.Capnp.Pure` exposes the most frequently used
 functionality from the high level API. We can output an address book
 message to standard output like so:
 
-```haskell
+@
 {-# LANGUAGE OverloadedStrings     #-}
 -- Note that DuplicateRecordFields is usually needed, as the generated
 -- code relys on it to resolve collisions in capnproto struct field
@@ -168,7 +209,7 @@ main = putValue AddressBook
     { people = V.fromList
         [ Person
             { id = 123
-            , name = "Alice"
+            , name = \"Alice\"
             , email = "alice@example.com"
             , phones = V.fromList
                 [ def
@@ -176,11 +217,11 @@ main = putValue AddressBook
                     , type_ =  Person'PhoneNumber'Type'mobile
                     }
                 ]
-            , employment = Person'employment'school "MIT"
+            , employment = Person'employment'school \"MIT\"
             }
         , Person
             { id = 456
-            , name = "Bob"
+            , name = \"Bob\"
             , email = "bob@example.com"
             , phones = V.fromList
                 [ def
@@ -197,14 +238,14 @@ main = putValue AddressBook
         ]
     }
 
-```
+@
 
-`putValue` is equivalent to `hPutValue stdout`; `hPutValue` may be used
+'putValue' is equivalent to @'hPutValue' 'stdout'@; 'hPutValue' may be used
 to write to an arbitrary handle.
 
-We can use `getValue` (or alternately `hGetValue`) to read in a message:
+We can use 'getValue' (or alternately 'hGetValue') to read in a message:
 
-```haskell
+@
 -- ...
 
 import Data.Capnp.Pure (getValue, defaultLimit)
@@ -214,55 +255,57 @@ import Data.Capnp.Pure (getValue, defaultLimit)
 main = do
     value <- getValue defaultLimit
     print (value :: AddressBook)
-```
+@
 
 Note the type annotation; there are a number of interfaces in the
 library which dispatch on return types, and depending on how they are
 used you may have to give GHC a hint for type inference to succeed.
-The type of `getValue` is:
+The type of 'getValue' is:
 
-```haskell
-getValue :: FromStruct ConstMsg a => Int -> IO a
-```
+@
+'getValue' :: 'FromStruct' 'ConstMsg' a => 'Int' -> 'IO' a
+@
 
 ...and so it may be used to read in any struct type.
 
-`defaultLimit` is a default value for the traversal limit, which acts to
+'defaultLimit' is a default value for the traversal limit, which acts to
 prevent denial of service vulnerabilities; See the documentation in
-`Data.Capnp.TraversalLimit` for more information. `getValue` uses this
+@Data.Capnp.TraversalLimit@ for more information. 'getValue' uses this
 argument both to catch values that would cause excessive resource usage,
 and to simply limit the overall size of the incoming message. The
 default is approximately 64 MiB.
 
-If an error occurs, an exception will be thrown of type `Error` from the
+If an error occurs, an exception will be thrown of type 'Error' from the
 `Data.Capnp.Errors` module.
 
-### Code generation rules.
+-}
+
+{- $highlevel-codegen-rules
 
 The complete rules for how capnproto types map to Haskell are as follows:
 
 * Integer types and booleans map to the obvious corresponding Haskell
   types.
-* `Float32` and `Float64` map to `Float` and `Double`, respectively.
-* `Void` maps to the unit type, `()`.
-* Lists map to `Vector`s from the Haskell `vector` package. Note that
+* @Float32@ and @Float64@ map to 'Float' and 'Double', respectively.
+* @Void@ maps to the unit type, @()@.
+* Lists map to 'Vector's from the Haskell vector package. Note that
   right now we use boxed vectors for everything; at some point this will
   likely change for performance reasons. Using the functions from
-  `Data.Vector.Generic` will probably decrease the amount of code you
+  'Data.Vector.Generic' will probably decrease the amount of code you
   will need to modify when upgrading.
-* `Text` maps to (strict) `Text` from the Haskell `text` package.
-* `Data` maps to (strict) `ByteString`s
+* @Text@ maps to (strict) 'T.Text' from the Haskell `text` package.
+* @Data@ maps to (strict) 'BS.ByteString's
 * Type constructor names are the fully qualified (within the schema file)
   capnproto name, using the single quote character as a namespace
   separator.
 * Structs map to record types. The name of the data constructor is the
   same as the name of the type constructor.
 * Field names map to record fields with the same names. Names that are
-  Haskell keywords have an underscore appended to them, e.g. `type_` in
+  Haskell keywords have an underscore appended to them, e.g. @type_@ in
   the above example. These names are not qualified; we use the
-  `DuplicateRecordFields` extension to disambiguate them.
+  @DuplicateRecordFields@ extension to disambiguate them.
 * Union fields result in an auxiliary type definition named
-  `<containing type's name>'<union field name>`. For an example, see the
+  @\<containing type's name>'\<union field name>@. For an example, see the
   mapping of the `employment` field above.
 * Unions and enums map to sum types, each of which has a special
   `unknown'` variant (note the trailing single quote). This variant will
@@ -283,11 +326,12 @@ The complete rules for how capnproto types map to Haskell are as follows:
   type for the union does not have the trailing single quote (so its
   name is what the name of the struct type would be).
 * Fields of type `AnyPointer` map to the types defined in
-  `Data.Capnp.Untyped.Pure`.
+  @Data.Capnp.Untyped.Pure@.
 * No code is currently generated for interfaces; this will change once
   we implement RPC.
+-}
 
-## Low Level API
+{- $lowlevel
 
 The low level API exposes a much more imperative interface than the
 high-level API. Instead of algebraic data types, types are exposed as
@@ -304,14 +348,16 @@ which is an instance of `MonadThrow` from the exceptions package, and
 `MonadLimit`, which is defined in `Data.Capnp.TraversalLimit`. We define
 a monad transformer `LimitT` for the latter.
 
-### Example
+-}
+
+{- $lowlevel-example
 
 We'll use the same schema as above for our example. Instead of standard
 algebraic data types, the module `Capnp.Addressbook` primarily defines
 newtype wrappers, which should be treated as opaque, and accessor
 functions for the various fields.
 
-```haskell
+@
 newtype AddressBook msg = ...
 
 get_Addressbook'people :: ReadCtx m msg => AddressBook msg -> m (List msg (Person msg))
@@ -320,19 +366,19 @@ newtype Person msg = ...
 
 get_Person'id   :: ReadCtx m msg => Person msg -> m Word32
 get_Person'name :: ReadCtx m msg => Person msg -> m (Text msg)
-```
+@
 
 `ReadCtx` is a type synonym:
 
-```haskell
+@
 type ReadCtx m msg = (Message m msg, MonadThrow m, MonadLimit m)
-```
+@
 
 Note the following:
 
 * The generated data types are parametrized over a `msg` type. This is
   the type of the message in which the value is contained. This can be
-  either `ConstMsg` in the case of an immutable message, or `MutMsg s`
+  either 'ConstMsg' in the case of an immutable message, or @'MutMsg' s@
   for a mutable message (where `s` is the state token for the monad in
   which the message may be mutated).
 * The `Text` and `List` types mentioned in the type signatures are types
@@ -344,7 +390,7 @@ Note the following:
 
 The snippet below prints the names of each person in the address book:
 
-```haskell
+@
 {-# LANGUAGE ScopedTypeVariables #-}
 import Prelude hiding (length)
 
@@ -361,27 +407,10 @@ main = do
     evalLimitT defaultLimit $ do
         people <- get_AddressBook'people addressbook
         forM_ [0..length people - 1] $ \i -> do
-            name <- index i people >>= get_Person'name >>= textBytes
+            name \<- index i people >>= get_Person'name >>= textBytes
             lift $ BS8.putStrLn name
-```
+@
 
 Note that we use the same `getValue` function as in the high-level
 example above.
-
-# License
-
-MIT
-
-[1]: https://capnproto.org/
-[2]: https://capnproto.org/language.html#evolving-your-protocol
-
-[issue27]: https://github.com/zenhack/haskell-capnp/issues/27
-[issue28]: https://github.com/zenhack/haskell-capnp/issues/28
-[issue29]: https://github.com/zenhack/haskell-capnp/issues/29
-
-[ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
-[ci]: https://gitlab.com/isd/haskell-capnp/pipelines
 -}
-module Data.Capnp.Tutorial
-    (
-    ) where
