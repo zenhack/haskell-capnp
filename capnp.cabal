@@ -12,8 +12,15 @@ license-file:             LICENSE.md
 homepage:                 https://github.com/zenhack/haskell-capnp
 bug-reports:              https://github.com/zenhack/haskell-capnp/issues
 synopsis:                 Cap'n Proto for Haskell
-description:              Cap'n Proto for Haskell
-                          -- FIXME: add proper package description
+description:
+  A native Haskell implementation of the Cap'N Proto cerialization format.
+  .
+  This library is currently serialization-only. RPC support is planned but not
+  yet implemented. It works, but bear in mind that the API is considered
+  unstable, and is likely to change to accomodate RPC, facilitate improved
+  performance, etc.
+  .
+  The 'Data.Capnp.Tutorial' module is the best place to start reading.
 build-type:               Simple
 cabal-version:            >= 1.10
 extra-source-files:
