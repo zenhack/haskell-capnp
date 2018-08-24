@@ -8,8 +8,6 @@ module Data.Capnp
     , Codec.MutListElem(..)
     , Codec.newRoot
     , Codec.setRoot
-    , Codec.getValue
-    , Codec.hGetValue
 
     , Basics.Data
     , Basics.dataBytes
@@ -22,6 +20,9 @@ module Data.Capnp
     , Message.MutMsg
     , Message.newMessage
     , Message.WriteCtx
+
+    , getValue
+    , hGetValue
 
     , decodeMessage
     , encodeMessage
@@ -38,6 +39,8 @@ import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 
 import Data.Capnp.TraversalLimit
+
+import Data.Capnp.IO (getValue, hGetValue)
 
 import qualified Codec.Capnp        as Codec
 import qualified Data.Capnp.Basics  as Basics

@@ -61,6 +61,7 @@ library
       , Data.Capnp.Errors
       , Data.Capnp.GenHelpers
       , Data.Capnp.GenHelpers.Pure
+      , Data.Capnp.IO
       , Data.Capnp.Message
       , Data.Capnp.Pointer
       , Data.Capnp.Untyped

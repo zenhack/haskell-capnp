@@ -17,10 +17,6 @@ module Codec.Capnp
     , newRoot
     , setRoot
     , getRoot
-    , hGetValue
-    , getValue
-    , hPutValue
-    , putValue
     ) where
 
 import Data.Bits
@@ -28,44 +24,14 @@ import Data.Int
 import Data.ReinterpretCast
 import Data.Word
 
-import Control.Monad.Catch     (MonadThrow(throwM))
-import Control.Monad.Primitive (RealWorld)
-import System.IO               (Handle, stdin, stdout)
+import Control.Monad.Catch (MonadThrow(throwM))
 
-import qualified Data.ByteString         as BS
-import qualified Data.ByteString.Builder as BB
-
-import Data.Capnp.Bits           (Word1(..))
-import Data.Capnp.Errors         (Error(SchemaViolationError))
-import Data.Capnp.TraversalLimit (evalLimitT)
-import Data.Capnp.Untyped
-    (ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
+import Data.Capnp.Bits    (Word1(..))
+import Data.Capnp.Errors  (Error(SchemaViolationError))
+import Data.Capnp.Untyped (ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
 
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
-
-hGetValue :: FromStruct M.ConstMsg a => Int -> Handle -> IO a
-hGetValue limit handle = do
-    contents <- BS.hGetContents handle
-    msg <- M.decode contents
-    evalLimitT limit (getRoot msg)
-
-getValue :: FromStruct M.ConstMsg a => Int -> IO a
-getValue limit = hGetValue limit stdin
-
-hPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
-    => Handle -> a -> IO ()
-hPutValue handle value = do
-    msg <- M.newMessage
-    root <- evalLimitT maxBound $ cerialize msg value
-    setRoot root
-    constMsg <- M.freeze msg
-    bytes <- M.encode constMsg
-    BB.hPutBuilder handle bytes
-
-putValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
-    => a -> IO ()
-putValue = hPutValue stdout
 
 -- | Types that can be converted to and from a 64-bit word.
 --
