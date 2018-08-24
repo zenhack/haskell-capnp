@@ -20,6 +20,10 @@ module Data.Capnp
     , Message.MutMsg
     , Message.newMessage
     , Message.WriteCtx
+    , Message.getMsg
+    , Message.hGetMsg
+    , Message.putMsg
+    , Message.hPutMsg
 
     , getValue
     , hGetValue
