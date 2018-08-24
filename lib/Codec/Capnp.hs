@@ -106,9 +106,6 @@ class Decerialize a => Cerialize s a where
         marshalInto raw value
         pure raw
 
-expected :: MonadThrow m => String -> m a
-expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
-
 -- | 'newRoot' allocates and returns a new value inside the message, setting
 -- it as the root object of the message.
 newRoot :: (ToStruct (M.MutMsg s) a, Allocate s a, M.WriteCtx m s)
@@ -183,6 +180,10 @@ instance IsWord Float where
 instance IsWord Double where
     fromWord = wordToDouble
     toWord = doubleToWord
+
+-- helper function for throwing SchemaViolationError "expected ..."
+expected :: MonadThrow m => String -> m a
+expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 
 -- IsPtr instance for lists of Void/().
 instance IsPtr msg (ListOf msg ()) where
