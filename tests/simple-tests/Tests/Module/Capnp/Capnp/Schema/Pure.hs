@@ -485,7 +485,7 @@ prop_hGetPutInverses proxy expected = propertyIO $ do
             withBinaryFile filename WriteMode
                 (`hPutValue` expected)
             withBinaryFile filename ReadMode $ \h ->
-                (hGetValue h defaultLimit))
+                hGetValue h defaultLimit)
     ppAssertEqual actual expected
 
 -- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
