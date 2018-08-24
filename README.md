@@ -151,37 +151,7 @@ data Person'PhoneNumber'Type
 ```
 
 Note that we use the single quote character as a namespace separator for
-namespaces within a single capnproto schema. I(@zenhack) generally
-advise against deeply nested namespaces; in languages which can't define
-hierarchical and/or mutually recursive modules they usually end up
-generating excessively long names. For the example schema I would suggest
-moving the definition of the `PhoneNumber` struct outside of `Person`,
-which results in:
-
-```haskell
--- ...
-
-data Person = Person
-    { id         :: Word32
-    , name       :: Text
-    , email      :: Text
-    , phones     :: Vector PhoneNumber
-    , employment :: Person'employment
-    }
-
-data PhoneNumber = PhoneNumber
-    { number :: Text
-    , type_  :: PhoneNumber'Type
-    }
-
-data PhoneNumber'Type
-    = PhoneNumber'Type'mobile
-    | PhoneNumber'Type'home
-    | PhoneNumber'Type'work
-    | PhoneNumber'Type'unknown' Word16
-
--- ...
-```
+namespaces within a single capnproto schema.
 
 The module also exports instances of several type classes:
 
