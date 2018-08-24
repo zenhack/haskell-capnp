@@ -13,9 +13,6 @@ module Data.Capnp.IO
 import Control.Monad.Primitive (RealWorld)
 import System.IO               (Handle, stdin, stdout)
 
-import qualified Data.ByteString         as BS
-import qualified Data.ByteString.Builder as BB
-
 import Codec.Capnp
     ( Cerialize(..)
     , Decerialize(..)
@@ -31,15 +28,14 @@ import qualified Data.Capnp.Message as M
 -- | @'hGetValue' limit handle@ reads a message from @handle@, returning its root object.
 -- @limit@ is used as both a cap on the size of a message which may be read and, for types
 -- in the high-level API, the traversal limit when decoding the message.
-hGetValue :: FromStruct M.ConstMsg a => Int -> Handle -> IO a
-hGetValue limit handle = do
-    contents <- BS.hGetContents handle
-    msg <- M.decode contents
+hGetValue :: FromStruct M.ConstMsg a => Handle -> Int -> IO a
+hGetValue handle limit = do
+    msg <- M.hGetMsg handle limit
     evalLimitT limit (getRoot msg)
 
--- | @'getValue' limit@ is equivalent to @'hGetValue' limit 'stdin'@.
+-- | @'getValue'@ is equivalent to @'hGetValue' 'stdin'@.
 getValue :: FromStruct M.ConstMsg a => Int -> IO a
-getValue limit = hGetValue limit stdin
+getValue = hGetValue stdin
 
 -- | @'hPutValue' handle value@ writes @value@ to handle, as the root object of
 -- a message.
@@ -50,8 +46,7 @@ hPutValue handle value = do
     root <- evalLimitT maxBound $ cerialize msg value
     setRoot root
     constMsg <- M.freeze msg
-    bytes <- M.encode constMsg
-    BB.hPutBuilder handle bytes
+    M.hPutMsg handle constMsg
 
 -- | 'putValue' is equivalent to @'hPutValue' 'stdin'@
 putValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))

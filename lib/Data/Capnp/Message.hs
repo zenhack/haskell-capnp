@@ -28,6 +28,10 @@ module Data.Capnp.Message
     , empty
     , maxSegmentSize
     , maxSegments
+    , hPutMsg
+    , hGetMsg
+    , putMsg
+    , getMsg
     )
   where
 
@@ -41,11 +45,15 @@ import Control.Monad.Primitive   (PrimMonad, PrimState)
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
+import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.ByteString.Internal  (ByteString(..))
+import Data.Either               (fromRight)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64)
 import System.Endian             (fromLE64, toLE64)
+import System.IO                 (Handle, stdin, stdout)
 
+import qualified Data.ByteString              as BS
 import qualified Data.ByteString.Builder      as BB
 import qualified Data.Vector                  as V
 import qualified Data.Vector.Mutable          as MV
@@ -55,7 +63,7 @@ import qualified Data.Vector.Storable.Mutable as SMV
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
 import Data.Capnp.Errors         (Error(..))
-import Data.Capnp.TraversalLimit (MonadLimit(invoice), evalLimitT)
+import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Internal.Util             (checkIndex)
 
 
@@ -207,6 +215,7 @@ decodeSeg seg = do
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
 -- The size of the message (in 64-bit words) is deducted from the traversal,
 -- limit which can be used to set the maximum message size.
+readMessage :: (MonadThrow m, MonadLimit m) => m Word32 -> (WordCount -> m (Segment ConstMsg)) -> m ConstMsg
 readMessage read32 readSegment = do
     invoice 1
     numSegs' <- read32
@@ -227,6 +236,33 @@ writeMessage (ConstMsg segs) write32 writeSegment = do
     V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> numWords seg
     when (numSegs `mod` 2 == 0) $ write32 0
     V.forM_ segs writeSegment
+
+
+-- | @'hPutMsg' handle msg@ writes @msg@ to @handle@.
+hPutMsg :: Handle -> ConstMsg -> IO ()
+hPutMsg handle msg = encode msg >>= BB.hPutBuilder handle
+
+-- | Equivalent to @'hPutMsg' 'stdout'@
+putMsg :: ConstMsg -> IO ()
+putMsg = hPutMsg stdout
+
+-- | @'hGetMsg' handle limit@ reads a message from @handle@ that is at most
+-- @limit@ 64-bit words in length.
+hGetMsg :: Handle -> Int -> IO ConstMsg
+hGetMsg handle size =
+    evalLimitT size $ readMessage read32 readSegment
+  where
+    read32 :: LimitT IO Word32
+    read32 = lift $ do
+        bytes <- BS.hGet handle 4
+        -- The only way we get a left is if we get less than 4 bytes, in which
+        -- case hGet should have thrown:
+        pure $ fromRight (error "impossible") (runGetS getWord32le bytes)
+    readSegment n = lift $ BS.hGet handle (fromIntegral n * 8) >>= fromByteString
+
+-- | Equivalent to @'hGetMsg' 'stdin'@
+getMsg :: Int -> IO ConstMsg
+getMsg = hGetMsg stdin
 
 -- | A 'MutMsg' is a mutable capnproto message. The type parameter 's' is the
 -- state token for the instance of 'PrimMonad' in which the message may be
