@@ -46,24 +46,38 @@ import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector        as V
 
+-- | A capability in the wire format.
 type Cap = Word32
 
+-- | A one of a struct's sections (data or pointer).
+--
+-- This is just a newtype wrapper around 'ListOf' (which is itself just
+-- 'V.Vector'), but critically the notion of equality is different. Two
+-- slices are considered equal if all of their elements are equal, but
+-- If the slices are different lengths, missing elements are treated as
+-- having default values. Accordingly, equality is only defined if the
+-- element type is an instance of 'Default'.
 newtype Slice a = Slice (ListOf a)
     deriving(Generic, Show, Read, Ord, Functor, Default)
 
+-- | A capnproto pointer type.
 data PtrType
     = PtrStruct !Struct
     | PtrList   !List
     | PtrCap    !Cap
     deriving(Generic, Show, Read, Eq)
 
+-- | A capnproto struct.
 data Struct = Struct
     { structData :: Slice Word64
+    -- ^ The struct's data section
     , structPtrs :: Slice (Maybe PtrType)
+    -- ^ The struct's pointer section
     }
     deriving(Generic, Show, Read, Eq)
 instance Default Struct
 
+-- | An untyped list.
 data List
     = List0  (ListOf ())
     | List1  (ListOf Bool)
@@ -75,6 +89,9 @@ data List
     | ListStruct (ListOf Struct)
     deriving(Generic, Show, Read, Eq)
 
+-- | Alias for 'V.Vector'. Using this alias may make upgrading to future
+-- versions of the library easier, as we will likely switch to a more
+-- efficient representation at some point.
 type ListOf a = V.Vector a
 
 -- Cookie-cutter IsList instance. This is derivable with
@@ -86,9 +103,12 @@ instance IsList (Slice a) where
     fromList = Slice . fromList
     fromListN n = Slice . fromListN n
 
+-- | Alias for vector's 'V.length'.
 length :: ListOf a -> Int
 length = V.length
 
+-- | Index into a slice, returning a default value if the the index is past
+-- the end of the array.
 sliceIndex :: Default a => Int -> Slice a -> a
 sliceIndex i (Slice vec)
     | i < V.length vec = vec V.! i

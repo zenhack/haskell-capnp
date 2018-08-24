@@ -3,24 +3,34 @@ Module: Data.Capnp.Pure
 Description: The most commonly used functionality from the high-level API.
 -}
 module Data.Capnp.Pure
-    ( Basics.Text(..)
-    , Basics.Data(..)
-
-    , Capnp.ConstMsg
-    , Capnp.Message(..)
-    , Capnp.decodeMessage
-    , Capnp.encodeMessage
-    , Capnp.getRoot
-    , Capnp.getValue
+    (
+    -- * Reading and writing values
+      hPutValue
     , Capnp.hGetValue
     , putValue
-    , hPutValue
+    , Capnp.getValue
 
+
+    -- * Working directly with messages
+    , Capnp.decodeMessage
+    , Capnp.encodeMessage
+    , Capnp.ConstMsg
+    , Capnp.Message(..)
+
+    -- * Getting values in and out of messages
+    , Capnp.getRoot
     , Classes.Decerialize(..)
     , Classes.Cerialize(..)
 
+    -- * Managing resource limits
     , module Data.Capnp.TraversalLimit
 
+
+    -- * Aliases for built-in capnproto types.
+    , Basics.Text(..)
+    , Basics.Data(..)
+
+    -- * Re-exported from data-default
     , def
     ) where
 

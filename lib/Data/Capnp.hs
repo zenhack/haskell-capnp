@@ -3,38 +3,47 @@ Module: Data.Capnp
 Description: The most commonly used functionality from the low-level API.
 -}
 module Data.Capnp
-    ( Codec.getRoot
-    , Codec.newRoot
-    , Codec.setRoot
-
-    , Classes.ListElem(..)
+    (
+    -- * Working with capnproto lists
+      Classes.ListElem(..)
     , Classes.MutListElem(..)
 
+    -- * Working with capnproto Text and Data values.
     , Basics.Data
     , Basics.dataBytes
     , Basics.Text
     , Basics.textBytes
 
+    -- * Working with messages
     , Message.ConstMsg
     , Message.Message(..)
     , Message.Mutable(..)
     , Message.MutMsg
     , Message.newMessage
-    , Message.WriteCtx
-    , Message.getMsg
-    , Message.hGetMsg
-    , Message.putMsg
-    , Message.hPutMsg
-
-    , getValue
-    , hGetValue
-
     , decodeMessage
     , encodeMessage
 
+    -- ** Reading and writing messages
+    , Message.hPutMsg
+    , Message.putMsg
+    , Message.hGetMsg
+    , Message.getMsg
+
+    -- * Manipulating the root object of a message
+    , Codec.getRoot
+    , Codec.newRoot
+    , Codec.setRoot
+
+    -- * Reading values
+    , hGetValue
+    , getValue
+
+    -- * Type aliases for common contexts
+    , Message.WriteCtx
     , Untyped.ReadCtx
     , Untyped.RWCtx
 
+    -- * Managing resource limits
     , module Data.Capnp.TraversalLimit
     ) where
 

@@ -102,8 +102,13 @@ class Monad m => Message m msg where
     toByteString :: Segment msg -> m ByteString
 
 -- | The 'Mutable' type class relates mutable and immutable versions of a type.
+-- The instance is defined on the mutable variant; @'Frozen' a@ is the immutable
+-- version of a mutable type @a@.
 class Mutable a where
+    -- | The state token for a mutable value.
     type Scope a
+
+    -- | The immutable version of @a@.
     type Frozen a
 
     -- | Convert an immutable value to a mutable one.
@@ -175,6 +180,7 @@ instance MonadThrow m => Message m ConstMsg where
 decode :: MonadThrow m => ByteString -> m ConstMsg
 decode bytes = fromByteString bytes >>= decodeSeg
 
+-- | 'encode' encodes a message as a bytestring builder.
 encode :: MonadThrow m => ConstMsg -> m BB.Builder
 encode msg = execWriterT $ writeMessage
     msg
@@ -365,6 +371,8 @@ newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
     setSegment msg segIndex newSeg
     pure (segIndex, newSeg)
 
+-- | Like 'alloc', but the second argument allows the caller to specify the
+-- index of the segment in which to allocate the data.
 allocInSeg :: WriteCtx m s => MutMsg s -> Int -> WordCount -> m WordAddr
 allocInSeg msg segIndex (WordCount size) = do
     oldSeg@MutSegment{mutSegLen} <- getSegment msg segIndex

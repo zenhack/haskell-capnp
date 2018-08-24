@@ -427,6 +427,7 @@ ptrAddr (PtrCap _ _) = error "ptrAddr called on a capability pointer."
 ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
+-- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
 setIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => a -> Int -> ListOf (M.MutMsg s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
@@ -667,12 +668,25 @@ allocCompositeList msg dataSz ptrSz len = do
             ptrSz
     pure $ ListOfStruct firstStruct len
 
+-- | Allocate a list of capnproto @Void@ values.
 allocList0   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) ())
+
+-- | Allocate a list of booleans
 allocList1   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Bool)
+
+-- | Allocate a list of 8-bit values.
 allocList8   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word8)
+
+-- | Allocate a list of 16-bit values.
 allocList16  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word16)
+
+-- | Allocate a list of 32-bit values.
 allocList32  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word32)
+
+-- | Allocate a list of 64-bit words.
 allocList64  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word64)
+
+-- | Allocate a list of pointers.
 allocListPtr :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) (Maybe (Ptr (M.MutMsg s))))
 
 allocList0   msg len = pure $ ListOfVoid msg len

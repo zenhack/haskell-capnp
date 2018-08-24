@@ -3,6 +3,18 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
+{- |
+Module: Data.Capnp.Basics.Pure
+Description: Handling of "basic" capnp datatypes (high-level API).
+
+Analogous to 'Data.Capnp.Basics' in the low-level API, this module deals
+with capnproto's @Text@ and @Data@ types. These are simply aliases for
+'BS.ByteString' and the text package's 'T.Text'; mostly this module provides
+helper functions and type class instances.
+
+Unlike with the low-level API, typed lists do not require special
+treatment -- they're just Vectors.
+-}
 module Data.Capnp.Basics.Pure
     ( Data(..)
     , Text(..)
@@ -24,7 +36,10 @@ import qualified Data.Capnp.Basics  as Basics
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as Untyped
 
+-- | A capnproto @Data@ value. This is just an alias for 'BS.ByteString'.
 type Data = BS.ByteString
+
+-- | A capnproto @Text@. This  is just an alias for the text package's 'T.Text'.
 type Text = T.Text
 
 instance Decerialize Data where

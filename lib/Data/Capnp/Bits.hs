@@ -25,12 +25,16 @@ import Data.Bits
 import Data.Int
 import Data.Word
 
--- wrapper types for numbers of bits, bytes & words -- helpful for avoiding
--- mixingup units:
+-- | Wrapper type for a quantity of bits. This along with 'ByteCount' and
+-- 'WordCount' are helpful for avoiding mixing up units
 newtype BitCount = BitCount Int
     deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
+
+-- | A quantity of bytes
 newtype ByteCount = ByteCount Int
     deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
+
+-- | A quantity of 64-bit words
 newtype WordCount = WordCount Int
     deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
 
