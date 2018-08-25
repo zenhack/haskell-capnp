@@ -1,5 +1,4 @@
---------------------------------------------------------------------------------
-
+cabal-version:            2.2
 name:                     capnp
 version:                  0.1.0.0
 stability:                Experimental
@@ -22,7 +21,6 @@ description:
   .
   The 'Data.Capnp.Tutorial' module is the best place to start reading.
 build-type:               Simple
-cabal-version:            >= 1.10
 extra-source-files:
     README.md
   , CHANGELOG.md
@@ -61,7 +59,29 @@ source-repository head
 
 --------------------------------------------------------------------------------
 
+common shared-opts
+  build-depends:
+        base                              >= 4.8  && < 5.0
+      , array                             >= 0.5  && < 0.6
+      , bytes                             >= 0.15.4 && < 0.16
+      , bytestring                        >= 0.10 && < 0.11
+      , exceptions                        >= 0.10.0 && < 0.11
+      , mtl                               >= 2.2.2 && < 2.3
+      , primitive                         >= 0.6.3 && < 0.7
+      , reinterpret-cast                  >= 0.1.0 && < 0.2
+      , text                              >= 1.2  && < 2.0
+      , transformers                      >= 0.5.2 && < 0.6
+      , vector                            >= 0.12.0 && < 0.13
+  ghc-options:
+    -Wnoncanonical-monad-instances
+    -Wincomplete-patterns
+    -Wunused-imports
+  default-language:     Haskell2010
+
+--------------------------------------------------------------------------------
+
 library
+    import: shared-opts
     hs-source-dirs:       lib
     exposed-modules:
         Data.Capnp
@@ -113,29 +133,14 @@ library
       , Codec.Capnp
     -- other-extensions:
     build-depends:
-        base                              >= 4.8  && < 5.0
-      , cpu                               >= 0.1.2 && < 0.2
-      , array                             >= 0.5  && < 0.6
-      , bytes                             >= 0.15.4 && < 0.16
-      , bytestring                        >= 0.10 && < 0.11
+        cpu                               >= 0.1.2 && < 0.2
       , data-default                      >= 0.7.1 && < 0.8
       , data-default-instances-vector     >= 0.0.1 && < 0.1
-      , exceptions                        >= 0.10.0 && < 0.11
-      , mtl                               >= 2.2.2 && < 2.3
-      , primitive                         >= 0.6.3 && < 0.7
-      , reinterpret-cast                  >= 0.1.0 && < 0.2
-      , text                              >= 1.2  && < 2.0
-      , transformers                      >= 0.5.2 && < 0.6
-      , vector                            >= 0.12.0 && < 0.13
-    ghc-options:
-      -Wnoncanonical-monad-instances
-      -Wincomplete-patterns
-      -Wunused-imports
-    default-language:     Haskell2010
 
 --------------------------------------------------------------------------------
 
 executable capnpc-haskell
+    import: shared-opts
     main-is:              Main.hs
     other-modules:
         FrontEnd
@@ -147,34 +152,19 @@ executable capnpc-haskell
     hs-source-dirs:       exe/capnpc-haskell
     build-depends:
         capnp
-      , array                             >= 0.5  && < 0.6
-      , base                              >= 4.8  && < 5.0
       , binary                            >= 0.8.5 && < 0.9
-      , bytes                             >= 0.15.4 && < 0.16
-      , bytestring                        >= 0.10 && < 0.11
       , cereal                            >= 0.5.5 && < 0.6
       , containers                        >= 0.5.10 && < 0.6
       , directory                         >= 1.3.0 && < 1.4
       , dlist                             >= 0.8.0 && < 0.9
-      , exceptions                        >= 0.10.0 && < 0.11
       , filepath                          >= 1.4.1 && < 1.5
-      , mtl                               >= 2.2.2 && < 2.3
-      , primitive                         >= 0.6.3 && < 0.7
-      , text                              >= 1.2  && < 2.0
-      , transformers                      >= 0.5.2 && < 0.6
       , utf8-string                       >= 1.0.1 && < 1.1
-      , vector                            >= 0.12.0 && < 0.13
-      , reinterpret-cast                  >= 0.1 && < 0.2
       , wl-pprint-text                    >= 1.2 && <1.3
-    ghc-options:
-      -Wnoncanonical-monad-instances
-      -Wincomplete-patterns
-      -Wunused-imports
-    default-language:     Haskell2010
 
 --------------------------------------------------------------------------------
 
 test-suite simple-tests
+    import: shared-opts
     type:                 exitcode-stdio-1.0
     main-is:              Main.hs
     hs-source-dirs:       tests/simple-tests
@@ -191,32 +181,19 @@ test-suite simple-tests
       , Tests.Util
     build-depends:
         capnp
-      , base       >= 4.8  && < 5.0
-      , bytestring >= 0.10 && < 0.11
       , data-default
-      , vector
       , process
       , process-extras
-      , exceptions
       , QuickCheck
       , quickcheck-io
       , quickcheck-instances
-      , mtl
       , HUnit
       , test-framework
       , test-framework-hunit
       , test-framework-quickcheck2
       , binary
-      , transformers
       , directory
       , resourcet
       , heredoc
-      , primitive
-      , reinterpret-cast
       , deepseq
       , pretty-show
-    ghc-options:
-      -Wnoncanonical-monad-instances
-      -Wincomplete-patterns
-      -Wunused-imports
-    default-language:     Haskell2010
