@@ -82,47 +82,43 @@ properties of the wire format. In particular:
 As a running example, we'll use the following schema (borrowed from the
 C++ implementation's documentation):
 
-@
-# addressbook.capnp
-\@0xcd6db6afb4a0cf5c;
-
-struct Person {
-  id @0 :UInt32;
-  name @1 :Text;
-  email @2 :Text;
-  phones @3 :List(PhoneNumber);
-
-  struct PhoneNumber {
-    number @0 :Text;
-    type @1 :Type;
-
-    enum Type {
-      mobile @0;
-      home @1;
-      work @2;
-    }
-  }
-
-  employment :union {
-    unemployed @4 :Void;
-    employer @5 :Text;
-    school @6 :Text;
-    selfEmployed @7 :Void;
-    # We assume that a person is only one of these.
-  }
-}
-
-struct AddressBook {
-  people @0 :List(Person);
-}
-@
+> # addressbook.capnp
+> @0xcd6db6afb4a0cf5c;
+>
+> struct Person {
+>   id @0 :UInt32;
+>   name @1 :Text;
+>   email @2 :Text;
+>   phones @3 :List(PhoneNumber);
+>
+>   struct PhoneNumber {
+>     number @0 :Text;
+>     type @1 :Type;
+>
+>     enum Type {
+>       mobile @0;
+>       home @1;
+>       work @2;
+>     }
+>   }
+>
+>   employment :union {
+>     unemployed @4 :Void;
+>     employer @5 :Text;
+>     school @6 :Text;
+>     selfEmployed @7 :Void;
+>     # We assume that a person is only one of these.
+>   }
+> }
+>
+> struct AddressBook {
+>   people @0 :List(Person);
+> }
 
 Once the @capnp@ and @capnpc-haskell@ executables are installed and in
 your @$PATH@, you can generate code for this schema by running:
 
-@
-capnp compile -ohaskell addressbook.capnp
-@
+> capnp compile -ohaskell addressbook.capnp
 
 This will create the following files relative to the current directory:
 
@@ -137,44 +133,42 @@ The modules under @ById@ are an implementation detail.
 level API. It will export the following data declarations (cleaned up
 for readability).
 
-@
-module Capnp.Addressbook where
-
-import Data.Int
-import Data.Text   (Text)
-import Data.Vector (Vector)
-import Data.Word
-
-data AddressBook = AddressBook
-    { people :: Vector Person
-    }
-
-data Person = Person
-    { id         :: Word32
-    , name       :: Text
-    , email      :: Text
-    , phones     :: Vector Person'PhoneNumber
-    , employment :: Person'employment
-    }
-
-data Person'PhoneNumber = Person'PhoneNumber
-    { number :: Text
-    , type_  :: Person'PhoneNumber'Type
-    }
-
-data Person'employment
-    = Person'employment'unemployed
-    | Person'employment'employer Text
-    | Person'employment'school Text
-    | Person'employment'selfEmployed
-    | Person'employment'unknown' Word16
-
-data Person'PhoneNumber'Type
-    = Person'PhoneNumber'Type'mobile
-    | Person'PhoneNumber'Type'home
-    | Person'PhoneNumber'Type'work
-    | Person'PhoneNumber'Type'unknown' Word16
-@
+> module Capnp.Addressbook where
+>
+> import Data.Int
+> import Data.Text   (Text)
+> import Data.Vector (Vector)
+> import Data.Word
+>
+> data AddressBook = AddressBook
+>     { people :: Vector Person
+>     }
+>
+> data Person = Person
+>     { id         :: Word32
+>     , name       :: Text
+>     , email      :: Text
+>     , phones     :: Vector Person'PhoneNumber
+>     , employment :: Person'employment
+>     }
+>
+> data Person'PhoneNumber = Person'PhoneNumber
+>     { number :: Text
+>     , type_  :: Person'PhoneNumber'Type
+>     }
+>
+> data Person'employment
+>     = Person'employment'unemployed
+>     | Person'employment'employer Text
+>     | Person'employment'school Text
+>     | Person'employment'selfEmployed
+>     | Person'employment'unknown' Word16
+>
+> data Person'PhoneNumber'Type
+>     = Person'PhoneNumber'Type'mobile
+>     | Person'PhoneNumber'Type'home
+>     | Person'PhoneNumber'Type'work
+>     | Person'PhoneNumber'Type'unknown' Word16
 
 Note that we use the single quote character as a namespace separator for
 namespaces within a single capnproto schema.
@@ -199,79 +193,72 @@ The module `Data.Capnp.Pure` exposes the most frequently used
 functionality from the high level API. We can output an address book
 message to standard output like so:
 
-@
-{-# LANGUAGE OverloadedStrings     #-}
--- Note that DuplicateRecordFields is usually needed, as the generated
--- code relys on it to resolve collisions in capnproto struct field
--- names:
-{-# LANGUAGE DuplicateRecordFields #-}
-import Capnp.Addressbook.Pure
-
--- Note that Data.Capnp.Pure re-exports `def`, as a convienence
-import Data.Capnp.Pure (putValue, def)
-
-import qualified Data.Vector as V
-
-main = putValue AddressBook
-    { people = V.fromList
-        [ Person
-            { id = 123
-            , name = \"Alice\"
-            , email = "alice@example.com"
-            , phones = V.fromList
-                [ def
-                    { number = "555-1212"
-                    , type_ =  Person'PhoneNumber'Type'mobile
-                    }
-                ]
-            , employment = Person'employment'school \"MIT\"
-            }
-        , Person
-            { id = 456
-            , name = \"Bob\"
-            , email = "bob@example.com"
-            , phones = V.fromList
-                [ def
-                    { number = "555-4567"
-                    , type_ = Person'PhoneNumber'Type'home
-                    }
-                , def
-                    { number = "555-7654"
-                    , type_ = Person'PhoneNumber'Type'work
-                    }
-                ]
-            , employment = Person'employment'selfEmployed
-            }
-        ]
-    }
-
-@
+> {-# LANGUAGE OverloadedStrings     #-}
+> -- Note that DuplicateRecordFields is usually needed, as the generated
+> -- code relys on it to resolve collisions in capnproto struct field
+> -- names:
+> {-# LANGUAGE DuplicateRecordFields #-}
+> import Capnp.Addressbook.Pure
+>
+> -- Note that Data.Capnp.Pure re-exports `def`, as a convienence
+> import Data.Capnp.Pure (putValue, def)
+>
+> import qualified Data.Vector as V
+>
+> main = putValue AddressBook
+>     { people = V.fromList
+>         [ Person
+>             { id = 123
+>             , name = "Alice"
+>             , email = "alice@example.com"
+>             , phones = V.fromList
+>                 [ def
+>                     { number = "555-1212"
+>                     , type_ =  Person'PhoneNumber'Type'mobile
+>                     }
+>                 ]
+>             , employment = Person'employment'school "MIT"
+>             }
+>         , Person
+>             { id = 456
+>             , name = "Bob"
+>             , email = "bob@example.com"
+>             , phones = V.fromList
+>                 [ def
+>                     { number = "555-4567"
+>                     , type_ = Person'PhoneNumber'Type'home
+>                     }
+>                 , def
+>                     { number = "555-7654"
+>                     , type_ = Person'PhoneNumber'Type'work
+>                     }
+>                 ]
+>             , employment = Person'employment'selfEmployed
+>             }
+>         ]
+>     }
 
 'putValue' is equivalent to @'hPutValue' 'stdout'@; 'hPutValue' may be used
 to write to an arbitrary handle.
 
 We can use 'getValue' (or alternately 'hGetValue') to read in a message:
 
-@
--- ...
-
-import Data.Capnp.Pure (getValue, defaultLimit)
-
--- ...
-
-main = do
-    value <- getValue defaultLimit
-    print (value :: AddressBook)
-@
+> -- ...
+>
+> import Data.Capnp.Pure (getValue, defaultLimit)
+>
+> -- ...
+>
+> main = do
+>     value <- getValue defaultLimit
+>     print (value :: AddressBook)
 
 Note the type annotation; there are a number of interfaces in the
 library which dispatch on return types, and depending on how they are
 used you may have to give GHC a hint for type inference to succeed.
 The type of 'getValue' is:
 
-@
-'getValue' :: 'FromStruct' 'ConstMsg' a => 'Int' -> 'IO' a
-@
+> 'getValue' :: 'FromStruct' 'ConstMsg' a => 'Int' -> 'IO' a
 
 ...and so it may be used to read in any struct type.
 
@@ -397,26 +384,24 @@ Note the following:
 
 The snippet below prints the names of each person in the address book:
 
-@
-{-# LANGUAGE ScopedTypeVariables #-}
-import Prelude hiding (length)
-
-import Capnp.Addressbook
-import Data.Capnp
-    (ConstMsg, defaultLimit, evalLimitT, getValue, index, length, textBytes)
-
-import           Control.Monad         (forM_)
-import           Control.Monad.Trans   (lift)
-import qualified Data.ByteString.Char8 as BS8
-
-main = do
-    addressbook :: AddressBook ConstMsg <- getValue defaultLimit
-    evalLimitT defaultLimit $ do
-        people <- get_AddressBook'people addressbook
-        forM_ [0..length people - 1] $ \i -> do
-            name \<- index i people >>= get_Person'name >>= textBytes
-            lift $ BS8.putStrLn name
-@
+> {-# LANGUAGE ScopedTypeVariables #-}
+> import Prelude hiding (length)
+>
+> import Capnp.Addressbook
+> import Data.Capnp
+>     (ConstMsg, defaultLimit, evalLimitT, getValue, index, length, textBytes)
+>
+> import           Control.Monad         (forM_)
+> import           Control.Monad.Trans   (lift)
+> import qualified Data.ByteString.Char8 as BS8
+>
+> main = do
+>     addressbook :: AddressBook ConstMsg <- getValue defaultLimit
+>     evalLimitT defaultLimit $ do
+>         people <- get_AddressBook'people addressbook
+>         forM_ [0..length people - 1] $ \i -> do
+>             name <- index i people >>= get_Person'name >>= textBytes
+>             lift $ BS8.putStrLn name
 
 Note that we use the same `getValue` function as in the high-level
 example above.
