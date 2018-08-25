@@ -1,6 +1,10 @@
-{-|
+{- |
 Module: Data.Capnp.Tutorial
 Description: Tutorial for the Haskell Cap'N Proto library.
+
+This module provides a tutorial on the overall usage of the library. Note that
+it does not aim to provide a thorough introduction to capnproto itself; see
+<https://capnproto.org> for general information.
 
 -}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
