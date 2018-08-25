@@ -15,7 +15,8 @@ usable, with some limitations:
   type.
 
 There is a module `Data.Capnp.Tutorial` which contains an introduction
-to the library.
+to the library; users are *strongly* encouraged to read this first, as
+the reference documentation can be bewildering without that context.
 
 The API is considered unstable. It will likely see changes, for the
 sake of polish, consistency, etc. as well as to improve performance and
