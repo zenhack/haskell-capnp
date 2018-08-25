@@ -41,7 +41,7 @@ extra-source-files:
   , scripts/hlint.sh
   , scripts/README.md
   , scripts/regen.sh
-  , .stylish-haskell
+  , .stylish-haskell.yaml
   , .gitattributes
   , .gitignore
   , .gitlab-ci.yml
