@@ -1,6 +1,6 @@
 [![build status][ci-img]][ci]
 
-A Haskell [capnproto][1] library.
+A Haskell library for the [Cap'N Proto][1] Cerialization protocol.
 
 Serialization (read & write) support is mostly finished, and already
 usable, with some limitations:
