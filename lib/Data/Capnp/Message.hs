@@ -12,7 +12,7 @@ Description: Cap'N Proto messages
 module Data.Capnp.Message
     ( Message(..)
     , ConstMsg(..)
-    , MutMsg(..)
+    , MutMsg
     , WriteCtx(..)
     , Mutable(..)
     , getSegment
