@@ -26,7 +26,7 @@ module Data.Capnp.Message (
     , Message(..)
     -- * Immutable messages
     , empty
-    , ConstMsg(..)
+    , ConstMsg
 
     -- * Reading data from messages
     , getSegment
