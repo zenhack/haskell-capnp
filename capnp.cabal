@@ -19,7 +19,7 @@ description:
   unstable, and is likely to change to accomodate RPC, facilitate improved
   performance, etc.
   .
-  The 'Data.Capnp.Tutorial' module is the best place to start reading; the
+  The "Data.Capnp.Tutorial" module is the best place to start reading; the
   reference documentation can seem bewildering without that context.
 build-type:               Simple
 extra-source-files:

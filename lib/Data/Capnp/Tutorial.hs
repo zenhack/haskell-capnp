@@ -42,8 +42,6 @@ import Data.Capnp.Pure
 
 import Data.Capnp.Classes (FromStruct)
 
-import qualified Data.Capnp.TraversalLimit
-
 {- $overview
 
 The API is roughly divided into two parts: a low level API and a high
@@ -128,8 +126,8 @@ This will create the following files relative to the current directory:
 * Capnp\/ById\/Xcd6db6afb4a0cf5c.hs
 
 The modules under @ById@ are an implementation detail.
-@Capnp/Addressbook.hs@ is generated code for use with the low level API.
-@Capnp/Addressbook/Pure.hs@ is generated code for use with the high
+@Capnp\/Addressbook.hs@ is generated code for use with the low level API.
+@Capnp\/Addressbook\/Pure.hs@ is generated code for use with the high
 level API. It will export the following data declarations (cleaned up
 for readability).
 
@@ -178,7 +176,7 @@ The module also exports instances of several type classes:
 * 'Show'
 * 'Read'
 * 'Eq'
-* 'Generic' from 'GHC.Generics'
+* 'Generic' from "GHC.Generics"
 * 'Default' from the @data-default@ package.
 * A number of type classes defined by the @capnp@ package.
 * Capnproto enums additionally implement the 'Enum' type class.
@@ -264,13 +262,13 @@ The type of 'getValue' is:
 
 'defaultLimit' is a default value for the traversal limit, which acts to
 prevent denial of service vulnerabilities; See the documentation in
-@Data.Capnp.TraversalLimit@ for more information. 'getValue' uses this
+"Data.Capnp.TraversalLimit" for more information. 'getValue' uses this
 argument both to catch values that would cause excessive resource usage,
 and to simply limit the overall size of the incoming message. The
 default is approximately 64 MiB.
 
 If an error occurs, an exception will be thrown of type 'Error' from the
-`Data.Capnp.Errors` module.
+"Data.Capnp.Errors" module.
 
 -}
 
@@ -285,7 +283,7 @@ The complete rules for how capnproto types map to Haskell are as follows:
 * Lists map to 'Vector's from the Haskell vector package. Note that
   right now we use boxed vectors for everything; at some point this will
   likely change for performance reasons. Using the functions from
-  'Data.Vector.Generic' will probably decrease the amount of code you
+  "Data.Vector.Generic" will probably decrease the amount of code you
   will need to modify when upgrading.
 * @Text@ maps to (strict) 'T.Text' from the Haskell `text` package.
 * @Data@ maps to (strict) 'BS.ByteString's
@@ -339,7 +337,7 @@ traversal limit needs to be tracked to avoid denial of service attacks.
 
 Because of this, access to the message must occur inside of a monad
 which is an instance of `MonadThrow` from the exceptions package, and
-`MonadLimit`, which is defined in `Data.Capnp.TraversalLimit`. We define
+`MonadLimit`, which is defined in "Data.Capnp.TraversalLimit". We define
 a monad transformer `LimitT` for the latter.
 
 -}
