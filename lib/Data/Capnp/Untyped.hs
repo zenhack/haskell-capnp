@@ -16,7 +16,7 @@ The types and functions in this module know about things like structs and
 lists, but are not schema aware.
 
 Each of the data types exported by this module is parametrized over a Message
-type (see 'Data.Capnp.Message'), used as the underlying storage.
+type (see "Data.Capnp.Message"), used as the underlying storage.
 -}
 module Data.Capnp.Untyped
     ( Ptr(..), List(..), Struct, ListOf

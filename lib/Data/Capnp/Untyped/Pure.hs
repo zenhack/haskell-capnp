@@ -13,7 +13,7 @@
 
     In addition to the algebraic data types themselves, this module also
     provides support for converting from the lower-level types in
-    Data.Capnp.Untyped.
+    "Data.Capnp.Untyped".
 -}
 module Data.Capnp.Untyped.Pure
     ( Cap(..)
