@@ -8,32 +8,46 @@
 Module: Data.Capnp.Message
 Description: Cap'N Proto messages
 
+This module provides support for working directly with Cap'N Proto messages.
 -}
-module Data.Capnp.Message
-    ( Message(..)
-    , ConstMsg(..)
-    , MutMsg
-    , WriteCtx(..)
-    , Mutable(..)
-    , getSegment
-    , getWord
-    , setSegment
-    , setWord
-    , encode
-    , decode
-    , alloc
-    , allocInSeg
-    , newMessage
-    , newSegment
-    , empty
-    , maxSegmentSize
-    , maxSegments
-    , hPutMsg
+module Data.Capnp.Message (
+    -- * Reading and writing messages
+      hPutMsg
     , hGetMsg
     , putMsg
     , getMsg
-    )
-  where
+    -- * Limits on message size
+    , maxSegmentSize
+    , maxSegments
+    -- * Converting between messages and 'ByteString's
+    , encode
+    , decode
+
+    , Message(..)
+    -- * Immutable messages
+    , empty
+    , ConstMsg(..)
+
+    -- * Reading data from messages
+    , getSegment
+    , getWord
+
+    -- * Mutable Messages
+    , MutMsg
+    , newMessage
+
+    -- ** Allocating space
+    , alloc
+    , allocInSeg
+    , newSegment
+
+    -- ** Modifying messages
+    , setWord
+    , setSegment
+
+    , WriteCtx(..)
+    , Mutable(..)
+    ) where
 
 import Prelude hiding (read)
 
