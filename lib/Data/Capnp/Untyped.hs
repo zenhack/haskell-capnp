@@ -247,64 +247,100 @@ tFlipP f list  = unflipP <$> tMsg f (FlipListP list)
 
 instance Thaw msg => Thaw (Ptr msg) where
     type Mutable s (Ptr msg) = Ptr (Mutable s msg)
-    thaw = tMsg thaw
-    freeze = tMsg freeze
+
+    thaw         = tMsg thaw
+    freeze       = tMsg freeze
+    unsafeThaw   = tMsg unsafeThaw
+    unsafeFreeze = tMsg unsafeFreeze
 
 instance Thaw msg => Thaw (List msg) where
     type Mutable s (List msg) = List (Mutable s msg)
-    thaw = tMsg thaw
-    freeze = tMsg freeze
+
+    thaw         = tMsg thaw
+    freeze       = tMsg freeze
+    unsafeThaw   = tMsg unsafeThaw
+    unsafeFreeze = tMsg unsafeFreeze
 
 instance Thaw msg => Thaw (NormalList msg) where
     type Mutable s (NormalList msg) = NormalList (Mutable s msg)
-    thaw = tMsg thaw
-    freeze = tMsg freeze
+
+    thaw         = tMsg thaw
+    freeze       = tMsg freeze
+    unsafeThaw   = tMsg unsafeThaw
+    unsafeFreeze = tMsg unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg ()) where
     type Mutable s (ListOf msg ()) = ListOf (Mutable s msg) ()
-    thaw = tFlip thaw
-    freeze = tFlip freeze
+
+    thaw         = tFlip thaw
+    freeze       = tFlip freeze
+    unsafeThaw   = tFlip unsafeThaw
+    unsafeFreeze = tFlip unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg Bool) where
     type Mutable s (ListOf msg Bool) = ListOf (Mutable s msg) Bool
-    thaw = tFlip thaw
-    freeze = tFlip freeze
+
+    thaw         = tFlip thaw
+    freeze       = tFlip freeze
+    unsafeThaw   = tFlip unsafeThaw
+    unsafeFreeze = tFlip unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg Word8) where
     type Mutable s (ListOf msg Word8) = ListOf (Mutable s msg) Word8
-    thaw = tFlip thaw
-    freeze = tFlip freeze
+
+    thaw         = tFlip thaw
+    freeze       = tFlip freeze
+    unsafeThaw   = tFlip unsafeThaw
+    unsafeFreeze = tFlip unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg Word16) where
     type Mutable s (ListOf msg Word16) = ListOf (Mutable s msg) Word16
-    thaw = tFlip thaw
-    freeze = tFlip freeze
+
+    thaw         = tFlip thaw
+    freeze       = tFlip freeze
+    unsafeThaw   = tFlip unsafeThaw
+    unsafeFreeze = tFlip unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg Word32) where
     type Mutable s (ListOf msg Word32) = ListOf (Mutable s msg) Word32
-    thaw = tFlip thaw
-    freeze = tFlip freeze
+
+    thaw         = tFlip thaw
+    freeze       = tFlip freeze
+    unsafeThaw   = tFlip unsafeThaw
+    unsafeFreeze = tFlip unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg Word64) where
     type Mutable s (ListOf msg Word64) = ListOf (Mutable s msg) Word64
-    thaw = tFlip thaw
-    freeze = tFlip freeze
+
+    thaw         = tFlip thaw
+    freeze       = tFlip freeze
+    unsafeThaw   = tFlip unsafeThaw
+    unsafeFreeze = tFlip unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg (Struct msg)) where
     type Mutable s (ListOf msg (Struct msg)) = ListOf (Mutable s msg) (Struct (Mutable s msg))
-    thaw = tFlipS thaw
-    freeze = tFlipS freeze
+
+    thaw         = tFlipS thaw
+    freeze       = tFlipS freeze
+    unsafeThaw   = tFlipS unsafeThaw
+    unsafeFreeze = tFlipS unsafeFreeze
 
 instance Thaw msg => Thaw (ListOf msg (Maybe (Ptr msg))) where
     type Mutable s (ListOf msg (Maybe (Ptr msg))) =
         ListOf (Mutable s msg) (Maybe (Ptr (Mutable s msg)))
-    thaw = tFlipP thaw
-    freeze = tFlipP freeze
+
+    thaw         = tFlipP thaw
+    freeze       = tFlipP freeze
+    unsafeThaw   = tFlipP unsafeThaw
+    unsafeFreeze = tFlipP unsafeFreeze
 
 instance Thaw msg => Thaw (Struct msg) where
     type Mutable s (Struct msg) = Struct (Mutable s msg)
-    thaw = tMsg thaw
-    freeze = tMsg freeze
+
+    thaw         = tMsg thaw
+    freeze       = tMsg freeze
+    unsafeThaw   = tMsg unsafeThaw
+    unsafeFreeze = tMsg unsafeFreeze
 
 -------------------------------------------------------------------------------
 
