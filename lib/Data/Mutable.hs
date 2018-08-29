@@ -57,3 +57,7 @@ class Thaw a where
 -- caller after freezing.
 create :: Thaw a => (forall s. ST s (Mutable s a)) -> a
 create st = runST (st >>= unsafeFreeze)
+
+-- | Like 'create', but the result is wrapped in an instance of 'Traversable'.
+createT :: (Traversable f, Thaw a) => (forall s. ST s (f (Mutable s a))) -> f a
+createT st = runST (st >>= traverse unsafeFreeze)
