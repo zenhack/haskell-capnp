@@ -50,6 +50,10 @@ module Data.Capnp
 
     -- * Freezing and thawing values
     , module Data.Mutable
+
+    -- * Building messages in pure code
+    , PureBuilder
+    , createPure
     ) where
 
 import Control.Monad.Catch (MonadThrow)
@@ -60,7 +64,8 @@ import qualified Data.ByteString.Builder as BB
 import Data.Capnp.TraversalLimit
 import Data.Mutable
 
-import Data.Capnp.IO (getValue, hGetValue)
+import Data.Capnp.IO      (getValue, hGetValue)
+import Internal.BuildPure (PureBuilder, createPure)
 
 import qualified Codec.Capnp        as Codec
 import qualified Data.Capnp.Basics  as Basics

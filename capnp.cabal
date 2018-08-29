@@ -134,6 +134,7 @@ library
     other-modules:
         Internal.Util
       , Internal.Gen.Instances
+      , Internal.BuildPure
       , Codec.Capnp
     -- other-extensions:
     build-depends:
