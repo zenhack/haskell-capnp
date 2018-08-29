@@ -396,27 +396,38 @@ newMessage = thaw empty
 instance Thaw (Segment ConstMsg) where
     type Mutable s (Segment ConstMsg) = Segment (MutMsg s)
 
-    thaw (ConstSegment vec) = do
-        mvec <- SV.thaw vec
-        pure MutSegment
-            { mutSegVec = mvec
-            , mutSegLen = SV.length vec
-            }
-    freeze seg@MutSegment{mutSegLen} = do
-        -- Slice before freezing, so we don't waste time copying
-        -- the unallocated portion:
-        MutSegment{mutSegVec} <- slice 0 mutSegLen seg
-        ConstSegment <$> SV.freeze mutSegVec
+    thaw         = thawSeg   SV.thaw
+    unsafeThaw   = thawSeg   SV.unsafeThaw
+    freeze       = freezeSeg SV.freeze
+    unsafeFreeze = freezeSeg SV.unsafeFreeze
 
+-- Helpers for @Segment ConstMsg@'s Thaw instance.
+thawSeg thaw (ConstSegment vec) = do
+    mvec <- thaw vec
+    pure MutSegment
+        { mutSegVec = mvec
+        , mutSegLen = SV.length vec
+        }
+freezeSeg freeze seg@MutSegment{mutSegLen} = do
+    -- Slice before freezing, so we don't waste time copying
+    -- the unallocated portion:
+    MutSegment{mutSegVec} <- slice 0 mutSegLen seg
+    ConstSegment <$> freeze mutSegVec
 
 instance Thaw ConstMsg where
     type Mutable s ConstMsg = MutMsg s
 
-    thaw (ConstMsg vec) = do
-        segments <- V.mapM thaw vec >>= V.thaw
-        MutMsg
-            <$> newMutVar segments
-            <*> newMutVar (MV.length segments)
-    freeze msg@MutMsg{mutMsgLen} = do
+    thaw         = thawMsg   thaw
+    unsafeThaw   = thawMsg   unsafeThaw
+    freeze       = freezeMsg freeze
+    unsafeFreeze = freezeMsg unsafeFreeze
+
+-- Helpers for ConstMsg's Thaw instance.
+thawMsg thaw (ConstMsg vec) = do
+    segments <- V.mapM thaw vec >>= V.unsafeThaw
+    MutMsg
+        <$> newMutVar segments
+        <*> newMutVar (MV.length segments)
+freezeMsg freeze msg@MutMsg{mutMsgLen} = do
         len <- readMutVar mutMsgLen
         ConstMsg <$> V.generateM len (internalGetSeg msg >=> freeze)
