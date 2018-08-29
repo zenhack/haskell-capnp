@@ -131,6 +131,21 @@ class Mutable a where
     -- | Convert a mutable value to an immutable one.
     freeze :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
 
+    -- | Like 'thaw', except that the caller is responsible for ensuring that
+    -- the original value is not subsequently used; doing so may violate
+    -- referential transparency.
+    --
+    -- The default implementation of this is just the same as 'thaw', but
+    -- typically an instance will override this with a trivial (unsafe) cast,
+    -- hence the obligation described above.
+    unsafeThaw :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
+    unsafeThaw = thaw
+
+    -- | Unsafe version of 'freeze' analagous to 'unsafeThaw'. The caller must
+    -- ensure that the original value is not used after this call.
+    unsafeFreeze :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
+    unsafeFreeze = freeze
+
 -- | @'getSegment' message index@ fetches the given segment in the message.
 -- It throws a @BoundsError@ if the address is out of bounds.
 getSegment :: (MonadThrow m, Message m msg) => msg -> Int -> m (Segment msg)
