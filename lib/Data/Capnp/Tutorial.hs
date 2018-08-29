@@ -410,27 +410,34 @@ example above.
 Writing messages using the low-level API has a similarly imperative feel.
 The below constructs the same message as in our high-level example above:
 
-> {-# LANGUAGE DuplicateRecordFields #-}
 > import Capnp.Addressbook
 >
-> import Capnp.Addressbook.Pure (Person'PhoneNumber(..))
->
 > import Data.Capnp
->     (defaultLimit, evalLimitT, freeze, index, newMessage, newRoot, putMsg)
-> import Data.Capnp.Pure (cerialize, def)
+>     ( MutMsg
+>     , PureBuilder
+>     , createPure
+>     , defaultLimit
+>     , index
+>     , newMessage
+>     , newRoot
+>     , putMsg
+>     )
+> import Data.Capnp.Pure (cerialize)
 >
-> import qualified Data.Text   as T
-> import qualified Data.Vector as V
+> import qualified Data.Text as T
 >
-> main = evalLimitT defaultLimit buildMsg >>= putMsg
+> main =
+>     let Right msg = createPure defaultLimit buildMsg
+>     in putMsg msg
 >
+> buildMsg :: PureBuilder s (MutMsg s)
 > buildMsg = do
 >     -- newMessage allocates a new, initially empty, mutable message:
 >     msg <- newMessage
 >
 >     -- newRoot allocates a new struct as the root object of the message.
 >     -- In this case the type of the struct can be inferred from our later
->     -- use of Addressbook's accessors:
+>     -- use of AddressBook's accessors:
 >     addressbook <- newRoot msg
 >
 >     -- new_* accessors allocate a new value of the correct type for a
@@ -485,5 +492,5 @@ The below constructs the same message as in our high-level example above:
 >     employment <- get_Person'employment bob
 >     set_Person'employment'selfEmployed employment
 >
->     freeze msg
+>     pure msg
 -}
