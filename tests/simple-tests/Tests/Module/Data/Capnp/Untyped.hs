@@ -19,6 +19,7 @@ import Data.Capnp.Untyped
 import Tests.Util
 
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
+import Data.Mutable              (Thaw(..))
 
 import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
@@ -261,9 +262,9 @@ modifyTests = testGroup "Test modification" $ map testCase
     testCase ModTest{..} = assertionsToTest
             (show testIn ++ " : " ++ testType ++ " == " ++ show testOut) $
             pure $ do
-        msg <- M.thaw =<< encodeValue schemaText testType testIn
+        msg <- thaw =<< encodeValue schemaText testType testIn
         evalLimitT 128 $ rootPtr msg >>= testMod
-        actualOut <- decodeValue schemaText testType =<< M.freeze msg
+        actualOut <- decodeValue schemaText testType =<< freeze msg
         assertEqual ( actualOut ++ " == " ++ testOut) actualOut testOut
     schemaText = [there|tests/data/aircraft.capnp|]
 

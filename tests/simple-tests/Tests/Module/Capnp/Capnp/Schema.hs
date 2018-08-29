@@ -10,6 +10,7 @@ import Capnp.Capnp.Schema
 
 import Data.Capnp                (newRoot)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
+import Data.Mutable              (Thaw(..))
 import Tests.Util                (assertionsToTest, decodeValue)
 
 import qualified Data.Capnp.Message as M
@@ -44,7 +45,7 @@ schemaTests = assertionsToTest "Test typed setters" $ map testCase
     testCase BuildTest{..} = do
         msg <- M.newMessage
         evalLimitT maxBound $ builder msg
-        constMsg <- M.freeze msg
+        constMsg <- freeze msg
         actual <- decodeValue schemaSchema typeName constMsg
         when (actual /= expected) $
             error $ "Expected:\n\n" ++ show expected ++ "\n\n...but got:\n\n" ++ show actual

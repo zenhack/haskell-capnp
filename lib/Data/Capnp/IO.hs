@@ -17,6 +17,7 @@ import Codec.Capnp               (getRoot, setRoot)
 import Data.Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
+import Data.Mutable              (Thaw(..))
 
 import qualified Data.Capnp.Message as M
 
@@ -40,7 +41,7 @@ hPutValue handle value = do
     msg <- M.newMessage
     root <- evalLimitT maxBound $ cerialize msg value
     setRoot root
-    constMsg <- M.freeze msg
+    constMsg <- freeze msg
     M.hPutMsg handle constMsg
 
 -- | 'putValue' is equivalent to @'hPutValue' 'stdin'@

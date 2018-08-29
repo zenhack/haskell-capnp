@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 module Tests.Module.Capnp.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
@@ -44,6 +45,7 @@ import Data.Capnp.Classes
     )
 import Data.Capnp.Pure           (hGetValue, hPutValue)
 import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
+import Data.Mutable              (Thaw(..))
 
 import qualified Data.Capnp.Message      as M
 import qualified Data.Capnp.Untyped      as U
@@ -82,7 +84,7 @@ encodeTests = testGroup "schema encode tests"
                 msg <- M.newMessage
                 cerialOut <- cerialize msg expectedValue
                 setRoot cerialOut
-                M.freeze msg
+                freeze msg
             builder <- M.encode msg
             actualText <- capnpDecode
                 (LBS.toStrict $ BB.toLazyByteString builder)
@@ -801,7 +803,7 @@ prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
         msg <- M.newMessage
         cerialOut <- cerialize msg expected
         setRoot cerialOut
-        constMsg <- M.freeze msg
+        constMsg :: M.ConstMsg <- freeze msg
         root <- U.rootPtr constMsg
         cerialIn <- fromStruct root
         decerialize cerialIn

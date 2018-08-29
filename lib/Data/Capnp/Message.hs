@@ -46,7 +46,6 @@ module Data.Capnp.Message (
     , setSegment
 
     , WriteCtx(..)
-    , Mutable(..)
     ) where
 
 import Prelude hiding (read)
@@ -394,9 +393,8 @@ empty = ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
 newMessage :: WriteCtx m s => m (MutMsg s)
 newMessage = thaw empty
 
-instance Mutable (Segment (MutMsg s)) where
-    type Scope (Segment (MutMsg s)) = s
-    type Frozen (Segment (MutMsg s)) = Segment ConstMsg
+instance Thaw (Segment ConstMsg) where
+    type Mutable s (Segment ConstMsg) = Segment (MutMsg s)
 
     thaw (ConstSegment vec) = do
         mvec <- SV.thaw vec
@@ -411,9 +409,8 @@ instance Mutable (Segment (MutMsg s)) where
         ConstSegment <$> SV.freeze mutSegVec
 
 
-instance Mutable (MutMsg s) where
-    type Scope (MutMsg s) = s
-    type Frozen (MutMsg s) = ConstMsg
+instance Thaw ConstMsg where
+    type Mutable s ConstMsg = MutMsg s
 
     thaw (ConstMsg vec) = do
         segments <- V.mapM thaw vec >>= V.thaw

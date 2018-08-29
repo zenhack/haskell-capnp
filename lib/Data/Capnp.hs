@@ -20,7 +20,6 @@ module Data.Capnp
     -- * Working with messages
     , Message.ConstMsg
     , Message.Message(..)
-    , Message.Mutable(..)
     , Message.MutMsg
     , Message.newMessage
     , decodeMessage
@@ -48,6 +47,9 @@ module Data.Capnp
 
     -- * Managing resource limits
     , module Data.Capnp.TraversalLimit
+
+    -- * Freezing and thawing values
+    , module Data.Mutable
     ) where
 
 import Control.Monad.Catch (MonadThrow)
@@ -56,6 +58,7 @@ import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 
 import Data.Capnp.TraversalLimit
+import Data.Mutable
 
 import Data.Capnp.IO (getValue, hGetValue)
 
