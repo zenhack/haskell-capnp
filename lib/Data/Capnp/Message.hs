@@ -126,10 +126,10 @@ class Mutable a where
     type Frozen a
 
     -- | Convert an immutable value to a mutable one.
-    thaw :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
+    thaw :: (PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
 
     -- | Convert a mutable value to an immutable one.
-    freeze :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
+    freeze :: (PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
 
     -- | Like 'thaw', except that the caller is responsible for ensuring that
     -- the original value is not subsequently used; doing so may violate
@@ -138,12 +138,12 @@ class Mutable a where
     -- The default implementation of this is just the same as 'thaw', but
     -- typically an instance will override this with a trivial (unsafe) cast,
     -- hence the obligation described above.
-    unsafeThaw :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
+    unsafeThaw :: (PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
     unsafeThaw = thaw
 
     -- | Unsafe version of 'freeze' analagous to 'unsafeThaw'. The caller must
     -- ensure that the original value is not used after this call.
-    unsafeFreeze :: (MonadThrow m, PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
+    unsafeFreeze :: (PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
     unsafeFreeze = freeze
 
 -- | @'getSegment' message index@ fetches the given segment in the message.
@@ -184,13 +184,11 @@ setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
 -- the underlying bytes are not copied.
 newtype ConstMsg = ConstMsg (V.Vector (Segment ConstMsg))
 
-instance MonadThrow m => Message m ConstMsg where
+instance Monad m => Message m ConstMsg where
     newtype Segment ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
 
     numSegs (ConstMsg vec) = pure $ V.length vec
-    internalGetSeg (ConstMsg vec) i = do
-        checkIndex i (V.length vec)
-        vec `V.indexM` i
+    internalGetSeg (ConstMsg vec) i = vec `V.indexM` i
 
     numWords (ConstSegment vec) = pure $ SV.length vec
     slice start len (ConstSegment vec) = pure $ ConstSegment (SV.slice start len vec)
@@ -317,7 +315,7 @@ data MutMsg s = MutMsg
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 
-instance WriteCtx m s => Message m (MutMsg s) where
+instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
     data Segment (MutMsg s) = MutSegment
         { mutSegVec :: !(SMV.MVector s Word64)
         -- ^ The underlying vector of words storing segment's data.
@@ -454,4 +452,4 @@ instance Mutable (MutMsg s) where
             <*> newMutVar (MV.length segments)
     freeze msg@MutMsg{mutMsgLen} = do
         len <- readMutVar mutMsgLen
-        ConstMsg <$> V.generateM len (getSegment msg >=> freeze)
+        ConstMsg <$> V.generateM len (internalGetSeg msg >=> freeze)
