@@ -78,6 +78,7 @@ import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
 import Data.Capnp.Errors         (Error(..))
 import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
+import Data.Mutable              (Mutable(..))
 import Internal.Util             (checkIndex)
 
 
@@ -114,37 +115,6 @@ class Monad m => Message m msg where
     fromByteString :: ByteString -> m (Segment msg)
     -- | Convert a segment to a byte string.
     toByteString :: Segment msg -> m ByteString
-
--- | The 'Mutable' type class relates mutable and immutable versions of a type.
--- The instance is defined on the mutable variant; @'Frozen' a@ is the immutable
--- version of a mutable type @a@.
-class Mutable a where
-    -- | The state token for a mutable value.
-    type Scope a
-
-    -- | The immutable version of @a@.
-    type Frozen a
-
-    -- | Convert an immutable value to a mutable one.
-    thaw :: (PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
-
-    -- | Convert a mutable value to an immutable one.
-    freeze :: (PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
-
-    -- | Like 'thaw', except that the caller is responsible for ensuring that
-    -- the original value is not subsequently used; doing so may violate
-    -- referential transparency.
-    --
-    -- The default implementation of this is just the same as 'thaw', but
-    -- typically an instance will override this with a trivial (unsafe) cast,
-    -- hence the obligation described above.
-    unsafeThaw :: (PrimMonad m, PrimState m ~ Scope a) => Frozen a -> m a
-    unsafeThaw = thaw
-
-    -- | Unsafe version of 'freeze' analagous to 'unsafeThaw'. The caller must
-    -- ensure that the original value is not used after this call.
-    unsafeFreeze :: (PrimMonad m, PrimState m ~ Scope a) => a -> m (Frozen a)
-    unsafeFreeze = freeze
 
 -- | @'getSegment' message index@ fetches the given segment in the message.
 -- It throws a @BoundsError@ if the address is out of bounds.
