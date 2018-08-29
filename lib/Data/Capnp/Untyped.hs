@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -133,106 +134,179 @@ data Struct msg
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
+-- | 'TraverseMsg' is basically 'Traversable' from the prelude, but
+-- the intent is that rather than conceptually being a "container",
+-- the instance is a value backed by a message, and the point of the
+-- type class is to be able to apply transformations to the underlying
+-- message.
+--
+-- We don't just use 'Traversable' for this because while algebraically
+-- it makes sense, it would be very surprising to users to e.g.
+-- have the 'Traversable' instance for 'List' not traverse over the
+-- *elements* of the list.
+--
+-- We also don't export this; it is mainly an implementation detail for
+-- the 'Thaw' instances for these data types, which all just that/freeze
+-- the underlying message.
+class TraverseMsg f where
+    tMsg :: Applicative m => (msgA -> m msgB) -> f msgA -> m (f msgB)
+
+instance TraverseMsg Ptr where
+    tMsg f = \case
+        PtrCap msgA n ->
+            PtrCap <$> f msgA <*> pure n
+        PtrList l ->
+            PtrList <$> tMsg f l
+        PtrStruct s ->
+            PtrStruct <$> tMsg f s
+
+instance TraverseMsg Struct where
+    tMsg f (Struct msg addr dataSz ptrSz) = Struct
+        <$> f msg
+        <*> pure addr
+        <*> pure dataSz
+        <*> pure ptrSz
+
+instance TraverseMsg List where
+    tMsg f = \case
+        List0      l -> List0      . unflip  <$> tMsg f (FlipList  l)
+        List1      l -> List1      . unflip  <$> tMsg f (FlipList  l)
+        List8      l -> List8      . unflip  <$> tMsg f (FlipList  l)
+        List16     l -> List16     . unflip  <$> tMsg f (FlipList  l)
+        List32     l -> List32     . unflip  <$> tMsg f (FlipList  l)
+        List64     l -> List64     . unflip  <$> tMsg f (FlipList  l)
+        ListPtr    l -> ListPtr    . unflipP <$> tMsg f (FlipListP l)
+        ListStruct l -> ListStruct . unflipS <$> tMsg f (FlipListS l)
+
+instance TraverseMsg NormalList where
+    tMsg f NormalList{..} = do
+        msg <- f nMsg
+        pure NormalList { nMsg = msg, .. }
+
+-------------------------------------------------------------------------------
+-- newtype wrappers for the purpose of implementing 'TraverseMsg'; these adjust
+-- the shape of 'ListOf' so that we can define an instance. We need a couple
+-- different wrappers depending on the shape of the element type.
+-------------------------------------------------------------------------------
+
+-- 'FlipList' wraps a @ListOf msg a@ where 'a' is of kind @*@.
+newtype FlipList  a msg = FlipList  { unflip  :: ListOf msg a                 }
+
+-- 'FlipListS' wraps a @ListOf msg (Struct msg)@. We can't use 'FlipList' for
+-- our instances, because we need both instances of the 'msg' parameter to stay
+-- equal.
+newtype FlipListS   msg = FlipListS { unflipS :: ListOf msg (Struct msg)      }
+
+-- 'FlipListP' wraps a @ListOf msg (Maybe (Ptr msg))@. Pointers can't use
+-- 'FlipList' for the same reason as structs.
+newtype FlipListP   msg = FlipListP { unflipP :: ListOf msg (Maybe (Ptr msg)) }
+
+-------------------------------------------------------------------------------
+-- 'TraverseMsg' instances for 'FlipList'
+-------------------------------------------------------------------------------
+
+instance TraverseMsg (FlipList ()) where
+    tMsg f (FlipList (ListOfVoid msg len)) = FlipList <$> (ListOfVoid <$> f msg <*> pure len)
+
+instance TraverseMsg (FlipList Bool) where
+    tMsg f (FlipList (ListOfBool   nlist)) = FlipList . ListOfBool   <$> tMsg f nlist
+
+instance TraverseMsg (FlipList Word8) where
+    tMsg f (FlipList (ListOfWord8  nlist)) = FlipList . ListOfWord8  <$> tMsg f nlist
+
+instance TraverseMsg (FlipList Word16) where
+    tMsg f (FlipList (ListOfWord16 nlist)) = FlipList . ListOfWord16 <$> tMsg f nlist
+
+instance TraverseMsg (FlipList Word32) where
+    tMsg f (FlipList (ListOfWord32 nlist)) = FlipList . ListOfWord32 <$> tMsg f nlist
+
+instance TraverseMsg (FlipList Word64) where
+    tMsg f (FlipList (ListOfWord64 nlist)) = FlipList . ListOfWord64 <$> tMsg f nlist
+
+-------------------------------------------------------------------------------
+-- 'TraverseMsg' instances for struct and pointer lists.
+-------------------------------------------------------------------------------
+
+instance TraverseMsg FlipListP where
+    tMsg f (FlipListP (ListOfPtr nlist))   = FlipListP . ListOfPtr   <$> tMsg f nlist
+
+instance TraverseMsg FlipListS where
+    tMsg f (FlipListS (ListOfStruct tag size)) =
+        FlipListS <$> (ListOfStruct <$> tMsg f tag <*> pure size)
+
+-- helpers for applying tMsg to a @ListOf@.
+tFlip  f list  = unflip  <$> tMsg f (FlipList  list)
+tFlipS f list  = unflipS <$> tMsg f (FlipListS list)
+tFlipP f list  = unflipP <$> tMsg f (FlipListP list)
+
+-------------------------------------------------------------------------------
+-- Boilerplate 'Thaw' instances.
+--
+-- These all just call the underlying methods on the message, using 'TraverseMsg'.
+-------------------------------------------------------------------------------
+
 instance Thaw msg => Thaw (Ptr msg) where
     type Mutable s (Ptr msg) = Ptr (Mutable s msg)
-    thaw (PtrCap cmsg n) = do
-        mmsg <- thaw cmsg
-        pure $ PtrCap mmsg n
-    thaw (PtrList l) = PtrList <$> thaw l
-    thaw (PtrStruct s) = PtrStruct <$> thaw s
-    freeze (PtrCap mmsg n) = do
-        cmsg <- freeze mmsg
-        pure $ PtrCap cmsg n
-    freeze (PtrList l) = PtrList <$> freeze l
-    freeze (PtrStruct s) = PtrStruct <$> freeze s
+    thaw = tMsg thaw
+    freeze = tMsg freeze
+
 instance Thaw msg => Thaw (List msg) where
     type Mutable s (List msg) = List (Mutable s msg)
+    thaw = tMsg thaw
+    freeze = tMsg freeze
 
-    thaw (List0 l)      = List0 <$> thaw l
-    thaw (List1 l)      = List1 <$> thaw l
-    thaw (List8 l)      = List8 <$> thaw l
-    thaw (List16 l)     = List16 <$> thaw l
-    thaw (List32 l)     = List32 <$> thaw l
-    thaw (List64 l)     = List64 <$> thaw l
-    thaw (ListPtr l)    = ListPtr <$> thaw l
-    thaw (ListStruct l) = ListStruct <$> thaw l
-    freeze (List0 l)      = List0 <$> freeze l
-    freeze (List1 l)      = List1 <$> freeze l
-    freeze (List8 l)      = List8 <$> freeze l
-    freeze (List16 l)     = List16 <$> freeze l
-    freeze (List32 l)     = List32 <$> freeze l
-    freeze (List64 l)     = List64 <$> freeze l
-    freeze (ListPtr l)    = ListPtr <$> freeze l
-    freeze (ListStruct l) = ListStruct <$> freeze l
 instance Thaw msg => Thaw (NormalList msg) where
     type Mutable s (NormalList msg) = NormalList (Mutable s msg)
-    thaw NormalList{..} = do
-        mmsg <- thaw nMsg
-        pure NormalList { nMsg = mmsg, .. }
-    freeze NormalList{..} = do
-        cmsg <- freeze nMsg
-        pure NormalList { nMsg = cmsg, .. }
+    thaw = tMsg thaw
+    freeze = tMsg freeze
+
 instance Thaw msg => Thaw (ListOf msg ()) where
     type Mutable s (ListOf msg ()) = ListOf (Mutable s msg) ()
-    thaw (ListOfVoid cmsg n) = do
-        mmsg <- thaw cmsg
-        pure $ ListOfVoid mmsg n
-    freeze (ListOfVoid mmsg n) = do
-        cmsg <- freeze mmsg
-        pure $ ListOfVoid cmsg n
+    thaw = tFlip thaw
+    freeze = tFlip freeze
 
--- Annoyingly, we can't just have an instance @Mutable (ListOf msg a)@
--- because that would require that the implementation to be valid for e.g.
--- @Mutable m (ListOf mmsg (Struct mmsg)) (ListOf cmsg (Struct mmsg))@ (note that the type
--- parameter for 'Struct' does not change). So, instead, we define a separate instance for
--- each possible parameter type.
---
--- TODO: generate this automatically.
 instance Thaw msg => Thaw (ListOf msg Bool) where
     type Mutable s (ListOf msg Bool) = ListOf (Mutable s msg) Bool
-    thaw (ListOfBool msg) = ListOfBool <$> thaw msg
-    freeze (ListOfBool msg) = ListOfBool <$> freeze msg
+    thaw = tFlip thaw
+    freeze = tFlip freeze
+
 instance Thaw msg => Thaw (ListOf msg Word8) where
     type Mutable s (ListOf msg Word8) = ListOf (Mutable s msg) Word8
-    thaw (ListOfWord8 msg) = ListOfWord8 <$> thaw msg
-    freeze (ListOfWord8 msg) = ListOfWord8 <$> freeze msg
+    thaw = tFlip thaw
+    freeze = tFlip freeze
+
 instance Thaw msg => Thaw (ListOf msg Word16) where
     type Mutable s (ListOf msg Word16) = ListOf (Mutable s msg) Word16
-    thaw (ListOfWord16 msg) = ListOfWord16 <$> thaw msg
-    freeze (ListOfWord16 msg) = ListOfWord16 <$> freeze msg
+    thaw = tFlip thaw
+    freeze = tFlip freeze
+
 instance Thaw msg => Thaw (ListOf msg Word32) where
     type Mutable s (ListOf msg Word32) = ListOf (Mutable s msg) Word32
-    thaw (ListOfWord32 msg) = ListOfWord32 <$> thaw msg
-    freeze (ListOfWord32 msg) = ListOfWord32 <$> freeze msg
+    thaw = tFlip thaw
+    freeze = tFlip freeze
+
 instance Thaw msg => Thaw (ListOf msg Word64) where
     type Mutable s (ListOf msg Word64) = ListOf (Mutable s msg) Word64
-    thaw (ListOfWord64 msg) = ListOfWord64 <$> thaw msg
-    freeze (ListOfWord64 msg) = ListOfWord64 <$> freeze msg
+    thaw = tFlip thaw
+    freeze = tFlip freeze
+
 instance Thaw msg => Thaw (ListOf msg (Struct msg)) where
     type Mutable s (ListOf msg (Struct msg)) = ListOf (Mutable s msg) (Struct (Mutable s msg))
-    thaw (ListOfStruct ctag size) = do
-        mtag <- thaw ctag
-        pure $ ListOfStruct mtag size
-    freeze (ListOfStruct mtag size) = do
-        ctag <- freeze mtag
-        pure $ ListOfStruct ctag size
+    thaw = tFlipS thaw
+    freeze = tFlipS freeze
 
 instance Thaw msg => Thaw (ListOf msg (Maybe (Ptr msg))) where
     type Mutable s (ListOf msg (Maybe (Ptr msg))) =
         ListOf (Mutable s msg) (Maybe (Ptr (Mutable s msg)))
-
-    thaw (ListOfPtr msg) = ListOfPtr <$> thaw msg
-    freeze (ListOfPtr msg) = ListOfPtr <$> freeze msg
+    thaw = tFlipP thaw
+    freeze = tFlipP freeze
 
 instance Thaw msg => Thaw (Struct msg) where
     type Mutable s (Struct msg) = Struct (Mutable s msg)
+    thaw = tMsg thaw
+    freeze = tMsg freeze
 
-    thaw (Struct cmsg addr dataSz ptrSz) = do
-        mmsg <- thaw cmsg
-        pure $ Struct mmsg addr dataSz ptrSz
-    freeze (Struct mmsg addr dataSz ptrSz) = do
-        cmsg <- freeze mmsg
-        pure $ Struct cmsg addr dataSz ptrSz
+-------------------------------------------------------------------------------
 
 -- | Types @a@ whose storage is owned by a message with blob type @b@.
 class HasMessage a msg where
