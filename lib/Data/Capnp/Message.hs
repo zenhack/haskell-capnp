@@ -16,14 +16,18 @@ module Data.Capnp.Message (
     , hGetMsg
     , putMsg
     , getMsg
+
     -- * Limits on message size
     , maxSegmentSize
     , maxSegments
+
     -- * Converting between messages and 'ByteString's
     , encode
     , decode
 
+    -- * Message type class
     , Message(..)
+
     -- * Immutable messages
     , empty
     , ConstMsg
@@ -36,7 +40,7 @@ module Data.Capnp.Message (
     , MutMsg
     , newMessage
 
-    -- ** Allocating space
+    -- ** Allocating space in messages
     , alloc
     , allocInSeg
     , newSegment
@@ -191,9 +195,12 @@ decodeSeg :: MonadThrow m => Segment ConstMsg -> m ConstMsg
 decodeSeg seg = do
     len <- numWords seg
     flip evalStateT (Nothing, 0) $ evalLimitT len $
-        -- Note: we use the quota to avoid needing to do bounds checking here;
-        -- since readMessage invoices the quota before reading, we can rely on it
-        -- not to read past the end of the blob.
+        -- Note: we use the traversal limit to avoid needing to do bounds checking
+        -- here; since readMessage invoices the limit before reading, we can rely
+        -- on it not to read past the end of the blob.
+        --
+        -- TODO: while this works, it means that we throw 'TraversalLimitError'
+        -- on failure, which makes for a confusing API.
         readMessage read32 readSegment
   where
     read32 = do
@@ -211,7 +218,7 @@ decodeSeg seg = do
         put (cur, idx + len)
         lift $ lift $ slice idx len seg
 
--- | @readMessage read32 readSegment@ reads in a message using the
+-- | @'readMessage' read32 readSegment@ reads in a message using the
 -- monadic context, which should manage the current read position,
 -- into a message. read32 should read a 32-bit little-endian integer,
 -- and @readSegment n@ should read a blob of @n@ 64-bit words.
@@ -228,7 +235,7 @@ readMessage read32 readSegment = do
     V.mapM_ (invoice . fromIntegral) segSizes
     ConstMsg <$> V.mapM (readSegment . fromIntegral) segSizes
 
--- | @writeMesage write32 writeSegment@ writes out the message. @write32@
+-- | @'writeMesage' write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
 writeMessage :: MonadThrow m => ConstMsg -> (Word32 -> m ()) -> (Segment ConstMsg -> m ()) -> m ()
@@ -240,7 +247,8 @@ writeMessage (ConstMsg segs) write32 writeSegment = do
     V.forM_ segs writeSegment
 
 
--- | @'hPutMsg' handle msg@ writes @msg@ to @handle@.
+-- | @'hPutMsg' handle msg@ writes @msg@ to @handle@. If there is an exception,
+-- it will be an 'IOError' raised by the underlying IO libraries.
 hPutMsg :: Handle -> ConstMsg -> IO ()
 hPutMsg handle msg = encode msg >>= BB.hPutBuilder handle
 
@@ -266,7 +274,7 @@ hGetMsg handle size =
 getMsg :: Int -> IO ConstMsg
 getMsg = hGetMsg stdin
 
--- | A 'MutMsg' is a mutable capnproto message. The type parameter 's' is the
+-- | A 'MutMsg' is a mutable capnproto message. The type parameter @s@ is the
 -- state token for the instance of 'PrimMonad' in which the message may be
 -- modified.
 --

@@ -7,13 +7,17 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-| This module provides an idiomatic Haskell interface for untyped capnp
-    data, based on algebraic datatypes. It forgoes some of the benefits of
-    the capnp wire format in favor of a more convienient API.
+{-|
+Module: Data.Capnp.Untyped.Pure
+Description: high-level API for working with untyped Cap'N Proto values.
 
-    In addition to the algebraic data types themselves, this module also
-    provides support for converting from the lower-level types in
-    "Data.Capnp.Untyped".
+This module provides an idiomatic Haskell interface for untyped capnp
+data, based on algebraic datatypes. It forgoes some of the benefits of
+the capnp wire format in favor of a more convienient API.
+
+In addition to the algebraic data types themselves, this module also
+provides support for converting from the lower-level types in
+"Data.Capnp.Untyped".
 -}
 module Data.Capnp.Untyped.Pure
     ( Cap(..)

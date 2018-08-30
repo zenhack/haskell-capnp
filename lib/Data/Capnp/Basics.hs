@@ -4,9 +4,9 @@ Description: Handling of "basic" capnp datatypes.
 
 In particular
 
-* Text and Data (which are primitive types in the schema language,
-  but are both the same as List(uint8) on the wire).
-* List of types other than those in Data.Capnp.Untyped.
+* 'Text' and 'Data' (which are primitive types in the schema language,
+  but are both the same as @List(UInt8)@ on the wire).
+* Lists of types other than those in "Data.Capnp.Untyped".
   Whereas 'U.ListOf' only deals with low-level encodings of lists,
   this module's 'List' type can represent typed lists.
 -}
@@ -59,7 +59,7 @@ newtype Text msg = Text (U.ListOf msg Word8)
 -- bytes.
 newtype Data msg = Data (U.ListOf msg Word8)
 
--- | @'newData' msg len@ Allocates a new data blob of length @len@ bytes
+-- | @'newData' msg len@ allocates a new data blob of length @len@ bytes
 -- inside the message.
 newData :: M.WriteCtx m s => M.MutMsg s -> Int -> m (Data (M.MutMsg s))
 newData msg len = Data <$> U.allocList8 msg len

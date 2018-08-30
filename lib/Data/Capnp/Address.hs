@@ -1,6 +1,11 @@
 {-|
 Module: Data.Capnp.Address
 Description: Utilities for manipulating addresses within capnproto messages.
+
+This module provides facilities for manipulating raw addresses within
+Cap'N Proto messages.
+
+This is a low level module that very few users will need to use directly.
 -}
 {-# LANGUAGE RecordWildCards #-}
 module Data.Capnp.Address
@@ -32,7 +37,9 @@ newtype CapAddr = Cap Word32 deriving(Show, Eq)
 
 -- | An address, i.e. a location that a pointer may point at.
 data Addr
+    -- | The address of some data in the message.
     = WordAddr !WordAddr
+    -- | The "address" of a capability.
     | CapAddr !CapAddr
     deriving(Show, Eq)
 

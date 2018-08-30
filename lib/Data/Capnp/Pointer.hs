@@ -3,6 +3,7 @@ Module: Data.Capnp.Pointer
 Description: Support for parsing/serializing capnproto pointers
 
 This module provides support for parsing and serializing capnproto pointers.
+This is a low-level module; most users will not need to call it directly.
 -}
 module Data.Capnp.Pointer
     ( Ptr(..)

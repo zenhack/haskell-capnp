@@ -1,6 +1,12 @@
 {-|
 Module: Data.Capnp.Bits
 Description: Utilities for bitwhacking useful for capnproto.
+
+This module provides misc. utilities for bitwhacking that are useful
+in dealing with low-level details of the Cap'N Proto wire format.
+
+This is mostly an implementation detail; users are unlikely to need
+to use this module directly.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Data.Capnp.Bits
@@ -20,6 +26,9 @@ module Data.Capnp.Bits
     , replaceBits
     )
   where
+
+-- TODO: the only reason this module is in exposed-modules is so it can be
+-- seen by the test suite. We should find a way to avoid this.
 
 import Data.Bits
 import Data.Int

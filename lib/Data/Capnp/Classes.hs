@@ -46,8 +46,15 @@ import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 
 -- | Types that can be converted to and from a 64-bit word.
+--
+-- Anything that goes in the data section of a struct will have
+-- an instance of this.
 class IsWord a where
+    -- | Convert from a 64-bit words Truncates the word if the
+    -- type has less than 64 bits.
     fromWord :: Word64 -> a
+
+    -- | Convert to a 64-bit word.
     toWord :: a -> Word64
 
 -- | Types which may be stored as an element of a capnproto list.
@@ -92,12 +99,12 @@ class Decerialize a where
     -- | Extract the value from the message.
     decerialize :: U.ReadCtx m M.ConstMsg => Cerial M.ConstMsg a -> m a
 
--- | Types which may be mashaled into a pre-allocated object in a message.
+-- | Types which may be marshaled into a pre-allocated object in a message.
 class Decerialize a => Marshal a where
 
     -- | Marshal a value into the pre-allocated object inside the message.
     --
-    -- Note that caller must arrange for the object to of the correct size.
+    -- Note that caller must arrange for the object to be of the correct size.
     -- This is is not necessarily guaranteed; for example, list types must
     -- coordinate the length of the list.
     marshalInto :: U.RWCtx m s => Cerial (M.MutMsg s) a -> a -> m ()

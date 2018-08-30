@@ -105,6 +105,10 @@ library
 
       , Data.Mutable
 
+      , Capnp
+      , Capnp.ById
+      , Capnp.Capnp
+
       -- BEGIN GENERATED SCHEMA MODULES
       , Capnp.Capnp.Cxx.Pure
       , Capnp.Capnp.Json.Pure

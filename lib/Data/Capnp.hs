@@ -2,6 +2,10 @@
 Module: Data.Capnp
 Description: The most commonly used functionality from the low-level API.
 
+This module re-exports the most commonly used functionality from the
+low-level API. See also "Data.Capnp.Pure", which similarly re-exports
+functionality from the high-level API.
+
 Users getting acquainted with the library are *strongly* encouraged to read the
 "Data.Capnp.Tutorial" module before anything else.
 -}

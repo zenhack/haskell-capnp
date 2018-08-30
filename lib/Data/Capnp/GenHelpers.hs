@@ -5,7 +5,7 @@ Description: Misc. helpers for generated code.
 This module provides various helpers used by generated code; developers
 are not expected to invoke them directly.
 
-These helpers are used by the low-level api. 'Data.Capnp.GenHelpers.Pure'
+These helpers are used by the low-level api. "Data.Capnp.GenHelpers.Pure"
 defines helpers used by high-level api.
 -}
 {-# LANGUAGE FlexibleContexts #-}
