@@ -1,4 +1,5 @@
 [![build status][ci-img]][ci]
+[![hackage][hackage-img]][hackage]
 
 A Haskell library for the [Cap'N Proto][1] Cerialization protocol.
 
@@ -32,3 +33,6 @@ probably require changing some interfaces).
 
 [ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
 [ci]: https://gitlab.com/isd/haskell-capnp/pipelines
+
+[hackage-img]: https://img.shields.io/hackage/v/capnp.svg
+[hackage]: https://hackage.haskell.org/package/capnp
