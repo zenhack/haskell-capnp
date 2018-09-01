@@ -1,7 +1,8 @@
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NamedFieldPuns    #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 module FrontEnd
     ( cgrToIR
     ) where
@@ -58,12 +59,17 @@ collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
 collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
     [ [(id, meta)]
     , concatMap collectNested $ V.toList nestedNodes
-    -- Child nodes can be in two places: most are in nestedNodes, but
-    -- group fields are not, and can only be found in the fields of
-    -- a struct union.
     , case union' of
             Node'struct{..} ->
+                -- Child field nodes can be in two places: most are in nestedNodes,
+                -- but group fields are not, and can only be found in the fields of
+                -- a struct union.
                 concatMap collectField $ V.toList fields
+            Node'interface{..} ->
+                -- If the interface has methods with anonymous parameter or result
+                -- types, we need to collect them, since they aren't otherwise
+                -- reachable.
+                concatMap collectMethod $ V.toList methods
             _ ->
                 []
     ]
@@ -79,6 +85,25 @@ collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
                 }
         _ ->
             []
+    -- Collect metadata for nodes under a Method.
+    collectMethod Method{..} =
+        collectMethodStruct name paramStructType "params" ++
+        collectMethodStruct name resultStructType "results"
+
+    -- Collect metadata for a struct that is a method parameter or result.
+    collectMethodStruct name nodeId paramOrResult = case M.lookup nodeId nodeMap of
+        Just node@Node{scopeId} | scopeId == 0 ->
+            -- This is an anonymous struct; generate a node with a name for it.
+            collectMetaData nodeMap NodeMetaData
+                { namespace = paramOrResult : name : namespace
+                , node
+                , moduleId
+                }
+        _ ->
+            -- This isn't an anonymous struct; it will get picked up somewhere
+            -- else.
+            []
+
     -- Collect metadata for nodes under a NestedNode.
     collectNested nn@Node'NestedNode{..} = case M.lookup id nodeMap of
         Just node -> collectMetaData nodeMap
@@ -120,7 +145,11 @@ makeNodeMap CodeGeneratorRequest{..} =
     & concat
     & M.fromList
   where
-    rootNodes = V.filter (\Node{..} -> scopeId == 0) nodes
+    rootNodes = nodes & V.filter (\case
+        Node{union'=Node'file, scopeId=0} ->
+            True
+        _ ->
+            False)
     baseMap =
         V.toList nodes
         & map (\node@Node{..} -> (id, node))
@@ -182,6 +211,18 @@ neededByParent nodeMap Node{id,scopeId,union'=Node'struct{isGroup,discriminantCo
         _ -> error "Invalid schema; group's scopeId references something that is not a struct!"
 neededByParent _ _ = True
 
+generateMethodStructs :: Id -> NodeMap -> Method -> [(IR.Name, IR.Decl)]
+generateMethodStructs thisMod nodeMap Method{..} =
+    go paramStructType ++ go resultStructType
+  where
+    go structId = case M.lookup structId nodeMap of
+        Just meta@NodeMetaData{node=Node{id,scopeId}} | scopeId == 0 ->
+            -- anonymous struct; this isn't reachable from anywhere else.
+            generateDecls thisMod (M.insert id meta nodeMap) meta
+        _ ->
+            -- not an anonymous struct; will be taken care of elsewhere.
+            []
+
 generateDecls :: Id -> NodeMap -> NodeMetaData -> [(IR.Name, IR.Decl)]
 generateDecls thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
@@ -239,6 +280,8 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     [ ( typeName, bodyFields )
                     , ( unionName, bodyUnion )
                     ]
+        Node'interface{..} ->
+            concatMap (generateMethodStructs thisModule nodeMap) methods
         Node'enum{..} ->
             [ ( name
               , IR.DeclDef $ IR.DefEnum $ map
