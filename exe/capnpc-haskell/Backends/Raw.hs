@@ -352,38 +352,39 @@ fmtNew thisMod accessorName typeCon fieldLocType =
             ]
         ]
 
--- TODO: a lot of this is copypasta from fmtUnionSetter.
-fmtUnknownUnionSetter :: Module -> Name -> DataLoc -> PP.Doc
-fmtUnknownUnionSetter thisMod parentType tagLoc =
-    let variantName = subName parentType "unknown'"
-        accessorName prefix = prefix <> fmtName thisMod variantName
-        setName = "set_" <> fmtName thisMod variantName
-        parentTypeCon = fmtName thisMod parentType
-        parentDataCon = parentTypeCon <> "_newtype_"
-        -- this is the unknown' variant; we just accept the tag as an argument.
-    in vcat
-        [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> Word16 -> m ()" ]
-        , hcat
-            [ setName, "(", parentDataCon, " struct) tagValue = "
-            , fmtSetWordField "struct" "(tagValue :: Word16)" tagLoc
-            ]
-        ]
-
 
 -- Generate setters for union variants, plus new_* functions where the argument
 -- is a pointer type.
-fmtUnionSetter :: Module -> Name -> DataLoc -> Variant -> PP.Doc
-fmtUnionSetter thisMod parentType tagLoc Variant{..} =
-    let accessorName prefix = prefix <> fmtName thisMod variantName
+fmtUnionSetter :: Module -> Name -> DataLoc -> Maybe Variant -> PP.Doc
+fmtUnionSetter thisMod parentType tagLoc variant =
+    let (variantName, variantParams) = case variant of
+            Just Variant{..} ->
+                (variantName, Just variantParams)
+            Nothing ->
+                ( subName parentType "unknown'"
+                , Nothing
+                )
+        accessorName prefix = prefix <> fmtName thisMod variantName
         setName = "set_" <> fmtName thisMod variantName
         parentTypeCon = fmtName thisMod parentType
         parentDataCon = parentTypeCon <> "_newtype_"
         fmtSetTag = fmtSetWordField
             "struct"
-            (hcat [ "(", fromString (show variantTag), " :: Word16)" ])
+            (case variant of
+                Just Variant{variantTag} ->
+                    hcat [ "(", fromString (show variantTag), " :: Word16)" ]
+                Nothing ->
+                    "(tagValue :: Word16)")
             tagLoc
     in case variantParams of
-        Record _ ->
+        Nothing -> vcat
+            [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> Word16 -> m ()" ]
+            , hcat
+                [ setName, "(", parentDataCon, " struct) tagValue = "
+                , fmtSetTag
+                ]
+            ]
+        Just (Record _) ->
             -- Variant is a group; we return a reference to the group so the user can
             -- modify it.
             let childTypeCon = fmtName thisMod (subName variantName "group'")
@@ -399,7 +400,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{..} =
                 , hcat [ "pure $ ", childDataCon, " struct" ]
                 ]
             ]
-        Unnamed _ (DataField loc typ) -> vcat
+        Just (Unnamed _ (DataField loc typ)) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
                 , fmtType thisMod "(M'.MutMsg s)" (WordType typ), " -> m ()"
@@ -413,7 +414,7 @@ fmtUnionSetter thisMod parentType tagLoc Variant{..} =
                         loc
                 ]
             ]
-        Unnamed _ fieldLocType@(PtrField index typ) -> vcat
+        Just (Unnamed _ fieldLocType@(PtrField index typ)) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
                 , fmtType thisMod "(M'.MutMsg s)" (PtrType typ), " -> m ()"
@@ -427,11 +428,11 @@ fmtUnionSetter thisMod parentType tagLoc Variant{..} =
             -- Also generate a new_* function.
             , fmtNew thisMod accessorName parentTypeCon fieldLocType
             ]
-        Unnamed _ VoidField -> vcat
+        Just (Unnamed _ VoidField) -> vcat
             [ hcat [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> m ()" ]
             , hcat [ setName, " (", parentDataCon, " struct) = ", fmtSetTag ]
             ]
-        Unnamed _ (HereField typ) -> vcat
+        Just (Unnamed _ (HereField typ)) -> vcat
             [ hcat
                 [ setName, " :: U'.RWCtx m s => ", parentTypeCon, " (M'.MutMsg s) -> "
                 , "m (", fmtType thisMod " (M'.MutMsg s)" (CompositeType typ), ")"
@@ -487,8 +488,8 @@ fmtDataDef thisMod dataName DefUnion{dataVariants,dataTagLoc,parentStruct=Struct
             { fieldName = ""
             , fieldLocType = HereField $ StructType unionName []
             }
-        , vcat $ map (fmtUnionSetter thisMod dataName dataTagLoc) dataVariants
-        , fmtUnknownUnionSetter thisMod dataName dataTagLoc
+        , vcat $ map (fmtUnionSetter thisMod dataName dataTagLoc . Just) dataVariants
+        , fmtUnionSetter thisMod dataName dataTagLoc Nothing
         -- Generate auxiliary newtype definitions for group fields:
         , vcat $ map fmtVariantAuxNewtype dataVariants
         , instance_ [] ("C'.FromStruct msg (" <> unionNameText <> " msg)")
