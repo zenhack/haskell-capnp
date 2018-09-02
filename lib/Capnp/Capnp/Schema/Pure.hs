@@ -36,7 +36,7 @@ import qualified Capnp.ById.Xa93fc509624c72d9
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 data Annotation
-     = Annotation
+    = Annotation
         {id :: Word64,
         value :: Value,
         brand :: Brand}
@@ -65,7 +65,7 @@ instance C'.Cerialize s Annotation
 instance Default Annotation where
     def = PH'.defaultStruct
 data Brand
-     = Brand
+    = Brand
         {scopes :: PU'.ListOf (Brand'Scope)}
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Brand where
@@ -90,7 +90,7 @@ instance C'.Cerialize s Brand
 instance Default Brand where
     def = PH'.defaultStruct
 data CapnpVersion
-     = CapnpVersion
+    = CapnpVersion
         {major :: Word16,
         minor :: Word8,
         micro :: Word8}
@@ -117,7 +117,7 @@ instance C'.Cerialize s CapnpVersion
 instance Default CapnpVersion where
     def = PH'.defaultStruct
 data CodeGeneratorRequest
-     = CodeGeneratorRequest
+    = CodeGeneratorRequest
         {nodes :: PU'.ListOf (Node),
         requestedFiles :: PU'.ListOf (CodeGeneratorRequest'RequestedFile),
         capnpVersion :: CapnpVersion}
@@ -153,7 +153,7 @@ instance C'.Cerialize s CodeGeneratorRequest
 instance Default CodeGeneratorRequest where
     def = PH'.defaultStruct
 data Enumerant
-     = Enumerant
+    = Enumerant
         {name :: Text,
         codeOrder :: Word16,
         annotations :: PU'.ListOf (Annotation)}
@@ -185,7 +185,7 @@ instance C'.Cerialize s Enumerant
 instance Default Enumerant where
     def = PH'.defaultStruct
 data Field
-     = Field
+    = Field
         {name :: Text,
         codeOrder :: Word16,
         annotations :: PU'.ListOf (Annotation),
@@ -228,7 +228,7 @@ instance C'.Cerialize s Field
 instance Default Field where
     def = PH'.defaultStruct
 data Method
-     = Method
+    = Method
         {name :: Text,
         codeOrder :: Word16,
         paramStructType :: Word64,
@@ -281,7 +281,7 @@ instance C'.Cerialize s Method
 instance Default Method where
     def = PH'.defaultStruct
 data Node
-     = Node
+    = Node
         {id :: Word64,
         displayName :: Text,
         displayNamePrefixLength :: Word32,
@@ -340,7 +340,7 @@ instance C'.Cerialize s Node
 instance Default Node where
     def = PH'.defaultStruct
 data Superclass
-     = Superclass
+    = Superclass
         {id :: Word64,
         brand :: Brand}
     deriving(Show,Read,Eq,Generic)
@@ -365,34 +365,34 @@ instance C'.Cerialize s Superclass
 instance Default Superclass where
     def = PH'.defaultStruct
 data Type
-     = Type'void |
-    Type'bool |
-    Type'int8 |
-    Type'int16 |
-    Type'int32 |
-    Type'int64 |
-    Type'uint8 |
-    Type'uint16 |
-    Type'uint32 |
-    Type'uint64 |
-    Type'float32 |
-    Type'float64 |
-    Type'text |
-    Type'data_ |
-    Type'list
-        {elementType :: Type} |
-    Type'enum
+    = Type'void
+    | Type'bool
+    | Type'int8
+    | Type'int16
+    | Type'int32
+    | Type'int64
+    | Type'uint8
+    | Type'uint16
+    | Type'uint32
+    | Type'uint64
+    | Type'float32
+    | Type'float64
+    | Type'text
+    | Type'data_
+    | Type'list
+        {elementType :: Type}
+    | Type'enum
         {typeId :: Word64,
-        brand :: Brand} |
-    Type'struct
+        brand :: Brand}
+    | Type'struct
         {typeId :: Word64,
-        brand :: Brand} |
-    Type'interface
+        brand :: Brand}
+    | Type'interface
         {typeId :: Word64,
-        brand :: Brand} |
-    Type'anyPointer
-        {union' :: Type'anyPointer} |
-    Type'unknown' (Word16)
+        brand :: Brand}
+    | Type'anyPointer
+        {union' :: Type'anyPointer}
+    | Type'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Type where
     type Cerial msg Type = Capnp.ById.Xa93fc509624c72d9.Type msg
@@ -476,26 +476,26 @@ instance C'.Cerialize s Type
 instance Default Type where
     def = PH'.defaultStruct
 data Value
-     = Value'void |
-    Value'bool (Bool) |
-    Value'int8 (Int8) |
-    Value'int16 (Int16) |
-    Value'int32 (Int32) |
-    Value'int64 (Int64) |
-    Value'uint8 (Word8) |
-    Value'uint16 (Word16) |
-    Value'uint32 (Word32) |
-    Value'uint64 (Word64) |
-    Value'float32 (Float) |
-    Value'float64 (Double) |
-    Value'text (Text) |
-    Value'data_ (Data) |
-    Value'list (Maybe (PU'.PtrType)) |
-    Value'enum (Word16) |
-    Value'struct (Maybe (PU'.PtrType)) |
-    Value'interface |
-    Value'anyPointer (Maybe (PU'.PtrType)) |
-    Value'unknown' (Word16)
+    = Value'void
+    | Value'bool (Bool)
+    | Value'int8 (Int8)
+    | Value'int16 (Int16)
+    | Value'int32 (Int32)
+    | Value'int64 (Int64)
+    | Value'uint8 (Word8)
+    | Value'uint16 (Word16)
+    | Value'uint32 (Word32)
+    | Value'uint64 (Word64)
+    | Value'float32 (Float)
+    | Value'float64 (Double)
+    | Value'text (Text)
+    | Value'data_ (Data)
+    | Value'list (Maybe (PU'.PtrType))
+    | Value'enum (Word16)
+    | Value'struct (Maybe (PU'.PtrType))
+    | Value'interface
+    | Value'anyPointer (Maybe (PU'.PtrType))
+    | Value'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Value where
     type Cerial msg Value = Capnp.ById.Xa93fc509624c72d9.Value msg
@@ -563,9 +563,9 @@ instance C'.Cerialize s Value
 instance Default Value where
     def = PH'.defaultStruct
 data Brand'Binding
-     = Brand'Binding'unbound |
-    Brand'Binding'type_ (Type) |
-    Brand'Binding'unknown' (Word16)
+    = Brand'Binding'unbound
+    | Brand'Binding'type_ (Type)
+    | Brand'Binding'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Brand'Binding where
     type Cerial msg Brand'Binding = Capnp.ById.Xa93fc509624c72d9.Brand'Binding msg
@@ -591,7 +591,7 @@ instance C'.Cerialize s Brand'Binding
 instance Default Brand'Binding where
     def = PH'.defaultStruct
 data Brand'Scope
-     = Brand'Scope
+    = Brand'Scope
         {scopeId :: Word64,
         union' :: Brand'Scope'}
     deriving(Show,Read,Eq,Generic)
@@ -616,9 +616,9 @@ instance C'.Cerialize s Brand'Scope
 instance Default Brand'Scope where
     def = PH'.defaultStruct
 data Brand'Scope'
-     = Brand'Scope'bind (PU'.ListOf (Brand'Binding)) |
-    Brand'Scope'inherit |
-    Brand'Scope'unknown' (Word16)
+    = Brand'Scope'bind (PU'.ListOf (Brand'Binding))
+    | Brand'Scope'inherit
+    | Brand'Scope'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Brand'Scope' where
     type Cerial msg Brand'Scope' = Capnp.ById.Xa93fc509624c72d9.Brand'Scope' msg
@@ -647,7 +647,7 @@ instance C'.Cerialize s Brand'Scope'
 instance Default Brand'Scope' where
     def = PH'.defaultStruct
 data CodeGeneratorRequest'RequestedFile
-     = CodeGeneratorRequest'RequestedFile
+    = CodeGeneratorRequest'RequestedFile
         {id :: Word64,
         filename :: Text,
         imports :: PU'.ListOf (CodeGeneratorRequest'RequestedFile'Import)}
@@ -679,7 +679,7 @@ instance C'.Cerialize s CodeGeneratorRequest'RequestedFile
 instance Default CodeGeneratorRequest'RequestedFile where
     def = PH'.defaultStruct
 data CodeGeneratorRequest'RequestedFile'Import
-     = CodeGeneratorRequest'RequestedFile'Import
+    = CodeGeneratorRequest'RequestedFile'Import
         {id :: Word64,
         name :: Text}
     deriving(Show,Read,Eq,Generic)
@@ -704,14 +704,14 @@ instance C'.Cerialize s CodeGeneratorRequest'RequestedFile'Import
 instance Default CodeGeneratorRequest'RequestedFile'Import where
     def = PH'.defaultStruct
 data Field'
-     = Field'slot
+    = Field'slot
         {offset :: Word32,
         type_ :: Type,
         defaultValue :: Value,
-        hadExplicitDefault :: Bool} |
-    Field'group
-        {typeId :: Word64} |
-    Field'unknown' (Word16)
+        hadExplicitDefault :: Bool}
+    | Field'group
+        {typeId :: Word64}
+    | Field'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Field' where
     type Cerial msg Field' = Capnp.ById.Xa93fc509624c72d9.Field' msg
@@ -751,9 +751,9 @@ instance Default Field' where
 field'noDiscriminant :: Word16
 field'noDiscriminant = Capnp.ById.Xa93fc509624c72d9.field'noDiscriminant
 data Field'ordinal
-     = Field'ordinal'implicit |
-    Field'ordinal'explicit (Word16) |
-    Field'ordinal'unknown' (Word16)
+    = Field'ordinal'implicit
+    | Field'ordinal'explicit (Word16)
+    | Field'ordinal'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Field'ordinal where
     type Cerial msg Field'ordinal = Capnp.ById.Xa93fc509624c72d9.Field'ordinal msg
@@ -777,24 +777,24 @@ instance C'.Cerialize s Field'ordinal
 instance Default Field'ordinal where
     def = PH'.defaultStruct
 data Node'
-     = Node'file |
-    Node'struct
+    = Node'file
+    | Node'struct
         {dataWordCount :: Word16,
         pointerCount :: Word16,
         preferredListEncoding :: Capnp.ById.Xa93fc509624c72d9.ElementSize,
         isGroup :: Bool,
         discriminantCount :: Word16,
         discriminantOffset :: Word32,
-        fields :: PU'.ListOf (Field)} |
-    Node'enum
-        {enumerants :: PU'.ListOf (Enumerant)} |
-    Node'interface
+        fields :: PU'.ListOf (Field)}
+    | Node'enum
+        {enumerants :: PU'.ListOf (Enumerant)}
+    | Node'interface
         {methods :: PU'.ListOf (Method),
-        superclasses :: PU'.ListOf (Superclass)} |
-    Node'const
+        superclasses :: PU'.ListOf (Superclass)}
+    | Node'const
         {type_ :: Type,
-        value :: Value} |
-    Node'annotation
+        value :: Value}
+    | Node'annotation
         {type_ :: Type,
         targetsFile :: Bool,
         targetsConst :: Bool,
@@ -807,8 +807,8 @@ data Node'
         targetsInterface :: Bool,
         targetsMethod :: Bool,
         targetsParam :: Bool,
-        targetsAnnotation :: Bool} |
-    Node'unknown' (Word16)
+        targetsAnnotation :: Bool}
+    | Node'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Node' where
     type Cerial msg Node' = Capnp.ById.Xa93fc509624c72d9.Node' msg
@@ -914,7 +914,7 @@ instance C'.Cerialize s Node'
 instance Default Node' where
     def = PH'.defaultStruct
 data Node'NestedNode
-     = Node'NestedNode
+    = Node'NestedNode
         {name :: Text,
         id :: Word64}
     deriving(Show,Read,Eq,Generic)
@@ -939,7 +939,7 @@ instance C'.Cerialize s Node'NestedNode
 instance Default Node'NestedNode where
     def = PH'.defaultStruct
 data Node'Parameter
-     = Node'Parameter
+    = Node'Parameter
         {name :: Text}
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Node'Parameter where
@@ -961,14 +961,14 @@ instance C'.Cerialize s Node'Parameter
 instance Default Node'Parameter where
     def = PH'.defaultStruct
 data Type'anyPointer
-     = Type'anyPointer'unconstrained
-        {union' :: Type'anyPointer'unconstrained} |
-    Type'anyPointer'parameter
+    = Type'anyPointer'unconstrained
+        {union' :: Type'anyPointer'unconstrained}
+    | Type'anyPointer'parameter
         {scopeId :: Word64,
-        parameterIndex :: Word16} |
-    Type'anyPointer'implicitMethodParameter
-        {parameterIndex :: Word16} |
-    Type'anyPointer'unknown' (Word16)
+        parameterIndex :: Word16}
+    | Type'anyPointer'implicitMethodParameter
+        {parameterIndex :: Word16}
+    | Type'anyPointer'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Type'anyPointer where
     type Cerial msg Type'anyPointer = Capnp.ById.Xa93fc509624c72d9.Type'anyPointer msg
@@ -1006,11 +1006,11 @@ instance C'.Cerialize s Type'anyPointer
 instance Default Type'anyPointer where
     def = PH'.defaultStruct
 data Type'anyPointer'unconstrained
-     = Type'anyPointer'unconstrained'anyKind |
-    Type'anyPointer'unconstrained'struct |
-    Type'anyPointer'unconstrained'list |
-    Type'anyPointer'unconstrained'capability |
-    Type'anyPointer'unconstrained'unknown' (Word16)
+    = Type'anyPointer'unconstrained'anyKind
+    | Type'anyPointer'unconstrained'struct
+    | Type'anyPointer'unconstrained'list
+    | Type'anyPointer'unconstrained'capability
+    | Type'anyPointer'unconstrained'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Type'anyPointer'unconstrained where
     type Cerial msg Type'anyPointer'unconstrained = Capnp.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained msg

@@ -36,7 +36,7 @@ import qualified Capnp.ById.Xa184c7885cdaf2a1
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 data JoinKeyPart
-     = JoinKeyPart
+    = JoinKeyPart
         {joinId :: Word32,
         partCount :: Word16,
         partNum :: Word16}
@@ -63,7 +63,7 @@ instance C'.Cerialize s JoinKeyPart
 instance Default JoinKeyPart where
     def = PH'.defaultStruct
 data JoinResult
-     = JoinResult
+    = JoinResult
         {joinId :: Word32,
         succeeded :: Bool,
         cap :: Maybe (PU'.PtrType)}
@@ -91,7 +91,7 @@ instance C'.Cerialize s JoinResult
 instance Default JoinResult where
     def = PH'.defaultStruct
 data ProvisionId
-     = ProvisionId
+    = ProvisionId
         {joinId :: Word32}
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize ProvisionId where
@@ -112,7 +112,7 @@ instance C'.Cerialize s ProvisionId
 instance Default ProvisionId where
     def = PH'.defaultStruct
 data VatId
-     = VatId
+    = VatId
         {side :: Capnp.ById.Xa184c7885cdaf2a1.Side}
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize VatId where

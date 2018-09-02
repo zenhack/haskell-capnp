@@ -51,14 +51,14 @@ instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
     fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue l) = C'.toPtr l
 data JsonValue' msg
-     = JsonValue'null |
-    JsonValue'boolean Bool |
-    JsonValue'number Double |
-    JsonValue'string (B'.Text msg) |
-    JsonValue'array (B'.List msg (JsonValue msg)) |
-    JsonValue'object (B'.List msg (JsonValue'Field msg)) |
-    JsonValue'call (JsonValue'Call msg) |
-    JsonValue'unknown' Word16
+    = JsonValue'null
+    | JsonValue'boolean Bool
+    | JsonValue'number Double
+    | JsonValue'string (B'.Text msg)
+    | JsonValue'array (B'.List msg (JsonValue msg))
+    | JsonValue'object (B'.List msg (JsonValue'Field msg))
+    | JsonValue'call (JsonValue'Call msg)
+    | JsonValue'unknown' Word16
 get_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m (JsonValue' msg)
 get_JsonValue' (JsonValue_newtype_ struct) = C'.fromStruct struct
 has_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m Bool

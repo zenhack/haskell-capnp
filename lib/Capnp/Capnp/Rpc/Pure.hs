@@ -36,7 +36,7 @@ import qualified Capnp.ById.Xb312981b2552a250
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 data Accept
-     = Accept
+    = Accept
         {questionId :: Word32,
         provision :: Maybe (PU'.PtrType),
         embargo :: Bool}
@@ -64,7 +64,7 @@ instance C'.Cerialize s Accept
 instance Default Accept where
     def = PH'.defaultStruct
 data Bootstrap
-     = Bootstrap
+    = Bootstrap
         {questionId :: Word32,
         deprecatedObjectId :: Maybe (PU'.PtrType)}
     deriving(Show,Read,Eq,Generic)
@@ -89,7 +89,7 @@ instance C'.Cerialize s Bootstrap
 instance Default Bootstrap where
     def = PH'.defaultStruct
 data Call
-     = Call
+    = Call
         {questionId :: Word32,
         target :: MessageTarget,
         interfaceId :: Word64,
@@ -131,13 +131,13 @@ instance C'.Cerialize s Call
 instance Default Call where
     def = PH'.defaultStruct
 data CapDescriptor
-     = CapDescriptor'none |
-    CapDescriptor'senderHosted (Word32) |
-    CapDescriptor'senderPromise (Word32) |
-    CapDescriptor'receiverHosted (Word32) |
-    CapDescriptor'receiverAnswer (PromisedAnswer) |
-    CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor) |
-    CapDescriptor'unknown' (Word16)
+    = CapDescriptor'none
+    | CapDescriptor'senderHosted (Word32)
+    | CapDescriptor'senderPromise (Word32)
+    | CapDescriptor'receiverHosted (Word32)
+    | CapDescriptor'receiverAnswer (PromisedAnswer)
+    | CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor)
+    | CapDescriptor'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize CapDescriptor where
     type Cerial msg CapDescriptor = Capnp.ById.Xb312981b2552a250.CapDescriptor msg
@@ -173,7 +173,7 @@ instance C'.Cerialize s CapDescriptor
 instance Default CapDescriptor where
     def = PH'.defaultStruct
 data Disembargo
-     = Disembargo
+    = Disembargo
         {target :: MessageTarget,
         context :: Disembargo'context}
     deriving(Show,Read,Eq,Generic)
@@ -199,7 +199,7 @@ instance C'.Cerialize s Disembargo
 instance Default Disembargo where
     def = PH'.defaultStruct
 data Exception
-     = Exception
+    = Exception
         {reason :: Text,
         obsoleteIsCallersFault :: Bool,
         obsoleteDurability :: Word16,
@@ -230,7 +230,7 @@ instance C'.Cerialize s Exception
 instance Default Exception where
     def = PH'.defaultStruct
 data Finish
-     = Finish
+    = Finish
         {questionId :: Word32,
         releaseResultCaps :: Bool}
     deriving(Show,Read,Eq,Generic)
@@ -254,7 +254,7 @@ instance C'.Cerialize s Finish
 instance Default Finish where
     def = PH'.defaultStruct
 data Join
-     = Join
+    = Join
         {questionId :: Word32,
         target :: MessageTarget,
         keyPart :: Maybe (PU'.PtrType)}
@@ -283,21 +283,21 @@ instance C'.Cerialize s Join
 instance Default Join where
     def = PH'.defaultStruct
 data Message
-     = Message'unimplemented (Message) |
-    Message'abort (Exception) |
-    Message'call (Call) |
-    Message'return (Return) |
-    Message'finish (Finish) |
-    Message'resolve (Resolve) |
-    Message'release (Release) |
-    Message'obsoleteSave (Maybe (PU'.PtrType)) |
-    Message'bootstrap (Bootstrap) |
-    Message'obsoleteDelete (Maybe (PU'.PtrType)) |
-    Message'provide (Provide) |
-    Message'accept (Accept) |
-    Message'join (Join) |
-    Message'disembargo (Disembargo) |
-    Message'unknown' (Word16)
+    = Message'unimplemented (Message)
+    | Message'abort (Exception)
+    | Message'call (Call)
+    | Message'return (Return)
+    | Message'finish (Finish)
+    | Message'resolve (Resolve)
+    | Message'release (Release)
+    | Message'obsoleteSave (Maybe (PU'.PtrType))
+    | Message'bootstrap (Bootstrap)
+    | Message'obsoleteDelete (Maybe (PU'.PtrType))
+    | Message'provide (Provide)
+    | Message'accept (Accept)
+    | Message'join (Join)
+    | Message'disembargo (Disembargo)
+    | Message'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Message where
     type Cerial msg Message = Capnp.ById.Xb312981b2552a250.Message msg
@@ -373,9 +373,9 @@ instance C'.Cerialize s Message
 instance Default Message where
     def = PH'.defaultStruct
 data MessageTarget
-     = MessageTarget'importedCap (Word32) |
-    MessageTarget'promisedAnswer (PromisedAnswer) |
-    MessageTarget'unknown' (Word16)
+    = MessageTarget'importedCap (Word32)
+    | MessageTarget'promisedAnswer (PromisedAnswer)
+    | MessageTarget'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize MessageTarget where
     type Cerial msg MessageTarget = Capnp.ById.Xb312981b2552a250.MessageTarget msg
@@ -401,7 +401,7 @@ instance C'.Cerialize s MessageTarget
 instance Default MessageTarget where
     def = PH'.defaultStruct
 data Payload
-     = Payload
+    = Payload
         {content :: Maybe (PU'.PtrType),
         capTable :: PU'.ListOf (CapDescriptor)}
     deriving(Show,Read,Eq,Generic)
@@ -430,7 +430,7 @@ instance C'.Cerialize s Payload
 instance Default Payload where
     def = PH'.defaultStruct
 data PromisedAnswer
-     = PromisedAnswer
+    = PromisedAnswer
         {questionId :: Word32,
         transform :: PU'.ListOf (PromisedAnswer'Op)}
     deriving(Show,Read,Eq,Generic)
@@ -458,7 +458,7 @@ instance C'.Cerialize s PromisedAnswer
 instance Default PromisedAnswer where
     def = PH'.defaultStruct
 data Provide
-     = Provide
+    = Provide
         {questionId :: Word32,
         target :: MessageTarget,
         recipient :: Maybe (PU'.PtrType)}
@@ -487,7 +487,7 @@ instance C'.Cerialize s Provide
 instance Default Provide where
     def = PH'.defaultStruct
 data Release
-     = Release
+    = Release
         {id :: Word32,
         referenceCount :: Word32}
     deriving(Show,Read,Eq,Generic)
@@ -511,7 +511,7 @@ instance C'.Cerialize s Release
 instance Default Release where
     def = PH'.defaultStruct
 data Resolve
-     = Resolve
+    = Resolve
         {promiseId :: Word32,
         union' :: Resolve'}
     deriving(Show,Read,Eq,Generic)
@@ -536,7 +536,7 @@ instance C'.Cerialize s Resolve
 instance Default Resolve where
     def = PH'.defaultStruct
 data Return
-     = Return
+    = Return
         {answerId :: Word32,
         releaseParamCaps :: Bool,
         union' :: Return'}
@@ -564,7 +564,7 @@ instance C'.Cerialize s Return
 instance Default Return where
     def = PH'.defaultStruct
 data ThirdPartyCapDescriptor
-     = ThirdPartyCapDescriptor
+    = ThirdPartyCapDescriptor
         {id :: Maybe (PU'.PtrType),
         vineId :: Word32}
     deriving(Show,Read,Eq,Generic)
@@ -589,10 +589,10 @@ instance C'.Cerialize s ThirdPartyCapDescriptor
 instance Default ThirdPartyCapDescriptor where
     def = PH'.defaultStruct
 data Call'sendResultsTo
-     = Call'sendResultsTo'caller |
-    Call'sendResultsTo'yourself |
-    Call'sendResultsTo'thirdParty (Maybe (PU'.PtrType)) |
-    Call'sendResultsTo'unknown' (Word16)
+    = Call'sendResultsTo'caller
+    | Call'sendResultsTo'yourself
+    | Call'sendResultsTo'thirdParty (Maybe (PU'.PtrType))
+    | Call'sendResultsTo'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Call'sendResultsTo where
     type Cerial msg Call'sendResultsTo = Capnp.ById.Xb312981b2552a250.Call'sendResultsTo msg
@@ -620,11 +620,11 @@ instance C'.Cerialize s Call'sendResultsTo
 instance Default Call'sendResultsTo where
     def = PH'.defaultStruct
 data Disembargo'context
-     = Disembargo'context'senderLoopback (Word32) |
-    Disembargo'context'receiverLoopback (Word32) |
-    Disembargo'context'accept |
-    Disembargo'context'provide (Word32) |
-    Disembargo'context'unknown' (Word16)
+    = Disembargo'context'senderLoopback (Word32)
+    | Disembargo'context'receiverLoopback (Word32)
+    | Disembargo'context'accept
+    | Disembargo'context'provide (Word32)
+    | Disembargo'context'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Disembargo'context where
     type Cerial msg Disembargo'context = Capnp.ById.Xb312981b2552a250.Disembargo'context msg
@@ -652,9 +652,9 @@ instance C'.Cerialize s Disembargo'context
 instance Default Disembargo'context where
     def = PH'.defaultStruct
 data PromisedAnswer'Op
-     = PromisedAnswer'Op'noop |
-    PromisedAnswer'Op'getPointerField (Word16) |
-    PromisedAnswer'Op'unknown' (Word16)
+    = PromisedAnswer'Op'noop
+    | PromisedAnswer'Op'getPointerField (Word16)
+    | PromisedAnswer'Op'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize PromisedAnswer'Op where
     type Cerial msg PromisedAnswer'Op = Capnp.ById.Xb312981b2552a250.PromisedAnswer'Op msg
@@ -678,9 +678,9 @@ instance C'.Cerialize s PromisedAnswer'Op
 instance Default PromisedAnswer'Op where
     def = PH'.defaultStruct
 data Resolve'
-     = Resolve'cap (CapDescriptor) |
-    Resolve'exception (Exception) |
-    Resolve'unknown' (Word16)
+    = Resolve'cap (CapDescriptor)
+    | Resolve'exception (Exception)
+    | Resolve'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Resolve' where
     type Cerial msg Resolve' = Capnp.ById.Xb312981b2552a250.Resolve' msg
@@ -708,13 +708,13 @@ instance C'.Cerialize s Resolve'
 instance Default Resolve' where
     def = PH'.defaultStruct
 data Return'
-     = Return'results (Payload) |
-    Return'exception (Exception) |
-    Return'canceled |
-    Return'resultsSentElsewhere |
-    Return'takeFromOtherQuestion (Word32) |
-    Return'acceptFromThirdParty (Maybe (PU'.PtrType)) |
-    Return'unknown' (Word16)
+    = Return'results (Payload)
+    | Return'exception (Exception)
+    | Return'canceled
+    | Return'resultsSentElsewhere
+    | Return'takeFromOtherQuestion (Word32)
+    | Return'acceptFromThirdParty (Maybe (PU'.PtrType))
+    | Return'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Return' where
     type Cerial msg Return' = Capnp.ById.Xb312981b2552a250.Return' msg

@@ -211,13 +211,13 @@ instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
     fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_CapDescriptor l) = C'.toPtr l
 data CapDescriptor' msg
-     = CapDescriptor'none |
-    CapDescriptor'senderHosted Word32 |
-    CapDescriptor'senderPromise Word32 |
-    CapDescriptor'receiverHosted Word32 |
-    CapDescriptor'receiverAnswer (PromisedAnswer msg) |
-    CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor msg) |
-    CapDescriptor'unknown' Word16
+    = CapDescriptor'none
+    | CapDescriptor'senderHosted Word32
+    | CapDescriptor'senderPromise Word32
+    | CapDescriptor'receiverHosted Word32
+    | CapDescriptor'receiverAnswer (PromisedAnswer msg)
+    | CapDescriptor'thirdPartyHosted (ThirdPartyCapDescriptor msg)
+    | CapDescriptor'unknown' Word16
 get_CapDescriptor' :: U'.ReadCtx m msg => CapDescriptor msg -> m (CapDescriptor' msg)
 get_CapDescriptor' (CapDescriptor_newtype_ struct) = C'.fromStruct struct
 has_CapDescriptor' :: U'.ReadCtx m msg => CapDescriptor msg -> m Bool
@@ -475,21 +475,21 @@ instance C'.IsPtr msg (B'.List msg (Message msg)) where
     fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
     toPtr (List_Message l) = C'.toPtr l
 data Message' msg
-     = Message'unimplemented (Message msg) |
-    Message'abort (Exception msg) |
-    Message'call (Call msg) |
-    Message'return (Return msg) |
-    Message'finish (Finish msg) |
-    Message'resolve (Resolve msg) |
-    Message'release (Release msg) |
-    Message'obsoleteSave (Maybe (U'.Ptr msg)) |
-    Message'bootstrap (Bootstrap msg) |
-    Message'obsoleteDelete (Maybe (U'.Ptr msg)) |
-    Message'provide (Provide msg) |
-    Message'accept (Accept msg) |
-    Message'join (Join msg) |
-    Message'disembargo (Disembargo msg) |
-    Message'unknown' Word16
+    = Message'unimplemented (Message msg)
+    | Message'abort (Exception msg)
+    | Message'call (Call msg)
+    | Message'return (Return msg)
+    | Message'finish (Finish msg)
+    | Message'resolve (Resolve msg)
+    | Message'release (Release msg)
+    | Message'obsoleteSave (Maybe (U'.Ptr msg))
+    | Message'bootstrap (Bootstrap msg)
+    | Message'obsoleteDelete (Maybe (U'.Ptr msg))
+    | Message'provide (Provide msg)
+    | Message'accept (Accept msg)
+    | Message'join (Join msg)
+    | Message'disembargo (Disembargo msg)
+    | Message'unknown' Word16
 get_Message' :: U'.ReadCtx m msg => Message msg -> m (Message' msg)
 get_Message' (Message_newtype_ struct) = C'.fromStruct struct
 has_Message' :: U'.ReadCtx m msg => Message msg -> m Bool
@@ -656,9 +656,9 @@ instance C'.IsPtr msg (B'.List msg (MessageTarget msg)) where
     fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
     toPtr (List_MessageTarget l) = C'.toPtr l
 data MessageTarget' msg
-     = MessageTarget'importedCap Word32 |
-    MessageTarget'promisedAnswer (PromisedAnswer msg) |
-    MessageTarget'unknown' Word16
+    = MessageTarget'importedCap Word32
+    | MessageTarget'promisedAnswer (PromisedAnswer msg)
+    | MessageTarget'unknown' Word16
 get_MessageTarget' :: U'.ReadCtx m msg => MessageTarget msg -> m (MessageTarget' msg)
 get_MessageTarget' (MessageTarget_newtype_ struct) = C'.fromStruct struct
 has_MessageTarget' :: U'.ReadCtx m msg => MessageTarget msg -> m Bool
@@ -997,10 +997,10 @@ instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
     fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
     toPtr (List_Call'sendResultsTo l) = C'.toPtr l
 data Call'sendResultsTo' msg
-     = Call'sendResultsTo'caller |
-    Call'sendResultsTo'yourself |
-    Call'sendResultsTo'thirdParty (Maybe (U'.Ptr msg)) |
-    Call'sendResultsTo'unknown' Word16
+    = Call'sendResultsTo'caller
+    | Call'sendResultsTo'yourself
+    | Call'sendResultsTo'thirdParty (Maybe (U'.Ptr msg))
+    | Call'sendResultsTo'unknown' Word16
 get_Call'sendResultsTo' :: U'.ReadCtx m msg => Call'sendResultsTo msg -> m (Call'sendResultsTo' msg)
 get_Call'sendResultsTo' (Call'sendResultsTo_newtype_ struct) = C'.fromStruct struct
 has_Call'sendResultsTo' :: U'.ReadCtx m msg => Call'sendResultsTo msg -> m Bool
@@ -1048,11 +1048,11 @@ instance C'.IsPtr msg (B'.List msg (Disembargo'context msg)) where
     fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo'context l) = C'.toPtr l
 data Disembargo'context' msg
-     = Disembargo'context'senderLoopback Word32 |
-    Disembargo'context'receiverLoopback Word32 |
-    Disembargo'context'accept |
-    Disembargo'context'provide Word32 |
-    Disembargo'context'unknown' Word16
+    = Disembargo'context'senderLoopback Word32
+    | Disembargo'context'receiverLoopback Word32
+    | Disembargo'context'accept
+    | Disembargo'context'provide Word32
+    | Disembargo'context'unknown' Word16
 get_Disembargo'context' :: U'.ReadCtx m msg => Disembargo'context msg -> m (Disembargo'context' msg)
 get_Disembargo'context' (Disembargo'context_newtype_ struct) = C'.fromStruct struct
 has_Disembargo'context' :: U'.ReadCtx m msg => Disembargo'context msg -> m Bool
@@ -1083,11 +1083,11 @@ instance C'.FromStruct msg (Disembargo'context' msg) where
             0 -> Disembargo'context'senderLoopback <$>  H'.getWordField struct 0 0 0
             _ -> pure $ Disembargo'context'unknown' tag
 data Exception'Type
-     = Exception'Type'failed |
-    Exception'Type'overloaded |
-    Exception'Type'disconnected |
-    Exception'Type'unimplemented |
-    Exception'Type'unknown' Word16
+    = Exception'Type'failed
+    | Exception'Type'overloaded
+    | Exception'Type'disconnected
+    | Exception'Type'unimplemented
+    | Exception'Type'unknown' Word16
     deriving(Show,Read,Eq,Generic)
 instance Enum Exception'Type where
     toEnum = C'.fromWord . fromIntegral
@@ -1139,9 +1139,9 @@ instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer'Op l) = C'.toPtr l
 data PromisedAnswer'Op' msg
-     = PromisedAnswer'Op'noop |
-    PromisedAnswer'Op'getPointerField Word16 |
-    PromisedAnswer'Op'unknown' Word16
+    = PromisedAnswer'Op'noop
+    | PromisedAnswer'Op'getPointerField Word16
+    | PromisedAnswer'Op'unknown' Word16
 get_PromisedAnswer'Op' :: U'.ReadCtx m msg => PromisedAnswer'Op msg -> m (PromisedAnswer'Op' msg)
 get_PromisedAnswer'Op' (PromisedAnswer'Op_newtype_ struct) = C'.fromStruct struct
 has_PromisedAnswer'Op' :: U'.ReadCtx m msg => PromisedAnswer'Op msg -> m Bool
@@ -1186,9 +1186,9 @@ instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
     fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
     toPtr (List_Resolve' l) = C'.toPtr l
 data Resolve'' msg
-     = Resolve'cap (CapDescriptor msg) |
-    Resolve'exception (Exception msg) |
-    Resolve'unknown' Word16
+    = Resolve'cap (CapDescriptor msg)
+    | Resolve'exception (Exception msg)
+    | Resolve'unknown' Word16
 get_Resolve'' :: U'.ReadCtx m msg => Resolve' msg -> m (Resolve'' msg)
 get_Resolve'' (Resolve'_newtype_ struct) = C'.fromStruct struct
 has_Resolve'' :: U'.ReadCtx m msg => Resolve' msg -> m Bool
@@ -1245,13 +1245,13 @@ instance C'.IsPtr msg (B'.List msg (Return' msg)) where
     fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
     toPtr (List_Return' l) = C'.toPtr l
 data Return'' msg
-     = Return'results (Payload msg) |
-    Return'exception (Exception msg) |
-    Return'canceled |
-    Return'resultsSentElsewhere |
-    Return'takeFromOtherQuestion Word32 |
-    Return'acceptFromThirdParty (Maybe (U'.Ptr msg)) |
-    Return'unknown' Word16
+    = Return'results (Payload msg)
+    | Return'exception (Exception msg)
+    | Return'canceled
+    | Return'resultsSentElsewhere
+    | Return'takeFromOtherQuestion Word32
+    | Return'acceptFromThirdParty (Maybe (U'.Ptr msg))
+    | Return'unknown' Word16
 get_Return'' :: U'.ReadCtx m msg => Return' msg -> m (Return'' msg)
 get_Return'' (Return'_newtype_ struct) = C'.fromStruct struct
 has_Return'' :: U'.ReadCtx m msg => Return' msg -> m Bool

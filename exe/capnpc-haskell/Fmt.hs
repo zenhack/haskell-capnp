@@ -26,7 +26,11 @@ data_ :: Doc -> [Doc] -> [Doc] -> Doc
 data_ typeCon dataCons deriving_ = vcat
     [ hcat [ "data ", typeCon ]
     , indent $ vcat
-        [ " = " <> vcat (PP.punctuate " |" dataCons)
+        [ case dataCons of
+            (d:ds) -> vcat $
+                ("= " <> d) : map ("| " <>) ds
+            [] ->
+                ""
         , case deriving_ of
             [] -> ""
             _  -> "deriving" <> PP.tupled deriving_

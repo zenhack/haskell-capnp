@@ -36,7 +36,7 @@ import qualified Capnp.ById.Xb8630836983feed7
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 data Persistent'SaveParams
-     = Persistent'SaveParams
+    = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Persistent'SaveParams where
@@ -58,7 +58,7 @@ instance C'.Cerialize s Persistent'SaveParams
 instance Default Persistent'SaveParams where
     def = PH'.defaultStruct
 data Persistent'SaveResults
-     = Persistent'SaveResults
+    = Persistent'SaveResults
         {sturdyRef :: Maybe (PU'.PtrType)}
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize Persistent'SaveResults where

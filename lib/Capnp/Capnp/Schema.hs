@@ -225,15 +225,15 @@ new_CodeGeneratorRequest'capnpVersion struct = do
     set_CodeGeneratorRequest'capnpVersion struct result
     pure result
 data ElementSize
-     = ElementSize'empty |
-    ElementSize'bit |
-    ElementSize'byte |
-    ElementSize'twoBytes |
-    ElementSize'fourBytes |
-    ElementSize'eightBytes |
-    ElementSize'pointer |
-    ElementSize'inlineComposite |
-    ElementSize'unknown' Word16
+    = ElementSize'empty
+    | ElementSize'bit
+    | ElementSize'byte
+    | ElementSize'twoBytes
+    | ElementSize'fourBytes
+    | ElementSize'eightBytes
+    | ElementSize'pointer
+    | ElementSize'inlineComposite
+    | ElementSize'unknown' Word16
     deriving(Show,Read,Eq,Generic)
 instance Enum ElementSize where
     toEnum = C'.fromWord . fromIntegral
@@ -673,26 +673,26 @@ instance C'.IsPtr msg (B'.List msg (Type msg)) where
     fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
     toPtr (List_Type l) = C'.toPtr l
 data Type' msg
-     = Type'void |
-    Type'bool |
-    Type'int8 |
-    Type'int16 |
-    Type'int32 |
-    Type'int64 |
-    Type'uint8 |
-    Type'uint16 |
-    Type'uint32 |
-    Type'uint64 |
-    Type'float32 |
-    Type'float64 |
-    Type'text |
-    Type'data_ |
-    Type'list (Type'list'group' msg) |
-    Type'enum (Type'enum'group' msg) |
-    Type'struct (Type'struct'group' msg) |
-    Type'interface (Type'interface'group' msg) |
-    Type'anyPointer (Type'anyPointer'group' msg) |
-    Type'unknown' Word16
+    = Type'void
+    | Type'bool
+    | Type'int8
+    | Type'int16
+    | Type'int32
+    | Type'int64
+    | Type'uint8
+    | Type'uint16
+    | Type'uint32
+    | Type'uint64
+    | Type'float32
+    | Type'float64
+    | Type'text
+    | Type'data_
+    | Type'list (Type'list'group' msg)
+    | Type'enum (Type'enum'group' msg)
+    | Type'struct (Type'struct'group' msg)
+    | Type'interface (Type'interface'group' msg)
+    | Type'anyPointer (Type'anyPointer'group' msg)
+    | Type'unknown' Word16
 get_Type' :: U'.ReadCtx m msg => Type msg -> m (Type' msg)
 get_Type' (Type_newtype_ struct) = C'.fromStruct struct
 has_Type' :: U'.ReadCtx m msg => Type msg -> m Bool
@@ -990,26 +990,26 @@ instance C'.IsPtr msg (B'.List msg (Value msg)) where
     fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
     toPtr (List_Value l) = C'.toPtr l
 data Value' msg
-     = Value'void |
-    Value'bool Bool |
-    Value'int8 Int8 |
-    Value'int16 Int16 |
-    Value'int32 Int32 |
-    Value'int64 Int64 |
-    Value'uint8 Word8 |
-    Value'uint16 Word16 |
-    Value'uint32 Word32 |
-    Value'uint64 Word64 |
-    Value'float32 Float |
-    Value'float64 Double |
-    Value'text (B'.Text msg) |
-    Value'data_ (B'.Data msg) |
-    Value'list (Maybe (U'.Ptr msg)) |
-    Value'enum Word16 |
-    Value'struct (Maybe (U'.Ptr msg)) |
-    Value'interface |
-    Value'anyPointer (Maybe (U'.Ptr msg)) |
-    Value'unknown' Word16
+    = Value'void
+    | Value'bool Bool
+    | Value'int8 Int8
+    | Value'int16 Int16
+    | Value'int32 Int32
+    | Value'int64 Int64
+    | Value'uint8 Word8
+    | Value'uint16 Word16
+    | Value'uint32 Word32
+    | Value'uint64 Word64
+    | Value'float32 Float
+    | Value'float64 Double
+    | Value'text (B'.Text msg)
+    | Value'data_ (B'.Data msg)
+    | Value'list (Maybe (U'.Ptr msg))
+    | Value'enum Word16
+    | Value'struct (Maybe (U'.Ptr msg))
+    | Value'interface
+    | Value'anyPointer (Maybe (U'.Ptr msg))
+    | Value'unknown' Word16
 get_Value' :: U'.ReadCtx m msg => Value msg -> m (Value' msg)
 get_Value' (Value_newtype_ struct) = C'.fromStruct struct
 has_Value' :: U'.ReadCtx m msg => Value msg -> m Bool
@@ -1147,9 +1147,9 @@ instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
     fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Binding l) = C'.toPtr l
 data Brand'Binding' msg
-     = Brand'Binding'unbound |
-    Brand'Binding'type_ (Type msg) |
-    Brand'Binding'unknown' Word16
+    = Brand'Binding'unbound
+    | Brand'Binding'type_ (Type msg)
+    | Brand'Binding'unknown' Word16
 get_Brand'Binding' :: U'.ReadCtx m msg => Brand'Binding msg -> m (Brand'Binding' msg)
 get_Brand'Binding' (Brand'Binding_newtype_ struct) = C'.fromStruct struct
 has_Brand'Binding' :: U'.ReadCtx m msg => Brand'Binding msg -> m Bool
@@ -1233,9 +1233,9 @@ instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
     fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope' l) = C'.toPtr l
 data Brand'Scope'' msg
-     = Brand'Scope'bind (B'.List msg (Brand'Binding msg)) |
-    Brand'Scope'inherit |
-    Brand'Scope'unknown' Word16
+    = Brand'Scope'bind (B'.List msg (Brand'Binding msg))
+    | Brand'Scope'inherit
+    | Brand'Scope'unknown' Word16
 get_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m (Brand'Scope'' msg)
 get_Brand'Scope'' (Brand'Scope'_newtype_ struct) = C'.fromStruct struct
 has_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m Bool
@@ -1384,9 +1384,9 @@ instance C'.IsPtr msg (B'.List msg (Field' msg)) where
     fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
     toPtr (List_Field' l) = C'.toPtr l
 data Field'' msg
-     = Field'slot (Field'slot'group' msg) |
-    Field'group (Field'group'group' msg) |
-    Field'unknown' Word16
+    = Field'slot (Field'slot'group' msg)
+    | Field'group (Field'group'group' msg)
+    | Field'unknown' Word16
 get_Field'' :: U'.ReadCtx m msg => Field' msg -> m (Field'' msg)
 get_Field'' (Field'_newtype_ struct) = C'.fromStruct struct
 has_Field'' :: U'.ReadCtx m msg => Field' msg -> m Bool
@@ -1527,9 +1527,9 @@ instance C'.IsPtr msg (B'.List msg (Field'ordinal msg)) where
     fromPtr msg ptr = List_Field'ordinal <$> C'.fromPtr msg ptr
     toPtr (List_Field'ordinal l) = C'.toPtr l
 data Field'ordinal' msg
-     = Field'ordinal'implicit |
-    Field'ordinal'explicit Word16 |
-    Field'ordinal'unknown' Word16
+    = Field'ordinal'implicit
+    | Field'ordinal'explicit Word16
+    | Field'ordinal'unknown' Word16
 get_Field'ordinal' :: U'.ReadCtx m msg => Field'ordinal msg -> m (Field'ordinal' msg)
 get_Field'ordinal' (Field'ordinal_newtype_ struct) = C'.fromStruct struct
 has_Field'ordinal' :: U'.ReadCtx m msg => Field'ordinal msg -> m Bool
@@ -1574,13 +1574,13 @@ instance C'.IsPtr msg (B'.List msg (Node' msg)) where
     fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
     toPtr (List_Node' l) = C'.toPtr l
 data Node'' msg
-     = Node'file |
-    Node'struct (Node'struct'group' msg) |
-    Node'enum (Node'enum'group' msg) |
-    Node'interface (Node'interface'group' msg) |
-    Node'const (Node'const'group' msg) |
-    Node'annotation (Node'annotation'group' msg) |
-    Node'unknown' Word16
+    = Node'file
+    | Node'struct (Node'struct'group' msg)
+    | Node'enum (Node'enum'group' msg)
+    | Node'interface (Node'interface'group' msg)
+    | Node'const (Node'const'group' msg)
+    | Node'annotation (Node'annotation'group' msg)
+    | Node'unknown' Word16
 get_Node'' :: U'.ReadCtx m msg => Node' msg -> m (Node'' msg)
 get_Node'' (Node'_newtype_ struct) = C'.fromStruct struct
 has_Node'' :: U'.ReadCtx m msg => Node' msg -> m Bool
@@ -2044,10 +2044,10 @@ instance C'.IsPtr msg (B'.List msg (Type'anyPointer msg)) where
     fromPtr msg ptr = List_Type'anyPointer <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer l) = C'.toPtr l
 data Type'anyPointer' msg
-     = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg) |
-    Type'anyPointer'parameter (Type'anyPointer'parameter'group' msg) |
-    Type'anyPointer'implicitMethodParameter (Type'anyPointer'implicitMethodParameter'group' msg) |
-    Type'anyPointer'unknown' Word16
+    = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg)
+    | Type'anyPointer'parameter (Type'anyPointer'parameter'group' msg)
+    | Type'anyPointer'implicitMethodParameter (Type'anyPointer'implicitMethodParameter'group' msg)
+    | Type'anyPointer'unknown' Word16
 get_Type'anyPointer' :: U'.ReadCtx m msg => Type'anyPointer msg -> m (Type'anyPointer' msg)
 get_Type'anyPointer' (Type'anyPointer_newtype_ struct) = C'.fromStruct struct
 has_Type'anyPointer' :: U'.ReadCtx m msg => Type'anyPointer msg -> m Bool
@@ -2193,11 +2193,11 @@ instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained l) = C'.toPtr l
 data Type'anyPointer'unconstrained' msg
-     = Type'anyPointer'unconstrained'anyKind |
-    Type'anyPointer'unconstrained'struct |
-    Type'anyPointer'unconstrained'list |
-    Type'anyPointer'unconstrained'capability |
-    Type'anyPointer'unconstrained'unknown' Word16
+    = Type'anyPointer'unconstrained'anyKind
+    | Type'anyPointer'unconstrained'struct
+    | Type'anyPointer'unconstrained'list
+    | Type'anyPointer'unconstrained'capability
+    | Type'anyPointer'unconstrained'unknown' Word16
 get_Type'anyPointer'unconstrained' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained msg -> m (Type'anyPointer'unconstrained' msg)
 get_Type'anyPointer'unconstrained' (Type'anyPointer'unconstrained_newtype_ struct) = C'.fromStruct struct
 has_Type'anyPointer'unconstrained' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained msg -> m Bool

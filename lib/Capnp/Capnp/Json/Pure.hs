@@ -36,14 +36,14 @@ import qualified Capnp.ById.X8ef99297a43a5e34
 import qualified Capnp.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 data JsonValue
-     = JsonValue'null |
-    JsonValue'boolean (Bool) |
-    JsonValue'number (Double) |
-    JsonValue'string (Text) |
-    JsonValue'array (PU'.ListOf (JsonValue)) |
-    JsonValue'object (PU'.ListOf (JsonValue'Field)) |
-    JsonValue'call (JsonValue'Call) |
-    JsonValue'unknown' (Word16)
+    = JsonValue'null
+    | JsonValue'boolean (Bool)
+    | JsonValue'number (Double)
+    | JsonValue'string (Text)
+    | JsonValue'array (PU'.ListOf (JsonValue))
+    | JsonValue'object (PU'.ListOf (JsonValue'Field))
+    | JsonValue'call (JsonValue'Call)
+    | JsonValue'unknown' (Word16)
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize JsonValue where
     type Cerial msg JsonValue = Capnp.ById.X8ef99297a43a5e34.JsonValue msg
@@ -91,7 +91,7 @@ instance C'.Cerialize s JsonValue
 instance Default JsonValue where
     def = PH'.defaultStruct
 data JsonValue'Call
-     = JsonValue'Call
+    = JsonValue'Call
         {function :: Text,
         params :: PU'.ListOf (JsonValue)}
     deriving(Show,Read,Eq,Generic)
@@ -120,7 +120,7 @@ instance C'.Cerialize s JsonValue'Call
 instance Default JsonValue'Call where
     def = PH'.defaultStruct
 data JsonValue'Field
-     = JsonValue'Field
+    = JsonValue'Field
         {name :: Text,
         value :: JsonValue}
     deriving(Show,Read,Eq,Generic)
