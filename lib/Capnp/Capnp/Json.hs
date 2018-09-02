@@ -44,9 +44,9 @@ instance C'.IsPtr msg (JsonValue msg) where
     toPtr (JsonValue_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (JsonValue (M'.MutMsg s)) where
     setIndex (JsonValue_newtype_ elt) i (List_JsonValue l) = U'.setIndex elt i l
-    newList msg len = List_JsonValue <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_JsonValue <$> U'.allocCompositeList msg 2 1 len
 instance C'.Allocate s (JsonValue (M'.MutMsg s)) where
-    new msg = JsonValue_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = JsonValue_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
     fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue l) = C'.toPtr l

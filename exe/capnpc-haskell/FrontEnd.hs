@@ -193,7 +193,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                 typeName = name
                 unionName = IR.subName name ""
 
-                bodyFields = IR.DeclDef IR.DefStruct
+                structDef = IR.StructDef
                     { fields = formatStructBody thisModule nodeMap typeName allFields
                     , info = if isGroup
                         then IR.IsGroup
@@ -202,6 +202,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                             , ptrSz = pointerCount
                             }
                     }
+                bodyFields = IR.DeclDef (IR.DefStruct structDef)
 
                 bodyUnion = IR.DeclDef IR.DefUnion
                     { dataVariants =
@@ -211,7 +212,8 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                         (IR.PrimWord IR.PrimInt{isSigned = False, size = 16})
                         -- The default value for a union tag is always zero:
                         (Value'uint16 0)
-                    , unionStructName = name
+                    , parentStructName = name
+                    , parentStruct = structDef
                     }
 
             in case (unionFields, commonFields) of

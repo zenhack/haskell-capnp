@@ -39,6 +39,7 @@ module IR
     , Field(..)
     , Decl(..)
     , DataDef(..)
+    , StructDef(..)
     , Const(..)
     , FieldLocType(..)
     , DataLoc(..)
@@ -201,17 +202,21 @@ data Const
 
 data DataDef
     = DefUnion
-        { dataVariants    :: [Variant]
+        { dataVariants     :: [Variant]
         -- | The location of the tag for the union.
-        , dataTagLoc      :: DataLoc
+        , dataTagLoc       :: DataLoc
         -- | The name of the containing struct.
-        , unionStructName :: Name
+        , parentStructName :: Name
+        , parentStruct     :: StructDef
         }
-    | DefStruct
-        { fields :: [Field]
-        , info   :: StructInfo
-        }
+    | DefStruct StructDef
     | DefEnum [Name]
+    deriving(Show, Read, Eq)
+
+data StructDef = StructDef
+    { fields :: [Field]
+    , info   :: StructInfo
+    }
     deriving(Show, Read, Eq)
 
 data StructInfo

@@ -204,9 +204,9 @@ instance C'.IsPtr msg (CapDescriptor msg) where
     toPtr (CapDescriptor_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (CapDescriptor (M'.MutMsg s)) where
     setIndex (CapDescriptor_newtype_ elt) i (List_CapDescriptor l) = U'.setIndex elt i l
-    newList msg len = List_CapDescriptor <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_CapDescriptor <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (CapDescriptor (M'.MutMsg s)) where
-    new msg = CapDescriptor_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = CapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
     fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_CapDescriptor l) = C'.toPtr l
@@ -468,9 +468,9 @@ instance C'.IsPtr msg (Message msg) where
     toPtr (Message_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (Message (M'.MutMsg s)) where
     setIndex (Message_newtype_ elt) i (List_Message l) = U'.setIndex elt i l
-    newList msg len = List_Message <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_Message <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Message (M'.MutMsg s)) where
-    new msg = Message_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = Message_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Message msg)) where
     fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
     toPtr (List_Message l) = C'.toPtr l
@@ -649,9 +649,9 @@ instance C'.IsPtr msg (MessageTarget msg) where
     toPtr (MessageTarget_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (MessageTarget (M'.MutMsg s)) where
     setIndex (MessageTarget_newtype_ elt) i (List_MessageTarget l) = U'.setIndex elt i l
-    newList msg len = List_MessageTarget <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_MessageTarget <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (MessageTarget (M'.MutMsg s)) where
-    new msg = MessageTarget_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = MessageTarget_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (MessageTarget msg)) where
     fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
     toPtr (List_MessageTarget l) = C'.toPtr l
@@ -1132,9 +1132,9 @@ instance C'.IsPtr msg (PromisedAnswer'Op msg) where
     toPtr (PromisedAnswer'Op_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (PromisedAnswer'Op (M'.MutMsg s)) where
     setIndex (PromisedAnswer'Op_newtype_ elt) i (List_PromisedAnswer'Op l) = U'.setIndex elt i l
-    newList msg len = List_PromisedAnswer'Op <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_PromisedAnswer'Op <$> U'.allocCompositeList msg 1 0 len
 instance C'.Allocate s (PromisedAnswer'Op (M'.MutMsg s)) where
-    new msg = PromisedAnswer'Op_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = PromisedAnswer'Op_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer'Op l) = C'.toPtr l
@@ -1179,9 +1179,9 @@ instance C'.IsPtr msg (Resolve' msg) where
     toPtr (Resolve'_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (Resolve' (M'.MutMsg s)) where
     setIndex (Resolve'_newtype_ elt) i (List_Resolve' l) = U'.setIndex elt i l
-    newList msg len = List_Resolve' <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_Resolve' <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Resolve' (M'.MutMsg s)) where
-    new msg = Resolve'_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = Resolve'_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
     fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
     toPtr (List_Resolve' l) = C'.toPtr l
@@ -1238,9 +1238,9 @@ instance C'.IsPtr msg (Return' msg) where
     toPtr (Return'_newtype_ struct) = C'.toPtr struct
 instance B'.MutListElem s (Return' (M'.MutMsg s)) where
     setIndex (Return'_newtype_ elt) i (List_Return' l) = U'.setIndex elt i l
-    newList msg len = List_Return' <$> U'.allocCompositeList msg 20 20 len
+    newList msg len = List_Return' <$> U'.allocCompositeList msg 2 1 len
 instance C'.Allocate s (Return' (M'.MutMsg s)) where
-    new msg = Return'_newtype_ <$> U'.allocStruct msg 20 20
+    new msg = Return'_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Return' msg)) where
     fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
     toPtr (List_Return' l) = C'.toPtr l

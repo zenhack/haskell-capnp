@@ -222,7 +222,7 @@ fmtDataDef thisMod dataName dataDef =
             DefEnum{} ->
                 -- TODO: refactor so we don't need this case.
                 error "BUG: this should have been ruled out above."
-            DefStruct{fields} ->
+            DefStruct StructDef{fields} ->
                 let dataVariant =
                         -- TODO: some of the functions we use still expect structs
                         -- to just be single-variant unions; this is a stand-in,
@@ -252,8 +252,8 @@ fmtDataDef thisMod dataName dataDef =
                         ]
                     ]
                 ]
-            DefUnion{dataVariants,unionStructName} ->
-                let unknownVariantName = subName unionStructName "unknown'"
+            DefUnion{dataVariants,parentStructName} ->
+                let unknownVariantName = subName parentStructName "unknown'"
                 in vcat
                 [ data_
                     (fmtName Pure thisMod dataName)

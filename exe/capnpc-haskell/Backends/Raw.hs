@@ -467,16 +467,16 @@ fmtConst thisMod name value =
             ]
 
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
-fmtDataDef thisMod dataName DefStruct{fields, info} = vcat
+fmtDataDef thisMod dataName (DefStruct StructDef{fields, info}) = vcat
     [ fmtNewtypeStruct thisMod dataName info
     , vcat $ map (fmtFieldAccessor thisMod dataName dataName) fields
     ]
-fmtDataDef thisMod dataName DefUnion{dataVariants,dataTagLoc} =
+fmtDataDef thisMod dataName DefUnion{dataVariants,dataTagLoc,parentStruct=StructDef{info}} =
     let unionName = subName dataName ""
         unionNameText = fmtName thisMod unionName
         unknownName = subName dataName "unknown'"
     in vcat
-        [ fmtNewtypeStruct thisMod dataName IR.IsGroup
+        [ fmtNewtypeStruct thisMod dataName info
         , data_
             (unionNameText <> " msg")
             (map fmtDataVariant dataVariants ++
