@@ -153,6 +153,7 @@ executable capnpc-haskell
     main-is:              Main.hs
     other-modules:
         FrontEnd
+      , Fmt
       , IR
       , Backends.Common
       , Backends.Pure

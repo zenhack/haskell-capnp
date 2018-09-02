@@ -17,10 +17,9 @@ import qualified Data.Map.Strict              as M
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
+import Fmt
 import IR
 import Util
-
-indent = PP.indent 4
 
 -- | If a module reference refers to a generated module, does it
 -- refer to the raw, low-level module or the *.Pure variant (which
@@ -216,9 +215,10 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
     let rawName = fmtName Raw thisMod dataName
         pureName = fmtName Pure thisMod dataName
     in vcat
-        [ hcat [ "data ", fmtName Pure thisMod dataName ]
-        , indent $ " = " <> vcat (PP.punctuate " |" $ map (fmtVariant thisMod) dataVariants)
-        , indent "deriving(Show, Read, Eq, Generic)"
+        [ data_
+            (fmtName Pure thisMod dataName)
+            (map (fmtVariant thisMod) dataVariants)
+            ["Show", "Read", "Eq", "Generic"]
         , hcat [ "instance C'.Decerialize ", pureName, " where" ]
         , indent $ vcat
             [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]

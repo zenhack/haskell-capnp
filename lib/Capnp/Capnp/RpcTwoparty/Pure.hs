@@ -40,7 +40,7 @@ data JoinKeyPart
         {joinId :: Word32,
         partCount :: Word16,
         partNum :: Word16}
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize JoinKeyPart where
     type Cerial msg JoinKeyPart = Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart msg
     decerialize raw = do
@@ -67,7 +67,7 @@ data JoinResult
         {joinId :: Word32,
         succeeded :: Bool,
         cap :: Maybe (PU'.PtrType)}
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize JoinResult where
     type Cerial msg JoinResult = Capnp.ById.Xa184c7885cdaf2a1.JoinResult msg
     decerialize raw = do
@@ -93,7 +93,7 @@ instance Default JoinResult where
 data ProvisionId
      = ProvisionId
         {joinId :: Word32}
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize ProvisionId where
     type Cerial msg ProvisionId = Capnp.ById.Xa184c7885cdaf2a1.ProvisionId msg
     decerialize raw = do
@@ -114,7 +114,7 @@ instance Default ProvisionId where
 data VatId
      = VatId
         {side :: Capnp.ById.Xa184c7885cdaf2a1.Side}
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize VatId where
     type Cerial msg VatId = Capnp.ById.Xa184c7885cdaf2a1.VatId msg
     decerialize raw = do
