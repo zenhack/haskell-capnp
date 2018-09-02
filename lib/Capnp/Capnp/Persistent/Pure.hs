@@ -44,16 +44,16 @@ instance C'.Decerialize Persistent'SaveParams where
     decerialize raw = do
         Persistent'SaveParams <$>
             (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw >>= C'.decerialize)
-instance C'.FromStruct M'.ConstMsg Persistent'SaveParams where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg)
 instance C'.Marshal Persistent'SaveParams where
     marshalInto raw value = do
         case value of
             Persistent'SaveParams{..} -> do
                 field_ <- C'.cerialize (U'.message raw) sealFor
                 Capnp.ById.Xb8630836983feed7.set_Persistent'SaveParams'sealFor raw field_
+instance C'.FromStruct M'.ConstMsg Persistent'SaveParams where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveParams M'.ConstMsg)
 instance C'.Cerialize s Persistent'SaveParams
 instance Default Persistent'SaveParams where
     def = PH'.defaultStruct
@@ -66,16 +66,16 @@ instance C'.Decerialize Persistent'SaveResults where
     decerialize raw = do
         Persistent'SaveResults <$>
             (Capnp.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw >>= C'.decerialize)
-instance C'.FromStruct M'.ConstMsg Persistent'SaveResults where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg)
 instance C'.Marshal Persistent'SaveResults where
     marshalInto raw value = do
         case value of
             Persistent'SaveResults{..} -> do
                 field_ <- C'.cerialize (U'.message raw) sturdyRef
                 Capnp.ById.Xb8630836983feed7.set_Persistent'SaveResults'sturdyRef raw field_
+instance C'.FromStruct M'.ConstMsg Persistent'SaveResults where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xb8630836983feed7.Persistent'SaveResults M'.ConstMsg)
 instance C'.Cerialize s Persistent'SaveResults
 instance Default Persistent'SaveResults where
     def = PH'.defaultStruct

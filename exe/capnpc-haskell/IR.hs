@@ -39,10 +39,10 @@ module IR
     , Field(..)
     , Decl(..)
     , DataDef(..)
-    , CerialType(..)
     , Const(..)
     , FieldLocType(..)
     , DataLoc(..)
+    , StructInfo(..)
     , subName
     , prefixName
     , valueName
@@ -175,7 +175,7 @@ data AnyPtr
 data Variant = Variant
     { variantName   :: Name
     , variantParams :: VariantParams
-    , variantTag    :: Maybe Word16
+    , variantTag    :: !Word16
     }
     deriving(Show, Read, Eq)
 
@@ -199,24 +199,31 @@ data Const
     -- TODO: support pointer types.
     deriving(Show, Read, Eq)
 
-data DataDef = DataDef
-    { dataVariants   :: [Variant]
-    -- | The location of the tag for the union, if any.
-    , dataTagLoc     :: Maybe DataLoc
-    , dataCerialType :: CerialType
-    }
+data DataDef
+    = DefUnion
+        { dataVariants    :: [Variant]
+        -- | The location of the tag for the union.
+        , dataTagLoc      :: DataLoc
+        -- | The name of the containing struct.
+        , unionStructName :: Name
+        }
+    | DefStruct
+        { fields :: [Field]
+        , info   :: StructInfo
+        }
+    | DefEnum [Name]
     deriving(Show, Read, Eq)
 
--- | What kind of value is this; struct, enum, or...?
---
--- Unlike 'Type', this only encodes types of values that we may be asked to
--- define, and encodes less detail (no type parameters, name etc).
-data CerialType
-    -- | A struct. Arguments are the size of the data and pointer
-    -- sections, respectively.
-    = CTyStruct !Word16 !Word16
-    -- | An Enum. Stored in the data section of a struct as a 16-bit value.
-    | CTyEnum
+data StructInfo
+    = IsGroup
+    -- ^ The struct is really a group.
+    | IsStandalone
+        { dataSz :: !Word16
+        , ptrSz  :: !Word16
+        }
+    -- ^ The struct is a full-fledged struct that can be directly
+    -- allocated, stored in a list, etc. Info contains the sizes
+    -- of its sections.
     deriving(Show, Read, Eq)
 
 -- | The type and location of a field.

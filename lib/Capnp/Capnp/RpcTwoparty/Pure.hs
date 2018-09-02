@@ -48,10 +48,6 @@ instance C'.Decerialize JoinKeyPart where
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw) <*>
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw) <*>
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw)
-instance C'.FromStruct M'.ConstMsg JoinKeyPart where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg)
 instance C'.Marshal JoinKeyPart where
     marshalInto raw value = do
         case value of
@@ -59,6 +55,10 @@ instance C'.Marshal JoinKeyPart where
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'joinId raw joinId
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partCount raw partCount
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partNum raw partNum
+instance C'.FromStruct M'.ConstMsg JoinKeyPart where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg)
 instance C'.Cerialize s JoinKeyPart
 instance Default JoinKeyPart where
     def = PH'.defaultStruct
@@ -75,10 +75,6 @@ instance C'.Decerialize JoinResult where
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw) <*>
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw) <*>
             (Capnp.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw >>= C'.decerialize)
-instance C'.FromStruct M'.ConstMsg JoinResult where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
 instance C'.Marshal JoinResult where
     marshalInto raw value = do
         case value of
@@ -87,6 +83,10 @@ instance C'.Marshal JoinResult where
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'succeeded raw succeeded
                 field_ <- C'.cerialize (U'.message raw) cap
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'cap raw field_
+instance C'.FromStruct M'.ConstMsg JoinResult where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
 instance C'.Cerialize s JoinResult
 instance Default JoinResult where
     def = PH'.defaultStruct
@@ -99,15 +99,15 @@ instance C'.Decerialize ProvisionId where
     decerialize raw = do
         ProvisionId <$>
             (Capnp.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw)
-instance C'.FromStruct M'.ConstMsg ProvisionId where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
 instance C'.Marshal ProvisionId where
     marshalInto raw value = do
         case value of
             ProvisionId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
+instance C'.FromStruct M'.ConstMsg ProvisionId where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
 instance C'.Cerialize s ProvisionId
 instance Default ProvisionId where
     def = PH'.defaultStruct
@@ -120,15 +120,15 @@ instance C'.Decerialize VatId where
     decerialize raw = do
         VatId <$>
             (Capnp.ById.Xa184c7885cdaf2a1.get_VatId'side raw)
-instance C'.FromStruct M'.ConstMsg VatId where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg)
 instance C'.Marshal VatId where
     marshalInto raw value = do
         case value of
             VatId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_VatId'side raw side
+instance C'.FromStruct M'.ConstMsg VatId where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg)
 instance C'.Cerialize s VatId
 instance Default VatId where
     def = PH'.defaultStruct

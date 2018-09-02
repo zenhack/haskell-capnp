@@ -191,45 +191,29 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
             let allFields = V.toList fields
                 (unionFields, commonFields) = partition isUnionField allFields
                 typeName = name
-                -- variants to generate that go inside the union:
-                unionVariants =
-                    map (generateVariant thisModule nodeMap name) unionFields
-                    ++
-                    -- Every union gets an extra "unknown" varaint, which is used
-                    -- whenever what's on the wire has a discriminant that's not
-                    -- in our schema.
-                    [ IR.Variant
-                        { variantName = IR.subName name "unknown'"
-                        , variantParams = IR.Unnamed
-                            (IR.WordType $ IR.PrimWord IR.PrimInt{isSigned=False, size=16})
-                            IR.VoidField -- We won't end up actually fetching this from anywhere.
-                        , variantTag = Nothing
-                        }
-                    ]
-                bodyFields =
-                    ( typeName
-                    , IR.DeclDef IR.DataDef
-                          { dataVariants =
-                              [ IR.Variant
-                                  { variantName = typeName
-                                  , variantParams = formatStructBody thisModule nodeMap typeName allFields
-                                  , variantTag = Nothing
-                                  }
-                              ]
-                          , dataTagLoc = Nothing
-                          , dataCerialType = IR.CTyStruct dataWordCount pointerCount
-                          }
-                    )
-                bodyUnion = IR.DeclDef IR.DataDef
-                    { dataVariants = unionVariants
-                    , dataTagLoc = Just $ dataLoc
+                unionName = IR.subName name ""
+
+                bodyFields = IR.DeclDef IR.DefStruct
+                    { fields = formatStructBody thisModule nodeMap typeName allFields
+                    , info = if isGroup
+                        then IR.IsGroup
+                        else IR.IsStandalone
+                            { dataSz = dataWordCount
+                            , ptrSz = pointerCount
+                            }
+                    }
+
+                bodyUnion = IR.DeclDef IR.DefUnion
+                    { dataVariants =
+                        map (generateVariant thisModule nodeMap name) unionFields
+                    , dataTagLoc = dataLoc
                         discriminantOffset
                         (IR.PrimWord IR.PrimInt{isSigned = False, size = 16})
                         -- The default value for a union tag is always zero:
                         (Value'uint16 0)
-                    , dataCerialType = IR.CTyStruct dataWordCount pointerCount
+                    , unionStructName = name
                     }
-                unionName = IR.subName name ""
+
             in case (unionFields, commonFields) of
                 ([], []) ->
                     -- I(zenhack) don't fully understand this case. It seems like
@@ -242,33 +226,24 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     []
                 ([], _:_) ->
                     -- There's no anonymous union; just declare the fields.
-                    [ bodyFields ]
+                    [ ( typeName, bodyFields ) ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants
                     -- in-line, rather than making a wrapper.
-                    [ (typeName, bodyUnion) ]
+                    [ ( typeName, bodyUnion ) ]
                 (_:_, _:_) ->
                     -- There are both common fields and an anonymous union. Generate
                     -- an auxiliary type for the union.
-                    [ bodyFields
-                    , (unionName, bodyUnion)
+                    [ ( typeName, bodyFields )
+                    , ( unionName, bodyUnion )
                     ]
         Node'enum{..} ->
             [ ( name
-              , IR.DeclDef IR.DataDef
-                    { dataVariants =
-                        map (generateEnum thisModule nodeMap name) (V.toList enumerants)
-                        <> [ IR.Variant
-                                { variantName = IR.subName name "unknown'"
-                                , variantParams = IR.Unnamed
-                                    (IR.WordType $ IR.PrimWord IR.PrimInt {isSigned=False, size=16})
-                                    IR.VoidField
-                                , variantTag = Nothing
-                                }
-                           ]
-                    , dataTagLoc = Nothing
-                    , dataCerialType = IR.CTyEnum
-                    }
+              , IR.DeclDef $ IR.DefEnum $ map
+                    (\Enumerant{name=variantName} ->
+                        IR.subName name variantName
+                    )
+                    (V.toList enumerants)
               )
             ]
         Node'const{type_=Type'void,value=Value'void} ->
@@ -320,15 +295,15 @@ generateEnum thisModule nodeMap parentName Enumerant{..} =
     IR.Variant
         { variantName = IR.subName parentName name
         , variantParams = IR.Unnamed IR.VoidType IR.VoidField
-        , variantTag = Just codeOrder
+        , variantTag = codeOrder -- FIXME: codeOrder is not the same as ordinal!
         }
 
 -- | Return whether the field is part of a union within its struct.
 isUnionField :: Field -> Bool
 isUnionField Field{..} = discriminantValue /= field'noDiscriminant
 
-formatStructBody :: Id -> NodeMap -> IR.Name -> [Field] -> IR.VariantParams
-formatStructBody thisModule nodeMap parentName fields = IR.Record $
+formatStructBody :: Id -> NodeMap -> IR.Name -> [Field] -> [IR.Field]
+formatStructBody thisModule nodeMap parentName fields =
     let (unionFields, commonFields) = partition isUnionField fields in
     map (generateField thisModule nodeMap) commonFields
     <> case unionFields of
@@ -367,16 +342,16 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
         , variantParams = IR.Unnamed
             (formatType thisModule nodeMap type_)
             (getFieldLoc thisModule nodeMap union')
-        , variantTag = Just discriminantValue
+        , variantTag = discriminantValue
         }
     Field'group{..} ->
         let NodeMetaData{node=node@Node{..},..} = nodeMap M.! typeId
         in case union' of
             Node'struct{..} -> IR.Variant
-                { variantName = variantName
+                { variantName
                 , variantParams =
-                    formatStructBody thisModule nodeMap variantName $ V.toList fields
-                , variantTag = Just discriminantValue
+                    IR.Record $ formatStructBody thisModule nodeMap variantName $ V.toList fields
+                , variantTag = discriminantValue
                 }
             _               ->
                 error "A group field referenced a non-struct node."
@@ -387,7 +362,7 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
         IR.Variant
             { variantName
             , variantParams = IR.Unnamed IR.VoidType IR.VoidField
-            , variantTag = Nothing
+            , variantTag = discriminantValue
             }
   where
     variantName = IR.subName parentName (makeLegalName name)

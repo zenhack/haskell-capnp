@@ -31,20 +31,20 @@ instance C'.FromStruct msg (Annotation msg) where
     fromStruct = pure . Annotation_newtype_
 instance C'.ToStruct msg (Annotation msg) where
     toStruct (Annotation_newtype_ struct) = struct
-instance C'.IsPtr msg (Annotation msg) where
-    fromPtr msg ptr = Annotation_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Annotation_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Annotation msg) where
-    newtype List msg (Annotation msg) = List_Annotation (U'.ListOf msg (U'.Struct msg))
-    length (List_Annotation l) = U'.length l
-    index i (List_Annotation l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Annotation msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Annotation (M'.MutMsg s)) where
-    setIndex (Annotation_newtype_ elt) i (List_Annotation l) = U'.setIndex elt i l
-    newList msg len = List_Annotation <$> U'.allocCompositeList msg 1 2 len
 instance U'.HasMessage (Annotation msg) msg where
     message (Annotation_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Annotation msg) msg where
     messageDefault = Annotation_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Annotation msg) where
+    newtype List msg (Annotation msg) = List_Annotation (U'.ListOf msg (U'.Struct msg))
+    length (List_Annotation l) = U'.length l
+    index i (List_Annotation l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Annotation msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Annotation msg) where
+    fromPtr msg ptr = Annotation_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Annotation_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Annotation (M'.MutMsg s)) where
+    setIndex (Annotation_newtype_ elt) i (List_Annotation l) = U'.setIndex elt i l
+    newList msg len = List_Annotation <$> U'.allocCompositeList msg 1 2 len
 instance C'.Allocate s (Annotation (M'.MutMsg s)) where
     new msg = Annotation_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Annotation msg)) where
@@ -87,20 +87,20 @@ instance C'.FromStruct msg (Brand msg) where
     fromStruct = pure . Brand_newtype_
 instance C'.ToStruct msg (Brand msg) where
     toStruct (Brand_newtype_ struct) = struct
-instance C'.IsPtr msg (Brand msg) where
-    fromPtr msg ptr = Brand_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Brand msg) where
-    newtype List msg (Brand msg) = List_Brand (U'.ListOf msg (U'.Struct msg))
-    length (List_Brand l) = U'.length l
-    index i (List_Brand l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand (M'.MutMsg s)) where
-    setIndex (Brand_newtype_ elt) i (List_Brand l) = U'.setIndex elt i l
-    newList msg len = List_Brand <$> U'.allocCompositeList msg 0 1 len
 instance U'.HasMessage (Brand msg) msg where
     message (Brand_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Brand msg) msg where
     messageDefault = Brand_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Brand msg) where
+    newtype List msg (Brand msg) = List_Brand (U'.ListOf msg (U'.Struct msg))
+    length (List_Brand l) = U'.length l
+    index i (List_Brand l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Brand msg) where
+    fromPtr msg ptr = Brand_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Brand_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Brand (M'.MutMsg s)) where
+    setIndex (Brand_newtype_ elt) i (List_Brand l) = U'.setIndex elt i l
+    newList msg len = List_Brand <$> U'.allocCompositeList msg 0 1 len
 instance C'.Allocate s (Brand (M'.MutMsg s)) where
     new msg = Brand_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Brand msg)) where
@@ -124,20 +124,20 @@ instance C'.FromStruct msg (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion_newtype_
 instance C'.ToStruct msg (CapnpVersion msg) where
     toStruct (CapnpVersion_newtype_ struct) = struct
-instance C'.IsPtr msg (CapnpVersion msg) where
-    fromPtr msg ptr = CapnpVersion_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CapnpVersion_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (CapnpVersion msg) where
-    newtype List msg (CapnpVersion msg) = List_CapnpVersion (U'.ListOf msg (U'.Struct msg))
-    length (List_CapnpVersion l) = U'.length l
-    index i (List_CapnpVersion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapnpVersion msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CapnpVersion (M'.MutMsg s)) where
-    setIndex (CapnpVersion_newtype_ elt) i (List_CapnpVersion l) = U'.setIndex elt i l
-    newList msg len = List_CapnpVersion <$> U'.allocCompositeList msg 1 0 len
 instance U'.HasMessage (CapnpVersion msg) msg where
     message (CapnpVersion_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (CapnpVersion msg) msg where
     messageDefault = CapnpVersion_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CapnpVersion msg) where
+    newtype List msg (CapnpVersion msg) = List_CapnpVersion (U'.ListOf msg (U'.Struct msg))
+    length (List_CapnpVersion l) = U'.length l
+    index i (List_CapnpVersion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapnpVersion msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CapnpVersion msg) where
+    fromPtr msg ptr = CapnpVersion_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (CapnpVersion_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (CapnpVersion (M'.MutMsg s)) where
+    setIndex (CapnpVersion_newtype_ elt) i (List_CapnpVersion l) = U'.setIndex elt i l
+    newList msg len = List_CapnpVersion <$> U'.allocCompositeList msg 1 0 len
 instance C'.Allocate s (CapnpVersion (M'.MutMsg s)) where
     new msg = CapnpVersion_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
@@ -166,20 +166,20 @@ instance C'.FromStruct msg (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest msg) where
     toStruct (CodeGeneratorRequest_newtype_ struct) = struct
-instance C'.IsPtr msg (CodeGeneratorRequest msg) where
-    fromPtr msg ptr = CodeGeneratorRequest_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CodeGeneratorRequest_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (CodeGeneratorRequest msg) where
-    newtype List msg (CodeGeneratorRequest msg) = List_CodeGeneratorRequest (U'.ListOf msg (U'.Struct msg))
-    length (List_CodeGeneratorRequest l) = U'.length l
-    index i (List_CodeGeneratorRequest l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMsg s)) where
-    setIndex (CodeGeneratorRequest_newtype_ elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
-    newList msg len = List_CodeGeneratorRequest <$> U'.allocCompositeList msg 0 3 len
 instance U'.HasMessage (CodeGeneratorRequest msg) msg where
     message (CodeGeneratorRequest_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (CodeGeneratorRequest msg) msg where
     messageDefault = CodeGeneratorRequest_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CodeGeneratorRequest msg) where
+    newtype List msg (CodeGeneratorRequest msg) = List_CodeGeneratorRequest (U'.ListOf msg (U'.Struct msg))
+    length (List_CodeGeneratorRequest l) = U'.length l
+    index i (List_CodeGeneratorRequest l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CodeGeneratorRequest msg) where
+    fromPtr msg ptr = CodeGeneratorRequest_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (CodeGeneratorRequest_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMsg s)) where
+    setIndex (CodeGeneratorRequest_newtype_ elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
+    newList msg len = List_CodeGeneratorRequest <$> U'.allocCompositeList msg 0 3 len
 instance C'.Allocate s (CodeGeneratorRequest (M'.MutMsg s)) where
     new msg = CodeGeneratorRequest_newtype_ <$> U'.allocStruct msg 0 3
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest msg)) where
@@ -240,23 +240,23 @@ instance Enum ElementSize where
     fromEnum = fromIntegral . C'.toWord
 instance C'.IsWord ElementSize where
     fromWord n = go (fromIntegral n :: Word16) where
-        go 7 = ElementSize'inlineComposite
-        go 6 = ElementSize'pointer
-        go 5 = ElementSize'eightBytes
-        go 4 = ElementSize'fourBytes
-        go 3 = ElementSize'twoBytes
-        go 2 = ElementSize'byte
-        go 1 = ElementSize'bit
         go 0 = ElementSize'empty
+        go 1 = ElementSize'bit
+        go 2 = ElementSize'byte
+        go 3 = ElementSize'twoBytes
+        go 4 = ElementSize'fourBytes
+        go 5 = ElementSize'eightBytes
+        go 6 = ElementSize'pointer
+        go 7 = ElementSize'inlineComposite
         go tag = ElementSize'unknown' (fromIntegral tag)
-    toWord ElementSize'inlineComposite = 7
-    toWord ElementSize'pointer = 6
-    toWord ElementSize'eightBytes = 5
-    toWord ElementSize'fourBytes = 4
-    toWord ElementSize'twoBytes = 3
-    toWord ElementSize'byte = 2
-    toWord ElementSize'bit = 1
     toWord ElementSize'empty = 0
+    toWord ElementSize'bit = 1
+    toWord ElementSize'byte = 2
+    toWord ElementSize'twoBytes = 3
+    toWord ElementSize'fourBytes = 4
+    toWord ElementSize'eightBytes = 5
+    toWord ElementSize'pointer = 6
+    toWord ElementSize'inlineComposite = 7
     toWord (ElementSize'unknown' tag) = fromIntegral tag
 instance B'.ListElem msg ElementSize where
     newtype List msg ElementSize = List_ElementSize (U'.ListOf msg Word16)
@@ -273,20 +273,20 @@ instance C'.FromStruct msg (Enumerant msg) where
     fromStruct = pure . Enumerant_newtype_
 instance C'.ToStruct msg (Enumerant msg) where
     toStruct (Enumerant_newtype_ struct) = struct
-instance C'.IsPtr msg (Enumerant msg) where
-    fromPtr msg ptr = Enumerant_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Enumerant_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Enumerant msg) where
-    newtype List msg (Enumerant msg) = List_Enumerant (U'.ListOf msg (U'.Struct msg))
-    length (List_Enumerant l) = U'.length l
-    index i (List_Enumerant l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Enumerant msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Enumerant (M'.MutMsg s)) where
-    setIndex (Enumerant_newtype_ elt) i (List_Enumerant l) = U'.setIndex elt i l
-    newList msg len = List_Enumerant <$> U'.allocCompositeList msg 1 2 len
 instance U'.HasMessage (Enumerant msg) msg where
     message (Enumerant_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Enumerant msg) msg where
     messageDefault = Enumerant_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Enumerant msg) where
+    newtype List msg (Enumerant msg) = List_Enumerant (U'.ListOf msg (U'.Struct msg))
+    length (List_Enumerant l) = U'.length l
+    index i (List_Enumerant l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Enumerant msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Enumerant msg) where
+    fromPtr msg ptr = Enumerant_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Enumerant_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Enumerant (M'.MutMsg s)) where
+    setIndex (Enumerant_newtype_ elt) i (List_Enumerant l) = U'.setIndex elt i l
+    newList msg len = List_Enumerant <$> U'.allocCompositeList msg 1 2 len
 instance C'.Allocate s (Enumerant (M'.MutMsg s)) where
     new msg = Enumerant_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Enumerant msg)) where
@@ -329,20 +329,20 @@ instance C'.FromStruct msg (Field msg) where
     fromStruct = pure . Field_newtype_
 instance C'.ToStruct msg (Field msg) where
     toStruct (Field_newtype_ struct) = struct
-instance C'.IsPtr msg (Field msg) where
-    fromPtr msg ptr = Field_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Field msg) where
-    newtype List msg (Field msg) = List_Field (U'.ListOf msg (U'.Struct msg))
-    length (List_Field l) = U'.length l
-    index i (List_Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field (M'.MutMsg s)) where
-    setIndex (Field_newtype_ elt) i (List_Field l) = U'.setIndex elt i l
-    newList msg len = List_Field <$> U'.allocCompositeList msg 3 4 len
 instance U'.HasMessage (Field msg) msg where
     message (Field_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Field msg) msg where
     messageDefault = Field_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Field msg) where
+    newtype List msg (Field msg) = List_Field (U'.ListOf msg (U'.Struct msg))
+    length (List_Field l) = U'.length l
+    index i (List_Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Field msg) where
+    fromPtr msg ptr = Field_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Field (M'.MutMsg s)) where
+    setIndex (Field_newtype_ elt) i (List_Field l) = U'.setIndex elt i l
+    newList msg len = List_Field <$> U'.allocCompositeList msg 3 4 len
 instance C'.Allocate s (Field (M'.MutMsg s)) where
     new msg = Field_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
@@ -399,20 +399,20 @@ instance C'.FromStruct msg (Method msg) where
     fromStruct = pure . Method_newtype_
 instance C'.ToStruct msg (Method msg) where
     toStruct (Method_newtype_ struct) = struct
-instance C'.IsPtr msg (Method msg) where
-    fromPtr msg ptr = Method_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Method_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Method msg) where
-    newtype List msg (Method msg) = List_Method (U'.ListOf msg (U'.Struct msg))
-    length (List_Method l) = U'.length l
-    index i (List_Method l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Method msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Method (M'.MutMsg s)) where
-    setIndex (Method_newtype_ elt) i (List_Method l) = U'.setIndex elt i l
-    newList msg len = List_Method <$> U'.allocCompositeList msg 3 5 len
 instance U'.HasMessage (Method msg) msg where
     message (Method_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Method msg) msg where
     messageDefault = Method_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Method msg) where
+    newtype List msg (Method msg) = List_Method (U'.ListOf msg (U'.Struct msg))
+    length (List_Method l) = U'.length l
+    index i (List_Method l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Method msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Method msg) where
+    fromPtr msg ptr = Method_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Method_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Method (M'.MutMsg s)) where
+    setIndex (Method_newtype_ elt) i (List_Method l) = U'.setIndex elt i l
+    newList msg len = List_Method <$> U'.allocCompositeList msg 3 5 len
 instance C'.Allocate s (Method (M'.MutMsg s)) where
     new msg = Method_newtype_ <$> U'.allocStruct msg 3 5
 instance C'.IsPtr msg (B'.List msg (Method msg)) where
@@ -506,20 +506,20 @@ instance C'.FromStruct msg (Node msg) where
     fromStruct = pure . Node_newtype_
 instance C'.ToStruct msg (Node msg) where
     toStruct (Node_newtype_ struct) = struct
-instance C'.IsPtr msg (Node msg) where
-    fromPtr msg ptr = Node_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node msg) where
-    newtype List msg (Node msg) = List_Node (U'.ListOf msg (U'.Struct msg))
-    length (List_Node l) = U'.length l
-    index i (List_Node l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node (M'.MutMsg s)) where
-    setIndex (Node_newtype_ elt) i (List_Node l) = U'.setIndex elt i l
-    newList msg len = List_Node <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node msg) msg where
     message (Node_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node msg) msg where
     messageDefault = Node_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node msg) where
+    newtype List msg (Node msg) = List_Node (U'.ListOf msg (U'.Struct msg))
+    length (List_Node l) = U'.length l
+    index i (List_Node l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node msg) where
+    fromPtr msg ptr = Node_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node (M'.MutMsg s)) where
+    setIndex (Node_newtype_ elt) i (List_Node l) = U'.setIndex elt i l
+    newList msg len = List_Node <$> U'.allocCompositeList msg 5 6 len
 instance C'.Allocate s (Node (M'.MutMsg s)) where
     new msg = Node_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
@@ -610,20 +610,20 @@ instance C'.FromStruct msg (Superclass msg) where
     fromStruct = pure . Superclass_newtype_
 instance C'.ToStruct msg (Superclass msg) where
     toStruct (Superclass_newtype_ struct) = struct
-instance C'.IsPtr msg (Superclass msg) where
-    fromPtr msg ptr = Superclass_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Superclass_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Superclass msg) where
-    newtype List msg (Superclass msg) = List_Superclass (U'.ListOf msg (U'.Struct msg))
-    length (List_Superclass l) = U'.length l
-    index i (List_Superclass l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Superclass msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Superclass (M'.MutMsg s)) where
-    setIndex (Superclass_newtype_ elt) i (List_Superclass l) = U'.setIndex elt i l
-    newList msg len = List_Superclass <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Superclass msg) msg where
     message (Superclass_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Superclass msg) msg where
     messageDefault = Superclass_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Superclass msg) where
+    newtype List msg (Superclass msg) = List_Superclass (U'.ListOf msg (U'.Struct msg))
+    length (List_Superclass l) = U'.length l
+    index i (List_Superclass l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Superclass msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Superclass msg) where
+    fromPtr msg ptr = Superclass_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Superclass_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Superclass (M'.MutMsg s)) where
+    setIndex (Superclass_newtype_ elt) i (List_Superclass l) = U'.setIndex elt i l
+    newList msg len = List_Superclass <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Superclass (M'.MutMsg s)) where
     new msg = Superclass_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
@@ -653,22 +653,22 @@ instance C'.FromStruct msg (Type msg) where
     fromStruct = pure . Type_newtype_
 instance C'.ToStruct msg (Type msg) where
     toStruct (Type_newtype_ struct) = struct
-instance C'.IsPtr msg (Type msg) where
-    fromPtr msg ptr = Type_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type msg) where
-    newtype List msg (Type msg) = List_Type (U'.ListOf msg (U'.Struct msg))
-    length (List_Type l) = U'.length l
-    index i (List_Type l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type (M'.MutMsg s)) where
-    setIndex (Type_newtype_ elt) i (List_Type l) = U'.setIndex elt i l
-    newList msg len = List_Type <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type msg) msg where
     message (Type_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type msg) msg where
     messageDefault = Type_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type msg) where
+    newtype List msg (Type msg) = List_Type (U'.ListOf msg (U'.Struct msg))
+    length (List_Type l) = U'.length l
+    index i (List_Type l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type msg) where
+    fromPtr msg ptr = Type_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type (M'.MutMsg s)) where
+    setIndex (Type_newtype_ elt) i (List_Type l) = U'.setIndex elt i l
+    newList msg len = List_Type <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type (M'.MutMsg s)) where
-    new msg = Type_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type msg)) where
     fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
     toPtr (List_Type l) = C'.toPtr l
@@ -752,22 +752,22 @@ instance C'.FromStruct msg (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'_newtype_
 instance C'.ToStruct msg (Type'list'group' msg) where
     toStruct (Type'list'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'list'group' msg) where
-    fromPtr msg ptr = Type'list'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'list'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'list'group' msg) where
-    newtype List msg (Type'list'group' msg) = List_Type'list'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'list'group' l) = U'.length l
-    index i (List_Type'list'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'list'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'list'group' (M'.MutMsg s)) where
-    setIndex (Type'list'group'_newtype_ elt) i (List_Type'list'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'list'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'list'group' msg) msg where
     message (Type'list'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'list'group' msg) msg where
     messageDefault = Type'list'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'list'group' msg) where
+    newtype List msg (Type'list'group' msg) = List_Type'list'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'list'group' l) = U'.length l
+    index i (List_Type'list'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'list'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'list'group' msg) where
+    fromPtr msg ptr = Type'list'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'list'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'list'group' (M'.MutMsg s)) where
+    setIndex (Type'list'group'_newtype_ elt) i (List_Type'list'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'list'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'list'group' (M'.MutMsg s)) where
-    new msg = Type'list'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'list'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'list'group' msg)) where
     fromPtr msg ptr = List_Type'list'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'list'group' l) = C'.toPtr l
@@ -789,22 +789,22 @@ instance C'.FromStruct msg (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'_newtype_
 instance C'.ToStruct msg (Type'enum'group' msg) where
     toStruct (Type'enum'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'enum'group' msg) where
-    fromPtr msg ptr = Type'enum'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'enum'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'enum'group' msg) where
-    newtype List msg (Type'enum'group' msg) = List_Type'enum'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'enum'group' l) = U'.length l
-    index i (List_Type'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'enum'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'enum'group' (M'.MutMsg s)) where
-    setIndex (Type'enum'group'_newtype_ elt) i (List_Type'enum'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'enum'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'enum'group' msg) msg where
     message (Type'enum'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'enum'group' msg) msg where
     messageDefault = Type'enum'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'enum'group' msg) where
+    newtype List msg (Type'enum'group' msg) = List_Type'enum'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'enum'group' l) = U'.length l
+    index i (List_Type'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'enum'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'enum'group' msg) where
+    fromPtr msg ptr = Type'enum'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'enum'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'enum'group' (M'.MutMsg s)) where
+    setIndex (Type'enum'group'_newtype_ elt) i (List_Type'enum'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'enum'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'enum'group' (M'.MutMsg s)) where
-    new msg = Type'enum'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'enum'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'enum'group' msg)) where
     fromPtr msg ptr = List_Type'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'enum'group' l) = C'.toPtr l
@@ -832,22 +832,22 @@ instance C'.FromStruct msg (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'_newtype_
 instance C'.ToStruct msg (Type'struct'group' msg) where
     toStruct (Type'struct'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'struct'group' msg) where
-    fromPtr msg ptr = Type'struct'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'struct'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'struct'group' msg) where
-    newtype List msg (Type'struct'group' msg) = List_Type'struct'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'struct'group' l) = U'.length l
-    index i (List_Type'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'struct'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'struct'group' (M'.MutMsg s)) where
-    setIndex (Type'struct'group'_newtype_ elt) i (List_Type'struct'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'struct'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'struct'group' msg) msg where
     message (Type'struct'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'struct'group' msg) msg where
     messageDefault = Type'struct'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'struct'group' msg) where
+    newtype List msg (Type'struct'group' msg) = List_Type'struct'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'struct'group' l) = U'.length l
+    index i (List_Type'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'struct'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'struct'group' msg) where
+    fromPtr msg ptr = Type'struct'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'struct'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'struct'group' (M'.MutMsg s)) where
+    setIndex (Type'struct'group'_newtype_ elt) i (List_Type'struct'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'struct'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'struct'group' (M'.MutMsg s)) where
-    new msg = Type'struct'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'struct'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'struct'group' msg)) where
     fromPtr msg ptr = List_Type'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'struct'group' l) = C'.toPtr l
@@ -875,22 +875,22 @@ instance C'.FromStruct msg (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'_newtype_
 instance C'.ToStruct msg (Type'interface'group' msg) where
     toStruct (Type'interface'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'interface'group' msg) where
-    fromPtr msg ptr = Type'interface'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'interface'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'interface'group' msg) where
-    newtype List msg (Type'interface'group' msg) = List_Type'interface'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'interface'group' l) = U'.length l
-    index i (List_Type'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'interface'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'interface'group' (M'.MutMsg s)) where
-    setIndex (Type'interface'group'_newtype_ elt) i (List_Type'interface'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'interface'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'interface'group' msg) msg where
     message (Type'interface'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'interface'group' msg) msg where
     messageDefault = Type'interface'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'interface'group' msg) where
+    newtype List msg (Type'interface'group' msg) = List_Type'interface'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'interface'group' l) = U'.length l
+    index i (List_Type'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'interface'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'interface'group' msg) where
+    fromPtr msg ptr = Type'interface'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'interface'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'interface'group' (M'.MutMsg s)) where
+    setIndex (Type'interface'group'_newtype_ elt) i (List_Type'interface'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'interface'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'interface'group' (M'.MutMsg s)) where
-    new msg = Type'interface'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'interface'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'interface'group' msg)) where
     fromPtr msg ptr = List_Type'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'interface'group' l) = C'.toPtr l
@@ -918,22 +918,22 @@ instance C'.FromStruct msg (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'group' msg) where
     toStruct (Type'anyPointer'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'anyPointer'group' msg) where
-    fromPtr msg ptr = Type'anyPointer'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'anyPointer'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'anyPointer'group' msg) where
-    newtype List msg (Type'anyPointer'group' msg) = List_Type'anyPointer'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer'group' l) = U'.length l
-    index i (List_Type'anyPointer'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMsg s)) where
-    setIndex (Type'anyPointer'group'_newtype_ elt) i (List_Type'anyPointer'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'anyPointer'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'anyPointer'group' msg) msg where
     message (Type'anyPointer'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'anyPointer'group' msg) msg where
     messageDefault = Type'anyPointer'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'anyPointer'group' msg) where
+    newtype List msg (Type'anyPointer'group' msg) = List_Type'anyPointer'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer'group' l) = U'.length l
+    index i (List_Type'anyPointer'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'anyPointer'group' msg) where
+    fromPtr msg ptr = Type'anyPointer'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'anyPointer'group' (M'.MutMsg s)) where
+    setIndex (Type'anyPointer'group'_newtype_ elt) i (List_Type'anyPointer'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'anyPointer'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'anyPointer'group' (M'.MutMsg s)) where
-    new msg = Type'anyPointer'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'anyPointer'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'group' l) = C'.toPtr l
@@ -970,22 +970,22 @@ instance C'.FromStruct msg (Value msg) where
     fromStruct = pure . Value_newtype_
 instance C'.ToStruct msg (Value msg) where
     toStruct (Value_newtype_ struct) = struct
-instance C'.IsPtr msg (Value msg) where
-    fromPtr msg ptr = Value_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Value_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Value msg) where
-    newtype List msg (Value msg) = List_Value (U'.ListOf msg (U'.Struct msg))
-    length (List_Value l) = U'.length l
-    index i (List_Value l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Value msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Value (M'.MutMsg s)) where
-    setIndex (Value_newtype_ elt) i (List_Value l) = U'.setIndex elt i l
-    newList msg len = List_Value <$> U'.allocCompositeList msg 2 1 len
 instance U'.HasMessage (Value msg) msg where
     message (Value_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Value msg) msg where
     messageDefault = Value_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Value msg) where
+    newtype List msg (Value msg) = List_Value (U'.ListOf msg (U'.Struct msg))
+    length (List_Value l) = U'.length l
+    index i (List_Value l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Value msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Value msg) where
+    fromPtr msg ptr = Value_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Value_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Value (M'.MutMsg s)) where
+    setIndex (Value_newtype_ elt) i (List_Value l) = U'.setIndex elt i l
+    newList msg len = List_Value <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Value (M'.MutMsg s)) where
-    new msg = Value_newtype_ <$> U'.allocStruct msg 2 1
+    new msg = Value_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Value msg)) where
     fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
     toPtr (List_Value l) = C'.toPtr l
@@ -1127,22 +1127,22 @@ instance C'.FromStruct msg (Brand'Binding msg) where
     fromStruct = pure . Brand'Binding_newtype_
 instance C'.ToStruct msg (Brand'Binding msg) where
     toStruct (Brand'Binding_newtype_ struct) = struct
-instance C'.IsPtr msg (Brand'Binding msg) where
-    fromPtr msg ptr = Brand'Binding_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand'Binding_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Brand'Binding msg) where
-    newtype List msg (Brand'Binding msg) = List_Brand'Binding (U'.ListOf msg (U'.Struct msg))
-    length (List_Brand'Binding l) = U'.length l
-    index i (List_Brand'Binding l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Binding msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand'Binding (M'.MutMsg s)) where
-    setIndex (Brand'Binding_newtype_ elt) i (List_Brand'Binding l) = U'.setIndex elt i l
-    newList msg len = List_Brand'Binding <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Brand'Binding msg) msg where
     message (Brand'Binding_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Brand'Binding msg) msg where
     messageDefault = Brand'Binding_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Brand'Binding msg) where
+    newtype List msg (Brand'Binding msg) = List_Brand'Binding (U'.ListOf msg (U'.Struct msg))
+    length (List_Brand'Binding l) = U'.length l
+    index i (List_Brand'Binding l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Binding msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Brand'Binding msg) where
+    fromPtr msg ptr = Brand'Binding_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Brand'Binding_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Brand'Binding (M'.MutMsg s)) where
+    setIndex (Brand'Binding_newtype_ elt) i (List_Brand'Binding l) = U'.setIndex elt i l
+    newList msg len = List_Brand'Binding <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Brand'Binding (M'.MutMsg s)) where
-    new msg = Brand'Binding_newtype_ <$> U'.allocStruct msg 1 1
+    new msg = Brand'Binding_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
     fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Binding l) = C'.toPtr l
@@ -1179,20 +1179,20 @@ instance C'.FromStruct msg (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope_newtype_
 instance C'.ToStruct msg (Brand'Scope msg) where
     toStruct (Brand'Scope_newtype_ struct) = struct
-instance C'.IsPtr msg (Brand'Scope msg) where
-    fromPtr msg ptr = Brand'Scope_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand'Scope_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Brand'Scope msg) where
-    newtype List msg (Brand'Scope msg) = List_Brand'Scope (U'.ListOf msg (U'.Struct msg))
-    length (List_Brand'Scope l) = U'.length l
-    index i (List_Brand'Scope l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
-    setIndex (Brand'Scope_newtype_ elt) i (List_Brand'Scope l) = U'.setIndex elt i l
-    newList msg len = List_Brand'Scope <$> U'.allocCompositeList msg 2 1 len
 instance U'.HasMessage (Brand'Scope msg) msg where
     message (Brand'Scope_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Brand'Scope msg) msg where
     messageDefault = Brand'Scope_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Brand'Scope msg) where
+    newtype List msg (Brand'Scope msg) = List_Brand'Scope (U'.ListOf msg (U'.Struct msg))
+    length (List_Brand'Scope l) = U'.length l
+    index i (List_Brand'Scope l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Brand'Scope msg) where
+    fromPtr msg ptr = Brand'Scope_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Brand'Scope_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
+    setIndex (Brand'Scope_newtype_ elt) i (List_Brand'Scope l) = U'.setIndex elt i l
+    newList msg len = List_Brand'Scope <$> U'.allocCompositeList msg 2 1 len
 instance C'.Allocate s (Brand'Scope (M'.MutMsg s)) where
     new msg = Brand'Scope_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
@@ -1213,29 +1213,29 @@ instance C'.FromStruct msg (Brand'Scope' msg) where
     fromStruct = pure . Brand'Scope'_newtype_
 instance C'.ToStruct msg (Brand'Scope' msg) where
     toStruct (Brand'Scope'_newtype_ struct) = struct
-instance C'.IsPtr msg (Brand'Scope' msg) where
-    fromPtr msg ptr = Brand'Scope'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand'Scope'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Brand'Scope' msg) where
-    newtype List msg (Brand'Scope' msg) = List_Brand'Scope' (U'.ListOf msg (U'.Struct msg))
-    length (List_Brand'Scope' l) = U'.length l
-    index i (List_Brand'Scope' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Brand'Scope' (M'.MutMsg s)) where
-    setIndex (Brand'Scope'_newtype_ elt) i (List_Brand'Scope' l) = U'.setIndex elt i l
-    newList msg len = List_Brand'Scope' <$> U'.allocCompositeList msg 2 1 len
 instance U'.HasMessage (Brand'Scope' msg) msg where
     message (Brand'Scope'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Brand'Scope' msg) msg where
     messageDefault = Brand'Scope'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Brand'Scope' msg) where
+    newtype List msg (Brand'Scope' msg) = List_Brand'Scope' (U'.ListOf msg (U'.Struct msg))
+    length (List_Brand'Scope' l) = U'.length l
+    index i (List_Brand'Scope' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Brand'Scope' msg) where
+    fromPtr msg ptr = Brand'Scope'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Brand'Scope'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Brand'Scope' (M'.MutMsg s)) where
+    setIndex (Brand'Scope'_newtype_ elt) i (List_Brand'Scope' l) = U'.setIndex elt i l
+    newList msg len = List_Brand'Scope' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Brand'Scope' (M'.MutMsg s)) where
-    new msg = Brand'Scope'_newtype_ <$> U'.allocStruct msg 2 1
+    new msg = Brand'Scope'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
     fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope' l) = C'.toPtr l
 data Brand'Scope'' msg
     = Brand'Scope'bind (B'.List msg (Brand'Binding msg))
     | Brand'Scope'inherit
-    | Brand'Scope'unknown' Word16
+    | Brand'Scope''unknown' Word16
 get_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m (Brand'Scope'' msg)
 get_Brand'Scope'' (Brand'Scope'_newtype_ struct) = C'.fromStruct struct
 has_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m Bool
@@ -1251,34 +1251,34 @@ new_Brand'Scope'bind len struct = do
     pure result
 set_Brand'Scope'inherit :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> m ()
 set_Brand'Scope'inherit (Brand'Scope'_newtype_ struct) = H'.setWordField struct (1 :: Word16) 1 0 0
-set_Brand'Scope'unknown' :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> Word16 -> m ()
-set_Brand'Scope'unknown'(Brand'Scope'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
+set_Brand'Scope''unknown' :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> Word16 -> m ()
+set_Brand'Scope''unknown'(Brand'Scope'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 instance C'.FromStruct msg (Brand'Scope'' msg) where
     fromStruct struct = do
         tag <-  H'.getWordField struct 1 0 0
         case tag of
             1 -> pure Brand'Scope'inherit
             0 -> Brand'Scope'bind <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
-            _ -> pure $ Brand'Scope'unknown' tag
+            _ -> pure $ Brand'Scope''unknown' tag
 newtype CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     toStruct (CodeGeneratorRequest'RequestedFile_newtype_ struct) = struct
-instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile msg) where
-    fromPtr msg ptr = CodeGeneratorRequest'RequestedFile_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CodeGeneratorRequest'RequestedFile_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
-    newtype List msg (CodeGeneratorRequest'RequestedFile msg) = List_CodeGeneratorRequest'RequestedFile (U'.ListOf msg (U'.Struct msg))
-    length (List_CodeGeneratorRequest'RequestedFile l) = U'.length l
-    index i (List_CodeGeneratorRequest'RequestedFile l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
-    setIndex (CodeGeneratorRequest'RequestedFile_newtype_ elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
-    newList msg len = List_CodeGeneratorRequest'RequestedFile <$> U'.allocCompositeList msg 1 2 len
 instance U'.HasMessage (CodeGeneratorRequest'RequestedFile msg) msg where
     message (CodeGeneratorRequest'RequestedFile_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile msg) msg where
     messageDefault = CodeGeneratorRequest'RequestedFile_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
+    newtype List msg (CodeGeneratorRequest'RequestedFile msg) = List_CodeGeneratorRequest'RequestedFile (U'.ListOf msg (U'.Struct msg))
+    length (List_CodeGeneratorRequest'RequestedFile l) = U'.length l
+    index i (List_CodeGeneratorRequest'RequestedFile l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile msg) where
+    fromPtr msg ptr = CodeGeneratorRequest'RequestedFile_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (CodeGeneratorRequest'RequestedFile_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
+    setIndex (CodeGeneratorRequest'RequestedFile_newtype_ elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
+    newList msg len = List_CodeGeneratorRequest'RequestedFile <$> U'.allocCompositeList msg 1 2 len
 instance C'.Allocate s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     new msg = CodeGeneratorRequest'RequestedFile_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) where
@@ -1321,20 +1321,20 @@ instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     toStruct (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = struct
-instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile'Import msg) where
-    fromPtr msg ptr = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
-    newtype List msg (CodeGeneratorRequest'RequestedFile'Import msg) = List_CodeGeneratorRequest'RequestedFile'Import (U'.ListOf msg (U'.Struct msg))
-    length (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.length l
-    index i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile'Import msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
-    setIndex (CodeGeneratorRequest'RequestedFile'Import_newtype_ elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
-    newList msg len = List_CodeGeneratorRequest'RequestedFile'Import <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (CodeGeneratorRequest'RequestedFile'Import msg) msg where
     message (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile'Import msg) msg where
     messageDefault = CodeGeneratorRequest'RequestedFile'Import_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
+    newtype List msg (CodeGeneratorRequest'RequestedFile'Import msg) = List_CodeGeneratorRequest'RequestedFile'Import (U'.ListOf msg (U'.Struct msg))
+    length (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.length l
+    index i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile'Import msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile'Import msg) where
+    fromPtr msg ptr = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
+    setIndex (CodeGeneratorRequest'RequestedFile'Import_newtype_ elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
+    newList msg len = List_CodeGeneratorRequest'RequestedFile'Import <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
     new msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
@@ -1364,29 +1364,29 @@ instance C'.FromStruct msg (Field' msg) where
     fromStruct = pure . Field'_newtype_
 instance C'.ToStruct msg (Field' msg) where
     toStruct (Field'_newtype_ struct) = struct
-instance C'.IsPtr msg (Field' msg) where
-    fromPtr msg ptr = Field'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Field' msg) where
-    newtype List msg (Field' msg) = List_Field' (U'.ListOf msg (U'.Struct msg))
-    length (List_Field' l) = U'.length l
-    index i (List_Field' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field' (M'.MutMsg s)) where
-    setIndex (Field'_newtype_ elt) i (List_Field' l) = U'.setIndex elt i l
-    newList msg len = List_Field' <$> U'.allocCompositeList msg 3 4 len
 instance U'.HasMessage (Field' msg) msg where
     message (Field'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Field' msg) msg where
     messageDefault = Field'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Field' msg) where
+    newtype List msg (Field' msg) = List_Field' (U'.ListOf msg (U'.Struct msg))
+    length (List_Field' l) = U'.length l
+    index i (List_Field' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Field' msg) where
+    fromPtr msg ptr = Field'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Field' (M'.MutMsg s)) where
+    setIndex (Field'_newtype_ elt) i (List_Field' l) = U'.setIndex elt i l
+    newList msg len = List_Field' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Field' (M'.MutMsg s)) where
-    new msg = Field'_newtype_ <$> U'.allocStruct msg 3 4
+    new msg = Field'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Field' msg)) where
     fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
     toPtr (List_Field' l) = C'.toPtr l
 data Field'' msg
     = Field'slot (Field'slot'group' msg)
     | Field'group (Field'group'group' msg)
-    | Field'unknown' Word16
+    | Field''unknown' Word16
 get_Field'' :: U'.ReadCtx m msg => Field' msg -> m (Field'' msg)
 get_Field'' (Field'_newtype_ struct) = C'.fromStruct struct
 has_Field'' :: U'.ReadCtx m msg => Field' msg -> m Bool
@@ -1399,29 +1399,29 @@ set_Field'group :: U'.RWCtx m s => Field' (M'.MutMsg s) -> m (Field'group'group'
 set_Field'group (Field'_newtype_ struct) = do
     H'.setWordField struct (1 :: Word16) 1 0 0
     pure $ Field'group'group'_newtype_ struct
-set_Field'unknown' :: U'.RWCtx m s => Field' (M'.MutMsg s) -> Word16 -> m ()
-set_Field'unknown'(Field'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
+set_Field''unknown' :: U'.RWCtx m s => Field' (M'.MutMsg s) -> Word16 -> m ()
+set_Field''unknown'(Field'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'_newtype_
 instance C'.ToStruct msg (Field'slot'group' msg) where
     toStruct (Field'slot'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Field'slot'group' msg) where
-    fromPtr msg ptr = Field'slot'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field'slot'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Field'slot'group' msg) where
-    newtype List msg (Field'slot'group' msg) = List_Field'slot'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Field'slot'group' l) = U'.length l
-    index i (List_Field'slot'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'slot'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'slot'group' (M'.MutMsg s)) where
-    setIndex (Field'slot'group'_newtype_ elt) i (List_Field'slot'group' l) = U'.setIndex elt i l
-    newList msg len = List_Field'slot'group' <$> U'.allocCompositeList msg 3 4 len
 instance U'.HasMessage (Field'slot'group' msg) msg where
     message (Field'slot'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Field'slot'group' msg) msg where
     messageDefault = Field'slot'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Field'slot'group' msg) where
+    newtype List msg (Field'slot'group' msg) = List_Field'slot'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Field'slot'group' l) = U'.length l
+    index i (List_Field'slot'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'slot'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Field'slot'group' msg) where
+    fromPtr msg ptr = Field'slot'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field'slot'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Field'slot'group' (M'.MutMsg s)) where
+    setIndex (Field'slot'group'_newtype_ elt) i (List_Field'slot'group' l) = U'.setIndex elt i l
+    newList msg len = List_Field'slot'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Field'slot'group' (M'.MutMsg s)) where
-    new msg = Field'slot'group'_newtype_ <$> U'.allocStruct msg 3 4
+    new msg = Field'slot'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Field'slot'group' msg)) where
     fromPtr msg ptr = List_Field'slot'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'slot'group' l) = C'.toPtr l
@@ -1468,22 +1468,22 @@ instance C'.FromStruct msg (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'_newtype_
 instance C'.ToStruct msg (Field'group'group' msg) where
     toStruct (Field'group'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Field'group'group' msg) where
-    fromPtr msg ptr = Field'group'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field'group'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Field'group'group' msg) where
-    newtype List msg (Field'group'group' msg) = List_Field'group'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Field'group'group' l) = U'.length l
-    index i (List_Field'group'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'group'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'group'group' (M'.MutMsg s)) where
-    setIndex (Field'group'group'_newtype_ elt) i (List_Field'group'group' l) = U'.setIndex elt i l
-    newList msg len = List_Field'group'group' <$> U'.allocCompositeList msg 3 4 len
 instance U'.HasMessage (Field'group'group' msg) msg where
     message (Field'group'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Field'group'group' msg) msg where
     messageDefault = Field'group'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Field'group'group' msg) where
+    newtype List msg (Field'group'group' msg) = List_Field'group'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Field'group'group' l) = U'.length l
+    index i (List_Field'group'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'group'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Field'group'group' msg) where
+    fromPtr msg ptr = Field'group'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field'group'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Field'group'group' (M'.MutMsg s)) where
+    setIndex (Field'group'group'_newtype_ elt) i (List_Field'group'group' l) = U'.setIndex elt i l
+    newList msg len = List_Field'group'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Field'group'group' (M'.MutMsg s)) where
-    new msg = Field'group'group'_newtype_ <$> U'.allocStruct msg 3 4
+    new msg = Field'group'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Field'group'group' msg)) where
     fromPtr msg ptr = List_Field'group'group' <$> C'.fromPtr msg ptr
     toPtr (List_Field'group'group' l) = C'.toPtr l
@@ -1499,7 +1499,7 @@ instance C'.FromStruct msg (Field'' msg) where
         case tag of
             1 -> Field'group <$> C'.fromStruct struct
             0 -> Field'slot <$> C'.fromStruct struct
-            _ -> pure $ Field'unknown' tag
+            _ -> pure $ Field''unknown' tag
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 newtype Field'ordinal msg = Field'ordinal_newtype_ (U'.Struct msg)
@@ -1507,22 +1507,22 @@ instance C'.FromStruct msg (Field'ordinal msg) where
     fromStruct = pure . Field'ordinal_newtype_
 instance C'.ToStruct msg (Field'ordinal msg) where
     toStruct (Field'ordinal_newtype_ struct) = struct
-instance C'.IsPtr msg (Field'ordinal msg) where
-    fromPtr msg ptr = Field'ordinal_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field'ordinal_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Field'ordinal msg) where
-    newtype List msg (Field'ordinal msg) = List_Field'ordinal (U'.ListOf msg (U'.Struct msg))
-    length (List_Field'ordinal l) = U'.length l
-    index i (List_Field'ordinal l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'ordinal msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Field'ordinal (M'.MutMsg s)) where
-    setIndex (Field'ordinal_newtype_ elt) i (List_Field'ordinal l) = U'.setIndex elt i l
-    newList msg len = List_Field'ordinal <$> U'.allocCompositeList msg 3 4 len
 instance U'.HasMessage (Field'ordinal msg) msg where
     message (Field'ordinal_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Field'ordinal msg) msg where
     messageDefault = Field'ordinal_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Field'ordinal msg) where
+    newtype List msg (Field'ordinal msg) = List_Field'ordinal (U'.ListOf msg (U'.Struct msg))
+    length (List_Field'ordinal l) = U'.length l
+    index i (List_Field'ordinal l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field'ordinal msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Field'ordinal msg) where
+    fromPtr msg ptr = Field'ordinal_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Field'ordinal_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Field'ordinal (M'.MutMsg s)) where
+    setIndex (Field'ordinal_newtype_ elt) i (List_Field'ordinal l) = U'.setIndex elt i l
+    newList msg len = List_Field'ordinal <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Field'ordinal (M'.MutMsg s)) where
-    new msg = Field'ordinal_newtype_ <$> U'.allocStruct msg 3 4
+    new msg = Field'ordinal_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Field'ordinal msg)) where
     fromPtr msg ptr = List_Field'ordinal <$> C'.fromPtr msg ptr
     toPtr (List_Field'ordinal l) = C'.toPtr l
@@ -1554,22 +1554,22 @@ instance C'.FromStruct msg (Node' msg) where
     fromStruct = pure . Node'_newtype_
 instance C'.ToStruct msg (Node' msg) where
     toStruct (Node'_newtype_ struct) = struct
-instance C'.IsPtr msg (Node' msg) where
-    fromPtr msg ptr = Node'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node' msg) where
-    newtype List msg (Node' msg) = List_Node' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node' l) = U'.length l
-    index i (List_Node' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node' (M'.MutMsg s)) where
-    setIndex (Node'_newtype_ elt) i (List_Node' l) = U'.setIndex elt i l
-    newList msg len = List_Node' <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node' msg) msg where
     message (Node'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node' msg) msg where
     messageDefault = Node'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node' msg) where
+    newtype List msg (Node' msg) = List_Node' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node' l) = U'.length l
+    index i (List_Node' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node' msg) where
+    fromPtr msg ptr = Node'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node' (M'.MutMsg s)) where
+    setIndex (Node'_newtype_ elt) i (List_Node' l) = U'.setIndex elt i l
+    newList msg len = List_Node' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Node' (M'.MutMsg s)) where
-    new msg = Node'_newtype_ <$> U'.allocStruct msg 5 6
+    new msg = Node'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Node' msg)) where
     fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
     toPtr (List_Node' l) = C'.toPtr l
@@ -1580,7 +1580,7 @@ data Node'' msg
     | Node'interface (Node'interface'group' msg)
     | Node'const (Node'const'group' msg)
     | Node'annotation (Node'annotation'group' msg)
-    | Node'unknown' Word16
+    | Node''unknown' Word16
 get_Node'' :: U'.ReadCtx m msg => Node' msg -> m (Node'' msg)
 get_Node'' (Node'_newtype_ struct) = C'.fromStruct struct
 has_Node'' :: U'.ReadCtx m msg => Node' msg -> m Bool
@@ -1607,29 +1607,29 @@ set_Node'annotation :: U'.RWCtx m s => Node' (M'.MutMsg s) -> m (Node'annotation
 set_Node'annotation (Node'_newtype_ struct) = do
     H'.setWordField struct (5 :: Word16) 1 32 0
     pure $ Node'annotation'group'_newtype_ struct
-set_Node'unknown' :: U'.RWCtx m s => Node' (M'.MutMsg s) -> Word16 -> m ()
-set_Node'unknown'(Node'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 32 0
+set_Node''unknown' :: U'.RWCtx m s => Node' (M'.MutMsg s) -> Word16 -> m ()
+set_Node''unknown'(Node'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 32 0
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'_newtype_
 instance C'.ToStruct msg (Node'struct'group' msg) where
     toStruct (Node'struct'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'struct'group' msg) where
-    fromPtr msg ptr = Node'struct'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'struct'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'struct'group' msg) where
-    newtype List msg (Node'struct'group' msg) = List_Node'struct'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'struct'group' l) = U'.length l
-    index i (List_Node'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'struct'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'struct'group' (M'.MutMsg s)) where
-    setIndex (Node'struct'group'_newtype_ elt) i (List_Node'struct'group' l) = U'.setIndex elt i l
-    newList msg len = List_Node'struct'group' <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node'struct'group' msg) msg where
     message (Node'struct'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'struct'group' msg) msg where
     messageDefault = Node'struct'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'struct'group' msg) where
+    newtype List msg (Node'struct'group' msg) = List_Node'struct'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'struct'group' l) = U'.length l
+    index i (List_Node'struct'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'struct'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'struct'group' msg) where
+    fromPtr msg ptr = Node'struct'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'struct'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'struct'group' (M'.MutMsg s)) where
+    setIndex (Node'struct'group'_newtype_ elt) i (List_Node'struct'group' l) = U'.setIndex elt i l
+    newList msg len = List_Node'struct'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Node'struct'group' (M'.MutMsg s)) where
-    new msg = Node'struct'group'_newtype_ <$> U'.allocStruct msg 5 6
+    new msg = Node'struct'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Node'struct'group' msg)) where
     fromPtr msg ptr = List_Node'struct'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'struct'group' l) = C'.toPtr l
@@ -1687,22 +1687,22 @@ instance C'.FromStruct msg (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'_newtype_
 instance C'.ToStruct msg (Node'enum'group' msg) where
     toStruct (Node'enum'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'enum'group' msg) where
-    fromPtr msg ptr = Node'enum'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'enum'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'enum'group' msg) where
-    newtype List msg (Node'enum'group' msg) = List_Node'enum'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'enum'group' l) = U'.length l
-    index i (List_Node'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'enum'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'enum'group' (M'.MutMsg s)) where
-    setIndex (Node'enum'group'_newtype_ elt) i (List_Node'enum'group' l) = U'.setIndex elt i l
-    newList msg len = List_Node'enum'group' <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node'enum'group' msg) msg where
     message (Node'enum'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'enum'group' msg) msg where
     messageDefault = Node'enum'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'enum'group' msg) where
+    newtype List msg (Node'enum'group' msg) = List_Node'enum'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'enum'group' l) = U'.length l
+    index i (List_Node'enum'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'enum'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'enum'group' msg) where
+    fromPtr msg ptr = Node'enum'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'enum'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'enum'group' (M'.MutMsg s)) where
+    setIndex (Node'enum'group'_newtype_ elt) i (List_Node'enum'group' l) = U'.setIndex elt i l
+    newList msg len = List_Node'enum'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Node'enum'group' (M'.MutMsg s)) where
-    new msg = Node'enum'group'_newtype_ <$> U'.allocStruct msg 5 6
+    new msg = Node'enum'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Node'enum'group' msg)) where
     fromPtr msg ptr = List_Node'enum'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'enum'group' l) = C'.toPtr l
@@ -1724,22 +1724,22 @@ instance C'.FromStruct msg (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'_newtype_
 instance C'.ToStruct msg (Node'interface'group' msg) where
     toStruct (Node'interface'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'interface'group' msg) where
-    fromPtr msg ptr = Node'interface'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'interface'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'interface'group' msg) where
-    newtype List msg (Node'interface'group' msg) = List_Node'interface'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'interface'group' l) = U'.length l
-    index i (List_Node'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'interface'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'interface'group' (M'.MutMsg s)) where
-    setIndex (Node'interface'group'_newtype_ elt) i (List_Node'interface'group' l) = U'.setIndex elt i l
-    newList msg len = List_Node'interface'group' <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node'interface'group' msg) msg where
     message (Node'interface'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'interface'group' msg) msg where
     messageDefault = Node'interface'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'interface'group' msg) where
+    newtype List msg (Node'interface'group' msg) = List_Node'interface'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'interface'group' l) = U'.length l
+    index i (List_Node'interface'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'interface'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'interface'group' msg) where
+    fromPtr msg ptr = Node'interface'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'interface'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'interface'group' (M'.MutMsg s)) where
+    setIndex (Node'interface'group'_newtype_ elt) i (List_Node'interface'group' l) = U'.setIndex elt i l
+    newList msg len = List_Node'interface'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Node'interface'group' (M'.MutMsg s)) where
-    new msg = Node'interface'group'_newtype_ <$> U'.allocStruct msg 5 6
+    new msg = Node'interface'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Node'interface'group' msg)) where
     fromPtr msg ptr = List_Node'interface'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'interface'group' l) = C'.toPtr l
@@ -1774,22 +1774,22 @@ instance C'.FromStruct msg (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'_newtype_
 instance C'.ToStruct msg (Node'const'group' msg) where
     toStruct (Node'const'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'const'group' msg) where
-    fromPtr msg ptr = Node'const'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'const'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'const'group' msg) where
-    newtype List msg (Node'const'group' msg) = List_Node'const'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'const'group' l) = U'.length l
-    index i (List_Node'const'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'const'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'const'group' (M'.MutMsg s)) where
-    setIndex (Node'const'group'_newtype_ elt) i (List_Node'const'group' l) = U'.setIndex elt i l
-    newList msg len = List_Node'const'group' <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node'const'group' msg) msg where
     message (Node'const'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'const'group' msg) msg where
     messageDefault = Node'const'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'const'group' msg) where
+    newtype List msg (Node'const'group' msg) = List_Node'const'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'const'group' l) = U'.length l
+    index i (List_Node'const'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'const'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'const'group' msg) where
+    fromPtr msg ptr = Node'const'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'const'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'const'group' (M'.MutMsg s)) where
+    setIndex (Node'const'group'_newtype_ elt) i (List_Node'const'group' l) = U'.setIndex elt i l
+    newList msg len = List_Node'const'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Node'const'group' (M'.MutMsg s)) where
-    new msg = Node'const'group'_newtype_ <$> U'.allocStruct msg 5 6
+    new msg = Node'const'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Node'const'group' msg)) where
     fromPtr msg ptr = List_Node'const'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'const'group' l) = C'.toPtr l
@@ -1824,22 +1824,22 @@ instance C'.FromStruct msg (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'_newtype_
 instance C'.ToStruct msg (Node'annotation'group' msg) where
     toStruct (Node'annotation'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'annotation'group' msg) where
-    fromPtr msg ptr = Node'annotation'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'annotation'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'annotation'group' msg) where
-    newtype List msg (Node'annotation'group' msg) = List_Node'annotation'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'annotation'group' l) = U'.length l
-    index i (List_Node'annotation'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'annotation'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'annotation'group' (M'.MutMsg s)) where
-    setIndex (Node'annotation'group'_newtype_ elt) i (List_Node'annotation'group' l) = U'.setIndex elt i l
-    newList msg len = List_Node'annotation'group' <$> U'.allocCompositeList msg 5 6 len
 instance U'.HasMessage (Node'annotation'group' msg) msg where
     message (Node'annotation'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'annotation'group' msg) msg where
     messageDefault = Node'annotation'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'annotation'group' msg) where
+    newtype List msg (Node'annotation'group' msg) = List_Node'annotation'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'annotation'group' l) = U'.length l
+    index i (List_Node'annotation'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'annotation'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'annotation'group' msg) where
+    fromPtr msg ptr = Node'annotation'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'annotation'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'annotation'group' (M'.MutMsg s)) where
+    setIndex (Node'annotation'group'_newtype_ elt) i (List_Node'annotation'group' l) = U'.setIndex elt i l
+    newList msg len = List_Node'annotation'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Node'annotation'group' (M'.MutMsg s)) where
-    new msg = Node'annotation'group'_newtype_ <$> U'.allocStruct msg 5 6
+    new msg = Node'annotation'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Node'annotation'group' msg)) where
     fromPtr msg ptr = List_Node'annotation'group' <$> C'.fromPtr msg ptr
     toPtr (List_Node'annotation'group' l) = C'.toPtr l
@@ -1938,26 +1938,26 @@ instance C'.FromStruct msg (Node'' msg) where
             2 -> Node'enum <$> C'.fromStruct struct
             1 -> Node'struct <$> C'.fromStruct struct
             0 -> pure Node'file
-            _ -> pure $ Node'unknown' tag
+            _ -> pure $ Node''unknown' tag
 newtype Node'NestedNode msg = Node'NestedNode_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode_newtype_
 instance C'.ToStruct msg (Node'NestedNode msg) where
     toStruct (Node'NestedNode_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'NestedNode msg) where
-    fromPtr msg ptr = Node'NestedNode_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'NestedNode_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'NestedNode msg) where
-    newtype List msg (Node'NestedNode msg) = List_Node'NestedNode (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'NestedNode l) = U'.length l
-    index i (List_Node'NestedNode l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'NestedNode msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'NestedNode (M'.MutMsg s)) where
-    setIndex (Node'NestedNode_newtype_ elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
-    newList msg len = List_Node'NestedNode <$> U'.allocCompositeList msg 1 1 len
 instance U'.HasMessage (Node'NestedNode msg) msg where
     message (Node'NestedNode_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'NestedNode msg) msg where
     messageDefault = Node'NestedNode_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'NestedNode msg) where
+    newtype List msg (Node'NestedNode msg) = List_Node'NestedNode (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'NestedNode l) = U'.length l
+    index i (List_Node'NestedNode l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'NestedNode msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'NestedNode msg) where
+    fromPtr msg ptr = Node'NestedNode_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'NestedNode_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'NestedNode (M'.MutMsg s)) where
+    setIndex (Node'NestedNode_newtype_ elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
+    newList msg len = List_Node'NestedNode <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Node'NestedNode (M'.MutMsg s)) where
     new msg = Node'NestedNode_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Node'NestedNode msg)) where
@@ -1987,20 +1987,20 @@ instance C'.FromStruct msg (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter_newtype_
 instance C'.ToStruct msg (Node'Parameter msg) where
     toStruct (Node'Parameter_newtype_ struct) = struct
-instance C'.IsPtr msg (Node'Parameter msg) where
-    fromPtr msg ptr = Node'Parameter_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'Parameter_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Node'Parameter msg) where
-    newtype List msg (Node'Parameter msg) = List_Node'Parameter (U'.ListOf msg (U'.Struct msg))
-    length (List_Node'Parameter l) = U'.length l
-    index i (List_Node'Parameter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'Parameter msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Node'Parameter (M'.MutMsg s)) where
-    setIndex (Node'Parameter_newtype_ elt) i (List_Node'Parameter l) = U'.setIndex elt i l
-    newList msg len = List_Node'Parameter <$> U'.allocCompositeList msg 0 1 len
 instance U'.HasMessage (Node'Parameter msg) msg where
     message (Node'Parameter_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Node'Parameter msg) msg where
     messageDefault = Node'Parameter_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Node'Parameter msg) where
+    newtype List msg (Node'Parameter msg) = List_Node'Parameter (U'.ListOf msg (U'.Struct msg))
+    length (List_Node'Parameter l) = U'.length l
+    index i (List_Node'Parameter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'Parameter msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Node'Parameter msg) where
+    fromPtr msg ptr = Node'Parameter_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Node'Parameter_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Node'Parameter (M'.MutMsg s)) where
+    setIndex (Node'Parameter_newtype_ elt) i (List_Node'Parameter l) = U'.setIndex elt i l
+    newList msg len = List_Node'Parameter <$> U'.allocCompositeList msg 0 1 len
 instance C'.Allocate s (Node'Parameter (M'.MutMsg s)) where
     new msg = Node'Parameter_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Node'Parameter msg)) where
@@ -2024,22 +2024,22 @@ instance C'.FromStruct msg (Type'anyPointer msg) where
     fromStruct = pure . Type'anyPointer_newtype_
 instance C'.ToStruct msg (Type'anyPointer msg) where
     toStruct (Type'anyPointer_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'anyPointer msg) where
-    fromPtr msg ptr = Type'anyPointer_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'anyPointer_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'anyPointer msg) where
-    newtype List msg (Type'anyPointer msg) = List_Type'anyPointer (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer l) = U'.length l
-    index i (List_Type'anyPointer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer (M'.MutMsg s)) where
-    setIndex (Type'anyPointer_newtype_ elt) i (List_Type'anyPointer l) = U'.setIndex elt i l
-    newList msg len = List_Type'anyPointer <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'anyPointer msg) msg where
     message (Type'anyPointer_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'anyPointer msg) msg where
     messageDefault = Type'anyPointer_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'anyPointer msg) where
+    newtype List msg (Type'anyPointer msg) = List_Type'anyPointer (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer l) = U'.length l
+    index i (List_Type'anyPointer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'anyPointer msg) where
+    fromPtr msg ptr = Type'anyPointer_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'anyPointer (M'.MutMsg s)) where
+    setIndex (Type'anyPointer_newtype_ elt) i (List_Type'anyPointer l) = U'.setIndex elt i l
+    newList msg len = List_Type'anyPointer <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'anyPointer (M'.MutMsg s)) where
-    new msg = Type'anyPointer_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'anyPointer_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer msg)) where
     fromPtr msg ptr = List_Type'anyPointer <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer l) = C'.toPtr l
@@ -2071,22 +2071,22 @@ instance C'.FromStruct msg (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'unconstrained'group' msg) where
     toStruct (Type'anyPointer'unconstrained'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'anyPointer'unconstrained'group' msg) where
-    fromPtr msg ptr = Type'anyPointer'unconstrained'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
-    newtype List msg (Type'anyPointer'unconstrained'group' msg) = List_Type'anyPointer'unconstrained'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer'unconstrained'group' l) = U'.length l
-    index i (List_Type'anyPointer'unconstrained'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
-    setIndex (Type'anyPointer'unconstrained'group'_newtype_ elt) i (List_Type'anyPointer'unconstrained'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'anyPointer'unconstrained'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'anyPointer'unconstrained'group' msg) msg where
     message (Type'anyPointer'unconstrained'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'anyPointer'unconstrained'group' msg) msg where
     messageDefault = Type'anyPointer'unconstrained'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'anyPointer'unconstrained'group' msg) where
+    newtype List msg (Type'anyPointer'unconstrained'group' msg) = List_Type'anyPointer'unconstrained'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer'unconstrained'group' l) = U'.length l
+    index i (List_Type'anyPointer'unconstrained'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'anyPointer'unconstrained'group' msg) where
+    fromPtr msg ptr = Type'anyPointer'unconstrained'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
+    setIndex (Type'anyPointer'unconstrained'group'_newtype_ elt) i (List_Type'anyPointer'unconstrained'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'anyPointer'unconstrained'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'anyPointer'unconstrained'group' (M'.MutMsg s)) where
-    new msg = Type'anyPointer'unconstrained'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'anyPointer'unconstrained'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained'group' l) = C'.toPtr l
@@ -2099,22 +2099,22 @@ instance C'.FromStruct msg (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'parameter'group' msg) where
     toStruct (Type'anyPointer'parameter'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'anyPointer'parameter'group' msg) where
-    fromPtr msg ptr = Type'anyPointer'parameter'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'anyPointer'parameter'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'anyPointer'parameter'group' msg) where
-    newtype List msg (Type'anyPointer'parameter'group' msg) = List_Type'anyPointer'parameter'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer'parameter'group' l) = U'.length l
-    index i (List_Type'anyPointer'parameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'parameter'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
-    setIndex (Type'anyPointer'parameter'group'_newtype_ elt) i (List_Type'anyPointer'parameter'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'anyPointer'parameter'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'anyPointer'parameter'group' msg) msg where
     message (Type'anyPointer'parameter'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'anyPointer'parameter'group' msg) msg where
     messageDefault = Type'anyPointer'parameter'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'anyPointer'parameter'group' msg) where
+    newtype List msg (Type'anyPointer'parameter'group' msg) = List_Type'anyPointer'parameter'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer'parameter'group' l) = U'.length l
+    index i (List_Type'anyPointer'parameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'parameter'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'anyPointer'parameter'group' msg) where
+    fromPtr msg ptr = Type'anyPointer'parameter'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer'parameter'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
+    setIndex (Type'anyPointer'parameter'group'_newtype_ elt) i (List_Type'anyPointer'parameter'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'anyPointer'parameter'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'anyPointer'parameter'group' (M'.MutMsg s)) where
-    new msg = Type'anyPointer'parameter'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'anyPointer'parameter'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'parameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'parameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'parameter'group' l) = C'.toPtr l
@@ -2135,22 +2135,22 @@ instance C'.FromStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) 
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     toStruct (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'anyPointer'implicitMethodParameter'group' msg) where
-    fromPtr msg ptr = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) where
-    newtype List msg (Type'anyPointer'implicitMethodParameter'group' msg) = List_Type'anyPointer'implicitMethodParameter'group' (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.length l
-    index i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'implicitMethodParameter'group' msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
-    setIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.setIndex elt i l
-    newList msg len = List_Type'anyPointer'implicitMethodParameter'group' <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'anyPointer'implicitMethodParameter'group' msg) msg where
     message (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'anyPointer'implicitMethodParameter'group' msg) msg where
     messageDefault = Type'anyPointer'implicitMethodParameter'group'_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'anyPointer'implicitMethodParameter'group' msg) where
+    newtype List msg (Type'anyPointer'implicitMethodParameter'group' msg) = List_Type'anyPointer'implicitMethodParameter'group' (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.length l
+    index i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'implicitMethodParameter'group' msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'anyPointer'implicitMethodParameter'group' msg) where
+    fromPtr msg ptr = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
+    setIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ elt) i (List_Type'anyPointer'implicitMethodParameter'group' l) = U'.setIndex elt i l
+    newList msg len = List_Type'anyPointer'implicitMethodParameter'group' <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'anyPointer'implicitMethodParameter'group' (M'.MutMsg s)) where
-    new msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'implicitMethodParameter'group' msg)) where
     fromPtr msg ptr = List_Type'anyPointer'implicitMethodParameter'group' <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'implicitMethodParameter'group' l) = C'.toPtr l
@@ -2173,22 +2173,22 @@ instance C'.FromStruct msg (Type'anyPointer'unconstrained msg) where
     fromStruct = pure . Type'anyPointer'unconstrained_newtype_
 instance C'.ToStruct msg (Type'anyPointer'unconstrained msg) where
     toStruct (Type'anyPointer'unconstrained_newtype_ struct) = struct
-instance C'.IsPtr msg (Type'anyPointer'unconstrained msg) where
-    fromPtr msg ptr = Type'anyPointer'unconstrained_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type'anyPointer'unconstrained_newtype_ struct) = C'.toPtr struct
-instance B'.ListElem msg (Type'anyPointer'unconstrained msg) where
-    newtype List msg (Type'anyPointer'unconstrained msg) = List_Type'anyPointer'unconstrained (U'.ListOf msg (U'.Struct msg))
-    length (List_Type'anyPointer'unconstrained l) = U'.length l
-    index i (List_Type'anyPointer'unconstrained l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained msg); go = C'.fromStruct} in go)
-instance B'.MutListElem s (Type'anyPointer'unconstrained (M'.MutMsg s)) where
-    setIndex (Type'anyPointer'unconstrained_newtype_ elt) i (List_Type'anyPointer'unconstrained l) = U'.setIndex elt i l
-    newList msg len = List_Type'anyPointer'unconstrained <$> U'.allocCompositeList msg 3 1 len
 instance U'.HasMessage (Type'anyPointer'unconstrained msg) msg where
     message (Type'anyPointer'unconstrained_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Type'anyPointer'unconstrained msg) msg where
     messageDefault = Type'anyPointer'unconstrained_newtype_ . U'.messageDefault
+instance B'.ListElem msg (Type'anyPointer'unconstrained msg) where
+    newtype List msg (Type'anyPointer'unconstrained msg) = List_Type'anyPointer'unconstrained (U'.ListOf msg (U'.Struct msg))
+    length (List_Type'anyPointer'unconstrained l) = U'.length l
+    index i (List_Type'anyPointer'unconstrained l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type'anyPointer'unconstrained msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (Type'anyPointer'unconstrained msg) where
+    fromPtr msg ptr = Type'anyPointer'unconstrained_newtype_ <$> C'.fromPtr msg ptr
+    toPtr (Type'anyPointer'unconstrained_newtype_ struct) = C'.toPtr struct
+instance B'.MutListElem s (Type'anyPointer'unconstrained (M'.MutMsg s)) where
+    setIndex (Type'anyPointer'unconstrained_newtype_ elt) i (List_Type'anyPointer'unconstrained l) = U'.setIndex elt i l
+    newList msg len = List_Type'anyPointer'unconstrained <$> U'.allocCompositeList msg 20 20 len
 instance C'.Allocate s (Type'anyPointer'unconstrained (M'.MutMsg s)) where
-    new msg = Type'anyPointer'unconstrained_newtype_ <$> U'.allocStruct msg 3 1
+    new msg = Type'anyPointer'unconstrained_newtype_ <$> U'.allocStruct msg 20 20
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained l) = C'.toPtr l

@@ -43,7 +43,7 @@ data JsonValue
     | JsonValue'array (PU'.ListOf (JsonValue))
     | JsonValue'object (PU'.ListOf (JsonValue'Field))
     | JsonValue'call (JsonValue'Call)
-    | JsonValue'unknown' (Word16)
+    | JsonValue'unknown' Word16
     deriving(Show,Read,Eq,Generic)
 instance C'.Decerialize JsonValue where
     type Cerial msg JsonValue = Capnp.ById.X8ef99297a43a5e34.JsonValue msg
@@ -57,11 +57,7 @@ instance C'.Decerialize JsonValue where
             Capnp.ById.X8ef99297a43a5e34.JsonValue'array val -> JsonValue'array <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'object val -> JsonValue'object <$> C'.decerialize val
             Capnp.ById.X8ef99297a43a5e34.JsonValue'call val -> JsonValue'call <$> C'.decerialize val
-            Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> pure (JsonValue'unknown' val)
-instance C'.FromStruct M'.ConstMsg JsonValue where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg)
+            Capnp.ById.X8ef99297a43a5e34.JsonValue'unknown' val -> pure $ JsonValue'unknown' val
 instance C'.Marshal JsonValue where
     marshalInto raw value = do
         case value of
@@ -87,6 +83,10 @@ instance C'.Marshal JsonValue where
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'call raw
                 C'.marshalInto field_ arg_
             JsonValue'unknown' arg_ -> Capnp.ById.X8ef99297a43a5e34.set_JsonValue'unknown' raw arg_
+instance C'.FromStruct M'.ConstMsg JsonValue where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue M'.ConstMsg)
 instance C'.Cerialize s JsonValue
 instance Default JsonValue where
     def = PH'.defaultStruct
@@ -101,10 +101,6 @@ instance C'.Decerialize JsonValue'Call where
         JsonValue'Call <$>
             (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw >>= C'.decerialize) <*>
             (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw >>= C'.decerialize)
-instance C'.FromStruct M'.ConstMsg JsonValue'Call where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg)
 instance C'.Marshal JsonValue'Call where
     marshalInto raw value = do
         case value of
@@ -116,6 +112,10 @@ instance C'.Marshal JsonValue'Call where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (params V.! i)
+instance C'.FromStruct M'.ConstMsg JsonValue'Call where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Call M'.ConstMsg)
 instance C'.Cerialize s JsonValue'Call
 instance Default JsonValue'Call where
     def = PH'.defaultStruct
@@ -130,10 +130,6 @@ instance C'.Decerialize JsonValue'Field where
         JsonValue'Field <$>
             (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw >>= C'.decerialize) <*>
             (Capnp.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw >>= C'.decerialize)
-instance C'.FromStruct M'.ConstMsg JsonValue'Field where
-    fromStruct struct = do
-        raw <- C'.fromStruct struct
-        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMsg)
 instance C'.Marshal JsonValue'Field where
     marshalInto raw value = do
         case value of
@@ -142,6 +138,10 @@ instance C'.Marshal JsonValue'Field where
                 Capnp.ById.X8ef99297a43a5e34.set_JsonValue'Field'name raw field_
                 field_ <- Capnp.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
                 C'.marshalInto field_ value
+instance C'.FromStruct M'.ConstMsg JsonValue'Field where
+    fromStruct struct = do
+        raw <- C'.fromStruct struct
+        C'.decerialize (raw :: Capnp.ById.X8ef99297a43a5e34.JsonValue'Field M'.ConstMsg)
 instance C'.Cerialize s JsonValue'Field
 instance Default JsonValue'Field where
     def = PH'.defaultStruct
