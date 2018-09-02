@@ -224,8 +224,8 @@ new_CodeGeneratorRequest'capnpVersion struct = do
     result <- C'.new (U'.message struct)
     set_CodeGeneratorRequest'capnpVersion struct result
     pure result
-data ElementSize =
-    ElementSize'empty |
+data ElementSize
+     = ElementSize'empty |
     ElementSize'bit |
     ElementSize'byte |
     ElementSize'twoBytes |
@@ -234,7 +234,7 @@ data ElementSize =
     ElementSize'pointer |
     ElementSize'inlineComposite |
     ElementSize'unknown' Word16
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance Enum ElementSize where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord
@@ -672,8 +672,8 @@ instance C'.Allocate s (Type (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Type msg)) where
     fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
     toPtr (List_Type l) = C'.toPtr l
-data Type' msg =
-    Type'void |
+data Type' msg
+     = Type'void |
     Type'bool |
     Type'int8 |
     Type'int16 |
@@ -989,8 +989,8 @@ instance C'.Allocate s (Value (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Value msg)) where
     fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
     toPtr (List_Value l) = C'.toPtr l
-data Value' msg =
-    Value'void |
+data Value' msg
+     = Value'void |
     Value'bool Bool |
     Value'int8 Int8 |
     Value'int16 Int16 |
@@ -1146,8 +1146,8 @@ instance C'.Allocate s (Brand'Binding (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
     fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Binding l) = C'.toPtr l
-data Brand'Binding' msg =
-    Brand'Binding'unbound |
+data Brand'Binding' msg
+     = Brand'Binding'unbound |
     Brand'Binding'type_ (Type msg) |
     Brand'Binding'unknown' Word16
 get_Brand'Binding' :: U'.ReadCtx m msg => Brand'Binding msg -> m (Brand'Binding' msg)
@@ -1232,8 +1232,8 @@ instance C'.Allocate s (Brand'Scope' (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
     fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
     toPtr (List_Brand'Scope' l) = C'.toPtr l
-data Brand'Scope'' msg =
-    Brand'Scope'bind (B'.List msg (Brand'Binding msg)) |
+data Brand'Scope'' msg
+     = Brand'Scope'bind (B'.List msg (Brand'Binding msg)) |
     Brand'Scope'inherit |
     Brand'Scope'unknown' Word16
 get_Brand'Scope'' :: U'.ReadCtx m msg => Brand'Scope' msg -> m (Brand'Scope'' msg)
@@ -1383,8 +1383,8 @@ instance C'.Allocate s (Field' (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Field' msg)) where
     fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
     toPtr (List_Field' l) = C'.toPtr l
-data Field'' msg =
-    Field'slot (Field'slot'group' msg) |
+data Field'' msg
+     = Field'slot (Field'slot'group' msg) |
     Field'group (Field'group'group' msg) |
     Field'unknown' Word16
 get_Field'' :: U'.ReadCtx m msg => Field' msg -> m (Field'' msg)
@@ -1526,8 +1526,8 @@ instance C'.Allocate s (Field'ordinal (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Field'ordinal msg)) where
     fromPtr msg ptr = List_Field'ordinal <$> C'.fromPtr msg ptr
     toPtr (List_Field'ordinal l) = C'.toPtr l
-data Field'ordinal' msg =
-    Field'ordinal'implicit |
+data Field'ordinal' msg
+     = Field'ordinal'implicit |
     Field'ordinal'explicit Word16 |
     Field'ordinal'unknown' Word16
 get_Field'ordinal' :: U'.ReadCtx m msg => Field'ordinal msg -> m (Field'ordinal' msg)
@@ -1573,8 +1573,8 @@ instance C'.Allocate s (Node' (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Node' msg)) where
     fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
     toPtr (List_Node' l) = C'.toPtr l
-data Node'' msg =
-    Node'file |
+data Node'' msg
+     = Node'file |
     Node'struct (Node'struct'group' msg) |
     Node'enum (Node'enum'group' msg) |
     Node'interface (Node'interface'group' msg) |
@@ -2043,8 +2043,8 @@ instance C'.Allocate s (Type'anyPointer (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer msg)) where
     fromPtr msg ptr = List_Type'anyPointer <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer l) = C'.toPtr l
-data Type'anyPointer' msg =
-    Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg) |
+data Type'anyPointer' msg
+     = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg) |
     Type'anyPointer'parameter (Type'anyPointer'parameter'group' msg) |
     Type'anyPointer'implicitMethodParameter (Type'anyPointer'implicitMethodParameter'group' msg) |
     Type'anyPointer'unknown' Word16
@@ -2192,8 +2192,8 @@ instance C'.Allocate s (Type'anyPointer'unconstrained (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Type'anyPointer'unconstrained msg)) where
     fromPtr msg ptr = List_Type'anyPointer'unconstrained <$> C'.fromPtr msg ptr
     toPtr (List_Type'anyPointer'unconstrained l) = C'.toPtr l
-data Type'anyPointer'unconstrained' msg =
-    Type'anyPointer'unconstrained'anyKind |
+data Type'anyPointer'unconstrained' msg
+     = Type'anyPointer'unconstrained'anyKind |
     Type'anyPointer'unconstrained'struct |
     Type'anyPointer'unconstrained'list |
     Type'anyPointer'unconstrained'capability |

@@ -50,8 +50,8 @@ instance C'.Allocate s (JsonValue (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
     fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
     toPtr (List_JsonValue l) = C'.toPtr l
-data JsonValue' msg =
-    JsonValue'null |
+data JsonValue' msg
+     = JsonValue'null |
     JsonValue'boolean Bool |
     JsonValue'number Double |
     JsonValue'string (B'.Text msg) |

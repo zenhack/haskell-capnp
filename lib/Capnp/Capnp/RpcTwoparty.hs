@@ -142,11 +142,11 @@ has_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Bool
 has_ProvisionId'joinId(ProvisionId_newtype_ struct) = pure $ 0 < U'.length (U'.dataSection struct)
 set_ProvisionId'joinId :: U'.RWCtx m s => ProvisionId (M'.MutMsg s) -> Word32 -> m ()
 set_ProvisionId'joinId (ProvisionId_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
-data Side =
-    Side'server |
+data Side
+     = Side'server |
     Side'client |
     Side'unknown' Word16
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance Enum Side where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord

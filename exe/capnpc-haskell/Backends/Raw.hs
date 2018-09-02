@@ -20,12 +20,11 @@ import qualified Data.Map.Strict              as M
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
+import Fmt
 import IR
 import Util
 
 import Backends.Common (dataFieldSize, fmtPrimWord)
-
-indent = PP.indent 4
 
 -- | Sort varaints by their tag, in decending order (with no tag at all being last).
 sortVariants = sortOn (Down . variantTag)
@@ -493,8 +492,10 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
         unionNameText = fmtName thisMod unionName
     in vcat
         [ fmtNewtypeStruct thisMod dataName dataSz ptrSz
-        , hcat [ "data ", unionNameText, " msg =" ]
-        , indent $ vcat $ PP.punctuate " |" (map fmtDataVariant dataVariants)
+        , data_
+            (unionNameText <> " msg")
+            (map fmtDataVariant dataVariants)
+            []
         , fmtFieldAccessor thisMod dataName dataName Field
             { fieldName = ""
             , fieldLocType = HereField $ StructType unionName []
@@ -549,11 +550,9 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
 fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
     let typeName = fmtName thisMod dataName
     in vcat
-        [ hcat [ "data ", typeName, " =" ]
-        , indent $ vcat
-            [ vcat $ PP.punctuate " |" $ map fmtEnumVariant dataVariants
-            , "deriving(Show, Read, Eq, Generic)"
-            ]
+        [ data_ typeName
+            (map fmtEnumVariant dataVariants)
+            ["Show", "Read", "Eq", "Generic"]
         -- Generate an Enum instance. This is a trivial wrapper around the
         -- IsWord instance, below.
         , hcat [ "instance Enum ", typeName, " where" ]

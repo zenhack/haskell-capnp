@@ -210,8 +210,8 @@ instance C'.Allocate s (CapDescriptor (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
     fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
     toPtr (List_CapDescriptor l) = C'.toPtr l
-data CapDescriptor' msg =
-    CapDescriptor'none |
+data CapDescriptor' msg
+     = CapDescriptor'none |
     CapDescriptor'senderHosted Word32 |
     CapDescriptor'senderPromise Word32 |
     CapDescriptor'receiverHosted Word32 |
@@ -474,8 +474,8 @@ instance C'.Allocate s (Message (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Message msg)) where
     fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
     toPtr (List_Message l) = C'.toPtr l
-data Message' msg =
-    Message'unimplemented (Message msg) |
+data Message' msg
+     = Message'unimplemented (Message msg) |
     Message'abort (Exception msg) |
     Message'call (Call msg) |
     Message'return (Return msg) |
@@ -655,8 +655,8 @@ instance C'.Allocate s (MessageTarget (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (MessageTarget msg)) where
     fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
     toPtr (List_MessageTarget l) = C'.toPtr l
-data MessageTarget' msg =
-    MessageTarget'importedCap Word32 |
+data MessageTarget' msg
+     = MessageTarget'importedCap Word32 |
     MessageTarget'promisedAnswer (PromisedAnswer msg) |
     MessageTarget'unknown' Word16
 get_MessageTarget' :: U'.ReadCtx m msg => MessageTarget msg -> m (MessageTarget' msg)
@@ -996,8 +996,8 @@ instance C'.Allocate s (Call'sendResultsTo (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
     fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
     toPtr (List_Call'sendResultsTo l) = C'.toPtr l
-data Call'sendResultsTo' msg =
-    Call'sendResultsTo'caller |
+data Call'sendResultsTo' msg
+     = Call'sendResultsTo'caller |
     Call'sendResultsTo'yourself |
     Call'sendResultsTo'thirdParty (Maybe (U'.Ptr msg)) |
     Call'sendResultsTo'unknown' Word16
@@ -1047,8 +1047,8 @@ instance C'.Allocate s (Disembargo'context (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Disembargo'context msg)) where
     fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
     toPtr (List_Disembargo'context l) = C'.toPtr l
-data Disembargo'context' msg =
-    Disembargo'context'senderLoopback Word32 |
+data Disembargo'context' msg
+     = Disembargo'context'senderLoopback Word32 |
     Disembargo'context'receiverLoopback Word32 |
     Disembargo'context'accept |
     Disembargo'context'provide Word32 |
@@ -1082,13 +1082,13 @@ instance C'.FromStruct msg (Disembargo'context' msg) where
             1 -> Disembargo'context'receiverLoopback <$>  H'.getWordField struct 0 0 0
             0 -> Disembargo'context'senderLoopback <$>  H'.getWordField struct 0 0 0
             _ -> pure $ Disembargo'context'unknown' tag
-data Exception'Type =
-    Exception'Type'failed |
+data Exception'Type
+     = Exception'Type'failed |
     Exception'Type'overloaded |
     Exception'Type'disconnected |
     Exception'Type'unimplemented |
     Exception'Type'unknown' Word16
-    deriving(Show, Read, Eq, Generic)
+    deriving(Show,Read,Eq,Generic)
 instance Enum Exception'Type where
     toEnum = C'.fromWord . fromIntegral
     fromEnum = fromIntegral . C'.toWord
@@ -1138,8 +1138,8 @@ instance C'.Allocate s (PromisedAnswer'Op (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
     toPtr (List_PromisedAnswer'Op l) = C'.toPtr l
-data PromisedAnswer'Op' msg =
-    PromisedAnswer'Op'noop |
+data PromisedAnswer'Op' msg
+     = PromisedAnswer'Op'noop |
     PromisedAnswer'Op'getPointerField Word16 |
     PromisedAnswer'Op'unknown' Word16
 get_PromisedAnswer'Op' :: U'.ReadCtx m msg => PromisedAnswer'Op msg -> m (PromisedAnswer'Op' msg)
@@ -1185,8 +1185,8 @@ instance C'.Allocate s (Resolve' (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
     fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
     toPtr (List_Resolve' l) = C'.toPtr l
-data Resolve'' msg =
-    Resolve'cap (CapDescriptor msg) |
+data Resolve'' msg
+     = Resolve'cap (CapDescriptor msg) |
     Resolve'exception (Exception msg) |
     Resolve'unknown' Word16
 get_Resolve'' :: U'.ReadCtx m msg => Resolve' msg -> m (Resolve'' msg)
@@ -1244,8 +1244,8 @@ instance C'.Allocate s (Return' (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (Return' msg)) where
     fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
     toPtr (List_Return' l) = C'.toPtr l
-data Return'' msg =
-    Return'results (Payload msg) |
+data Return'' msg
+     = Return'results (Payload msg) |
     Return'exception (Exception msg) |
     Return'canceled |
     Return'resultsSentElsewhere |
