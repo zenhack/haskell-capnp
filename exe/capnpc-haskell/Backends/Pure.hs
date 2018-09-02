@@ -219,8 +219,7 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
             (fmtName Pure thisMod dataName)
             (map (fmtVariant thisMod) dataVariants)
             ["Show", "Read", "Eq", "Generic"]
-        , hcat [ "instance C'.Decerialize ", pureName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.Decerialize " <> pureName)
             [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
             , "decerialize raw = do"
             , indent $ case dataVariants of
@@ -232,16 +231,14 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     , indent $ vcat (map fmtDecerializeVariant dataVariants)
                     ]
             ]
-        , hcat [ "instance C'.FromStruct M'.ConstMsg ", pureName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.FromStruct M'.ConstMsg " <> pureName)
             [ "fromStruct struct = do"
             , indent $ vcat
                 [ "raw <- C'.fromStruct struct"
                 , hcat [ "C'.decerialize (raw :: ", rawName, " M'.ConstMsg)" ]
                 ]
             ]
-        , hcat [ "instance C'.Marshal ", pureName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.Marshal " <> pureName)
             [ "marshalInto raw value = do"
             , indent $ vcat
                 [ "case value of\n"
@@ -250,9 +247,9 @@ fmtDataDef thisMod dataName DataDef{dataVariants} =
                     dataVariants
                 ]
             ]
-        , hcat [ "instance C'.Cerialize s ", pureName ]
-        , hcat [ "instance Default ", pureName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.Cerialize s " <> pureName)
+            []
+        , instance_ [] ("Default " <> pureName)
             [ "def = PH'.defaultStruct"
             ]
         ]

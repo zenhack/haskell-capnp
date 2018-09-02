@@ -101,13 +101,11 @@ fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 -- | format the IsPtr instance for a list of the struct type with
 -- the given name.
 fmtStructListIsPtr :: PP.Doc -> PP.Doc
-fmtStructListIsPtr nameText = vcat
-    [ hcat [ "instance C'.IsPtr msg (B'.List msg (", nameText, " msg)) where" ]
-    , indent $ vcat
+fmtStructListIsPtr nameText =
+    instance_ [] ("C'.IsPtr msg (B'.List msg (" <> nameText <> " msg))")
         [ hcat [ "fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr" ]
         , hcat [ "toPtr (List_", nameText, " l) = C'.toPtr l" ]
         ]
-    ]
 
 -- | Generate declarations common to all types which are represented
 -- by 'Untyped.Struct'.
@@ -124,26 +122,18 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
         dataCon = typeCon <> "_newtype_"
     in vcat
         [ hcat [ "newtype ", typeCon, " msg = ", dataCon, " (U'.Struct msg)" ]
-
-        , hcat [ "instance C'.FromStruct msg (", typeCon, " msg) where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.FromStruct msg (" <> typeCon <> " msg)")
             [ hcat [ "fromStruct = pure . ", dataCon ]
             ]
-
-        , hcat [ "instance C'.ToStruct msg (", typeCon, " msg) where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.ToStruct msg (" <> typeCon <> " msg)")
             [ hcat [ "toStruct (", dataCon, " struct) = struct" ]
             ]
-
-        , hcat [ "instance C'.IsPtr msg (", typeCon, " msg) where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.IsPtr msg (" <> typeCon <> " msg)")
             [ hcat [ "fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr" ]
             , hcat [ "toPtr (", dataCon, " struct) = C'.toPtr struct" ]
             ]
         , fmtStructListElem typeCon
-
-        , hcat [ "instance B'.MutListElem s (", typeCon, " (M'.MutMsg s)) where" ]
-        , indent $ vcat
+        , instance_ [] ("B'.MutListElem s (" <> typeCon <> " (M'.MutMsg s))")
             [ hcat [ "setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l" ]
             , hcat
                 [ "newList msg len = List_", typeCon, " <$> U'.allocCompositeList msg "
@@ -151,19 +141,14 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
                 , fromString (show ptrSz), " len"
                 ]
             ]
-
-        , hcat [ "instance U'.HasMessage (", typeCon, " msg) msg where" ]
-        , indent $ vcat
+        , instance_ [] ("U'.HasMessage (" <> typeCon <> " msg) msg")
             [ hcat [ "message (", dataCon, " struct) = U'.message struct" ]
             ]
-
-        , hcat [ "instance U'.MessageDefault (", typeCon, " msg) msg where" ]
-        , indent $ vcat
+        , instance_ [] ("U'.MessageDefault (" <> typeCon <> " msg) msg")
             [ hcat [ "messageDefault = ", dataCon, " . U'.messageDefault" ]
             ]
 
-        , hcat [ "instance C'.Allocate s (", typeCon, " (M'.MutMsg s)) where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.Allocate s (" <> typeCon <> " (M'.MutMsg s))")
             [ hcat
                 [ "new msg = ", dataCon , " <$> U'.allocStruct msg "
                 , fromString (show dataSz), " "
@@ -176,14 +161,12 @@ fmtNewtypeStruct thisMod name dataSz ptrSz =
 -- | Generate an instance of ListElem for a struct type. The parameter is the name of
 -- the type constructor.
 fmtStructListElem :: PP.Doc -> PP.Doc
-fmtStructListElem nameText = vcat
-    [ hcat [ "instance B'.ListElem msg (", nameText, " msg) where" ]
-    , indent $ vcat
+fmtStructListElem nameText =
+    instance_ [] ("B'.ListElem msg (" <> nameText <> " msg)")
         [ hcat [ "newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))" ]
         , hcat [ "length (List_", nameText, " l) = U'.length l" ]
         , hcat [ "index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText ]
         ]
-    ]
 
 -- | Output an expression equivalent to fromStruct, but restricted to the type
 -- with the given type constructor (which must have kind * -> *).
@@ -503,13 +486,14 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyStruct dataSz ptrSz,dataTa
         , vcat $ map (fmtUnionSetter thisMod dataName tagLoc) dataVariants
         -- Generate auxiliary newtype definitions for group fields:
         , vcat $ map fmtVariantAuxNewtype dataVariants
-        , hcat [ "instance C'.FromStruct msg (", unionNameText, " msg) where" ]
-        , indent $ vcat
-            [ "fromStruct struct = do"
-            , indent $ vcat
-                [ hcat [ "tag <- ", fmtGetWordField "struct" tagLoc ]
-                , "case tag of"
-                , indent $ vcat $ map fmtVariantCase $ sortVariants dataVariants
+        , instance_ [] ("C'.FromStruct msg (" <> unionNameText <> " msg)")
+            [ vcat
+                [ "fromStruct struct = do"
+                , indent $ vcat
+                    [ hcat [ "tag <- ", fmtGetWordField "struct" tagLoc ]
+                    , "case tag of"
+                    , indent $ vcat $ map fmtVariantCase $ sortVariants dataVariants
+                    ]
                 ]
             ]
         ]
@@ -555,33 +539,28 @@ fmtDataDef thisMod dataName DataDef{dataCerialType=CTyEnum,..} =
             ["Show", "Read", "Eq", "Generic"]
         -- Generate an Enum instance. This is a trivial wrapper around the
         -- IsWord instance, below.
-        , hcat [ "instance Enum ", typeName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("Enum " <> typeName)
             [ "toEnum = C'.fromWord . fromIntegral"
             , "fromEnum = fromIntegral . C'.toWord"
             ]
         -- Generate an IsWord instance.
-        , hcat [ "instance C'.IsWord ", typeName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.IsWord " <> typeName)
             [ "fromWord n = go (fromIntegral n :: Word16) where"
             , indent $ vcat $
                 map (("go "     <>) . fmtEnumFromWordCase) $ sortVariants dataVariants
             , vcat $
                 map (("toWord " <>) .   fmtEnumToWordCase) $ sortVariants dataVariants
             ]
-        , hcat [ "instance B'.ListElem msg ", typeName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("B'.ListElem msg " <> typeName)
             [ hcat [ "newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)" ]
             , hcat [ "length (List_", typeName, " l) = U'.length l" ]
             , hcat [ "index i (List_", typeName, " l) = (C'.fromWord . fromIntegral) <$> U'.index i l" ]
             ]
-        , hcat [ "instance B'.MutListElem s ", typeName, " where" ]
-        , indent $ vcat
+        , instance_ [] ("B'.MutListElem s " <> typeName)
             [ hcat [ "setIndex elt i (List_", typeName, " l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l" ]
             , hcat [ "newList msg size = List_", typeName, " <$> U'.allocList16 msg size" ]
             ]
-        , hcat [ "instance C'.IsPtr msg (B'.List msg ", typeName, ") where" ]
-        , indent $ vcat
+        , instance_ [] ("C'.IsPtr msg (B'.List msg " <> typeName <> ")")
             [ hcat [ "fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr" ]
             , hcat [ "toPtr (List_", typeName, " l) = C'.toPtr l" ]
             ]

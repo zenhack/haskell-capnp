@@ -36,3 +36,22 @@ data_ typeCon dataCons deriving_ = vcat
             _  -> "deriving" <> PP.tupled deriving_
         ]
     ]
+
+-- @'instance_' ctx typeCon defs@ defines an instance for @typeCon@
+-- given the context @ctx@. @defs@ is the set of definitions in the
+-- instance.
+instance_ :: [Doc] -> Doc -> [Doc] -> Doc
+instance_ ctx typeCon defs = vcat
+    [ hcat
+        [ "instance "
+        , case ctx of
+            []    -> ""
+            [one] -> one <> " => "
+            _     -> PP.tupled ctx <> " => "
+        , typeCon
+        , case defs of
+            [] -> ""
+            _  -> " where"
+        ]
+    , indent $ vcat defs
+    ]
