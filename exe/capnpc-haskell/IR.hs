@@ -151,6 +151,7 @@ data PtrType
     = ListOf Type
     | PrimPtr PrimPtr
     | PtrComposite CompositeType
+    | PtrInterface Name
     deriving(Show, Read, Eq)
 
 data PrimWord

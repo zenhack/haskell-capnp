@@ -145,6 +145,7 @@ fmtType thisMod (CompositeType (StructType name params)) =
 fmtType thisMod (WordType (EnumType name)) = fmtName Raw thisMod name
 fmtType thisMod (PtrType (ListOf eltType)) = "PU'.ListOf (" <> fmtType thisMod eltType <> ")"
 fmtType thisMod (PtrType (PtrComposite ty)) = fmtType thisMod (CompositeType ty)
+fmtType thisMod (PtrType (PtrInterface name)) = fmtName Pure thisMod name
 fmtType _ VoidType = "()"
 fmtType _ (WordType (PrimWord prim)) = fmtPrimWord prim
 fmtType _ (PtrType (PrimPtr PrimText)) = "Text"
@@ -382,6 +383,8 @@ fmtDataDef thisMod dataName dataDef =
                 , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                 ]
             PtrField _ ty -> case ty of
+                PtrInterface _ ->
+                    "" -- TODO
                 PrimPtr PrimData -> vcat
                     [ hcat [ "field_ <- ", newName, " (BS.length ", fieldNameText, ") raw" ]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]

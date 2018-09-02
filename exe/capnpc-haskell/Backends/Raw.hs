@@ -336,6 +336,8 @@ fmtNew thisMod accessorName typeCon fieldLocType =
                         , "pure result"
                         ]
                     ]
+                PtrInterface _ ->
+                    ""
         _ ->
             ""
   where
@@ -610,6 +612,8 @@ fmtType thisMod msg = \case
         "(Maybe " <> fmtAnyPtr msg anyPtr <> ")"
     PtrType (PtrComposite ty) ->
         fmtType thisMod msg (CompositeType ty)
+    PtrType (PtrInterface name) ->
+        fmtName thisMod name
     CompositeType (StructType name params) -> hcat
         [ "("
         , fmtName thisMod name

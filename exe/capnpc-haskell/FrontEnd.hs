@@ -480,8 +480,7 @@ formatType thisModule nodeMap ty = case ty of
     -- TODO: use 'brand' to generate type parameters.
     Type'enum{..}   -> IR.WordType $ IR.EnumType (typeName typeId)
     Type'struct{..} -> IR.CompositeType $ IR.StructType (typeName typeId) []
-    -- TODO: interfaces are not structs; handle them separately.
-    Type'interface{..} -> IR.CompositeType $ IR.StructType (typeName typeId) []
+    Type'interface{..} -> IR.PtrType $ IR.PtrInterface (typeName typeId)
     Type'anyPointer anyPtr -> IR.PtrType $ IR.PrimPtr $ IR.PrimAnyPtr $
         case anyPtr of
             Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind ->
