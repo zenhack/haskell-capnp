@@ -55,11 +55,11 @@ instance C'.Marshal JoinKeyPart where
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'joinId raw joinId
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partCount raw partCount
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partNum raw partNum
+instance C'.Cerialize s JoinKeyPart
 instance C'.FromStruct M'.ConstMsg JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinKeyPart M'.ConstMsg)
-instance C'.Cerialize s JoinKeyPart
 instance Default JoinKeyPart where
     def = PH'.defaultStruct
 data JoinResult
@@ -83,11 +83,11 @@ instance C'.Marshal JoinResult where
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'succeeded raw succeeded
                 field_ <- C'.cerialize (U'.message raw) cap
                 Capnp.ById.Xa184c7885cdaf2a1.set_JoinResult'cap raw field_
+instance C'.Cerialize s JoinResult
 instance C'.FromStruct M'.ConstMsg JoinResult where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.JoinResult M'.ConstMsg)
-instance C'.Cerialize s JoinResult
 instance Default JoinResult where
     def = PH'.defaultStruct
 data ProvisionId
@@ -104,11 +104,11 @@ instance C'.Marshal ProvisionId where
         case value of
             ProvisionId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
+instance C'.Cerialize s ProvisionId
 instance C'.FromStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.ProvisionId M'.ConstMsg)
-instance C'.Cerialize s ProvisionId
 instance Default ProvisionId where
     def = PH'.defaultStruct
 data VatId
@@ -125,10 +125,10 @@ instance C'.Marshal VatId where
         case value of
             VatId{..} -> do
                 Capnp.ById.Xa184c7885cdaf2a1.set_VatId'side raw side
+instance C'.Cerialize s VatId
 instance C'.FromStruct M'.ConstMsg VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
         C'.decerialize (raw :: Capnp.ById.Xa184c7885cdaf2a1.VatId M'.ConstMsg)
-instance C'.Cerialize s VatId
 instance Default VatId where
     def = PH'.defaultStruct

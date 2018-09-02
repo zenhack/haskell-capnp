@@ -981,21 +981,6 @@ instance U'.HasMessage (Call'sendResultsTo msg) msg where
     message (Call'sendResultsTo_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Call'sendResultsTo msg) msg where
     messageDefault = Call'sendResultsTo_newtype_ . U'.messageDefault
-instance B'.ListElem msg (Call'sendResultsTo msg) where
-    newtype List msg (Call'sendResultsTo msg) = List_Call'sendResultsTo (U'.ListOf msg (U'.Struct msg))
-    length (List_Call'sendResultsTo l) = U'.length l
-    index i (List_Call'sendResultsTo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call'sendResultsTo msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Call'sendResultsTo msg) where
-    fromPtr msg ptr = Call'sendResultsTo_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Call'sendResultsTo_newtype_ struct) = C'.toPtr struct
-instance B'.MutListElem s (Call'sendResultsTo (M'.MutMsg s)) where
-    setIndex (Call'sendResultsTo_newtype_ elt) i (List_Call'sendResultsTo l) = U'.setIndex elt i l
-    newList msg len = List_Call'sendResultsTo <$> U'.allocCompositeList msg 20 20 len
-instance C'.Allocate s (Call'sendResultsTo (M'.MutMsg s)) where
-    new msg = Call'sendResultsTo_newtype_ <$> U'.allocStruct msg 20 20
-instance C'.IsPtr msg (B'.List msg (Call'sendResultsTo msg)) where
-    fromPtr msg ptr = List_Call'sendResultsTo <$> C'.fromPtr msg ptr
-    toPtr (List_Call'sendResultsTo l) = C'.toPtr l
 data Call'sendResultsTo' msg
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
@@ -1032,21 +1017,6 @@ instance U'.HasMessage (Disembargo'context msg) msg where
     message (Disembargo'context_newtype_ struct) = U'.message struct
 instance U'.MessageDefault (Disembargo'context msg) msg where
     messageDefault = Disembargo'context_newtype_ . U'.messageDefault
-instance B'.ListElem msg (Disembargo'context msg) where
-    newtype List msg (Disembargo'context msg) = List_Disembargo'context (U'.ListOf msg (U'.Struct msg))
-    length (List_Disembargo'context l) = U'.length l
-    index i (List_Disembargo'context l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo'context msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Disembargo'context msg) where
-    fromPtr msg ptr = Disembargo'context_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Disembargo'context_newtype_ struct) = C'.toPtr struct
-instance B'.MutListElem s (Disembargo'context (M'.MutMsg s)) where
-    setIndex (Disembargo'context_newtype_ elt) i (List_Disembargo'context l) = U'.setIndex elt i l
-    newList msg len = List_Disembargo'context <$> U'.allocCompositeList msg 20 20 len
-instance C'.Allocate s (Disembargo'context (M'.MutMsg s)) where
-    new msg = Disembargo'context_newtype_ <$> U'.allocStruct msg 20 20
-instance C'.IsPtr msg (B'.List msg (Disembargo'context msg)) where
-    fromPtr msg ptr = List_Disembargo'context <$> C'.fromPtr msg ptr
-    toPtr (List_Disembargo'context l) = C'.toPtr l
 data Disembargo'context' msg
     = Disembargo'context'senderLoopback Word32
     | Disembargo'context'receiverLoopback Word32

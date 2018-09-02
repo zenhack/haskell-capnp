@@ -222,7 +222,7 @@ fmtDataDef thisMod dataName dataDef =
             DefEnum{} ->
                 -- TODO: refactor so we don't need this case.
                 error "BUG: this should have been ruled out above."
-            DefStruct StructDef{fields} ->
+            DefStruct StructDef{fields,info} ->
                 let dataVariant =
                         -- TODO: some of the functions we use still expect structs
                         -- to just be single-variant unions; this is a stand-in,
@@ -251,8 +251,14 @@ fmtDataDef thisMod dataName dataDef =
                             [ fmtCerializeVariant False dataVariant ]
                         ]
                     ]
+                , case info of
+                    IsStandalone{} ->
+                        instance_ [] ("C'.Cerialize s " <> pureName)
+                            []
+                    _ ->
+                        ""
                 ]
-            DefUnion{dataVariants,parentStructName} ->
+            DefUnion{dataVariants,parentStructName,parentStruct=StructDef{info}} ->
                 let unknownVariantName = subName parentStructName "unknown'"
                 in vcat
                 [ data_
@@ -289,6 +295,12 @@ fmtDataDef thisMod dataName dataDef =
                             ]
                         ]
                     ]
+                , case info of
+                    IsStandalone{} ->
+                        instance_ [] ("C'.Cerialize s " <> pureName)
+                            []
+                    _ ->
+                        ""
                 ]
         , instance_ [] ("C'.FromStruct M'.ConstMsg " <> pureName)
             [ "fromStruct struct = do"
@@ -297,8 +309,6 @@ fmtDataDef thisMod dataName dataDef =
                 , hcat [ "C'.decerialize (raw :: ", rawName, " M'.ConstMsg)" ]
                 ]
             ]
-        , instance_ [] ("C'.Cerialize s " <> pureName)
-            []
         , instance_ [] ("Default " <> pureName)
             [ "def = PH'.defaultStruct"
             ]

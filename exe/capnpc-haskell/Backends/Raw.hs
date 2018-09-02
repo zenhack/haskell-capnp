@@ -131,10 +131,10 @@ fmtNewtypeStruct thisMod name info =
         , instance_ [] ("U'.MessageDefault (" <> typeCon <> " msg) msg")
             [ hcat [ "messageDefault = ", dataCon, " . U'.messageDefault" ]
             ]
-        , let (dataSz, ptrSz) = case info of
-                IR.IsStandalone{dataSz, ptrSz} -> (dataSz, ptrSz)
-                IR.IsGroup                     -> (20, 20)
-          in vcat
+        , case info of
+            IR.IsGroup ->
+                ""
+            IR.IsStandalone{dataSz, ptrSz} -> vcat
                 [ fmtStructListElem typeCon
                 , instance_ [] ("C'.IsPtr msg (" <> typeCon <> " msg)")
                     [ hcat [ "fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr" ]
