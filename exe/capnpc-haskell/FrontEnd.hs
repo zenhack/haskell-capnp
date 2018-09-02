@@ -292,14 +292,6 @@ dataLoc offset ty defaultVal =
         , dataDef = valueBits defaultVal
         }
 
-generateEnum :: Id -> NodeMap -> IR.Name -> Enumerant -> IR.Variant
-generateEnum thisModule nodeMap parentName Enumerant{..} =
-    IR.Variant
-        { variantName = IR.subName parentName name
-        , variantParams = IR.Unnamed IR.VoidType IR.VoidField
-        , variantTag = codeOrder -- FIXME: codeOrder is not the same as ordinal!
-        }
-
 -- | Return whether the field is part of a union within its struct.
 isUnionField :: Field -> Bool
 isUnionField Field{..} = discriminantValue /= field'noDiscriminant
