@@ -474,7 +474,7 @@ fmtDataDef thisMod dataName DefStruct{fields, info} = vcat
 fmtDataDef thisMod dataName DefUnion{dataVariants,dataTagLoc} =
     let unionName = subName dataName ""
         unionNameText = fmtName thisMod unionName
-        unknownName = (subName dataName "unknown'")
+        unknownName = subName dataName "unknown'"
     in vcat
         [ fmtNewtypeStruct thisMod dataName IR.IsGroup
         , data_
