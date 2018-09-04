@@ -92,6 +92,7 @@ library
       , Data.Capnp.Basics
       , Data.Capnp.Basics.Pure
       , Data.Capnp.Bits
+      , Data.Capnp.Capability
       , Data.Capnp.Classes
       , Data.Capnp.Errors
       , Data.Capnp.GenHelpers
