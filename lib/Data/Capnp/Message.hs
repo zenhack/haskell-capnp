@@ -52,6 +52,8 @@ module Data.Capnp.Message (
     , WriteCtx(..)
     ) where
 
+import {-# SOURCE #-} Network.RPC.Capnp (Client)
+
 import Prelude hiding (read)
 
 import Data.Bits (shiftL)
