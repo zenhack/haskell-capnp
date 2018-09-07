@@ -22,6 +22,8 @@ module Network.RPC.Capnp
     , newPromise
     , fulfill
     , isResolved
+
+    , nullClient
     ) where
 
 import Control.Concurrent.STM
@@ -77,6 +79,11 @@ newId pool = do
             (id:ids) -> do
                 writeTVar (pool vat) ids
                 pure id
+
+-- | A "null" client, which throws unimplemented in response to all method
+-- calls.
+nullClient :: Client
+nullClient = error "TODO"
 
 newExportId :: MonadIO m => RpcT m ExportId
 newExportId = newId exportIdPool

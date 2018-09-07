@@ -474,8 +474,12 @@ fmtConst thisMod name value =
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DefInterface =
     let name = fmtName thisMod dataName in
-    hcat
-    [ "newtype ", name, " = ", name, " M'.Client"
+    vcat
+    [ hcat [ "newtype ", name, " = ", name, " M'.Client" ]
+    , instance_ [] ("C'.IsPtr msg " <> name)
+        [ hcat [ "fromPtr msg Nothing = M'.nullClient" ]
+        , hcat [ "toPtr msg (", name , " client) = H'.embedCapPtr msg client" ]
+        ]
     ]
 fmtDataDef thisMod dataName (DefStruct StructDef{fields, info}) = vcat
     [ fmtNewtypeStruct thisMod dataName info

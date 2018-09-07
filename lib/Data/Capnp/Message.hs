@@ -56,9 +56,10 @@ module Data.Capnp.Message (
     , WriteCtx(..)
 
     , Client
+    , nullClient
     ) where
 
-import {-# SOURCE #-} Network.RPC.Capnp (Client)
+import {-# SOURCE #-} Network.RPC.Capnp (Client, nullClient)
 
 import Prelude hiding (read)
 

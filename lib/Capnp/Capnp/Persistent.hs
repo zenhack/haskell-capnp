@@ -27,7 +27,13 @@ import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
 newtype Persistent = Persistent M'.Client
+instance C'.IsPtr msg Persistent where
+    fromPtr msg Nothing = M'.nullClient
+    toPtr msg (Persistent client) = H'.embedCapPtr msg client
 newtype RealmGateway = RealmGateway M'.Client
+instance C'.IsPtr msg RealmGateway where
+    fromPtr msg Nothing = M'.nullClient
+    toPtr msg (RealmGateway client) = H'.embedCapPtr msg client
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
