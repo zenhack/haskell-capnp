@@ -73,6 +73,7 @@ import System.IO                 (Handle, stdin, stdout)
 import qualified Data.ByteString              as BS
 import qualified Data.ByteString.Builder      as BB
 import qualified Data.Vector                  as V
+import qualified Data.Vector.Generic.Mutable  as GMV
 import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
@@ -82,7 +83,10 @@ import Data.Capnp.Bits           (WordCount(..), hi, lo)
 import Data.Capnp.Errors         (Error(..))
 import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable              (Mutable(..))
+import Internal.AppendVec        (AppendVec)
 import Internal.Util             (checkIndex)
+
+import qualified Internal.AppendVec as AppendVec
 
 
 -- | The maximum size of a segment supported by this libarary, in words.
@@ -293,29 +297,16 @@ data MutMsg s = MutMsg
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 
 instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
-    data Segment (MutMsg s) = MutSegment
-        { mutSegVec :: !(SMV.MVector s Word64)
-        -- ^ The underlying vector of words storing segment's data.
-        , mutSegLen :: !Int
-        -- ^ The "true" length fo the segment. This may be shorter
-        -- than @'SMV.length' mutSegVec@; it is analogous to 'mutMsgLen'
-        -- at the message level.
-        }
+    newtype Segment (MutMsg s) = MutSegment (AppendVec SMV.MVector s Word64)
 
-    numWords MutSegment{mutSegLen} = pure mutSegLen
-    slice start len MutSegment{mutSegVec,mutSegLen} =
-        pure MutSegment
-            { mutSegVec = SMV.slice start len mutSegVec
-            , mutSegLen = len
-            }
-    read MutSegment{mutSegVec} i = fromLE64 <$> SMV.read mutSegVec i
+    numWords (MutSegment mseg) = pure $ GMV.length (AppendVec.getVector mseg)
+    slice start len (MutSegment mseg) =
+        pure $ MutSegment $ AppendVec.fromVector $
+            SMV.slice start len (AppendVec.getVector mseg)
+    read (MutSegment mseg) i = fromLE64 <$> SMV.read (AppendVec.getVector mseg) i
     fromByteString bytes = do
         vec <- constSegToVec <$> fromByteString bytes
-        mvec <- SV.thaw vec
-        pure MutSegment
-            { mutSegVec = mvec
-            , mutSegLen = SV.length vec
-            }
+        MutSegment . AppendVec.fromVector <$> SV.thaw vec
     toByteString mseg = do
         seg <- freeze mseg
         toByteString (seg :: Segment ConstMsg)
@@ -338,28 +329,21 @@ internalSetSeg MutMsg{mutMsgSegs} segIndex seg = do
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
 write :: WriteCtx m s => Segment (MutMsg s) -> Int -> Word64 -> m ()
-write MutSegment{mutSegVec} i val =
-    SMV.write mutSegVec i (toLE64 val)
+write (MutSegment seg) i val =
+    SMV.write (AppendVec.getVector seg) i (toLE64 val)
 
 -- | @'grow' segment amount@ grows the segment by the specified number
 -- of 64-bit words. The original segment should not be used afterwards.
 grow  :: WriteCtx m s => Segment (MutMsg s) -> Int -> m (Segment (MutMsg s))
-grow MutSegment{mutSegVec} amount = do
-    -- TODO: use unallocated space if available, instead of actually resizing.
-    when (maxSegmentSize - amount < SMV.length mutSegVec) $
-        throwM SizeError
-    newVec <- SMV.grow mutSegVec amount
-    pure MutSegment
-        { mutSegVec = newVec
-        , mutSegLen = SMV.length newVec
-        }
+grow (MutSegment vec) amount =
+    MutSegment <$> AppendVec.grow vec amount maxSegmentSize
 
 -- | @'newSegment' msg sizeHint@ allocates a new, initially empty segment in
 -- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
 -- number and the segment itself. Amortized O(1).
 newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
 newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
-    newSegVec <- SMV.new sizeHint
+    newSeg <- MutSegment . AppendVec.makeEmpty <$> SMV.new sizeHint
     segIndex <- numSegs msg
     when (segIndex >= maxSegments) $
         throwM SizeError
@@ -368,10 +352,6 @@ newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
         -- out of space; double the length of the message.
         MV.grow segs segIndex >>= writeMutVar mutMsgSegs
         writeMutVar mutMsgLen (segIndex * 2)
-    let newSeg = MutSegment
-            { mutSegVec = newSegVec
-            , mutSegLen = 0
-            }
     setSegment msg segIndex newSeg
     pure (segIndex, newSeg)
 
@@ -379,8 +359,11 @@ newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
 -- index of the segment in which to allocate the data.
 allocInSeg :: WriteCtx m s => MutMsg s -> Int -> WordCount -> m WordAddr
 allocInSeg msg segIndex (WordCount size) = do
-    oldSeg@MutSegment{mutSegLen} <- getSegment msg segIndex
-    let ret = WordAt { segIndex, wordIndex = WordCount mutSegLen }
+    oldSeg@(MutSegment vec) <- getSegment msg segIndex
+    let ret = WordAt
+            { segIndex
+            , wordIndex = WordCount $ GMV.length $ AppendVec.getVector vec
+            }
     newSeg <- grow oldSeg size
     setSegment msg segIndex newSeg
     pure ret
@@ -404,23 +387,16 @@ newMessage = thaw empty
 instance Thaw (Segment ConstMsg) where
     type Mutable s (Segment ConstMsg) = Segment (MutMsg s)
 
-    thaw         = thawSeg   SV.thaw
-    unsafeThaw   = thawSeg   SV.unsafeThaw
-    freeze       = freezeSeg SV.freeze
-    unsafeFreeze = freezeSeg SV.unsafeFreeze
+    thaw         = thawSeg   thaw
+    unsafeThaw   = thawSeg   unsafeThaw
+    freeze       = freezeSeg freeze
+    unsafeFreeze = freezeSeg unsafeFreeze
 
 -- Helpers for @Segment ConstMsg@'s Thaw instance.
-thawSeg thaw (ConstSegment vec) = do
-    mvec <- thaw vec
-    pure MutSegment
-        { mutSegVec = mvec
-        , mutSegLen = SV.length vec
-        }
-freezeSeg freeze seg@MutSegment{mutSegLen} = do
-    -- Slice before freezing, so we don't waste time copying
-    -- the unallocated portion:
-    MutSegment{mutSegVec} <- slice 0 mutSegLen seg
-    ConstSegment <$> freeze mutSegVec
+thawSeg thaw (ConstSegment vec) =
+    MutSegment <$> thaw (AppendVec.FrozenAppendVec vec)
+freezeSeg freeze (MutSegment mvec) =
+    ConstSegment . AppendVec.getFrozenVector <$> freeze mvec
 
 instance Thaw ConstMsg where
     type Mutable s ConstMsg = MutMsg s
