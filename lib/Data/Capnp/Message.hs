@@ -20,6 +20,7 @@ module Data.Capnp.Message (
     -- * Limits on message size
     , maxSegmentSize
     , maxSegments
+    , maxCaps
 
     -- * Converting between messages and 'ByteString's
     , encode
@@ -47,8 +48,10 @@ module Data.Capnp.Message (
     , newSegment
 
     -- ** Modifying messages
-    , setWord
     , setSegment
+    , setWord
+    , setCap
+    , appendCap
 
     , WriteCtx(..)
     ) where
@@ -98,6 +101,10 @@ maxSegmentSize = 1 `shiftL` 28 -- 2 GiB.
 -- | The maximum number of segments allowed in a message by this library.
 maxSegments :: Int
 maxSegments = 1024
+
+-- | The maximum number of capabilities allowed in a message by this library.
+maxCaps :: Int
+maxCaps = 512
 
 -- | A 'Message' is a (possibly read-only) capnproto message. It is
 -- parameterized over a monad in which operations are performed.
@@ -170,6 +177,26 @@ setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
     seg <- getSegment msg segIndex
     checkIndex i =<< numWords seg
     write seg i val
+
+-- | @'setCap' message index cap@ sets the sets the capability at @index@ in
+-- the message's capability table to @cap@. If the index is out of bounds, a
+-- 'Data.Capnp.Errors.BoundsError' will be thrown.
+setCap :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Client -> m ()
+setCap msg@MutMsg{mutCaps} i cap = do
+    checkIndex i =<< numCaps msg
+    capTable <- AppendVec.getVector <$> readMutVar mutCaps
+    MV.write capTable i cap
+
+-- | 'appendCap' appends a new capabilty to the end of a message's capability
+-- table, returning its index.
+appendCap :: WriteCtx m s => MutMsg s -> Client -> m Int
+appendCap msg@MutMsg{mutCaps} cap = do
+    i <- numCaps msg
+    capTable <- readMutVar mutCaps
+    capTable <- AppendVec.grow capTable 1 maxCaps
+    writeMutVar mutCaps capTable
+    setCap msg i cap
+    pure i
 
 -- | A read-only capnproto message.
 --
