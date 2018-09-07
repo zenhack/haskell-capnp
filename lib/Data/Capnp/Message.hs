@@ -35,6 +35,7 @@ module Data.Capnp.Message (
     -- * Reading data from messages
     , getSegment
     , getWord
+    , getCap
 
     -- * Mutable Messages
     , MutMsg
@@ -106,12 +107,19 @@ class Monad m => Message m msg where
 
     -- | 'numSegs' gets the number of segments in a message.
     numSegs :: msg -> m Int
+    -- | 'numWords' gets the number of words in a segment.
+    numWords :: Segment msg -> m Int
+    -- | 'numCaps' gets the number of capabilities in a message's capability
+    -- table.
+    numCaps :: msg -> m Int
     -- | @'internalGetSeg' message index@ gets the segment at index 'index'
     -- in 'message'. Most callers should use the 'getSegment' wrapper, instead
     -- of calling this directly.
     internalGetSeg :: msg -> Int -> m (Segment msg)
-    -- | Get the length of the segment, in units of 64-bit words.
-    numWords :: Segment msg -> m Int
+    -- | @'internalGetCap' cap index@ reads a capability from the message's
+    -- capability table, returning the client. does not check bounds. Callers
+    -- should use getCap instead.
+    internalGetCap ::msg -> Int -> m Client
     -- | @'slice' start length segment@ extracts a sub-section of the segment,
     -- starting at index @start@, of length @length@.
     slice   :: Int -> Int -> Segment msg -> m (Segment msg)
@@ -130,6 +138,14 @@ getSegment :: (MonadThrow m, Message m msg) => msg -> Int -> m (Segment msg)
 getSegment msg i = do
     checkIndex i =<< numSegs msg
     internalGetSeg msg i
+
+-- | @'getCap' message index@ gets the capability with the given index from
+-- the message. throws 'Data.Capnp.Errors.BoundsError' if the index is out
+-- of bounds.
+getCap :: (MonadThrow m, Message m msg) => msg -> Int -> m Client
+getCap msg i = do
+    checkIndex i =<< numCaps msg
+    msg `internalGetCap` i
 
 -- | @'getWord' msg addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
@@ -169,7 +185,9 @@ instance Monad m => Message m ConstMsg where
     newtype Segment ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
 
     numSegs ConstMsg{constSegs} = pure $ V.length constSegs
+    numCaps ConstMsg{constCaps} = pure $ V.length constCaps
     internalGetSeg ConstMsg{constSegs} i = constSegs `V.indexM` i
+    internalGetCap ConstMsg{constCaps} i = constCaps `V.indexM` i
 
     numWords (ConstSegment vec) = pure $ SV.length vec
     slice start len (ConstSegment vec) = pure $ ConstSegment (SV.slice start len vec)
@@ -313,9 +331,13 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
         toByteString (seg :: Segment ConstMsg)
 
     numSegs MutMsg{mutSegs} = GMV.length . AppendVec.getVector <$> readMutVar mutSegs
+    numCaps MutMsg{mutCaps} = GMV.length . AppendVec.getVector <$> readMutVar mutCaps
     internalGetSeg MutMsg{mutSegs} i = do
         segs <- AppendVec.getVector <$> readMutVar mutSegs
         MV.read segs i
+    internalGetCap MutMsg{mutCaps} i = do
+        caps <- AppendVec.getVector <$> readMutVar mutCaps
+        MV.read caps i
 
 
 -- | @'internalSetSeg' message index segment@ sets the segment at the given
