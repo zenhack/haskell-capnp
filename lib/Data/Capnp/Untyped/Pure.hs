@@ -162,7 +162,7 @@ instance Decerialize (Maybe PtrType) where
 
 instance Cerialize s (Maybe PtrType) where
     cerialize _ Nothing                     = pure Nothing
-    cerialize msg (Just (PtrStruct struct)) = toPtr <$> cerialize msg struct
+    cerialize msg (Just (PtrStruct struct)) = cerialize msg struct >>= toPtr msg
     cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
     -- TODO: when we actually support it, we need to insert the cap into the message:
     cerialize msg (Just (PtrCap       cap)) = pure $ Just (U.PtrCap msg cap)

@@ -41,7 +41,7 @@ instance B'.ListElem msg (Annotation msg) where
     index i (List_Annotation l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Annotation msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Annotation msg) where
     fromPtr msg ptr = Annotation_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Annotation_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Annotation_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Annotation (M'.MutMsg s)) where
     setIndex (Annotation_newtype_ elt) i (List_Annotation l) = U'.setIndex elt i l
     newList msg len = List_Annotation <$> U'.allocCompositeList msg 1 2 len
@@ -49,7 +49,7 @@ instance C'.Allocate s (Annotation (M'.MutMsg s)) where
     new msg = Annotation_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Annotation msg)) where
     fromPtr msg ptr = List_Annotation <$> C'.fromPtr msg ptr
-    toPtr (List_Annotation l) = C'.toPtr l
+    toPtr msg (List_Annotation l) = C'.toPtr msg l
 get_Annotation'id :: U'.ReadCtx m msg => Annotation msg -> m Word64
 get_Annotation'id (Annotation_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Annotation'id :: U'.ReadCtx m msg => Annotation msg -> m Bool
@@ -63,7 +63,9 @@ get_Annotation'value (Annotation_newtype_ struct) =
 has_Annotation'value :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'value(Annotation_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Annotation'value :: U'.RWCtx m s => Annotation (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
-set_Annotation'value (Annotation_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Annotation'value (Annotation_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Annotation'value :: U'.RWCtx m s => Annotation (M'.MutMsg s) -> m ((Value (M'.MutMsg s)))
 new_Annotation'value struct = do
     result <- C'.new (U'.message struct)
@@ -76,7 +78,9 @@ get_Annotation'brand (Annotation_newtype_ struct) =
 has_Annotation'brand :: U'.ReadCtx m msg => Annotation msg -> m Bool
 has_Annotation'brand(Annotation_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Annotation'brand :: U'.RWCtx m s => Annotation (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Annotation'brand (Annotation_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Annotation'brand (Annotation_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_Annotation'brand :: U'.RWCtx m s => Annotation (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Annotation'brand struct = do
     result <- C'.new (U'.message struct)
@@ -97,7 +101,7 @@ instance B'.ListElem msg (Brand msg) where
     index i (List_Brand l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Brand msg) where
     fromPtr msg ptr = Brand_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Brand_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Brand (M'.MutMsg s)) where
     setIndex (Brand_newtype_ elt) i (List_Brand l) = U'.setIndex elt i l
     newList msg len = List_Brand <$> U'.allocCompositeList msg 0 1 len
@@ -105,7 +109,7 @@ instance C'.Allocate s (Brand (M'.MutMsg s)) where
     new msg = Brand_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Brand msg)) where
     fromPtr msg ptr = List_Brand <$> C'.fromPtr msg ptr
-    toPtr (List_Brand l) = C'.toPtr l
+    toPtr msg (List_Brand l) = C'.toPtr msg l
 get_Brand'scopes :: U'.ReadCtx m msg => Brand msg -> m (B'.List msg (Brand'Scope msg))
 get_Brand'scopes (Brand_newtype_ struct) =
     U'.getPtr 0 struct
@@ -113,7 +117,9 @@ get_Brand'scopes (Brand_newtype_ struct) =
 has_Brand'scopes :: U'.ReadCtx m msg => Brand msg -> m Bool
 has_Brand'scopes(Brand_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Brand'scopes :: U'.RWCtx m s => Brand (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Scope (M'.MutMsg s))) -> m ()
-set_Brand'scopes (Brand_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Brand'scopes (Brand_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Brand'scopes :: U'.RWCtx m s => Int -> Brand (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Brand'Scope (M'.MutMsg s))))
 new_Brand'scopes len struct = do
     result <- C'.newList (U'.message struct) len
@@ -134,7 +140,7 @@ instance B'.ListElem msg (CapnpVersion msg) where
     index i (List_CapnpVersion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapnpVersion msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (CapnpVersion msg) where
     fromPtr msg ptr = CapnpVersion_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CapnpVersion_newtype_ struct) = C'.toPtr struct
+    toPtr msg (CapnpVersion_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CapnpVersion (M'.MutMsg s)) where
     setIndex (CapnpVersion_newtype_ elt) i (List_CapnpVersion l) = U'.setIndex elt i l
     newList msg len = List_CapnpVersion <$> U'.allocCompositeList msg 1 0 len
@@ -142,7 +148,7 @@ instance C'.Allocate s (CapnpVersion (M'.MutMsg s)) where
     new msg = CapnpVersion_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (CapnpVersion msg)) where
     fromPtr msg ptr = List_CapnpVersion <$> C'.fromPtr msg ptr
-    toPtr (List_CapnpVersion l) = C'.toPtr l
+    toPtr msg (List_CapnpVersion l) = C'.toPtr msg l
 get_CapnpVersion'major :: U'.ReadCtx m msg => CapnpVersion msg -> m Word16
 get_CapnpVersion'major (CapnpVersion_newtype_ struct) = H'.getWordField struct 0 0 0
 has_CapnpVersion'major :: U'.ReadCtx m msg => CapnpVersion msg -> m Bool
@@ -176,7 +182,7 @@ instance B'.ListElem msg (CodeGeneratorRequest msg) where
     index i (List_CodeGeneratorRequest l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (CodeGeneratorRequest msg) where
     fromPtr msg ptr = CodeGeneratorRequest_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CodeGeneratorRequest_newtype_ struct) = C'.toPtr struct
+    toPtr msg (CodeGeneratorRequest_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CodeGeneratorRequest (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest_newtype_ elt) i (List_CodeGeneratorRequest l) = U'.setIndex elt i l
     newList msg len = List_CodeGeneratorRequest <$> U'.allocCompositeList msg 0 3 len
@@ -184,7 +190,7 @@ instance C'.Allocate s (CodeGeneratorRequest (M'.MutMsg s)) where
     new msg = CodeGeneratorRequest_newtype_ <$> U'.allocStruct msg 0 3
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest <$> C'.fromPtr msg ptr
-    toPtr (List_CodeGeneratorRequest l) = C'.toPtr l
+    toPtr msg (List_CodeGeneratorRequest l) = C'.toPtr msg l
 get_CodeGeneratorRequest'nodes :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m (B'.List msg (Node msg))
 get_CodeGeneratorRequest'nodes (CodeGeneratorRequest_newtype_ struct) =
     U'.getPtr 0 struct
@@ -192,7 +198,9 @@ get_CodeGeneratorRequest'nodes (CodeGeneratorRequest_newtype_ struct) =
 has_CodeGeneratorRequest'nodes :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'nodes(CodeGeneratorRequest_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_CodeGeneratorRequest'nodes :: U'.RWCtx m s => CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node (M'.MutMsg s))) -> m ()
-set_CodeGeneratorRequest'nodes (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_CodeGeneratorRequest'nodes (CodeGeneratorRequest_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_CodeGeneratorRequest'nodes :: U'.RWCtx m s => Int -> CodeGeneratorRequest (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node (M'.MutMsg s))))
 new_CodeGeneratorRequest'nodes len struct = do
     result <- C'.newList (U'.message struct) len
@@ -205,7 +213,9 @@ get_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest_newtype_ struct) =
 has_CodeGeneratorRequest'requestedFiles :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'requestedFiles(CodeGeneratorRequest_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_CodeGeneratorRequest'requestedFiles :: U'.RWCtx m s => CodeGeneratorRequest (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))) -> m ()
-set_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_CodeGeneratorRequest'requestedFiles :: U'.RWCtx m s => Int -> CodeGeneratorRequest (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile (M'.MutMsg s))))
 new_CodeGeneratorRequest'requestedFiles len struct = do
     result <- C'.newList (U'.message struct) len
@@ -218,7 +228,9 @@ get_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest_newtype_ struct) =
 has_CodeGeneratorRequest'capnpVersion :: U'.ReadCtx m msg => CodeGeneratorRequest msg -> m Bool
 has_CodeGeneratorRequest'capnpVersion(CodeGeneratorRequest_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
 set_CodeGeneratorRequest'capnpVersion :: U'.RWCtx m s => CodeGeneratorRequest (M'.MutMsg s) -> (CapnpVersion (M'.MutMsg s)) -> m ()
-set_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
+set_CodeGeneratorRequest'capnpVersion (CodeGeneratorRequest_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 2 struct
 new_CodeGeneratorRequest'capnpVersion :: U'.RWCtx m s => CodeGeneratorRequest (M'.MutMsg s) -> m ((CapnpVersion (M'.MutMsg s)))
 new_CodeGeneratorRequest'capnpVersion struct = do
     result <- C'.new (U'.message struct)
@@ -267,7 +279,7 @@ instance B'.MutListElem s ElementSize where
     newList msg size = List_ElementSize <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg ElementSize) where
     fromPtr msg ptr = List_ElementSize <$> C'.fromPtr msg ptr
-    toPtr (List_ElementSize l) = C'.toPtr l
+    toPtr msg (List_ElementSize l) = C'.toPtr msg l
 newtype Enumerant msg = Enumerant_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Enumerant msg) where
     fromStruct = pure . Enumerant_newtype_
@@ -283,7 +295,7 @@ instance B'.ListElem msg (Enumerant msg) where
     index i (List_Enumerant l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Enumerant msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Enumerant msg) where
     fromPtr msg ptr = Enumerant_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Enumerant_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Enumerant_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Enumerant (M'.MutMsg s)) where
     setIndex (Enumerant_newtype_ elt) i (List_Enumerant l) = U'.setIndex elt i l
     newList msg len = List_Enumerant <$> U'.allocCompositeList msg 1 2 len
@@ -291,7 +303,7 @@ instance C'.Allocate s (Enumerant (M'.MutMsg s)) where
     new msg = Enumerant_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (Enumerant msg)) where
     fromPtr msg ptr = List_Enumerant <$> C'.fromPtr msg ptr
-    toPtr (List_Enumerant l) = C'.toPtr l
+    toPtr msg (List_Enumerant l) = C'.toPtr msg l
 get_Enumerant'name :: U'.ReadCtx m msg => Enumerant msg -> m (B'.Text msg)
 get_Enumerant'name (Enumerant_newtype_ struct) =
     U'.getPtr 0 struct
@@ -299,7 +311,9 @@ get_Enumerant'name (Enumerant_newtype_ struct) =
 has_Enumerant'name :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'name(Enumerant_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Enumerant'name :: U'.RWCtx m s => Enumerant (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Enumerant'name (Enumerant_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Enumerant'name (Enumerant_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Enumerant'name :: U'.RWCtx m s => Int -> Enumerant (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Enumerant'name len struct = do
     result <- B'.newText (U'.message struct) len
@@ -318,7 +332,9 @@ get_Enumerant'annotations (Enumerant_newtype_ struct) =
 has_Enumerant'annotations :: U'.ReadCtx m msg => Enumerant msg -> m Bool
 has_Enumerant'annotations(Enumerant_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Enumerant'annotations :: U'.RWCtx m s => Enumerant (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
-set_Enumerant'annotations (Enumerant_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Enumerant'annotations (Enumerant_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_Enumerant'annotations :: U'.RWCtx m s => Int -> Enumerant (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
 new_Enumerant'annotations len struct = do
     result <- C'.newList (U'.message struct) len
@@ -339,7 +355,7 @@ instance B'.ListElem msg (Field msg) where
     index i (List_Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Field msg) where
     fromPtr msg ptr = Field_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Field_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Field (M'.MutMsg s)) where
     setIndex (Field_newtype_ elt) i (List_Field l) = U'.setIndex elt i l
     newList msg len = List_Field <$> U'.allocCompositeList msg 3 4 len
@@ -347,7 +363,7 @@ instance C'.Allocate s (Field (M'.MutMsg s)) where
     new msg = Field_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field msg)) where
     fromPtr msg ptr = List_Field <$> C'.fromPtr msg ptr
-    toPtr (List_Field l) = C'.toPtr l
+    toPtr msg (List_Field l) = C'.toPtr msg l
 get_Field'name :: U'.ReadCtx m msg => Field msg -> m (B'.Text msg)
 get_Field'name (Field_newtype_ struct) =
     U'.getPtr 0 struct
@@ -355,7 +371,9 @@ get_Field'name (Field_newtype_ struct) =
 has_Field'name :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field'name(Field_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Field'name :: U'.RWCtx m s => Field (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Field'name (Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Field'name (Field_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Field'name :: U'.RWCtx m s => Int -> Field (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Field'name len struct = do
     result <- B'.newText (U'.message struct) len
@@ -374,7 +392,9 @@ get_Field'annotations (Field_newtype_ struct) =
 has_Field'annotations :: U'.ReadCtx m msg => Field msg -> m Bool
 has_Field'annotations(Field_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Field'annotations :: U'.RWCtx m s => Field (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
-set_Field'annotations (Field_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Field'annotations (Field_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_Field'annotations :: U'.RWCtx m s => Int -> Field (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
 new_Field'annotations len struct = do
     result <- C'.newList (U'.message struct) len
@@ -409,7 +429,7 @@ instance B'.ListElem msg (Method msg) where
     index i (List_Method l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Method msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Method msg) where
     fromPtr msg ptr = Method_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Method_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Method_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Method (M'.MutMsg s)) where
     setIndex (Method_newtype_ elt) i (List_Method l) = U'.setIndex elt i l
     newList msg len = List_Method <$> U'.allocCompositeList msg 3 5 len
@@ -417,7 +437,7 @@ instance C'.Allocate s (Method (M'.MutMsg s)) where
     new msg = Method_newtype_ <$> U'.allocStruct msg 3 5
 instance C'.IsPtr msg (B'.List msg (Method msg)) where
     fromPtr msg ptr = List_Method <$> C'.fromPtr msg ptr
-    toPtr (List_Method l) = C'.toPtr l
+    toPtr msg (List_Method l) = C'.toPtr msg l
 get_Method'name :: U'.ReadCtx m msg => Method msg -> m (B'.Text msg)
 get_Method'name (Method_newtype_ struct) =
     U'.getPtr 0 struct
@@ -425,7 +445,9 @@ get_Method'name (Method_newtype_ struct) =
 has_Method'name :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'name(Method_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Method'name :: U'.RWCtx m s => Method (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Method'name (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Method'name (Method_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Method'name :: U'.RWCtx m s => Int -> Method (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Method'name len struct = do
     result <- B'.newText (U'.message struct) len
@@ -456,7 +478,9 @@ get_Method'annotations (Method_newtype_ struct) =
 has_Method'annotations :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'annotations(Method_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Method'annotations :: U'.RWCtx m s => Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
-set_Method'annotations (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Method'annotations (Method_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_Method'annotations :: U'.RWCtx m s => Int -> Method (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
 new_Method'annotations len struct = do
     result <- C'.newList (U'.message struct) len
@@ -469,7 +493,9 @@ get_Method'paramBrand (Method_newtype_ struct) =
 has_Method'paramBrand :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'paramBrand(Method_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
 set_Method'paramBrand :: U'.RWCtx m s => Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Method'paramBrand (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
+set_Method'paramBrand (Method_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 2 struct
 new_Method'paramBrand :: U'.RWCtx m s => Method (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Method'paramBrand struct = do
     result <- C'.new (U'.message struct)
@@ -482,7 +508,9 @@ get_Method'resultBrand (Method_newtype_ struct) =
 has_Method'resultBrand :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'resultBrand(Method_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Method'resultBrand :: U'.RWCtx m s => Method (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Method'resultBrand (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Method'resultBrand (Method_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Method'resultBrand :: U'.RWCtx m s => Method (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Method'resultBrand struct = do
     result <- C'.new (U'.message struct)
@@ -495,7 +523,9 @@ get_Method'implicitParameters (Method_newtype_ struct) =
 has_Method'implicitParameters :: U'.ReadCtx m msg => Method msg -> m Bool
 has_Method'implicitParameters(Method_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
 set_Method'implicitParameters :: U'.RWCtx m s => Method (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
-set_Method'implicitParameters (Method_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
+set_Method'implicitParameters (Method_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 4 struct
 new_Method'implicitParameters :: U'.RWCtx m s => Int -> Method (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))))
 new_Method'implicitParameters len struct = do
     result <- C'.newList (U'.message struct) len
@@ -516,7 +546,7 @@ instance B'.ListElem msg (Node msg) where
     index i (List_Node l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Node msg) where
     fromPtr msg ptr = Node_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Node_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Node (M'.MutMsg s)) where
     setIndex (Node_newtype_ elt) i (List_Node l) = U'.setIndex elt i l
     newList msg len = List_Node <$> U'.allocCompositeList msg 5 6 len
@@ -524,7 +554,7 @@ instance C'.Allocate s (Node (M'.MutMsg s)) where
     new msg = Node_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node msg)) where
     fromPtr msg ptr = List_Node <$> C'.fromPtr msg ptr
-    toPtr (List_Node l) = C'.toPtr l
+    toPtr msg (List_Node l) = C'.toPtr msg l
 get_Node'id :: U'.ReadCtx m msg => Node msg -> m Word64
 get_Node'id (Node_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Node'id :: U'.ReadCtx m msg => Node msg -> m Bool
@@ -538,7 +568,9 @@ get_Node'displayName (Node_newtype_ struct) =
 has_Node'displayName :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'displayName(Node_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Node'displayName :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Node'displayName (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Node'displayName (Node_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Node'displayName :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Node'displayName len struct = do
     result <- B'.newText (U'.message struct) len
@@ -563,7 +595,9 @@ get_Node'nestedNodes (Node_newtype_ struct) =
 has_Node'nestedNodes :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'nestedNodes(Node_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_Node'nestedNodes :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))) -> m ()
-set_Node'nestedNodes (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_Node'nestedNodes (Node_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_Node'nestedNodes :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node'NestedNode (M'.MutMsg s))))
 new_Node'nestedNodes len struct = do
     result <- C'.newList (U'.message struct) len
@@ -576,7 +610,9 @@ get_Node'annotations (Node_newtype_ struct) =
 has_Node'annotations :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'annotations(Node_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
 set_Node'annotations :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))) -> m ()
-set_Node'annotations (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
+set_Node'annotations (Node_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 2 struct
 new_Node'annotations :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Annotation (M'.MutMsg s))))
 new_Node'annotations len struct = do
     result <- C'.newList (U'.message struct) len
@@ -589,7 +625,9 @@ get_Node'parameters (Node_newtype_ struct) =
 has_Node'parameters :: U'.ReadCtx m msg => Node msg -> m Bool
 has_Node'parameters(Node_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 5 struct
 set_Node'parameters :: U'.RWCtx m s => Node (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))) -> m ()
-set_Node'parameters (Node_newtype_ struct) value = U'.setPtr (C'.toPtr value) 5 struct
+set_Node'parameters (Node_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 5 struct
 new_Node'parameters :: U'.RWCtx m s => Int -> Node (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Node'Parameter (M'.MutMsg s))))
 new_Node'parameters len struct = do
     result <- C'.newList (U'.message struct) len
@@ -620,7 +658,7 @@ instance B'.ListElem msg (Superclass msg) where
     index i (List_Superclass l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Superclass msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Superclass msg) where
     fromPtr msg ptr = Superclass_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Superclass_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Superclass_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Superclass (M'.MutMsg s)) where
     setIndex (Superclass_newtype_ elt) i (List_Superclass l) = U'.setIndex elt i l
     newList msg len = List_Superclass <$> U'.allocCompositeList msg 1 1 len
@@ -628,7 +666,7 @@ instance C'.Allocate s (Superclass (M'.MutMsg s)) where
     new msg = Superclass_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Superclass msg)) where
     fromPtr msg ptr = List_Superclass <$> C'.fromPtr msg ptr
-    toPtr (List_Superclass l) = C'.toPtr l
+    toPtr msg (List_Superclass l) = C'.toPtr msg l
 get_Superclass'id :: U'.ReadCtx m msg => Superclass msg -> m Word64
 get_Superclass'id (Superclass_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Superclass'id :: U'.ReadCtx m msg => Superclass msg -> m Bool
@@ -642,7 +680,9 @@ get_Superclass'brand (Superclass_newtype_ struct) =
 has_Superclass'brand :: U'.ReadCtx m msg => Superclass msg -> m Bool
 has_Superclass'brand(Superclass_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Superclass'brand :: U'.RWCtx m s => Superclass (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Superclass'brand (Superclass_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Superclass'brand (Superclass_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Superclass'brand :: U'.RWCtx m s => Superclass (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Superclass'brand struct = do
     result <- C'.new (U'.message struct)
@@ -663,7 +703,7 @@ instance B'.ListElem msg (Type msg) where
     index i (List_Type l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Type msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Type msg) where
     fromPtr msg ptr = Type_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Type_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Type_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Type (M'.MutMsg s)) where
     setIndex (Type_newtype_ elt) i (List_Type l) = U'.setIndex elt i l
     newList msg len = List_Type <$> U'.allocCompositeList msg 3 1 len
@@ -671,7 +711,7 @@ instance C'.Allocate s (Type (M'.MutMsg s)) where
     new msg = Type_newtype_ <$> U'.allocStruct msg 3 1
 instance C'.IsPtr msg (B'.List msg (Type msg)) where
     fromPtr msg ptr = List_Type <$> C'.fromPtr msg ptr
-    toPtr (List_Type l) = C'.toPtr l
+    toPtr msg (List_Type l) = C'.toPtr msg l
 data Type' msg
     = Type'void
     | Type'bool
@@ -763,7 +803,9 @@ get_Type'list'elementType (Type'list'group'_newtype_ struct) =
 has_Type'list'elementType :: U'.ReadCtx m msg => Type'list'group' msg -> m Bool
 has_Type'list'elementType(Type'list'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Type'list'elementType :: U'.RWCtx m s => Type'list'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
-set_Type'list'elementType (Type'list'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Type'list'elementType (Type'list'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Type'list'elementType :: U'.RWCtx m s => Type'list'group' (M'.MutMsg s) -> m ((Type (M'.MutMsg s)))
 new_Type'list'elementType struct = do
     result <- C'.new (U'.message struct)
@@ -791,7 +833,9 @@ get_Type'enum'brand (Type'enum'group'_newtype_ struct) =
 has_Type'enum'brand :: U'.ReadCtx m msg => Type'enum'group' msg -> m Bool
 has_Type'enum'brand(Type'enum'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Type'enum'brand :: U'.RWCtx m s => Type'enum'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Type'enum'brand (Type'enum'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Type'enum'brand (Type'enum'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Type'enum'brand :: U'.RWCtx m s => Type'enum'group' (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Type'enum'brand struct = do
     result <- C'.new (U'.message struct)
@@ -819,7 +863,9 @@ get_Type'struct'brand (Type'struct'group'_newtype_ struct) =
 has_Type'struct'brand :: U'.ReadCtx m msg => Type'struct'group' msg -> m Bool
 has_Type'struct'brand(Type'struct'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Type'struct'brand :: U'.RWCtx m s => Type'struct'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Type'struct'brand (Type'struct'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Type'struct'brand (Type'struct'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Type'struct'brand :: U'.RWCtx m s => Type'struct'group' (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Type'struct'brand struct = do
     result <- C'.new (U'.message struct)
@@ -847,7 +893,9 @@ get_Type'interface'brand (Type'interface'group'_newtype_ struct) =
 has_Type'interface'brand :: U'.ReadCtx m msg => Type'interface'group' msg -> m Bool
 has_Type'interface'brand(Type'interface'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Type'interface'brand :: U'.RWCtx m s => Type'interface'group' (M'.MutMsg s) -> (Brand (M'.MutMsg s)) -> m ()
-set_Type'interface'brand (Type'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Type'interface'brand (Type'interface'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Type'interface'brand :: U'.RWCtx m s => Type'interface'group' (M'.MutMsg s) -> m ((Brand (M'.MutMsg s)))
 new_Type'interface'brand struct = do
     result <- C'.new (U'.message struct)
@@ -905,7 +953,7 @@ instance B'.ListElem msg (Value msg) where
     index i (List_Value l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Value msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Value msg) where
     fromPtr msg ptr = Value_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Value_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Value_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Value (M'.MutMsg s)) where
     setIndex (Value_newtype_ elt) i (List_Value l) = U'.setIndex elt i l
     newList msg len = List_Value <$> U'.allocCompositeList msg 2 1 len
@@ -913,7 +961,7 @@ instance C'.Allocate s (Value (M'.MutMsg s)) where
     new msg = Value_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Value msg)) where
     fromPtr msg ptr = List_Value <$> C'.fromPtr msg ptr
-    toPtr (List_Value l) = C'.toPtr l
+    toPtr msg (List_Value l) = C'.toPtr msg l
 data Value' msg
     = Value'void
     | Value'bool Bool
@@ -988,7 +1036,8 @@ set_Value'float64 (Value_newtype_ struct) value = do
 set_Value'text :: U'.RWCtx m s => Value (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
 set_Value'text(Value_newtype_ struct) value = do
     H'.setWordField struct (12 :: Word16) 0 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Value'text :: U'.RWCtx m s => Int -> Value (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Value'text len struct = do
     result <- B'.newText (U'.message struct) len
@@ -997,7 +1046,8 @@ new_Value'text len struct = do
 set_Value'data_ :: U'.RWCtx m s => Value (M'.MutMsg s) -> (B'.Data (M'.MutMsg s)) -> m ()
 set_Value'data_(Value_newtype_ struct) value = do
     H'.setWordField struct (13 :: Word16) 0 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Value'data_ :: U'.RWCtx m s => Int -> Value (M'.MutMsg s) -> m ((B'.Data (M'.MutMsg s)))
 new_Value'data_ len struct = do
     result <- B'.newData (U'.message struct) len
@@ -1006,7 +1056,8 @@ new_Value'data_ len struct = do
 set_Value'list :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'list(Value_newtype_ struct) value = do
     H'.setWordField struct (14 :: Word16) 0 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 set_Value'enum :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word16 -> m ()
 set_Value'enum (Value_newtype_ struct) value = do
     H'.setWordField struct (15 :: Word16) 0 0 0
@@ -1014,13 +1065,15 @@ set_Value'enum (Value_newtype_ struct) value = do
 set_Value'struct :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'struct(Value_newtype_ struct) value = do
     H'.setWordField struct (16 :: Word16) 0 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 set_Value'interface :: U'.RWCtx m s => Value (M'.MutMsg s) -> m ()
 set_Value'interface (Value_newtype_ struct) = H'.setWordField struct (17 :: Word16) 0 0 0
 set_Value'anyPointer :: U'.RWCtx m s => Value (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
 set_Value'anyPointer(Value_newtype_ struct) value = do
     H'.setWordField struct (18 :: Word16) 0 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 set_Value'unknown' :: U'.RWCtx m s => Value (M'.MutMsg s) -> Word16 -> m ()
 set_Value'unknown'(Value_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 instance C'.FromStruct msg (Value' msg) where
@@ -1062,7 +1115,7 @@ instance B'.ListElem msg (Brand'Binding msg) where
     index i (List_Brand'Binding l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Binding msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Brand'Binding msg) where
     fromPtr msg ptr = Brand'Binding_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand'Binding_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Brand'Binding_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Brand'Binding (M'.MutMsg s)) where
     setIndex (Brand'Binding_newtype_ elt) i (List_Brand'Binding l) = U'.setIndex elt i l
     newList msg len = List_Brand'Binding <$> U'.allocCompositeList msg 1 1 len
@@ -1070,7 +1123,7 @@ instance C'.Allocate s (Brand'Binding (M'.MutMsg s)) where
     new msg = Brand'Binding_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Brand'Binding msg)) where
     fromPtr msg ptr = List_Brand'Binding <$> C'.fromPtr msg ptr
-    toPtr (List_Brand'Binding l) = C'.toPtr l
+    toPtr msg (List_Brand'Binding l) = C'.toPtr msg l
 data Brand'Binding' msg
     = Brand'Binding'unbound
     | Brand'Binding'type_ (Type msg)
@@ -1084,7 +1137,8 @@ set_Brand'Binding'unbound (Brand'Binding_newtype_ struct) = H'.setWordField stru
 set_Brand'Binding'type_ :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
 set_Brand'Binding'type_(Brand'Binding_newtype_ struct) value = do
     H'.setWordField struct (1 :: Word16) 0 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Brand'Binding'type_ :: U'.RWCtx m s => Brand'Binding (M'.MutMsg s) -> m ((Type (M'.MutMsg s)))
 new_Brand'Binding'type_ struct = do
     result <- C'.new (U'.message struct)
@@ -1114,7 +1168,7 @@ instance B'.ListElem msg (Brand'Scope msg) where
     index i (List_Brand'Scope l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Brand'Scope msg) where
     fromPtr msg ptr = Brand'Scope_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand'Scope_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Brand'Scope_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Brand'Scope (M'.MutMsg s)) where
     setIndex (Brand'Scope_newtype_ elt) i (List_Brand'Scope l) = U'.setIndex elt i l
     newList msg len = List_Brand'Scope <$> U'.allocCompositeList msg 2 1 len
@@ -1122,7 +1176,7 @@ instance C'.Allocate s (Brand'Scope (M'.MutMsg s)) where
     new msg = Brand'Scope_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Brand'Scope msg)) where
     fromPtr msg ptr = List_Brand'Scope <$> C'.fromPtr msg ptr
-    toPtr (List_Brand'Scope l) = C'.toPtr l
+    toPtr msg (List_Brand'Scope l) = C'.toPtr msg l
 get_Brand'Scope'scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Word64
 get_Brand'Scope'scopeId (Brand'Scope_newtype_ struct) = H'.getWordField struct 0 0 0
 has_Brand'Scope'scopeId :: U'.ReadCtx m msg => Brand'Scope msg -> m Bool
@@ -1148,7 +1202,7 @@ instance B'.ListElem msg (Brand'Scope' msg) where
     index i (List_Brand'Scope' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Brand'Scope' msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Brand'Scope' msg) where
     fromPtr msg ptr = Brand'Scope'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Brand'Scope'_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Brand'Scope'_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Brand'Scope' (M'.MutMsg s)) where
     setIndex (Brand'Scope'_newtype_ elt) i (List_Brand'Scope' l) = U'.setIndex elt i l
     newList msg len = List_Brand'Scope' <$> U'.allocCompositeList msg 2 1 len
@@ -1156,7 +1210,7 @@ instance C'.Allocate s (Brand'Scope' (M'.MutMsg s)) where
     new msg = Brand'Scope'_newtype_ <$> U'.allocStruct msg 2 1
 instance C'.IsPtr msg (B'.List msg (Brand'Scope' msg)) where
     fromPtr msg ptr = List_Brand'Scope' <$> C'.fromPtr msg ptr
-    toPtr (List_Brand'Scope' l) = C'.toPtr l
+    toPtr msg (List_Brand'Scope' l) = C'.toPtr msg l
 data Brand'Scope'' msg
     = Brand'Scope'bind (B'.List msg (Brand'Binding msg))
     | Brand'Scope'inherit
@@ -1168,7 +1222,8 @@ has_Brand'Scope''(Brand'Scope'_newtype_ struct) = pure True
 set_Brand'Scope'bind :: U'.RWCtx m s => Brand'Scope' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Brand'Binding (M'.MutMsg s))) -> m ()
 set_Brand'Scope'bind(Brand'Scope'_newtype_ struct) value = do
     H'.setWordField struct (0 :: Word16) 1 0 0
-    U'.setPtr (C'.toPtr value) 0 struct
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Brand'Scope'bind :: U'.RWCtx m s => Int -> Brand'Scope' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Brand'Binding (M'.MutMsg s))))
 new_Brand'Scope'bind len struct = do
     result <- C'.newList (U'.message struct) len
@@ -1200,7 +1255,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
     index i (List_CodeGeneratorRequest'RequestedFile l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile msg) where
     fromPtr msg ptr = CodeGeneratorRequest'RequestedFile_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CodeGeneratorRequest'RequestedFile_newtype_ struct) = C'.toPtr struct
+    toPtr msg (CodeGeneratorRequest'RequestedFile_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile_newtype_ elt) i (List_CodeGeneratorRequest'RequestedFile l) = U'.setIndex elt i l
     newList msg len = List_CodeGeneratorRequest'RequestedFile <$> U'.allocCompositeList msg 1 2 len
@@ -1208,7 +1263,7 @@ instance C'.Allocate s (CodeGeneratorRequest'RequestedFile (M'.MutMsg s)) where
     new msg = CodeGeneratorRequest'RequestedFile_newtype_ <$> U'.allocStruct msg 1 2
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile <$> C'.fromPtr msg ptr
-    toPtr (List_CodeGeneratorRequest'RequestedFile l) = C'.toPtr l
+    toPtr msg (List_CodeGeneratorRequest'RequestedFile l) = C'.toPtr msg l
 get_CodeGeneratorRequest'RequestedFile'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Word64
 get_CodeGeneratorRequest'RequestedFile'id (CodeGeneratorRequest'RequestedFile_newtype_ struct) = H'.getWordField struct 0 0 0
 has_CodeGeneratorRequest'RequestedFile'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
@@ -1222,7 +1277,9 @@ get_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedF
 has_CodeGeneratorRequest'RequestedFile'filename :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'filename(CodeGeneratorRequest'RequestedFile_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_CodeGeneratorRequest'RequestedFile'filename :: U'.RWCtx m s => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_CodeGeneratorRequest'RequestedFile'filename :: U'.RWCtx m s => Int -> CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_CodeGeneratorRequest'RequestedFile'filename len struct = do
     result <- B'.newText (U'.message struct) len
@@ -1235,7 +1292,9 @@ get_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFi
 has_CodeGeneratorRequest'RequestedFile'imports :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'imports(CodeGeneratorRequest'RequestedFile_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
 set_CodeGeneratorRequest'RequestedFile'imports :: U'.RWCtx m s => CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))) -> m ()
-set_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = U'.setPtr (C'.toPtr value) 1 struct
+set_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
 new_CodeGeneratorRequest'RequestedFile'imports :: U'.RWCtx m s => Int -> CodeGeneratorRequest'RequestedFile (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))))
 new_CodeGeneratorRequest'RequestedFile'imports len struct = do
     result <- C'.newList (U'.message struct) len
@@ -1256,7 +1315,7 @@ instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     index i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CodeGeneratorRequest'RequestedFile'Import msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromPtr msg ptr = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = C'.toPtr struct
+    toPtr msg (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s)) where
     setIndex (CodeGeneratorRequest'RequestedFile'Import_newtype_ elt) i (List_CodeGeneratorRequest'RequestedFile'Import l) = U'.setIndex elt i l
     newList msg len = List_CodeGeneratorRequest'RequestedFile'Import <$> U'.allocCompositeList msg 1 1 len
@@ -1264,7 +1323,7 @@ instance C'.Allocate s (CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s))
     new msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
     fromPtr msg ptr = List_CodeGeneratorRequest'RequestedFile'Import <$> C'.fromPtr msg ptr
-    toPtr (List_CodeGeneratorRequest'RequestedFile'Import l) = C'.toPtr l
+    toPtr msg (List_CodeGeneratorRequest'RequestedFile'Import l) = C'.toPtr msg l
 get_CodeGeneratorRequest'RequestedFile'Import'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Word64
 get_CodeGeneratorRequest'RequestedFile'Import'id (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = H'.getWordField struct 0 0 0
 has_CodeGeneratorRequest'RequestedFile'Import'id :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
@@ -1278,7 +1337,9 @@ get_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'Request
 has_CodeGeneratorRequest'RequestedFile'Import'name :: U'.ReadCtx m msg => CodeGeneratorRequest'RequestedFile'Import msg -> m Bool
 has_CodeGeneratorRequest'RequestedFile'Import'name(CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_CodeGeneratorRequest'RequestedFile'Import'name :: U'.RWCtx m s => CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_CodeGeneratorRequest'RequestedFile'Import'name :: U'.RWCtx m s => Int -> CodeGeneratorRequest'RequestedFile'Import (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_CodeGeneratorRequest'RequestedFile'Import'name len struct = do
     result <- B'.newText (U'.message struct) len
@@ -1299,7 +1360,7 @@ instance B'.ListElem msg (Field' msg) where
     index i (List_Field' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Field' msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Field' msg) where
     fromPtr msg ptr = Field'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Field'_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Field'_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Field' (M'.MutMsg s)) where
     setIndex (Field'_newtype_ elt) i (List_Field' l) = U'.setIndex elt i l
     newList msg len = List_Field' <$> U'.allocCompositeList msg 3 4 len
@@ -1307,7 +1368,7 @@ instance C'.Allocate s (Field' (M'.MutMsg s)) where
     new msg = Field'_newtype_ <$> U'.allocStruct msg 3 4
 instance C'.IsPtr msg (B'.List msg (Field' msg)) where
     fromPtr msg ptr = List_Field' <$> C'.fromPtr msg ptr
-    toPtr (List_Field' l) = C'.toPtr l
+    toPtr msg (List_Field' l) = C'.toPtr msg l
 data Field'' msg
     = Field'slot (Field'slot'group' msg)
     | Field'group (Field'group'group' msg)
@@ -1348,7 +1409,9 @@ get_Field'slot'type_ (Field'slot'group'_newtype_ struct) =
 has_Field'slot'type_ :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'type_(Field'slot'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 2 struct
 set_Field'slot'type_ :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
-set_Field'slot'type_ (Field'slot'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 2 struct
+set_Field'slot'type_ (Field'slot'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 2 struct
 new_Field'slot'type_ :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> m ((Type (M'.MutMsg s)))
 new_Field'slot'type_ struct = do
     result <- C'.new (U'.message struct)
@@ -1361,7 +1424,9 @@ get_Field'slot'defaultValue (Field'slot'group'_newtype_ struct) =
 has_Field'slot'defaultValue :: U'.ReadCtx m msg => Field'slot'group' msg -> m Bool
 has_Field'slot'defaultValue(Field'slot'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Field'slot'defaultValue :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
-set_Field'slot'defaultValue (Field'slot'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Field'slot'defaultValue (Field'slot'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Field'slot'defaultValue :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> m ((Value (M'.MutMsg s)))
 new_Field'slot'defaultValue struct = do
     result <- C'.new (U'.message struct)
@@ -1444,7 +1509,7 @@ instance B'.ListElem msg (Node' msg) where
     index i (List_Node' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node' msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Node' msg) where
     fromPtr msg ptr = Node'_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Node'_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Node' (M'.MutMsg s)) where
     setIndex (Node'_newtype_ elt) i (List_Node' l) = U'.setIndex elt i l
     newList msg len = List_Node' <$> U'.allocCompositeList msg 5 6 len
@@ -1452,7 +1517,7 @@ instance C'.Allocate s (Node' (M'.MutMsg s)) where
     new msg = Node'_newtype_ <$> U'.allocStruct msg 5 6
 instance C'.IsPtr msg (B'.List msg (Node' msg)) where
     fromPtr msg ptr = List_Node' <$> C'.fromPtr msg ptr
-    toPtr (List_Node' l) = C'.toPtr l
+    toPtr msg (List_Node' l) = C'.toPtr msg l
 data Node'' msg
     = Node'file
     | Node'struct (Node'struct'group' msg)
@@ -1541,7 +1606,9 @@ get_Node'struct'fields (Node'struct'group'_newtype_ struct) =
 has_Node'struct'fields :: U'.ReadCtx m msg => Node'struct'group' msg -> m Bool
 has_Node'struct'fields(Node'struct'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Node'struct'fields :: U'.RWCtx m s => Node'struct'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Field (M'.MutMsg s))) -> m ()
-set_Node'struct'fields (Node'struct'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Node'struct'fields (Node'struct'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Node'struct'fields :: U'.RWCtx m s => Int -> Node'struct'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Field (M'.MutMsg s))))
 new_Node'struct'fields len struct = do
     result <- C'.newList (U'.message struct) len
@@ -1563,7 +1630,9 @@ get_Node'enum'enumerants (Node'enum'group'_newtype_ struct) =
 has_Node'enum'enumerants :: U'.ReadCtx m msg => Node'enum'group' msg -> m Bool
 has_Node'enum'enumerants(Node'enum'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Node'enum'enumerants :: U'.RWCtx m s => Node'enum'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Enumerant (M'.MutMsg s))) -> m ()
-set_Node'enum'enumerants (Node'enum'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Node'enum'enumerants (Node'enum'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Node'enum'enumerants :: U'.RWCtx m s => Int -> Node'enum'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Enumerant (M'.MutMsg s))))
 new_Node'enum'enumerants len struct = do
     result <- C'.newList (U'.message struct) len
@@ -1585,7 +1654,9 @@ get_Node'interface'methods (Node'interface'group'_newtype_ struct) =
 has_Node'interface'methods :: U'.ReadCtx m msg => Node'interface'group' msg -> m Bool
 has_Node'interface'methods(Node'interface'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Node'interface'methods :: U'.RWCtx m s => Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Method (M'.MutMsg s))) -> m ()
-set_Node'interface'methods (Node'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Node'interface'methods (Node'interface'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Node'interface'methods :: U'.RWCtx m s => Int -> Node'interface'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Method (M'.MutMsg s))))
 new_Node'interface'methods len struct = do
     result <- C'.newList (U'.message struct) len
@@ -1598,7 +1669,9 @@ get_Node'interface'superclasses (Node'interface'group'_newtype_ struct) =
 has_Node'interface'superclasses :: U'.ReadCtx m msg => Node'interface'group' msg -> m Bool
 has_Node'interface'superclasses(Node'interface'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
 set_Node'interface'superclasses :: U'.RWCtx m s => Node'interface'group' (M'.MutMsg s) -> (B'.List (M'.MutMsg s) (Superclass (M'.MutMsg s))) -> m ()
-set_Node'interface'superclasses (Node'interface'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
+set_Node'interface'superclasses (Node'interface'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 4 struct
 new_Node'interface'superclasses :: U'.RWCtx m s => Int -> Node'interface'group' (M'.MutMsg s) -> m ((B'.List (M'.MutMsg s) (Superclass (M'.MutMsg s))))
 new_Node'interface'superclasses len struct = do
     result <- C'.newList (U'.message struct) len
@@ -1620,7 +1693,9 @@ get_Node'const'type_ (Node'const'group'_newtype_ struct) =
 has_Node'const'type_ :: U'.ReadCtx m msg => Node'const'group' msg -> m Bool
 has_Node'const'type_(Node'const'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Node'const'type_ :: U'.RWCtx m s => Node'const'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
-set_Node'const'type_ (Node'const'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Node'const'type_ (Node'const'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Node'const'type_ :: U'.RWCtx m s => Node'const'group' (M'.MutMsg s) -> m ((Type (M'.MutMsg s)))
 new_Node'const'type_ struct = do
     result <- C'.new (U'.message struct)
@@ -1633,7 +1708,9 @@ get_Node'const'value (Node'const'group'_newtype_ struct) =
 has_Node'const'value :: U'.ReadCtx m msg => Node'const'group' msg -> m Bool
 has_Node'const'value(Node'const'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 4 struct
 set_Node'const'value :: U'.RWCtx m s => Node'const'group' (M'.MutMsg s) -> (Value (M'.MutMsg s)) -> m ()
-set_Node'const'value (Node'const'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 4 struct
+set_Node'const'value (Node'const'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 4 struct
 new_Node'const'value :: U'.RWCtx m s => Node'const'group' (M'.MutMsg s) -> m ((Value (M'.MutMsg s)))
 new_Node'const'value struct = do
     result <- C'.new (U'.message struct)
@@ -1655,7 +1732,9 @@ get_Node'annotation'type_ (Node'annotation'group'_newtype_ struct) =
 has_Node'annotation'type_ :: U'.ReadCtx m msg => Node'annotation'group' msg -> m Bool
 has_Node'annotation'type_(Node'annotation'group'_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 3 struct
 set_Node'annotation'type_ :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> (Type (M'.MutMsg s)) -> m ()
-set_Node'annotation'type_ (Node'annotation'group'_newtype_ struct) value = U'.setPtr (C'.toPtr value) 3 struct
+set_Node'annotation'type_ (Node'annotation'group'_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 3 struct
 new_Node'annotation'type_ :: U'.RWCtx m s => Node'annotation'group' (M'.MutMsg s) -> m ((Type (M'.MutMsg s)))
 new_Node'annotation'type_ struct = do
     result <- C'.new (U'.message struct)
@@ -1759,7 +1838,7 @@ instance B'.ListElem msg (Node'NestedNode msg) where
     index i (List_Node'NestedNode l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'NestedNode msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Node'NestedNode msg) where
     fromPtr msg ptr = Node'NestedNode_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'NestedNode_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Node'NestedNode_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Node'NestedNode (M'.MutMsg s)) where
     setIndex (Node'NestedNode_newtype_ elt) i (List_Node'NestedNode l) = U'.setIndex elt i l
     newList msg len = List_Node'NestedNode <$> U'.allocCompositeList msg 1 1 len
@@ -1767,7 +1846,7 @@ instance C'.Allocate s (Node'NestedNode (M'.MutMsg s)) where
     new msg = Node'NestedNode_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (Node'NestedNode msg)) where
     fromPtr msg ptr = List_Node'NestedNode <$> C'.fromPtr msg ptr
-    toPtr (List_Node'NestedNode l) = C'.toPtr l
+    toPtr msg (List_Node'NestedNode l) = C'.toPtr msg l
 get_Node'NestedNode'name :: U'.ReadCtx m msg => Node'NestedNode msg -> m (B'.Text msg)
 get_Node'NestedNode'name (Node'NestedNode_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1775,7 +1854,9 @@ get_Node'NestedNode'name (Node'NestedNode_newtype_ struct) =
 has_Node'NestedNode'name :: U'.ReadCtx m msg => Node'NestedNode msg -> m Bool
 has_Node'NestedNode'name(Node'NestedNode_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Node'NestedNode'name :: U'.RWCtx m s => Node'NestedNode (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Node'NestedNode'name (Node'NestedNode_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Node'NestedNode'name (Node'NestedNode_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Node'NestedNode'name :: U'.RWCtx m s => Int -> Node'NestedNode (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Node'NestedNode'name len struct = do
     result <- B'.newText (U'.message struct) len
@@ -1802,7 +1883,7 @@ instance B'.ListElem msg (Node'Parameter msg) where
     index i (List_Node'Parameter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Node'Parameter msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Node'Parameter msg) where
     fromPtr msg ptr = Node'Parameter_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Node'Parameter_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Node'Parameter_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Node'Parameter (M'.MutMsg s)) where
     setIndex (Node'Parameter_newtype_ elt) i (List_Node'Parameter l) = U'.setIndex elt i l
     newList msg len = List_Node'Parameter <$> U'.allocCompositeList msg 0 1 len
@@ -1810,7 +1891,7 @@ instance C'.Allocate s (Node'Parameter (M'.MutMsg s)) where
     new msg = Node'Parameter_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Node'Parameter msg)) where
     fromPtr msg ptr = List_Node'Parameter <$> C'.fromPtr msg ptr
-    toPtr (List_Node'Parameter l) = C'.toPtr l
+    toPtr msg (List_Node'Parameter l) = C'.toPtr msg l
 get_Node'Parameter'name :: U'.ReadCtx m msg => Node'Parameter msg -> m (B'.Text msg)
 get_Node'Parameter'name (Node'Parameter_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1818,7 +1899,9 @@ get_Node'Parameter'name (Node'Parameter_newtype_ struct) =
 has_Node'Parameter'name :: U'.ReadCtx m msg => Node'Parameter msg -> m Bool
 has_Node'Parameter'name(Node'Parameter_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Node'Parameter'name :: U'.RWCtx m s => Node'Parameter (M'.MutMsg s) -> (B'.Text (M'.MutMsg s)) -> m ()
-set_Node'Parameter'name (Node'Parameter_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Node'Parameter'name (Node'Parameter_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 new_Node'Parameter'name :: U'.RWCtx m s => Int -> Node'Parameter (M'.MutMsg s) -> m ((B'.Text (M'.MutMsg s)))
 new_Node'Parameter'name len struct = do
     result <- B'.newText (U'.message struct) len

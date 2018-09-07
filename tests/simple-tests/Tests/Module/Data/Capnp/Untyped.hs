@@ -284,5 +284,6 @@ farPtrTest = assertionsToTest
         srcStruct <- allocStruct msg 4 4
         (1, _) <- M.newSegment msg 10
         dstStruct <- allocStruct msg 2 2
-        setPtr (C.toPtr dstStruct) 0 srcStruct
+        ptr <- C.toPtr msg dstStruct
+        setPtr ptr 0 srcStruct
     ]

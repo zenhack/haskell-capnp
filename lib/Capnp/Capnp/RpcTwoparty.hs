@@ -41,7 +41,7 @@ instance B'.ListElem msg (JoinKeyPart msg) where
     index i (List_JoinKeyPart l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinKeyPart msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (JoinKeyPart msg) where
     fromPtr msg ptr = JoinKeyPart_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (JoinKeyPart_newtype_ struct) = C'.toPtr struct
+    toPtr msg (JoinKeyPart_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (JoinKeyPart (M'.MutMsg s)) where
     setIndex (JoinKeyPart_newtype_ elt) i (List_JoinKeyPart l) = U'.setIndex elt i l
     newList msg len = List_JoinKeyPart <$> U'.allocCompositeList msg 1 0 len
@@ -49,7 +49,7 @@ instance C'.Allocate s (JoinKeyPart (M'.MutMsg s)) where
     new msg = JoinKeyPart_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (JoinKeyPart msg)) where
     fromPtr msg ptr = List_JoinKeyPart <$> C'.fromPtr msg ptr
-    toPtr (List_JoinKeyPart l) = C'.toPtr l
+    toPtr msg (List_JoinKeyPart l) = C'.toPtr msg l
 get_JoinKeyPart'joinId :: U'.ReadCtx m msg => JoinKeyPart msg -> m Word32
 get_JoinKeyPart'joinId (JoinKeyPart_newtype_ struct) = H'.getWordField struct 0 0 0
 has_JoinKeyPart'joinId :: U'.ReadCtx m msg => JoinKeyPart msg -> m Bool
@@ -83,7 +83,7 @@ instance B'.ListElem msg (JoinResult msg) where
     index i (List_JoinResult l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinResult msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (JoinResult msg) where
     fromPtr msg ptr = JoinResult_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (JoinResult_newtype_ struct) = C'.toPtr struct
+    toPtr msg (JoinResult_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (JoinResult (M'.MutMsg s)) where
     setIndex (JoinResult_newtype_ elt) i (List_JoinResult l) = U'.setIndex elt i l
     newList msg len = List_JoinResult <$> U'.allocCompositeList msg 1 1 len
@@ -91,7 +91,7 @@ instance C'.Allocate s (JoinResult (M'.MutMsg s)) where
     new msg = JoinResult_newtype_ <$> U'.allocStruct msg 1 1
 instance C'.IsPtr msg (B'.List msg (JoinResult msg)) where
     fromPtr msg ptr = List_JoinResult <$> C'.fromPtr msg ptr
-    toPtr (List_JoinResult l) = C'.toPtr l
+    toPtr msg (List_JoinResult l) = C'.toPtr msg l
 get_JoinResult'joinId :: U'.ReadCtx m msg => JoinResult msg -> m Word32
 get_JoinResult'joinId (JoinResult_newtype_ struct) = H'.getWordField struct 0 0 0
 has_JoinResult'joinId :: U'.ReadCtx m msg => JoinResult msg -> m Bool
@@ -111,7 +111,9 @@ get_JoinResult'cap (JoinResult_newtype_ struct) =
 has_JoinResult'cap :: U'.ReadCtx m msg => JoinResult msg -> m Bool
 has_JoinResult'cap(JoinResult_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_JoinResult'cap :: U'.RWCtx m s => JoinResult (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_JoinResult'cap (JoinResult_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_JoinResult'cap (JoinResult_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 newtype ProvisionId msg = ProvisionId_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId_newtype_
@@ -127,7 +129,7 @@ instance B'.ListElem msg (ProvisionId msg) where
     index i (List_ProvisionId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ProvisionId msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (ProvisionId msg) where
     fromPtr msg ptr = ProvisionId_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (ProvisionId_newtype_ struct) = C'.toPtr struct
+    toPtr msg (ProvisionId_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (ProvisionId (M'.MutMsg s)) where
     setIndex (ProvisionId_newtype_ elt) i (List_ProvisionId l) = U'.setIndex elt i l
     newList msg len = List_ProvisionId <$> U'.allocCompositeList msg 1 0 len
@@ -135,7 +137,7 @@ instance C'.Allocate s (ProvisionId (M'.MutMsg s)) where
     new msg = ProvisionId_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (ProvisionId msg)) where
     fromPtr msg ptr = List_ProvisionId <$> C'.fromPtr msg ptr
-    toPtr (List_ProvisionId l) = C'.toPtr l
+    toPtr msg (List_ProvisionId l) = C'.toPtr msg l
 get_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Word32
 get_ProvisionId'joinId (ProvisionId_newtype_ struct) = H'.getWordField struct 0 0 0
 has_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Bool
@@ -167,7 +169,7 @@ instance B'.MutListElem s Side where
     newList msg size = List_Side <$> U'.allocList16 msg size
 instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
-    toPtr (List_Side l) = C'.toPtr l
+    toPtr msg (List_Side l) = C'.toPtr msg l
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (VatId msg) where
     fromStruct = pure . VatId_newtype_
@@ -183,7 +185,7 @@ instance B'.ListElem msg (VatId msg) where
     index i (List_VatId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VatId msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (VatId msg) where
     fromPtr msg ptr = VatId_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (VatId_newtype_ struct) = C'.toPtr struct
+    toPtr msg (VatId_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VatId (M'.MutMsg s)) where
     setIndex (VatId_newtype_ elt) i (List_VatId l) = U'.setIndex elt i l
     newList msg len = List_VatId <$> U'.allocCompositeList msg 1 0 len
@@ -191,7 +193,7 @@ instance C'.Allocate s (VatId (M'.MutMsg s)) where
     new msg = VatId_newtype_ <$> U'.allocStruct msg 1 0
 instance C'.IsPtr msg (B'.List msg (VatId msg)) where
     fromPtr msg ptr = List_VatId <$> C'.fromPtr msg ptr
-    toPtr (List_VatId l) = C'.toPtr l
+    toPtr msg (List_VatId l) = C'.toPtr msg l
 get_VatId'side :: U'.ReadCtx m msg => VatId msg -> m Side
 get_VatId'side (VatId_newtype_ struct) = H'.getWordField struct 0 0 0
 has_VatId'side :: U'.ReadCtx m msg => VatId msg -> m Bool

@@ -124,8 +124,8 @@ class Decerialize a => Cerialize s a where
 
 -- | Types that can be converted to and from an untyped pointer.
 --
--- Note that this should not involve a marshalling step, and that decoding
--- does not have to succeed, if the pointer is the wrong type.
+-- Note that encoding and decoding do not have to succeed, if the
+-- pointer is the wrong type.
 --
 -- TODO: split this into FromPtr and ToPtr, for symmetry with FromStruct
 -- and ToStruct?
@@ -134,7 +134,7 @@ class IsPtr msg a where
     fromPtr :: ReadCtx m msg => msg -> Maybe (Ptr msg) -> m a
 
     -- | Convert an @a@ to an untyped pointer.
-    toPtr :: a -> Maybe (Ptr msg)
+    toPtr :: M.WriteCtx m s => msg -> a -> m (Maybe (Ptr msg))
 
 -- | Types that can be extracted from a struct.
 class FromStruct msg a where
@@ -199,48 +199,48 @@ instance IsPtr msg (ListOf msg ()) where
     fromPtr msg Nothing                         = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
-    toPtr = Just . PtrList . U.List0
+    toPtr _ = pure . Just . PtrList . U.List0
 
 -- IsPtr instances for lists of unsigned integers.
 instance IsPtr msg (ListOf msg Word8) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-    toPtr = Just . PtrList . U.List8
+    toPtr _ = pure . Just . PtrList . U.List8
 instance IsPtr msg (ListOf msg Word16) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-    toPtr = Just . PtrList . U.List16
+    toPtr _ = pure . Just . PtrList . U.List16
 instance IsPtr msg (ListOf msg Word32) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-    toPtr = Just . PtrList . U.List32
+    toPtr _ = pure . Just . PtrList . U.List32
 instance IsPtr msg (ListOf msg Word64) where
     fromPtr msg Nothing                       = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
-    toPtr = Just . PtrList . U.List64
+    toPtr _ = pure . Just . PtrList . U.List64
 
 
 instance IsPtr msg (ListOf msg Bool) where
     fromPtr msg Nothing = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.List1 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 1."
-    toPtr = Just . PtrList . U.List1
+    toPtr _ = pure . Just . PtrList . U.List1
 
 -- | IsPtr instance for pointers -- this is just the identity.
 instance IsPtr msg (Maybe (Ptr msg)) where
     fromPtr _ = pure
-    toPtr = id
+    toPtr _ = pure
 
 -- IsPtr instance for composite lists.
 instance IsPtr msg (ListOf msg (Struct msg)) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
-    toPtr = Just . PtrList . U.ListStruct
+    toPtr _ = pure. Just . PtrList . U.ListStruct
 
 -- FromStruct instance for Struct; just the identity.
 instance FromStruct msg (Struct msg) where
@@ -256,4 +256,4 @@ instance IsPtr msg (Struct msg) where
         go = messageDefault
     fromPtr msg (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                      = expected "pointer to struct"
-    toPtr = Just . PtrStruct
+    toPtr _ = pure . Just . PtrStruct

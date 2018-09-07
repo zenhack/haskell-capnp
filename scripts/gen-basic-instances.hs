@@ -43,7 +43,7 @@ genInstance P{..} = concat
     , "    newList msg size = List", typed, " <$> U.allocList", listSuffix, " msg size\n"
     , "instance IsPtr msg (List msg ", typed, ") where\n"
     , "    fromPtr msg ptr = List", typed, " <$> fromPtr msg ptr\n"
-    , "    toPtr (List", typed, " list) = Just (U.PtrList (U.List", listSuffix, " list))\n"
+    , "    toPtr _ (List", typed, " list) = pure $ Just (U.PtrList (U.List", listSuffix, " list))\n"
     ]
   where
     dataCon = "List" ++ typed

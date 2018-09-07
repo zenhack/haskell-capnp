@@ -26,6 +26,8 @@ import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
+newtype Persistent = Persistent M'.Client
+newtype RealmGateway = RealmGateway M'.Client
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
@@ -41,7 +43,7 @@ instance B'.ListElem msg (Persistent'SaveParams msg) where
     index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Persistent'SaveParams msg) where
     fromPtr msg ptr = Persistent'SaveParams_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Persistent'SaveParams_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Persistent'SaveParams_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Persistent'SaveParams (M'.MutMsg s)) where
     setIndex (Persistent'SaveParams_newtype_ elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
     newList msg len = List_Persistent'SaveParams <$> U'.allocCompositeList msg 0 1 len
@@ -49,7 +51,7 @@ instance C'.Allocate s (Persistent'SaveParams (M'.MutMsg s)) where
     new msg = Persistent'SaveParams_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveParams msg)) where
     fromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
-    toPtr (List_Persistent'SaveParams l) = C'.toPtr l
+    toPtr msg (List_Persistent'SaveParams l) = C'.toPtr msg l
 get_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m (Maybe (U'.Ptr msg))
 get_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) =
     U'.getPtr 0 struct
@@ -57,7 +59,9 @@ get_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) =
 has_Persistent'SaveParams'sealFor :: U'.ReadCtx m msg => Persistent'SaveParams msg -> m Bool
 has_Persistent'SaveParams'sealFor(Persistent'SaveParams_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Persistent'SaveParams'sealFor :: U'.RWCtx m s => Persistent'SaveParams (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 newtype Persistent'SaveResults msg = Persistent'SaveResults_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults_newtype_
@@ -73,7 +77,7 @@ instance B'.ListElem msg (Persistent'SaveResults msg) where
     index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Persistent'SaveResults msg) where
     fromPtr msg ptr = Persistent'SaveResults_newtype_ <$> C'.fromPtr msg ptr
-    toPtr (Persistent'SaveResults_newtype_ struct) = C'.toPtr struct
+    toPtr msg (Persistent'SaveResults_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Persistent'SaveResults (M'.MutMsg s)) where
     setIndex (Persistent'SaveResults_newtype_ elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
     newList msg len = List_Persistent'SaveResults <$> U'.allocCompositeList msg 0 1 len
@@ -81,7 +85,7 @@ instance C'.Allocate s (Persistent'SaveResults (M'.MutMsg s)) where
     new msg = Persistent'SaveResults_newtype_ <$> U'.allocStruct msg 0 1
 instance C'.IsPtr msg (B'.List msg (Persistent'SaveResults msg)) where
     fromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
-    toPtr (List_Persistent'SaveResults l) = C'.toPtr l
+    toPtr msg (List_Persistent'SaveResults l) = C'.toPtr msg l
 get_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m (Maybe (U'.Ptr msg))
 get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) =
     U'.getPtr 0 struct
@@ -89,4 +93,104 @@ get_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) =
 has_Persistent'SaveResults'sturdyRef :: U'.ReadCtx m msg => Persistent'SaveResults msg -> m Bool
 has_Persistent'SaveResults'sturdyRef(Persistent'SaveResults_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
 set_Persistent'SaveResults'sturdyRef :: U'.RWCtx m s => Persistent'SaveResults (M'.MutMsg s) -> (Maybe (U'.Ptr (M'.MutMsg s))) -> m ()
-set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) value = U'.setPtr (C'.toPtr value) 0 struct
+set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
+newtype RealmGateway'export'params msg = RealmGateway'export'params_newtype_ (U'.Struct msg)
+instance C'.FromStruct msg (RealmGateway'export'params msg) where
+    fromStruct = pure . RealmGateway'export'params_newtype_
+instance C'.ToStruct msg (RealmGateway'export'params msg) where
+    toStruct (RealmGateway'export'params_newtype_ struct) = struct
+instance U'.HasMessage (RealmGateway'export'params msg) msg where
+    message (RealmGateway'export'params_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (RealmGateway'export'params msg) msg where
+    messageDefault = RealmGateway'export'params_newtype_ . U'.messageDefault
+instance B'.ListElem msg (RealmGateway'export'params msg) where
+    newtype List msg (RealmGateway'export'params msg) = List_RealmGateway'export'params (U'.ListOf msg (U'.Struct msg))
+    length (List_RealmGateway'export'params l) = U'.length l
+    index i (List_RealmGateway'export'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RealmGateway'export'params msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (RealmGateway'export'params msg) where
+    fromPtr msg ptr = RealmGateway'export'params_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (RealmGateway'export'params_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (RealmGateway'export'params (M'.MutMsg s)) where
+    setIndex (RealmGateway'export'params_newtype_ elt) i (List_RealmGateway'export'params l) = U'.setIndex elt i l
+    newList msg len = List_RealmGateway'export'params <$> U'.allocCompositeList msg 0 2 len
+instance C'.Allocate s (RealmGateway'export'params (M'.MutMsg s)) where
+    new msg = RealmGateway'export'params_newtype_ <$> U'.allocStruct msg 0 2
+instance C'.IsPtr msg (B'.List msg (RealmGateway'export'params msg)) where
+    fromPtr msg ptr = List_RealmGateway'export'params <$> C'.fromPtr msg ptr
+    toPtr msg (List_RealmGateway'export'params l) = C'.toPtr msg l
+get_RealmGateway'export'params'cap :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m Persistent
+get_RealmGateway'export'params'cap (RealmGateway'export'params_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+has_RealmGateway'export'params'cap :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m Bool
+has_RealmGateway'export'params'cap(RealmGateway'export'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_RealmGateway'export'params'cap :: U'.RWCtx m s => RealmGateway'export'params (M'.MutMsg s) -> Persistent -> m ()
+set_RealmGateway'export'params'cap (RealmGateway'export'params_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
+get_RealmGateway'export'params'params :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m (Persistent'SaveParams msg)
+get_RealmGateway'export'params'params (RealmGateway'export'params_newtype_ struct) =
+    U'.getPtr 1 struct
+    >>= C'.fromPtr (U'.message struct)
+has_RealmGateway'export'params'params :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m Bool
+has_RealmGateway'export'params'params(RealmGateway'export'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+set_RealmGateway'export'params'params :: U'.RWCtx m s => RealmGateway'export'params (M'.MutMsg s) -> (Persistent'SaveParams (M'.MutMsg s)) -> m ()
+set_RealmGateway'export'params'params (RealmGateway'export'params_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
+new_RealmGateway'export'params'params :: U'.RWCtx m s => RealmGateway'export'params (M'.MutMsg s) -> m ((Persistent'SaveParams (M'.MutMsg s)))
+new_RealmGateway'export'params'params struct = do
+    result <- C'.new (U'.message struct)
+    set_RealmGateway'export'params'params struct result
+    pure result
+newtype RealmGateway'import'params msg = RealmGateway'import'params_newtype_ (U'.Struct msg)
+instance C'.FromStruct msg (RealmGateway'import'params msg) where
+    fromStruct = pure . RealmGateway'import'params_newtype_
+instance C'.ToStruct msg (RealmGateway'import'params msg) where
+    toStruct (RealmGateway'import'params_newtype_ struct) = struct
+instance U'.HasMessage (RealmGateway'import'params msg) msg where
+    message (RealmGateway'import'params_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (RealmGateway'import'params msg) msg where
+    messageDefault = RealmGateway'import'params_newtype_ . U'.messageDefault
+instance B'.ListElem msg (RealmGateway'import'params msg) where
+    newtype List msg (RealmGateway'import'params msg) = List_RealmGateway'import'params (U'.ListOf msg (U'.Struct msg))
+    length (List_RealmGateway'import'params l) = U'.length l
+    index i (List_RealmGateway'import'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RealmGateway'import'params msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (RealmGateway'import'params msg) where
+    fromPtr msg ptr = RealmGateway'import'params_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (RealmGateway'import'params_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (RealmGateway'import'params (M'.MutMsg s)) where
+    setIndex (RealmGateway'import'params_newtype_ elt) i (List_RealmGateway'import'params l) = U'.setIndex elt i l
+    newList msg len = List_RealmGateway'import'params <$> U'.allocCompositeList msg 0 2 len
+instance C'.Allocate s (RealmGateway'import'params (M'.MutMsg s)) where
+    new msg = RealmGateway'import'params_newtype_ <$> U'.allocStruct msg 0 2
+instance C'.IsPtr msg (B'.List msg (RealmGateway'import'params msg)) where
+    fromPtr msg ptr = List_RealmGateway'import'params <$> C'.fromPtr msg ptr
+    toPtr msg (List_RealmGateway'import'params l) = C'.toPtr msg l
+get_RealmGateway'import'params'cap :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m Persistent
+get_RealmGateway'import'params'cap (RealmGateway'import'params_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+has_RealmGateway'import'params'cap :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m Bool
+has_RealmGateway'import'params'cap(RealmGateway'import'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_RealmGateway'import'params'cap :: U'.RWCtx m s => RealmGateway'import'params (M'.MutMsg s) -> Persistent -> m ()
+set_RealmGateway'import'params'cap (RealmGateway'import'params_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
+get_RealmGateway'import'params'params :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m (Persistent'SaveParams msg)
+get_RealmGateway'import'params'params (RealmGateway'import'params_newtype_ struct) =
+    U'.getPtr 1 struct
+    >>= C'.fromPtr (U'.message struct)
+has_RealmGateway'import'params'params :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m Bool
+has_RealmGateway'import'params'params(RealmGateway'import'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 1 struct
+set_RealmGateway'import'params'params :: U'.RWCtx m s => RealmGateway'import'params (M'.MutMsg s) -> (Persistent'SaveParams (M'.MutMsg s)) -> m ()
+set_RealmGateway'import'params'params (RealmGateway'import'params_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 1 struct
+new_RealmGateway'import'params'params :: U'.RWCtx m s => RealmGateway'import'params (M'.MutMsg s) -> m ((Persistent'SaveParams (M'.MutMsg s)))
+new_RealmGateway'import'params'params struct = do
+    result <- C'.new (U'.message struct)
+    set_RealmGateway'import'params'params struct result
+    pure result

@@ -102,7 +102,7 @@ fmtStructListIsPtr :: PP.Doc -> PP.Doc
 fmtStructListIsPtr nameText =
     instance_ [] ("C'.IsPtr msg (B'.List msg (" <> nameText <> " msg))")
         [ hcat [ "fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr" ]
-        , hcat [ "toPtr (List_", nameText, " l) = C'.toPtr l" ]
+        , hcat [ "toPtr msg (List_", nameText, " l) = C'.toPtr msg l" ]
         ]
 
 -- | Generate declarations common to all types which are represented
@@ -138,7 +138,7 @@ fmtNewtypeStruct thisMod name info =
                 [ fmtStructListElem typeCon
                 , instance_ [] ("C'.IsPtr msg (" <> typeCon <> " msg)")
                     [ hcat [ "fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr" ]
-                    , hcat [ "toPtr (", dataCon, " struct) = C'.toPtr struct" ]
+                    , hcat [ "toPtr msg (", dataCon, " struct) = C'.toPtr msg struct" ]
                     ]
                 , instance_ [] ("B'.MutListElem s (" <> typeCon <> " (M'.MutMsg s))")
                     [ hcat [ "setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l" ]
@@ -289,9 +289,10 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                 ]
             PtrField idx ty -> vcat
                 [ typeAnnotation (PtrType ty)
-                , hcat
-                    [ setName, " (", dataCon, " struct) value = "
-                    , "U'.setPtr (C'.toPtr value) ", fromString (show idx), " struct"
+                , hcat [ setName, " (", dataCon, " struct) value = do" ]
+                , indent $ vcat
+                    [ "ptr <- C'.toPtr (U'.message struct) value"
+                    , hcat [ "U'.setPtr ptr ", fromString (show idx), " struct" ]
                     ]
                 ]
             HereField _ ->
@@ -424,7 +425,8 @@ fmtUnionSetter thisMod parentType tagLoc variant =
             , hcat [ setName, "(", parentDataCon, " struct) value = do" ]
             , indent $ vcat
                 [ fmtSetTag
-                , hcat [ "U'.setPtr (C'.toPtr value) ", fromString (show index), " struct" ]
+                , "ptr <- C'.toPtr (U'.message struct) value"
+                , hcat [ "U'.setPtr ptr ", fromString (show index), " struct" ]
                 ]
 
             -- Also generate a new_* function.
@@ -586,7 +588,7 @@ fmtDataDef thisMod dataName (DefEnum enumerants) =
         ]
     , instance_ [] ("C'.IsPtr msg (B'.List msg " <> typeName <> ")")
         [ hcat [ "fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr" ]
-        , hcat [ "toPtr (List_", typeName, " l) = C'.toPtr l" ]
+        , hcat [ "toPtr msg (List_", typeName, " l) = C'.toPtr msg l" ]
         ]
     ]
   where

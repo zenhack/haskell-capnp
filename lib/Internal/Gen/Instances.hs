@@ -25,7 +25,7 @@ instance MutListElem s Int8 where
     newList msg size = ListInt8 <$> U.allocList8 msg size
 instance IsPtr msg (List msg Int8) where
     fromPtr msg ptr = ListInt8 <$> fromPtr msg ptr
-    toPtr (ListInt8 list) = Just (U.PtrList (U.List8 list))
+    toPtr _ (ListInt8 list) = pure $ Just (U.PtrList (U.List8 list))
 instance ListElem msg Int16 where
     newtype List msg Int16 = ListInt16 (U.ListOf msg Word16)
     length (ListInt16 l) = U.length l
@@ -35,7 +35,7 @@ instance MutListElem s Int16 where
     newList msg size = ListInt16 <$> U.allocList16 msg size
 instance IsPtr msg (List msg Int16) where
     fromPtr msg ptr = ListInt16 <$> fromPtr msg ptr
-    toPtr (ListInt16 list) = Just (U.PtrList (U.List16 list))
+    toPtr _ (ListInt16 list) = pure $ Just (U.PtrList (U.List16 list))
 instance ListElem msg Int32 where
     newtype List msg Int32 = ListInt32 (U.ListOf msg Word32)
     length (ListInt32 l) = U.length l
@@ -45,7 +45,7 @@ instance MutListElem s Int32 where
     newList msg size = ListInt32 <$> U.allocList32 msg size
 instance IsPtr msg (List msg Int32) where
     fromPtr msg ptr = ListInt32 <$> fromPtr msg ptr
-    toPtr (ListInt32 list) = Just (U.PtrList (U.List32 list))
+    toPtr _ (ListInt32 list) = pure $ Just (U.PtrList (U.List32 list))
 instance ListElem msg Int64 where
     newtype List msg Int64 = ListInt64 (U.ListOf msg Word64)
     length (ListInt64 l) = U.length l
@@ -55,7 +55,7 @@ instance MutListElem s Int64 where
     newList msg size = ListInt64 <$> U.allocList64 msg size
 instance IsPtr msg (List msg Int64) where
     fromPtr msg ptr = ListInt64 <$> fromPtr msg ptr
-    toPtr (ListInt64 list) = Just (U.PtrList (U.List64 list))
+    toPtr _ (ListInt64 list) = pure $ Just (U.PtrList (U.List64 list))
 instance ListElem msg Word8 where
     newtype List msg Word8 = ListWord8 (U.ListOf msg Word8)
     length (ListWord8 l) = U.length l
@@ -65,7 +65,7 @@ instance MutListElem s Word8 where
     newList msg size = ListWord8 <$> U.allocList8 msg size
 instance IsPtr msg (List msg Word8) where
     fromPtr msg ptr = ListWord8 <$> fromPtr msg ptr
-    toPtr (ListWord8 list) = Just (U.PtrList (U.List8 list))
+    toPtr _ (ListWord8 list) = pure $ Just (U.PtrList (U.List8 list))
 instance ListElem msg Word16 where
     newtype List msg Word16 = ListWord16 (U.ListOf msg Word16)
     length (ListWord16 l) = U.length l
@@ -75,7 +75,7 @@ instance MutListElem s Word16 where
     newList msg size = ListWord16 <$> U.allocList16 msg size
 instance IsPtr msg (List msg Word16) where
     fromPtr msg ptr = ListWord16 <$> fromPtr msg ptr
-    toPtr (ListWord16 list) = Just (U.PtrList (U.List16 list))
+    toPtr _ (ListWord16 list) = pure $ Just (U.PtrList (U.List16 list))
 instance ListElem msg Word32 where
     newtype List msg Word32 = ListWord32 (U.ListOf msg Word32)
     length (ListWord32 l) = U.length l
@@ -85,7 +85,7 @@ instance MutListElem s Word32 where
     newList msg size = ListWord32 <$> U.allocList32 msg size
 instance IsPtr msg (List msg Word32) where
     fromPtr msg ptr = ListWord32 <$> fromPtr msg ptr
-    toPtr (ListWord32 list) = Just (U.PtrList (U.List32 list))
+    toPtr _ (ListWord32 list) = pure $ Just (U.PtrList (U.List32 list))
 instance ListElem msg Word64 where
     newtype List msg Word64 = ListWord64 (U.ListOf msg Word64)
     length (ListWord64 l) = U.length l
@@ -95,7 +95,7 @@ instance MutListElem s Word64 where
     newList msg size = ListWord64 <$> U.allocList64 msg size
 instance IsPtr msg (List msg Word64) where
     fromPtr msg ptr = ListWord64 <$> fromPtr msg ptr
-    toPtr (ListWord64 list) = Just (U.PtrList (U.List64 list))
+    toPtr _ (ListWord64 list) = pure $ Just (U.PtrList (U.List64 list))
 instance ListElem msg Float where
     newtype List msg Float = ListFloat (U.ListOf msg Word32)
     length (ListFloat l) = U.length l
@@ -105,7 +105,7 @@ instance MutListElem s Float where
     newList msg size = ListFloat <$> U.allocList32 msg size
 instance IsPtr msg (List msg Float) where
     fromPtr msg ptr = ListFloat <$> fromPtr msg ptr
-    toPtr (ListFloat list) = Just (U.PtrList (U.List32 list))
+    toPtr _ (ListFloat list) = pure $ Just (U.PtrList (U.List32 list))
 instance ListElem msg Double where
     newtype List msg Double = ListDouble (U.ListOf msg Word64)
     length (ListDouble l) = U.length l
@@ -115,7 +115,7 @@ instance MutListElem s Double where
     newList msg size = ListDouble <$> U.allocList64 msg size
 instance IsPtr msg (List msg Double) where
     fromPtr msg ptr = ListDouble <$> fromPtr msg ptr
-    toPtr (ListDouble list) = Just (U.PtrList (U.List64 list))
+    toPtr _ (ListDouble list) = pure $ Just (U.PtrList (U.List64 list))
 instance ListElem msg Bool where
     newtype List msg Bool = ListBool (U.ListOf msg Bool)
     length (ListBool l) = U.length l
@@ -125,4 +125,4 @@ instance MutListElem s Bool where
     newList msg size = ListBool <$> U.allocList1 msg size
 instance IsPtr msg (List msg Bool) where
     fromPtr msg ptr = ListBool <$> fromPtr msg ptr
-    toPtr (ListBool list) = Just (U.PtrList (U.List1 list))
+    toPtr _ (ListBool list) = pure $ Just (U.PtrList (U.List1 list))
