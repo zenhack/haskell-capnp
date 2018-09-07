@@ -281,7 +281,10 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     , ( unionName, bodyUnion )
                     ]
         Node'interface{..} ->
-            concatMap (generateMethodStructs thisModule nodeMap) methods
+            ( name
+            , IR.DeclDef IR.DefInterface
+            )
+            : concatMap (generateMethodStructs thisModule nodeMap) methods
         Node'enum{..} ->
             [ ( name
               , IR.DeclDef $ IR.DefEnum $ map

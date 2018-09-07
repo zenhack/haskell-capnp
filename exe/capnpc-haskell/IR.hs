@@ -212,6 +212,7 @@ data DataDef
         }
     | DefStruct StructDef
     | DefEnum [Name]
+    | DefInterface
     deriving(Show, Read, Eq)
 
 data StructDef = StructDef
