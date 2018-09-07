@@ -80,7 +80,6 @@ import qualified Data.Vector.Storable.Mutable as SMV
 
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
-import Data.Capnp.Errors         (Error(..))
 import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable              (Mutable(..))
 import Internal.AppendVec        (AppendVec)
@@ -284,14 +283,7 @@ getMsg = hGetMsg stdin
 --
 -- Due to mutabilty, the implementations of 'toByteString' and 'fromByteString'
 -- must make full copies, and so are O(n) in the length of the segment.
-data MutMsg s = MutMsg
-    { mutMsgSegs :: MutVar s (MV.MVector s (Segment (MutMsg s)))
-    -- ^ A vector of segments. A suffix of this may be unused; see below.
-    , mutMsgLen  :: MutVar s Int
-    -- ^ The "true" number of segments in the message. This may be shorter
-    -- than @'MV.length' mutMsgSegs@; the remainder is considered
-    -- unallocated space, and is used for amortized O(1) appending.
-    }
+newtype MutMsg s = MutMsg (MutVar s (AppendVec MV.MVector s (Segment (MutMsg s))))
 
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
@@ -311,9 +303,9 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
         seg <- freeze mseg
         toByteString (seg :: Segment ConstMsg)
 
-    numSegs = readMutVar . mutMsgLen
-    internalGetSeg MutMsg{mutMsgSegs} i = do
-        segs <- readMutVar mutMsgSegs
+    numSegs (MutMsg segVar) = GMV.length . AppendVec.getVector <$> readMutVar segVar
+    internalGetSeg (MutMsg segVar) i = do
+        segs <- AppendVec.getVector <$> readMutVar segVar
         MV.read segs i
 
 
@@ -321,8 +313,8 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
 -- index in the message. Most callers should use the 'setSegment' wrapper,
 -- instead of calling this directly.
 internalSetSeg :: WriteCtx m s => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
-internalSetSeg MutMsg{mutMsgSegs} segIndex seg = do
-    segs <- readMutVar mutMsgSegs
+internalSetSeg (MutMsg segVar) segIndex seg = do
+    segs <- AppendVec.getVector <$> readMutVar segVar
     MV.write segs segIndex seg
 
 -- | @'write' segment index value@ writes a value to the 64-bit word
@@ -342,16 +334,17 @@ grow (MutSegment vec) amount =
 -- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
 -- number and the segment itself. Amortized O(1).
 newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
-newSegment msg@MutMsg{mutMsgSegs,mutMsgLen} sizeHint = do
-    newSeg <- MutSegment . AppendVec.makeEmpty <$> SMV.new sizeHint
+newSegment msg@(MutMsg segVar) sizeHint = do
+    -- the next segment number will be equal to the *current* number of
+    -- segments:
     segIndex <- numSegs msg
-    when (segIndex >= maxSegments) $
-        throwM SizeError
-    segs <- readMutVar mutMsgSegs
-    when (MV.length segs == segIndex) $ do
-        -- out of space; double the length of the message.
-        MV.grow segs segIndex >>= writeMutVar mutMsgSegs
-        writeMutVar mutMsgLen (segIndex * 2)
+
+    -- make space for th new segment
+    segs <- readMutVar segVar
+    segs <- AppendVec.grow segs 1 maxSegments
+    writeMutVar segVar segs
+
+    newSeg <- MutSegment . AppendVec.makeEmpty <$> SMV.new sizeHint
     setSegment msg segIndex newSeg
     pure (segIndex, newSeg)
 
@@ -409,9 +402,7 @@ instance Thaw ConstMsg where
 -- Helpers for ConstMsg's Thaw instance.
 thawMsg thaw (ConstMsg vec) = do
     segments <- V.mapM thaw vec >>= V.unsafeThaw
-    MutMsg
-        <$> newMutVar segments
-        <*> newMutVar (MV.length segments)
-freezeMsg freeze msg@MutMsg{mutMsgLen} = do
-        len <- readMutVar mutMsgLen
-        ConstMsg <$> V.generateM len (internalGetSeg msg >=> freeze)
+    MutMsg <$> newMutVar (AppendVec.fromVector segments)
+freezeMsg freeze msg = do
+    len <- numSegs msg
+    ConstMsg <$> V.generateM len (internalGetSeg msg >=> freeze)
