@@ -54,6 +54,8 @@ module Data.Capnp.Message (
     , appendCap
 
     , WriteCtx(..)
+
+    , Client
     ) where
 
 import {-# SOURCE #-} Network.RPC.Capnp (Client)
