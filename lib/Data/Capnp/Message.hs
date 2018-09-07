@@ -289,7 +289,10 @@ getMsg = hGetMsg stdin
 --
 -- Due to mutabilty, the implementations of 'toByteString' and 'fromByteString'
 -- must make full copies, and so are O(n) in the length of the segment.
-newtype MutMsg s = MutMsg (MutVar s (AppendVec MV.MVector s (Segment (MutMsg s))))
+data MutMsg s = MutMsg
+    { mutSegs :: MutVar s (AppendVec MV.MVector s (Segment (MutMsg s)))
+    , mutCaps :: MutVar s (AppendVec MV.MVector s Client)
+    }
 
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
@@ -309,9 +312,9 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
         seg <- freeze mseg
         toByteString (seg :: Segment ConstMsg)
 
-    numSegs (MutMsg segVar) = GMV.length . AppendVec.getVector <$> readMutVar segVar
-    internalGetSeg (MutMsg segVar) i = do
-        segs <- AppendVec.getVector <$> readMutVar segVar
+    numSegs MutMsg{mutSegs} = GMV.length . AppendVec.getVector <$> readMutVar mutSegs
+    internalGetSeg MutMsg{mutSegs} i = do
+        segs <- AppendVec.getVector <$> readMutVar mutSegs
         MV.read segs i
 
 
@@ -319,8 +322,8 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
 -- index in the message. Most callers should use the 'setSegment' wrapper,
 -- instead of calling this directly.
 internalSetSeg :: WriteCtx m s => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
-internalSetSeg (MutMsg segVar) segIndex seg = do
-    segs <- AppendVec.getVector <$> readMutVar segVar
+internalSetSeg MutMsg{mutSegs} segIndex seg = do
+    segs <- AppendVec.getVector <$> readMutVar mutSegs
     MV.write segs segIndex seg
 
 -- | @'write' segment index value@ writes a value to the 64-bit word
@@ -340,15 +343,15 @@ grow (MutSegment vec) amount =
 -- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
 -- number and the segment itself. Amortized O(1).
 newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
-newSegment msg@(MutMsg segVar) sizeHint = do
+newSegment msg@MutMsg{mutSegs} sizeHint = do
     -- the next segment number will be equal to the *current* number of
     -- segments:
     segIndex <- numSegs msg
 
     -- make space for th new segment
-    segs <- readMutVar segVar
+    segs <- readMutVar mutSegs
     segs <- AppendVec.grow segs 1 maxSegments
-    writeMutVar segVar segs
+    writeMutVar mutSegs segs
 
     newSeg <- MutSegment . AppendVec.makeEmpty <$> SMV.new sizeHint
     setSegment msg segIndex newSeg
@@ -403,17 +406,28 @@ freezeSeg freeze (MutSegment mvec) =
 instance Thaw ConstMsg where
     type Mutable s ConstMsg = MutMsg s
 
-    thaw         = thawMsg   thaw
-    unsafeThaw   = thawMsg   unsafeThaw
-    freeze       = freezeMsg freeze
-    unsafeFreeze = freezeMsg unsafeFreeze
+    thaw         = thawMsg   thaw         V.thaw
+    unsafeThaw   = thawMsg   unsafeThaw   V.unsafeThaw
+    freeze       = freezeMsg freeze       V.freeze
+    unsafeFreeze = freezeMsg unsafeFreeze V.unsafeFreeze
 
 -- Helpers for ConstMsg's Thaw instance.
-thawMsg thaw ConstMsg{constSegs, constCaps}= do
-    segments <- V.mapM thaw constSegs >>= V.unsafeThaw
-    MutMsg <$> newMutVar (AppendVec.fromVector segments)
-freezeMsg freeze msg = do
+thawMsg :: (PrimMonad m, s ~ PrimState m)
+    => (Segment ConstMsg -> m (Segment (MutMsg s)))
+    -> (V.Vector Client -> m (MV.MVector s Client))
+    -> ConstMsg
+    -> m (MutMsg s)
+thawMsg thawSeg thawCaps ConstMsg{constSegs, constCaps}= do
+    mutSegs <- newMutVar . AppendVec.fromVector =<< (V.mapM thawSeg constSegs >>= V.unsafeThaw)
+    mutCaps <- newMutVar . AppendVec.fromVector =<< thawCaps constCaps
+    pure MutMsg{mutSegs, mutCaps}
+freezeMsg :: (PrimMonad m, s ~ PrimState m)
+    => (Segment (MutMsg s) -> m (Segment ConstMsg))
+    -> (MV.MVector s Client -> m (V.Vector Client))
+    -> MutMsg s
+    -> m ConstMsg
+freezeMsg freezeSeg freezeCaps msg@MutMsg{mutCaps} = do
     len <- numSegs msg
     constSegs <- V.generateM len (internalGetSeg msg >=> freeze)
-    constCaps <- pure V.empty
+    constCaps <- freezeCaps . AppendVec.getVector =<< readMutVar mutCaps
     pure ConstMsg{constSegs, constCaps}
