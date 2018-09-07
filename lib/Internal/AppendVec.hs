@@ -85,7 +85,7 @@ grow AppendVec{mutVec,mutVecLen} amount maxSize = do
             -- we have enough un-allocated space already; leave the vector
             -- itself alone.
             pure mutVec
-        else do
+        else
             -- Allocate some more space. we at least double the underlying
             -- vector's size, to make appending amortized O(1), but if the
             -- vector is small enough and the allocation is big enough, we
