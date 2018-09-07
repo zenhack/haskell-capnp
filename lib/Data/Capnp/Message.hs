@@ -160,13 +160,16 @@ setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
 -- 'ConstMsg' is an instance of the generic 'Message' type class. its
 -- implementations of 'toByteString' and 'fromByteString' are O(1);
 -- the underlying bytes are not copied.
-newtype ConstMsg = ConstMsg (V.Vector (Segment ConstMsg))
+data ConstMsg = ConstMsg
+    { constSegs :: V.Vector (Segment ConstMsg)
+    , constCaps :: V.Vector Client
+    }
 
 instance Monad m => Message m ConstMsg where
     newtype Segment ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
 
-    numSegs (ConstMsg vec) = pure $ V.length vec
-    internalGetSeg (ConstMsg vec) i = vec `V.indexM` i
+    numSegs ConstMsg{constSegs} = pure $ V.length constSegs
+    internalGetSeg ConstMsg{constSegs} i = constSegs `V.indexM` i
 
     numWords (ConstSegment vec) = pure $ SV.length vec
     slice start len (ConstSegment vec) = pure $ ConstSegment (SV.slice start len vec)
@@ -238,18 +241,19 @@ readMessage read32 readSegment = do
     segSizes <- V.replicateM (fromIntegral numSegs) read32
     when (numSegs `mod` 2 == 0) $ void read32
     V.mapM_ (invoice . fromIntegral) segSizes
-    ConstMsg <$> V.mapM (readSegment . fromIntegral) segSizes
+    constSegs <- V.mapM (readSegment . fromIntegral) segSizes
+    pure ConstMsg{constSegs, constCaps = V.empty}
 
 -- | @'writeMesage' write32 writeSegment@ writes out the message. @write32@
 -- should write a 32-bit word in little-endian format to the output stream.
 -- @writeSegment@ should write a blob.
 writeMessage :: MonadThrow m => ConstMsg -> (Word32 -> m ()) -> (Segment ConstMsg -> m ()) -> m ()
-writeMessage (ConstMsg segs) write32 writeSegment = do
-    let numSegs = V.length segs
+writeMessage ConstMsg{constSegs} write32 writeSegment = do
+    let numSegs = V.length constSegs
     write32 (fromIntegral numSegs - 1)
-    V.forM_ segs $ \seg -> write32 =<< fromIntegral <$> numWords seg
+    V.forM_ constSegs $ \seg -> write32 =<< fromIntegral <$> numWords seg
     when (numSegs `mod` 2 == 0) $ write32 0
-    V.forM_ segs writeSegment
+    V.forM_ constSegs writeSegment
 
 
 -- | @'hPutMsg' handle msg@ writes @msg@ to @handle@. If there is an exception,
@@ -373,7 +377,10 @@ alloc msg size = do
 -- | 'empty' is an empty message, i.e. a minimal message with a null pointer as
 -- its root object.
 empty :: ConstMsg
-empty = ConstMsg $ V.fromList [ ConstSegment $ SV.fromList [0] ]
+empty = ConstMsg
+    { constSegs = V.fromList [ ConstSegment $ SV.fromList [0] ]
+    , constCaps = V.empty
+    }
 
 -- | Allocate a new empty message.
 newMessage :: WriteCtx m s => m (MutMsg s)
@@ -402,9 +409,11 @@ instance Thaw ConstMsg where
     unsafeFreeze = freezeMsg unsafeFreeze
 
 -- Helpers for ConstMsg's Thaw instance.
-thawMsg thaw (ConstMsg vec) = do
-    segments <- V.mapM thaw vec >>= V.unsafeThaw
+thawMsg thaw ConstMsg{constSegs, constCaps}= do
+    segments <- V.mapM thaw constSegs >>= V.unsafeThaw
     MutMsg <$> newMutVar (AppendVec.fromVector segments)
 freezeMsg freeze msg = do
     len <- numSegs msg
-    ConstMsg <$> V.generateM len (internalGetSeg msg >=> freeze)
+    constSegs <- V.generateM len (internalGetSeg msg >=> freeze)
+    constCaps <- pure V.empty
+    pure ConstMsg{constSegs, constCaps}
