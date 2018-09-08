@@ -48,6 +48,5 @@ setWordField struct value idx offset def = do
     U.setData new idx struct
 
 embedCapPtr :: M.WriteCtx m s => M.MutMsg s -> M.Client -> m (Maybe (U.Ptr (M.MutMsg s)))
-embedCapPtr msg client = do
-    i <- M.appendCap msg client
-    pure $ Just $ U.PtrCap msg $ fromIntegral i
+embedCapPtr msg client =
+    Just . U.PtrCap <$> U.appendCap msg client

@@ -20,11 +20,12 @@ Each of the data types exported by this module is parametrized over a Message
 type (see "Data.Capnp.Message"), used as the underlying storage.
 -}
 module Data.Capnp.Untyped
-    ( Ptr(..), List(..), Struct, ListOf
+    ( Ptr(..), List(..), Struct, ListOf, Cap
     , dataSection, ptrSection
     , getData, getPtr
     , setData, setPtr
     , copyStruct
+    , getClient
     , get, index, length
     , setIndex
     , take
@@ -43,6 +44,7 @@ module Data.Capnp.Untyped
     , allocList32
     , allocList64
     , allocListPtr
+    , appendCap
     )
   where
 
@@ -86,7 +88,7 @@ type RWCtx m s = (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
 -- Note that there is no variant for far pointers, which don't make sense
 -- with absolute addressing.
 data Ptr msg
-    = PtrCap msg !Word32
+    = PtrCap (Cap msg)
     | PtrList (List msg)
     | PtrStruct (Struct msg)
 
@@ -126,6 +128,9 @@ data ListOf msg a where
     ListOfWord64 :: !(NormalList msg) -> ListOf msg Word64
     ListOfPtr    :: !(NormalList msg) -> ListOf msg (Maybe (Ptr msg))
 
+-- | A Capability in a message.
+data Cap msg = Cap msg !Word32
+
 -- | A struct value in a message.
 data Struct msg
     = Struct
@@ -153,12 +158,15 @@ class TraverseMsg f where
 
 instance TraverseMsg Ptr where
     tMsg f = \case
-        PtrCap msgA n ->
-            PtrCap <$> f msgA <*> pure n
+        PtrCap cap ->
+            PtrCap <$> tMsg f cap
         PtrList l ->
             PtrList <$> tMsg f l
         PtrStruct s ->
             PtrStruct <$> tMsg f s
+
+instance TraverseMsg Cap where
+    tMsg f (Cap msg n) = Cap <$> f msg <*> pure n
 
 instance TraverseMsg Struct where
     tMsg f (Struct msg addr dataSz ptrSz) = Struct
@@ -359,9 +367,12 @@ class HasMessage a msg => MessageDefault a msg where
     messageDefault :: msg -> a
 
 instance HasMessage (Ptr msg) msg where
-    message (PtrCap msg _)     = msg
+    message (PtrCap cap)       = message cap
     message (PtrList list)     = message list
     message (PtrStruct struct) = message struct
+
+instance HasMessage (Cap msg) msg where
+    message (Cap msg _) = msg
 
 instance HasMessage (Struct msg) msg where
     message (Struct msg _ _ _) = msg
@@ -412,6 +423,9 @@ instance HasMessage (NormalList msg) msg where
 instance MessageDefault (NormalList msg) msg where
     messageDefault msg = NormalList msg (WordAt 0 0) 0
 
+getClient :: ReadCtx m msg => Cap msg -> m M.Client
+getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
+
 -- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
@@ -421,7 +435,7 @@ get msg addr = do
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
-            P.CapPtr cap -> return $ Just $ PtrCap msg cap
+            P.CapPtr cap -> return $ Just $ PtrCap (Cap msg cap)
             P.StructPtr off dataSz ptrSz -> return $ Just $ PtrStruct $
                 Struct msg (resolveOffset addr off) dataSz ptrSz
             P.ListPtr off eltSpec -> Just <$> getList (resolveOffset addr off) eltSpec
@@ -453,7 +467,7 @@ get msg addr = do
                                     -- how the reference implementation does this, copy
                                     -- that, and submit a patch to the spec.
                                     Just (P.CapPtr cap) ->
-                                        return $ Just $ PtrCap msg cap
+                                        return $ Just $ PtrCap (Cap msg cap)
                                     ptr -> throwM $ E.InvalidDataError $
                                         "The tag word of a far pointer's " ++
                                         "2-word landing pad should be an intra " ++
@@ -524,7 +538,7 @@ listAddr (ListPtr (ListOfPtr NormalList{nAddr})) = nAddr
 -- | Return the address of the pointer's target. It is illegal to call this on
 -- a pointer which targets a capability.
 ptrAddr :: Ptr msg -> WordAddr
-ptrAddr (PtrCap _ _) = error "ptrAddr called on a capability pointer."
+ptrAddr (PtrCap _) = error "ptrAddr called on a capability pointer."
 ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
@@ -541,7 +555,7 @@ setIndex value i list = case list of
     ListOfWord64 nlist -> setNIndex nlist 1 value
     ListOfPtr nlist -> case value of
         Nothing                -> setNIndex nlist 1 (P.serializePtr Nothing)
-        Just (PtrCap _ cap)    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
+        Just (PtrCap (Cap _ cap))    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
         Just p@(PtrList ptrList)     ->
             setPtrIndex nlist p $ P.ListPtr 0 (listEltSpec ptrList)
         Just p@(PtrStruct (Struct _ addr dataSz ptrSz)) ->
@@ -815,3 +829,8 @@ allocNormalList bitsPerElt msg len = do
         , nAddr = addr
         , nLen = len
         }
+
+appendCap :: M.WriteCtx m s => M.MutMsg s -> M.Client -> m (Cap (M.MutMsg s))
+appendCap msg client = do
+    i <- M.appendCap msg client
+    pure $ Cap msg (fromIntegral i)

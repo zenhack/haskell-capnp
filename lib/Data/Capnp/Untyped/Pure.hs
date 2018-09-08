@@ -20,8 +20,7 @@ provides support for converting from the lower-level types in
 "Data.Capnp.Untyped".
 -}
 module Data.Capnp.Untyped.Pure
-    ( Cap(..)
-    , Slice(..)
+    ( Slice(..)
     , PtrType(..)
     , Struct(..)
     , List(..)
@@ -50,9 +49,6 @@ import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
 import qualified Data.Vector        as V
 
--- | A capability in the wire format.
-type Cap = Word32
-
 -- | A one of a struct's sections (data or pointer).
 --
 -- This is just a newtype wrapper around 'ListOf' (which is itself just
@@ -68,7 +64,7 @@ newtype Slice a = Slice (ListOf a)
 data PtrType
     = PtrStruct !Struct
     | PtrList   !List
-    | PtrCap    !Cap
+    | PtrCap    !M.Client
     deriving(Generic, Show, Read, Eq)
 
 -- | A capnproto struct.
@@ -156,7 +152,7 @@ instance Decerialize (Maybe PtrType) where
 
     decerialize Nothing = pure Nothing
     decerialize (Just ptr) = Just <$> case ptr of
-        U.PtrCap _ cap     -> return (PtrCap cap)
+        U.PtrCap cap       -> PtrCap <$> U.getClient cap
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
 
@@ -164,8 +160,7 @@ instance Cerialize s (Maybe PtrType) where
     cerialize _ Nothing                     = pure Nothing
     cerialize msg (Just (PtrStruct struct)) = cerialize msg struct >>= toPtr msg
     cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
-    -- TODO: when we actually support it, we need to insert the cap into the message:
-    cerialize msg (Just (PtrCap       cap)) = pure $ Just (U.PtrCap msg cap)
+    cerialize msg (Just (PtrCap       cap)) = Just . U.PtrCap <$> U.appendCap msg cap
 
 -- Generic decerialize instances for lists. TODO: this doesn't really belong
 -- in Untyped, since this is mostly used for typed lists. maybe Basics.

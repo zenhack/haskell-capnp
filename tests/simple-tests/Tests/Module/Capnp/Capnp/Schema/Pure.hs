@@ -782,11 +782,14 @@ instance Arbitrary PU.List where
         ]
 
 instance Arbitrary PU.PtrType where
-    shrink = genericShrink
+    shrink (PU.PtrStruct s) = PU.PtrStruct <$> shrink s
+    shrink (PU.PtrList   l) = PU.PtrList   <$> shrink l
+    shrink (PU.PtrCap    c) = []
     arbitrary = oneof
         [ PU.PtrStruct <$> arbitrary
         , PU.PtrList <$> arbitrary
-        , PU.PtrCap <$> arbitrary
+        -- We never generate capabilites, as we can't marshal Clients back in,
+        -- so many of the invariants we check don't hold for caps.
         ]
 
 prop_cerializeDecerializeInverses ::

@@ -29,14 +29,16 @@ module Network.RPC.Capnp
 import Control.Concurrent.STM
 import Data.Word
 
-import Control.Concurrent.Async  (concurrently_)
-import Control.Exception         (Exception, throwIO)
-import Control.Monad             (forever)
-import Control.Monad.IO.Class    (MonadIO, liftIO)
-import Control.Monad.Reader      (ReaderT, ask, runReaderT)
-import Control.Monad.Trans.Class (MonadTrans(lift))
-import Data.Maybe                (isJust)
-import System.IO                 (Handle, hClose)
+import Control.Concurrent.Async        (concurrently_)
+import Control.Exception               (Exception, throwIO)
+import Control.Monad                   (forever)
+import Control.Monad.IO.Class          (MonadIO, liftIO)
+import Control.Monad.Reader            (ReaderT, ask, runReaderT)
+import Control.Monad.Trans.Class       (MonadTrans(lift))
+import Data.Maybe                      (isJust)
+import System.IO                       (Handle, hClose)
+import Text.ParserCombinators.ReadPrec (pfail)
+import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
@@ -83,7 +85,7 @@ newId pool = do
 -- | A "null" client, which throws unimplemented in response to all method
 -- calls.
 nullClient :: Client
-nullClient = error "TODO"
+nullClient = NullClient
 
 newExportId :: MonadIO m => RpcT m ExportId
 newExportId = newId exportIdPool
@@ -105,11 +107,35 @@ instance Transport HandleTransport IO where
     recvMsg HandleTransport{handle, limit} = liftIO $ hGetValue handle limit
     disconnect = liftIO . hClose . handle
 
+-- | A client for a capnproto capability.
+--
+-- Note that client's 'Show' instance does not have a way of retaininig the,
+-- connection reference, so doing @'read' . 'show'@ will reseult in a disconnected
+-- capability (except in the case of 'nullClient', which is the only capability
+-- that can be represented statically)..
 data Client
     = RemoteClient
         { target   :: MessageTarget
         , localVat :: Vat
         }
+    | NullClient
+    | DisconnectedClient
+    deriving(Eq)
+
+instance Read Client where
+    readPrec = lexP >>= \case
+        Ident "nullClient" ->
+            pure nullClient
+        Ident "DisconnectedClient" ->
+            -- TODO: figure out something else to put here.
+            pure DisconnectedClient
+        _ ->
+            pfail
+
+instance Show Client where
+    show NullClient = "nullClient"
+    -- TODO: we should put something here that makes sense given the exposed API:
+    show _          = "DisconnectedClient"
 
 bootstrap :: MonadIO m => RpcT m Client
 bootstrap = do
@@ -141,18 +167,39 @@ call interfaceId methodId params RemoteClient{ target, localVat } = do
         , sendReturn = fulfiller
         }
     pure promise
+call _ _ _ NullClient = alwaysThrow def
+    { reason = "Client is null"
+    , type_ = Exception'Type'unimplemented
+    }
+call _ _ _ DisconnectedClient = alwaysThrow def
+    { reason = "Client is disconnected"
+    , type_ = Exception'Type'disconnected
+    }
+
+alwaysThrow :: MonadIO m => Rpc.Exception -> RpcT m (Promise Return)
+alwaysThrow exn = do
+    (promise, fulfiller) <- liftIO $ atomically newPromise
+    liftIO $ atomically $ breakPromise fulfiller exn
+    pure promise
 
 newtype Fulfiller a = Fulfiller
-    { var :: TVar (Maybe a)
+    { var :: TVar (Maybe (Either Rpc.Exception a))
     }
 
 fulfill :: Fulfiller a -> a -> STM ()
 fulfill Fulfiller{var} val = modifyTVar' var $ \case
     Nothing ->
-        Just val
+        Just (Right val)
     Just _ ->
         -- TODO: report this in a more controlled way.
         error "BUG: tried to fullfill a promise twice!"
+
+breakPromise :: Fulfiller a -> Rpc.Exception -> STM ()
+breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
+    Nothing ->
+        Just (Left exn)
+    Just _ ->
+        error "BUG: tried to break an already resolved promise!"
 
 wait :: Promise a -> STM a
 wait Promise{var} = do
@@ -160,8 +207,10 @@ wait Promise{var} = do
     case val of
         Nothing ->
             retry
-        Just result ->
+        Just (Right result) ->
             pure result
+        Just (Left exn) ->
+            throwSTM exn
 
 isResolved :: Promise a -> STM Bool
 isResolved Promise{var} = isJust <$> readTVar var
@@ -172,7 +221,7 @@ newPromise = do
     pure (Promise{var}, Fulfiller{var})
 
 newtype Promise a = Promise
-    { var :: TVar (Maybe a)
+    { var :: TVar (Maybe (Either Rpc.Exception a))
     }
 
 data Question
@@ -203,6 +252,7 @@ data Vat = Vat
     , sendQ          :: TBQueue Message
     , recvQ          :: TBQueue Message
     }
+    deriving(Eq)
 
 data VatConfig = VatConfig
     { maxQuestions :: !Word32
