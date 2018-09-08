@@ -40,7 +40,8 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import Data.Capnp.Bits    (Word1(..))
 import Data.Capnp.Errors  (Error(SchemaViolationError))
-import Data.Capnp.Untyped (ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
+import Data.Capnp.Untyped
+    (Cap, ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
 
 import qualified Data.Capnp.Message as M
 import qualified Data.Capnp.Untyped as U
@@ -257,3 +258,9 @@ instance IsPtr msg (Struct msg) where
     fromPtr msg (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                      = expected "pointer to struct"
     toPtr _ = pure . Just . PtrStruct
+
+instance IsPtr msg (Maybe (Cap msg)) where
+    fromPtr msg Nothing             = pure Nothing
+    fromPtr msg (Just (PtrCap cap)) = pure (Just cap)
+    fromPtr _ _                     = expected "pointer to capability"
+    toPtr _ = pure . fmap PtrCap

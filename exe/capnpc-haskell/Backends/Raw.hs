@@ -475,10 +475,11 @@ fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DefInterface =
     let name = fmtName thisMod dataName in
     vcat
-    [ hcat [ "newtype ", name, " = ", name, " M'.Client" ]
-    , instance_ [] ("C'.IsPtr msg " <> name)
-        [ hcat [ "fromPtr msg Nothing = M'.nullClient" ]
-        , hcat [ "toPtr msg (", name , " client) = H'.embedCapPtr msg client" ]
+    [ hcat [ "newtype ", name, " msg = ", name, " (Maybe (U'.Cap msg))" ]
+    , instance_ [] ("C'.IsPtr msg (" <> name <> " msg)")
+        [ hcat [ "fromPtr msg cap = ", name, " <$> C'.fromPtr msg cap" ]
+        , hcat [ "toPtr msg (", name , " Nothing) = pure Nothing" ]
+        , hcat [ "toPtr msg (", name , " (Just cap)) = pure $ Just $ U'.PtrCap cap" ]
         ]
     ]
 fmtDataDef thisMod dataName (DefStruct StructDef{fields, info}) = vcat
@@ -624,7 +625,7 @@ fmtType thisMod msg = \case
     PtrType (PtrComposite ty) ->
         fmtType thisMod msg (CompositeType ty)
     PtrType (PtrInterface name) ->
-        fmtName thisMod name
+        hcat [ "(", fmtName thisMod name, " ", msg, ")" ]
     CompositeType (StructType name params) -> hcat
         [ "("
         , fmtName thisMod name

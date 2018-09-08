@@ -26,14 +26,16 @@ import qualified Data.Capnp.TraversalLimit as TL'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Message as M'
 import qualified Capnp.ById.Xbdf87d7bb8304e81
-newtype Persistent = Persistent M'.Client
-instance C'.IsPtr msg Persistent where
-    fromPtr msg Nothing = M'.nullClient
-    toPtr msg (Persistent client) = H'.embedCapPtr msg client
-newtype RealmGateway = RealmGateway M'.Client
-instance C'.IsPtr msg RealmGateway where
-    fromPtr msg Nothing = M'.nullClient
-    toPtr msg (RealmGateway client) = H'.embedCapPtr msg client
+newtype Persistent msg = Persistent (Maybe (U'.Cap msg))
+instance C'.IsPtr msg (Persistent msg) where
+    fromPtr msg cap = Persistent <$> C'.fromPtr msg cap
+    toPtr msg (Persistent Nothing) = pure Nothing
+    toPtr msg (Persistent (Just cap)) = pure $ Just $ U'.PtrCap cap
+newtype RealmGateway msg = RealmGateway (Maybe (U'.Cap msg))
+instance C'.IsPtr msg (RealmGateway msg) where
+    fromPtr msg cap = RealmGateway <$> C'.fromPtr msg cap
+    toPtr msg (RealmGateway Nothing) = pure Nothing
+    toPtr msg (RealmGateway (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
@@ -126,13 +128,13 @@ instance C'.Allocate s (RealmGateway'export'params (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (RealmGateway'export'params msg)) where
     fromPtr msg ptr = List_RealmGateway'export'params <$> C'.fromPtr msg ptr
     toPtr msg (List_RealmGateway'export'params l) = C'.toPtr msg l
-get_RealmGateway'export'params'cap :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m Persistent
+get_RealmGateway'export'params'cap :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m (Persistent msg)
 get_RealmGateway'export'params'cap (RealmGateway'export'params_newtype_ struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 has_RealmGateway'export'params'cap :: U'.ReadCtx m msg => RealmGateway'export'params msg -> m Bool
 has_RealmGateway'export'params'cap(RealmGateway'export'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_RealmGateway'export'params'cap :: U'.RWCtx m s => RealmGateway'export'params (M'.MutMsg s) -> Persistent -> m ()
+set_RealmGateway'export'params'cap :: U'.RWCtx m s => RealmGateway'export'params (M'.MutMsg s) -> (Persistent (M'.MutMsg s)) -> m ()
 set_RealmGateway'export'params'cap (RealmGateway'export'params_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
@@ -175,13 +177,13 @@ instance C'.Allocate s (RealmGateway'import'params (M'.MutMsg s)) where
 instance C'.IsPtr msg (B'.List msg (RealmGateway'import'params msg)) where
     fromPtr msg ptr = List_RealmGateway'import'params <$> C'.fromPtr msg ptr
     toPtr msg (List_RealmGateway'import'params l) = C'.toPtr msg l
-get_RealmGateway'import'params'cap :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m Persistent
+get_RealmGateway'import'params'cap :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m (Persistent msg)
 get_RealmGateway'import'params'cap (RealmGateway'import'params_newtype_ struct) =
     U'.getPtr 0 struct
     >>= C'.fromPtr (U'.message struct)
 has_RealmGateway'import'params'cap :: U'.ReadCtx m msg => RealmGateway'import'params msg -> m Bool
 has_RealmGateway'import'params'cap(RealmGateway'import'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
-set_RealmGateway'import'params'cap :: U'.RWCtx m s => RealmGateway'import'params (M'.MutMsg s) -> Persistent -> m ()
+set_RealmGateway'import'params'cap :: U'.RWCtx m s => RealmGateway'import'params (M'.MutMsg s) -> (Persistent (M'.MutMsg s)) -> m ()
 set_RealmGateway'import'params'cap (RealmGateway'import'params_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
