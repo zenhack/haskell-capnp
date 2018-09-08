@@ -33,4 +33,4 @@ dataFieldSize fieldType = case fieldType of
 
 -- | Does the module define any interfaces?
 hasInterfaces :: IR.Module -> Bool
-hasInterfaces = any (== DeclDef DefInterface) . modDecls
+hasInterfaces Module{modDecls} = DeclDef DefInterface `elem` modDecls
