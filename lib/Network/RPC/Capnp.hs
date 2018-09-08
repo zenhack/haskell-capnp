@@ -109,8 +109,8 @@ instance Transport HandleTransport IO where
 
 -- | A client for a capnproto capability.
 --
--- Note that client's 'Show' instance does not have a way of retaininig the,
--- connection reference, so doing @'read' . 'show'@ will reseult in a disconnected
+-- Note that client's 'Show' instance does not have a way of retaininig the
+-- connection, so doing @'read' . 'show'@ will reseult in a disconnected
 -- capability (except in the case of 'nullClient', which is the only capability
 -- that can be represented statically)..
 data Client
