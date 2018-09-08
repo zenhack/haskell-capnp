@@ -8,7 +8,6 @@ module Backends.Pure
     ) where
 
 import Data.Monoid                  ((<>))
-import Data.String                  (IsString(..))
 import GHC.Exts                     (IsList(..))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import Text.Printf                  (printf)
@@ -17,6 +16,7 @@ import qualified Data.Map.Strict              as M
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
+import Backends.Common
 import Fmt
 import IR
 import Util
@@ -107,6 +107,12 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
     , "import qualified Data.Capnp.GenHelpers.Pure as PH'"
     , "import qualified Data.Capnp.Classes as C'"
+    -- We need to do this conditionally to avoid a circular dependency
+    -- between the rpc system and the generated code for rpc.capnp:
+    , if hasInterfaces mod then
+        "import qualified Network.RPC.Capnp as Rpc"
+      else
+        ""
     , ""
     , "import qualified Data.Vector as V"
     , "import qualified Data.ByteString as BS"
@@ -153,13 +159,6 @@ fmtType _ (WordType (PrimWord prim)) = fmtPrimWord prim
 fmtType _ (PtrType (PrimPtr PrimText)) = "Text"
 fmtType _ (PtrType (PrimPtr PrimData)) = "Data"
 fmtType _ (PtrType (PrimPtr (PrimAnyPtr ty))) = "Maybe (" <> fmtAnyPtr ty <> ")"
-
-fmtPrimWord :: PrimWord -> PP.Doc
-fmtPrimWord PrimInt{isSigned=True,size}  = "Int" <> fromString (show size)
-fmtPrimWord PrimInt{isSigned=False,size} = "Word" <> fromString (show size)
-fmtPrimWord PrimFloat32                  = "Float"
-fmtPrimWord PrimFloat64                  = "Double"
-fmtPrimWord PrimBool                     = "Bool"
 
 fmtAnyPtr :: AnyPtr -> PP.Doc
 fmtAnyPtr Struct = "PU'.Struct"
