@@ -32,7 +32,7 @@ module Data.Capnp.Tutorial (
     ) where
 
 -- So haddock references work:
-import System.IO (stdin, stdout)
+import System.IO (stdout)
 
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
@@ -256,7 +256,7 @@ library which dispatch on return types, and depending on how they are
 used you may have to give GHC a hint for type inference to succeed.
 The type of 'getValue' is:
 
-> 'getValue' :: 'FromStruct' 'ConstMsg' a => 'Int' -> 'IO' a
+@'getValue' :: 'FromStruct' 'ConstMsg' a => 'Int' -> 'IO' a@
 
 ...and so it may be used to read in any struct type.
 
