@@ -39,17 +39,17 @@ data NodeMetaData = NodeMetaData
     }
     deriving(Show, Read, Eq)
 
--- | @'identifierFromMetaData' thisModule meta@ return a haskell identifier
+-- | @'identifierFromMetaData' meta@ return a haskell identifier
 -- for a node based on the metadata @meta@, and @thisModule@, the id for
 -- the module in which the name will be used.
-identifierFromMetaData :: Id -> NodeMetaData -> IR.Name
-identifierFromMetaData _ NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
+identifierFromMetaData :: NodeMetaData -> IR.Name
+identifierFromMetaData NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
     IR.Name
         { nameModule = IR.ByCapnpId moduleId
         , nameLocalNS = IR.Namespace $ reverse localNS
         , nameUnqualified = unqualified
         }
-identifierFromMetaData _ meta =
+identifierFromMetaData meta =
     -- TODO: rule out this possibility statically; shouldn't be too hard.
     error $ "Node metadata had an empty namespace field: " ++ show meta
 
@@ -226,7 +226,7 @@ generateMethodStructs thisMod nodeMap Method{..} =
 generateDecls :: Id -> NodeMap -> NodeMetaData -> [(IR.Name, IR.Decl)]
 generateDecls thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
-        name = identifierFromMetaData moduleId meta
+        name = identifierFromMetaData meta
     in case union' of
         Node'struct{..} | neededByParent nodeMap node ->
             let allFields = V.toList fields
@@ -436,7 +436,7 @@ getFieldLoc thisModule nodeMap = \case
             IR.CompositeType ty ->
                 IR.PtrField (fromIntegral offset) (IR.PtrComposite ty)
     Field'group{..} ->
-        IR.HereField $ IR.StructType (identifierFromMetaData thisModule (nodeMap M.! typeId)) []
+        IR.HereField $ IR.StructType (identifierFromMetaData (nodeMap M.! typeId)) []
     Field'unknown' _ ->
         -- Don't know how to interpret this; we'll have to leave the argument
         -- opaque.
@@ -500,7 +500,7 @@ formatType thisModule nodeMap ty = case ty of
     _ -> IR.VoidType -- TODO: constrained anyPointers
   where
     typeName typeId =
-        identifierFromMetaData thisModule (nodeMap M.! typeId)
+        identifierFromMetaData (nodeMap M.! typeId)
 
 generateImport :: CodeGeneratorRequest'RequestedFile'Import -> IR.Import
 generateImport CodeGeneratorRequest'RequestedFile'Import{..} =
