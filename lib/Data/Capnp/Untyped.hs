@@ -344,7 +344,7 @@ instance Thaw msg => Thaw (Struct msg) where
 
 -------------------------------------------------------------------------------
 
--- | Types @a@ whose storage is owned by a message with blob type @b@.
+-- | Types @a@ whose storage is owned by a message with type @msg@.
 class HasMessage a msg where
     -- | Get the message in which the @a@ is stored.
     message :: a -> msg
