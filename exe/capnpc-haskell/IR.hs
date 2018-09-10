@@ -24,6 +24,7 @@
 module IR
     ( Name(..)
     , Namespace(..)
+    , Method(..)
     , Module(..)
     , ModuleRef(..)
     , Import(..)
@@ -40,6 +41,7 @@ module IR
     , Decl(..)
     , DataDef(..)
     , StructDef(..)
+    , InterfaceDef(..)
     , Const(..)
     , FieldLocType(..)
     , DataLoc(..)
@@ -212,7 +214,7 @@ data DataDef
         }
     | DefStruct StructDef
     | DefEnum [Name]
-    | DefInterface
+    | DefInterface InterfaceDef
     deriving(Show, Read, Eq)
 
 data StructDef = StructDef
@@ -231,6 +233,20 @@ data StructInfo
     -- ^ The struct is a full-fledged struct that can be directly
     -- allocated, stored in a list, etc. Info contains the sizes
     -- of its sections.
+    deriving(Show, Read, Eq)
+
+data InterfaceDef = InterfaceDef
+    { interfaceId :: !Word64
+    , methods     :: [Method]
+    }
+    deriving(Show, Read, Eq)
+
+data Method = Method
+    { methodName :: Text
+    , ordinal    :: !Word16
+    , paramType  :: CompositeType
+    , resultType :: CompositeType
+    }
     deriving(Show, Read, Eq)
 
 -- | The type and location of a field.

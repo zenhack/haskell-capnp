@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
@@ -33,4 +34,6 @@ dataFieldSize fieldType = case fieldType of
 
 -- | Does the module define any interfaces?
 hasInterfaces :: IR.Module -> Bool
-hasInterfaces Module{modDecls} = DeclDef DefInterface `elem` modDecls
+hasInterfaces Module{modDecls} = flip any modDecls $ \case
+    DeclDef (DefInterface _) -> True
+    _ -> False

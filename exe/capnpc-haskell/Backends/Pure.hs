@@ -133,7 +133,7 @@ fmtExport thisMod (name, DeclDef DefStruct{}) =
     fmtName Pure thisMod name <> "(..)"
 fmtExport thisMod (name, DeclDef DefUnion{}) =
     fmtName Pure thisMod name <> "(..)"
-fmtExport thisMod (name, DeclDef DefInterface) =
+fmtExport thisMod (name, DeclDef (DefInterface _)) =
     fmtName Pure thisMod name <> "(..)"
 -- These are 'Raw' because we're just re-exporting them:
 fmtExport thisMod (name, DeclDef DefEnum{}) =
@@ -213,7 +213,7 @@ fmtConst thisMod name value =
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 -- We end up re-exporting these, but doing nothing else:
 fmtDataDef thisMod dataName DefEnum{} = ""
-fmtDataDef thisMod dataName DefInterface =
+fmtDataDef thisMod dataName (DefInterface _) =
     let pureName = fmtName Pure thisMod dataName
         rawName  = fmtName Raw  thisMod dataName
     in vcat
@@ -239,7 +239,7 @@ fmtDataDef thisMod dataName dataDef =
             DefEnum{} ->
                 -- TODO: refactor so we don't need this case.
                 error "BUG: this should have been ruled out above."
-            DefInterface ->
+            DefInterface _ ->
                 error "BUG: this should have been ruled out above."
             DefStruct StructDef{fields,info} ->
                 let dataVariant =

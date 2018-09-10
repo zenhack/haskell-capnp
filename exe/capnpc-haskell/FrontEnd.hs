@@ -223,6 +223,18 @@ generateMethodStructs thisMod nodeMap Method{..} =
             -- not an anonymous struct; will be taken care of elsewhere.
             []
 
+generateMethod :: Id -> NodeMap -> Word16 -> Method -> IR.Method
+generateMethod thisMod nodeMap ordinal Method{..} =
+    IR.Method
+        { methodName = name
+        , ordinal = ordinal
+        , paramType = typeFromId paramStructType
+        , resultType = typeFromId resultStructType
+        }
+  where
+    typeFromId typeId =
+        IR.StructType (identifierFromMetaData (nodeMap M.! typeId)) []
+
 generateDecls :: Id -> NodeMap -> NodeMetaData -> [(IR.Name, IR.Decl)]
 generateDecls thisModule nodeMap meta@NodeMetaData{..} =
     let Node{..} = node
@@ -282,7 +294,10 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     ]
         Node'interface{..} ->
             ( name
-            , IR.DeclDef IR.DefInterface
+            , IR.DeclDef $ IR.DefInterface $ IR.InterfaceDef
+                { interfaceId = id
+                , methods = zipWith (generateMethod thisModule nodeMap) [0..] (V.toList methods)
+                }
             )
             : concatMap (generateMethodStructs thisModule nodeMap) methods
         Node'enum{..} ->

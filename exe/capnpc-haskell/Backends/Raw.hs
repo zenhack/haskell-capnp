@@ -472,7 +472,7 @@ fmtConst thisMod name value =
             ]
 
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
-fmtDataDef thisMod dataName DefInterface =
+fmtDataDef thisMod dataName (DefInterface _) =
     let name = fmtName thisMod dataName in
     vcat
     [ hcat [ "newtype ", name, " msg = ", name, " (Maybe (U'.Cap msg))" ]
