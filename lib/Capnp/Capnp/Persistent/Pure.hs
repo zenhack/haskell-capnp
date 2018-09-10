@@ -6,6 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {- |
 Module: Capnp.Capnp.Persistent.Pure
@@ -22,7 +23,7 @@ import Data.Word
 import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
-import Control.Monad.Catch (MonadThrow)
+import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Capnp.TraversalLimit (MonadLimit)
 import Control.Monad (forM_)
 import qualified Data.Capnp.Message as M'
@@ -44,6 +45,15 @@ instance C'.Decerialize Persistent where
     decerialize (Capnp.ById.Xb8630836983feed7.Persistent (Just cap)) = Persistent <$> U'.getClient cap
 instance C'.Cerialize s Persistent where
     cerialize msg (Persistent client) = Capnp.ById.Xb8630836983feed7.Persistent . Just <$> U'.appendCap msg client
+class Persistent'server_ cap where
+    {-# MINIMAL persistent'save #-}
+    persistent'save :: Persistent'SaveParams -> cap -> IO (Persistent'SaveResults)
+    persistent'save _ _ = throwM $ Rpc.Exception
+        { reason = "Method unimplemented"
+        , type_ = Rpc.Exception'Type'unimplemented
+        , obsoleteIsCallersFault = False
+        , obsoleteDurability = 0
+        }
 newtype RealmGateway = RealmGateway M'.Client
     deriving(Show, Eq, Read, Generic)
 instance C'.Decerialize RealmGateway where
@@ -52,6 +62,22 @@ instance C'.Decerialize RealmGateway where
     decerialize (Capnp.ById.Xb8630836983feed7.RealmGateway (Just cap)) = RealmGateway <$> U'.getClient cap
 instance C'.Cerialize s RealmGateway where
     cerialize msg (RealmGateway client) = Capnp.ById.Xb8630836983feed7.RealmGateway . Just <$> U'.appendCap msg client
+class RealmGateway'server_ cap where
+    {-# MINIMAL realmGateway'import, realmGateway'export #-}
+    realmGateway'import :: RealmGateway'import'params -> cap -> IO (Persistent'SaveResults)
+    realmGateway'import _ _ = throwM $ Rpc.Exception
+        { reason = "Method unimplemented"
+        , type_ = Rpc.Exception'Type'unimplemented
+        , obsoleteIsCallersFault = False
+        , obsoleteDurability = 0
+        }
+    realmGateway'export :: RealmGateway'export'params -> cap -> IO (Persistent'SaveResults)
+    realmGateway'export _ _ = throwM $ Rpc.Exception
+        { reason = "Method unimplemented"
+        , type_ = Rpc.Exception'Type'unimplemented
+        , obsoleteIsCallersFault = False
+        , obsoleteDurability = 0
+        }
 data Persistent'SaveParams
     = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}

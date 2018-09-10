@@ -77,6 +77,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "{-# LANGUAGE ScopedTypeVariables #-}"
     , "{-# LANGUAGE TypeFamilies #-}"
     , "{-# LANGUAGE DeriveGeneric #-}"
+    , "{-# LANGUAGE OverloadedStrings #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
     , "{- |"
     , "Module: " <> humanMod
@@ -97,7 +98,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import GHC.Generics (Generic)"
     , ""
     , "import Data.Capnp.Basics.Pure (Data, Text)"
-    , "import Control.Monad.Catch (MonadThrow)"
+    , "import Control.Monad.Catch (MonadThrow(throwM))"
     , "import Data.Capnp.TraversalLimit (MonadLimit)"
     , ""
     , "import Control.Monad (forM_)"
@@ -213,9 +214,10 @@ fmtConst thisMod name value =
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 -- We end up re-exporting these, but doing nothing else:
 fmtDataDef thisMod dataName DefEnum{} = ""
-fmtDataDef thisMod dataName (DefInterface _) =
+fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     let pureName = fmtName Pure thisMod dataName
         rawName  = fmtName Raw  thisMod dataName
+        pureValName name = fmtName Pure thisMod (valueName name)
     in vcat
     [ hcat [ "newtype ", pureName, " = ", pureName, " M'.Client" ]
     , "    deriving(Show, Eq, Read, Generic)"
@@ -226,6 +228,39 @@ fmtDataDef thisMod dataName (DefInterface _) =
         ]
     , instance_ [] ("C'.Cerialize s " <> pureName)
         [ hcat [ "cerialize msg (", pureName, " client) = ", rawName, " . Just <$> U'.appendCap msg client" ]
+        ]
+    , hcat [ "class ", pureName, "'server_ cap where" ]
+    , indent $ vcat
+        [ hcat
+            -- We provide default definitions for all methods that just throw
+            -- 'unimplemented', so that if a schema adds new methods, the code
+            -- will still compile and behave the same. But we add a MINIMAL
+            -- pragma so the user will still get a *warning* if they forget
+            -- a method.
+            [ "{-# MINIMAL "
+            , hcat $ PP.punctuate ", " $ map
+                (\Method{methodName} -> pureValName methodName)
+                methods
+            , " #-}"
+            ]
+        , vcat $ flip map methods $ \Method{..} -> vcat
+            [ hcat
+                [ pureValName methodName
+                , " :: "
+                , fmtType thisMod (CompositeType paramType)
+                , " -> cap -> IO ("
+                , fmtType thisMod (CompositeType resultType)
+                , ")"
+                ]
+            , hcat [ pureValName methodName, " _ _ = throwM $ Rpc.Exception" ]
+            , indent $ vcat
+                [ "{ reason = \"Method unimplemented\""
+                , ", type_ = Rpc.Exception'Type'unimplemented"
+                , ", obsoleteIsCallersFault = False"
+                , ", obsoleteDurability = 0"
+                , "}"
+                ]
+            ]
         ]
     ]
 fmtDataDef thisMod dataName dataDef =

@@ -17,6 +17,9 @@ module Network.RPC.Capnp
     , bootstrap
     , call
 
+    , Rpc.Exception(..)
+    , Rpc.Exception'Type(..)
+
     , Promise
     , Fulfiller
     , newPromise

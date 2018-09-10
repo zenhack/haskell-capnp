@@ -242,7 +242,7 @@ data InterfaceDef = InterfaceDef
     deriving(Show, Read, Eq)
 
 data Method = Method
-    { methodName :: Text
+    { methodName :: Name
     , ordinal    :: !Word16
     , paramType  :: CompositeType
     , resultType :: CompositeType
