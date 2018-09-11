@@ -111,7 +111,10 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     -- We need to do this conditionally to avoid a circular dependency
     -- between the rpc system and the generated code for rpc.capnp:
     , if hasInterfaces mod then
-        "import qualified Network.RPC.Capnp as Rpc"
+        vcat
+        [ "import qualified Network.RPC.Capnp as Rpc"
+        , "import qualified Capnp.Capnp.Rpc.Pure as Rpc"
+        ]
       else
         ""
     , ""
@@ -248,7 +251,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 [ pureValName methodName
                 , " :: "
                 , fmtType thisMod (CompositeType paramType)
-                , " -> cap -> IO ("
+                , " -> cap -> Rpc.RpcT IO ("
                 , fmtType thisMod (CompositeType resultType)
                 , ")"
                 ]
@@ -262,6 +265,33 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 ]
             ]
         ]
+    , instance_ [] (pureName <> "'server_ " <> pureName)
+        $ flip map methods $ \Method{..} -> vcat
+            [ hcat [ pureValName methodName,  " args (", pureName, " client) = do" ]
+            , indent $ vcat
+                [ "encodeResult <- PH'.encodeV args"
+                , "case encodeResult of"
+                , indent $ vcat
+                    [ "Left exn -> throwM exn"
+                    , "Right args' -> do"
+                    , indent $ vcat
+                        [ hcat
+                            [ "resultPromise <- Rpc.call "
+                            , PP.textStrict $ T.pack $ show interfaceId
+                            , " "
+                            , PP.textStrict $ T.pack $ show ordinal
+                            , " Rpc.Payload"
+                            , " { content = Just (PU'.PtrStruct args')"
+                            , " , capTable = V.empty"
+                            , " }"
+                            , " client"
+                            ]
+                        , "result <- Rpc.waitIO resultPromise"
+                        , "encodedResult <- PH'.encodeV result"
+                        ]
+                    ]
+                ]
+            ]
     ]
 fmtDataDef thisMod dataName dataDef =
     let rawName = fmtName Raw thisMod dataName

@@ -25,6 +25,8 @@ module Network.RPC.Capnp
     , newPromise
     , fulfill
     , isResolved
+    , wait
+    , waitIO
 
     , nullClient
     ) where
@@ -214,6 +216,9 @@ wait Promise{var} = do
             pure result
         Just (Left exn) ->
             throwSTM exn
+
+waitIO :: MonadIO m => Promise a -> m a
+waitIO = liftIO . atomically . wait
 
 isResolved :: Promise a -> STM Bool
 isResolved Promise{var} = isJust <$> readTVar var

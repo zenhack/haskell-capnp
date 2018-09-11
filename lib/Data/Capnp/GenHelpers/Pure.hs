@@ -12,12 +12,13 @@ are not expected to invoke them directly.
 These helpers are only used by the high-level api. "Data.Capnp.GenHelpers"
 defines helpers used by the low-level api.
 -}
-module Data.Capnp.GenHelpers.Pure where
+module Data.Capnp.GenHelpers.Pure (defaultStruct, encodeV) where
 
 import Control.Monad.Catch.Pure (runCatchT)
 import Data.Either              (fromRight)
 import Data.Functor.Identity    (runIdentity)
 
+import Codec.Capnp               (encodeV)
 import Data.Capnp.TraversalLimit (evalLimitT)
 
 import qualified Data.Capnp.Classes as C
