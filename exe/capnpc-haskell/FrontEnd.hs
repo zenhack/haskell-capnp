@@ -287,7 +287,28 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                 }
               )
             ]
-        -- TODO: other constants.
+        Node'const{type_=Type'data_,value=Value'data_ v} ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrType = IR.PrimPtr IR.PrimData
+                , ptrValue = Just $ Untyped.PtrList $ Untyped.List8 $
+                    BS.unpack v
+                    & V.fromList
+                }
+              )
+            ]
+        Node'const{type_=Type'list{elementType},value=Value'list v} ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrType = IR.ListOf (formatType thisModule nodeMap elementType)
+                , ptrValue = v
+                }
+              )
+            ]
+        -- TODO: enum constants
+        -- TODO: struct constants
+        -- TODO: interface constants
+        -- TODO: anyPointer constants
         _ -> [] -- TODO
 
 primWordConst :: Integral a => IR.PrimWord -> a -> IR.Decl

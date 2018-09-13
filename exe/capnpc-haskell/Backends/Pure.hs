@@ -212,12 +212,10 @@ fmtConst thisMod name value =
                 , hcat [ pureName, " = ", rawName ]
                 ]
 
-            PtrConst{ptrType=PrimPtr PrimText} -> vcat
-                [ hcat [ pureName, " :: Text" ]
+            PtrConst{ptrType} -> vcat
+                [ hcat [ pureName, " :: ", fmtType thisMod (PtrType ptrType) ]
                 , hcat [ pureName, " = PH'.toPurePtrConst ", rawName ]
                 ]
-            PtrConst{} ->
-                "" -- TODO
 
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DefEnum{} =

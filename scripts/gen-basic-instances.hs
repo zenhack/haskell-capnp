@@ -18,6 +18,7 @@ header = unlines
     , "    ( ListElem(..)"
     , "    , MutListElem(..)"
     , "    , IsPtr(..)"
+    , "    , Decerialize(..)"
     , "    )"
     , ""
     , "import qualified Data.Capnp.Untyped as U"
@@ -44,6 +45,9 @@ genInstance P{..} = concat
     , "instance IsPtr msg (List msg ", typed, ") where\n"
     , "    fromPtr msg ptr = List", typed, " <$> fromPtr msg ptr\n"
     , "    toPtr (List", typed, " list) = Just (U.PtrList (U.List", listSuffix, " list))\n"
+    , "instance Decerialize ", typed, " where\n"
+    , "    type Cerial msg ", typed, " = ", typed, "\n"
+    , "    decerialize val = pure val\n"
     ]
   where
     dataCon = "List" ++ typed

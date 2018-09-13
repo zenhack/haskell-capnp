@@ -7,6 +7,7 @@ module Backends.Raw
     ( fmtModule
     ) where
 
+import Data.Function                ((&))
 import Data.List                    (sortOn)
 import Data.Monoid                  ((<>))
 import Data.Ord                     (Down(..))
@@ -476,26 +477,33 @@ fmtConst thisMod name value =
             [ hcat [ nameText, " :: ()" ]
             , hcat [ nameText, " = ()" ]
             ]
-        PtrConst{ptrType=PrimPtr PrimText, ptrValue=v} ->
-            let assertRight (Left e)  = error (show e)
-                assertRight (Right v) = v
-                msg = assertRight $ createPure defaultLimit $ do
-                    msg <- newMessage
-                    rootPtr <- cerialize msg $ Untyped.Struct
-                        (fromList [])
-                        (fromList [v])
-                    setRoot rootPtr
-                    pure msg
-                msgBytes = LBS.unpack $ BB.toLazyByteString $ assertRight $ encodeMessage msg
-            in vcat
-                [ hcat [ nameText, " :: B'.Text M'.ConstMsg" ]
+        PtrConst{ptrType,ptrValue} ->
+            vcat
+                [ hcat [ nameText, " :: ", fmtType thisMod "M'.ConstMsg" (PtrType ptrType) ]
                 , hcat
                     [ nameText, " = H'.getPtrConst $ Data.ByteString.pack "
-                    , PP.textStrict $ T.pack $ show msgBytes
+                    , makePtrByteList ptrValue
                     ]
                 ]
-        _ ->
-            ""
+  where
+    makePtrByteList ptr =
+        let assertRight (Left e)  = error (show e)
+            assertRight (Right v) = v
+            msg = assertRight $ createPure defaultLimit $ do
+                msg <- newMessage
+                rootPtr <- cerialize msg $ Untyped.Struct
+                    (fromList [])
+                    (fromList [ptr])
+                setRoot rootPtr
+                pure msg
+        in
+        encodeMessage msg &
+        assertRight &
+        BB.toLazyByteString &
+        LBS.unpack &
+        show &
+        T.pack &
+        PP.textStrict
 
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName (DefStruct StructDef{fields, info}) = vcat
