@@ -314,7 +314,17 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                 }
               )
             ]
-        -- TODO: struct constants
+        -- TODO: group constants?
+        Node'const{type_=Type'struct{typeId},value=Value'struct v} ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrType = IR.PtrComposite $ IR.StructType
+                    (identifierFromMetaData thisModule (nodeMap M.! typeId))
+                    []
+                , ptrValue = v
+                }
+              )
+            ]
         -- TODO: interface constants
         -- TODO: anyPointer constants
         _ -> [] -- TODO
