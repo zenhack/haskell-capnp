@@ -7,13 +7,17 @@ module Backends.Raw
     ( fmtModule
     ) where
 
+import Data.Function                ((&))
 import Data.List                    (sortOn)
 import Data.Monoid                  ((<>))
 import Data.Ord                     (Down(..))
 import Data.String                  (IsString(..))
+import GHC.Exts                     (IsList(fromList))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import Text.Printf                  (printf)
 
+import qualified Data.ByteString.Builder      as BB
+import qualified Data.ByteString.Lazy         as LBS
 import qualified Data.Map.Strict              as M
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
@@ -23,6 +27,12 @@ import IR
 import Util
 
 import Backends.Common (dataFieldSize, fmtPrimWord)
+
+import Data.Capnp
+    (createPure, defaultLimit, encodeMessage, newMessage, setRoot)
+import Data.Capnp.Pure (cerialize)
+
+import qualified Data.Capnp.Untyped.Pure as Untyped
 
 -- | Sort varaints by their tag, in decending order (with no tag at all being last).
 sortVariants = sortOn (Down . variantTag)
@@ -76,6 +86,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
+    , "import qualified Data.ByteString"
     -- The trailing ' is to avoid possible name collisions:
     , "import qualified Data.Capnp.Classes as C'"
     , "import qualified Data.Capnp.Basics as B'"
@@ -470,6 +481,33 @@ fmtConst thisMod name value =
             [ hcat [ nameText, " :: ()" ]
             , hcat [ nameText, " = ()" ]
             ]
+        PtrConst{ptrType,ptrValue} ->
+            vcat
+                [ hcat [ nameText, " :: ", fmtType thisMod "M'.ConstMsg" (PtrType ptrType) ]
+                , hcat
+                    [ nameText, " = H'.getPtrConst $ Data.ByteString.pack "
+                    , makePtrByteList ptrValue
+                    ]
+                ]
+  where
+    makePtrByteList ptr =
+        let assertRight (Left e)  = error (show e)
+            assertRight (Right v) = v
+            msg = assertRight $ createPure defaultLimit $ do
+                msg <- newMessage
+                rootPtr <- cerialize msg $ Untyped.Struct
+                    (fromList [])
+                    (fromList [ptr])
+                setRoot rootPtr
+                pure msg
+        in
+        encodeMessage msg &
+        assertRight &
+        BB.toLazyByteString &
+        LBS.unpack &
+        show &
+        T.pack &
+        PP.textStrict
 
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName (DefInterface _) =

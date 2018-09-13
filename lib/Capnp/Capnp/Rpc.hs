@@ -19,6 +19,7 @@ import GHC.Generics (Generic)
 import Data.Capnp.Bits (Word1)
 import qualified Data.Bits
 import qualified Data.Maybe
+import qualified Data.ByteString
 import qualified Data.Capnp.Classes as C'
 import qualified Data.Capnp.Basics as B'
 import qualified Data.Capnp.GenHelpers as H'

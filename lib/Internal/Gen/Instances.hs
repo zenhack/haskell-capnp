@@ -12,6 +12,7 @@ import Data.Capnp.Classes
     ( ListElem(..)
     , MutListElem(..)
     , IsPtr(..)
+    , Decerialize(..)
     )
 
 import qualified Data.Capnp.Untyped as U
@@ -26,6 +27,9 @@ instance MutListElem s Int8 where
 instance IsPtr msg (List msg Int8) where
     fromPtr msg ptr = ListInt8 <$> fromPtr msg ptr
     toPtr _ (ListInt8 list) = pure $ Just (U.PtrList (U.List8 list))
+instance Decerialize Int8 where
+    type Cerial msg Int8 = Int8
+    decerialize val = pure val
 instance ListElem msg Int16 where
     newtype List msg Int16 = ListInt16 (U.ListOf msg Word16)
     length (ListInt16 l) = U.length l
@@ -36,6 +40,9 @@ instance MutListElem s Int16 where
 instance IsPtr msg (List msg Int16) where
     fromPtr msg ptr = ListInt16 <$> fromPtr msg ptr
     toPtr _ (ListInt16 list) = pure $ Just (U.PtrList (U.List16 list))
+instance Decerialize Int16 where
+    type Cerial msg Int16 = Int16
+    decerialize val = pure val
 instance ListElem msg Int32 where
     newtype List msg Int32 = ListInt32 (U.ListOf msg Word32)
     length (ListInt32 l) = U.length l
@@ -46,6 +53,9 @@ instance MutListElem s Int32 where
 instance IsPtr msg (List msg Int32) where
     fromPtr msg ptr = ListInt32 <$> fromPtr msg ptr
     toPtr _ (ListInt32 list) = pure $ Just (U.PtrList (U.List32 list))
+instance Decerialize Int32 where
+    type Cerial msg Int32 = Int32
+    decerialize val = pure val
 instance ListElem msg Int64 where
     newtype List msg Int64 = ListInt64 (U.ListOf msg Word64)
     length (ListInt64 l) = U.length l
@@ -56,6 +66,9 @@ instance MutListElem s Int64 where
 instance IsPtr msg (List msg Int64) where
     fromPtr msg ptr = ListInt64 <$> fromPtr msg ptr
     toPtr _ (ListInt64 list) = pure $ Just (U.PtrList (U.List64 list))
+instance Decerialize Int64 where
+    type Cerial msg Int64 = Int64
+    decerialize val = pure val
 instance ListElem msg Word8 where
     newtype List msg Word8 = ListWord8 (U.ListOf msg Word8)
     length (ListWord8 l) = U.length l
@@ -66,6 +79,9 @@ instance MutListElem s Word8 where
 instance IsPtr msg (List msg Word8) where
     fromPtr msg ptr = ListWord8 <$> fromPtr msg ptr
     toPtr _ (ListWord8 list) = pure $ Just (U.PtrList (U.List8 list))
+instance Decerialize Word8 where
+    type Cerial msg Word8 = Word8
+    decerialize val = pure val
 instance ListElem msg Word16 where
     newtype List msg Word16 = ListWord16 (U.ListOf msg Word16)
     length (ListWord16 l) = U.length l
@@ -76,6 +92,9 @@ instance MutListElem s Word16 where
 instance IsPtr msg (List msg Word16) where
     fromPtr msg ptr = ListWord16 <$> fromPtr msg ptr
     toPtr _ (ListWord16 list) = pure $ Just (U.PtrList (U.List16 list))
+instance Decerialize Word16 where
+    type Cerial msg Word16 = Word16
+    decerialize val = pure val
 instance ListElem msg Word32 where
     newtype List msg Word32 = ListWord32 (U.ListOf msg Word32)
     length (ListWord32 l) = U.length l
@@ -86,6 +105,9 @@ instance MutListElem s Word32 where
 instance IsPtr msg (List msg Word32) where
     fromPtr msg ptr = ListWord32 <$> fromPtr msg ptr
     toPtr _ (ListWord32 list) = pure $ Just (U.PtrList (U.List32 list))
+instance Decerialize Word32 where
+    type Cerial msg Word32 = Word32
+    decerialize val = pure val
 instance ListElem msg Word64 where
     newtype List msg Word64 = ListWord64 (U.ListOf msg Word64)
     length (ListWord64 l) = U.length l
@@ -96,6 +118,9 @@ instance MutListElem s Word64 where
 instance IsPtr msg (List msg Word64) where
     fromPtr msg ptr = ListWord64 <$> fromPtr msg ptr
     toPtr _ (ListWord64 list) = pure $ Just (U.PtrList (U.List64 list))
+instance Decerialize Word64 where
+    type Cerial msg Word64 = Word64
+    decerialize val = pure val
 instance ListElem msg Float where
     newtype List msg Float = ListFloat (U.ListOf msg Word32)
     length (ListFloat l) = U.length l
@@ -106,6 +131,9 @@ instance MutListElem s Float where
 instance IsPtr msg (List msg Float) where
     fromPtr msg ptr = ListFloat <$> fromPtr msg ptr
     toPtr _ (ListFloat list) = pure $ Just (U.PtrList (U.List32 list))
+instance Decerialize Float where
+    type Cerial msg Float = Float
+    decerialize val = pure val
 instance ListElem msg Double where
     newtype List msg Double = ListDouble (U.ListOf msg Word64)
     length (ListDouble l) = U.length l
@@ -116,6 +144,9 @@ instance MutListElem s Double where
 instance IsPtr msg (List msg Double) where
     fromPtr msg ptr = ListDouble <$> fromPtr msg ptr
     toPtr _ (ListDouble list) = pure $ Just (U.PtrList (U.List64 list))
+instance Decerialize Double where
+    type Cerial msg Double = Double
+    decerialize val = pure val
 instance ListElem msg Bool where
     newtype List msg Bool = ListBool (U.ListOf msg Bool)
     length (ListBool l) = U.length l
@@ -126,3 +157,6 @@ instance MutListElem s Bool where
 instance IsPtr msg (List msg Bool) where
     fromPtr msg ptr = ListBool <$> fromPtr msg ptr
     toPtr _ (ListBool list) = pure $ Just (U.PtrList (U.List1 list))
+instance Decerialize Bool where
+    type Cerial msg Bool = Bool
+    decerialize val = pure val

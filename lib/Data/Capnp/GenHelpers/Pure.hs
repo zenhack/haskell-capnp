@@ -14,9 +14,7 @@ defines helpers used by the low-level api.
 -}
 module Data.Capnp.GenHelpers.Pure (defaultStruct, encodeV) where
 
-import Control.Monad.Catch.Pure (runCatchT)
-import Data.Either              (fromRight)
-import Data.Functor.Identity    (runIdentity)
+import Data.Maybe (fromJust)
 
 import Codec.Capnp               (encodeV)
 import Data.Capnp.TraversalLimit (evalLimitT)
@@ -29,8 +27,14 @@ import qualified Data.Capnp.Untyped as U
 -- the given constraints.
 defaultStruct :: (C.Decerialize a, C.FromStruct M.ConstMsg (C.Cerial M.ConstMsg a)) => a
 defaultStruct =
-    fromRight (error "impossible") $
-    runIdentity $
-    runCatchT $
+    fromJust $
     evalLimitT maxBound $
         U.rootPtr M.empty >>= C.fromStruct >>= C.decerialize
+
+
+-- | Convert a low-level constant to a high-level constant. This trusts the
+-- input, using maxBound as the traversal limit and calling 'error' on
+-- decoding failures. It's purpose is defining constants the high-level
+-- modules.
+toPurePtrConst :: C.Decerialize a => C.Cerial M.ConstMsg a -> a
+toPurePtrConst = fromJust . evalLimitT maxBound . C.decerialize

@@ -1,4 +1,4 @@
 # Mark generated output as such for GitHub diffs:
 /lib/Capnp/ linguist-generated=true
 /lib/Capnp/ linguist-generated=true
-/lib/Data/Capnp/BuiltinTypes/Lists.hs
+/lib/Internal/Gen/ linguist-generated=true
