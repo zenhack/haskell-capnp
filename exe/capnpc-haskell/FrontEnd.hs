@@ -305,7 +305,15 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                 }
               )
             ]
-        -- TODO: enum constants
+        Node'const{type_=Type'enum{typeId},value=Value'enum v} ->
+            -- TODO: do something with brand.
+            [ ( name
+              , IR.DeclConst IR.WordConst
+                { wordValue = fromIntegral v
+                , wordType = IR.EnumType $ identifierFromMetaData thisModule (nodeMap M.! typeId)
+                }
+              )
+            ]
         -- TODO: struct constants
         -- TODO: interface constants
         -- TODO: anyPointer constants
