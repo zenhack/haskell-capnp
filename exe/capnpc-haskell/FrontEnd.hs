@@ -326,7 +326,28 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
               )
             ]
         -- TODO: interface constants
-        -- TODO: anyPointer constants
+        Node'const
+            { type_=Type'anyPointer{union'=Type'anyPointer'unconstrained{union'}}
+            , value=Value'anyPointer v
+            } ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrValue = v
+                , ptrType = IR.PrimPtr $ IR.PrimAnyPtr $ case union' of
+                    Type'anyPointer'unconstrained'anyKind    -> IR.Ptr
+                    Type'anyPointer'unconstrained'struct     -> IR.Struct
+                    Type'anyPointer'unconstrained'list       -> IR.List
+
+                    -- TODO: we'll want to restrict this once we actually
+                    -- support interfaces:
+                    Type'anyPointer'unconstrained'capability -> IR.Ptr
+
+                    Type'anyPointer'unconstrained'unknown' _ -> IR.Ptr
+                }
+              )
+            ]
+        -- TODO: "constrained" anyPointer constants. This has to wait until
+        -- we support type parameters.
         _ -> [] -- TODO
 
 primWordConst :: Integral a => IR.PrimWord -> a -> IR.Decl
