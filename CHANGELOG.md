@@ -5,6 +5,9 @@
   class" types (i.e. types which cannot appear as stand-alone
   definitions in schema files -- groups and unions).
 * Various non-functional changes in the output of the code generator.
+* We now generate constants for (most) pointer types; previously
+  constants defined in a schema would not result in any generated code
+  ([#41][issue41]).
 
 # 0.2.0.0
 
@@ -15,3 +18,5 @@
 # 0.1.0.0
 
 * First release; basic read & write support, serialization only.
+
+[issue41]: https://github.com/zenhack/haskell-capnp/issues/41
