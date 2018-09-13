@@ -194,19 +194,30 @@ fmtConst :: Id -> Name -> Const -> PP.Doc
 fmtConst thisMod name value =
     let pureName = fmtName Pure thisMod (valueName name)
         rawName = fmtName Raw thisMod (valueName name)
-    in vcat
-        -- We just define this as an alias for the one in the raw module.
-        -- TODO: we should just re-export the existing constant instead
-        -- (but note that when we support struct and list constants we'll
-        -- have to handle those separately).
-        [ hcat
-            [ pureName, " :: ", case value of
-                VoidConst -> "()"
-                WordConst{wordType=PrimWord ty} -> fmtPrimWord ty
-                WordConst{wordType=EnumType typeName} -> fmtName Raw thisMod typeName
-            ]
-        , hcat [ pureName, " = ", rawName ]
-        ]
+    in
+        case value of
+            -- For non-pointer types, We just define these as aliases for the
+            -- constants in the raw module. TODO: we should just re-export the
+            -- existing constant instead.
+            VoidConst -> vcat
+                [ hcat [ pureName, " :: ()" ]
+                , hcat [ pureName, " = ()" ]
+                ]
+            WordConst{wordType=PrimWord ty} -> vcat
+                [ hcat [ pureName, " :: ", fmtPrimWord ty ]
+                , hcat [ pureName, " = ", rawName ]
+                ]
+            WordConst{wordType=EnumType typeName} -> vcat
+                [ hcat [ pureName, " :: ", fmtName Raw thisMod typeName ]
+                , hcat [ pureName, " = ", rawName ]
+                ]
+
+            PtrConst{ptrType=PrimPtr PrimText} -> vcat
+                [ hcat [ pureName, " :: Text" ]
+                , hcat [ pureName, " = PH'.toPurePtrConst ", rawName ]
+                ]
+            PtrConst{} ->
+                "" -- TODO
 
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName DefEnum{} =

@@ -13,8 +13,10 @@ import Data.Function        ((&))
 import Data.List            (partition)
 import Data.Monoid          ((<>))
 import Data.ReinterpretCast (doubleToWord, floatToWord)
+import Data.Text.Encoding   (encodeUtf8)
 import Util                 (Id, splitOn)
 
+import qualified Data.ByteString as BS
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
@@ -23,6 +25,7 @@ import Capnp.Capnp.Schema.Pure
 
 import Backends.Common (dataFieldSize)
 
+import qualified Data.Capnp.Untyped.Pure as Untyped
 import qualified IR
 
 type NodeMap = M.Map Id NodeMetaData
@@ -272,6 +275,18 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
             [(name, primWordConst IR.PrimFloat32 (floatToWord v))]
         Node'const{type_=Type'float64,value=Value'float64 v} ->
             [(name, primWordConst IR.PrimFloat64 (doubleToWord v))]
+        Node'const{type_=Type'text,value=Value'text v} ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrType = IR.PrimPtr IR.PrimText
+                , ptrValue = Just $ Untyped.PtrList $ Untyped.List8 $
+                    encodeUtf8 v
+                    & BS.unpack
+                    & (++ [0])
+                    & V.fromList
+                }
+              )
+            ]
         -- TODO: other constants.
         _ -> [] -- TODO
 

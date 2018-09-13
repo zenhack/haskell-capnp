@@ -11,9 +11,12 @@ import Data.List                    (sortOn)
 import Data.Monoid                  ((<>))
 import Data.Ord                     (Down(..))
 import Data.String                  (IsString(..))
+import GHC.Exts                     (IsList(fromList))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import Text.Printf                  (printf)
 
+import qualified Data.ByteString.Builder      as BB
+import qualified Data.ByteString.Lazy         as LBS
 import qualified Data.Map.Strict              as M
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
@@ -23,6 +26,12 @@ import IR
 import Util
 
 import Backends.Common (dataFieldSize, fmtPrimWord)
+
+import Data.Capnp
+    (createPure, defaultLimit, encodeMessage, newMessage, setRoot)
+import Data.Capnp.Pure (cerialize)
+
+import qualified Data.Capnp.Untyped.Pure as Untyped
 
 -- | Sort varaints by their tag, in decending order (with no tag at all being last).
 sortVariants = sortOn (Down . variantTag)
@@ -76,6 +85,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
+    , "import qualified Data.ByteString"
     -- The trailing ' is to avoid possible name collisions:
     , "import qualified Data.Capnp.Classes as C'"
     , "import qualified Data.Capnp.Basics as B'"
@@ -466,6 +476,26 @@ fmtConst thisMod name value =
             [ hcat [ nameText, " :: ()" ]
             , hcat [ nameText, " = ()" ]
             ]
+        PtrConst{ptrType=PrimPtr PrimText, ptrValue=v} ->
+            let assertRight (Left e)  = error (show e)
+                assertRight (Right v) = v
+                msg = assertRight $ createPure defaultLimit $ do
+                    msg <- newMessage
+                    rootPtr <- cerialize msg $ Untyped.Struct
+                        (fromList [])
+                        (fromList [v])
+                    setRoot rootPtr
+                    pure msg
+                msgBytes = LBS.unpack $ BB.toLazyByteString $ assertRight $ encodeMessage msg
+            in vcat
+                [ hcat [ nameText, " :: B'.Text M'.ConstMsg" ]
+                , hcat
+                    [ nameText, " = H'.getPtrConst $ Data.ByteString.pack "
+                    , PP.textStrict $ T.pack $ show msgBytes
+                    ]
+                ]
+        _ ->
+            ""
 
 fmtDataDef :: Module -> Name -> DataDef -> PP.Doc
 fmtDataDef thisMod dataName (DefStruct StructDef{fields, info}) = vcat

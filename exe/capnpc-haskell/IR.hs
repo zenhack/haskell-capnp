@@ -63,6 +63,8 @@ import qualified Data.Text       as T
 
 import Util
 
+import qualified Data.Capnp.Untyped.Pure as Untyped
+
 newtype Namespace = Namespace [Text]
     deriving(Show, Read, Eq, Ord)
 
@@ -197,7 +199,10 @@ data Const
         , wordType  :: WordType
         }
     | VoidConst
-    -- TODO: support pointer types.
+    | PtrConst
+        { ptrValue :: Maybe Untyped.PtrType
+        , ptrType  :: PtrType
+        }
     deriving(Show, Read, Eq)
 
 data DataDef

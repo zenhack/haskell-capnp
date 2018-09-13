@@ -15,7 +15,13 @@ module Data.Capnp.GenHelpers where
 import Data.Bits
 import Data.Word
 
+import Data.Maybe (fromJust)
+
+import qualified Data.ByteString as BS
+
 import Data.Capnp.Bits
+
+import Data.Capnp (decodeMessage, evalLimitT)
 
 import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
@@ -46,3 +52,15 @@ setWordField struct value idx offset def = do
     old <- U.getData idx struct
     let new = replaceBits (value `xor` def) old offset
     U.setData new idx struct
+
+-- | Get a pointer from a ByteString, where the root object is a struct with
+-- one pointer, which is the pointer we will retrieve. This is only safe for
+-- trusted inputs; it reads the message with a traversal limit of 'maxBound'
+-- (and so is suseptable to denial of service attacks), and it calls 'error'
+-- if decoding is not successful.
+--
+-- The purpose of this is for defining constants of pointer type from a schema.
+getPtrConst :: C.IsPtr M.ConstMsg a => BS.ByteString -> a
+getPtrConst bytes = fromJust $ do
+    msg <- decodeMessage bytes
+    evalLimitT maxBound $ U.rootPtr msg >>= U.getPtr 0 >>= C.fromPtr msg
