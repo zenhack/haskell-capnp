@@ -284,6 +284,7 @@ getMsg = hGetMsg stdin
 -- Due to mutabilty, the implementations of 'toByteString' and 'fromByteString'
 -- must make full copies, and so are O(n) in the length of the segment.
 newtype MutMsg s = MutMsg (MutVar s (AppendVec MV.MVector s (Segment (MutMsg s))))
+    deriving(Eq)
 
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)

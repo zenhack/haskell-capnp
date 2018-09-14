@@ -8,6 +8,7 @@
 * We now generate constants for (most) pointer types; previously
   constants defined in a schema would not result in any generated code
   ([#41][issue41]).
+* `MutMsg` is now an instance of `Eq`.
 
 # 0.2.0.0
 
