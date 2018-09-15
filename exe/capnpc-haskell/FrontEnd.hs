@@ -369,10 +369,49 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                 }
               )
             ]
-        -- TODO: enum constants
-        -- TODO: struct constants
+        Node'const{type_=Type'enum{typeId},value=Value'enum v} ->
+            -- TODO: do something with brand.
+            [ ( name
+              , IR.DeclConst IR.WordConst
+                { wordValue = fromIntegral v
+                , wordType = IR.EnumType $ identifierFromMetaData (nodeMap M.! typeId)
+                }
+              )
+            ]
+        -- TODO: group constants?
+        Node'const{type_=Type'struct{typeId},value=Value'struct v} ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrType = IR.PtrComposite $ IR.StructType
+                    (identifierFromMetaData (nodeMap M.! typeId))
+                    []
+                , ptrValue = v
+                }
+              )
+            ]
         -- TODO: interface constants
-        -- TODO: anyPointer constants
+        Node'const
+            { type_=Type'anyPointer{union'=Type'anyPointer'unconstrained{union'}}
+            , value=Value'anyPointer v
+            } ->
+            [ ( name
+              , IR.DeclConst IR.PtrConst
+                { ptrValue = v
+                , ptrType = IR.PrimPtr $ IR.PrimAnyPtr $ case union' of
+                    Type'anyPointer'unconstrained'anyKind    -> IR.Ptr
+                    Type'anyPointer'unconstrained'struct     -> IR.Struct
+                    Type'anyPointer'unconstrained'list       -> IR.List
+
+                    -- TODO: we'll want to restrict this once we actually
+                    -- support interfaces:
+                    Type'anyPointer'unconstrained'capability -> IR.Ptr
+
+                    Type'anyPointer'unconstrained'unknown' _ -> IR.Ptr
+                }
+              )
+            ]
+        -- TODO: "constrained" anyPointer constants. This has to wait until
+        -- we support type parameters.
         _ -> [] -- TODO
 
 primWordConst :: Integral a => IR.PrimWord -> a -> IR.Decl

@@ -32,9 +32,10 @@ instance C'.FromStruct msg (Accept msg) where
     fromStruct = pure . Accept_newtype_
 instance C'.ToStruct msg (Accept msg) where
     toStruct (Accept_newtype_ struct) = struct
-instance U'.HasMessage (Accept msg) msg where
+instance U'.HasMessage (Accept msg) where
+    type InMessage (Accept msg) = msg
     message (Accept_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Accept msg) msg where
+instance U'.MessageDefault (Accept msg) where
     messageDefault = Accept_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Accept msg) where
     newtype List msg (Accept msg) = List_Accept (U'.ListOf msg (U'.Struct msg))
@@ -78,9 +79,10 @@ instance C'.FromStruct msg (Bootstrap msg) where
     fromStruct = pure . Bootstrap_newtype_
 instance C'.ToStruct msg (Bootstrap msg) where
     toStruct (Bootstrap_newtype_ struct) = struct
-instance U'.HasMessage (Bootstrap msg) msg where
+instance U'.HasMessage (Bootstrap msg) where
+    type InMessage (Bootstrap msg) = msg
     message (Bootstrap_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Bootstrap msg) msg where
+instance U'.MessageDefault (Bootstrap msg) where
     messageDefault = Bootstrap_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Bootstrap msg) where
     newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf msg (U'.Struct msg))
@@ -118,9 +120,10 @@ instance C'.FromStruct msg (Call msg) where
     fromStruct = pure . Call_newtype_
 instance C'.ToStruct msg (Call msg) where
     toStruct (Call_newtype_ struct) = struct
-instance U'.HasMessage (Call msg) msg where
+instance U'.HasMessage (Call msg) where
+    type InMessage (Call msg) = msg
     message (Call_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Call msg) msg where
+instance U'.MessageDefault (Call msg) where
     messageDefault = Call_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Call msg) where
     newtype List msg (Call msg) = List_Call (U'.ListOf msg (U'.Struct msg))
@@ -200,9 +203,10 @@ instance C'.FromStruct msg (CapDescriptor msg) where
     fromStruct = pure . CapDescriptor_newtype_
 instance C'.ToStruct msg (CapDescriptor msg) where
     toStruct (CapDescriptor_newtype_ struct) = struct
-instance U'.HasMessage (CapDescriptor msg) msg where
+instance U'.HasMessage (CapDescriptor msg) where
+    type InMessage (CapDescriptor msg) = msg
     message (CapDescriptor_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (CapDescriptor msg) msg where
+instance U'.MessageDefault (CapDescriptor msg) where
     messageDefault = CapDescriptor_newtype_ . U'.messageDefault
 instance B'.ListElem msg (CapDescriptor msg) where
     newtype List msg (CapDescriptor msg) = List_CapDescriptor (U'.ListOf msg (U'.Struct msg))
@@ -283,9 +287,10 @@ instance C'.FromStruct msg (Disembargo msg) where
     fromStruct = pure . Disembargo_newtype_
 instance C'.ToStruct msg (Disembargo msg) where
     toStruct (Disembargo_newtype_ struct) = struct
-instance U'.HasMessage (Disembargo msg) msg where
+instance U'.HasMessage (Disembargo msg) where
+    type InMessage (Disembargo msg) = msg
     message (Disembargo_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Disembargo msg) msg where
+instance U'.MessageDefault (Disembargo msg) where
     messageDefault = Disembargo_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Disembargo msg) where
     newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf msg (U'.Struct msg))
@@ -326,9 +331,10 @@ instance C'.FromStruct msg (Exception msg) where
     fromStruct = pure . Exception_newtype_
 instance C'.ToStruct msg (Exception msg) where
     toStruct (Exception_newtype_ struct) = struct
-instance U'.HasMessage (Exception msg) msg where
+instance U'.HasMessage (Exception msg) where
+    type InMessage (Exception msg) = msg
     message (Exception_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Exception msg) msg where
+instance U'.MessageDefault (Exception msg) where
     messageDefault = Exception_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Exception msg) where
     newtype List msg (Exception msg) = List_Exception (U'.ListOf msg (U'.Struct msg))
@@ -383,9 +389,10 @@ instance C'.FromStruct msg (Finish msg) where
     fromStruct = pure . Finish_newtype_
 instance C'.ToStruct msg (Finish msg) where
     toStruct (Finish_newtype_ struct) = struct
-instance U'.HasMessage (Finish msg) msg where
+instance U'.HasMessage (Finish msg) where
+    type InMessage (Finish msg) = msg
     message (Finish_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Finish msg) msg where
+instance U'.MessageDefault (Finish msg) where
     messageDefault = Finish_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Finish msg) where
     newtype List msg (Finish msg) = List_Finish (U'.ListOf msg (U'.Struct msg))
@@ -419,9 +426,10 @@ instance C'.FromStruct msg (Join msg) where
     fromStruct = pure . Join_newtype_
 instance C'.ToStruct msg (Join msg) where
     toStruct (Join_newtype_ struct) = struct
-instance U'.HasMessage (Join msg) msg where
+instance U'.HasMessage (Join msg) where
+    type InMessage (Join msg) = msg
     message (Join_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Join msg) msg where
+instance U'.MessageDefault (Join msg) where
     messageDefault = Join_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Join msg) where
     newtype List msg (Join msg) = List_Join (U'.ListOf msg (U'.Struct msg))
@@ -474,9 +482,10 @@ instance C'.FromStruct msg (Message msg) where
     fromStruct = pure . Message_newtype_
 instance C'.ToStruct msg (Message msg) where
     toStruct (Message_newtype_ struct) = struct
-instance U'.HasMessage (Message msg) msg where
+instance U'.HasMessage (Message msg) where
+    type InMessage (Message msg) = msg
     message (Message_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Message msg) msg where
+instance U'.MessageDefault (Message msg) where
     messageDefault = Message_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Message msg) where
     newtype List msg (Message msg) = List_Message (U'.ListOf msg (U'.Struct msg))
@@ -669,9 +678,10 @@ instance C'.FromStruct msg (MessageTarget msg) where
     fromStruct = pure . MessageTarget_newtype_
 instance C'.ToStruct msg (MessageTarget msg) where
     toStruct (MessageTarget_newtype_ struct) = struct
-instance U'.HasMessage (MessageTarget msg) msg where
+instance U'.HasMessage (MessageTarget msg) where
+    type InMessage (MessageTarget msg) = msg
     message (MessageTarget_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (MessageTarget msg) msg where
+instance U'.MessageDefault (MessageTarget msg) where
     messageDefault = MessageTarget_newtype_ . U'.messageDefault
 instance B'.ListElem msg (MessageTarget msg) where
     newtype List msg (MessageTarget msg) = List_MessageTarget (U'.ListOf msg (U'.Struct msg))
@@ -724,9 +734,10 @@ instance C'.FromStruct msg (Payload msg) where
     fromStruct = pure . Payload_newtype_
 instance C'.ToStruct msg (Payload msg) where
     toStruct (Payload_newtype_ struct) = struct
-instance U'.HasMessage (Payload msg) msg where
+instance U'.HasMessage (Payload msg) where
+    type InMessage (Payload msg) = msg
     message (Payload_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Payload msg) msg where
+instance U'.MessageDefault (Payload msg) where
     messageDefault = Payload_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Payload msg) where
     newtype List msg (Payload msg) = List_Payload (U'.ListOf msg (U'.Struct msg))
@@ -773,9 +784,10 @@ instance C'.FromStruct msg (PromisedAnswer msg) where
     fromStruct = pure . PromisedAnswer_newtype_
 instance C'.ToStruct msg (PromisedAnswer msg) where
     toStruct (PromisedAnswer_newtype_ struct) = struct
-instance U'.HasMessage (PromisedAnswer msg) msg where
+instance U'.HasMessage (PromisedAnswer msg) where
+    type InMessage (PromisedAnswer msg) = msg
     message (PromisedAnswer_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (PromisedAnswer msg) msg where
+instance U'.MessageDefault (PromisedAnswer msg) where
     messageDefault = PromisedAnswer_newtype_ . U'.messageDefault
 instance B'.ListElem msg (PromisedAnswer msg) where
     newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf msg (U'.Struct msg))
@@ -818,9 +830,10 @@ instance C'.FromStruct msg (Provide msg) where
     fromStruct = pure . Provide_newtype_
 instance C'.ToStruct msg (Provide msg) where
     toStruct (Provide_newtype_ struct) = struct
-instance U'.HasMessage (Provide msg) msg where
+instance U'.HasMessage (Provide msg) where
+    type InMessage (Provide msg) = msg
     message (Provide_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Provide msg) msg where
+instance U'.MessageDefault (Provide msg) where
     messageDefault = Provide_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Provide msg) where
     newtype List msg (Provide msg) = List_Provide (U'.ListOf msg (U'.Struct msg))
@@ -873,9 +886,10 @@ instance C'.FromStruct msg (Release msg) where
     fromStruct = pure . Release_newtype_
 instance C'.ToStruct msg (Release msg) where
     toStruct (Release_newtype_ struct) = struct
-instance U'.HasMessage (Release msg) msg where
+instance U'.HasMessage (Release msg) where
+    type InMessage (Release msg) = msg
     message (Release_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Release msg) msg where
+instance U'.MessageDefault (Release msg) where
     messageDefault = Release_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Release msg) where
     newtype List msg (Release msg) = List_Release (U'.ListOf msg (U'.Struct msg))
@@ -909,9 +923,10 @@ instance C'.FromStruct msg (Resolve msg) where
     fromStruct = pure . Resolve_newtype_
 instance C'.ToStruct msg (Resolve msg) where
     toStruct (Resolve_newtype_ struct) = struct
-instance U'.HasMessage (Resolve msg) msg where
+instance U'.HasMessage (Resolve msg) where
+    type InMessage (Resolve msg) = msg
     message (Resolve_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Resolve msg) msg where
+instance U'.MessageDefault (Resolve msg) where
     messageDefault = Resolve_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Resolve msg) where
     newtype List msg (Resolve msg) = List_Resolve (U'.ListOf msg (U'.Struct msg))
@@ -943,9 +958,10 @@ instance C'.FromStruct msg (Return msg) where
     fromStruct = pure . Return_newtype_
 instance C'.ToStruct msg (Return msg) where
     toStruct (Return_newtype_ struct) = struct
-instance U'.HasMessage (Return msg) msg where
+instance U'.HasMessage (Return msg) where
+    type InMessage (Return msg) = msg
     message (Return_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Return msg) msg where
+instance U'.MessageDefault (Return msg) where
     messageDefault = Return_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Return msg) where
     newtype List msg (Return msg) = List_Return (U'.ListOf msg (U'.Struct msg))
@@ -983,9 +999,10 @@ instance C'.FromStruct msg (ThirdPartyCapDescriptor msg) where
     fromStruct = pure . ThirdPartyCapDescriptor_newtype_
 instance C'.ToStruct msg (ThirdPartyCapDescriptor msg) where
     toStruct (ThirdPartyCapDescriptor_newtype_ struct) = struct
-instance U'.HasMessage (ThirdPartyCapDescriptor msg) msg where
+instance U'.HasMessage (ThirdPartyCapDescriptor msg) where
+    type InMessage (ThirdPartyCapDescriptor msg) = msg
     message (ThirdPartyCapDescriptor_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (ThirdPartyCapDescriptor msg) msg where
+instance U'.MessageDefault (ThirdPartyCapDescriptor msg) where
     messageDefault = ThirdPartyCapDescriptor_newtype_ . U'.messageDefault
 instance B'.ListElem msg (ThirdPartyCapDescriptor msg) where
     newtype List msg (ThirdPartyCapDescriptor msg) = List_ThirdPartyCapDescriptor (U'.ListOf msg (U'.Struct msg))
@@ -1023,9 +1040,10 @@ instance C'.FromStruct msg (Call'sendResultsTo msg) where
     fromStruct = pure . Call'sendResultsTo_newtype_
 instance C'.ToStruct msg (Call'sendResultsTo msg) where
     toStruct (Call'sendResultsTo_newtype_ struct) = struct
-instance U'.HasMessage (Call'sendResultsTo msg) msg where
+instance U'.HasMessage (Call'sendResultsTo msg) where
+    type InMessage (Call'sendResultsTo msg) = msg
     message (Call'sendResultsTo_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Call'sendResultsTo msg) msg where
+instance U'.MessageDefault (Call'sendResultsTo msg) where
     messageDefault = Call'sendResultsTo_newtype_ . U'.messageDefault
 data Call'sendResultsTo' msg
     = Call'sendResultsTo'caller
@@ -1060,9 +1078,10 @@ instance C'.FromStruct msg (Disembargo'context msg) where
     fromStruct = pure . Disembargo'context_newtype_
 instance C'.ToStruct msg (Disembargo'context msg) where
     toStruct (Disembargo'context_newtype_ struct) = struct
-instance U'.HasMessage (Disembargo'context msg) msg where
+instance U'.HasMessage (Disembargo'context msg) where
+    type InMessage (Disembargo'context msg) = msg
     message (Disembargo'context_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Disembargo'context msg) msg where
+instance U'.MessageDefault (Disembargo'context msg) where
     messageDefault = Disembargo'context_newtype_ . U'.messageDefault
 data Disembargo'context' msg
     = Disembargo'context'senderLoopback Word32
@@ -1136,9 +1155,10 @@ instance C'.FromStruct msg (PromisedAnswer'Op msg) where
     fromStruct = pure . PromisedAnswer'Op_newtype_
 instance C'.ToStruct msg (PromisedAnswer'Op msg) where
     toStruct (PromisedAnswer'Op_newtype_ struct) = struct
-instance U'.HasMessage (PromisedAnswer'Op msg) msg where
+instance U'.HasMessage (PromisedAnswer'Op msg) where
+    type InMessage (PromisedAnswer'Op msg) = msg
     message (PromisedAnswer'Op_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (PromisedAnswer'Op msg) msg where
+instance U'.MessageDefault (PromisedAnswer'Op msg) where
     messageDefault = PromisedAnswer'Op_newtype_ . U'.messageDefault
 instance B'.ListElem msg (PromisedAnswer'Op msg) where
     newtype List msg (PromisedAnswer'Op msg) = List_PromisedAnswer'Op (U'.ListOf msg (U'.Struct msg))
@@ -1183,9 +1203,10 @@ instance C'.FromStruct msg (Resolve' msg) where
     fromStruct = pure . Resolve'_newtype_
 instance C'.ToStruct msg (Resolve' msg) where
     toStruct (Resolve'_newtype_ struct) = struct
-instance U'.HasMessage (Resolve' msg) msg where
+instance U'.HasMessage (Resolve' msg) where
+    type InMessage (Resolve' msg) = msg
     message (Resolve'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Resolve' msg) msg where
+instance U'.MessageDefault (Resolve' msg) where
     messageDefault = Resolve'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Resolve' msg) where
     newtype List msg (Resolve' msg) = List_Resolve' (U'.ListOf msg (U'.Struct msg))
@@ -1244,9 +1265,10 @@ instance C'.FromStruct msg (Return' msg) where
     fromStruct = pure . Return'_newtype_
 instance C'.ToStruct msg (Return' msg) where
     toStruct (Return'_newtype_ struct) = struct
-instance U'.HasMessage (Return' msg) msg where
+instance U'.HasMessage (Return' msg) where
+    type InMessage (Return' msg) = msg
     message (Return'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Return' msg) msg where
+instance U'.MessageDefault (Return' msg) where
     messageDefault = Return'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Return' msg) where
     newtype List msg (Return' msg) = List_Return' (U'.ListOf msg (U'.Struct msg))

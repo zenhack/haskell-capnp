@@ -136,10 +136,11 @@ fmtNewtypeStruct thisMod name info =
         , instance_ [] ("C'.ToStruct msg (" <> typeCon <> " msg)")
             [ hcat [ "toStruct (", dataCon, " struct) = struct" ]
             ]
-        , instance_ [] ("U'.HasMessage (" <> typeCon <> " msg) msg")
-            [ hcat [ "message (", dataCon, " struct) = U'.message struct" ]
+        , instance_ [] ("U'.HasMessage (" <> typeCon <> " msg)")
+            [ hcat [ "type InMessage (", typeCon, " msg) = msg" ]
+            , hcat [ "message (", dataCon, " struct) = U'.message struct" ]
             ]
-        , instance_ [] ("U'.MessageDefault (" <> typeCon <> " msg) msg")
+        , instance_ [] ("U'.MessageDefault (" <> typeCon <> " msg)")
             [ hcat [ "messageDefault = ", dataCon, " . U'.messageDefault" ]
             ]
         , case info of

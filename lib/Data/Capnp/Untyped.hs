@@ -352,10 +352,13 @@ instance Thaw msg => Thaw (Struct msg) where
 
 -------------------------------------------------------------------------------
 
--- | Types @a@ whose storage is owned by a message with type @msg@.
-class HasMessage a msg where
+-- | Types @a@ whose storage is owned by a message..
+class HasMessage a where
+    -- | The type of the messages containing @a@s.
+    type InMessage a
+
     -- | Get the message in which the @a@ is stored.
-    message :: a -> msg
+    message :: a -> InMessage a
 
 -- | Types which have a "default" value, but require a message
 -- to construct it.
@@ -363,24 +366,32 @@ class HasMessage a msg where
 -- The default is usually conceptually zero-size. This is mostly useful
 -- for generated code, so that it can use standard decoding techniques
 -- on default values.
-class HasMessage a msg => MessageDefault a msg where
-    messageDefault :: msg -> a
+class HasMessage a => MessageDefault a where
+    messageDefault :: InMessage a -> a
 
-instance HasMessage (Ptr msg) msg where
+instance HasMessage (Ptr msg) where
+    type InMessage (Ptr msg) = msg
+
     message (PtrCap cap)       = message cap
     message (PtrList list)     = message list
     message (PtrStruct struct) = message struct
 
-instance HasMessage (Cap msg) msg where
+instance HasMessage (Cap msg) where
+    type InMessage (Cap msg) = msg
+
     message (Cap msg _) = msg
 
-instance HasMessage (Struct msg) msg where
+instance HasMessage (Struct msg) where
+    type InMessage (Struct msg) = msg
+
     message (Struct msg _ _ _) = msg
 
-instance MessageDefault (Struct msg) msg where
+instance MessageDefault (Struct msg) where
     messageDefault msg = Struct msg (WordAt 0 0) 0 0
 
-instance HasMessage (List msg) msg where
+instance HasMessage (List msg) where
+    type InMessage (List msg) = msg
+
     message (List0 list)      = message list
     message (List1 list)      = message list
     message (List8 list)      = message list
@@ -390,7 +401,9 @@ instance HasMessage (List msg) msg where
     message (ListPtr list)    = message list
     message (ListStruct list) = message list
 
-instance HasMessage (ListOf msg a) msg where
+instance HasMessage (ListOf msg a) where
+    type InMessage (ListOf msg a) = msg
+
     message (ListOfVoid msg _)   = msg
     message (ListOfStruct tag _) = message tag
     message (ListOfBool list)    = message list
@@ -400,27 +413,29 @@ instance HasMessage (ListOf msg a) msg where
     message (ListOfWord64 list)  = message list
     message (ListOfPtr list)     = message list
 
-instance MessageDefault (ListOf msg ()) msg where
+instance MessageDefault (ListOf msg ()) where
     messageDefault msg = ListOfVoid msg 0
-instance MessageDefault (ListOf msg (Struct msg)) msg where
+instance MessageDefault (ListOf msg (Struct msg)) where
     messageDefault msg = ListOfStruct (messageDefault msg) 0
-instance MessageDefault (ListOf msg Bool) msg where
+instance MessageDefault (ListOf msg Bool) where
     messageDefault msg = ListOfBool (messageDefault msg)
-instance MessageDefault (ListOf msg Word8) msg where
+instance MessageDefault (ListOf msg Word8) where
     messageDefault msg = ListOfWord8 (messageDefault msg)
-instance MessageDefault (ListOf msg Word16) msg where
+instance MessageDefault (ListOf msg Word16) where
     messageDefault msg = ListOfWord16 (messageDefault msg)
-instance MessageDefault (ListOf msg Word32) msg where
+instance MessageDefault (ListOf msg Word32) where
     messageDefault msg = ListOfWord32 (messageDefault msg)
-instance MessageDefault (ListOf msg Word64) msg where
+instance MessageDefault (ListOf msg Word64) where
     messageDefault msg = ListOfWord64 (messageDefault msg)
-instance MessageDefault (ListOf msg (Maybe (Ptr msg))) msg where
+instance MessageDefault (ListOf msg (Maybe (Ptr msg))) where
     messageDefault msg = ListOfPtr (messageDefault msg)
 
-instance HasMessage (NormalList msg) msg where
+instance HasMessage (NormalList msg) where
+    type InMessage (NormalList msg) = msg
+
     message = nMsg
 
-instance MessageDefault (NormalList msg) msg where
+instance MessageDefault (NormalList msg) where
     messageDefault msg = NormalList msg (WordAt 0 0) 0
 
 getClient :: ReadCtx m msg => Cap msg -> m M.Client
@@ -543,7 +558,7 @@ ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
-setIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => a -> Int -> ListOf (M.MutMsg s) a -> m ()
+setIndex :: RWCtx m s => a -> Int -> ListOf (M.MutMsg s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -554,6 +569,9 @@ setIndex value i list = case list of
     ListOfWord32 nlist -> setNIndex nlist 2 value
     ListOfWord64 nlist -> setNIndex nlist 1 value
     ListOfPtr nlist -> case value of
+        Just p | message p /= message list -> do
+            newPtr <- copyPtr (message list) value
+            setIndex newPtr i list
         Nothing                -> setNIndex nlist 1 (P.serializePtr Nothing)
         Just (PtrCap (Cap _ cap))    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
         Just p@(PtrList ptrList)     ->
@@ -603,10 +621,59 @@ setPointerTo msg srcAddr dstAddr relPtr =
                 Left OutOfRange ->
                     error "BUG: segment is too large to set the pointer."
 
+copyCap :: RWCtx m s => M.MutMsg s -> Cap (M.MutMsg s) -> m (Cap (M.MutMsg s))
+copyCap dest cap = getClient cap >>= appendCap dest
+
+copyPtr :: RWCtx m s => M.MutMsg s -> Maybe (Ptr (M.MutMsg s)) -> m (Maybe (Ptr (M.MutMsg s)))
+copyPtr dest Nothing                = pure Nothing
+copyPtr dest (Just (PtrCap cap))    = Just . PtrCap <$> copyCap dest cap
+copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
+copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
+    destStruct <- allocStruct
+            dest
+            (fromIntegral $ length (dataSection src))
+            (fromIntegral $ length (ptrSection src))
+    copyStruct destStruct src
+    pure destStruct
+
+copyList :: RWCtx m s => M.MutMsg s -> List (M.MutMsg s) -> m (List (M.MutMsg s))
+copyList dest src = case src of
+    List0 src      -> List0 <$> allocList0 dest (length src)
+    List1 src      -> List1 <$> copyNewListOf dest src allocList1
+    List8 src      -> List8 <$> copyNewListOf dest src allocList8
+    List16 src     -> List16 <$> copyNewListOf dest src allocList16
+    List32 src     -> List32 <$> copyNewListOf dest src allocList32
+    List64 src     -> List64 <$> copyNewListOf dest src allocList64
+    ListPtr src    -> ListPtr <$> copyNewListOf dest src allocListPtr
+    ListStruct src -> ListStruct <$> do
+        destList <- allocCompositeList
+            dest
+            (structListDataCount src)
+            (structListPtrCount  src)
+            (length src)
+        copyListOf destList src
+        pure destList
+
+copyNewListOf
+    :: RWCtx m s
+    => M.MutMsg s
+    -> ListOf (M.MutMsg s) a
+    -> (M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) a))
+    -> m (ListOf (M.MutMsg s) a)
+copyNewListOf destMsg src new = do
+    dest <- new destMsg (length src)
+    copyListOf dest src
+    pure dest
+
+
+copyListOf :: RWCtx m s => ListOf (M.MutMsg s) a -> ListOf (M.MutMsg s) a -> m ()
+copyListOf dest src =
+    forM_ [0..length src - 1] $ \i -> do
+        value <- index i src
+        setIndex value i dest
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.
-copyStruct :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
-    => Struct (M.MutMsg s) -> Struct (M.MutMsg s) -> m ()
+copyStruct :: RWCtx m s => Struct (M.MutMsg s) -> Struct (M.MutMsg s) -> m ()
 copyStruct dest src = do
     -- We copy both the data and pointer sections from src to dest,
     -- padding the tail of the destination section with zeros/null
@@ -621,9 +688,7 @@ copyStruct dest src = do
   where
     copySection dest src pad = do
         -- Copy the source section to the destination section:
-        forM_ [0..length src - 1] $ \i -> do
-            value <- index i src
-            setIndex value i dest
+        copyListOf dest src
         -- Pad the remainder with zeros/default values:
         forM_ [length src..length dest - 1] $ \i ->
             setIndex pad i dest
@@ -706,6 +771,22 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)
+
+-- | Get the size (in words) of a struct's data section.
+structDataCount :: Struct msg -> Word16
+structDataCount = fromIntegral . length . dataSection
+
+-- | Get the size of a struct's pointer section.
+structPtrCount  :: Struct msg -> Word16
+structPtrCount  = fromIntegral . length . ptrSection
+
+-- | Get the size (in words) of the data sections in a composite list.
+structListDataCount :: ListOf msg (Struct msg) -> Word16
+structListDataCount (ListOfStruct s _) = structDataCount s
+
+-- | Get the size of the pointer sections in a composite list.
+structListPtrCount  :: ListOf msg (Struct msg) -> Word16
+structListPtrCount  (ListOfStruct s _) = structPtrCount s
 
 -- | @'getData' i struct@ gets the @i@th word from the struct's data section,
 -- returning 0 if it is absent.

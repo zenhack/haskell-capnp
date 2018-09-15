@@ -341,6 +341,7 @@ data MutMsg s = MutMsg
     { mutSegs :: MutVar s (AppendVec MV.MVector s (Segment (MutMsg s)))
     , mutCaps :: MutVar s (AppendVec MV.MVector s Client)
     }
+    deriving(Eq)
 
 -- | 'WriteCtx' is the context needed for most write operations.
 type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)

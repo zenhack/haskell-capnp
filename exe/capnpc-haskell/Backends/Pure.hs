@@ -142,7 +142,13 @@ fmtExport thisMod (name, DeclDef (DefInterface _)) =
 -- These are 'Raw' because we're just re-exporting them:
 fmtExport thisMod (name, DeclDef DefEnum{}) =
     fmtName Raw thisMod name <> "(..)"
-fmtExport thisMod (name, DeclConst _) = fmtName Pure thisMod (valueName name)
+fmtExport thisMod (name, DeclConst VoidConst) =
+    fmtName Raw thisMod (valueName name)
+fmtExport thisMod (name, DeclConst WordConst{}) =
+    fmtName Raw thisMod (valueName name)
+
+fmtExport thisMod (name, DeclConst _) =
+    fmtName Pure thisMod (valueName name)
 
 fmtImport :: ModRefType -> Import -> PP.Doc
 fmtImport ty (Import ref) = "import qualified " <> fmtModRef ty ref
@@ -200,28 +206,16 @@ fmtConst :: Id -> Name -> Const -> PP.Doc
 fmtConst thisMod name value =
     let pureName = fmtName Pure thisMod (valueName name)
         rawName = fmtName Raw thisMod (valueName name)
-    in
-        case value of
-            -- For non-pointer types, We just define these as aliases for the
-            -- constants in the raw module. TODO: we should just re-export the
-            -- existing constant instead.
-            VoidConst -> vcat
-                [ hcat [ pureName, " :: ()" ]
-                , hcat [ pureName, " = ()" ]
-                ]
-            WordConst{wordType=PrimWord ty} -> vcat
-                [ hcat [ pureName, " :: ", fmtPrimWord ty ]
-                , hcat [ pureName, " = ", rawName ]
-                ]
-            WordConst{wordType=EnumType typeName} -> vcat
-                [ hcat [ pureName, " :: ", fmtName Raw thisMod typeName ]
-                , hcat [ pureName, " = ", rawName ]
-                ]
+    in case value of
+        -- For word types, We just re-export the definitions from the
+        -- low-level module, so we don't need to declare anything here:
+        VoidConst -> ""
+        WordConst{} -> ""
 
-            PtrConst{ptrType} -> vcat
-                [ hcat [ pureName, " :: ", fmtType thisMod (PtrType ptrType) ]
-                , hcat [ pureName, " = PH'.toPurePtrConst ", rawName ]
-                ]
+        PtrConst{ptrType} -> vcat
+            [ hcat [ pureName, " :: ", fmtType thisMod (PtrType ptrType) ]
+            , hcat [ pureName, " = PH'.toPurePtrConst ", rawName ]
+            ]
 
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
 -- We end up re-exporting these, but doing nothing else:

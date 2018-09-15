@@ -182,7 +182,7 @@ test-suite simple-tests
     import: shared-opts
     type:                 exitcode-stdio-1.0
     main-is:              Main.hs
-    hs-source-dirs:       tests/simple-tests
+    hs-source-dirs:       tests
     other-modules:
         Tests.Module.Capnp.Capnp.Schema
       , Tests.Module.Capnp.Capnp.Schema.Pure
@@ -194,6 +194,7 @@ test-suite simple-tests
       , Tests.SchemaGeneration
       , Tests.SchemaQuickCheck
       , Tests.Util
+      , Instances
     build-depends:
         capnp
       , data-default

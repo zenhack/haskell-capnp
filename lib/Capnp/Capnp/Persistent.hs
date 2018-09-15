@@ -42,9 +42,10 @@ instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
 instance C'.ToStruct msg (Persistent'SaveParams msg) where
     toStruct (Persistent'SaveParams_newtype_ struct) = struct
-instance U'.HasMessage (Persistent'SaveParams msg) msg where
+instance U'.HasMessage (Persistent'SaveParams msg) where
+    type InMessage (Persistent'SaveParams msg) = msg
     message (Persistent'SaveParams_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Persistent'SaveParams msg) msg where
+instance U'.MessageDefault (Persistent'SaveParams msg) where
     messageDefault = Persistent'SaveParams_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
@@ -76,9 +77,10 @@ instance C'.FromStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults_newtype_
 instance C'.ToStruct msg (Persistent'SaveResults msg) where
     toStruct (Persistent'SaveResults_newtype_ struct) = struct
-instance U'.HasMessage (Persistent'SaveResults msg) msg where
+instance U'.HasMessage (Persistent'SaveResults msg) where
+    type InMessage (Persistent'SaveResults msg) = msg
     message (Persistent'SaveResults_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Persistent'SaveResults msg) msg where
+instance U'.MessageDefault (Persistent'SaveResults msg) where
     messageDefault = Persistent'SaveResults_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))
@@ -110,9 +112,10 @@ instance C'.FromStruct msg (RealmGateway'export'params msg) where
     fromStruct = pure . RealmGateway'export'params_newtype_
 instance C'.ToStruct msg (RealmGateway'export'params msg) where
     toStruct (RealmGateway'export'params_newtype_ struct) = struct
-instance U'.HasMessage (RealmGateway'export'params msg) msg where
+instance U'.HasMessage (RealmGateway'export'params msg) where
+    type InMessage (RealmGateway'export'params msg) = msg
     message (RealmGateway'export'params_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (RealmGateway'export'params msg) msg where
+instance U'.MessageDefault (RealmGateway'export'params msg) where
     messageDefault = RealmGateway'export'params_newtype_ . U'.messageDefault
 instance B'.ListElem msg (RealmGateway'export'params msg) where
     newtype List msg (RealmGateway'export'params msg) = List_RealmGateway'export'params (U'.ListOf msg (U'.Struct msg))
@@ -159,9 +162,10 @@ instance C'.FromStruct msg (RealmGateway'import'params msg) where
     fromStruct = pure . RealmGateway'import'params_newtype_
 instance C'.ToStruct msg (RealmGateway'import'params msg) where
     toStruct (RealmGateway'import'params_newtype_ struct) = struct
-instance U'.HasMessage (RealmGateway'import'params msg) msg where
+instance U'.HasMessage (RealmGateway'import'params msg) where
+    type InMessage (RealmGateway'import'params msg) = msg
     message (RealmGateway'import'params_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (RealmGateway'import'params msg) msg where
+instance U'.MessageDefault (RealmGateway'import'params msg) where
     messageDefault = RealmGateway'import'params_newtype_ . U'.messageDefault
 instance B'.ListElem msg (RealmGateway'import'params msg) where
     newtype List msg (RealmGateway'import'params msg) = List_RealmGateway'import'params (U'.ListOf msg (U'.Struct msg))

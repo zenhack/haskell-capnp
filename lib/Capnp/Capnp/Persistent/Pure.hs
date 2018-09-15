@@ -32,6 +32,7 @@ import qualified Data.Capnp.Untyped.Pure as PU'
 import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Capnp.Classes as C'
 import qualified Network.RPC.Capnp as Rpc
+import qualified Capnp.Capnp.Rpc.Pure as Rpc
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xb8630836983feed7
@@ -47,13 +48,22 @@ instance C'.Cerialize s Persistent where
     cerialize msg (Persistent client) = Capnp.ById.Xb8630836983feed7.Persistent . Just <$> U'.appendCap msg client
 class Persistent'server_ cap where
     {-# MINIMAL persistent'save #-}
-    persistent'save :: Persistent'SaveParams -> cap -> IO (Persistent'SaveResults)
+    persistent'save :: Persistent'SaveParams -> cap -> Rpc.RpcT IO (Persistent'SaveResults)
     persistent'save _ _ = throwM $ Rpc.Exception
         { reason = "Method unimplemented"
         , type_ = Rpc.Exception'Type'unimplemented
         , obsoleteIsCallersFault = False
         , obsoleteDurability = 0
         }
+instance Persistent'server_ Persistent where
+    persistent'save args (Persistent client) = do
+        encodeResult <- PH'.encodeV args
+        case encodeResult of
+            Left exn -> throwM exn
+            Right args' -> do
+                resultPromise <- Rpc.call 14468694717054801553 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+                result <- Rpc.waitIO resultPromise
+                encodedResult <- PH'.encodeV result
 newtype RealmGateway = RealmGateway M'.Client
     deriving(Show, Eq, Read, Generic)
 instance C'.Decerialize RealmGateway where
@@ -64,20 +74,37 @@ instance C'.Cerialize s RealmGateway where
     cerialize msg (RealmGateway client) = Capnp.ById.Xb8630836983feed7.RealmGateway . Just <$> U'.appendCap msg client
 class RealmGateway'server_ cap where
     {-# MINIMAL realmGateway'import, realmGateway'export #-}
-    realmGateway'import :: RealmGateway'import'params -> cap -> IO (Persistent'SaveResults)
+    realmGateway'import :: RealmGateway'import'params -> cap -> Rpc.RpcT IO (Persistent'SaveResults)
     realmGateway'import _ _ = throwM $ Rpc.Exception
         { reason = "Method unimplemented"
         , type_ = Rpc.Exception'Type'unimplemented
         , obsoleteIsCallersFault = False
         , obsoleteDurability = 0
         }
-    realmGateway'export :: RealmGateway'export'params -> cap -> IO (Persistent'SaveResults)
+    realmGateway'export :: RealmGateway'export'params -> cap -> Rpc.RpcT IO (Persistent'SaveResults)
     realmGateway'export _ _ = throwM $ Rpc.Exception
         { reason = "Method unimplemented"
         , type_ = Rpc.Exception'Type'unimplemented
         , obsoleteIsCallersFault = False
         , obsoleteDurability = 0
         }
+instance RealmGateway'server_ RealmGateway where
+    realmGateway'import args (RealmGateway client) = do
+        encodeResult <- PH'.encodeV args
+        case encodeResult of
+            Left exn -> throwM exn
+            Right args' -> do
+                resultPromise <- Rpc.call 9583422979879616212 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+                result <- Rpc.waitIO resultPromise
+                encodedResult <- PH'.encodeV result
+    realmGateway'export args (RealmGateway client) = do
+        encodeResult <- PH'.encodeV args
+        case encodeResult of
+            Left exn -> throwM exn
+            Right args' -> do
+                resultPromise <- Rpc.call 9583422979879616212 1 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+                result <- Rpc.waitIO resultPromise
+                encodedResult <- PH'.encodeV result
 data Persistent'SaveParams
     = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}
