@@ -648,7 +648,7 @@ copyNewListOf destMsg src new = do
 
 
 copyListOf :: RWCtx m s => ListOf (M.MutMsg s) a -> ListOf (M.MutMsg s) a -> m ()
-copyListOf dest src = do
+copyListOf dest src =
     forM_ [0..length src - 1] $ \i -> do
         value <- index i src
         setIndex value i dest
