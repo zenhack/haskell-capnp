@@ -9,6 +9,9 @@
   constants defined in a schema would not result in any generated code
   ([#41][issue41]).
 * `MutMsg` is now an instance of `Eq`.
+* The `HasMessage` class from `Data.Capnp.Untyped` is now a type family,
+  rather than a multi-parameter type class. This improves inference and
+  removes some superfluous generalization.
 
 # 0.2.0.0
 
