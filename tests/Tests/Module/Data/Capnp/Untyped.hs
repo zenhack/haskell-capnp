@@ -8,25 +8,32 @@ module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
-import Control.Monad           (forM_, when)
-import Control.Monad.Catch     (MonadThrow(throwM))
-import Control.Monad.Primitive (RealWorld)
-import Data.ReinterpretCast    (doubleToWord, wordToDouble)
-import Test.Framework          (Test, testGroup)
-import Test.HUnit              (assertEqual)
-import Text.Heredoc            (here, there)
+import Control.Monad                        (forM_, when)
+import Control.Monad.Catch                  (MonadThrow(throwM))
+import Control.Monad.Primitive              (RealWorld)
+import Data.ReinterpretCast                 (doubleToWord, wordToDouble)
+import Data.Text                            (Text)
+import Test.Framework                       (Test, testGroup)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.HUnit                           (assertEqual)
+import Test.QuickCheck                      (Property)
+import Test.QuickCheck.IO                   (propertyIO)
+import Text.Heredoc                         (here, there)
 
 import qualified Data.ByteString as BS
+import qualified Data.Vector     as V
 
 import Data.Capnp.Untyped
 import Tests.Util
 
 import Data.Capnp                (createPure, getRoot, newRoot)
-import Data.Capnp.Pure           (def)
+import Data.Capnp.Pure           (cerialize, def)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 import Data.Mutable              (Thaw(..))
 
-import Capnp.Capnp.Schema.Pure (CapnpVersion(..), CodeGeneratorRequest(..))
+import Instances ()
+
+import Capnp.Capnp.Schema.Pure (Brand, Method(..), Node'Parameter)
 
 import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
@@ -297,32 +304,41 @@ farPtrTest = assertionsToTest
         setPtr (C.toPtr dstStruct) 0 srcStruct
     ]
 
-otherMessageTest = assertionsToTest
-    "Setting pointers to values from other messages copies them if needed."
-    [ let expected = def
-            { capnpVersion = CapnpVersion
-                { major = 0
-                , minor = 6
-                , micro = 1
-                }
+otherMessageTest :: Test
+otherMessageTest = testProperty
+    "Setting pointers to values in other messages copies them if needed."
+    otherMessageTest'
+
+otherMessageTest' :: Text -> V.Vector Node'Parameter -> Brand -> Property
+otherMessageTest' name params brand = propertyIO $ do
+    let expected = def
+            { name = name
+            , implicitParameters = params
+            , paramBrand = brand
             }
-          result = createPure maxBound $ do
-            msg1 <- M.newMessage
-            msg2 <- M.newMessage
-            cgr <- newRoot msg1
-            version  <- newRoot msg2
+    let result = createPure maxBound $ do
+            methodMsg <- M.newMessage
+            nameMsg <- M.newMessage
+            paramsMsg <- M.newMessage
+            brandMsg <- M.newMessage
 
-            Schema.set_CapnpVersion'major version 0
-            Schema.set_CapnpVersion'minor version 6
-            Schema.set_CapnpVersion'micro version 1
+            methodCerial <- newRoot methodMsg
+            nameCerial <- cerialize nameMsg name
+            brandCerial <- cerialize brandMsg brand
 
-            Schema.set_CodeGeneratorRequest'capnpVersion cgr version
+            -- We don't implement Cerialize for Vector, so we can't just
+            -- inject params directly. TODO: implement Cerialize for Vector.
+            wrapper <- cerialize paramsMsg expected
+            paramsCerial <- Schema.get_Method'implicitParameters wrapper
 
-            pure msg1
-      in case result of
+            Schema.set_Method'name methodCerial nameCerial
+            Schema.set_Method'implicitParameters methodCerial paramsCerial
+            Schema.set_Method'paramBrand methodCerial brandCerial
+
+            pure methodMsg
+    case result of
             Left e ->
                 throwM e
             Right (msg :: M.ConstMsg) -> do
                 actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
-                assertEqual (show actual ++ " == " ++ show expected)  actual expected
-    ]
+                assertEqual (show actual ++ " == " ++ show expected) actual expected
