@@ -1,12 +1,15 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
 import Control.Monad           (forM_, when)
+import Control.Monad.Catch     (MonadThrow(throwM))
 import Control.Monad.Primitive (RealWorld)
 import Data.ReinterpretCast    (doubleToWord, wordToDouble)
 import Test.Framework          (Test, testGroup)
@@ -18,16 +21,23 @@ import qualified Data.ByteString as BS
 import Data.Capnp.Untyped
 import Tests.Util
 
+import Data.Capnp                (createPure, getRoot, newRoot)
+import Data.Capnp.Pure           (def)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 import Data.Mutable              (Thaw(..))
 
+import Capnp.Capnp.Schema.Pure (CapnpVersion(..), CodeGeneratorRequest(..))
+
 import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
+
+import qualified Capnp.Capnp.Schema as Schema
 
 untypedTests = testGroup "Untyped Tests"
     [ readTests
     , modifyTests
     , farPtrTest
+    , otherMessageTest
     ]
 
 readTests :: Test
@@ -285,4 +295,34 @@ farPtrTest = assertionsToTest
         (1, _) <- M.newSegment msg 10
         dstStruct <- allocStruct msg 2 2
         setPtr (C.toPtr dstStruct) 0 srcStruct
+    ]
+
+otherMessageTest = assertionsToTest
+    "Setting pointers to values from other messages copies them if needed."
+    [ let expected = def
+            { capnpVersion = CapnpVersion
+                { major = 0
+                , minor = 6
+                , micro = 1
+                }
+            }
+          result = createPure maxBound $ do
+            msg1 <- M.newMessage
+            msg2 <- M.newMessage
+            cgr <- newRoot msg1
+            version  <- newRoot msg2
+
+            Schema.set_CapnpVersion'major version 0
+            Schema.set_CapnpVersion'minor version 6
+            Schema.set_CapnpVersion'micro version 1
+
+            Schema.set_CodeGeneratorRequest'capnpVersion cgr version
+
+            pure msg1
+      in case result of
+            Left e ->
+                throwM e
+            Right (msg :: M.ConstMsg) -> do
+                actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
+                assertEqual (show actual ++ " == " ++ show expected)  actual expected
     ]

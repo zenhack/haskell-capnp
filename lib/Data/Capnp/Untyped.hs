@@ -529,7 +529,7 @@ ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
 ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
-setIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => a -> Int -> ListOf (M.MutMsg s) a -> m ()
+setIndex :: RWCtx m s => a -> Int -> ListOf (M.MutMsg s) a -> m ()
 setIndex value i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -540,6 +540,9 @@ setIndex value i list = case list of
     ListOfWord32 nlist -> setNIndex nlist 2 value
     ListOfWord64 nlist -> setNIndex nlist 1 value
     ListOfPtr nlist -> case value of
+        Just p | message p /= message list -> do
+            newPtr <- copyPtr (message list) value
+            setIndex newPtr i list
         Nothing                -> setNIndex nlist 1 (P.serializePtr Nothing)
         Just (PtrCap _ cap)    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
         Just p@(PtrList ptrList)     ->
@@ -589,10 +592,49 @@ setPointerTo msg srcAddr dstAddr relPtr =
                 Left OutOfRange ->
                     error "BUG: segment is too large to set the pointer."
 
+copyPtr :: (ReadCtx m srcMsg, RWCtx m s) => M.MutMsg s -> Maybe (Ptr srcMsg) -> m (Maybe (Ptr (M.MutMsg s)))
+copyPtr dest Nothing                = pure Nothing
+copyPtr dest (Just (PtrCap _ n))    = pure $ Just (PtrCap dest n)
+copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
+copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
+    destStruct <- allocStruct
+            dest
+            (fromIntegral $ length (dataSection src))
+            (fromIntegral $ length (ptrSection src))
+    copyStruct destStruct src
+    pure destStruct
+
+copyList :: (ReadCtx m srcMsg, RWCtx m s) => M.MutMsg s -> List srcMsg -> m (List (M.MutMsg s))
+copyList dest src = case src of
+    List0 src   -> List0 <$> allocList0 (message dest) (length src)
+    List1 src   -> List1 <$> copyNewListOf dest src allocList1
+    List8 src   -> List8 <$> copyNewListOf dest src allocList8
+    List16 src  -> List16 <$> copyNewListOf dest src allocList16
+    List32 src  -> List32 <$> copyNewListOf dest src allocList32
+    List64 src  -> List64 <$> copyNewListOf dest src allocList64
+    ListPtr src -> ListPtr <$> copyNewListOf dest src allocListPtr
+
+copyNewListOf
+    :: (ReadCtx m srcMsg, RWCtx m s)
+    => M.MutMsg s
+    -> ListOf srcMsg a
+    -> (M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) a))
+    -> m (ListOf (M.MutMsg s) a)
+copyNewListOf destMsg src new = do
+    dest <- new destMsg (length src)
+    copyListOf dest src
+    pure dest
+
+
+copyListOf :: (ReadCtx m srcMsg, RWCtx m s)
+    => ListOf (M.MutMsg s) a -> ListOf srcMsg a -> m ()
+copyListOf dest src = do
+    forM_ [0..length src - 1] $ \i -> do
+        value <- index i src
+        setIndex value i dest
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.
-copyStruct :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
-    => Struct (M.MutMsg s) -> Struct (M.MutMsg s) -> m ()
+copyStruct :: (ReadCtx m srcMsg, RWCtx m s) => Struct (M.MutMsg s) -> Struct srcMsg -> m ()
 copyStruct dest src = do
     -- We copy both the data and pointer sections from src to dest,
     -- padding the tail of the destination section with zeros/null
@@ -607,9 +649,7 @@ copyStruct dest src = do
   where
     copySection dest src pad = do
         -- Copy the source section to the destination section:
-        forM_ [0..length src - 1] $ \i -> do
-            value <- index i src
-            setIndex value i dest
+        copyListOf dest src
         -- Pad the remainder with zeros/default values:
         forM_ [length src..length dest - 1] $ \i ->
             setIndex pad i dest
