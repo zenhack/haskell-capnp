@@ -626,7 +626,14 @@ copyList dest src = case src of
     List32 src     -> List32 <$> copyNewListOf dest src allocList32
     List64 src     -> List64 <$> copyNewListOf dest src allocList64
     ListPtr src    -> ListPtr <$> copyNewListOf dest src allocListPtr
-    ListStruct src -> ListStruct <$> error "TODO FIXME: handle composite lists"
+    ListStruct src -> ListStruct <$> do
+        destList <- allocCompositeList
+            dest
+            (structListDataCount src)
+            (structListPtrCount  src)
+            (length src)
+        copyListOf destList src
+        pure destList
 
 copyNewListOf
     :: RWCtx m s
@@ -745,6 +752,22 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
         msg
         addr { wordIndex = wordIndex + fromIntegral dataSz }
         (fromIntegral ptrSz)
+
+-- | Get the size (in words) of a struct's data section.
+structDataCount :: Struct msg -> Word16
+structDataCount = fromIntegral . length . dataSection
+
+-- | Get the size of a struct's pointer section.
+structPtrCount  :: Struct msg -> Word16
+structPtrCount  = fromIntegral . length . ptrSection
+
+-- | Get the size (in words) of the data sections in a composite list.
+structListDataCount :: ListOf msg (Struct msg) -> Word16
+structListDataCount (ListOfStruct s _) = structDataCount s
+
+-- | Get the size of the pointer sections in a composite list.
+structListPtrCount  :: ListOf msg (Struct msg) -> Word16
+structListPtrCount  (ListOfStruct s _) = structPtrCount s
 
 -- | @'getData' i struct@ gets the @i@th word from the struct's data section,
 -- returning 0 if it is absent.
