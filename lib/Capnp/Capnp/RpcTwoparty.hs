@@ -32,9 +32,10 @@ instance C'.FromStruct msg (JoinKeyPart msg) where
     fromStruct = pure . JoinKeyPart_newtype_
 instance C'.ToStruct msg (JoinKeyPart msg) where
     toStruct (JoinKeyPart_newtype_ struct) = struct
-instance U'.HasMessage (JoinKeyPart msg) msg where
+instance U'.HasMessage (JoinKeyPart msg) where
+    type InMessage (JoinKeyPart msg) = msg
     message (JoinKeyPart_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (JoinKeyPart msg) msg where
+instance U'.MessageDefault (JoinKeyPart msg) where
     messageDefault = JoinKeyPart_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JoinKeyPart msg) where
     newtype List msg (JoinKeyPart msg) = List_JoinKeyPart (U'.ListOf msg (U'.Struct msg))
@@ -74,9 +75,10 @@ instance C'.FromStruct msg (JoinResult msg) where
     fromStruct = pure . JoinResult_newtype_
 instance C'.ToStruct msg (JoinResult msg) where
     toStruct (JoinResult_newtype_ struct) = struct
-instance U'.HasMessage (JoinResult msg) msg where
+instance U'.HasMessage (JoinResult msg) where
+    type InMessage (JoinResult msg) = msg
     message (JoinResult_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (JoinResult msg) msg where
+instance U'.MessageDefault (JoinResult msg) where
     messageDefault = JoinResult_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JoinResult msg) where
     newtype List msg (JoinResult msg) = List_JoinResult (U'.ListOf msg (U'.Struct msg))
@@ -118,9 +120,10 @@ instance C'.FromStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId_newtype_
 instance C'.ToStruct msg (ProvisionId msg) where
     toStruct (ProvisionId_newtype_ struct) = struct
-instance U'.HasMessage (ProvisionId msg) msg where
+instance U'.HasMessage (ProvisionId msg) where
+    type InMessage (ProvisionId msg) = msg
     message (ProvisionId_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (ProvisionId msg) msg where
+instance U'.MessageDefault (ProvisionId msg) where
     messageDefault = ProvisionId_newtype_ . U'.messageDefault
 instance B'.ListElem msg (ProvisionId msg) where
     newtype List msg (ProvisionId msg) = List_ProvisionId (U'.ListOf msg (U'.Struct msg))
@@ -174,9 +177,10 @@ instance C'.FromStruct msg (VatId msg) where
     fromStruct = pure . VatId_newtype_
 instance C'.ToStruct msg (VatId msg) where
     toStruct (VatId_newtype_ struct) = struct
-instance U'.HasMessage (VatId msg) msg where
+instance U'.HasMessage (VatId msg) where
+    type InMessage (VatId msg) = msg
     message (VatId_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (VatId msg) msg where
+instance U'.MessageDefault (VatId msg) where
     messageDefault = VatId_newtype_ . U'.messageDefault
 instance B'.ListElem msg (VatId msg) where
     newtype List msg (VatId msg) = List_VatId (U'.ListOf msg (U'.Struct msg))

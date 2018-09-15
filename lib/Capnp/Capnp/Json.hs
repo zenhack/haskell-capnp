@@ -32,9 +32,10 @@ instance C'.FromStruct msg (JsonValue msg) where
     fromStruct = pure . JsonValue_newtype_
 instance C'.ToStruct msg (JsonValue msg) where
     toStruct (JsonValue_newtype_ struct) = struct
-instance U'.HasMessage (JsonValue msg) msg where
+instance U'.HasMessage (JsonValue msg) where
+    type InMessage (JsonValue msg) = msg
     message (JsonValue_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (JsonValue msg) msg where
+instance U'.MessageDefault (JsonValue msg) where
     messageDefault = JsonValue_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JsonValue msg) where
     newtype List msg (JsonValue msg) = List_JsonValue (U'.ListOf msg (U'.Struct msg))
@@ -129,9 +130,10 @@ instance C'.FromStruct msg (JsonValue'Call msg) where
     fromStruct = pure . JsonValue'Call_newtype_
 instance C'.ToStruct msg (JsonValue'Call msg) where
     toStruct (JsonValue'Call_newtype_ struct) = struct
-instance U'.HasMessage (JsonValue'Call msg) msg where
+instance U'.HasMessage (JsonValue'Call msg) where
+    type InMessage (JsonValue'Call msg) = msg
     message (JsonValue'Call_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (JsonValue'Call msg) msg where
+instance U'.MessageDefault (JsonValue'Call msg) where
     messageDefault = JsonValue'Call_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (U'.ListOf msg (U'.Struct msg))
@@ -179,9 +181,10 @@ instance C'.FromStruct msg (JsonValue'Field msg) where
     fromStruct = pure . JsonValue'Field_newtype_
 instance C'.ToStruct msg (JsonValue'Field msg) where
     toStruct (JsonValue'Field_newtype_ struct) = struct
-instance U'.HasMessage (JsonValue'Field msg) msg where
+instance U'.HasMessage (JsonValue'Field msg) where
+    type InMessage (JsonValue'Field msg) = msg
     message (JsonValue'Field_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (JsonValue'Field msg) msg where
+instance U'.MessageDefault (JsonValue'Field msg) where
     messageDefault = JsonValue'Field_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (U'.ListOf msg (U'.Struct msg))

@@ -32,9 +32,10 @@ instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
 instance C'.ToStruct msg (Persistent'SaveParams msg) where
     toStruct (Persistent'SaveParams_newtype_ struct) = struct
-instance U'.HasMessage (Persistent'SaveParams msg) msg where
+instance U'.HasMessage (Persistent'SaveParams msg) where
+    type InMessage (Persistent'SaveParams msg) = msg
     message (Persistent'SaveParams_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Persistent'SaveParams msg) msg where
+instance U'.MessageDefault (Persistent'SaveParams msg) where
     messageDefault = Persistent'SaveParams_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Persistent'SaveParams msg) where
     newtype List msg (Persistent'SaveParams msg) = List_Persistent'SaveParams (U'.ListOf msg (U'.Struct msg))
@@ -64,9 +65,10 @@ instance C'.FromStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults_newtype_
 instance C'.ToStruct msg (Persistent'SaveResults msg) where
     toStruct (Persistent'SaveResults_newtype_ struct) = struct
-instance U'.HasMessage (Persistent'SaveResults msg) msg where
+instance U'.HasMessage (Persistent'SaveResults msg) where
+    type InMessage (Persistent'SaveResults msg) = msg
     message (Persistent'SaveResults_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Persistent'SaveResults msg) msg where
+instance U'.MessageDefault (Persistent'SaveResults msg) where
     messageDefault = Persistent'SaveResults_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Persistent'SaveResults msg) where
     newtype List msg (Persistent'SaveResults msg) = List_Persistent'SaveResults (U'.ListOf msg (U'.Struct msg))

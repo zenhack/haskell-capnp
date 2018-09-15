@@ -32,9 +32,10 @@ instance C'.FromStruct msg (Annotation msg) where
     fromStruct = pure . Annotation_newtype_
 instance C'.ToStruct msg (Annotation msg) where
     toStruct (Annotation_newtype_ struct) = struct
-instance U'.HasMessage (Annotation msg) msg where
+instance U'.HasMessage (Annotation msg) where
+    type InMessage (Annotation msg) = msg
     message (Annotation_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Annotation msg) msg where
+instance U'.MessageDefault (Annotation msg) where
     messageDefault = Annotation_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Annotation msg) where
     newtype List msg (Annotation msg) = List_Annotation (U'.ListOf msg (U'.Struct msg))
@@ -88,9 +89,10 @@ instance C'.FromStruct msg (Brand msg) where
     fromStruct = pure . Brand_newtype_
 instance C'.ToStruct msg (Brand msg) where
     toStruct (Brand_newtype_ struct) = struct
-instance U'.HasMessage (Brand msg) msg where
+instance U'.HasMessage (Brand msg) where
+    type InMessage (Brand msg) = msg
     message (Brand_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Brand msg) msg where
+instance U'.MessageDefault (Brand msg) where
     messageDefault = Brand_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Brand msg) where
     newtype List msg (Brand msg) = List_Brand (U'.ListOf msg (U'.Struct msg))
@@ -125,9 +127,10 @@ instance C'.FromStruct msg (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion_newtype_
 instance C'.ToStruct msg (CapnpVersion msg) where
     toStruct (CapnpVersion_newtype_ struct) = struct
-instance U'.HasMessage (CapnpVersion msg) msg where
+instance U'.HasMessage (CapnpVersion msg) where
+    type InMessage (CapnpVersion msg) = msg
     message (CapnpVersion_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (CapnpVersion msg) msg where
+instance U'.MessageDefault (CapnpVersion msg) where
     messageDefault = CapnpVersion_newtype_ . U'.messageDefault
 instance B'.ListElem msg (CapnpVersion msg) where
     newtype List msg (CapnpVersion msg) = List_CapnpVersion (U'.ListOf msg (U'.Struct msg))
@@ -167,9 +170,10 @@ instance C'.FromStruct msg (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest msg) where
     toStruct (CodeGeneratorRequest_newtype_ struct) = struct
-instance U'.HasMessage (CodeGeneratorRequest msg) msg where
+instance U'.HasMessage (CodeGeneratorRequest msg) where
+    type InMessage (CodeGeneratorRequest msg) = msg
     message (CodeGeneratorRequest_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (CodeGeneratorRequest msg) msg where
+instance U'.MessageDefault (CodeGeneratorRequest msg) where
     messageDefault = CodeGeneratorRequest_newtype_ . U'.messageDefault
 instance B'.ListElem msg (CodeGeneratorRequest msg) where
     newtype List msg (CodeGeneratorRequest msg) = List_CodeGeneratorRequest (U'.ListOf msg (U'.Struct msg))
@@ -274,9 +278,10 @@ instance C'.FromStruct msg (Enumerant msg) where
     fromStruct = pure . Enumerant_newtype_
 instance C'.ToStruct msg (Enumerant msg) where
     toStruct (Enumerant_newtype_ struct) = struct
-instance U'.HasMessage (Enumerant msg) msg where
+instance U'.HasMessage (Enumerant msg) where
+    type InMessage (Enumerant msg) = msg
     message (Enumerant_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Enumerant msg) msg where
+instance U'.MessageDefault (Enumerant msg) where
     messageDefault = Enumerant_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Enumerant msg) where
     newtype List msg (Enumerant msg) = List_Enumerant (U'.ListOf msg (U'.Struct msg))
@@ -330,9 +335,10 @@ instance C'.FromStruct msg (Field msg) where
     fromStruct = pure . Field_newtype_
 instance C'.ToStruct msg (Field msg) where
     toStruct (Field_newtype_ struct) = struct
-instance U'.HasMessage (Field msg) msg where
+instance U'.HasMessage (Field msg) where
+    type InMessage (Field msg) = msg
     message (Field_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Field msg) msg where
+instance U'.MessageDefault (Field msg) where
     messageDefault = Field_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Field msg) where
     newtype List msg (Field msg) = List_Field (U'.ListOf msg (U'.Struct msg))
@@ -400,9 +406,10 @@ instance C'.FromStruct msg (Method msg) where
     fromStruct = pure . Method_newtype_
 instance C'.ToStruct msg (Method msg) where
     toStruct (Method_newtype_ struct) = struct
-instance U'.HasMessage (Method msg) msg where
+instance U'.HasMessage (Method msg) where
+    type InMessage (Method msg) = msg
     message (Method_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Method msg) msg where
+instance U'.MessageDefault (Method msg) where
     messageDefault = Method_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Method msg) where
     newtype List msg (Method msg) = List_Method (U'.ListOf msg (U'.Struct msg))
@@ -507,9 +514,10 @@ instance C'.FromStruct msg (Node msg) where
     fromStruct = pure . Node_newtype_
 instance C'.ToStruct msg (Node msg) where
     toStruct (Node_newtype_ struct) = struct
-instance U'.HasMessage (Node msg) msg where
+instance U'.HasMessage (Node msg) where
+    type InMessage (Node msg) = msg
     message (Node_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node msg) msg where
+instance U'.MessageDefault (Node msg) where
     messageDefault = Node_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Node msg) where
     newtype List msg (Node msg) = List_Node (U'.ListOf msg (U'.Struct msg))
@@ -611,9 +619,10 @@ instance C'.FromStruct msg (Superclass msg) where
     fromStruct = pure . Superclass_newtype_
 instance C'.ToStruct msg (Superclass msg) where
     toStruct (Superclass_newtype_ struct) = struct
-instance U'.HasMessage (Superclass msg) msg where
+instance U'.HasMessage (Superclass msg) where
+    type InMessage (Superclass msg) = msg
     message (Superclass_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Superclass msg) msg where
+instance U'.MessageDefault (Superclass msg) where
     messageDefault = Superclass_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Superclass msg) where
     newtype List msg (Superclass msg) = List_Superclass (U'.ListOf msg (U'.Struct msg))
@@ -654,9 +663,10 @@ instance C'.FromStruct msg (Type msg) where
     fromStruct = pure . Type_newtype_
 instance C'.ToStruct msg (Type msg) where
     toStruct (Type_newtype_ struct) = struct
-instance U'.HasMessage (Type msg) msg where
+instance U'.HasMessage (Type msg) where
+    type InMessage (Type msg) = msg
     message (Type_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type msg) msg where
+instance U'.MessageDefault (Type msg) where
     messageDefault = Type_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Type msg) where
     newtype List msg (Type msg) = List_Type (U'.ListOf msg (U'.Struct msg))
@@ -753,9 +763,10 @@ instance C'.FromStruct msg (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'_newtype_
 instance C'.ToStruct msg (Type'list'group' msg) where
     toStruct (Type'list'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'list'group' msg) msg where
+instance U'.HasMessage (Type'list'group' msg) where
+    type InMessage (Type'list'group' msg) = msg
     message (Type'list'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'list'group' msg) msg where
+instance U'.MessageDefault (Type'list'group' msg) where
     messageDefault = Type'list'group'_newtype_ . U'.messageDefault
 get_Type'list'elementType :: U'.ReadCtx m msg => Type'list'group' msg -> m (Type msg)
 get_Type'list'elementType (Type'list'group'_newtype_ struct) =
@@ -775,9 +786,10 @@ instance C'.FromStruct msg (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'_newtype_
 instance C'.ToStruct msg (Type'enum'group' msg) where
     toStruct (Type'enum'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'enum'group' msg) msg where
+instance U'.HasMessage (Type'enum'group' msg) where
+    type InMessage (Type'enum'group' msg) = msg
     message (Type'enum'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'enum'group' msg) msg where
+instance U'.MessageDefault (Type'enum'group' msg) where
     messageDefault = Type'enum'group'_newtype_ . U'.messageDefault
 get_Type'enum'typeId :: U'.ReadCtx m msg => Type'enum'group' msg -> m Word64
 get_Type'enum'typeId (Type'enum'group'_newtype_ struct) = H'.getWordField struct 1 0 0
@@ -803,9 +815,10 @@ instance C'.FromStruct msg (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'_newtype_
 instance C'.ToStruct msg (Type'struct'group' msg) where
     toStruct (Type'struct'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'struct'group' msg) msg where
+instance U'.HasMessage (Type'struct'group' msg) where
+    type InMessage (Type'struct'group' msg) = msg
     message (Type'struct'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'struct'group' msg) msg where
+instance U'.MessageDefault (Type'struct'group' msg) where
     messageDefault = Type'struct'group'_newtype_ . U'.messageDefault
 get_Type'struct'typeId :: U'.ReadCtx m msg => Type'struct'group' msg -> m Word64
 get_Type'struct'typeId (Type'struct'group'_newtype_ struct) = H'.getWordField struct 1 0 0
@@ -831,9 +844,10 @@ instance C'.FromStruct msg (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'_newtype_
 instance C'.ToStruct msg (Type'interface'group' msg) where
     toStruct (Type'interface'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'interface'group' msg) msg where
+instance U'.HasMessage (Type'interface'group' msg) where
+    type InMessage (Type'interface'group' msg) = msg
     message (Type'interface'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'interface'group' msg) msg where
+instance U'.MessageDefault (Type'interface'group' msg) where
     messageDefault = Type'interface'group'_newtype_ . U'.messageDefault
 get_Type'interface'typeId :: U'.ReadCtx m msg => Type'interface'group' msg -> m Word64
 get_Type'interface'typeId (Type'interface'group'_newtype_ struct) = H'.getWordField struct 1 0 0
@@ -859,9 +873,10 @@ instance C'.FromStruct msg (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'group' msg) where
     toStruct (Type'anyPointer'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'anyPointer'group' msg) msg where
+instance U'.HasMessage (Type'anyPointer'group' msg) where
+    type InMessage (Type'anyPointer'group' msg) = msg
     message (Type'anyPointer'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'anyPointer'group' msg) msg where
+instance U'.MessageDefault (Type'anyPointer'group' msg) where
     messageDefault = Type'anyPointer'group'_newtype_ . U'.messageDefault
 get_Type'anyPointer'union' :: U'.ReadCtx m msg => Type'anyPointer'group' msg -> m (Type'anyPointer msg)
 get_Type'anyPointer'union' (Type'anyPointer'group'_newtype_ struct) = C'.fromStruct struct
@@ -896,9 +911,10 @@ instance C'.FromStruct msg (Value msg) where
     fromStruct = pure . Value_newtype_
 instance C'.ToStruct msg (Value msg) where
     toStruct (Value_newtype_ struct) = struct
-instance U'.HasMessage (Value msg) msg where
+instance U'.HasMessage (Value msg) where
+    type InMessage (Value msg) = msg
     message (Value_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Value msg) msg where
+instance U'.MessageDefault (Value msg) where
     messageDefault = Value_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Value msg) where
     newtype List msg (Value msg) = List_Value (U'.ListOf msg (U'.Struct msg))
@@ -1053,9 +1069,10 @@ instance C'.FromStruct msg (Brand'Binding msg) where
     fromStruct = pure . Brand'Binding_newtype_
 instance C'.ToStruct msg (Brand'Binding msg) where
     toStruct (Brand'Binding_newtype_ struct) = struct
-instance U'.HasMessage (Brand'Binding msg) msg where
+instance U'.HasMessage (Brand'Binding msg) where
+    type InMessage (Brand'Binding msg) = msg
     message (Brand'Binding_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Brand'Binding msg) msg where
+instance U'.MessageDefault (Brand'Binding msg) where
     messageDefault = Brand'Binding_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Brand'Binding msg) where
     newtype List msg (Brand'Binding msg) = List_Brand'Binding (U'.ListOf msg (U'.Struct msg))
@@ -1105,9 +1122,10 @@ instance C'.FromStruct msg (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope_newtype_
 instance C'.ToStruct msg (Brand'Scope msg) where
     toStruct (Brand'Scope_newtype_ struct) = struct
-instance U'.HasMessage (Brand'Scope msg) msg where
+instance U'.HasMessage (Brand'Scope msg) where
+    type InMessage (Brand'Scope msg) = msg
     message (Brand'Scope_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Brand'Scope msg) msg where
+instance U'.MessageDefault (Brand'Scope msg) where
     messageDefault = Brand'Scope_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Brand'Scope msg) where
     newtype List msg (Brand'Scope msg) = List_Brand'Scope (U'.ListOf msg (U'.Struct msg))
@@ -1139,9 +1157,10 @@ instance C'.FromStruct msg (Brand'Scope' msg) where
     fromStruct = pure . Brand'Scope'_newtype_
 instance C'.ToStruct msg (Brand'Scope' msg) where
     toStruct (Brand'Scope'_newtype_ struct) = struct
-instance U'.HasMessage (Brand'Scope' msg) msg where
+instance U'.HasMessage (Brand'Scope' msg) where
+    type InMessage (Brand'Scope' msg) = msg
     message (Brand'Scope'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Brand'Scope' msg) msg where
+instance U'.MessageDefault (Brand'Scope' msg) where
     messageDefault = Brand'Scope'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Brand'Scope' msg) where
     newtype List msg (Brand'Scope' msg) = List_Brand'Scope' (U'.ListOf msg (U'.Struct msg))
@@ -1191,9 +1210,10 @@ instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     toStruct (CodeGeneratorRequest'RequestedFile_newtype_ struct) = struct
-instance U'.HasMessage (CodeGeneratorRequest'RequestedFile msg) msg where
+instance U'.HasMessage (CodeGeneratorRequest'RequestedFile msg) where
+    type InMessage (CodeGeneratorRequest'RequestedFile msg) = msg
     message (CodeGeneratorRequest'RequestedFile_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile msg) msg where
+instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile msg) where
     messageDefault = CodeGeneratorRequest'RequestedFile_newtype_ . U'.messageDefault
 instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile msg) = List_CodeGeneratorRequest'RequestedFile (U'.ListOf msg (U'.Struct msg))
@@ -1247,9 +1267,10 @@ instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     toStruct (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = struct
-instance U'.HasMessage (CodeGeneratorRequest'RequestedFile'Import msg) msg where
+instance U'.HasMessage (CodeGeneratorRequest'RequestedFile'Import msg) where
+    type InMessage (CodeGeneratorRequest'RequestedFile'Import msg) = msg
     message (CodeGeneratorRequest'RequestedFile'Import_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile'Import msg) msg where
+instance U'.MessageDefault (CodeGeneratorRequest'RequestedFile'Import msg) where
     messageDefault = CodeGeneratorRequest'RequestedFile'Import_newtype_ . U'.messageDefault
 instance B'.ListElem msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     newtype List msg (CodeGeneratorRequest'RequestedFile'Import msg) = List_CodeGeneratorRequest'RequestedFile'Import (U'.ListOf msg (U'.Struct msg))
@@ -1290,9 +1311,10 @@ instance C'.FromStruct msg (Field' msg) where
     fromStruct = pure . Field'_newtype_
 instance C'.ToStruct msg (Field' msg) where
     toStruct (Field'_newtype_ struct) = struct
-instance U'.HasMessage (Field' msg) msg where
+instance U'.HasMessage (Field' msg) where
+    type InMessage (Field' msg) = msg
     message (Field'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Field' msg) msg where
+instance U'.MessageDefault (Field' msg) where
     messageDefault = Field'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Field' msg) where
     newtype List msg (Field' msg) = List_Field' (U'.ListOf msg (U'.Struct msg))
@@ -1332,9 +1354,10 @@ instance C'.FromStruct msg (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'_newtype_
 instance C'.ToStruct msg (Field'slot'group' msg) where
     toStruct (Field'slot'group'_newtype_ struct) = struct
-instance U'.HasMessage (Field'slot'group' msg) msg where
+instance U'.HasMessage (Field'slot'group' msg) where
+    type InMessage (Field'slot'group' msg) = msg
     message (Field'slot'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Field'slot'group' msg) msg where
+instance U'.MessageDefault (Field'slot'group' msg) where
     messageDefault = Field'slot'group'_newtype_ . U'.messageDefault
 get_Field'slot'offset :: U'.ReadCtx m msg => Field'slot'group' msg -> m Word32
 get_Field'slot'offset (Field'slot'group'_newtype_ struct) = H'.getWordField struct 0 32 0
@@ -1379,9 +1402,10 @@ instance C'.FromStruct msg (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'_newtype_
 instance C'.ToStruct msg (Field'group'group' msg) where
     toStruct (Field'group'group'_newtype_ struct) = struct
-instance U'.HasMessage (Field'group'group' msg) msg where
+instance U'.HasMessage (Field'group'group' msg) where
+    type InMessage (Field'group'group' msg) = msg
     message (Field'group'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Field'group'group' msg) msg where
+instance U'.MessageDefault (Field'group'group' msg) where
     messageDefault = Field'group'group'_newtype_ . U'.messageDefault
 get_Field'group'typeId :: U'.ReadCtx m msg => Field'group'group' msg -> m Word64
 get_Field'group'typeId (Field'group'group'_newtype_ struct) = H'.getWordField struct 2 0 0
@@ -1403,9 +1427,10 @@ instance C'.FromStruct msg (Field'ordinal msg) where
     fromStruct = pure . Field'ordinal_newtype_
 instance C'.ToStruct msg (Field'ordinal msg) where
     toStruct (Field'ordinal_newtype_ struct) = struct
-instance U'.HasMessage (Field'ordinal msg) msg where
+instance U'.HasMessage (Field'ordinal msg) where
+    type InMessage (Field'ordinal msg) = msg
     message (Field'ordinal_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Field'ordinal msg) msg where
+instance U'.MessageDefault (Field'ordinal msg) where
     messageDefault = Field'ordinal_newtype_ . U'.messageDefault
 data Field'ordinal' msg
     = Field'ordinal'implicit
@@ -1435,9 +1460,10 @@ instance C'.FromStruct msg (Node' msg) where
     fromStruct = pure . Node'_newtype_
 instance C'.ToStruct msg (Node' msg) where
     toStruct (Node'_newtype_ struct) = struct
-instance U'.HasMessage (Node' msg) msg where
+instance U'.HasMessage (Node' msg) where
+    type InMessage (Node' msg) = msg
     message (Node'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node' msg) msg where
+instance U'.MessageDefault (Node' msg) where
     messageDefault = Node'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Node' msg) where
     newtype List msg (Node' msg) = List_Node' (U'.ListOf msg (U'.Struct msg))
@@ -1495,9 +1521,10 @@ instance C'.FromStruct msg (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'_newtype_
 instance C'.ToStruct msg (Node'struct'group' msg) where
     toStruct (Node'struct'group'_newtype_ struct) = struct
-instance U'.HasMessage (Node'struct'group' msg) msg where
+instance U'.HasMessage (Node'struct'group' msg) where
+    type InMessage (Node'struct'group' msg) = msg
     message (Node'struct'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'struct'group' msg) msg where
+instance U'.MessageDefault (Node'struct'group' msg) where
     messageDefault = Node'struct'group'_newtype_ . U'.messageDefault
 get_Node'struct'dataWordCount :: U'.ReadCtx m msg => Node'struct'group' msg -> m Word16
 get_Node'struct'dataWordCount (Node'struct'group'_newtype_ struct) = H'.getWordField struct 1 48 0
@@ -1553,9 +1580,10 @@ instance C'.FromStruct msg (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'_newtype_
 instance C'.ToStruct msg (Node'enum'group' msg) where
     toStruct (Node'enum'group'_newtype_ struct) = struct
-instance U'.HasMessage (Node'enum'group' msg) msg where
+instance U'.HasMessage (Node'enum'group' msg) where
+    type InMessage (Node'enum'group' msg) = msg
     message (Node'enum'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'enum'group' msg) msg where
+instance U'.MessageDefault (Node'enum'group' msg) where
     messageDefault = Node'enum'group'_newtype_ . U'.messageDefault
 get_Node'enum'enumerants :: U'.ReadCtx m msg => Node'enum'group' msg -> m (B'.List msg (Enumerant msg))
 get_Node'enum'enumerants (Node'enum'group'_newtype_ struct) =
@@ -1575,9 +1603,10 @@ instance C'.FromStruct msg (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'_newtype_
 instance C'.ToStruct msg (Node'interface'group' msg) where
     toStruct (Node'interface'group'_newtype_ struct) = struct
-instance U'.HasMessage (Node'interface'group' msg) msg where
+instance U'.HasMessage (Node'interface'group' msg) where
+    type InMessage (Node'interface'group' msg) = msg
     message (Node'interface'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'interface'group' msg) msg where
+instance U'.MessageDefault (Node'interface'group' msg) where
     messageDefault = Node'interface'group'_newtype_ . U'.messageDefault
 get_Node'interface'methods :: U'.ReadCtx m msg => Node'interface'group' msg -> m (B'.List msg (Method msg))
 get_Node'interface'methods (Node'interface'group'_newtype_ struct) =
@@ -1610,9 +1639,10 @@ instance C'.FromStruct msg (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'_newtype_
 instance C'.ToStruct msg (Node'const'group' msg) where
     toStruct (Node'const'group'_newtype_ struct) = struct
-instance U'.HasMessage (Node'const'group' msg) msg where
+instance U'.HasMessage (Node'const'group' msg) where
+    type InMessage (Node'const'group' msg) = msg
     message (Node'const'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'const'group' msg) msg where
+instance U'.MessageDefault (Node'const'group' msg) where
     messageDefault = Node'const'group'_newtype_ . U'.messageDefault
 get_Node'const'type_ :: U'.ReadCtx m msg => Node'const'group' msg -> m (Type msg)
 get_Node'const'type_ (Node'const'group'_newtype_ struct) =
@@ -1645,9 +1675,10 @@ instance C'.FromStruct msg (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'_newtype_
 instance C'.ToStruct msg (Node'annotation'group' msg) where
     toStruct (Node'annotation'group'_newtype_ struct) = struct
-instance U'.HasMessage (Node'annotation'group' msg) msg where
+instance U'.HasMessage (Node'annotation'group' msg) where
+    type InMessage (Node'annotation'group' msg) = msg
     message (Node'annotation'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'annotation'group' msg) msg where
+instance U'.MessageDefault (Node'annotation'group' msg) where
     messageDefault = Node'annotation'group'_newtype_ . U'.messageDefault
 get_Node'annotation'type_ :: U'.ReadCtx m msg => Node'annotation'group' msg -> m (Type msg)
 get_Node'annotation'type_ (Node'annotation'group'_newtype_ struct) =
@@ -1750,9 +1781,10 @@ instance C'.FromStruct msg (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode_newtype_
 instance C'.ToStruct msg (Node'NestedNode msg) where
     toStruct (Node'NestedNode_newtype_ struct) = struct
-instance U'.HasMessage (Node'NestedNode msg) msg where
+instance U'.HasMessage (Node'NestedNode msg) where
+    type InMessage (Node'NestedNode msg) = msg
     message (Node'NestedNode_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'NestedNode msg) msg where
+instance U'.MessageDefault (Node'NestedNode msg) where
     messageDefault = Node'NestedNode_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Node'NestedNode msg) where
     newtype List msg (Node'NestedNode msg) = List_Node'NestedNode (U'.ListOf msg (U'.Struct msg))
@@ -1793,9 +1825,10 @@ instance C'.FromStruct msg (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter_newtype_
 instance C'.ToStruct msg (Node'Parameter msg) where
     toStruct (Node'Parameter_newtype_ struct) = struct
-instance U'.HasMessage (Node'Parameter msg) msg where
+instance U'.HasMessage (Node'Parameter msg) where
+    type InMessage (Node'Parameter msg) = msg
     message (Node'Parameter_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Node'Parameter msg) msg where
+instance U'.MessageDefault (Node'Parameter msg) where
     messageDefault = Node'Parameter_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Node'Parameter msg) where
     newtype List msg (Node'Parameter msg) = List_Node'Parameter (U'.ListOf msg (U'.Struct msg))
@@ -1830,9 +1863,10 @@ instance C'.FromStruct msg (Type'anyPointer msg) where
     fromStruct = pure . Type'anyPointer_newtype_
 instance C'.ToStruct msg (Type'anyPointer msg) where
     toStruct (Type'anyPointer_newtype_ struct) = struct
-instance U'.HasMessage (Type'anyPointer msg) msg where
+instance U'.HasMessage (Type'anyPointer msg) where
+    type InMessage (Type'anyPointer msg) = msg
     message (Type'anyPointer_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'anyPointer msg) msg where
+instance U'.MessageDefault (Type'anyPointer msg) where
     messageDefault = Type'anyPointer_newtype_ . U'.messageDefault
 data Type'anyPointer' msg
     = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained'group' msg)
@@ -1862,9 +1896,10 @@ instance C'.FromStruct msg (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'unconstrained'group' msg) where
     toStruct (Type'anyPointer'unconstrained'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'anyPointer'unconstrained'group' msg) msg where
+instance U'.HasMessage (Type'anyPointer'unconstrained'group' msg) where
+    type InMessage (Type'anyPointer'unconstrained'group' msg) = msg
     message (Type'anyPointer'unconstrained'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'anyPointer'unconstrained'group' msg) msg where
+instance U'.MessageDefault (Type'anyPointer'unconstrained'group' msg) where
     messageDefault = Type'anyPointer'unconstrained'group'_newtype_ . U'.messageDefault
 get_Type'anyPointer'unconstrained'union' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained'group' msg -> m (Type'anyPointer'unconstrained msg)
 get_Type'anyPointer'unconstrained'union' (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.fromStruct struct
@@ -1875,9 +1910,10 @@ instance C'.FromStruct msg (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'parameter'group' msg) where
     toStruct (Type'anyPointer'parameter'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'anyPointer'parameter'group' msg) msg where
+instance U'.HasMessage (Type'anyPointer'parameter'group' msg) where
+    type InMessage (Type'anyPointer'parameter'group' msg) = msg
     message (Type'anyPointer'parameter'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'anyPointer'parameter'group' msg) msg where
+instance U'.MessageDefault (Type'anyPointer'parameter'group' msg) where
     messageDefault = Type'anyPointer'parameter'group'_newtype_ . U'.messageDefault
 get_Type'anyPointer'parameter'scopeId :: U'.ReadCtx m msg => Type'anyPointer'parameter'group' msg -> m Word64
 get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'group'_newtype_ struct) = H'.getWordField struct 2 0 0
@@ -1896,9 +1932,10 @@ instance C'.FromStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) 
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     toStruct (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = struct
-instance U'.HasMessage (Type'anyPointer'implicitMethodParameter'group' msg) msg where
+instance U'.HasMessage (Type'anyPointer'implicitMethodParameter'group' msg) where
+    type InMessage (Type'anyPointer'implicitMethodParameter'group' msg) = msg
     message (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'anyPointer'implicitMethodParameter'group' msg) msg where
+instance U'.MessageDefault (Type'anyPointer'implicitMethodParameter'group' msg) where
     messageDefault = Type'anyPointer'implicitMethodParameter'group'_newtype_ . U'.messageDefault
 get_Type'anyPointer'implicitMethodParameter'parameterIndex :: U'.ReadCtx m msg => Type'anyPointer'implicitMethodParameter'group' msg -> m Word16
 get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'group'_newtype_ struct) = H'.getWordField struct 1 16 0
@@ -1919,9 +1956,10 @@ instance C'.FromStruct msg (Type'anyPointer'unconstrained msg) where
     fromStruct = pure . Type'anyPointer'unconstrained_newtype_
 instance C'.ToStruct msg (Type'anyPointer'unconstrained msg) where
     toStruct (Type'anyPointer'unconstrained_newtype_ struct) = struct
-instance U'.HasMessage (Type'anyPointer'unconstrained msg) msg where
+instance U'.HasMessage (Type'anyPointer'unconstrained msg) where
+    type InMessage (Type'anyPointer'unconstrained msg) = msg
     message (Type'anyPointer'unconstrained_newtype_ struct) = U'.message struct
-instance U'.MessageDefault (Type'anyPointer'unconstrained msg) msg where
+instance U'.MessageDefault (Type'anyPointer'unconstrained msg) where
     messageDefault = Type'anyPointer'unconstrained_newtype_ . U'.messageDefault
 data Type'anyPointer'unconstrained' msg
     = Type'anyPointer'unconstrained'anyKind
