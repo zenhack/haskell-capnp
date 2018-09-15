@@ -190,6 +190,7 @@ test-suite simple-tests
       , Tests.SchemaGeneration
       , Tests.SchemaQuickCheck
       , Tests.Util
+      , Instances
     build-depends:
         capnp
       , data-default
