@@ -49,6 +49,9 @@ module Data.Capnp
     , Untyped.ReadCtx
     , Untyped.RWCtx
 
+    -- ** Converting between messages, Cap'N Proto values, and raw bytes
+    , module Data.Capnp.Convert
+
     -- * Managing resource limits
     , module Data.Capnp.TraversalLimit
 
@@ -65,6 +68,7 @@ import Control.Monad.Catch (MonadThrow)
 import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 
+import Data.Capnp.Convert
 import Data.Capnp.TraversalLimit
 import Data.Mutable
 
