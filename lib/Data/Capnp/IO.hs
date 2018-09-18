@@ -11,6 +11,10 @@ module Data.Capnp.IO
     , getValue
     , hPutValue
     , putValue
+    , M.hGetMsg
+    , M.getMsg
+    , M.hPutMsg
+    , M.putMsg
     ) where
 
 import Control.Monad.Primitive (RealWorld)
