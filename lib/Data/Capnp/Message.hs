@@ -65,6 +65,7 @@ import Control.Monad.Writer      (execWriterT, tell)
 import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Either               (fromRight)
+import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64)
 import System.Endian             (fromLE64, toLE64)
@@ -184,11 +185,18 @@ decode :: MonadThrow m => ByteString -> m ConstMsg
 decode bytes = fromByteString bytes >>= decodeSeg
 
 -- | 'encode' encodes a message as a bytestring builder.
-encode :: MonadThrow m => ConstMsg -> m BB.Builder
-encode msg = execWriterT $ writeMessage
-    msg
-    (tell . BB.word32LE)
-    (toByteString >=> tell . BB.byteString)
+encode :: Monad m => ConstMsg -> m BB.Builder
+encode msg =
+    -- We use Maybe as the MonadThrow instance required by
+    -- writeMessage/toByteString, but we know this can't actually fail,
+    -- so we ignore errors. TODO: we should get rid of the Monad constraint
+    -- on this function and just have the tyep be ConstMsg -> BB.Builder,
+    -- but that will have some cascading api effects, so we're deferring
+    -- that for a bit.
+    pure $ fromJust $ execWriterT $ writeMessage
+        msg
+        (tell . BB.word32LE)
+        (toByteString >=> tell . BB.byteString)
 
 -- | 'decodeSeg' decodes a message from a segment, treating the segment as if
 -- it were raw bytes.
