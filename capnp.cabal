@@ -106,7 +106,6 @@ library
       , Data.Mutable
 
       , Capnp
-      , Capnp.ById
       , Capnp.Capnp
 
       -- BEGIN GENERATED SCHEMA MODULES
