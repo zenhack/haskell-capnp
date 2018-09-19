@@ -74,7 +74,9 @@ class Transport t m where
 
 data HandleTransport = HandleTransport
     { handle :: Handle
+    -- ^ Handle to use for read/write operations.
     , limit  :: !Int
+    -- ^ Traversal limit to use when reading messages.
     }
 
 -- | Get a new exportId/questionId. The argument gets the pool to allocate from.
