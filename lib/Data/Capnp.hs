@@ -1,10 +1,9 @@
 {- |
 Module: Data.Capnp
-Description: The most commonly used functionality from the low-level API.
+Description: The most commonly used functionality in the capnp package.
 
-This module re-exports the most commonly used functionality from the
-low-level API. See also "Data.Capnp.Pure", which similarly re-exports
-functionality from the high-level API.
+This module re-exports the most commonly used functionality from other modules in the
+library.
 
 Users getting acquainted with the library are *strongly* encouraged to read the
 "Data.Capnp.Tutorial" module before anything else.
@@ -29,27 +28,24 @@ module Data.Capnp
     , decodeMessage
     , encodeMessage
 
-    -- ** Reading and writing messages
-    , Message.hPutMsg
-    , Message.putMsg
-    , Message.hGetMsg
-    , Message.getMsg
-
     -- * Manipulating the root object of a message
     , Codec.getRoot
     , Codec.newRoot
     , Codec.setRoot
 
-    -- * Reading values
-    , hGetValue
-    , getValue
+    -- * Marshalling data into and out of messages
+    , Classes.Decerialize(..)
+    , Classes.Cerialize(..)
+
+    -- * IO
+    , module Data.Capnp.IO
 
     -- * Type aliases for common contexts
     , Message.WriteCtx
     , Untyped.ReadCtx
     , Untyped.RWCtx
 
-    -- ** Converting between messages, Cap'N Proto values, and raw bytes
+    -- * Converting between messages, Cap'N Proto values, and raw bytes
     , module Data.Capnp.Convert
 
     -- * Managing resource limits
@@ -61,18 +57,23 @@ module Data.Capnp
     -- * Building messages in pure code
     , PureBuilder
     , createPure
+
+    -- * Re-exported from "Data.Default", for convienence.
+    , def
     ) where
 
 import Control.Monad.Catch (MonadThrow)
+
+import Data.Default (def)
 
 import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 
 import Data.Capnp.Convert
+import Data.Capnp.IO
 import Data.Capnp.TraversalLimit
 import Data.Mutable
 
-import Data.Capnp.IO      (getValue, hGetValue)
 import Internal.BuildPure (PureBuilder, createPure)
 
 import qualified Codec.Capnp        as Codec

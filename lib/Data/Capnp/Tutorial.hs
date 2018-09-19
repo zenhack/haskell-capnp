@@ -38,7 +38,6 @@ import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
 import Data.Capnp
-import Data.Capnp.Pure
 
 import Data.Capnp.Classes (FromStruct)
 
@@ -187,9 +186,9 @@ schema, but it also makes it easier to forget to set a field if you had
 intended to. The instance maps @'def'@ to the default value as defined by
 capnproto, so leaving out newly-added fields will do The Right Thing.
 
-The module `Data.Capnp.Pure` exposes the most frequently used
-functionality from the high level API. We can output an address book
-message to standard output like so:
+The module "Data.Capnp" exposes the most frequently used
+functionality from the capnp package. We can write an address book
+message to standard output using the high-level API like so:
 
 > {-# LANGUAGE OverloadedStrings     #-}
 > -- Note that DuplicateRecordFields is usually needed, as the generated
@@ -198,8 +197,8 @@ message to standard output like so:
 > {-# LANGUAGE DuplicateRecordFields #-}
 > import Capnp.Addressbook.Pure
 >
-> -- Note that Data.Capnp.Pure re-exports `def`, as a convienence
-> import Data.Capnp.Pure (putValue, def)
+> -- Note that Data.Capnp re-exports `def`, as a convienence
+> import Data.Capnp (putValue, def)
 >
 > import qualified Data.Vector as V
 >
@@ -243,7 +242,7 @@ We can use 'getValue' (or alternately 'hGetValue') to read in a message:
 
 > -- ...
 >
-> import Data.Capnp.Pure (getValue, defaultLimit)
+> import Data.Capnp (getValue, defaultLimit)
 >
 > -- ...
 >
@@ -415,6 +414,7 @@ The below constructs the same message as in our high-level example above:
 > import Data.Capnp
 >     ( MutMsg
 >     , PureBuilder
+>     , cerialize
 >     , createPure
 >     , defaultLimit
 >     , index
@@ -422,7 +422,6 @@ The below constructs the same message as in our high-level example above:
 >     , newRoot
 >     , putMsg
 >     )
-> import Data.Capnp.Pure (cerialize)
 >
 > import qualified Data.Text as T
 >

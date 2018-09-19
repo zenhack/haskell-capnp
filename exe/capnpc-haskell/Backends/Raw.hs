@@ -29,8 +29,7 @@ import Util
 import Backends.Common (dataFieldSize, fmtPrimWord)
 
 import Data.Capnp
-    (createPure, defaultLimit, encodeMessage, newMessage, setRoot)
-import Data.Capnp.Pure (cerialize)
+    (cerialize, createPure, defaultLimit, encodeMessage, newMessage, setRoot)
 
 import qualified Data.Capnp.Untyped.Pure as Untyped
 

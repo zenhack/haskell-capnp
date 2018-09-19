@@ -32,16 +32,14 @@ import Tests.Util
 
 import Instances ()
 
-import Data.Capnp                (getRoot, setRoot)
+import Data.Capnp                (getRoot, hGetValue, hPutValue, setRoot)
 import Data.Capnp.Classes
     ( Allocate(..)
     , Cerialize(..)
     , Decerialize(..)
     , FromStruct(..)
     , ToStruct(..)
-    , cerialize
     )
-import Data.Capnp.Pure           (hGetValue, hPutValue)
 import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Data.Mutable              (Thaw(..))
 

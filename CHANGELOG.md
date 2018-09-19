@@ -14,6 +14,11 @@
 * The `HasMessage` class from `Data.Capnp.Untyped` is now a type family,
   rather than a multi-parameter type class. This improves inference and
   removes some superfluous generalization.
+* The module `Data.Capnp.Pure` has been folded into `Data.Capnp`. If you
+  were previously using the `Text` and `Data` type aliases it exported,
+  you should instead use `Text` from `Data.Text` and `ByteString` from
+  `Data.ByteString`; the `Text` and `Data` exported by `Data.Capnp` are
+  types from the low-level API.
 
 # 0.2.0.0
 
