@@ -100,10 +100,11 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import Data.Capnp.Basics.Pure (Data, Text)"
     , "import Control.Monad.Catch (MonadThrow(throwM))"
-    , "import Data.Capnp.TraversalLimit (MonadLimit)"
+    , "import Data.Capnp.TraversalLimit (MonadLimit, evalLimitT)"
     , ""
     , "import Control.Monad (forM_)"
     , ""
+    , "import qualified Data.Capnp.Convert as Convert"
     , "import qualified Data.Capnp.Message as M'"
     , "import qualified Data.Capnp.Untyped as U'"
     , "import qualified Data.Capnp.Untyped.Pure as PU'"
@@ -273,27 +274,25 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
         $ flip map methods $ \Method{..} -> vcat
             [ hcat [ pureValName methodName,  " args (", pureName, " client) = do" ]
             , indent $ vcat
-                [ "encodeResult <- PH'.encodeV args"
-                , "case encodeResult of"
-                , indent $ vcat
-                    [ "Left exn -> throwM exn"
-                    , "Right args' -> do"
-                    , indent $ vcat
-                        [ hcat
-                            [ "resultPromise <- Rpc.call "
-                            , PP.textStrict $ T.pack $ show interfaceId
-                            , " "
-                            , PP.textStrict $ T.pack $ show ordinal
-                            , " Rpc.Payload"
-                            , " { content = Just (PU'.PtrStruct args')"
-                            , " , capTable = V.empty"
-                            , " }"
-                            , " client"
-                            ]
-                        , "result <- Rpc.waitIO resultPromise"
-                        , "encodedResult <- PH'.encodeV result"
-                        ]
+                -- we're using maxBound as the traversal limit below. This is OK
+                -- because we're only touching values converted from already-validated
+                -- high-level api types that we serailize ourselves, so they can't
+                -- be malicious in the ways that the traversal limit is designed to
+                -- mitiage
+                [ "args' <- evalLimitT maxBound $ PH'.convertValue args"
+                , hcat
+                    [ "resultPromise <- Rpc.call "
+                    , PP.textStrict $ T.pack $ show interfaceId
+                    , " "
+                    , PP.textStrict $ T.pack $ show ordinal
+                    , " Rpc.Payload"
+                    , " { content = Just (PU'.PtrStruct args')"
+                    , " , capTable = V.empty"
+                    , " }"
+                    , " client"
                     ]
+                , "result <- Rpc.waitIO resultPromise"
+                , "evalLimitT maxBound $ PH'.convertValue result"
                 ]
             ]
     ]

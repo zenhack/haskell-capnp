@@ -24,8 +24,9 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Capnp.TraversalLimit (MonadLimit)
+import Data.Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
+import qualified Data.Capnp.Convert as Convert
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'

@@ -7,6 +7,7 @@
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Network.RPC.Capnp
     ( RpcT
     , Client
@@ -37,7 +38,9 @@ import Data.Word
 import Control.Concurrent.Async        (concurrently_)
 import Control.Exception               (Exception, throwIO)
 import Control.Monad                   (forever)
+import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
+import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
 import Data.Maybe                      (isJust)
@@ -106,6 +109,13 @@ instance MonadTrans RpcT where
 
 instance MonadIO m => MonadIO (RpcT m) where
     liftIO = lift . liftIO
+
+instance MonadThrow m => MonadThrow (RpcT m) where
+    throwM = lift . throwM
+
+instance PrimMonad m => PrimMonad (RpcT m) where
+    type PrimState (RpcT m) = PrimState m
+    primitive = lift . primitive
 
 instance Transport HandleTransport IO where
     sendMsg HandleTransport{handle} = liftIO . hPutValue handle

@@ -24,8 +24,9 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Data.Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Capnp.TraversalLimit (MonadLimit)
+import Data.Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
+import qualified Data.Capnp.Convert as Convert
 import qualified Data.Capnp.Message as M'
 import qualified Data.Capnp.Untyped as U'
 import qualified Data.Capnp.Untyped.Pure as PU'
@@ -57,13 +58,10 @@ class Persistent'server_ cap where
         }
 instance Persistent'server_ Persistent where
     persistent'save args (Persistent client) = do
-        encodeResult <- PH'.encodeV args
-        case encodeResult of
-            Left exn -> throwM exn
-            Right args' -> do
-                resultPromise <- Rpc.call 14468694717054801553 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
-                result <- Rpc.waitIO resultPromise
-                encodedResult <- PH'.encodeV result
+        args' <- evalLimitT maxBound $ PH'.convertValue args
+        resultPromise <- Rpc.call 14468694717054801553 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        result <- Rpc.waitIO resultPromise
+        evalLimitT maxBound $ PH'.convertValue result
 newtype RealmGateway = RealmGateway M'.Client
     deriving(Show, Eq, Read, Generic)
 instance C'.Decerialize RealmGateway where
@@ -90,21 +88,15 @@ class RealmGateway'server_ cap where
         }
 instance RealmGateway'server_ RealmGateway where
     realmGateway'import args (RealmGateway client) = do
-        encodeResult <- PH'.encodeV args
-        case encodeResult of
-            Left exn -> throwM exn
-            Right args' -> do
-                resultPromise <- Rpc.call 9583422979879616212 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
-                result <- Rpc.waitIO resultPromise
-                encodedResult <- PH'.encodeV result
+        args' <- evalLimitT maxBound $ PH'.convertValue args
+        resultPromise <- Rpc.call 9583422979879616212 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        result <- Rpc.waitIO resultPromise
+        evalLimitT maxBound $ PH'.convertValue result
     realmGateway'export args (RealmGateway client) = do
-        encodeResult <- PH'.encodeV args
-        case encodeResult of
-            Left exn -> throwM exn
-            Right args' -> do
-                resultPromise <- Rpc.call 9583422979879616212 1 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
-                result <- Rpc.waitIO resultPromise
-                encodedResult <- PH'.encodeV result
+        args' <- evalLimitT maxBound $ PH'.convertValue args
+        resultPromise <- Rpc.call 9583422979879616212 1 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        result <- Rpc.waitIO resultPromise
+        evalLimitT maxBound $ PH'.convertValue result
 data Persistent'SaveParams
     = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}
