@@ -16,7 +16,6 @@ import GHC.Exts                     (IsList(fromList))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import Text.Printf                  (printf)
 
-import qualified Data.ByteString.Builder      as BB
 import qualified Data.ByteString.Lazy         as LBS
 import qualified Data.Map.Strict              as M
 import qualified Data.Text                    as T
@@ -29,7 +28,7 @@ import Util
 import Backends.Common (dataFieldSize, fmtPrimWord)
 
 import Data.Capnp
-    (cerialize, createPure, defaultLimit, encodeMessage, newMessage, setRoot)
+    (cerialize, createPure, defaultLimit, msgToLBS, newMessage, setRoot)
 
 import qualified Data.Capnp.Untyped.Pure as Untyped
 
@@ -497,9 +496,7 @@ fmtConst thisMod name value =
                 setRoot rootPtr
                 pure msg
         in
-        encodeMessage msg &
-        assertRight &
-        BB.toLazyByteString &
+        msgToLBS msg &
         LBS.unpack &
         show &
         T.pack &

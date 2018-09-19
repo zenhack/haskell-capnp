@@ -25,8 +25,6 @@ module Data.Capnp
     , Message.Message(..)
     , Message.MutMsg
     , Message.newMessage
-    , decodeMessage
-    , encodeMessage
 
     -- * Manipulating the root object of a message
     , Codec.getRoot
@@ -62,12 +60,7 @@ module Data.Capnp
     , def
     ) where
 
-import Control.Monad.Catch (MonadThrow)
-
 import Data.Default (def)
-
-import qualified Data.ByteString         as BS
-import qualified Data.ByteString.Builder as BB
 
 import Data.Capnp.Convert
 import Data.Capnp.IO
@@ -81,11 +74,3 @@ import qualified Data.Capnp.Basics  as Basics
 import qualified Data.Capnp.Classes as Classes
 import qualified Data.Capnp.Message as Message
 import qualified Data.Capnp.Untyped as Untyped
-
--- | Alias for 'Message.encode'
-encodeMessage :: MonadThrow m => Message.ConstMsg -> m BB.Builder
-encodeMessage = Message.encode
-
--- | Alias for 'Message.decode'
-decodeMessage :: MonadThrow m => BS.ByteString -> m Message.ConstMsg
-decodeMessage = Message.decode
