@@ -21,7 +21,7 @@ import qualified Data.ByteString as BS
 
 import Data.Capnp.Bits
 
-import Data.Capnp (decodeMessage, evalLimitT)
+import Data.Capnp (bsToMsg, evalLimitT)
 
 import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
@@ -66,5 +66,5 @@ embedCapPtr msg client =
 -- The purpose of this is for defining constants of pointer type from a schema.
 getPtrConst :: C.IsPtr M.ConstMsg a => BS.ByteString -> a
 getPtrConst bytes = fromJust $ do
-    msg <- decodeMessage bytes
+    msg <- bsToMsg bytes
     evalLimitT maxBound $ U.rootPtr msg >>= U.getPtr 0 >>= C.fromPtr msg

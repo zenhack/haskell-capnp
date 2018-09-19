@@ -87,7 +87,6 @@ library
     hs-source-dirs:       lib
     exposed-modules:
         Data.Capnp
-      , Data.Capnp.Pure
       , Data.Capnp.Address
       , Data.Capnp.Basics
       , Data.Capnp.Basics.Pure
@@ -110,7 +109,6 @@ library
       , Network.RPC.Capnp
 
       , Capnp
-      , Capnp.ById
       , Capnp.Capnp
 
       -- BEGIN GENERATED SCHEMA MODULES

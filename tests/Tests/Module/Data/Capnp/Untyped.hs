@@ -26,8 +26,7 @@ import qualified Data.Vector     as V
 import Data.Capnp.Untyped
 import Tests.Util
 
-import Data.Capnp                (createPure, getRoot, newRoot)
-import Data.Capnp.Pure           (cerialize, def)
+import Data.Capnp                (cerialize, createPure, def, getRoot, newRoot)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 import Data.Mutable              (Thaw(..))
 

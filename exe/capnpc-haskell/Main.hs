@@ -9,7 +9,7 @@ import System.IO        (IOMode(WriteMode), withFile)
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import Capnp.Capnp.Schema.Pure (CodeGeneratorRequest)
-import Data.Capnp.Pure         (defaultLimit, getValue)
+import Data.Capnp              (defaultLimit, getValue)
 
 import qualified Backends.Pure
 import qualified Backends.Raw
