@@ -50,7 +50,7 @@ import qualified Data.Text       as T
 
 import Capnp.Capnp.Rpc.Pure hiding (Exception)
 
-import Data.Capnp.Pure (def, hGetValue, hPutValue)
+import Data.Capnp (def, hGetValue, hPutValue)
 
 import qualified Capnp.Capnp.Rpc.Pure as Rpc
 
