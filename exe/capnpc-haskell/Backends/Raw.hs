@@ -266,19 +266,18 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                 , getDef " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
                 ]
     fmtHas =
-        let hasType = typeCon <> " msg -> m Bool"
-        in vcat
-        [ hcat [ hasName, " :: U'.ReadCtx m msg => ", hasType ]
-        , hcat
-            [ hasName, "(", dataCon, " struct) = ", case fieldLocType of
-                DataField DataLoc{dataIdx} _ ->
-                    "pure $ " <> fromString (show dataIdx) <> " < U'.length (U'.dataSection struct)"
-                PtrField idx _ ->
-                    "Data.Maybe.isJust <$> U'.getPtr " <> fromString (show idx) <> " struct"
-                HereField _ -> "pure True"
-                VoidField -> "pure True"
-            ]
-        ]
+        case fieldLocType of
+            PtrField idx _ -> vcat
+                [ hcat [ hasName, " :: U'.ReadCtx m msg => ", typeCon, " msg -> m Bool" ]
+                , hcat
+                    [ hasName, "(", dataCon, " struct) = "
+                    , "Data.Maybe.isJust <$> U'.getPtr "
+                    , fromString (show idx)
+                    , " struct"
+                    ]
+                ]
+            _ ->
+                ""
     fmtSetter =
         let setType fieldType = typeCon <> " (M'.MutMsg s) -> " <> fmtType thisMod "(M'.MutMsg s)" fieldType <> " -> m ()"
             typeAnnotation fieldType = setName <> " :: U'.RWCtx m s => " <> setType fieldType

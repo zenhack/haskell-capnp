@@ -63,8 +63,6 @@ data JsonValue' msg
     | JsonValue'unknown' Word16
 get_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m (JsonValue' msg)
 get_JsonValue' (JsonValue_newtype_ struct) = C'.fromStruct struct
-has_JsonValue' :: U'.ReadCtx m msg => JsonValue msg -> m Bool
-has_JsonValue'(JsonValue_newtype_ struct) = pure True
 set_JsonValue'null :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> m ()
 set_JsonValue'null (JsonValue_newtype_ struct) = H'.setWordField struct (0 :: Word16) 0 0 0
 set_JsonValue'boolean :: U'.RWCtx m s => JsonValue (M'.MutMsg s) -> Bool -> m ()
