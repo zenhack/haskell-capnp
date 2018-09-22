@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# OPTIONS_HADDOCK hide           #-}
 {- |
 Module: Data.Capnp.GenHelpers.Pure
 Description: Misc. helpers for generated code.
