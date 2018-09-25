@@ -51,7 +51,8 @@ import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 
-import Capnp.Capnp.Rpc.Pure hiding (Exception)
+import Capnp.Capnp.Rpc.Pure    hiding (Exception)
+import Data.Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
 import Data.Capnp (def, hGetValue, hPutValue)
 
@@ -167,7 +168,7 @@ sendQuestion Vat{sendQ,questions} question = do
     writeTBQueue sendQ $ getQuestionMessage question
     modifyTVar questions $ M.insert (getQuestionId question) question
 
-call :: MonadIO m => Word64 -> Word16 -> Payload -> Client -> RpcT m (Promise Return)
+call :: MonadIO m => Word64 -> Word16 -> Payload -> Client -> RpcT m (Promise Struct)
 call interfaceId methodId params RemoteClient{ target, localVat } = do
     questionId <- newQuestionId
     let callMsg = Call
@@ -190,7 +191,7 @@ call _ _ _ DisconnectedClient = alwaysThrow def
     , type_ = Exception'Type'disconnected
     }
 
-alwaysThrow :: MonadIO m => Rpc.Exception -> RpcT m (Promise Return)
+alwaysThrow :: MonadIO m => Rpc.Exception -> RpcT m (Promise Struct)
 alwaysThrow exn = do
     (promise, fulfiller) <- liftIO $ atomically newPromise
     liftIO $ atomically $ breakPromise fulfiller exn
@@ -244,7 +245,7 @@ newtype Promise a = Promise
 data Question
     = CallQuestion
         { callMsg    :: Call
-        , sendReturn :: Fulfiller Return
+        , sendReturn :: Fulfiller Struct
         }
     | BootstrapQuestion !QuestionId
 
@@ -315,8 +316,8 @@ coordinator Vat{..} = forever $ do
     case msg of
         Message'abort exn ->
             throwIO exn
-        Message'return ret@Return{..} ->
-            atomically $ do
+        Message'return ret@Return{..} -> do
+            ret <- atomically $ do
                 question <- M.lookup answerId <$> readTVar questions
                 case question of
                     Just CallQuestion{callMsg, sendReturn} -> do
@@ -324,17 +325,49 @@ coordinator Vat{..} = forever $ do
                         -- send Finish right away.
                         writeTBQueue sendQ $ Message'finish def { questionId = answerId }
                         modifyTVar questions $ M.delete answerId
-                        fulfill sendReturn ret
+                        case union' of
+                            Return'results Payload{content} -> case content of
+                                Nothing -> do
+                                    fulfill sendReturn def
+                                    ok
+                                Just (PtrStruct s) -> do
+                                    fulfill sendReturn s
+                                    ok
+                                Just _ -> abort def
+                                    { reason = "Received non-struct pointer in " <>
+                                        "a return message."
+                                    , type_ = Exception'Type'failed
+                                    }
+                            Return'exception exn -> do
+                                breakPromise sendReturn exn
+                                ok
+                            _ ->
+                                abort def
+                                    { reason = "Received unexpected return variant " <>
+                                        "(we only support results and exception)."
+                                    , type_ = Exception'Type'failed
+                                    }
                     Just (BootstrapQuestion _) -> do
                         -- This will case the other side to drop the resolved cap; we'll
                         -- just keep using the promise.
                         writeTBQueue sendQ $ Message'unimplemented msg
                         modifyTVar questions $ M.delete answerId
+                        ok
                     Nothing ->
-                        writeTBQueue sendQ $ Message'abort def
+                        abort def
                             { reason = "Received 'Return' for non-existant question #"
                                 <> T.pack (show answerId)
                             , type_ = Exception'Type'failed
                             }
+            case ret of
+                Left exn ->
+                    throwIO exn
+                Right () ->
+                    pure ()
         _ ->
             atomically $ writeTBQueue sendQ $ Message'unimplemented msg
+  where
+    abort exn = do
+        writeTBQueue sendQ $ Message'abort exn
+        pure $ Left exn
+    ok = pure $ Right ()
