@@ -11,7 +11,7 @@
 module Network.RPC.Capnp
     ( RpcT
     , Client
-    , VatConfig
+    , VatConfig(..)
     , Transport(..)
     , HandleTransport
     , runRpcT
