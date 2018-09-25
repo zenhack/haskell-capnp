@@ -155,8 +155,10 @@ getSegment msg i = do
 -- of bounds.
 getCap :: (MonadThrow m, Message m msg) => msg -> Int -> m Client
 getCap msg i = do
-    checkIndex i =<< numCaps msg
-    msg `internalGetCap` i
+    ncaps <- numCaps msg
+    if i >= ncaps || i < 0
+        then pure nullClient
+        else msg `internalGetCap` i
 
 -- | @'getWord' msg addr@ returns the word at @addr@ within @msg@. It throws a
 -- @BoundsError@ if the address is out of bounds.
