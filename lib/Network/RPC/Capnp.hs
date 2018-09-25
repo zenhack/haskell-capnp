@@ -70,7 +70,6 @@ type ImportId = Word32
 class Transport t m where
     sendMsg :: t -> Message -> m ()
     recvMsg :: t -> m Message
-    disconnect :: t -> m ()
 
 data HandleTransport = HandleTransport
     { handle :: Handle
@@ -122,7 +121,6 @@ instance PrimMonad m => PrimMonad (RpcT m) where
 instance Transport HandleTransport IO where
     sendMsg HandleTransport{handle} = liftIO . hPutValue handle
     recvMsg HandleTransport{handle, limit} = liftIO $ hGetValue handle limit
-    disconnect = liftIO . hClose . handle
 
 -- | A client for a capnproto capability.
 --
