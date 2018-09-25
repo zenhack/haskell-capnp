@@ -301,11 +301,11 @@ newVat VatConfig{..} = atomically $ do
 
     pure Vat{..}
 
-sendLoop :: Transport t IO => t -> Vat -> IO ()
+sendLoop :: Transport IO -> Vat -> IO ()
 sendLoop transport Vat{sendQ} =
     forever $ atomically (readTBQueue sendQ) >>= sendMsg transport
 
-recvLoop :: Transport t IO => t -> Vat -> IO ()
+recvLoop :: Transport IO -> Vat -> IO ()
 recvLoop transport Vat{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
 
