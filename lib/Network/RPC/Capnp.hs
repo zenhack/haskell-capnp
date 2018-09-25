@@ -317,64 +317,90 @@ recvLoop :: Transport IO -> Vat -> IO ()
 recvLoop transport Vat{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
 
+-- | The coordinator handles incoming messages, dispatching them as
+-- method calls to local objects, forwarding return values to the right
+-- place, etc.
 coordinator :: Vat -> IO ()
-coordinator Vat{..} = forever $ do
+coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
     case msg of
         Message'abort exn ->
             throwIO exn
-        Message'return ret@Return{..} -> do
-            ret <- atomically $ do
-                question <- M.lookup answerId <$> readTVar questions
-                case question of
-                    Just CallQuestion{callMsg, sendReturn} -> do
-                        -- We don't support caps other than the bootstrap yet, so we can
-                        -- send Finish right away.
-                        writeTBQueue sendQ $ Message'finish def { questionId = answerId }
-                        modifyTVar questions $ M.delete answerId
-                        case union' of
-                            Return'results Payload{content} -> case content of
-                                Nothing -> do
-                                    fulfill sendReturn def
-                                    ok
-                                Just (PtrStruct s) -> do
-                                    fulfill sendReturn s
-                                    ok
-                                Just _ -> abort def
-                                    { reason = "Received non-struct pointer in " <>
-                                        "a return message."
-                                    , type_ = Exception'Type'failed
-                                    }
-                            Return'exception exn -> do
-                                breakPromise sendReturn exn
-                                ok
-                            _ ->
-                                abort def
-                                    { reason = "Received unexpected return variant " <>
-                                        "(we only support results and exception)."
-                                    , type_ = Exception'Type'failed
-                                    }
-                    Just (BootstrapQuestion _) -> do
-                        -- This will case the other side to drop the resolved cap; we'll
-                        -- just keep using the promise.
-                        writeTBQueue sendQ $ Message'unimplemented msg
-                        modifyTVar questions $ M.delete answerId
-                        ok
-                    Nothing ->
-                        abort def
-                            { reason = "Received 'Return' for non-existant question #"
-                                <> T.pack (show answerId)
-                            , type_ = Exception'Type'failed
-                            }
-            case ret of
-                Left exn ->
-                    throwIO exn
-                Right () ->
-                    pure ()
+        Message'return ret ->
+            handleReturn vat msg ret
         _ ->
             atomically $ writeTBQueue sendQ $ Message'unimplemented msg
+
+-- | Handle receiving a 'Return' message.
+handleReturn :: Vat -> Message -> Return -> IO ()
+handleReturn Vat{..} msg Return{..} = handleErrs $ do
+        question <- M.lookup answerId <$> readTVar questions
+        case question of
+            Nothing ->
+                abort def
+                    { reason = "Received 'Return' for non-existant question #"
+                        <> T.pack (show answerId)
+                    , type_ = Exception'Type'failed
+                    }
+            Just (BootstrapQuestion _) -> do
+                -- This will case the other side to drop the resolved cap; we'll
+                -- just keep using the promise.
+                writeTBQueue sendQ $ Message'unimplemented msg
+                modifyTVar questions $ M.delete answerId
+                ok
+            Just CallQuestion{callMsg, sendReturn} -> do
+                -- We don't support caps other than the bootstrap yet, so we can
+                -- send Finish right away.
+                writeTBQueue sendQ $ Message'finish def { questionId = answerId }
+                modifyTVar questions $ M.delete answerId
+                case union' of
+                    Return'results Payload{content} ->
+                        handleResult sendReturn content
+                    Return'exception exn -> do
+                        breakPromise sendReturn exn
+                        ok
+                    _ ->
+                        abort def
+                            { reason = "Received unexpected return variant " <>
+                                "(we only support results and exception)."
+                            , type_ = Exception'Type'failed
+                            }
+
   where
+    -- | Run a transaction, which may *return* an error (as opposed to throwing
+    -- one) via 'Left'; if it does, throw the error, otherwise return ().
+    --
+    -- The reason for this is so we can report errors while still commiting the
+    -- transaction; if we did 'throwSTM' it would roll back the results.
+    handleErrs transaction = do
+        ret <- atomically transaction
+        case ret of
+            Left exn ->
+                throwIO exn
+            Right () ->
+                pure ()
+
+    -- | Send an exception to the remote vat, and also return it (to be raised
+    -- by handleErrs).
     abort exn = do
         writeTBQueue sendQ $ Message'abort exn
         pure $ Left exn
+    -- | Shorthand to return from a transaction with no error.
     ok = pure $ Right ()
+
+    -- | handle the @result@ variant of a 'Return'.
+    handleResult sendReturn content = case content of
+        Nothing -> do
+            fulfill sendReturn def
+            ok
+        Just (PtrStruct s) -> do
+            fulfill sendReturn s
+            ok
+        Just _ -> abort def
+            -- TODO: I(zenhack) am not sure it's actually invalid to have
+            -- capability in a return value, so maybe we should relax this
+            -- a bit.
+            { reason = "Received non-struct pointer in " <>
+                "a return message."
+            , type_ = Exception'Type'failed
+            }
