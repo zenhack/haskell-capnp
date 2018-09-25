@@ -13,7 +13,7 @@ module Network.RPC.Capnp
     , Client
     , VatConfig(..)
     , Transport(..)
-    , HandleTransport
+    , handleTransport
     , runRpcT
     , bootstrap
     , call
@@ -67,15 +67,18 @@ type AnswerId = Word32
 type ExportId = Word32
 type ImportId = Word32
 
-class Transport t m where
-    sendMsg :: t -> Message -> m ()
-    recvMsg :: t -> m Message
+data Transport m = Transport
+    { sendMsg :: Message -> m ()
+    , recvMsg :: m Message
+    }
 
-data HandleTransport = HandleTransport
-    { handle :: Handle
-    -- ^ Handle to use for read/write operations.
-    , limit  :: !Int
-    -- ^ Traversal limit to use when reading messages.
+-- | @'handleTransport' limit handle@ creates a new transport which reads
+-- and writes messages from/to @handle@. It uses @limit@ as the traaversal
+-- limit when reading messages and decoding.
+handleTransport :: MonadIO m => Int -> Handle -> Transport m
+handleTransport limit handle = Transport
+    { sendMsg = liftIO . hPutValue handle
+    , recvMsg = liftIO $ hGetValue handle limit
     }
 
 -- | Get a new exportId/questionId. The argument gets the pool to allocate from.
@@ -117,10 +120,6 @@ instance MonadThrow m => MonadThrow (RpcT m) where
 instance PrimMonad m => PrimMonad (RpcT m) where
     type PrimState (RpcT m) = PrimState m
     primitive = lift . primitive
-
-instance Transport HandleTransport IO where
-    sendMsg HandleTransport{handle} = liftIO . hPutValue handle
-    recvMsg HandleTransport{handle, limit} = liftIO $ hGetValue handle limit
 
 -- | A client for a capnproto capability.
 --
@@ -277,7 +276,7 @@ data VatConfig = VatConfig
     , maxExports   :: !Word32
     }
 
-runRpcT :: Transport t IO => VatConfig -> t -> RpcT IO () -> IO ()
+runRpcT :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
 runRpcT config transport (RpcT m) = do
     vat <- newVat config
     foldl concurrently_
