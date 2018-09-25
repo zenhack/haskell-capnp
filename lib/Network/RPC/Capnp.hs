@@ -43,6 +43,7 @@ import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
+import Data.Default                    (Default(..))
 import Data.Maybe                      (isJust)
 import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
@@ -276,6 +277,12 @@ data VatConfig = VatConfig
     { maxQuestions :: !Word32
     , maxExports   :: !Word32
     }
+
+instance Default VatConfig where
+    def = VatConfig
+        { maxQuestions = 32
+        , maxExports = 32
+        }
 
 runRpcT :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
 runRpcT config transport (RpcT m) = do
