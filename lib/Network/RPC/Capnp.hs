@@ -44,7 +44,7 @@ import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
 import Data.Maybe                      (isJust)
-import System.IO                       (Handle, hClose)
+import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
