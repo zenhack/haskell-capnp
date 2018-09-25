@@ -14,13 +14,12 @@ import Network.RPC.Capnp (bootstrap, handleTransport, runRpcT)
 
 import Capnp.Echo.Pure
 
-main = do
-    bracket openConn hClose talk
+main = bracket openConn hClose talk
   where
     openConn = do
         (sock, _addr) <- connectSock "localhost" "4000"
         socketToHandle sock ReadWriteMode
-    talk handle = do
+    talk handle =
         runRpcT def (handleTransport defaultLimit handle) $ do
             echoSrv <- Echo <$> bootstrap
             result <- echoSrv & echo'echo def { query = "Hello, World!" }
