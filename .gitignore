@@ -1,8 +1,8 @@
-/dist
-/dist-newstyle
+dist
+dist-newstyle
 *.swp
-/.cabal-sandbox
-/cabal.sandbox.config
+.cabal-sandbox
+cabal.sandbox.config
 cabal.project.local
 .ghc.*
 result*

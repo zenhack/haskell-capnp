@@ -1,0 +1,33 @@
+cabal-version: 2.0
+name:                capnp-examples
+version:             0.1.0.0
+synopsis:            Examples for haskell-capnp
+-- description:
+homepage:            https://github.com/zenhack/haskell-capnp
+license:             MIT
+license-file:        LICENSE
+author:              Ian Denhardt
+maintainer:          ian@zenhack.net
+-- copyright:
+-- category:
+build-type:          Simple
+extra-source-files:  ChangeLog.md
+
+executable echo-client
+  main-is:             Main.hs
+  other-modules:
+      Capnp.Echo
+    , Capnp.Echo.Pure
+    , Capnp.ById.Xd0a87f36fa0182f5
+    , Capnp.ById.Xd0a87f36fa0182f5.Pure
+  build-depends:
+      base ^>=4.11
+    , capnp
+    , bytestring ^>=0.10
+    , data-default ^>=0.7
+    , exceptions ^>=0.10
+    , vector ^>=0.12
+    , network ^>= 2.8.0
+    , network-simple ^>= 0.4
+  -- hs-source-dirs:
+  default-language:    Haskell2010
