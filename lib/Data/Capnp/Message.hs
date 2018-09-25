@@ -73,7 +73,6 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
 import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.ByteString.Internal  (ByteString(..))
-import Data.Either               (fromRight)
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64)
@@ -90,6 +89,7 @@ import qualified Data.Vector.Storable.Mutable as SMV
 
 import Data.Capnp.Address        (WordAddr(..))
 import Data.Capnp.Bits           (WordCount(..), hi, lo)
+import Data.Capnp.Errors         (Error(InvalidDataError))
 import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable              (Mutable(..))
 import Internal.AppendVec        (AppendVec)
@@ -330,9 +330,12 @@ hGetMsg handle size =
     read32 :: LimitT IO Word32
     read32 = lift $ do
         bytes <- BS.hGet handle 4
-        -- The only way we get a left is if we get less than 4 bytes, in which
-        -- case hGet should have thrown:
-        pure $ fromRight (error "impossible") (runGetS getWord32le bytes)
+        case runGetS getWord32le bytes of
+            Left _ ->
+                -- the only way this can hapepn is if we get < 4 bytes.
+                throwM $ InvalidDataError "Unexpected end of input"
+            Right result ->
+                pure result
     readSegment n = lift $ BS.hGet handle (fromIntegral n * 8) >>= fromByteString
 
 -- | Equivalent to @'hGetMsg' 'stdin'@
