@@ -44,7 +44,6 @@ extra-source-files:
   , .gitattributes
   , .gitignore
   , .gitlab-ci.yml
-  -- FIXME: add a CHANGELOG.md and add it to this list
 tested-with:
   -- Our Gitlab CI uses this version:
     GHC == 8.2.1
