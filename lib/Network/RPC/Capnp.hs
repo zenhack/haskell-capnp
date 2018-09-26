@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TypeFamilies               #-}
 module Network.RPC.Capnp
@@ -28,6 +29,8 @@ module Network.RPC.Capnp
     , isResolved
     , wait
     , waitIO
+
+    , export
 
     , nullClient
     ) where
@@ -134,9 +137,22 @@ data Client
         { target   :: MessageTarget
         , localVat :: Vat
         }
+    | LocalClient
+        { exportId :: ExportId
+        , handleCall :: forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct)
+        , localVat :: Vat
+        }
     | NullClient
     | DisconnectedClient
-    deriving(Eq)
+
+instance Eq Client where
+    RemoteClient{target=ta, localVat=va} == RemoteClient{target=tb, localVat=vb} =
+        (ta, va) == (tb, vb)
+    LocalClient{exportId=ea, localVat=va} == LocalClient{exportId=eb, localVat=vb} =
+        (ea, va) == (eb, vb)
+    NullClient == NullClient = True
+    DisconnectedClient == DisconnectedClient = True
+    _ == _ = False
 
 instance Read Client where
     readPrec = lexP >>= \case
@@ -152,6 +168,19 @@ instance Show Client where
     show NullClient = "nullClient"
     -- TODO: we should put something here that makes sense given the exposed API:
     show _          = "DisconnectedClient"
+
+-- | Export a local interface server, so it may be offered on the network.
+--
+-- TODO: I(zenhack) really don't like the fact that we're using a higher-rank
+-- type here. We probably will eventually want 'Client' to be parametrized
+-- over @m@ or something at some point, so we can specialize clients for a
+-- particular @m@.
+export :: MonadIO m => (forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct))
+    -> RpcT m (Client)
+export handleCall = do
+    exportId <- newExportId
+    localVat <- RpcT ask
+    pure LocalClient{exportId, handleCall, localVat}
 
 bootstrap :: MonadIO m => RpcT m Client
 bootstrap = do
@@ -183,6 +212,8 @@ call interfaceId methodId params RemoteClient{ target, localVat } = do
         , sendReturn = fulfiller
         }
     pure promise
+call interfaceId methodId params LocalClient{handleCall} =
+    handleCall interfaceId methodId params
 call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
     , type_ = Exception'Type'unimplemented
