@@ -176,7 +176,7 @@ instance Show Client where
 -- over @m@ or something at some point, so we can specialize clients for a
 -- particular @m@.
 export :: MonadIO m => (forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct))
-    -> RpcT m (Client)
+    -> RpcT m Client
 export handleCall = do
     exportId <- newExportId
     localVat <- RpcT ask
