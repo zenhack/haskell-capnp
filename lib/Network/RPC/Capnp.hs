@@ -12,6 +12,7 @@
 module Network.RPC.Capnp
     ( RpcT
     , Client
+    , Server(..)
     , VatConfig(..)
     , Transport(..)
     , handleTransport
@@ -145,6 +146,10 @@ data Client
     | NullClient
     | DisconnectedClient
 
+newtype Server = Server
+    { handleCall :: forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct)
+    }
+
 instance Eq Client where
     RemoteClient{target=ta, localVat=va} == RemoteClient{target=tb, localVat=vb} =
         (ta, va) == (tb, vb)
@@ -175,9 +180,8 @@ instance Show Client where
 -- type here. We probably will eventually want 'Client' to be parametrized
 -- over @m@ or something at some point, so we can specialize clients for a
 -- particular @m@.
-export :: MonadIO m => (forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct))
-    -> RpcT m Client
-export handleCall = do
+export :: MonadIO m => Server -> RpcT m Client
+export Server{handleCall} = do
     exportId <- newExportId
     localVat <- RpcT ask
     pure LocalClient{exportId, handleCall, localVat}
@@ -281,6 +285,12 @@ data Question
         }
     | BootstrapQuestion !QuestionId
 
+newtype Answer
+    = ServerAnswer Server
+
+newtype Export
+    = ExportServer Server
+
 getQuestionMessage :: Question -> Message
 getQuestionMessage CallQuestion{callMsg} = Message'call callMsg
 getQuestionMessage (BootstrapQuestion questionId) =
@@ -291,28 +301,36 @@ getQuestionId CallQuestion{callMsg=Call{questionId}} = questionId
 getQuestionId (BootstrapQuestion questionId)         = questionId
 
 data Vat = Vat
-    { questions      :: TVar (M.Map QuestionId Question)
-    , answers        :: TVar (M.Map AnswerId Message)
-    , imports        :: TVar (M.Map ImportId CapDescriptor)
-    , exports        :: TVar (M.Map ExportId Client)
+    { questions       :: TVar (M.Map QuestionId Question)
+    , answers         :: TVar (M.Map AnswerId Answer)
+    , imports         :: TVar (M.Map ImportId CapDescriptor)
+    , exports         :: TVar (M.Map ExportId Server)
 
-    , questionIdPool :: TVar [Word32]
-    , exportIdPool   :: TVar [Word32]
+    , questionIdPool  :: TVar [Word32]
+    , exportIdPool    :: TVar [Word32]
 
-    , sendQ          :: TBQueue Message
-    , recvQ          :: TBQueue Message
+    , bootstrapServer :: Maybe Server
+
+    , sendQ           :: TBQueue Message
+    , recvQ           :: TBQueue Message
     }
-    deriving(Eq)
+
+instance Eq Vat where
+    -- it is sufficient to compare any of the TVars, since we create the whole
+    -- vat as a unit:
+    Vat{questions=qa} == Vat{questions=qb} = qa == qb
 
 data VatConfig = VatConfig
-    { maxQuestions :: !Word32
-    , maxExports   :: !Word32
+    { maxQuestions    :: !Word32
+    , maxExports      :: !Word32
+    , bootstrapServer :: Maybe Server
     }
 
 instance Default VatConfig where
     def = VatConfig
         { maxQuestions = 32
         , maxExports = 32
+        , bootstrapServer = Nothing
         }
 
 runRpcT :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
@@ -359,6 +377,13 @@ coordinator vat@Vat{..} = forever $ do
             throwIO exn
         Message'return ret ->
             handleReturn vat msg ret
+        Message'bootstrap Bootstrap{questionId} ->
+            case bootstrapServer of
+                Nothing ->
+                    atomically $ writeTBQueue sendQ $ Message'unimplemented msg
+                Just server -> atomically $
+                    modifyTVar' answers $ M.insert questionId (ServerAnswer server)
+                    -- TODO: also add it to exports and send a Return.
         _ ->
             atomically $ writeTBQueue sendQ $ Message'unimplemented msg
 
