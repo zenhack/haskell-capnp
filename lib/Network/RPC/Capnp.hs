@@ -146,8 +146,9 @@ data Client
     | NullClient
     | DisconnectedClient
 
-newtype Server = Server
+data Server = Server
     { handleCall :: forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct)
+    , handleStop :: forall m. MonadIO m => RpcT m ()
     }
 
 instance Eq Client where
