@@ -139,9 +139,9 @@ data Client
         , localVat :: Vat
         }
     | LocalClient
-        { exportId :: ExportId
-        , handleCall :: forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct)
-        , localVat :: Vat
+        { exportId    :: ExportId
+        , localServer :: Server
+        , localVat    :: Vat
         }
     | NullClient
     | DisconnectedClient
@@ -182,10 +182,10 @@ instance Show Client where
 -- over @m@ or something at some point, so we can specialize clients for a
 -- particular @m@.
 export :: MonadIO m => Server -> RpcT m Client
-export Server{handleCall} = do
+export localServer = do
     exportId <- newExportId
     localVat <- RpcT ask
-    pure LocalClient{exportId, handleCall, localVat}
+    pure LocalClient{exportId, localServer, localVat}
 
 bootstrap :: MonadIO m => RpcT m Client
 bootstrap = do
@@ -217,7 +217,7 @@ call interfaceId methodId params RemoteClient{ target, localVat } = do
         , sendReturn = fulfiller
         }
     pure promise
-call interfaceId methodId params LocalClient{handleCall} =
+call interfaceId methodId params LocalClient{localServer=Server{handleCall}} =
     handleCall interfaceId methodId params
 call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
