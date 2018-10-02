@@ -14,7 +14,8 @@
 Module: Network.RPC.Capnp
 Description: Cap'N Proto RPC support.
 
-This module implements the RPC protocol. See also the protocol specification:
+This module implements the RPC protocol (two-party only). See also the protocol
+specification:
 
 <https://github.com/capnproto/capnproto/blob/master/c%2B%2B/src/capnp/rpc.capnp>
 -}
@@ -25,7 +26,7 @@ module Network.RPC.Capnp
     , VatConfig(..)
     , Transport(..)
     , handleTransport
-    , runRpcT
+    , runVat
     , bootstrap
     , call
 
@@ -379,14 +380,17 @@ instance Default VatConfig where
         , bootstrapServer = Nothing
         }
 
-runRpcT :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
-runRpcT config transport (RpcT m) = do
+runRpcT :: Vat -> RpcT m a -> m a
+runRpcT vat (RpcT m) = runReaderT m vat
+
+runVat :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
+runVat config transport m = do
     vat <- newVat config
     foldl concurrently_
         (recvLoop transport vat)
         [ sendLoop transport vat
         , coordinator vat
-        , runReaderT m vat
+        , runRpcT vat m
         ]
 
 newVat :: VatConfig -> IO Vat
@@ -412,6 +416,10 @@ recvLoop :: Transport IO -> Vat -> IO ()
 recvLoop transport Vat{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
 
+-- | Report the specified message to the remote vat as unimplemented.
+replyUnimplemented :: Vat -> Message -> STM ()
+replyUnimplemented Vat{sendQ} =
+    writeTBQueue sendQ . Message'unimplemented
 
 -- | The coordinator handles incoming messages, dispatching them as
 -- method calls to local objects, forwarding return values to the right
@@ -419,117 +427,125 @@ recvLoop transport Vat{recvQ} =
 coordinator :: Vat -> IO ()
 coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
-    let replyUnimplemented =
-            atomically $ writeTBQueue sendQ $ Message'unimplemented msg
     case msg of
         Message'abort exn ->
             throwIO exn
         Message'return ret ->
-            handleReturn vat msg ret
-        Message'bootstrap Bootstrap{questionId} ->
-            case bootstrapServer of
-                Nothing ->
-                    replyUnimplemented
-                Just server -> atomically $
-                    modifyTVar' answers $ M.insert questionId (ServerAnswer server)
-                    -- TODO: also add it to exports and send a Return.
-        Message'call Call{target,interfaceId,methodId,params} ->
-            case target of
-                MessageTarget'importedCap _ ->
-                    replyUnimplemented
-                MessageTarget'promisedAnswer PromisedAnswer{questionId, transform}
-                    | V.length transform == 0 -> do
-                        result <- atomically $ M.lookup questionId <$> readTVar answers
-                        case result of
-                            Nothing -> do
-                                let exn = def
-                                        { reason = "Received 'Call' on non-existant promised answer #"
-                                            <> T.pack (show questionId)
-                                        , type_ = Exception'Type'failed
-                                        }
-                                atomically $ writeTBQueue sendQ $ Message'abort exn
-                                -- TODO: adjust this so we don't throw (and thus kill the connection)
-                                -- before the abort message is actually sent.
-                                throwIO exn
-                            Just (ServerAnswer Server{handleCall}) -> do
-                                result <- try $ do
-                                    ret <- handleCall interfaceId methodId params
-                                    liftIO $ waitIO ret
-                                atomically $ writeTBQueue sendQ $ Message'return $ case result of
-                                    -- The server returned successfully; pass along the result.
-                                    Right ok -> def
-                                        { answerId = questionId
-                                        , union' = Return'results def
-                                            { content = Just (PtrStruct ok)
-                                            }
-                                        }
-                                    Left (e :: SomeException) -> def
-                                        -- The server threw an exception; we need to report this
-                                        -- to the caller.
-                                        { answerId = questionId
-                                        , union' = Return'exception $
-                                            case fromException e of
-                                                Just (e :: Rpc.Exception) ->
-                                                    -- If the exception was a capnp exception,
-                                                    -- just pass it along.
-                                                    e
-                                                Nothing -> def
-                                                    -- Otherwise, return something opaque to
-                                                    -- the caller; the exception could potentially
-                                                    -- contain sensitive info.
-                                                    { reason = "unhandled exception"
-                                                    , type_ = Exception'Type'failed
-                                                    }
-                                        }
-
-                    | otherwise ->
-                        replyUnimplemented
-                MessageTarget'unknown' _ ->
-                    replyUnimplemented
+            handleReturn vat ret
+        Message'bootstrap bs ->
+            handleBootstrap vat bs
+        Message'call call ->
+            handleCallMsg vat call
         _ ->
-            replyUnimplemented
+            atomically $ replyUnimplemented vat msg
+
+-- | Handle a bootstrap message.
+handleBootstrap :: Vat -> Bootstrap -> IO ()
+handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
+    case bootstrapServer of
+        Nothing ->
+            atomically $ replyUnimplemented vat $ Message'bootstrap msg
+        Just server -> atomically $
+            modifyTVar' answers $ M.insert questionId (ServerAnswer server)
+            -- TODO: also add it to exports and send a Return.
+
+handleCallMsg :: Vat -> Call -> IO ()
+-- TODO: can't call this handleCall because that's taken by the field in 'Server'.
+-- rework things so we can be consistent.
+handleCallMsg vat@Vat{..} msg@Call{target,interfaceId,methodId,params} =
+    case target of
+        MessageTarget'importedCap _ ->
+            atomically $ replyUnimplemented vat $ Message'call msg
+        MessageTarget'unknown' _ ->
+            atomically $ replyUnimplemented vat $ Message'call msg
+        MessageTarget'promisedAnswer PromisedAnswer{questionId, transform}
+            | V.length transform /= 0 ->
+                atomically $ replyUnimplemented vat $ Message'call msg
+            | otherwise -> do
+                result <- atomically $ M.lookup questionId <$> readTVar answers
+                case result of
+                    Nothing -> do
+                        let exn = def
+                                { reason = "Received 'Call' on non-existant promised answer #"
+                                    <> T.pack (show questionId)
+                                , type_ = Exception'Type'failed
+                                }
+                        atomically $ writeTBQueue sendQ $ Message'abort exn
+                        -- TODO: adjust this so we don't throw (and thus kill the connection)
+                        -- before the abort message is actually sent.
+                        throwIO exn
+                    Just (ServerAnswer Server{handleCall}) -> do
+                        result <- try $ do
+                            ret <- runRpcT vat $ handleCall interfaceId methodId params
+                            liftIO $ waitIO ret
+                        atomically $ writeTBQueue sendQ $ Message'return $ case result of
+                            -- The server returned successfully; pass along the result.
+                            Right ok -> def
+                                { answerId = questionId
+                                , union' = Return'results def
+                                    { content = Just (PtrStruct ok)
+                                    }
+                                }
+                            Left (e :: SomeException) -> def
+                                -- The server threw an exception; we need to report this
+                                -- to the caller.
+                                { answerId = questionId
+                                , union' = Return'exception $
+                                    case fromException e of
+                                        Just (e :: Rpc.Exception) ->
+                                            -- If the exception was a capnp exception,
+                                            -- just pass it along.
+                                            e
+                                        Nothing -> def
+                                            -- Otherwise, return something opaque to
+                                            -- the caller; the exception could potentially
+                                            -- contain sensitive info.
+                                            { reason = "unhandled exception"
+                                            , type_ = Exception'Type'failed
+                                            }
+                                }
 
 -- | Handle receiving a 'Return' message.
-handleReturn :: Vat -> Message -> Return -> IO ()
-handleReturn Vat{..} msg Return{..} = handleErrs $ do
-        question <- M.lookup answerId <$> readTVar questions
-        case question of
-            Nothing ->
-                abort def
-                    { reason = "Received 'Return' for non-existant question #"
-                        <> T.pack (show answerId)
-                    , type_ = Exception'Type'failed
-                    }
-            Just (BootstrapQuestion _) -> do
-                -- This will case the other side to drop the resolved cap; we'll
-                -- just keep using the promise.
-                writeTBQueue sendQ $ Message'unimplemented msg
-                modifyTVar questions $ M.delete answerId
-                ok
-            Just CallQuestion{callMsg, sendReturn} -> do
-                -- We don't support caps other than the bootstrap yet, so we can
-                -- send Finish right away.
-                writeTBQueue sendQ $ Message'finish def { questionId = answerId }
-                modifyTVar questions $ M.delete answerId
-                case union' of
-                    Return'results Payload{content} ->
-                        handleResult sendReturn content
-                    Return'exception exn -> do
-                        breakPromise sendReturn exn
-                        ok
-                    _ ->
-                        abort def
-                            { reason = "Received unexpected return variant " <>
-                                "(we only support results and exception)."
-                            , type_ = Exception'Type'failed
-                            }
+handleReturn :: Vat -> Return -> IO ()
+handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
+    question <- M.lookup answerId <$> readTVar questions
+    case question of
+        Nothing ->
+            abort def
+                { reason = "Received 'Return' for non-existant question #"
+                    <> T.pack (show answerId)
+                , type_ = Exception'Type'failed
+                }
+        Just (BootstrapQuestion _) -> do
+            -- This will case the other side to drop the resolved cap; we'll
+            -- just keep using the promise.
+            replyUnimplemented vat $ Message'return msg
+            modifyTVar questions $ M.delete answerId
+            ok
+        Just CallQuestion{callMsg, sendReturn} -> do
+            -- We don't support caps other than the bootstrap yet, so we can
+            -- send Finish right away.
+            writeTBQueue sendQ $ Message'finish def { questionId = answerId }
+            modifyTVar questions $ M.delete answerId
+            case union' of
+                Return'results Payload{content} ->
+                    handleResult sendReturn content
+                Return'exception exn -> do
+                    breakPromise sendReturn exn
+                    ok
+                _ ->
+                    abort def
+                        { reason = "Received unexpected return variant " <>
+                            "(we only support results and exception)."
+                        , type_ = Exception'Type'failed
+                        }
 
   where
     -- | Run a transaction, which may *return* an error (as opposed to throwing
     -- one) via 'Left'; if it does, throw the error, otherwise return ().
     --
     -- The reason for this is so we can report errors while still commiting the
-    -- transaction; if we did 'throwSTM' it would roll back the results.
+    -- transaction; if we did 'throwSTM' it would roll back the effects.
     handleErrs transaction = do
         ret <- atomically transaction
         case ret of
