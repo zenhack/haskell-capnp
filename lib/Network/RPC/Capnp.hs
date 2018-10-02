@@ -10,6 +10,14 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-|
+Module: Network.RPC.Capnp
+Description: Cap'N Proto RPC support.
+
+This module implements the RPC protocol. See also the protocol specification:
+
+<https://github.com/capnproto/capnproto/blob/master/c%2B%2B/src/capnp/rpc.capnp>
+-}
 module Network.RPC.Capnp
     ( RpcT
     , Client
@@ -76,6 +84,8 @@ type AnswerId = Word32
 type ExportId = Word32
 type ImportId = Word32
 
+-- | A @'Transport' m@ handles transmitting RPC messages, inside of a monadic
+-- context @m@.
 data Transport m = Transport
     { sendMsg :: Message -> m ()
     , recvMsg :: m Message
@@ -108,12 +118,16 @@ newId pool = do
 nullClient :: Client
 nullClient = NullClient
 
+-- | Allocate an unused export id.
 newExportId :: MonadIO m => RpcT m ExportId
 newExportId = newId exportIdPool
 
+-- | Allocate an unused question id.
 newQuestionId :: MonadIO m => RpcT m QuestionId
 newQuestionId = newId questionIdPool
 
+-- | 'RpcT' is a monad transformer that supports making capnproto rpc calls.
+-- The underlying monad must be an instance of 'MonadIO'.
 newtype RpcT m a = RpcT (ReaderT Vat m a)
     deriving(Functor, Applicative, Monad)
 
@@ -130,7 +144,8 @@ instance PrimMonad m => PrimMonad (RpcT m) where
     type PrimState (RpcT m) = PrimState m
     primitive = lift . primitive
 
--- | A client for a capnproto capability.
+-- | A client for a capnproto capability. A client is used to call methods on a
+-- remote object; see 'call'.
 --
 -- Note that client's 'Show' instance does not have a way of retaininig the
 -- connection, so doing @'read' . 'show'@ will reseult in a disconnected
@@ -149,9 +164,17 @@ data Client
     | NullClient
     | DisconnectedClient
 
+-- | A 'Server' contains functions for handling requests to an object. It
+-- can be converted to a 'Client' and then shared via RPC.
 data Server = Server
     { handleCall :: forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct)
+    -- ^ @'handleCall' interfaceId methodId params@ handles a method call.
+    -- The method is as specified by interfaceId and methodId, with @params@
+    -- being the argument to the method call. It returns a 'Promise' for the
+    -- result.
     , handleStop :: forall m. MonadIO m => RpcT m ()
+    -- ^ 'handleStop' is executed when the last reference to the object is
+    -- dropped.
     }
 
 instance Eq Client where
@@ -179,17 +202,13 @@ instance Show Client where
     show _          = "DisconnectedClient"
 
 -- | Export a local interface server, so it may be offered on the network.
---
--- TODO: I(zenhack) really don't like the fact that we're using a higher-rank
--- type here. We probably will eventually want 'Client' to be parametrized
--- over @m@ or something at some point, so we can specialize clients for a
--- particular @m@.
 export :: MonadIO m => Server -> RpcT m Client
 export localServer = do
     exportId <- newExportId
     localVat <- RpcT ask
     pure LocalClient{exportId, localServer, localVat}
 
+-- | Get a client for the bootstrap interface from the remote vat.
 bootstrap :: MonadIO m => RpcT m Client
 bootstrap = do
     questionId <- newQuestionId
@@ -200,12 +219,16 @@ bootstrap = do
         { target = MessageTarget'promisedAnswer def { questionId }
         , localVat = vat
         }
-
+-- | send a question to the remote vat. This inserts it into the local
+-- vat's  questions table, in addition to actually sending the message.
 sendQuestion :: Vat -> Question -> STM ()
 sendQuestion Vat{sendQ,questions} question = do
     writeTBQueue sendQ $ getQuestionMessage question
     modifyTVar questions $ M.insert (getQuestionId question) question
 
+-- | @'call' interfaceId methodId params client@ calls an RPC method
+-- on @client@. The method is as specified by @interfaceId@ and
+-- @methodId@. The return value is a promise for the result.
 call :: MonadIO m => Word64 -> Word16 -> Payload -> Client -> RpcT m (Promise Struct)
 call interfaceId methodId params RemoteClient{ target, localVat } = do
     questionId <- newQuestionId
@@ -231,16 +254,21 @@ call _ _ _ DisconnectedClient = alwaysThrow def
     , type_ = Exception'Type'disconnected
     }
 
+-- | Return an already-broken promise, which raises the specified
+-- exception.
 alwaysThrow :: MonadIO m => Rpc.Exception -> RpcT m (Promise Struct)
 alwaysThrow exn = do
     (promise, fulfiller) <- liftIO $ atomically newPromise
     liftIO $ atomically $ breakPromise fulfiller exn
     pure promise
 
+-- | A 'Fulfiller' is used to fulfill a promise.
 newtype Fulfiller a = Fulfiller
     { var :: TVar (Maybe (Either Rpc.Exception a))
     }
 
+-- | Fulfill a promise by supplying the specified value. It is an error to
+-- call 'fulfill' if the promise has already been fulfilled (or broken).
 fulfill :: Fulfiller a -> a -> STM ()
 fulfill Fulfiller{var} val = modifyTVar' var $ \case
     Nothing ->
@@ -249,6 +277,9 @@ fulfill Fulfiller{var} val = modifyTVar' var $ \case
         -- TODO: report this in a more controlled way.
         error "BUG: tried to fullfill a promise twice!"
 
+-- | Break a promise. When the user of the promise executes 'wait', the
+-- specified exception will be raised. It is an error to call 'breakPromise'
+-- if the promise has already been fulfilled (or broken).
 breakPromise :: Fulfiller a -> Rpc.Exception -> STM ()
 breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
     Nothing ->
@@ -256,6 +287,8 @@ breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
     Just _ ->
         error "BUG: tried to break an already resolved promise!"
 
+-- | Wait for a promise to resolve, and return the result. If the promise
+-- is broken, this raises an exception instead (see 'breakPromise').
 wait :: Promise a -> STM a
 wait Promise{var} = do
     val <- readTVar var
@@ -267,21 +300,26 @@ wait Promise{var} = do
         Just (Left exn) ->
             throwSTM exn
 
+-- | Like 'wait', but in the 'IO' monad.
 waitIO :: MonadIO m => Promise a -> m a
 waitIO = liftIO . atomically . wait
 
+-- | Check whether a promise is resolved.
 isResolved :: Promise a -> STM Bool
 isResolved Promise{var} = isJust <$> readTVar var
 
+-- | Create a new promise and an associated fulfiller.
 newPromise :: STM (Promise a, Fulfiller a)
 newPromise = do
     var <- newTVar Nothing
     pure (Promise{var}, Fulfiller{var})
 
+-- | A promise is a value that may not be ready yet.
 newtype Promise a = Promise
     { var :: TVar (Maybe (Either Rpc.Exception a))
     }
 
+-- | A 'Question' is an outstanding question message.
 data Question
     = CallQuestion
         { callMsg    :: Call
@@ -295,15 +333,19 @@ newtype Answer
 newtype Export
     = ExportServer Server
 
+-- | Get a 'Message' corresponding to the question.
 getQuestionMessage :: Question -> Message
 getQuestionMessage CallQuestion{callMsg} = Message'call callMsg
 getQuestionMessage (BootstrapQuestion questionId) =
     Message'bootstrap def { questionId }
 
+-- | Get the question's id.
 getQuestionId :: Question -> QuestionId
 getQuestionId CallQuestion{callMsg=Call{questionId}} = questionId
 getQuestionId (BootstrapQuestion questionId)         = questionId
 
+-- | A 'Vat' is where objects live. It represents the state of one
+-- side of a connection.
 data Vat = Vat
     { questions       :: TVar (M.Map QuestionId Question)
     , answers         :: TVar (M.Map AnswerId Answer)
