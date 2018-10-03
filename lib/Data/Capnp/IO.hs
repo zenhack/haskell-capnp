@@ -9,8 +9,10 @@ from file 'Handle's.
 module Data.Capnp.IO
     ( hGetValue
     , getValue
+    , sGetValue
     , hPutValue
     , putValue
+    , sPutValue
     , M.hGetMsg
     , M.getMsg
     , M.hPutMsg
@@ -18,11 +20,13 @@ module Data.Capnp.IO
     ) where
 
 import Control.Monad.Primitive (RealWorld)
+import Network.Simple.TCP      (Socket, sendLazy)
 import System.IO               (Handle, stdin, stdout)
 
 import Codec.Capnp               (getRoot, setRoot)
 import Data.Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
+import Data.Capnp.Convert        (valueToLBS)
 import Data.Capnp.TraversalLimit (evalLimitT)
 import Data.Mutable              (Thaw(..))
 
@@ -43,6 +47,14 @@ hGetValue handle limit = do
 getValue :: FromStruct M.ConstMsg a => Int -> IO a
 getValue = hGetValue stdin
 
+-- | Like 'hGetValue', except that it takes a socket instead of a 'Handle'.
+sGetValue :: FromStruct M.ConstMsg a => Socket -> Int -> IO a
+sGetValue socket limit =
+    -- TODO: we need to expose something from Message to make this possible; readMessage
+    -- is not a bad candidate, but can we come up with something that's conceptually
+    -- a cleaner interface?
+    error "TODO"
+
 -- | @'hPutValue' handle value@ writes @value@ to handle, as the root object of
 -- a message. If it throws an exception, it will be an 'IOError' raised by the
 -- underlying IO libraries.
@@ -59,3 +71,10 @@ hPutValue handle value = do
 putValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
     => a -> IO ()
 putValue = hPutValue stdout
+
+-- | Like 'hPutValue', except that it takes a 'Socket' instead of a 'Handle'.
+sPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+    => Socket -> a -> IO ()
+sPutValue socket value = do
+    lbs <- evalLimitT maxBound $ valueToLBS value
+    sendLazy socket lbs
