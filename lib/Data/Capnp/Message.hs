@@ -17,6 +17,9 @@ module Data.Capnp.Message (
     , putMsg
     , getMsg
 
+    , readMessage
+    , writeMessage
+
     -- * Limits on message size
     , maxSegmentSize
     , maxSegments
