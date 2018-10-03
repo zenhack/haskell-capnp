@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -26,6 +27,7 @@ module Network.RPC.Capnp
     , VatConfig(..)
     , Transport(..)
     , handleTransport
+    , socketTransport
     , runVat
     , bootstrap
     , call
@@ -58,20 +60,27 @@ import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
+import Data.Binary.Get                 (Decoder(..), runGetIncremental)
 import Data.Default                    (Default(..))
+import Data.IORef                      (newIORef, readIORef, writeIORef)
 import Data.Maybe                      (isJust)
+import Network.Socket                  (Socket)
+import Network.Socket.ByteString       (recv)
 import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
+import qualified Data.ByteString as BS
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
-import Capnp.Capnp.Rpc.Pure    hiding (Exception)
+import Capnp.Capnp.Rpc.Pure hiding (Exception)
+
+import Data.Capnp.Message      (getMsgBinary)
 import Data.Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
-import Data.Capnp (def, hGetValue, hPutValue)
+import Data.Capnp (def, hGetValue, hPutValue, msgToValue, sPutValue)
 
 import qualified Capnp.Capnp.Rpc.Pure as Rpc
 
@@ -100,6 +109,42 @@ handleTransport limit handle = Transport
     { sendMsg = liftIO . hPutValue handle
     , recvMsg = liftIO $ hGetValue handle limit
     }
+
+-- | @'socketTransport' limit socket@ creates a new transport which reads
+-- and writes messages to/from a socket. It uses @limit@ as the traversal
+-- limit when reading messages and decoing. Note that when reading messages,
+-- it may read past the end of the message due to buffering; if you attempt
+-- to read data from the socket after the transport is no longer in use, it
+-- is possible some additional data has been consumed beyond the last message
+-- received.
+socketTransport :: MonadIO m => Int -> Socket -> m (Transport m)
+socketTransport limit socket = do
+    bufferedData <- liftIO $ newIORef BS.empty
+    let decodeMessage !limitRemaining bytes = \case
+            Fail _ _ _ ->
+                error "TODO: handle errors."
+            Done excess _ msg -> do
+                writeIORef bufferedData excess
+                pure msg
+            Partial push -> do
+                bytes <- if BS.null bytes
+                    then recv socket limitRemaining
+                    else pure bytes
+                decodeMessage
+                    (limitRemaining - BS.length bytes)
+                    BS.empty
+                    (push (Just bytes))
+    pure Transport
+        { sendMsg = liftIO . sPutValue socket
+        , recvMsg = liftIO $ do
+            bytes <- readIORef bufferedData
+            msg <- decodeMessage
+                limit
+                bytes
+                (runGetIncremental $ getMsgBinary limit)
+            msgToValue msg
+        }
+
 
 -- | Get a new exportId/questionId. The argument gets the pool to allocate from.
 newId :: MonadIO m => (Vat -> TVar [Word32]) -> RpcT m Word32
