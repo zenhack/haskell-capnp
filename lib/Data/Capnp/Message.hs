@@ -334,7 +334,7 @@ hGetMsg handle size =
         bytes <- BS.hGet handle 4
         case runGetS getWord32le bytes of
             Left _ ->
-                -- the only way this can hapepn is if we get < 4 bytes.
+                -- the only way this can happen is if we get < 4 bytes.
                 throwM $ InvalidDataError "Unexpected end of input"
             Right result ->
                 pure result
