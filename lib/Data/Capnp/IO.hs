@@ -9,7 +9,7 @@ from file 'Handle's.
 module Data.Capnp.IO
     ( hGetValue
     , getValue
-    , sGetValue
+    -- , sGetValue
     , hPutValue
     , putValue
     , sPutValue
@@ -50,9 +50,6 @@ getValue = hGetValue stdin
 -- | Like 'hGetValue', except that it takes a socket instead of a 'Handle'.
 sGetValue :: FromStruct M.ConstMsg a => Socket -> Int -> IO a
 sGetValue socket limit =
-    -- TODO: we need to expose something from Message to make this possible; readMessage
-    -- is not a bad candidate, but can we come up with something that's conceptually
-    -- a cleaner interface?
     error "TODO"
 
 -- | @'hPutValue' handle value@ writes @value@ to handle, as the root object of
