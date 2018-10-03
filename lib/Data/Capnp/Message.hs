@@ -20,6 +20,9 @@ module Data.Capnp.Message (
     , readMessage
     , writeMessage
 
+    -- * Decoding messages
+    , getMsgBinary
+
     -- * Limits on message size
     , maxSegmentSize
     , maxSegments
@@ -82,6 +85,7 @@ import Data.Word                 (Word32, Word64)
 import System.Endian             (fromLE64, toLE64)
 import System.IO                 (Handle, stdin, stdout)
 
+import qualified Data.Binary.Get              as Get
 import qualified Data.ByteString              as BS
 import qualified Data.ByteString.Builder      as BB
 import qualified Data.Vector                  as V
@@ -91,11 +95,12 @@ import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
 
 import Data.Capnp.Address        (WordAddr(..))
-import Data.Capnp.Bits           (WordCount(..), hi, lo)
+import Data.Capnp.Bits           (WordCount(..), hi, lo, wordsToBytes)
 import Data.Capnp.Errors         (Error(InvalidDataError))
 import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable              (Mutable(..))
 import Internal.AppendVec        (AppendVec)
+import Internal.ThrowFail        (runThrowFailT)
 import Internal.Util             (checkIndex)
 
 import qualified Internal.AppendVec as AppendVec
@@ -346,6 +351,19 @@ hGetMsg handle size =
 -- | Equivalent to @'hGetMsg' 'stdin'@
 getMsg :: Int -> IO ConstMsg
 getMsg = hGetMsg stdin
+
+-- | @'getMsgBinary' limit@ decodes a message that is at most @limit@ 64-bit
+-- words in length.
+--
+-- TODO: The idiomatic thing to call this would be 'getMsg', but that's taken.
+-- Figure out how to reconcile the names.
+getMsgBinary :: Int -> Get.Get ConstMsg
+getMsgBinary limit = runThrowFailT $ evalLimitT limit $
+    readMessage
+        (lift $ lift Get.getWord32le)
+        $ \words -> do
+            bs <- lift $ lift $ Get.getByteString (fromIntegral (wordsToBytes words))
+            fromByteString bs
 
 -- | A 'MutMsg' is a mutable capnproto message. The type parameter @s@ is the
 -- state token for the instance of 'PrimMonad' in which the message may be
