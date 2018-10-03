@@ -93,7 +93,7 @@ data Transport m = Transport
     }
 
 -- | @'handleTransport' limit handle@ creates a new transport which reads
--- and writes messages from/to @handle@. It uses @limit@ as the traaversal
+-- and writes messages from/to @handle@. It uses @limit@ as the traversal
 -- limit when reading messages and decoding.
 handleTransport :: MonadIO m => Int -> Handle -> Transport m
 handleTransport limit handle = Transport
