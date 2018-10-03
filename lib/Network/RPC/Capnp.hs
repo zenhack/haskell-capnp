@@ -121,7 +121,7 @@ socketTransport :: MonadIO m => Int -> Socket -> m (Transport m)
 socketTransport limit socket = do
     bufferedData <- liftIO $ newIORef BS.empty
     let decodeMessage !limitRemaining bytes = \case
-            Fail _ _ _ ->
+            Fail{} ->
                 error "TODO: handle errors."
             Done excess _ msg -> do
                 writeIORef bufferedData excess
