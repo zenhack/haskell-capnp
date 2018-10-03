@@ -1,28 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Exception      (bracket)
 import Control.Monad.IO.Class (liftIO)
 import Data.Function          ((&))
-import Network.Simple.TCP     (connectSock)
-import Network.Socket         (socketToHandle)
+import Network.Simple.TCP     (connect)
 import System.Exit            (exitSuccess)
 import System.IO              (IOMode(ReadWriteMode), hClose)
 
 import Data.Capnp        (def, defaultLimit)
-import Network.RPC.Capnp (bootstrap, handleTransport, runVat)
+import Network.RPC.Capnp (bootstrap, runVat, socketTransport)
 
 import Capnp.Echo.Pure
 
-main = bracket openConn hClose talk
-  where
-    openConn = do
-        (sock, _addr) <- connectSock "localhost" "4000"
-        socketToHandle sock ReadWriteMode
-    talk handle =
-        runVat def (handleTransport defaultLimit handle) $ do
-            echoSrv <- Echo <$> bootstrap
-            result <- echoSrv & echo'echo def { query = "Hello, World!" }
-            liftIO $ do
-                print result
-                exitSuccess
+main = connect "localhost" "4000" $ \(sock, _addr) -> do
+    transport <- socketTransport defaultLimit sock
+    runVat def transport $ do
+        echoSrv <- Echo <$> bootstrap
+        result <- echoSrv & echo'echo def { query = "Hello, World!" }
+        liftIO $ do
+            print result
+            exitSuccess
