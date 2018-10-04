@@ -122,7 +122,7 @@ socketTransport limit socket = do
     bufferedData <- liftIO $ newIORef BS.empty
     let decodeMessage !limitRemaining bytes = \case
             Fail{} ->
-                error "TODO: handle errors."
+                error "FIXME: handle errors."
             Done excess _ msg -> do
                 writeIORef bufferedData excess
                 pure msg
