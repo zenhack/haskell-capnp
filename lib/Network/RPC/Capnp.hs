@@ -395,10 +395,10 @@ data Question
     | BootstrapQuestion !QuestionId
 
 newtype Answer
-    = ServerAnswer Server
+    = ClientAnswer Client
 
 newtype Export
-    = ExportServer Server
+    = ExportClient Client
 
 -- | Get a 'Message' corresponding to the question.
 getQuestionMessage :: Question -> Message
@@ -417,12 +417,12 @@ data Vat = Vat
     { questions       :: TVar (M.Map QuestionId Question)
     , answers         :: TVar (M.Map AnswerId Answer)
     , imports         :: TVar (M.Map ImportId CapDescriptor)
-    , exports         :: TVar (M.Map ExportId Server)
+    , exports         :: TVar (M.Map ExportId Client)
 
     , questionIdPool  :: TVar [Word32]
     , exportIdPool    :: TVar [Word32]
 
-    , bootstrapServer :: Maybe Server
+    , bootstrapServer :: Maybe (RpcT IO Client)
 
     , sendQ           :: TBQueue Message
     , recvQ           :: TBQueue Message
@@ -436,7 +436,7 @@ instance Eq Vat where
 data VatConfig = VatConfig
     { maxQuestions    :: !Word32
     , maxExports      :: !Word32
-    , bootstrapServer :: Maybe Server
+    , bootstrapServer :: Maybe (RpcT IO Client)
     }
 
 instance Default VatConfig where
@@ -511,9 +511,11 @@ handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
     case bootstrapServer of
         Nothing ->
             atomically $ replyUnimplemented vat $ Message'bootstrap msg
-        Just server -> atomically $
-            modifyTVar' answers $ M.insert questionId (ServerAnswer server)
-            -- TODO: also add it to exports and send a Return.
+        Just getServer -> do
+            server <- runRpcT vat getServer
+            atomically $
+                modifyTVar' answers $ M.insert questionId (ClientAnswer server)
+                -- TODO: also add it to exports and send a Return.
 
 handleCallMsg :: Vat -> Call -> IO ()
 -- TODO: can't call this handleCall because that's taken by the field in 'Server'.
@@ -540,9 +542,9 @@ handleCallMsg vat@Vat{..} msg@Call{target,interfaceId,methodId,params} =
                         -- TODO: adjust this so we don't throw (and thus kill the connection)
                         -- before the abort message is actually sent.
                         throwIO exn
-                    Just (ServerAnswer Server{handleCall}) -> do
+                    Just (ClientAnswer client) -> do
                         result <- try $ do
-                            ret <- runRpcT vat $ handleCall interfaceId methodId params
+                            ret <- runRpcT vat $ call interfaceId methodId params client
                             liftIO $ waitIO ret
                         atomically $ writeTBQueue sendQ $ Message'return $ case result of
                             -- The server returned successfully; pass along the result.

@@ -142,7 +142,8 @@ fmtExport thisMod (name, DeclDef DefUnion{}) =
     fmtName Pure thisMod name <> "(..)"
 fmtExport thisMod (name, DeclDef (DefInterface _)) = mconcat
     [ fmtName Pure thisMod name, "(..), "
-    , fmtName Pure thisMod name, "'server_(..)"
+    , fmtName Pure thisMod name, "'server_(..),"
+    , "export_", fmtName Pure thisMod name
     ]
 -- These are 'Raw' because we're just re-exporting them:
 fmtExport thisMod (name, DeclDef DefEnum{}) =

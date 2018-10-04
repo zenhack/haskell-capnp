@@ -13,7 +13,7 @@ maintainer:          ian@zenhack.net
 build-type:          Simple
 extra-source-files:  ChangeLog.md
 
-executable echo-client
+executable echo-demo
   main-is:             Main.hs
   other-modules:
       Capnp.Echo
