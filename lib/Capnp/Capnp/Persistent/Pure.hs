@@ -50,14 +50,22 @@ instance C'.Cerialize s Persistent where
 class Persistent'server_ cap where
     {-# MINIMAL persistent'save #-}
     persistent'save :: Persistent'SaveParams -> cap -> Rpc.RpcT IO (Persistent'SaveResults)
-    persistent'save _ _ = throwM $ Rpc.Exception
-        { reason = "Method unimplemented"
-        , type_ = Rpc.Exception'Type'unimplemented
-        , obsoleteIsCallersFault = False
-        , obsoleteDurability = 0
-        }
+    persistent'save _ _ = Rpc.throwMethodUnimplemented
 export_Persistent :: Persistent'server_ a => a -> Rpc.RpcT IO Persistent
-export_Persistent = undefined
+export_Persistent server_ = Persistent <$> Rpc.export Rpc.Server
+    { handleStop = pure () -- TODO
+    , handleCall = \interfaceId methodId params -> case interfaceId of
+        14468694717054801553 -> case methodId of
+            0 -> do
+                typedParams <- evalLimitT maxBound $ PH'.convertValue params
+                results <- persistent'save typedParams server_
+                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
+                (promise, fulfiller) <- Rpc.newPromiseIO
+                Rpc.fulfillIO fulfiller resultStruct
+                pure promise
+            _ -> Rpc.throwMethodUnimplemented
+        _ -> Rpc.throwMethodUnimplemented
+    }
 instance Persistent'server_ Persistent where
     persistent'save args (Persistent client) = do
         args' <- evalLimitT maxBound $ PH'.convertValue args
@@ -75,21 +83,31 @@ instance C'.Cerialize s RealmGateway where
 class RealmGateway'server_ cap where
     {-# MINIMAL realmGateway'import, realmGateway'export #-}
     realmGateway'import :: RealmGateway'import'params -> cap -> Rpc.RpcT IO (Persistent'SaveResults)
-    realmGateway'import _ _ = throwM $ Rpc.Exception
-        { reason = "Method unimplemented"
-        , type_ = Rpc.Exception'Type'unimplemented
-        , obsoleteIsCallersFault = False
-        , obsoleteDurability = 0
-        }
+    realmGateway'import _ _ = Rpc.throwMethodUnimplemented
     realmGateway'export :: RealmGateway'export'params -> cap -> Rpc.RpcT IO (Persistent'SaveResults)
-    realmGateway'export _ _ = throwM $ Rpc.Exception
-        { reason = "Method unimplemented"
-        , type_ = Rpc.Exception'Type'unimplemented
-        , obsoleteIsCallersFault = False
-        , obsoleteDurability = 0
-        }
+    realmGateway'export _ _ = Rpc.throwMethodUnimplemented
 export_RealmGateway :: RealmGateway'server_ a => a -> Rpc.RpcT IO RealmGateway
-export_RealmGateway = undefined
+export_RealmGateway server_ = RealmGateway <$> Rpc.export Rpc.Server
+    { handleStop = pure () -- TODO
+    , handleCall = \interfaceId methodId params -> case interfaceId of
+        9583422979879616212 -> case methodId of
+            0 -> do
+                typedParams <- evalLimitT maxBound $ PH'.convertValue params
+                results <- realmGateway'import typedParams server_
+                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
+                (promise, fulfiller) <- Rpc.newPromiseIO
+                Rpc.fulfillIO fulfiller resultStruct
+                pure promise
+            1 -> do
+                typedParams <- evalLimitT maxBound $ PH'.convertValue params
+                results <- realmGateway'export typedParams server_
+                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
+                (promise, fulfiller) <- Rpc.newPromiseIO
+                Rpc.fulfillIO fulfiller resultStruct
+                pure promise
+            _ -> Rpc.throwMethodUnimplemented
+        _ -> Rpc.throwMethodUnimplemented
+    }
 instance RealmGateway'server_ RealmGateway where
     realmGateway'import args (RealmGateway client) = do
         args' <- evalLimitT maxBound $ PH'.convertValue args

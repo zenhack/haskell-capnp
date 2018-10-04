@@ -32,13 +32,17 @@ module Network.RPC.Capnp
     , bootstrap
     , call
 
+    , throwMethodUnimplemented
+
     , Rpc.Exception(..)
     , Rpc.Exception'Type(..)
 
     , Promise
     , Fulfiller
     , newPromise
+    , newPromiseIO
     , fulfill
+    , fulfillIO
     , isResolved
     , wait
     , waitIO
@@ -83,6 +87,15 @@ import Data.Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 import Data.Capnp (def, hGetValue, hPutValue, msgToValue, sPutValue)
 
 import qualified Capnp.Capnp.Rpc.Pure as Rpc
+
+-- | Shortcut to throw an @unimplemented@ exception.
+throwMethodUnimplemented :: MonadThrow m => m a
+throwMethodUnimplemented = throwM Rpc.Exception
+    { reason = "Method unimplemented"
+    , type_ = Rpc.Exception'Type'unimplemented
+    , obsoleteIsCallersFault = False
+    , obsoleteDurability = 0
+    }
 
 instance Exception Rpc.Exception
 
@@ -213,12 +226,12 @@ data Client
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' and then shared via RPC.
 data Server = Server
-    { handleCall :: forall m. MonadIO m => Word64 -> Word16 -> Payload -> RpcT m (Promise Struct)
+    { handleCall :: Word64 -> Word16 -> Payload -> RpcT IO (Promise Struct)
     -- ^ @'handleCall' interfaceId methodId params@ handles a method call.
     -- The method is as specified by interfaceId and methodId, with @params@
     -- being the argument to the method call. It returns a 'Promise' for the
     -- result.
-    , handleStop :: forall m. MonadIO m => RpcT m ()
+    , handleStop :: RpcT IO ()
     -- ^ 'handleStop' is executed when the last reference to the object is
     -- dropped.
     }
@@ -275,7 +288,7 @@ sendQuestion Vat{sendQ,questions} question = do
 -- | @'call' interfaceId methodId params client@ calls an RPC method
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
-call :: MonadIO m => Word64 -> Word16 -> Payload -> Client -> RpcT m (Promise Struct)
+call :: Word64 -> Word16 -> Payload -> Client -> RpcT IO (Promise Struct)
 call interfaceId methodId params RemoteClient{ target, localVat } = do
     questionId <- newQuestionId
     let callMsg = Call
@@ -323,6 +336,10 @@ fulfill Fulfiller{var} val = modifyTVar' var $ \case
         -- TODO: report this in a more controlled way.
         error "BUG: tried to fullfill a promise twice!"
 
+-- | Like 'fulfill', but in the IO monad.
+fulfillIO :: MonadIO m => Fulfiller a -> a -> m ()
+fulfillIO fulfiller = liftIO . atomically . fulfill fulfiller
+
 -- | Break a promise. When the user of the promise executes 'wait', the
 -- specified exception will be raised. It is an error to call 'breakPromise'
 -- if the promise has already been fulfilled (or broken).
@@ -359,6 +376,10 @@ newPromise :: STM (Promise a, Fulfiller a)
 newPromise = do
     var <- newTVar Nothing
     pure (Promise{var}, Fulfiller{var})
+
+-- | Like 'newPromise', but in the IO monad.
+newPromiseIO :: MonadIO m => m (Promise a, Fulfiller a)
+newPromiseIO = liftIO $ atomically newPromise
 
 -- | A promise is a value that may not be ready yet.
 newtype Promise a = Promise

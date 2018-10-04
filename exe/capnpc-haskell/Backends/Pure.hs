@@ -8,6 +8,7 @@ module Backends.Pure
     ) where
 
 import Data.Monoid                  ((<>))
+import Data.String                  (fromString)
 import GHC.Exts                     (IsList(..))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import Text.Printf                  (printf)
@@ -262,18 +263,40 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 , fmtType thisMod (CompositeType resultType)
                 , ")"
                 ]
-            , hcat [ pureValName methodName, " _ _ = throwM $ Rpc.Exception" ]
-            , indent $ vcat
-                [ "{ reason = \"Method unimplemented\""
-                , ", type_ = Rpc.Exception'Type'unimplemented"
-                , ", obsoleteIsCallersFault = False"
-                , ", obsoleteDurability = 0"
-                , "}"
-                ]
+            , hcat [ pureValName methodName, " _ _ = Rpc.throwMethodUnimplemented" ]
             ]
         ]
     , hcat [ "export_", pureName, " :: ", pureName, "'server_ a => a -> Rpc.RpcT IO ", pureName ]
-    , hcat [ "export_", pureName, " = undefined" ]
+    , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Rpc.Server" ]
+    , indent $ vcat
+        [ "{ handleStop = pure () -- TODO"
+        , ", handleCall = \\interfaceId methodId params -> case interfaceId of"
+        , indent $ vcat
+            -- TODO: superclasses.
+            [ hcat [ fromString (show interfaceId), " -> case methodId of" ]
+            , indent $ vcat
+                [ vcat $ flip map methods $ \Method{..} -> vcat
+                    [ hcat [ fromString (show ordinal), " -> do" ]
+                    , indent $ vcat
+                        -- TODO:
+                        --
+                        -- * handle exceptions
+                        -- * factor this out into a helper that we can call, rather than
+                        --   generating lots of repetative code.
+                        [ hcat [ "typedParams <- evalLimitT maxBound $ PH'.convertValue params" ]
+                        , hcat [ "results <- ", pureValName methodName, " typedParams server_" ]
+                        , hcat [ "resultStruct <- evalLimitT maxBound $ PH'.convertValue results" ]
+                        , hcat [ "(promise, fulfiller) <- Rpc.newPromiseIO" ]
+                        , hcat [ "Rpc.fulfillIO fulfiller resultStruct" ]
+                        , hcat [ "pure promise" ]
+                        ]
+                    ]
+                , "_ -> Rpc.throwMethodUnimplemented"
+                ]
+            , "_ -> Rpc.throwMethodUnimplemented"
+            ]
+        , "}"
+        ]
     , instance_ [] (pureName <> "'server_ " <> pureName)
         $ flip map methods $ \Method{..} -> vcat
             [ hcat [ pureValName methodName,  " args (", pureName, " client) = do" ]

@@ -48,12 +48,22 @@ instance C'.Cerialize s Echo where
 class Echo'server_ cap where
     {-# MINIMAL echo'echo #-}
     echo'echo :: Echo'echo'params -> cap -> Rpc.RpcT IO (Echo'echo'results)
-    echo'echo _ _ = throwM $ Rpc.Exception
-        { reason = "Method unimplemented"
-        , type_ = Rpc.Exception'Type'unimplemented
-        , obsoleteIsCallersFault = False
-        , obsoleteDurability = 0
-        }
+    echo'echo _ _ = Rpc.throwMethodUnimplemented
+export_Echo :: Echo'server_ a => a -> Rpc.RpcT IO Echo
+export_Echo server_ = Echo <$> Rpc.export Rpc.Server
+    { handleStop = pure () -- TODO
+    , handleCall = \interfaceId methodId params -> case interfaceId of
+        16940812395455687611 -> case methodId of
+            0 -> do
+                typedParams <- evalLimitT maxBound $ PH'.convertValue params
+                results <- echo'echo typedParams server_
+                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
+                (promise, fulfiller) <- Rpc.newPromiseIO
+                Rpc.fulfillIO fulfiller resultStruct
+                pure promise
+            _ -> Rpc.throwMethodUnimplemented
+        _ -> Rpc.throwMethodUnimplemented
+    }
 instance Echo'server_ Echo where
     echo'echo args (Echo client) = do
         args' <- evalLimitT maxBound $ PH'.convertValue args
