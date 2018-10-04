@@ -426,6 +426,8 @@ data Vat = Vat
 
     , sendQ           :: TBQueue Message
     , recvQ           :: TBQueue Message
+
+    , debugMode       :: !Bool
     }
 
 instance Eq Vat where
@@ -437,6 +439,11 @@ data VatConfig = VatConfig
     { maxQuestions    :: !Word32
     , maxExports      :: !Word32
     , bootstrapServer :: Maybe (RpcT IO Client)
+    , debugMode       :: !Bool
+    -- ^ In debug mode, errors reported by the RPC system to its peers will
+    -- contain extra information. This should not be used in production, as
+    -- it is possible for these messages to contain sensitive information,
+    -- but it can be useful for debugging.
     }
 
 instance Default VatConfig where
@@ -444,6 +451,7 @@ instance Default VatConfig where
         { maxQuestions = 32
         , maxExports = 32
         , bootstrapServer = Nothing
+        , debugMode = False
         }
 
 runRpcT :: Vat -> RpcT m a -> m a
@@ -568,7 +576,10 @@ handleCallMsg vat@Vat{..} msg@Call{target,interfaceId,methodId,params} =
                                             -- Otherwise, return something opaque to
                                             -- the caller; the exception could potentially
                                             -- contain sensitive info.
-                                            { reason = "unhandled exception"
+                                            { reason = "unhandled exception" <>
+                                                    if debugMode
+                                                        then ": " <> T.pack (show e)
+                                                        else ""
                                             , type_ = Exception'Type'failed
                                             }
                                 }

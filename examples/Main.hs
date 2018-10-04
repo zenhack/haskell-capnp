@@ -30,7 +30,7 @@ main = do
 runClient =
     connect "localhost" "4000" $ \(sock, _addr) -> do
         transport <- socketTransport defaultLimit sock
-        runVat def transport $ do
+        runVat def { debugMode = True } transport $ do
             echoSrv <- Echo <$> bootstrap
             result <- echoSrv & echo'echo def { query = "Hello, World!" }
             liftIO $ do
@@ -44,6 +44,7 @@ runServer =
             def { bootstrapServer = Just $ do
                     Echo client <- export_Echo MyEchoServer
                     pure client
+                , debugMode = True
                 }
             transport
             (pure ())
