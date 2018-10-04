@@ -272,6 +272,8 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 ]
             ]
         ]
+    , hcat [ "export_", pureName, " :: ", pureName, "'server_ a => a -> Rpc.RpcT IO ", pureName ]
+    , hcat [ "export_", pureName, " = undefined" ]
     , instance_ [] (pureName <> "'server_ " <> pureName)
         $ flip map methods $ \Method{..} -> vcat
             [ hcat [ pureValName methodName,  " args (", pureName, " client) = do" ]

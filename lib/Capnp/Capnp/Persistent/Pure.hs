@@ -56,6 +56,8 @@ class Persistent'server_ cap where
         , obsoleteIsCallersFault = False
         , obsoleteDurability = 0
         }
+export_Persistent :: Persistent'server_ a => a -> Rpc.RpcT IO Persistent
+export_Persistent = undefined
 instance Persistent'server_ Persistent where
     persistent'save args (Persistent client) = do
         args' <- evalLimitT maxBound $ PH'.convertValue args
@@ -86,6 +88,8 @@ class RealmGateway'server_ cap where
         , obsoleteIsCallersFault = False
         , obsoleteDurability = 0
         }
+export_RealmGateway :: RealmGateway'server_ a => a -> Rpc.RpcT IO RealmGateway
+export_RealmGateway = undefined
 instance RealmGateway'server_ RealmGateway where
     realmGateway'import args (RealmGateway client) = do
         args' <- evalLimitT maxBound $ PH'.convertValue args
