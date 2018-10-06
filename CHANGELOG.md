@@ -1,3 +1,8 @@
+# 0.4.0.0
+
+* Fix a bug where `defaultLimit` was actually much larger than
+  documented.
+* Fix a where reads on `Handle`s at EOF would cause a call to error.
 
 # 0.3.0.0
 

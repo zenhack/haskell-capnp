@@ -76,7 +76,7 @@ execLimitT limit (LimitT stateT) = execStateT stateT limit
 
 -- | A sensible default traversal limit. Currently 64 MiB.
 defaultLimit :: Int
-defaultLimit = 64 * 1024 * 1024
+defaultLimit = (64 * 1024 * 1024) `div` 8
 
 ------ Instances of mtl type classes for 'LimitT'.
 
