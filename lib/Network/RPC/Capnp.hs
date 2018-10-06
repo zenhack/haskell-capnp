@@ -495,6 +495,18 @@ replyUnimplemented :: Vat -> Message -> STM ()
 replyUnimplemented Vat{sendQ} =
     writeTBQueue sendQ . Message'unimplemented
 
+-- | Send an abort message to the remote vat with the given reason field
+-- and a type field of @failed@, and return the exception that was included
+-- in the message.
+replyAbort :: Vat -> T.Text -> STM Rpc.Exception
+replyAbort Vat{sendQ} reason = do
+    let exn = def
+            { reason
+            , type_ = Exception'Type'failed
+            }
+    writeTBQueue sendQ $ Message'abort exn
+    pure exn
+
 -- | The coordinator handles incoming messages, dispatching them as
 -- method calls to local objects, forwarding return values to the right
 -- place, etc.
@@ -510,8 +522,28 @@ coordinator vat@Vat{..} = forever $ do
             handleBootstrap vat bs
         Message'call call ->
             handleCallMsg vat call
+        Message'unimplemented msg ->
+            handleUnimplemented vat msg
         _ ->
             atomically $ replyUnimplemented vat msg
+
+-- | Handle an @unimplemented@ message.
+handleUnimplemented vat msg = case msg of
+    Message'unimplemented _ ->
+        -- If the client itself doesn't handle unimplemented message, that's
+        -- their problem.
+        pure ()
+    Message'abort _ ->
+        -- There's something very wrong on the other vat; we didn't send an
+        -- abort, since we only do that right before, you know, aborting the
+        -- connection.
+        throwIO =<< (atomically $ replyAbort vat $
+            "Your vat sent an 'unimplemented' message for an abort message " <>
+            "that its remote peer never sent. This is likely a bug in your " <>
+            "capnproto library.")
+    _ ->
+        throwIO =<< (atomically $ replyAbort vat
+            "Your vat replied with @unimplemented for a requred message.")
 
 -- | Handle a bootstrap message.
 handleBootstrap :: Vat -> Bootstrap -> IO ()
@@ -541,12 +573,10 @@ handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,
                 result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
                 case result of
                     Nothing -> do
-                        let exn = def
-                                { reason = "Received 'Call' on non-existant promised answer #"
-                                    <> T.pack (show targetQuestionId)
-                                , type_ = Exception'Type'failed
-                                }
-                        atomically $ writeTBQueue sendQ $ Message'abort exn
+                        exn <- atomically $ replyAbort
+                            vat
+                            ("Received 'Call' on non-existant promised answer #"
+                                <> T.pack (show targetQuestionId))
                         -- TODO: adjust this so we don't throw (and thus kill the connection)
                         -- before the abort message is actually sent.
                         throwIO exn
@@ -587,12 +617,9 @@ handleReturn :: Vat -> Return -> IO ()
 handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
     question <- M.lookup answerId <$> readTVar questions
     case question of
-        Nothing ->
-            abort def
-                { reason = "Received 'Return' for non-existant question #"
-                    <> T.pack (show answerId)
-                , type_ = Exception'Type'failed
-                }
+        Nothing -> abort $
+            "Received 'Return' for non-existant question #"
+                <> T.pack (show answerId)
         Just (BootstrapQuestion _) -> do
             -- This will case the other side to drop the resolved cap; we'll
             -- just keep using the promise.
@@ -611,11 +638,9 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
                     breakPromise sendReturn exn
                     ok
                 _ ->
-                    abort def
-                        { reason = "Received unexpected return variant " <>
-                            "(we only support results and exception)."
-                        , type_ = Exception'Type'failed
-                        }
+                    abort $
+                        "Received unexpected return variant " <>
+                        "(we only support results and exception)."
 
   where
     -- | Run a transaction, which may *return* an error (as opposed to throwing
@@ -633,9 +658,8 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
 
     -- | Send an exception to the remote vat, and also return it (to be raised
     -- by handleErrs).
-    abort exn = do
-        writeTBQueue sendQ $ Message'abort exn
-        pure $ Left exn
+    abort = fmap Left . replyAbort vat
+
     -- | Shorthand to return from a transaction with no error.
     ok = pure $ Right ()
 
@@ -647,11 +671,8 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
         Just (PtrStruct s) -> do
             fulfill sendReturn s
             ok
-        Just _ -> abort def
+        Just _ -> abort
             -- TODO: I(zenhack) am not sure it's actually invalid to have
             -- capability in a return value, so maybe we should relax this
             -- a bit.
-            { reason = "Received non-struct pointer in " <>
-                "a return message."
-            , type_ = Exception'Type'failed
-            }
+            "Received non-struct pointer in a return message."
