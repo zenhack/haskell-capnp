@@ -4,5 +4,7 @@ dist-newstyle
 .cabal-sandbox
 cabal.sandbox.config
 cabal.project.local
+cabal.project.local~
+*.prof
 .ghc.*
 result*
