@@ -221,9 +221,11 @@ data ConstMsg = ConstMsg
     { constSegs :: V.Vector (Segment ConstMsg)
     , constCaps :: V.Vector Client
     }
+    deriving(Eq)
 
 instance Monad m => Message m ConstMsg where
     newtype Segment ConstMsg = ConstSegment { constSegToVec :: SV.Vector Word64 }
+        deriving(Eq)
 
     numSegs ConstMsg{constSegs} = pure $ V.length constSegs
     numCaps ConstMsg{constCaps} = pure $ V.length constCaps
