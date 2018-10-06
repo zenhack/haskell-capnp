@@ -528,22 +528,22 @@ handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
 handleCallMsg :: Vat -> Call -> IO ()
 -- TODO: can't call this handleCall because that's taken by the field in 'Server'.
 -- rework things so we can be consistent.
-handleCallMsg vat@Vat{..} msg@Call{target,interfaceId,methodId,params} =
+handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params} =
     case target of
         MessageTarget'importedCap _ ->
             atomically $ replyUnimplemented vat $ Message'call msg
         MessageTarget'unknown' _ ->
             atomically $ replyUnimplemented vat $ Message'call msg
-        MessageTarget'promisedAnswer PromisedAnswer{questionId, transform}
+        MessageTarget'promisedAnswer PromisedAnswer{questionId=targetQuestionId, transform}
             | V.length transform /= 0 ->
                 atomically $ replyUnimplemented vat $ Message'call msg
             | otherwise -> do
-                result <- atomically $ M.lookup questionId <$> readTVar answers
+                result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
                 case result of
                     Nothing -> do
                         let exn = def
                                 { reason = "Received 'Call' on non-existant promised answer #"
-                                    <> T.pack (show questionId)
+                                    <> T.pack (show targetQuestionId)
                                 , type_ = Exception'Type'failed
                                 }
                         atomically $ writeTBQueue sendQ $ Message'abort exn
@@ -554,35 +554,33 @@ handleCallMsg vat@Vat{..} msg@Call{target,interfaceId,methodId,params} =
                         result <- try $ do
                             ret <- runRpcT vat $ call interfaceId methodId params client
                             liftIO $ waitIO ret
-                        atomically $ writeTBQueue sendQ $ Message'return $ case result of
-                            -- The server returned successfully; pass along the result.
-                            Right ok -> def
-                                { answerId = questionId
-                                , union' = Return'results def
+                        atomically $ writeTBQueue sendQ $ Message'return $ def
+                            { answerId = callQuestionId
+                            , union' = case result of
+                                -- The server returned successfully; pass along the result.
+                                Right ok -> Return'results def
                                     { content = Just (PtrStruct ok)
                                     }
-                                }
-                            Left (e :: SomeException) -> def
-                                -- The server threw an exception; we need to report this
-                                -- to the caller.
-                                { answerId = questionId
-                                , union' = Return'exception $
-                                    case fromException e of
-                                        Just (e :: Rpc.Exception) ->
-                                            -- If the exception was a capnp exception,
-                                            -- just pass it along.
-                                            e
-                                        Nothing -> def
-                                            -- Otherwise, return something opaque to
-                                            -- the caller; the exception could potentially
-                                            -- contain sensitive info.
-                                            { reason = "unhandled exception" <>
-                                                    if debugMode
-                                                        then ": " <> T.pack (show e)
-                                                        else ""
-                                            , type_ = Exception'Type'failed
-                                            }
-                                }
+                                Left (e :: SomeException) -> def
+                                    -- The server threw an exception; we need to report this
+                                    -- to the caller.
+                                    Return'exception $
+                                        case fromException e of
+                                            Just (e :: Rpc.Exception) ->
+                                                -- If the exception was a capnp exception,
+                                                -- just pass it along.
+                                                e
+                                            Nothing -> def
+                                                -- Otherwise, return something opaque to
+                                                -- the caller; the exception could potentially
+                                                -- contain sensitive info.
+                                                { reason = "unhandled exception" <>
+                                                        if debugMode
+                                                            then ": " <> T.pack (show e)
+                                                            else ""
+                                                , type_ = Exception'Type'failed
+                                                }
+                            }
 
 -- | Handle receiving a 'Return' message.
 handleReturn :: Vat -> Return -> IO ()

@@ -34,6 +34,7 @@ import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Capnp.Classes as C'
 import qualified Network.RPC.Capnp as Rpc
 import qualified Capnp.Capnp.Rpc.Pure as Rpc
+import qualified Data.Capnp.GenHelpers.Rpc as RH'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xd0a87f36fa0182f5
@@ -52,15 +53,10 @@ class Echo'server_ cap where
 export_Echo :: Echo'server_ a => a -> Rpc.RpcT IO Echo
 export_Echo server_ = Echo <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId params -> case interfaceId of
+    , handleCall = \interfaceId methodId payload -> case interfaceId of
         16940812395455687611 -> case methodId of
             0 -> do
-                typedParams <- evalLimitT maxBound $ PH'.convertValue params
-                results <- echo'echo typedParams server_
-                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
-                (promise, fulfiller) <- Rpc.newPromiseIO
-                Rpc.fulfillIO fulfiller resultStruct
-                pure promise
+                RH'.handleMethod server_ echo'echo payload
             _ -> Rpc.throwMethodUnimplemented
         _ -> Rpc.throwMethodUnimplemented
     }

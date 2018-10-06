@@ -96,6 +96,7 @@ library
       , Data.Capnp.Errors
       , Data.Capnp.GenHelpers
       , Data.Capnp.GenHelpers.Pure
+      , Data.Capnp.GenHelpers.Rpc
       , Data.Capnp.IO
       , Data.Capnp.Message
       , Data.Capnp.Pointer

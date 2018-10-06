@@ -34,6 +34,7 @@ import qualified Data.Capnp.GenHelpers.Pure as PH'
 import qualified Data.Capnp.Classes as C'
 import qualified Network.RPC.Capnp as Rpc
 import qualified Capnp.Capnp.Rpc.Pure as Rpc
+import qualified Data.Capnp.GenHelpers.Rpc as RH'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Capnp.ById.Xb8630836983feed7
@@ -54,15 +55,10 @@ class Persistent'server_ cap where
 export_Persistent :: Persistent'server_ a => a -> Rpc.RpcT IO Persistent
 export_Persistent server_ = Persistent <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId params -> case interfaceId of
+    , handleCall = \interfaceId methodId payload -> case interfaceId of
         14468694717054801553 -> case methodId of
             0 -> do
-                typedParams <- evalLimitT maxBound $ PH'.convertValue params
-                results <- persistent'save typedParams server_
-                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
-                (promise, fulfiller) <- Rpc.newPromiseIO
-                Rpc.fulfillIO fulfiller resultStruct
-                pure promise
+                RH'.handleMethod server_ persistent'save payload
             _ -> Rpc.throwMethodUnimplemented
         _ -> Rpc.throwMethodUnimplemented
     }
@@ -89,22 +85,12 @@ class RealmGateway'server_ cap where
 export_RealmGateway :: RealmGateway'server_ a => a -> Rpc.RpcT IO RealmGateway
 export_RealmGateway server_ = RealmGateway <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId params -> case interfaceId of
+    , handleCall = \interfaceId methodId payload -> case interfaceId of
         9583422979879616212 -> case methodId of
             0 -> do
-                typedParams <- evalLimitT maxBound $ PH'.convertValue params
-                results <- realmGateway'import typedParams server_
-                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
-                (promise, fulfiller) <- Rpc.newPromiseIO
-                Rpc.fulfillIO fulfiller resultStruct
-                pure promise
+                RH'.handleMethod server_ realmGateway'import payload
             1 -> do
-                typedParams <- evalLimitT maxBound $ PH'.convertValue params
-                results <- realmGateway'export typedParams server_
-                resultStruct <- evalLimitT maxBound $ PH'.convertValue results
-                (promise, fulfiller) <- Rpc.newPromiseIO
-                Rpc.fulfillIO fulfiller resultStruct
-                pure promise
+                RH'.handleMethod server_ realmGateway'export payload
             _ -> Rpc.throwMethodUnimplemented
         _ -> Rpc.throwMethodUnimplemented
     }

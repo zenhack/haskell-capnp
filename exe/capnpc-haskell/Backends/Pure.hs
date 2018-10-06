@@ -117,6 +117,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
         vcat
         [ "import qualified Network.RPC.Capnp as Rpc"
         , "import qualified Capnp.Capnp.Rpc.Pure as Rpc"
+        , "import qualified Data.Capnp.GenHelpers.Rpc as RH'"
         ]
       else
         ""
@@ -271,7 +272,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Rpc.Server" ]
     , indent $ vcat
         [ "{ handleStop = pure () -- TODO"
-        , ", handleCall = \\interfaceId methodId params -> case interfaceId of"
+        , ", handleCall = \\interfaceId methodId payload -> case interfaceId of"
         , indent $ vcat
             -- TODO: superclasses.
             [ hcat [ fromString (show interfaceId), " -> case methodId of" ]
@@ -279,18 +280,10 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 [ vcat $ flip map methods $ \Method{..} -> vcat
                     [ hcat [ fromString (show ordinal), " -> do" ]
                     , indent $ vcat
+                        [ hcat [ "RH'.handleMethod server_ ", pureValName methodName, " payload" ] ]
                         -- TODO:
                         --
                         -- * handle exceptions
-                        -- * factor this out into a helper that we can call, rather than
-                        --   generating lots of repetative code.
-                        [ hcat [ "typedParams <- evalLimitT maxBound $ PH'.convertValue params" ]
-                        , hcat [ "results <- ", pureValName methodName, " typedParams server_" ]
-                        , hcat [ "resultStruct <- evalLimitT maxBound $ PH'.convertValue results" ]
-                        , hcat [ "(promise, fulfiller) <- Rpc.newPromiseIO" ]
-                        , hcat [ "Rpc.fulfillIO fulfiller resultStruct" ]
-                        , hcat [ "pure promise" ]
-                        ]
                     ]
                 , "_ -> Rpc.throwMethodUnimplemented"
                 ]
