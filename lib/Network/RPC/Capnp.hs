@@ -500,7 +500,7 @@ coordinator vat@Vat{..} = forever $ do
         _ ->
             atomically $ replyUnimplemented vat msg
 
-handleFinish Vat{..} Finish{questionId} = do
+handleFinish Vat{..} Finish{questionId} =
     atomically $ modifyTVar' answers (M.delete questionId)
 
 
