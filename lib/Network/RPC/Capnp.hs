@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -64,27 +63,22 @@ import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
-import Data.Binary.Get                 (Decoder(..), runGetIncremental)
 import Data.Default                    (Default(..))
-import Data.IORef                      (newIORef, readIORef, writeIORef)
 import Data.Maybe                      (isJust)
 import Network.Socket                  (Socket)
-import Network.Socket.ByteString       (recv)
 import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
-import qualified Data.ByteString as BS
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
 import Capnp.Capnp.Rpc.Pure hiding (Exception)
 
-import Data.Capnp.Message      (getMsgBinary)
 import Data.Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
-import Data.Capnp (def, hGetValue, hPutValue, msgToValue, sPutValue)
+import Data.Capnp (def, hGetValue, hPutValue, sGetValue, sPutValue)
 
 import qualified Capnp.Capnp.Rpc.Pure as Rpc
 
@@ -131,33 +125,10 @@ handleTransport limit handle = Transport
 -- is possible some additional data has been consumed beyond the last message
 -- received.
 socketTransport :: MonadIO m => Int -> Socket -> m (Transport m)
-socketTransport limit socket = do
-    bufferedData <- liftIO $ newIORef BS.empty
-    let decodeMessage !limitRemaining bytes = \case
-            Fail{} ->
-                error "FIXME: handle errors."
-            Done excess _ msg -> do
-                writeIORef bufferedData excess
-                pure msg
-            Partial push -> do
-                bytes <- if BS.null bytes
-                    then recv socket limitRemaining
-                    else pure bytes
-                decodeMessage
-                    (limitRemaining - BS.length bytes)
-                    BS.empty
-                    (push (Just bytes))
-    pure Transport
-        { sendMsg = liftIO . sPutValue socket
-        , recvMsg = liftIO $ do
-            bytes <- readIORef bufferedData
-            msg <- decodeMessage
-                limit
-                bytes
-                (runGetIncremental $ getMsgBinary limit)
-            msgToValue msg
-        }
-
+socketTransport limit socket = pure $ Transport
+    { sendMsg = \msg -> liftIO $ sPutValue socket msg
+    , recvMsg = liftIO $ sGetValue socket limit
+    }
 
 -- | Get a new exportId/questionId. The argument gets the pool to allocate from.
 newId :: MonadIO m => (Vat -> TVar [Word32]) -> RpcT m Word32
