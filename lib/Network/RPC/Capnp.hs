@@ -608,6 +608,13 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
                 Return'exception exn -> do
                     breakPromise sendReturn exn
                     ok
+
+                -- These shouldn't come up in practice yet, since our
+                -- implementation doesn't do anything that can trigger
+                -- them, but when they do we won't need to do anything:
+                Return'canceled -> ok
+                Return'resultsSentElsewhere -> ok
+
                 _ ->
                     abort $
                         "Received unexpected return variant " <>
