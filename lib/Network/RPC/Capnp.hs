@@ -514,7 +514,7 @@ handleUnimplemented vat msg = case msg of
             "capnproto library.")
     _ ->
         throwIO =<< (atomically $ replyAbort vat
-            "Your vat replied with @unimplemented for a requred message.")
+            "Your vat replied with 'unimplemented' for a requred message.")
 
 -- | Handle a bootstrap message.
 handleBootstrap :: Vat -> Bootstrap -> IO ()
