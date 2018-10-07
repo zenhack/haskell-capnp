@@ -22,11 +22,12 @@ module Data.Capnp.IO
 
 import Data.Bits
 
+import Control.Exception         (throwIO)
 import Control.Monad.Primitive   (RealWorld)
 import Control.Monad.Trans.Class (lift)
-import Network.Simple.TCP        (Socket, sendLazy)
-import Network.Socket.ByteString (recv)
+import Network.Simple.TCP        (Socket, recv, sendLazy)
 import System.IO                 (Handle, stdin, stdout)
+import System.IO.Error           (eofErrorType, mkIOError)
 
 import qualified Data.ByteString as BS
 
@@ -72,14 +73,20 @@ sGetValue socket limit = do
         bytes <- recvFull (fromIntegral $ wordsToBytes words)
         M.fromByteString bytes
 
-    -- | Like recv, but (1) never returns less than `count` bytes, and (2)
-    -- uses `socket`, rather than taking the socket as an argument.
+    -- | Like recv, but (1) never returns less than `count` bytes, (2)
+    -- uses `socket`, rather than taking the socket as an argument, and (3)
+    -- throws an EOF exception when the connection is closed.
     recvFull :: Int -> IO BS.ByteString
     recvFull !count = do
-        bytes <- recv socket count
-        if BS.length bytes == count
-            then pure bytes
-            else (bytes <>) <$> recvFull (count - BS.length bytes)
+        maybeBytes <- recv socket count
+        case maybeBytes of
+            Nothing ->
+                throwIO $ mkIOError eofErrorType "Remote socket closed" Nothing Nothing
+            Just bytes
+                | BS.length bytes == count ->
+                    pure bytes
+                | otherwise ->
+                    (bytes <>) <$> recvFull (count - BS.length bytes)
 
 -- | @'hPutValue' handle value@ writes @value@ to handle, as the root object of
 -- a message. If it throws an exception, it will be an 'IOError' raised by the
