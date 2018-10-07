@@ -126,7 +126,7 @@ handleTransport limit handle = Transport
 -- received.
 socketTransport :: MonadIO m => Int -> Socket -> m (Transport m)
 socketTransport limit socket = pure $ Transport
-    { sendMsg = \msg -> liftIO $ sPutValue socket msg
+    { sendMsg = liftIO . sPutValue socket
     , recvMsg = liftIO $ sGetValue socket limit
     }
 
@@ -508,12 +508,12 @@ handleUnimplemented vat msg = case msg of
         -- There's something very wrong on the other vat; we didn't send an
         -- abort, since we only do that right before, you know, aborting the
         -- connection.
-        throwIO =<< (atomically $ replyAbort vat $
+        throwIO =<< atomically (replyAbort vat $
             "Your vat sent an 'unimplemented' message for an abort message " <>
             "that its remote peer never sent. This is likely a bug in your " <>
             "capnproto library.")
     _ ->
-        throwIO =<< (atomically $ replyAbort vat
+        throwIO =<< atomically (replyAbort vat
             "Your vat replied with 'unimplemented' for a requred message.")
 
 -- | Handle a bootstrap message.
