@@ -5,6 +5,12 @@ dist-newstyle
 cabal.sandbox.config
 cabal.project.local
 cabal.project.local~
+
+# Profiler outputs (and formatted reports):
 *.prof
+*.hp
+*.aux
+*.ps
+
 .ghc.*
 result*
