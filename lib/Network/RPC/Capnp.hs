@@ -493,10 +493,16 @@ coordinator vat@Vat{..} = forever $ do
             handleBootstrap vat bs
         Message'call call ->
             handleCallMsg vat call
+        Message'finish finish ->
+            handleFinish vat finish
         Message'unimplemented msg ->
             handleUnimplemented vat msg
         _ ->
             atomically $ replyUnimplemented vat msg
+
+handleFinish Vat{..} Finish{questionId} = do
+    atomically $ modifyTVar' answers (M.delete questionId)
+
 
 -- | Handle an @unimplemented@ message.
 handleUnimplemented vat msg = case msg of
