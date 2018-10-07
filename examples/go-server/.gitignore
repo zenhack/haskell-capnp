@@ -1,3 +1,0 @@
-*.capnp
-*.capnp.go
-/haskell-capnp-echo-server
