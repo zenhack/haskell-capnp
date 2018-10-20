@@ -19,7 +19,7 @@ module Capnp.GenHelpers.Pure (defaultStruct, convertValue) where
 import Data.Maybe (fromJust)
 
 import Capnp.TraversalLimit (evalLimitT)
-import Data.Mutable              (freeze)
+import Data.Mutable         (freeze)
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Convert as Convert

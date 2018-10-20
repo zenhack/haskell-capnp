@@ -36,9 +36,9 @@ import qualified Data.ByteString.Lazy    as LBS
 
 import Capnp.Classes
 
-import Codec.Capnp               (getRoot, setRoot)
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
-import Data.Mutable              (freeze)
+import Codec.Capnp          (getRoot, setRoot)
+import Data.Mutable         (freeze)
 
 import qualified Capnp.Message as M
 

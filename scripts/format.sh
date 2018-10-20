@@ -4,6 +4,6 @@
 set -e
 cd "$(dirname $0)/.."
 stylish-haskell -i $(find * -name '*.hs' \
-	| grep -v examples/Capnp/ \
-	| grep -v lib/Capnp/ \
+	| grep -v examples/Capnp/Gen/ \
+	| grep -v lib/Capnp/Gen/ \
 	| grep -v lib/Internal/Gen)

@@ -47,7 +47,7 @@ import Internal.Gen.Instances ()
 import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
-import qualified Data.Vector        as V
+import qualified Data.Vector   as V
 
 -- | A one of a struct's sections (data or pointer).
 --

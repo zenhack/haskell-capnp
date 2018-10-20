@@ -6,5 +6,5 @@ This directory contains a few helper scripts for development.
   generated code).
 * `hlint.sh` runs `hlint` on the source tree (except for generated
   code).
-* `gen-builtintypes-lists.hs` generates the module
-  `Data.Capnp.BuiltinTypes.Lists`, which contains a lot of boilerplate.
+* `gen-basic-instances.hs` generates the module
+  `Internal.Gen.Instances`, which contains a lot of boilerplate.

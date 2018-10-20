@@ -71,7 +71,7 @@ import Capnp.Bits
     )
 import Capnp.Pointer        (ElementSize(..))
 import Capnp.TraversalLimit (MonadLimit(invoice))
-import Data.Mutable              (Thaw(..))
+import Data.Mutable         (Thaw(..))
 
 import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M
