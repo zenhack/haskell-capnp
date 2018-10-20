@@ -8,12 +8,12 @@ import Text.Heredoc            (there)
 
 import Capnp.Gen.Capnp.Schema
 
-import Data.Capnp                (newRoot)
-import Data.Capnp.TraversalLimit (LimitT, evalLimitT)
-import Data.Mutable              (Thaw(..))
-import Tests.Util                (assertionsToTest, decodeValue)
+import Capnp                (newRoot)
+import Capnp.TraversalLimit (LimitT, evalLimitT)
+import Data.Mutable         (Thaw(..))
+import Tests.Util           (assertionsToTest, decodeValue)
 
-import qualified Data.Capnp.Message as M
+import qualified Capnp.Message as M
 
 data BuildTest = BuildTest
     { typeName :: String

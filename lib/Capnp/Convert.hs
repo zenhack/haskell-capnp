@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-|
-Module: Data.Capnp.Convert
+Module: Capnp.Convert
 Description: Convert between messages, typed capnproto values, and (lazy)bytestring(builders).
 
 This module provides various helper functions to convert between messages, types defined
@@ -10,7 +10,7 @@ bytestrings (both lazy and strict), and bytestring builders.
 
 Note that not all conversions exist or necessarily make sense.
 -}
-module Data.Capnp.Convert
+module Capnp.Convert
     ( msgToBuilder
     , msgToLBS
     , msgToBS
@@ -34,13 +34,13 @@ import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 
-import Data.Capnp.Classes
+import Capnp.Classes
 
 import Codec.Capnp               (getRoot, setRoot)
-import Data.Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
+import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
 import Data.Mutable              (freeze)
 
-import qualified Data.Capnp.Message as M
+import qualified Capnp.Message as M
 
 -- | Compute a reasonable limit based on the size of a message. The limit
 -- is the total number of words in all of the message's segments, multiplied

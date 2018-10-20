@@ -1,17 +1,17 @@
 {- |
-Module: Data.Capnp.GenHelpers
+Module: Capnp.GenHelpers
 Description: Misc. helpers for generated code.
 
 This module provides various helpers used by generated code; developers
 are not expected to invoke them directly.
 
-These helpers are used by the low-level api. "Data.Capnp.GenHelpers.Pure"
+These helpers are used by the low-level api. "Capnp.GenHelpers.Pure"
 defines helpers used by high-level api.
 -}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# OPTIONS_HADDOCK hide      #-}
-module Data.Capnp.GenHelpers where
+module Capnp.GenHelpers where
 
 import Data.Bits
 import Data.Word
@@ -20,13 +20,13 @@ import Data.Maybe (fromJust)
 
 import qualified Data.ByteString as BS
 
-import Data.Capnp.Bits
+import Capnp.Bits
 
-import Data.Capnp (bsToMsg, evalLimitT)
+import Capnp (bsToMsg, evalLimitT)
 
-import qualified Data.Capnp.Classes as C
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Classes as C
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
 -- | @'getWordField' struct index offset def@ fetches a field from the
 -- struct's data section. @index@ is the index of the 64-bit word in the data

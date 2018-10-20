@@ -27,10 +27,10 @@ import Util
 
 import Backends.Common (dataFieldSize, fmtPrimWord)
 
-import Data.Capnp
+import Capnp
     (cerialize, createPure, defaultLimit, msgToLBS, newMessage, setRoot)
 
-import qualified Data.Capnp.Untyped.Pure as Untyped
+import qualified Capnp.Untyped.Pure as Untyped
 
 -- | Sort varaints by their tag, in decending order (with no tag at all being last).
 sortVariants = sortOn (Down . variantTag)
@@ -81,18 +81,18 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import GHC.Generics (Generic)"
     , ""
-    , "import Data.Capnp.Bits (Word1)"
+    , "import Capnp.Bits (Word1)"
     , ""
     , "import qualified Data.Bits"
     , "import qualified Data.Maybe"
     , "import qualified Data.ByteString"
     -- The trailing ' is to avoid possible name collisions:
-    , "import qualified Data.Capnp.Classes as C'"
-    , "import qualified Data.Capnp.Basics as B'"
-    , "import qualified Data.Capnp.GenHelpers as H'"
-    , "import qualified Data.Capnp.TraversalLimit as TL'"
-    , "import qualified Data.Capnp.Untyped as U'"
-    , "import qualified Data.Capnp.Message as M'"
+    , "import qualified Capnp.Classes as C'"
+    , "import qualified Capnp.Basics as B'"
+    , "import qualified Capnp.GenHelpers as H'"
+    , "import qualified Capnp.TraversalLimit as TL'"
+    , "import qualified Capnp.Untyped as U'"
+    , "import qualified Capnp.Message as M'"
     , ""
     , vcat $ map fmtImport modImports
     , ""
@@ -263,7 +263,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
                 ]
             VoidField -> vcat
                 [ typeAnnotation VoidType
-                , getDef " Data.Capnp.TraversalLimit.invoice 1 >> pure ()"
+                , getDef " Capnp.TraversalLimit.invoice 1 >> pure ()"
                 ]
     fmtHas =
         case fieldLocType of

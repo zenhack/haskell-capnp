@@ -65,7 +65,7 @@ import qualified Data.Text       as T
 
 import Util
 
-import qualified Data.Capnp.Untyped.Pure as Untyped
+import qualified Capnp.Untyped.Pure as Untyped
 
 newtype Namespace = Namespace [Text]
     deriving(Show, Read, Eq, Ord)

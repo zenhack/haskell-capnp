@@ -10,16 +10,16 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-|
-Module: Data.Capnp.Untyped
+Module: Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.
 
 The types and functions in this module know about things like structs and
 lists, but are not schema aware.
 
 Each of the data types exported by this module is parametrized over a Message
-type (see "Data.Capnp.Message"), used as the underlying storage.
+type (see "Capnp.Message"), used as the underlying storage.
 -}
-module Data.Capnp.Untyped
+module Capnp.Untyped
     ( Ptr(..), List(..), Struct, ListOf, Cap
     , dataSection, ptrSection
     , getData, getPtr
@@ -58,8 +58,8 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Data.Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
-import Data.Capnp.Bits
+import Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
+import Capnp.Bits
     ( BitCount(..)
     , ByteCount(..)
     , Word1(..)
@@ -69,13 +69,13 @@ import Data.Capnp.Bits
     , replaceBits
     , wordsToBytes
     )
-import Data.Capnp.Pointer        (ElementSize(..))
-import Data.Capnp.TraversalLimit (MonadLimit(invoice))
+import Capnp.Pointer        (ElementSize(..))
+import Capnp.TraversalLimit (MonadLimit(invoice))
 import Data.Mutable              (Thaw(..))
 
-import qualified Data.Capnp.Errors  as E
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Pointer as P
+import qualified Capnp.Errors  as E
+import qualified Capnp.Message as M
+import qualified Capnp.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.

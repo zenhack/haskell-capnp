@@ -1,10 +1,10 @@
 {-|
-Module: Data.Capnp.Errors
+Module: Capnp.Errors
 Description: Error handling utilities
 -}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Data.Capnp.Errors
+module Capnp.Errors
     ( Error(..)
     )
   where

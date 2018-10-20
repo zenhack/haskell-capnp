@@ -5,14 +5,14 @@ module Tests.SchemaQuickCheck
 
 import qualified Data.ByteString as BS
 
-import Data.Capnp.Classes        (fromStruct)
-import Data.Capnp.Errors         (Error)
-import Data.Capnp.Message        as M
-import Data.Capnp.TraversalLimit (LimitT, runLimitT)
+import Capnp.Classes        (fromStruct)
+import Capnp.Errors         (Error)
+import Capnp.Message        as M
+import Capnp.TraversalLimit (LimitT, runLimitT)
 
+import qualified Capnp.Basics           as Basics
 import qualified Capnp.Gen.Capnp.Schema as Schema
-import qualified Data.Capnp.Basics      as Basics
-import qualified Data.Capnp.Untyped     as Untyped
+import qualified Capnp.Untyped          as Untyped
 
 -- Testing framework imports
 import Test.Framework.Providers.QuickCheck2 (testProperty)

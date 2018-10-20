@@ -2,9 +2,11 @@
 
 * Fix a bug where `defaultLimit` was actually much larger than
   documented.
-* Fix a where reads on `Handle`s at EOF would cause a call to error.
+* Fix a bug where reads on `Handle`s at EOF would cause a call to error.
 * Beginnings of RPC support; the API will likely change substantially.
-* Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
+* Some changes to the module hierarchy:
+  * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
+  * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
 
 # 0.3.0.0
 

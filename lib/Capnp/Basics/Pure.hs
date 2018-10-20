@@ -4,10 +4,10 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 {- |
-Module: Data.Capnp.Basics.Pure
+Module: Capnp.Basics.Pure
 Description: Handling of "basic" capnp datatypes (high-level API).
 
-Analogous to 'Data.Capnp.Basics' in the low-level API, this module deals
+Analogous to 'Capnp.Basics' in the low-level API, this module deals
 with capnproto's @Text@ and @Data@ types. These are simply aliases for
 'BS.ByteString' and the text package's 'T.Text'; mostly this module provides
 helper functions and type class instances.
@@ -15,7 +15,7 @@ helper functions and type class instances.
 Unlike with the low-level API, typed lists do not require special
 treatment -- they're just Vectors.
 -}
-module Data.Capnp.Basics.Pure
+module Capnp.Basics.Pure
     ( Data(..)
     , Text(..)
     ) where
@@ -27,14 +27,14 @@ import Data.Text.Encoding  (decodeUtf8', encodeUtf8)
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
-import Data.Capnp.Classes hiding (ListElem(List))
+import Capnp.Classes hiding (ListElem(List))
 
-import Data.Capnp.Errors  (Error(InvalidUtf8Error))
-import Data.Capnp.Untyped (rawBytes)
+import Capnp.Errors  (Error(InvalidUtf8Error))
+import Capnp.Untyped (rawBytes)
 
-import qualified Data.Capnp.Basics  as Basics
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as Untyped
+import qualified Capnp.Basics  as Basics
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as Untyped
 
 -- | A capnproto @Data@ value. This is just an alias for 'BS.ByteString'.
 type Data = BS.ByteString

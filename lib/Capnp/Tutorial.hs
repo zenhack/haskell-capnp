@@ -1,5 +1,5 @@
 {- |
-Module: Data.Capnp.Tutorial
+Module: Capnp.Tutorial
 Description: Tutorial for the Haskell Cap'N Proto library.
 
 This module provides a tutorial on the overall usage of the library. Note that
@@ -8,7 +8,7 @@ it does not aim to provide a thorough introduction to capnproto itself; see
 
 -}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
-module Data.Capnp.Tutorial (
+module Capnp.Tutorial (
     -- * Overview
     -- $overview
 
@@ -37,9 +37,9 @@ import System.IO (stdout)
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
-import Data.Capnp
+import Capnp
 
-import Data.Capnp.Classes (FromStruct)
+import Capnp.Classes (FromStruct)
 
 {- $overview
 
@@ -186,7 +186,7 @@ schema, but it also makes it easier to forget to set a field if you had
 intended to. The instance maps @'def'@ to the default value as defined by
 capnproto, so leaving out newly-added fields will do The Right Thing.
 
-The module "Data.Capnp" exposes the most frequently used
+The module "Capnp" exposes the most frequently used
 functionality from the capnp package. We can write an address book
 message to standard output using the high-level API like so:
 
@@ -197,8 +197,8 @@ message to standard output using the high-level API like so:
 > {-# LANGUAGE DuplicateRecordFields #-}
 > import Capnp.Gen.Addressbook.Pure
 >
-> -- Note that Data.Capnp re-exports `def`, as a convienence
-> import Data.Capnp (putValue, def)
+> -- Note that Capnp re-exports `def`, as a convienence
+> import Capnp (putValue, def)
 >
 > import qualified Data.Vector as V
 >
@@ -242,7 +242,7 @@ We can use 'getValue' (or alternately 'hGetValue') to read in a message:
 
 > -- ...
 >
-> import Data.Capnp (getValue, defaultLimit)
+> import Capnp (getValue, defaultLimit)
 >
 > -- ...
 >
@@ -261,13 +261,13 @@ The type of 'getValue' is:
 
 'defaultLimit' is a default value for the traversal limit, which acts to
 prevent denial of service vulnerabilities; See the documentation in
-"Data.Capnp.TraversalLimit" for more information. 'getValue' uses this
+"Capnp.TraversalLimit" for more information. 'getValue' uses this
 argument both to catch values that would cause excessive resource usage,
 and to simply limit the overall size of the incoming message. The
 default is approximately 64 MiB.
 
 If an error occurs, an exception will be thrown of type 'Error' from the
-"Data.Capnp.Errors" module.
+"Capnp.Errors" module.
 
 -}
 
@@ -317,7 +317,7 @@ The complete rules for how capnproto types map to Haskell are as follows:
   type for the union does not have the trailing single quote (so its
   name is what the name of the struct type would be).
 * Fields of type `AnyPointer` map to the types defined in
-  @Data.Capnp.Untyped.Pure@.
+  @Capnp.Untyped.Pure@.
 * No code is currently generated for interfaces; this will change once
   we implement RPC.
 -}
@@ -336,7 +336,7 @@ traversal limit needs to be tracked to avoid denial of service attacks.
 
 Because of this, access to the message must occur inside of a monad
 which is an instance of `MonadThrow` from the exceptions package, and
-`MonadLimit`, which is defined in "Data.Capnp.TraversalLimit". We define
+`MonadLimit`, which is defined in "Capnp.TraversalLimit". We define
 a monad transformer `LimitT` for the latter.
 
 -}
@@ -385,7 +385,7 @@ The snippet below prints the names of each person in the address book:
 > import Prelude hiding (length)
 >
 > import Capnp.Gen.Addressbook
-> import Data.Capnp
+> import Capnp
 >     (ConstMsg, defaultLimit, evalLimitT, getValue, index, length, textBytes)
 >
 > import           Control.Monad         (forM_)
@@ -411,7 +411,7 @@ The below constructs the same message as in our high-level example above:
 
 > import Capnp.Gen.Addressbook
 >
-> import Data.Capnp
+> import Capnp
 >     ( MutMsg
 >     , PureBuilder
 >     , cerialize

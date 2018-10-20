@@ -17,16 +17,16 @@ import Test.HUnit     (Assertion, assertEqual)
 import qualified Data.ByteString as BS
 import qualified Prelude
 
-import Data.Capnp.Untyped hiding (index, length)
+import Capnp.Untyped hiding (index, length)
 
 import Tests.Util
 
-import Data.Capnp.Basics         (index, length, textBytes)
-import Data.Capnp.Classes        (fromStruct)
-import Data.Capnp.TraversalLimit (LimitT, execLimitT)
+import Capnp.Basics         (index, length, textBytes)
+import Capnp.Classes        (fromStruct)
+import Capnp.TraversalLimit (LimitT, execLimitT)
 
 import qualified Capnp.Gen.Capnp.Schema as Schema
-import qualified Data.Capnp.Message     as M
+import qualified Capnp.Message          as M
 
 
 -- | TODO: make this an array; we're doing random access to it below.

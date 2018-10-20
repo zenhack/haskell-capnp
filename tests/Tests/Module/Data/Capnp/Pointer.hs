@@ -10,7 +10,7 @@ import Test.HUnit                           (assertEqual)
 import Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen                  (Gen, oneof)
 
-import Data.Capnp.Pointer
+import Capnp.Pointer
 
 import Tests.Util (assertionsToTest)
 

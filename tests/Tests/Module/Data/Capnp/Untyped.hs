@@ -23,19 +23,19 @@ import Text.Heredoc                         (here, there)
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
 
-import Data.Capnp.Untyped
+import Capnp.Untyped
 import Tests.Util
 
-import Data.Capnp                (cerialize, createPure, def, getRoot, newRoot)
-import Data.Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
-import Data.Mutable              (Thaw(..))
+import Capnp                (cerialize, createPure, def, getRoot, newRoot)
+import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
+import Data.Mutable         (Thaw(..))
 
 import Instances ()
 
 import Capnp.Gen.Capnp.Schema.Pure (Brand, Method(..), Node'Parameter)
 
-import qualified Data.Capnp.Classes as C
-import qualified Data.Capnp.Message as M
+import qualified Capnp.Classes as C
+import qualified Capnp.Message as M
 
 import qualified Capnp.Gen.Capnp.Schema as Schema
 

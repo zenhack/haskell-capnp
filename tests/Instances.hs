@@ -4,7 +4,7 @@ Description: Instances of Arbitrary for various types.
 
 In particular, stuff from:
 
-* "Data.Capnp.Untyped.Pure"
+* "Capnp.Untyped.Pure"
 * "Capnp.Gen.Capnp.Schema.Pure"
 -}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -20,7 +20,7 @@ import qualified Data.Vector as V
 
 import Capnp.Gen.Capnp.Schema.Pure
 
-import qualified Data.Capnp.Untyped.Pure as PU
+import qualified Capnp.Untyped.Pure as PU
 
 -- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
 -- by the schema. The parameter is the number of tags assigned by the schema.

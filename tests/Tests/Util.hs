@@ -27,7 +27,7 @@ import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
 import qualified Test.HUnit                 as H
 
-import qualified Data.Capnp.Message as M
+import qualified Capnp.Message as M
 
 -- | Information about the contents of a capnp message. This is enough
 -- to encode/decode both textual and binary forms.

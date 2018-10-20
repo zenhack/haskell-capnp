@@ -1,14 +1,14 @@
 {- |
-Module: Data.Capnp
+Module: Capnp
 Description: The most commonly used functionality in the capnp package.
 
 This module re-exports the most commonly used functionality from other modules in the
 library.
 
 Users getting acquainted with the library are *strongly* encouraged to read the
-"Data.Capnp.Tutorial" module before anything else.
+"Capnp.Tutorial" module before anything else.
 -}
-module Data.Capnp
+module Capnp
     (
     -- * Working with capnproto lists
       Classes.ListElem(..)
@@ -36,7 +36,7 @@ module Data.Capnp
     , Classes.Cerialize(..)
 
     -- * IO
-    , module Data.Capnp.IO
+    , module Capnp.IO
 
     -- * Type aliases for common contexts
     , Message.WriteCtx
@@ -44,10 +44,10 @@ module Data.Capnp
     , Untyped.RWCtx
 
     -- * Converting between messages, Cap'N Proto values, and raw bytes
-    , module Data.Capnp.Convert
+    , module Capnp.Convert
 
     -- * Managing resource limits
-    , module Data.Capnp.TraversalLimit
+    , module Capnp.TraversalLimit
 
     -- * Freezing and thawing values
     , module Data.Mutable
@@ -62,15 +62,15 @@ module Data.Capnp
 
 import Data.Default (def)
 
-import Data.Capnp.Convert
-import Data.Capnp.IO
-import Data.Capnp.TraversalLimit
+import Capnp.Convert
+import Capnp.IO
+import Capnp.TraversalLimit
 import Data.Mutable
 
 import Internal.BuildPure (PureBuilder, createPure)
 
-import qualified Codec.Capnp        as Codec
-import qualified Data.Capnp.Basics  as Basics
-import qualified Data.Capnp.Classes as Classes
-import qualified Data.Capnp.Message as Message
-import qualified Data.Capnp.Untyped as Untyped
+import qualified Capnp.Basics  as Basics
+import qualified Capnp.Classes as Classes
+import qualified Capnp.Message as Message
+import qualified Capnp.Untyped as Untyped
+import qualified Codec.Capnp   as Codec

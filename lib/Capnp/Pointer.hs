@@ -1,11 +1,11 @@
 {- |
-Module: Data.Capnp.Pointer
+Module: Capnp.Pointer
 Description: Support for parsing/serializing capnproto pointers
 
 This module provides support for parsing and serializing capnproto pointers.
 This is a low-level module; most users will not need to call it directly.
 -}
-module Data.Capnp.Pointer
+module Capnp.Pointer
     ( Ptr(..)
     , ElementSize(..)
     , EltSpec(..)
@@ -20,7 +20,7 @@ import Data.Bits
 import Data.Int
 import Data.Word
 
-import Data.Capnp.Bits
+import Capnp.Bits
 
 -- | A 'Ptr' represents the information in a capnproto pointer.
 data Ptr

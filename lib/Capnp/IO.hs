@@ -1,5 +1,5 @@
 {- |
-Module: Data.Capnp.IO
+Module: Capnp.IO
 Description: Utilities for reading and writing values to handles.
 
 This module provides utilities for reading and writing values to and
@@ -7,7 +7,7 @@ from file 'Handle's.
 -}
 {-# LANGUAGE BangPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Data.Capnp.IO
+module Capnp.IO
     ( hGetValue
     , getValue
     , sGetValue
@@ -32,20 +32,20 @@ import System.IO.Error           (eofErrorType, mkIOError)
 import qualified Data.ByteString as BS
 
 import Codec.Capnp               (getRoot, setRoot)
-import Data.Capnp.Bits           (wordsToBytes)
-import Data.Capnp.Classes
+import Capnp.Bits           (wordsToBytes)
+import Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
-import Data.Capnp.Convert        (valueToLBS)
-import Data.Capnp.TraversalLimit (evalLimitT)
+import Capnp.Convert        (valueToLBS)
+import Capnp.TraversalLimit (evalLimitT)
 import Data.Mutable              (Thaw(..))
 
-import qualified Data.Capnp.Message as M
+import qualified Capnp.Message as M
 
 -- | @'hGetValue' limit handle@ reads a message from @handle@, returning its root object.
 -- @limit@ is used as both a cap on the size of a message which may be read and, for types
 -- in the high-level API, the traversal limit when decoding the message.
 --
--- It may throw a 'Data.Capnp.Errors.Error' if there is a problem decoding the message,
+-- It may throw a 'Capnp.Errors.Error' if there is a problem decoding the message,
 -- or an 'IOError' raised by the underlying IO libraries.
 hGetValue :: FromStruct M.ConstMsg a => Handle -> Int -> IO a
 hGetValue handle limit = do

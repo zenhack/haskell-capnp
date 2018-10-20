@@ -26,7 +26,7 @@ import Capnp.Gen.Capnp.Schema.Pure
 
 import Backends.Common (dataFieldSize)
 
-import qualified Data.Capnp.Untyped.Pure as Untyped
+import qualified Capnp.Untyped.Pure as Untyped
 import qualified IR
 
 type NodeMap = M.Map Id NodeMetaData

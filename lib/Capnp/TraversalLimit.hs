@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {- |
-Module: Data.Capnp.TraversalLimit
+Module: Capnp.TraversalLimit
 Description: Support for managing message traversal limits.
 
 This module is used to mitigate several pitfalls with the capnproto format,
@@ -23,7 +23,7 @@ transformer and mtl-style type class to track the limit; reading from the
 message happens inside of this monad.
 
 -}
-module Data.Capnp.TraversalLimit
+module Capnp.TraversalLimit
     ( MonadLimit(..)
     , LimitT
     , runLimitT
@@ -46,7 +46,7 @@ import Control.Monad.Writer (WriterT)
 
 import qualified Control.Monad.State.Lazy as LazyState
 
-import Data.Capnp.Errors (Error(TraversalLimitError))
+import Capnp.Errors (Error(TraversalLimitError))
 
 -- | mtl-style type class to track the traversal limit. This is used
 -- by other parts of the library which actually do the reading.

@@ -1,5 +1,5 @@
 {-|
-Module: Data.Capnp.Bits
+Module: Capnp.Bits
 Description: Utilities for bitwhacking useful for capnproto.
 
 This module provides misc. utilities for bitwhacking that are useful
@@ -9,7 +9,7 @@ This is mostly an implementation detail; users are unlikely to need
 to use this module directly.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Data.Capnp.Bits
+module Capnp.Bits
     ( BitCount(..)
     , ByteCount(..)
     , WordCount(..)

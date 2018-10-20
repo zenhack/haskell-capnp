@@ -1,17 +1,17 @@
 {-# OPTIONS_HADDOCK hide #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
-module Data.Capnp.GenHelpers.Rpc where
+module Capnp.GenHelpers.Rpc where
 
 import Control.Monad.Catch (throwM)
 import Data.Default        (def)
 
 import Capnp.Gen.Capnp.Rpc.Pure  (Payload(..))
-import Data.Capnp.TraversalLimit (evalLimitT)
+import Capnp.TraversalLimit (evalLimitT)
 
-import qualified Data.Capnp.Errors          as E
-import qualified Data.Capnp.GenHelpers.Pure as PH
-import qualified Data.Capnp.Untyped.Pure    as PU
+import qualified Capnp.Errors          as E
+import qualified Capnp.GenHelpers.Pure as PH
+import qualified Capnp.Untyped.Pure    as PU
 import qualified Network.RPC.Capnp          as Rpc
 
 handleMethod server method payload@Payload{content=Nothing} =

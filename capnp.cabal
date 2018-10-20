@@ -86,24 +86,24 @@ library
     import: shared-opts
     hs-source-dirs:       lib
     exposed-modules:
-        Data.Capnp
-      , Data.Capnp.Address
-      , Data.Capnp.Basics
-      , Data.Capnp.Basics.Pure
-      , Data.Capnp.Bits
-      , Data.Capnp.Classes
-      , Data.Capnp.Convert
-      , Data.Capnp.Errors
-      , Data.Capnp.GenHelpers
-      , Data.Capnp.GenHelpers.Pure
-      , Data.Capnp.GenHelpers.Rpc
-      , Data.Capnp.IO
-      , Data.Capnp.Message
-      , Data.Capnp.Pointer
-      , Data.Capnp.Untyped
-      , Data.Capnp.Untyped.Pure
-      , Data.Capnp.TraversalLimit
-      , Data.Capnp.Tutorial
+        Capnp
+      , Capnp.Address
+      , Capnp.Basics
+      , Capnp.Basics.Pure
+      , Capnp.Bits
+      , Capnp.Classes
+      , Capnp.Convert
+      , Capnp.Errors
+      , Capnp.GenHelpers
+      , Capnp.GenHelpers.Pure
+      , Capnp.GenHelpers.Rpc
+      , Capnp.IO
+      , Capnp.Message
+      , Capnp.Pointer
+      , Capnp.Untyped
+      , Capnp.Untyped.Pure
+      , Capnp.TraversalLimit
+      , Capnp.Tutorial
 
       , Data.Mutable
 

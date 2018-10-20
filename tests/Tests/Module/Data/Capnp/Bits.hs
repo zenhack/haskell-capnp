@@ -7,7 +7,7 @@ import Test.Framework (testGroup)
 import Test.HUnit     (Assertion, assertEqual)
 import Tests.Util     (assertionsToTest)
 
-import Data.Capnp.Bits
+import Capnp.Bits
 
 
 bitsTests = testGroup "bits tests" [bitRangeExamples, replaceBitsExamples]

@@ -5,12 +5,12 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-|
-Module: Data.Capnp.Message
+Module: Capnp.Message
 Description: Cap'N Proto messages
 
 This module provides support for working directly with Cap'N Proto messages.
 -}
-module Data.Capnp.Message (
+module Capnp.Message (
     -- * Reading and writing messages
       hPutMsg
     , hGetMsg
@@ -90,10 +90,10 @@ import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
 
-import Data.Capnp.Address        (WordAddr(..))
-import Data.Capnp.Bits           (WordCount(..), hi, lo)
-import Data.Capnp.Errors         (Error(InvalidDataError))
-import Data.Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
+import Capnp.Address        (WordAddr(..))
+import Capnp.Bits           (WordCount(..), hi, lo)
+import Capnp.Errors         (Error(InvalidDataError))
+import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable              (Mutable(..))
 import Internal.AppendVec        (AppendVec)
 import Internal.Util             (checkIndex)
@@ -154,7 +154,7 @@ getSegment msg i = do
     internalGetSeg msg i
 
 -- | @'getCap' message index@ gets the capability with the given index from
--- the message. throws 'Data.Capnp.Errors.BoundsError' if the index is out
+-- the message. throws 'Capnp.Errors.BoundsError' if the index is out
 -- of bounds.
 getCap :: (MonadThrow m, Message m msg) => msg -> Int -> m Client
 getCap msg i = do
@@ -189,7 +189,7 @@ setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
 
 -- | @'setCap' message index cap@ sets the sets the capability at @index@ in
 -- the message's capability table to @cap@. If the index is out of bounds, a
--- 'Data.Capnp.Errors.BoundsError' will be thrown.
+-- 'Capnp.Errors.BoundsError' will be thrown.
 setCap :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Client -> m ()
 setCap msg@MutMsg{mutCaps} i cap = do
     checkIndex i =<< numCaps msg

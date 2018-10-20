@@ -15,7 +15,7 @@ usable, with some limitations:
   type List(T) (where T is any non-struct type) to a list of a struct
   type.
 
-There is a module `Data.Capnp.Tutorial` which contains an introduction
+There is a module `Capnp.Tutorial` which contains an introduction
 to the library; users are *strongly* encouraged to read this first, as
 the reference documentation can be bewildering without that context.
 

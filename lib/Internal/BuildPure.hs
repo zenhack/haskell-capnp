@@ -19,8 +19,8 @@ import Control.Monad.Primitive  (PrimMonad(..))
 import Control.Monad.ST         (ST)
 import Control.Monad.Trans      (MonadTrans(..))
 
-import Data.Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
-import Data.Mutable              (Thaw(..), createT)
+import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
+import Data.Mutable         (Thaw(..), createT)
 
 -- | 'PureBuilder' is a monad transformer stack with the instnaces needed
 -- manipulate mutable messages. @'PureBuilder' s a@ is morally equivalent

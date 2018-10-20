@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {- |
-Module: Data.Capnp.Classes
+Module: Capnp.Classes
 Description: Misc. type classes
 
 This module defines several type classes concerning encoding and decoding
@@ -18,7 +18,7 @@ to look elsewhere in the library for what you need, and refer to this
 module only when trying to understand what the class constraints on a
 function mean.
 -}
-module Data.Capnp.Classes
+module Capnp.Classes
     ( IsWord(..)
     , ListElem(..)
     , MutListElem(..)
@@ -38,13 +38,13 @@ import Data.Word
 
 import Control.Monad.Catch (MonadThrow(throwM))
 
-import Data.Capnp.Bits    (Word1(..))
-import Data.Capnp.Errors  (Error(SchemaViolationError))
-import Data.Capnp.Untyped
+import Capnp.Bits    (Word1(..))
+import Capnp.Errors  (Error(SchemaViolationError))
+import Capnp.Untyped
     (Cap, ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
 
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
 -- | Types that can be converted to and from a 64-bit word.
 --

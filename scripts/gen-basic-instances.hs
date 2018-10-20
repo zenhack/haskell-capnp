@@ -14,14 +14,14 @@ header = unlines
     , "import Data.ReinterpretCast"
     , "import Data.Word"
     , ""
-    , "import Data.Capnp.Classes"
+    , "import Capnp.Classes"
     , "    ( ListElem(..)"
     , "    , MutListElem(..)"
     , "    , IsPtr(..)"
     , "    , Decerialize(..)"
     , "    )"
     , ""
-    , "import qualified Data.Capnp.Untyped as U"
+    , "import qualified Capnp.Untyped as U"
     , ""
     ]
 

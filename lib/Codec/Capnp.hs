@@ -8,10 +8,10 @@ module Codec.Capnp
     , encodeV
     ) where
 
-import Data.Capnp.Classes
+import Capnp.Classes
 
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
 -- | 'newRoot' allocates and returns a new value inside the message, setting
 -- it as the root object of the message.

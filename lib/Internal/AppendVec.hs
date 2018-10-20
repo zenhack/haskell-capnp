@@ -20,8 +20,8 @@ import Control.Monad.Primitive (PrimMonad, PrimState)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GMV
 
-import Data.Capnp.Errors (Error(SizeError))
-import Data.Mutable      (Thaw(..))
+import Capnp.Errors (Error(SizeError))
+import Data.Mutable (Thaw(..))
 
 -- | 'AppendVec' wraps a mutable vector, and affords amortized O(1) appending.
 data AppendVec v s a = AppendVec

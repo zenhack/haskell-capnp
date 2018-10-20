@@ -1,12 +1,12 @@
 {-|
-Module: Data.Capnp.Basics
+Module: Capnp.Basics
 Description: Handling of "basic" capnp datatypes.
 
 In particular
 
 * 'Text' and 'Data' (which are primitive types in the schema language,
   but are both the same as @List(UInt8)@ on the wire).
-* Lists of types other than those in "Data.Capnp.Untyped".
+* Lists of types other than those in "Capnp.Untyped".
   Whereas 'U.ListOf' only deals with low-level encodings of lists,
   this module's 'List' type can represent typed lists.
 -}
@@ -14,7 +14,7 @@ In particular
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
-module Data.Capnp.Basics
+module Capnp.Basics
     ( Text
     , Data(..)
     , ListElem(..)
@@ -35,12 +35,12 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Data.Capnp.Classes     (IsPtr(..), ListElem(..), MutListElem(..))
+import Capnp.Classes     (IsPtr(..), ListElem(..), MutListElem(..))
 import Internal.Gen.Instances ()
 
-import qualified Data.Capnp.Errors  as E
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Errors  as E
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
 
 -- | A textual string (@Text@ in capnproto's schema language). On the wire,

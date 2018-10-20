@@ -5,26 +5,26 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# OPTIONS_HADDOCK hide           #-}
 {- |
-Module: Data.Capnp.GenHelpers.Pure
+Module: Capnp.GenHelpers.Pure
 Description: Misc. helpers for generated code.
 
 This module provides various helpers used by generated code; developers
 are not expected to invoke them directly.
 
-These helpers are only used by the high-level api. "Data.Capnp.GenHelpers"
+These helpers are only used by the high-level api. "Capnp.GenHelpers"
 defines helpers used by the low-level api.
 -}
-module Data.Capnp.GenHelpers.Pure (defaultStruct, convertValue) where
+module Capnp.GenHelpers.Pure (defaultStruct, convertValue) where
 
 import Data.Maybe (fromJust)
 
-import Data.Capnp.TraversalLimit (evalLimitT)
+import Capnp.TraversalLimit (evalLimitT)
 import Data.Mutable              (freeze)
 
-import qualified Data.Capnp.Classes as C
-import qualified Data.Capnp.Convert as Convert
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Classes as C
+import qualified Capnp.Convert as Convert
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
 -- | A valid implementation for 'Data.Default.Default' for any type that meets
 -- the given constraints.

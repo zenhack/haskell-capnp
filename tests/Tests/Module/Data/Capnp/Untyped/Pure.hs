@@ -10,16 +10,16 @@ import Text.Heredoc         (here, there)
 
 import qualified Data.Vector as V
 
-import Data.Capnp.Untyped.Pure
+import Capnp.Untyped.Pure
 import Tests.Util
 
-import Data.Capnp.Classes        (decerialize)
-import Data.Capnp.TraversalLimit (LimitT, runLimitT)
+import Capnp.Classes        (decerialize)
+import Capnp.TraversalLimit (LimitT, runLimitT)
 
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
--- This is analogous to Tests.Module.Data.Capnp.Untyped.untypedTests, but
+-- This is analogous to Tests.Module.Capnp.Untyped.untypedTests, but
 -- using the Pure module:
 pureUntypedTests :: Test
 pureUntypedTests = assertionsToTest "Untyped ADT Tests"

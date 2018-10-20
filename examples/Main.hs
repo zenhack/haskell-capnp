@@ -8,7 +8,7 @@ import System.Environment     (getArgs)
 import System.Exit            (exitFailure, exitSuccess)
 import System.IO              (IOMode(ReadWriteMode), hClose)
 
-import Data.Capnp        (def, defaultLimit)
+import Capnp             (def, defaultLimit)
 import Network.RPC.Capnp (VatConfig(..), bootstrap, runVat, socketTransport)
 
 import Capnp.Gen.Echo.Pure

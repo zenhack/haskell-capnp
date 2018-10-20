@@ -118,14 +118,14 @@ import qualified Data.ByteString as BS
 
 -- same structure for modules within our library:
 
-import Data.Capnp.Untyped hiding (length)
+import Capnp.Untyped hiding (length)
 
-import Data.Capnp.Bits
+import Capnp.Bits
 
-import Data.Capnp.TraversalLimit(defaultLimit, evalLimitT)
+import Capnp.TraversalLimit(defaultLimit, evalLimitT)
 
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Basics as B
+import qualified Capnp.Message as M
+import qualified Capnp.Basics as B
 ```
 
 The formatter will take care of formatting the sections correctly, as

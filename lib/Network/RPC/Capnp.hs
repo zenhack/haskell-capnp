@@ -76,9 +76,9 @@ import qualified Data.Vector     as V
 
 import Capnp.Gen.Capnp.Rpc.Pure hiding (Exception)
 
-import Data.Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
+import Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
-import Data.Capnp (def, hGetValue, hPutValue, sGetValue, sPutValue)
+import Capnp (def, hGetValue, hPutValue, sGetValue, sPutValue)
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc
 

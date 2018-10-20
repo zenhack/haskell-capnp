@@ -8,7 +8,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-|
-Module: Data.Capnp.Untyped.Pure
+Module: Capnp.Untyped.Pure
 Description: high-level API for working with untyped Cap'N Proto values.
 
 This module provides an idiomatic Haskell interface for untyped capnp
@@ -17,9 +17,9 @@ the capnp wire format in favor of a more convienient API.
 
 In addition to the algebraic data types themselves, this module also
 provides support for converting from the lower-level types in
-"Data.Capnp.Untyped".
+"Capnp.Untyped".
 -}
-module Data.Capnp.Untyped.Pure
+module Capnp.Untyped.Pure
     ( Slice(..)
     , PtrType(..)
     , Struct(..)
@@ -40,13 +40,13 @@ import Data.Default.Instances.Vector ()
 import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
-import Data.Capnp.Classes
+import Capnp.Classes
     (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..))
 import Internal.Gen.Instances ()
 
-import qualified Data.Capnp.Classes as C
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Classes as C
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 import qualified Data.Vector        as V
 
 -- | A one of a struct's sections (data or pointer).

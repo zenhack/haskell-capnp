@@ -32,19 +32,19 @@ import Tests.Util
 
 import Instances ()
 
-import Data.Capnp                (getRoot, hGetValue, hPutValue, setRoot)
-import Data.Capnp.Classes
+import Capnp                (getRoot, hGetValue, hPutValue, setRoot)
+import Capnp.Classes
     ( Allocate(..)
     , Cerialize(..)
     , Decerialize(..)
     , FromStruct(..)
     , ToStruct(..)
     )
-import Data.Capnp.TraversalLimit (defaultLimit, evalLimitT)
-import Data.Mutable              (Thaw(..))
+import Capnp.TraversalLimit (defaultLimit, evalLimitT)
+import Data.Mutable         (Thaw(..))
 
-import qualified Data.Capnp.Message as M
-import qualified Data.Capnp.Untyped as U
+import qualified Capnp.Message as M
+import qualified Capnp.Untyped as U
 
 schemaText = [there|tests/data/schema.capnp|]
 
