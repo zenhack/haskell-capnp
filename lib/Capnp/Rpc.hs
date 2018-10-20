@@ -279,7 +279,7 @@ sendQuestion Vat{sendQ,questions} question = do
 -- | @'call' interfaceId methodId params client@ calls an RPC method
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
-call :: Word64 -> Word16 -> (Maybe (Untyped.Ptr ConstMsg)) -> Client -> RpcT IO (Promise Struct)
+call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
 call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
     questionId <- newQuestionId
     paramContent <- evalLimitT maxBound (decerialize paramContent)
@@ -530,9 +530,9 @@ coordinator vat@Vat{..} = forever $ do
                         "but decoding as raw did not. This should never happen!"
         Message'finish finish ->
             handleFinish vat finish
-        Message'unimplemented msg -> do
+        Message'unimplemented msg ->
             handleUnimplemented vat pureMsg
-        _ -> do
+        _ ->
             atomically $ replyUnimplemented vat pureMsg
 
 handleFinish Vat{..} Finish{questionId} =
