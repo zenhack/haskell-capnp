@@ -1,4 +1,4 @@
-module Network.RPC.Capnp where
+module Capnp.Rpc where
 
 data Client
 

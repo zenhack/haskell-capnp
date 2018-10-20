@@ -32,7 +32,7 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Untyped.Pure as PU'
 import qualified Capnp.GenHelpers.Pure as PH'
 import qualified Capnp.Classes as C'
-import qualified Network.RPC.Capnp as Rpc
+import qualified Capnp.Rpc as Rpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc
 import qualified Capnp.GenHelpers.Rpc as RH'
 import qualified Data.Vector as V

@@ -103,11 +103,10 @@ library
       , Capnp.Untyped
       , Capnp.Untyped.Pure
       , Capnp.TraversalLimit
+      , Capnp.Rpc
       , Capnp.Tutorial
 
       , Data.Mutable
-
-      , Network.RPC.Capnp
 
       , Capnp.Gen
       , Capnp.Gen.Capnp

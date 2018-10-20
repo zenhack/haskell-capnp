@@ -62,7 +62,7 @@ module Capnp.Message (
     , nullClient
     ) where
 
-import {-# SOURCE #-} Network.RPC.Capnp (Client, nullClient)
+import {-# SOURCE #-} Capnp.Rpc (Client, nullClient)
 
 import Prelude hiding (read)
 
@@ -94,9 +94,9 @@ import Capnp.Address        (WordAddr(..))
 import Capnp.Bits           (WordCount(..), hi, lo)
 import Capnp.Errors         (Error(InvalidDataError))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
-import Data.Mutable              (Mutable(..))
-import Internal.AppendVec        (AppendVec)
-import Internal.Util             (checkIndex)
+import Data.Mutable         (Mutable(..))
+import Internal.AppendVec   (AppendVec)
+import Internal.Util        (checkIndex)
 
 import qualified Internal.AppendVec as AppendVec
 

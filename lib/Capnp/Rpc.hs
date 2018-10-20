@@ -11,7 +11,7 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-|
-Module: Network.RPC.Capnp
+Module: Capnp.Rpc
 Description: Cap'N Proto RPC support.
 
 This module implements the RPC protocol (two-party only). See also the protocol
@@ -19,7 +19,7 @@ specification:
 
 <https://github.com/capnproto/capnproto/blob/master/c%2B%2B/src/capnp/rpc.capnp>
 -}
-module Network.RPC.Capnp
+module Capnp.Rpc
     ( RpcT
     , Client
     , Server(..)

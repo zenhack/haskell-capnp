@@ -6,13 +6,13 @@ module Capnp.GenHelpers.Rpc where
 import Control.Monad.Catch (throwM)
 import Data.Default        (def)
 
-import Capnp.Gen.Capnp.Rpc.Pure  (Payload(..))
-import Capnp.TraversalLimit (evalLimitT)
+import Capnp.Gen.Capnp.Rpc.Pure (Payload(..))
+import Capnp.TraversalLimit     (evalLimitT)
 
 import qualified Capnp.Errors          as E
 import qualified Capnp.GenHelpers.Pure as PH
+import qualified Capnp.Rpc             as Rpc
 import qualified Capnp.Untyped.Pure    as PU
-import qualified Network.RPC.Capnp          as Rpc
 
 handleMethod server method payload@Payload{content=Nothing} =
     handleMethod server method payload { content = Just $ PU.PtrStruct def }
