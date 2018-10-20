@@ -109,8 +109,8 @@ library
 
       , Network.RPC.Capnp
 
-      , Capnp
-      , Capnp.Capnp
+      , Capnp.Gen
+      , Capnp.Gen.Capnp
 
       -- BEGIN GENERATED SCHEMA MODULES
       , Capnp.Gen.Capnp.Cxx.Pure
