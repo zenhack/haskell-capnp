@@ -10,10 +10,12 @@ from file 'Handle's.
 module Capnp.IO
     ( hGetValue
     , getValue
+    , sGetMsg
     , sGetValue
     , hPutValue
     , putValue
     , sPutValue
+    , sPutMsg
     , M.hGetMsg
     , M.getMsg
     , M.hPutMsg
@@ -34,7 +36,7 @@ import qualified Data.ByteString as BS
 import Capnp.Bits           (wordsToBytes)
 import Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
-import Capnp.Convert        (valueToLBS)
+import Capnp.Convert        (msgToLBS, valueToLBS)
 import Capnp.TraversalLimit (evalLimitT)
 import Codec.Capnp          (getRoot, setRoot)
 import Data.Mutable         (Thaw(..))
@@ -59,8 +61,13 @@ getValue = hGetValue stdin
 -- | Like 'hGetValue', except that it takes a socket instead of a 'Handle'.
 sGetValue :: FromStruct M.ConstMsg a => Socket -> Int -> IO a
 sGetValue socket limit = do
-    msg <- evalLimitT limit $ M.readMessage (lift read32) (lift . readSegment)
+    msg <- sGetMsg socket limit
     evalLimitT limit (getRoot msg)
+
+-- | Like 'hGetMsg', except that it takes a socket instead of a 'Handle'.
+sGetMsg :: Socket -> Int -> IO M.ConstMsg
+sGetMsg socket limit =
+    evalLimitT limit $ M.readMessage (lift read32) (lift . readSegment)
   where
     read32 = do
         bytes <- recvFull 4
@@ -104,6 +111,10 @@ hPutValue handle value = do
 putValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
     => a -> IO ()
 putValue = hPutValue stdout
+
+-- | Like 'hPutMsg', except that it takes a 'Socket' instead of a 'Handle'.
+sPutMsg :: Socket -> M.ConstMsg -> IO ()
+sPutMsg socket = sendLazy socket . msgToLBS
 
 -- | Like 'hPutValue', except that it takes a 'Socket' instead of a 'Handle'.
 sPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))

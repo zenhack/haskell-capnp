@@ -51,6 +51,10 @@ module Capnp.Rpc
     , nullClient
     ) where
 
+-- XXX: we use 'defaultLimit' in a number of places, where we really
+-- should use a value passed in from the user. We should probably add
+-- a field to 'VatConfig' for this.
+
 import Control.Concurrent.STM
 import Data.Word
 
@@ -78,7 +82,19 @@ import Capnp.Gen.Capnp.Rpc.Pure hiding (Exception)
 
 import Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
-import Capnp (def, hGetValue, hPutValue, sGetValue, sPutValue)
+import Capnp
+    ( ConstMsg
+    , createPure
+    , def
+    , defaultLimit
+    , evalLimitT
+    , hGetMsg
+    , hPutMsg
+    , msgToValue
+    , sGetMsg
+    , sPutMsg
+    , valueToMsg
+    )
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc
 
@@ -104,8 +120,8 @@ type ImportId = Word32
 -- | A @'Transport' m@ handles transmitting RPC messages, inside of a monadic
 -- context @m@.
 data Transport m = Transport
-    { sendMsg :: Message -> m ()
-    , recvMsg :: m Message
+    { sendMsg :: ConstMsg -> m ()
+    , recvMsg :: m ConstMsg
     }
 
 -- | @'handleTransport' limit handle@ creates a new transport which reads
@@ -113,8 +129,8 @@ data Transport m = Transport
 -- limit when reading messages and decoding.
 handleTransport :: MonadIO m => Int -> Handle -> Transport m
 handleTransport limit handle = Transport
-    { sendMsg = liftIO . hPutValue handle
-    , recvMsg = liftIO $ hGetValue handle limit
+    { sendMsg = liftIO . hPutMsg handle
+    , recvMsg = liftIO $ hGetMsg handle limit
     }
 
 -- | @'socketTransport' limit socket@ creates a new transport which reads
@@ -126,8 +142,8 @@ handleTransport limit handle = Transport
 -- received.
 socketTransport :: MonadIO m => Int -> Socket -> m (Transport m)
 socketTransport limit socket = pure $ Transport
-    { sendMsg = liftIO . sPutValue socket
-    , recvMsg = liftIO $ sGetValue socket limit
+    { sendMsg = liftIO . sPutMsg socket
+    , recvMsg = liftIO $ sGetMsg socket limit
     }
 
 -- | Get a new exportId/questionId. The argument gets the pool to allocate from.
@@ -253,7 +269,8 @@ bootstrap = do
 -- vat's  questions table, in addition to actually sending the message.
 sendQuestion :: Vat -> Question -> STM ()
 sendQuestion Vat{sendQ,questions} question = do
-    writeTBQueue sendQ $ getQuestionMessage question
+    writeTBQueue sendQ =<< createPure defaultLimit
+        (valueToMsg $ getQuestionMessage question)
     modifyTVar questions $ M.insert (getQuestionId question) question
 
 -- | @'call' interfaceId methodId params client@ calls an RPC method
@@ -395,8 +412,8 @@ data Vat = Vat
 
     , bootstrapServer :: Maybe (RpcT IO Client)
 
-    , sendQ           :: TBQueue Message
-    , recvQ           :: TBQueue Message
+    , sendQ           :: TBQueue ConstMsg
+    , recvQ           :: TBQueue ConstMsg
 
     , debugMode       :: !Bool
     }
@@ -463,8 +480,9 @@ recvLoop transport Vat{recvQ} =
 
 -- | Report the specified message to the remote vat as unimplemented.
 replyUnimplemented :: Vat -> Message -> STM ()
-replyUnimplemented Vat{sendQ} =
-    writeTBQueue sendQ . Message'unimplemented
+replyUnimplemented Vat{sendQ} msg =
+    createPure defaultLimit (valueToMsg $ Message'unimplemented msg)
+    >>= writeTBQueue sendQ
 
 -- | Send an abort message to the remote vat with the given reason field
 -- and a type field of @failed@, and return the exception that was included
@@ -475,7 +493,8 @@ replyAbort Vat{sendQ} reason = do
             { reason
             , type_ = Exception'Type'failed
             }
-    writeTBQueue sendQ $ Message'abort exn
+    msg <- createPure defaultLimit $ valueToMsg exn
+    writeTBQueue sendQ msg
     pure exn
 
 -- | The coordinator handles incoming messages, dispatching them as
@@ -484,7 +503,8 @@ replyAbort Vat{sendQ} reason = do
 coordinator :: Vat -> IO ()
 coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
-    case msg of
+    rpcMsg <- evalLimitT defaultLimit (msgToValue msg)
+    case rpcMsg of
         Message'abort exn ->
             throwIO exn
         Message'return ret ->
@@ -498,7 +518,7 @@ coordinator vat@Vat{..} = forever $ do
         Message'unimplemented msg ->
             handleUnimplemented vat msg
         _ ->
-            atomically $ replyUnimplemented vat msg
+            atomically $ replyUnimplemented vat rpcMsg
 
 handleFinish Vat{..} Finish{questionId} =
     atomically $ modifyTVar' answers (M.delete questionId)
@@ -561,7 +581,7 @@ handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,
                         result <- try $ do
                             ret <- runRpcT vat $ call interfaceId methodId params client
                             liftIO $ waitIO ret
-                        atomically $ writeTBQueue sendQ $ Message'return $ def
+                        msg <- createPure defaultLimit $ valueToMsg <$> Message'return $ def
                             { answerId = callQuestionId
                             , union' = case result of
                                 -- The server returned successfully; pass along the result.
@@ -588,6 +608,7 @@ handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,
                                                 , type_ = Exception'Type'failed
                                                 }
                             }
+                        atomically $ writeTBQueue sendQ msg
 
 -- | Handle receiving a 'Return' message.
 handleReturn :: Vat -> Return -> IO ()
@@ -606,7 +627,9 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
         Just CallQuestion{callMsg, sendReturn} -> do
             -- We don't support caps other than the bootstrap yet, so we can
             -- send Finish right away.
-            writeTBQueue sendQ $ Message'finish def { questionId = answerId }
+            msg <- createPure defaultLimit $ valueToMsg $
+                Message'finish def { questionId = answerId }
+            writeTBQueue sendQ msg
             modifyTVar questions $ M.delete answerId
             case union' of
                 Return'results Payload{content} ->
