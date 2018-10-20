@@ -62,8 +62,8 @@ export_Echo server_ = Echo <$> Rpc.export Rpc.Server
     }
 instance Echo'server_ Echo where
     echo'echo args (Echo client) = do
-        args' <- evalLimitT maxBound $ PH'.convertValue args
-        resultPromise <- Rpc.call 16940812395455687611 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
+        resultPromise <- Rpc.call 16940812395455687611 0 (Just (U'.PtrStruct args')) client
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
 data Echo'echo'params

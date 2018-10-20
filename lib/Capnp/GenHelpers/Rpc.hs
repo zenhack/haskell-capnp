@@ -3,25 +3,18 @@
 {-# LANGUAGE FlexibleContexts      #-}
 module Capnp.GenHelpers.Rpc where
 
-import Control.Monad.Catch (throwM)
-import Data.Default        (def)
+import Capnp.Classes        (Decerialize(..), IsPtr(..))
+import Capnp.TraversalLimit (evalLimitT)
 
-import Capnp.Gen.Capnp.Rpc.Pure (Payload(..))
-import Capnp.TraversalLimit     (evalLimitT)
-
-import qualified Capnp.Errors          as E
 import qualified Capnp.GenHelpers.Pure as PH
+import qualified Capnp.Message         as M
 import qualified Capnp.Rpc             as Rpc
-import qualified Capnp.Untyped.Pure    as PU
 
-handleMethod server method payload@Payload{content=Nothing} =
-    handleMethod server method payload { content = Just $ PU.PtrStruct def }
-handleMethod server method Payload{ content = Just (PU.PtrStruct params) } = do
-    typedParams <- evalLimitT maxBound $ PH.convertValue params
-    results <- method typedParams server
+handleMethod server method paramContent = do
+    content <- evalLimitT maxBound $
+        fromPtr M.empty paramContent >>= decerialize
+    results <- method content server
     resultStruct <- evalLimitT maxBound $ PH.convertValue results
     (promise, fulfiller) <- Rpc.newPromiseIO
     Rpc.fulfillIO fulfiller resultStruct
     pure promise
-handleMethod _ _ _ =
-    throwM $ E.SchemaViolationError "Parameter was non-struct"

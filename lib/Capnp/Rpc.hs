@@ -33,8 +33,8 @@ module Capnp.Rpc
 
     , throwMethodUnimplemented
 
-    , Rpc.Exception(..)
-    , Rpc.Exception'Type(..)
+    , Exception(..)
+    , Exception'Type(..)
 
     , Promise
     , Fulfiller
@@ -60,7 +60,7 @@ import Data.Word
 
 import Control.Concurrent.Async        (concurrently_)
 import Control.Exception
-    (Exception, SomeException, fromException, throwIO, try)
+    (SomeException, fromException, throwIO, try)
 import Control.Monad                   (forever)
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
@@ -74,17 +74,19 @@ import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
-import qualified Data.Map.Strict as M
-import qualified Data.Text       as T
-import qualified Data.Vector     as V
+import qualified Control.Exception
+import qualified Data.Map.Strict   as M
+import qualified Data.Text         as T
+import qualified Data.Vector       as V
 
-import Capnp.Gen.Capnp.Rpc.Pure hiding (Exception)
+import Capnp.Gen.Capnp.Rpc.Pure
 
 import Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
 import Capnp
     ( ConstMsg
     , createPure
+    , decerialize
     , def
     , defaultLimit
     , evalLimitT
@@ -96,18 +98,19 @@ import Capnp
     , valueToMsg
     )
 
-import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc
+import qualified Capnp.Gen.Capnp.Rpc as Rpc
+import qualified Capnp.Untyped       as Untyped
 
 -- | Shortcut to throw an @unimplemented@ exception.
 throwMethodUnimplemented :: MonadThrow m => m a
-throwMethodUnimplemented = throwM Rpc.Exception
+throwMethodUnimplemented = throwM Exception
     { reason = "Method unimplemented"
-    , type_ = Rpc.Exception'Type'unimplemented
+    , type_ = Exception'Type'unimplemented
     , obsoleteIsCallersFault = False
     , obsoleteDurability = 0
     }
 
-instance Exception Rpc.Exception
+instance Control.Exception.Exception Exception
 
 -- These aliases are actually defined in the schema, but the schema compiler
 -- doesn't expose them to the code generator plugin, so we re-define them
@@ -213,7 +216,7 @@ data Client
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' and then shared via RPC.
 data Server = Server
-    { handleCall :: Word64 -> Word16 -> Payload -> RpcT IO (Promise Struct)
+    { handleCall :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> RpcT IO (Promise Struct)
     -- ^ @'handleCall' interfaceId methodId params@ handles a method call.
     -- The method is as specified by interfaceId and methodId, with @params@
     -- being the argument to the method call. It returns a 'Promise' for the
@@ -276,12 +279,17 @@ sendQuestion Vat{sendQ,questions} question = do
 -- | @'call' interfaceId methodId params client@ calls an RPC method
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
-call :: Word64 -> Word16 -> Payload -> Client -> RpcT IO (Promise Struct)
-call interfaceId methodId params RemoteClient{ target, localVat } = do
+call :: Word64 -> Word16 -> (Maybe (Untyped.Ptr ConstMsg)) -> Client -> RpcT IO (Promise Struct)
+call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
     questionId <- newQuestionId
+    paramContent <- evalLimitT maxBound (decerialize paramContent)
     let callMsg = Call
             { sendResultsTo = Call'sendResultsTo'caller
             , allowThirdPartyTailCall = False
+            , params = def
+                -- TODO: capTable.
+                { content = paramContent
+                }
             , ..
             }
     (promise, fulfiller) <- liftIO $ atomically newPromise
@@ -303,7 +311,7 @@ call _ _ _ DisconnectedClient = alwaysThrow def
 
 -- | Return an already-broken promise, which raises the specified
 -- exception.
-alwaysThrow :: MonadIO m => Rpc.Exception -> RpcT m (Promise Struct)
+alwaysThrow :: MonadIO m => Exception -> RpcT m (Promise Struct)
 alwaysThrow exn = do
     (promise, fulfiller) <- liftIO $ atomically newPromise
     liftIO $ atomically $ breakPromise fulfiller exn
@@ -311,7 +319,7 @@ alwaysThrow exn = do
 
 -- | A 'Fulfiller' is used to fulfill a promise.
 newtype Fulfiller a = Fulfiller
-    { var :: TVar (Maybe (Either Rpc.Exception a))
+    { var :: TVar (Maybe (Either Exception a))
     }
 
 -- | Fulfill a promise by supplying the specified value. It is an error to
@@ -331,7 +339,7 @@ fulfillIO fulfiller = liftIO . atomically . fulfill fulfiller
 -- | Break a promise. When the user of the promise executes 'wait', the
 -- specified exception will be raised. It is an error to call 'breakPromise'
 -- if the promise has already been fulfilled (or broken).
-breakPromise :: Fulfiller a -> Rpc.Exception -> STM ()
+breakPromise :: Fulfiller a -> Exception -> STM ()
 breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
     Nothing ->
         Just (Left exn)
@@ -371,7 +379,7 @@ newPromiseIO = liftIO $ atomically newPromise
 
 -- | A promise is a value that may not be ready yet.
 newtype Promise a = Promise
-    { var :: TVar (Maybe (Either Rpc.Exception a))
+    { var :: TVar (Maybe (Either Exception a))
     }
 
 -- | A 'Question' is an outstanding question message.
@@ -487,7 +495,7 @@ replyUnimplemented Vat{sendQ} msg =
 -- | Send an abort message to the remote vat with the given reason field
 -- and a type field of @failed@, and return the exception that was included
 -- in the message.
-replyAbort :: Vat -> T.Text -> STM Rpc.Exception
+replyAbort :: Vat -> T.Text -> STM Exception
 replyAbort Vat{sendQ} reason = do
     let exn = def
             { reason
@@ -503,22 +511,29 @@ replyAbort Vat{sendQ} reason = do
 coordinator :: Vat -> IO ()
 coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
-    rpcMsg <- evalLimitT defaultLimit (msgToValue msg)
-    case rpcMsg of
+    pureMsg <- evalLimitT defaultLimit (msgToValue msg)
+    case pureMsg of
         Message'abort exn ->
             throwIO exn
         Message'return ret ->
             handleReturn vat ret
         Message'bootstrap bs ->
             handleBootstrap vat bs
-        Message'call call ->
-            handleCallMsg vat call
+        Message'call call -> do
+            rawMsg <- evalLimitT defaultLimit (msgToValue msg)
+            case rawMsg of
+                Rpc.Message'call rawCall ->
+                    handleCallMsg rawCall vat call
+                _ ->
+                    error $
+                        "BUG: decoding as pure resulted in a 'call' message, " ++
+                        "but decoding as raw did not. This should never happen!"
         Message'finish finish ->
             handleFinish vat finish
-        Message'unimplemented msg ->
-            handleUnimplemented vat msg
-        _ ->
-            atomically $ replyUnimplemented vat rpcMsg
+        Message'unimplemented msg -> do
+            handleUnimplemented vat pureMsg
+        _ -> do
+            atomically $ replyUnimplemented vat pureMsg
 
 handleFinish Vat{..} Finish{questionId} =
     atomically $ modifyTVar' answers (M.delete questionId)
@@ -554,10 +569,10 @@ handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
                 modifyTVar' answers $ M.insert questionId (ClientAnswer server)
                 -- TODO: also add it to exports and send a Return.
 
-handleCallMsg :: Vat -> Call -> IO ()
+handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
 -- TODO: can't call this handleCall because that's taken by the field in 'Server'.
 -- rework things so we can be consistent.
-handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params} =
+handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} =
     case target of
         MessageTarget'importedCap _ ->
             atomically $ replyUnimplemented vat $ Message'call msg
@@ -579,7 +594,16 @@ handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,
                         throwIO exn
                     Just (ClientAnswer client) -> do
                         result <- try $ do
-                            ret <- runRpcT vat $ call interfaceId methodId params client
+                            -- We fish out the low-level representation of the params, set the
+                            -- cap table based on the value in the call message(TODO), and then
+                            -- pass it to the handler. This ensures that any Clients in the value
+                            -- are actually connected; on the initial decode they will be null,
+                            -- since the cap table is empty.
+                            --
+                            -- the handler has to decode again anyway. We should try to make this
+                            -- whole business more efficient. See also #52.
+                            paramContent <- evalLimitT maxBound $ Rpc.get_Call'params rawCall >>= Rpc.get_Payload'content
+                            ret <- runRpcT vat $ call interfaceId methodId paramContent client
                             liftIO $ waitIO ret
                         msg <- createPure defaultLimit $ valueToMsg <$> Message'return $ def
                             { answerId = callQuestionId
@@ -593,7 +617,7 @@ handleCallMsg vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,
                                     -- to the caller.
                                     Return'exception $
                                         case fromException e of
-                                            Just (e :: Rpc.Exception) ->
+                                            Just (e :: Exception) ->
                                                 -- If the exception was a capnp exception,
                                                 -- just pass it along.
                                                 e

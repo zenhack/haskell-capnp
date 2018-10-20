@@ -14,12 +14,14 @@ are not expected to invoke them directly.
 These helpers are only used by the high-level api. "Capnp.GenHelpers"
 defines helpers used by the low-level api.
 -}
-module Capnp.GenHelpers.Pure (defaultStruct, convertValue) where
+module Capnp.GenHelpers.Pure (defaultStruct, convertValue, getRoot, createPure) where
 
 import Data.Maybe (fromJust)
 
 import Capnp.TraversalLimit (evalLimitT)
+import Codec.Capnp          (getRoot)
 import Data.Mutable         (freeze)
+import Internal.BuildPure   (createPure)
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Convert as Convert

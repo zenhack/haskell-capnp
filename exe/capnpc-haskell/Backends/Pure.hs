@@ -300,16 +300,13 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 -- high-level api types that we serailize ourselves, so they can't
                 -- be malicious in the ways that the traversal limit is designed to
                 -- mitiage
-                [ "args' <- evalLimitT maxBound $ PH'.convertValue args"
+                [ "args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot"
                 , hcat
                     [ "resultPromise <- Rpc.call "
                     , PP.textStrict $ T.pack $ show interfaceId
                     , " "
                     , PP.textStrict $ T.pack $ show ordinal
-                    , " Rpc.Payload"
-                    , " { content = Just (PU'.PtrStruct args')"
-                    , " , capTable = V.empty"
-                    , " }"
+                    , " (Just (U'.PtrStruct args'))"
                     , " client"
                     ]
                 , "result <- Rpc.waitIO resultPromise"

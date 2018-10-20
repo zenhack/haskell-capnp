@@ -64,8 +64,8 @@ export_Persistent server_ = Persistent <$> Rpc.export Rpc.Server
     }
 instance Persistent'server_ Persistent where
     persistent'save args (Persistent client) = do
-        args' <- evalLimitT maxBound $ PH'.convertValue args
-        resultPromise <- Rpc.call 14468694717054801553 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
+        resultPromise <- Rpc.call 14468694717054801553 0 (Just (U'.PtrStruct args')) client
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
 newtype RealmGateway = RealmGateway M'.Client
@@ -96,13 +96,13 @@ export_RealmGateway server_ = RealmGateway <$> Rpc.export Rpc.Server
     }
 instance RealmGateway'server_ RealmGateway where
     realmGateway'import args (RealmGateway client) = do
-        args' <- evalLimitT maxBound $ PH'.convertValue args
-        resultPromise <- Rpc.call 9583422979879616212 0 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
+        resultPromise <- Rpc.call 9583422979879616212 0 (Just (U'.PtrStruct args')) client
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
     realmGateway'export args (RealmGateway client) = do
-        args' <- evalLimitT maxBound $ PH'.convertValue args
-        resultPromise <- Rpc.call 9583422979879616212 1 Rpc.Payload { content = Just (PU'.PtrStruct args') , capTable = V.empty } client
+        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
+        resultPromise <- Rpc.call 9583422979879616212 1 (Just (U'.PtrStruct args')) client
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
 data Persistent'SaveParams
