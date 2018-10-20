@@ -40,7 +40,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     [ ( T.unpack $ mintercalate "/" humanParts <> ".hs"
       , mainContent
       )
-    , ( printf "Capnp/ById/X%x.hs" modId
+    , ( printf "Capnp/Gen/ById/X%x.hs" modId
       , vcat
         [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
         , "{-# OPTIONS_HADDOCK hide #-}"
@@ -53,9 +53,9 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
         ]
       )
     ] where
-  machineMod = fromString (printf "Capnp.ById.X%x" modId)
+  machineMod = fromString (printf "Capnp.Gen.ById.X%x" modId)
   humanMod = fmtModRef $ FullyQualified $ Namespace humanParts
-  humanParts = "Capnp":modNameParts
+  humanParts = "Capnp":"Gen":modNameParts
   modFileText = PP.textStrict modFile
   mainContent = vcat
     [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
@@ -100,7 +100,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     ]
 
 fmtModRef :: ModuleRef -> PP.Doc
-fmtModRef (ByCapnpId id) = fromString $ printf "Capnp.ById.X%x" id
+fmtModRef (ByCapnpId id) = fromString $ printf "Capnp.Gen.ById.X%x" id
 fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map PP.textStrict ns)
 
 fmtImport :: Import -> PP.Doc

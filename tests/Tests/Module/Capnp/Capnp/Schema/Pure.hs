@@ -27,7 +27,7 @@ import Text.Show.Pretty                     (ppShow)
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 
-import Capnp.Capnp.Schema.Pure
+import Capnp.Gen.Capnp.Schema.Pure
 import Tests.Util
 
 import Instances ()

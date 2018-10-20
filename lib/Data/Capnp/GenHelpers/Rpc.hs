@@ -6,7 +6,7 @@ module Data.Capnp.GenHelpers.Rpc where
 import Control.Monad.Catch (throwM)
 import Data.Default        (def)
 
-import Capnp.Capnp.Rpc.Pure      (Payload(..))
+import Capnp.Gen.Capnp.Rpc.Pure  (Payload(..))
 import Data.Capnp.TraversalLimit (evalLimitT)
 
 import qualified Data.Capnp.Errors          as E

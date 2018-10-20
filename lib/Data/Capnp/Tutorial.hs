@@ -119,18 +119,18 @@ your @$PATH@, you can generate code for this schema by running:
 
 This will create the following files relative to the current directory:
 
-* Capnp\/Addressbook.hs
-* Capnp\/Addressbook\/Pure.hs
-* Capnp\/ById\/Xcd6db6afb4a0cf5c/Pure.hs
-* Capnp\/ById\/Xcd6db6afb4a0cf5c.hs
+* Capnp\/Gen\/Addressbook.hs
+* Capnp\/Gen\/Addressbook\/Pure.hs
+* Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c/Pure.hs
+* Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c.hs
 
 The modules under @ById@ are an implementation detail.
-@Capnp\/Addressbook.hs@ is generated code for use with the low level API.
-@Capnp\/Addressbook\/Pure.hs@ is generated code for use with the high
-level API. It will export the following data declarations (cleaned up
+@Capnp\/Gen\/Addressbook.hs@ is generated code for use with the low level API.
+@Capnp\/Gen\/Addressbook\/Pure.hs@ is generated code for use with the high
+level API. The latter will export the following data declarations (cleaned up
 for readability).
 
-> module Capnp.Addressbook where
+> module Capnp.Gen.Addressbook.Pure where
 >
 > import Data.Int
 > import Data.Text   (Text)
@@ -195,7 +195,7 @@ message to standard output using the high-level API like so:
 > -- code relys on it to resolve collisions in capnproto struct field
 > -- names:
 > {-# LANGUAGE DuplicateRecordFields #-}
-> import Capnp.Addressbook.Pure
+> import Capnp.Gen.Addressbook.Pure
 >
 > -- Note that Data.Capnp re-exports `def`, as a convienence
 > import Data.Capnp (putValue, def)
@@ -384,7 +384,7 @@ The snippet below prints the names of each person in the address book:
 > {-# LANGUAGE ScopedTypeVariables #-}
 > import Prelude hiding (length)
 >
-> import Capnp.Addressbook
+> import Capnp.Gen.Addressbook
 > import Data.Capnp
 >     (ConstMsg, defaultLimit, evalLimitT, getValue, index, length, textBytes)
 >
@@ -409,7 +409,7 @@ example above.
 Writing messages using the low-level API has a similarly imperative feel.
 The below constructs the same message as in our high-level example above:
 
-> import Capnp.Addressbook
+> import Capnp.Gen.Addressbook
 >
 > import Data.Capnp
 >     ( MutMsg

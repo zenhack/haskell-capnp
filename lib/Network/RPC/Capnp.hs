@@ -74,13 +74,13 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
-import Capnp.Capnp.Rpc.Pure hiding (Exception)
+import Capnp.Gen.Capnp.Rpc.Pure hiding (Exception)
 
 import Data.Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
 
 import Data.Capnp (def, hGetValue, hPutValue, sGetValue, sPutValue)
 
-import qualified Capnp.Capnp.Rpc.Pure as Rpc
+import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc
 
 -- | Shortcut to throw an @unimplemented@ exception.
 throwMethodUnimplemented :: MonadThrow m => m a

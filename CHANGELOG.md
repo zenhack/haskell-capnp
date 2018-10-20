@@ -4,6 +4,7 @@
   documented.
 * Fix a where reads on `Handle`s at EOF would cause a call to error.
 * Beginnings of RPC support; the API will likely change substantially.
+* Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
 
 # 0.3.0.0
 

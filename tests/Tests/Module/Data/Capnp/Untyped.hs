@@ -32,12 +32,12 @@ import Data.Mutable              (Thaw(..))
 
 import Instances ()
 
-import Capnp.Capnp.Schema.Pure (Brand, Method(..), Node'Parameter)
+import Capnp.Gen.Capnp.Schema.Pure (Brand, Method(..), Node'Parameter)
 
 import qualified Data.Capnp.Classes as C
 import qualified Data.Capnp.Message as M
 
-import qualified Capnp.Capnp.Schema as Schema
+import qualified Capnp.Gen.Capnp.Schema as Schema
 
 untypedTests = testGroup "Untyped Tests"
     [ readTests

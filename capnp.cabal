@@ -113,30 +113,30 @@ library
       , Capnp.Capnp
 
       -- BEGIN GENERATED SCHEMA MODULES
-      , Capnp.Capnp.Cxx.Pure
-      , Capnp.Capnp.Json.Pure
-      , Capnp.Capnp.Persistent.Pure
-      , Capnp.Capnp.Rpc.Pure
-      , Capnp.Capnp.RpcTwoparty.Pure
-      , Capnp.Capnp.Schema.Pure
-      , Capnp.Capnp.Cxx
-      , Capnp.Capnp.Json
-      , Capnp.Capnp.Persistent
-      , Capnp.Capnp.Rpc
-      , Capnp.Capnp.RpcTwoparty
-      , Capnp.Capnp.Schema
-      , Capnp.ById.Xbdf87d7bb8304e81.Pure
-      , Capnp.ById.X8ef99297a43a5e34.Pure
-      , Capnp.ById.Xb8630836983feed7.Pure
-      , Capnp.ById.Xb312981b2552a250.Pure
-      , Capnp.ById.Xa184c7885cdaf2a1.Pure
-      , Capnp.ById.Xa93fc509624c72d9.Pure
-      , Capnp.ById.Xbdf87d7bb8304e81
-      , Capnp.ById.X8ef99297a43a5e34
-      , Capnp.ById.Xb8630836983feed7
-      , Capnp.ById.Xb312981b2552a250
-      , Capnp.ById.Xa184c7885cdaf2a1
-      , Capnp.ById.Xa93fc509624c72d9
+      , Capnp.Gen.Capnp.Cxx.Pure
+      , Capnp.Gen.Capnp.Json.Pure
+      , Capnp.Gen.Capnp.Persistent.Pure
+      , Capnp.Gen.Capnp.Rpc.Pure
+      , Capnp.Gen.Capnp.RpcTwoparty.Pure
+      , Capnp.Gen.Capnp.Schema.Pure
+      , Capnp.Gen.Capnp.Cxx
+      , Capnp.Gen.Capnp.Json
+      , Capnp.Gen.Capnp.Persistent
+      , Capnp.Gen.Capnp.Rpc
+      , Capnp.Gen.Capnp.RpcTwoparty
+      , Capnp.Gen.Capnp.Schema
+      , Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
+      , Capnp.Gen.ById.X8ef99297a43a5e34.Pure
+      , Capnp.Gen.ById.Xb8630836983feed7.Pure
+      , Capnp.Gen.ById.Xb312981b2552a250.Pure
+      , Capnp.Gen.ById.Xa184c7885cdaf2a1.Pure
+      , Capnp.Gen.ById.Xa93fc509624c72d9.Pure
+      , Capnp.Gen.ById.Xbdf87d7bb8304e81
+      , Capnp.Gen.ById.X8ef99297a43a5e34
+      , Capnp.Gen.ById.Xb8630836983feed7
+      , Capnp.Gen.ById.Xb312981b2552a250
+      , Capnp.Gen.ById.Xa184c7885cdaf2a1
+      , Capnp.Gen.ById.Xa93fc509624c72d9
       -- END GENERATED SCHEMA MODULES
     other-modules:
         Internal.Util

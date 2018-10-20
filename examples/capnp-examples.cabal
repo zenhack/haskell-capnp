@@ -16,10 +16,10 @@ extra-source-files:  ChangeLog.md
 executable echo-demo
   main-is:             Main.hs
   other-modules:
-      Capnp.Echo
-    , Capnp.Echo.Pure
-    , Capnp.ById.Xd0a87f36fa0182f5
-    , Capnp.ById.Xd0a87f36fa0182f5.Pure
+      Capnp.Gen.Echo
+    , Capnp.Gen.Echo.Pure
+    , Capnp.Gen.ById.Xd0a87f36fa0182f5
+    , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
   build-depends:
       base ^>=4.11
     , capnp

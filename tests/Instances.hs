@@ -5,7 +5,7 @@ Description: Instances of Arbitrary for various types.
 In particular, stuff from:
 
 * "Data.Capnp.Untyped.Pure"
-* "Capnp.Capnp.Schema.Pure"
+* "Capnp.Gen.Capnp.Schema.Pure"
 -}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards       #-}
@@ -18,7 +18,7 @@ import Test.QuickCheck.Instances ()
 
 import qualified Data.Vector as V
 
-import Capnp.Capnp.Schema.Pure
+import Capnp.Gen.Capnp.Schema.Pure
 
 import qualified Data.Capnp.Untyped.Pure as PU
 

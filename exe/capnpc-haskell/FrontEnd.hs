@@ -22,7 +22,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
-import Capnp.Capnp.Schema.Pure
+import Capnp.Gen.Capnp.Schema.Pure
 
 import Backends.Common (dataFieldSize)
 

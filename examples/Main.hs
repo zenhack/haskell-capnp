@@ -11,7 +11,7 @@ import System.IO              (IOMode(ReadWriteMode), hClose)
 import Data.Capnp        (def, defaultLimit)
 import Network.RPC.Capnp (VatConfig(..), bootstrap, runVat, socketTransport)
 
-import Capnp.Echo.Pure
+import Capnp.Gen.Echo.Pure
 
 data MyEchoServer = MyEchoServer
 

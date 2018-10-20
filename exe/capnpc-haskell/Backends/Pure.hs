@@ -42,8 +42,8 @@ fmtName refTy thisMod Name{..} = modPrefix <> localName
 modRefToNS :: ModRefType -> ModuleRef -> Namespace
 modRefToNS _ (FullyQualified ns) = ns
 modRefToNS ty (ByCapnpId id) = Namespace $ case ty of
-    Pure -> ["Capnp", "ById", T.pack (printf "X%x" id), "Pure"]
-    Raw  -> ["Capnp", "ById", T.pack (printf "X%x" id)]
+    Pure -> ["Capnp", "Gen", "ById", T.pack (printf "X%x" id), "Pure"]
+    Raw  -> ["Capnp", "Gen", "ById", T.pack (printf "X%x" id)]
 
 
 fmtModule :: Module -> [(FilePath, PP.Doc)]
@@ -51,7 +51,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     [ ( T.unpack $ mintercalate "/" humanParts <> ".hs"
       , mainContent
       )
-    , ( printf "Capnp/ById/X%x/Pure.hs" modId
+    , ( printf "Capnp/Gen/ById/X%x/Pure.hs" modId
       , vcat
             [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
             , "{-# OPTIONS_HADDOCK hide #-}"
@@ -68,7 +68,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
  where
   machineMod = fmtModRef Pure (ByCapnpId modId)
   humanMod = fmtModRef Pure $ FullyQualified $ Namespace humanParts
-  humanParts = "Capnp":modNameParts ++ ["Pure"]
+  humanParts = "Capnp":"Gen":modNameParts ++ ["Pure"]
   modFileText = PP.textStrict modFile
   mainContent = vcat
     [ "{-# LANGUAGE DuplicateRecordFields #-}"
@@ -116,7 +116,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , if hasInterfaces mod then
         vcat
         [ "import qualified Network.RPC.Capnp as Rpc"
-        , "import qualified Capnp.Capnp.Rpc.Pure as Rpc"
+        , "import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc"
         , "import qualified Data.Capnp.GenHelpers.Rpc as RH'"
         ]
       else

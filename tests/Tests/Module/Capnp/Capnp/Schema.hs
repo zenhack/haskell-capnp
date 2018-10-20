@@ -6,7 +6,7 @@ import Control.Monad           (when)
 import Control.Monad.Primitive (RealWorld)
 import Text.Heredoc            (there)
 
-import Capnp.Capnp.Schema
+import Capnp.Gen.Capnp.Schema
 
 import Data.Capnp                (newRoot)
 import Data.Capnp.TraversalLimit (LimitT, evalLimitT)

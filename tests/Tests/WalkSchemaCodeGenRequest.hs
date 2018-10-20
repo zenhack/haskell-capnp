@@ -25,8 +25,8 @@ import Data.Capnp.Basics         (index, length, textBytes)
 import Data.Capnp.Classes        (fromStruct)
 import Data.Capnp.TraversalLimit (LimitT, execLimitT)
 
-import qualified Capnp.Capnp.Schema as Schema
-import qualified Data.Capnp.Message as M
+import qualified Capnp.Gen.Capnp.Schema as Schema
+import qualified Data.Capnp.Message     as M
 
 
 -- | TODO: make this an array; we're doing random access to it below.
