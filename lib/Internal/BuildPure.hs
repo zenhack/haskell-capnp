@@ -13,7 +13,7 @@ module Internal.BuildPure
     , createPure
     ) where
 
-import Control.Monad.Catch      (MonadThrow(..), SomeException)
+import Control.Monad.Catch      (Exception, MonadThrow(..), SomeException)
 import Control.Monad.Catch.Pure (CatchT, runCatchT)
 import Control.Monad.Primitive  (PrimMonad(..))
 import Control.Monad.ST         (ST)
@@ -37,9 +37,15 @@ runPureBuilder limit (PureBuilder m) = runPrimCatchT $ evalLimitT limit m
 
 -- | @'createPure' limit m@ creates a capnproto value in pure code according
 -- to @m@, then freezes it without copying. If @m@ calls 'throwM' then
--- 'createPure' returns a 'Left' with the exception.
-createPure :: Thaw a => Int -> (forall s. PureBuilder s (Mutable s a)) -> Either SomeException a
-createPure limit m = createT (runPureBuilder limit m)
+-- 'createPure' rethrows the exception in the specified monad.
+createPure :: (MonadThrow m, Thaw a) => Int -> (forall s. PureBuilder s (Mutable s a)) -> m a
+createPure limit m = throwLeft $ createT (runPureBuilder limit m)
+  where
+    -- I(zenhack) am surprised not to have found this in one of the various
+    -- exception packages:
+    throwLeft :: (Exception e, MonadThrow m) => Either e a -> m a
+    throwLeft (Left e)  = throwM e
+    throwLeft (Right a) = pure a
 
 -- | 'PrimCatchT' is a trivial wrapper around 'CatchT', which implements
 -- 'PrimMonad'. This is a temporary workaround for:

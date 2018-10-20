@@ -7,6 +7,8 @@
 * Some changes to the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
   * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
+* `createPure` can now be used with any instance of `MonadThrow`, not
+  just `Either SomeException`.
 
 # 0.3.0.0
 

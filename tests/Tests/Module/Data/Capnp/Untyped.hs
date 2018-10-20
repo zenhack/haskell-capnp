@@ -9,7 +9,6 @@ module Tests.Module.Data.Capnp.Untyped (untypedTests) where
 import Prelude hiding (length)
 
 import Control.Monad                        (forM_, when)
-import Control.Monad.Catch                  (MonadThrow(throwM))
 import Control.Monad.Primitive              (RealWorld)
 import Data.ReinterpretCast                 (doubleToWord, wordToDouble)
 import Data.Text                            (Text)
@@ -316,7 +315,7 @@ otherMessageTest' name params brand = propertyIO $ do
             , implicitParameters = params
             , paramBrand = brand
             }
-    let result = createPure maxBound $ do
+    msg :: M.ConstMsg <- createPure maxBound $ do
             methodMsg <- M.newMessage
             nameMsg <- M.newMessage
             paramsMsg <- M.newMessage
@@ -336,9 +335,5 @@ otherMessageTest' name params brand = propertyIO $ do
             Schema.set_Method'paramBrand methodCerial brandCerial
 
             pure methodMsg
-    case result of
-            Left e ->
-                throwM e
-            Right (msg :: M.ConstMsg) -> do
-                actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
-                assertEqual (show actual ++ " == " ++ show expected) actual expected
+    actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
+    assertEqual (show actual ++ " == " ++ show expected) actual expected
