@@ -32,8 +32,11 @@ module Capnp.TraversalLimit
     , defaultLimit
     ) where
 
+import Prelude hiding (fail)
+
 import Control.Monad              (when)
 import Control.Monad.Catch        (MonadThrow(throwM))
+import Control.Monad.Fail         (MonadFail(..))
 import Control.Monad.Primitive    (PrimMonad(primitive), PrimState)
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
@@ -99,6 +102,9 @@ instance MonadState s m => MonadState s (LimitT m) where
 instance (PrimMonad m, s ~ PrimState m) => PrimMonad (LimitT m) where
     type PrimState (LimitT m) = PrimState m
     primitive = lift . primitive
+
+instance MonadFail m => MonadFail (LimitT m) where
+    fail = lift . fail
 
 ------ Instances of 'MonadLimit' for standard monad transformers
 

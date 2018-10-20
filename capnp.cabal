@@ -148,7 +148,7 @@ library
         cpu                               ^>= 0.1.2
       , data-default                      ^>= 0.7.1
       , data-default-instances-vector     ^>= 0.0.1
-      , stm                               ^>= 2.4.5
+      , stm                               ^>= 2.5.0
       , async                             ^>= 2.2.1
       , network-simple                    ^>= 0.4
       , network                           ^>= 2.8.0
