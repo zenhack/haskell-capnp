@@ -60,6 +60,7 @@ module Capnp.Message (
 
     , Client
     , nullClient
+    , withCapTable
     ) where
 
 import {-# SOURCE #-} Capnp.Rpc (Client, nullClient)
@@ -152,6 +153,10 @@ getSegment :: (MonadThrow m, Message m msg) => msg -> Int -> m (Segment msg)
 getSegment msg i = do
     checkIndex i =<< numSegs msg
     internalGetSeg msg i
+
+-- | @'withCapTable'@ replaces the capability table in the message.
+withCapTable :: V.Vector Client -> ConstMsg -> ConstMsg
+withCapTable newCaps msg = msg { constCaps = newCaps }
 
 -- | @'getCap' message index@ gets the capability with the given index from
 -- the message. throws 'Capnp.Errors.BoundsError' if the index is out
