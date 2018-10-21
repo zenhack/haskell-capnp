@@ -1,4 +1,4 @@
-module Tests.Module.Data.Capnp.Bits (bitsTests) where
+module Tests.Module.Capnp.Bits (bitsTests) where
 
 import Data.Bits
 import Data.Word

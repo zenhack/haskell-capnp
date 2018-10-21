@@ -184,12 +184,12 @@ test-suite simple-tests
     main-is:              Main.hs
     hs-source-dirs:       tests
     other-modules:
-        Tests.Module.Capnp.Capnp.Schema
-      , Tests.Module.Capnp.Capnp.Schema.Pure
-      , Tests.Module.Data.Capnp.Untyped
-      , Tests.Module.Data.Capnp.Untyped.Pure
-      , Tests.Module.Data.Capnp.Pointer
-      , Tests.Module.Data.Capnp.Bits
+        Tests.Module.Capnp.Gen.Capnp.Schema
+      , Tests.Module.Capnp.Gen.Capnp.Schema.Pure
+      , Tests.Module.Capnp.Untyped
+      , Tests.Module.Capnp.Untyped.Pure
+      , Tests.Module.Capnp.Pointer
+      , Tests.Module.Capnp.Bits
       , Tests.WalkSchemaCodeGenRequest
       , Tests.SchemaGeneration
       , Tests.SchemaQuickCheck

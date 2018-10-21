@@ -4,7 +4,7 @@
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-module Tests.Module.Data.Capnp.Untyped (untypedTests) where
+module Tests.Module.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 

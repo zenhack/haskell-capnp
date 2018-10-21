@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE RecordWildCards #-}
-module Tests.Module.Capnp.Capnp.Schema (schemaTests) where
+module Tests.Module.Capnp.Gen.Capnp.Schema (schemaTests) where
 
 import Control.Monad           (when)
 import Control.Monad.Primitive (RealWorld)
