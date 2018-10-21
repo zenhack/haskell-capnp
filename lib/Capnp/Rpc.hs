@@ -207,7 +207,7 @@ data Client
         , localVat :: Vat
         }
     | LocalClient
-        { exportId    :: ExportId
+        { exportId    :: !ExportId
         , localServer :: Server
         , localVat    :: Vat
         }
