@@ -702,6 +702,7 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
     --
     -- The reason for this is so we can report errors while still commiting the
     -- transaction; if we did 'throwSTM' it would roll back the effects.
+    handleErrs :: HsExn.Exception e => STM (Either e ()) -> IO ()
     handleErrs transaction = do
         ret <- atomically transaction
         case ret of
