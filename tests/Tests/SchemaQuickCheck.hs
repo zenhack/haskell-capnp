@@ -55,6 +55,6 @@ prop_schemaValid schema = ioProperty $ do
         Right _ -> True
 
 schemaCGRQuickCheck =
-    describe "generateCGR an decodeCGR agree" $ do
-        it "successfully decodes generated schema" $ do
+    describe "generateCGR an decodeCGR agree" $
+        it "successfully decodes generated schema" $
             property $ prop_schemaValid <$> genSchema

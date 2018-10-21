@@ -24,7 +24,7 @@ bitRangeExamples = do
         bitRange word lo hi `shouldBe` expected
     ones = map (\bit ->  (1 `shiftL` bit, bit, bit + 1, 1)) [0..63]
 
-replaceBitsExamples = do
+replaceBitsExamples =
     it "Should work with several examples" $
         sequence_
             [ replaceTest 8 (0xf :: Word8) 0      0 0xf

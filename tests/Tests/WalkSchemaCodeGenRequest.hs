@@ -42,7 +42,7 @@ nodeNames =
 -- TODO: This contains a bit of copypasta from some of the untyped tests; should
 -- factor that out.
 walkSchemaCodeGenRequestTest =
-    describe "Various sanity checks on a known schema CodeGeneratorRequest" $ do
+    describe "Various sanity checks on a known schema CodeGeneratorRequest" $
         it "Should match misc. expectations" $ do
             -- TODO: the above description betrays that this test isn't
             -- especially well defined at a granularity that I(zenhack)

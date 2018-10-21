@@ -53,7 +53,7 @@ pureSchemaTests = describe "Tests for generated high-level modules." $ do
     encodeTests
     propTests
 
-encodeTests = describe "schema encode tests" $ do
+encodeTests = describe "schema encode tests" $
     testCase
         ( "Node.Parameter"
         , Node'Parameter { name = "Bob" }
@@ -69,7 +69,7 @@ encodeTests = describe "schema encode tests" $ do
         , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
         , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
         ) => (String, a, String) -> Spec
-    testCase (name, expectedValue, expectedText) = describe "cerialize" $ do
+    testCase (name, expectedValue, expectedText) = describe "cerialize" $
         it ("Should agree with capnp decode (with name = " ++ name ++ ")") $ do
             msg <- evalLimitT maxBound $ do
                 -- TODO: add some helpers for all this.
