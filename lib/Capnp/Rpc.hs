@@ -75,7 +75,7 @@ import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
-import qualified Control.Exception
+import qualified Control.Exception as HsExn
 import qualified Data.Map.Strict   as M
 import qualified Data.Text         as T
 import qualified Data.Vector       as V
@@ -111,7 +111,7 @@ throwMethodUnimplemented = throwM Exception
     , obsoleteDurability = 0
     }
 
-instance Control.Exception.Exception Exception
+instance HsExn.Exception Exception
 
 -- These aliases are actually defined in the schema, but the schema compiler
 -- doesn't expose them to the code generator plugin, so we re-define them
@@ -230,7 +230,7 @@ data Server = Server
 -- | 'StopVat' is an exception used to terminate a capnproto connection; it is
 -- raised by `stopVat`.
 data StopVat = StopVat deriving(Show)
-instance Control.Exception.Exception StopVat
+instance HsExn.Exception StopVat
 
 -- | Shut down the rpc connection, and all resources managed by the vat. This
 -- does not return (it raises an exception used to actually signal termination
