@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies      #-}
-module Tests.Util
+module Util
     ( MsgMetaData(..)
     , capnpEncode, capnpDecode, capnpCompile
     , decodeValue

@@ -12,7 +12,7 @@ import Test.QuickCheck.Gen                  (Gen, oneof)
 
 import Capnp.Pointer
 
-import Tests.Util (assertionsToTest)
+import Util (assertionsToTest)
 
 instance Arbitrary EltSpec where
     arbitrary = oneof [ EltNormal <$> arbitrary <*> arbitraryU29

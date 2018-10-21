@@ -11,7 +11,7 @@ import Text.Heredoc         (here, there)
 import qualified Data.Vector as V
 
 import Capnp.Untyped.Pure
-import Tests.Util
+import Util
 
 import Capnp.Classes        (decerialize)
 import Capnp.TraversalLimit (LimitT, runLimitT)

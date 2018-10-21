@@ -19,7 +19,7 @@ import qualified Prelude
 
 import Capnp.Untyped hiding (index, length)
 
-import Tests.Util
+import Util
 
 import Capnp.Basics         (index, length, textBytes)
 import Capnp.Classes        (fromStruct)

@@ -11,7 +11,7 @@ import Capnp.Gen.Capnp.Schema
 import Capnp                (newRoot)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
 import Data.Mutable         (Thaw(..))
-import Tests.Util           (assertionsToTest, decodeValue)
+import Util                 (assertionsToTest, decodeValue)
 
 import qualified Capnp.Message as M
 

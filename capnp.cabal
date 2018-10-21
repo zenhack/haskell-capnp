@@ -193,7 +193,7 @@ test-suite simple-tests
       , Tests.WalkSchemaCodeGenRequest
       , Tests.SchemaGeneration
       , Tests.SchemaQuickCheck
-      , Tests.Util
+      , Util
       , Instances
     build-depends:
         capnp

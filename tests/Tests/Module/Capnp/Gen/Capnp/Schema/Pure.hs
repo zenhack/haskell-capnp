@@ -28,7 +28,7 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 
 import Capnp.Gen.Capnp.Schema.Pure
-import Tests.Util
+import Util
 
 import Instances ()
 

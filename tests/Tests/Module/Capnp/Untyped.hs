@@ -23,7 +23,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
 
 import Capnp.Untyped
-import Tests.Util
+import Util
 
 import Capnp                (cerialize, createPure, def, getRoot, newRoot)
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)

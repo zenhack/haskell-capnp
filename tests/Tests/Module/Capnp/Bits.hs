@@ -5,7 +5,7 @@ import Data.Word
 
 import Test.Framework (testGroup)
 import Test.HUnit     (Assertion, assertEqual)
-import Tests.Util     (assertionsToTest)
+import Util           (assertionsToTest)
 
 import Capnp.Bits
 

@@ -20,7 +20,7 @@ import Test.QuickCheck
 
 -- Schema generation imports
 import Tests.SchemaGeneration
-import Tests.Util
+import Util
 
 -- Schema validation imports
 import Control.Monad.Catch as C
