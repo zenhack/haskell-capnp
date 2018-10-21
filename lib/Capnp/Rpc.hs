@@ -623,7 +623,9 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             --
                             -- the handler has to decode again anyway. We should try to make this
                             -- whole business more efficient. See also #52.
-                            paramContent <- evalLimitT maxBound $ Rpc.get_Call'params rawCall >>= Rpc.get_Payload'content
+                            paramContent <- evalLimitT maxBound $
+                                Rpc.get_Call'params rawCall
+                                >>= Rpc.get_Payload'content
                             ret <- runRpcT vat $ call interfaceId methodId paramContent client
                             liftIO $ waitIO ret
                         msg <- createPure defaultLimit $ valueToMsg <$> Message'return $ def
