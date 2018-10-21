@@ -10,16 +10,14 @@ module Tests.WalkSchemaCodeGenRequest
 
 import Prelude hiding (length)
 
-import Control.Monad  (mapM_, when)
-import Test.Framework (Test)
-import Test.HUnit     (Assertion, assertEqual)
+import Test.Hspec
+
+import Control.Monad (mapM_, when)
 
 import qualified Data.ByteString as BS
 import qualified Prelude
 
 import Capnp.Untyped hiding (index, length)
-
-import Util
 
 import Capnp.Basics         (index, length, textBytes)
 import Capnp.Classes        (fromStruct)
@@ -43,12 +41,21 @@ nodeNames =
 
 -- TODO: This contains a bit of copypasta from some of the untyped tests; should
 -- factor that out.
-theAssert :: Assertion
-theAssert = do
-    bytes <- BS.readFile "tests/data/schema-codegenreq"
-    msg <- M.decode bytes
-    endQuota <- execLimitT 4096 (rootPtr msg >>= reader)
-    assertEqual "Correct remaining quota" 2036 endQuota
+walkSchemaCodeGenRequestTest =
+    describe "Various sanity checks on a known schema CodeGeneratorRequest" $ do
+        it "Should match misc. expectations" $ do
+            -- TODO: the above description betrays that this test isn't
+            -- especially well defined at a granularity that I(zenhack)
+            -- know how to tell hspec about, because there are data
+            -- dependencies between conceptual tests (we walk over the
+            -- data checking various things as we go).
+            --
+            -- It would be nice if we could mark off individual checks for
+            -- hspec's reporting somehow.
+            bytes <- BS.readFile "tests/data/schema-codegenreq"
+            msg <- M.decode bytes
+            endQuota <- execLimitT 4096 (rootPtr msg >>= reader)
+            endQuota `shouldBe` 2036
   where
     reader :: Struct M.ConstMsg -> LimitT IO ()
     reader root = do
@@ -87,7 +94,3 @@ theAssert = do
             (True, False) ->
                 error $ "Node at index " ++ show i ++ " should not " ++
                         "have had an annotation."
-
-walkSchemaCodeGenRequestTest :: Test
-walkSchemaCodeGenRequestTest =
-    assertionsToTest "walk schema CodeGenerationRequest" [theAssert]

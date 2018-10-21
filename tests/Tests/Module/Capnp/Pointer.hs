@@ -3,16 +3,10 @@ module Tests.Module.Capnp.Pointer (ptrTests) where
 import Data.Bits
 import Data.Int
 import Data.Word
-
-import Test.Framework                       (testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit                           (assertEqual)
-import Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary)
-import Test.QuickCheck.Gen                  (Gen, oneof)
+import Test.Hspec
+import Test.QuickCheck
 
 import Capnp.Pointer
-
-import Util (assertionsToTest)
 
 instance Arbitrary EltSpec where
     arbitrary = oneof [ EltNormal <$> arbitrary <*> arbitraryU29
@@ -54,30 +48,25 @@ instance Arbitrary Ptr where
                       , CapPtr <$> arbitrary
                       ]
 
-ptrTests = testGroup "Pointer Tests" [ptrProps, parsePtrExamples]
+ptrTests = do
+    ptrProps
+    parsePtrExamples
 
-ptrProps = testGroup "Pointer Properties"
-    [ testProperty "parseEltSpec . serializeEltSpec == id"
-        (\spec -> parseEltSpec (serializeEltSpec spec) == spec)
-    , testProperty "parsePtr . serializePtr == id" $ \ptr ->
-        case ptr of
-            (Just (StructPtr 0 0 0)) -> True -- we skip this one, since it's
-                                             -- the same bits as a null, so this
-                                             -- shouldn't hold. TODO: the name
-                                             -- of this test is a bit misleading
-                                             -- because of this case; should fix
-                                             -- that.
-            _                        -> parsePtr (serializePtr ptr) == ptr
-    ]
+ptrProps = describe "Pointer Properties" $ do
+    it "Should satisfy: parseEltSpec . serializeEltSpec == id" $
+        property $ \spec -> parseEltSpec (serializeEltSpec spec) == spec
+    it "Should satisfy: parsePtr . serializePtr == id" $
+        property $ \ptr ->
+            case ptr of
+                (Just (StructPtr 0 0 0)) -> True -- we skip this one, since it's
+                                                 -- the same bits as a null, so this
+                                                 -- shouldn't hold. TODO: the name
+                                                 -- of this test is a bit misleading
+                                                 -- because of this case; should fix
+                                                 -- that.
+                _                        -> parsePtr (serializePtr ptr) == ptr
 
 
-parsePtrExamples = assertionsToTest "parsePtr Examples" $
-    map parseExample
-        [ (0x0000000200000000, Just $ StructPtr 0 2 0)
-        ]
-  where
-    parseExample (word, expected) =
-        assertEqual
-            (concat ["parsePtr ", show word, " == ", show expected])
-            expected
-            (parsePtr word)
+parsePtrExamples = describe "parsePtr (examples)" $
+    it "Should parse this example correctly" $
+        parsePtr 0x0000000200000000 `shouldBe` (Just $ StructPtr 0 2 0)

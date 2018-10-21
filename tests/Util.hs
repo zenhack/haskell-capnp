@@ -5,7 +5,6 @@ module Util
     , capnpEncode, capnpDecode, capnpCompile
     , decodeValue
     , encodeValue
-    , assertionsToTest
     )
     where
 
@@ -18,14 +17,11 @@ import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
 import System.Directory               (removeFile)
 import System.Exit                    (ExitCode(..))
 import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
-import Test.Framework                 (Test, testGroup)
-import Test.Framework.Providers.HUnit (hUnitTestToTests)
 
 import qualified Data.ByteString            as BS
 import qualified Data.ByteString.Builder    as BB
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
-import qualified Test.HUnit                 as H
 
 import qualified Capnp.Message as M
 
@@ -82,11 +78,6 @@ interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
     let saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
     schemaFile <- saveTmpSchema msgSchema
     lift $ readCreateProcessWithExitCode (proc "capnp" ([subCommand, schemaFile] ++ args)) stdInBytes
-
--- | Convert a list of 'Assertion's to a test group with the given name.
-assertionsToTest :: String -> [H.Assertion] -> Test
-assertionsToTest name =
-    testGroup name . hUnitTestToTests . H.TestList . map H.TestCase
 
 -- | @'decodeValue' schema typename message@ decodes the value at the root of
 -- the message and converts it to text. This is a thin wrapper around

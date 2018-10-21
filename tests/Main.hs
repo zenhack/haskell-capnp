@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Test.Framework (defaultMain)
+import Test.Hspec
 
 import Tests.Module.Capnp.Bits                  (bitsTests)
 import Tests.Module.Capnp.Gen.Capnp.Schema      (schemaTests)
@@ -12,12 +12,15 @@ import Tests.SchemaQuickCheck                   (schemaCGRQuickCheck)
 import Tests.WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 
 main :: IO ()
-main = defaultMain [ bitsTests
-                   , ptrTests
-                   , untypedTests
-                   , pureUntypedTests
-                   , walkSchemaCodeGenRequestTest
-                   , schemaCGRQuickCheck
-                   , schemaTests
-                   , pureSchemaTests
-                   ]
+main = hspec $ do
+    describe "Tests for specific modules" $ do
+        describe "Capnp.Bits" bitsTests
+        describe "Capnp.Pointer" ptrTests
+        describe "Capnp.Untyped" untypedTests
+        describe "Capnp.Untyped.Pure" pureUntypedTests
+    describe "Tests for generated output" $ do
+        describe "low-level output" schemaTests
+        describe "high-level output" pureSchemaTests
+    describe "Tests relate to schema" $ do
+        describe "tests using tests/data/schema-codegenreq" walkSchemaCodeGenRequestTest
+        describe "property tests for schema" schemaCGRQuickCheck

@@ -203,10 +203,7 @@ test-suite simple-tests
       , QuickCheck
       , quickcheck-io
       , quickcheck-instances
-      , HUnit
-      , test-framework
-      , test-framework-hunit
-      , test-framework-quickcheck2
+      , hspec
       , directory
       , resourcet
       , heredoc

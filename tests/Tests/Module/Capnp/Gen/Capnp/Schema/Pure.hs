@@ -7,22 +7,21 @@
 module Tests.Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
+import Test.Hspec
 
-import Control.Exception                    (bracket)
-import Control.Monad                        (when)
-import Control.Monad.Primitive              (RealWorld)
-import Data.Default                         (Default(..))
-import System.Directory                     (removeFile)
+import Control.Exception         (bracket)
+import Control.Monad             (when)
+import Control.Monad.Primitive   (RealWorld)
+import Data.Default              (Default(..))
+import Data.Foldable             (traverse_)
+import System.Directory          (removeFile)
 import System.IO
     (IOMode(ReadMode, WriteMode), hClose, openBinaryTempFile, withBinaryFile)
-import Test.Framework                       (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit.Lang                      (Assertion, assertEqual)
-import Test.QuickCheck                      (Property)
+import Test.QuickCheck           (Property, property)
 import Test.QuickCheck.Instances ()
-import Test.QuickCheck.IO                   (propertyIO)
-import Text.Heredoc                         (here, there)
-import Text.Show.Pretty                     (ppShow)
+import Test.QuickCheck.IO        (propertyIO)
+import Text.Heredoc              (here, there)
+import Text.Show.Pretty          (ppShow)
 
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
@@ -48,20 +47,18 @@ import qualified Capnp.Untyped as U
 
 schemaText = [there|tests/data/schema.capnp|]
 
-pureSchemaTests = testGroup "Tests for generated .Pure modules."
-    [ decodeTests
-    , decodeDefaultTests
-    , encodeTests
-    , propTests
-    ]
+pureSchemaTests = describe "Tests for generated high-level modules." $ do
+    decodeTests
+    decodeDefaultTests
+    encodeTests
+    propTests
 
-encodeTests = testGroup "schema encode tests"
-    [ testCase
+encodeTests = describe "schema encode tests" $ do
+    testCase
         ( "Node.Parameter"
         , Node'Parameter { name = "Bob" }
         , "(name = \"Bob\")\n"
         )
-    ]
   where
     testCase ::
         -- TODO: the size of this context is *stupid*
@@ -71,9 +68,9 @@ encodeTests = testGroup "schema encode tests"
         , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
         , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
         , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
-        ) => (String, a, String) -> Test
-    testCase (name, expectedValue, expectedText) =
-        assertionsToTest ("Check cerialize against capnp decode (" ++ name ++ ")") $ pure $ do
+        ) => (String, a, String) -> Spec
+    testCase (name, expectedValue, expectedText) = describe "cerialize" $ do
+        it ("Should agree with capnp decode (with name = " ++ name ++ ")") $ do
             msg <- evalLimitT maxBound $ do
                 -- TODO: add some helpers for all this.
                 msg <- M.newMessage
@@ -84,19 +81,14 @@ encodeTests = testGroup "schema encode tests"
             actualText <- capnpDecode
                 (LBS.toStrict $ BB.toLazyByteString builder)
                 (MsgMetaData schemaText name)
-            assertEqual ("Encode " ++ show expectedValue)
-                expectedText
-                actualText
+            actualText `shouldBe` expectedText
             actualValue <- evalLimitT maxBound $ do
                 root <- U.rootPtr msg
                 cerialIn <- fromStruct root
                 decerialize cerialIn
-            assertEqual
-                ("decerialize (cerialize " ++ show expectedValue ++ ") == " ++ show actualValue)
-                expectedValue
-                actualValue
+            actualValue `shouldBe` expectedValue
 
-decodeTests = testGroup "schema decode tests"
+decodeTests = describe "schema decode tests" $ sequence_ $
     [ decodeTests "CodeGeneratorRequest"
         [ ( [here|
                 ( capnpVersion = (major = 0, minor = 6, micro = 1)
@@ -398,22 +390,29 @@ decodeTests = testGroup "schema decode tests"
                 ]
           )
         ]
-    ]
+    ] `asProxyTypeOf` (Proxy :: Proxy [Spec])
   where
-    -- decodeTests :: Decerialize Struct a => String -> [(String, a)] -> IO ()
+    -- TODO: rename this: it's confusing to have both the top level and helper
+    -- have the same name; not sure how that happened in the first place.
+    decodeTests ::
+        ( Eq a
+        , Show a
+        , Decerialize a
+        , FromStruct M.ConstMsg a
+        ) => String -> [(String, a)] -> Spec
     decodeTests typename cases =
-        assertionsToTest ("Decode " ++ typename) $ map (testCase typename) cases
-    testCase typename (capnpText, expected) = do
-        msg <- encodeValue schemaText typename capnpText
-        actual <- evalLimitT 128 $ getRoot msg
-        ppAssertEqual actual expected
+        describe ("Decode " ++ typename) $ traverse_ (testCase typename) cases
 
-decodeDefaultTests = assertionsToTest
-    "Check that the empty struct decodes to the default value"
-    [ decodeDefault "Type" (Proxy :: Proxy Type)
-    , decodeDefault "Value" (Proxy :: Proxy Value)
-    , decodeDefault "Node" (Proxy :: Proxy Node)
-    ]
+    testCase typename (capnpText, expected) =
+        specify ("should agree with `capnp encode` on " ++ capnpText) $ do
+            msg <- encodeValue schemaText typename capnpText
+            actual <- evalLimitT 128 $ getRoot msg
+            ppAssertEqual actual expected
+
+decodeDefaultTests = describe "Decoding default values" $ do
+    decodeDefault "Type" (Proxy :: Proxy Type)
+    decodeDefault "Value" (Proxy :: Proxy Value)
+    decodeDefault "Node" (Proxy :: Proxy Node)
 
 decodeDefault ::
     ( Show a
@@ -422,42 +421,44 @@ decodeDefault ::
     , FromStruct M.ConstMsg a
     , Cerialize RealWorld a
     , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
-    ) => String -> Proxy a -> Assertion
-decodeDefault typename proxy = do
-    actual <- evalLimitT defaultLimit (getRoot M.empty)
-    ppAssertEqual (actual `asProxyTypeOf` proxy) def
+    ) => String -> Proxy a -> Spec
+decodeDefault typename proxy =
+    specify ("The empty struct decodes to the default value for " ++ typename) $ do
+        actual <- evalLimitT defaultLimit (getRoot M.empty)
+        ppAssertEqual (actual `asProxyTypeOf` proxy) def
 
 ppAssertEqual :: (Show a, Eq a) => a -> a -> IO ()
 ppAssertEqual actual expected =
     when (actual /= expected) $ error $
         "Expected:\n\n" ++ ppShow expected ++ "\n\nbut got:\n\n" ++ ppShow actual
 
-propTests = testGroup "Various quickcheck properties"
-    [ propCase "Node" (Proxy :: Proxy Node)
-    , propCase "Node.Parameter" (Proxy :: Proxy Node'Parameter)
-    , propCase "Node.NestedNode" (Proxy :: Proxy Node'NestedNode)
-    , propCase "Field" (Proxy :: Proxy Field)
-    , propCase "Enumerant" (Proxy :: Proxy Enumerant)
-    , propCase "Superclass" (Proxy :: Proxy Superclass)
-    , propCase "Method" (Proxy :: Proxy Method)
-    , propCase "Type" (Proxy :: Proxy Type)
-    , propCase "Brand" (Proxy :: Proxy Brand)
-    , propCase "Brand.Scope" (Proxy :: Proxy Brand'Scope)
-    , propCase "Brand.Binding" (Proxy :: Proxy Brand'Binding)
-    , propCase "Value" (Proxy :: Proxy Value)
-    , propCase "Annotation" (Proxy :: Proxy Annotation)
-    , propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
-    , propCase "CodeGeneratorRequest" (Proxy :: Proxy CodeGeneratorRequest)
-    , propCase "CodeGeneratorRequest.RequestedFile"
+propTests :: Spec
+propTests = describe "Various quickcheck properties" $ do
+    propCase "Node" (Proxy :: Proxy Node)
+    propCase "Node.Parameter" (Proxy :: Proxy Node'Parameter)
+    propCase "Node.NestedNode" (Proxy :: Proxy Node'NestedNode)
+    propCase "Field" (Proxy :: Proxy Field)
+    propCase "Enumerant" (Proxy :: Proxy Enumerant)
+    propCase "Superclass" (Proxy :: Proxy Superclass)
+    propCase "Method" (Proxy :: Proxy Method)
+    propCase "Type" (Proxy :: Proxy Type)
+    propCase "Brand" (Proxy :: Proxy Brand)
+    propCase "Brand.Scope" (Proxy :: Proxy Brand'Scope)
+    propCase "Brand.Binding" (Proxy :: Proxy Brand'Binding)
+    propCase "Value" (Proxy :: Proxy Value)
+    propCase "Annotation" (Proxy :: Proxy Annotation)
+    propCase "CapnpVersion" (Proxy :: Proxy CapnpVersion)
+    propCase "CodeGeneratorRequest" (Proxy :: Proxy CodeGeneratorRequest)
+    propCase "CodeGeneratorRequest.RequestedFile"
         (Proxy :: Proxy CodeGeneratorRequest'RequestedFile)
-    , propCase "CodeGeneratorRequest.RequestedFile.Import"
+    propCase "CodeGeneratorRequest.RequestedFile.Import"
         (Proxy :: Proxy CodeGeneratorRequest'RequestedFile'Import)
-    ]
 
-propCase name proxy = testGroup ("...for " ++ name)
-    [ testProperty "check that cerialize and decerialize are inverses." (prop_cerializeDecerializeInverses proxy)
-    , testProperty "check that hPutValue and hGetValue are inverses." (prop_hGetPutInverses proxy)
-    ]
+propCase name proxy = describe ("...for " ++ name) $ do
+    specify "cerialize and decerialize are inverses." $
+        property (prop_cerializeDecerializeInverses proxy)
+    specify "hPutValue and hGetValue are inverses." $
+        property (prop_hGetPutInverses proxy)
 
 prop_hGetPutInverses ::
     ( Show a

@@ -15,7 +15,7 @@ import qualified Capnp.Gen.Capnp.Schema as Schema
 import qualified Capnp.Untyped          as Untyped
 
 -- Testing framework imports
-import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.Hspec
 import Test.QuickCheck
 
 -- Schema generation imports
@@ -54,5 +54,7 @@ prop_schemaValid schema = ioProperty $ do
         Left _  -> False
         Right _ -> True
 
-schemaCGRQuickCheck = testProperty "valid schema QuickCheck"
-                      (prop_schemaValid <$> genSchema)
+schemaCGRQuickCheck =
+    describe "generateCGR an decodeCGR agree" $ do
+        it "successfully decodes generated schema" $ do
+            property $ prop_schemaValid <$> genSchema

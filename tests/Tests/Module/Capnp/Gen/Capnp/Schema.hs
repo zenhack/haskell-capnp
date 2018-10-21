@@ -2,8 +2,10 @@
 {-# LANGUAGE RecordWildCards #-}
 module Tests.Module.Capnp.Gen.Capnp.Schema (schemaTests) where
 
-import Control.Monad           (when)
+import Test.Hspec
+
 import Control.Monad.Primitive (RealWorld)
+import Data.Foldable           (traverse_)
 import Text.Heredoc            (there)
 
 import Capnp.Gen.Capnp.Schema
@@ -11,7 +13,7 @@ import Capnp.Gen.Capnp.Schema
 import Capnp                (newRoot)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
 import Data.Mutable         (Thaw(..))
-import Util                 (assertionsToTest, decodeValue)
+import Util                 (decodeValue)
 
 import qualified Capnp.Message as M
 
@@ -21,7 +23,7 @@ data BuildTest = BuildTest
     , builder  :: M.MutMsg RealWorld -> LimitT IO ()
     }
 
-schemaTests = assertionsToTest "Test typed setters" $ map testCase
+schemaTests = describe "tests for typed setters" $ traverse_ testCase
     [ BuildTest
         { typeName = "Field"
         , expected = concat
@@ -42,12 +44,11 @@ schemaTests = assertionsToTest "Test typed setters" $ map testCase
         }
     ]
   where
-    testCase BuildTest{..} = do
+    testCase BuildTest{..} = it ("Should build " ++ expected) $ do
         msg <- M.newMessage
         evalLimitT maxBound $ builder msg
         constMsg <- freeze msg
         actual <- decodeValue schemaSchema typeName constMsg
-        when (actual /= expected) $
-            error $ "Expected:\n\n" ++ show expected ++ "\n\n...but got:\n\n" ++ show actual
+        actual `shouldBe` expected
 
 schemaSchema = [there|core-schema/capnp/schema.capnp|]

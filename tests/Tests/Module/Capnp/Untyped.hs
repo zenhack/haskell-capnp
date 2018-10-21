@@ -8,16 +8,16 @@ module Tests.Module.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
 
-import Control.Monad                        (forM_, when)
-import Control.Monad.Primitive              (RealWorld)
-import Data.ReinterpretCast                 (doubleToWord, wordToDouble)
-import Data.Text                            (Text)
-import Test.Framework                       (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit                           (assertEqual)
-import Test.QuickCheck                      (Property)
-import Test.QuickCheck.IO                   (propertyIO)
-import Text.Heredoc                         (here, there)
+import Test.Hspec
+
+import Control.Monad           (forM_, when)
+import Control.Monad.Primitive (RealWorld)
+import Data.Foldable           (traverse_)
+import Data.ReinterpretCast    (doubleToWord, wordToDouble)
+import Data.Text               (Text)
+import Test.QuickCheck         (property)
+import Test.QuickCheck.IO      (propertyIO)
+import Text.Heredoc            (here, there)
 
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
@@ -38,16 +38,14 @@ import qualified Capnp.Message as M
 
 import qualified Capnp.Gen.Capnp.Schema as Schema
 
-untypedTests = testGroup "Untyped Tests"
-    [ readTests
-    , modifyTests
-    , farPtrTest
-    , otherMessageTest
-    ]
+untypedTests = describe "low-level untyped API tests" $ do
+    readTests
+    modifyTests
+    farPtrTest
+    otherMessageTest
 
-readTests :: Test
-readTests = assertionsToTest "read tests"
-    [ do
+readTests = describe "read tests" $
+    it "Should agree with `capnp decode`" $ do
         msg <- encodeValue
                     [there|tests/data/aircraft.capnp|]
                     "Aircraft"
@@ -98,8 +96,7 @@ readTests = assertionsToTest "read tests"
             Just (PtrList (List16 homes)) <- getPtr 1 base
             let 0 = length homes
             return ()
-        assertEqual "endQuota == 110" 110 endQuota
-    ]
+        endQuota `shouldBe` 110
 
 data ModTest s = ModTest
     { testIn   :: String
@@ -108,8 +105,7 @@ data ModTest s = ModTest
     , testType :: String
     }
 
-modifyTests :: Test
-modifyTests = testGroup "Test modification" $ map testCase
+modifyTests = describe "modification tests" $ traverse_ testCase
     -- tests for setIndex
     [ ModTest
         { testIn = "(year = 2018, month = 6, day = 20)\n"
@@ -274,66 +270,66 @@ modifyTests = testGroup "Test modification" $ map testCase
                 forM_ [0..4] $ \i -> setIndex (fromIntegral i) i vec
                 setPtr (Just $ PtrList $ dataCon vec) 0 struct
             }
-    testCase ModTest{..} = assertionsToTest
-            (show testIn ++ " : " ++ testType ++ " == " ++ show testOut) $
-            pure $ do
-        msg <- thaw =<< encodeValue schemaText testType testIn
-        evalLimitT 128 $ rootPtr msg >>= testMod
-        actualOut <- decodeValue schemaText testType =<< freeze msg
-        assertEqual ( actualOut ++ " == " ++ testOut) actualOut testOut
+    testCase ModTest{..} =
+        it ("Should satisfy: " ++ show testIn ++ " : " ++ testType ++ " == " ++ show testOut) $ do
+            msg <- thaw =<< encodeValue schemaText testType testIn
+            evalLimitT 128 $ rootPtr msg >>= testMod
+            actualOut <- decodeValue schemaText testType =<< freeze msg
+            actualOut `shouldBe` testOut
     schemaText = [there|tests/data/aircraft.capnp|]
 
 
-farPtrTest = assertionsToTest
-    "Setting cross-segment pointers should work."
-    [ do
+farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
+    -- I(zenhack) am disappointed in hindsight that we only check for crashes
+    -- here; we should make these more thorough, actually checking validity
+    -- somehow.
+    it "Should work when setting the root pointer" $ do
+        pure () :: IO () -- Not sure why ghc needs this hint, but it does.
         msg <- M.newMessage
         -- The allocator always allocates new objects in the last segment, so
         -- if we create a new segment, the call to allocStruct below should
         -- allocate there:
         (1, _) <- M.newSegment msg 16
         struct <- allocStruct msg 3 4
-        setRoot struct
-    , evalLimitT maxBound $ do
-        msg <- M.newMessage
-        srcStruct <- allocStruct msg 4 4
-        (1, _) <- M.newSegment msg 10
-        dstStruct <- allocStruct msg 2 2
-        ptr <- C.toPtr msg dstStruct
-        setPtr ptr 0 srcStruct
-    ]
+        setRoot struct :: IO ()
+    it "Should work when setting a field in a struct" $ do
+        pure () :: IO () -- Not sure why ghc needs this hint, but it does.
+        evalLimitT maxBound $ do
+            msg <- M.newMessage
+            srcStruct <- allocStruct msg 4 4
+            (1, _) <- M.newSegment msg 10
+            dstStruct <- allocStruct msg 2 2
+            ptr <- C.toPtr msg dstStruct
+            setPtr ptr 0 srcStruct
 
-otherMessageTest :: Test
-otherMessageTest = testProperty
-    "Setting pointers to values in other messages copies them if needed."
-    otherMessageTest'
+otherMessageTest = describe "Setting pointers in other messages" $
+    it "Should copy them if needed." $
+        property $ \(name :: Text) (params :: V.Vector Node'Parameter) (brand :: Brand) ->
+            propertyIO $ do
+                let expected = def
+                        { name = name
+                        , implicitParameters = params
+                        , paramBrand = brand
+                        }
+                msg :: M.ConstMsg <- createPure maxBound $ do
+                        methodMsg <- M.newMessage
+                        nameMsg <- M.newMessage
+                        paramsMsg <- M.newMessage
+                        brandMsg <- M.newMessage
 
-otherMessageTest' :: Text -> V.Vector Node'Parameter -> Brand -> Property
-otherMessageTest' name params brand = propertyIO $ do
-    let expected = def
-            { name = name
-            , implicitParameters = params
-            , paramBrand = brand
-            }
-    msg :: M.ConstMsg <- createPure maxBound $ do
-            methodMsg <- M.newMessage
-            nameMsg <- M.newMessage
-            paramsMsg <- M.newMessage
-            brandMsg <- M.newMessage
+                        methodCerial <- newRoot methodMsg
+                        nameCerial <- cerialize nameMsg name
+                        brandCerial <- cerialize brandMsg brand
 
-            methodCerial <- newRoot methodMsg
-            nameCerial <- cerialize nameMsg name
-            brandCerial <- cerialize brandMsg brand
+                        -- We don't implement Cerialize for Vector, so we can't just
+                        -- inject params directly. TODO: implement Cerialize for Vector.
+                        wrapper <- cerialize paramsMsg expected
+                        paramsCerial <- Schema.get_Method'implicitParameters wrapper
 
-            -- We don't implement Cerialize for Vector, so we can't just
-            -- inject params directly. TODO: implement Cerialize for Vector.
-            wrapper <- cerialize paramsMsg expected
-            paramsCerial <- Schema.get_Method'implicitParameters wrapper
+                        Schema.set_Method'name methodCerial nameCerial
+                        Schema.set_Method'implicitParameters methodCerial paramsCerial
+                        Schema.set_Method'paramBrand methodCerial brandCerial
 
-            Schema.set_Method'name methodCerial nameCerial
-            Schema.set_Method'implicitParameters methodCerial paramsCerial
-            Schema.set_Method'paramBrand methodCerial brandCerial
-
-            pure methodMsg
-    actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
-    assertEqual (show actual ++ " == " ++ show expected) actual expected
+                        pure methodMsg
+                actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
+                actual `shouldBe` expected
