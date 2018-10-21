@@ -1,4 +1,4 @@
-cabal-version: 2.0
+cabal-version: 2.2
 name:                capnp-examples
 version:             0.1.0.0
 synopsis:            Examples for haskell-capnp
@@ -13,13 +13,7 @@ maintainer:          ian@zenhack.net
 build-type:          Simple
 extra-source-files:  ChangeLog.md
 
-executable echo-demo
-  main-is:             Main.hs
-  other-modules:
-      Capnp.Gen.Echo
-    , Capnp.Gen.Echo.Pure
-    , Capnp.Gen.ById.Xd0a87f36fa0182f5
-    , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
+common shared-opts
   build-depends:
       base >=4.11 && <5.0
     , capnp
@@ -29,5 +23,17 @@ executable echo-demo
     , vector ^>=0.12
     , network ^>= 2.8.0
     , network-simple ^>= 0.4
-  -- hs-source-dirs:
   default-language:    Haskell2010
+  other-modules:
+      Capnp.Gen.Echo
+    , Capnp.Gen.Echo.Pure
+    , Capnp.Gen.ById.Xd0a87f36fa0182f5
+    , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
+
+executable echo-client
+  import: shared-opts
+  main-is:             EchoClient.hs
+
+executable echo-server
+  import: shared-opts
+  main-is:             EchoServer.hs
