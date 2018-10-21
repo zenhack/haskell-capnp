@@ -9,7 +9,7 @@ import System.Exit            (exitFailure, exitSuccess)
 import System.IO              (IOMode(ReadWriteMode), hClose)
 
 import Capnp     (def, defaultLimit)
-import Capnp.Rpc (VatConfig(..), bootstrap, runVat, socketTransport)
+import Capnp.Rpc (VatConfig(..), bootstrap, runVat, socketTransport, stopVat)
 
 import Capnp.Gen.Echo.Pure
 
@@ -33,9 +33,8 @@ runClient =
         runVat def { debugMode = True } transport $ do
             echoSrv <- Echo <$> bootstrap
             result <- echoSrv & echo'echo def { query = "Hello, World!" }
-            liftIO $ do
-                print result
-                exitSuccess
+            liftIO $ print result
+            stopVat
 
 runServer =
     serve "localhost" "4000" $ \(sock, _addr) -> do

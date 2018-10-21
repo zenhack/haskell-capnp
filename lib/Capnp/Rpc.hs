@@ -28,6 +28,7 @@ module Capnp.Rpc
     , handleTransport
     , socketTransport
     , runVat
+    , stopVat
     , bootstrap
     , call
 
@@ -225,6 +226,17 @@ data Server = Server
     -- ^ 'handleStop' is executed when the last reference to the object is
     -- dropped.
     }
+
+-- | 'StopVat' is an exception used to terminate a capnproto connection; it is
+-- raised by `stopVat`.
+data StopVat = StopVat deriving(Show)
+instance Control.Exception.Exception StopVat
+
+-- | Shut down the rpc connection, and all resources managed by the vat. This
+-- does not return (it raises an exception used to actually signal termination
+-- of the connection.
+stopVat :: MonadIO m => RpcT m ()
+stopVat = liftIO (throwIO StopVat)
 
 instance Eq Client where
     RemoteClient{target=ta, localVat=va} == RemoteClient{target=tb, localVat=vb} =
@@ -456,12 +468,21 @@ runRpcT vat (RpcT m) = runReaderT m vat
 runVat :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
 runVat config transport m = do
     vat <- newVat config
-    foldl concurrently_
+    ret <- try $ foldl concurrently_
         (recvLoop transport vat)
         [ sendLoop transport vat
         , coordinator vat
         , runRpcT vat m
         ]
+    case ret of
+        Left (_ :: StopVat) ->
+            -- The StopVat exception is used to signal that we should shut
+            -- down the connection.
+            pure ()
+        Right () ->
+            error $
+                "runVat stopped without a call to `stopVat`; this should " ++
+                "never happen!"
 
 newVat :: VatConfig -> IO Vat
 newVat VatConfig{..} = atomically $ do
