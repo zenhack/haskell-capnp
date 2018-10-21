@@ -204,6 +204,7 @@ test-suite simple-tests
       , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
     build-depends:
         capnp
+      , async
       , data-default
       , process
       , process-extras
