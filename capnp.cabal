@@ -186,6 +186,7 @@ test-suite simple-tests
     other-modules:
         Tests.Module.Capnp.Gen.Capnp.Schema
       , Tests.Module.Capnp.Gen.Capnp.Schema.Pure
+      , Tests.Module.Capnp.Rpc
       , Tests.Module.Capnp.Untyped
       , Tests.Module.Capnp.Untyped.Pure
       , Tests.Module.Capnp.Pointer

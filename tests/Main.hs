@@ -6,6 +6,7 @@ import Tests.Module.Capnp.Bits                  (bitsTests)
 import Tests.Module.Capnp.Gen.Capnp.Schema      (schemaTests)
 import Tests.Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests)
 import Tests.Module.Capnp.Pointer               (ptrTests)
+import Tests.Module.Capnp.Rpc                   (rpcTests)
 import Tests.Module.Capnp.Untyped               (untypedTests)
 import Tests.Module.Capnp.Untyped.Pure          (pureUntypedTests)
 import Tests.SchemaQuickCheck                   (schemaCGRQuickCheck)
@@ -16,6 +17,7 @@ main = hspec $ do
     describe "Tests for specific modules" $ do
         describe "Capnp.Bits" bitsTests
         describe "Capnp.Pointer" ptrTests
+        describe "Capnp.Rpc" rpcTests
         describe "Capnp.Untyped" untypedTests
         describe "Capnp.Untyped.Pure" pureUntypedTests
     describe "Tests for generated output" $ do
