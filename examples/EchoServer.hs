@@ -25,5 +25,5 @@ main = serve "localhost" "4000" $ \(sock, _addr) -> do
                 pure client
             , debugMode = True
             }
-        (socketTransport defaultLimit sock)
+        (socketTransport sock defaultLimit)
         (pure ())

@@ -140,20 +140,20 @@ data Transport m = Transport
     -- ^ Receive a message
     }
 
--- | @'handleTransport' limit handle@ is a transport which reads and writes
+-- | @'handleTransport' handle limit@ is a transport which reads and writes
 -- messages from/to @handle@. It uses @limit@ as the traversal limit when
 -- reading messages and decoding.
-handleTransport :: MonadIO m => Int -> Handle -> Transport m
-handleTransport limit handle = Transport
+handleTransport :: MonadIO m => Handle -> Int -> Transport m
+handleTransport handle limit = Transport
     { sendMsg = liftIO . hPutMsg handle
     , recvMsg = liftIO $ hGetMsg handle limit
     }
 
--- | @'socketTransport' limit socket@ is a transport which reads and writes
+-- | @'socketTransport' socket limit@ is a transport which reads and writes
 -- messages to/from a socket. It uses @limit@ as the traversal limit when
 -- reading messages and decoing.
-socketTransport :: MonadIO m => Int -> Socket -> Transport m
-socketTransport limit socket = Transport
+socketTransport :: MonadIO m => Socket -> Int -> Transport m
+socketTransport socket limit = Transport
     { sendMsg = liftIO . sPutMsg socket
     , recvMsg = liftIO $ sGetMsg socket limit
     }

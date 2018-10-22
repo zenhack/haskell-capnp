@@ -14,7 +14,7 @@ import Capnp.Rpc (VatConfig(..), bootstrap, runVat, socketTransport, stopVat)
 import Capnp.Gen.Echo.Pure
 
 main = connect "localhost" "4000" $ \(sock, _addr) -> do
-    runVat def { debugMode = True } (socketTransport defaultLimit sock) $ do
+    runVat def { debugMode = True } (socketTransport sock defaultLimit) $ do
         echoSrv <- Echo <$> bootstrap
         result <- echoSrv & echo'echo def { query = "Hello, World!" }
         liftIO $ print result
