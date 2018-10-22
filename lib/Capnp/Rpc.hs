@@ -34,6 +34,7 @@ module Capnp.Rpc
 
     -- * Starting and stopping connections
     , VatConfig(..)
+    , vatConfig
     , runVat
     , stopVat
 
@@ -78,7 +79,7 @@ import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
-import Data.Default                    (Default(..))
+import Data.Foldable                   (traverse_)
 import Data.Maybe                      (isJust)
 import Network.Socket                  (Socket)
 import System.IO                       (Handle)
@@ -430,20 +431,20 @@ getQuestionId (BootstrapQuestion questionId)         = questionId
 -- | A 'Vat' is where objects live. It represents the state of one
 -- side of a connection.
 data Vat = Vat
-    { questions       :: TVar (M.Map QuestionId Question)
-    , answers         :: TVar (M.Map AnswerId Answer)
-    , imports         :: TVar (M.Map ImportId CapDescriptor)
-    , exports         :: TVar (M.Map ExportId Client)
+    { questions      :: TVar (M.Map QuestionId Question)
+    , answers        :: TVar (M.Map AnswerId Answer)
+    , imports        :: TVar (M.Map ImportId CapDescriptor)
+    , exports        :: TVar (M.Map ExportId Client)
 
-    , questionIdPool  :: TVar [Word32]
-    , exportIdPool    :: TVar [Word32]
+    , questionIdPool :: TVar [Word32]
+    , exportIdPool   :: TVar [Word32]
 
-    , bootstrapServer :: Maybe (RpcT IO Client)
+    , offerBootstrap :: Maybe (RpcT IO Client)
 
-    , sendQ           :: TBQueue ConstMsg
-    , recvQ           :: TBQueue ConstMsg
+    , sendQ          :: TBQueue ConstMsg
+    , recvQ          :: TBQueue ConstMsg
 
-    , debugMode       :: !Bool
+    , debugMode      :: !Bool
     }
 
 instance Eq Vat where
@@ -454,63 +455,83 @@ instance Eq Vat where
 -- | A 'VatConfig' carries various parameters controlling the behavior of a
 -- 'Vat'.
 --
--- 'VatConfig' is an instance of 'Default'; the default values for various
--- parameters are documented in-line.
+-- 'vatConfig' can be used to create a 'VatConfig', using sensible defaults
+-- for most fields. The default values for these fields are documented
+-- in-line.
 data VatConfig = VatConfig
-    { maxQuestions    :: !Word32
+    { maxQuestions   :: !Word32
     -- ^ The maximum number of simultanious outstanding requests to the peer
     -- vat. Once this limit is reached, further questsions will block until
     -- some of the existing questions have been answered.
     --
     -- Defaults to 32.
 
-    , maxExports      :: !Word32
+    , maxExports     :: !Word32
     -- ^ The maximum number of objects which may be exported by this vat.
     --
     -- Defaults to 32.
 
-    , bootstrapServer :: Maybe (RpcT IO Client)
-    -- ^ If not 'Nothing', 'bootstrapServer' is used to create the bootstrap
+    , offerBootstrap :: Maybe (RpcT IO Client)
+    -- ^ If not 'Nothing', 'offerBootstrap' is used to create the bootstrap
     -- interface if and when the peer vat first requests it. If this is
     -- 'Nothing', this vat will respond to bootstrap messages with
     -- @unimplemented@.
     --
     -- Defaults to 'Nothing'
 
-    , debugMode       :: !Bool
+    , withBootstrap  :: Maybe (Client -> RpcT IO ())
+    -- ^ An action to perform with a client for the remote vat's bootstrap
+    -- interface, on connection startup. If 'Nothing', the remote vat's
+    -- bootstrap interface will not be requested.
+
+    , debugMode      :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
     -- contain extra information. This should not be used in production, as
     -- it is possible for these messages to contain sensitive information,
     -- but it can be useful for debugging.
     --
     -- Defaults to 'False'.
+
+    , getTransport   :: Int -> Transport IO
+    -- ^ get the transport to use, as a function of the limit.
+
+    , limit          :: Int
+    -- ^ The limit to use when reading and decoding messages.
+    --
+    -- Defaults to 'defaultLimit'
     }
 
-instance Default VatConfig where
-    def = VatConfig
-        { maxQuestions = 32
-        , maxExports = 32
-        , bootstrapServer = Nothing
-        , debugMode = False
-        }
+-- | Create a new vat config, using the given function to create a
+-- transport as a function of the limit. sets default values for
+-- other fields; see the documentation for 'VatConfig'.
+vatConfig :: (Int -> Transport IO) -> VatConfig
+vatConfig getTransport = VatConfig
+    { maxQuestions = 32
+    , maxExports = 32
+    , offerBootstrap = Nothing
+    , withBootstrap = Nothing
+    , debugMode = False
+    , getTransport = getTransport
+    , limit = defaultLimit
+    }
 
--- | @'runVat' config transport onStart@ starts an rpc session with a new
--- vat. @transport@ is used to transmit messages to the remote vat, and
--- the settings in @config@ are used to control the behavior of the local
--- vat. @onStart@ is run once the connection is established.
+-- | @'runVat' config@ starts an rpc session with a new vat, using the
+-- settings in @config@
 --
 -- 'runVat' does not return until the session terminates. If it is
 -- terminated via 'stopVat', it will return normally, otherwise it will
 -- raise an exception (TODO: document details of the exceptions and
 -- what conditions trigger them).
-runVat :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
-runVat config transport m = do
+runVat :: VatConfig -> IO ()
+runVat config@VatConfig{limit, getTransport, withBootstrap} = do
+    let transport = getTransport limit
     vat <- newVat config
     ret <- try $ foldl concurrently_
         (recvLoop transport vat)
         [ sendLoop transport vat
         , coordinator vat
-        , runRpcT vat m
+        , runRpcT vat $ flip traverse_ withBootstrap $ \with ->
+            bootstrap >>= with
         ]
     case ret of
         Left (_ :: StopVat) ->
@@ -630,7 +651,7 @@ handleUnimplemented vat msg = case msg of
 -- | Handle a bootstrap message.
 handleBootstrap :: Vat -> Bootstrap -> IO ()
 handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
-    case bootstrapServer of
+    case offerBootstrap of
         Nothing ->
             atomically $ replyUnimplemented vat $ Message'bootstrap msg
         Just getServer -> do

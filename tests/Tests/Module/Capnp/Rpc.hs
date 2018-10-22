@@ -40,11 +40,10 @@ rpcTests = describe "Echo server & client" $
         -- a way to share more of the code, while keeping the example
         -- useful as documentation.
         (clientTrans, serverTrans) <- transportPair
-        let runClient = runVat def
-                { debugMode = True }
-                clientTrans
-                $ do
-                    echoSrv <- Echo <$> bootstrap
+        let runClient = runVat $ (vatConfig $ const clientTrans)
+                { debugMode = True
+                , withBootstrap = Just $ \client -> do
+                    let echoSrv = Echo client
                     let msgs =
                             [ def { query = "Hello #1" }
                             , def { query = "Hello #2" }
@@ -55,14 +54,13 @@ rpcTests = describe "Echo server & client" $
                         , def { reply = "Hello #2" }
                         ]
                     stopVat
-            runServer = runVat def
+                }
+            runServer = runVat $ (vatConfig $ const serverTrans)
                 { debugMode = True
-                , bootstrapServer = Just $ do
+                , offerBootstrap = Just $ do
                     Echo client <- export_Echo TestEchoServer
                     pure client
                 }
-                serverTrans
-                (pure ())
         race_ runServer runClient
 
 data TestEchoServer = TestEchoServer

@@ -9,7 +9,8 @@ import System.Exit            (exitFailure, exitSuccess)
 import System.IO              (IOMode(ReadWriteMode), hClose)
 
 import Capnp     (def, defaultLimit)
-import Capnp.Rpc (VatConfig(..), bootstrap, runVat, socketTransport, stopVat)
+import Capnp.Rpc
+    (VatConfig(..), bootstrap, runVat, socketTransport, stopVat, vatConfig)
 
 import Capnp.Gen.Echo.Pure
 
@@ -19,11 +20,9 @@ instance Echo'server_ MyEchoServer where
     echo'echo params MyEchoServer = pure def { reply = query params }
 
 main = serve "localhost" "4000" $ \(sock, _addr) -> do
-    runVat
-        def { bootstrapServer = Just $ do
-                Echo client <- export_Echo MyEchoServer
-                pure client
-            , debugMode = True
-            }
-        (socketTransport sock defaultLimit)
-        (pure ())
+    runVat $ (vatConfig $ socketTransport sock)
+        { offerBootstrap  = Just $ do
+            Echo client <- export_Echo MyEchoServer
+            pure client
+        , debugMode = True
+        }

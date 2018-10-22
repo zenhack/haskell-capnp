@@ -9,13 +9,17 @@ import System.Exit            (exitFailure, exitSuccess)
 import System.IO              (IOMode(ReadWriteMode), hClose)
 
 import Capnp     (def, defaultLimit)
-import Capnp.Rpc (VatConfig(..), bootstrap, runVat, socketTransport, stopVat)
+import Capnp.Rpc
+    (VatConfig(..), bootstrap, runVat, socketTransport, stopVat, vatConfig)
 
 import Capnp.Gen.Echo.Pure
 
 main = connect "localhost" "4000" $ \(sock, _addr) -> do
-    runVat def { debugMode = True } (socketTransport sock defaultLimit) $ do
-        echoSrv <- Echo <$> bootstrap
-        result <- echoSrv & echo'echo def { query = "Hello, World!" }
-        liftIO $ print result
-        stopVat
+    runVat $ (vatConfig $ socketTransport sock)
+        { debugMode = True
+        , withBootstrap = Just $ \client -> do
+            let echoSrv = Echo client
+            result <- echoSrv & echo'echo def { query = "Hello, World!" }
+            liftIO $ print result
+            stopVat
+        }
