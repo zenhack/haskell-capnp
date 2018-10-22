@@ -63,10 +63,6 @@ module Capnp.Rpc
     , waitIO
     ) where
 
--- XXX: we use 'defaultLimit' in a number of places, where we really
--- should use a value passed in from the user. We should probably add
--- a field to 'VatConfig' for this.
-
 import Control.Concurrent.STM
 import Data.Word
 
@@ -292,8 +288,8 @@ bootstrap = do
 -- | send a question to the remote vat. This inserts it into the local
 -- vat's  questions table, in addition to actually sending the message.
 sendQuestion :: Vat -> Question -> STM ()
-sendQuestion Vat{sendQ,questions} question = do
-    writeTBQueue sendQ =<< createPure defaultLimit
+sendQuestion Vat{sendQ,questions,limit} question = do
+    writeTBQueue sendQ =<< createPure limit
         (valueToMsg $ getQuestionMessage question)
     modifyTVar questions $ M.insert (getQuestionId question) question
 
@@ -302,8 +298,9 @@ sendQuestion Vat{sendQ,questions} question = do
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
 call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
+    Vat{limit} <- RpcT $ ask
     questionId <- newQuestionId
-    paramContent <- evalLimitT maxBound (decerialize paramContent)
+    paramContent <- evalLimitT limit (decerialize paramContent)
     let callMsg = Call
             { sendResultsTo = Call'sendResultsTo'caller
             , allowThirdPartyTailCall = False
@@ -439,6 +436,8 @@ data Vat = Vat
     , questionIdPool :: TVar [Word32]
     , exportIdPool   :: TVar [Word32]
 
+    , limit          :: !Int
+
     , offerBootstrap :: Maybe (RpcT IO Client)
 
     , sendQ          :: TBQueue ConstMsg
@@ -495,7 +494,7 @@ data VatConfig = VatConfig
     , getTransport   :: Int -> Transport IO
     -- ^ get the transport to use, as a function of the limit.
 
-    , limit          :: Int
+    , limit          :: !Int
     -- ^ The limit to use when reading and decoding messages.
     --
     -- Defaults to 'defaultLimit'
@@ -579,7 +578,7 @@ recvLoop transport Vat{recvQ} =
 coordinator :: Vat -> IO ()
 coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
-    pureMsg <- evalLimitT defaultLimit (msgToValue msg)
+    pureMsg <- evalLimitT limit (msgToValue msg)
     case pureMsg of
         Message'abort exn ->
             throwIO exn
@@ -588,7 +587,7 @@ coordinator vat@Vat{..} = forever $ do
         Message'bootstrap bs ->
             handleBootstrap vat bs
         Message'call call -> do
-            rawMsg <- evalLimitT defaultLimit (msgToValue msg)
+            rawMsg <- evalLimitT limit (msgToValue msg)
             case rawMsg of
                 Rpc.Message'call rawCall ->
                     handleCallMsg rawCall vat call
@@ -607,20 +606,20 @@ coordinator vat@Vat{..} = forever $ do
 
 -- | Report the specified message to the remote vat as unimplemented.
 replyUnimplemented :: Vat -> Message -> STM ()
-replyUnimplemented Vat{sendQ} msg =
-    createPure defaultLimit (valueToMsg $ Message'unimplemented msg)
+replyUnimplemented Vat{sendQ, limit} msg =
+    createPure limit (valueToMsg $ Message'unimplemented msg)
     >>= writeTBQueue sendQ
 
 -- | Send an abort message to the remote vat with the given reason field
 -- and a type field of @failed@, and return the exception that was included
 -- in the message.
 replyAbort :: Vat -> T.Text -> STM Exception
-replyAbort Vat{sendQ} reason = do
+replyAbort Vat{sendQ, limit} reason = do
     let exn = def
             { reason
             , type_ = Exception'Type'failed
             }
-    msg <- createPure defaultLimit $ valueToMsg exn
+    msg <- createPure limit $ valueToMsg exn
     writeTBQueue sendQ msg
     pure exn
 
@@ -693,12 +692,12 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             --
                             -- the handler has to decode again anyway. We should try to make this
                             -- whole business more efficient. See also #52.
-                            paramContent <- evalLimitT maxBound $
+                            paramContent <- evalLimitT limit $
                                 Rpc.get_Call'params rawCall
                                 >>= Rpc.get_Payload'content
                             ret <- runRpcT vat $ call interfaceId methodId paramContent client
                             liftIO $ waitIO ret
-                        msg <- createPure defaultLimit $ valueToMsg <$> Message'return $ def
+                        msg <- createPure limit $ valueToMsg <$> Message'return $ def
                             { answerId = callQuestionId
                             , union' = case result of
                                 -- The server returned successfully; pass along the result.
@@ -744,7 +743,7 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
         Just CallQuestion{callMsg, sendReturn} -> do
             -- We don't support caps other than the bootstrap yet, so we can
             -- send Finish right away.
-            msg <- createPure defaultLimit $ valueToMsg $
+            msg <- createPure limit $ valueToMsg $
                 Message'finish def { questionId = answerId }
             writeTBQueue sendQ msg
             modifyTVar questions $ M.delete answerId
