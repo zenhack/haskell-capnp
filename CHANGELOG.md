@@ -15,6 +15,8 @@
   just `Either SomeException`.
 * `LimitT m` is now an instance of `MonadIO`, provided that `m` is an
   instance.
+* More type class instances from elsewhere in the library are
+  re-exported via the `Capnp` module.
 
 # 0.3.0.0
 
