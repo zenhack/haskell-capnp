@@ -1,8 +1,12 @@
 # 0.4.0.0
 
-* Fix a bug where `defaultLimit` was actually much larger than
-  documented.
-* Fix a bug where reads on `Handle`s at EOF would cause a call to error.
+* Fix some bugs:
+  * The value of `defaultLimit` was much larger (8x) than documented or
+    intended.
+  * Reads on `Handle`s at EOF would cause a call to error.
+  * Struct definitions with no fields were not generating type
+    definitions, in some cases resulting in output modules that do
+    not compile (#54).
 * Beginnings of RPC support; the API will likely change substantially.
 * Some changes to the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.

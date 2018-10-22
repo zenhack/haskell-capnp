@@ -273,17 +273,9 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                     }
 
             in case (unionFields, commonFields) of
-                ([], []) ->
-                    -- I(zenhack) don't fully understand this case. It seems like
-                    -- it should apply to struct Foo {}, but it also imperically
-                    -- shows up for type aliases in the schema. In this case, the
-                    -- schema should still build without them since our generated
-                    -- code just uses the original type. Furthermore, right now
-                    -- our ast output doesn't handle types with no variants, so
-                    -- we just don't output any code.
-                    []
-                ([], _:_) ->
-                    -- There's no anonymous union; just declare the fields.
+                ([], _) ->
+                    -- There's no anonymous union; just declare the fields. Note that
+                    -- this covers the case where there are no fields at all.
                     [ ( typeName, bodyFields ) ]
                 (_:_, []) ->
                     -- The struct is just one big anonymous union; expand the variants

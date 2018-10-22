@@ -1376,6 +1376,31 @@ new_StackingRoot'a struct = do
     result <- C'.new (U'.message struct)
     set_StackingRoot'a struct result
     pure result
+newtype VerEmpty msg = VerEmpty_newtype_ (U'.Struct msg)
+instance C'.FromStruct msg (VerEmpty msg) where
+    fromStruct = pure . VerEmpty_newtype_
+instance C'.ToStruct msg (VerEmpty msg) where
+    toStruct (VerEmpty_newtype_ struct) = struct
+instance U'.HasMessage (VerEmpty msg) where
+    type InMessage (VerEmpty msg) = msg
+    message (VerEmpty_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (VerEmpty msg) where
+    messageDefault = VerEmpty_newtype_ . U'.messageDefault
+instance B'.ListElem msg (VerEmpty msg) where
+    newtype List msg (VerEmpty msg) = List_VerEmpty (U'.ListOf msg (U'.Struct msg))
+    length (List_VerEmpty l) = U'.length l
+    index i (List_VerEmpty l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerEmpty msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (VerEmpty msg) where
+    fromPtr msg ptr = VerEmpty_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (VerEmpty_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (VerEmpty (M'.MutMsg s)) where
+    setIndex (VerEmpty_newtype_ elt) i (List_VerEmpty l) = U'.setIndex elt i l
+    newList msg len = List_VerEmpty <$> U'.allocCompositeList msg 0 0 len
+instance C'.Allocate s (VerEmpty (M'.MutMsg s)) where
+    new msg = VerEmpty_newtype_ <$> U'.allocStruct msg 0 0
+instance C'.IsPtr msg (B'.List msg (VerEmpty msg)) where
+    fromPtr msg ptr = List_VerEmpty <$> C'.fromPtr msg ptr
+    toPtr msg (List_VerEmpty l) = C'.toPtr msg l
 newtype VerOneData msg = VerOneData_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (VerOneData msg) where
     fromStruct = pure . VerOneData_newtype_
@@ -2523,6 +2548,31 @@ constEnum :: Airport
 constEnum = C'.fromWord 1
 constList :: (B'.List M'.ConstMsg (Zdate M'.ConstMsg))
 constList = H'.getPtrConst $ Data.ByteString.pack [0,0,0,0,5,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,23,0,0,0,8,0,0,0,1,0,0,0,223,7,8,27,0,0,0,0,223,7,8,28,0,0,0,0]
+newtype CallSequence'getNumber'params msg = CallSequence'getNumber'params_newtype_ (U'.Struct msg)
+instance C'.FromStruct msg (CallSequence'getNumber'params msg) where
+    fromStruct = pure . CallSequence'getNumber'params_newtype_
+instance C'.ToStruct msg (CallSequence'getNumber'params msg) where
+    toStruct (CallSequence'getNumber'params_newtype_ struct) = struct
+instance U'.HasMessage (CallSequence'getNumber'params msg) where
+    type InMessage (CallSequence'getNumber'params msg) = msg
+    message (CallSequence'getNumber'params_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (CallSequence'getNumber'params msg) where
+    messageDefault = CallSequence'getNumber'params_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CallSequence'getNumber'params msg) where
+    newtype List msg (CallSequence'getNumber'params msg) = List_CallSequence'getNumber'params (U'.ListOf msg (U'.Struct msg))
+    length (List_CallSequence'getNumber'params l) = U'.length l
+    index i (List_CallSequence'getNumber'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CallSequence'getNumber'params msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CallSequence'getNumber'params msg) where
+    fromPtr msg ptr = CallSequence'getNumber'params_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (CallSequence'getNumber'params_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (CallSequence'getNumber'params (M'.MutMsg s)) where
+    setIndex (CallSequence'getNumber'params_newtype_ elt) i (List_CallSequence'getNumber'params l) = U'.setIndex elt i l
+    newList msg len = List_CallSequence'getNumber'params <$> U'.allocCompositeList msg 0 0 len
+instance C'.Allocate s (CallSequence'getNumber'params (M'.MutMsg s)) where
+    new msg = CallSequence'getNumber'params_newtype_ <$> U'.allocStruct msg 0 0
+instance C'.IsPtr msg (B'.List msg (CallSequence'getNumber'params msg)) where
+    fromPtr msg ptr = List_CallSequence'getNumber'params <$> C'.fromPtr msg ptr
+    toPtr msg (List_CallSequence'getNumber'params l) = C'.toPtr msg l
 newtype CallSequence'getNumber'results msg = CallSequence'getNumber'results_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (CallSequence'getNumber'results msg) where
     fromStruct = pure . CallSequence'getNumber'results_newtype_

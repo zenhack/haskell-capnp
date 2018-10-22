@@ -420,6 +420,8 @@ fmtDataDef thisMod dataName dataDef =
 
         ]
   where
+    fmtDecerializeArgs variantName [] =
+        hcat [ "pure $ ", fmtName Pure thisMod variantName ]
     fmtDecerializeArgs variantName fields = vcat
         [ hcat [ fmtName Pure thisMod variantName, " <$>" ]
         , indent $ vcat $ PP.punctuate " <*>" $
@@ -438,6 +440,7 @@ fmtDataDef thisMod dataName dataDef =
         fmtName Raw thisMod variantName <>
         case variantParams of
             Unnamed VoidType _ -> " -> pure " <> fmtName Pure thisMod variantName
+            Record []          -> " -> pure " <> fmtName Pure thisMod variantName
             Record fields ->
               " raw -> " <> fmtDecerializeArgs variantName fields
             Unnamed (WordType _) _ -> hcat
@@ -462,6 +465,7 @@ fmtDataDef thisMod dataName dataDef =
                 [ " arg_ -> do"
                 , indent (fmtUseAccessors accessorName "arg_" fieldLocType)
                 ]
+            Record [] -> " -> pure ()"
             Record fields -> vcat
                 [ "{..} -> do"
                 , indent $ vcat

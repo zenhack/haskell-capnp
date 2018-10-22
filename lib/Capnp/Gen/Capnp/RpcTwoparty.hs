@@ -136,6 +136,31 @@ get_ProvisionId'joinId :: U'.ReadCtx m msg => ProvisionId msg -> m Word32
 get_ProvisionId'joinId (ProvisionId_newtype_ struct) = H'.getWordField struct 0 0 0
 set_ProvisionId'joinId :: U'.RWCtx m s => ProvisionId (M'.MutMsg s) -> Word32 -> m ()
 set_ProvisionId'joinId (ProvisionId_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+newtype RecipientId msg = RecipientId_newtype_ (U'.Struct msg)
+instance C'.FromStruct msg (RecipientId msg) where
+    fromStruct = pure . RecipientId_newtype_
+instance C'.ToStruct msg (RecipientId msg) where
+    toStruct (RecipientId_newtype_ struct) = struct
+instance U'.HasMessage (RecipientId msg) where
+    type InMessage (RecipientId msg) = msg
+    message (RecipientId_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (RecipientId msg) where
+    messageDefault = RecipientId_newtype_ . U'.messageDefault
+instance B'.ListElem msg (RecipientId msg) where
+    newtype List msg (RecipientId msg) = List_RecipientId (U'.ListOf msg (U'.Struct msg))
+    length (List_RecipientId l) = U'.length l
+    index i (List_RecipientId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RecipientId msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (RecipientId msg) where
+    fromPtr msg ptr = RecipientId_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (RecipientId_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (RecipientId (M'.MutMsg s)) where
+    setIndex (RecipientId_newtype_ elt) i (List_RecipientId l) = U'.setIndex elt i l
+    newList msg len = List_RecipientId <$> U'.allocCompositeList msg 0 0 len
+instance C'.Allocate s (RecipientId (M'.MutMsg s)) where
+    new msg = RecipientId_newtype_ <$> U'.allocStruct msg 0 0
+instance C'.IsPtr msg (B'.List msg (RecipientId msg)) where
+    fromPtr msg ptr = List_RecipientId <$> C'.fromPtr msg ptr
+    toPtr msg (List_RecipientId l) = C'.toPtr msg l
 data Side
     = Side'server
     | Side'client
@@ -162,6 +187,31 @@ instance B'.MutListElem s Side where
 instance C'.IsPtr msg (B'.List msg Side) where
     fromPtr msg ptr = List_Side <$> C'.fromPtr msg ptr
     toPtr msg (List_Side l) = C'.toPtr msg l
+newtype ThirdPartyCapId msg = ThirdPartyCapId_newtype_ (U'.Struct msg)
+instance C'.FromStruct msg (ThirdPartyCapId msg) where
+    fromStruct = pure . ThirdPartyCapId_newtype_
+instance C'.ToStruct msg (ThirdPartyCapId msg) where
+    toStruct (ThirdPartyCapId_newtype_ struct) = struct
+instance U'.HasMessage (ThirdPartyCapId msg) where
+    type InMessage (ThirdPartyCapId msg) = msg
+    message (ThirdPartyCapId_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (ThirdPartyCapId msg) where
+    messageDefault = ThirdPartyCapId_newtype_ . U'.messageDefault
+instance B'.ListElem msg (ThirdPartyCapId msg) where
+    newtype List msg (ThirdPartyCapId msg) = List_ThirdPartyCapId (U'.ListOf msg (U'.Struct msg))
+    length (List_ThirdPartyCapId l) = U'.length l
+    index i (List_ThirdPartyCapId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ThirdPartyCapId msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (ThirdPartyCapId msg) where
+    fromPtr msg ptr = ThirdPartyCapId_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (ThirdPartyCapId_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (ThirdPartyCapId (M'.MutMsg s)) where
+    setIndex (ThirdPartyCapId_newtype_ elt) i (List_ThirdPartyCapId l) = U'.setIndex elt i l
+    newList msg len = List_ThirdPartyCapId <$> U'.allocCompositeList msg 0 0 len
+instance C'.Allocate s (ThirdPartyCapId (M'.MutMsg s)) where
+    new msg = ThirdPartyCapId_newtype_ <$> U'.allocStruct msg 0 0
+instance C'.IsPtr msg (B'.List msg (ThirdPartyCapId msg)) where
+    fromPtr msg ptr = List_ThirdPartyCapId <$> C'.fromPtr msg ptr
+    toPtr msg (List_ThirdPartyCapId l) = C'.toPtr msg l
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (VatId msg) where
     fromStruct = pure . VatId_newtype_
