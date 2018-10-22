@@ -21,21 +21,35 @@ specification:
 -}
 module Capnp.Rpc
     ( RpcT
+
+    -- * Making remote method calls
     , Client
+    , call
+    , bootstrap
+    , nullClient
+
+    -- * Handling method calls
     , Server(..)
+    , export
+
+    -- * Starting and stopping connections
     , VatConfig(..)
+    , runVat
+    , stopVat
+
+    -- ** Transmitting messages
     , Transport(..)
     , handleTransport
     , socketTransport
-    , runVat
-    , stopVat
-    , bootstrap
-    , call
 
+    -- * Exceptions
     , throwMethodUnimplemented
 
+    -- ** Re-exported from the generated rpc.capnp module.
     , Exception(..)
     , Exception'Type(..)
+
+    -- * Promises
 
     , Promise
     , Fulfiller
@@ -46,10 +60,6 @@ module Capnp.Rpc
     , isResolved
     , wait
     , waitIO
-
-    , export
-
-    , nullClient
     ) where
 
 -- XXX: we use 'defaultLimit' in a number of places, where we really
@@ -217,7 +227,7 @@ data Client
     | DisconnectedClient
 
 -- | A 'Server' contains functions for handling requests to an object. It
--- can be converted to a 'Client' and then shared via RPC.
+-- can be converted to a 'Client' using 'export' and then shared via RPC.
 data Server = Server
     { handleCall :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> RpcT IO (Promise Struct)
     -- ^ @handleCall interfaceId methodId params@ handles a method call.
@@ -488,6 +498,15 @@ instance Default VatConfig where
         , debugMode = False
         }
 
+-- | @'runVat' config transport onStart@ starts an rpc session with a new
+-- vat. @transport@ is used to transmit messages to the remote vat, and
+-- the settings in @config@ are used to control the behavior of the local
+-- vat. @onStart@ is run once the connection is established.
+--
+-- 'runVat' does not return until the session terminates. If it is
+-- terminated via 'stopVat', it will return normally, otherwise it will
+-- raise an exception (TODO: document details of the exceptions and
+-- what conditions trigger them).
 runVat :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
 runVat config transport m = do
     vat <- newVat config
