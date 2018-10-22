@@ -4,6 +4,10 @@
 # This is copied from the Go implementation:
 #
 # https://github.com/zombiezen/go-capnproto2
+#
+# For now, a default values for pointer types have been commented out,
+# so that the compiler plugin will not reject the schema in light of
+# issue #28. These are marked with 'TODO#28' in the source.
 
 const constDate :Zdate = (year = 2015, month = 8, day = 27);
 const constList :List(Zdate) = [(year = 2015, month = 8, day = 27), (year = 2015, month = 8, day = 28)];
@@ -306,7 +310,7 @@ struct EchoBases {
 
 struct StackingRoot {
   a @1 :StackingA;
-  aWithDefault @0 :StackingA = (num = 42);
+  aWithDefault @0 :StackingA ;#TODO#28 = (num = 42);
 }
 
 struct StackingA {
@@ -325,8 +329,8 @@ interface CallSequence {
 # test defaults
 
 struct Defaults {
-  text @0 :Text = "foo";
-  data @1 :Data = "bar";
+  text @0 :Text ;#TODO#28 = "foo";
+  data @1 :Data ;#TODO#28 = "bar";
   float @2 :Float32 = 3.14;
   int @3 :Int32 = -123;
   uint @4 :UInt32 = 42;
