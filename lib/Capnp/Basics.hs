@@ -30,7 +30,7 @@ module Capnp.Basics
 
 import Data.Word
 
-import Control.Monad       (when)
+import Control.Monad       (when, (>=>))
 import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
@@ -86,7 +86,7 @@ getText list = do
     lastByte <- U.index (len - 1) list
     when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
         "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
-    Text <$> U.take (len - 1) list
+    pure $ Text list
 
 -- | Convert a 'Data' to a 'BS.ByteString'.
 dataBytes :: U.ReadCtx m msg => Data msg -> m BS.ByteString
@@ -100,7 +100,7 @@ textBuffer (Text list) = U.take (U.length list - 1) list
 -- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
 -- (not counting the NUL terminator).
 textBytes :: U.ReadCtx m msg => Text msg -> m BS.ByteString
-textBytes (Text list) = U.rawBytes list
+textBytes = textBuffer >=> U.rawBytes
 
 -- IsPtr instances for Text and Data. These wrap lists of bytes.
 instance IsPtr msg (Data msg) where
