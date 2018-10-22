@@ -14,7 +14,7 @@ instance Echo'server_ MyEchoServer where
     echo'echo params MyEchoServer = pure def { reply = query params }
 
 main :: IO ()
-main = serve "localhost" "4000" $ \(sock, _addr) -> do
+main = serve "localhost" "4000" $ \(sock, _addr) ->
     runVat $ (vatConfig $ socketTransport sock)
         { offerBootstrap  = Just $ do
             Echo client <- export_Echo MyEchoServer

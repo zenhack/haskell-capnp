@@ -11,7 +11,7 @@ import Capnp.Rpc (VatConfig(..), runVat, socketTransport, stopVat, vatConfig)
 import Capnp.Gen.Echo.Pure
 
 main :: IO ()
-main = connect "localhost" "4000" $ \(sock, _addr) -> do
+main = connect "localhost" "4000" $ \(sock, _addr) ->
     runVat $ (vatConfig $ socketTransport sock)
         { debugMode = True
         , withBootstrap = Just $ \client -> do

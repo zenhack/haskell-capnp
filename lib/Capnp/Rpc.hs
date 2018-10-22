@@ -75,7 +75,7 @@ import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
-import Data.Foldable                   (traverse_)
+import Data.Foldable                   (for_)
 import Data.Maybe                      (isJust)
 import Network.Socket                  (Socket)
 import System.IO                       (Handle)
@@ -298,7 +298,7 @@ sendQuestion Vat{sendQ,questions,limit} question = do
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
 call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
-    Vat{limit} <- RpcT $ ask
+    Vat{limit} <- RpcT ask
     questionId <- newQuestionId
     paramContent <- evalLimitT limit (decerialize paramContent)
     let callMsg = Call
@@ -529,7 +529,7 @@ runVat config@VatConfig{limit, getTransport, withBootstrap} = do
         (recvLoop transport vat)
         [ sendLoop transport vat
         , coordinator vat
-        , runRpcT vat $ flip traverse_ withBootstrap $ \with ->
+        , runRpcT vat $ for_ withBootstrap $ \with ->
             bootstrap >>= with
         ]
     case ret of
