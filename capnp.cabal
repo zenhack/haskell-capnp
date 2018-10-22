@@ -168,7 +168,7 @@ executable capnpc-haskell
       , Backends.Pure
       , Backends.Raw
       , Util
-    hs-source-dirs:       exe/capnpc-haskell
+    hs-source-dirs:       cmd/capnpc-haskell
     build-depends:
         capnp
       , cereal                            ^>= 0.5.5
