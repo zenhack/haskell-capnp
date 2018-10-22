@@ -19,12 +19,11 @@ instance Echo'server_ MyEchoServer where
     echo'echo params MyEchoServer = pure def { reply = query params }
 
 main = serve "localhost" "4000" $ \(sock, _addr) -> do
-    transport <- socketTransport defaultLimit sock
     runVat
         def { bootstrapServer = Just $ do
                 Echo client <- export_Echo MyEchoServer
                 pure client
             , debugMode = True
             }
-        transport
+        (socketTransport defaultLimit sock)
         (pure ())
