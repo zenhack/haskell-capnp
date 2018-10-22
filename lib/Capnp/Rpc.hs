@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -75,7 +76,7 @@ import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
-import Data.Foldable                   (for_)
+import Data.Foldable                   (for_, traverse_)
 import Data.Maybe                      (isJust)
 import Network.Socket                  (Socket)
 import System.IO                       (Handle)
@@ -272,7 +273,18 @@ instance Show Client where
 export :: MonadIO m => Server -> RpcT m Client
 export localServer = do
     exportId <- newExportId
-    localVat <- RpcT ask
+    localVat@Vat{exports} <- RpcT ask
+
+    -- We add an entry to our exports table. The refcount *starts* at zero,
+    -- and will be incremented to one the first time we actually send this
+    -- capability to the remote vat. Because the refcount checking happens
+    -- in response to interaction with the remote vat, it won't be removed
+    -- until it goes *back* to being zero.
+    liftIO $ atomically $ modifyTVar exports $ M.insert exportId Export
+        { server = localServer
+        , refCount = 0
+        }
+
     pure LocalClient{exportId, localServer, localVat}
 
 -- | Get a client for the bootstrap interface from the remote vat.
@@ -286,13 +298,48 @@ bootstrap = do
         { target = MessageTarget'promisedAnswer def { questionId }
         , localVat = vat
         }
--- | send a question to the remote vat. This inserts it into the local
--- vat's  questions table, in addition to actually sending the message.
+-- | send a question to the remote vat. This updates the local vat's
+-- tables as needed, in addition to actually sending the message.
 sendQuestion :: Vat -> Question -> STM ()
-sendQuestion Vat{sendQ,questions,limit} question = do
+sendQuestion vat@Vat{sendQ,questions,limit} question = do
+    case question of
+        CallQuestion{callMsg=Call{params=Payload{capTable}}} ->
+            traverse_ (updateSendWithCap vat) capTable
+        BootstrapQuestion _ ->
+            pure ()
     writeTBQueue sendQ =<< createPure limit
         (valueToMsg $ getQuestionMessage question)
-    modifyTVar questions $ M.insert (getQuestionId question) question
+    modifyTVar' questions $ M.insert (getQuestionId question) question
+
+-- | 'updateSendWithCap' updates the vat's tables as needed, assuming the CapDescriptor
+-- is being send to the remote vat as part of a call (TODO: or also return?).
+updateSendWithCap :: Vat -> CapDescriptor -> STM ()
+updateSendWithCap Vat{exports} = \case
+    CapDescriptor'none -> pure ()
+
+    CapDescriptor'senderHosted exportId -> incrExport exportId
+    CapDescriptor'senderPromise exportId -> incrExport exportId
+
+    -- I(zenhack) don't *think* we need to do anything in these cases, but I
+    -- need to think about it more carefully.
+    CapDescriptor'receiverHosted _ -> pure ()
+    CapDescriptor'receiverAnswer _ -> pure ()
+
+    CapDescriptor'thirdPartyHosted cap ->
+        error $
+            "BUG: we tried to send a third party cap descriptor. This is weird; " ++
+            "we don't support level 3 yet. " ++ show cap
+    CapDescriptor'unknown' tag ->
+        error $
+            "BUG: we tried to send a cap descriptor with a tag we don't know about: " ++
+            show tag
+  where
+    -- | Increment the reference count for the specified export id.
+    incrExport :: Word32 -> STM ()
+    incrExport =
+        modifyTVar' exports . M.adjust
+            (\(!e@Export{refCount}) -> e { refCount = refCount + 1 })
+
 
 -- | @'call' interfaceId methodId params client@ calls an RPC method
 -- on @client@. The method is as specified by @interfaceId@ and
