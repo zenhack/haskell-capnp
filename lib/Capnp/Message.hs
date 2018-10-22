@@ -33,13 +33,14 @@ module Capnp.Message (
     , Message(..)
 
     -- * Immutable messages
-    , empty
     , ConstMsg
+    , empty
 
     -- * Reading data from messages
     , getSegment
     , getWord
     , getCap
+    , getCapTable
 
     -- * Mutable Messages
     , MutMsg
@@ -134,7 +135,7 @@ class Monad m => Message m msg where
     -- | @'internalGetCap' cap index@ reads a capability from the message's
     -- capability table, returning the client. does not check bounds. Callers
     -- should use getCap instead.
-    internalGetCap ::msg -> Int -> m Client
+    internalGetCap :: msg -> Int -> m Client
     -- | @'slice' start length segment@ extracts a sub-section of the segment,
     -- starting at index @start@, of length @length@.
     slice   :: Int -> Int -> Segment msg -> m (Segment msg)
@@ -157,6 +158,10 @@ getSegment msg i = do
 -- | @'withCapTable'@ replaces the capability table in the message.
 withCapTable :: V.Vector Client -> ConstMsg -> ConstMsg
 withCapTable newCaps msg = msg { constCaps = newCaps }
+
+-- | 'getCapTable' gets the capability table from a 'ConstMsg'.
+getCapTable :: ConstMsg -> V.Vector Client
+getCapTable = constCaps
 
 -- | @'getCap' message index@ gets the capability with the given index from
 -- the message. throws 'Capnp.Errors.BoundsError' if the index is out

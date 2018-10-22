@@ -107,6 +107,7 @@ import Capnp
     )
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
+import qualified Capnp.Message       as Message
 import qualified Capnp.Untyped       as Untyped
 
 -- | Shortcut to throw an @unimplemented@ exception.
@@ -300,13 +301,17 @@ call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (P
 call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
     Vat{limit} <- RpcT ask
     questionId <- newQuestionId
+    let capTable = maybe
+            V.empty
+            (V.map makeCapDescriptor . Message.getCapTable . Untyped.message)
+            paramContent
     paramContent <- evalLimitT limit (decerialize paramContent)
     let callMsg = Call
             { sendResultsTo = Call'sendResultsTo'caller
             , allowThirdPartyTailCall = False
             , params = def
-                -- TODO: capTable.
                 { content = paramContent
+                , capTable = capTable
                 }
             , ..
             }
