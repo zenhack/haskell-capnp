@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -338,7 +337,7 @@ updateSendWithCap Vat{exports} = \case
     incrExport :: Word32 -> STM ()
     incrExport =
         modifyTVar' exports . M.adjust
-            (\(!e@Export{refCount}) -> e { refCount = refCount + 1 })
+            (\e@Export{refCount} -> e { refCount = refCount + 1 })
 
 
 -- | @'call' interfaceId methodId params client@ calls an RPC method
