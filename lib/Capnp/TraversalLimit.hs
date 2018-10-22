@@ -37,6 +37,7 @@ import Prelude hiding (fail)
 import Control.Monad              (when)
 import Control.Monad.Catch        (MonadThrow(throwM))
 import Control.Monad.Fail         (MonadFail(..))
+import Control.Monad.IO.Class     (MonadIO(..))
 import Control.Monad.Primitive    (PrimMonad(primitive), PrimState)
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
@@ -105,6 +106,9 @@ instance (PrimMonad m, s ~ PrimState m) => PrimMonad (LimitT m) where
 
 instance MonadFail m => MonadFail (LimitT m) where
     fail = lift . fail
+
+instance MonadIO m => MonadIO (LimitT m) where
+    liftIO = lift . liftIO
 
 ------ Instances of 'MonadLimit' for standard monad transformers
 

@@ -13,6 +13,8 @@
   * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
 * `createPure` can now be used with any instance of `MonadThrow`, not
   just `Either SomeException`.
+* `LimitT m` is now an instance of `MonadIO`, provided that `m` is an
+  instance.
 
 # 0.3.0.0
 
