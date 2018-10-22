@@ -125,7 +125,9 @@ type ImportId = Word32
 -- context @m@.
 data Transport m = Transport
     { sendMsg :: ConstMsg -> m ()
+    -- ^ Send a message
     , recvMsg :: m ConstMsg
+    -- ^ Receive a message
     }
 
 -- | @'handleTransport' limit handle@ creates a new transport which reads
@@ -197,10 +199,10 @@ instance PrimMonad m => PrimMonad (RpcT m) where
 -- | A client for a capnproto capability. A client is used to call methods on a
 -- remote object; see 'call'.
 --
--- Note that client's 'Show' instance does not have a way of retaininig the
+-- Note that 'Client''s 'Show' instance does not have a way of retaininig the
 -- connection, so doing @'read' . 'show'@ will reseult in a disconnected
 -- capability (except in the case of 'nullClient', which is the only capability
--- that can be represented statically)..
+-- that can be represented statically).
 data Client
     = RemoteClient
         { target   :: MessageTarget
@@ -218,12 +220,12 @@ data Client
 -- can be converted to a 'Client' and then shared via RPC.
 data Server = Server
     { handleCall :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> RpcT IO (Promise Struct)
-    -- ^ @'handleCall' interfaceId methodId params@ handles a method call.
+    -- ^ @handleCall interfaceId methodId params@ handles a method call.
     -- The method is as specified by interfaceId and methodId, with @params@
     -- being the argument to the method call. It returns a 'Promise' for the
     -- result.
     , handleStop :: RpcT IO ()
-    -- ^ 'handleStop' is executed when the last reference to the object is
+    -- ^ handleStop is executed when the last reference to the object is
     -- dropped.
     }
 
@@ -234,7 +236,7 @@ instance HsExn.Exception StopVat
 
 -- | Shut down the rpc connection, and all resources managed by the vat. This
 -- does not return (it raises an exception used to actually signal termination
--- of the connection.
+-- of the connection).
 stopVat :: MonadIO m => RpcT m ()
 stopVat = liftIO (throwIO StopVat)
 
@@ -443,15 +445,39 @@ instance Eq Vat where
     -- vat as a unit:
     Vat{questions=qa} == Vat{questions=qb} = qa == qb
 
+-- | A 'VatConfig' carries various parameters controlling the behavior of a
+-- 'Vat'.
+--
+-- 'VatConfig' is an instance of 'Default'; the default values for various
+-- parameters are documented in-line.
 data VatConfig = VatConfig
     { maxQuestions    :: !Word32
+    -- ^ The maximum number of simultanious outstanding requests to the peer
+    -- vat. Once this limit is reached, further questsions will block until
+    -- some of the existing questions have been answered.
+    --
+    -- Defaults to 32.
+
     , maxExports      :: !Word32
+    -- ^ The maximum number of objects which may be exported by this vat.
+    --
+    -- Defaults to 32.
+
     , bootstrapServer :: Maybe (RpcT IO Client)
+    -- ^ If not 'Nothing', 'bootstrapServer' is used to create the bootstrap
+    -- interface if and when the peer vat first requests it. If this is
+    -- 'Nothing', this vat will respond to bootstrap messages with
+    -- @unimplemented@.
+    --
+    -- Defaults to 'Nothing'
+
     , debugMode       :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
     -- contain extra information. This should not be used in production, as
     -- it is possible for these messages to contain sensitive information,
     -- but it can be useful for debugging.
+    --
+    -- Defaults to 'False'.
     }
 
 instance Default VatConfig where
@@ -461,9 +487,6 @@ instance Default VatConfig where
         , bootstrapServer = Nothing
         , debugMode = False
         }
-
-runRpcT :: Vat -> RpcT m a -> m a
-runRpcT vat (RpcT m) = runReaderT m vat
 
 runVat :: VatConfig -> Transport IO -> RpcT IO () -> IO ()
 runVat config transport m = do
@@ -484,6 +507,11 @@ runVat config transport m = do
                 "runVat stopped without a call to `stopVat`; this should " ++
                 "never happen!"
 
+-- | Run an 'RpcT'.
+runRpcT :: Vat -> RpcT m a -> m a
+runRpcT vat (RpcT m) = runReaderT m vat
+
+-- | Create a new 'Vat', based on the information in the 'VatConfig'.
 newVat :: VatConfig -> IO Vat
 newVat VatConfig{..} = atomically $ do
     questions <- newTVar M.empty
@@ -499,32 +527,15 @@ newVat VatConfig{..} = atomically $ do
 
     pure Vat{..}
 
+-- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport IO -> Vat -> IO ()
 sendLoop transport Vat{sendQ} =
     forever $ atomically (readTBQueue sendQ) >>= sendMsg transport
 
+-- | 'recvLoop' shunts messages from the transport into the receive queue.
 recvLoop :: Transport IO -> Vat -> IO ()
 recvLoop transport Vat{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
-
--- | Report the specified message to the remote vat as unimplemented.
-replyUnimplemented :: Vat -> Message -> STM ()
-replyUnimplemented Vat{sendQ} msg =
-    createPure defaultLimit (valueToMsg $ Message'unimplemented msg)
-    >>= writeTBQueue sendQ
-
--- | Send an abort message to the remote vat with the given reason field
--- and a type field of @failed@, and return the exception that was included
--- in the message.
-replyAbort :: Vat -> T.Text -> STM Exception
-replyAbort Vat{sendQ} reason = do
-    let exn = def
-            { reason
-            , type_ = Exception'Type'failed
-            }
-    msg <- createPure defaultLimit $ valueToMsg exn
-    writeTBQueue sendQ msg
-    pure exn
 
 -- | The coordinator handles incoming messages, dispatching them as
 -- method calls to local objects, forwarding return values to the right
@@ -555,6 +566,29 @@ coordinator vat@Vat{..} = forever $ do
             handleUnimplemented vat pureMsg
         _ ->
             atomically $ replyUnimplemented vat pureMsg
+
+----------------- Helpers for common responses. ----------------------------
+
+-- | Report the specified message to the remote vat as unimplemented.
+replyUnimplemented :: Vat -> Message -> STM ()
+replyUnimplemented Vat{sendQ} msg =
+    createPure defaultLimit (valueToMsg $ Message'unimplemented msg)
+    >>= writeTBQueue sendQ
+
+-- | Send an abort message to the remote vat with the given reason field
+-- and a type field of @failed@, and return the exception that was included
+-- in the message.
+replyAbort :: Vat -> T.Text -> STM Exception
+replyAbort Vat{sendQ} reason = do
+    let exn = def
+            { reason
+            , type_ = Exception'Type'failed
+            }
+    msg <- createPure defaultLimit $ valueToMsg exn
+    writeTBQueue sendQ msg
+    pure exn
+
+----------------- Handler code for specific types of messages. ---------------
 
 handleFinish Vat{..} Finish{questionId} =
     atomically $ modifyTVar' answers (M.delete questionId)
