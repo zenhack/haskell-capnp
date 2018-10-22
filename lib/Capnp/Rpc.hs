@@ -411,9 +411,6 @@ data Question
 newtype Answer
     = ClientAnswer Client
 
-newtype Export
-    = ExportClient Client
-
 -- | Get a 'Message' corresponding to the question.
 getQuestionMessage :: Question -> Message
 getQuestionMessage CallQuestion{callMsg} = Message'call callMsg
@@ -431,7 +428,7 @@ data Vat = Vat
     { questions      :: TVar (M.Map QuestionId Question)
     , answers        :: TVar (M.Map AnswerId Answer)
     , imports        :: TVar (M.Map ImportId CapDescriptor)
-    , exports        :: TVar (M.Map ExportId Client)
+    , exports        :: TVar (M.Map ExportId Export)
 
     , questionIdPool :: TVar [Word32]
     , exportIdPool   :: TVar [Word32]
@@ -445,6 +442,26 @@ data Vat = Vat
 
     , debugMode      :: !Bool
     }
+
+data Export = Export
+    { server   :: Server
+    , refCount :: !Word32
+    }
+
+-- | @'makeCapDescriptor' client@ creates a cap descriptor suitable
+-- for sending to a remote vat to describe the specified @client@.
+makeCapDescriptor :: Client -> CapDescriptor
+makeCapDescriptor NullClient         = CapDescriptor'none
+makeCapDescriptor DisconnectedClient = CapDescriptor'none
+makeCapDescriptor RemoteClient{target} = case target of
+    MessageTarget'importedCap importId ->
+        CapDescriptor'receiverHosted importId
+    MessageTarget'promisedAnswer pa ->
+        CapDescriptor'receiverAnswer pa
+    MessageTarget'unknown' _ ->
+        CapDescriptor'none
+makeCapDescriptor LocalClient{exportId} =
+    CapDescriptor'senderHosted exportId
 
 instance Eq Vat where
     -- it is sufficient to compare any of the TVars, since we create the whole
