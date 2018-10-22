@@ -2,6 +2,7 @@ module Main (main) where
 
 import Test.Hspec
 
+import Tests.Module.Capnp.Basics                (basicsTests)
 import Tests.Module.Capnp.Bits                  (bitsTests)
 import Tests.Module.Capnp.Gen.Capnp.Schema      (schemaTests)
 import Tests.Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests)
@@ -15,6 +16,7 @@ import Tests.WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 main :: IO ()
 main = hspec $ do
     describe "Tests for specific modules" $ do
+        describe "Capnp.Basics" basicsTests
         describe "Capnp.Bits" bitsTests
         describe "Capnp.Pointer" ptrTests
         describe "Capnp.Rpc" rpcTests
