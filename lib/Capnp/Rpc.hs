@@ -151,11 +151,7 @@ handleTransport limit handle = Transport
 
 -- | @'socketTransport' limit socket@ creates a new transport which reads
 -- and writes messages to/from a socket. It uses @limit@ as the traversal
--- limit when reading messages and decoing. Note that when reading messages,
--- it may read past the end of the message due to buffering; if you attempt
--- to read data from the socket after the transport is no longer in use, it
--- is possible some additional data has been consumed beyond the last message
--- received.
+-- limit when reading messages and decoing.
 socketTransport :: MonadIO m => Int -> Socket -> m (Transport m)
 socketTransport limit socket = pure $ Transport
     { sendMsg = liftIO . sPutMsg socket
