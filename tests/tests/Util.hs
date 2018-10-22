@@ -1,10 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TypeFamilies      #-}
 module Util
     ( MsgMetaData(..)
     , capnpEncode, capnpDecode, capnpCompile
     , decodeValue
     , encodeValue
+    , aircraftSchemaSrc
+    , schemaSchemaSrc
     )
     where
 
@@ -17,6 +20,7 @@ import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
 import System.Directory               (removeFile)
 import System.Exit                    (ExitCode(..))
 import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
+import Text.Heredoc                   (there)
 
 import qualified Data.ByteString            as BS
 import qualified Data.ByteString.Builder    as BB
@@ -24,6 +28,9 @@ import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC8
 
 import qualified Capnp.Message as M
+
+aircraftSchemaSrc = [there|tests/data/aircraft.capnp|]
+schemaSchemaSrc = [there|tests/data/schema.capnp|]
 
 -- | Information about the contents of a capnp message. This is enough
 -- to encode/decode both textual and binary forms.

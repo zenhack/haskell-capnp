@@ -6,7 +6,7 @@ module Tests.Module.Capnp.Untyped.Pure (pureUntypedTests) where
 import Test.Hspec
 
 import Data.ReinterpretCast (doubleToWord)
-import Text.Heredoc         (here, there)
+import Text.Heredoc         (here)
 
 import qualified Data.Vector as V
 
@@ -19,15 +19,13 @@ import Capnp.TraversalLimit (LimitT, runLimitT)
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 
-schemaText = [there|tests/data/aircraft.capnp|]
-
 -- This is analogous to Tests.Module.Capnp.Untyped.untypedTests, but
 -- using the Pure module:
 pureUntypedTests =
     describe "high-level untyped decoding" $
         it "Should agree with `capnp decode`" $ do
             msg <- encodeValue
-                        schemaText
+                        aircraftSchemaSrc
                         "Aircraft"
                         [here|(f16 = (base = (
                            name = "bob",

@@ -20,7 +20,7 @@ import System.IO
 import Test.QuickCheck           (Property, property)
 import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO        (propertyIO)
-import Text.Heredoc              (here, there)
+import Text.Heredoc              (here)
 import Text.Show.Pretty          (ppShow)
 
 import qualified Data.ByteString.Builder as BB
@@ -44,8 +44,6 @@ import Data.Mutable         (Thaw(..))
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
-
-schemaText = [there|tests/data/schema.capnp|]
 
 pureSchemaTests = describe "Tests for generated high-level modules." $ do
     decodeTests
@@ -80,7 +78,7 @@ encodeTests = describe "schema encode tests" $
             builder <- M.encode msg
             actualText <- capnpDecode
                 (LBS.toStrict $ BB.toLazyByteString builder)
-                (MsgMetaData schemaText name)
+                (MsgMetaData schemaSchemaSrc name)
             actualText `shouldBe` expectedText
             actualValue <- evalLimitT maxBound $ do
                 root <- U.rootPtr msg
@@ -405,7 +403,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
 
     testCase typename (capnpText, expected) =
         specify ("should agree with `capnp encode` on " ++ capnpText) $ do
-            msg <- encodeValue schemaText typename capnpText
+            msg <- encodeValue schemaSchemaSrc typename capnpText
             actual <- evalLimitT 128 $ getRoot msg
             ppAssertEqual actual expected
 

@@ -17,7 +17,7 @@ import Data.ReinterpretCast    (doubleToWord, wordToDouble)
 import Data.Text               (Text)
 import Test.QuickCheck         (property)
 import Test.QuickCheck.IO      (propertyIO)
-import Text.Heredoc            (here, there)
+import Text.Heredoc            (here)
 
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
@@ -47,7 +47,7 @@ untypedTests = describe "low-level untyped API tests" $ do
 readTests = describe "read tests" $
     it "Should agree with `capnp decode`" $ do
         msg <- encodeValue
-                    [there|tests/data/aircraft.capnp|]
+                    aircraftSchemaSrc
                     "Aircraft"
                     [here|(f16 = (base = (
                        name = "bob",
@@ -272,11 +272,10 @@ modifyTests = describe "modification tests" $ traverse_ testCase
             }
     testCase ModTest{..} =
         it ("Should satisfy: " ++ show testIn ++ " : " ++ testType ++ " == " ++ show testOut) $ do
-            msg <- thaw =<< encodeValue schemaText testType testIn
+            msg <- thaw =<< encodeValue aircraftSchemaSrc testType testIn
             evalLimitT 128 $ rootPtr msg >>= testMod
-            actualOut <- decodeValue schemaText testType =<< freeze msg
+            actualOut <- decodeValue aircraftSchemaSrc testType =<< freeze msg
             actualOut `shouldBe` testOut
-    schemaText = [there|tests/data/aircraft.capnp|]
 
 
 farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do

@@ -178,11 +178,11 @@ executable capnpc-haskell
 
 --------------------------------------------------------------------------------
 
-test-suite simple-tests
+test-suite tests
     import: shared-opts
     type:                 exitcode-stdio-1.0
     main-is:              Main.hs
-    hs-source-dirs:       tests
+    hs-source-dirs:       tests/tests
     other-modules:
         Tests.Module.Capnp.Gen.Capnp.Schema
       , Tests.Module.Capnp.Gen.Capnp.Schema.Pure
