@@ -74,3 +74,8 @@ import qualified Capnp.Classes as Classes
 import qualified Capnp.Message as Message
 import qualified Capnp.Untyped as Untyped
 import qualified Codec.Capnp   as Codec
+
+
+
+-- Just for instances:
+import Capnp.Basics.Pure ()
