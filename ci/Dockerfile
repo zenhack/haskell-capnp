@@ -1,4 +1,4 @@
-FROM haskell
+FROM haskell:8.4.3
 WORKDIR /usr/src/
 
 # Install various system packages needed for building capnproto.
