@@ -9,6 +9,7 @@ module Backends.Raw
 
 import Data.Function                ((&))
 import Data.List                    (sortOn)
+import Data.Maybe                   (fromJust)
 import Data.Monoid                  ((<>))
 import Data.Ord                     (Down(..))
 import Data.String                  (IsString(..))
@@ -482,9 +483,7 @@ fmtConst thisMod name value =
                 ]
   where
     makePtrByteList ptr =
-        let assertRight (Left e)  = error (show e)
-            assertRight (Right v) = v
-            msg = assertRight $ createPure defaultLimit $ do
+        let msg = fromJust $ createPure defaultLimit $ do
                 msg <- newMessage
                 rootPtr <- cerialize msg $ Untyped.Struct
                     (fromList [])
