@@ -14,7 +14,7 @@ are not expected to invoke them directly.
 These helpers are only used by the high-level api. "Capnp.GenHelpers"
 defines helpers used by the low-level api.
 -}
-module Capnp.GenHelpers.Pure (defaultStruct, convertValue, getRoot, createPure) where
+module Capnp.GenHelpers.Pure (defaultStruct, convertValue, getRoot, createPure, toPurePtrConst) where
 
 import Data.Maybe (fromJust)
 
@@ -47,3 +47,8 @@ convertValue ::
 convertValue from = do
     constMsg :: M.ConstMsg <- Convert.valueToMsg from >>= freeze
     Convert.msgToValue constMsg >>= C.decerialize
+
+-- | convert a low-level value to a high-level one. This is not safe against
+-- malicious or invalid input; it is used for declaring top-level constants.
+toPurePtrConst :: C.Decerialize a => C.Cerial M.ConstMsg a -> a
+toPurePtrConst = fromJust . evalLimitT maxBound . C.decerialize
