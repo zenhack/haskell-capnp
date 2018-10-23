@@ -12,7 +12,6 @@ import Data.Word
 import Data.Char            (toUpper)
 import Data.Function        ((&))
 import Data.List            (partition)
-import Data.Monoid          ((<>))
 import Data.ReinterpretCast (doubleToWord, floatToWord)
 import Data.Text.Encoding   (encodeUtf8)
 import Util                 (Id, splitOn)

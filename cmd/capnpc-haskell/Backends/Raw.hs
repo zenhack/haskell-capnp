@@ -10,7 +10,6 @@ module Backends.Raw
 import Data.Function                ((&))
 import Data.List                    (sortOn)
 import Data.Maybe                   (fromJust)
-import Data.Monoid                  ((<>))
 import Data.Ord                     (Down(..))
 import Data.String                  (IsString(..))
 import GHC.Exts                     (IsList(fromList))

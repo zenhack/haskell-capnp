@@ -8,7 +8,6 @@ Description: Bits of code generation common to both backends.
 -}
 module Backends.Common where
 
-import Data.Monoid ((<>))
 import Data.String (IsString(..))
 
 import qualified Text.PrettyPrint.Leijen.Text as PP

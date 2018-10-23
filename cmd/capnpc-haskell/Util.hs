@@ -3,8 +3,7 @@ module Util (Id(..), mintercalate, splitOn) where
 
 import Data.Word
 
-import Data.List   (intersperse)
-import Data.Monoid (Monoid, mconcat)
+import Data.List (intersperse)
 
 -- | Generalization of 'Data.List.intercalate', analogous to concat/mconcat
 mintercalate :: Monoid w => w -> [w] -> w

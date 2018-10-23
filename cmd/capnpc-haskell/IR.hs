@@ -57,8 +57,7 @@ import Data.Char   (toLower)
 import Data.String (IsString(fromString))
 import Data.Text   (Text)
 
-import Data.Monoid ((<>))
-import GHC.Exts    (IsList(..))
+import GHC.Exts (IsList(..))
 
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T

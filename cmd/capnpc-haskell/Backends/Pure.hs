@@ -7,7 +7,6 @@ module Backends.Pure
     ( fmtModule
     ) where
 
-import Data.Monoid                  ((<>))
 import Data.String                  (fromString)
 import GHC.Exts                     (IsList(..))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
