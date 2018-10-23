@@ -43,7 +43,6 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
     , ( printf "Capnp/Gen/ById/X%x.hs" modId
       , vcat
         [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
-        , "{-# OPTIONS_HADDOCK hide #-}"
         , "{- |"
         , hcat [ "Module: ", machineMod ]
         , hcat [ "Description: machine-addressable alias for '", humanMod, "'." ]

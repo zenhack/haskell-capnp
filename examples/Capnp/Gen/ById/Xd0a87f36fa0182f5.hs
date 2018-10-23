@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
-{-# OPTIONS_HADDOCK hide #-}
 {- |
 Module: Capnp.Gen.ById.Xd0a87f36fa0182f5
 Description: machine-addressable alias for 'Capnp.Gen.Echo'.

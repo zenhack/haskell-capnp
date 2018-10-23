@@ -10,7 +10,6 @@ defines helpers used by high-level api.
 -}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
-{-# OPTIONS_HADDOCK hide      #-}
 module Capnp.GenHelpers where
 
 import Data.Bits

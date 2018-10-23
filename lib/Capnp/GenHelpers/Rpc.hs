@@ -1,4 +1,3 @@
-{-# OPTIONS_HADDOCK hide #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
 module Capnp.GenHelpers.Rpc where

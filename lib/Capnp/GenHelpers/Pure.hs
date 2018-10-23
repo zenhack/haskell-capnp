@@ -3,7 +3,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
-{-# OPTIONS_HADDOCK hide           #-}
 {- |
 Module: Capnp.GenHelpers.Pure
 Description: Misc. helpers for generated code.
