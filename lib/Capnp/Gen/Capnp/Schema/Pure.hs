@@ -154,6 +154,9 @@ instance C'.FromStruct M'.ConstMsg CodeGeneratorRequest where
         C'.decerialize (raw :: Capnp.Gen.ById.Xa93fc509624c72d9.CodeGeneratorRequest M'.ConstMsg)
 instance Default CodeGeneratorRequest where
     def = PH'.defaultStruct
+instance C'.Decerialize Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize where
+    type Cerial msg Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize = Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize
+    decerialize = pure
 data Enumerant
     = Enumerant
         {name :: Text,

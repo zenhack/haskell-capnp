@@ -131,6 +131,9 @@ instance C'.FromStruct M'.ConstMsg RecipientId where
         C'.decerialize (raw :: Capnp.Gen.ById.Xa184c7885cdaf2a1.RecipientId M'.ConstMsg)
 instance Default RecipientId where
     def = PH'.defaultStruct
+instance C'.Decerialize Capnp.Gen.ById.Xa184c7885cdaf2a1.Side where
+    type Cerial msg Capnp.Gen.ById.Xa184c7885cdaf2a1.Side = Capnp.Gen.ById.Xa184c7885cdaf2a1.Side
+    decerialize = pure
 data ThirdPartyCapId
     = ThirdPartyCapId
     deriving(Show,Read,Eq,Generic)

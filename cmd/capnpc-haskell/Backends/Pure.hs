@@ -225,8 +225,16 @@ fmtConst thisMod name value =
             ]
 
 fmtDataDef :: Id -> Name -> DataDef -> PP.Doc
--- We end up re-exporting these, but doing nothing else:
-fmtDataDef thisMod dataName DefEnum{} = ""
+fmtDataDef thisMod dataName DefEnum{} =
+    -- We re-use the same datatype from the raw module, so we just need
+    -- to declare a trivial instance.
+    let rawName = fmtName Raw thisMod dataName
+    in vcat
+    [ instance_ [] ("C'.Decerialize " <> rawName)
+        [ hcat [ "type Cerial msg ", rawName, " = ", rawName ]
+        , hcat [ "decerialize = pure" ]
+        ]
+    ]
 fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     let pureName = fmtName Pure thisMod dataName
         rawName  = fmtName Raw  thisMod dataName

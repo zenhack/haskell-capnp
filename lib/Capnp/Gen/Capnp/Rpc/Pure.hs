@@ -651,6 +651,9 @@ instance C'.FromStruct M'.ConstMsg Disembargo'context where
         C'.decerialize (raw :: Capnp.Gen.ById.Xb312981b2552a250.Disembargo'context M'.ConstMsg)
 instance Default Disembargo'context where
     def = PH'.defaultStruct
+instance C'.Decerialize Capnp.Gen.ById.Xb312981b2552a250.Exception'Type where
+    type Cerial msg Capnp.Gen.ById.Xb312981b2552a250.Exception'Type = Capnp.Gen.ById.Xb312981b2552a250.Exception'Type
+    decerialize = pure
 data PromisedAnswer'Op
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField (Word16)

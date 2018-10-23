@@ -189,10 +189,10 @@ library aircraftlib
   exposed-modules:
     -- generated from tests/data/aircraft.capnp
     -- commented out for now due to a bug.
-        Capnp.Gen.Aircraft
---       , Capnp.Gen.Aircraft.Pure
+         Capnp.Gen.Aircraft
+       , Capnp.Gen.Aircraft.Pure
        , Capnp.Gen.ById.X832bcc6686a26d56
---       , Capnp.Gen.ById.X832bcc6686a26d56.Pure
+       , Capnp.Gen.ById.X832bcc6686a26d56.Pure
 
 --------------------------------------------------------------------------------
 

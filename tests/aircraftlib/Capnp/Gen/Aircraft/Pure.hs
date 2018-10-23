@@ -98,6 +98,9 @@ instance C'.FromStruct M'.ConstMsg Aircraft where
         C'.decerialize (raw :: Capnp.Gen.ById.X832bcc6686a26d56.Aircraft M'.ConstMsg)
 instance Default Aircraft where
     def = PH'.defaultStruct
+instance C'.Decerialize Capnp.Gen.ById.X832bcc6686a26d56.Airport where
+    type Cerial msg Capnp.Gen.ById.X832bcc6686a26d56.Airport = Capnp.Gen.ById.X832bcc6686a26d56.Airport
+    decerialize = pure
 data B737
     = B737
         {base :: PlaneBase}
