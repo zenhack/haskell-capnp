@@ -314,6 +314,7 @@ instance C'.Marshal EchoBase where
     marshalInto raw value = do
         case value of
             EchoBase{..} -> do
+                error "TODO: marshal interface fields."
 instance C'.Cerialize s EchoBase
 instance C'.FromStruct M'.ConstMsg EchoBase where
     fromStruct struct = do
@@ -1348,6 +1349,7 @@ instance C'.Marshal Z where
                 Capnp.Gen.ById.X832bcc6686a26d56.set_Z'grp'first raw first
                 Capnp.Gen.ById.X832bcc6686a26d56.set_Z'grp'second raw second
             Z'echo arg_ -> do
+                error "TODO: marshal interface fields."
             Z'echoBases arg_ -> do
                 field_ <- Capnp.Gen.ById.X832bcc6686a26d56.new_Z'echoBases raw
                 C'.marshalInto field_ arg_

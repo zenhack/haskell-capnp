@@ -492,7 +492,7 @@ fmtDataDef thisMod dataName dataDef =
                 ]
             PtrField _ ty -> case ty of
                 PtrInterface _ ->
-                    "" -- TODO
+                    "error \"TODO: marshal interface fields.\""
                 PrimPtr PrimData -> vcat
                     [ hcat [ "field_ <- ", newName, " (BS.length ", fieldNameText, ") raw" ]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
