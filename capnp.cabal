@@ -61,7 +61,7 @@ source-repository head
 
 common shared-opts
   build-depends:
-        base                              >= 4.8  && < 5.0
+        base                              >= 4.11  && < 4.13
       , array                             ^>= 0.5
       , bytes                             ^>= 0.15.4
       , binary                            ^>= 0.8.5
