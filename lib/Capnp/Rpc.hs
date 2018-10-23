@@ -532,30 +532,27 @@ interpCapDescriptor = \case
 
     CapDescriptor'receiverHosted exportId -> do
         vat@Vat{exports} <- RpcT ask
-        liftIO $ atomically $ do
+        liftIO $ atomicallyCommitErrs $ do
             exports <- readTVar exports
             case M.lookup exportId exports of
                 Nothing ->
-                    -- need to rework control flow a bit so we can handle this
-                    -- properly.
-                    error $
-                        "FIXME: remote vat referenced a non-existent export id. " ++
-                        "we should respond with an abort."
+                    abort vat $
+                        "Incoming capability table referenced non-existent " <>
+                        "receiverHosted capability #" <> T.pack (show exportId)
                 Just Export{server} ->
                     pure LocalClient
                         { localServer = server
                         , localVat = vat
                         , exportId = exportId
                         }
-    CapDescriptor'receiverAnswer _ -> abort "receiverAnswer not supported"
-    CapDescriptor'thirdPartyHosted _ -> abort "thirdPartyHosted not supported"
+    CapDescriptor'receiverAnswer _ -> abortIO "receiverAnswer not supported"
+    CapDescriptor'thirdPartyHosted _ -> abortIO "thirdPartyHosted not supported"
     CapDescriptor'unknown' tag ->
-        abort $ T.pack $ "unknown cap descriptor variant #" ++ show tag
+        abortIO $ T.pack $ "unknown cap descriptor variant #" ++ show tag
   where
-    abort reason = do
+    abortIO reason = do
         vat <- RpcT ask
-        exn <- liftIO $ atomically $ replyAbort vat reason
-        throwM exn
+        liftIO $ atomicallyCommitErrs $ abort vat reason
     -- create a client based on an import id. This increments the refcount for
     -- that import.
     getImportClient importId = do
