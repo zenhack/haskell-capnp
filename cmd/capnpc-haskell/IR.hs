@@ -1,8 +1,10 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TypeFamilies    #-}
-{-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE OverloadedLists            #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 -- This module defines datatypes that represent something between the capnp
 -- schema and Haskell code. The representation has the following
 -- chracteristics:
@@ -67,7 +69,7 @@ import Util
 import qualified Capnp.Untyped.Pure as Untyped
 
 newtype Namespace = Namespace [Text]
-    deriving(Show, Read, Eq, Ord)
+    deriving(Show, Read, Eq, Ord, IsList)
 
 data Module = Module
     { modId      :: Id
