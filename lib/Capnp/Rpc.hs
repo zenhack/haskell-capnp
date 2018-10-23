@@ -312,7 +312,7 @@ sendQuestion vat@Vat{sendQ,questions,limit} question = do
     modifyTVar' questions $ M.insert (getQuestionId question) question
 
 -- | 'updateSendWithCap' updates the vat's tables as needed, assuming the CapDescriptor
--- is being sent to the remote vat as part of a call (TODO: or also return?).
+-- is being send to the remote vat as part of a call (TODO: or also return?).
 updateSendWithCap :: Vat -> CapDescriptor -> STM ()
 updateSendWithCap Vat{exports} = \case
     CapDescriptor'none -> pure ()
@@ -517,8 +517,10 @@ makeCapDescriptor LocalClient{exportId} =
 
 -- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
 -- the local vat's table if needed.
-interpCapDescriptor :: CapDescriptor -> RpcT IO Client
-interpCapDescriptor = \case
+--
+-- This may call 'throwAndCommit', if the cap descriptor is invalid.
+interpCapDescriptor :: Vat -> CapDescriptor -> STM Client
+interpCapDescriptor vat@Vat{..} = \case
     CapDescriptor'none -> pure NullClient
 
     -- We treat senderPromise the same as senderHosted. We respond to resolve
@@ -531,38 +533,32 @@ interpCapDescriptor = \case
     CapDescriptor'senderPromise importId -> getImportClient importId
 
     CapDescriptor'receiverHosted exportId -> do
-        vat@Vat{exports} <- RpcT ask
-        liftIO $ atomicallyCommitErrs $ do
-            exports <- readTVar exports
-            case M.lookup exportId exports of
-                Nothing ->
-                    abort vat $
-                        "Incoming capability table referenced non-existent " <>
-                        "receiverHosted capability #" <> T.pack (show exportId)
-                Just Export{server} ->
-                    pure LocalClient
-                        { localServer = server
-                        , localVat = vat
-                        , exportId = exportId
-                        }
-    CapDescriptor'receiverAnswer _ -> abortIO "receiverAnswer not supported"
-    CapDescriptor'thirdPartyHosted _ -> abortIO "thirdPartyHosted not supported"
+        exports <- readTVar exports
+        case M.lookup exportId exports of
+            Nothing ->
+                abort vat $
+                    "Incoming capability table referenced non-existent " <>
+                    "receiverHosted capability #" <> T.pack (show exportId)
+            Just Export{server} ->
+                pure LocalClient
+                    { localServer = server
+                    , localVat = vat
+                    , exportId = exportId
+                    }
+    CapDescriptor'receiverAnswer _ -> abort vat "receiverAnswer not supported"
+    CapDescriptor'thirdPartyHosted _ -> abort vat "thirdPartyHosted not supported"
     CapDescriptor'unknown' tag ->
-        abortIO $ T.pack $ "unknown cap descriptor variant #" ++ show tag
+        abort vat $ T.pack $ "unknown cap descriptor variant #" ++ show tag
   where
-    abortIO reason = do
-        vat <- RpcT ask
-        liftIO $ atomicallyCommitErrs $ abort vat reason
     -- create a client based on an import id. This increments the refcount for
     -- that import.
     getImportClient importId = do
-        vat@Vat{imports} <- RpcT ask
         -- TODO: set up a finalizer to decrement the refcount.
         let client = RemoteClient
                 { target = MessageTarget'importedCap importId
                 , localVat = vat
                 }
-        liftIO $ atomically $ modifyTVar' imports $ flip M.alter importId $ \case
+        modifyTVar' imports $ flip M.alter importId $ \case
             Nothing -> Just 1
             Just !n -> Just (n+1)
         pure client
@@ -751,6 +747,17 @@ replyAbort Vat{sendQ, limit} reason = do
 abort :: Vat -> T.Text -> STM a
 abort vat = replyAbort vat >=> throwAndCommit
 
+-- | Like 'abort', but runs in IO.
+abortIO :: MonadIO m => Vat -> T.Text -> m a
+abortIO vat reason =
+    liftIO $ atomicallyCommitErrs $ abort vat reason
+
+-- | Like 'abortIO', but runs in 'RpcT' does not require a 'Vat' argument.
+abortT :: T.Text -> RpcT IO a
+abortT reason = do
+    vat <- RpcT ask
+    abortIO vat reason
+
 ----------------- Handler code for specific types of messages. ---------------
 
 handleFinish Vat{..} Finish{questionId} =
@@ -803,13 +810,11 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                 result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
                 case result of
                     Nothing -> do
-                        exn <- atomically $ replyAbort
-                            vat
-                            ("Received 'Call' on non-existant promised answer #"
-                                <> T.pack (show targetQuestionId))
                         -- TODO: adjust this so we don't throw (and thus kill the connection)
                         -- before the abort message is actually sent.
-                        throwIO exn
+                        abortIO vat $
+                            ("Received 'Call' on non-existant promised answer #"
+                                <> T.pack (show targetQuestionId))
                     Just (ClientAnswer client) -> do
                         result <- try $ do
                             -- We fish out the low-level representation of the params, set the
@@ -820,6 +825,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             --
                             -- the handler has to decode again anyway. We should try to make this
                             -- whole business more efficient. See also #52.
+                            clients <- atomicallyCommitErrs $ traverse (interpCapDescriptor vat) capTable
                             paramContent <- evalLimitT limit $
                                 Rpc.get_Call'params rawCall
                                 >>= Rpc.get_Payload'content
