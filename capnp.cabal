@@ -142,6 +142,7 @@ library
     other-modules:
         Internal.Util
       , Internal.AppendVec
+      , Internal.CommitThrow
       , Internal.Gen.Instances
       , Internal.BuildPure
       , Codec.Capnp

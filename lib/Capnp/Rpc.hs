@@ -70,7 +70,7 @@ import Data.Word
 import Control.Concurrent.Async        (concurrently_)
 import Control.Exception
     (SomeException, fromException, throwIO, try)
-import Control.Monad                   (forever)
+import Control.Monad                   (forever, (>=>))
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
@@ -90,8 +90,6 @@ import qualified Data.Vector       as V
 
 import Capnp.Gen.Capnp.Rpc.Pure
 
-import Capnp.Untyped.Pure (PtrType(PtrStruct), Struct)
-
 import Capnp
     ( ConstMsg
     , createPure
@@ -106,6 +104,8 @@ import Capnp
     , sPutMsg
     , valueToMsg
     )
+import Capnp.Untyped.Pure   (PtrType(PtrStruct), Struct)
+import Internal.CommitThrow (atomicallyCommitErrs, throwAndCommit)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
 import qualified Capnp.Message       as Message
@@ -748,6 +748,12 @@ replyAbort Vat{sendQ, limit} reason = do
     writeTBQueue sendQ msg
     pure exn
 
+-- | Send an abort message to the remote vat with the given reason field
+-- and a type field of @failed@, and then throw the same exception via
+-- 'throwAndCommit'.
+abort :: Vat -> T.Text -> STM a
+abort vat = replyAbort vat >=> throwAndCommit
+
 ----------------- Handler code for specific types of messages. ---------------
 
 handleFinish Vat{..} Finish{questionId} =
@@ -853,10 +859,10 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
 
 -- | Handle receiving a 'Return' message.
 handleReturn :: Vat -> Return -> IO ()
-handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
+handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
     question <- M.lookup answerId <$> readTVar questions
     case question of
-        Nothing -> abort $
+        Nothing -> abort vat $
             "Received 'Return' for non-existant question #"
                 <> T.pack (show answerId)
         Just (BootstrapQuestion _) -> do
@@ -864,7 +870,6 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
             -- just keep using the promise.
             replyUnimplemented vat $ Message'return msg
             modifyTVar questions $ M.delete answerId
-            ok
         Just CallQuestion{callMsg, sendReturn} -> do
             -- We don't support caps other than the bootstrap yet, so we can
             -- send Finish right away.
@@ -877,50 +882,26 @@ handleReturn vat@Vat{..} msg@Return{..} = handleErrs $ do
                     handleResult sendReturn content
                 Return'exception exn -> do
                     breakPromise sendReturn exn
-                    ok
 
                 -- These shouldn't come up in practice yet, since our
                 -- implementation doesn't do anything that can trigger
                 -- them, but when they do we won't need to do anything:
-                Return'canceled -> ok
-                Return'resultsSentElsewhere -> ok
+                Return'canceled -> pure ()
+                Return'resultsSentElsewhere -> pure ()
 
                 _ ->
-                    abort $
+                    abort vat $
                         "Received unexpected return variant " <>
                         "(we only support results and exception)."
 
   where
-    -- | Run a transaction, which may *return* an error (as opposed to throwing
-    -- one) via 'Left'; if it does, throw the error, otherwise return ().
-    --
-    -- The reason for this is so we can report errors while still commiting the
-    -- transaction; if we did 'throwSTM' it would roll back the effects.
-    handleErrs :: HsExn.Exception e => STM (Either e ()) -> IO ()
-    handleErrs transaction = do
-        ret <- atomically transaction
-        case ret of
-            Left exn ->
-                throwIO exn
-            Right () ->
-                pure ()
-
-    -- | Send an exception to the remote vat, and also return it (to be raised
-    -- by handleErrs).
-    abort = fmap Left . replyAbort vat
-
-    -- | Shorthand to return from a transaction with no error.
-    ok = pure $ Right ()
-
     -- | handle the @result@ variant of a 'Return'.
     handleResult sendReturn content = case content of
         Nothing -> do
             fulfill sendReturn def
-            ok
         Just (PtrStruct s) -> do
             fulfill sendReturn s
-            ok
-        Just _ -> abort
+        Just _ -> abort vat $
             -- TODO: I(zenhack) am not sure it's actually invalid to have
             -- capability in a return value, so maybe we should relax this
             -- a bit.
