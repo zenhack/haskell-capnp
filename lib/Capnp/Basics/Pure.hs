@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {- |
 Module: Capnp.Basics.Pure
 Description: Handling of "basic" capnp datatypes (high-level API).
@@ -20,14 +21,17 @@ module Capnp.Basics.Pure
     , Text(..)
     ) where
 
+import Prelude hiding (length)
+
 import Control.Monad       (forM_)
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Text.Encoding  (decodeUtf8', encodeUtf8)
 
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
+import qualified Data.Vector     as V
 
-import Capnp.Classes hiding (ListElem(List))
+import Capnp.Classes
 
 import Capnp.Errors  (Error(InvalidUtf8Error))
 import Capnp.Untyped (rawBytes)
@@ -73,3 +77,12 @@ marshalTextBytes :: Untyped.RWCtx m s => BS.ByteString -> Basics.Text (M.MutMsg 
 marshalTextBytes bytes text = do
     buffer <- Basics.textBuffer text
     marshalInto (Basics.Data buffer) bytes
+
+-- Generic decerialize instances for lists, given that the element type has an instance.
+instance
+    ( ListElem M.ConstMsg (Cerial M.ConstMsg a)
+    , Decerialize a
+    ) => Decerialize (V.Vector a)
+  where
+    type Cerial msg (V.Vector a) = List msg (Cerial msg a)
+    decerialize raw = V.generateM (length raw) (\i -> index i raw >>= decerialize)

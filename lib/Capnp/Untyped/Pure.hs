@@ -162,16 +162,6 @@ instance Cerialize s (Maybe PtrType) where
     cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
     cerialize msg (Just (PtrCap       cap)) = Just . U.PtrCap <$> U.appendCap msg cap
 
--- Generic decerialize instances for lists. TODO: this doesn't really belong
--- in Untyped, since this is mostly used for typed lists. maybe Basics.
-instance
-    ( C.ListElem M.ConstMsg (Cerial M.ConstMsg a)
-    , Decerialize a
-    ) => Decerialize (ListOf a)
-  where
-    type Cerial msg (ListOf a) = C.List msg (Cerial msg a)
-    decerialize raw = V.generateM (C.length raw) (\i -> C.index i raw >>= decerialize)
-
 -- | Decerialize an untyped list, whose elements are instances of Decerialize. This isn't
 -- an instance, since it would have to be an instance of (List a), which conflicts with
 -- the above.
