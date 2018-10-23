@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -478,7 +479,7 @@ getQuestionId (BootstrapQuestion questionId)         = questionId
 data Vat = Vat
     { questions      :: TVar (M.Map QuestionId Question)
     , answers        :: TVar (M.Map AnswerId Answer)
-    , imports        :: TVar (M.Map ImportId CapDescriptor)
+    , imports        :: TVar (M.Map ImportId Word32) -- values are the refcount
     , exports        :: TVar (M.Map ExportId Export)
 
     , questionIdPool :: TVar [Word32]
@@ -513,6 +514,62 @@ makeCapDescriptor RemoteClient{target} = case target of
         CapDescriptor'none
 makeCapDescriptor LocalClient{exportId} =
     CapDescriptor'senderHosted exportId
+
+-- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
+-- the local vat's table if needed.
+interpCapDescriptor :: CapDescriptor -> RpcT IO Client
+interpCapDescriptor = \case
+    CapDescriptor'none -> pure NullClient
+
+    -- We treat senderPromise the same as senderHosted. We respond to resolve
+    -- messages with unimplemented and keep using the promise; someday we'll
+    -- want to actually observe resolution.
+    --
+    -- This is the same workaround used by the Go implementation; see
+    -- https://github.com/capnproto/go-capnproto2/issues/2#issuecomment-221664672
+    CapDescriptor'senderHosted  importId -> getImportClient importId
+    CapDescriptor'senderPromise importId -> getImportClient importId
+
+    CapDescriptor'receiverHosted exportId -> do
+        vat@Vat{exports} <- RpcT ask
+        liftIO $ atomically $ do
+            exports <- readTVar exports
+            case M.lookup exportId exports of
+                Nothing ->
+                    -- need to rework control flow a bit so we can handle this
+                    -- properly.
+                    error $
+                        "FIXME: remote vat referenced a non-existent export id. " ++
+                        "we should respond with an abort."
+                Just Export{server} ->
+                    pure LocalClient
+                        { localServer = server
+                        , localVat = vat
+                        , exportId = exportId
+                        }
+    CapDescriptor'receiverAnswer _ -> abort "receiverAnswer not supported"
+    CapDescriptor'thirdPartyHosted _ -> abort "thirdPartyHosted not supported"
+    CapDescriptor'unknown' tag ->
+        abort $ T.pack $ "unknown cap descriptor variant #" ++ show tag
+  where
+    abort reason = do
+        vat <- RpcT ask
+        exn <- liftIO $ atomically $ replyAbort vat reason
+        throwM exn
+    -- create a client based on an import id. This increments the refcount for
+    -- that import.
+    getImportClient importId = do
+        vat@Vat{imports} <- RpcT ask
+        -- TODO: set up a finalizer to decrement the refcount.
+        let client = RemoteClient
+                { target = MessageTarget'importedCap importId
+                , localVat = vat
+                }
+        liftIO $ atomically $ modifyTVar' imports $ flip M.alter importId $ \case
+            Nothing -> Just 1
+            Just !n -> Just (n+1)
+        pure client
+
 
 instance Eq Vat where
     -- it is sufficient to compare any of the TVars, since we create the whole
