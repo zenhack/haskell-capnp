@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Regenerate modules for the core capnproto schema.
+# Regenerate generated modules.
 set -e
 
 # Some helpers for reporting info to the caller:
@@ -14,10 +14,14 @@ err() {
 }
 
 repo_root="$(realpath $(dirname $0)/..)"
-
-# First make sure the compiler plugin is up to date.
-log "Rebuilding schema compiler plugin..."
 cd "$repo_root"
+
+# First, make sure our non-schema generated modules are up to date.
+log "Generating Internal.Gen"
+runhaskell scripts/gen-basic-instances.hs
+
+# Make sure the compiler plugin is up to date.
+log "Rebuilding schema compiler plugin..."
 cabal new-build capnpc-haskell
 
 # We run the code generator from inside lib/, so that it outputs
@@ -59,7 +63,7 @@ capnp compile \
 		-ohaskell \
 		../data/aircraft.capnp
 
-log "Generating schema for echo.capnp (examples)..."
+log "Generating schema modules for echo.capnp (examples)..."
 cd "$repo_root/examples"
 capnp compile \
 		-I $core_inc \
