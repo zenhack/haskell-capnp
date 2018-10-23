@@ -11,7 +11,7 @@ before_script:
 test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
-    - cabal new-build
+    - cabal new-build all
     - cabal new-test
       # Linting:
     - ./scripts/hlint.sh
