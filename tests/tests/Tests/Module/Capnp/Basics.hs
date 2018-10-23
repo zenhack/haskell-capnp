@@ -19,7 +19,7 @@ import qualified Capnp.Untyped as U
 
 basicsTests :: Spec
 basicsTests =
-    describe "textBuffer and textBytes agree" $ do
+    describe "textBuffer and textBytes agree" $
         it "Should return the same number of bytes" $
             property $ \(text :: T.Text) -> propertyIO $ evalLimitT maxBound $ do
                 msg <- newMessage
