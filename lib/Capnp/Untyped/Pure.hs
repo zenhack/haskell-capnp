@@ -44,7 +44,6 @@ import Capnp.Classes
     (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..))
 import Internal.Gen.Instances ()
 
-import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 import qualified Data.Vector   as V
@@ -58,7 +57,7 @@ import qualified Data.Vector   as V
 -- having default values. Accordingly, equality is only defined if the
 -- element type is an instance of 'Default'.
 newtype Slice a = Slice (ListOf a)
-    deriving(Generic, Show, Read, Ord, Functor, Default)
+    deriving(Generic, Show, Read, Ord, Functor, Default, IsList)
 
 -- | A capnproto pointer type.
 data PtrType
@@ -93,15 +92,6 @@ data List
 -- versions of the library easier, as we will likely switch to a more
 -- efficient representation at some point.
 type ListOf a = V.Vector a
-
--- Cookie-cutter IsList instance. This is derivable with
--- GeneralizedNewtypeDeriving as of ghc >= 8.2.1, but not on
--- 8.0.x, due to the associated type.
-instance IsList (Slice a) where
-    type Item (Slice a) = a
-    toList (Slice list) = toList list
-    fromList = Slice . fromList
-    fromListN n = Slice . fromListN n
 
 -- | Alias for vector's 'V.length'.
 length :: ListOf a -> Int

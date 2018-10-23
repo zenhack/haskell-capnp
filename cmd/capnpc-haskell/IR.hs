@@ -70,11 +70,6 @@ import qualified Capnp.Untyped.Pure as Untyped
 newtype Namespace = Namespace [Text]
     deriving(Show, Read, Eq, Ord)
 
-instance IsList Namespace where
-    type Item Namespace = Text
-    fromList = Namespace
-    toList (Namespace parts) = parts
-
 data Module = Module
     { modId      :: Id
     , modName    :: Namespace
