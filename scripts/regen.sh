@@ -53,7 +53,7 @@ capnp compile \
 		-I $core_inc \
 		--src-prefix=$core_inc \
 		-ohaskell \
-		../core-schema/capnp/*.capnp
+		$core_inc/capnp/*.capnp
 
 log "Generating schema modules for aircraft.capnp (test suite)..."
 cd "$repo_root/tests/aircraftlib"
