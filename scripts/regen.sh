@@ -51,7 +51,7 @@ log "Generating schema modules for main library..."
 export PATH="$(dirname $exe):$PATH"
 capnp compile \
 		-I $core_inc \
-		--src-prefix=$core_inc \
+		--src-prefix=$core_inc/ \
 		-ohaskell \
 		$core_inc/capnp/*.capnp
 
