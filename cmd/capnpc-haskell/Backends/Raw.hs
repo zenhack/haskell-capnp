@@ -106,15 +106,6 @@ fmtModRef (FullyQualified (Namespace ns)) = mintercalate "." (map PP.textStrict 
 fmtImport :: Import -> PP.Doc
 fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 
--- | format the IsPtr instance for a list of the struct type with
--- the given name.
-fmtStructListIsPtr :: PP.Doc -> PP.Doc
-fmtStructListIsPtr nameText =
-    instance_ [] ("C'.IsPtr msg (B'.List msg (" <> nameText <> " msg))")
-        [ hcat [ "fromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr" ]
-        , hcat [ "toPtr msg (List_", nameText, " l) = C'.toPtr msg l" ]
-        ]
-
 -- | Generate declarations common to all types which are represented
 -- by 'Untyped.Struct'.
 --
@@ -166,7 +157,6 @@ fmtNewtypeStruct thisMod name info =
                         , fromString (show ptrSz)
                         ]
                     ]
-                , fmtStructListIsPtr typeCon
                 ]
         ]
 
@@ -176,6 +166,8 @@ fmtStructListElem :: PP.Doc -> PP.Doc
 fmtStructListElem nameText =
     instance_ [] ("B'.ListElem msg (" <> nameText <> " msg)")
         [ hcat [ "newtype List msg (", nameText, " msg) = List_", nameText, " (U'.ListOf msg (U'.Struct msg))" ]
+        , hcat [ "listFromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr" ]
+        , hcat [ "toUntypedList (List_", nameText, " l) = U'.ListStruct l" ]
         , hcat [ "length (List_", nameText, " l) = U'.length l" ]
         , hcat [ "index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText ]
         ]
@@ -619,16 +611,14 @@ fmtDataDef thisMod dataName (DefEnum enumerants) =
         ]
     , instance_ [] ("B'.ListElem msg " <> typeName)
         [ hcat [ "newtype List msg ", typeName, " = List_", typeName, " (U'.ListOf msg Word16)" ]
+        , hcat [ "listFromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr" ]
+        , hcat [ "toUntypedList (List_", typeName, " l) = U'.List16 l" ]
         , hcat [ "length (List_", typeName, " l) = U'.length l" ]
         , hcat [ "index i (List_", typeName, " l) = (C'.fromWord . fromIntegral) <$> U'.index i l" ]
         ]
     , instance_ [] ("B'.MutListElem s " <> typeName)
         [ hcat [ "setIndex elt i (List_", typeName, " l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l" ]
         , hcat [ "newList msg size = List_", typeName, " <$> U'.allocList16 msg size" ]
-        ]
-    , instance_ [] ("C'.IsPtr msg (B'.List msg " <> typeName <> ")")
-        [ hcat [ "fromPtr msg ptr = List_", typeName, " <$> C'.fromPtr msg ptr" ]
-        , hcat [ "toPtr msg (List_", typeName, " l) = C'.toPtr msg l" ]
         ]
     ]
   where

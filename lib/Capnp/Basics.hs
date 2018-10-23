@@ -102,10 +102,47 @@ textBuffer (Text list) = U.take (U.length list - 1) list
 textBytes :: U.ReadCtx m msg => Text msg -> m BS.ByteString
 textBytes = textBuffer >=> U.rawBytes
 
--- IsPtr instances for Text and Data. These wrap lists of bytes.
+------------------- (Mut)ListElem instances for text and data ------------------
+instance ListElem msg (Data msg) where
+    newtype List msg (Data msg) = DataList (U.ListOf msg (Maybe (U.Ptr msg)))
+
+    listFromPtr msg ptr = DataList <$> fromPtr msg ptr
+    toUntypedList (DataList l) = U.ListPtr l
+
+    length (DataList l) = U.length l
+    index i (DataList l) = ptrListIndex i l
+
+instance MutListElem s (Data (M.MutMsg s)) where
+    setIndex (Data e) i (DataList l) =
+        U.setIndex (Just (U.PtrList (U.List8 e))) i l
+    newList msg len = DataList <$> U.allocListPtr msg len
+
+instance ListElem msg (Text msg) where
+    newtype List msg (Text msg) = TextList (U.ListOf msg (Maybe (U.Ptr msg)))
+
+    listFromPtr msg ptr = TextList <$> fromPtr msg ptr
+    toUntypedList (TextList l) = U.ListPtr l
+
+    length (TextList l) = U.length l
+    index i (TextList l) = ptrListIndex i l
+
+instance MutListElem s (Text (M.MutMsg s)) where
+    setIndex (Text e) i (TextList l) =
+        U.setIndex (Just (U.PtrList (U.List8 e))) i l
+    newList msg len = TextList <$> U.allocListPtr msg len
+
+-- helper for the above instances.
+ptrListIndex :: (U.ReadCtx m msg, IsPtr msg a) => Int -> U.ListOf msg (Maybe (U.Ptr msg)) -> m a
+ptrListIndex i list = do
+    ptr <- U.index i list
+    fromPtr (U.message list) ptr
+
+--------- IsPtr instances for Text and Data. These wrap lists of bytes. --------
+
 instance IsPtr msg (Data msg) where
     fromPtr msg ptr = fromPtr msg ptr >>= getData
     toPtr msg (Data l) = toPtr msg l
+
 instance IsPtr msg (Text msg) where
     fromPtr msg ptr = case ptr of
         Just _ ->

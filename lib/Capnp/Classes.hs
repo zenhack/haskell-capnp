@@ -62,6 +62,16 @@ class ListElem msg e where
     -- | The type of lists of @e@ stored in messages of type @msg@
     data List msg e
 
+    -- | Convert an untyped list to a list of this type. May fail
+    -- with a 'SchemaViolationError' if the list does not have the
+    -- correct representation.
+    --
+    -- TODO: this is basically just fromPtr; refactor so this is less
+    -- redundant.
+    listFromPtr :: U.ReadCtx m msg => msg -> Maybe (U.Ptr msg) -> m (List msg e)
+
+    toUntypedList :: List msg e -> U.List msg
+
     -- | Get the length of a list.
     length :: List msg e -> Int
 
@@ -230,7 +240,7 @@ instance IsPtr msg (ListOf msg Bool) where
     fromPtr _ _ = expected "pointer to list with element size 1."
     toPtr _ = pure . Just . PtrList . U.List1
 
--- | IsPtr instance for pointers -- this is just the identity.
+-- IsPtr instance for pointers -- this is just the identity.
 instance IsPtr msg (Maybe (Ptr msg)) where
     fromPtr _ = pure
     toPtr _ = pure
@@ -240,7 +250,35 @@ instance IsPtr msg (ListOf msg (Struct msg)) where
     fromPtr msg Nothing                            = pure $ messageDefault msg
     fromPtr msg (Just (PtrList (U.ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
-    toPtr _ = pure. Just . PtrList . U.ListStruct
+    toPtr _ = pure . Just . PtrList . U.ListStruct
+
+-- IsPtr instance for lists of pointers.
+instance IsPtr msg (ListOf msg (Maybe (Ptr msg))) where
+    fromPtr msg Nothing                           = pure $ messageDefault msg
+    fromPtr msg (Just (PtrList (U.ListPtr list))) = pure list
+    fromPtr _ _ = expected "pointer to list of pointers"
+    toPtr _ = pure . Just . PtrList . U.ListPtr
+
+-- IsPtr instance for *typed* lists.
+instance ListElem msg e => IsPtr msg (List msg e) where
+    fromPtr = listFromPtr
+    toPtr _ = pure . Just . PtrList . toUntypedList
+
+-- ListElem instance for (typed) nested lists.
+instance ListElem msg e => ListElem msg (List msg e) where
+    newtype List msg (List msg e) = NestedList (U.ListOf msg (Maybe (U.Ptr msg)))
+
+    listFromPtr msg ptr = NestedList <$> fromPtr msg ptr
+    toUntypedList (NestedList l) = U.ListPtr l
+
+    length (NestedList l) = U.length l
+    index i (NestedList l) = do
+        ptr <- U.index i l
+        fromPtr (U.message l) ptr
+
+instance MutListElem s e => MutListElem s (List (M.MutMsg s) e) where
+    setIndex e i (NestedList l) = U.setIndex (Just (U.PtrList (toUntypedList e))) i l
+    newList msg len = NestedList <$> U.allocListPtr msg len
 
 -- FromStruct instance for Struct; just the identity.
 instance FromStruct msg (Struct msg) where

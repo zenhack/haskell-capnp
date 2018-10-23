@@ -9,6 +9,8 @@
     not compile (#54).
   * In some cases we were mis-handling the NUL terminator in text
     values; this has been addressed.
+  * Add some missing type class instances, which could have caused
+    generated code not to compile.
 * Beginnings of RPC support; the API will likely change substantially.
 * Some changes to the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.

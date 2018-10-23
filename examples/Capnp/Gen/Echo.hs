@@ -43,6 +43,8 @@ instance U'.MessageDefault (Echo'echo'params msg) where
     messageDefault = Echo'echo'params_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Echo'echo'params msg) where
     newtype List msg (Echo'echo'params msg) = List_Echo'echo'params (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Echo'echo'params <$> C'.fromPtr msg ptr
+    toUntypedList (List_Echo'echo'params l) = U'.ListStruct l
     length (List_Echo'echo'params l) = U'.length l
     index i (List_Echo'echo'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Echo'echo'params msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Echo'echo'params msg) where
@@ -53,9 +55,6 @@ instance B'.MutListElem s (Echo'echo'params (M'.MutMsg s)) where
     newList msg len = List_Echo'echo'params <$> U'.allocCompositeList msg 0 1 len
 instance C'.Allocate s (Echo'echo'params (M'.MutMsg s)) where
     new msg = Echo'echo'params_newtype_ <$> U'.allocStruct msg 0 1
-instance C'.IsPtr msg (B'.List msg (Echo'echo'params msg)) where
-    fromPtr msg ptr = List_Echo'echo'params <$> C'.fromPtr msg ptr
-    toPtr msg (List_Echo'echo'params l) = C'.toPtr msg l
 get_Echo'echo'params'query :: U'.ReadCtx m msg => Echo'echo'params msg -> m (B'.Text msg)
 get_Echo'echo'params'query (Echo'echo'params_newtype_ struct) =
     U'.getPtr 0 struct
@@ -83,6 +82,8 @@ instance U'.MessageDefault (Echo'echo'results msg) where
     messageDefault = Echo'echo'results_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Echo'echo'results msg) where
     newtype List msg (Echo'echo'results msg) = List_Echo'echo'results (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Echo'echo'results <$> C'.fromPtr msg ptr
+    toUntypedList (List_Echo'echo'results l) = U'.ListStruct l
     length (List_Echo'echo'results l) = U'.length l
     index i (List_Echo'echo'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Echo'echo'results msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Echo'echo'results msg) where
@@ -93,9 +94,6 @@ instance B'.MutListElem s (Echo'echo'results (M'.MutMsg s)) where
     newList msg len = List_Echo'echo'results <$> U'.allocCompositeList msg 0 1 len
 instance C'.Allocate s (Echo'echo'results (M'.MutMsg s)) where
     new msg = Echo'echo'results_newtype_ <$> U'.allocStruct msg 0 1
-instance C'.IsPtr msg (B'.List msg (Echo'echo'results msg)) where
-    fromPtr msg ptr = List_Echo'echo'results <$> C'.fromPtr msg ptr
-    toPtr msg (List_Echo'echo'results l) = C'.toPtr msg l
 get_Echo'echo'results'reply :: U'.ReadCtx m msg => Echo'echo'results msg -> m (B'.Text msg)
 get_Echo'echo'results'reply (Echo'echo'results_newtype_ struct) =
     U'.getPtr 0 struct

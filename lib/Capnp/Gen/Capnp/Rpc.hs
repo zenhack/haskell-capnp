@@ -39,6 +39,8 @@ instance U'.MessageDefault (Accept msg) where
     messageDefault = Accept_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Accept msg) where
     newtype List msg (Accept msg) = List_Accept (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
+    toUntypedList (List_Accept l) = U'.ListStruct l
     length (List_Accept l) = U'.length l
     index i (List_Accept l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Accept msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Accept msg) where
@@ -49,9 +51,6 @@ instance B'.MutListElem s (Accept (M'.MutMsg s)) where
     newList msg len = List_Accept <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Accept (M'.MutMsg s)) where
     new msg = Accept_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Accept msg)) where
-    fromPtr msg ptr = List_Accept <$> C'.fromPtr msg ptr
-    toPtr msg (List_Accept l) = C'.toPtr msg l
 get_Accept'questionId :: U'.ReadCtx m msg => Accept msg -> m Word32
 get_Accept'questionId (Accept_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Accept'questionId :: U'.RWCtx m s => Accept (M'.MutMsg s) -> Word32 -> m ()
@@ -82,6 +81,8 @@ instance U'.MessageDefault (Bootstrap msg) where
     messageDefault = Bootstrap_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Bootstrap msg) where
     newtype List msg (Bootstrap msg) = List_Bootstrap (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
+    toUntypedList (List_Bootstrap l) = U'.ListStruct l
     length (List_Bootstrap l) = U'.length l
     index i (List_Bootstrap l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bootstrap msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Bootstrap msg) where
@@ -92,9 +93,6 @@ instance B'.MutListElem s (Bootstrap (M'.MutMsg s)) where
     newList msg len = List_Bootstrap <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Bootstrap (M'.MutMsg s)) where
     new msg = Bootstrap_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Bootstrap msg)) where
-    fromPtr msg ptr = List_Bootstrap <$> C'.fromPtr msg ptr
-    toPtr msg (List_Bootstrap l) = C'.toPtr msg l
 get_Bootstrap'questionId :: U'.ReadCtx m msg => Bootstrap msg -> m Word32
 get_Bootstrap'questionId (Bootstrap_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Bootstrap'questionId :: U'.RWCtx m s => Bootstrap (M'.MutMsg s) -> Word32 -> m ()
@@ -121,6 +119,8 @@ instance U'.MessageDefault (Call msg) where
     messageDefault = Call_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Call msg) where
     newtype List msg (Call msg) = List_Call (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
+    toUntypedList (List_Call l) = U'.ListStruct l
     length (List_Call l) = U'.length l
     index i (List_Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Call msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Call msg) where
@@ -131,9 +131,6 @@ instance B'.MutListElem s (Call (M'.MutMsg s)) where
     newList msg len = List_Call <$> U'.allocCompositeList msg 3 3 len
 instance C'.Allocate s (Call (M'.MutMsg s)) where
     new msg = Call_newtype_ <$> U'.allocStruct msg 3 3
-instance C'.IsPtr msg (B'.List msg (Call msg)) where
-    fromPtr msg ptr = List_Call <$> C'.fromPtr msg ptr
-    toPtr msg (List_Call l) = C'.toPtr msg l
 get_Call'questionId :: U'.ReadCtx m msg => Call msg -> m Word32
 get_Call'questionId (Call_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Call'questionId :: U'.RWCtx m s => Call (M'.MutMsg s) -> Word32 -> m ()
@@ -194,6 +191,8 @@ instance U'.MessageDefault (CapDescriptor msg) where
     messageDefault = CapDescriptor_newtype_ . U'.messageDefault
 instance B'.ListElem msg (CapDescriptor msg) where
     newtype List msg (CapDescriptor msg) = List_CapDescriptor (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
+    toUntypedList (List_CapDescriptor l) = U'.ListStruct l
     length (List_CapDescriptor l) = U'.length l
     index i (List_CapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CapDescriptor msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (CapDescriptor msg) where
@@ -204,9 +203,6 @@ instance B'.MutListElem s (CapDescriptor (M'.MutMsg s)) where
     newList msg len = List_CapDescriptor <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (CapDescriptor (M'.MutMsg s)) where
     new msg = CapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (CapDescriptor msg)) where
-    fromPtr msg ptr = List_CapDescriptor <$> C'.fromPtr msg ptr
-    toPtr msg (List_CapDescriptor l) = C'.toPtr msg l
 data CapDescriptor' msg
     = CapDescriptor'none
     | CapDescriptor'senderHosted Word32
@@ -276,6 +272,8 @@ instance U'.MessageDefault (Disembargo msg) where
     messageDefault = Disembargo_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Disembargo msg) where
     newtype List msg (Disembargo msg) = List_Disembargo (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
+    toUntypedList (List_Disembargo l) = U'.ListStruct l
     length (List_Disembargo l) = U'.length l
     index i (List_Disembargo l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Disembargo msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Disembargo msg) where
@@ -286,9 +284,6 @@ instance B'.MutListElem s (Disembargo (M'.MutMsg s)) where
     newList msg len = List_Disembargo <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Disembargo (M'.MutMsg s)) where
     new msg = Disembargo_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Disembargo msg)) where
-    fromPtr msg ptr = List_Disembargo <$> C'.fromPtr msg ptr
-    toPtr msg (List_Disembargo l) = C'.toPtr msg l
 get_Disembargo'target :: U'.ReadCtx m msg => Disembargo msg -> m (MessageTarget msg)
 get_Disembargo'target (Disembargo_newtype_ struct) =
     U'.getPtr 0 struct
@@ -318,6 +313,8 @@ instance U'.MessageDefault (Exception msg) where
     messageDefault = Exception_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Exception msg) where
     newtype List msg (Exception msg) = List_Exception (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
+    toUntypedList (List_Exception l) = U'.ListStruct l
     length (List_Exception l) = U'.length l
     index i (List_Exception l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Exception msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Exception msg) where
@@ -328,9 +325,6 @@ instance B'.MutListElem s (Exception (M'.MutMsg s)) where
     newList msg len = List_Exception <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Exception (M'.MutMsg s)) where
     new msg = Exception_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Exception msg)) where
-    fromPtr msg ptr = List_Exception <$> C'.fromPtr msg ptr
-    toPtr msg (List_Exception l) = C'.toPtr msg l
 get_Exception'reason :: U'.ReadCtx m msg => Exception msg -> m (B'.Text msg)
 get_Exception'reason (Exception_newtype_ struct) =
     U'.getPtr 0 struct
@@ -370,6 +364,8 @@ instance U'.MessageDefault (Finish msg) where
     messageDefault = Finish_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Finish msg) where
     newtype List msg (Finish msg) = List_Finish (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
+    toUntypedList (List_Finish l) = U'.ListStruct l
     length (List_Finish l) = U'.length l
     index i (List_Finish l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Finish msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Finish msg) where
@@ -380,9 +376,6 @@ instance B'.MutListElem s (Finish (M'.MutMsg s)) where
     newList msg len = List_Finish <$> U'.allocCompositeList msg 1 0 len
 instance C'.Allocate s (Finish (M'.MutMsg s)) where
     new msg = Finish_newtype_ <$> U'.allocStruct msg 1 0
-instance C'.IsPtr msg (B'.List msg (Finish msg)) where
-    fromPtr msg ptr = List_Finish <$> C'.fromPtr msg ptr
-    toPtr msg (List_Finish l) = C'.toPtr msg l
 get_Finish'questionId :: U'.ReadCtx m msg => Finish msg -> m Word32
 get_Finish'questionId (Finish_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Finish'questionId :: U'.RWCtx m s => Finish (M'.MutMsg s) -> Word32 -> m ()
@@ -403,6 +396,8 @@ instance U'.MessageDefault (Join msg) where
     messageDefault = Join_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Join msg) where
     newtype List msg (Join msg) = List_Join (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
+    toUntypedList (List_Join l) = U'.ListStruct l
     length (List_Join l) = U'.length l
     index i (List_Join l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Join msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Join msg) where
@@ -413,9 +408,6 @@ instance B'.MutListElem s (Join (M'.MutMsg s)) where
     newList msg len = List_Join <$> U'.allocCompositeList msg 1 2 len
 instance C'.Allocate s (Join (M'.MutMsg s)) where
     new msg = Join_newtype_ <$> U'.allocStruct msg 1 2
-instance C'.IsPtr msg (B'.List msg (Join msg)) where
-    fromPtr msg ptr = List_Join <$> C'.fromPtr msg ptr
-    toPtr msg (List_Join l) = C'.toPtr msg l
 get_Join'questionId :: U'.ReadCtx m msg => Join msg -> m Word32
 get_Join'questionId (Join_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Join'questionId :: U'.RWCtx m s => Join (M'.MutMsg s) -> Word32 -> m ()
@@ -457,6 +449,8 @@ instance U'.MessageDefault (Message msg) where
     messageDefault = Message_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Message msg) where
     newtype List msg (Message msg) = List_Message (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
+    toUntypedList (List_Message l) = U'.ListStruct l
     length (List_Message l) = U'.length l
     index i (List_Message l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Message msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Message msg) where
@@ -467,9 +461,6 @@ instance B'.MutListElem s (Message (M'.MutMsg s)) where
     newList msg len = List_Message <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Message (M'.MutMsg s)) where
     new msg = Message_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Message msg)) where
-    fromPtr msg ptr = List_Message <$> C'.fromPtr msg ptr
-    toPtr msg (List_Message l) = C'.toPtr msg l
 data Message' msg
     = Message'unimplemented (Message msg)
     | Message'abort (Exception msg)
@@ -651,6 +642,8 @@ instance U'.MessageDefault (MessageTarget msg) where
     messageDefault = MessageTarget_newtype_ . U'.messageDefault
 instance B'.ListElem msg (MessageTarget msg) where
     newtype List msg (MessageTarget msg) = List_MessageTarget (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
+    toUntypedList (List_MessageTarget l) = U'.ListStruct l
     length (List_MessageTarget l) = U'.length l
     index i (List_MessageTarget l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (MessageTarget msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (MessageTarget msg) where
@@ -661,9 +654,6 @@ instance B'.MutListElem s (MessageTarget (M'.MutMsg s)) where
     newList msg len = List_MessageTarget <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (MessageTarget (M'.MutMsg s)) where
     new msg = MessageTarget_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (MessageTarget msg)) where
-    fromPtr msg ptr = List_MessageTarget <$> C'.fromPtr msg ptr
-    toPtr msg (List_MessageTarget l) = C'.toPtr msg l
 data MessageTarget' msg
     = MessageTarget'importedCap Word32
     | MessageTarget'promisedAnswer (PromisedAnswer msg)
@@ -705,6 +695,8 @@ instance U'.MessageDefault (Payload msg) where
     messageDefault = Payload_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Payload msg) where
     newtype List msg (Payload msg) = List_Payload (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
+    toUntypedList (List_Payload l) = U'.ListStruct l
     length (List_Payload l) = U'.length l
     index i (List_Payload l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Payload msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Payload msg) where
@@ -715,9 +707,6 @@ instance B'.MutListElem s (Payload (M'.MutMsg s)) where
     newList msg len = List_Payload <$> U'.allocCompositeList msg 0 2 len
 instance C'.Allocate s (Payload (M'.MutMsg s)) where
     new msg = Payload_newtype_ <$> U'.allocStruct msg 0 2
-instance C'.IsPtr msg (B'.List msg (Payload msg)) where
-    fromPtr msg ptr = List_Payload <$> C'.fromPtr msg ptr
-    toPtr msg (List_Payload l) = C'.toPtr msg l
 get_Payload'content :: U'.ReadCtx m msg => Payload msg -> m (Maybe (U'.Ptr msg))
 get_Payload'content (Payload_newtype_ struct) =
     U'.getPtr 0 struct
@@ -755,6 +744,8 @@ instance U'.MessageDefault (PromisedAnswer msg) where
     messageDefault = PromisedAnswer_newtype_ . U'.messageDefault
 instance B'.ListElem msg (PromisedAnswer msg) where
     newtype List msg (PromisedAnswer msg) = List_PromisedAnswer (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
+    toUntypedList (List_PromisedAnswer l) = U'.ListStruct l
     length (List_PromisedAnswer l) = U'.length l
     index i (List_PromisedAnswer l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (PromisedAnswer msg) where
@@ -765,9 +756,6 @@ instance B'.MutListElem s (PromisedAnswer (M'.MutMsg s)) where
     newList msg len = List_PromisedAnswer <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (PromisedAnswer (M'.MutMsg s)) where
     new msg = PromisedAnswer_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (PromisedAnswer msg)) where
-    fromPtr msg ptr = List_PromisedAnswer <$> C'.fromPtr msg ptr
-    toPtr msg (List_PromisedAnswer l) = C'.toPtr msg l
 get_PromisedAnswer'questionId :: U'.ReadCtx m msg => PromisedAnswer msg -> m Word32
 get_PromisedAnswer'questionId (PromisedAnswer_newtype_ struct) = H'.getWordField struct 0 0 0
 set_PromisedAnswer'questionId :: U'.RWCtx m s => PromisedAnswer (M'.MutMsg s) -> Word32 -> m ()
@@ -799,6 +787,8 @@ instance U'.MessageDefault (Provide msg) where
     messageDefault = Provide_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Provide msg) where
     newtype List msg (Provide msg) = List_Provide (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
+    toUntypedList (List_Provide l) = U'.ListStruct l
     length (List_Provide l) = U'.length l
     index i (List_Provide l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Provide msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Provide msg) where
@@ -809,9 +799,6 @@ instance B'.MutListElem s (Provide (M'.MutMsg s)) where
     newList msg len = List_Provide <$> U'.allocCompositeList msg 1 2 len
 instance C'.Allocate s (Provide (M'.MutMsg s)) where
     new msg = Provide_newtype_ <$> U'.allocStruct msg 1 2
-instance C'.IsPtr msg (B'.List msg (Provide msg)) where
-    fromPtr msg ptr = List_Provide <$> C'.fromPtr msg ptr
-    toPtr msg (List_Provide l) = C'.toPtr msg l
 get_Provide'questionId :: U'.ReadCtx m msg => Provide msg -> m Word32
 get_Provide'questionId (Provide_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Provide'questionId :: U'.RWCtx m s => Provide (M'.MutMsg s) -> Word32 -> m ()
@@ -853,6 +840,8 @@ instance U'.MessageDefault (Release msg) where
     messageDefault = Release_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Release msg) where
     newtype List msg (Release msg) = List_Release (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
+    toUntypedList (List_Release l) = U'.ListStruct l
     length (List_Release l) = U'.length l
     index i (List_Release l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Release msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Release msg) where
@@ -863,9 +852,6 @@ instance B'.MutListElem s (Release (M'.MutMsg s)) where
     newList msg len = List_Release <$> U'.allocCompositeList msg 1 0 len
 instance C'.Allocate s (Release (M'.MutMsg s)) where
     new msg = Release_newtype_ <$> U'.allocStruct msg 1 0
-instance C'.IsPtr msg (B'.List msg (Release msg)) where
-    fromPtr msg ptr = List_Release <$> C'.fromPtr msg ptr
-    toPtr msg (List_Release l) = C'.toPtr msg l
 get_Release'id :: U'.ReadCtx m msg => Release msg -> m Word32
 get_Release'id (Release_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Release'id :: U'.RWCtx m s => Release (M'.MutMsg s) -> Word32 -> m ()
@@ -886,6 +872,8 @@ instance U'.MessageDefault (Resolve msg) where
     messageDefault = Resolve_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Resolve msg) where
     newtype List msg (Resolve msg) = List_Resolve (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
+    toUntypedList (List_Resolve l) = U'.ListStruct l
     length (List_Resolve l) = U'.length l
     index i (List_Resolve l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Resolve msg) where
@@ -896,9 +884,6 @@ instance B'.MutListElem s (Resolve (M'.MutMsg s)) where
     newList msg len = List_Resolve <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Resolve (M'.MutMsg s)) where
     new msg = Resolve_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Resolve msg)) where
-    fromPtr msg ptr = List_Resolve <$> C'.fromPtr msg ptr
-    toPtr msg (List_Resolve l) = C'.toPtr msg l
 get_Resolve'promiseId :: U'.ReadCtx m msg => Resolve msg -> m Word32
 get_Resolve'promiseId (Resolve_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Resolve'promiseId :: U'.RWCtx m s => Resolve (M'.MutMsg s) -> Word32 -> m ()
@@ -917,6 +902,8 @@ instance U'.MessageDefault (Return msg) where
     messageDefault = Return_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Return msg) where
     newtype List msg (Return msg) = List_Return (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
+    toUntypedList (List_Return l) = U'.ListStruct l
     length (List_Return l) = U'.length l
     index i (List_Return l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Return msg) where
@@ -927,9 +914,6 @@ instance B'.MutListElem s (Return (M'.MutMsg s)) where
     newList msg len = List_Return <$> U'.allocCompositeList msg 2 1 len
 instance C'.Allocate s (Return (M'.MutMsg s)) where
     new msg = Return_newtype_ <$> U'.allocStruct msg 2 1
-instance C'.IsPtr msg (B'.List msg (Return msg)) where
-    fromPtr msg ptr = List_Return <$> C'.fromPtr msg ptr
-    toPtr msg (List_Return l) = C'.toPtr msg l
 get_Return'answerId :: U'.ReadCtx m msg => Return msg -> m Word32
 get_Return'answerId (Return_newtype_ struct) = H'.getWordField struct 0 0 0
 set_Return'answerId :: U'.RWCtx m s => Return (M'.MutMsg s) -> Word32 -> m ()
@@ -952,6 +936,8 @@ instance U'.MessageDefault (ThirdPartyCapDescriptor msg) where
     messageDefault = ThirdPartyCapDescriptor_newtype_ . U'.messageDefault
 instance B'.ListElem msg (ThirdPartyCapDescriptor msg) where
     newtype List msg (ThirdPartyCapDescriptor msg) = List_ThirdPartyCapDescriptor (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
+    toUntypedList (List_ThirdPartyCapDescriptor l) = U'.ListStruct l
     length (List_ThirdPartyCapDescriptor l) = U'.length l
     index i (List_ThirdPartyCapDescriptor l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ThirdPartyCapDescriptor msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (ThirdPartyCapDescriptor msg) where
@@ -962,9 +948,6 @@ instance B'.MutListElem s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
     newList msg len = List_ThirdPartyCapDescriptor <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (ThirdPartyCapDescriptor (M'.MutMsg s)) where
     new msg = ThirdPartyCapDescriptor_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (ThirdPartyCapDescriptor msg)) where
-    fromPtr msg ptr = List_ThirdPartyCapDescriptor <$> C'.fromPtr msg ptr
-    toPtr msg (List_ThirdPartyCapDescriptor l) = C'.toPtr msg l
 get_ThirdPartyCapDescriptor'id :: U'.ReadCtx m msg => ThirdPartyCapDescriptor msg -> m (Maybe (U'.Ptr msg))
 get_ThirdPartyCapDescriptor'id (ThirdPartyCapDescriptor_newtype_ struct) =
     U'.getPtr 0 struct
@@ -1082,14 +1065,13 @@ instance C'.IsWord Exception'Type where
     toWord (Exception'Type'unknown' tag) = fromIntegral tag
 instance B'.ListElem msg Exception'Type where
     newtype List msg Exception'Type = List_Exception'Type (U'.ListOf msg Word16)
+    listFromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
+    toUntypedList (List_Exception'Type l) = U'.List16 l
     length (List_Exception'Type l) = U'.length l
     index i (List_Exception'Type l) = (C'.fromWord . fromIntegral) <$> U'.index i l
 instance B'.MutListElem s Exception'Type where
     setIndex elt i (List_Exception'Type l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_Exception'Type <$> U'.allocList16 msg size
-instance C'.IsPtr msg (B'.List msg Exception'Type) where
-    fromPtr msg ptr = List_Exception'Type <$> C'.fromPtr msg ptr
-    toPtr msg (List_Exception'Type l) = C'.toPtr msg l
 newtype PromisedAnswer'Op msg = PromisedAnswer'Op_newtype_ (U'.Struct msg)
 instance C'.FromStruct msg (PromisedAnswer'Op msg) where
     fromStruct = pure . PromisedAnswer'Op_newtype_
@@ -1102,6 +1084,8 @@ instance U'.MessageDefault (PromisedAnswer'Op msg) where
     messageDefault = PromisedAnswer'Op_newtype_ . U'.messageDefault
 instance B'.ListElem msg (PromisedAnswer'Op msg) where
     newtype List msg (PromisedAnswer'Op msg) = List_PromisedAnswer'Op (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
+    toUntypedList (List_PromisedAnswer'Op l) = U'.ListStruct l
     length (List_PromisedAnswer'Op l) = U'.length l
     index i (List_PromisedAnswer'Op l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PromisedAnswer'Op msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (PromisedAnswer'Op msg) where
@@ -1112,9 +1096,6 @@ instance B'.MutListElem s (PromisedAnswer'Op (M'.MutMsg s)) where
     newList msg len = List_PromisedAnswer'Op <$> U'.allocCompositeList msg 1 0 len
 instance C'.Allocate s (PromisedAnswer'Op (M'.MutMsg s)) where
     new msg = PromisedAnswer'Op_newtype_ <$> U'.allocStruct msg 1 0
-instance C'.IsPtr msg (B'.List msg (PromisedAnswer'Op msg)) where
-    fromPtr msg ptr = List_PromisedAnswer'Op <$> C'.fromPtr msg ptr
-    toPtr msg (List_PromisedAnswer'Op l) = C'.toPtr msg l
 data PromisedAnswer'Op' msg
     = PromisedAnswer'Op'noop
     | PromisedAnswer'Op'getPointerField Word16
@@ -1148,6 +1129,8 @@ instance U'.MessageDefault (Resolve' msg) where
     messageDefault = Resolve'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Resolve' msg) where
     newtype List msg (Resolve' msg) = List_Resolve' (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
+    toUntypedList (List_Resolve' l) = U'.ListStruct l
     length (List_Resolve' l) = U'.length l
     index i (List_Resolve' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Resolve' msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Resolve' msg) where
@@ -1158,9 +1141,6 @@ instance B'.MutListElem s (Resolve' (M'.MutMsg s)) where
     newList msg len = List_Resolve' <$> U'.allocCompositeList msg 1 1 len
 instance C'.Allocate s (Resolve' (M'.MutMsg s)) where
     new msg = Resolve'_newtype_ <$> U'.allocStruct msg 1 1
-instance C'.IsPtr msg (B'.List msg (Resolve' msg)) where
-    fromPtr msg ptr = List_Resolve' <$> C'.fromPtr msg ptr
-    toPtr msg (List_Resolve' l) = C'.toPtr msg l
 data Resolve'' msg
     = Resolve'cap (CapDescriptor msg)
     | Resolve'exception (Exception msg)
@@ -1208,6 +1188,8 @@ instance U'.MessageDefault (Return' msg) where
     messageDefault = Return'_newtype_ . U'.messageDefault
 instance B'.ListElem msg (Return' msg) where
     newtype List msg (Return' msg) = List_Return' (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
+    toUntypedList (List_Return' l) = U'.ListStruct l
     length (List_Return' l) = U'.length l
     index i (List_Return' l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Return' msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (Return' msg) where
@@ -1218,9 +1200,6 @@ instance B'.MutListElem s (Return' (M'.MutMsg s)) where
     newList msg len = List_Return' <$> U'.allocCompositeList msg 2 1 len
 instance C'.Allocate s (Return' (M'.MutMsg s)) where
     new msg = Return'_newtype_ <$> U'.allocStruct msg 2 1
-instance C'.IsPtr msg (B'.List msg (Return' msg)) where
-    fromPtr msg ptr = List_Return' <$> C'.fromPtr msg ptr
-    toPtr msg (List_Return' l) = C'.toPtr msg l
 data Return'' msg
     = Return'results (Payload msg)
     | Return'exception (Exception msg)

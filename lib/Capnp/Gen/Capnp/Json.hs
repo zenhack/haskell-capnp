@@ -39,6 +39,8 @@ instance U'.MessageDefault (JsonValue msg) where
     messageDefault = JsonValue_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JsonValue msg) where
     newtype List msg (JsonValue msg) = List_JsonValue (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
+    toUntypedList (List_JsonValue l) = U'.ListStruct l
     length (List_JsonValue l) = U'.length l
     index i (List_JsonValue l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (JsonValue msg) where
@@ -49,9 +51,6 @@ instance B'.MutListElem s (JsonValue (M'.MutMsg s)) where
     newList msg len = List_JsonValue <$> U'.allocCompositeList msg 2 1 len
 instance C'.Allocate s (JsonValue (M'.MutMsg s)) where
     new msg = JsonValue_newtype_ <$> U'.allocStruct msg 2 1
-instance C'.IsPtr msg (B'.List msg (JsonValue msg)) where
-    fromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
-    toPtr msg (List_JsonValue l) = C'.toPtr msg l
 data JsonValue' msg
     = JsonValue'null
     | JsonValue'boolean Bool
@@ -139,6 +138,8 @@ instance U'.MessageDefault (JsonValue'Call msg) where
     messageDefault = JsonValue'Call_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JsonValue'Call msg) where
     newtype List msg (JsonValue'Call msg) = List_JsonValue'Call (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
+    toUntypedList (List_JsonValue'Call l) = U'.ListStruct l
     length (List_JsonValue'Call l) = U'.length l
     index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (JsonValue'Call msg) where
@@ -149,9 +150,6 @@ instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
     newList msg len = List_JsonValue'Call <$> U'.allocCompositeList msg 0 2 len
 instance C'.Allocate s (JsonValue'Call (M'.MutMsg s)) where
     new msg = JsonValue'Call_newtype_ <$> U'.allocStruct msg 0 2
-instance C'.IsPtr msg (B'.List msg (JsonValue'Call msg)) where
-    fromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
-    toPtr msg (List_JsonValue'Call l) = C'.toPtr msg l
 get_JsonValue'Call'function :: U'.ReadCtx m msg => JsonValue'Call msg -> m (B'.Text msg)
 get_JsonValue'Call'function (JsonValue'Call_newtype_ struct) =
     U'.getPtr 0 struct
@@ -194,6 +192,8 @@ instance U'.MessageDefault (JsonValue'Field msg) where
     messageDefault = JsonValue'Field_newtype_ . U'.messageDefault
 instance B'.ListElem msg (JsonValue'Field msg) where
     newtype List msg (JsonValue'Field msg) = List_JsonValue'Field (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
+    toUntypedList (List_JsonValue'Field l) = U'.ListStruct l
     length (List_JsonValue'Field l) = U'.length l
     index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
 instance C'.IsPtr msg (JsonValue'Field msg) where
@@ -204,9 +204,6 @@ instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
     newList msg len = List_JsonValue'Field <$> U'.allocCompositeList msg 0 2 len
 instance C'.Allocate s (JsonValue'Field (M'.MutMsg s)) where
     new msg = JsonValue'Field_newtype_ <$> U'.allocStruct msg 0 2
-instance C'.IsPtr msg (B'.List msg (JsonValue'Field msg)) where
-    fromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
-    toPtr msg (List_JsonValue'Field l) = C'.toPtr msg l
 get_JsonValue'Field'name :: U'.ReadCtx m msg => JsonValue'Field msg -> m (B'.Text msg)
 get_JsonValue'Field'name (JsonValue'Field_newtype_ struct) =
     U'.getPtr 0 struct
