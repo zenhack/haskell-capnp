@@ -28,6 +28,8 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype JoinKeyPart msg = JoinKeyPart_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg JoinKeyPart where
+    tMsg f (JoinKeyPart_newtype_ s) = JoinKeyPart_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (JoinKeyPart msg) where
     fromStruct = pure . JoinKeyPart_newtype_
 instance C'.ToStruct msg (JoinKeyPart msg) where
@@ -64,6 +66,8 @@ get_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) = H'.getWordField struct 0
 set_JoinKeyPart'partNum :: U'.RWCtx m s => JoinKeyPart (M'.MutMsg s) -> Word16 -> m ()
 set_JoinKeyPart'partNum (JoinKeyPart_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 48 0
 newtype JoinResult msg = JoinResult_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg JoinResult where
+    tMsg f (JoinResult_newtype_ s) = JoinResult_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (JoinResult msg) where
     fromStruct = pure . JoinResult_newtype_
 instance C'.ToStruct msg (JoinResult msg) where
@@ -106,6 +110,8 @@ set_JoinResult'cap (JoinResult_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
 newtype ProvisionId msg = ProvisionId_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg ProvisionId where
+    tMsg f (ProvisionId_newtype_ s) = ProvisionId_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (ProvisionId msg) where
     fromStruct = pure . ProvisionId_newtype_
 instance C'.ToStruct msg (ProvisionId msg) where
@@ -134,6 +140,8 @@ get_ProvisionId'joinId (ProvisionId_newtype_ struct) = H'.getWordField struct 0 
 set_ProvisionId'joinId :: U'.RWCtx m s => ProvisionId (M'.MutMsg s) -> Word32 -> m ()
 set_ProvisionId'joinId (ProvisionId_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 newtype RecipientId msg = RecipientId_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg RecipientId where
+    tMsg f (RecipientId_newtype_ s) = RecipientId_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (RecipientId msg) where
     fromStruct = pure . RecipientId_newtype_
 instance C'.ToStruct msg (RecipientId msg) where
@@ -183,6 +191,8 @@ instance B'.MutListElem s Side where
     setIndex elt i (List_Side l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_Side <$> U'.allocList16 msg size
 newtype ThirdPartyCapId msg = ThirdPartyCapId_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg ThirdPartyCapId where
+    tMsg f (ThirdPartyCapId_newtype_ s) = ThirdPartyCapId_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (ThirdPartyCapId msg) where
     fromStruct = pure . ThirdPartyCapId_newtype_
 instance C'.ToStruct msg (ThirdPartyCapId msg) where
@@ -207,6 +217,8 @@ instance B'.MutListElem s (ThirdPartyCapId (M'.MutMsg s)) where
 instance C'.Allocate s (ThirdPartyCapId (M'.MutMsg s)) where
     new msg = ThirdPartyCapId_newtype_ <$> U'.allocStruct msg 0 0
 newtype VatId msg = VatId_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VatId where
+    tMsg f (VatId_newtype_ s) = VatId_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VatId msg) where
     fromStruct = pure . VatId_newtype_
 instance C'.ToStruct msg (VatId msg) where

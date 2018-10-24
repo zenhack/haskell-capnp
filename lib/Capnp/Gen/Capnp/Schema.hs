@@ -28,6 +28,8 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype Annotation msg = Annotation_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Annotation where
+    tMsg f (Annotation_newtype_ s) = Annotation_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Annotation msg) where
     fromStruct = pure . Annotation_newtype_
 instance C'.ToStruct msg (Annotation msg) where
@@ -86,6 +88,8 @@ new_Annotation'brand struct = do
     set_Annotation'brand struct result
     pure result
 newtype Brand msg = Brand_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Brand where
+    tMsg f (Brand_newtype_ s) = Brand_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Brand msg) where
     fromStruct = pure . Brand_newtype_
 instance C'.ToStruct msg (Brand msg) where
@@ -125,6 +129,8 @@ new_Brand'scopes len struct = do
     set_Brand'scopes struct result
     pure result
 newtype CapnpVersion msg = CapnpVersion_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CapnpVersion where
+    tMsg f (CapnpVersion_newtype_ s) = CapnpVersion_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CapnpVersion msg) where
     fromStruct = pure . CapnpVersion_newtype_
 instance C'.ToStruct msg (CapnpVersion msg) where
@@ -161,6 +167,8 @@ get_CapnpVersion'micro (CapnpVersion_newtype_ struct) = H'.getWordField struct 0
 set_CapnpVersion'micro :: U'.RWCtx m s => CapnpVersion (M'.MutMsg s) -> Word8 -> m ()
 set_CapnpVersion'micro (CapnpVersion_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
 newtype CodeGeneratorRequest msg = CodeGeneratorRequest_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CodeGeneratorRequest where
+    tMsg f (CodeGeneratorRequest_newtype_ s) = CodeGeneratorRequest_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CodeGeneratorRequest msg) where
     fromStruct = pure . CodeGeneratorRequest_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest msg) where
@@ -273,6 +281,8 @@ instance B'.MutListElem s ElementSize where
     setIndex elt i (List_ElementSize l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_ElementSize <$> U'.allocList16 msg size
 newtype Enumerant msg = Enumerant_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Enumerant where
+    tMsg f (Enumerant_newtype_ s) = Enumerant_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Enumerant msg) where
     fromStruct = pure . Enumerant_newtype_
 instance C'.ToStruct msg (Enumerant msg) where
@@ -331,6 +341,8 @@ new_Enumerant'annotations len struct = do
     set_Enumerant'annotations struct result
     pure result
 newtype Field msg = Field_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Field where
+    tMsg f (Field_newtype_ s) = Field_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Field msg) where
     fromStruct = pure . Field_newtype_
 instance C'.ToStruct msg (Field msg) where
@@ -397,6 +409,8 @@ get_Field'ordinal (Field_newtype_ struct) = C'.fromStruct struct
 get_Field'union' :: U'.ReadCtx m msg => Field msg -> m (Field' msg)
 get_Field'union' (Field_newtype_ struct) = C'.fromStruct struct
 newtype Method msg = Method_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Method where
+    tMsg f (Method_newtype_ s) = Method_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Method msg) where
     fromStruct = pure . Method_newtype_
 instance C'.ToStruct msg (Method msg) where
@@ -508,6 +522,8 @@ new_Method'implicitParameters len struct = do
     set_Method'implicitParameters struct result
     pure result
 newtype Node msg = Node_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node where
+    tMsg f (Node_newtype_ s) = Node_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node msg) where
     fromStruct = pure . Node_newtype_
 instance C'.ToStruct msg (Node msg) where
@@ -610,6 +626,8 @@ set_Node'isGeneric (Node_newtype_ struct) value = H'.setWordField struct (fromIn
 get_Node'union' :: U'.ReadCtx m msg => Node msg -> m (Node' msg)
 get_Node'union' (Node_newtype_ struct) = C'.fromStruct struct
 newtype Superclass msg = Superclass_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Superclass where
+    tMsg f (Superclass_newtype_ s) = Superclass_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Superclass msg) where
     fromStruct = pure . Superclass_newtype_
 instance C'.ToStruct msg (Superclass msg) where
@@ -653,6 +671,8 @@ new_Superclass'brand struct = do
     set_Superclass'brand struct result
     pure result
 newtype Type msg = Type_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type where
+    tMsg f (Type_newtype_ s) = Type_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type msg) where
     fromStruct = pure . Type_newtype_
 instance C'.ToStruct msg (Type msg) where
@@ -750,6 +770,8 @@ set_Type'anyPointer (Type_newtype_ struct) = do
 set_Type'unknown' :: U'.RWCtx m s => Type (M'.MutMsg s) -> Word16 -> m ()
 set_Type'unknown'(Type_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 newtype Type'list'group' msg = Type'list'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'list'group' where
+    tMsg f (Type'list'group'_newtype_ s) = Type'list'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'list'group' msg) where
     fromStruct = pure . Type'list'group'_newtype_
 instance C'.ToStruct msg (Type'list'group' msg) where
@@ -775,6 +797,8 @@ new_Type'list'elementType struct = do
     set_Type'list'elementType struct result
     pure result
 newtype Type'enum'group' msg = Type'enum'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'enum'group' where
+    tMsg f (Type'enum'group'_newtype_ s) = Type'enum'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'enum'group' msg) where
     fromStruct = pure . Type'enum'group'_newtype_
 instance C'.ToStruct msg (Type'enum'group' msg) where
@@ -804,6 +828,8 @@ new_Type'enum'brand struct = do
     set_Type'enum'brand struct result
     pure result
 newtype Type'struct'group' msg = Type'struct'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'struct'group' where
+    tMsg f (Type'struct'group'_newtype_ s) = Type'struct'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'struct'group' msg) where
     fromStruct = pure . Type'struct'group'_newtype_
 instance C'.ToStruct msg (Type'struct'group' msg) where
@@ -833,6 +859,8 @@ new_Type'struct'brand struct = do
     set_Type'struct'brand struct result
     pure result
 newtype Type'interface'group' msg = Type'interface'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'interface'group' where
+    tMsg f (Type'interface'group'_newtype_ s) = Type'interface'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'interface'group' msg) where
     fromStruct = pure . Type'interface'group'_newtype_
 instance C'.ToStruct msg (Type'interface'group' msg) where
@@ -862,6 +890,8 @@ new_Type'interface'brand struct = do
     set_Type'interface'brand struct result
     pure result
 newtype Type'anyPointer'group' msg = Type'anyPointer'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'anyPointer'group' where
+    tMsg f (Type'anyPointer'group'_newtype_ s) = Type'anyPointer'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'anyPointer'group' msg) where
     fromStruct = pure . Type'anyPointer'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'group' msg) where
@@ -898,6 +928,8 @@ instance C'.FromStruct msg (Type' msg) where
             0 -> pure Type'void
             _ -> pure $ Type'unknown' tag
 newtype Value msg = Value_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Value where
+    tMsg f (Value_newtype_ s) = Value_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Value msg) where
     fromStruct = pure . Value_newtype_
 instance C'.ToStruct msg (Value msg) where
@@ -1058,6 +1090,8 @@ instance C'.FromStruct msg (Value' msg) where
             0 -> pure Value'void
             _ -> pure $ Value'unknown' tag
 newtype Brand'Binding msg = Brand'Binding_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Brand'Binding where
+    tMsg f (Brand'Binding_newtype_ s) = Brand'Binding_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Brand'Binding msg) where
     fromStruct = pure . Brand'Binding_newtype_
 instance C'.ToStruct msg (Brand'Binding msg) where
@@ -1109,6 +1143,8 @@ instance C'.FromStruct msg (Brand'Binding' msg) where
             0 -> pure Brand'Binding'unbound
             _ -> pure $ Brand'Binding'unknown' tag
 newtype Brand'Scope msg = Brand'Scope_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Brand'Scope where
+    tMsg f (Brand'Scope_newtype_ s) = Brand'Scope_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Brand'Scope msg) where
     fromStruct = pure . Brand'Scope_newtype_
 instance C'.ToStruct msg (Brand'Scope msg) where
@@ -1139,6 +1175,8 @@ set_Brand'Scope'scopeId (Brand'Scope_newtype_ struct) value = H'.setWordField st
 get_Brand'Scope'union' :: U'.ReadCtx m msg => Brand'Scope msg -> m (Brand'Scope' msg)
 get_Brand'Scope'union' (Brand'Scope_newtype_ struct) = C'.fromStruct struct
 newtype Brand'Scope' msg = Brand'Scope'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Brand'Scope' where
+    tMsg f (Brand'Scope'_newtype_ s) = Brand'Scope'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Brand'Scope' msg) where
     fromStruct = pure . Brand'Scope'_newtype_
 instance C'.ToStruct msg (Brand'Scope' msg) where
@@ -1190,6 +1228,8 @@ instance C'.FromStruct msg (Brand'Scope'' msg) where
             0 -> Brand'Scope'bind <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Brand'Scope''unknown' tag
 newtype CodeGeneratorRequest'RequestedFile msg = CodeGeneratorRequest'RequestedFile_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CodeGeneratorRequest'RequestedFile where
+    tMsg f (CodeGeneratorRequest'RequestedFile_newtype_ s) = CodeGeneratorRequest'RequestedFile_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile msg) where
@@ -1248,6 +1288,8 @@ new_CodeGeneratorRequest'RequestedFile'imports len struct = do
     set_CodeGeneratorRequest'RequestedFile'imports struct result
     pure result
 newtype CodeGeneratorRequest'RequestedFile'Import msg = CodeGeneratorRequest'RequestedFile'Import_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CodeGeneratorRequest'RequestedFile'Import where
+    tMsg f (CodeGeneratorRequest'RequestedFile'Import_newtype_ s) = CodeGeneratorRequest'RequestedFile'Import_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
     fromStruct = pure . CodeGeneratorRequest'RequestedFile'Import_newtype_
 instance C'.ToStruct msg (CodeGeneratorRequest'RequestedFile'Import msg) where
@@ -1291,6 +1333,8 @@ new_CodeGeneratorRequest'RequestedFile'Import'name len struct = do
     set_CodeGeneratorRequest'RequestedFile'Import'name struct result
     pure result
 newtype Field' msg = Field'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Field' where
+    tMsg f (Field'_newtype_ s) = Field'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Field' msg) where
     fromStruct = pure . Field'_newtype_
 instance C'.ToStruct msg (Field' msg) where
@@ -1331,6 +1375,8 @@ set_Field'group (Field'_newtype_ struct) = do
 set_Field''unknown' :: U'.RWCtx m s => Field' (M'.MutMsg s) -> Word16 -> m ()
 set_Field''unknown'(Field'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 newtype Field'slot'group' msg = Field'slot'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Field'slot'group' where
+    tMsg f (Field'slot'group'_newtype_ s) = Field'slot'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Field'slot'group' msg) where
     fromStruct = pure . Field'slot'group'_newtype_
 instance C'.ToStruct msg (Field'slot'group' msg) where
@@ -1379,6 +1425,8 @@ get_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) = H'.getWo
 set_Field'slot'hadExplicitDefault :: U'.RWCtx m s => Field'slot'group' (M'.MutMsg s) -> Bool -> m ()
 set_Field'slot'hadExplicitDefault (Field'slot'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 newtype Field'group'group' msg = Field'group'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Field'group'group' where
+    tMsg f (Field'group'group'_newtype_ s) = Field'group'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Field'group'group' msg) where
     fromStruct = pure . Field'group'group'_newtype_
 instance C'.ToStruct msg (Field'group'group' msg) where
@@ -1402,6 +1450,8 @@ instance C'.FromStruct msg (Field'' msg) where
 field'noDiscriminant :: Word16
 field'noDiscriminant = C'.fromWord 65535
 newtype Field'ordinal msg = Field'ordinal_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Field'ordinal where
+    tMsg f (Field'ordinal_newtype_ s) = Field'ordinal_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Field'ordinal msg) where
     fromStruct = pure . Field'ordinal_newtype_
 instance C'.ToStruct msg (Field'ordinal msg) where
@@ -1433,6 +1483,8 @@ instance C'.FromStruct msg (Field'ordinal' msg) where
             0 -> pure Field'ordinal'implicit
             _ -> pure $ Field'ordinal'unknown' tag
 newtype Node' msg = Node'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node' where
+    tMsg f (Node'_newtype_ s) = Node'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node' msg) where
     fromStruct = pure . Node'_newtype_
 instance C'.ToStruct msg (Node' msg) where
@@ -1491,6 +1543,8 @@ set_Node'annotation (Node'_newtype_ struct) = do
 set_Node''unknown' :: U'.RWCtx m s => Node' (M'.MutMsg s) -> Word16 -> m ()
 set_Node''unknown'(Node'_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 32 0
 newtype Node'struct'group' msg = Node'struct'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'struct'group' where
+    tMsg f (Node'struct'group'_newtype_ s) = Node'struct'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'struct'group' msg) where
     fromStruct = pure . Node'struct'group'_newtype_
 instance C'.ToStruct msg (Node'struct'group' msg) where
@@ -1540,6 +1594,8 @@ new_Node'struct'fields len struct = do
     set_Node'struct'fields struct result
     pure result
 newtype Node'enum'group' msg = Node'enum'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'enum'group' where
+    tMsg f (Node'enum'group'_newtype_ s) = Node'enum'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'enum'group' msg) where
     fromStruct = pure . Node'enum'group'_newtype_
 instance C'.ToStruct msg (Node'enum'group' msg) where
@@ -1565,6 +1621,8 @@ new_Node'enum'enumerants len struct = do
     set_Node'enum'enumerants struct result
     pure result
 newtype Node'interface'group' msg = Node'interface'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'interface'group' where
+    tMsg f (Node'interface'group'_newtype_ s) = Node'interface'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'interface'group' msg) where
     fromStruct = pure . Node'interface'group'_newtype_
 instance C'.ToStruct msg (Node'interface'group' msg) where
@@ -1605,6 +1663,8 @@ new_Node'interface'superclasses len struct = do
     set_Node'interface'superclasses struct result
     pure result
 newtype Node'const'group' msg = Node'const'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'const'group' where
+    tMsg f (Node'const'group'_newtype_ s) = Node'const'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'const'group' msg) where
     fromStruct = pure . Node'const'group'_newtype_
 instance C'.ToStruct msg (Node'const'group' msg) where
@@ -1645,6 +1705,8 @@ new_Node'const'value struct = do
     set_Node'const'value struct result
     pure result
 newtype Node'annotation'group' msg = Node'annotation'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'annotation'group' where
+    tMsg f (Node'annotation'group'_newtype_ s) = Node'annotation'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'annotation'group' msg) where
     fromStruct = pure . Node'annotation'group'_newtype_
 instance C'.ToStruct msg (Node'annotation'group' msg) where
@@ -1729,6 +1791,8 @@ instance C'.FromStruct msg (Node'' msg) where
             0 -> pure Node'file
             _ -> pure $ Node''unknown' tag
 newtype Node'NestedNode msg = Node'NestedNode_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'NestedNode where
+    tMsg f (Node'NestedNode_newtype_ s) = Node'NestedNode_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'NestedNode msg) where
     fromStruct = pure . Node'NestedNode_newtype_
 instance C'.ToStruct msg (Node'NestedNode msg) where
@@ -1772,6 +1836,8 @@ get_Node'NestedNode'id (Node'NestedNode_newtype_ struct) = H'.getWordField struc
 set_Node'NestedNode'id :: U'.RWCtx m s => Node'NestedNode (M'.MutMsg s) -> Word64 -> m ()
 set_Node'NestedNode'id (Node'NestedNode_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 0 0 0
 newtype Node'Parameter msg = Node'Parameter_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Node'Parameter where
+    tMsg f (Node'Parameter_newtype_ s) = Node'Parameter_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Node'Parameter msg) where
     fromStruct = pure . Node'Parameter_newtype_
 instance C'.ToStruct msg (Node'Parameter msg) where
@@ -1811,6 +1877,8 @@ new_Node'Parameter'name len struct = do
     set_Node'Parameter'name struct result
     pure result
 newtype Type'anyPointer msg = Type'anyPointer_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'anyPointer where
+    tMsg f (Type'anyPointer_newtype_ s) = Type'anyPointer_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'anyPointer msg) where
     fromStruct = pure . Type'anyPointer_newtype_
 instance C'.ToStruct msg (Type'anyPointer msg) where
@@ -1842,6 +1910,8 @@ set_Type'anyPointer'implicitMethodParameter (Type'anyPointer_newtype_ struct) = 
 set_Type'anyPointer'unknown' :: U'.RWCtx m s => Type'anyPointer (M'.MutMsg s) -> Word16 -> m ()
 set_Type'anyPointer'unknown'(Type'anyPointer_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 1 0 0
 newtype Type'anyPointer'unconstrained'group' msg = Type'anyPointer'unconstrained'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'anyPointer'unconstrained'group' where
+    tMsg f (Type'anyPointer'unconstrained'group'_newtype_ s) = Type'anyPointer'unconstrained'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'anyPointer'unconstrained'group' msg) where
     fromStruct = pure . Type'anyPointer'unconstrained'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'unconstrained'group' msg) where
@@ -1854,6 +1924,8 @@ instance U'.MessageDefault (Type'anyPointer'unconstrained'group' msg) where
 get_Type'anyPointer'unconstrained'union' :: U'.ReadCtx m msg => Type'anyPointer'unconstrained'group' msg -> m (Type'anyPointer'unconstrained msg)
 get_Type'anyPointer'unconstrained'union' (Type'anyPointer'unconstrained'group'_newtype_ struct) = C'.fromStruct struct
 newtype Type'anyPointer'parameter'group' msg = Type'anyPointer'parameter'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'anyPointer'parameter'group' where
+    tMsg f (Type'anyPointer'parameter'group'_newtype_ s) = Type'anyPointer'parameter'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'anyPointer'parameter'group' msg) where
     fromStruct = pure . Type'anyPointer'parameter'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'parameter'group' msg) where
@@ -1872,6 +1944,8 @@ get_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_n
 set_Type'anyPointer'parameter'parameterIndex :: U'.RWCtx m s => Type'anyPointer'parameter'group' (M'.MutMsg s) -> Word16 -> m ()
 set_Type'anyPointer'parameter'parameterIndex (Type'anyPointer'parameter'group'_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 1 16 0
 newtype Type'anyPointer'implicitMethodParameter'group' msg = Type'anyPointer'implicitMethodParameter'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'anyPointer'implicitMethodParameter'group' where
+    tMsg f (Type'anyPointer'implicitMethodParameter'group'_newtype_ s) = Type'anyPointer'implicitMethodParameter'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
     fromStruct = pure . Type'anyPointer'implicitMethodParameter'group'_newtype_
 instance C'.ToStruct msg (Type'anyPointer'implicitMethodParameter'group' msg) where
@@ -1894,6 +1968,8 @@ instance C'.FromStruct msg (Type'anyPointer' msg) where
             0 -> Type'anyPointer'unconstrained <$> C'.fromStruct struct
             _ -> pure $ Type'anyPointer'unknown' tag
 newtype Type'anyPointer'unconstrained msg = Type'anyPointer'unconstrained_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Type'anyPointer'unconstrained where
+    tMsg f (Type'anyPointer'unconstrained_newtype_ s) = Type'anyPointer'unconstrained_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Type'anyPointer'unconstrained msg) where
     fromStruct = pure . Type'anyPointer'unconstrained_newtype_
 instance C'.ToStruct msg (Type'anyPointer'unconstrained msg) where

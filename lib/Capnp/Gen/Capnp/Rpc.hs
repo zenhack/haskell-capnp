@@ -28,6 +28,8 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype Accept msg = Accept_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Accept where
+    tMsg f (Accept_newtype_ s) = Accept_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Accept msg) where
     fromStruct = pure . Accept_newtype_
 instance C'.ToStruct msg (Accept msg) where
@@ -70,6 +72,8 @@ get_Accept'embargo (Accept_newtype_ struct) = H'.getWordField struct 0 32 0
 set_Accept'embargo :: U'.RWCtx m s => Accept (M'.MutMsg s) -> Bool -> m ()
 set_Accept'embargo (Accept_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 0
 newtype Bootstrap msg = Bootstrap_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Bootstrap where
+    tMsg f (Bootstrap_newtype_ s) = Bootstrap_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Bootstrap msg) where
     fromStruct = pure . Bootstrap_newtype_
 instance C'.ToStruct msg (Bootstrap msg) where
@@ -108,6 +112,8 @@ set_Bootstrap'deprecatedObjectId (Bootstrap_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
 newtype Call msg = Call_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Call where
+    tMsg f (Call_newtype_ s) = Call_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Call msg) where
     fromStruct = pure . Call_newtype_
 instance C'.ToStruct msg (Call msg) where
@@ -180,6 +186,8 @@ get_Call'allowThirdPartyTailCall (Call_newtype_ struct) = H'.getWordField struct
 set_Call'allowThirdPartyTailCall :: U'.RWCtx m s => Call (M'.MutMsg s) -> Bool -> m ()
 set_Call'allowThirdPartyTailCall (Call_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 2 0 0
 newtype CapDescriptor msg = CapDescriptor_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CapDescriptor where
+    tMsg f (CapDescriptor_newtype_ s) = CapDescriptor_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CapDescriptor msg) where
     fromStruct = pure . CapDescriptor_newtype_
 instance C'.ToStruct msg (CapDescriptor msg) where
@@ -261,6 +269,8 @@ instance C'.FromStruct msg (CapDescriptor' msg) where
             0 -> pure CapDescriptor'none
             _ -> pure $ CapDescriptor'unknown' tag
 newtype Disembargo msg = Disembargo_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Disembargo where
+    tMsg f (Disembargo_newtype_ s) = Disembargo_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Disembargo msg) where
     fromStruct = pure . Disembargo_newtype_
 instance C'.ToStruct msg (Disembargo msg) where
@@ -302,6 +312,8 @@ new_Disembargo'target struct = do
 get_Disembargo'context :: U'.ReadCtx m msg => Disembargo msg -> m (Disembargo'context msg)
 get_Disembargo'context (Disembargo_newtype_ struct) = C'.fromStruct struct
 newtype Exception msg = Exception_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Exception where
+    tMsg f (Exception_newtype_ s) = Exception_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Exception msg) where
     fromStruct = pure . Exception_newtype_
 instance C'.ToStruct msg (Exception msg) where
@@ -353,6 +365,8 @@ get_Exception'type_ (Exception_newtype_ struct) = H'.getWordField struct 0 32 0
 set_Exception'type_ :: U'.RWCtx m s => Exception (M'.MutMsg s) -> Exception'Type -> m ()
 set_Exception'type_ (Exception_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 32 0
 newtype Finish msg = Finish_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Finish where
+    tMsg f (Finish_newtype_ s) = Finish_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Finish msg) where
     fromStruct = pure . Finish_newtype_
 instance C'.ToStruct msg (Finish msg) where
@@ -385,6 +399,8 @@ get_Finish'releaseResultCaps (Finish_newtype_ struct) = H'.getWordField struct 0
 set_Finish'releaseResultCaps :: U'.RWCtx m s => Finish (M'.MutMsg s) -> Bool -> m ()
 set_Finish'releaseResultCaps (Finish_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word1) 0 32 1
 newtype Join msg = Join_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Join where
+    tMsg f (Join_newtype_ s) = Join_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Join msg) where
     fromStruct = pure . Join_newtype_
 instance C'.ToStruct msg (Join msg) where
@@ -438,6 +454,8 @@ set_Join'keyPart (Join_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 1 struct
 newtype Message msg = Message_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Message where
+    tMsg f (Message_newtype_ s) = Message_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Message msg) where
     fromStruct = pure . Message_newtype_
 instance C'.ToStruct msg (Message msg) where
@@ -631,6 +649,8 @@ instance C'.FromStruct msg (Message' msg) where
             0 -> Message'unimplemented <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Message'unknown' tag
 newtype MessageTarget msg = MessageTarget_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg MessageTarget where
+    tMsg f (MessageTarget_newtype_ s) = MessageTarget_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (MessageTarget msg) where
     fromStruct = pure . MessageTarget_newtype_
 instance C'.ToStruct msg (MessageTarget msg) where
@@ -684,6 +704,8 @@ instance C'.FromStruct msg (MessageTarget' msg) where
             0 -> MessageTarget'importedCap <$>  H'.getWordField struct 0 0 0
             _ -> pure $ MessageTarget'unknown' tag
 newtype Payload msg = Payload_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Payload where
+    tMsg f (Payload_newtype_ s) = Payload_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Payload msg) where
     fromStruct = pure . Payload_newtype_
 instance C'.ToStruct msg (Payload msg) where
@@ -733,6 +755,8 @@ new_Payload'capTable len struct = do
     set_Payload'capTable struct result
     pure result
 newtype PromisedAnswer msg = PromisedAnswer_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg PromisedAnswer where
+    tMsg f (PromisedAnswer_newtype_ s) = PromisedAnswer_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (PromisedAnswer msg) where
     fromStruct = pure . PromisedAnswer_newtype_
 instance C'.ToStruct msg (PromisedAnswer msg) where
@@ -776,6 +800,8 @@ new_PromisedAnswer'transform len struct = do
     set_PromisedAnswer'transform struct result
     pure result
 newtype Provide msg = Provide_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Provide where
+    tMsg f (Provide_newtype_ s) = Provide_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Provide msg) where
     fromStruct = pure . Provide_newtype_
 instance C'.ToStruct msg (Provide msg) where
@@ -829,6 +855,8 @@ set_Provide'recipient (Provide_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 1 struct
 newtype Release msg = Release_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Release where
+    tMsg f (Release_newtype_ s) = Release_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Release msg) where
     fromStruct = pure . Release_newtype_
 instance C'.ToStruct msg (Release msg) where
@@ -861,6 +889,8 @@ get_Release'referenceCount (Release_newtype_ struct) = H'.getWordField struct 0 
 set_Release'referenceCount :: U'.RWCtx m s => Release (M'.MutMsg s) -> Word32 -> m ()
 set_Release'referenceCount (Release_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 32 0
 newtype Resolve msg = Resolve_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Resolve where
+    tMsg f (Resolve_newtype_ s) = Resolve_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Resolve msg) where
     fromStruct = pure . Resolve_newtype_
 instance C'.ToStruct msg (Resolve msg) where
@@ -891,6 +921,8 @@ set_Resolve'promiseId (Resolve_newtype_ struct) value = H'.setWordField struct (
 get_Resolve'union' :: U'.ReadCtx m msg => Resolve msg -> m (Resolve' msg)
 get_Resolve'union' (Resolve_newtype_ struct) = C'.fromStruct struct
 newtype Return msg = Return_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Return where
+    tMsg f (Return_newtype_ s) = Return_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Return msg) where
     fromStruct = pure . Return_newtype_
 instance C'.ToStruct msg (Return msg) where
@@ -925,6 +957,8 @@ set_Return'releaseParamCaps (Return_newtype_ struct) value = H'.setWordField str
 get_Return'union' :: U'.ReadCtx m msg => Return msg -> m (Return' msg)
 get_Return'union' (Return_newtype_ struct) = C'.fromStruct struct
 newtype ThirdPartyCapDescriptor msg = ThirdPartyCapDescriptor_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg ThirdPartyCapDescriptor where
+    tMsg f (ThirdPartyCapDescriptor_newtype_ s) = ThirdPartyCapDescriptor_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (ThirdPartyCapDescriptor msg) where
     fromStruct = pure . ThirdPartyCapDescriptor_newtype_
 instance C'.ToStruct msg (ThirdPartyCapDescriptor msg) where
@@ -963,6 +997,8 @@ get_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor_newtype_ struct) = H
 set_ThirdPartyCapDescriptor'vineId :: U'.RWCtx m s => ThirdPartyCapDescriptor (M'.MutMsg s) -> Word32 -> m ()
 set_ThirdPartyCapDescriptor'vineId (ThirdPartyCapDescriptor_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 newtype Call'sendResultsTo msg = Call'sendResultsTo_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Call'sendResultsTo where
+    tMsg f (Call'sendResultsTo_newtype_ s) = Call'sendResultsTo_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Call'sendResultsTo msg) where
     fromStruct = pure . Call'sendResultsTo_newtype_
 instance C'.ToStruct msg (Call'sendResultsTo msg) where
@@ -999,6 +1035,8 @@ instance C'.FromStruct msg (Call'sendResultsTo' msg) where
             0 -> pure Call'sendResultsTo'caller
             _ -> pure $ Call'sendResultsTo'unknown' tag
 newtype Disembargo'context msg = Disembargo'context_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Disembargo'context where
+    tMsg f (Disembargo'context_newtype_ s) = Disembargo'context_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Disembargo'context msg) where
     fromStruct = pure . Disembargo'context_newtype_
 instance C'.ToStruct msg (Disembargo'context msg) where
@@ -1073,6 +1111,8 @@ instance B'.MutListElem s Exception'Type where
     setIndex elt i (List_Exception'Type l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_Exception'Type <$> U'.allocList16 msg size
 newtype PromisedAnswer'Op msg = PromisedAnswer'Op_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg PromisedAnswer'Op where
+    tMsg f (PromisedAnswer'Op_newtype_ s) = PromisedAnswer'Op_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (PromisedAnswer'Op msg) where
     fromStruct = pure . PromisedAnswer'Op_newtype_
 instance C'.ToStruct msg (PromisedAnswer'Op msg) where
@@ -1118,6 +1158,8 @@ instance C'.FromStruct msg (PromisedAnswer'Op' msg) where
             0 -> pure PromisedAnswer'Op'noop
             _ -> pure $ PromisedAnswer'Op'unknown' tag
 newtype Resolve' msg = Resolve'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Resolve' where
+    tMsg f (Resolve'_newtype_ s) = Resolve'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Resolve' msg) where
     fromStruct = pure . Resolve'_newtype_
 instance C'.ToStruct msg (Resolve' msg) where
@@ -1177,6 +1219,8 @@ instance C'.FromStruct msg (Resolve'' msg) where
             0 -> Resolve'cap <$>  (U'.getPtr 0 struct >>= C'.fromPtr (U'.message struct))
             _ -> pure $ Resolve''unknown' tag
 newtype Return' msg = Return'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Return' where
+    tMsg f (Return'_newtype_ s) = Return'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Return' msg) where
     fromStruct = pure . Return'_newtype_
 instance C'.ToStruct msg (Return' msg) where

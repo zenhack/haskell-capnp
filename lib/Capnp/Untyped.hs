@@ -45,6 +45,8 @@ module Capnp.Untyped
     , allocList64
     , allocListPtr
     , appendCap
+
+    , TraverseMsg(..)
     )
   where
 
@@ -146,13 +148,9 @@ data Struct msg
 -- message.
 --
 -- We don't just use 'Traversable' for this because while algebraically
--- it makes sense, it would be very surprising to users to e.g.
--- have the 'Traversable' instance for 'List' not traverse over the
--- *elements* of the list.
---
--- We also don't export this; it is mainly an implementation detail for
--- the 'Thaw' instances for these data types, which all just that/freeze
--- the underlying message.
+-- it makes sense, it would be very unintuitive to e.g. have the
+-- 'Traversable' instance for 'List' not traverse over the *elements*
+-- of the list.
 class TraverseMsg f where
     tMsg :: Applicative m => (msgA -> m msgB) -> f msgA -> m (f msgB)
 

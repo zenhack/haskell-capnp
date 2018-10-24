@@ -28,6 +28,8 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype JsonValue msg = JsonValue_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg JsonValue where
+    tMsg f (JsonValue_newtype_ s) = JsonValue_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (JsonValue msg) where
     fromStruct = pure . JsonValue_newtype_
 instance C'.ToStruct msg (JsonValue msg) where
@@ -127,6 +129,8 @@ instance C'.FromStruct msg (JsonValue' msg) where
             0 -> pure JsonValue'null
             _ -> pure $ JsonValue'unknown' tag
 newtype JsonValue'Call msg = JsonValue'Call_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg JsonValue'Call where
+    tMsg f (JsonValue'Call_newtype_ s) = JsonValue'Call_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (JsonValue'Call msg) where
     fromStruct = pure . JsonValue'Call_newtype_
 instance C'.ToStruct msg (JsonValue'Call msg) where
@@ -181,6 +185,8 @@ new_JsonValue'Call'params len struct = do
     set_JsonValue'Call'params struct result
     pure result
 newtype JsonValue'Field msg = JsonValue'Field_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg JsonValue'Field where
+    tMsg f (JsonValue'Field_newtype_ s) = JsonValue'Field_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (JsonValue'Field msg) where
     fromStruct = pure . JsonValue'Field_newtype_
 instance C'.ToStruct msg (JsonValue'Field msg) where

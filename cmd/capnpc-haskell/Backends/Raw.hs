@@ -119,6 +119,9 @@ fmtNewtypeStruct thisMod name info =
         dataCon = typeCon <> "_newtype_"
     in vcat
         [ hcat [ "newtype ", typeCon, " msg = ", dataCon, " (U'.Struct msg)" ]
+        , instance_ [] ("U'.TraverseMsg " <> typeCon)
+            [ hcat [ "tMsg f (", dataCon, " s) = ", dataCon, " <$> U'.tMsg f s" ]
+            ]
         , instance_ [] ("C'.FromStruct msg (" <> typeCon <> " msg)")
             [ hcat [ "fromStruct = pure . ", dataCon ]
             ]

@@ -27,6 +27,8 @@ import qualified Capnp.TraversalLimit as TL'
 import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 newtype A320 msg = A320_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg A320 where
+    tMsg f (A320_newtype_ s) = A320_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (A320 msg) where
     fromStruct = pure . A320_newtype_
 instance C'.ToStruct msg (A320 msg) where
@@ -66,6 +68,8 @@ new_A320'base struct = do
     set_A320'base struct result
     pure result
 newtype Aircraft msg = Aircraft_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Aircraft where
+    tMsg f (Aircraft_newtype_ s) = Aircraft_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Aircraft msg) where
     fromStruct = pure . Aircraft_newtype_
 instance C'.ToStruct msg (Aircraft msg) where
@@ -181,6 +185,8 @@ instance B'.MutListElem s Airport where
     setIndex elt i (List_Airport l) = U'.setIndex (fromIntegral $ C'.toWord elt) i l
     newList msg size = List_Airport <$> U'.allocList16 msg size
 newtype B737 msg = B737_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg B737 where
+    tMsg f (B737_newtype_ s) = B737_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (B737 msg) where
     fromStruct = pure . B737_newtype_
 instance C'.ToStruct msg (B737 msg) where
@@ -220,6 +226,8 @@ new_B737'base struct = do
     set_B737'base struct result
     pure result
 newtype Bag msg = Bag_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Bag where
+    tMsg f (Bag_newtype_ s) = Bag_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Bag msg) where
     fromStruct = pure . Bag_newtype_
 instance C'.ToStruct msg (Bag msg) where
@@ -259,6 +267,8 @@ new_Bag'counter struct = do
     set_Bag'counter struct result
     pure result
 newtype BenchmarkA msg = BenchmarkA_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg BenchmarkA where
+    tMsg f (BenchmarkA_newtype_ s) = BenchmarkA_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (BenchmarkA msg) where
     fromStruct = pure . BenchmarkA_newtype_
 instance C'.ToStruct msg (BenchmarkA msg) where
@@ -334,6 +344,8 @@ instance C'.IsPtr msg (CallSequence msg) where
     toPtr msg (CallSequence Nothing) = pure Nothing
     toPtr msg (CallSequence (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Counter msg = Counter_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Counter where
+    tMsg f (Counter_newtype_ s) = Counter_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Counter msg) where
     fromStruct = pure . Counter_newtype_
 instance C'.ToStruct msg (Counter msg) where
@@ -392,6 +404,8 @@ new_Counter'wordlist len struct = do
     set_Counter'wordlist struct result
     pure result
 newtype Defaults msg = Defaults_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Defaults where
+    tMsg f (Defaults_newtype_ s) = Defaults_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Defaults msg) where
     fromStruct = pure . Defaults_newtype_
 instance C'.ToStruct msg (Defaults msg) where
@@ -463,6 +477,8 @@ instance C'.IsPtr msg (Echo msg) where
     toPtr msg (Echo Nothing) = pure Nothing
     toPtr msg (Echo (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype EchoBase msg = EchoBase_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg EchoBase where
+    tMsg f (EchoBase_newtype_ s) = EchoBase_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (EchoBase msg) where
     fromStruct = pure . EchoBase_newtype_
 instance C'.ToStruct msg (EchoBase msg) where
@@ -497,6 +513,8 @@ set_EchoBase'echo (EchoBase_newtype_ struct) value = do
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
 newtype EchoBases msg = EchoBases_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg EchoBases where
+    tMsg f (EchoBases_newtype_ s) = EchoBases_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (EchoBases msg) where
     fromStruct = pure . EchoBases_newtype_
 instance C'.ToStruct msg (EchoBases msg) where
@@ -536,6 +554,8 @@ new_EchoBases'bases len struct = do
     set_EchoBases'bases struct result
     pure result
 newtype F16 msg = F16_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg F16 where
+    tMsg f (F16_newtype_ s) = F16_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (F16 msg) where
     fromStruct = pure . F16_newtype_
 instance C'.ToStruct msg (F16 msg) where
@@ -575,6 +595,8 @@ new_F16'base struct = do
     set_F16'base struct result
     pure result
 newtype HoldsText msg = HoldsText_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsText where
+    tMsg f (HoldsText_newtype_ s) = HoldsText_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsText msg) where
     fromStruct = pure . HoldsText_newtype_
 instance C'.ToStruct msg (HoldsText msg) where
@@ -644,6 +666,8 @@ new_HoldsText'lstlst len struct = do
     set_HoldsText'lstlst struct result
     pure result
 newtype HoldsVerEmptyList msg = HoldsVerEmptyList_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerEmptyList where
+    tMsg f (HoldsVerEmptyList_newtype_ s) = HoldsVerEmptyList_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerEmptyList msg) where
     fromStruct = pure . HoldsVerEmptyList_newtype_
 instance C'.ToStruct msg (HoldsVerEmptyList msg) where
@@ -683,6 +707,8 @@ new_HoldsVerEmptyList'mylist len struct = do
     set_HoldsVerEmptyList'mylist struct result
     pure result
 newtype HoldsVerOneDataList msg = HoldsVerOneDataList_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerOneDataList where
+    tMsg f (HoldsVerOneDataList_newtype_ s) = HoldsVerOneDataList_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerOneDataList msg) where
     fromStruct = pure . HoldsVerOneDataList_newtype_
 instance C'.ToStruct msg (HoldsVerOneDataList msg) where
@@ -722,6 +748,8 @@ new_HoldsVerOneDataList'mylist len struct = do
     set_HoldsVerOneDataList'mylist struct result
     pure result
 newtype HoldsVerOnePtrList msg = HoldsVerOnePtrList_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerOnePtrList where
+    tMsg f (HoldsVerOnePtrList_newtype_ s) = HoldsVerOnePtrList_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerOnePtrList msg) where
     fromStruct = pure . HoldsVerOnePtrList_newtype_
 instance C'.ToStruct msg (HoldsVerOnePtrList msg) where
@@ -761,6 +789,8 @@ new_HoldsVerOnePtrList'mylist len struct = do
     set_HoldsVerOnePtrList'mylist struct result
     pure result
 newtype HoldsVerTwoDataList msg = HoldsVerTwoDataList_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerTwoDataList where
+    tMsg f (HoldsVerTwoDataList_newtype_ s) = HoldsVerTwoDataList_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerTwoDataList msg) where
     fromStruct = pure . HoldsVerTwoDataList_newtype_
 instance C'.ToStruct msg (HoldsVerTwoDataList msg) where
@@ -800,6 +830,8 @@ new_HoldsVerTwoDataList'mylist len struct = do
     set_HoldsVerTwoDataList'mylist struct result
     pure result
 newtype HoldsVerTwoPtrList msg = HoldsVerTwoPtrList_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerTwoPtrList where
+    tMsg f (HoldsVerTwoPtrList_newtype_ s) = HoldsVerTwoPtrList_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerTwoPtrList msg) where
     fromStruct = pure . HoldsVerTwoPtrList_newtype_
 instance C'.ToStruct msg (HoldsVerTwoPtrList msg) where
@@ -839,6 +871,8 @@ new_HoldsVerTwoPtrList'mylist len struct = do
     set_HoldsVerTwoPtrList'mylist struct result
     pure result
 newtype HoldsVerTwoTwoList msg = HoldsVerTwoTwoList_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerTwoTwoList where
+    tMsg f (HoldsVerTwoTwoList_newtype_ s) = HoldsVerTwoTwoList_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerTwoTwoList msg) where
     fromStruct = pure . HoldsVerTwoTwoList_newtype_
 instance C'.ToStruct msg (HoldsVerTwoTwoList msg) where
@@ -878,6 +912,8 @@ new_HoldsVerTwoTwoList'mylist len struct = do
     set_HoldsVerTwoTwoList'mylist struct result
     pure result
 newtype HoldsVerTwoTwoPlus msg = HoldsVerTwoTwoPlus_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg HoldsVerTwoTwoPlus where
+    tMsg f (HoldsVerTwoTwoPlus_newtype_ s) = HoldsVerTwoTwoPlus_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (HoldsVerTwoTwoPlus msg) where
     fromStruct = pure . HoldsVerTwoTwoPlus_newtype_
 instance C'.ToStruct msg (HoldsVerTwoTwoPlus msg) where
@@ -917,6 +953,8 @@ new_HoldsVerTwoTwoPlus'mylist len struct = do
     set_HoldsVerTwoTwoPlus'mylist struct result
     pure result
 newtype Hoth msg = Hoth_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Hoth where
+    tMsg f (Hoth_newtype_ s) = Hoth_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Hoth msg) where
     fromStruct = pure . Hoth_newtype_
 instance C'.ToStruct msg (Hoth msg) where
@@ -956,6 +994,8 @@ new_Hoth'base struct = do
     set_Hoth'base struct result
     pure result
 newtype ListStructCapn msg = ListStructCapn_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg ListStructCapn where
+    tMsg f (ListStructCapn_newtype_ s) = ListStructCapn_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (ListStructCapn msg) where
     fromStruct = pure . ListStructCapn_newtype_
 instance C'.ToStruct msg (ListStructCapn msg) where
@@ -995,6 +1035,8 @@ new_ListStructCapn'vec len struct = do
     set_ListStructCapn'vec struct result
     pure result
 newtype Nester1Capn msg = Nester1Capn_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Nester1Capn where
+    tMsg f (Nester1Capn_newtype_ s) = Nester1Capn_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Nester1Capn msg) where
     fromStruct = pure . Nester1Capn_newtype_
 instance C'.ToStruct msg (Nester1Capn msg) where
@@ -1034,6 +1076,8 @@ new_Nester1Capn'strs len struct = do
     set_Nester1Capn'strs struct result
     pure result
 newtype PlaneBase msg = PlaneBase_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg PlaneBase where
+    tMsg f (PlaneBase_newtype_ s) = PlaneBase_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (PlaneBase msg) where
     fromStruct = pure . PlaneBase_newtype_
 instance C'.ToStruct msg (PlaneBase msg) where
@@ -1104,6 +1148,8 @@ get_PlaneBase'maxSpeed (PlaneBase_newtype_ struct) = H'.getWordField struct 3 0 
 set_PlaneBase'maxSpeed :: U'.RWCtx m s => PlaneBase (M'.MutMsg s) -> Double -> m ()
 set_PlaneBase'maxSpeed (PlaneBase_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 3 0 0
 newtype RWTestCapn msg = RWTestCapn_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg RWTestCapn where
+    tMsg f (RWTestCapn_newtype_ s) = RWTestCapn_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (RWTestCapn msg) where
     fromStruct = pure . RWTestCapn_newtype_
 instance C'.ToStruct msg (RWTestCapn msg) where
@@ -1143,6 +1189,8 @@ new_RWTestCapn'nestMatrix len struct = do
     set_RWTestCapn'nestMatrix struct result
     pure result
 newtype Regression msg = Regression_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Regression where
+    tMsg f (Regression_newtype_ s) = Regression_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Regression msg) where
     fromStruct = pure . Regression_newtype_
 instance C'.ToStruct msg (Regression msg) where
@@ -1224,6 +1272,8 @@ get_Regression'ysd (Regression_newtype_ struct) = H'.getWordField struct 2 0 0
 set_Regression'ysd :: U'.RWCtx m s => Regression (M'.MutMsg s) -> Double -> m ()
 set_Regression'ysd (Regression_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 newtype StackingA msg = StackingA_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg StackingA where
+    tMsg f (StackingA_newtype_ s) = StackingA_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (StackingA msg) where
     fromStruct = pure . StackingA_newtype_
 instance C'.ToStruct msg (StackingA msg) where
@@ -1267,6 +1317,8 @@ new_StackingA'b struct = do
     set_StackingA'b struct result
     pure result
 newtype StackingB msg = StackingB_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg StackingB where
+    tMsg f (StackingB_newtype_ s) = StackingB_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (StackingB msg) where
     fromStruct = pure . StackingB_newtype_
 instance C'.ToStruct msg (StackingB msg) where
@@ -1295,6 +1347,8 @@ get_StackingB'num (StackingB_newtype_ struct) = H'.getWordField struct 0 0 0
 set_StackingB'num :: U'.RWCtx m s => StackingB (M'.MutMsg s) -> Int32 -> m ()
 set_StackingB'num (StackingB_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 newtype StackingRoot msg = StackingRoot_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg StackingRoot where
+    tMsg f (StackingRoot_newtype_ s) = StackingRoot_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (StackingRoot msg) where
     fromStruct = pure . StackingRoot_newtype_
 instance C'.ToStruct msg (StackingRoot msg) where
@@ -1349,6 +1403,8 @@ new_StackingRoot'a struct = do
     set_StackingRoot'a struct result
     pure result
 newtype VerEmpty msg = VerEmpty_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerEmpty where
+    tMsg f (VerEmpty_newtype_ s) = VerEmpty_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerEmpty msg) where
     fromStruct = pure . VerEmpty_newtype_
 instance C'.ToStruct msg (VerEmpty msg) where
@@ -1373,6 +1429,8 @@ instance B'.MutListElem s (VerEmpty (M'.MutMsg s)) where
 instance C'.Allocate s (VerEmpty (M'.MutMsg s)) where
     new msg = VerEmpty_newtype_ <$> U'.allocStruct msg 0 0
 newtype VerOneData msg = VerOneData_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerOneData where
+    tMsg f (VerOneData_newtype_ s) = VerOneData_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerOneData msg) where
     fromStruct = pure . VerOneData_newtype_
 instance C'.ToStruct msg (VerOneData msg) where
@@ -1401,6 +1459,8 @@ get_VerOneData'val (VerOneData_newtype_ struct) = H'.getWordField struct 0 0 0
 set_VerOneData'val :: U'.RWCtx m s => VerOneData (M'.MutMsg s) -> Int16 -> m ()
 set_VerOneData'val (VerOneData_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word16) 0 0 0
 newtype VerOnePtr msg = VerOnePtr_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerOnePtr where
+    tMsg f (VerOnePtr_newtype_ s) = VerOnePtr_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerOnePtr msg) where
     fromStruct = pure . VerOnePtr_newtype_
 instance C'.ToStruct msg (VerOnePtr msg) where
@@ -1440,6 +1500,8 @@ new_VerOnePtr'ptr struct = do
     set_VerOnePtr'ptr struct result
     pure result
 newtype VerTwoData msg = VerTwoData_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerTwoData where
+    tMsg f (VerTwoData_newtype_ s) = VerTwoData_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerTwoData msg) where
     fromStruct = pure . VerTwoData_newtype_
 instance C'.ToStruct msg (VerTwoData msg) where
@@ -1472,6 +1534,8 @@ get_VerTwoData'duo (VerTwoData_newtype_ struct) = H'.getWordField struct 1 0 0
 set_VerTwoData'duo :: U'.RWCtx m s => VerTwoData (M'.MutMsg s) -> Int64 -> m ()
 set_VerTwoData'duo (VerTwoData_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 1 0 0
 newtype VerTwoDataTwoPtr msg = VerTwoDataTwoPtr_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerTwoDataTwoPtr where
+    tMsg f (VerTwoDataTwoPtr_newtype_ s) = VerTwoDataTwoPtr_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerTwoDataTwoPtr msg) where
     fromStruct = pure . VerTwoDataTwoPtr_newtype_
 instance C'.ToStruct msg (VerTwoDataTwoPtr msg) where
@@ -1534,6 +1598,8 @@ new_VerTwoDataTwoPtr'ptr2 struct = do
     set_VerTwoDataTwoPtr'ptr2 struct result
     pure result
 newtype VerTwoPtr msg = VerTwoPtr_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerTwoPtr where
+    tMsg f (VerTwoPtr_newtype_ s) = VerTwoPtr_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerTwoPtr msg) where
     fromStruct = pure . VerTwoPtr_newtype_
 instance C'.ToStruct msg (VerTwoPtr msg) where
@@ -1588,6 +1654,8 @@ new_VerTwoPtr'ptr2 struct = do
     set_VerTwoPtr'ptr2 struct result
     pure result
 newtype VerTwoTwoPlus msg = VerTwoTwoPlus_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VerTwoTwoPlus where
+    tMsg f (VerTwoTwoPlus_newtype_ s) = VerTwoTwoPlus_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VerTwoTwoPlus msg) where
     fromStruct = pure . VerTwoTwoPlus_newtype_
 instance C'.ToStruct msg (VerTwoTwoPlus msg) where
@@ -1669,6 +1737,8 @@ new_VerTwoTwoPlus'lst3 len struct = do
     set_VerTwoTwoPlus'lst3 struct result
     pure result
 newtype VoidUnion msg = VoidUnion_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg VoidUnion where
+    tMsg f (VoidUnion_newtype_ s) = VoidUnion_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (VoidUnion msg) where
     fromStruct = pure . VoidUnion_newtype_
 instance C'.ToStruct msg (VoidUnion msg) where
@@ -1712,6 +1782,8 @@ instance C'.FromStruct msg (VoidUnion' msg) where
             0 -> pure VoidUnion'a
             _ -> pure $ VoidUnion'unknown' tag
 newtype Wrap2x2 msg = Wrap2x2_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Wrap2x2 where
+    tMsg f (Wrap2x2_newtype_ s) = Wrap2x2_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Wrap2x2 msg) where
     fromStruct = pure . Wrap2x2_newtype_
 instance C'.ToStruct msg (Wrap2x2 msg) where
@@ -1751,6 +1823,8 @@ new_Wrap2x2'mightNotBeReallyEmpty struct = do
     set_Wrap2x2'mightNotBeReallyEmpty struct result
     pure result
 newtype Wrap2x2plus msg = Wrap2x2plus_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Wrap2x2plus where
+    tMsg f (Wrap2x2plus_newtype_ s) = Wrap2x2plus_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Wrap2x2plus msg) where
     fromStruct = pure . Wrap2x2plus_newtype_
 instance C'.ToStruct msg (Wrap2x2plus msg) where
@@ -1790,6 +1864,8 @@ new_Wrap2x2plus'mightNotBeReallyEmpty struct = do
     set_Wrap2x2plus'mightNotBeReallyEmpty struct result
     pure result
 newtype WrapEmpty msg = WrapEmpty_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg WrapEmpty where
+    tMsg f (WrapEmpty_newtype_ s) = WrapEmpty_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (WrapEmpty msg) where
     fromStruct = pure . WrapEmpty_newtype_
 instance C'.ToStruct msg (WrapEmpty msg) where
@@ -1829,6 +1905,8 @@ new_WrapEmpty'mightNotBeReallyEmpty struct = do
     set_WrapEmpty'mightNotBeReallyEmpty struct result
     pure result
 newtype Z msg = Z_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Z where
+    tMsg f (Z_newtype_ s) = Z_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Z msg) where
     fromStruct = pure . Z_newtype_
 instance C'.ToStruct msg (Z msg) where
@@ -2263,6 +2341,8 @@ new_Z'echoBases struct = do
 set_Z'unknown' :: U'.RWCtx m s => Z (M'.MutMsg s) -> Word16 -> m ()
 set_Z'unknown'(Z_newtype_ struct) tagValue = H'.setWordField struct (tagValue :: Word16) 0 0 0
 newtype Z'grp'group' msg = Z'grp'group'_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Z'grp'group' where
+    tMsg f (Z'grp'group'_newtype_ s) = Z'grp'group'_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Z'grp'group' msg) where
     fromStruct = pure . Z'grp'group'_newtype_
 instance C'.ToStruct msg (Z'grp'group' msg) where
@@ -2331,6 +2411,8 @@ instance C'.FromStruct msg (Z' msg) where
             0 -> pure Z'void
             _ -> pure $ Z'unknown' tag
 newtype Zdata msg = Zdata_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Zdata where
+    tMsg f (Zdata_newtype_ s) = Zdata_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Zdata msg) where
     fromStruct = pure . Zdata_newtype_
 instance C'.ToStruct msg (Zdata msg) where
@@ -2370,6 +2452,8 @@ new_Zdata'data_ len struct = do
     set_Zdata'data_ struct result
     pure result
 newtype Zdate msg = Zdate_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Zdate where
+    tMsg f (Zdate_newtype_ s) = Zdate_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Zdate msg) where
     fromStruct = pure . Zdate_newtype_
 instance C'.ToStruct msg (Zdate msg) where
@@ -2406,6 +2490,8 @@ get_Zdate'day (Zdate_newtype_ struct) = H'.getWordField struct 0 24 0
 set_Zdate'day :: U'.RWCtx m s => Zdate (M'.MutMsg s) -> Word8 -> m ()
 set_Zdate'day (Zdate_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word8) 0 24 0
 newtype Zjob msg = Zjob_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Zjob where
+    tMsg f (Zjob_newtype_ s) = Zjob_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Zjob msg) where
     fromStruct = pure . Zjob_newtype_
 instance C'.ToStruct msg (Zjob msg) where
@@ -2460,6 +2546,8 @@ new_Zjob'args len struct = do
     set_Zjob'args struct result
     pure result
 newtype Zserver msg = Zserver_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Zserver where
+    tMsg f (Zserver_newtype_ s) = Zserver_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Zserver msg) where
     fromStruct = pure . Zserver_newtype_
 instance C'.ToStruct msg (Zserver msg) where
@@ -2505,6 +2593,8 @@ constEnum = C'.fromWord 1
 constList :: (B'.List M'.ConstMsg (Zdate M'.ConstMsg))
 constList = H'.getPtrConst $ Data.ByteString.pack [0,0,0,0,5,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,23,0,0,0,8,0,0,0,1,0,0,0,223,7,8,27,0,0,0,0,223,7,8,28,0,0,0,0]
 newtype CallSequence'getNumber'params msg = CallSequence'getNumber'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CallSequence'getNumber'params where
+    tMsg f (CallSequence'getNumber'params_newtype_ s) = CallSequence'getNumber'params_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CallSequence'getNumber'params msg) where
     fromStruct = pure . CallSequence'getNumber'params_newtype_
 instance C'.ToStruct msg (CallSequence'getNumber'params msg) where
@@ -2529,6 +2619,8 @@ instance B'.MutListElem s (CallSequence'getNumber'params (M'.MutMsg s)) where
 instance C'.Allocate s (CallSequence'getNumber'params (M'.MutMsg s)) where
     new msg = CallSequence'getNumber'params_newtype_ <$> U'.allocStruct msg 0 0
 newtype CallSequence'getNumber'results msg = CallSequence'getNumber'results_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CallSequence'getNumber'results where
+    tMsg f (CallSequence'getNumber'results_newtype_ s) = CallSequence'getNumber'results_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (CallSequence'getNumber'results msg) where
     fromStruct = pure . CallSequence'getNumber'results_newtype_
 instance C'.ToStruct msg (CallSequence'getNumber'results msg) where
@@ -2557,6 +2649,8 @@ get_CallSequence'getNumber'results'n (CallSequence'getNumber'results_newtype_ st
 set_CallSequence'getNumber'results'n :: U'.RWCtx m s => CallSequence'getNumber'results (M'.MutMsg s) -> Word32 -> m ()
 set_CallSequence'getNumber'results'n (CallSequence'getNumber'results_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
 newtype Echo'echo'params msg = Echo'echo'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Echo'echo'params where
+    tMsg f (Echo'echo'params_newtype_ s) = Echo'echo'params_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Echo'echo'params msg) where
     fromStruct = pure . Echo'echo'params_newtype_
 instance C'.ToStruct msg (Echo'echo'params msg) where
@@ -2596,6 +2690,8 @@ new_Echo'echo'params'in_ len struct = do
     set_Echo'echo'params'in_ struct result
     pure result
 newtype Echo'echo'results msg = Echo'echo'results_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Echo'echo'results where
+    tMsg f (Echo'echo'results_newtype_ s) = Echo'echo'results_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Echo'echo'results msg) where
     fromStruct = pure . Echo'echo'results_newtype_
 instance C'.ToStruct msg (Echo'echo'results msg) where

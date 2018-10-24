@@ -38,6 +38,8 @@ instance C'.IsPtr msg (RealmGateway msg) where
     toPtr msg (RealmGateway Nothing) = pure Nothing
     toPtr msg (RealmGateway (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Persistent'SaveParams where
+    tMsg f (Persistent'SaveParams_newtype_ s) = Persistent'SaveParams_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Persistent'SaveParams msg) where
     fromStruct = pure . Persistent'SaveParams_newtype_
 instance C'.ToStruct msg (Persistent'SaveParams msg) where
@@ -72,6 +74,8 @@ set_Persistent'SaveParams'sealFor (Persistent'SaveParams_newtype_ struct) value 
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
 newtype Persistent'SaveResults msg = Persistent'SaveResults_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Persistent'SaveResults where
+    tMsg f (Persistent'SaveResults_newtype_ s) = Persistent'SaveResults_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Persistent'SaveResults msg) where
     fromStruct = pure . Persistent'SaveResults_newtype_
 instance C'.ToStruct msg (Persistent'SaveResults msg) where
@@ -106,6 +110,8 @@ set_Persistent'SaveResults'sturdyRef (Persistent'SaveResults_newtype_ struct) va
     ptr <- C'.toPtr (U'.message struct) value
     U'.setPtr ptr 0 struct
 newtype RealmGateway'export'params msg = RealmGateway'export'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg RealmGateway'export'params where
+    tMsg f (RealmGateway'export'params_newtype_ s) = RealmGateway'export'params_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (RealmGateway'export'params msg) where
     fromStruct = pure . RealmGateway'export'params_newtype_
 instance C'.ToStruct msg (RealmGateway'export'params msg) where
@@ -155,6 +161,8 @@ new_RealmGateway'export'params'params struct = do
     set_RealmGateway'export'params'params struct result
     pure result
 newtype RealmGateway'import'params msg = RealmGateway'import'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg RealmGateway'import'params where
+    tMsg f (RealmGateway'import'params_newtype_ s) = RealmGateway'import'params_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (RealmGateway'import'params msg) where
     fromStruct = pure . RealmGateway'import'params_newtype_
 instance C'.ToStruct msg (RealmGateway'import'params msg) where

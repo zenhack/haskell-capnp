@@ -32,6 +32,8 @@ instance C'.IsPtr msg (Echo msg) where
     toPtr msg (Echo Nothing) = pure Nothing
     toPtr msg (Echo (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Echo'echo'params msg = Echo'echo'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Echo'echo'params where
+    tMsg f (Echo'echo'params_newtype_ s) = Echo'echo'params_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Echo'echo'params msg) where
     fromStruct = pure . Echo'echo'params_newtype_
 instance C'.ToStruct msg (Echo'echo'params msg) where
@@ -71,6 +73,8 @@ new_Echo'echo'params'query len struct = do
     set_Echo'echo'params'query struct result
     pure result
 newtype Echo'echo'results msg = Echo'echo'results_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg Echo'echo'results where
+    tMsg f (Echo'echo'results_newtype_ s) = Echo'echo'results_newtype_ <$> U'.tMsg f s
 instance C'.FromStruct msg (Echo'echo'results msg) where
     fromStruct = pure . Echo'echo'results_newtype_
 instance C'.ToStruct msg (Echo'echo'results msg) where
