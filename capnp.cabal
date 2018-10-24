@@ -227,6 +227,7 @@ test-suite tests
         capnp
       , aircraftlib
 
+      , stm
       , async
       , process
       , process-extras

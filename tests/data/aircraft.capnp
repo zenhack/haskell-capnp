@@ -326,6 +326,10 @@ interface CallSequence {
   getNumber @0 () -> (n :UInt32);
 }
 
+interface CounterFactory {
+  newCounter @0 (start :UInt32) -> (counter :CallSequence);
+}
+
 # test defaults
 
 struct Defaults {

@@ -403,6 +403,11 @@ new_Counter'wordlist len struct = do
     result <- C'.newList (U'.message struct) len
     set_Counter'wordlist struct result
     pure result
+newtype CounterFactory msg = CounterFactory (Maybe (U'.Cap msg))
+instance C'.IsPtr msg (CounterFactory msg) where
+    fromPtr msg cap = CounterFactory <$> C'.fromPtr msg cap
+    toPtr msg (CounterFactory Nothing) = pure Nothing
+    toPtr msg (CounterFactory (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Defaults msg = Defaults_newtype_ (U'.Struct msg)
 instance U'.TraverseMsg Defaults where
     tMsg f (Defaults_newtype_ s) = Defaults_newtype_ <$> U'.tMsg f s
@@ -2648,6 +2653,72 @@ get_CallSequence'getNumber'results'n :: U'.ReadCtx m msg => CallSequence'getNumb
 get_CallSequence'getNumber'results'n (CallSequence'getNumber'results_newtype_ struct) = H'.getWordField struct 0 0 0
 set_CallSequence'getNumber'results'n :: U'.RWCtx m s => CallSequence'getNumber'results (M'.MutMsg s) -> Word32 -> m ()
 set_CallSequence'getNumber'results'n (CallSequence'getNumber'results_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+newtype CounterFactory'newCounter'params msg = CounterFactory'newCounter'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CounterFactory'newCounter'params where
+    tMsg f (CounterFactory'newCounter'params_newtype_ s) = CounterFactory'newCounter'params_newtype_ <$> U'.tMsg f s
+instance C'.FromStruct msg (CounterFactory'newCounter'params msg) where
+    fromStruct = pure . CounterFactory'newCounter'params_newtype_
+instance C'.ToStruct msg (CounterFactory'newCounter'params msg) where
+    toStruct (CounterFactory'newCounter'params_newtype_ struct) = struct
+instance U'.HasMessage (CounterFactory'newCounter'params msg) where
+    type InMessage (CounterFactory'newCounter'params msg) = msg
+    message (CounterFactory'newCounter'params_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (CounterFactory'newCounter'params msg) where
+    messageDefault = CounterFactory'newCounter'params_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CounterFactory'newCounter'params msg) where
+    newtype List msg (CounterFactory'newCounter'params msg) = List_CounterFactory'newCounter'params (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_CounterFactory'newCounter'params <$> C'.fromPtr msg ptr
+    toUntypedList (List_CounterFactory'newCounter'params l) = U'.ListStruct l
+    length (List_CounterFactory'newCounter'params l) = U'.length l
+    index i (List_CounterFactory'newCounter'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterFactory'newCounter'params msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CounterFactory'newCounter'params msg) where
+    fromPtr msg ptr = CounterFactory'newCounter'params_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (CounterFactory'newCounter'params_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (CounterFactory'newCounter'params (M'.MutMsg s)) where
+    setIndex (CounterFactory'newCounter'params_newtype_ elt) i (List_CounterFactory'newCounter'params l) = U'.setIndex elt i l
+    newList msg len = List_CounterFactory'newCounter'params <$> U'.allocCompositeList msg 1 0 len
+instance C'.Allocate s (CounterFactory'newCounter'params (M'.MutMsg s)) where
+    new msg = CounterFactory'newCounter'params_newtype_ <$> U'.allocStruct msg 1 0
+get_CounterFactory'newCounter'params'start :: U'.ReadCtx m msg => CounterFactory'newCounter'params msg -> m Word32
+get_CounterFactory'newCounter'params'start (CounterFactory'newCounter'params_newtype_ struct) = H'.getWordField struct 0 0 0
+set_CounterFactory'newCounter'params'start :: U'.RWCtx m s => CounterFactory'newCounter'params (M'.MutMsg s) -> Word32 -> m ()
+set_CounterFactory'newCounter'params'start (CounterFactory'newCounter'params_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+newtype CounterFactory'newCounter'results msg = CounterFactory'newCounter'results_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CounterFactory'newCounter'results where
+    tMsg f (CounterFactory'newCounter'results_newtype_ s) = CounterFactory'newCounter'results_newtype_ <$> U'.tMsg f s
+instance C'.FromStruct msg (CounterFactory'newCounter'results msg) where
+    fromStruct = pure . CounterFactory'newCounter'results_newtype_
+instance C'.ToStruct msg (CounterFactory'newCounter'results msg) where
+    toStruct (CounterFactory'newCounter'results_newtype_ struct) = struct
+instance U'.HasMessage (CounterFactory'newCounter'results msg) where
+    type InMessage (CounterFactory'newCounter'results msg) = msg
+    message (CounterFactory'newCounter'results_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (CounterFactory'newCounter'results msg) where
+    messageDefault = CounterFactory'newCounter'results_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CounterFactory'newCounter'results msg) where
+    newtype List msg (CounterFactory'newCounter'results msg) = List_CounterFactory'newCounter'results (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_CounterFactory'newCounter'results <$> C'.fromPtr msg ptr
+    toUntypedList (List_CounterFactory'newCounter'results l) = U'.ListStruct l
+    length (List_CounterFactory'newCounter'results l) = U'.length l
+    index i (List_CounterFactory'newCounter'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterFactory'newCounter'results msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CounterFactory'newCounter'results msg) where
+    fromPtr msg ptr = CounterFactory'newCounter'results_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (CounterFactory'newCounter'results_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (CounterFactory'newCounter'results (M'.MutMsg s)) where
+    setIndex (CounterFactory'newCounter'results_newtype_ elt) i (List_CounterFactory'newCounter'results l) = U'.setIndex elt i l
+    newList msg len = List_CounterFactory'newCounter'results <$> U'.allocCompositeList msg 0 1 len
+instance C'.Allocate s (CounterFactory'newCounter'results (M'.MutMsg s)) where
+    new msg = CounterFactory'newCounter'results_newtype_ <$> U'.allocStruct msg 0 1
+get_CounterFactory'newCounter'results'counter :: U'.ReadCtx m msg => CounterFactory'newCounter'results msg -> m (CallSequence msg)
+get_CounterFactory'newCounter'results'counter (CounterFactory'newCounter'results_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+has_CounterFactory'newCounter'results'counter :: U'.ReadCtx m msg => CounterFactory'newCounter'results msg -> m Bool
+has_CounterFactory'newCounter'results'counter(CounterFactory'newCounter'results_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_CounterFactory'newCounter'results'counter :: U'.RWCtx m s => CounterFactory'newCounter'results (M'.MutMsg s) -> (CallSequence (M'.MutMsg s)) -> m ()
+set_CounterFactory'newCounter'results'counter (CounterFactory'newCounter'results_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
 newtype Echo'echo'params msg = Echo'echo'params_newtype_ (U'.Struct msg)
 instance U'.TraverseMsg Echo'echo'params where
     tMsg f (Echo'echo'params_newtype_ s) = Echo'echo'params_newtype_ <$> U'.tMsg f s
