@@ -29,6 +29,8 @@ module Capnp.Rpc
     , bootstrap
     , nullClient
 
+    , IsClient(..)
+
     -- * Handling method calls
     , Server(..)
     , export
@@ -113,6 +115,14 @@ import Internal.CommitThrow (atomicallyCommitErrs, throwAndCommit)
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
 import qualified Capnp.Message       as Message
 import qualified Capnp.Untyped       as Untyped
+
+-- | Types which may converted to and from 'Client's.
+class IsClient a where
+    -- | Convert a typed capability to a client.
+    toClient :: a -> Client
+
+    -- | Convert an (untyped) client to a typed capability.
+    fromClient :: Client -> a
 
 -- | Shortcut to throw an @unimplemented@ exception.
 throwMethodUnimplemented :: MonadThrow m => m a
