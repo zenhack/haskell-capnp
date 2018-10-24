@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-module Tests.Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
+module Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
 import Test.Hspec

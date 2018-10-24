@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Tests.Module.Capnp.Untyped.Pure (pureUntypedTests) where
+module Module.Capnp.Untyped.Pure (pureUntypedTests) where
 
 import Test.Hspec
 

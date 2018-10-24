@@ -197,6 +197,32 @@ library aircraftlib
 
 --------------------------------------------------------------------------------
 
+-- utilities for test suite.
+library testlib
+    import: shared-opts
+  build-depends:
+      capnp
+    , QuickCheck
+    , quickcheck-instances
+    , process
+    , process-extras
+    , directory
+    , resourcet
+    , heredoc
+  hs-source-dirs: tests/testlib
+  exposed-modules:
+        Util
+      , Instances
+      , SchemaGeneration
+
+      -- Generated code for examples/echo.capnp
+      , Capnp.Gen.Echo
+      , Capnp.Gen.Echo.Pure
+      , Capnp.Gen.ById.Xd0a87f36fa0182f5
+      , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
+
+--------------------------------------------------------------------------------
+
 -- test suite proper
 test-suite tests
     import: shared-opts
@@ -204,28 +230,20 @@ test-suite tests
     main-is:              Main.hs
     hs-source-dirs:       tests/main
     other-modules:
-        Tests.Module.Capnp.Gen.Capnp.Schema
-      , Tests.Module.Capnp.Gen.Capnp.Schema.Pure
-      , Tests.Module.Capnp.Rpc
-      , Tests.Module.Capnp.Untyped
-      , Tests.Module.Capnp.Untyped.Pure
-      , Tests.Module.Capnp.Pointer
-      , Tests.Module.Capnp.Bits
-      , Tests.Module.Capnp.Basics
-      , Tests.WalkSchemaCodeGenRequest
-      , Tests.SchemaGeneration
-      , Tests.SchemaQuickCheck
-      , Util
-      , Instances
-
-      -- Generated code for examples/echo.capnp
-      , Capnp.Gen.Echo
-      , Capnp.Gen.Echo.Pure
-      , Capnp.Gen.ById.Xd0a87f36fa0182f5
-      , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
+        Module.Capnp.Gen.Capnp.Schema
+      , Module.Capnp.Gen.Capnp.Schema.Pure
+      , Module.Capnp.Rpc
+      , Module.Capnp.Untyped
+      , Module.Capnp.Untyped.Pure
+      , Module.Capnp.Pointer
+      , Module.Capnp.Bits
+      , Module.Capnp.Basics
+      , WalkSchemaCodeGenRequest
+      , SchemaQuickCheck
     build-depends:
         capnp
       , aircraftlib
+      , testlib
 
       , stm
       , async

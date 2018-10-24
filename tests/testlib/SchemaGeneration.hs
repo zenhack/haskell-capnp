@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Tests.SchemaGeneration
+module SchemaGeneration
     ( Schema (..), genSchema
     ) where
 

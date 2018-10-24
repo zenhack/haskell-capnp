@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Tests.SchemaQuickCheck
+module SchemaQuickCheck
     (schemaCGRQuickCheck)
     where
 
@@ -19,7 +19,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 -- Schema generation imports
-import Tests.SchemaGeneration
+import SchemaGeneration
 import Util
 
 -- Schema validation imports

@@ -1,4 +1,4 @@
-module Tests.Module.Capnp.Pointer (ptrTests) where
+module Module.Capnp.Pointer (ptrTests) where
 
 import Data.Bits
 import Data.Int

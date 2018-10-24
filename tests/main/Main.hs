@@ -2,16 +2,16 @@ module Main (main) where
 
 import Test.Hspec
 
-import Tests.Module.Capnp.Basics                (basicsTests)
-import Tests.Module.Capnp.Bits                  (bitsTests)
-import Tests.Module.Capnp.Gen.Capnp.Schema      (schemaTests)
-import Tests.Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests)
-import Tests.Module.Capnp.Pointer               (ptrTests)
-import Tests.Module.Capnp.Rpc                   (rpcTests)
-import Tests.Module.Capnp.Untyped               (untypedTests)
-import Tests.Module.Capnp.Untyped.Pure          (pureUntypedTests)
-import Tests.SchemaQuickCheck                   (schemaCGRQuickCheck)
-import Tests.WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
+import Module.Capnp.Basics                (basicsTests)
+import Module.Capnp.Bits                  (bitsTests)
+import Module.Capnp.Gen.Capnp.Schema      (schemaTests)
+import Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests)
+import Module.Capnp.Pointer               (ptrTests)
+import Module.Capnp.Rpc                   (rpcTests)
+import Module.Capnp.Untyped               (untypedTests)
+import Module.Capnp.Untyped.Pure          (pureUntypedTests)
+import SchemaQuickCheck                   (schemaCGRQuickCheck)
+import WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 
 main :: IO ()
 main = hspec $ do

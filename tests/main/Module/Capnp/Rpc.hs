@@ -1,7 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Tests.Module.Capnp.Rpc (rpcTests) where
+module Module.Capnp.Rpc (rpcTests) where
 
 import Control.Concurrent.STM
 import Data.Word

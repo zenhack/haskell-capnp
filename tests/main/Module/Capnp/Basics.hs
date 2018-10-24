@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Tests.Module.Capnp.Basics (basicsTests) where
+module Module.Capnp.Basics (basicsTests) where
 
 import Test.Hspec
 import Test.QuickCheck

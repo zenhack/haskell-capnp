@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE RecordWildCards #-}
-module Tests.Module.Capnp.Gen.Capnp.Schema (schemaTests) where
+module Module.Capnp.Gen.Capnp.Schema (schemaTests) where
 
 import Test.Hspec
 
