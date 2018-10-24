@@ -11,6 +11,7 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-|
 Module: Capnp.Rpc
 Description: Cap'N Proto RPC support.
@@ -123,6 +124,10 @@ class IsClient a where
 
     -- | Convert an (untyped) client to a typed capability.
     fromClient :: Client -> a
+
+instance IsClient Client where
+    toClient c = c
+    fromClient c = c
 
 -- | Shortcut to throw an @unimplemented@ exception.
 throwMethodUnimplemented :: MonadThrow m => m a

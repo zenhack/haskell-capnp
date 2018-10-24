@@ -244,6 +244,10 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
         [ hcat [ "fromClient = ", pureName ]
         , hcat [ "toClient (", pureName, " client) = client" ]
         ]
+    , instance_ [] ("C'.FromPtr msg " <> pureName)
+        [ "fromPtr = RH'.isClientFromPtr" ]
+    , instance_ [] ("C'.ToPtr s " <> pureName)
+        [ "toPtr = RH'.isClientToPtr" ]
     , instance_ [] ("C'.Decerialize " <> pureName)
         [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
         , hcat [ "decerialize (", rawName, " Nothing) = pure $ ", pureName, " M'.nullClient" ]

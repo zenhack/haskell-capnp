@@ -45,6 +45,10 @@ newtype Persistent = Persistent M'.Client
 instance Rpc.IsClient Persistent where
     fromClient = Persistent
     toClient (Persistent client) = client
+instance C'.FromPtr msg Persistent where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s Persistent where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize Persistent where
     type Cerial msg Persistent = Capnp.Gen.ById.Xb8630836983feed7.Persistent msg
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.Persistent Nothing) = pure $ Persistent M'.nullClient
@@ -76,6 +80,10 @@ newtype RealmGateway = RealmGateway M'.Client
 instance Rpc.IsClient RealmGateway where
     fromClient = RealmGateway
     toClient (RealmGateway client) = client
+instance C'.FromPtr msg RealmGateway where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s RealmGateway where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize RealmGateway where
     type Cerial msg RealmGateway = Capnp.Gen.ById.Xb8630836983feed7.RealmGateway msg
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway Nothing) = pure $ RealmGateway M'.nullClient

@@ -43,6 +43,10 @@ newtype Echo = Echo M'.Client
 instance Rpc.IsClient Echo where
     fromClient = Echo
     toClient (Echo client) = client
+instance C'.FromPtr msg Echo where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s Echo where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize Echo where
     type Cerial msg Echo = Capnp.Gen.ById.Xd0a87f36fa0182f5.Echo msg
     decerialize (Capnp.Gen.ById.Xd0a87f36fa0182f5.Echo Nothing) = pure $ Echo M'.nullClient

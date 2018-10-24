@@ -188,6 +188,10 @@ newtype CallSequence = CallSequence M'.Client
 instance Rpc.IsClient CallSequence where
     fromClient = CallSequence
     toClient (CallSequence client) = client
+instance C'.FromPtr msg CallSequence where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s CallSequence where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize CallSequence where
     type Cerial msg CallSequence = Capnp.Gen.ById.X832bcc6686a26d56.CallSequence msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.CallSequence Nothing) = pure $ CallSequence M'.nullClient
@@ -249,6 +253,10 @@ newtype CounterAcceptor = CounterAcceptor M'.Client
 instance Rpc.IsClient CounterAcceptor where
     fromClient = CounterAcceptor
     toClient (CounterAcceptor client) = client
+instance C'.FromPtr msg CounterAcceptor where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s CounterAcceptor where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize CounterAcceptor where
     type Cerial msg CounterAcceptor = Capnp.Gen.ById.X832bcc6686a26d56.CounterAcceptor msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.CounterAcceptor Nothing) = pure $ CounterAcceptor M'.nullClient
@@ -280,6 +288,10 @@ newtype CounterFactory = CounterFactory M'.Client
 instance Rpc.IsClient CounterFactory where
     fromClient = CounterFactory
     toClient (CounterFactory client) = client
+instance C'.FromPtr msg CounterFactory where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s CounterFactory where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize CounterFactory where
     type Cerial msg CounterFactory = Capnp.Gen.ById.X832bcc6686a26d56.CounterFactory msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.CounterFactory Nothing) = pure $ CounterFactory M'.nullClient
@@ -346,6 +358,10 @@ newtype Echo = Echo M'.Client
 instance Rpc.IsClient Echo where
     fromClient = Echo
     toClient (Echo client) = client
+instance C'.FromPtr msg Echo where
+    fromPtr = RH'.isClientFromPtr
+instance C'.ToPtr s Echo where
+    toPtr = RH'.isClientToPtr
 instance C'.Decerialize Echo where
     type Cerial msg Echo = Capnp.Gen.ById.X832bcc6686a26d56.Echo msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.Echo Nothing) = pure $ Echo M'.nullClient
