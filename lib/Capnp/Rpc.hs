@@ -818,7 +818,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                     Just (ClientAnswer client) -> do
                         result <- try $ do
                             -- We fish out the low-level representation of the params, set the
-                            -- cap table based on the value in the call message(TODO), and then
+                            -- cap table based on the value in the call message, and then
                             -- pass it to the handler. This ensures that any Clients in the value
                             -- are actually connected; on the initial decode they will be null,
                             -- since the cap table is empty.
@@ -826,6 +826,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             -- the handler has to decode again anyway. We should try to make this
                             -- whole business more efficient. See also #52.
                             clients <- atomicallyCommitErrs $ traverse (interpCapDescriptor vat) capTable
+                            rawCall <- Untyped.tMsg (pure . Message.withCapTable clients) rawCall
                             paramContent <- evalLimitT limit $
                                 Rpc.get_Call'params rawCall
                                 >>= Rpc.get_Payload'content
