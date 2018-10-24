@@ -11,7 +11,7 @@ import Data.Function            ((&))
 import Capnp     (ConstMsg, def)
 import Capnp.Rpc
 
-import Capnp.Gen.Echo.Pure
+import qualified Capnp.Gen.Echo.Pure as E
 
 -- | Make a pair of in-memory transports that are connected to one another. i.e,
 -- messages sent on one are received on the other.
@@ -43,27 +43,27 @@ rpcTests = describe "Echo server & client" $
         let runClient = runVat $ (vatConfig $ const clientTrans)
                 { debugMode = True
                 , withBootstrap = Just $ \client -> do
-                    let echoSrv = Echo client
+                    let echoSrv = E.Echo client
                     let msgs =
-                            [ def { query = "Hello #1" }
-                            , def { query = "Hello #2" }
+                            [ def { E.query = "Hello #1" }
+                            , def { E.query = "Hello #2" }
                             ]
-                    rets <- traverse (\msg -> echoSrv & echo'echo msg) msgs
+                    rets <- traverse (\msg -> echoSrv & E.echo'echo msg) msgs
                     liftIO $ rets `shouldBe`
-                        [ def { reply = "Hello #1" }
-                        , def { reply = "Hello #2" }
+                        [ def { E.reply = "Hello #1" }
+                        , def { E.reply = "Hello #2" }
                         ]
                     stopVat
                 }
             runServer = runVat $ (vatConfig $ const serverTrans)
                 { debugMode = True
                 , offerBootstrap = Just $ do
-                    Echo client <- export_Echo TestEchoServer
+                    E.Echo client <- E.export_Echo TestEchoServer
                     pure client
                 }
         race_ runServer runClient
 
 data TestEchoServer = TestEchoServer
 
-instance Echo'server_ TestEchoServer where
-    echo'echo params TestEchoServer = pure def { reply = query params }
+instance E.Echo'server_ TestEchoServer where
+    echo'echo params TestEchoServer = pure def { E.reply = E.query params }
