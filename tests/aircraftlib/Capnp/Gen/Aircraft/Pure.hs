@@ -401,7 +401,8 @@ instance C'.Marshal EchoBase where
     marshalInto raw value = do
         case value of
             EchoBase{..} -> do
-                error "TODO: marshal interface fields."
+                field_ <- C'.cerialize (U'.message raw) echo
+                Capnp.Gen.ById.X832bcc6686a26d56.set_EchoBase'echo raw field_
 instance C'.Cerialize s EchoBase
 instance C'.FromStruct M'.ConstMsg EchoBase where
     fromStruct struct = do
@@ -1436,7 +1437,8 @@ instance C'.Marshal Z where
                 Capnp.Gen.ById.X832bcc6686a26d56.set_Z'grp'first raw first
                 Capnp.Gen.ById.X832bcc6686a26d56.set_Z'grp'second raw second
             Z'echo arg_ -> do
-                error "TODO: marshal interface fields."
+                field_ <- C'.cerialize (U'.message raw) arg_
+                Capnp.Gen.ById.X832bcc6686a26d56.set_Z'echo raw field_
             Z'echoBases arg_ -> do
                 field_ <- Capnp.Gen.ById.X832bcc6686a26d56.new_Z'echoBases raw
                 C'.marshalInto field_ arg_
@@ -1605,7 +1607,8 @@ instance C'.Marshal CounterAcceptor'accept'params where
     marshalInto raw value = do
         case value of
             CounterAcceptor'accept'params{..} -> do
-                error "TODO: marshal interface fields."
+                field_ <- C'.cerialize (U'.message raw) counter
+                Capnp.Gen.ById.X832bcc6686a26d56.set_CounterAcceptor'accept'params'counter raw field_
 instance C'.Cerialize s CounterAcceptor'accept'params
 instance C'.FromStruct M'.ConstMsg CounterAcceptor'accept'params where
     fromStruct struct = do
@@ -1665,7 +1668,8 @@ instance C'.Marshal CounterFactory'newCounter'results where
     marshalInto raw value = do
         case value of
             CounterFactory'newCounter'results{..} -> do
-                error "TODO: marshal interface fields."
+                field_ <- C'.cerialize (U'.message raw) counter
+                Capnp.Gen.ById.X832bcc6686a26d56.set_CounterFactory'newCounter'results'counter raw field_
 instance C'.Cerialize s CounterFactory'newCounter'results
 instance C'.FromStruct M'.ConstMsg CounterFactory'newCounter'results where
     fromStruct struct = do

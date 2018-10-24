@@ -178,7 +178,8 @@ instance C'.Marshal RealmGateway'export'params where
     marshalInto raw value = do
         case value of
             RealmGateway'export'params{..} -> do
-                error "TODO: marshal interface fields."
+                field_ <- C'.cerialize (U'.message raw) cap
+                Capnp.Gen.ById.Xb8630836983feed7.set_RealmGateway'export'params'cap raw field_
                 field_ <- Capnp.Gen.ById.Xb8630836983feed7.new_RealmGateway'export'params'params raw
                 C'.marshalInto field_ params
 instance C'.Cerialize s RealmGateway'export'params
@@ -203,7 +204,8 @@ instance C'.Marshal RealmGateway'import'params where
     marshalInto raw value = do
         case value of
             RealmGateway'import'params{..} -> do
-                error "TODO: marshal interface fields."
+                field_ <- C'.cerialize (U'.message raw) cap
+                Capnp.Gen.ById.Xb8630836983feed7.set_RealmGateway'import'params'cap raw field_
                 field_ <- Capnp.Gen.ById.Xb8630836983feed7.new_RealmGateway'import'params'params raw
                 C'.marshalInto field_ params
 instance C'.Cerialize s RealmGateway'import'params

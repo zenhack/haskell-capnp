@@ -505,8 +505,10 @@ fmtDataDef thisMod dataName dataDef =
                 , hcat [ "C'.marshalInto field_ ", fieldNameText ]
                 ]
             PtrField _ ty -> case ty of
-                PtrInterface _ ->
-                    "error \"TODO: marshal interface fields.\""
+                PtrInterface _ -> vcat
+                    [ hcat [ "field_ <- C'.cerialize (U'.message raw) ", fieldNameText ]
+                    , hcat [ setterName, " raw field_" ]
+                    ]
                 PrimPtr PrimData -> vcat
                     [ hcat [ "field_ <- ", newName, " (BS.length ", fieldNameText, ") raw" ]
                     , hcat [ "C'.marshalInto field_ ", fieldNameText ]
