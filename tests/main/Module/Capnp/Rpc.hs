@@ -33,12 +33,8 @@ rpcTests = do
 echoTests :: Spec
 echoTests = describe "Echo server & client" $
     it "Should echo back the same message." $ runVatPair
-        (do
-            E.Echo client <- E.export_Echo TestEchoServer
-            pure client
-        )
-        (\client -> do
-                let echoSrv = E.Echo client
+        (E.export_Echo TestEchoServer)
+        (\echoSrv -> do
                 let msgs =
                         [ def { E.query = "Hello #1" }
                         , def { E.query = "Hello #2" }
@@ -69,12 +65,8 @@ bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
     it "A counter should maintain state" $ runVatPair
-        (do
-            CallSequence client <- newTestCtr 0 >>= export_CallSequence
-            pure client
-        )
-        (\client -> do
-            let ctr = CallSequence client
+        (newTestCtr 0 >>= export_CallSequence)
+        (\ctr -> do
             results <- replicateM 4 $
                 ctr & callSequence'getNumber def
             liftIO $ results `shouldBe`
@@ -86,13 +78,8 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             stopVat
         )
     xit "Methods returning interfaces work" $ runVatPair
-        (do
-
-            CounterFactory client <- export_CounterFactory TestCtrFactory
-            pure client
-        )
-        (\client -> do
-            let factory = CounterFactory client
+        (export_CounterFactory TestCtrFactory)
+        (\factory -> do
             let newCounter start = do
                     CounterFactory'newCounter'results{counter} <-
                         factory & counterFactory'newCounter def { start }
@@ -134,12 +121,8 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         ctrB <- newTestCtr 0
         ctrC <- newTestCtr 30
         runVatPair
-            (do
-                CounterAcceptor client <- export_CounterAcceptor TestCtrAcceptor
-                pure client
-            )
-            (\client -> do
-                let acceptor = CounterAcceptor client
+            (export_CounterAcceptor TestCtrAcceptor)
+            (\acceptor -> do
                 for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
                     ctr <- export_CallSequence ctrSrv
                     acceptor & counterAcceptor'accept def { counter = ctr }
@@ -210,15 +193,15 @@ mVarTransport sendVar recvVar = Transport
 -- | @'runVatPair' server client@ runs a pair of vats connected to one another,
 -- using 'server' as the 'offerBootstrap' field in the one vat's config, and
 -- 'client' as the 'withBootstrap' field in the other's.
-runVatPair :: RpcT IO Client -> (Client -> RpcT IO ()) -> IO ()
+runVatPair :: IsClient c => RpcT IO c -> (c -> RpcT IO ()) -> IO ()
 runVatPair offerBootstrap withBootstrap = do
     (clientTrans, serverTrans) <- transportPair
     let runClient = runVat $ (vatConfig $ const clientTrans)
             { debugMode = True
-            , withBootstrap = Just withBootstrap
+            , withBootstrap = Just (withBootstrap . fromClient)
             }
         runServer = runVat $ (vatConfig $ const serverTrans)
             { debugMode = True
-            , offerBootstrap = Just offerBootstrap
+            , offerBootstrap = Just (toClient <$> offerBootstrap)
             }
     race_ runServer runClient
