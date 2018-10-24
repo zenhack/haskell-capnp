@@ -64,6 +64,8 @@ module Capnp.Rpc
     , waitIO
     ) where
 
+import Prelude hiding (fail)
+
 import Control.Concurrent.STM
 import Data.Word
 
@@ -72,6 +74,7 @@ import Control.Exception
     (SomeException, fromException, throwIO, try)
 import Control.Monad                   (forever, (>=>))
 import Control.Monad.Catch             (MonadThrow(..))
+import Control.Monad.Fail              (MonadFail(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
 import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
@@ -196,6 +199,9 @@ instance MonadIO m => MonadIO (RpcT m) where
 
 instance MonadThrow m => MonadThrow (RpcT m) where
     throwM = lift . throwM
+
+instance MonadFail m => MonadFail (RpcT m) where
+    fail = lift . fail
 
 instance PrimMonad m => PrimMonad (RpcT m) where
     type PrimState (RpcT m) = PrimState m

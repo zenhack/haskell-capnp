@@ -19,6 +19,8 @@
   just `Either SomeException`.
 * `LimitT m` is now an instance of `MonadIO`, provided that `m` is an
   instance.
+* `RpcT m` is now an instance of `MonadFail`, provided that `m` is an
+  instance.
 * More type class instances from elsewhere in the library are
   re-exported via the `Capnp` module.
 
