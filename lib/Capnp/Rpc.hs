@@ -809,12 +809,12 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
             | otherwise -> do
                 result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
                 case result of
-                    Nothing -> do
+                    Nothing ->
                         -- TODO: adjust this so we don't throw (and thus kill the connection)
                         -- before the abort message is actually sent.
                         abortIO vat $
-                            ("Received 'Call' on non-existant promised answer #"
-                                <> T.pack (show targetQuestionId))
+                            "Received 'Call' on non-existant promised answer #"
+                                <> T.pack (show targetQuestionId)
                     Just (ClientAnswer client) -> do
                         result <- try $ do
                             -- We fish out the low-level representation of the params, set the
@@ -884,7 +884,7 @@ handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             case union' of
                 Return'results Payload{content} ->
                     handleResult sendReturn content
-                Return'exception exn -> do
+                Return'exception exn ->
                     breakPromise sendReturn exn
 
                 -- These shouldn't come up in practice yet, since our
@@ -901,11 +901,11 @@ handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
   where
     -- | handle the @result@ variant of a 'Return'.
     handleResult sendReturn content = case content of
-        Nothing -> do
+        Nothing ->
             fulfill sendReturn def
-        Just (PtrStruct s) -> do
+        Just (PtrStruct s) ->
             fulfill sendReturn s
-        Just _ -> abort vat $
+        Just _ -> abort vat
             -- TODO: I(zenhack) am not sure it's actually invalid to have
             -- capability in a return value, so maybe we should relax this
             -- a bit.
