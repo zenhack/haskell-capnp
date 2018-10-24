@@ -312,7 +312,7 @@ sendQuestion vat@Vat{sendQ,questions,limit} question = do
     modifyTVar' questions $ M.insert (getQuestionId question) question
 
 -- | 'updateSendWithCap' updates the vat's tables as needed, assuming the CapDescriptor
--- is being send to the remote vat as part of a call (TODO: or also return?).
+-- is being sent to the remote vat as part of a call or return.
 updateSendWithCap :: Vat -> CapDescriptor -> STM ()
 updateSendWithCap Vat{exports} = \case
     CapDescriptor'none -> pure ()
