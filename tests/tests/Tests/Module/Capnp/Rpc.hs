@@ -9,6 +9,7 @@ import Test.Hspec
 
 import Control.Concurrent       (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Concurrent.Async (race_)
+import Control.Monad            (replicateM)
 import Control.Monad.IO.Class   (MonadIO, liftIO)
 import Data.Function            ((&))
 
@@ -67,7 +68,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         )
         (\client -> do
             let ctr = CallSequence client
-            results <- sequence $ replicate 4 $
+            results <- replicateM 4 $
                 ctr & callSequence'getNumber def
             liftIO $ results `shouldBe`
                 [ def { n = 1 }
@@ -92,7 +93,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             ctrA <- newCounter 2
             ctrB <- newCounter 0
 
-            let bumpN ctr n = sequence $ replicate n $
+            let bumpN ctr n = replicateM n $
                     ctr & callSequence'getNumber def
 
             r <- bumpN ctrA 4
@@ -170,7 +171,7 @@ mVarTransport sendVar recvVar = Transport
 -- | @'runVatPair' server client@ runs a pair of vats connected to one another,
 -- using 'server' as the 'offerBootstrap' field in the one vat's config, and
 -- 'client' as the 'withBootstrap' field in the other's.
-runVatPair :: (RpcT IO Client) -> (Client -> RpcT IO ()) -> IO ()
+runVatPair :: RpcT IO Client -> (Client -> RpcT IO ()) -> IO ()
 runVatPair offerBootstrap withBootstrap = do
     (clientTrans, serverTrans) <- transportPair
     let runClient = runVat $ (vatConfig $ const clientTrans)
