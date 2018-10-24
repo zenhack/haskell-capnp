@@ -905,8 +905,6 @@ handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             fulfill sendReturn def
         Just (PtrStruct s) ->
             fulfill sendReturn s
-        Just _ -> abort vat
-            -- TODO: I(zenhack) am not sure it's actually invalid to have
-            -- capability in a return value, so maybe we should relax this
-            -- a bit.
-            "Received non-struct pointer in a return message."
+        Just _ -> abort vat $
+            "Received non-struct pointer in a return message. " <>
+            "Return values must always be structs."
