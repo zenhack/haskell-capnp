@@ -140,9 +140,11 @@ fmtNewtypeStruct thisMod name info =
                 ""
             IR.IsStandalone{dataSz, ptrSz} -> vcat
                 [ fmtStructListElem typeCon
-                , instance_ [] ("C'.IsPtr msg (" <> typeCon <> " msg)")
+                , instance_ [] ("C'.FromPtr msg (" <> typeCon <> " msg)")
                     [ hcat [ "fromPtr msg ptr = ", dataCon, " <$> C'.fromPtr msg ptr" ]
-                    , hcat [ "toPtr msg (", dataCon, " struct) = C'.toPtr msg struct" ]
+                    ]
+                , instance_ [] ("C'.ToPtr s (" <> typeCon <> " (M'.MutMsg s))")
+                    [ hcat [ "toPtr msg (", dataCon, " struct) = C'.toPtr msg struct" ]
                     ]
                 , instance_ [] ("B'.MutListElem s (" <> typeCon <> " (M'.MutMsg s))")
                     [ hcat [ "setIndex (", dataCon, " elt) i (List_", typeCon, " l) = U'.setIndex elt i l" ]
@@ -503,9 +505,11 @@ fmtDataDef thisMod dataName (DefInterface _) =
     let name = fmtName thisMod dataName in
     vcat
     [ hcat [ "newtype ", name, " msg = ", name, " (Maybe (U'.Cap msg))" ]
-    , instance_ [] ("C'.IsPtr msg (" <> name <> " msg)")
+    , instance_ [] ("C'.FromPtr msg (" <> name <> " msg)")
         [ hcat [ "fromPtr msg cap = ", name, " <$> C'.fromPtr msg cap" ]
-        , hcat [ "toPtr msg (", name , " Nothing) = pure Nothing" ]
+        ]
+    , instance_ [] ("C'.ToPtr s (" <> name <> " (M'.MutMsg s))")
+        [ hcat [ "toPtr msg (", name , " Nothing) = pure Nothing" ]
         , hcat [ "toPtr msg (", name , " (Just cap)) = pure $ Just $ U'.PtrCap cap" ]
         ]
     ]

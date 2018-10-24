@@ -35,7 +35,8 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Capnp.Classes          (IsPtr(..), ListElem(..), MutListElem(..))
+import Capnp.Classes
+    (FromPtr(..), ListElem(..), MutListElem(..), ToPtr(..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Errors  as E
@@ -132,18 +133,19 @@ instance MutListElem s (Text (M.MutMsg s)) where
     newList msg len = TextList <$> U.allocListPtr msg len
 
 -- helper for the above instances.
-ptrListIndex :: (U.ReadCtx m msg, IsPtr msg a) => Int -> U.ListOf msg (Maybe (U.Ptr msg)) -> m a
+ptrListIndex :: (U.ReadCtx m msg, FromPtr msg a) => Int -> U.ListOf msg (Maybe (U.Ptr msg)) -> m a
 ptrListIndex i list = do
     ptr <- U.index i list
     fromPtr (U.message list) ptr
 
---------- IsPtr instances for Text and Data. These wrap lists of bytes. --------
+--------- To/FromPtr instances for Text and Data. These wrap lists of bytes. --------
 
-instance IsPtr msg (Data msg) where
+instance FromPtr msg (Data msg) where
     fromPtr msg ptr = fromPtr msg ptr >>= getData
+instance ToPtr s (Data (M.MutMsg s)) where
     toPtr msg (Data l) = toPtr msg l
 
-instance IsPtr msg (Text msg) where
+instance FromPtr msg (Text msg) where
     fromPtr msg ptr = case ptr of
         Just _ ->
             fromPtr msg ptr >>= getText
@@ -153,4 +155,5 @@ instance IsPtr msg (Text msg) where
             -- the empty string, so we bypass it here.
             Data bytes <- fromPtr msg ptr
             pure $ Text bytes
+instance ToPtr s (Text (M.MutMsg s)) where
     toPtr msg (Text l) = toPtr msg l

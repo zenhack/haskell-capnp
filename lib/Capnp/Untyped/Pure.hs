@@ -41,7 +41,7 @@ import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
 import Capnp.Classes
-    (Cerialize(..), Decerialize(..), IsPtr(..), Marshal(..))
+    (Cerialize(..), Decerialize(..), Marshal(..), ToPtr(..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Message as M

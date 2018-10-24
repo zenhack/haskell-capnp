@@ -45,8 +45,9 @@ instance B'.ListElem msg (JsonValue msg) where
     toUntypedList (List_JsonValue l) = U'.ListStruct l
     length (List_JsonValue l) = U'.length l
     index i (List_JsonValue l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (JsonValue msg) where
+instance C'.FromPtr msg (JsonValue msg) where
     fromPtr msg ptr = JsonValue_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (JsonValue (M'.MutMsg s)) where
     toPtr msg (JsonValue_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (JsonValue (M'.MutMsg s)) where
     setIndex (JsonValue_newtype_ elt) i (List_JsonValue l) = U'.setIndex elt i l
@@ -146,8 +147,9 @@ instance B'.ListElem msg (JsonValue'Call msg) where
     toUntypedList (List_JsonValue'Call l) = U'.ListStruct l
     length (List_JsonValue'Call l) = U'.length l
     index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (JsonValue'Call msg) where
+instance C'.FromPtr msg (JsonValue'Call msg) where
     fromPtr msg ptr = JsonValue'Call_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (JsonValue'Call (M'.MutMsg s)) where
     toPtr msg (JsonValue'Call_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (JsonValue'Call (M'.MutMsg s)) where
     setIndex (JsonValue'Call_newtype_ elt) i (List_JsonValue'Call l) = U'.setIndex elt i l
@@ -202,8 +204,9 @@ instance B'.ListElem msg (JsonValue'Field msg) where
     toUntypedList (List_JsonValue'Field l) = U'.ListStruct l
     length (List_JsonValue'Field l) = U'.length l
     index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (JsonValue'Field msg) where
+instance C'.FromPtr msg (JsonValue'Field msg) where
     fromPtr msg ptr = JsonValue'Field_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (JsonValue'Field (M'.MutMsg s)) where
     toPtr msg (JsonValue'Field_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (JsonValue'Field (M'.MutMsg s)) where
     setIndex (JsonValue'Field_newtype_ elt) i (List_JsonValue'Field l) = U'.setIndex elt i l

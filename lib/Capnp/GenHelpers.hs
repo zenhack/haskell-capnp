@@ -64,7 +64,7 @@ embedCapPtr msg client =
 -- if decoding is not successful.
 --
 -- The purpose of this is for defining constants of pointer type from a schema.
-getPtrConst :: C.IsPtr M.ConstMsg a => BS.ByteString -> a
+getPtrConst :: C.FromPtr M.ConstMsg a => BS.ByteString -> a
 getPtrConst bytes = fromJust $ do
     msg <- bsToMsg bytes
     evalLimitT maxBound $ U.rootPtr msg >>= U.getPtr 0 >>= C.fromPtr msg

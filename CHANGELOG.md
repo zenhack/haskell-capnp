@@ -23,6 +23,8 @@
   instance.
 * More type class instances from elsewhere in the library are
   re-exported via the `Capnp` module.
+* The `IsPtr` type class has been split into `FromPtr` and `ToPtr`. Most
+  user code should not care about this.
 
 # 0.3.0.0
 

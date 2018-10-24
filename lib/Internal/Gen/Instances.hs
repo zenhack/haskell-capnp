@@ -11,7 +11,7 @@ import Data.Word
 import Capnp.Classes
     ( ListElem(..)
     , MutListElem(..)
-    , IsPtr(..)
+    , FromPtr(..)
     , Decerialize(..)
     )
 

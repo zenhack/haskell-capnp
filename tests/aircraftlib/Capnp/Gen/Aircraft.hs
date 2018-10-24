@@ -44,8 +44,9 @@ instance B'.ListElem msg (A320 msg) where
     toUntypedList (List_A320 l) = U'.ListStruct l
     length (List_A320 l) = U'.length l
     index i (List_A320 l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (A320 msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (A320 msg) where
+instance C'.FromPtr msg (A320 msg) where
     fromPtr msg ptr = A320_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (A320 (M'.MutMsg s)) where
     toPtr msg (A320_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (A320 (M'.MutMsg s)) where
     setIndex (A320_newtype_ elt) i (List_A320 l) = U'.setIndex elt i l
@@ -85,8 +86,9 @@ instance B'.ListElem msg (Aircraft msg) where
     toUntypedList (List_Aircraft l) = U'.ListStruct l
     length (List_Aircraft l) = U'.length l
     index i (List_Aircraft l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Aircraft msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Aircraft msg) where
+instance C'.FromPtr msg (Aircraft msg) where
     fromPtr msg ptr = Aircraft_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Aircraft (M'.MutMsg s)) where
     toPtr msg (Aircraft_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Aircraft (M'.MutMsg s)) where
     setIndex (Aircraft_newtype_ elt) i (List_Aircraft l) = U'.setIndex elt i l
@@ -202,8 +204,9 @@ instance B'.ListElem msg (B737 msg) where
     toUntypedList (List_B737 l) = U'.ListStruct l
     length (List_B737 l) = U'.length l
     index i (List_B737 l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (B737 msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (B737 msg) where
+instance C'.FromPtr msg (B737 msg) where
     fromPtr msg ptr = B737_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (B737 (M'.MutMsg s)) where
     toPtr msg (B737_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (B737 (M'.MutMsg s)) where
     setIndex (B737_newtype_ elt) i (List_B737 l) = U'.setIndex elt i l
@@ -243,8 +246,9 @@ instance B'.ListElem msg (Bag msg) where
     toUntypedList (List_Bag l) = U'.ListStruct l
     length (List_Bag l) = U'.length l
     index i (List_Bag l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Bag msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Bag msg) where
+instance C'.FromPtr msg (Bag msg) where
     fromPtr msg ptr = Bag_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Bag (M'.MutMsg s)) where
     toPtr msg (Bag_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Bag (M'.MutMsg s)) where
     setIndex (Bag_newtype_ elt) i (List_Bag l) = U'.setIndex elt i l
@@ -284,8 +288,9 @@ instance B'.ListElem msg (BenchmarkA msg) where
     toUntypedList (List_BenchmarkA l) = U'.ListStruct l
     length (List_BenchmarkA l) = U'.length l
     index i (List_BenchmarkA l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (BenchmarkA msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (BenchmarkA msg) where
+instance C'.FromPtr msg (BenchmarkA msg) where
     fromPtr msg ptr = BenchmarkA_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (BenchmarkA (M'.MutMsg s)) where
     toPtr msg (BenchmarkA_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (BenchmarkA (M'.MutMsg s)) where
     setIndex (BenchmarkA_newtype_ elt) i (List_BenchmarkA l) = U'.setIndex elt i l
@@ -339,8 +344,9 @@ get_BenchmarkA'money (BenchmarkA_newtype_ struct) = H'.getWordField struct 2 0 0
 set_BenchmarkA'money :: U'.RWCtx m s => BenchmarkA (M'.MutMsg s) -> Double -> m ()
 set_BenchmarkA'money (BenchmarkA_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word64) 2 0 0
 newtype CallSequence msg = CallSequence (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (CallSequence msg) where
+instance C'.FromPtr msg (CallSequence msg) where
     fromPtr msg cap = CallSequence <$> C'.fromPtr msg cap
+instance C'.ToPtr s (CallSequence (M'.MutMsg s)) where
     toPtr msg (CallSequence Nothing) = pure Nothing
     toPtr msg (CallSequence (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Counter msg = Counter_newtype_ (U'.Struct msg)
@@ -361,8 +367,9 @@ instance B'.ListElem msg (Counter msg) where
     toUntypedList (List_Counter l) = U'.ListStruct l
     length (List_Counter l) = U'.length l
     index i (List_Counter l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Counter msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Counter msg) where
+instance C'.FromPtr msg (Counter msg) where
     fromPtr msg ptr = Counter_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Counter (M'.MutMsg s)) where
     toPtr msg (Counter_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Counter (M'.MutMsg s)) where
     setIndex (Counter_newtype_ elt) i (List_Counter l) = U'.setIndex elt i l
@@ -404,13 +411,15 @@ new_Counter'wordlist len struct = do
     set_Counter'wordlist struct result
     pure result
 newtype CounterAcceptor msg = CounterAcceptor (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (CounterAcceptor msg) where
+instance C'.FromPtr msg (CounterAcceptor msg) where
     fromPtr msg cap = CounterAcceptor <$> C'.fromPtr msg cap
+instance C'.ToPtr s (CounterAcceptor (M'.MutMsg s)) where
     toPtr msg (CounterAcceptor Nothing) = pure Nothing
     toPtr msg (CounterAcceptor (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype CounterFactory msg = CounterFactory (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (CounterFactory msg) where
+instance C'.FromPtr msg (CounterFactory msg) where
     fromPtr msg cap = CounterFactory <$> C'.fromPtr msg cap
+instance C'.ToPtr s (CounterFactory (M'.MutMsg s)) where
     toPtr msg (CounterFactory Nothing) = pure Nothing
     toPtr msg (CounterFactory (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Defaults msg = Defaults_newtype_ (U'.Struct msg)
@@ -431,8 +440,9 @@ instance B'.ListElem msg (Defaults msg) where
     toUntypedList (List_Defaults l) = U'.ListStruct l
     length (List_Defaults l) = U'.length l
     index i (List_Defaults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Defaults msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Defaults msg) where
+instance C'.FromPtr msg (Defaults msg) where
     fromPtr msg ptr = Defaults_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Defaults (M'.MutMsg s)) where
     toPtr msg (Defaults_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Defaults (M'.MutMsg s)) where
     setIndex (Defaults_newtype_ elt) i (List_Defaults l) = U'.setIndex elt i l
@@ -482,8 +492,9 @@ get_Defaults'uint (Defaults_newtype_ struct) = H'.getWordField struct 1 0 42
 set_Defaults'uint :: U'.RWCtx m s => Defaults (M'.MutMsg s) -> Word32 -> m ()
 set_Defaults'uint (Defaults_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 1 0 42
 newtype Echo msg = Echo (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (Echo msg) where
+instance C'.FromPtr msg (Echo msg) where
     fromPtr msg cap = Echo <$> C'.fromPtr msg cap
+instance C'.ToPtr s (Echo (M'.MutMsg s)) where
     toPtr msg (Echo Nothing) = pure Nothing
     toPtr msg (Echo (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype EchoBase msg = EchoBase_newtype_ (U'.Struct msg)
@@ -504,8 +515,9 @@ instance B'.ListElem msg (EchoBase msg) where
     toUntypedList (List_EchoBase l) = U'.ListStruct l
     length (List_EchoBase l) = U'.length l
     index i (List_EchoBase l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (EchoBase msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (EchoBase msg) where
+instance C'.FromPtr msg (EchoBase msg) where
     fromPtr msg ptr = EchoBase_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (EchoBase (M'.MutMsg s)) where
     toPtr msg (EchoBase_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (EchoBase (M'.MutMsg s)) where
     setIndex (EchoBase_newtype_ elt) i (List_EchoBase l) = U'.setIndex elt i l
@@ -540,8 +552,9 @@ instance B'.ListElem msg (EchoBases msg) where
     toUntypedList (List_EchoBases l) = U'.ListStruct l
     length (List_EchoBases l) = U'.length l
     index i (List_EchoBases l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (EchoBases msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (EchoBases msg) where
+instance C'.FromPtr msg (EchoBases msg) where
     fromPtr msg ptr = EchoBases_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (EchoBases (M'.MutMsg s)) where
     toPtr msg (EchoBases_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (EchoBases (M'.MutMsg s)) where
     setIndex (EchoBases_newtype_ elt) i (List_EchoBases l) = U'.setIndex elt i l
@@ -581,8 +594,9 @@ instance B'.ListElem msg (F16 msg) where
     toUntypedList (List_F16 l) = U'.ListStruct l
     length (List_F16 l) = U'.length l
     index i (List_F16 l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (F16 msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (F16 msg) where
+instance C'.FromPtr msg (F16 msg) where
     fromPtr msg ptr = F16_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (F16 (M'.MutMsg s)) where
     toPtr msg (F16_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (F16 (M'.MutMsg s)) where
     setIndex (F16_newtype_ elt) i (List_F16 l) = U'.setIndex elt i l
@@ -622,8 +636,9 @@ instance B'.ListElem msg (HoldsText msg) where
     toUntypedList (List_HoldsText l) = U'.ListStruct l
     length (List_HoldsText l) = U'.length l
     index i (List_HoldsText l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsText msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsText msg) where
+instance C'.FromPtr msg (HoldsText msg) where
     fromPtr msg ptr = HoldsText_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsText (M'.MutMsg s)) where
     toPtr msg (HoldsText_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsText (M'.MutMsg s)) where
     setIndex (HoldsText_newtype_ elt) i (List_HoldsText l) = U'.setIndex elt i l
@@ -693,8 +708,9 @@ instance B'.ListElem msg (HoldsVerEmptyList msg) where
     toUntypedList (List_HoldsVerEmptyList l) = U'.ListStruct l
     length (List_HoldsVerEmptyList l) = U'.length l
     index i (List_HoldsVerEmptyList l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerEmptyList msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerEmptyList msg) where
+instance C'.FromPtr msg (HoldsVerEmptyList msg) where
     fromPtr msg ptr = HoldsVerEmptyList_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerEmptyList (M'.MutMsg s)) where
     toPtr msg (HoldsVerEmptyList_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerEmptyList (M'.MutMsg s)) where
     setIndex (HoldsVerEmptyList_newtype_ elt) i (List_HoldsVerEmptyList l) = U'.setIndex elt i l
@@ -734,8 +750,9 @@ instance B'.ListElem msg (HoldsVerOneDataList msg) where
     toUntypedList (List_HoldsVerOneDataList l) = U'.ListStruct l
     length (List_HoldsVerOneDataList l) = U'.length l
     index i (List_HoldsVerOneDataList l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerOneDataList msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerOneDataList msg) where
+instance C'.FromPtr msg (HoldsVerOneDataList msg) where
     fromPtr msg ptr = HoldsVerOneDataList_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerOneDataList (M'.MutMsg s)) where
     toPtr msg (HoldsVerOneDataList_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerOneDataList (M'.MutMsg s)) where
     setIndex (HoldsVerOneDataList_newtype_ elt) i (List_HoldsVerOneDataList l) = U'.setIndex elt i l
@@ -775,8 +792,9 @@ instance B'.ListElem msg (HoldsVerOnePtrList msg) where
     toUntypedList (List_HoldsVerOnePtrList l) = U'.ListStruct l
     length (List_HoldsVerOnePtrList l) = U'.length l
     index i (List_HoldsVerOnePtrList l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerOnePtrList msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerOnePtrList msg) where
+instance C'.FromPtr msg (HoldsVerOnePtrList msg) where
     fromPtr msg ptr = HoldsVerOnePtrList_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerOnePtrList (M'.MutMsg s)) where
     toPtr msg (HoldsVerOnePtrList_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerOnePtrList (M'.MutMsg s)) where
     setIndex (HoldsVerOnePtrList_newtype_ elt) i (List_HoldsVerOnePtrList l) = U'.setIndex elt i l
@@ -816,8 +834,9 @@ instance B'.ListElem msg (HoldsVerTwoDataList msg) where
     toUntypedList (List_HoldsVerTwoDataList l) = U'.ListStruct l
     length (List_HoldsVerTwoDataList l) = U'.length l
     index i (List_HoldsVerTwoDataList l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerTwoDataList msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerTwoDataList msg) where
+instance C'.FromPtr msg (HoldsVerTwoDataList msg) where
     fromPtr msg ptr = HoldsVerTwoDataList_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerTwoDataList (M'.MutMsg s)) where
     toPtr msg (HoldsVerTwoDataList_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerTwoDataList (M'.MutMsg s)) where
     setIndex (HoldsVerTwoDataList_newtype_ elt) i (List_HoldsVerTwoDataList l) = U'.setIndex elt i l
@@ -857,8 +876,9 @@ instance B'.ListElem msg (HoldsVerTwoPtrList msg) where
     toUntypedList (List_HoldsVerTwoPtrList l) = U'.ListStruct l
     length (List_HoldsVerTwoPtrList l) = U'.length l
     index i (List_HoldsVerTwoPtrList l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerTwoPtrList msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerTwoPtrList msg) where
+instance C'.FromPtr msg (HoldsVerTwoPtrList msg) where
     fromPtr msg ptr = HoldsVerTwoPtrList_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerTwoPtrList (M'.MutMsg s)) where
     toPtr msg (HoldsVerTwoPtrList_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerTwoPtrList (M'.MutMsg s)) where
     setIndex (HoldsVerTwoPtrList_newtype_ elt) i (List_HoldsVerTwoPtrList l) = U'.setIndex elt i l
@@ -898,8 +918,9 @@ instance B'.ListElem msg (HoldsVerTwoTwoList msg) where
     toUntypedList (List_HoldsVerTwoTwoList l) = U'.ListStruct l
     length (List_HoldsVerTwoTwoList l) = U'.length l
     index i (List_HoldsVerTwoTwoList l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerTwoTwoList msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerTwoTwoList msg) where
+instance C'.FromPtr msg (HoldsVerTwoTwoList msg) where
     fromPtr msg ptr = HoldsVerTwoTwoList_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerTwoTwoList (M'.MutMsg s)) where
     toPtr msg (HoldsVerTwoTwoList_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerTwoTwoList (M'.MutMsg s)) where
     setIndex (HoldsVerTwoTwoList_newtype_ elt) i (List_HoldsVerTwoTwoList l) = U'.setIndex elt i l
@@ -939,8 +960,9 @@ instance B'.ListElem msg (HoldsVerTwoTwoPlus msg) where
     toUntypedList (List_HoldsVerTwoTwoPlus l) = U'.ListStruct l
     length (List_HoldsVerTwoTwoPlus l) = U'.length l
     index i (List_HoldsVerTwoTwoPlus l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (HoldsVerTwoTwoPlus msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (HoldsVerTwoTwoPlus msg) where
+instance C'.FromPtr msg (HoldsVerTwoTwoPlus msg) where
     fromPtr msg ptr = HoldsVerTwoTwoPlus_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (HoldsVerTwoTwoPlus (M'.MutMsg s)) where
     toPtr msg (HoldsVerTwoTwoPlus_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (HoldsVerTwoTwoPlus (M'.MutMsg s)) where
     setIndex (HoldsVerTwoTwoPlus_newtype_ elt) i (List_HoldsVerTwoTwoPlus l) = U'.setIndex elt i l
@@ -980,8 +1002,9 @@ instance B'.ListElem msg (Hoth msg) where
     toUntypedList (List_Hoth l) = U'.ListStruct l
     length (List_Hoth l) = U'.length l
     index i (List_Hoth l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Hoth msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Hoth msg) where
+instance C'.FromPtr msg (Hoth msg) where
     fromPtr msg ptr = Hoth_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Hoth (M'.MutMsg s)) where
     toPtr msg (Hoth_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Hoth (M'.MutMsg s)) where
     setIndex (Hoth_newtype_ elt) i (List_Hoth l) = U'.setIndex elt i l
@@ -1021,8 +1044,9 @@ instance B'.ListElem msg (ListStructCapn msg) where
     toUntypedList (List_ListStructCapn l) = U'.ListStruct l
     length (List_ListStructCapn l) = U'.length l
     index i (List_ListStructCapn l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ListStructCapn msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (ListStructCapn msg) where
+instance C'.FromPtr msg (ListStructCapn msg) where
     fromPtr msg ptr = ListStructCapn_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (ListStructCapn (M'.MutMsg s)) where
     toPtr msg (ListStructCapn_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (ListStructCapn (M'.MutMsg s)) where
     setIndex (ListStructCapn_newtype_ elt) i (List_ListStructCapn l) = U'.setIndex elt i l
@@ -1062,8 +1086,9 @@ instance B'.ListElem msg (Nester1Capn msg) where
     toUntypedList (List_Nester1Capn l) = U'.ListStruct l
     length (List_Nester1Capn l) = U'.length l
     index i (List_Nester1Capn l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Nester1Capn msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Nester1Capn msg) where
+instance C'.FromPtr msg (Nester1Capn msg) where
     fromPtr msg ptr = Nester1Capn_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Nester1Capn (M'.MutMsg s)) where
     toPtr msg (Nester1Capn_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Nester1Capn (M'.MutMsg s)) where
     setIndex (Nester1Capn_newtype_ elt) i (List_Nester1Capn l) = U'.setIndex elt i l
@@ -1103,8 +1128,9 @@ instance B'.ListElem msg (PlaneBase msg) where
     toUntypedList (List_PlaneBase l) = U'.ListStruct l
     length (List_PlaneBase l) = U'.length l
     index i (List_PlaneBase l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (PlaneBase msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (PlaneBase msg) where
+instance C'.FromPtr msg (PlaneBase msg) where
     fromPtr msg ptr = PlaneBase_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (PlaneBase (M'.MutMsg s)) where
     toPtr msg (PlaneBase_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (PlaneBase (M'.MutMsg s)) where
     setIndex (PlaneBase_newtype_ elt) i (List_PlaneBase l) = U'.setIndex elt i l
@@ -1175,8 +1201,9 @@ instance B'.ListElem msg (RWTestCapn msg) where
     toUntypedList (List_RWTestCapn l) = U'.ListStruct l
     length (List_RWTestCapn l) = U'.length l
     index i (List_RWTestCapn l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RWTestCapn msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (RWTestCapn msg) where
+instance C'.FromPtr msg (RWTestCapn msg) where
     fromPtr msg ptr = RWTestCapn_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (RWTestCapn (M'.MutMsg s)) where
     toPtr msg (RWTestCapn_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (RWTestCapn (M'.MutMsg s)) where
     setIndex (RWTestCapn_newtype_ elt) i (List_RWTestCapn l) = U'.setIndex elt i l
@@ -1216,8 +1243,9 @@ instance B'.ListElem msg (Regression msg) where
     toUntypedList (List_Regression l) = U'.ListStruct l
     length (List_Regression l) = U'.length l
     index i (List_Regression l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Regression msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Regression msg) where
+instance C'.FromPtr msg (Regression msg) where
     fromPtr msg ptr = Regression_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Regression (M'.MutMsg s)) where
     toPtr msg (Regression_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Regression (M'.MutMsg s)) where
     setIndex (Regression_newtype_ elt) i (List_Regression l) = U'.setIndex elt i l
@@ -1299,8 +1327,9 @@ instance B'.ListElem msg (StackingA msg) where
     toUntypedList (List_StackingA l) = U'.ListStruct l
     length (List_StackingA l) = U'.length l
     index i (List_StackingA l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (StackingA msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (StackingA msg) where
+instance C'.FromPtr msg (StackingA msg) where
     fromPtr msg ptr = StackingA_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (StackingA (M'.MutMsg s)) where
     toPtr msg (StackingA_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (StackingA (M'.MutMsg s)) where
     setIndex (StackingA_newtype_ elt) i (List_StackingA l) = U'.setIndex elt i l
@@ -1344,8 +1373,9 @@ instance B'.ListElem msg (StackingB msg) where
     toUntypedList (List_StackingB l) = U'.ListStruct l
     length (List_StackingB l) = U'.length l
     index i (List_StackingB l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (StackingB msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (StackingB msg) where
+instance C'.FromPtr msg (StackingB msg) where
     fromPtr msg ptr = StackingB_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (StackingB (M'.MutMsg s)) where
     toPtr msg (StackingB_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (StackingB (M'.MutMsg s)) where
     setIndex (StackingB_newtype_ elt) i (List_StackingB l) = U'.setIndex elt i l
@@ -1374,8 +1404,9 @@ instance B'.ListElem msg (StackingRoot msg) where
     toUntypedList (List_StackingRoot l) = U'.ListStruct l
     length (List_StackingRoot l) = U'.length l
     index i (List_StackingRoot l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (StackingRoot msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (StackingRoot msg) where
+instance C'.FromPtr msg (StackingRoot msg) where
     fromPtr msg ptr = StackingRoot_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (StackingRoot (M'.MutMsg s)) where
     toPtr msg (StackingRoot_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (StackingRoot (M'.MutMsg s)) where
     setIndex (StackingRoot_newtype_ elt) i (List_StackingRoot l) = U'.setIndex elt i l
@@ -1430,8 +1461,9 @@ instance B'.ListElem msg (VerEmpty msg) where
     toUntypedList (List_VerEmpty l) = U'.ListStruct l
     length (List_VerEmpty l) = U'.length l
     index i (List_VerEmpty l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerEmpty msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerEmpty msg) where
+instance C'.FromPtr msg (VerEmpty msg) where
     fromPtr msg ptr = VerEmpty_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerEmpty (M'.MutMsg s)) where
     toPtr msg (VerEmpty_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerEmpty (M'.MutMsg s)) where
     setIndex (VerEmpty_newtype_ elt) i (List_VerEmpty l) = U'.setIndex elt i l
@@ -1456,8 +1488,9 @@ instance B'.ListElem msg (VerOneData msg) where
     toUntypedList (List_VerOneData l) = U'.ListStruct l
     length (List_VerOneData l) = U'.length l
     index i (List_VerOneData l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerOneData msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerOneData msg) where
+instance C'.FromPtr msg (VerOneData msg) where
     fromPtr msg ptr = VerOneData_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerOneData (M'.MutMsg s)) where
     toPtr msg (VerOneData_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerOneData (M'.MutMsg s)) where
     setIndex (VerOneData_newtype_ elt) i (List_VerOneData l) = U'.setIndex elt i l
@@ -1486,8 +1519,9 @@ instance B'.ListElem msg (VerOnePtr msg) where
     toUntypedList (List_VerOnePtr l) = U'.ListStruct l
     length (List_VerOnePtr l) = U'.length l
     index i (List_VerOnePtr l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerOnePtr msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerOnePtr msg) where
+instance C'.FromPtr msg (VerOnePtr msg) where
     fromPtr msg ptr = VerOnePtr_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerOnePtr (M'.MutMsg s)) where
     toPtr msg (VerOnePtr_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerOnePtr (M'.MutMsg s)) where
     setIndex (VerOnePtr_newtype_ elt) i (List_VerOnePtr l) = U'.setIndex elt i l
@@ -1527,8 +1561,9 @@ instance B'.ListElem msg (VerTwoData msg) where
     toUntypedList (List_VerTwoData l) = U'.ListStruct l
     length (List_VerTwoData l) = U'.length l
     index i (List_VerTwoData l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerTwoData msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerTwoData msg) where
+instance C'.FromPtr msg (VerTwoData msg) where
     fromPtr msg ptr = VerTwoData_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerTwoData (M'.MutMsg s)) where
     toPtr msg (VerTwoData_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerTwoData (M'.MutMsg s)) where
     setIndex (VerTwoData_newtype_ elt) i (List_VerTwoData l) = U'.setIndex elt i l
@@ -1561,8 +1596,9 @@ instance B'.ListElem msg (VerTwoDataTwoPtr msg) where
     toUntypedList (List_VerTwoDataTwoPtr l) = U'.ListStruct l
     length (List_VerTwoDataTwoPtr l) = U'.length l
     index i (List_VerTwoDataTwoPtr l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerTwoDataTwoPtr msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerTwoDataTwoPtr msg) where
+instance C'.FromPtr msg (VerTwoDataTwoPtr msg) where
     fromPtr msg ptr = VerTwoDataTwoPtr_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerTwoDataTwoPtr (M'.MutMsg s)) where
     toPtr msg (VerTwoDataTwoPtr_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerTwoDataTwoPtr (M'.MutMsg s)) where
     setIndex (VerTwoDataTwoPtr_newtype_ elt) i (List_VerTwoDataTwoPtr l) = U'.setIndex elt i l
@@ -1625,8 +1661,9 @@ instance B'.ListElem msg (VerTwoPtr msg) where
     toUntypedList (List_VerTwoPtr l) = U'.ListStruct l
     length (List_VerTwoPtr l) = U'.length l
     index i (List_VerTwoPtr l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerTwoPtr msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerTwoPtr msg) where
+instance C'.FromPtr msg (VerTwoPtr msg) where
     fromPtr msg ptr = VerTwoPtr_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerTwoPtr (M'.MutMsg s)) where
     toPtr msg (VerTwoPtr_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerTwoPtr (M'.MutMsg s)) where
     setIndex (VerTwoPtr_newtype_ elt) i (List_VerTwoPtr l) = U'.setIndex elt i l
@@ -1681,8 +1718,9 @@ instance B'.ListElem msg (VerTwoTwoPlus msg) where
     toUntypedList (List_VerTwoTwoPlus l) = U'.ListStruct l
     length (List_VerTwoTwoPlus l) = U'.length l
     index i (List_VerTwoTwoPlus l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VerTwoTwoPlus msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VerTwoTwoPlus msg) where
+instance C'.FromPtr msg (VerTwoTwoPlus msg) where
     fromPtr msg ptr = VerTwoTwoPlus_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VerTwoTwoPlus (M'.MutMsg s)) where
     toPtr msg (VerTwoTwoPlus_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VerTwoTwoPlus (M'.MutMsg s)) where
     setIndex (VerTwoTwoPlus_newtype_ elt) i (List_VerTwoTwoPlus l) = U'.setIndex elt i l
@@ -1764,8 +1802,9 @@ instance B'.ListElem msg (VoidUnion msg) where
     toUntypedList (List_VoidUnion l) = U'.ListStruct l
     length (List_VoidUnion l) = U'.length l
     index i (List_VoidUnion l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VoidUnion msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (VoidUnion msg) where
+instance C'.FromPtr msg (VoidUnion msg) where
     fromPtr msg ptr = VoidUnion_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (VoidUnion (M'.MutMsg s)) where
     toPtr msg (VoidUnion_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (VoidUnion (M'.MutMsg s)) where
     setIndex (VoidUnion_newtype_ elt) i (List_VoidUnion l) = U'.setIndex elt i l
@@ -1809,8 +1848,9 @@ instance B'.ListElem msg (Wrap2x2 msg) where
     toUntypedList (List_Wrap2x2 l) = U'.ListStruct l
     length (List_Wrap2x2 l) = U'.length l
     index i (List_Wrap2x2 l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Wrap2x2 msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Wrap2x2 msg) where
+instance C'.FromPtr msg (Wrap2x2 msg) where
     fromPtr msg ptr = Wrap2x2_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Wrap2x2 (M'.MutMsg s)) where
     toPtr msg (Wrap2x2_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Wrap2x2 (M'.MutMsg s)) where
     setIndex (Wrap2x2_newtype_ elt) i (List_Wrap2x2 l) = U'.setIndex elt i l
@@ -1850,8 +1890,9 @@ instance B'.ListElem msg (Wrap2x2plus msg) where
     toUntypedList (List_Wrap2x2plus l) = U'.ListStruct l
     length (List_Wrap2x2plus l) = U'.length l
     index i (List_Wrap2x2plus l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Wrap2x2plus msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Wrap2x2plus msg) where
+instance C'.FromPtr msg (Wrap2x2plus msg) where
     fromPtr msg ptr = Wrap2x2plus_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Wrap2x2plus (M'.MutMsg s)) where
     toPtr msg (Wrap2x2plus_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Wrap2x2plus (M'.MutMsg s)) where
     setIndex (Wrap2x2plus_newtype_ elt) i (List_Wrap2x2plus l) = U'.setIndex elt i l
@@ -1891,8 +1932,9 @@ instance B'.ListElem msg (WrapEmpty msg) where
     toUntypedList (List_WrapEmpty l) = U'.ListStruct l
     length (List_WrapEmpty l) = U'.length l
     index i (List_WrapEmpty l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (WrapEmpty msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (WrapEmpty msg) where
+instance C'.FromPtr msg (WrapEmpty msg) where
     fromPtr msg ptr = WrapEmpty_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (WrapEmpty (M'.MutMsg s)) where
     toPtr msg (WrapEmpty_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (WrapEmpty (M'.MutMsg s)) where
     setIndex (WrapEmpty_newtype_ elt) i (List_WrapEmpty l) = U'.setIndex elt i l
@@ -1932,8 +1974,9 @@ instance B'.ListElem msg (Z msg) where
     toUntypedList (List_Z l) = U'.ListStruct l
     length (List_Z l) = U'.length l
     index i (List_Z l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Z msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Z msg) where
+instance C'.FromPtr msg (Z msg) where
     fromPtr msg ptr = Z_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Z (M'.MutMsg s)) where
     toPtr msg (Z_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Z (M'.MutMsg s)) where
     setIndex (Z_newtype_ elt) i (List_Z l) = U'.setIndex elt i l
@@ -2438,8 +2481,9 @@ instance B'.ListElem msg (Zdata msg) where
     toUntypedList (List_Zdata l) = U'.ListStruct l
     length (List_Zdata l) = U'.length l
     index i (List_Zdata l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Zdata msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Zdata msg) where
+instance C'.FromPtr msg (Zdata msg) where
     fromPtr msg ptr = Zdata_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Zdata (M'.MutMsg s)) where
     toPtr msg (Zdata_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Zdata (M'.MutMsg s)) where
     setIndex (Zdata_newtype_ elt) i (List_Zdata l) = U'.setIndex elt i l
@@ -2479,8 +2523,9 @@ instance B'.ListElem msg (Zdate msg) where
     toUntypedList (List_Zdate l) = U'.ListStruct l
     length (List_Zdate l) = U'.length l
     index i (List_Zdate l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Zdate msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Zdate msg) where
+instance C'.FromPtr msg (Zdate msg) where
     fromPtr msg ptr = Zdate_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Zdate (M'.MutMsg s)) where
     toPtr msg (Zdate_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Zdate (M'.MutMsg s)) where
     setIndex (Zdate_newtype_ elt) i (List_Zdate l) = U'.setIndex elt i l
@@ -2517,8 +2562,9 @@ instance B'.ListElem msg (Zjob msg) where
     toUntypedList (List_Zjob l) = U'.ListStruct l
     length (List_Zjob l) = U'.length l
     index i (List_Zjob l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Zjob msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Zjob msg) where
+instance C'.FromPtr msg (Zjob msg) where
     fromPtr msg ptr = Zjob_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Zjob (M'.MutMsg s)) where
     toPtr msg (Zjob_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Zjob (M'.MutMsg s)) where
     setIndex (Zjob_newtype_ elt) i (List_Zjob l) = U'.setIndex elt i l
@@ -2573,8 +2619,9 @@ instance B'.ListElem msg (Zserver msg) where
     toUntypedList (List_Zserver l) = U'.ListStruct l
     length (List_Zserver l) = U'.length l
     index i (List_Zserver l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Zserver msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Zserver msg) where
+instance C'.FromPtr msg (Zserver msg) where
     fromPtr msg ptr = Zserver_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Zserver (M'.MutMsg s)) where
     toPtr msg (Zserver_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Zserver (M'.MutMsg s)) where
     setIndex (Zserver_newtype_ elt) i (List_Zserver l) = U'.setIndex elt i l
@@ -2620,8 +2667,9 @@ instance B'.ListElem msg (CallSequence'getNumber'params msg) where
     toUntypedList (List_CallSequence'getNumber'params l) = U'.ListStruct l
     length (List_CallSequence'getNumber'params l) = U'.length l
     index i (List_CallSequence'getNumber'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CallSequence'getNumber'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (CallSequence'getNumber'params msg) where
+instance C'.FromPtr msg (CallSequence'getNumber'params msg) where
     fromPtr msg ptr = CallSequence'getNumber'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (CallSequence'getNumber'params (M'.MutMsg s)) where
     toPtr msg (CallSequence'getNumber'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CallSequence'getNumber'params (M'.MutMsg s)) where
     setIndex (CallSequence'getNumber'params_newtype_ elt) i (List_CallSequence'getNumber'params l) = U'.setIndex elt i l
@@ -2646,8 +2694,9 @@ instance B'.ListElem msg (CallSequence'getNumber'results msg) where
     toUntypedList (List_CallSequence'getNumber'results l) = U'.ListStruct l
     length (List_CallSequence'getNumber'results l) = U'.length l
     index i (List_CallSequence'getNumber'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CallSequence'getNumber'results msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (CallSequence'getNumber'results msg) where
+instance C'.FromPtr msg (CallSequence'getNumber'results msg) where
     fromPtr msg ptr = CallSequence'getNumber'results_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (CallSequence'getNumber'results (M'.MutMsg s)) where
     toPtr msg (CallSequence'getNumber'results_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CallSequence'getNumber'results (M'.MutMsg s)) where
     setIndex (CallSequence'getNumber'results_newtype_ elt) i (List_CallSequence'getNumber'results l) = U'.setIndex elt i l
@@ -2676,8 +2725,9 @@ instance B'.ListElem msg (CounterAcceptor'accept'params msg) where
     toUntypedList (List_CounterAcceptor'accept'params l) = U'.ListStruct l
     length (List_CounterAcceptor'accept'params l) = U'.length l
     index i (List_CounterAcceptor'accept'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterAcceptor'accept'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (CounterAcceptor'accept'params msg) where
+instance C'.FromPtr msg (CounterAcceptor'accept'params msg) where
     fromPtr msg ptr = CounterAcceptor'accept'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (CounterAcceptor'accept'params (M'.MutMsg s)) where
     toPtr msg (CounterAcceptor'accept'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CounterAcceptor'accept'params (M'.MutMsg s)) where
     setIndex (CounterAcceptor'accept'params_newtype_ elt) i (List_CounterAcceptor'accept'params l) = U'.setIndex elt i l
@@ -2712,8 +2762,9 @@ instance B'.ListElem msg (CounterAcceptor'accept'results msg) where
     toUntypedList (List_CounterAcceptor'accept'results l) = U'.ListStruct l
     length (List_CounterAcceptor'accept'results l) = U'.length l
     index i (List_CounterAcceptor'accept'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterAcceptor'accept'results msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (CounterAcceptor'accept'results msg) where
+instance C'.FromPtr msg (CounterAcceptor'accept'results msg) where
     fromPtr msg ptr = CounterAcceptor'accept'results_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (CounterAcceptor'accept'results (M'.MutMsg s)) where
     toPtr msg (CounterAcceptor'accept'results_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CounterAcceptor'accept'results (M'.MutMsg s)) where
     setIndex (CounterAcceptor'accept'results_newtype_ elt) i (List_CounterAcceptor'accept'results l) = U'.setIndex elt i l
@@ -2738,8 +2789,9 @@ instance B'.ListElem msg (CounterFactory'newCounter'params msg) where
     toUntypedList (List_CounterFactory'newCounter'params l) = U'.ListStruct l
     length (List_CounterFactory'newCounter'params l) = U'.length l
     index i (List_CounterFactory'newCounter'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterFactory'newCounter'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (CounterFactory'newCounter'params msg) where
+instance C'.FromPtr msg (CounterFactory'newCounter'params msg) where
     fromPtr msg ptr = CounterFactory'newCounter'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (CounterFactory'newCounter'params (M'.MutMsg s)) where
     toPtr msg (CounterFactory'newCounter'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CounterFactory'newCounter'params (M'.MutMsg s)) where
     setIndex (CounterFactory'newCounter'params_newtype_ elt) i (List_CounterFactory'newCounter'params l) = U'.setIndex elt i l
@@ -2768,8 +2820,9 @@ instance B'.ListElem msg (CounterFactory'newCounter'results msg) where
     toUntypedList (List_CounterFactory'newCounter'results l) = U'.ListStruct l
     length (List_CounterFactory'newCounter'results l) = U'.length l
     index i (List_CounterFactory'newCounter'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterFactory'newCounter'results msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (CounterFactory'newCounter'results msg) where
+instance C'.FromPtr msg (CounterFactory'newCounter'results msg) where
     fromPtr msg ptr = CounterFactory'newCounter'results_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (CounterFactory'newCounter'results (M'.MutMsg s)) where
     toPtr msg (CounterFactory'newCounter'results_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (CounterFactory'newCounter'results (M'.MutMsg s)) where
     setIndex (CounterFactory'newCounter'results_newtype_ elt) i (List_CounterFactory'newCounter'results l) = U'.setIndex elt i l
@@ -2804,8 +2857,9 @@ instance B'.ListElem msg (Echo'echo'params msg) where
     toUntypedList (List_Echo'echo'params l) = U'.ListStruct l
     length (List_Echo'echo'params l) = U'.length l
     index i (List_Echo'echo'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Echo'echo'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Echo'echo'params msg) where
+instance C'.FromPtr msg (Echo'echo'params msg) where
     fromPtr msg ptr = Echo'echo'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Echo'echo'params (M'.MutMsg s)) where
     toPtr msg (Echo'echo'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Echo'echo'params (M'.MutMsg s)) where
     setIndex (Echo'echo'params_newtype_ elt) i (List_Echo'echo'params l) = U'.setIndex elt i l
@@ -2845,8 +2899,9 @@ instance B'.ListElem msg (Echo'echo'results msg) where
     toUntypedList (List_Echo'echo'results l) = U'.ListStruct l
     length (List_Echo'echo'results l) = U'.length l
     index i (List_Echo'echo'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Echo'echo'results msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Echo'echo'results msg) where
+instance C'.FromPtr msg (Echo'echo'results msg) where
     fromPtr msg ptr = Echo'echo'results_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Echo'echo'results (M'.MutMsg s)) where
     toPtr msg (Echo'echo'results_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Echo'echo'results (M'.MutMsg s)) where
     setIndex (Echo'echo'results_newtype_ elt) i (List_Echo'echo'results l) = U'.setIndex elt i l

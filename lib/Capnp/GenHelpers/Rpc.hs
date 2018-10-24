@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 module Capnp.GenHelpers.Rpc where
 
-import Capnp.Classes        (Decerialize(..), IsPtr(..))
+import Capnp.Classes        (Decerialize(..), FromPtr(..))
 import Capnp.TraversalLimit (evalLimitT)
 
 import qualified Capnp.GenHelpers.Pure as PH

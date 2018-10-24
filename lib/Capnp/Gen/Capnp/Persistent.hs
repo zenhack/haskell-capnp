@@ -28,13 +28,15 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype Persistent msg = Persistent (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (Persistent msg) where
+instance C'.FromPtr msg (Persistent msg) where
     fromPtr msg cap = Persistent <$> C'.fromPtr msg cap
+instance C'.ToPtr s (Persistent (M'.MutMsg s)) where
     toPtr msg (Persistent Nothing) = pure Nothing
     toPtr msg (Persistent (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype RealmGateway msg = RealmGateway (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (RealmGateway msg) where
+instance C'.FromPtr msg (RealmGateway msg) where
     fromPtr msg cap = RealmGateway <$> C'.fromPtr msg cap
+instance C'.ToPtr s (RealmGateway (M'.MutMsg s)) where
     toPtr msg (RealmGateway Nothing) = pure Nothing
     toPtr msg (RealmGateway (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Persistent'SaveParams msg = Persistent'SaveParams_newtype_ (U'.Struct msg)
@@ -55,8 +57,9 @@ instance B'.ListElem msg (Persistent'SaveParams msg) where
     toUntypedList (List_Persistent'SaveParams l) = U'.ListStruct l
     length (List_Persistent'SaveParams l) = U'.length l
     index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Persistent'SaveParams msg) where
+instance C'.FromPtr msg (Persistent'SaveParams msg) where
     fromPtr msg ptr = Persistent'SaveParams_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Persistent'SaveParams (M'.MutMsg s)) where
     toPtr msg (Persistent'SaveParams_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Persistent'SaveParams (M'.MutMsg s)) where
     setIndex (Persistent'SaveParams_newtype_ elt) i (List_Persistent'SaveParams l) = U'.setIndex elt i l
@@ -91,8 +94,9 @@ instance B'.ListElem msg (Persistent'SaveResults msg) where
     toUntypedList (List_Persistent'SaveResults l) = U'.ListStruct l
     length (List_Persistent'SaveResults l) = U'.length l
     index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Persistent'SaveResults msg) where
+instance C'.FromPtr msg (Persistent'SaveResults msg) where
     fromPtr msg ptr = Persistent'SaveResults_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Persistent'SaveResults (M'.MutMsg s)) where
     toPtr msg (Persistent'SaveResults_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Persistent'SaveResults (M'.MutMsg s)) where
     setIndex (Persistent'SaveResults_newtype_ elt) i (List_Persistent'SaveResults l) = U'.setIndex elt i l
@@ -127,8 +131,9 @@ instance B'.ListElem msg (RealmGateway'export'params msg) where
     toUntypedList (List_RealmGateway'export'params l) = U'.ListStruct l
     length (List_RealmGateway'export'params l) = U'.length l
     index i (List_RealmGateway'export'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RealmGateway'export'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (RealmGateway'export'params msg) where
+instance C'.FromPtr msg (RealmGateway'export'params msg) where
     fromPtr msg ptr = RealmGateway'export'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (RealmGateway'export'params (M'.MutMsg s)) where
     toPtr msg (RealmGateway'export'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (RealmGateway'export'params (M'.MutMsg s)) where
     setIndex (RealmGateway'export'params_newtype_ elt) i (List_RealmGateway'export'params l) = U'.setIndex elt i l
@@ -178,8 +183,9 @@ instance B'.ListElem msg (RealmGateway'import'params msg) where
     toUntypedList (List_RealmGateway'import'params l) = U'.ListStruct l
     length (List_RealmGateway'import'params l) = U'.length l
     index i (List_RealmGateway'import'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RealmGateway'import'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (RealmGateway'import'params msg) where
+instance C'.FromPtr msg (RealmGateway'import'params msg) where
     fromPtr msg ptr = RealmGateway'import'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (RealmGateway'import'params (M'.MutMsg s)) where
     toPtr msg (RealmGateway'import'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (RealmGateway'import'params (M'.MutMsg s)) where
     setIndex (RealmGateway'import'params_newtype_ elt) i (List_RealmGateway'import'params l) = U'.setIndex elt i l

@@ -17,7 +17,7 @@ header = unlines
     , "import Capnp.Classes"
     , "    ( ListElem(..)"
     , "    , MutListElem(..)"
-    , "    , IsPtr(..)"
+    , "    , FromPtr(..)"
     , "    , Decerialize(..)"
     , "    )"
     , ""

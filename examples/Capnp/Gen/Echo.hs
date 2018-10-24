@@ -27,8 +27,9 @@ import qualified Capnp.TraversalLimit as TL'
 import qualified Capnp.Untyped as U'
 import qualified Capnp.Message as M'
 newtype Echo msg = Echo (Maybe (U'.Cap msg))
-instance C'.IsPtr msg (Echo msg) where
+instance C'.FromPtr msg (Echo msg) where
     fromPtr msg cap = Echo <$> C'.fromPtr msg cap
+instance C'.ToPtr s (Echo (M'.MutMsg s)) where
     toPtr msg (Echo Nothing) = pure Nothing
     toPtr msg (Echo (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype Echo'echo'params msg = Echo'echo'params_newtype_ (U'.Struct msg)
@@ -49,8 +50,9 @@ instance B'.ListElem msg (Echo'echo'params msg) where
     toUntypedList (List_Echo'echo'params l) = U'.ListStruct l
     length (List_Echo'echo'params l) = U'.length l
     index i (List_Echo'echo'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Echo'echo'params msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Echo'echo'params msg) where
+instance C'.FromPtr msg (Echo'echo'params msg) where
     fromPtr msg ptr = Echo'echo'params_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Echo'echo'params (M'.MutMsg s)) where
     toPtr msg (Echo'echo'params_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Echo'echo'params (M'.MutMsg s)) where
     setIndex (Echo'echo'params_newtype_ elt) i (List_Echo'echo'params l) = U'.setIndex elt i l
@@ -90,8 +92,9 @@ instance B'.ListElem msg (Echo'echo'results msg) where
     toUntypedList (List_Echo'echo'results l) = U'.ListStruct l
     length (List_Echo'echo'results l) = U'.length l
     index i (List_Echo'echo'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Echo'echo'results msg); go = C'.fromStruct} in go)
-instance C'.IsPtr msg (Echo'echo'results msg) where
+instance C'.FromPtr msg (Echo'echo'results msg) where
     fromPtr msg ptr = Echo'echo'results_newtype_ <$> C'.fromPtr msg ptr
+instance C'.ToPtr s (Echo'echo'results (M'.MutMsg s)) where
     toPtr msg (Echo'echo'results_newtype_ struct) = C'.toPtr msg struct
 instance B'.MutListElem s (Echo'echo'results (M'.MutMsg s)) where
     setIndex (Echo'echo'results_newtype_ elt) i (List_Echo'echo'results l) = U'.setIndex elt i l
