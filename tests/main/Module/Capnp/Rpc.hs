@@ -77,7 +77,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 ]
             stopVat
         )
-    xit "Methods returning interfaces work" $ runVatPair
+    it "Methods returning interfaces work" $ runVatPair
         (export_CounterFactory TestCtrFactory)
         (\factory -> do
             let newCounter start = do
@@ -150,8 +150,8 @@ instance CounterAcceptor'server_ TestCtrAcceptor where
 data TestCtrFactory = TestCtrFactory
 
 instance CounterFactory'server_ TestCtrFactory where
-    counterFactory'newCounter _ TestCtrFactory = do
-        ctr <- newTestCtr 0 >>= export_CallSequence
+    counterFactory'newCounter CounterFactory'newCounter'params{start} TestCtrFactory = do
+        ctr <- newTestCtr start >>= export_CallSequence
         pure CounterFactory'newCounter'results { counter = ctr }
 
 newTestCtr :: MonadIO m => Word32 -> m TestCtrServer
