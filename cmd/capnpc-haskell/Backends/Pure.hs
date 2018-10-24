@@ -240,6 +240,10 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     in vcat
     [ hcat [ "newtype ", pureName, " = ", pureName, " M'.Client" ]
     , "    deriving(Show, Eq, Read, Generic)"
+    , instance_ [] ("Rpc.IsClient " <> pureName)
+        [ hcat [ "fromClient = ", pureName ]
+        , hcat [ "toClient (", pureName, " client) = client" ]
+        ]
     , instance_ [] ("C'.Decerialize " <> pureName)
         [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
         , hcat [ "decerialize (", rawName, " Nothing) = pure $ ", pureName, " M'.nullClient" ]

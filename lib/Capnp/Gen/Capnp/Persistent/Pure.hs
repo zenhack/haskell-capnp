@@ -42,6 +42,9 @@ import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype Persistent = Persistent M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient Persistent where
+    fromClient = Persistent
+    toClient (Persistent client) = client
 instance C'.Decerialize Persistent where
     type Cerial msg Persistent = Capnp.Gen.ById.Xb8630836983feed7.Persistent msg
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.Persistent Nothing) = pure $ Persistent M'.nullClient
@@ -70,6 +73,9 @@ instance Persistent'server_ Persistent where
         evalLimitT maxBound $ PH'.convertValue result
 newtype RealmGateway = RealmGateway M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient RealmGateway where
+    fromClient = RealmGateway
+    toClient (RealmGateway client) = client
 instance C'.Decerialize RealmGateway where
     type Cerial msg RealmGateway = Capnp.Gen.ById.Xb8630836983feed7.RealmGateway msg
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway Nothing) = pure $ RealmGateway M'.nullClient

@@ -185,6 +185,9 @@ instance Default BenchmarkA where
     def = PH'.defaultStruct
 newtype CallSequence = CallSequence M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient CallSequence where
+    fromClient = CallSequence
+    toClient (CallSequence client) = client
 instance C'.Decerialize CallSequence where
     type Cerial msg CallSequence = Capnp.Gen.ById.X832bcc6686a26d56.CallSequence msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.CallSequence Nothing) = pure $ CallSequence M'.nullClient
@@ -243,6 +246,9 @@ instance Default Counter where
     def = PH'.defaultStruct
 newtype CounterAcceptor = CounterAcceptor M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient CounterAcceptor where
+    fromClient = CounterAcceptor
+    toClient (CounterAcceptor client) = client
 instance C'.Decerialize CounterAcceptor where
     type Cerial msg CounterAcceptor = Capnp.Gen.ById.X832bcc6686a26d56.CounterAcceptor msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.CounterAcceptor Nothing) = pure $ CounterAcceptor M'.nullClient
@@ -271,6 +277,9 @@ instance CounterAcceptor'server_ CounterAcceptor where
         evalLimitT maxBound $ PH'.convertValue result
 newtype CounterFactory = CounterFactory M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient CounterFactory where
+    fromClient = CounterFactory
+    toClient (CounterFactory client) = client
 instance C'.Decerialize CounterFactory where
     type Cerial msg CounterFactory = Capnp.Gen.ById.X832bcc6686a26d56.CounterFactory msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.CounterFactory Nothing) = pure $ CounterFactory M'.nullClient
@@ -334,6 +343,9 @@ instance Default Defaults where
     def = PH'.defaultStruct
 newtype Echo = Echo M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient Echo where
+    fromClient = Echo
+    toClient (Echo client) = client
 instance C'.Decerialize Echo where
     type Cerial msg Echo = Capnp.Gen.ById.X832bcc6686a26d56.Echo msg
     decerialize (Capnp.Gen.ById.X832bcc6686a26d56.Echo Nothing) = pure $ Echo M'.nullClient

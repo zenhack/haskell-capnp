@@ -40,6 +40,9 @@ import qualified Data.ByteString as BS
 import qualified Capnp.Gen.ById.Xd0a87f36fa0182f5
 newtype Echo = Echo M'.Client
     deriving(Show, Eq, Read, Generic)
+instance Rpc.IsClient Echo where
+    fromClient = Echo
+    toClient (Echo client) = client
 instance C'.Decerialize Echo where
     type Cerial msg Echo = Capnp.Gen.ById.Xd0a87f36fa0182f5.Echo msg
     decerialize (Capnp.Gen.ById.Xd0a87f36fa0182f5.Echo Nothing) = pure $ Echo M'.nullClient
