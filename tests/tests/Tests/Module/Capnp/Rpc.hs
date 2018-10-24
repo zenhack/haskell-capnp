@@ -30,33 +30,24 @@ rpcTests = do
 
 echoTests :: Spec
 echoTests = describe "Echo server & client" $
-    it "Should echo back the same message." $ do
-        -- XXX: this is copypasta from the examples dir. We should find
-        -- a way to share more of the code, while keeping the example
-        -- useful as documentation.
-        (clientTrans, serverTrans) <- transportPair
-        let runClient = runVat $ (vatConfig $ const clientTrans)
-                { debugMode = True
-                , withBootstrap = Just $ \client -> do
-                    let echoSrv = E.Echo client
-                    let msgs =
-                            [ def { E.query = "Hello #1" }
-                            , def { E.query = "Hello #2" }
-                            ]
-                    rets <- traverse (\msg -> echoSrv & E.echo'echo msg) msgs
-                    liftIO $ rets `shouldBe`
-                        [ def { E.reply = "Hello #1" }
-                        , def { E.reply = "Hello #2" }
+    it "Should echo back the same message." $ runVatPair
+        (do
+            E.Echo client <- E.export_Echo TestEchoServer
+            pure client
+        )
+        (\client -> do
+                let echoSrv = E.Echo client
+                let msgs =
+                        [ def { E.query = "Hello #1" }
+                        , def { E.query = "Hello #2" }
                         ]
-                    stopVat
-                }
-            runServer = runVat $ (vatConfig $ const serverTrans)
-                { debugMode = True
-                , offerBootstrap = Just $ do
-                    E.Echo client <- E.export_Echo TestEchoServer
-                    pure client
-                }
-        race_ runServer runClient
+                rets <- traverse (\msg -> echoSrv & E.echo'echo msg) msgs
+                liftIO $ rets `shouldBe`
+                    [ def { E.reply = "Hello #1" }
+                    , def { E.reply = "Hello #2" }
+                    ]
+                stopVat
+        )
 
 data TestEchoServer = TestEchoServer
 
@@ -69,81 +60,69 @@ instance E.Echo'server_ TestEchoServer where
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
-    it "A counter should maintain state" $ do
-        (ct, st) <- transportPair
-        let runClient = runVat $ (vatConfig $ const ct)
-                { debugMode = True
-                , withBootstrap = Just $ \client -> do
-                    let ctr = CallSequence client
-                    results <- sequence $ replicate 4 $
-                        ctr & callSequence'getNumber def
-                    liftIO $ results `shouldBe`
-                        [ def { n = 1 }
-                        , def { n = 2 }
-                        , def { n = 3 }
-                        , def { n = 4 }
-                        ]
-                    stopVat
-                }
-            runServer = runVat $ (vatConfig $ const st)
-                { debugMode = True
-                , offerBootstrap = Just $ do
-                    CallSequence client <- newTestCtr >>= export_CallSequence
-                    pure client
-                }
-        race_ runServer runClient
-    xit "A counter factory returns a new counter each time." $ do
-        (ct, st) <- transportPair
-        let runClient = runVat $ (vatConfig $ const ct)
-                { debugMode = True
-                , withBootstrap = Just $ \client -> do
-                    let factory = CounterFactory client
-                    let newCounter start = do
-                            CounterFactory'newCounter'results{counter} <-
-                                factory & counterFactory'newCounter def { start }
-                            pure counter
+    it "A counter should maintain state" $ runVatPair
+        (do
+            CallSequence client <- newTestCtr >>= export_CallSequence
+            pure client
+        )
+        (\client -> do
+            let ctr = CallSequence client
+            results <- sequence $ replicate 4 $
+                ctr & callSequence'getNumber def
+            liftIO $ results `shouldBe`
+                [ def { n = 1 }
+                , def { n = 2 }
+                , def { n = 3 }
+                , def { n = 4 }
+                ]
+            stopVat
+        )
+    xit "A counter factory returns a new counter each time." $ runVatPair
+        (do
+            CounterFactory client <- export_CounterFactory TestCtrFactory
+            pure client
+        )
+        (\client -> do
+            let factory = CounterFactory client
+            let newCounter start = do
+                    CounterFactory'newCounter'results{counter} <-
+                        factory & counterFactory'newCounter def { start }
+                    pure counter
 
-                    ctrA <- newCounter 2
-                    ctrB <- newCounter 0
+            ctrA <- newCounter 2
+            ctrB <- newCounter 0
 
-                    let bumpN ctr n = sequence $ replicate n $
-                            ctr & callSequence'getNumber def
+            let bumpN ctr n = sequence $ replicate n $
+                    ctr & callSequence'getNumber def
 
-                    r <- bumpN ctrA 4
-                    liftIO $ r `shouldBe`
-                        [ def { n = 3 }
-                        , def { n = 4 }
-                        , def { n = 5 }
-                        , def { n = 6 }
-                        ]
+            r <- bumpN ctrA 4
+            liftIO $ r `shouldBe`
+                [ def { n = 3 }
+                , def { n = 4 }
+                , def { n = 5 }
+                , def { n = 6 }
+                ]
 
-                    r <- bumpN ctrB 2
-                    liftIO $ r `shouldBe`
-                        [ def { n = 1 }
-                        , def { n = 2 }
-                        ]
+            r <- bumpN ctrB 2
+            liftIO $ r `shouldBe`
+                [ def { n = 1 }
+                , def { n = 2 }
+                ]
 
-                    ctrC <- newCounter 30
+            ctrC <- newCounter 30
 
-                    r <- bumpN ctrA 3
-                    liftIO $ r `shouldBe`
-                        [ def { n = 7 }
-                        , def { n = 8 }
-                        , def { n = 9 }
-                        ]
+            r <- bumpN ctrA 3
+            liftIO $ r `shouldBe`
+                [ def { n = 7 }
+                , def { n = 8 }
+                , def { n = 9 }
+                ]
 
-                    r <- bumpN ctrC 1
-                    liftIO $ r `shouldBe` [ def { n = 31 } ]
+            r <- bumpN ctrC 1
+            liftIO $ r `shouldBe` [ def { n = 31 } ]
 
-                    stopVat
-                }
-            runServer = runVat $ (vatConfig $ const st)
-                { debugMode = True
-                , offerBootstrap = Just $ do
-                    CounterFactory client <- export_CounterFactory TestCtrFactory
-                    pure client
-                }
-        race_ runServer runClient
+            stopVat
+        )
 
 data TestCtrFactory = TestCtrFactory
 
@@ -187,3 +166,19 @@ mVarTransport sendVar recvVar = Transport
     { sendMsg = liftIO . putMVar sendVar
     , recvMsg = liftIO (takeMVar recvVar)
     }
+
+-- | @'runVatPair' server client@ runs a pair of vats connected to one another,
+-- using 'server' as the 'offerBootstrap' field in the one vat's config, and
+-- 'client' as the 'withBootstrap' field in the other's.
+runVatPair :: (RpcT IO Client) -> (Client -> RpcT IO ()) -> IO ()
+runVatPair offerBootstrap withBootstrap = do
+    (clientTrans, serverTrans) <- transportPair
+    let runClient = runVat $ (vatConfig $ const clientTrans)
+            { debugMode = True
+            , withBootstrap = Just withBootstrap
+            }
+        runServer = runVat $ (vatConfig $ const serverTrans)
+            { debugMode = True
+            , offerBootstrap = Just offerBootstrap
+            }
+    race_ runServer runClient
