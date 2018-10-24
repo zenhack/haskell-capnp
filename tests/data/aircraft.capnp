@@ -330,6 +330,10 @@ interface CounterFactory {
   newCounter @0 (start :UInt32) -> (counter :CallSequence);
 }
 
+interface CounterAcceptor {
+  accept @0 (counter :CallSequence);
+}
+
 # test defaults
 
 struct Defaults {

@@ -403,6 +403,11 @@ new_Counter'wordlist len struct = do
     result <- C'.newList (U'.message struct) len
     set_Counter'wordlist struct result
     pure result
+newtype CounterAcceptor msg = CounterAcceptor (Maybe (U'.Cap msg))
+instance C'.IsPtr msg (CounterAcceptor msg) where
+    fromPtr msg cap = CounterAcceptor <$> C'.fromPtr msg cap
+    toPtr msg (CounterAcceptor Nothing) = pure Nothing
+    toPtr msg (CounterAcceptor (Just cap)) = pure $ Just $ U'.PtrCap cap
 newtype CounterFactory msg = CounterFactory (Maybe (U'.Cap msg))
 instance C'.IsPtr msg (CounterFactory msg) where
     fromPtr msg cap = CounterFactory <$> C'.fromPtr msg cap
@@ -2653,6 +2658,68 @@ get_CallSequence'getNumber'results'n :: U'.ReadCtx m msg => CallSequence'getNumb
 get_CallSequence'getNumber'results'n (CallSequence'getNumber'results_newtype_ struct) = H'.getWordField struct 0 0 0
 set_CallSequence'getNumber'results'n :: U'.RWCtx m s => CallSequence'getNumber'results (M'.MutMsg s) -> Word32 -> m ()
 set_CallSequence'getNumber'results'n (CallSequence'getNumber'results_newtype_ struct) value = H'.setWordField struct (fromIntegral (C'.toWord value) :: Word32) 0 0 0
+newtype CounterAcceptor'accept'params msg = CounterAcceptor'accept'params_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CounterAcceptor'accept'params where
+    tMsg f (CounterAcceptor'accept'params_newtype_ s) = CounterAcceptor'accept'params_newtype_ <$> U'.tMsg f s
+instance C'.FromStruct msg (CounterAcceptor'accept'params msg) where
+    fromStruct = pure . CounterAcceptor'accept'params_newtype_
+instance C'.ToStruct msg (CounterAcceptor'accept'params msg) where
+    toStruct (CounterAcceptor'accept'params_newtype_ struct) = struct
+instance U'.HasMessage (CounterAcceptor'accept'params msg) where
+    type InMessage (CounterAcceptor'accept'params msg) = msg
+    message (CounterAcceptor'accept'params_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (CounterAcceptor'accept'params msg) where
+    messageDefault = CounterAcceptor'accept'params_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CounterAcceptor'accept'params msg) where
+    newtype List msg (CounterAcceptor'accept'params msg) = List_CounterAcceptor'accept'params (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_CounterAcceptor'accept'params <$> C'.fromPtr msg ptr
+    toUntypedList (List_CounterAcceptor'accept'params l) = U'.ListStruct l
+    length (List_CounterAcceptor'accept'params l) = U'.length l
+    index i (List_CounterAcceptor'accept'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterAcceptor'accept'params msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CounterAcceptor'accept'params msg) where
+    fromPtr msg ptr = CounterAcceptor'accept'params_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (CounterAcceptor'accept'params_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (CounterAcceptor'accept'params (M'.MutMsg s)) where
+    setIndex (CounterAcceptor'accept'params_newtype_ elt) i (List_CounterAcceptor'accept'params l) = U'.setIndex elt i l
+    newList msg len = List_CounterAcceptor'accept'params <$> U'.allocCompositeList msg 0 1 len
+instance C'.Allocate s (CounterAcceptor'accept'params (M'.MutMsg s)) where
+    new msg = CounterAcceptor'accept'params_newtype_ <$> U'.allocStruct msg 0 1
+get_CounterAcceptor'accept'params'counter :: U'.ReadCtx m msg => CounterAcceptor'accept'params msg -> m (CallSequence msg)
+get_CounterAcceptor'accept'params'counter (CounterAcceptor'accept'params_newtype_ struct) =
+    U'.getPtr 0 struct
+    >>= C'.fromPtr (U'.message struct)
+has_CounterAcceptor'accept'params'counter :: U'.ReadCtx m msg => CounterAcceptor'accept'params msg -> m Bool
+has_CounterAcceptor'accept'params'counter(CounterAcceptor'accept'params_newtype_ struct) = Data.Maybe.isJust <$> U'.getPtr 0 struct
+set_CounterAcceptor'accept'params'counter :: U'.RWCtx m s => CounterAcceptor'accept'params (M'.MutMsg s) -> (CallSequence (M'.MutMsg s)) -> m ()
+set_CounterAcceptor'accept'params'counter (CounterAcceptor'accept'params_newtype_ struct) value = do
+    ptr <- C'.toPtr (U'.message struct) value
+    U'.setPtr ptr 0 struct
+newtype CounterAcceptor'accept'results msg = CounterAcceptor'accept'results_newtype_ (U'.Struct msg)
+instance U'.TraverseMsg CounterAcceptor'accept'results where
+    tMsg f (CounterAcceptor'accept'results_newtype_ s) = CounterAcceptor'accept'results_newtype_ <$> U'.tMsg f s
+instance C'.FromStruct msg (CounterAcceptor'accept'results msg) where
+    fromStruct = pure . CounterAcceptor'accept'results_newtype_
+instance C'.ToStruct msg (CounterAcceptor'accept'results msg) where
+    toStruct (CounterAcceptor'accept'results_newtype_ struct) = struct
+instance U'.HasMessage (CounterAcceptor'accept'results msg) where
+    type InMessage (CounterAcceptor'accept'results msg) = msg
+    message (CounterAcceptor'accept'results_newtype_ struct) = U'.message struct
+instance U'.MessageDefault (CounterAcceptor'accept'results msg) where
+    messageDefault = CounterAcceptor'accept'results_newtype_ . U'.messageDefault
+instance B'.ListElem msg (CounterAcceptor'accept'results msg) where
+    newtype List msg (CounterAcceptor'accept'results msg) = List_CounterAcceptor'accept'results (U'.ListOf msg (U'.Struct msg))
+    listFromPtr msg ptr = List_CounterAcceptor'accept'results <$> C'.fromPtr msg ptr
+    toUntypedList (List_CounterAcceptor'accept'results l) = U'.ListStruct l
+    length (List_CounterAcceptor'accept'results l) = U'.length l
+    index i (List_CounterAcceptor'accept'results l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (CounterAcceptor'accept'results msg); go = C'.fromStruct} in go)
+instance C'.IsPtr msg (CounterAcceptor'accept'results msg) where
+    fromPtr msg ptr = CounterAcceptor'accept'results_newtype_ <$> C'.fromPtr msg ptr
+    toPtr msg (CounterAcceptor'accept'results_newtype_ struct) = C'.toPtr msg struct
+instance B'.MutListElem s (CounterAcceptor'accept'results (M'.MutMsg s)) where
+    setIndex (CounterAcceptor'accept'results_newtype_ elt) i (List_CounterAcceptor'accept'results l) = U'.setIndex elt i l
+    newList msg len = List_CounterAcceptor'accept'results <$> U'.allocCompositeList msg 0 0 len
+instance C'.Allocate s (CounterAcceptor'accept'results (M'.MutMsg s)) where
+    new msg = CounterAcceptor'accept'results_newtype_ <$> U'.allocStruct msg 0 0
 newtype CounterFactory'newCounter'params msg = CounterFactory'newCounter'params_newtype_ (U'.Struct msg)
 instance U'.TraverseMsg CounterFactory'newCounter'params where
     tMsg f (CounterFactory'newCounter'params_newtype_ s) = CounterFactory'newCounter'params_newtype_ <$> U'.tMsg f s

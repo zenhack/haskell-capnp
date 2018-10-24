@@ -11,6 +11,7 @@ import Control.Concurrent       (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Concurrent.Async (race_)
 import Control.Monad            (replicateM)
 import Control.Monad.IO.Class   (MonadIO, liftIO)
+import Data.Foldable            (for_)
 import Data.Function            ((&))
 
 import Capnp (ConstMsg, def)
@@ -57,13 +58,19 @@ instance E.Echo'server_ TestEchoServer where
 
 -------------------------------------------------------------------------------
 -- Tests using aircraft.capnp.
+--
+-- These use the 'CallSequence' interface as a counter.
 -------------------------------------------------------------------------------
+
+-- | Bump a counter n times, returning a list of the results.
+bumpN :: CallSequence -> Int -> RpcT IO [CallSequence'getNumber'results]
+bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
     it "A counter should maintain state" $ runVatPair
         (do
-            CallSequence client <- newTestCtr >>= export_CallSequence
+            CallSequence client <- newTestCtr 0 >>= export_CallSequence
             pure client
         )
         (\client -> do
@@ -78,8 +85,9 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 ]
             stopVat
         )
-    xit "A counter factory returns a new counter each time." $ runVatPair
+    xit "Methods returning interfaces work" $ runVatPair
         (do
+
             CounterFactory client <- export_CounterFactory TestCtrFactory
             pure client
         )
@@ -92,9 +100,6 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
             ctrA <- newCounter 2
             ctrB <- newCounter 0
-
-            let bumpN ctr n = replicateM n $
-                    ctr & callSequence'getNumber def
 
             r <- bumpN ctrA 4
             liftIO $ r `shouldBe`
@@ -124,16 +129,50 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
             stopVat
         )
+    xit "Methods with interface parameters work" $ do
+        ctrA <- newTestCtr 2
+        ctrB <- newTestCtr 0
+        ctrC <- newTestCtr 30
+        runVatPair
+            (do
+                CounterAcceptor client <- export_CounterAcceptor TestCtrAcceptor
+                pure client
+            )
+            (\client -> do
+                let acceptor = CounterAcceptor client
+                for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
+                    ctr <- export_CallSequence ctrSrv
+                    acceptor & counterAcceptor'accept def { counter = ctr }
+                r <- traverse
+                    (\(TestCtrServer var) -> liftIO $ readTVarIO var)
+                    [ctrA, ctrB, ctrC]
+                liftIO $ r `shouldBe` [6, 4, 34]
+                stopVat
+            )
+
+data TestCtrAcceptor = TestCtrAcceptor
+
+instance CounterAcceptor'server_ TestCtrAcceptor where
+    counterAcceptor'accept CounterAcceptor'accept'params{counter} TestCtrAcceptor = do
+        [start] <- map n <$> bumpN counter 1
+        r <- bumpN counter 4
+        liftIO $ r `shouldBe`
+            [ def { n = start + 1 }
+            , def { n = start + 2 }
+            , def { n = start + 3 }
+            , def { n = start + 4 }
+            ]
+        pure def
 
 data TestCtrFactory = TestCtrFactory
 
 instance CounterFactory'server_ TestCtrFactory where
     counterFactory'newCounter _ TestCtrFactory = do
-        ctr <- newTestCtr >>= export_CallSequence
+        ctr <- newTestCtr 0 >>= export_CallSequence
         pure CounterFactory'newCounter'results { counter = ctr }
 
-newTestCtr :: MonadIO m => m TestCtrServer
-newTestCtr = liftIO $ TestCtrServer <$> newTVarIO 0
+newTestCtr :: MonadIO m => Word32 -> m TestCtrServer
+newTestCtr n = liftIO $ TestCtrServer <$> newTVarIO n
 
 newtype TestCtrServer = TestCtrServer (TVar Word32)
 
