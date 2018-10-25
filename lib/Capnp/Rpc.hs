@@ -738,12 +738,12 @@ coordinator vat@Vat{..} = forever $ do
     pureMsg <- evalLimitT limit (msgToValue msg)
     case pureMsg of
         Message'unimplemented msg ->
-            handleUnimplemented vat pureMsg
+            handleUnimplementedMsg vat pureMsg
         Message'abort exn ->
             throwIO exn
         -- Level 0:
         Message'bootstrap bs ->
-            handleBootstrap vat bs
+            handleBootstrapMsg vat bs
         Message'call call -> do
             rawMsg <- evalLimitT limit (msgToValue msg)
             case rawMsg of
@@ -754,9 +754,9 @@ coordinator vat@Vat{..} = forever $ do
                         "BUG: decoding as pure resulted in a 'call' message, " ++
                         "but decoding as raw did not. This should never happen!"
         Message'return ret ->
-            handleReturn vat ret
+            handleReturnMsg vat ret
         Message'finish finish ->
-            handleFinish vat finish
+            handleFinishMsg vat finish
         -- Level >= 1:
         _ ->
             atomically $ replyUnimplemented vat pureMsg
@@ -802,7 +802,7 @@ abortT reason = do
 ----------------- Handler code for specific types of messages. ---------------
 
 -- | Handle an @unimplemented@ message.
-handleUnimplemented vat msg = case msg of
+handleUnimplementedMsg vat msg = case msg of
     Message'unimplemented _ ->
         -- If the client itself doesn't handle unimplemented message, that's
         -- their problem.
@@ -822,8 +822,8 @@ handleUnimplemented vat msg = case msg of
 -- level 0 --
 
 -- | Handle a bootstrap message.
-handleBootstrap :: Vat -> Bootstrap -> IO ()
-handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
+handleBootstrapMsg :: Vat -> Bootstrap -> IO ()
+handleBootstrapMsg vat@Vat{..} msg@Bootstrap{questionId} =
     -- TODO: right now this will run getServer for each bootstrap message;
     -- do we want to re-use the same server in the event that our peer
     -- sends more than bootstrap message?
@@ -837,8 +837,6 @@ handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
                 -- TODO: also add it to exports and send a Return.
 
 handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
--- TODO: can't call this handleCall because that's taken by the field in 'Server'.
--- rework things so we can be consistent.
 handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} =
     case target of
         MessageTarget'importedCap _ ->
@@ -904,8 +902,8 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                         atomically $ writeTBQueue sendQ msg
 
 -- | Handle receiving a 'Return' message.
-handleReturn :: Vat -> Return -> IO ()
-handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
+handleReturnMsg :: Vat -> Return -> IO ()
+handleReturnMsg vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
     question <- M.lookup answerId <$> readTVar questions
     case question of
         Nothing -> abort vat $
@@ -951,7 +949,8 @@ handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             "Received non-struct pointer in a return message. " <>
             "Return values must always be structs."
 
-handleFinish Vat{..} Finish{questionId} =
+handleFinishMsg :: Vat -> Finish -> IO ()
+handleFinishMsg Vat{..} Finish{questionId} =
     atomically $ modifyTVar' answers (M.delete questionId)
 
 -- level >= 1 --
