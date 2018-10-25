@@ -306,7 +306,7 @@ export localServer = do
     -- capability to the remote vat. Because the refcount checking happens
     -- in response to interaction with the remote vat, it won't be removed
     -- until it goes *back* to being zero.
-    liftIO $ atomically $ modifyTVar exports $ M.insert exportId Export
+    atomically $ modifyTVar exports $ M.insert exportId Export
         { server = localServer
         , refCount = 0
         }
@@ -319,7 +319,7 @@ bootstrap = do
     questionId <- newQuestionId
     vat <- RpcT ask
     let msg = Message'bootstrap def { questionId }
-    liftIO $ atomically $ sendQuestion vat (BootstrapQuestion questionId)
+    atomically $ sendQuestion vat (BootstrapQuestion questionId)
     pure RemoteClient
         { target = MessageTarget'promisedAnswer def { questionId }
         , localVat = vat
@@ -388,8 +388,8 @@ call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
                 }
             , ..
             }
-    (promise, fulfiller) <- liftIO $ atomically newPromise
-    liftIO $ atomically $ sendQuestion localVat $ CallQuestion
+    (promise, fulfiller) <- atomically newPromise
+    atomically $ sendQuestion localVat $ CallQuestion
         { callMsg
         , sendReturn = fulfiller
         }
@@ -409,8 +409,8 @@ call _ _ _ DisconnectedClient = alwaysThrow def
 -- exception.
 alwaysThrow :: MonadIO m => Exception -> RpcT m (Promise Struct)
 alwaysThrow exn = do
-    (promise, fulfiller) <- liftIO $ atomically newPromise
-    liftIO $ atomically $ breakPromise fulfiller exn
+    (promise, fulfiller) <- atomically newPromise
+    atomically $ breakPromise fulfiller exn
     pure promise
 
 -- | A 'Fulfiller' is used to fulfill a promise.
@@ -430,7 +430,7 @@ fulfill Fulfiller{var} val = modifyTVar' var $ \case
 
 -- | Like 'fulfill', but in the IO monad.
 fulfillIO :: MonadIO m => Fulfiller a -> a -> m ()
-fulfillIO fulfiller = liftIO . atomically . fulfill fulfiller
+fulfillIO fulfiller = atomically . fulfill fulfiller
 
 -- | Break a promise. When the user of the promise executes 'wait', the
 -- specified exception will be raised. It is an error to call 'breakPromise'
@@ -457,7 +457,7 @@ wait Promise{var} = do
 
 -- | Like 'wait', but in the 'IO' monad.
 waitIO :: MonadIO m => Promise a -> m a
-waitIO = liftIO . atomically . wait
+waitIO = atomically . wait
 
 -- | Check whether a promise is resolved.
 isResolved :: Promise a -> STM Bool
@@ -471,7 +471,7 @@ newPromise = do
 
 -- | Like 'newPromise', but in the IO monad.
 newPromiseIO :: MonadIO m => m (Promise a, Fulfiller a)
-newPromiseIO = liftIO $ atomically newPromise
+newPromiseIO = atomically newPromise
 
 -- | A promise is a value that may not be ready yet.
 newtype Promise a = Promise
