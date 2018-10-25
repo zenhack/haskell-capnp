@@ -71,7 +71,9 @@ throwKids (Supervisor stateVar) exn = bracketOnError
         modifyTVar' var $ const val
 
 
--- | Launch the IO action in a thread
+-- | Launch the IO action in a thread, monitored by the 'Supervisor'. If the
+-- supervisor receives an exception, the exception will also be raised in the
+-- child thread.
 supervise :: IO () -> Supervisor -> IO ()
 supervise task (Supervisor stateVar) =
     void $ forkIO $ bracket_ addMe removeMe task
