@@ -69,12 +69,10 @@ module Capnp.Rpc
 
 import Prelude hiding (fail)
 
-import Control.Concurrent.STM
 import Data.Word
+import UnliftIO  hiding (Exception, wait)
 
-import Control.Concurrent.Async        (concurrently_)
-import Control.Exception
-    (SomeException, fromException, throwIO, try)
+import Control.Concurrent.STM          (throwSTM)
 import Control.Monad                   (forever, (>=>))
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
@@ -89,10 +87,10 @@ import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
-import qualified Control.Exception as HsExn
-import qualified Data.Map.Strict   as M
-import qualified Data.Text         as T
-import qualified Data.Vector       as V
+import qualified Data.Map.Strict    as M
+import qualified Data.Text          as T
+import qualified Data.Vector        as V
+import qualified UnliftIO.Exception as HsExn
 
 import Capnp.Gen.Capnp.Rpc.Pure
 
@@ -184,7 +182,7 @@ newId pool = do
         oldIds <- readTVar (pool vat)
         case oldIds of
             [] ->
-                retry
+                retrySTM
             (id:ids) -> do
                 writeTVar (pool vat) ids
                 pure id
@@ -445,7 +443,7 @@ wait Promise{var} = do
     val <- readTVar var
     case val of
         Nothing ->
-            retry
+            retrySTM
         Just (Right result) ->
             pure result
         Just (Left exn) ->
