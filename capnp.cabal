@@ -145,6 +145,7 @@ library
       , Internal.CommitThrow
       , Internal.Gen.Instances
       , Internal.BuildPure
+      , Internal.Supervisors
       , Codec.Capnp
     -- other-extensions:
     build-depends:
