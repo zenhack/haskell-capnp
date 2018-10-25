@@ -112,6 +112,7 @@ import Capnp
     )
 import Capnp.Untyped.Pure   (PtrType(PtrStruct), Struct)
 import Internal.CommitThrow (atomicallyCommitErrs, throwAndCommit)
+import Internal.Supervisors (Supervisor, withSupervisor)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
 import qualified Capnp.Message       as Message
@@ -498,21 +499,32 @@ getQuestionId (BootstrapQuestion questionId)         = questionId
 -- | A 'Vat' is where objects live. It represents the state of one
 -- side of a connection.
 data Vat = Vat
+    -- The four tables:
     { questions      :: TVar (M.Map QuestionId Question)
     , answers        :: TVar (M.Map AnswerId Answer)
     , imports        :: TVar (M.Map ImportId Word32) -- values are the refcount
     , exports        :: TVar (M.Map ExportId Export)
 
+    -- Pools of available IDs for questions and exported objects.
     , questionIdPool :: TVar [Word32]
     , exportIdPool   :: TVar [Word32]
 
+    -- The traversal limit to use.
     , limit          :: !Int
 
+    -- Create the bootstrap interface for a connection. If 'Nothing', bootstrap
+    -- messages return unimplemented.
     , offerBootstrap :: Maybe (RpcT IO Client)
 
+    -- queues on which to send and receive messages.
     , sendQ          :: TBQueue ConstMsg
     , recvQ          :: TBQueue ConstMsg
 
+    -- Supervisor which monitors object lifetimes.
+    , supervisor     :: Supervisor
+
+    -- Whether include extra (possibly sensitive) info in exceptions sent to the
+    -- peer vat.
     , debugMode      :: !Bool
     }
 
@@ -663,14 +675,15 @@ vatConfig getTransport = VatConfig
 runVat :: VatConfig -> IO ()
 runVat config@VatConfig{limit, getTransport, withBootstrap} = do
     let transport = getTransport limit
-    vat <- newVat config
-    ret <- try $ foldl concurrently_
-        (recvLoop transport vat)
-        [ sendLoop transport vat
-        , coordinator vat
-        , runRpcT vat $ for_ withBootstrap $ \with ->
-            bootstrap >>= with
-        ]
+    ret <- try $ withSupervisor $ \sup -> do
+        vat <- newVat config sup
+        foldl concurrently_
+            (recvLoop transport vat)
+            [ sendLoop transport vat
+            , coordinator vat
+            , runRpcT vat $ for_ withBootstrap $ \with ->
+                bootstrap >>= with
+            ]
     case ret of
         Left (_ :: StopVat) ->
             -- The StopVat exception is used to signal that we should shut
@@ -685,9 +698,10 @@ runVat config@VatConfig{limit, getTransport, withBootstrap} = do
 runRpcT :: Vat -> RpcT m a -> m a
 runRpcT vat (RpcT m) = runReaderT m vat
 
--- | Create a new 'Vat', based on the information in the 'VatConfig'.
-newVat :: VatConfig -> IO Vat
-newVat VatConfig{..} = atomically $ do
+-- | Create a new 'Vat', based on the information in the 'VatConfig'. Use the
+-- given supervisor to monitor exported objects.
+newVat :: VatConfig -> Supervisor -> IO Vat
+newVat VatConfig{..} supervisor = atomically $ do
     questions <- newTVar M.empty
     answers <- newTVar M.empty
     imports  <- newTVar M.empty
