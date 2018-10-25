@@ -824,6 +824,9 @@ handleUnimplemented vat msg = case msg of
 -- | Handle a bootstrap message.
 handleBootstrap :: Vat -> Bootstrap -> IO ()
 handleBootstrap vat@Vat{..} msg@Bootstrap{questionId} =
+    -- TODO: right now this will run getServer for each bootstrap message;
+    -- do we want to re-use the same server in the event that our peer
+    -- sends more than bootstrap message?
     case offerBootstrap of
         Nothing ->
             atomically $ replyUnimplemented vat $ Message'bootstrap msg
