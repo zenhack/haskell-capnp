@@ -20,7 +20,14 @@ import Control.Concurrent
     (ThreadId, forkIO, myThreadId, threadDelay, throwTo)
 import Control.Concurrent.Async (withAsync)
 import Control.Exception
-    (Exception, SomeException, bracketOnError, bracket_, catch, toException)
+    ( Exception
+    , SomeException
+    , bracketOnError
+    , bracket_
+    , catch
+    , throwIO
+    , toException
+    )
 import Control.Monad            (forever, void)
 import Data.Foldable            (traverse_)
 
@@ -35,7 +42,9 @@ runSupervisor :: Supervisor -> IO ()
 runSupervisor sup =
     forever (threadDelay (1000 * 1000 * 1000))
     `catch`
-    (\e -> throwKids sup (e :: SomeException))
+    (\e -> do
+        throwKids sup (e :: SomeException)
+        throwIO e)
 
 withSupervisor :: (Supervisor -> IO ()) -> IO ()
 withSupervisor f = do
