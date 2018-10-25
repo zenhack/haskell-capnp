@@ -737,10 +737,11 @@ coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
     pureMsg <- evalLimitT limit (msgToValue msg)
     case pureMsg of
+        Message'unimplemented msg ->
+            handleUnimplemented vat pureMsg
         Message'abort exn ->
             throwIO exn
-        Message'return ret ->
-            handleReturn vat ret
+        -- Level 0:
         Message'bootstrap bs ->
             handleBootstrap vat bs
         Message'call call -> do
@@ -752,10 +753,11 @@ coordinator vat@Vat{..} = forever $ do
                     error $
                         "BUG: decoding as pure resulted in a 'call' message, " ++
                         "but decoding as raw did not. This should never happen!"
+        Message'return ret ->
+            handleReturn vat ret
         Message'finish finish ->
             handleFinish vat finish
-        Message'unimplemented msg ->
-            handleUnimplemented vat pureMsg
+        -- Level >= 1:
         _ ->
             atomically $ replyUnimplemented vat pureMsg
 
@@ -799,10 +801,6 @@ abortT reason = do
 
 ----------------- Handler code for specific types of messages. ---------------
 
-handleFinish Vat{..} Finish{questionId} =
-    atomically $ modifyTVar' answers (M.delete questionId)
-
-
 -- | Handle an @unimplemented@ message.
 handleUnimplemented vat msg = case msg of
     Message'unimplemented _ ->
@@ -820,6 +818,8 @@ handleUnimplemented vat msg = case msg of
     _ ->
         throwIO =<< atomically (replyAbort vat
             "Your vat replied with 'unimplemented' for a requred message.")
+
+-- level 0 --
 
 -- | Handle a bootstrap message.
 handleBootstrap :: Vat -> Bootstrap -> IO ()
@@ -947,3 +947,8 @@ handleReturn vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
         Just _ -> abort vat $
             "Received non-struct pointer in a return message. " <>
             "Return values must always be structs."
+
+handleFinish Vat{..} Finish{questionId} =
+    atomically $ modifyTVar' answers (M.delete questionId)
+
+-- level >= 1 --
