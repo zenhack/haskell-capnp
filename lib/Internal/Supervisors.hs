@@ -14,22 +14,16 @@ spawn threads while guaranteeing that:
 -}
 module Internal.Supervisors (Supervisor, supervise, withSupervisor) where
 
-import Control.Concurrent.STM
+import UnliftIO.STM
 
 import Control.Concurrent
     (ThreadId, forkIO, myThreadId, threadDelay, throwTo)
 import Control.Concurrent.Async (withAsync)
-import Control.Exception
-    ( Exception
-    , SomeException
-    , bracketOnError
-    , bracket_
-    , catch
-    , throwIO
-    , toException
-    )
+import Control.Concurrent.STM   (throwSTM)
 import Control.Monad            (forever, void)
 import Data.Foldable            (traverse_)
+import UnliftIO.Exception
+    (Exception, SomeException, bracket_, throwIO, toException, withException)
 
 import qualified Data.Set as S
 
@@ -41,7 +35,7 @@ newSupervisor = Supervisor <$> newTVarIO (Right S.empty)
 runSupervisor :: Supervisor -> IO ()
 runSupervisor sup =
     forever (threadDelay (1000 * 1000 * 1000))
-    `catch`
+    `withException`
     (\e -> do
         throwKids sup (e :: SomeException)
         throwIO e)
@@ -51,34 +45,23 @@ withSupervisor f = do
     sup <- newSupervisor
     withAsync (runSupervisor sup) $ const (f sup)
 
+-- | Throw an exception to all of a supervisor's children, using 'throwTo'.
 throwKids :: Exception e => Supervisor -> e -> IO ()
-throwKids (Supervisor stateVar) exn = bracketOnError
-    getState
-    restoreState
-    $ \case
+throwKids (Supervisor stateVar) exn = do
+    kids <- atomically $ readTVar stateVar >>= \case
         Left _ ->
-            pure ()
-        Right kids ->
-            traverse_ (`throwTo` exn) kids
-  where
-    getState = atomically $ do
-        state <- readTVar stateVar
-        case state of
-            Left _ ->
-                pure ()
-            Right kids ->
-                writeTVar' stateVar $ Left (toException exn)
-        pure state
+            pure S.empty
+        Right kids -> do
+            writeTVar' stateVar (Left (toException exn))
+            pure kids
+    traverse_ (`throwTo` exn) kids
 
-    restoreState state =
-        atomically $ writeTVar' stateVar state
-
-    -- the docs don't specify whether 'writeTVar' forces the contents of
-    -- the TVar before leaving. We need this so we don't leak things, so
-    -- we write a wrapper that is guaranteed to do so.
-    writeTVar' var val =
-        modifyTVar' var $ const val
-
+-- The docs don't specify whether 'writeTVar' forces the contents of
+-- the TVar before leaving. We need this so we don't leak things, so
+-- we write a wrapper that is guaranteed to do so.
+writeTVar' :: TVar a -> a -> STM ()
+writeTVar' var val =
+    modifyTVar' var $ const val
 
 -- | Launch the IO action in a thread, monitored by the 'Supervisor'. If the
 -- supervisor receives an exception, the exception will also be raised in the
@@ -97,12 +80,12 @@ supervise task (Supervisor stateVar) =
                     throwSTM e
                 Right kids -> do
                     let !newKids = S.insert me kids
-                    writeTVar stateVar (Right newKids)
+                    writeTVar' stateVar (Right newKids)
     -- | Remove our ThreadId from the supervisor, so we don't leak it.
     removeMe = do
         me <- myThreadId
-        atomically $ modifyTVar' stateVar $ \state -> case state of
-            Left _ ->
+        atomically $ modifyTVar' stateVar $ \case
+            state@(Left _) ->
                 -- The supervisor is already stopped; we don't need to
                 -- do anything.
                 state
