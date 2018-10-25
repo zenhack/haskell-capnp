@@ -265,6 +265,16 @@ data Server = Server
 data StopVat = StopVat deriving(Show)
 instance HsExn.Exception StopVat
 
+-- | An eror raised by the RPC system.
+data RpcError
+    = ReceivedAbort Exception
+    -- ^ We received an abort message from the remote vat.
+    | SentAbort Exception
+    -- ^ We sent an abort message to the remote vat; this is thrown after
+    -- sending the abort.
+    deriving(Show)
+instance HsExn.Exception RpcError
+
 -- | Shut down the rpc connection, and all resources managed by the vat. This
 -- does not return (it raises an exception used to actually signal termination
 -- of the connection).
@@ -674,8 +684,8 @@ vatConfig getTransport = VatConfig
 --
 -- 'runVat' does not return until the session terminates. If it is
 -- terminated via 'stopVat', it will return normally, otherwise it will
--- raise an exception (TODO: document details of the exceptions and
--- what conditions trigger them).
+-- raise an exception of type 'RpcError'. See the documentation for
+-- 'RpcError' for what these errors mean.
 runVat :: VatConfig -> IO ()
 runVat config@VatConfig{limit, getTransport, withBootstrap} = do
     let transport = getTransport limit
@@ -738,9 +748,9 @@ coordinator vat@Vat{..} = forever $ do
     pureMsg <- evalLimitT limit (msgToValue msg)
     case pureMsg of
         Message'unimplemented msg ->
-            handleUnimplementedMsg vat pureMsg
+            handleUnimplementedMsg vat msg
         Message'abort exn ->
-            throwIO exn
+            handleAbortMsg vat exn
         -- Level 0:
         Message'bootstrap bs ->
             handleBootstrapMsg vat bs
@@ -785,8 +795,12 @@ replyAbort Vat{sendQ, limit} reason = do
 -- | Send an abort message to the remote vat with the given reason field
 -- and a type field of @failed@, and then throw the same exception via
 -- 'throwAndCommit'.
+--
+-- FIXME: This will likely usually not actually send the abort, since we throw
+-- an exception right after putting it in the send queue, which will kill the
+-- send loop. We should add a delay here.
 abort :: Vat -> T.Text -> STM a
-abort vat = replyAbort vat >=> throwAndCommit
+abort vat = replyAbort vat >=> throwAndCommit . SentAbort
 
 -- | Like 'abort', but runs in IO.
 abortIO :: MonadIO m => Vat -> T.Text -> m a
@@ -802,22 +816,28 @@ abortT reason = do
 ----------------- Handler code for specific types of messages. ---------------
 
 -- | Handle an @unimplemented@ message.
+handleUnimplementedMsg :: Vat -> Message -> IO ()
 handleUnimplementedMsg vat msg = case msg of
     Message'unimplemented _ ->
-        -- If the client itself doesn't handle unimplemented message, that's
+        -- If the client itself doesn't handle unimplemented messages, that's
         -- their problem.
         pure ()
     Message'abort _ ->
         -- There's something very wrong on the other vat; we didn't send an
         -- abort, since we only do that right before, you know, aborting the
         -- connection.
-        throwIO =<< atomically (replyAbort vat $
+        abortIO vat $
             "Your vat sent an 'unimplemented' message for an abort message " <>
             "that its remote peer never sent. This is likely a bug in your " <>
-            "capnproto library.")
+            "capnproto library."
     _ ->
-        throwIO =<< atomically (replyAbort vat
-            "Your vat replied with 'unimplemented' for a requred message.")
+        abortIO vat
+            "Your vat replied with 'unimplemented' for a required message."
+
+-- | Handle an @abort@ message.
+handleAbortMsg :: Vat -> Exception -> IO ()
+handleAbortMsg _ exn =
+    throwIO (ReceivedAbort exn)
 
 -- level 0 --
 
@@ -910,7 +930,7 @@ handleReturnMsg vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             "Received 'Return' for non-existant question #"
                 <> T.pack (show answerId)
         Just (BootstrapQuestion _) -> do
-            -- This will case the other side to drop the resolved cap; we'll
+            -- This will cause the other side to drop the resolved cap; we'll
             -- just keep using the promise.
             replyUnimplemented vat $ Message'return msg
             modifyTVar questions $ M.delete answerId
