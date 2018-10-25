@@ -50,14 +50,14 @@ throwKids (Supervisor stateVar) exn = bracketOnError
         Left _ ->
             pure ()
         Right kids ->
-            traverse_ (\k -> throwTo k exn) kids
+            traverse_ (`throwTo` exn) kids
   where
     getState = atomically $ do
         state <- readTVar stateVar
         case state of
             Left _ ->
                 pure ()
-            Right kids -> do
+            Right kids ->
                 writeTVar' stateVar $ Left (toException exn)
         pure state
 
