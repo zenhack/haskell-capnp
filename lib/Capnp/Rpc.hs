@@ -635,6 +635,14 @@ data VatConfig = VatConfig
     --
     -- Defaults to 32.
 
+    , maxObjectCalls :: !Word32
+    -- ^ The maximum number of calls which may be outstanding on a single
+    -- object. If this number is exceeded, the vat will block on handling
+    -- other incoming messages until there is free space in the object's
+    -- queue.
+    --
+    -- Defaults to 10.
+
     , offerBootstrap :: Maybe (RpcT IO Client)
     -- ^ If not 'Nothing', 'offerBootstrap' is used to create the bootstrap
     -- interface if and when the peer vat first requests it. If this is
@@ -672,6 +680,7 @@ vatConfig :: (Int -> Transport IO) -> VatConfig
 vatConfig getTransport = VatConfig
     { maxQuestions = 32
     , maxExports = 32
+    , maxObjectCalls = 10
     , offerBootstrap = Nothing
     , withBootstrap = Nothing
     , debugMode = False
