@@ -211,6 +211,12 @@ instance MonadTrans RpcT where
 instance MonadIO m => MonadIO (RpcT m) where
     liftIO = lift . liftIO
 
+instance MonadUnliftIO m => MonadUnliftIO (RpcT m) where
+    askUnliftIO = do
+        u <- lift askUnliftIO
+        vat <- RpcT ask
+        pure $ UnliftIO $ unliftIO u . runRpcT vat
+
 instance MonadThrow m => MonadThrow (RpcT m) where
     throwM = lift . throwM
 
