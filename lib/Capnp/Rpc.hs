@@ -296,7 +296,7 @@ instance Show Client where
     show _          = "DisconnectedClient"
 
 -- | Export a local interface server, so it may be offered on the network.
-export :: MonadIO m => Server -> RpcT m Client
+export :: MonadUnliftIO m => Server -> RpcT m Client
 export localServer = do
     exportId <- newExportId
     localVat@Vat{exports} <- RpcT ask
