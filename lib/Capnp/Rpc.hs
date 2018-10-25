@@ -793,7 +793,7 @@ abortIO :: MonadIO m => Vat -> T.Text -> m a
 abortIO vat reason =
     liftIO $ atomicallyCommitErrs $ abort vat reason
 
--- | Like 'abortIO', but runs in 'RpcT' does not require a 'Vat' argument.
+-- | Like 'abortIO', but runs in 'RpcT' and does not require a 'Vat' argument.
 abortT :: T.Text -> RpcT IO a
 abortT reason = do
     vat <- RpcT ask
