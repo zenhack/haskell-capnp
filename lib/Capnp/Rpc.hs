@@ -772,8 +772,18 @@ coordinator vat@Vat{..} = forever $ do
                     error $
                         "BUG: decoding as pure resulted in a 'call' message, " ++
                         "but decoding as raw did not. This should never happen!"
-        Message'return ret ->
-            handleReturnMsg vat ret
+        Message'return ret -> do
+            -- TODO: factor out this and the bit for call above.
+            rawRet' <- evalLimitT limit $ do
+                ret <- msgToValue msg
+                case ret of
+                    Rpc.Message'return rawReturn ->
+                        Rpc.get_Return'union' rawReturn
+                    _ ->
+                        error $
+                            "BUG: decoding as pure resulted in a 'return' message, " ++
+                            "but decoding as raw did not. This should never happen!"
+            handleReturnMsg rawRet' vat ret
         Message'finish finish ->
             handleFinishMsg vat finish
         -- Level >= 1:
@@ -839,9 +849,14 @@ handleUnimplementedMsg vat msg = case msg of
             "Your vat sent an 'unimplemented' message for an abort message " <>
             "that its remote peer never sent. This is likely a bug in your " <>
             "capnproto library."
-    _ ->
-        abortIO vat
-            "Your vat replied with 'unimplemented' for a required message."
+    msg ->
+        abortIO vat $
+            "Your vat replied with 'unimplemented' for a required message." <>
+            case vat of
+                Vat{debugMode=True} ->
+                    T.pack $ " The message was:" ++ show msg
+                _ ->
+                    ""
 
 -- | Handle an @abort@ message.
 handleAbortMsg :: Vat -> Exception -> IO ()
@@ -894,45 +909,52 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             --
                             -- the handler has to decode again anyway. We should try to make this
                             -- whole business more efficient. See also #52.
-                            clients <- atomicallyCommitErrs $ traverse (interpCapDescriptor vat) capTable
-                            rawCall <- Untyped.tMsg (pure . Message.withCapTable clients) rawCall
+                            rawCall <- atomicallyCommitErrs $ updateRawCapTable vat capTable rawCall
                             paramContent <- evalLimitT limit $
                                 Rpc.get_Call'params rawCall
                                 >>= Rpc.get_Payload'content
                             ret <- runRpcT vat $ call interfaceId methodId paramContent client
-                            liftIO $ waitIO ret
+                            waitIO ret
+                        union' <- case result of
+                            -- The server returned successfully; pass along the result.
+                            Right ok -> do
+                                clients <- createPure limit $ valueToMsg ok
+                                pure $ Return'results def
+                                    { content = Just (PtrStruct ok)
+                                    , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
+                                    }
+                            Left (e :: SomeException) -> pure $ def
+                                -- The server threw an exception; we need to report this
+                                -- to the caller.
+                                Return'exception $
+                                    case fromException e of
+                                        Just (e :: Exception) ->
+                                            -- If the exception was a capnp exception,
+                                            -- just pass it along.
+                                            e
+                                        Nothing -> def
+                                            -- Otherwise, return something opaque to
+                                            -- the caller; the exception could potentially
+                                            -- contain sensitive info.
+                                            { reason = "unhandled exception" <>
+                                                    if debugMode
+                                                        then ": " <> T.pack (show e)
+                                                        else ""
+                                            , type_ = Exception'Type'failed
+                                            }
                         msg <- createPure limit $ valueToMsg <$> Message'return $ def
                             { answerId = callQuestionId
-                            , union' = case result of
-                                -- The server returned successfully; pass along the result.
-                                Right ok -> Return'results def
-                                    { content = Just (PtrStruct ok)
-                                    }
-                                Left (e :: SomeException) -> def
-                                    -- The server threw an exception; we need to report this
-                                    -- to the caller.
-                                    Return'exception $
-                                        case fromException e of
-                                            Just (e :: Exception) ->
-                                                -- If the exception was a capnp exception,
-                                                -- just pass it along.
-                                                e
-                                            Nothing -> def
-                                                -- Otherwise, return something opaque to
-                                                -- the caller; the exception could potentially
-                                                -- contain sensitive info.
-                                                { reason = "unhandled exception" <>
-                                                        if debugMode
-                                                            then ": " <> T.pack (show e)
-                                                            else ""
-                                                , type_ = Exception'Type'failed
-                                                }
+                            , union' = union'
                             }
                         atomically $ writeTBQueue sendQ msg
 
+updateRawCapTable vat capTable raw = do
+    clients <- traverse (interpCapDescriptor vat) capTable
+    Untyped.tMsg (pure . Message.withCapTable clients) raw
+
 -- | Handle receiving a 'Return' message.
-handleReturnMsg :: Vat -> Return -> IO ()
-handleReturnMsg vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
+handleReturnMsg :: Rpc.Return' ConstMsg -> Vat -> Return -> IO ()
+handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
     question <- M.lookup answerId <$> readTVar questions
     case question of
         Nothing -> abort vat $
@@ -951,7 +973,14 @@ handleReturnMsg vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             writeTBQueue sendQ msg
             modifyTVar questions $ M.delete answerId
             case union' of
-                Return'results Payload{content} ->
+                Return'results Payload{capTable} -> do
+                    rawRet' <- updateRawCapTable vat capTable rawRet'
+                    rawRet'' <- evalLimitT limit $ Rpc.get_Return'' rawRet'
+                    content <- case rawRet'' of
+                        Rpc.Return'results payload -> do
+                            evalLimitT limit $ Rpc.get_Payload'content payload >>= decerialize
+                        _ ->
+                            error "TODO: better error message"
                     handleResult sendReturn content
                 Return'exception exn ->
                     breakPromise sendReturn exn
