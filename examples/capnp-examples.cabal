@@ -17,6 +17,7 @@ common shared-opts
   build-depends:
       base >=4.11 && <5.0
     , capnp
+    , stm ^>= 2.5.0
     , bytestring ^>=0.10
     , data-default ^>=0.7
     , exceptions ^>=0.10
