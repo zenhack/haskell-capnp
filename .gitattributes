@@ -2,4 +2,4 @@
 /examples/Capnp/Gen/ linguist-generated=true
 /lib/Capnp/Gen/ linguist-generated=true
 /lib/Internal/Gen/ linguist-generated=true
-/tests/aircraftlib/Capnp/Gen/ linguist-generated=true
+/tests/main/Capnp/Gen/ linguist-generated=true
