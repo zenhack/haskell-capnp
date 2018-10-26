@@ -116,7 +116,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
             stopVat
         )
-    xit "Methods with interface parameters work" $ do
+    it "Methods with interface parameters work" $ do
         ctrA <- newTestCtr 2
         ctrB <- newTestCtr 0
         ctrC <- newTestCtr 30
@@ -129,7 +129,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 r <- traverse
                     (\(TestCtrServer var) -> liftIO $ readTVarIO var)
                     [ctrA, ctrB, ctrC]
-                liftIO $ r `shouldBe` [6, 4, 34]
+                liftIO $ r `shouldBe` [7, 5, 35]
                 stopVat
             )
 
