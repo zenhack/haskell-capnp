@@ -993,7 +993,7 @@ handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
                     rawRet' <- updateRawCapTable vat capTable rawRet'
                     rawRet'' <- evalLimitT limit $ Rpc.get_Return'' rawRet'
                     content <- case rawRet'' of
-                        Rpc.Return'results payload -> do
+                        Rpc.Return'results payload ->
                             evalLimitT limit $ Rpc.get_Payload'content payload >>= decerialize
                         _ ->
                             error "TODO: better error message"
