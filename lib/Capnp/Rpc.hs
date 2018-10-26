@@ -75,7 +75,7 @@ import Data.Word
 import UnliftIO  hiding (Exception, wait)
 
 import Control.Concurrent.STM          (throwSTM)
-import Control.Monad                   (forever, (>=>))
+import Control.Monad                   (forever, when, (>=>))
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
@@ -112,7 +112,7 @@ import Capnp
     )
 import Capnp.Untyped.Pure   (PtrType(PtrStruct), Struct)
 import Internal.CommitThrow (atomicallyCommitErrs, throwAndCommit)
-import Internal.Supervisors (Supervisor, withSupervisor)
+import Internal.Supervisors (Supervisor, supervise, withSupervisor)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
 import qualified Capnp.Message       as Message
@@ -246,11 +246,13 @@ data Client
         }
     | LocalClient
         { exportId    :: !ExportId
-        , localServer :: Server
+        , serverQueue :: ServerQueue
         , localVat    :: Vat
         }
     | NullClient
     | DisconnectedClient
+
+type ServerQueue = TBQueue (Server -> RpcT IO Bool)
 
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' using 'export' and then shared via RPC.
@@ -314,7 +316,9 @@ instance Show Client where
 export :: MonadUnliftIO m => Server -> RpcT m Client
 export localServer = do
     exportId <- newExportId
-    localVat@Vat{exports} <- RpcT ask
+    localVat@Vat{exports, maxObjectCalls, supervisor} <- RpcT ask
+
+    queue <- atomically $ newTBQueue (fromIntegral maxObjectCalls)
 
     -- We add an entry to our exports table. The refcount *starts* at zero,
     -- and will be incremented to one the first time we actually send this
@@ -322,11 +326,16 @@ export localServer = do
     -- in response to interaction with the remote vat, it won't be removed
     -- until it goes *back* to being zero.
     atomically $ modifyTVar exports $ M.insert exportId Export
-        { server = localServer
+        { serverQueue = queue
         , refCount = 0
         }
+    liftIO $ supervise (runRpcT localVat $ runServer localServer queue) supervisor
+    pure LocalClient{exportId, localVat, serverQueue = queue}
 
-    pure LocalClient{exportId, localServer, localVat}
+runServer server queue = do
+    job <- atomically $ readTBQueue queue
+    continue <- job server
+    when continue (runServer server queue)
 
 -- | Get a client for the bootstrap interface from the remote vat.
 bootstrap :: MonadIO m => RpcT m Client
@@ -409,9 +418,11 @@ call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
         , sendReturn = fulfiller
         }
     pure promise
-call interfaceId methodId params LocalClient{localServer=Server{handleCall}} = do
+call interfaceId methodId params LocalClient{serverQueue} = do
     (promise, fulfiller) <- newPromiseIO
-    handleCall interfaceId methodId params fulfiller
+    atomically $ writeTBQueue serverQueue $ \server -> do
+        handleCall server interfaceId methodId params fulfiller
+        pure True
     pure promise
 call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
@@ -530,9 +541,6 @@ data Vat = Vat
     , questionIdPool :: TVar [Word32]
     , exportIdPool   :: TVar [Word32]
 
-    -- The traversal limit to use.
-    , limit          :: !Int
-
     -- Create the bootstrap interface for a connection. If 'Nothing', bootstrap
     -- messages return unimplemented.
     , offerBootstrap :: Maybe (RpcT IO Client)
@@ -544,14 +552,16 @@ data Vat = Vat
     -- Supervisor which monitors object lifetimes.
     , supervisor     :: Supervisor
 
-    -- Whether include extra (possibly sensitive) info in exceptions sent to the
-    -- peer vat.
+    -- same as the corresponding fields in 'VatConfig'
     , debugMode      :: !Bool
+    , limit          :: !Int
+    , maxObjectCalls :: !Word32
+
     }
 
 data Export = Export
-    { server   :: Server
-    , refCount :: !Word32
+    { serverQueue :: ServerQueue
+    , refCount    :: !Word32
     }
 
 -- | @'makeCapDescriptor' client@ creates a cap descriptor suitable
@@ -593,9 +603,9 @@ interpCapDescriptor vat@Vat{..} = \case
                 abort vat $
                     "Incoming capability table referenced non-existent " <>
                     "receiverHosted capability #" <> T.pack (show exportId)
-            Just Export{server} ->
+            Just Export{serverQueue} ->
                 pure LocalClient
-                    { localServer = server
+                    { serverQueue
                     , localVat = vat
                     , exportId = exportId
                     }
@@ -899,10 +909,10 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{target,interfaceId,methodId,params=Pa
                     abortIO vat $
                         "Received 'Call' on non-existent export #" <>
                             T.pack (show exportId)
-                Just Export{server} ->
+                Just Export{serverQueue} ->
                     handleCallToClient rawCall vat msg LocalClient
-                        { localVat = vat
-                        , localServer = server
+                        { serverQueue
+                        , localVat = vat
                         , exportId = exportId
                         }
         MessageTarget'promisedAnswer PromisedAnswer{questionId=targetQuestionId, transform}
