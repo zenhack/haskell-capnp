@@ -48,6 +48,7 @@ module Capnp.Rpc
     , socketTransport
 
     -- * Exceptions
+    , methodUnimplemented
     , throwMethodUnimplemented
 
     -- ** Re-exported from the generated rpc.capnp module.
@@ -62,6 +63,7 @@ module Capnp.Rpc
     , newPromiseIO
     , fulfill
     , fulfillIO
+    , breakPromise
     , isResolved
     , wait
     , waitIO
@@ -130,7 +132,10 @@ instance IsClient Client where
 
 -- | Shortcut to throw an @unimplemented@ exception.
 throwMethodUnimplemented :: MonadThrow m => m a
-throwMethodUnimplemented = throwM Exception
+throwMethodUnimplemented = throwM methodUnimplemented
+
+methodUnimplemented :: Exception
+methodUnimplemented = Exception
     { reason = "Method unimplemented"
     , type_ = Exception'Type'unimplemented
     , obsoleteIsCallersFault = False
@@ -250,7 +255,7 @@ data Client
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' using 'export' and then shared via RPC.
 data Server = Server
-    { handleCall :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> RpcT IO (Promise Struct)
+    { handleCall :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Fulfiller Struct -> RpcT IO ()
     -- ^ @handleCall interfaceId methodId params@ handles a method call.
     -- The method is as specified by interfaceId and methodId, with @params@
     -- being the argument to the method call. It returns a 'Promise' for the
@@ -404,8 +409,10 @@ call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
         , sendReturn = fulfiller
         }
     pure promise
-call interfaceId methodId params LocalClient{localServer=Server{handleCall}} =
-    handleCall interfaceId methodId params
+call interfaceId methodId params LocalClient{localServer=Server{handleCall}} = do
+    (promise, fulfiller) <- newPromiseIO
+    handleCall interfaceId methodId params fulfiller
+    pure promise
 call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
     , type_ = Exception'Type'unimplemented

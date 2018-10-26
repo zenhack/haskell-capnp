@@ -1,9 +1,13 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.GenHelpers.Rpc where
 
 import Control.Monad.Catch (MonadThrow(..))
+import Data.Default        (def)
+import UnliftIO            (SomeException, atomically, fromException, try)
 
 import Capnp.Classes        (Decerialize(..), FromPtr(..))
 import Capnp.TraversalLimit (evalLimitT)
@@ -14,14 +18,24 @@ import qualified Capnp.Message         as M
 import qualified Capnp.Rpc             as Rpc
 import qualified Capnp.Untyped         as U
 
-handleMethod server method paramContent = do
-    content <- evalLimitT maxBound $
-        fromPtr M.empty paramContent >>= decerialize
-    results <- method content server
-    resultStruct <- evalLimitT maxBound $ PH.convertValue results
-    (promise, fulfiller) <- Rpc.newPromiseIO
-    Rpc.fulfillIO fulfiller resultStruct
-    pure promise
+handleMethod server method paramContent fulfiller = do
+    ret <- try $ do
+        content <- evalLimitT maxBound $
+            fromPtr M.empty paramContent >>= decerialize
+        results <- method content server
+        evalLimitT maxBound $ PH.convertValue results
+    case ret of
+        Right resultStruct ->
+            Rpc.fulfillIO fulfiller resultStruct
+        Left e ->
+            case fromException (e :: SomeException) of
+                Just exn ->
+                    atomically $ Rpc.breakPromise fulfiller exn
+                Nothing ->
+                    atomically $ Rpc.breakPromise fulfiller def
+                        { Rpc.type_ = Rpc.Exception'Type'failed
+                        , Rpc.reason = "Method threw an unhandled exception."
+                        }
 
 -- | A valid implementation of 'fromPtr' for any type that implements 'IsClient'.
 --

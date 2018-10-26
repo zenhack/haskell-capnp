@@ -24,6 +24,8 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Concurrent.STM (atomically)
+import Control.Monad.IO.Class (liftIO)
 import Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
 import qualified Capnp.Convert as Convert
@@ -60,12 +62,12 @@ class Echo'server_ cap where
 export_Echo :: Echo'server_ a => a -> Rpc.RpcT IO Echo
 export_Echo server_ = Echo <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         16940812395455687611 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ echo'echo payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ echo'echo payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance Echo'server_ Echo where
     echo'echo args (Echo client) = do

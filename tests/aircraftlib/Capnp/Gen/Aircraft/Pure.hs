@@ -24,6 +24,8 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Concurrent.STM (atomically)
+import Control.Monad.IO.Class (liftIO)
 import Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
 import qualified Capnp.Convert as Convert
@@ -205,12 +207,12 @@ class CallSequence'server_ cap where
 export_CallSequence :: CallSequence'server_ a => a -> Rpc.RpcT IO CallSequence
 export_CallSequence server_ = CallSequence <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         12371070827563042848 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ callSequence'getNumber payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ callSequence'getNumber payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance CallSequence'server_ CallSequence where
     callSequence'getNumber args (CallSequence client) = do
@@ -270,12 +272,12 @@ class CounterAcceptor'server_ cap where
 export_CounterAcceptor :: CounterAcceptor'server_ a => a -> Rpc.RpcT IO CounterAcceptor
 export_CounterAcceptor server_ = CounterAcceptor <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         14317498215560924065 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ counterAcceptor'accept payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ counterAcceptor'accept payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance CounterAcceptor'server_ CounterAcceptor where
     counterAcceptor'accept args (CounterAcceptor client) = do
@@ -305,12 +307,12 @@ class CounterFactory'server_ cap where
 export_CounterFactory :: CounterFactory'server_ a => a -> Rpc.RpcT IO CounterFactory
 export_CounterFactory server_ = CounterFactory <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         15610220054254702620 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ counterFactory'newCounter payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ counterFactory'newCounter payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance CounterFactory'server_ CounterFactory where
     counterFactory'newCounter args (CounterFactory client) = do
@@ -375,12 +377,12 @@ class Echo'server_ cap where
 export_Echo :: Echo'server_ a => a -> Rpc.RpcT IO Echo
 export_Echo server_ = Echo <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         10255578992688506164 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ echo'echo payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ echo'echo payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance Echo'server_ Echo where
     echo'echo args (Echo client) = do

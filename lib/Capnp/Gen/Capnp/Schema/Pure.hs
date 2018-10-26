@@ -24,6 +24,8 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Concurrent.STM (atomically)
+import Control.Monad.IO.Class (liftIO)
 import Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
 import qualified Capnp.Convert as Convert

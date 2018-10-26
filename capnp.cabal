@@ -187,7 +187,8 @@ executable capnpc-haskell
 library aircraftlib
   import: shared-opts
   build-depends:
-    capnp
+      capnp
+    , stm
   hs-source-dirs: tests/aircraftlib
   exposed-modules:
     -- generated from tests/data/aircraft.capnp
@@ -204,6 +205,7 @@ library testlib
     import: shared-opts
   build-depends:
       capnp
+    , stm
     , QuickCheck
     , quickcheck-instances
     , process

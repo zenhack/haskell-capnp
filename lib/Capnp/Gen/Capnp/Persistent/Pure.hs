@@ -24,6 +24,8 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Concurrent.STM (atomically)
+import Control.Monad.IO.Class (liftIO)
 import Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
 import qualified Capnp.Convert as Convert
@@ -62,12 +64,12 @@ class Persistent'server_ cap where
 export_Persistent :: Persistent'server_ a => a -> Rpc.RpcT IO Persistent
 export_Persistent server_ = Persistent <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         14468694717054801553 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ persistent'save payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ persistent'save payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance Persistent'server_ Persistent where
     persistent'save args (Persistent client) = do
@@ -99,14 +101,14 @@ class RealmGateway'server_ cap where
 export_RealmGateway :: RealmGateway'server_ a => a -> Rpc.RpcT IO RealmGateway
 export_RealmGateway server_ = RealmGateway <$> Rpc.export Rpc.Server
     { handleStop = pure () -- TODO
-    , handleCall = \interfaceId methodId payload -> case interfaceId of
+    , handleCall = \interfaceId methodId payload fulfiller -> case interfaceId of
         9583422979879616212 -> case methodId of
             0 -> do
-                RH'.handleMethod server_ realmGateway'import payload
+                RH'.handleMethod server_ realmGateway'import payload fulfiller
             1 -> do
-                RH'.handleMethod server_ realmGateway'export payload
-            _ -> Rpc.throwMethodUnimplemented
-        _ -> Rpc.throwMethodUnimplemented
+                RH'.handleMethod server_ realmGateway'export payload fulfiller
+            _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
+        _ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented
     }
 instance RealmGateway'server_ RealmGateway where
     realmGateway'import args (RealmGateway client) = do

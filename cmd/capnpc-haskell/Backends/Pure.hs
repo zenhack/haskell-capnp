@@ -99,6 +99,8 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import Capnp.Basics.Pure (Data, Text)"
     , "import Control.Monad.Catch (MonadThrow(throwM))"
+    , "import Control.Concurrent.STM (atomically)"
+    , "import Control.Monad.IO.Class (liftIO)"
     , "import Capnp.TraversalLimit (MonadLimit, evalLimitT)"
     , ""
     , "import Control.Monad (forM_)"
@@ -286,7 +288,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Rpc.Server" ]
     , indent $ vcat
         [ "{ handleStop = pure () -- TODO"
-        , ", handleCall = \\interfaceId methodId payload -> case interfaceId of"
+        , ", handleCall = \\interfaceId methodId payload fulfiller -> case interfaceId of"
         , indent $ vcat
             -- TODO: superclasses.
             [ hcat [ fromString (show interfaceId), " -> case methodId of" ]
@@ -294,14 +296,14 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 [ vcat $ flip map methods $ \Method{..} -> vcat
                     [ hcat [ fromString (show ordinal), " -> do" ]
                     , indent $ vcat
-                        [ hcat [ "RH'.handleMethod server_ ", pureValName methodName, " payload" ] ]
+                        [ hcat [ "RH'.handleMethod server_ ", pureValName methodName, " payload fulfiller" ] ]
                         -- TODO:
                         --
                         -- * handle exceptions
                     ]
-                , "_ -> Rpc.throwMethodUnimplemented"
+                , "_ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented"
                 ]
-            , "_ -> Rpc.throwMethodUnimplemented"
+            , "_ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented"
             ]
         , "}"
         ]
