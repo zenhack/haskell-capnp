@@ -78,7 +78,7 @@ import UnliftIO  hiding (Exception, wait)
 
 import Control.Concurrent              (threadDelay)
 import Control.Concurrent.STM          (throwSTM)
-import Control.Monad                   (forever, when, (>=>))
+import Control.Monad                   (forever, when)
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
@@ -114,7 +114,6 @@ import Capnp
     , valueToMsg
     )
 import Capnp.Untyped.Pure   (PtrType(PtrStruct), Struct)
-import Internal.CommitThrow (atomicallyCommitErrs, throwAndCommit)
 import Internal.Supervisors (Supervisor, supervise, withSupervisor)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
@@ -590,9 +589,9 @@ makeCapDescriptor LocalClient{exportId} =
 -- the local vat's table if needed.
 --
 -- This may call 'throwAndCommit', if the cap descriptor is invalid.
-interpCapDescriptor :: Vat -> CapDescriptor -> STM Client
+interpCapDescriptor :: Vat -> CapDescriptor -> STM (Either RpcError Client)
 interpCapDescriptor vat@Vat{..} = \case
-    CapDescriptor'none -> pure NullClient
+    CapDescriptor'none -> ok $ pure NullClient
 
     -- We treat senderPromise the same as senderHosted. We respond to resolve
     -- messages with unimplemented and keep using the promise; someday we'll
@@ -611,7 +610,7 @@ interpCapDescriptor vat@Vat{..} = \case
                     "Incoming capability table referenced non-existent " <>
                     "receiverHosted capability #" <> T.pack (show exportId)
             Just Export{serverQueue} ->
-                pure LocalClient
+                ok $ pure $ LocalClient
                     { serverQueue
                     , localVat = vat
                     , exportId = exportId
@@ -632,7 +631,7 @@ interpCapDescriptor vat@Vat{..} = \case
         modifyTVar' imports $ flip M.alter importId $ \case
             Nothing -> Just 1
             Just !n -> Just (n+1)
-        pure client
+        ok $ pure client
 
 
 instance Eq Vat where
@@ -844,30 +843,43 @@ replyAbort Vat{sendQ, limit} reason = do
             { reason
             , type_ = Exception'Type'failed
             }
-    msg <- createPure limit $ valueToMsg exn
+    msg <- createPure limit $ valueToMsg $ Message'abort exn
     writeTBQueue sendQ msg
     pure exn
 
 -- | Send an abort message to the remote vat with the given reason field
--- and a type field of @failed@, and then throw the same exception via
--- 'throwAndCommit'.
+-- and a type field of @failed@, and then *return* the exception, wrapped
+-- in @'Left' . 'SentAbort'@.
 --
--- FIXME: This will likely usually not actually send the abort, since we throw
--- an exception right after putting it in the send queue, which will kill the
--- send loop. We should add a delay here.
-abort :: Vat -> T.Text -> STM a
-abort vat = replyAbort vat >=> throwAndCommit . SentAbort
+-- The exception is *returned*, rather than thrown, so that the transaction
+-- is not rolled back.
+abort :: Vat -> T.Text -> STM (Either RpcError a)
+abort vat text = Left . SentAbort <$> replyAbort vat text
 
--- | Like 'abort', but runs in IO.
+-- | Send an abort message to the remote vat with the given reason field
+-- and a type field of @failed@, and then the exception, wrapped in
+-- 'SentAbort'.
 abortIO :: MonadIO m => Vat -> T.Text -> m a
-abortIO vat reason =
-    liftIO $ atomicallyCommitErrs $ abort vat reason
+abortIO vat reason = liftIO $ do
+    exn <- atomically $ replyAbort vat reason
+    throwIO $ SentAbort exn
 
 -- | Like 'abortIO', but runs in 'RpcT' and does not require a 'Vat' argument.
 abortT :: T.Text -> RpcT IO a
 abortT reason = do
     vat <- RpcT ask
     abortIO vat reason
+
+-- | helper function that converts an Either into a value, throwing the
+-- exception if it is a 'Left'. There's no conceptual reasons this needs
+-- to be 'RpcError'; it could be any exception. But we only currently use
+-- it in places where we only want to throw 'RpcError'.
+throwLeft :: Either RpcError v -> IO v
+throwLeft (Left e)  = throwIO e
+throwLeft (Right v) = pure v
+
+ok :: Monad m => m a -> m (Either RpcError a)
+ok m = m >>= pure . Right
 
 ----------------- Handler code for specific types of messages. ---------------
 
@@ -987,7 +999,7 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
     --
     -- the handler has to decode again anyway. We should try to make this
     -- whole business more efficient. See also #52.
-    rawCall <- atomicallyCommitErrs $ updateRawCapTable vat capTable rawCall
+    rawCall <- throwLeft =<< atomically (updateRawCapTable vat capTable rawCall)
     paramContent <- evalLimitT limit $
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
@@ -997,10 +1009,10 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
         result <- try $ waitIO ret
         union' <- case result of
             -- The server returned successfully; pass along the result.
-            Right ok -> do
-                clients <- createPure limit $ valueToMsg ok
+            Right ret -> do
+                clients <- createPure limit $ valueToMsg ret
                 pure $ Return'results def
-                    { content = Just (PtrStruct ok)
+                    { content = Just (PtrStruct ret)
                     , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
                     }
             Left (e :: SomeException) -> pure $ def
@@ -1028,13 +1040,26 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
             }
         atomically $ writeTBQueue sendQ msg
 
+updateRawCapTable
+    :: Untyped.TraverseMsg t
+    => Vat
+    -> V.Vector CapDescriptor
+    -> t Message.ConstMsg
+    -> STM (Either RpcError (t Message.ConstMsg))
 updateRawCapTable vat capTable raw = do
-    clients <- traverse (interpCapDescriptor vat) capTable
-    Untyped.tMsg (pure . Message.withCapTable clients) raw
+    -- FIXME: we may send more than one abort message, since
+    -- 'interpCapDescriptor' may 'abort' on more than one cap. We
+    -- should rework this to short-circut.
+    r <- sequence <$> traverse (interpCapDescriptor vat) capTable
+    case r of
+        Left e ->
+            pure $ Left e
+        Right clients ->
+            ok $ Untyped.tMsg (pure . Message.withCapTable clients) raw
 
 -- | Handle receiving a 'Return' message.
 handleReturnMsg :: Rpc.Return' ConstMsg -> Vat -> Return -> IO ()
-handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
+handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = (throwLeft =<<) $ atomically $ do
     question <- M.lookup answerId <$> readTVar questions
     case question of
         Nothing -> abort vat $
@@ -1044,7 +1069,7 @@ handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             -- This will cause the other side to drop the resolved cap; we'll
             -- just keep using the promise.
             replyUnimplemented vat $ Message'return msg
-            modifyTVar questions $ M.delete answerId
+            ok $ modifyTVar questions $ M.delete answerId
         Just CallQuestion{callMsg, sendReturn} -> do
             -- We don't support caps other than the bootstrap yet, so we can
             -- send Finish right away.
@@ -1054,22 +1079,26 @@ handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
             modifyTVar questions $ M.delete answerId
             case union' of
                 Return'results Payload{capTable} -> do
-                    rawRet' <- updateRawCapTable vat capTable rawRet'
-                    rawRet'' <- evalLimitT limit $ Rpc.get_Return'' rawRet'
-                    content <- case rawRet'' of
-                        Rpc.Return'results payload ->
-                            evalLimitT limit $ Rpc.get_Payload'content payload >>= decerialize
-                        _ ->
-                            error "TODO: better error message"
-                    handleResult sendReturn content
+                    r <- updateRawCapTable vat capTable rawRet'
+                    case r of
+                        Left e ->
+                            pure (Left e)
+                        Right rawRet' -> do
+                            rawRet'' <- evalLimitT limit $ Rpc.get_Return'' rawRet'
+                            content <- case rawRet'' of
+                                Rpc.Return'results payload ->
+                                    evalLimitT limit $ Rpc.get_Payload'content payload >>= decerialize
+                                _ ->
+                                    error "TODO: better error message"
+                            handleResult sendReturn content
                 Return'exception exn ->
-                    breakPromise sendReturn exn
+                    ok $ breakPromise sendReturn exn
 
                 -- These shouldn't come up in practice yet, since our
                 -- implementation doesn't do anything that can trigger
                 -- them, but when they do we won't need to do anything:
-                Return'canceled -> pure ()
-                Return'resultsSentElsewhere -> pure ()
+                Return'canceled -> ok $ pure ()
+                Return'resultsSentElsewhere -> ok $ pure ()
 
                 _ ->
                     abort vat $
@@ -1077,12 +1106,13 @@ handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = atomicallyCommitErrs $ do
                         "(we only support results and exception)."
 
   where
+
     -- | handle the @result@ variant of a 'Return'.
     handleResult sendReturn content = case content of
         Nothing ->
-            fulfill sendReturn def
+            ok $ fulfill sendReturn def
         Just (PtrStruct s) ->
-            fulfill sendReturn s
+            ok $ fulfill sendReturn s
         Just _ -> abort vat $
             "Received non-struct pointer in a return message. " <>
             "Return values must always be structs."
