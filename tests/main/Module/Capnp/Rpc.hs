@@ -178,7 +178,7 @@ instance CallSequence'server_ TestCtrServer  where
 -------------------------------------------------------------------------------
 
 unusualTests :: Spec
-unusualTests = describe "Tests for unusual message patterns" $ do
+unusualTests = describe "Tests for unusual message patterns" $
     it "Should raise ReceivedAbort in response to an abort message." $ do
         -- Send an abort message to the remote vat, and verify that
         -- the vat actually aborts.
@@ -192,7 +192,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
             $ do
                 msg <- createPure maxBound $ valueToMsg $ Message'abort exn
                 sendMsg probeTrans msg
-        ret `shouldBe` (Left (ReceivedAbort exn))
+        ret `shouldBe` Left (ReceivedAbort exn)
 
 -------------------------------------------------------------------------------
 -- Utilties used by the tests.
