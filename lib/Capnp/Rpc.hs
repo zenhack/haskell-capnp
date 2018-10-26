@@ -342,7 +342,6 @@ bootstrap :: MonadIO m => RpcT m Client
 bootstrap = do
     questionId <- newQuestionId
     vat <- RpcT ask
-    let msg = Message'bootstrap def { questionId }
     atomically $ sendQuestion vat (BootstrapQuestion questionId)
     pure RemoteClient
         { target = MessageTarget'promisedAnswer def { questionId }
