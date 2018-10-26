@@ -879,7 +879,7 @@ throwLeft (Left e)  = throwIO e
 throwLeft (Right v) = pure v
 
 ok :: Monad m => m a -> m (Either RpcError a)
-ok m = m >>= pure . Right
+ok = fmap Right
 
 ----------------- Handler code for specific types of messages. ---------------
 
