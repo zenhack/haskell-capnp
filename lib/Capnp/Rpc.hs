@@ -933,7 +933,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                                 <> T.pack (show targetQuestionId)
                     Just (ClientAnswer client) ->
                         handleCallToClient rawCall vat msg client
-                    Just (PromiseAnswer _promise) -> do
+                    Just (PromiseAnswer _promise) ->
                         -- We can reject this without resolving the promise, since we
                         -- know that:
                         --
