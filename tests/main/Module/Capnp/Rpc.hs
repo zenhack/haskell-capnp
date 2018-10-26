@@ -12,7 +12,7 @@ import Control.Monad          (replicateM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable          (for_)
 import Data.Function          ((&))
-import UnliftIO               (concurrently_, race_, try)
+import UnliftIO               (concurrently_, race_, timeout, try)
 
 import qualified Data.Text as T
 
@@ -219,9 +219,17 @@ triggerAbort msg reason =
             (do
                 rawMsg <- createPure maxBound $ valueToMsg msg
                 sendMsg probeTrans rawMsg
-                rawResp <- recvMsg probeTrans
-                resp <- evalLimitT maxBound (msgToValue rawResp)
-                resp `shouldBe` Message'abort wantAbortExn
+                -- 4 second timeout. The remote vat's timeout before killing the
+                -- connection is one second, so if this happens we're never going
+                -- to receive the message. In theory this is possible, but if it
+                -- happens something is very wrong.
+                r <- timeout 4000000 $ recvMsg probeTrans
+                case r of
+                    Nothing ->
+                        error "Test timed out waiting on abort message."
+                    Just rawResp -> do
+                        resp <- evalLimitT maxBound (msgToValue rawResp)
+                        resp `shouldBe` Message'abort wantAbortExn
             )
 
 -------------------------------------------------------------------------------

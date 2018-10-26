@@ -76,6 +76,7 @@ import Prelude hiding (fail)
 import Data.Word
 import UnliftIO  hiding (Exception, wait)
 
+import Control.Concurrent              (threadDelay)
 import Control.Concurrent.STM          (throwSTM)
 import Control.Monad                   (forever, when, (>=>))
 import Control.Monad.Catch             (MonadThrow(..))
@@ -726,7 +727,20 @@ runVat config@VatConfig{limit, getTransport, withBootstrap} = do
         foldl concurrently_
             (recvLoop transport vat)
             [ sendLoop transport vat
-            , coordinator vat
+            , do
+                ret <- try $ coordinator vat
+                case ret of
+                    Left e@(SentAbort _) -> do
+                        -- Give the message a bit of time to reach
+                        -- the remote vat.
+                        threadDelay 100000
+                        throwIO e
+                    Left e@(ReceivedAbort _) ->
+                        throwIO e
+                    Right _ ->
+                        error $
+                            "BUG: coordinator returned normally; it should " ++
+                            "loop until an exception is thrown."
             , runRpcT vat $ for_ withBootstrap $ \with ->
                 bootstrap >>= with
             ]
