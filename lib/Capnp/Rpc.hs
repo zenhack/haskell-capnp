@@ -883,10 +883,21 @@ handleBootstrapMsg vat@Vat{..} msg@Bootstrap{questionId} =
 handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
 handleCallMsg rawCall vat@Vat{..} msg@Call{target,interfaceId,methodId,params=Payload{capTable}} =
     case target of
-        MessageTarget'importedCap _ ->
-            atomically $ replyUnimplemented vat $ Message'call msg
         MessageTarget'unknown' _ ->
             atomically $ replyUnimplemented vat $ Message'call msg
+        MessageTarget'importedCap exportId -> do
+            result <- atomically $ M.lookup exportId <$> readTVar exports
+            case result of
+                Nothing ->
+                    abortIO vat $
+                        "Received 'Call' on non-existent export #" <>
+                            T.pack (show exportId)
+                Just Export{server} ->
+                    handleCallToClient rawCall vat msg LocalClient
+                        { localVat = vat
+                        , localServer = server
+                        , exportId = exportId
+                        }
         MessageTarget'promisedAnswer PromisedAnswer{questionId=targetQuestionId, transform}
             | V.length transform /= 0 ->
                 atomically $ replyUnimplemented vat $ Message'call msg
@@ -897,7 +908,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{target,interfaceId,methodId,params=Pa
                         -- TODO: adjust this so we don't throw (and thus kill the connection)
                         -- before the abort message is actually sent.
                         abortIO vat $
-                            "Received 'Call' on non-existant promised answer #"
+                            "Received 'Call' on non-existent promised answer #"
                                 <> T.pack (show targetQuestionId)
                     Just (ClientAnswer client) ->
                         handleCallToClient rawCall vat msg client
