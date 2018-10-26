@@ -11,14 +11,19 @@ before_script:
 test:alltests:
   image: zenhack/haskell-capnp-ci
   script:
-    - cabal new-build all
-    - cabal new-test
-      # Linting:
-    - ./scripts/hlint.sh
-      # Run stylish-haskell, and fail if it changes anything:
-    - ./scripts/format.sh
-    - git diff --exit-code
-      # Regenerate the schema, and make sure they're in-sync
-      # with what was committed:
+    # First build the code generator plugin.
+    - cabal new-build capnpc-haskell
+    # Then, regenerate the schema modules, and make sure they're in-sync
+    # with what was committed. This is also necessary to generate the
+    # Schema modules used by the test suite, which are not committed.
     - ./scripts/regen.sh
+    - git diff --exit-code
+    # Now build everything else (incl. examples):
+    - cabal new-build all
+    # ...run the tests:
+    - cabal new-test
+    # Linting:
+    - ./scripts/hlint.sh
+    # Run stylish-haskell, and fail if it changes anything:
+    - ./scripts/format.sh
     - git diff --exit-code
