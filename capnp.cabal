@@ -219,6 +219,7 @@ test-suite tests
       , SchemaQuickCheck
     build-depends:
         capnp
+      , unliftio
       , stm
       , async
       , process

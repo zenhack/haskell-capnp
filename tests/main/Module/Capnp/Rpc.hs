@@ -7,16 +7,17 @@ import Control.Concurrent.STM
 import Data.Word
 import Test.Hspec
 
-import Control.Concurrent       (MVar, newEmptyMVar, putMVar, takeMVar)
-import Control.Concurrent.Async (race_)
-import Control.Monad            (replicateM)
-import Control.Monad.IO.Class   (MonadIO, liftIO)
-import Data.Foldable            (for_)
-import Data.Function            ((&))
+import Control.Concurrent     (MVar, newEmptyMVar, putMVar, takeMVar)
+import Control.Monad          (replicateM)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Data.Foldable          (for_)
+import Data.Function          ((&))
+import UnliftIO               (concurrently_, race_, try)
 
-import Capnp (ConstMsg, def)
+import Capnp (ConstMsg, createPure, def, valueToMsg)
 
 import Capnp.Gen.Aircraft.Pure
+import Capnp.Gen.Capnp.Rpc.Pure
 import Capnp.Rpc
 
 import qualified Capnp.Gen.Echo.Pure as E
@@ -25,6 +26,7 @@ rpcTests :: Spec
 rpcTests = do
     echoTests
     aircraftTests
+    unusualTests
 
 -------------------------------------------------------------------------------
 -- Tests using echo.capnp. This is the schema used by the example.
@@ -165,6 +167,32 @@ instance CallSequence'server_ TestCtrServer  where
             modifyTVar' tvar (+1)
             readTVar tvar
         pure def { n = ret }
+
+-------------------------------------------------------------------------------
+-- Tests for unusual patterns of messages .
+--
+-- Some of these will never come up when talking to a correct implementation of
+-- capnproto, and others just won't come up when talking to Haskell
+-- implementation. Accordingly, these tests start a vat in one thread and
+-- directly manipulate the transport in the other.
+-------------------------------------------------------------------------------
+
+unusualTests :: Spec
+unusualTests = describe "Tests for unusual message patterns" $ do
+    it "Should raise ReceivedAbort in response to an abort message." $ do
+        -- Send an abort message to the remote vat, and verify that
+        -- the vat actually aborts.
+        let exn = def
+                { type_ = Exception'Type'failed
+                , reason = "Testing abort"
+                }
+        (vatTrans, probeTrans) <- transportPair
+        ret <- try $ concurrently_
+            (runVat $ (vatConfig $ const vatTrans) { debugMode = True})
+            $ do
+                msg <- createPure maxBound $ valueToMsg $ Message'abort exn
+                sendMsg probeTrans msg
+        ret `shouldBe` (Left (ReceivedAbort exn))
 
 -------------------------------------------------------------------------------
 -- Utilties used by the tests.
