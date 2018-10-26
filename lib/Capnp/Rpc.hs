@@ -516,7 +516,11 @@ data Question
 
 data Answer
     = ClientAnswer Client
+    -- ^ An answer which has already resolved to a capability
     | PromiseAnswer (Promise Struct)
+    -- ^ An answer which will be fulfilled by a promise
+    | ExnAnswer Exception
+    -- ^ An answer which has thrown an exception.
 
 -- | Get a 'Message' corresponding to the question.
 getQuestionMessage :: Question -> Message
@@ -899,7 +903,7 @@ handleBootstrapMsg vat@Vat{..} msg@Bootstrap{questionId} =
                 -- TODO: also add it to exports and send a Return.
 
 handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
-handleCallMsg rawCall vat@Vat{..} msg@Call{target,interfaceId,methodId,params=Payload{capTable}} =
+handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} =
     case target of
         MessageTarget'unknown' _ ->
             atomically $ replyUnimplemented vat $ Message'call msg
@@ -930,6 +934,32 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{target,interfaceId,methodId,params=Pa
                                 <> T.pack (show targetQuestionId)
                     Just (ClientAnswer client) ->
                         handleCallToClient rawCall vat msg client
+                    Just (PromiseAnswer _promise) -> do
+                        -- We can reject this without resolving the promise, since we
+                        -- know that:
+                        --
+                        -- 1. The result will be a struct.
+                        -- 2. the call has no 'transform', so is trying to call a method
+                        --    directly on the struct.
+                        --
+                        -- Once we implement transform support we'll have to actually
+                        -- deal with this.
+                        throwExnAnswer def
+                            { type_ = Exception'Type'failed
+                            , reason = "Tried to call a method on a struct."
+                            }
+                    Just (ExnAnswer exn) ->
+                        throwExnAnswer exn
+  where
+    throwExnAnswer exn = do
+        msg <- createPure limit $ valueToMsg $ Message'return def
+                { answerId = callQuestionId
+                , union' = Return'exception exn
+                }
+        atomically $ do
+            writeTBQueue sendQ msg
+            modifyTVar' answers $ M.insert callQuestionId (ExnAnswer exn)
+
 
 -- helper for 'handleCallMsg'; this handles the case where we have a Client available to service the call.
 handleCallToClient :: Rpc.Call ConstMsg -> Vat -> Call -> Client -> IO ()
