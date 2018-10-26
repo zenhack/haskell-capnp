@@ -881,7 +881,7 @@ handleBootstrapMsg vat@Vat{..} msg@Bootstrap{questionId} =
                 -- TODO: also add it to exports and send a Return.
 
 handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
-handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} =
+handleCallMsg rawCall vat@Vat{..} msg@Call{target,interfaceId,methodId,params=Payload{capTable}} =
     case target of
         MessageTarget'importedCap _ ->
             atomically $ replyUnimplemented vat $ Message'call msg
@@ -899,54 +899,59 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                         abortIO vat $
                             "Received 'Call' on non-existant promised answer #"
                                 <> T.pack (show targetQuestionId)
-                    Just (ClientAnswer client) -> do
-                        result <- try $ do
-                            -- We fish out the low-level representation of the params, set the
-                            -- cap table based on the value in the call message, and then
-                            -- pass it to the handler. This ensures that any Clients in the value
-                            -- are actually connected; on the initial decode they will be null,
-                            -- since the cap table is empty.
-                            --
-                            -- the handler has to decode again anyway. We should try to make this
-                            -- whole business more efficient. See also #52.
-                            rawCall <- atomicallyCommitErrs $ updateRawCapTable vat capTable rawCall
-                            paramContent <- evalLimitT limit $
-                                Rpc.get_Call'params rawCall
-                                >>= Rpc.get_Payload'content
-                            ret <- runRpcT vat $ call interfaceId methodId paramContent client
-                            waitIO ret
-                        union' <- case result of
-                            -- The server returned successfully; pass along the result.
-                            Right ok -> do
-                                clients <- createPure limit $ valueToMsg ok
-                                pure $ Return'results def
-                                    { content = Just (PtrStruct ok)
-                                    , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
-                                    }
-                            Left (e :: SomeException) -> pure $ def
-                                -- The server threw an exception; we need to report this
-                                -- to the caller.
-                                Return'exception $
-                                    case fromException e of
-                                        Just (e :: Exception) ->
-                                            -- If the exception was a capnp exception,
-                                            -- just pass it along.
-                                            e
-                                        Nothing -> def
-                                            -- Otherwise, return something opaque to
-                                            -- the caller; the exception could potentially
-                                            -- contain sensitive info.
-                                            { reason = "unhandled exception" <>
-                                                    if debugMode
-                                                        then ": " <> T.pack (show e)
-                                                        else ""
-                                            , type_ = Exception'Type'failed
-                                            }
-                        msg <- createPure limit $ valueToMsg <$> Message'return $ def
-                            { answerId = callQuestionId
-                            , union' = union'
-                            }
-                        atomically $ writeTBQueue sendQ msg
+                    Just (ClientAnswer client) ->
+                        handleCallToClient rawCall vat msg client
+
+-- helper for 'handleCallMsg'; this handles the case where we have a Client available to service the call.
+handleCallToClient :: Rpc.Call ConstMsg -> Vat -> Call -> Client -> IO ()
+handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} client = do
+    result <- try $ do
+        -- We fish out the low-level representation of the params, set the
+        -- cap table based on the value in the call message, and then
+        -- pass it to the handler. This ensures that any Clients in the value
+        -- are actually connected; on the initial decode they will be null,
+        -- since the cap table is empty.
+        --
+        -- the handler has to decode again anyway. We should try to make this
+        -- whole business more efficient. See also #52.
+        rawCall <- atomicallyCommitErrs $ updateRawCapTable vat capTable rawCall
+        paramContent <- evalLimitT limit $
+            Rpc.get_Call'params rawCall
+            >>= Rpc.get_Payload'content
+        ret <- runRpcT vat $ call interfaceId methodId paramContent client
+        waitIO ret
+    union' <- case result of
+        -- The server returned successfully; pass along the result.
+        Right ok -> do
+            clients <- createPure limit $ valueToMsg ok
+            pure $ Return'results def
+                { content = Just (PtrStruct ok)
+                , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
+                }
+        Left (e :: SomeException) -> pure $ def
+            -- The server threw an exception; we need to report this
+            -- to the caller.
+            Return'exception $
+                case fromException e of
+                    Just (e :: Exception) ->
+                        -- If the exception was a capnp exception,
+                        -- just pass it along.
+                        e
+                    Nothing -> def
+                        -- Otherwise, return something opaque to
+                        -- the caller; the exception could potentially
+                        -- contain sensitive info.
+                        { reason = "unhandled exception" <>
+                                if debugMode
+                                    then ": " <> T.pack (show e)
+                                    else ""
+                        , type_ = Exception'Type'failed
+                        }
+    msg <- createPure limit $ valueToMsg <$> Message'return $ def
+        { answerId = callQuestionId
+        , union' = union'
+        }
+    atomically $ writeTBQueue sendQ msg
 
 updateRawCapTable vat capTable raw = do
     clients <- traverse (interpCapDescriptor vat) capTable
