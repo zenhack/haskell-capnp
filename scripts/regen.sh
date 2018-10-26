@@ -56,7 +56,7 @@ capnp compile \
 		$core_inc/capnp/*.capnp
 
 log "Generating schema modules for aircraft.capnp (test suite)..."
-cd "$repo_root/tests/aircraftlib"
+cd "$repo_root/tests/main"
 capnp compile \
 		-I $core_inc \
 		--src-prefix=../data/ \
@@ -69,5 +69,12 @@ capnp compile \
 		-I $core_inc \
 		-ohaskell \
 		echo.capnp
+
+log "Linking echo schema into test suite"
+for file in $(find Capnp -type f -name '*.hs'); do
+		cd "$repo_root/tests/main"
+		[ -d $(dirname $file) ] || mkdir -p $(dirname $file)
+		ln -s "$repo_root/examples/$file" "$file"
+done
 
 # vim: set ts=2 sw=2 noet :
