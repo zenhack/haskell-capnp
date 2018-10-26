@@ -14,3 +14,7 @@ cabal.project.local~
 
 .ghc.*
 result*
+
+# Code coverage:
+.hpc
+*.tix
