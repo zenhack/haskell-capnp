@@ -14,7 +14,9 @@ import Data.Foldable          (for_)
 import Data.Function          ((&))
 import UnliftIO               (concurrently_, race_, try)
 
-import Capnp (ConstMsg, createPure, def, valueToMsg)
+import qualified Data.Text as T
+
+import Capnp (ConstMsg, createPure, def, evalLimitT, msgToValue, valueToMsg)
 
 import Capnp.Gen.Aircraft.Pure
 import Capnp.Gen.Capnp.Rpc.Pure
@@ -178,7 +180,7 @@ instance CallSequence'server_ TestCtrServer  where
 -------------------------------------------------------------------------------
 
 unusualTests :: Spec
-unusualTests = describe "Tests for unusual message patterns" $
+unusualTests = describe "Tests for unusual message patterns" $ do
     it "Should raise ReceivedAbort in response to an abort message." $ do
         -- Send an abort message to the remote vat, and verify that
         -- the vat actually aborts.
@@ -193,6 +195,34 @@ unusualTests = describe "Tests for unusual message patterns" $
                 msg <- createPure maxBound $ valueToMsg $ Message'abort exn
                 sendMsg probeTrans msg
         ret `shouldBe` Left (ReceivedAbort exn)
+    triggerAbort (Message'unimplemented $ Message'abort def) $
+        "Your vat sent an 'unimplemented' message for an abort message " <>
+        "that its remote peer never sent. This is likely a bug in your " <>
+        "capnproto library."
+
+
+-- | Verify that the given message triggers an abort with the specified 'reason'
+-- field.
+triggerAbort :: Message -> T.Text -> Spec
+triggerAbort msg reason =
+    xit ("Should abort when sent the message " ++ show msg ++ " on startup") $ do
+        let wantAbortExn = def
+                { reason = reason
+                , type_ = Exception'Type'failed
+                }
+        (vatTrans, probeTrans) <- transportPair
+        concurrently_
+            (do
+                ret <- try $ runVat $ (vatConfig $ const vatTrans) { debugMode = True }
+                ret `shouldBe` Left (SentAbort wantAbortExn)
+            )
+            (do
+                rawMsg <- createPure maxBound $ valueToMsg msg
+                sendMsg probeTrans rawMsg
+                rawResp <- recvMsg probeTrans
+                resp <- evalLimitT maxBound (msgToValue rawResp)
+                resp `shouldBe` Message'abort wantAbortExn
+            )
 
 -------------------------------------------------------------------------------
 -- Utilties used by the tests.
