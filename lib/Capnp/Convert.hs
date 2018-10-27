@@ -8,6 +8,10 @@ This module provides various helper functions to convert between messages, types
 in capnproto schema (called "values" in the rest of this module's documentation),
 bytestrings (both lazy and strict), and bytestring builders.
 
+Note that most of the functions which decode messages or raw bytes do *not* need to be
+run inside of an instance of 'MonadLimit'; they choose an appropriate limit based on the
+size of the input.
+
 Note that not all conversions exist or necessarily make sense.
 -}
 module Capnp.Convert
