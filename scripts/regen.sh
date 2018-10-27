@@ -74,7 +74,7 @@ log "Linking echo schema into test suite"
 for file in $(find Capnp -type f -name '*.hs'); do
 		cd "$repo_root/tests/main"
 		[ -d $(dirname $file) ] || mkdir -p $(dirname $file)
-		ln -s "$repo_root/examples/$file" "$file"
+		ln -sf "$repo_root/examples/$file" "$file"
 done
 
 # vim: set ts=2 sw=2 noet :
