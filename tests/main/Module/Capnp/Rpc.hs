@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 module Module.Capnp.Rpc (rpcTests) where
 
 import Control.Concurrent.STM
@@ -68,6 +69,20 @@ bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
+    xit "Should receive unimplemented when calling a method on a null cap." $ runVatPair
+        (pure $ CallSequence nullClient)
+        (\ctr -> do
+            ret <- try $ ctr & callSequence'getNumber def
+            case ret of
+                Left (e :: Exception) -> do
+                    liftIO $ e `shouldBe` def
+                        { type_ = Exception'Type'unimplemented
+                        , reason = "Client is null"
+                        }
+                    stopVat
+                Right val ->
+                    error $ "Should have received unimplemented exn, but got " ++ show val
+        )
     it "A counter should maintain state" $ runVatPair
         (newTestCtr 0 >>= export_CallSequence)
         (\ctr -> do
