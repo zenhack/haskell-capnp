@@ -10,6 +10,7 @@ import Test.Hspec
 
 import Control.Concurrent     (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Monad          (replicateM)
+import Control.Monad.Catch    (throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable          (for_)
 import Data.Function          ((&))
@@ -69,19 +70,32 @@ bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
+    it "Should propogate server-side exceptions to client method calls" $ runVatPair
+        (export_CallSequence ExnCtrServer)
+        (expectException
+            (callSequence'getNumber def)
+            def
+                { type_ = Exception'Type'failed
+                , reason = "Something went sideways."
+                }
+        )
     xit "Should receive unimplemented when calling a method on a null cap." $ runVatPair
         (pure $ CallSequence nullClient)
-        (\ctr -> do
-            ret <- try $ ctr & callSequence'getNumber def
-            case ret of
-                Left (e :: Exception) -> do
-                    liftIO $ e `shouldBe` def
-                        { type_ = Exception'Type'unimplemented
-                        , reason = "Client is null"
-                        }
-                    stopVat
-                Right val ->
-                    error $ "Should have received unimplemented exn, but got " ++ show val
+        (expectException
+            (callSequence'getNumber def)
+            def
+                { type_ = Exception'Type'unimplemented
+                , reason = "Client is null"
+                }
+        )
+    xit "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair
+        (export_CallSequence NoImplServer)
+        (expectException
+            (callSequence'getNumber def)
+            def
+                { type_ = Exception'Type'unimplemented
+                , reason = "Method unimplemented"
+                }
         )
     it "A counter should maintain state" $ runVatPair
         (newTestCtr 0 >>= export_CallSequence)
@@ -166,6 +180,10 @@ instance CounterAcceptor'server_ TestCtrAcceptor where
             ]
         pure def
 
+-------------------------------------------------------------------------------
+-- Implementations of various interfaces for testing purposes.
+-------------------------------------------------------------------------------
+
 data TestCtrFactory = TestCtrFactory
 
 instance CounterFactory'server_ TestCtrFactory where
@@ -184,6 +202,21 @@ instance CallSequence'server_ TestCtrServer  where
             modifyTVar' tvar (+1)
             readTVar tvar
         pure def { n = ret }
+
+-- a 'CallSequence' which always throws an exception.
+data ExnCtrServer = ExnCtrServer
+
+instance CallSequence'server_ ExnCtrServer where
+    callSequence'getNumber _ _ =
+        throwM def
+            { type_ = Exception'Type'failed
+            , reason = "Something went sideways."
+            }
+
+-- a 'CallSequence' which doesn't implement its methods.
+data NoImplServer = NoImplServer
+
+instance CallSequence'server_ NoImplServer -- TODO: can we silence the warning somehow?
 
 -------------------------------------------------------------------------------
 -- Tests for unusual patterns of messages .
@@ -286,3 +319,11 @@ runVatPair offerBootstrap withBootstrap = do
             , offerBootstrap = Just (toClient <$> offerBootstrap)
             }
     race_ runServer runClient
+
+expectException call wantExn = \cap -> do
+    ret <- try $ cap & call
+    case ret of
+        Left (e :: Exception) ->
+            liftIO $ e `shouldBe` wantExn
+        Right val ->
+            error $ "Should have received exn, but got " ++ show val
