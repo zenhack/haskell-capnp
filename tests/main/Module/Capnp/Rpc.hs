@@ -268,7 +268,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
 -- field.
 triggerAbort :: Message -> T.Text -> Spec
 triggerAbort msg reason =
-    xit ("Should abort when sent the message " ++ show msg ++ " on startup") $ do
+    it ("Should abort when sent the message " ++ show msg ++ " on startup") $ do
         let wantAbortExn = def
                 { reason = reason
                 , type_ = Exception'Type'failed
