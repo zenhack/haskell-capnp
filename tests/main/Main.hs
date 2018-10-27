@@ -29,4 +29,4 @@ main = hspec $ do
     describe "Tests relate to schema" $ do
         describe "tests using tests/data/schema-codegenreq" walkSchemaCodeGenRequestTest
         describe "property tests for schema" schemaCGRQuickCheck
-    describe "Regression tests" $ regressionTests
+    describe "Regression tests" regressionTests
