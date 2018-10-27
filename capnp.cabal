@@ -187,6 +187,8 @@ test-suite tests
     type:                 exitcode-stdio-1.0
     main-is:              Main.hs
     hs-source-dirs:       tests/main
+    ghc-options:
+      -threaded
     other-modules:
       -- Utilities
         Util

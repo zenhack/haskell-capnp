@@ -15,7 +15,7 @@ import SchemaQuickCheck                   (schemaCGRQuickCheck)
 import WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 
 main :: IO ()
-main = hspec $ do
+main = hspec $ parallel $ do
     describe "Tests for specific modules" $ do
         describe "Capnp.Basics" basicsTests
         describe "Capnp.Bits" bitsTests
