@@ -70,7 +70,7 @@ bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
-    it "Should propogate server-side exceptions to client method calls" $ runVatPair
+    xit "Should propogate server-side exceptions to client method calls" $ runVatPair
         (export_CallSequence ExnCtrServer)
         (expectException
             (callSequence'getNumber def)
@@ -95,6 +95,15 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             def
                 { type_ = Exception'Type'unimplemented
                 , reason = "Method unimplemented"
+                }
+        )
+    it "Should throw an opaque exception when the server throws a non-rpc exception" $ runVatPair
+        (export_CallSequence NonRpcExnServer)
+        (expectException
+            (callSequence'getNumber def)
+            def
+                { type_ = Exception'Type'failed
+                , reason = "Method threw an unhandled exception."
                 }
         )
     it "A counter should maintain state" $ runVatPair
@@ -217,6 +226,12 @@ instance CallSequence'server_ ExnCtrServer where
 data NoImplServer = NoImplServer
 
 instance CallSequence'server_ NoImplServer -- TODO: can we silence the warning somehow?
+
+-- Server that throws some non-rpc exception.
+data NonRpcExnServer = NonRpcExnServer
+
+instance CallSequence'server_ NonRpcExnServer where
+    callSequence'getNumber _ _ = error "OOPS"
 
 -------------------------------------------------------------------------------
 -- Tests for unusual patterns of messages .
