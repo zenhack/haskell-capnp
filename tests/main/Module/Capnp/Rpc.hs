@@ -70,7 +70,7 @@ bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
-    xit "Should propogate server-side exceptions to client method calls" $ runVatPair
+    it "Should propogate server-side exceptions to client method calls" $ runVatPair
         (export_CallSequence ExnCtrServer)
         (expectException
             (callSequence'getNumber def)
@@ -79,7 +79,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 , reason = "Something went sideways."
                 }
         )
-    xit "Should receive unimplemented when calling a method on a null cap." $ runVatPair
+    it "Should receive unimplemented when calling a method on a null cap." $ runVatPair
         (pure $ CallSequence nullClient)
         (expectException
             (callSequence'getNumber def)
@@ -88,7 +88,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 , reason = "Client is null"
                 }
         )
-    xit "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair
+    it "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair
         (export_CallSequence NoImplServer)
         (expectException
             (callSequence'getNumber def)
@@ -338,7 +338,8 @@ runVatPair offerBootstrap withBootstrap = do
 expectException call wantExn cap = do
     ret <- try $ cap & call
     case ret of
-        Left (e :: Exception) ->
+        Left (e :: Exception) -> do
             liftIO $ e `shouldBe` wantExn
+            stopVat
         Right val ->
             error $ "Should have received exn, but got " ++ show val
