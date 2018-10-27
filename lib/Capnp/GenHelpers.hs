@@ -47,10 +47,10 @@ setWordField ::
     ( U.RWCtx m s
     , Bounded a, Integral a, C.IsWord a, Bits a
     )
-    => U.Struct (M.MutMsg s) -> a -> Int -> Int -> a -> m ()
+    => U.Struct (M.MutMsg s) -> a -> Int -> Int -> Word64 -> m ()
 setWordField struct value idx offset def = do
     old <- U.getData idx struct
-    let new = replaceBits (value `xor` def) old offset
+    let new = replaceBits (value `xor` C.fromWord def) old offset
     U.setData new idx struct
 
 embedCapPtr :: M.WriteCtx m s => M.MutMsg s -> M.Client -> m (Maybe (U.Ptr (M.MutMsg s)))
