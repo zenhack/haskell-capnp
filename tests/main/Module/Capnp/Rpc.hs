@@ -335,7 +335,7 @@ runVatPair offerBootstrap withBootstrap = do
             }
     race_ runServer runClient
 
-expectException call wantExn = \cap -> do
+expectException call wantExn cap = do
     ret <- try $ cap & call
     case ret of
         Left (e :: Exception) ->
