@@ -16,7 +16,7 @@ import UnliftIO               (concurrently_, race_, timeout, try)
 
 import qualified Data.Text as T
 
-import Capnp (ConstMsg, createPure, def, evalLimitT, msgToValue, valueToMsg)
+import Capnp (ConstMsg, createPure, def, msgToValue, valueToMsg)
 
 import Capnp.Gen.Aircraft.Pure
 import Capnp.Gen.Capnp.Rpc.Pure
@@ -228,7 +228,7 @@ triggerAbort msg reason =
                     Nothing ->
                         error "Test timed out waiting on abort message."
                     Just rawResp -> do
-                        resp <- evalLimitT maxBound (msgToValue rawResp)
+                        resp <- msgToValue rawResp
                         resp `shouldBe` Message'abort wantAbortExn
             )
 

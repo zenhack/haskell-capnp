@@ -790,7 +790,7 @@ recvLoop transport Vat{recvQ} =
 coordinator :: Vat -> IO ()
 coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
-    pureMsg <- evalLimitT limit (msgToValue msg)
+    pureMsg <- msgToValue msg
     case pureMsg of
         Message'unimplemented msg ->
             handleUnimplementedMsg vat msg
@@ -800,7 +800,7 @@ coordinator vat@Vat{..} = forever $ do
         Message'bootstrap bs ->
             handleBootstrapMsg vat bs
         Message'call call -> do
-            rawMsg <- evalLimitT limit (msgToValue msg)
+            rawMsg <- msgToValue msg
             case rawMsg of
                 Rpc.Message'call rawCall ->
                     handleCallMsg rawCall vat call

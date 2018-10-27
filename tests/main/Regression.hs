@@ -4,7 +4,7 @@ module Regression (regressionTests) where
 
 import Test.Hspec
 
-import Capnp (bsToValue, def, evalLimitT)
+import Capnp (bsToValue, def)
 
 import Capnp.Gen.Capnp.Rpc.Pure
 
@@ -18,7 +18,7 @@ regressionTests = describe "Regression tests" $
                 "\NUL\NULz\EOT\NUL\NULYour vat sent an 'unimplemented' " <>
                 "message for an abort message that its remote peer never " <>
                 "sent. This is likely a bug in your capnproto library.\NUL\NUL"
-        msg <- evalLimitT maxBound (bsToValue bytes)
+        msg <- bsToValue bytes
         msg `shouldBe` Message'abort def
             { reason =
                 "Your vat sent an 'unimplemented' message for an abort " <>
