@@ -10,7 +10,7 @@ import Capnp.Gen.Capnp.Rpc.Pure
 
 regressionTests :: Spec
 regressionTests = describe "Regression tests" $
-    xit "Should decode abort message successfully (issue #56)" $ do
+    it "Should decode abort message successfully (issue #56)" $ do
         let bytes =
                 "\NUL\NUL\NUL\NUL\ETB\NUL\NUL\NUL\NUL\NUL\NUL\NUL\SOH\NUL" <>
                 "\SOH\NUL\SOH\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL" <>

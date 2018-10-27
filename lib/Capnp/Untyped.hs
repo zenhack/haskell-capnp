@@ -814,7 +814,7 @@ setPtr value i = setIndex value i . ptrSection
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
 rawBytes :: ReadCtx m msg => ListOf msg Word8 -> m BS.ByteString
 rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
-    invoice len
+    invoice $ fromIntegral $ bytesToWordsCeil (ByteCount len)
     bytes <- M.getSegment msg segIndex >>= M.toByteString
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
