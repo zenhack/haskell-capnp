@@ -1015,10 +1015,10 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
                     { content = Just (PtrStruct ret)
                     , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
                     }
-            Left (e :: SomeException) -> pure $ def
+            Left (e :: SomeException) ->
                 -- The server threw an exception; we need to report this
                 -- to the caller.
-                Return'exception $
+                pure $ Return'exception $
                     case fromException e of
                         Just (e :: Exception) ->
                             -- If the exception was a capnp exception,
