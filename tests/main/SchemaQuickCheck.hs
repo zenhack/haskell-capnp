@@ -5,6 +5,7 @@ module SchemaQuickCheck
 
 import qualified Data.ByteString as BS
 
+import Capnp.Bits           (WordCount)
 import Capnp.Classes        (fromStruct)
 import Capnp.Errors         (Error)
 import Capnp.Message        as M
@@ -32,7 +33,7 @@ generateCGR schema = capnpCompile (show schema) "-"
 
 -- Functions to validate CGRs
 
-decodeCGR :: BS.ByteString -> IO (Int, Int)
+decodeCGR :: BS.ByteString -> IO (WordCount, Int)
 decodeCGR bytes = do
     let reader :: Untyped.Struct M.ConstMsg -> LimitT IO Int
         reader struct = do
@@ -50,7 +51,7 @@ prop_schemaValid :: Schema -> Property
 prop_schemaValid schema = ioProperty $ do
     compiled <- generateCGR schema
     decoded <- try $ decodeCGR compiled
-    return $ case (decoded :: Either Error (Int, Int)) of
+    return $ case (decoded :: Either Error (WordCount, Int)) of
         Left _  -> False
         Right _ -> True
 

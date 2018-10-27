@@ -113,6 +113,7 @@ import Capnp
     , sPutMsg
     , valueToMsg
     )
+import Capnp.Bits           (WordCount)
 import Capnp.Untyped.Pure   (PtrType(PtrStruct), Struct)
 import Internal.Supervisors (Supervisor, supervise, withSupervisor)
 
@@ -166,7 +167,7 @@ data Transport m = Transport
 -- | @'handleTransport' handle limit@ is a transport which reads and writes
 -- messages from/to @handle@. It uses @limit@ as the traversal limit when
 -- reading messages and decoding.
-handleTransport :: MonadIO m => Handle -> Int -> Transport m
+handleTransport :: MonadIO m => Handle -> WordCount -> Transport m
 handleTransport handle limit = Transport
     { sendMsg = liftIO . hPutMsg handle
     , recvMsg = liftIO $ hGetMsg handle limit
@@ -175,7 +176,7 @@ handleTransport handle limit = Transport
 -- | @'socketTransport' socket limit@ is a transport which reads and writes
 -- messages to/from a socket. It uses @limit@ as the traversal limit when
 -- reading messages and decoing.
-socketTransport :: MonadIO m => Socket -> Int -> Transport m
+socketTransport :: MonadIO m => Socket -> WordCount -> Transport m
 socketTransport socket limit = Transport
     { sendMsg = liftIO . sPutMsg socket
     , recvMsg = liftIO $ sGetMsg socket limit
@@ -560,7 +561,7 @@ data Vat = Vat
 
     -- same as the corresponding fields in 'VatConfig'
     , debugMode      :: !Bool
-    , limit          :: !Int
+    , limit          :: !WordCount
     , maxObjectCalls :: !Word32
 
     }
@@ -687,10 +688,10 @@ data VatConfig = VatConfig
     --
     -- Defaults to 'False'.
 
-    , getTransport   :: Int -> Transport IO
+    , getTransport   :: WordCount -> Transport IO
     -- ^ get the transport to use, as a function of the limit.
 
-    , limit          :: !Int
+    , limit          :: !WordCount
     -- ^ The limit to use when reading and decoding messages.
     --
     -- Defaults to 'defaultLimit'
@@ -699,7 +700,7 @@ data VatConfig = VatConfig
 -- | Create a new vat config, using the given function to create a
 -- transport as a function of the limit. sets default values for
 -- other fields; see the documentation for 'VatConfig'.
-vatConfig :: (Int -> Transport IO) -> VatConfig
+vatConfig :: (WordCount -> Transport IO) -> VatConfig
 vatConfig getTransport = VatConfig
     { maxQuestions = 32
     , maxExports = 32

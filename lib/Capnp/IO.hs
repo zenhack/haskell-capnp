@@ -33,7 +33,7 @@ import System.IO.Error           (eofErrorType, mkIOError)
 
 import qualified Data.ByteString as BS
 
-import Capnp.Bits           (wordsToBytes)
+import Capnp.Bits           (WordCount, wordsToBytes)
 import Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
 import Capnp.Convert        (msgToLBS, valueToLBS)
@@ -49,23 +49,23 @@ import qualified Capnp.Message as M
 --
 -- It may throw a 'Capnp.Errors.Error' if there is a problem decoding the message,
 -- or an 'IOError' raised by the underlying IO libraries.
-hGetValue :: FromStruct M.ConstMsg a => Handle -> Int -> IO a
+hGetValue :: FromStruct M.ConstMsg a => Handle -> WordCount -> IO a
 hGetValue handle limit = do
     msg <- M.hGetMsg handle limit
     evalLimitT limit (getRoot msg)
 
 -- | @'getValue'@ is equivalent to @'hGetValue' 'stdin'@.
-getValue :: FromStruct M.ConstMsg a => Int -> IO a
+getValue :: FromStruct M.ConstMsg a => WordCount -> IO a
 getValue = hGetValue stdin
 
 -- | Like 'hGetValue', except that it takes a socket instead of a 'Handle'.
-sGetValue :: FromStruct M.ConstMsg a => Socket -> Int -> IO a
+sGetValue :: FromStruct M.ConstMsg a => Socket -> WordCount -> IO a
 sGetValue socket limit = do
     msg <- sGetMsg socket limit
     evalLimitT limit (getRoot msg)
 
 -- | Like 'hGetMsg', except that it takes a socket instead of a 'Handle'.
-sGetMsg :: Socket -> Int -> IO M.ConstMsg
+sGetMsg :: Socket -> WordCount -> IO M.ConstMsg
 sGetMsg socket limit =
     evalLimitT limit $ M.readMessage (lift read32) (lift . readSegment)
   where

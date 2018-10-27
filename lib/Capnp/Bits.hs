@@ -37,15 +37,15 @@ import Data.Word
 -- | Wrapper type for a quantity of bits. This along with 'ByteCount' and
 -- 'WordCount' are helpful for avoiding mixing up units
 newtype BitCount = BitCount Int
-    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
+    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show, Bounded)
 
 -- | A quantity of bytes
 newtype ByteCount = ByteCount Int
-    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
+    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show, Bounded)
 
 -- | A quantity of 64-bit words
 newtype WordCount = WordCount Int
-    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show)
+    deriving(Num, Real, Integral, Bits, Ord, Eq, Enum, Show, Bounded)
 
 -- | Convert bits to bytes. Rounds up.
 bitsToBytesCeil :: BitCount -> ByteCount

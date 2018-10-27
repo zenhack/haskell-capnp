@@ -140,8 +140,7 @@ library
       , Capnp.Gen.ById.Xa93fc509624c72d9
       -- END GENERATED SCHEMA MODULES
     other-modules:
-        Internal.Util
-      , Internal.AppendVec
+        Internal.AppendVec
       , Internal.Gen.Instances
       , Internal.BuildPure
       , Internal.Supervisors

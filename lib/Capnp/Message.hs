@@ -94,12 +94,11 @@ import qualified Data.Vector.Storable.Mutable as SMV
 
 import Capnp.Address        (WordAddr(..))
 import Capnp.Bits           (WordCount(..), hi, lo)
-import Capnp.Errors         (Error(InvalidDataError))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable         (Mutable(..))
 import Internal.AppendVec   (AppendVec)
-import Internal.Util        (checkIndex)
 
+import qualified Capnp.Errors       as E
 import qualified Internal.AppendVec as AppendVec
 
 
@@ -124,7 +123,7 @@ class Monad m => Message m msg where
     -- | 'numSegs' gets the number of segments in a message.
     numSegs :: msg -> m Int
     -- | 'numWords' gets the number of words in a segment.
-    numWords :: Segment msg -> m Int
+    numWords :: Segment msg -> m WordCount
     -- | 'numCaps' gets the number of capabilities in a message's capability
     -- table.
     numCaps :: msg -> m Int
@@ -138,18 +137,18 @@ class Monad m => Message m msg where
     internalGetCap :: msg -> Int -> m Client
     -- | @'slice' start length segment@ extracts a sub-section of the segment,
     -- starting at index @start@, of length @length@.
-    slice   :: Int -> Int -> Segment msg -> m (Segment msg)
+    slice   :: WordCount -> WordCount -> Segment msg -> m (Segment msg)
     -- | @'read' segment index@ reads a 64-bit word from the segement at the
     -- given index. Consider using 'getWord' on the message, instead of
     -- calling this directly.
-    read    :: Segment msg -> Int -> m Word64
+    read    :: Segment msg -> WordCount -> m Word64
     -- | Convert a ByteString to a segment.
     fromByteString :: ByteString -> m (Segment msg)
     -- | Convert a segment to a byte string.
     toByteString :: Segment msg -> m ByteString
 
 -- | @'getSegment' message index@ fetches the given segment in the message.
--- It throws a @BoundsError@ if the address is out of bounds.
+-- It throws a 'E.BoundsError' if the address is out of bounds.
 getSegment :: (MonadThrow m, Message m msg) => msg -> Int -> m (Segment msg)
 getSegment msg i = do
     checkIndex i =<< numSegs msg
@@ -164,7 +163,7 @@ getCapTable :: ConstMsg -> V.Vector Client
 getCapTable = constCaps
 
 -- | @'getCap' message index@ gets the capability with the given index from
--- the message. throws 'Capnp.Errors.BoundsError' if the index is out
+-- the message. throws 'E.BoundsError' if the index is out
 -- of bounds.
 getCap :: (MonadThrow m, Message m msg) => msg -> Int -> m Client
 getCap msg i = do
@@ -174,15 +173,15 @@ getCap msg i = do
         else msg `internalGetCap` i
 
 -- | @'getWord' msg addr@ returns the word at @addr@ within @msg@. It throws a
--- @BoundsError@ if the address is out of bounds.
+-- 'E.BoundsError' if the address is out of bounds.
 getWord :: (MonadThrow m, Message m msg) => msg -> WordAddr -> m Word64
-getWord msg WordAt{wordIndex=wordIndex@(WordCount i), segIndex} = do
+getWord msg WordAt{wordIndex=i, segIndex} = do
     seg <- getSegment msg segIndex
     checkIndex i =<< numWords seg
     seg `read` i
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
--- in the message. It throws a @BoundsError@ if the address is out of bounds.
+-- in the message. It throws a 'E.BoundsError' if the address is out of bounds.
 setSegment :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
 setSegment msg i seg = do
     checkIndex i =<< numSegs msg
@@ -190,16 +189,16 @@ setSegment msg i seg = do
 
 -- | @'setWord' message address value@ sets the word at @address@ in the
 -- message to @value@. If the address is not valid in the message, a
--- @BoundsError@ will be thrown.
+-- 'E.BoundsError' will be thrown.
 setWord :: (WriteCtx m s, MonadThrow m) => MutMsg s -> WordAddr -> Word64 -> m ()
-setWord msg WordAt{wordIndex=WordCount i, segIndex} val = do
+setWord msg WordAt{wordIndex=i, segIndex} val = do
     seg <- getSegment msg segIndex
     checkIndex i =<< numWords seg
     write seg i val
 
 -- | @'setCap' message index cap@ sets the sets the capability at @index@ in
 -- the message's capability table to @cap@. If the index is out of bounds, a
--- 'Capnp.Errors.BoundsError' will be thrown.
+-- 'E.BoundsError' will be thrown.
 setCap :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Client -> m ()
 setCap msg@MutMsg{mutCaps} i cap = do
     checkIndex i =<< numCaps msg
@@ -237,9 +236,10 @@ instance Monad m => Message m ConstMsg where
     internalGetSeg ConstMsg{constSegs} i = constSegs `V.indexM` i
     internalGetCap ConstMsg{constCaps} i = constCaps `V.indexM` i
 
-    numWords (ConstSegment vec) = pure $ SV.length vec
-    slice start len (ConstSegment vec) = pure $ ConstSegment (SV.slice start len vec)
-    read (ConstSegment vec) i = fromLE64 <$> vec `SV.indexM` i
+    numWords (ConstSegment vec) = pure $ WordCount $ SV.length vec
+    slice (WordCount start) (WordCount len) (ConstSegment vec) =
+        pure $ ConstSegment (SV.slice start len vec)
+    read (ConstSegment vec) i = fromLE64 <$> vec `SV.indexM` fromIntegral i
 
     -- FIXME: Verify that the pointer is actually 64-bit aligned before casting.
     fromByteString (PS fptr offset len) =
@@ -294,7 +294,7 @@ decodeSeg seg = do
                 word <- lift $ lift $ read seg idx
                 put (Just $ hi word, idx + 1)
                 return (lo word)
-    readSegment (WordCount len) = do
+    readSegment len = do
         (cur, idx) <- get
         put (cur, idx + len)
         lift $ lift $ slice idx len seg
@@ -340,7 +340,7 @@ putMsg = hPutMsg stdout
 
 -- | @'hGetMsg' handle limit@ reads a message from @handle@ that is at most
 -- @limit@ 64-bit words in length.
-hGetMsg :: Handle -> Int -> IO ConstMsg
+hGetMsg :: Handle -> WordCount -> IO ConstMsg
 hGetMsg handle size =
     evalLimitT size $ readMessage read32 readSegment
   where
@@ -350,13 +350,13 @@ hGetMsg handle size =
         case runGetS getWord32le bytes of
             Left _ ->
                 -- the only way this can happen is if we get < 4 bytes.
-                throwM $ InvalidDataError "Unexpected end of input"
+                throwM $ E.InvalidDataError "Unexpected end of input"
             Right result ->
                 pure result
     readSegment n = lift $ BS.hGet handle (fromIntegral n * 8) >>= fromByteString
 
 -- | Equivalent to @'hGetMsg' 'stdin'@
-getMsg :: Int -> IO ConstMsg
+getMsg :: WordCount -> IO ConstMsg
 getMsg = hGetMsg stdin
 
 -- | A 'MutMsg' is a mutable capnproto message. The type parameter @s@ is the
@@ -377,11 +377,11 @@ type WriteCtx m s = (PrimMonad m, s ~ PrimState m, MonadThrow m)
 instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
     newtype Segment (MutMsg s) = MutSegment (AppendVec SMV.MVector s Word64)
 
-    numWords (MutSegment mseg) = pure $ GMV.length (AppendVec.getVector mseg)
-    slice start len (MutSegment mseg) =
+    numWords (MutSegment mseg) = pure $ WordCount $ GMV.length (AppendVec.getVector mseg)
+    slice (WordCount start) (WordCount len) (MutSegment mseg) =
         pure $ MutSegment $ AppendVec.fromVector $
             SMV.slice start len (AppendVec.getVector mseg)
-    read (MutSegment mseg) i = fromLE64 <$> SMV.read (AppendVec.getVector mseg) i
+    read (MutSegment mseg) i = fromLE64 <$> SMV.read (AppendVec.getVector mseg) (fromIntegral i)
     fromByteString bytes = do
         vec <- constSegToVec <$> fromByteString bytes
         MutSegment . AppendVec.fromVector <$> SV.thaw vec
@@ -410,8 +410,8 @@ internalSetSeg MutMsg{mutSegs} segIndex seg = do
 -- | @'write' segment index value@ writes a value to the 64-bit word
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
-write :: WriteCtx m s => Segment (MutMsg s) -> Int -> Word64 -> m ()
-write (MutSegment seg) i val =
+write :: WriteCtx m s => Segment (MutMsg s) -> WordCount -> Word64 -> m ()
+write (MutSegment seg) (WordCount i) val =
     SMV.write (AppendVec.getVector seg) i (toLE64 val)
 
 -- | @'grow' segment amount@ grows the segment by the specified number
@@ -512,3 +512,13 @@ freezeMsg freezeSeg freezeCaps msg@MutMsg{mutCaps} = do
     constSegs <- V.generateM len (internalGetSeg msg >=> freeze)
     constCaps <- freezeCaps . AppendVec.getVector =<< readMutVar mutCaps
     pure ConstMsg{constSegs, constCaps}
+
+-- | @'checkIndex' index length@ checkes that 'index' is in the range
+-- [0, length), throwing a 'BoundsError' if not.
+checkIndex :: (Integral a, MonadThrow m) => a -> a -> m ()
+checkIndex i len =
+    when (i < 0 || i >= len) $
+        throwM E.BoundsError
+            { E.index = fromIntegral i
+            , E.maxIndex = fromIntegral len
+            }

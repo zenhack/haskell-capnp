@@ -19,6 +19,7 @@ import Control.Monad.Primitive  (PrimMonad(..))
 import Control.Monad.ST         (ST)
 import Control.Monad.Trans      (MonadTrans(..))
 
+import Capnp.Bits           (WordCount)
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
 import Data.Mutable         (Thaw(..), createT)
 
@@ -32,13 +33,13 @@ instance PrimMonad (PureBuilder s) where
     type PrimState (PureBuilder s) = s
     primitive = PureBuilder . primitive
 
-runPureBuilder :: Int -> PureBuilder s a -> ST s (Either SomeException a)
+runPureBuilder :: WordCount -> PureBuilder s a -> ST s (Either SomeException a)
 runPureBuilder limit (PureBuilder m) = runPrimCatchT $ evalLimitT limit m
 
 -- | @'createPure' limit m@ creates a capnproto value in pure code according
 -- to @m@, then freezes it without copying. If @m@ calls 'throwM' then
 -- 'createPure' rethrows the exception in the specified monad.
-createPure :: (MonadThrow m, Thaw a) => Int -> (forall s. PureBuilder s (Mutable s a)) -> m a
+createPure :: (MonadThrow m, Thaw a) => WordCount -> (forall s. PureBuilder s (Mutable s a)) -> m a
 createPure limit m = throwLeft $ createT (runPureBuilder limit m)
   where
     -- I(zenhack) am surprised not to have found this in one of the various

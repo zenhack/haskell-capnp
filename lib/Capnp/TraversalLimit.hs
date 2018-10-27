@@ -50,6 +50,7 @@ import Control.Monad.Writer (WriterT)
 
 import qualified Control.Monad.State.Lazy as LazyState
 
+import Capnp.Bits   (WordCount)
 import Capnp.Errors (Error(TraversalLimitError))
 
 -- | mtl-style type class to track the traversal limit. This is used
@@ -57,29 +58,29 @@ import Capnp.Errors (Error(TraversalLimitError))
 class Monad m => MonadLimit m where
     -- | @'invoice' n@ deducts @n@ from the traversal limit, signaling
     -- an error if the limit is exhausted.
-    invoice :: Int -> m ()
+    invoice :: WordCount -> m ()
 
 -- | Monad transformer implementing 'MonadLimit'. The underlying monad
 -- must implement 'MonadThrow'. 'invoice' calls @'throwM' 'TraversalLimitError'@
 -- when the limit is exhausted.
-newtype LimitT m a = LimitT (StateT Int m a)
+newtype LimitT m a = LimitT (StateT WordCount m a)
     deriving(Functor, Applicative, Monad)
 
 -- | Run a 'LimitT', returning the value from the computation and the remaining
 -- traversal limit.
-runLimitT :: MonadThrow m => Int -> LimitT m a -> m (a, Int)
+runLimitT :: MonadThrow m => WordCount -> LimitT m a -> m (a, WordCount)
 runLimitT limit (LimitT stateT) = runStateT stateT limit
 
 -- | Run a 'LimitT', returning the value from the computation.
-evalLimitT :: MonadThrow m => Int -> LimitT m a -> m a
+evalLimitT :: MonadThrow m => WordCount -> LimitT m a -> m a
 evalLimitT limit (LimitT stateT) = evalStateT stateT limit
 
 -- | Run a 'LimitT', returning the remaining traversal limit.
-execLimitT :: MonadThrow m => Int -> LimitT m a -> m Int
+execLimitT :: MonadThrow m => WordCount -> LimitT m a -> m WordCount
 execLimitT limit (LimitT stateT) = execStateT stateT limit
 
 -- | A sensible default traversal limit. Currently 64 MiB.
-defaultLimit :: Int
+defaultLimit :: WordCount
 defaultLimit = (64 * 1024 * 1024) `div` 8
 
 ------ Instances of mtl type classes for 'LimitT'.
