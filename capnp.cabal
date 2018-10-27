@@ -214,6 +214,7 @@ test-suite tests
       , Module.Capnp.Pointer
       , Module.Capnp.Bits
       , Module.Capnp.Basics
+      , Regression
       , WalkSchemaCodeGenRequest
       , SchemaQuickCheck
     build-depends:
