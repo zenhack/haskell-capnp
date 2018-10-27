@@ -15,6 +15,9 @@ cabal.project.local~
 .ghc.*
 result*
 
+.hspec
+.hspec-failures
+
 # Code coverage:
 .hpc
 *.tix
