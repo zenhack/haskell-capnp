@@ -15,7 +15,6 @@ module Capnp.Address
     , OffsetError(..)
     , computeOffset
     , pointerFrom
-    , resolvePtr
     )
   where
 
@@ -86,19 +85,3 @@ pointerFrom ptrAddr targetAddr (P.StructPtr _ dataSz ptrSz) =
 pointerFrom ptrAddr targetAddr (P.ListPtr _ eltSpec) =
     flip fmap (computeOffset ptrAddr targetAddr) $
         \off -> P.ListPtr (fromIntegral off) eltSpec
-
--- | @'resolvePtr' from ptr@ resolves the pointer @ptr@ to an address
--- relative to @from@. Note that inter-segment pointers ('P.FarPtr')
--- resolve to the address of the landing pad, *not* the the final
--- address of the object pointed to, as the latter would reqiure access
--- to the message.
-resolvePtr :: WordAddr -> P.Ptr -> Addr
-resolvePtr (WordAt seg word) (P.StructPtr off _dataSz _ptrSz) =
-    WordAddr $ WordAt seg (word + fromIntegral off + 1)
-resolvePtr (WordAt seg word) (P.ListPtr off _) =
-    WordAddr (WordAt seg (word + fromIntegral off + 1))
-resolvePtr _ (P.FarPtr _ word seg) =
-    WordAddr $ WordAt
-        (fromIntegral seg)
-        (fromIntegral word)
-resolvePtr _ (P.CapPtr cap) = CapAddr (Cap cap)

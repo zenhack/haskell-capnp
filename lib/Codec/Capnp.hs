@@ -5,7 +5,6 @@ module Codec.Capnp
     ( newRoot
     , setRoot
     , getRoot
-    , encodeV
     ) where
 
 import Capnp.Classes
@@ -29,17 +28,3 @@ setRoot = U.setRoot . toStruct
 -- | 'getRoot' returns the root object of a message.
 getRoot :: (FromStruct msg a, U.ReadCtx m msg) => msg -> m a
 getRoot msg = U.rootPtr msg >>= fromStruct
-
--- | Convert a value to it's serialized form, as the root object of its
--- message.
-encodeV ::
-    ( U.RWCtx m s
-    , Cerialize s a
-    , ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)
-    ) =>
-    a -> m (Cerial (M.MutMsg s) a)
-encodeV value = do
-    msg <- M.newMessage
-    cerial <- cerialize msg value
-    setRoot cerial
-    pure cerial
