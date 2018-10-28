@@ -8,18 +8,20 @@ import Control.Concurrent.STM
 import Data.Word
 import Test.Hspec
 
-import Control.Concurrent     (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Monad          (replicateM)
 import Control.Monad.Catch    (throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable          (for_)
 import Data.Function          ((&))
-import UnliftIO               (concurrently_, race_, timeout, try)
+import UnliftIO               (bracket, concurrently_, race_, timeout, try)
 
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
+import qualified Network.Socket          as Socket
 
-import Capnp (ConstMsg, createPure, def, lbsToMsg, msgToValue, valueToMsg)
+import Capnp
+    (createPure, def, defaultLimit, lbsToMsg, msgToValue, valueToMsg)
+import Capnp.Bits (WordCount)
 
 import Capnp.Gen.Aircraft.Pure
 import Capnp.Gen.Capnp.Rpc.Pure
@@ -253,13 +255,13 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                 { type_ = Exception'Type'failed
                 , reason = "Testing abort"
                 }
-        (vatTrans, probeTrans) <- transportPair
-        ret <- try $ concurrently_
-            (runVat $ (vatConfig $ const vatTrans) { debugMode = True})
-            $ do
-                msg <- createPure maxBound $ valueToMsg $ Message'abort exn
-                sendMsg probeTrans msg
-        ret `shouldBe` Left (ReceivedAbort exn)
+        withTransportPair $ \(vatTrans, probeTrans) -> do
+            ret <- try $ concurrently_
+                (runVat $ (vatConfig vatTrans) { debugMode = True})
+                $ do
+                    msg <- createPure maxBound $ valueToMsg $ Message'abort exn
+                    sendMsg (probeTrans defaultLimit) msg
+            ret `shouldBe` Left (ReceivedAbort exn)
     triggerAbort (Message'unimplemented $ Message'abort def) $
         "Your vat sent an 'unimplemented' message for an abort message " <>
         "that its remote peer never sent. This is likely a bug in your " <>
@@ -284,36 +286,36 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                 { reason = "Error decoding message: TraversalLimitError"
                 , type_ = Exception'Type'failed
                 }
-        (vatTrans, probeTrans) <- transportPair
-        concurrently_
-            (do
-                Left (e :: RpcError) <- try $
-                    runVat (vatConfig $ const vatTrans) { debugMode = True }
-                e `shouldBe` SentAbort wantAbortExn
-            )
-            (do
-                let bb = mconcat
-                        [ BB.word32LE 0 -- 1 segment - 1 = 0
-                        , BB.word32LE 2 -- 2 words in first segment
-                        -- a pair of structs that point to each other:
-                        , BB.word64LE (P.serializePtr (Just (P.StructPtr   0  0 1)))
-                        , BB.word64LE (P.serializePtr (Just (P.StructPtr (-1) 0 1)))
-                        ]
-                    lbs = BB.toLazyByteString bb
-                msg <- lbsToMsg lbs
-                sendMsg probeTrans msg
-                msg' <- recvMsg probeTrans
-                resp <- msgToValue msg'
-                resp `shouldBe` Message'abort wantAbortExn
-            )
-    it "Should reply with unimplemented when sent a join (level 4 only)." $ do
-        (vatTrans, probeTrans) <- transportPair
+        withTransportPair $ \(vatTrans, probeTrans) ->
+            concurrently_
+                (do
+                    Left (e :: RpcError) <- try $
+                        runVat (vatConfig vatTrans) { debugMode = True }
+                    e `shouldBe` SentAbort wantAbortExn
+                )
+                (do
+                    let bb = mconcat
+                            [ BB.word32LE 0 -- 1 segment - 1 = 0
+                            , BB.word32LE 2 -- 2 words in first segment
+                            -- a pair of structs that point to each other:
+                            , BB.word64LE (P.serializePtr (Just (P.StructPtr   0  0 1)))
+                            , BB.word64LE (P.serializePtr (Just (P.StructPtr (-1) 0 1)))
+                            ]
+                        lbs = BB.toLazyByteString bb
+                    msg <- lbsToMsg lbs
+                    sendMsg (probeTrans defaultLimit) msg
+                    msg' <- recvMsg (probeTrans defaultLimit)
+                    resp <- msgToValue msg'
+                    resp `shouldBe` Message'abort wantAbortExn
+                )
+    it "Should reply with unimplemented when sent a join (level 4 only)." $
+        withTransportPair $ \(vatTrans, probeTrans) ->
         race_
-            (runVat $ (vatConfig $ const vatTrans) { debugMode = True })
+            (runVat $ (vatConfig vatTrans) { debugMode = True })
             $ do
                 msg <- createPure maxBound $ valueToMsg $ Message'join def
-                sendMsg probeTrans msg
-                msg' <- recvMsg probeTrans >>= msgToValue
+                sendMsg (probeTrans defaultLimit) msg
+                msg' <- recvMsg (probeTrans defaultLimit) >>= msgToValue
                 msg' `shouldBe` Message'unimplemented (Message'join def)
 
 
@@ -326,63 +328,56 @@ triggerAbort msg reason =
                 { reason = reason
                 , type_ = Exception'Type'failed
                 }
-        (vatTrans, probeTrans) <- transportPair
-        concurrently_
-            (do
-                ret <- try $ runVat $ (vatConfig $ const vatTrans) { debugMode = True }
-                ret `shouldBe` Left (SentAbort wantAbortExn)
-            )
-            (do
-                rawMsg <- createPure maxBound $ valueToMsg msg
-                sendMsg probeTrans rawMsg
-                -- 4 second timeout. The remote vat's timeout before killing the
-                -- connection is one second, so if this happens we're never going
-                -- to receive the message. In theory this is possible, but if it
-                -- happens something is very wrong.
-                r <- timeout 4000000 $ recvMsg probeTrans
-                case r of
-                    Nothing ->
-                        error "Test timed out waiting on abort message."
-                    Just rawResp -> do
-                        resp <- msgToValue rawResp
-                        resp `shouldBe` Message'abort wantAbortExn
-            )
+        withTransportPair $ \(vatTrans, probeTrans) ->
+            concurrently_
+                (do
+                    ret <- try $ runVat $ (vatConfig vatTrans) { debugMode = True }
+                    ret `shouldBe` Left (SentAbort wantAbortExn)
+                )
+                (do
+                    rawMsg <- createPure maxBound $ valueToMsg msg
+                    sendMsg (probeTrans defaultLimit) rawMsg
+                    -- 4 second timeout. The remote vat's timeout before killing the
+                    -- connection is one second, so if this happens we're never going
+                    -- to receive the message. In theory this is possible, but if it
+                    -- happens something is very wrong.
+                    r <- timeout 4000000 $ recvMsg (probeTrans defaultLimit)
+                    case r of
+                        Nothing ->
+                            error "Test timed out waiting on abort message."
+                        Just rawResp -> do
+                            resp <- msgToValue rawResp
+                            resp `shouldBe` Message'abort wantAbortExn
+                )
 
 -------------------------------------------------------------------------------
 -- Utilties used by the tests.
 -------------------------------------------------------------------------------
 
--- | Make a pair of in-memory transports that are connected to one another. i.e,
--- messages sent on one are received on the other.
-transportPair :: MonadIO m => m (Transport m, Transport m)
-transportPair = liftIO $ do
-    varA <- newEmptyMVar
-    varB <- newEmptyMVar
-    pure
-        ( mVarTransport varA varB
-        , mVarTransport varB varA
-        )
+withSocketPair :: ((Socket.Socket, Socket.Socket) -> IO a) -> IO a
+withSocketPair =
+    bracket
+        (Socket.socketPair Socket.AF_UNIX Socket.Stream 0)
+        (\(x, y) -> Socket.close x >> Socket.close y)
 
--- | @'mVarTransport' sendVar recvVar@ is a 'Transport' which sends messages by
--- putting them into @sendVar@, and receives messages by taking them from
--- @recvVar@.
-mVarTransport :: MonadIO m => MVar ConstMsg -> MVar ConstMsg -> Transport m
-mVarTransport sendVar recvVar = Transport
-    { sendMsg = liftIO . putMVar sendVar
-    , recvMsg = liftIO (takeMVar recvVar)
-    }
+withTransportPair ::
+    ( ( WordCount -> Transport IO
+      , WordCount -> Transport IO
+      ) -> IO a
+    ) -> IO a
+withTransportPair f =
+    withSocketPair $ \(x, y) -> f (socketTransport x, socketTransport y)
 
 -- | @'runVatPair' server client@ runs a pair of vats connected to one another,
 -- using 'server' as the 'offerBootstrap' field in the one vat's config, and
 -- 'client' as the 'withBootstrap' field in the other's.
 runVatPair :: IsClient c => RpcT IO c -> (c -> RpcT IO ()) -> IO ()
-runVatPair offerBootstrap withBootstrap = do
-    (clientTrans, serverTrans) <- transportPair
-    let runClient = runVat $ (vatConfig $ const clientTrans)
+runVatPair offerBootstrap withBootstrap = withTransportPair $ \(clientTrans, serverTrans) -> do
+    let runClient = runVat $ (vatConfig $ clientTrans)
             { debugMode = True
             , withBootstrap = Just (withBootstrap . fromClient)
             }
-        runServer = runVat $ (vatConfig $ const serverTrans)
+        runServer = runVat $ (vatConfig $ serverTrans)
             { debugMode = True
             , offerBootstrap = Just (toClient <$> offerBootstrap)
             }
