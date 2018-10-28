@@ -56,12 +56,12 @@ capnp compile \
 		$core_inc/capnp/*.capnp
 
 log "Generating schema modules for aircraft.capnp (test suite)..."
-cd "$repo_root/tests/main"
+cd "$repo_root/tests"
 capnp compile \
 		-I $core_inc \
-		--src-prefix=../data/ \
+		--src-prefix=data/ \
 		-ohaskell \
-		../data/aircraft.capnp
+		data/aircraft.capnp
 
 log "Generating schema modules for echo.capnp (examples)..."
 cd "$repo_root/examples"
@@ -72,7 +72,7 @@ capnp compile \
 
 log "Linking echo schema into test suite"
 for file in $(find Capnp -type f -name '*.hs'); do
-		cd "$repo_root/tests/main"
+		cd "$repo_root/tests/"
 		[ -d $(dirname $file) ] || mkdir -p $(dirname $file)
 		ln -sf "$repo_root/examples/$file" "$file"
 done
