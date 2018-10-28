@@ -791,7 +791,16 @@ recvLoop transport Vat{recvQ} =
 coordinator :: Vat -> IO ()
 coordinator vat@Vat{..} = forever $ do
     msg <- atomically $ readTBQueue recvQ
-    pureMsg <- msgToValue msg
+    pureMsg <- case msgToValue msg of
+        Right msg ->
+            pure msg
+        Left (e :: SomeException) ->
+            abortIO vat $
+                "Error decoding message" <>
+                if debugMode then
+                    ": " <> T.pack (show e)
+                else
+                    "."
     case pureMsg of
         Message'unimplemented msg ->
             handleUnimplementedMsg vat msg

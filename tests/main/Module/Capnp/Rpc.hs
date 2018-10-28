@@ -16,15 +16,17 @@ import Data.Foldable          (for_)
 import Data.Function          ((&))
 import UnliftIO               (concurrently_, race_, timeout, try)
 
-import qualified Data.Text as T
+import qualified Data.ByteString.Builder as BB
+import qualified Data.Text               as T
 
-import Capnp (ConstMsg, createPure, def, msgToValue, valueToMsg)
+import Capnp (ConstMsg, createPure, def, lbsToMsg, msgToValue, valueToMsg)
 
 import Capnp.Gen.Aircraft.Pure
 import Capnp.Gen.Capnp.Rpc.Pure
 import Capnp.Rpc
 
 import qualified Capnp.Gen.Echo.Pure as E
+import qualified Capnp.Pointer       as P
 
 rpcTests :: Spec
 rpcTests = do
@@ -277,6 +279,33 @@ unusualTests = describe "Tests for unusual message patterns" $ do
     triggerAbort
         (Message'return def { answerId = 234 })
         "Received 'Return' for non-existant question #234"
+    it "Should respond with an abort if sent junk data" $ do
+        let wantAbortExn = def
+                { reason = "Error decoding message: TraversalLimitError"
+                , type_ = Exception'Type'failed
+                }
+        (vatTrans, probeTrans) <- transportPair
+        concurrently_
+            (do
+                Left (e :: RpcError) <- try $
+                    runVat (vatConfig $ const vatTrans) { debugMode = True }
+                e `shouldBe` (SentAbort wantAbortExn)
+            )
+            (do
+                let bb = mconcat
+                        [ BB.word32LE 0 -- 1 segment - 1 = 0
+                        , BB.word32LE 2 -- 2 words in first segment
+                        -- a pair of structs that point to each other:
+                        , BB.word64LE (P.serializePtr (Just (P.StructPtr   0  0 1)))
+                        , BB.word64LE (P.serializePtr (Just (P.StructPtr (-1) 0 1)))
+                        ]
+                    lbs = BB.toLazyByteString bb
+                msg <- lbsToMsg lbs
+                sendMsg probeTrans msg
+                msg' <- recvMsg probeTrans
+                resp <- msgToValue msg'
+                resp `shouldBe` Message'abort wantAbortExn
+            )
     it "Should reply with unimplemented when sent a join (level 4 only)." $ do
         (vatTrans, probeTrans) <- transportPair
         race_
