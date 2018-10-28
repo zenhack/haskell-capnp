@@ -26,4 +26,4 @@ result*
 # ignore generated code for the main library, as there are cyclic
 # dependencies between it and the rest of the library.
 /examples/Capnp
-/tests/main/Capnp
+/tests/Capnp
