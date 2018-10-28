@@ -964,8 +964,6 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                 result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
                 case result of
                     Nothing ->
-                        -- TODO: adjust this so we don't throw (and thus kill the connection)
-                        -- before the abort message is actually sent.
                         abortIO vat $
                             "Received 'Call' on non-existent promised answer #"
                                 <> T.pack (show targetQuestionId)
