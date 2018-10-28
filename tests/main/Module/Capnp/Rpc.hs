@@ -289,7 +289,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
             (do
                 Left (e :: RpcError) <- try $
                     runVat (vatConfig $ const vatTrans) { debugMode = True }
-                e `shouldBe` (SentAbort wantAbortExn)
+                e `shouldBe` SentAbort wantAbortExn
             )
             (do
                 let bb = mconcat
