@@ -262,6 +262,15 @@ unusualTests = describe "Tests for unusual message patterns" $ do
         "Your vat sent an 'unimplemented' message for an abort message " <>
         "that its remote peer never sent. This is likely a bug in your " <>
         "capnproto library."
+    it "Should reply with unimplemented when sent a join (level 4 only)." $ do
+        (vatTrans, probeTrans) <- transportPair
+        race_
+            (runVat $ (vatConfig $ const vatTrans) { debugMode = True })
+            $ do
+                msg <- createPure maxBound $ valueToMsg $ Message'join def
+                sendMsg probeTrans msg
+                msg' <- recvMsg probeTrans >>= msgToValue
+                msg' `shouldBe` Message'unimplemented (Message'join def)
 
 
 -- | Verify that the given message triggers an abort with the specified 'reason'
