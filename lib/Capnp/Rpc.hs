@@ -350,6 +350,16 @@ bootstrap = do
         { target = MessageTarget'promisedAnswer def { questionId }
         , localVat = vat
         }
+
+-- | Insert a new answer into our answers table. Blocks if we've reached the
+-- set limit on outstanding questions from the remote vat.
+insertAnswer :: Vat -> AnswerId -> Answer -> STM ()
+insertAnswer Vat{..} key value = do
+    nAvail <- readTVar availAnswers
+    when (nAvail == 0) retrySTM
+    writeTVar availAnswers $! nAvail - 1
+    modifyTVar' answers $ M.insert key value
+
 -- | send a question to the remote vat. This updates the local vat's
 -- tables as needed, in addition to actually sending the message.
 sendQuestion :: Vat -> Question -> STM ()
@@ -548,6 +558,10 @@ data Vat = Vat
     , questionIdPool :: TVar [Word32]
     , exportIdPool   :: TVar [Word32]
 
+    -- Number of available slots for pending answers. If this is zero and the
+    -- remote vat sends us a question, we'll block until it is replenished.
+    , availAnswers   :: TVar Word32
+
     -- Create the bootstrap interface for a connection. If 'Nothing', bootstrap
     -- messages return unimplemented.
     , offerBootstrap :: Maybe (RpcT IO Client)
@@ -654,6 +668,12 @@ data VatConfig = VatConfig
     --
     -- Defaults to 32.
 
+    , maxAnswers     :: !Word32
+    -- ^ The maximum size of our answers table. This has the effect of limiting
+    -- the number of outstanding questions we may be servicing from the remote
+    -- vat. Once this limit is reached, further questions from the remote vat
+    -- will block.
+
     , maxExports     :: !Word32
     -- ^ The maximum number of objects which may be exported by this vat.
     --
@@ -703,6 +723,7 @@ data VatConfig = VatConfig
 vatConfig :: (WordCount -> Transport IO) -> VatConfig
 vatConfig getTransport = VatConfig
     { maxQuestions = 32
+    , maxAnswers = 32
     , maxExports = 32
     , maxObjectCalls = 10
     , offerBootstrap = Nothing
@@ -769,6 +790,8 @@ newVat VatConfig{..} supervisor = atomically $ do
 
     questionIdPool <- newTVar [0..maxQuestions-1]
     exportIdPool <- newTVar [0..maxExports-1]
+
+    availAnswers <- newTVar maxAnswers
 
     sendQ <- newTBQueue $ fromIntegral maxQuestions
     recvQ <- newTBQueue $ fromIntegral maxQuestions
@@ -936,7 +959,7 @@ handleBootstrapMsg vat@Vat{..} msg@Bootstrap{questionId} =
         Just getServer -> do
             server <- runRpcT vat getServer
             atomically $
-                modifyTVar' answers $ M.insert questionId (ClientAnswer server)
+                insertAnswer vat questionId (ClientAnswer server)
                 -- TODO: also add it to exports and send a Return.
 
 handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
@@ -993,7 +1016,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                 }
         atomically $ do
             writeTBQueue sendQ msg
-            modifyTVar' answers $ M.insert callQuestionId (ExnAnswer exn)
+            insertAnswer vat callQuestionId (ExnAnswer exn)
 
 
 -- helper for 'handleCallMsg'; this handles the case where we have a Client available to service the call.
@@ -1012,7 +1035,7 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
     ret <- runRpcT vat $ call interfaceId methodId paramContent client
-    atomically $ modifyTVar' answers $ M.insert callQuestionId (PromiseAnswer ret)
+    atomically $ insertAnswer vat callQuestionId (PromiseAnswer ret)
     flip supervise supervisor $ do
         result <- try $ waitIO ret
         union' <- case result of
@@ -1126,7 +1149,12 @@ handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = (throwLeft =<<) $ atomicall
             "Return values must always be structs."
 
 handleFinishMsg :: Vat -> Finish -> IO ()
-handleFinishMsg Vat{..} Finish{questionId} =
-    atomically $ modifyTVar' answers (M.delete questionId)
+handleFinishMsg vat@Vat{..} Finish{questionId} =
+    atomically $ deleteAnswer vat questionId
+
+deleteAnswer :: Vat -> AnswerId -> STM ()
+deleteAnswer Vat{..} answerId = do
+    modifyTVar' availAnswers (+1)
+    modifyTVar' answers (M.delete answerId)
 
 -- level >= 1 --
