@@ -255,7 +255,7 @@ data Client
     | NullClient
     | DisconnectedClient
 
-type ServerQueue = TBQueue (Server -> RpcT IO Bool)
+type ServerQueue = TQueue (Server -> RpcT IO Bool)
 
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' using 'export' and then shared via RPC.
@@ -319,9 +319,9 @@ instance Show Client where
 export :: MonadUnliftIO m => Server -> RpcT m Client
 export localServer = do
     exportId <- newExportId
-    localVat@Vat{exports, maxObjectCalls, supervisor} <- RpcT ask
+    localVat@Vat{exports, supervisor} <- RpcT ask
 
-    queue <- atomically $ newTBQueue (fromIntegral maxObjectCalls)
+    queue <- atomically newTQueue
 
     -- We add an entry to our exports table. The refcount *starts* at zero,
     -- and will be incremented to one the first time we actually send this
@@ -335,8 +335,9 @@ export localServer = do
     liftIO $ supervise (runRpcT localVat $ runServer localServer queue) supervisor
     pure LocalClient{exportId, localVat, serverQueue = queue}
 
+runServer :: Server -> TQueue (Server -> RpcT IO Bool) -> RpcT IO ()
 runServer server queue = do
-    job <- atomically $ readTBQueue queue
+    job <- atomically $ readTQueue queue
     continue <- job server
     when continue (runServer server queue)
 
@@ -432,7 +433,7 @@ call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
     pure promise
 call interfaceId methodId params LocalClient{serverQueue} = do
     (promise, fulfiller) <- newPromiseIO
-    atomically $ writeTBQueue serverQueue $ \server -> do
+    atomically $ writeTQueue serverQueue $ \server -> do
         handleCall server interfaceId methodId params fulfiller
         pure True
     pure promise
@@ -576,7 +577,6 @@ data Vat = Vat
     -- same as the corresponding fields in 'VatConfig'
     , debugMode      :: !Bool
     , limit          :: !WordCount
-    , maxObjectCalls :: !Word32
 
     }
 
@@ -679,14 +679,6 @@ data VatConfig = VatConfig
     --
     -- Defaults to 32.
 
-    , maxObjectCalls :: !Word32
-    -- ^ The maximum number of calls which may be outstanding on a single
-    -- object. If this number is exceeded, the vat will block on handling
-    -- other incoming messages until there is free space in the object's
-    -- queue.
-    --
-    -- Defaults to 10.
-
     , offerBootstrap :: Maybe (RpcT IO Client)
     -- ^ If not 'Nothing', 'offerBootstrap' is used to create the bootstrap
     -- interface if and when the peer vat first requests it. If this is
@@ -725,7 +717,6 @@ vatConfig getTransport = VatConfig
     { maxQuestions = 32
     , maxAnswers = 32
     , maxExports = 32
-    , maxObjectCalls = 10
     , offerBootstrap = Nothing
     , withBootstrap = Nothing
     , debugMode = False
