@@ -262,6 +262,18 @@ unusualTests = describe "Tests for unusual message patterns" $ do
         "Your vat sent an 'unimplemented' message for an abort message " <>
         "that its remote peer never sent. This is likely a bug in your " <>
         "capnproto library."
+    triggerAbort
+        (Message'call def
+            { target = MessageTarget'importedCap 443
+            }
+        )
+        "Received 'Call' on non-existent export #443"
+    triggerAbort
+        (Message'call def
+            { target = MessageTarget'promisedAnswer def { questionId=300 }
+            }
+        )
+        "Received 'Call' on non-existent promised answer #300"
     it "Should reply with unimplemented when sent a join (level 4 only)." $ do
         (vatTrans, probeTrans) <- transportPair
         race_
