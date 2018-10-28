@@ -373,11 +373,11 @@ withTransportPair f =
 -- 'client' as the 'withBootstrap' field in the other's.
 runVatPair :: IsClient c => RpcT IO c -> (c -> RpcT IO ()) -> IO ()
 runVatPair offerBootstrap withBootstrap = withTransportPair $ \(clientTrans, serverTrans) -> do
-    let runClient = runVat $ (vatConfig $ clientTrans)
+    let runClient = runVat (vatConfig clientTrans)
             { debugMode = True
             , withBootstrap = Just (withBootstrap . fromClient)
             }
-        runServer = runVat $ (vatConfig $ serverTrans)
+        runServer = runVat (vatConfig serverTrans)
             { debugMode = True
             , offerBootstrap = Just (toClient <$> offerBootstrap)
             }
