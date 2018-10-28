@@ -7,6 +7,6 @@
 cd "$(dirname $0)/.."
 exec hlint $(find lib examples cmd tests -name '*.hs' \
 		| grep -v examples/Capnp/Gen/ \
-		| grep -v tests/main/Capnp/Gen/ \
+		| grep -v tests/Capnp/Gen/ \
 		| grep -v lib/Capnp/Gen/ \
 		| grep -v lib/Internal/Gen)
