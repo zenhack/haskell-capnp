@@ -274,6 +274,9 @@ unusualTests = describe "Tests for unusual message patterns" $ do
             }
         )
         "Received 'Call' on non-existent promised answer #300"
+    triggerAbort
+        (Message'return def { answerId = 234 })
+        "Received 'Return' for non-existant question #234"
     it "Should reply with unimplemented when sent a join (level 4 only)." $ do
         (vatTrans, probeTrans) <- transportPair
         race_
