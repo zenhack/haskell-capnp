@@ -9,8 +9,10 @@ module Internal.AppendVec
     , fromVector
     , makeEmpty
     , getVector
+    , getCapacity
     , FrozenAppendVec(..)
     , grow
+    , canGrowWithoutCopy
     ) where
 
 import Control.Monad           (when)
@@ -49,6 +51,9 @@ makeEmpty vec = AppendVec
 getVector :: GMV.MVector v a => AppendVec v s a -> v s a
 getVector AppendVec{mutVec, mutVecLen} = GMV.slice 0 mutVecLen mutVec
 
+getCapacity :: GMV.MVector v a => AppendVec v s a -> Int
+getCapacity AppendVec{mutVec} = GMV.length mutVec
+
 -- | immutable version of 'AppendVec'; this is defined for the purpose of
 -- implementing 'Thaw'.
 newtype FrozenAppendVec v a = FrozenAppendVec { getFrozenVector :: v a }
@@ -77,11 +82,11 @@ freezeAppend freeze = fmap FrozenAppendVec . freeze . getVector
 -- If the result does exceed @maxSize@, throws 'SizeError'.
 grow :: (MonadThrow m, PrimMonad m, s ~ PrimState m, GMV.MVector v a)
     => AppendVec v s a -> Int -> Int -> m (AppendVec v s a)
-grow AppendVec{mutVec,mutVecLen} amount maxSize = do
+grow vec@AppendVec{mutVec,mutVecLen} amount maxSize = do
     when (maxSize - amount < mutVecLen) $
         throwM SizeError
     mutVec <-
-        if mutVecLen + amount <= GMV.length mutVec then
+        if canGrowWithoutCopy vec amount then
             -- we have enough un-allocated space already; leave the vector
             -- itself alone.
             pure mutVec
@@ -95,3 +100,7 @@ grow AppendVec{mutVec,mutVecLen} amount maxSize = do
         { mutVec = mutVec
         , mutVecLen = mutVecLen + amount
         }
+
+canGrowWithoutCopy :: (GMV.MVector v a) => AppendVec v s a -> Int -> Bool
+canGrowWithoutCopy AppendVec{mutVec,mutVecLen} amount =
+    mutVecLen + amount <= GMV.length mutVec

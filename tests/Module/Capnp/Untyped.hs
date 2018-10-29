@@ -296,7 +296,7 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
         evalLimitT maxBound $ do
             msg <- M.newMessage
             srcStruct <- allocStruct msg 4 4
-            (1, _) <- M.newSegment msg 10
+            (_, _) <- M.newSegment msg 10
             dstStruct <- allocStruct msg 2 2
             ptr <- C.toPtr msg dstStruct
             setPtr ptr 0 srcStruct

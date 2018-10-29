@@ -454,9 +454,19 @@ allocInSeg msg segIndex (WordCount size) = do
 -- | @'alloc' size@ allocates 'size' words within a message. it returns the
 -- starting address of the allocated memory.
 alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
-alloc msg size = do
+alloc msg size@(WordCount sizeInt) = do
     segIndex <- pred <$> numSegs msg
-    allocInSeg msg segIndex size
+    oldSeg@(MutSegment vec) <- getSegment msg segIndex
+    if AppendVec.canGrowWithoutCopy vec sizeInt
+        then
+            allocInSeg msg segIndex size
+        else do
+            segments <- readMutVar (mutSegs msg)
+            segs <- V.freeze (AppendVec.getVector segments)
+            let totalAllocation = V.sum $ fmap (\(MutSegment vec) -> AppendVec.getCapacity vec) segs
+            -- the new segment's size should match the total size of existing segments
+            ( newSegIndex, _ ) <- newSegment msg (min maxSegmentSize (max totalAllocation sizeInt))
+            allocInSeg msg newSegIndex size
 
 -- | 'empty' is an empty message, i.e. a minimal message with a null pointer as
 -- its root object.
