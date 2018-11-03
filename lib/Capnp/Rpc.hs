@@ -78,6 +78,7 @@ import UnliftIO  hiding (Exception, wait)
 
 import Control.Concurrent              (threadDelay)
 import Control.Concurrent.STM          (throwSTM)
+import Control.Concurrent.STM.TSem     (TSem, newTSem, signalTSem, waitTSem)
 import Control.Monad                   (forever, when)
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
@@ -356,9 +357,7 @@ bootstrap = do
 -- set limit on outstanding questions from the remote vat.
 insertAnswer :: Vat -> AnswerId -> Answer -> STM ()
 insertAnswer Vat{..} key value = do
-    nAvail <- readTVar availAnswers
-    when (nAvail == 0) retrySTM
-    writeTVar availAnswers $! nAvail - 1
+    waitTSem availAnswers
     modifyTVar' answers $ M.insert key value
 
 -- | send a question to the remote vat. This updates the local vat's
@@ -559,9 +558,9 @@ data Vat = Vat
     , questionIdPool :: TVar [Word32]
     , exportIdPool   :: TVar [Word32]
 
-    -- Number of available slots for pending answers. If this is zero and the
-    -- remote vat sends us a question, we'll block until it is replenished.
-    , availAnswers   :: TVar Word32
+    -- Semaphore for limiting the number of pending answers; this is to guard
+    -- against resource usage attacks.
+    , availAnswers   :: TSem
 
     -- Create the bootstrap interface for a connection. If 'Nothing', bootstrap
     -- messages return unimplemented.
@@ -782,7 +781,7 @@ newVat VatConfig{..} supervisor = atomically $ do
     questionIdPool <- newTVar [0..maxQuestions-1]
     exportIdPool <- newTVar [0..maxExports-1]
 
-    availAnswers <- newTVar maxAnswers
+    availAnswers <- newTSem $ fromIntegral maxAnswers
 
     sendQ <- newTBQueue $ fromIntegral maxQuestions
     recvQ <- newTBQueue $ fromIntegral maxQuestions
@@ -1145,7 +1144,7 @@ handleFinishMsg vat@Vat{..} Finish{questionId} =
 
 deleteAnswer :: Vat -> AnswerId -> STM ()
 deleteAnswer Vat{..} answerId = do
-    modifyTVar' availAnswers (+1)
+    signalTSem availAnswers
     modifyTVar' answers (M.delete answerId)
 
 -- level >= 1 --
