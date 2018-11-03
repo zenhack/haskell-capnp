@@ -22,7 +22,7 @@ basicsTests =
     describe "textBuffer and textBytes agree" $
         it "Should return the same number of bytes" $
             property $ \(text :: T.Text) -> propertyIO $ evalLimitT maxBound $ do
-                msg <- newMessage
+                msg <- newMessage Nothing
                 cerial <- cerialize msg text
                 buf <- textBuffer cerial
                 bytes <- textBytes cerial

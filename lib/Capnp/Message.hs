@@ -476,9 +476,22 @@ empty = ConstMsg
     , constCaps = V.empty
     }
 
--- | Allocate a new empty message.
-newMessage :: WriteCtx m s => m (MutMsg s)
-newMessage = thaw empty
+-- | @'newMessage' sizeHint@ allocates a new empty message, with a single segment
+-- having capacity @sizeHint@. If @sizeHint@ is 'Nothing', defaults to a sensible
+-- value.
+newMessage :: WriteCtx m s => Maybe WordCount -> m (MutMsg s)
+newMessage Nothing = newMessage (Just 32)
+    -- The default value above is somewhat arbitrary, and just a guess -- we
+    -- should do some profiling to figure out what a good value is here.
+newMessage (Just (WordCount sizeHint)) = do
+    mutSegs <- MV.new 1 >>= newMutVar . AppendVec.makeEmpty
+    mutCaps <- MV.new 0 >>= newMutVar . AppendVec.makeEmpty
+    let msg = MutMsg{mutSegs,mutCaps}
+    -- allocte the first segment, and make space for the root pointer:
+    newSegment msg sizeHint
+    alloc msg 1
+    pure msg
+
 
 instance Thaw (Segment ConstMsg) where
     type Mutable s (Segment ConstMsg) = Segment (MutMsg s)

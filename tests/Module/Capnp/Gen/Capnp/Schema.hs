@@ -45,7 +45,7 @@ schemaTests = describe "tests for typed setters" $ traverse_ testCase
     ]
   where
     testCase BuildTest{..} = it ("Should build " ++ expected) $ do
-        msg <- M.newMessage
+        msg <- M.newMessage Nothing
         evalLimitT maxBound $ builder msg
         constMsg <- freeze msg
         actual <- decodeValue schemaSchema typeName constMsg

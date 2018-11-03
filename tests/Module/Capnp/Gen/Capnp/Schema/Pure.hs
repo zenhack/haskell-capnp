@@ -71,7 +71,7 @@ encodeTests = describe "schema encode tests" $
         it ("Should agree with capnp decode (with name = " ++ name ++ ")") $ do
             msg <- evalLimitT maxBound $ do
                 -- TODO: add some helpers for all this.
-                msg <- M.newMessage
+                msg <- M.newMessage Nothing
                 cerialOut <- cerialize msg expectedValue
                 setRoot cerialOut
                 freeze msg
@@ -495,7 +495,7 @@ prop_cerializeDecerializeInverses ::
 prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
     actual <- evalLimitT maxBound $ do
         -- TODO: add some helpers for all this.
-        msg <- M.newMessage
+        msg <- M.newMessage Nothing
         cerialOut <- cerialize msg expected
         setRoot cerialOut
         constMsg :: M.ConstMsg <- freeze msg

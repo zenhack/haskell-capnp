@@ -284,7 +284,7 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
     -- somehow.
     it "Should work when setting the root pointer" $ do
         pure () :: IO () -- Not sure why ghc needs this hint, but it does.
-        msg <- M.newMessage
+        msg <- M.newMessage Nothing
         -- The allocator always allocates new objects in the last segment, so
         -- if we create a new segment, the call to allocStruct below should
         -- allocate there:
@@ -294,9 +294,9 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
     it "Should work when setting a field in a struct" $ do
         pure () :: IO () -- Not sure why ghc needs this hint, but it does.
         evalLimitT maxBound $ do
-            msg <- M.newMessage
+            msg <- M.newMessage Nothing
             srcStruct <- allocStruct msg 4 4
-            (_, _) <- M.newSegment msg 10
+            (1, _) <- M.newSegment msg 10
             dstStruct <- allocStruct msg 2 2
             ptr <- C.toPtr msg dstStruct
             setPtr ptr 0 srcStruct
@@ -311,10 +311,10 @@ otherMessageTest = describe "Setting pointers in other messages" $
                         , paramBrand = brand
                         }
                 msg :: M.ConstMsg <- createPure maxBound $ do
-                        methodMsg <- M.newMessage
-                        nameMsg <- M.newMessage
-                        paramsMsg <- M.newMessage
-                        brandMsg <- M.newMessage
+                        methodMsg <- M.newMessage Nothing
+                        nameMsg <- M.newMessage Nothing
+                        paramsMsg <- M.newMessage Nothing
+                        brandMsg <- M.newMessage Nothing
 
                         methodCerial <- newRoot methodMsg
                         nameCerial <- cerialize nameMsg name

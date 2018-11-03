@@ -117,7 +117,7 @@ valueToLBS = fmap BB.toLazyByteString . valueToBuilder
 -- | Convert a value to a message.
 valueToMsg :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m (M.MutMsg s)
 valueToMsg val = do
-    msg <- M.newMessage
+    msg <- M.newMessage Nothing
     ret <- cerialize msg val
     setRoot ret
     pure msg

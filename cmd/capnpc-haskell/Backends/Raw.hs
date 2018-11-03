@@ -487,7 +487,7 @@ fmtConst thisMod name value =
   where
     makePtrByteList ptr =
         let msg = fromJust $ createPure defaultLimit $ do
-                msg <- newMessage
+                msg <- newMessage Nothing
                 rootPtr <- cerialize msg $ Untyped.Struct
                     (fromList [])
                     (fromList [ptr])

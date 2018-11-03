@@ -101,7 +101,7 @@ sGetMsg socket limit =
 hPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
     => Handle -> a -> IO ()
 hPutValue handle value = do
-    msg <- M.newMessage
+    msg <- M.newMessage Nothing
     root <- evalLimitT maxBound $ cerialize msg value
     setRoot root
     constMsg <- freeze msg
