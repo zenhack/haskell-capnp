@@ -25,6 +25,10 @@
   re-exported via the `Capnp` module.
 * The `IsPtr` type class has been split into `FromPtr` and `ToPtr`. Most
   user code should not care about this.
+* `newMessage` now accepts an optional size hint.
+* The allocation strategy has changed to reduce unnecessary copying.
+* It is now possible to create messages with a size > 2GiB. Note that
+  individual segments are still limited.
 
 # 0.3.0.0
 
