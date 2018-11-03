@@ -430,11 +430,15 @@ call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
         , sendReturn = fulfiller
         }
     pure promise
-call interfaceId methodId params LocalClient{serverQueue} = do
+call interfaceId methodId params LocalClient{serverQueue,localVat=Vat{availLocalCalls}} = do
     (promise, fulfiller) <- newPromiseIO
-    atomically $ writeTQueue serverQueue $ \server -> do
-        handleCall server interfaceId methodId params fulfiller
-        pure True
+    atomically $ do
+        waitTSem availLocalCalls
+        writeTQueue serverQueue $ \server -> do
+            handleCall server interfaceId methodId params fulfiller
+                `finally`
+                atomically (signalTSem availLocalCalls)
+            pure True
     pure promise
 call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
@@ -549,33 +553,42 @@ getQuestionId (BootstrapQuestion questionId)         = questionId
 -- side of a connection.
 data Vat = Vat
     -- The four tables:
-    { questions      :: TVar (M.Map QuestionId Question)
-    , answers        :: TVar (M.Map AnswerId Answer)
-    , imports        :: TVar (M.Map ImportId Word32) -- values are the refcount
-    , exports        :: TVar (M.Map ExportId Export)
+    { questions       :: TVar (M.Map QuestionId Question)
+    , answers         :: TVar (M.Map AnswerId Answer)
+    , imports         :: TVar (M.Map ImportId Word32) -- values are the refcount
+    , exports         :: TVar (M.Map ExportId Export)
 
     -- Pools of available IDs for questions and exported objects.
-    , questionIdPool :: TVar [Word32]
-    , exportIdPool   :: TVar [Word32]
+    , questionIdPool  :: TVar [Word32]
+    , exportIdPool    :: TVar [Word32]
 
-    -- Semaphore for limiting the number of pending answers; this is to guard
+    -- Semaphore for limiting the size of our answers table; this is to guard
     -- against resource usage attacks.
-    , availAnswers   :: TSem
+    , availAnswers    :: TSem
+
+    -- Like availAnswers, but this limits the number of questions that can be
+    -- pending on objects hosted by this vat. This is subtly different, in that
+    -- it covers the case where an attacker has attempted to cause resource
+    -- exhaustion by triggering a larger number of intra-vat calls on our end.
+    --
+    -- TODO: is availAnswers still necessary? I(zenhack) need to think about
+    -- the implications.
+    , availLocalCalls :: TSem
 
     -- Create the bootstrap interface for a connection. If 'Nothing', bootstrap
     -- messages return unimplemented.
-    , offerBootstrap :: Maybe (RpcT IO Client)
+    , offerBootstrap  :: Maybe (RpcT IO Client)
 
     -- queues on which to send and receive messages.
-    , sendQ          :: TBQueue ConstMsg
-    , recvQ          :: TBQueue ConstMsg
+    , sendQ           :: TBQueue ConstMsg
+    , recvQ           :: TBQueue ConstMsg
 
     -- Supervisor which monitors object lifetimes.
-    , supervisor     :: Supervisor
+    , supervisor      :: Supervisor
 
     -- same as the corresponding fields in 'VatConfig'
-    , debugMode      :: !Bool
-    , limit          :: !WordCount
+    , debugMode       :: !Bool
+    , limit           :: !WordCount
 
     }
 
@@ -672,6 +685,21 @@ data VatConfig = VatConfig
     -- the number of outstanding questions we may be servicing from the remote
     -- vat. Once this limit is reached, further questions from the remote vat
     -- will block.
+    --
+    -- Defaults to 32.
+
+
+    , maxLocalCalls  :: TSem
+    -- Like maxAnswers, but this limits the number of calls that can be
+    -- queued on objects hosted by this vat. This is subtly different, in that
+    -- it covers the case where an attacker has attempted to cause resource
+    -- exhaustion by triggering a large number of intra-vat calls rather than
+    -- making a large number of calls themselves.
+    --
+    -- Defaults to 32.
+    --
+    -- TODO: is availAnswers still necessary? I(zenhack) need to think about
+    -- the implications.
 
     , maxExports     :: !Word32
     -- ^ The maximum number of objects which may be exported by this vat.
@@ -782,6 +810,7 @@ newVat VatConfig{..} supervisor = atomically $ do
     exportIdPool <- newTVar [0..maxExports-1]
 
     availAnswers <- newTSem $ fromIntegral maxAnswers
+    availLocalCalls <- newTSem $ fromIntegral maxAnswers
 
     sendQ <- newTBQueue $ fromIntegral maxQuestions
     recvQ <- newTBQueue $ fromIntegral maxQuestions
