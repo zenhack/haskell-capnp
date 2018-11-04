@@ -1,7 +1,7 @@
 @0x832bcc6686a26d56;
 # A schema with useful declarations for testing.
 #
-# This is copied from the Go implementation:
+# This was originally copied from the Go implementation:
 #
 # https://github.com/zombiezen/go-capnproto2
 #
@@ -332,6 +332,24 @@ interface CounterFactory {
 
 interface CounterAcceptor {
   accept @0 (counter :CallSequence);
+}
+
+# test inheritance
+
+interface Top {
+	top @0 ();
+}
+
+interface Left extends(Top) {
+	left @0 ();
+}
+
+interface Right extends(Top) {
+	right @0 ();
+}
+
+interface Bottom extends(Left, Right) {
+	bottom @0 ();
 }
 
 # test defaults
