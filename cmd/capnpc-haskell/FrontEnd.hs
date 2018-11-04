@@ -292,8 +292,8 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
                 { interfaceId = id
                 , methods = zipWith
                     (generateMethod thisModule nodeMap name)
-                    [0..] (V.toList
-                    methods)
+                    [0..]
+                    (V.toList methods)
                 }
             )
             : concatMap (generateMethodStructs thisModule nodeMap) methods
