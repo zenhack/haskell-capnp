@@ -79,7 +79,7 @@ import UnliftIO  hiding (Exception, wait)
 import Control.Concurrent              (threadDelay)
 import Control.Concurrent.STM          (throwSTM)
 import Control.Concurrent.STM.TSem     (TSem, newTSem, signalTSem, waitTSem)
-import Control.Monad                   (forever, when)
+import Control.Monad                   (forever)
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
@@ -255,7 +255,11 @@ data Client
     | NullClient
     | DisconnectedClient
 
-type ServerQueue = TQueue (Server -> RpcT IO Bool)
+type ServerQueue = TQueue ServerOp
+
+data ServerOp
+    = ServerCall Word64 Word16 (Maybe (Untyped.Ptr ConstMsg)) (Fulfiller Struct)
+    | ServerStop
 
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' using 'export' and then shared via RPC.
@@ -334,14 +338,22 @@ export localServer = do
             , refCount = 0
             }
         pure exportId
-    liftIO $ supervise (runRpcT localVat $ runServer localServer queue) supervisor
+    liftIO $ supervise (runRpcT localVat $ runServer localVat localServer queue) supervisor
     pure LocalClient{exportId, localVat, serverQueue = queue}
 
-runServer :: Server -> TQueue (Server -> RpcT IO Bool) -> RpcT IO ()
-runServer server queue = do
-    job <- atomically $ readTQueue queue
-    continue <- job server
-    when continue (runServer server queue)
+runServer :: Vat -> Server -> TQueue ServerOp -> RpcT IO ()
+runServer Vat{availLocalCalls} Server{handleCall} queue = go where
+  go = do
+    op <- atomically $ readTQueue queue
+    case op of
+        ServerStop ->
+            pure ()
+
+        ServerCall interfaceId methodId params fulfiller -> do
+            handleCall interfaceId methodId params fulfiller
+                `finally`
+                atomically (signalTSem availLocalCalls)
+            go
 
 -- | Get a client for the bootstrap interface from the remote vat.
 bootstrap :: MonadIO m => RpcT m Client
@@ -437,11 +449,7 @@ call interfaceId methodId params LocalClient{serverQueue,localVat=Vat{availLocal
     (promise, fulfiller) <- newPromiseIO
     atomically $ do
         waitTSem availLocalCalls
-        writeTQueue serverQueue $ \server -> do
-            handleCall server interfaceId methodId params fulfiller
-                `finally`
-                atomically (signalTSem availLocalCalls)
-            pure True
+        writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
     pure promise
 call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
