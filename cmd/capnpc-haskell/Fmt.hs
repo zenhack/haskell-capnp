@@ -9,7 +9,7 @@ wl-pprint.
 We will expand this to cover more constructs, make it more type safe,
 and so forth as we go.
 -}
-module Fmt where
+module Fmt (indent, data_, instance_, class_) where
 
 import Text.PrettyPrint.Leijen.Text (Doc, hcat, vcat)
 
@@ -37,21 +37,32 @@ data_ typeCon dataCons deriving_ = vcat
         ]
     ]
 
--- @'instance_' ctx typeCon defs@ defines an instance for @typeCon@
+-- | @'instance_' ctx typeCon defs@ defines an instance for @typeCon@
 -- given the context @ctx@. @defs@ is the set of definitions in the
 -- instance.
 instance_ :: [Doc] -> Doc -> [Doc] -> Doc
-instance_ ctx typeCon defs = vcat
+instance_ = classOrInstance "instance"
+
+-- | @'class_' ctx cls decls@ defines a class for @cls@ given the
+-- context @ctx@. @decls@ is the set of declarations in the class body.
+class_ :: [Doc] -> Doc -> [Doc] -> Doc
+class_ = classOrInstance "class"
+
+-- | Helper for 'class_' and 'instance_'. The first argument is the string
+-- @"class"@ or @"instance"@.
+classOrInstance :: Doc -> [Doc] -> Doc -> [Doc] -> Doc
+classOrInstance kwd ctx main items = vcat
     [ hcat
-        [ "instance "
+        [ kwd
+        , " "
         , case ctx of
             []    -> ""
             [one] -> one <> " => "
             _     -> PP.tupled ctx <> " => "
-        , typeCon
-        , case defs of
+        , main
+        , case items of
             [] -> ""
             _  -> " where"
         ]
-    , indent $ vcat defs
+    , indent $ vcat items
     ]

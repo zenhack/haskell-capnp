@@ -258,8 +258,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     , instance_ [] ("C'.Cerialize s " <> pureName)
         [ hcat [ "cerialize msg (", pureName, " client) = ", rawName, " . Just <$> U'.appendCap msg client" ]
         ]
-    , hcat [ "class ", pureName, "'server_ cap where" ]
-    , indent $ vcat
+    , class_ [] (pureName <> "'server_ cap")
         [ hcat
             -- We provide default definitions for all methods that just throw
             -- 'unimplemented', so that if a schema adds new methods, the code
