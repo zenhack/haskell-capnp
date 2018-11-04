@@ -183,18 +183,17 @@ socketTransport socket limit = Transport
     , recvMsg = liftIO $ sGetMsg socket limit
     }
 
--- | Get a new exportId/questionId. The argument gets the pool to allocate from.
-newId :: MonadIO m => (Vat -> TVar [Word32]) -> RpcT m Word32
-newId pool = do
-    vat <- RpcT ask
-    liftIO $ atomically $ do
-        oldIds <- readTVar (pool vat)
-        case oldIds of
-            [] ->
-                retrySTM
-            (id:ids) -> do
-                writeTVar (pool vat) ids
-                pure id
+-- | Get a new exportId/questionId. The first argument gets the pool to
+-- allocate from.
+newId :: (Vat -> TVar [Word32]) -> Vat -> STM Word32
+newId pool vat = do
+    oldIds <- readTVar (pool vat)
+    case oldIds of
+        [] ->
+            retrySTM
+        (id:ids) -> do
+            writeTVar (pool vat) ids
+            pure id
 
 -- | A "null" client, which throws unimplemented in response to all method
 -- calls.
@@ -202,11 +201,11 @@ nullClient :: Client
 nullClient = NullClient
 
 -- | Allocate an unused export id.
-newExportId :: MonadIO m => RpcT m ExportId
+newExportId :: Vat -> STM Word32
 newExportId = newId exportIdPool
 
 -- | Allocate an unused question id.
-newQuestionId :: MonadIO m => RpcT m QuestionId
+newQuestionId :: Vat -> STM Word32
 newQuestionId = newId questionIdPool
 
 -- | 'RpcT' is a monad transformer that supports making capnproto rpc calls.
@@ -319,7 +318,6 @@ instance Show Client where
 -- | Export a local interface server, so it may be offered on the network.
 export :: MonadUnliftIO m => Server -> RpcT m Client
 export localServer = do
-    exportId <- newExportId
     localVat@Vat{exports, supervisor} <- RpcT ask
 
     queue <- atomically newTQueue
@@ -329,10 +327,13 @@ export localServer = do
     -- capability to the remote vat. Because the refcount checking happens
     -- in response to interaction with the remote vat, it won't be removed
     -- until it goes *back* to being zero.
-    atomically $ modifyTVar exports $ M.insert exportId Export
-        { serverQueue = queue
-        , refCount = 0
-        }
+    exportId <- atomically $ do
+        exportId <- newExportId localVat
+        modifyTVar exports $ M.insert exportId Export
+            { serverQueue = queue
+            , refCount = 0
+            }
+        pure exportId
     liftIO $ supervise (runRpcT localVat $ runServer localServer queue) supervisor
     pure LocalClient{exportId, localVat, serverQueue = queue}
 
@@ -345,13 +346,14 @@ runServer server queue = do
 -- | Get a client for the bootstrap interface from the remote vat.
 bootstrap :: MonadIO m => RpcT m Client
 bootstrap = do
-    questionId <- newQuestionId
     vat <- RpcT ask
-    atomically $ sendQuestion vat (BootstrapQuestion questionId)
-    pure RemoteClient
-        { target = MessageTarget'promisedAnswer def { questionId }
-        , localVat = vat
-        }
+    atomically $ do
+        questionId <- newQuestionId vat
+        sendQuestion vat (BootstrapQuestion questionId)
+        pure RemoteClient
+            { target = MessageTarget'promisedAnswer def { questionId }
+            , localVat = vat
+            }
 
 -- | Insert a new answer into our answers table. Blocks if we've reached the
 -- set limit on outstanding questions from the remote vat.
@@ -408,28 +410,29 @@ updateSendWithCap Vat{exports} = \case
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
 call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
-    Vat{limit} <- RpcT ask
-    questionId <- newQuestionId
+    vat@Vat{limit} <- RpcT ask
     let capTable = maybe
             V.empty
             (V.map makeCapDescriptor . Message.getCapTable . Untyped.message)
             paramContent
     paramContent <- evalLimitT limit (decerialize paramContent)
-    let callMsg = Call
-            { sendResultsTo = Call'sendResultsTo'caller
-            , allowThirdPartyTailCall = False
-            , params = def
-                { content = paramContent
-                , capTable = capTable
+    atomically $ do
+        questionId <- newQuestionId vat
+        let callMsg = Call
+                { sendResultsTo = Call'sendResultsTo'caller
+                , allowThirdPartyTailCall = False
+                , params = def
+                    { content = paramContent
+                    , capTable = capTable
+                    }
+                , ..
                 }
-            , ..
+        (promise, fulfiller) <- newPromise
+        sendQuestion localVat $ CallQuestion
+            { callMsg
+            , sendReturn = fulfiller
             }
-    (promise, fulfiller) <- atomically newPromise
-    atomically $ sendQuestion localVat $ CallQuestion
-        { callMsg
-        , sendReturn = fulfiller
-        }
-    pure promise
+        pure promise
 call interfaceId methodId params LocalClient{serverQueue,localVat=Vat{availLocalCalls}} = do
     (promise, fulfiller) <- newPromiseIO
     atomically $ do
