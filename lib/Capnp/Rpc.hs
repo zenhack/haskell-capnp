@@ -689,7 +689,7 @@ data VatConfig = VatConfig
     -- Defaults to 32.
 
 
-    , maxLocalCalls  :: TSem
+    , maxLocalCalls  :: !Word32
     -- Like maxAnswers, but this limits the number of calls that can be
     -- queued on objects hosted by this vat. This is subtly different, in that
     -- it covers the case where an attacker has attempted to cause resource
@@ -744,6 +744,7 @@ vatConfig getTransport = VatConfig
     { maxQuestions = 32
     , maxAnswers = 32
     , maxExports = 32
+    , maxLocalCalls = 32
     , offerBootstrap = Nothing
     , withBootstrap = Nothing
     , debugMode = False
@@ -810,7 +811,7 @@ newVat VatConfig{..} supervisor = atomically $ do
     exportIdPool <- newTVar [0..maxExports-1]
 
     availAnswers <- newTSem $ fromIntegral maxAnswers
-    availLocalCalls <- newTSem $ fromIntegral maxAnswers
+    availLocalCalls <- newTSem $ fromIntegral maxLocalCalls
 
     sendQ <- newTBQueue $ fromIntegral maxQuestions
     recvQ <- newTBQueue $ fromIntegral maxQuestions
