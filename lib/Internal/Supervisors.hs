@@ -87,9 +87,8 @@ supervise task (Supervisor stateVar) =
                 -- if we don't, we'll leak our ThreadId until the supervisor
                 -- exits.
                 --
-                -- The bang pattern here is very important, because even though
+                -- The use of $! here is very important, because even though
                 -- modifyTVar' is strict, it only does whnf, so it would leave
                 -- the state only evaluated as far as @Right (S.delete me kids)@;
                 -- in that case we would still leak @me@.
-                let !newKids = S.delete me kids
-                in Right newKids
+                Right $! S.delete me kids
