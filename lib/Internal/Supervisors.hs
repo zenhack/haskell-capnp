@@ -23,7 +23,7 @@ import Control.Concurrent.STM   (throwSTM)
 import Control.Monad            (forever, void)
 import Data.Foldable            (traverse_)
 import UnliftIO.Exception
-    (Exception, SomeException, bracket_, throwIO, toException, withException)
+    (Exception, SomeException, bracket_, toException, withException)
 
 import qualified Data.Set as S
 
@@ -36,9 +36,7 @@ runSupervisor :: Supervisor -> IO ()
 runSupervisor sup =
     forever (threadDelay (1000 * 1000 * 1000))
     `withException`
-    (\e -> do
-        throwKids sup (e :: SomeException)
-        throwIO e)
+    \e -> throwKids sup (e :: SomeException)
 
 withSupervisor :: (Supervisor -> IO ()) -> IO ()
 withSupervisor f = do
