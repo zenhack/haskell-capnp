@@ -23,7 +23,7 @@ import Control.Concurrent.STM   (throwSTM)
 import Control.Monad            (forever, void)
 import Data.Foldable            (traverse_)
 import UnliftIO.Exception
-    (Exception, SomeException, bracket_, toException, withException)
+    (Exception, SomeException, bracket, bracket_, toException, withException)
 
 import qualified Data.Set as S
 
@@ -46,13 +46,15 @@ withSupervisor f = do
 -- | Throw an exception to all of a supervisor's children, using 'throwTo'.
 throwKids :: Exception e => Supervisor -> e -> IO ()
 throwKids (Supervisor stateVar) exn = do
-    kids <- atomically $ readTVar stateVar >>= \case
-        Left _ ->
-            pure S.empty
-        Right kids -> do
-            writeTVar stateVar $! Left (toException exn)
-            pure kids
-    traverse_ (`throwTo` exn) kids
+    bracket
+        (atomically $ readTVar stateVar >>= \case
+            Left _ ->
+                pure S.empty
+            Right kids -> do
+                writeTVar stateVar $! Left (toException exn)
+                pure kids)
+        (traverse_ (`throwTo` exn))
+        (\_ -> pure ())
 
 -- | Launch the IO action in a thread, monitored by the 'Supervisor'. If the
 -- supervisor receives an exception, the exception will also be raised in the
