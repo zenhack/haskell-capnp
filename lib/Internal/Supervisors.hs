@@ -51,7 +51,7 @@ throwKids (Supervisor stateVar) exn =
             Left _ ->
                 pure S.empty
             Right kids -> do
-                writeTVar stateVar $! Left (toException exn)
+                writeTVar stateVar $ Left (toException exn)
                 pure kids)
         (traverse_ (`throwTo` exn))
         (\_ -> pure ())
@@ -73,7 +73,7 @@ supervise task (Supervisor stateVar) =
                     throwSTM e
                 Right kids -> do
                     let !newKids = S.insert me kids
-                    writeTVar stateVar $! Right newKids
+                    writeTVar stateVar $ Right newKids
     -- | Remove our ThreadId from the supervisor, so we don't leak it.
     removeMe = do
         me <- myThreadId
