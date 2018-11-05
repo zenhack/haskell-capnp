@@ -45,7 +45,7 @@ withSupervisor f = do
 
 -- | Throw an exception to all of a supervisor's children, using 'throwTo'.
 throwKids :: Exception e => Supervisor -> e -> IO ()
-throwKids (Supervisor stateVar) exn = do
+throwKids (Supervisor stateVar) exn =
     bracket
         (atomically $ readTVar stateVar >>= \case
             Left _ ->
