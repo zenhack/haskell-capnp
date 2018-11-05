@@ -52,16 +52,9 @@ throwKids (Supervisor stateVar) exn = do
         Left _ ->
             pure S.empty
         Right kids -> do
-            writeTVar' stateVar (Left (toException exn))
+            writeTVar stateVar $! Left (toException exn)
             pure kids
     traverse_ (`throwTo` exn) kids
-
--- The docs don't specify whether 'writeTVar' forces the contents of
--- the TVar before leaving. We need this so we don't leak things, so
--- we write a wrapper that is guaranteed to do so.
-writeTVar' :: TVar a -> a -> STM ()
-writeTVar' var val =
-    modifyTVar' var $ const val
 
 -- | Launch the IO action in a thread, monitored by the 'Supervisor'. If the
 -- supervisor receives an exception, the exception will also be raised in the
@@ -80,7 +73,7 @@ supervise task (Supervisor stateVar) =
                     throwSTM e
                 Right kids -> do
                     let !newKids = S.insert me kids
-                    writeTVar' stateVar (Right newKids)
+                    writeTVar stateVar $! Right newKids
     -- | Remove our ThreadId from the supervisor, so we don't leak it.
     removeMe = do
         me <- myThreadId
