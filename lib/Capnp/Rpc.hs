@@ -1080,9 +1080,20 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
             insertAnswer vat callQuestionId (ExnAnswer exn)
 
 
--- helper for 'handleCallMsg'; this handles the case where we have a Client available to service the call.
+-- helper for 'handleCallMsg'; this handles the case where we have a 'Client'
+-- available to service the call.
 handleCallToClient :: Rpc.Call ConstMsg -> Vat -> Call -> Client -> IO ()
-handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} client = do
+handleCallToClient
+        rawCall
+        vat@Vat{..}
+        msg@Call
+            { questionId=callQuestionId
+            , target
+            , interfaceId
+            , methodId
+            , params=Payload{capTable}
+            }
+        client = do
     -- We fish out the low-level representation of the params, set the
     -- cap table based on the value in the call message, and then
     -- pass it to the handler. This ensures that any Clients in the value
