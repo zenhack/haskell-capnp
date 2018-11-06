@@ -361,8 +361,8 @@ withSocketPair =
         (\(x, y) -> Socket.close x >> Socket.close y)
 
 withTransportPair ::
-    ( ( WordCount -> Transport IO
-      , WordCount -> Transport IO
+    ( ( WordCount -> Transport
+      , WordCount -> Transport
       ) -> IO a
     ) -> IO a
 withTransportPair f =

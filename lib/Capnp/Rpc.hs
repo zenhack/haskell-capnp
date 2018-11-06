@@ -156,31 +156,30 @@ type AnswerId = Word32
 type ExportId = Word32
 type ImportId = Word32
 
--- | A @'Transport' m@ handles transmitting RPC messages, inside of a monadic
--- context @m@.
-data Transport m = Transport
-    { sendMsg :: ConstMsg -> m ()
+-- | A @'Transport'@ handles transmitting RPC messages.
+data Transport = Transport
+    { sendMsg :: ConstMsg -> IO ()
     -- ^ Send a message
-    , recvMsg :: m ConstMsg
+    , recvMsg :: IO ConstMsg
     -- ^ Receive a message
     }
 
 -- | @'handleTransport' handle limit@ is a transport which reads and writes
 -- messages from/to @handle@. It uses @limit@ as the traversal limit when
 -- reading messages and decoding.
-handleTransport :: MonadIO m => Handle -> WordCount -> Transport m
+handleTransport :: Handle -> WordCount -> Transport
 handleTransport handle limit = Transport
-    { sendMsg = liftIO . hPutMsg handle
-    , recvMsg = liftIO $ hGetMsg handle limit
+    { sendMsg = hPutMsg handle
+    , recvMsg = hGetMsg handle limit
     }
 
 -- | @'socketTransport' socket limit@ is a transport which reads and writes
 -- messages to/from a socket. It uses @limit@ as the traversal limit when
 -- reading messages and decoing.
-socketTransport :: MonadIO m => Socket -> WordCount -> Transport m
+socketTransport :: Socket -> WordCount -> Transport
 socketTransport socket limit = Transport
-    { sendMsg = liftIO . sPutMsg socket
-    , recvMsg = liftIO $ sGetMsg socket limit
+    { sendMsg = sPutMsg socket
+    , recvMsg = sGetMsg socket limit
     }
 
 -- | Get a new exportId/questionId. The first argument gets the pool to
@@ -741,7 +740,7 @@ data VatConfig = VatConfig
     --
     -- Defaults to 'False'.
 
-    , getTransport   :: WordCount -> Transport IO
+    , getTransport   :: WordCount -> Transport
     -- ^ get the transport to use, as a function of the limit.
 
     , limit          :: !WordCount
@@ -753,7 +752,7 @@ data VatConfig = VatConfig
 -- | Create a new vat config, using the given function to create a
 -- transport as a function of the limit. sets default values for
 -- other fields; see the documentation for 'VatConfig'.
-vatConfig :: (WordCount -> Transport IO) -> VatConfig
+vatConfig :: (WordCount -> Transport) -> VatConfig
 vatConfig getTransport = VatConfig
     { maxQuestions = 32
     , maxAnswers = 32
@@ -833,12 +832,12 @@ newVat VatConfig{..} supervisor = atomically $ do
     pure Vat{..}
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
-sendLoop :: Transport IO -> Vat -> IO ()
+sendLoop :: Transport -> Vat -> IO ()
 sendLoop transport Vat{sendQ} =
     forever $ atomically (readTBQueue sendQ) >>= sendMsg transport
 
 -- | 'recvLoop' shunts messages from the transport into the receive queue.
-recvLoop :: Transport IO -> Vat -> IO ()
+recvLoop :: Transport -> Vat -> IO ()
 recvLoop transport Vat{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
 
