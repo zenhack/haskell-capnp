@@ -1140,11 +1140,11 @@ handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = do
         Nothing -> abortIO vat $
             "Received 'Return' for non-existant question #"
                 <> T.pack (show answerId)
-        Just (BootstrapQuestion _) -> do
+        Just (BootstrapQuestion _) ->
             -- This will cause the other side to drop the resolved cap; we'll
             -- just keep using the promise.
             atomically $ replyUnimplemented vat $ Message'return msg
-        Just CallQuestion{callMsg, sendReturn} -> do
+        Just CallQuestion{callMsg, sendReturn} ->
             case union' of
                 Return'results Payload{capTable} -> do
                     clients <- traverse (interpCapDescriptor vat) capTable
