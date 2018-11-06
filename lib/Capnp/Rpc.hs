@@ -373,13 +373,6 @@ bootstrap = do
             , localVat = vat
             }
 
--- | Insert a new answer into our answers table. Blocks if we've reached the
--- set limit on outstanding questions from the remote vat.
-insertAnswer :: Vat -> AnswerId -> Answer -> STM ()
-insertAnswer Vat{..} key value = do
-    waitTSem availAnswers
-    modifyTVar' answers $ M.insert key value
-
 -- | send a question to the remote vat. This updates the local vat's
 -- tables as needed, in addition to actually sending the message.
 sendQuestion :: Vat -> Question -> STM ()
@@ -900,7 +893,9 @@ coordinator vat@Vat{..} = forever $ do
         _ ->
             atomically $ replyUnimplemented vat pureMsg
 
------------------ Helpers for common responses. ----------------------------
+-----------------------------------------------------------------------------
+-- Helpers for common responses.
+-----------------------------------------------------------------------------
 
 -- | Report the specified message to the remote vat as unimplemented.
 replyUnimplemented :: Vat -> Message -> STM ()
@@ -955,7 +950,29 @@ throwLeft (Right v) = pure v
 ok :: Monad m => m a -> m (Either RpcError a)
 ok = fmap Right
 
------------------ Handler code for specific types of messages. ---------------
+-----------------------------------------------------------------------------
+-- Misc. helpers for manipiulating the vat's state.
+-----------------------------------------------------------------------------
+
+-- | Insert a new answer into our answers table. Blocks if we've reached the
+-- set limit on outstanding questions from the remote vat.
+insertAnswer :: Vat -> AnswerId -> Answer -> STM ()
+insertAnswer Vat{..} key value = do
+    waitTSem availAnswers
+    modifyTVar' answers $ M.insert key value
+
+-- | Delete an answer from our answers table, keeping track of the change to
+-- the number of available answers.
+deleteAnswer :: Vat -> AnswerId -> STM ()
+deleteAnswer Vat{..} answerId = do
+    signalTSem availAnswers
+    modifyTVar' answers (M.delete answerId)
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-- Handler code for specific types of messages.
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 -- | Handle an @unimplemented@ message.
 handleUnimplementedMsg :: Vat -> Message -> IO ()
@@ -986,7 +1003,9 @@ handleAbortMsg :: Vat -> Exception -> IO ()
 handleAbortMsg _ exn =
     throwIO (ReceivedAbort exn)
 
--- level 0 --
+-----------------------------------------------------------------------------
+-- level 0 messages
+-----------------------------------------------------------------------------
 
 -- | Handle a bootstrap message.
 handleBootstrapMsg :: Vat -> Bootstrap -> IO ()
@@ -1003,6 +1022,7 @@ handleBootstrapMsg vat@Vat{..} msg@Bootstrap{questionId} =
                 insertAnswer vat questionId (ClientAnswer server)
                 -- TODO: also add it to exports and send a Return.
 
+-- | Handle a call message.
 handleCallMsg :: Rpc.Call ConstMsg -> Vat -> Call -> IO ()
 handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,interfaceId,methodId,params=Payload{capTable}} =
     case target of
@@ -1193,9 +1213,7 @@ handleFinishMsg :: Vat -> Finish -> IO ()
 handleFinishMsg vat@Vat{..} Finish{questionId} =
     atomically $ deleteAnswer vat questionId
 
-deleteAnswer :: Vat -> AnswerId -> STM ()
-deleteAnswer Vat{..} answerId = do
-    signalTSem availAnswers
-    modifyTVar' answers (M.delete answerId)
 
--- level >= 1 --
+-----------------------------------------------------------------------------
+-- level 1+ messages
+-----------------------------------------------------------------------------
