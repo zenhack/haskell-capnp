@@ -79,6 +79,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "{-# LANGUAGE DeriveGeneric #-}"
     , "{-# LANGUAGE OverloadedStrings #-}"
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+    , "{-# OPTIONS_GHC -Wno-orphans #-}"
     , "{- |"
     , "Module: " <> humanMod
     , "Description: " <> "High-level generated module for " <> modFileText

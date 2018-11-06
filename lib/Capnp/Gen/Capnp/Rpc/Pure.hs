@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 {- |
 Module: Capnp.Gen.Capnp.Rpc.Pure
 Description: High-level generated module for capnp/rpc.capnp

@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 {- |
 Module: Capnp.Gen.Capnp.Persistent.Pure
 Description: High-level generated module for capnp/persistent.capnp
