@@ -263,8 +263,7 @@ type ServerQueue = TQueue ServerOp
 
 data ServerOp
     = ServerCall Word64 Word16 (Maybe (Untyped.Ptr ConstMsg)) (Fulfiller Struct)
-    | AddRef
-    | DelRef
+    | ServerStop
 
 -- | A 'Server' contains functions for handling requests to an object. It
 -- can be converted to a 'Client' using 'export' and then shared via RPC.
@@ -349,22 +348,18 @@ export localServer = do
     pure LocalClient{exportId, localVat, serverQueue = queue}
 
 runServer :: Vat -> Server -> TQueue ServerOp -> RpcT IO ()
-runServer Vat{availLocalCalls} Server{..} queue = go 1 where
-  go 0 = handleStop
-  go n = do
+runServer Vat{availLocalCalls} Server{handleCall} queue = go where
+  go = do
     op <- atomically $ readTQueue queue
     case op of
-        AddRef ->
-            go (n+1)
-
-        DelRef ->
-            go (n-1)
+        ServerStop ->
+            pure ()
 
         ServerCall interfaceId methodId params fulfiller -> do
             handleCall interfaceId methodId params fulfiller
                 `finally`
                 atomically (signalTSem availLocalCalls)
-            go n
+            go
 
 -- | Get a client for the bootstrap interface from the remote vat.
 bootstrap :: MonadIO m => RpcT m Client
