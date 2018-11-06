@@ -931,7 +931,7 @@ abort :: Vat -> T.Text -> STM (Either RpcError a)
 abort vat text = Left . SentAbort <$> replyAbort vat text
 
 -- | Send an abort message to the remote vat with the given reason field
--- and a type field of @failed@, and then the exception, wrapped in
+-- and a type field of @failed@, and then throw the exception, wrapped in
 -- 'SentAbort'.
 abortIO :: MonadIO m => Vat -> T.Text -> m a
 abortIO vat reason = liftIO $ do
