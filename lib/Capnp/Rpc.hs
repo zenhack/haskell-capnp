@@ -29,6 +29,7 @@ module Capnp.Rpc
     , call
     , bootstrap
     , nullClient
+    , disconnectedClient
 
     , IsClient(..)
 
@@ -197,6 +198,11 @@ newId pool vat = do
 nullClient :: Client
 nullClient = NullClient
 
+-- | A client which is disconnected; throws disconnected in response to all
+-- method calls.
+disconnectedClient :: Client
+disconnectedClient = DisconnectedClient
+
 -- | Allocate an unused export id.
 newExportId :: Vat -> STM Word32
 newExportId = newId exportIdPool
@@ -305,16 +311,14 @@ instance Read Client where
     readPrec = lexP >>= \case
         Ident "nullClient" ->
             pure nullClient
-        Ident "DisconnectedClient" ->
-            -- TODO: figure out something else to put here.
+        Ident "disconnectedClient" ->
             pure DisconnectedClient
         _ ->
             pfail
 
 instance Show Client where
     show NullClient = "nullClient"
-    -- TODO: we should put something here that makes sense given the exposed API:
-    show _          = "DisconnectedClient"
+    show _          = "disconnectedClient"
 
 -- | Export a local interface server, so it may be offered on the network.
 export :: MonadUnliftIO m => Server -> RpcT m Client
