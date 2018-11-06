@@ -628,10 +628,10 @@ makeCapDescriptor LocalClient{exportId} =
 -- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
 -- the local vat's table if needed.
 --
--- Returns a 'Left' if the cap descriptor is invalid.
-interpCapDescriptor :: Vat -> CapDescriptor -> STM (Either RpcError Client)
+-- aborts the connection (and raises SentAbort) if the cap descriptor is invalid.
+interpCapDescriptor :: Vat -> CapDescriptor -> IO Client
 interpCapDescriptor vat@Vat{..} = \case
-    CapDescriptor'none -> ok $ pure NullClient
+    CapDescriptor'none -> pure NullClient
 
     -- We treat senderPromise the same as senderHosted. We respond to resolve
     -- messages with unimplemented and keep using the promise; someday we'll
@@ -642,7 +642,7 @@ interpCapDescriptor vat@Vat{..} = \case
     CapDescriptor'senderHosted  importId -> getImportClient importId
     CapDescriptor'senderPromise importId -> getImportClient importId
 
-    CapDescriptor'receiverHosted exportId -> do
+    CapDescriptor'receiverHosted exportId -> (throwLeft =<<) $ atomically $ do
         exports <- readTVar exports
         case M.lookup exportId exports of
             Nothing ->
@@ -655,14 +655,14 @@ interpCapDescriptor vat@Vat{..} = \case
                     , localVat = vat
                     , exportId = exportId
                     }
-    CapDescriptor'receiverAnswer _ -> abort vat "receiverAnswer not supported"
-    CapDescriptor'thirdPartyHosted _ -> abort vat "thirdPartyHosted not supported"
+    CapDescriptor'receiverAnswer _ -> abortIO vat "receiverAnswer not supported"
+    CapDescriptor'thirdPartyHosted _ -> abortIO vat "thirdPartyHosted not supported"
     CapDescriptor'unknown' tag ->
-        abort vat $ T.pack $ "unknown cap descriptor variant #" ++ show tag
+        abortIO vat $ T.pack $ "unknown cap descriptor variant #" ++ show tag
   where
     -- create a client based on an import id. This increments the refcount for
     -- that import.
-    getImportClient importId = do
+    getImportClient importId = atomically $ do
         -- TODO: set up a finalizer to decrement the refcount.
         let client = ImportClient
                 { importId = importId
@@ -671,7 +671,7 @@ interpCapDescriptor vat@Vat{..} = \case
         modifyTVar' imports $ flip M.alter importId $ \case
             Nothing -> Just 1
             Just !n -> Just (n+1)
-        ok $ pure client
+        pure client
 
 
 instance Eq Vat where
@@ -1090,7 +1090,8 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
     --
     -- the handler has to decode again anyway. We should try to make this
     -- whole business more efficient. See also #52.
-    rawCall <- throwLeft =<< atomically (updateRawCapTable vat capTable rawCall)
+    clients <- traverse (interpCapDescriptor vat) capTable
+    rawCall <- Untyped.tMsg (pure . Message.withCapTable clients) rawCall
     paramContent <- evalLimitT limit $
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
@@ -1131,72 +1132,61 @@ handleCallToClient rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target
             }
         atomically $ writeTBQueue sendQ msg
 
-updateRawCapTable
-    :: Untyped.TraverseMsg t
-    => Vat
-    -> V.Vector CapDescriptor
-    -> t Message.ConstMsg
-    -> STM (Either RpcError (t Message.ConstMsg))
-updateRawCapTable vat capTable raw = do
-    -- FIXME: we may send more than one abort message, since
-    -- 'interpCapDescriptor' may 'abort' on more than one cap. We
-    -- should rework this to short-circut.
-    r <- sequence <$> traverse (interpCapDescriptor vat) capTable
-    case r of
-        Left e ->
-            pure $ Left e
-        Right clients ->
-            ok $ Untyped.tMsg (pure . Message.withCapTable clients) raw
-
 -- | Handle receiving a 'Return' message.
 handleReturnMsg :: Rpc.Return' ConstMsg -> Vat -> Return -> IO ()
-handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = (throwLeft =<<) $ atomically $ do
-    question <- M.lookup answerId <$> readTVar questions
+handleReturnMsg rawRet' vat@Vat{..} msg@Return{..} = do
+    question <- atomically $ M.lookup answerId <$> readTVar questions
     case question of
-        Nothing -> abort vat $
+        Nothing -> abortIO vat $
             "Received 'Return' for non-existant question #"
                 <> T.pack (show answerId)
         Just (BootstrapQuestion _) -> do
             -- This will cause the other side to drop the resolved cap; we'll
             -- just keep using the promise.
-            replyUnimplemented vat $ Message'return msg
-            ok $ modifyTVar questions $ M.delete answerId
+            atomically $ replyUnimplemented vat $ Message'return msg
         Just CallQuestion{callMsg, sendReturn} -> do
-            -- We don't support caps other than the bootstrap yet, so we can
-            -- send Finish right away.
-            msg <- createPure limit $ valueToMsg $
-                Message'finish def { questionId = answerId }
-            writeTBQueue sendQ msg
-            modifyTVar questions $ M.delete answerId
             case union' of
                 Return'results Payload{capTable} -> do
-                    r <- updateRawCapTable vat capTable rawRet'
-                    case r of
-                        Left e ->
-                            pure (Left e)
-                        Right rawRet' -> do
-                            rawRet'' <- evalLimitT limit $ Rpc.get_Return'' rawRet'
-                            content <- case rawRet'' of
-                                Rpc.Return'results payload ->
-                                    evalLimitT limit $ Rpc.get_Payload'content payload >>= decerialize
-                                _ ->
-                                    error "TODO: better error message"
-                            handleResult sendReturn content
+                    clients <- traverse (interpCapDescriptor vat) capTable
+                    (throwLeft =<<) $ atomically $ do
+                        sendFinish
+                        rawRet' <- Untyped.tMsg (pure . Message.withCapTable clients) rawRet'
+                        rawRet'' <- evalLimitT limit $ Rpc.get_Return'' rawRet'
+                        content <- case rawRet'' of
+                            Rpc.Return'results payload ->
+                                evalLimitT limit $ Rpc.get_Payload'content payload >>= decerialize
+                            _ ->
+                                error $
+                                    "BUG: first decode of message yielded 'results', " ++
+                                    "but second did not."
+                        handleResult sendReturn content
+                        ok $ modifyTVar questions $ M.delete answerId
+
                 Return'exception exn ->
-                    ok $ breakPromise sendReturn exn
+                    atomically $ do
+                        sendFinish
+                        breakPromise sendReturn exn
 
                 -- These shouldn't come up in practice yet, since our
                 -- implementation doesn't do anything that can trigger
                 -- them, but when they do we won't need to do anything:
-                Return'canceled -> ok $ pure ()
-                Return'resultsSentElsewhere -> ok $ pure ()
+                Return'canceled -> atomically sendFinish
+                Return'resultsSentElsewhere -> atomically sendFinish
 
                 _ ->
-                    abort vat $
+                    abortIO vat $
                         "Received unexpected return variant " <>
                         "(we only support results and exception)."
 
   where
+    sendFinish = do
+        -- We don't support caps other than the bootstrap yet, so we can
+        -- send Finish right away.
+        msg <- createPure limit $ valueToMsg $
+            Message'finish def { questionId = answerId }
+        writeTBQueue sendQ msg
+        modifyTVar questions $ M.delete answerId
+
 
     -- | handle the @result@ variant of a 'Return'.
     handleResult sendReturn content = case content of
