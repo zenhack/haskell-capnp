@@ -628,7 +628,7 @@ makeCapDescriptor LocalClient{exportId} =
 -- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
 -- the local vat's table if needed.
 --
--- This may call 'throwAndCommit', if the cap descriptor is invalid.
+-- Returns a 'Left' if the cap descriptor is invalid.
 interpCapDescriptor :: Vat -> CapDescriptor -> STM (Either RpcError Client)
 interpCapDescriptor vat@Vat{..} = \case
     CapDescriptor'none -> ok $ pure NullClient
