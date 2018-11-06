@@ -240,7 +240,10 @@ instance PrimMonad m => PrimMonad (RpcT m) where
 -- capability (except in the case of 'nullClient', which is the only capability
 -- that can be represented statically).
 data Client
-    = RefClient RefClient
+    = RefClient
+        { refClient :: RefClient
+        , localVat  :: Vat
+        }
     | NullClient
     | DisconnectedClient
     deriving(Eq)
@@ -248,17 +251,15 @@ data Client
 data RefClient
     = PromisedAnswerClient
         { target   :: PromisedAnswer
-        , localVat :: Vat
         }
     | ImportClient
         { importId :: !Word32
-        , localVat :: Vat
         }
     | LocalClient
         { exportId    :: !ExportId
         , serverQueue :: ServerQueue
-        , localVat    :: Vat
         }
+    deriving(Eq)
 
 type ServerQueue = TQueue ServerOp
 
@@ -300,15 +301,6 @@ instance HsExn.Exception RpcError
 stopVat :: MonadIO m => RpcT m ()
 stopVat = liftIO (throwIO StopVat)
 
-instance Eq RefClient where
-    PromisedAnswerClient{target=ta, localVat=va} == PromisedAnswerClient{target=tb, localVat=vb} =
-        (ta, va) == (tb, vb)
-    ImportClient{importId=ia, localVat=va} == ImportClient{importId=ib, localVat=vb} =
-        (ia, va) == (ib, vb)
-    LocalClient{exportId=ea, localVat=va} == LocalClient{exportId=eb, localVat=vb} =
-        (ea, va) == (eb, vb)
-    _ == _ = False
-
 instance Read Client where
     readPrec = lexP >>= \case
         Ident "nullClient" ->
@@ -344,7 +336,10 @@ export localServer = do
             }
         pure exportId
     liftIO $ supervise (runRpcT localVat $ runServer localVat localServer queue) supervisor
-    pure $ RefClient LocalClient{exportId, localVat, serverQueue = queue}
+    pure RefClient
+        { refClient = LocalClient{exportId, serverQueue = queue}
+        , localVat
+        }
 
 runServer :: Vat -> Server -> TQueue ServerOp -> RpcT IO ()
 runServer Vat{availLocalCalls} Server{handleCall} queue = go where
@@ -367,8 +362,10 @@ bootstrap = do
     atomically $ do
         questionId <- newQuestionId vat
         sendQuestion vat (BootstrapQuestion questionId)
-        pure $ RefClient PromisedAnswerClient
-            { target = PromisedAnswer { questionId, transform = V.empty }
+        pure RefClient
+            { refClient = PromisedAnswerClient
+                { target = PromisedAnswer { questionId, transform = V.empty }
+                }
             , localVat = vat
             }
 
@@ -419,11 +416,11 @@ updateSendWithCap Vat{exports} = \case
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
-call interfaceId methodId paramContent (RefClient PromisedAnswerClient { target, localVat }) =
+call interfaceId methodId paramContent RefClient{localVat, refClient=PromisedAnswerClient { target }} =
     callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
-call interfaceId methodId paramContent (RefClient ImportClient { importId, localVat }) =
+call interfaceId methodId paramContent RefClient{localVat, refClient=ImportClient { importId }} =
     callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
-call interfaceId methodId params (RefClient LocalClient{serverQueue,localVat=Vat{availLocalCalls}}) = do
+call interfaceId methodId params RefClient{refClient=LocalClient{serverQueue},localVat=Vat{availLocalCalls}} = do
     (promise, fulfiller) <- newPromiseIO
     atomically $ do
         waitTSem availLocalCalls
@@ -614,11 +611,11 @@ data Export = Export
 makeCapDescriptor :: Client -> CapDescriptor
 makeCapDescriptor NullClient         = CapDescriptor'none
 makeCapDescriptor DisconnectedClient = CapDescriptor'none
-makeCapDescriptor (RefClient ImportClient{importId}) =
+makeCapDescriptor RefClient{refClient=ImportClient{importId}} =
     CapDescriptor'receiverHosted importId
-makeCapDescriptor (RefClient PromisedAnswerClient{target}) =
+makeCapDescriptor RefClient{refClient=PromisedAnswerClient{target}} =
     CapDescriptor'receiverAnswer target
-makeCapDescriptor (RefClient LocalClient{exportId}) =
+makeCapDescriptor RefClient{refClient=LocalClient{exportId}} =
     CapDescriptor'senderHosted exportId
 
 -- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
@@ -646,10 +643,12 @@ interpCapDescriptor vat@Vat{..} = \case
                     "Incoming capability table referenced non-existent " <>
                     "receiverHosted capability #" <> T.pack (show exportId)
             Just Export{serverQueue} ->
-                ok $ pure $ RefClient LocalClient
-                    { serverQueue
+                ok $ pure $ RefClient
+                    { refClient = LocalClient
+                        { serverQueue
+                        , exportId = exportId
+                        }
                     , localVat = vat
-                    , exportId = exportId
                     }
     CapDescriptor'receiverAnswer _ -> abortIO vat "receiverAnswer not supported"
     CapDescriptor'thirdPartyHosted _ -> abortIO vat "thirdPartyHosted not supported"
@@ -660,8 +659,8 @@ interpCapDescriptor vat@Vat{..} = \case
     -- that import.
     getImportClient importId = atomically $ do
         -- TODO: set up a finalizer to decrement the refcount.
-        let client = RefClient ImportClient
-                { importId = importId
+        let client = RefClient
+                { refClient = ImportClient { importId = importId }
                 , localVat = vat
                 }
         modifyTVar' imports $ flip M.alter importId $ \case
@@ -1031,10 +1030,12 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                         "Received 'Call' on non-existent export #" <>
                             T.pack (show exportId)
                 Just Export{serverQueue} ->
-                    handleCallToClient rawCall vat msg $ RefClient LocalClient
-                        { serverQueue
-                        , localVat = vat
-                        , exportId = exportId
+                    handleCallToClient rawCall vat msg RefClient
+                        { localVat = vat
+                        , refClient = LocalClient
+                            { serverQueue
+                            , exportId = exportId
+                            }
                         }
         MessageTarget'promisedAnswer PromisedAnswer{questionId=targetQuestionId, transform}
             | V.length transform /= 0 ->
