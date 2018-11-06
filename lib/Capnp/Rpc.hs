@@ -243,8 +243,12 @@ instance PrimMonad m => PrimMonad (RpcT m) where
 -- capability (except in the case of 'nullClient', which is the only capability
 -- that can be represented statically).
 data Client
-    = RemoteClient
-        { target   :: MessageTarget
+    = PromisedAnswerClient
+        { target   :: PromisedAnswer
+        , localVat :: Vat
+        }
+    | ImportClient
+        { importId :: !Word32
         , localVat :: Vat
         }
     | LocalClient
@@ -297,8 +301,10 @@ stopVat :: MonadIO m => RpcT m ()
 stopVat = liftIO (throwIO StopVat)
 
 instance Eq Client where
-    RemoteClient{target=ta, localVat=va} == RemoteClient{target=tb, localVat=vb} =
+    PromisedAnswerClient{target=ta, localVat=va} == PromisedAnswerClient{target=tb, localVat=vb} =
         (ta, va) == (tb, vb)
+    ImportClient{importId=ia, localVat=va} == ImportClient{importId=ib, localVat=vb} =
+        (ia, va) == (ib, vb)
     LocalClient{exportId=ea, localVat=va} == LocalClient{exportId=eb, localVat=vb} =
         (ea, va) == (eb, vb)
     NullClient == NullClient = True
@@ -367,8 +373,8 @@ bootstrap = do
     atomically $ do
         questionId <- newQuestionId vat
         sendQuestion vat (BootstrapQuestion questionId)
-        pure RemoteClient
-            { target = MessageTarget'promisedAnswer def { questionId }
+        pure PromisedAnswerClient
+            { target = PromisedAnswer { questionId, transform = V.empty }
             , localVat = vat
             }
 
@@ -426,7 +432,28 @@ updateSendWithCap Vat{exports} = \case
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
-call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
+call interfaceId methodId paramContent PromisedAnswerClient { target, localVat } =
+    callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
+call interfaceId methodId paramContent ImportClient { importId, localVat } =
+    callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
+call interfaceId methodId params LocalClient{serverQueue,localVat=Vat{availLocalCalls}} = do
+    (promise, fulfiller) <- newPromiseIO
+    atomically $ do
+        waitTSem availLocalCalls
+        writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
+    pure promise
+call _ _ _ NullClient = alwaysThrow def
+    { reason = "Client is null"
+    , type_ = Exception'Type'unimplemented
+    }
+call _ _ _ DisconnectedClient = alwaysThrow def
+    { reason = "Client is disconnected"
+    , type_ = Exception'Type'disconnected
+    }
+
+-- helper for call; handles remote cases.
+callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> RpcT IO (Promise Struct)
+callRemote interfaceId methodId paramContent target localVat = do
     vat@Vat{limit} <- RpcT ask
     let capTable = maybe
             V.empty
@@ -450,20 +477,6 @@ call interfaceId methodId paramContent RemoteClient{ target, localVat } = do
             , sendReturn = fulfiller
             }
         pure promise
-call interfaceId methodId params LocalClient{serverQueue,localVat=Vat{availLocalCalls}} = do
-    (promise, fulfiller) <- newPromiseIO
-    atomically $ do
-        waitTSem availLocalCalls
-        writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
-    pure promise
-call _ _ _ NullClient = alwaysThrow def
-    { reason = "Client is null"
-    , type_ = Exception'Type'unimplemented
-    }
-call _ _ _ DisconnectedClient = alwaysThrow def
-    { reason = "Client is disconnected"
-    , type_ = Exception'Type'disconnected
-    }
 
 -- | Return an already-broken promise, which raises the specified
 -- exception.
@@ -618,13 +631,10 @@ data Export = Export
 makeCapDescriptor :: Client -> CapDescriptor
 makeCapDescriptor NullClient         = CapDescriptor'none
 makeCapDescriptor DisconnectedClient = CapDescriptor'none
-makeCapDescriptor RemoteClient{target} = case target of
-    MessageTarget'importedCap importId ->
-        CapDescriptor'receiverHosted importId
-    MessageTarget'promisedAnswer pa ->
-        CapDescriptor'receiverAnswer pa
-    MessageTarget'unknown' _ ->
-        CapDescriptor'none
+makeCapDescriptor ImportClient{importId} =
+    CapDescriptor'receiverHosted importId
+makeCapDescriptor PromisedAnswerClient{target} =
+    CapDescriptor'receiverAnswer target
 makeCapDescriptor LocalClient{exportId} =
     CapDescriptor'senderHosted exportId
 
@@ -667,8 +677,8 @@ interpCapDescriptor vat@Vat{..} = \case
     -- that import.
     getImportClient importId = do
         -- TODO: set up a finalizer to decrement the refcount.
-        let client = RemoteClient
-                { target = MessageTarget'importedCap importId
+        let client = ImportClient
+                { importId = importId
                 , localVat = vat
                 }
         modifyTVar' imports $ flip M.alter importId $ \case
