@@ -53,6 +53,7 @@ module Capnp.Rpc
 
     , methodUnimplemented
     , throwMethodUnimplemented
+    , throwFailed
 
     -- ** Re-exported from the generated rpc.capnp module.
     , Exception(..)
@@ -136,6 +137,14 @@ instance IsClient Client where
 -- | Shortcut to throw an @unimplemented@ exception.
 throwMethodUnimplemented :: MonadThrow m => m a
 throwMethodUnimplemented = throwM methodUnimplemented
+
+-- | Throw an exception with a type field of 'Exception'Type'failed' and
+-- the argument as a reason.
+throwFailed :: MonadThrow m => T.Text -> m a
+throwFailed reason = throwM (def
+    { reason = reason
+    , type_ = Exception'Type'failed
+    } :: Exception)
 
 methodUnimplemented :: Exception
 methodUnimplemented = Exception
