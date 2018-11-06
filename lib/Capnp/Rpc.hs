@@ -66,7 +66,6 @@ module Capnp.Rpc
     , fulfill
     , fulfillIO
     , breakPromise
-    , isResolved
     , wait
     , waitIO
     ) where
@@ -87,7 +86,6 @@ import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
 import Data.Foldable                   (for_, traverse_)
-import Data.Maybe                      (isJust)
 import Network.Socket                  (Socket)
 import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
@@ -518,10 +516,6 @@ wait Promise{var} = do
 -- | Like 'wait', but in the 'IO' monad.
 waitIO :: MonadIO m => Promise a -> m a
 waitIO = atomically . wait
-
--- | Check whether a promise is resolved.
-isResolved :: Promise a -> STM Bool
-isResolved Promise{var} = isJust <$> readTVar var
 
 -- | Create a new promise and an associated fulfiller.
 newPromise :: STM (Promise a, Fulfiller a)
