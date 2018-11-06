@@ -68,7 +68,7 @@ cd "$repo_root/examples"
 capnp compile \
 		-I $core_inc \
 		-ohaskell \
-		echo.capnp
+		*.capnp
 
 log "Linking echo schema into test suite"
 for file in $(find Capnp -type f -name '*.hs'); do
