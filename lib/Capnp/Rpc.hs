@@ -407,8 +407,8 @@ updateSendWithCap Vat{exports} = \case
     CapDescriptor'senderHosted exportId -> incrExport exportId
     CapDescriptor'senderPromise exportId -> incrExport exportId
 
-    -- I(zenhack) don't *think* we need to do anything in these cases, but I
-    -- need to think about it more carefully.
+    -- TODO: I(zenhack) don't *think* we need to do anything in these cases,
+    -- but I need to think about it more carefully.
     CapDescriptor'receiverHosted _ -> pure ()
     CapDescriptor'receiverAnswer _ -> pure ()
 
