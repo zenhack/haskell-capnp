@@ -432,20 +432,21 @@ updateSendWithCap Vat{exports} = \case
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
-call interfaceId methodId paramContent RefClient{localVat, refClient=QuestionClient { target }} =
-    atomically $ callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
-call interfaceId methodId paramContent RefClient{localVat, refClient=ImportClient { importId }} =
-    atomically $ callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
-call interfaceId methodId params RefClient{refClient=ExportClient{serverQueue},localVat=Vat{availLocalCalls}} = atomically $ do
-    (promise, fulfiller) <- newPromise
-    waitTSem availLocalCalls
-    writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
-    pure promise
-call _ _ _ NullClient = atomically $ alwaysThrow def
-    { reason = "Client is null"
-    , type_ = Exception'Type'unimplemented
-    }
-call _ _ _ (ExnClient e) = atomically $ alwaysThrow e
+call interfaceId methodId paramContent client = atomically (go client) where
+    go RefClient{localVat, refClient=QuestionClient { target }} =
+        callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
+    go RefClient{localVat, refClient=ImportClient { importId }} =
+        callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
+    go RefClient{refClient=ExportClient{serverQueue},localVat=Vat{availLocalCalls}} = do
+        (promise, fulfiller) <- newPromise
+        waitTSem availLocalCalls
+        writeTQueue serverQueue $ ServerCall interfaceId methodId paramContent fulfiller
+        pure promise
+    go NullClient = alwaysThrow def
+        { reason = "Client is null"
+        , type_ = Exception'Type'unimplemented
+        }
+    go (ExnClient e) = alwaysThrow e
 
 -- helper for call; handles remote cases.
 callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> STM (Promise Struct)
