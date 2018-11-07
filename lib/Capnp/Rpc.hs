@@ -442,11 +442,11 @@ call interfaceId methodId params RefClient{refClient=ExportClient{serverQueue},l
         waitTSem availLocalCalls
         writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
     pure promise
-call _ _ _ NullClient = alwaysThrow def
+call _ _ _ NullClient = atomically $ alwaysThrow def
     { reason = "Client is null"
     , type_ = Exception'Type'unimplemented
     }
-call _ _ _ (ExnClient e) = alwaysThrow e
+call _ _ _ (ExnClient e) = atomically $ alwaysThrow e
 
 -- helper for call; handles remote cases.
 callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> RpcT IO (Promise Struct)
@@ -477,10 +477,10 @@ callRemote interfaceId methodId paramContent target localVat = do
 
 -- | Return an already-broken promise, which raises the specified
 -- exception.
-alwaysThrow :: MonadIO m => Exception -> RpcT m (Promise Struct)
+alwaysThrow :: Exception -> STM (Promise Struct)
 alwaysThrow exn = do
-    (promise, fulfiller) <- atomically newPromise
-    atomically $ breakPromise fulfiller exn
+    (promise, fulfiller) <- newPromise
+    breakPromise fulfiller exn
     pure promise
 
 -- | A 'Fulfiller' is used to fulfill a promise.
