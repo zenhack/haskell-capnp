@@ -957,6 +957,23 @@ throwLeft (Right v) = pure v
 ok :: Monad m => m a -> m (Either RpcError a)
 ok = fmap Right
 
+-- | @'convertExn' debugMode exn@ converts an arbitrary haskell exception
+-- into a capnproto 'Exception'. If the exception is already the correct type
+-- it is returned as-is. Otherwise, the result has a type of 'Exception'Type'failed'
+-- and a reason including the text "unhandled exception." If @debugMode@ is 'True',
+-- the reason field will also include extra information about the original exception.
+convertExn :: Bool -> SomeException -> Exception
+convertExn debugMode e = case fromException e of
+    Just (e :: Exception) ->
+        e
+    Nothing -> def
+        { reason = "unhandled exception" <>
+                if debugMode
+                    then ": " <> T.pack (show e)
+                    else ""
+        , type_ = Exception'Type'failed
+        }
+
 -----------------------------------------------------------------------------
 -- Misc. helpers for manipiulating the vat's state.
 -----------------------------------------------------------------------------
@@ -1128,25 +1145,8 @@ handleCallToClient
                     { content = Just (PtrStruct ret)
                     , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
                     }
-            Left (e :: SomeException) ->
-                -- The server threw an exception; we need to report this
-                -- to the caller.
-                pure $ Return'exception $
-                    case fromException e of
-                        Just (e :: Exception) ->
-                            -- If the exception was a capnp exception,
-                            -- just pass it along.
-                            e
-                        Nothing -> def
-                            -- Otherwise, return something opaque to
-                            -- the caller; the exception could potentially
-                            -- contain sensitive info.
-                            { reason = "unhandled exception" <>
-                                    if debugMode
-                                        then ": " <> T.pack (show e)
-                                        else ""
-                            , type_ = Exception'Type'failed
-                            }
+            Left e ->
+                pure $ Return'exception $ convertExn debugMode e
         msg <- createPure limit $ valueToMsg <$> Message'return $ def
             { answerId = callQuestionId
             , union' = union'
