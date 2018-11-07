@@ -115,7 +115,7 @@ import Capnp
     , valueToMsg
     )
 import Capnp.Bits           (WordCount)
-import Capnp.Untyped.Pure   (PtrType(PtrStruct), Struct)
+import Capnp.Untyped.Pure   (PtrType(PtrCap, PtrStruct), Struct(..), sliceIndex)
 import Internal.Supervisors (Supervisor, supervise, withSupervisor)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
@@ -555,7 +555,9 @@ data Question
 data Answer
     = ClientAnswer Client
     -- ^ An answer which has already resolved to a capability
-    | PromiseAnswer (Promise Struct)
+    | PromiseAnswer
+        (Promise Struct)
+        (V.Vector PromisedAnswer'Op)
     -- ^ An answer which will be fulfilled by a promise
     | ExnAnswer Exception
     -- ^ An answer which has thrown an exception.
@@ -1067,34 +1069,42 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             , exportId = exportId
                             }
                         }
-        MessageTarget'promisedAnswer PromisedAnswer{questionId=targetQuestionId, transform}
-            | V.length transform /= 0 ->
-                atomically $ replyUnimplemented vat $ Message'call msg
-            | otherwise -> do
-                result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
-                case result of
-                    Nothing ->
-                        abortIO vat $
-                            "Received 'Call' on non-existent promised answer #"
-                                <> T.pack (show targetQuestionId)
-                    Just (ClientAnswer client) ->
-                        handleCallToClient rawCall vat msg client
-                    Just (PromiseAnswer _promise) ->
-                        -- We can reject this without resolving the promise, since we
-                        -- know that:
-                        --
-                        -- 1. The result will be a struct.
-                        -- 2. the call has no 'transform', so is trying to call a method
-                        --    directly on the struct.
-                        --
-                        -- Once we implement transform support we'll have to actually
-                        -- deal with this.
-                        throwExnAnswer def
-                            { type_ = Exception'Type'failed
-                            , reason = "Tried to call a method on a struct."
-                            }
-                    Just (ExnAnswer exn) ->
-                        throwExnAnswer exn
+        MessageTarget'promisedAnswer PromisedAnswer{questionId=targetQuestionId, transform} -> do
+            result <- atomically $ M.lookup targetQuestionId <$> readTVar answers
+            case result of
+                Nothing ->
+                    abortIO vat $
+                        "Received 'Call' on non-existent promised answer #"
+                            <> T.pack (show targetQuestionId)
+                Just (ClientAnswer client) ->
+                    handleCallToClient rawCall vat msg client
+                Just (PromiseAnswer promise oldTransform) -> do
+                    -- TODO(perf): the append here is O(n); we could stand to improve
+                    -- on this, if it is a bottleneck.
+                    let newTransform = oldTransform <> transform
+                    atomically $ insertAnswer vat callQuestionId $
+                        PromiseAnswer promise newTransform
+                    flip supervise supervisor $ do
+                        result <- try $ waitIO promise
+                        case result of
+                            Left e ->
+                                throwExnAnswer $ convertExn debugMode e
+                            Right ret ->
+                                case followTransform (Just (PtrStruct ret)) newTransform of
+                                    Left exn ->
+                                        throwExnAnswer exn
+                                    Right Nothing ->
+                                        handleCallToClient rawCall vat msg nullClient
+                                    Right (Just (PtrCap client)) ->
+                                        handleCallToClient rawCall vat msg client
+                                    Right _ ->
+                                        throwExnAnswer def
+                                            { type_ = Exception'Type'failed
+                                            , reason =
+                                                "Tried to call a method on a non-capability pointer."
+                                            }
+                Just (ExnAnswer exn) ->
+                    throwExnAnswer exn
   where
     throwExnAnswer exn = do
         msg <- createPure limit $ valueToMsg $ Message'return def
@@ -1104,6 +1114,27 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
         atomically $ do
             writeTBQueue sendQ msg
             insertAnswer vat callQuestionId (ExnAnswer exn)
+    followTransform :: Maybe PtrType -> V.Vector PromisedAnswer'Op -> Either Exception (Maybe PtrType)
+    followTransform ptr ops | V.length ops == 0 = Right ptr
+    followTransform ptr ops = case (ptr, ops V.! 0) of
+        (_, PromisedAnswer'Op'noop) ->
+            followTransform ptr (V.drop 1 ops)
+        (_, PromisedAnswer'Op'unknown' n) ->
+            Left def
+                { type_ = Exception'Type'failed
+                , reason = "Unknown PromisedAnswer.Op #" <> T.pack (show n)
+                }
+        (Nothing, PromisedAnswer'Op'getPointerField idx) ->
+            -- a null pointer is interpreted as a struct with zero size; in this case
+            -- the whole pointer section is semantically full of 'Nothing':
+            followTransform Nothing (V.drop 1 ops)
+        (Just (PtrStruct (Struct _ ptrSection)), PromisedAnswer'Op'getPointerField idx) ->
+            followTransform (sliceIndex (fromIntegral idx) ptrSection) (V.drop 1 ops)
+        (Just _, PromisedAnswer'Op'getPointerField _) ->
+            Left def
+                { type_ = Exception'Type'failed
+                , reason = "Call tried to fetch a pointer field of a non-struct."
+                }
 
 
 -- helper for 'handleCallMsg'; this handles the case where we have a 'Client'
@@ -1134,10 +1165,12 @@ handleCallToClient
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
     ret <- runRpcT vat $ call interfaceId methodId paramContent client
-    atomically $ insertAnswer vat callQuestionId (PromiseAnswer ret)
+    atomically $ insertAnswer vat callQuestionId (PromiseAnswer ret V.empty)
     flip supervise supervisor $ do
         result <- try $ waitIO ret
         union' <- case result of
+            Left e ->
+                pure $ Return'exception $ convertExn debugMode e
             -- The server returned successfully; pass along the result.
             Right ret -> do
                 clients <- createPure limit $ valueToMsg ret
@@ -1145,8 +1178,6 @@ handleCallToClient
                     { content = Just (PtrStruct ret)
                     , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
                     }
-            Left e ->
-                pure $ Return'exception $ convertExn debugMode e
         msg <- createPure limit $ valueToMsg <$> Message'return $ def
             { answerId = callQuestionId
             , union' = union'
