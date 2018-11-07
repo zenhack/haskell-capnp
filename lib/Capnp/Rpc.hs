@@ -1,6 +1,5 @@
 {-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
-{-# LANGUAGE ExistentialQuantification  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -516,13 +515,13 @@ breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
 -- | Wait for a promise to resolve, and return the result. If the promise
 -- is broken, this raises an exception instead (see 'breakPromise').
 wait :: Promise a -> STM a
-wait Promise{var, transform} = do
+wait Promise{var} = do
     val <- readTVar var
     case val of
         Nothing ->
             retrySTM
         Just (Right result) ->
-            pure $ transform result
+            pure result
         Just (Left exn) ->
             throwSTM exn
 
@@ -534,24 +533,16 @@ waitIO = atomically . wait
 newPromise :: STM (Promise a, Fulfiller a)
 newPromise = do
     var <- newTVar Nothing
-    pure (Promise{var, transform=Prelude.id}, Fulfiller{var})
+    pure (Promise{var}, Fulfiller{var})
 
 -- | Like 'newPromise', but in the IO monad.
 newPromiseIO :: MonadIO m => m (Promise a, Fulfiller a)
 newPromiseIO = atomically newPromise
 
 -- | A promise is a value that may not be ready yet.
-data Promise a = forall b. Promise
-    { var       :: TVar (Maybe (Either Exception b))
-    , transform :: b -> a
+newtype Promise a = Promise
+    { var :: TVar (Maybe (Either Exception a))
     }
-
-instance Functor Promise where
-    fmap f Promise{var, transform=g} =
-        Promise
-            { var = var
-            , transform = f . g
-            }
 
 -- | A 'Question' is an outstanding question message.
 data Question
