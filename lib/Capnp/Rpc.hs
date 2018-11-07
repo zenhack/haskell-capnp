@@ -268,7 +268,7 @@ data Client
     deriving(Eq)
 
 data RefClient
-    = PromisedAnswerClient
+    = RemoteAnswerClient
         { target   :: PromisedAnswer
         }
     | ImportClient
@@ -380,7 +380,7 @@ bootstrap = do
         questionId <- newQuestionId vat
         sendQuestion vat (BootstrapQuestion questionId)
         pure RefClient
-            { refClient = PromisedAnswerClient
+            { refClient = RemoteAnswerClient
                 { target = PromisedAnswer { questionId, transform = V.empty }
                 }
             , localVat = vat
@@ -433,7 +433,7 @@ updateSendWithCap Vat{exports} = \case
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
-call interfaceId methodId paramContent RefClient{localVat, refClient=PromisedAnswerClient { target }} =
+call interfaceId methodId paramContent RefClient{localVat, refClient=RemoteAnswerClient { target }} =
     callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
 call interfaceId methodId paramContent RefClient{localVat, refClient=ImportClient { importId }} =
     callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
@@ -635,7 +635,7 @@ makeCapDescriptor NullClient    = CapDescriptor'none
 makeCapDescriptor (ExnClient _) = CapDescriptor'none
 makeCapDescriptor RefClient{refClient=ImportClient{importId}} =
     CapDescriptor'receiverHosted importId
-makeCapDescriptor RefClient{refClient=PromisedAnswerClient{target}} =
+makeCapDescriptor RefClient{refClient=RemoteAnswerClient{target}} =
     CapDescriptor'receiverAnswer target
 makeCapDescriptor RefClient{refClient=LocalClient{exportId}} =
     CapDescriptor'senderHosted exportId
