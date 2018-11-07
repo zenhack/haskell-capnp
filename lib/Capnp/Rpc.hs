@@ -210,7 +210,10 @@ nullClient = NullClient
 -- | A client which is disconnected; throws disconnected in response to all
 -- method calls.
 disconnectedClient :: Client
-disconnectedClient = DisconnectedClient
+disconnectedClient = ExnClient def
+    { reason = "Client is disconnected"
+    , type_ = Exception'Type'disconnected
+    }
 
 -- | Allocate an unused export id.
 newExportId :: Vat -> STM Word32
@@ -260,7 +263,7 @@ data Client
         , localVat  :: Vat
         }
     | NullClient
-    | DisconnectedClient
+    | ExnClient Exception
     deriving(Eq)
 
 data RefClient
@@ -321,7 +324,7 @@ instance Read Client where
         Ident "nullClient" ->
             pure nullClient
         Ident "disconnectedClient" ->
-            pure DisconnectedClient
+            pure disconnectedClient
         _ ->
             pfail
 
@@ -443,10 +446,7 @@ call _ _ _ NullClient = alwaysThrow def
     { reason = "Client is null"
     , type_ = Exception'Type'unimplemented
     }
-call _ _ _ DisconnectedClient = alwaysThrow def
-    { reason = "Client is disconnected"
-    , type_ = Exception'Type'disconnected
-    }
+call _ _ _ (ExnClient e) = alwaysThrow e
 
 -- helper for call; handles remote cases.
 callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> RpcT IO (Promise Struct)
@@ -559,8 +559,6 @@ data Answer
         (Promise Struct)
         (V.Vector PromisedAnswer'Op)
     -- ^ An answer which will be fulfilled by a promise
-    | ExnAnswer Exception
-    -- ^ An answer which has thrown an exception.
 
 -- | Get a 'Message' corresponding to the question.
 getQuestionMessage :: Question -> Message
@@ -624,8 +622,8 @@ data Export = Export
 -- | @'makeCapDescriptor' client@ creates a cap descriptor suitable
 -- for sending to a remote vat to describe the specified @client@.
 makeCapDescriptor :: Client -> CapDescriptor
-makeCapDescriptor NullClient         = CapDescriptor'none
-makeCapDescriptor DisconnectedClient = CapDescriptor'none
+makeCapDescriptor NullClient    = CapDescriptor'none
+makeCapDescriptor (ExnClient _) = CapDescriptor'none
 makeCapDescriptor RefClient{refClient=ImportClient{importId}} =
     CapDescriptor'receiverHosted importId
 makeCapDescriptor RefClient{refClient=PromisedAnswerClient{target}} =
@@ -1113,8 +1111,6 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                                             , reason =
                                                 "Tried to call a method on a non-capability pointer."
                                             }
-                Just (ExnAnswer exn) ->
-                    throwExnAnswer exn
   where
     throwExnAnswer exn = do
         msg <- createPure limit $ valueToMsg $ Message'return def
@@ -1123,7 +1119,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                 }
         atomically $ do
             writeTBQueue sendQ msg
-            insertAnswer vat callQuestionId (ExnAnswer exn)
+            insertAnswer vat callQuestionId (ClientAnswer (ExnClient exn))
     followTransform :: Maybe PtrType -> V.Vector PromisedAnswer'Op -> Either Exception (Maybe PtrType)
     followTransform ptr ops | V.length ops == 0 = Right ptr
     followTransform ptr ops = case (ptr, ops V.! 0) of
