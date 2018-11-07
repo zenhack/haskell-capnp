@@ -487,6 +487,7 @@ alwaysThrow exn = do
 newtype Fulfiller a = Fulfiller
     { var :: TVar (Maybe (Either Exception a))
     }
+    deriving(Eq)
 
 -- | Fulfill a promise by supplying the specified value. It is an error to
 -- call 'fulfill' if the promise has already been fulfilled (or broken).
@@ -543,6 +544,7 @@ newPromiseIO = atomically newPromise
 newtype Promise a = Promise
     { var :: TVar (Maybe (Either Exception a))
     }
+    deriving(Eq)
 
 -- | A 'Question' is an outstanding question message.
 data Question
