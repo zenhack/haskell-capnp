@@ -9,6 +9,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 {- |
 Module: Capnp.Gen.Capnp.Rpc.Pure
 Description: High-level generated module for capnp/rpc.capnp

@@ -78,8 +78,25 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "{-# LANGUAGE TypeFamilies #-}"
     , "{-# LANGUAGE DeriveGeneric #-}"
     , "{-# LANGUAGE OverloadedStrings #-}"
+    -- Some of these warnings can crop up in the generated code, and this is
+    -- expected so we disable them via a pragma:
+
+    -- Some of the modules we import may not be used if the original schema
+    -- did not include the construct we need them for. This is OK:
     , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+
+    -- The pure modules define some instances for types defined in the raw
+    -- modules. Arguably this warning should happen at the package level
+    -- anyway:
     , "{-# OPTIONS_GHC -Wno-orphans #-}"
+
+    -- Parts of the generated code deliberately use name shadowing:
+    , "{-# OPTIONS_GHC -Wno-name-shadowing #-}"
+
+    -- This happens with empty structs, which bind the struct to a variable
+    -- but don't actually need to extract any info from it. This is most
+    -- common for the parameter or result structs for a method:
+    , "{-# OPTIONS_GHC -Wno-unused-matches #-}"
     , "{- |"
     , "Module: " <> humanMod
     , "Description: " <> "High-level generated module for " <> modFileText
