@@ -665,7 +665,17 @@ interpCapDescriptor vat@Vat{..} = \case
                         }
                     , localVat = vat
                     }
-    CapDescriptor'receiverAnswer _ -> abortIO vat "receiverAnswer not supported"
+    CapDescriptor'receiverAnswer PromisedAnswer{questionId} -> (throwLeft =<<) $ atomically $ do
+        answer <- M.lookup questionId <$> readTVar answers
+        case answer of
+            Nothing ->
+                abort vat $
+                    "Incoming capability table referenced non-existent " <>
+                    "answer #" <> T.pack (show questionId)
+            Just (ClientAnswer client) ->
+                ok $ pure client
+            Just _ ->
+                abort vat "TODO: support other answer types"
     CapDescriptor'thirdPartyHosted _ -> abortIO vat "thirdPartyHosted not supported"
     CapDescriptor'unknown' tag ->
         abortIO vat $ T.pack $ "unknown cap descriptor variant #" ++ show tag
