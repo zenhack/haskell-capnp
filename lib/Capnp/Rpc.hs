@@ -433,14 +433,13 @@ updateSendWithCap Vat{exports} = \case
 -- @methodId@. The return value is a promise for the result.
 call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
 call interfaceId methodId paramContent RefClient{localVat, refClient=QuestionClient { target }} =
-    callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
+    atomically $ callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
 call interfaceId methodId paramContent RefClient{localVat, refClient=ImportClient { importId }} =
-    callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
-call interfaceId methodId params RefClient{refClient=ExportClient{serverQueue},localVat=Vat{availLocalCalls}} = do
-    (promise, fulfiller) <- newPromiseIO
-    atomically $ do
-        waitTSem availLocalCalls
-        writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
+    atomically $ callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
+call interfaceId methodId params RefClient{refClient=ExportClient{serverQueue},localVat=Vat{availLocalCalls}} = atomically $ do
+    (promise, fulfiller) <- newPromise
+    waitTSem availLocalCalls
+    writeTQueue serverQueue $ ServerCall interfaceId methodId params fulfiller
     pure promise
 call _ _ _ NullClient = atomically $ alwaysThrow def
     { reason = "Client is null"
@@ -449,31 +448,29 @@ call _ _ _ NullClient = atomically $ alwaysThrow def
 call _ _ _ (ExnClient e) = atomically $ alwaysThrow e
 
 -- helper for call; handles remote cases.
-callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> RpcT IO (Promise Struct)
-callRemote interfaceId methodId paramContent target localVat = do
-    vat@Vat{limit} <- RpcT ask
+callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> STM (Promise Struct)
+callRemote interfaceId methodId paramContent target localVat@Vat{limit} = do
     let capTable = maybe
             V.empty
             (V.map makeCapDescriptor . Message.getCapTable . Untyped.message)
             paramContent
     paramContent <- evalLimitT limit (decerialize paramContent)
-    atomically $ do
-        questionId <- newQuestionId vat
-        let callMsg = Call
-                { sendResultsTo = Call'sendResultsTo'caller
-                , allowThirdPartyTailCall = False
-                , params = def
-                    { content = paramContent
-                    , capTable = capTable
-                    }
-                , ..
+    questionId <- newQuestionId localVat
+    let callMsg = Call
+            { sendResultsTo = Call'sendResultsTo'caller
+            , allowThirdPartyTailCall = False
+            , params = def
+                { content = paramContent
+                , capTable = capTable
                 }
-        (promise, fulfiller) <- newPromise
-        sendQuestion localVat $ CallQuestion
-            { callMsg
-            , sendReturn = fulfiller
+            , ..
             }
-        pure promise
+    (promise, fulfiller) <- newPromise
+    sendQuestion localVat $ CallQuestion
+        { callMsg
+        , sendReturn = fulfiller
+        }
+    pure promise
 
 -- | Return an already-broken promise, which raises the specified
 -- exception.
