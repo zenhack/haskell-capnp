@@ -68,6 +68,7 @@ module Capnp.Rpc
     , fulfill
     , fulfillIO
     , breakPromise
+    , breakPromiseIO
     , wait
     , waitIO
     ) where
@@ -510,6 +511,9 @@ breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
         Just (Left exn)
     Just _ ->
         error "BUG: tried to break an already resolved promise!"
+
+breakPromiseIO :: MonadIO m => Fulfiller a -> Exception -> m ()
+breakPromiseIO fulfiller = atomically . breakPromise fulfiller
 
 -- | Wait for a promise to resolve, and return the result. If the promise
 -- is broken, this raises an exception instead (see 'breakPromise').
