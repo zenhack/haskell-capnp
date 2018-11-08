@@ -81,7 +81,7 @@ import UnliftIO  hiding (Exception, wait)
 import Control.Concurrent              (threadDelay)
 import Control.Concurrent.STM          (throwSTM)
 import Control.Concurrent.STM.TSem     (TSem, newTSem, signalTSem, waitTSem)
-import Control.Monad                   (forever)
+import Control.Monad                   (forever, (>=>))
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
@@ -117,7 +117,8 @@ import Capnp
     )
 import Capnp.Bits           (WordCount)
 import Capnp.Untyped.Pure   (PtrType(PtrCap, PtrStruct), Struct(..), sliceIndex)
-import Internal.Supervisors (Supervisor, supervise, withSupervisor)
+import Internal.Supervisors
+    (TSupervisor, newTSupervisor, superviseSTM, withSupervisor)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
 import qualified Capnp.Message       as Message
@@ -339,30 +340,29 @@ export :: MonadUnliftIO m => Server -> RpcT m Client
 export localServer = do
     localVat@Vat{exports, supervisor} <- RpcT ask
 
-    queue <- atomically newTQueue
-
     -- We add an entry to our exports table. The refcount *starts* at zero,
     -- and will be incremented to one the first time we actually send this
     -- capability to the remote vat. Because the refcount checking happens
     -- in response to interaction with the remote vat, it won't be removed
     -- until it goes *back* to being zero.
-    exportId <- atomically $ do
+    atomically $ do
+        queue <- newTQueue
         exportId <- newExportId localVat
         modifyTVar exports $ M.insert exportId Export
             { serverQueue = queue
             , promise = Nothing
             , refCount = 0
             }
-        pure exportId
-    liftIO $ supervise supervisor (runRpcT localVat $ runServer localVat localServer queue)
-    pure RefClient
-        { refClient = ExportClient
-            { exportId
-            , promise = Nothing
-            , serverQueue = queue
+        superviseSTM supervisor $
+            runRpcT localVat $ runServer localVat localServer queue
+        pure RefClient
+            { refClient = ExportClient
+                { exportId
+                , promise = Nothing
+                , serverQueue = queue
+                }
+            , localVat
             }
-        , localVat
-        }
 
 runServer :: Vat -> Server -> TQueue ServerOp -> RpcT IO ()
 runServer Vat{availLocalCalls} Server{handleCall} queue = go where
@@ -617,7 +617,7 @@ data Vat = Vat
     , recvQ           :: TBQueue ConstMsg
 
     -- Supervisor which monitors object lifetimes.
-    , supervisor      :: Supervisor
+    , supervisor      :: TSupervisor
 
     -- same as the corresponding fields in 'VatConfig'
     , debugMode       :: !Bool
@@ -808,7 +808,7 @@ vatConfig getTransport = VatConfig
 runVat :: VatConfig -> IO ()
 runVat config@VatConfig{limit, getTransport, withBootstrap} = do
     let transport = getTransport limit
-    ret <- try $ withSupervisor $ \sup -> do
+    ret <- try $ withSupervisor $ newTSupervisor >=> \sup -> do
         vat <- newVat config sup
         foldl concurrently_
             (recvLoop transport vat)
@@ -846,7 +846,7 @@ runRpcT vat (RpcT m) = runReaderT m vat
 
 -- | Create a new 'Vat', based on the information in the 'VatConfig'. Use the
 -- given supervisor to monitor exported objects.
-newVat :: VatConfig -> Supervisor -> IO Vat
+newVat :: VatConfig -> TSupervisor -> IO Vat
 newVat VatConfig{..} supervisor = atomically $ do
     questions <- newTVar M.empty
     answers <- newTVar M.empty
@@ -1106,27 +1106,28 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                     -- TODO(perf): the append here is O(n); we could stand to improve
                     -- on this, if it is a bottleneck.
                     let newTransform = oldTransform <> transform
-                    atomically $ insertAnswer vat callQuestionId $
-                        PromiseAnswer{ promise, transform = newTransform }
-                    supervise supervisor $ do
-                        result <- try $ waitIO promise
-                        case result of
-                            Left e ->
-                                throwExnAnswer $ convertExn debugMode e
-                            Right ret ->
-                                case followTransform (Just (PtrStruct ret)) newTransform of
-                                    Left exn ->
-                                        throwExnAnswer exn
-                                    Right Nothing ->
-                                        handleCallToClient rawCall vat msg nullClient
-                                    Right (Just (PtrCap client)) ->
-                                        handleCallToClient rawCall vat msg client
-                                    Right _ ->
-                                        throwExnAnswer def
-                                            { type_ = Exception'Type'failed
-                                            , reason =
-                                                "Tried to call a method on a non-capability pointer."
-                                            }
+                    atomically $ do
+                        insertAnswer vat callQuestionId $
+                            PromiseAnswer{ promise, transform = newTransform }
+                        superviseSTM supervisor $ do
+                            result <- try $ waitIO promise
+                            case result of
+                                Left e ->
+                                    throwExnAnswer $ convertExn debugMode e
+                                Right ret ->
+                                    case followTransform (Just (PtrStruct ret)) newTransform of
+                                        Left exn ->
+                                            throwExnAnswer exn
+                                        Right Nothing ->
+                                            handleCallToClient rawCall vat msg nullClient
+                                        Right (Just (PtrCap client)) ->
+                                            handleCallToClient rawCall vat msg client
+                                        Right _ ->
+                                            throwExnAnswer def
+                                                { type_ = Exception'Type'failed
+                                                , reason =
+                                                    "Tried to call a method on a non-capability pointer."
+                                                }
   where
     throwExnAnswer exn = do
         msg <- createPure limit $ valueToMsg $ Message'return def
@@ -1187,24 +1188,25 @@ handleCallToClient
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
     ret <- runRpcT vat $ call interfaceId methodId paramContent client
-    atomically $ insertAnswer vat callQuestionId PromiseAnswer{ promise = ret, transform = V.empty }
-    supervise supervisor $ do
-        result <- try $ waitIO ret
-        union' <- case result of
-            Left e ->
-                pure $ Return'exception $ convertExn debugMode e
-            -- The server returned successfully; pass along the result.
-            Right ret -> do
-                clients <- createPure limit $ valueToMsg ret
-                pure $ Return'results def
-                    { content = Just (PtrStruct ret)
-                    , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
-                    }
-        msg <- createPure limit $ valueToMsg <$> Message'return $ def
-            { answerId = callQuestionId
-            , union' = union'
-            }
-        atomically $ writeTBQueue sendQ msg
+    atomically $ do
+        insertAnswer vat callQuestionId PromiseAnswer{ promise = ret, transform = V.empty }
+        superviseSTM supervisor $ do
+            result <- try $ waitIO ret
+            union' <- case result of
+                Left e ->
+                    pure $ Return'exception $ convertExn debugMode e
+                -- The server returned successfully; pass along the result.
+                Right ret -> do
+                    clients <- createPure limit $ valueToMsg ret
+                    pure $ Return'results def
+                        { content = Just (PtrStruct ret)
+                        , capTable = V.map makeCapDescriptor (Message.getCapTable clients)
+                        }
+            msg <- createPure limit $ valueToMsg <$> Message'return $ def
+                { answerId = callQuestionId
+                , union' = union'
+                }
+            atomically $ writeTBQueue sendQ msg
 
 -- | Handle receiving a 'Return' message.
 handleReturnMsg :: Rpc.Return' ConstMsg -> Vat -> Return -> IO ()
