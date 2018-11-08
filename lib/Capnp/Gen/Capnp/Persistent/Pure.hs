@@ -78,7 +78,7 @@ instance Persistent'server_ Persistent where
     persistent'save args (Persistent client) = do
         args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
         (resultPromise, resultFulfiller) <- Rpc.newPromiseIO
-        Rpc.call 14468694717054801553 0 (Just (U'.PtrStruct args')) client resultFulfiller
+        Rpc.call client 14468694717054801553 0 (Just (U'.PtrStruct args')) resultFulfiller
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
 newtype RealmGateway = RealmGateway M'.Client
@@ -118,13 +118,13 @@ instance RealmGateway'server_ RealmGateway where
     realmGateway'import args (RealmGateway client) = do
         args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
         (resultPromise, resultFulfiller) <- Rpc.newPromiseIO
-        Rpc.call 9583422979879616212 0 (Just (U'.PtrStruct args')) client resultFulfiller
+        Rpc.call client 9583422979879616212 0 (Just (U'.PtrStruct args')) resultFulfiller
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
     realmGateway'export args (RealmGateway client) = do
         args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
         (resultPromise, resultFulfiller) <- Rpc.newPromiseIO
-        Rpc.call 9583422979879616212 1 (Just (U'.PtrStruct args')) client resultFulfiller
+        Rpc.call client 9583422979879616212 1 (Just (U'.PtrStruct args')) resultFulfiller
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
 data Persistent'SaveParams

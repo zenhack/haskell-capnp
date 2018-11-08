@@ -337,11 +337,11 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 , "(resultPromise, resultFulfiller) <- Rpc.newPromiseIO"
                 , hcat
                     [ "Rpc.call "
+                    , "client "
                     , PP.textStrict $ T.pack $ show interfaceId
                     , " "
                     , PP.textStrict $ T.pack $ show ordinal
                     , " (Just (U'.PtrStruct args'))"
-                    , " client"
                     , " resultFulfiller"
                     ]
                 , "result <- Rpc.waitIO resultPromise"

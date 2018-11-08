@@ -438,8 +438,8 @@ updateSendWithCap Vat{exports} = \case
 -- | @'call' interfaceId methodId params client@ calls an RPC method
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
-call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> Fulfiller Struct -> RpcT IO ()
-call interfaceId methodId paramContent client fulfiller = atomically (go client) where
+call :: Client -> Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Fulfiller Struct -> RpcT IO ()
+call client interfaceId methodId paramContent fulfiller = atomically (go client) where
     go RefClient{localVat, refClient=QuestionClient { target }} =
         callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat fulfiller
     go RefClient{localVat, refClient=ImportClient { importId }} =
@@ -1176,7 +1176,7 @@ handleCallToClient
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
     (ret, fulfiller) <- newPromiseIO
-    runRpcT vat $ call interfaceId methodId paramContent client fulfiller
+    runRpcT vat $ call client interfaceId methodId paramContent fulfiller
     atomically $ do
         insertAnswer vat callQuestionId PromiseAnswer{ promise = ret, transform = V.empty }
         superviseSTM supervisor $ do
