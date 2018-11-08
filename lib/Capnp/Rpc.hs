@@ -348,7 +348,7 @@ export localServer = do
     atomically $ do
         queue <- newTQueue
         exportId <- newExportId localVat
-        modifyTVar exports $ M.insert exportId Export
+        modifyTVar' exports $ M.insert exportId Export
             { serverQueue = queue
             , promise = Nothing
             , refCount = 0
