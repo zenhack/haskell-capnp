@@ -435,9 +435,9 @@ updateSendWithCap Vat{exports} = \case
             (\e@Export{refCount} -> e { refCount = refCount + 1 })
 
 
--- | @'call' interfaceId methodId params client@ calls an RPC method
--- on @client@. The method is as specified by @interfaceId@ and
--- @methodId@. The return value is a promise for the result.
+-- | @'call' client interfaceId methodId params fulfiller@ calls an RPC method
+-- on @client@. The method is as specified by @interfaceId@ and @methodId@.
+-- when the call finishes, its result will be communicated via @fulfiller@.
 call :: Client -> Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Fulfiller Struct -> RpcT IO ()
 call client interfaceId methodId paramContent fulfiller = atomically (go client) where
     go RefClient{localVat, refClient=QuestionClient { target }} =
