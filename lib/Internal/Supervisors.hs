@@ -11,8 +11,18 @@ spawn threads while guaranteeing that:
   killed.
 * Child threads can terminate in any order, and memory usage will always
   be proportional to the number of *live* supervised threads.
+
+We also provide a 'TSupervisor' abstraction, which can be used to attach
+threads to the 'Supervisor' from inside an 'STM' transaction.
 -}
-module Internal.Supervisors (Supervisor, supervise, withSupervisor) where
+module Internal.Supervisors
+    ( Supervisor
+    , TSupervisor
+    , withSupervisor
+    , newTSupervisor
+    , supervise
+    , superviseSTM
+    ) where
 
 import UnliftIO.STM
 
@@ -29,8 +39,18 @@ import qualified Data.Set as S
 
 newtype Supervisor = Supervisor (TVar (Either SomeException (S.Set ThreadId)))
 
+-- | A handle to a supervisor that can be used inside of 'STM'.
+newtype TSupervisor = TSupervisor (TQueue (IO ()))
+
 newSupervisor :: IO Supervisor
 newSupervisor = Supervisor <$> newTVarIO (Right S.empty)
+
+newTSupervisor :: Supervisor -> IO TSupervisor
+newTSupervisor sup = do
+    queue <- newTQueueIO
+    flip supervise sup $ forever $ do
+        atomically (readTQueue queue) >>= flip supervise sup
+    pure $ TSupervisor queue
 
 runSupervisor :: Supervisor -> IO ()
 runSupervisor sup =
@@ -92,3 +112,6 @@ supervise task (Supervisor stateVar) =
                 -- the state only evaluated as far as @Right (S.delete me kids)@;
                 -- in that case we would still leak @me@.
                 Right $! S.delete me kids
+
+superviseSTM :: IO () -> TSupervisor -> STM ()
+superviseSTM task (TSupervisor queue) = writeTQueue queue task
