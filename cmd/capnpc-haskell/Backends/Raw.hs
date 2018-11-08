@@ -58,6 +58,7 @@ fmtModule thisMod@Module{modName=Namespace modNameParts,..} =
   modFileText = PP.textStrict modFile
   mainContent = vcat
     [ "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+    , "{-# OPTIONS_GHC -Wno-unused-matches #-}"
     , "{-# LANGUAGE FlexibleContexts #-}"
     , "{-# LANGUAGE FlexibleInstances #-}"
     , "{-# LANGUAGE MultiParamTypeClasses #-}"
