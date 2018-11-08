@@ -165,6 +165,7 @@ type QuestionId = Word32
 type AnswerId = Word32
 type ExportId = Word32
 type ImportId = Word32
+type EmbargoId = Word32
 
 -- | A @'Transport'@ handles transmitting RPC messages.
 data Transport = Transport
@@ -276,9 +277,9 @@ data RefClient
         { importId :: !Word32
         }
     | ExportClient
-        { exportId    :: !ExportId
-        , promise     :: Maybe (Promise Client)
-        , serverQueue :: ServerQueue
+        { exportId     :: !ExportId
+        , promiseState :: Maybe (TVar ExportPromiseState)
+        , serverQueue  :: ServerQueue
         }
     deriving(Eq)
 
@@ -335,6 +336,47 @@ instance Show Client where
     show NullClient = "nullClient"
     show _          = "disconnectedClient"
 
+-- | Create a new client that wraps a promise. The returned 'Fulfiller' can be
+-- used to resolve the promise.
+--
+-- The promise client buffers calls until the promise is resolved, and then
+-- forwards them (and any future calls) to the final client.
+newPromiseClient :: (IsClient c, MonadUnliftIO m) => RpcT m (c, Fulfiller c)
+newPromiseClient = do
+    vat@Vat{exports, supervisor} <- RpcT ask
+    atomically $ do
+        (promise, fulfiller) <- newPromise
+        queue <- newTQueue
+        exportId <- newExportId vat
+        pStateVar <- newTVar Unresolved
+        modifyTVar' exports $ M.insert exportId Export
+            { serverQueue = queue
+            , promiseState = Just pStateVar
+            , refCount = 0
+            }
+        superviseSTM supervisor $ runRpcT vat $ runServer
+            vat
+            Server
+                { handleCall = \interfaceId methodId paramContents methodFulfiller -> do
+                    client <- try (waitIO promise) >>= \case
+                        Left  e -> pure $ ExnClient e
+                        Right c -> pure $ toClient  c
+                    -- TODO: deal with embargos, send resolve messages, update
+                    -- the promiseState in the exports table, etc.
+                    call client interfaceId methodId paramContents methodFulfiller
+                , handleStop = pure ()
+                }
+            queue
+        let retClient = RefClient
+                { localVat = vat
+                , refClient = ExportClient
+                    { exportId
+                    , promiseState = Just pStateVar
+                    , serverQueue = queue
+                    }
+                }
+        pure (fromClient retClient, fulfiller)
+
 -- | Export a local interface server, so it may be offered on the network.
 export :: MonadUnliftIO m => Server -> RpcT m Client
 export localServer = do
@@ -350,7 +392,7 @@ export localServer = do
         exportId <- newExportId localVat
         modifyTVar' exports $ M.insert exportId Export
             { serverQueue = queue
-            , promise = Nothing
+            , promiseState = Nothing
             , refCount = 0
             }
         superviseSTM supervisor $
@@ -358,7 +400,7 @@ export localServer = do
         pure RefClient
             { refClient = ExportClient
                 { exportId
-                , promise = Nothing
+                , promiseState = Nothing
                 , serverQueue = queue
                 }
             , localVat
@@ -613,10 +655,15 @@ data Vat = Vat
 
     }
 
+data ExportPromiseState
+    = Unresolved
+    | Embargoed !EmbargoId
+    | Ready ServerQueue
+
 data Export = Export
-    { serverQueue :: ServerQueue
-    , promise     :: Maybe (Promise Client)
-    , refCount    :: !Word32
+    { serverQueue  :: ServerQueue
+    , promiseState :: Maybe (TVar ExportPromiseState)
+    , refCount     :: !Word32
     }
 
 -- | @'makeCapDescriptor' client@ creates a cap descriptor suitable
@@ -628,9 +675,9 @@ makeCapDescriptor RefClient{refClient=ImportClient{importId}} =
     CapDescriptor'receiverHosted importId
 makeCapDescriptor RefClient{refClient=QuestionClient{target}} =
     CapDescriptor'receiverAnswer target
-makeCapDescriptor RefClient{refClient=ExportClient{exportId, promise=Nothing}} =
+makeCapDescriptor RefClient{refClient=ExportClient{exportId, promiseState=Nothing}} =
     CapDescriptor'senderHosted exportId
-makeCapDescriptor RefClient{refClient=ExportClient{exportId, promise=Just _}} =
+makeCapDescriptor RefClient{refClient=ExportClient{exportId, promiseState=Just _}} =
     CapDescriptor'senderPromise exportId
 
 -- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
@@ -657,11 +704,11 @@ interpCapDescriptor vat@Vat{..} = \case
                 abort vat $
                     "Incoming capability table referenced non-existent " <>
                     "receiverHosted capability #" <> T.pack (show exportId)
-            Just Export{serverQueue, promise} ->
+            Just Export{serverQueue, promiseState} ->
                 ok $ pure $ RefClient
                     { refClient = ExportClient
                         { serverQueue
-                        , promise
+                        , promiseState
                         , exportId = exportId
                         }
                     , localVat = vat
@@ -1072,12 +1119,12 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                     abortIO vat $
                         "Received 'Call' on non-existent export #" <>
                             T.pack (show exportId)
-                Just Export{promise, serverQueue} ->
+                Just Export{promiseState, serverQueue} ->
                     handleCallToClient rawCall vat msg RefClient
                         { localVat = vat
                         , refClient = ExportClient
                             { serverQueue
-                            , promise
+                            , promiseState
                             , exportId = exportId
                             }
                         }
