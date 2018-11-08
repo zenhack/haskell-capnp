@@ -560,8 +560,9 @@ data Answer
     = ClientAnswer Client
     -- ^ An answer which has already resolved to a capability
     | PromiseAnswer
-        (Promise Struct)
-        (V.Vector PromisedAnswer'Op)
+        { promise   :: Promise Struct
+        , transform :: V.Vector PromisedAnswer'Op
+        }
     -- ^ An answer which will be fulfilled by a promise
 
 -- | Get a 'Message' corresponding to the question.
@@ -1090,12 +1091,12 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                             <> T.pack (show targetQuestionId)
                 Just (ClientAnswer client) ->
                     handleCallToClient rawCall vat msg client
-                Just (PromiseAnswer promise oldTransform) -> do
+                Just PromiseAnswer{promise, transform=oldTransform} -> do
                     -- TODO(perf): the append here is O(n); we could stand to improve
                     -- on this, if it is a bottleneck.
                     let newTransform = oldTransform <> transform
                     atomically $ insertAnswer vat callQuestionId $
-                        PromiseAnswer promise newTransform
+                        PromiseAnswer{ promise, transform = newTransform }
                     flip supervise supervisor $ do
                         result <- try $ waitIO promise
                         case result of
@@ -1175,7 +1176,7 @@ handleCallToClient
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
     ret <- runRpcT vat $ call interfaceId methodId paramContent client
-    atomically $ insertAnswer vat callQuestionId (PromiseAnswer ret V.empty)
+    atomically $ insertAnswer vat callQuestionId PromiseAnswer{ promise = ret, transform = V.empty }
     flip supervise supervisor $ do
         result <- try $ waitIO ret
         union' <- case result of
