@@ -1145,6 +1145,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                         insertAnswer vat callQuestionId $
                             PromiseAnswer{ promise, transform = newTransform }
                         superviseSTM supervisor $ do
+                            -- FIXME: this is broken, in that it doesn't respect E-order.
                             result <- try $ waitIO promise
                             case result of
                                 Left e ->
