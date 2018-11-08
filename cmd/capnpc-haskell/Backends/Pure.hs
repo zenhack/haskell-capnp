@@ -334,13 +334,15 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 -- be malicious in the ways that the traversal limit is designed to
                 -- mitiage
                 [ "args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot"
+                , "(resultPromise, resultFulfiller) <- Rpc.newPromiseIO"
                 , hcat
-                    [ "resultPromise <- Rpc.call "
+                    [ "Rpc.call "
                     , PP.textStrict $ T.pack $ show interfaceId
                     , " "
                     , PP.textStrict $ T.pack $ show ordinal
                     , " (Just (U'.PtrStruct args'))"
                     , " client"
+                    , " resultFulfiller"
                     ]
                 , "result <- Rpc.waitIO resultPromise"
                 , "evalLimitT maxBound $ PH'.convertValue result"

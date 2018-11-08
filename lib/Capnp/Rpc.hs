@@ -438,26 +438,24 @@ updateSendWithCap Vat{exports} = \case
 -- | @'call' interfaceId methodId params client@ calls an RPC method
 -- on @client@. The method is as specified by @interfaceId@ and
 -- @methodId@. The return value is a promise for the result.
-call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> RpcT IO (Promise Struct)
-call interfaceId methodId paramContent client = atomically (go client) where
+call :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> Client -> Fulfiller Struct -> RpcT IO ()
+call interfaceId methodId paramContent client fulfiller = atomically (go client) where
     go RefClient{localVat, refClient=QuestionClient { target }} =
-        callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat
+        callRemote interfaceId methodId paramContent (MessageTarget'promisedAnswer target) localVat fulfiller
     go RefClient{localVat, refClient=ImportClient { importId }} =
-        callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat
+        callRemote interfaceId methodId paramContent (MessageTarget'importedCap importId) localVat fulfiller
     go RefClient{refClient=ExportClient{serverQueue},localVat=Vat{availLocalCalls}} = do
-        (promise, fulfiller) <- newPromise
         waitTSem availLocalCalls
         writeTQueue serverQueue $ ServerCall interfaceId methodId paramContent fulfiller
-        pure promise
-    go NullClient = alwaysThrow def
+    go NullClient = breakPromise fulfiller def
         { reason = "Client is null"
         , type_ = Exception'Type'unimplemented
         }
-    go (ExnClient e) = alwaysThrow e
+    go (ExnClient e) = breakPromise fulfiller e
 
 -- helper for call; handles remote cases.
-callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> STM (Promise Struct)
-callRemote interfaceId methodId paramContent target localVat@Vat{limit} = do
+callRemote :: Word64 -> Word16 -> Maybe (Untyped.Ptr ConstMsg) -> MessageTarget -> Vat -> Fulfiller Struct -> STM ()
+callRemote interfaceId methodId paramContent target localVat@Vat{limit} fulfiller = do
     let capTable = maybe
             V.empty
             (V.map makeCapDescriptor . Message.getCapTable . Untyped.message)
@@ -473,20 +471,10 @@ callRemote interfaceId methodId paramContent target localVat@Vat{limit} = do
                 }
             , ..
             }
-    (promise, fulfiller) <- newPromise
     sendQuestion localVat $ CallQuestion
         { callMsg
         , sendReturn = fulfiller
         }
-    pure promise
-
--- | Return an already-broken promise, which raises the specified
--- exception.
-alwaysThrow :: Exception -> STM (Promise Struct)
-alwaysThrow exn = do
-    (promise, fulfiller) <- newPromise
-    breakPromise fulfiller exn
-    pure promise
 
 -- | A 'Fulfiller' is used to fulfill a promise.
 newtype Fulfiller a = Fulfiller
@@ -1187,7 +1175,8 @@ handleCallToClient
     paramContent <- evalLimitT limit $
         Rpc.get_Call'params rawCall
         >>= Rpc.get_Payload'content
-    ret <- runRpcT vat $ call interfaceId methodId paramContent client
+    (ret, fulfiller) <- newPromiseIO
+    runRpcT vat $ call interfaceId methodId paramContent client fulfiller
     atomically $ do
         insertAnswer vat callQuestionId PromiseAnswer{ promise = ret, transform = V.empty }
         superviseSTM supervisor $ do
