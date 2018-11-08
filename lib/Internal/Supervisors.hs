@@ -48,7 +48,7 @@ newSupervisor = Supervisor <$> newTVarIO (Right S.empty)
 newTSupervisor :: Supervisor -> IO TSupervisor
 newTSupervisor sup = do
     queue <- newTQueueIO
-    supervise sup $ forever $ do
+    supervise sup $ forever $
         atomically (readTQueue queue) >>= supervise sup
     pure $ TSupervisor queue
 
