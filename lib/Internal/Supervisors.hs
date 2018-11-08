@@ -114,4 +114,4 @@ supervise (Supervisor stateVar) task =
                 Right $! S.delete me kids
 
 superviseSTM :: TSupervisor -> IO () -> STM ()
-superviseSTM (TSupervisor queue) task = writeTQueue queue task
+superviseSTM (TSupervisor queue) = writeTQueue queue
