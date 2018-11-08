@@ -103,6 +103,7 @@ library
       , Capnp.Untyped
       , Capnp.Untyped.Pure
       , Capnp.TraversalLimit
+      , Capnp.Promise
       , Capnp.Rpc
       , Capnp.Tutorial
 
