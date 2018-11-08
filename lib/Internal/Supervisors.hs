@@ -48,8 +48,8 @@ newSupervisor = Supervisor <$> newTVarIO (Right S.empty)
 newTSupervisor :: Supervisor -> IO TSupervisor
 newTSupervisor sup = do
     queue <- newTQueueIO
-    flip supervise sup $ forever $ do
-        atomically (readTQueue queue) >>= flip supervise sup
+    supervise sup $ forever $ do
+        atomically (readTQueue queue) >>= supervise sup
     pure $ TSupervisor queue
 
 runSupervisor :: Supervisor -> IO ()
@@ -79,8 +79,8 @@ throwKids (Supervisor stateVar) exn =
 -- | Launch the IO action in a thread, monitored by the 'Supervisor'. If the
 -- supervisor receives an exception, the exception will also be raised in the
 -- child thread.
-supervise :: IO () -> Supervisor -> IO ()
-supervise task (Supervisor stateVar) =
+supervise :: Supervisor -> IO () -> IO ()
+supervise (Supervisor stateVar) task =
     void $ forkIO $ bracket_ addMe removeMe task
   where
     -- | Add our ThreadId to the supervisor.
@@ -113,5 +113,5 @@ supervise task (Supervisor stateVar) =
                 -- in that case we would still leak @me@.
                 Right $! S.delete me kids
 
-superviseSTM :: IO () -> TSupervisor -> STM ()
-superviseSTM task (TSupervisor queue) = writeTQueue queue task
+superviseSTM :: TSupervisor -> IO () -> STM ()
+superviseSTM (TSupervisor queue) task = writeTQueue queue task

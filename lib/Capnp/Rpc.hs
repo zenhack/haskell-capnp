@@ -354,7 +354,7 @@ export localServer = do
             , refCount = 0
             }
         pure exportId
-    liftIO $ supervise (runRpcT localVat $ runServer localVat localServer queue) supervisor
+    liftIO $ supervise supervisor (runRpcT localVat $ runServer localVat localServer queue)
     pure RefClient
         { refClient = ExportClient
             { exportId
@@ -1108,7 +1108,7 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                     let newTransform = oldTransform <> transform
                     atomically $ insertAnswer vat callQuestionId $
                         PromiseAnswer{ promise, transform = newTransform }
-                    flip supervise supervisor $ do
+                    supervise supervisor $ do
                         result <- try $ waitIO promise
                         case result of
                             Left e ->
@@ -1188,7 +1188,7 @@ handleCallToClient
         >>= Rpc.get_Payload'content
     ret <- runRpcT vat $ call interfaceId methodId paramContent client
     atomically $ insertAnswer vat callQuestionId PromiseAnswer{ promise = ret, transform = V.empty }
-    flip supervise supervisor $ do
+    supervise supervisor $ do
         result <- try $ waitIO ret
         union' <- case result of
             Left e ->
