@@ -276,6 +276,7 @@ data RefClient
         }
     | ExportClient
         { exportId    :: !ExportId
+        , promise     :: Maybe (Promise Client)
         , serverQueue :: ServerQueue
         }
     deriving(Eq)
@@ -349,12 +350,17 @@ export localServer = do
         exportId <- newExportId localVat
         modifyTVar exports $ M.insert exportId Export
             { serverQueue = queue
+            , promise = Nothing
             , refCount = 0
             }
         pure exportId
     liftIO $ supervise (runRpcT localVat $ runServer localVat localServer queue) supervisor
     pure RefClient
-        { refClient = ExportClient{exportId, serverQueue = queue}
+        { refClient = ExportClient
+            { exportId
+            , promise = Nothing
+            , serverQueue = queue
+            }
         , localVat
         }
 
@@ -621,6 +627,7 @@ data Vat = Vat
 
 data Export = Export
     { serverQueue :: ServerQueue
+    , promise     :: Maybe (Promise Client)
     , refCount    :: !Word32
     }
 
@@ -633,8 +640,10 @@ makeCapDescriptor RefClient{refClient=ImportClient{importId}} =
     CapDescriptor'receiverHosted importId
 makeCapDescriptor RefClient{refClient=QuestionClient{target}} =
     CapDescriptor'receiverAnswer target
-makeCapDescriptor RefClient{refClient=ExportClient{exportId}} =
+makeCapDescriptor RefClient{refClient=ExportClient{exportId, promise=Nothing}} =
     CapDescriptor'senderHosted exportId
+makeCapDescriptor RefClient{refClient=ExportClient{exportId, promise=Just _}} =
+    CapDescriptor'senderPromise exportId
 
 -- | Convert a 'CapDescriptor' from an incoming message into a Client, updating
 -- the local vat's table if needed.
@@ -660,10 +669,11 @@ interpCapDescriptor vat@Vat{..} = \case
                 abort vat $
                     "Incoming capability table referenced non-existent " <>
                     "receiverHosted capability #" <> T.pack (show exportId)
-            Just Export{serverQueue} ->
+            Just Export{serverQueue, promise} ->
                 ok $ pure $ RefClient
                     { refClient = ExportClient
                         { serverQueue
+                        , promise
                         , exportId = exportId
                         }
                     , localVat = vat
@@ -1074,11 +1084,12 @@ handleCallMsg rawCall vat@Vat{..} msg@Call{questionId=callQuestionId,target,inte
                     abortIO vat $
                         "Received 'Call' on non-existent export #" <>
                             T.pack (show exportId)
-                Just Export{serverQueue} ->
+                Just Export{promise, serverQueue} ->
                     handleCallToClient rawCall vat msg RefClient
                         { localVat = vat
                         , refClient = ExportClient
                             { serverQueue
+                            , promise
                             , exportId = exportId
                             }
                         }
