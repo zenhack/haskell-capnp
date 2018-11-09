@@ -930,7 +930,7 @@ abortT reason = do
     abortIO vat reason
 
 -- | helper function that converts an Either into a value, throwing the
--- exception if it is a 'Left'. There's no conceptual reasons this needs
+-- exception if it is a 'Left'. There's no conceptual reason this needs
 -- to be 'RpcError'; it could be any exception. But we only currently use
 -- it in places where we only want to throw 'RpcError'.
 throwLeft :: Either RpcError v -> IO v
