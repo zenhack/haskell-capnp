@@ -923,12 +923,6 @@ abortIO vat reason = liftIO $ do
     exn <- atomically $ replyAbort vat reason
     throwIO $ SentAbort exn
 
--- | Like 'abortIO', but runs in 'RpcT' and does not require a 'Vat' argument.
-abortT :: T.Text -> RpcT IO a
-abortT reason = do
-    vat <- RpcT ask
-    abortIO vat reason
-
 -- | helper function that converts an Either into a value, throwing the
 -- exception if it is a 'Left'. There's no conceptual reason this needs
 -- to be 'RpcError'; it could be any exception. But we only currently use
