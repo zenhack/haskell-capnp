@@ -142,7 +142,6 @@ library
         Internal.AppendVec
       , Internal.Gen.Instances
       , Internal.BuildPure
-      , Internal.Supervisors
       , Codec.Capnp
     -- other-extensions:
     build-depends:
@@ -153,6 +152,7 @@ library
       , network-simple                    ^>= 0.4
       , network                           ^>= 2.8.0
       , unliftio                          ^>= 0.2.8
+      , supervisors                       ^>= 0.1.0
 
 --------------------------------------------------------------------------------
 

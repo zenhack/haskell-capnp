@@ -71,7 +71,7 @@ import UnliftIO  hiding (Exception, wait)
 
 import Control.Concurrent              (threadDelay)
 import Control.Concurrent.STM.TSem     (TSem, newTSem, signalTSem, waitTSem)
-import Control.Monad                   (forever, (>=>))
+import Control.Monad                   (forever)
 import Control.Monad.Catch             (MonadThrow(..))
 import Control.Monad.Fail              (MonadFail(..))
 import Control.Monad.IO.Class          (MonadIO, liftIO)
@@ -106,10 +106,9 @@ import Capnp
     , sPutMsg
     , valueToMsg
     )
-import Capnp.Bits           (WordCount)
-import Capnp.Untyped.Pure   (PtrType(PtrCap, PtrStruct), Struct(..), sliceIndex)
-import Internal.Supervisors
-    (TSupervisor, newTSupervisor, superviseSTM, withSupervisor)
+import Capnp.Bits         (WordCount)
+import Capnp.Untyped.Pure (PtrType(PtrCap, PtrStruct), Struct(..), sliceIndex)
+import Supervisors        (Supervisor, superviseSTM, withSupervisor)
 
 import qualified Capnp.Gen.Capnp.Rpc as Rpc
 import qualified Capnp.Message       as Message
@@ -570,7 +569,7 @@ data Vat = Vat
     , recvQ           :: TBQueue ConstMsg
 
     -- Supervisor which monitors object lifetimes.
-    , supervisor      :: TSupervisor
+    , supervisor      :: Supervisor
 
     -- same as the corresponding fields in 'VatConfig'
     , debugMode       :: !Bool
@@ -766,7 +765,7 @@ vatConfig getTransport = VatConfig
 runVat :: VatConfig -> IO ()
 runVat config@VatConfig{limit, getTransport, withBootstrap} = do
     let transport = getTransport limit
-    ret <- try $ withSupervisor $ newTSupervisor >=> \sup -> do
+    ret <- try $ withSupervisor $ \sup -> do
         vat <- newVat config sup
         foldl concurrently_
             (recvLoop transport vat)
@@ -804,7 +803,7 @@ runRpcT vat (RpcT m) = runReaderT m vat
 
 -- | Create a new 'Vat', based on the information in the 'VatConfig'. Use the
 -- given supervisor to monitor exported objects.
-newVat :: VatConfig -> TSupervisor -> IO Vat
+newVat :: VatConfig -> Supervisor -> IO Vat
 newVat VatConfig{..} supervisor = atomically $ do
     questions <- newTVar M.empty
     answers <- newTVar M.empty
