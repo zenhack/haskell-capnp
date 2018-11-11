@@ -19,6 +19,7 @@ type ExportId   = Word32
 type ImportId   = ExportId
 type EmbargoId  = Word32
 
+-- | A connection to a remote vat
 data Conn = Conn
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO:
