@@ -1,5 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies      #-}
 module Capnp.RpcReorg
     ( Conn
     ) where
@@ -7,9 +10,16 @@ module Capnp.RpcReorg
 import Data.Word
 import UnliftIO.STM
 
+import Control.Monad (when)
+import Data.Default  (def)
+
 import qualified StmContainers.Map as M
 
 import Capnp.Message (ConstMsg)
+import Capnp.Promise (breakPromise)
+
+import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
+import qualified Capnp.Rpc.Object         as Object
 
 -- These alias are the same ones defined in rpc.capnp; unfortunately the
 -- schema compiler doesn't supply information about type aliases, so we
@@ -35,6 +45,64 @@ data Conn = Conn
     -- this table, and execute the STM we have registered.
     , embargos :: M.Map EmbargoId (STM ())
     }
+
+newtype Client = Client (Maybe (TVar Client'))
+
+data Client'
+    = ExnClient RpcGen.Exception
+    -- ^ A client which always throws an exception in response
+    -- to calls.
+    | LocalClient
+        { refCount :: TVar Word32
+        , opQueue  :: TQueue Object.ReceiverOp
+        }
+
+nullClient :: Client
+nullClient = Client Nothing
+
+disconnectedClient' :: Client'
+disconnectedClient' = ExnClient def
+    { RpcGen.type_ = RpcGen.Exception'Type'disconnected
+    , RpcGen.reason = "disconnected"
+    }
+
+incRef :: Client -> STM ()
+incRef (Client Nothing) = pure ()
+incRef (Client (Just clientVar)) = readTVar clientVar >>= \case
+    ExnClient _ ->
+        pure ()
+
+    LocalClient{refCount} ->
+        modifyTVar' refCount succ
+
+decRef :: Client -> STM ()
+decRef (Client Nothing) = pure ()
+decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
+    ExnClient _ ->
+        pure ()
+
+    LocalClient{refCount, opQueue} -> do
+        modifyTVar' refCount pred
+        cnt <- readTVar refCount
+        when (cnt == 0) $ do
+            -- Refcount is zero. Tell the receiver to stop:
+            writeTQueue opQueue Object.Stop
+            -- ...and then replace ourselves with a disconnected client:
+            writeTVar clientVar disconnectedClient'
+
+call :: Object.CallInfo -> Client -> STM ()
+call info (Client Nothing) =
+    breakPromise (Object.response info) def
+        { RpcGen.type_ = RpcGen.Exception'Type'failed
+        , RpcGen.reason = "Client is null"
+        }
+call info (Client (Just clientVar)) =
+    readTVar clientVar >>= \case
+        ExnClient e ->
+            breakPromise (Object.response info) e
+
+        LocalClient{opQueue} ->
+            writeTQueue opQueue (Object.Call info)
 
 -- The coordinator processes incoming messages.
 coordinator :: Conn -> IO ()
