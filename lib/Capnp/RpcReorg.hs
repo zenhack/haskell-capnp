@@ -67,8 +67,11 @@ pureHandler ::
     ( MonadThrow m
     , Decerialize p
     , FromPtr ConstMsg (Cerial ConstMsg p)
-    , Cerialize s r
-    , ToPtr s (Cerial ConstMsg r)
+    , Cerialize r
+    -- TODO: something like the below is needed, but I(zenhack) am having a
+    -- hard time figuring out what the constraint should actually be; the
+    -- below doesn't type-check.
+    -- , ToPtr s (Cerial ConstMsg r)
     )
     => (c -> p -> m r)
     -> MethodHandler m (Cerial ConstMsg p) (Cerial ConstMsg r)
