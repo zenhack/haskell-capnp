@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NamedFieldPuns    #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NamedFieldPuns      #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 module Capnp.RpcReorg
     (
     -- * Connections to other vats
@@ -27,6 +28,9 @@ module Capnp.RpcReorg
 -- * [ ] Handle each message type
 --   * [ ] Abort
 --   * [ ] Unimplemented
+--     * [ ] For each message type
+--       * [x] Unimplemented
+--       * [ ] ...
 --   * [ ] Level 0 messages
 --     * [ ] Bootstrap
 --     * [ ] Call
@@ -42,6 +46,7 @@ module Capnp.RpcReorg
 --     * [ ] Accept
 --   * [ ] Level 4 messages
 --     * [ ] Join
+-- * [ ] Handle decode errors
 -- * [ ] Resource limits (see Note [Limiting resource usage])
 
 import Data.Word
@@ -54,6 +59,7 @@ import UnliftIO.Async (concurrently_)
 
 import qualified StmContainers.Map as M
 
+import Capnp.Convert       (msgToValue)
 import Capnp.Message       (ConstMsg)
 import Capnp.Promise       (breakPromise)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg))
@@ -106,12 +112,22 @@ data ConnConfig = ConnConfig
     -- ^ The maximum number of objects which may be exported on this connection.
     --
     -- Defaults to 32.
+
+    , debugMode    :: !Bool
+    -- ^ In debug mode, errors reported by the RPC system to its peers will
+    -- contain extra information. This should not be used in production, as
+    -- it is possible for these messages to contain sensitive information,
+    -- but it can be useful for debugging.
+    --
+    -- Defaults to 'False'.
+    -- ^ Whether to emit extra debugging info in various p
     }
 
 instance Default ConnConfig where
     def = ConnConfig
         { maxQuestions = 32
         , maxExports   = 32
+        , debugMode    = False
         }
 
 -- | Get a new question id. retries if we are out of available question ids.
@@ -315,14 +331,6 @@ call info (Client (Just clientVar)) =
     -- TODO: RemoteClient
 
 
--- | The coordinator processes incoming messages.
-coordinator :: Conn -> IO ()
--- The logic here mostly routes messages to other parts of the code that know
--- more about the objects in question; See Note [Organization] for more info.
-coordinator Conn{recvQ} = atomically $ do
-    msg <- readTBQueue recvQ
-    error "TODO"
-
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn -> IO ()
 sendLoop transport Conn{sendQ} =
@@ -332,6 +340,31 @@ sendLoop transport Conn{sendQ} =
 recvLoop :: Transport -> Conn -> IO ()
 recvLoop transport Conn{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
+
+-- | The coordinator processes incoming messages.
+coordinator :: Conn -> IO ()
+-- The logic here mostly routes messages to other parts of the code that know
+-- more about the objects in question; See Note [Organization] for more info.
+coordinator conn@Conn{recvQ} = atomically $ do
+    msg <- readTBQueue recvQ
+    pureMsg <- msgToValue msg -- FIXME: handle decode errors
+    case pureMsg of
+        RpcGen.Message'unimplemented msg ->
+            handleUnimplementedMsg conn msg
+        _ ->
+            error "TODO"
+    error "TODO"
+
+-- Each function handle*Msg handles a message of a particular type;
+-- 'coordinator' dispatches to these.
+handleUnimplementedMsg :: Conn -> RpcGen.Message -> STM ()
+handleUnimplementedMsg conn = \case
+    RpcGen.Message'unimplemented _ ->
+        -- If the client itself doesn't handle unimplemented messages, that's
+        -- weird, but ultimately their problem.
+        pure ()
+    _ ->
+        error "TODO"
 
 
 -- Note [Organization]
