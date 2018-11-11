@@ -7,6 +7,33 @@ module Capnp.RpcReorg
     ( Conn
     ) where
 
+-- Note [Implementation checklist]
+-- ===============================
+--
+-- While RPC support is still incomplete, we keep a checklist of what
+-- is implemented here; this is a little easier than using the bug
+-- tracker, just because it's closer at hand.
+--
+-- * [ ] Handle each message type
+--   * [ ] Abort
+--   * [ ] Unimplemented
+--   * [ ] Level 0 messages
+--     * [ ] Bootstrap
+--     * [ ] Call
+--     * [ ] Return
+--     * [ ] Finish
+--   * [ ] Level 1 messages
+--     * [ ] Resolve
+--     * [ ] Release
+--     * [ ] Disembargo
+--   * [x] Level 2 messages (there are none).
+--   * [ ] Level 3 messages
+--     * [ ] Provide
+--     * [ ] Accept
+--   * [ ] Level 4 messages
+--     * [ ] Join
+-- * [ ] Resource limits (see Note [Limiting resource usage])
+
 import Data.Word
 import UnliftIO.STM
 
@@ -21,7 +48,7 @@ import Capnp.Promise (breakPromise)
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Rpc.Object         as Object
 
--- These alias are the same ones defined in rpc.capnp; unfortunately the
+-- These aliases are the same ones defined in rpc.capnp; unfortunately the
 -- schema compiler doesn't supply information about type aliases, so we
 -- have to re-define them ourselves. See the comments in rpc.capnp for
 -- more information.
@@ -34,7 +61,7 @@ type EmbargoId  = Word32
 -- | A connection to a remote vat
 data Conn = Conn
     -- queues of messages to send and receive; each of these has a dedicated
-    -- thread doing the IO:
+    -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
     { sendQ    :: TBQueue ConstMsg
     , recvQ    :: TBQueue ConstMsg
 
@@ -46,26 +73,62 @@ data Conn = Conn
     , embargos :: M.Map EmbargoId (STM ())
     }
 
-newtype Client = Client (Maybe (TVar Client'))
+-- Note [Client representation]
+-- ============================
+--
+-- A client is a reference to a capability, which can be used to
+-- call methods on an object. The implementation is composed of two
+-- types, Client and Client'. Only the former is exposed by the API.
+-- Client contains a @TVar Client'@ (or Nothing if it is a null
+-- client).
+--
+-- The reason for the indirection is so that we can swap out the
+-- implementation. Some examples of when this is useful include:
+--
+-- * When a promise resolves, we want to redirect it to the thing it
+--   resolved to.
+-- * When a connection is dropped, we replace the relevant clients
+--   with ones that always throw disconnected exceptions.
+--
+-- The reason for not using the TVar to represent null clients is so
+-- that we can define the top-level definition 'nullClient', which
+-- can be used statically. If the value 'nullClient' included a 'TVar',
+-- we would have to create it at runtime.
 
+
+-- | An untyped capability on which methods may be called.
+newtype Client =
+    -- See Note [Client representation]
+    Client (Maybe (TVar Client'))
+
+-- See Note [Client representation]
 data Client'
-    = ExnClient RpcGen.Exception
-    -- ^ A client which always throws an exception in response
+    -- | A client which always throws an exception in response
     -- to calls.
+    = ExnClient RpcGen.Exception
+    -- | A client which lives in the same vat/process as us.
     | LocalClient
         { refCount :: TVar Word32
+        -- ^ The number of live references to this object. When this
+        -- reaches zero, we will tell the receiver to stop.
         , opQueue  :: TQueue Object.ReceiverOp
+        -- ^ A queue for submitting commands to the thread managing the
+        -- object.
         }
 
+-- | A null client. This is the only client value that can be represented
+-- statically. Throws exceptions in response to all method calls.
 nullClient :: Client
 nullClient = Client Nothing
 
+-- | A client that is disconnected; always throws disconnected exceptions.
 disconnectedClient' :: Client'
 disconnectedClient' = ExnClient def
     { RpcGen.type_ = RpcGen.Exception'Type'disconnected
     , RpcGen.reason = "disconnected"
     }
 
+-- | Increment the reference count on a client.
 incRef :: Client -> STM ()
 incRef (Client Nothing) = pure ()
 incRef (Client (Just clientVar)) = readTVar clientVar >>= \case
@@ -75,6 +138,8 @@ incRef (Client (Just clientVar)) = readTVar clientVar >>= \case
     LocalClient{refCount} ->
         modifyTVar' refCount succ
 
+-- | Decrement the reference count on a client. If the count reaches zero,
+-- the object is destroyed.
 decRef :: Client -> STM ()
 decRef (Client Nothing) = pure ()
 decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
@@ -90,6 +155,7 @@ decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
             -- ...and then replace ourselves with a disconnected client:
             writeTVar clientVar disconnectedClient'
 
+-- | Call a method on the object pointed to by this client.
 call :: Object.CallInfo -> Client -> STM ()
 call info (Client Nothing) =
     breakPromise (Object.response info) def
@@ -159,3 +225,6 @@ coordinator = undefined
 --     * Block
 --     * Throw an 'overloaded' exception
 --     * Some combination of the two; block with a timeout, then throw.
+--
+--   If we just block, we need to make sure this doesn't hang the vat;
+--   we probably need a timeout at some level.
