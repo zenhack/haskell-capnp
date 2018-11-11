@@ -62,7 +62,7 @@ encodeTests = describe "schema encode tests" $
         -- TODO: the size of this context is *stupid*
         ( Show a
         , Eq a
-        , Cerialize RealWorld a
+        , Cerialize a
         , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
         , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
         , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
@@ -417,7 +417,7 @@ decodeDefault ::
     , Eq a
     , Default a
     , FromStruct M.ConstMsg a
-    , Cerialize RealWorld a
+    , Cerialize a
     , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
     ) => String -> Proxy a -> Spec
 decodeDefault typename proxy =
@@ -462,7 +462,7 @@ prop_hGetPutInverses ::
     ( Show a
     , Eq a
     , FromStruct M.ConstMsg a
-    , Cerialize RealWorld a
+    , Cerialize a
     , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
     ) => Proxy a -> a -> Property
 prop_hGetPutInverses proxy expected = propertyIO $ do
@@ -487,7 +487,7 @@ prop_hGetPutInverses proxy expected = propertyIO $ do
 prop_cerializeDecerializeInverses ::
     ( Show a
     , Eq a
-    , Cerialize RealWorld a
+    , Cerialize a
     , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
     , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
     , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)

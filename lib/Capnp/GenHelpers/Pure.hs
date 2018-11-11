@@ -38,7 +38,7 @@ defaultStruct =
 convertValue ::
     ( U.RWCtx m s
     , M.Message m M.ConstMsg
-    , C.Cerialize s a
+    , C.Cerialize a
     , C.ToStruct (M.MutMsg s) (C.Cerial (M.MutMsg s) a)
     , C.Decerialize b
     , C.FromStruct M.ConstMsg (C.Cerial M.ConstMsg b)

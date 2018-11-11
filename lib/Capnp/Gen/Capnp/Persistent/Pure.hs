@@ -58,7 +58,7 @@ instance C'.Decerialize Persistent where
     type Cerial msg Persistent = Capnp.Gen.ById.Xb8630836983feed7.Persistent msg
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.Persistent Nothing) = pure $ Persistent M'.nullClient
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.Persistent (Just cap)) = Persistent <$> U'.getClient cap
-instance C'.Cerialize s Persistent where
+instance C'.Cerialize Persistent where
     cerialize msg (Persistent client) = Capnp.Gen.ById.Xb8630836983feed7.Persistent . Just <$> U'.appendCap msg client
 class Persistent'server_ cap where
     {-# MINIMAL persistent'save #-}
@@ -94,7 +94,7 @@ instance C'.Decerialize RealmGateway where
     type Cerial msg RealmGateway = Capnp.Gen.ById.Xb8630836983feed7.RealmGateway msg
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway Nothing) = pure $ RealmGateway M'.nullClient
     decerialize (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway (Just cap)) = RealmGateway <$> U'.getClient cap
-instance C'.Cerialize s RealmGateway where
+instance C'.Cerialize RealmGateway where
     cerialize msg (RealmGateway client) = Capnp.Gen.ById.Xb8630836983feed7.RealmGateway . Just <$> U'.appendCap msg client
 class RealmGateway'server_ cap where
     {-# MINIMAL realmGateway'import, realmGateway'export #-}
@@ -142,7 +142,7 @@ instance C'.Marshal Persistent'SaveParams where
             Persistent'SaveParams{..} -> do
                 field_ <- C'.cerialize (U'.message raw) sealFor
                 Capnp.Gen.ById.Xb8630836983feed7.set_Persistent'SaveParams'sealFor raw field_
-instance C'.Cerialize s Persistent'SaveParams
+instance C'.Cerialize Persistent'SaveParams
 instance C'.FromStruct M'.ConstMsg Persistent'SaveParams where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -164,7 +164,7 @@ instance C'.Marshal Persistent'SaveResults where
             Persistent'SaveResults{..} -> do
                 field_ <- C'.cerialize (U'.message raw) sturdyRef
                 Capnp.Gen.ById.Xb8630836983feed7.set_Persistent'SaveResults'sturdyRef raw field_
-instance C'.Cerialize s Persistent'SaveResults
+instance C'.Cerialize Persistent'SaveResults
 instance C'.FromStruct M'.ConstMsg Persistent'SaveResults where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -190,7 +190,7 @@ instance C'.Marshal RealmGateway'export'params where
                 Capnp.Gen.ById.Xb8630836983feed7.set_RealmGateway'export'params'cap raw field_
                 field_ <- Capnp.Gen.ById.Xb8630836983feed7.new_RealmGateway'export'params'params raw
                 C'.marshalInto field_ params
-instance C'.Cerialize s RealmGateway'export'params
+instance C'.Cerialize RealmGateway'export'params
 instance C'.FromStruct M'.ConstMsg RealmGateway'export'params where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -216,7 +216,7 @@ instance C'.Marshal RealmGateway'import'params where
                 Capnp.Gen.ById.Xb8630836983feed7.set_RealmGateway'import'params'cap raw field_
                 field_ <- Capnp.Gen.ById.Xb8630836983feed7.new_RealmGateway'import'params'params raw
                 C'.marshalInto field_ params
-instance C'.Cerialize s RealmGateway'import'params
+instance C'.Cerialize RealmGateway'import'params
 instance C'.FromStruct M'.ConstMsg RealmGateway'import'params where
     fromStruct struct = do
         raw <- C'.fromStruct struct

@@ -62,7 +62,7 @@ instance C'.Marshal JoinKeyPart where
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'joinId raw joinId
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partCount raw partCount
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_JoinKeyPart'partNum raw partNum
-instance C'.Cerialize s JoinKeyPart
+instance C'.Cerialize JoinKeyPart
 instance C'.FromStruct M'.ConstMsg JoinKeyPart where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -90,7 +90,7 @@ instance C'.Marshal JoinResult where
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_JoinResult'succeeded raw succeeded
                 field_ <- C'.cerialize (U'.message raw) cap
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_JoinResult'cap raw field_
-instance C'.Cerialize s JoinResult
+instance C'.Cerialize JoinResult
 instance C'.FromStruct M'.ConstMsg JoinResult where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -111,7 +111,7 @@ instance C'.Marshal ProvisionId where
         case value of
             ProvisionId{..} -> do
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_ProvisionId'joinId raw joinId
-instance C'.Cerialize s ProvisionId
+instance C'.Cerialize ProvisionId
 instance C'.FromStruct M'.ConstMsg ProvisionId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -129,7 +129,7 @@ instance C'.Marshal RecipientId where
     marshalInto raw value = do
         case value of
             RecipientId -> pure ()
-instance C'.Cerialize s RecipientId
+instance C'.Cerialize RecipientId
 instance C'.FromStruct M'.ConstMsg RecipientId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -150,7 +150,7 @@ instance C'.Marshal ThirdPartyCapId where
     marshalInto raw value = do
         case value of
             ThirdPartyCapId -> pure ()
-instance C'.Cerialize s ThirdPartyCapId
+instance C'.Cerialize ThirdPartyCapId
 instance C'.FromStruct M'.ConstMsg ThirdPartyCapId where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -171,7 +171,7 @@ instance C'.Marshal VatId where
         case value of
             VatId{..} -> do
                 Capnp.Gen.ById.Xa184c7885cdaf2a1.set_VatId'side raw side
-instance C'.Cerialize s VatId
+instance C'.Cerialize VatId
 instance C'.FromStruct M'.ConstMsg VatId where
     fromStruct struct = do
         raw <- C'.fromStruct struct

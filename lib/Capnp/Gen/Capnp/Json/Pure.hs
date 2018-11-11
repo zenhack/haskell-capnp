@@ -90,7 +90,7 @@ instance C'.Marshal JsonValue where
                 field_ <- Capnp.Gen.ById.X8ef99297a43a5e34.new_JsonValue'call raw
                 C'.marshalInto field_ arg_
             JsonValue'unknown' arg_ -> Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'unknown' raw arg_
-instance C'.Cerialize s JsonValue
+instance C'.Cerialize JsonValue
 instance C'.FromStruct M'.ConstMsg JsonValue where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -119,7 +119,7 @@ instance C'.Marshal JsonValue'Call where
                 forM_ [0..len_ - 1] $ \i -> do
                     elt <- C'.index i field_
                     C'.marshalInto elt (params V.! i)
-instance C'.Cerialize s JsonValue'Call
+instance C'.Cerialize JsonValue'Call
 instance C'.FromStruct M'.ConstMsg JsonValue'Call where
     fromStruct struct = do
         raw <- C'.fromStruct struct
@@ -145,7 +145,7 @@ instance C'.Marshal JsonValue'Field where
                 Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'Field'name raw field_
                 field_ <- Capnp.Gen.ById.X8ef99297a43a5e34.new_JsonValue'Field'value raw
                 C'.marshalInto field_ value
-instance C'.Cerialize s JsonValue'Field
+instance C'.Cerialize JsonValue'Field
 instance C'.FromStruct M'.ConstMsg JsonValue'Field where
     fromStruct struct = do
         raw <- C'.fromStruct struct

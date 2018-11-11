@@ -98,7 +98,7 @@ sGetMsg socket limit =
 -- | @'hPutValue' handle value@ writes @value@ to handle, as the root object of
 -- a message. If it throws an exception, it will be an 'IOError' raised by the
 -- underlying IO libraries.
-hPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+hPutValue :: (Cerialize a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
     => Handle -> a -> IO ()
 hPutValue handle value = do
     msg <- M.newMessage Nothing
@@ -108,7 +108,7 @@ hPutValue handle value = do
     M.hPutMsg handle constMsg
 
 -- | 'putValue' is equivalent to @'hPutValue' 'stdin'@
-putValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+putValue :: (Cerialize a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
     => a -> IO ()
 putValue = hPutValue stdout
 
@@ -117,7 +117,7 @@ sPutMsg :: Socket -> M.ConstMsg -> IO ()
 sPutMsg socket = sendLazy socket . msgToLBS
 
 -- | Like 'hPutValue', except that it takes a 'Socket' instead of a 'Handle'.
-sPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+sPutValue :: (Cerialize a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
     => Socket -> a -> IO ()
 sPutValue socket value = do
     lbs <- evalLimitT maxBound $ valueToLBS value

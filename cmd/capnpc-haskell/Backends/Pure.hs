@@ -273,7 +273,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
         , hcat [ "decerialize (", rawName, " Nothing) = pure $ ", pureName, " M'.nullClient" ]
         , hcat [ "decerialize (", rawName, " (Just cap)) = ", pureName, " <$> U'.getClient cap" ]
         ]
-    , instance_ [] ("C'.Cerialize s " <> pureName)
+    , instance_ [] ("C'.Cerialize " <> pureName)
         [ hcat [ "cerialize msg (", pureName, " client) = ", rawName, " . Just <$> U'.appendCap msg client" ]
         ]
     , class_ [] (pureName <> "'server_ cap")
@@ -393,7 +393,7 @@ fmtDataDef thisMod dataName dataDef =
                     ]
                 , case info of
                     IsStandalone{} ->
-                        instance_ [] ("C'.Cerialize s " <> pureName)
+                        instance_ [] ("C'.Cerialize " <> pureName)
                             []
                     _ ->
                         ""
@@ -437,7 +437,7 @@ fmtDataDef thisMod dataName dataDef =
                     ]
                 , case info of
                     IsStandalone{} ->
-                        instance_ [] ("C'.Cerialize s " <> pureName)
+                        instance_ [] ("C'.Cerialize " <> pureName)
                             []
                     _ ->
                         ""

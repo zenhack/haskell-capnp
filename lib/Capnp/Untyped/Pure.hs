@@ -128,7 +128,7 @@ instance Marshal Struct where
             ptr <- cerialize (U.message raw) (ptrSec V.! i)
             U.setPtr ptr i raw
 
-instance Cerialize s Struct where
+instance Cerialize Struct where
     cerialize msg struct@(Struct (Slice dataSec) (Slice ptrSec)) = do
         raw <- U.allocStruct
             msg
@@ -146,7 +146,7 @@ instance Decerialize (Maybe PtrType) where
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
 
-instance Cerialize s (Maybe PtrType) where
+instance Cerialize (Maybe PtrType) where
     cerialize _ Nothing                     = pure Nothing
     cerialize msg (Just (PtrStruct struct)) = cerialize msg struct >>= toPtr msg
     cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list
@@ -177,7 +177,7 @@ instance Decerialize List where
     decerialize (U.ListPtr l)    = ListPtr <$> decerializeListOf l
     decerialize (U.ListStruct l) = ListStruct <$> decerializeListOf l
 
-instance Cerialize s List where
+instance Cerialize List where
     cerialize msg (List0   l) = U.List0  <$> U.allocList0 msg (length l)
     cerialize msg (List1   l) = U.List1  <$> cerializeListOfWord (U.allocList1  msg) l
     cerialize msg (List8   l) = U.List8  <$> cerializeListOfWord (U.allocList8  msg) l

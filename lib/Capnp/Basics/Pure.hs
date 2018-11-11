@@ -66,7 +66,7 @@ instance Decerialize Text where
 instance Marshal Text where
     marshalInto dest text = marshalTextBytes (encodeUtf8 text) dest
 
-instance Cerialize s Text where
+instance Cerialize Text where
     cerialize msg text = do
         let bytes = encodeUtf8 text
         ret <- Basics.newText msg (BS.length bytes)
