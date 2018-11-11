@@ -9,7 +9,15 @@ import qualified StmContainers.Map as M
 
 import Capnp.Message (ConstMsg)
 
-type EmbargoId = Word32
+-- These alias are the same ones defined in rpc.capnp; unfortunately the
+-- schema compiler doesn't supply information about type aliases, so we
+-- have to re-define them ourselves. See the comments in rpc.capnp for
+-- more information.
+type QuestionId = Word32
+type AnswerId   = QuestionId
+type ExportId   = Word32
+type ImportId   = ExportId
+type EmbargoId  = Word32
 
 data Conn = Conn
     -- queues of messages to send and receive; each of these has a dedicated
