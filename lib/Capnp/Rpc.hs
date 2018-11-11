@@ -44,9 +44,7 @@ module Capnp.Rpc
     , stopVat
 
     -- ** Transmitting messages
-    , Transport(..)
-    , handleTransport
-    , socketTransport
+    , module Capnp.Rpc.Transport
 
     -- * Exceptions
     , RpcError(..)
@@ -79,8 +77,6 @@ import Control.Monad.Primitive         (PrimMonad(..))
 import Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class       (MonadTrans(lift))
 import Data.Foldable                   (for_, traverse_)
-import Network.Socket                  (Socket)
-import System.IO                       (Handle)
 import Text.ParserCombinators.ReadPrec (pfail)
 import Text.Read                       (Lexeme(Ident), lexP, readPrec)
 
@@ -91,6 +87,7 @@ import qualified UnliftIO.Exception as HsExn
 
 import Capnp.Gen.Capnp.Rpc.Pure
 import Capnp.Promise
+import Capnp.Rpc.Transport
 
 import Capnp
     ( ConstMsg
@@ -99,11 +96,7 @@ import Capnp
     , def
     , defaultLimit
     , evalLimitT
-    , hGetMsg
-    , hPutMsg
     , msgToValue
-    , sGetMsg
-    , sPutMsg
     , valueToMsg
     )
 import Capnp.Bits         (WordCount)
@@ -154,32 +147,6 @@ type AnswerId = Word32
 type ExportId = Word32
 type ImportId = Word32
 type EmbargoId = Word32
-
--- | A @'Transport'@ handles transmitting RPC messages.
-data Transport = Transport
-    { sendMsg :: ConstMsg -> IO ()
-    -- ^ Send a message
-    , recvMsg :: IO ConstMsg
-    -- ^ Receive a message
-    }
-
--- | @'handleTransport' handle limit@ is a transport which reads and writes
--- messages from/to @handle@. It uses @limit@ as the traversal limit when
--- reading messages and decoding.
-handleTransport :: Handle -> WordCount -> Transport
-handleTransport handle limit = Transport
-    { sendMsg = hPutMsg handle
-    , recvMsg = hGetMsg handle limit
-    }
-
--- | @'socketTransport' socket limit@ is a transport which reads and writes
--- messages to/from a socket. It uses @limit@ as the traversal limit when
--- reading messages and decoing.
-socketTransport :: Socket -> WordCount -> Transport
-socketTransport socket limit = Transport
-    { sendMsg = sPutMsg socket
-    , recvMsg = sGetMsg socket limit
-    }
 
 -- | Get a new exportId/questionId. The first argument gets the pool to
 -- allocate from.
