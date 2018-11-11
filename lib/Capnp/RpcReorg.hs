@@ -120,7 +120,7 @@ newQuestion Conn{questionIdPool} = newId questionIdPool
 
 -- | Return a question id to the pool of available ids.
 freeQuestion :: Conn -> QuestionId -> STM ()
-freeQuestion Conn{questionIdPool} id = freeId questionIdPool id
+freeQuestion = freeId . questionIdPool
 
 -- | Get a new export id. retries if we are out of available export ids.
 newExport :: Conn -> STM ExportId
@@ -128,7 +128,7 @@ newExport Conn{exportIdPool} = newId exportIdPool
 
 -- | Return a export id to the pool of available ids.
 freeExport :: Conn -> ExportId -> STM ()
-freeExport Conn{exportIdPool} id = freeId exportIdPool id
+freeExport = freeId . exportIdPool
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: ConnConfig -> Transport -> IO ()
