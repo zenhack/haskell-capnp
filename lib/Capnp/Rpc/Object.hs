@@ -1,10 +1,20 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures   #-}
-module Capnp.Rpc.Object where
+{-# LANGUAGE LambdaCase       #-}
+{-# LANGUAGE NamedFieldPuns   #-}
+module Capnp.Rpc.Object
+    ( MethodHandler
+    , pureHandler
+    , MethodReceiver(..)
+    , ReceiverOp(..)
+    , CallInfo(..)
+    , runReceiver
+    ) where
 
 import Data.Word
+import UnliftIO.STM
 
 import Control.Monad.Catch (MonadThrow)
+import Supervisors         (Supervisor, superviseSTM)
 
 import Capnp.Classes (Cerialize, Decerialize(Cerial), FromPtr)
 import Capnp.Message (ConstMsg)
@@ -13,7 +23,12 @@ import Capnp.Untyped (Ptr)
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@. See Note [Method handling].
-data MethodHandler (m :: * -> *) p r
+newtype MethodHandler m p r = MethodHandler
+    { handleMethod
+        ::  Maybe (Ptr ConstMsg)
+        -> Fulfiller (Maybe (Ptr ConstMsg))
+        -> m ()
+    }
 
 -- | 'pureHandler' creates a method handler from a function accepting the
 -- receiver and parameters, and returning a monadic value computing the
@@ -60,6 +75,20 @@ data CallInfo = CallInfo
     }
 
 data ReceiverOp = Stop | Call CallInfo
+
+runReceiver :: TQueue ReceiverOp -> MethodReceiver IO -> Supervisor -> STM ()
+runReceiver q recvr sup =
+    superviseSTM sup go
+  where
+    go = atomically (readTQueue q) >>= \case
+        Stop ->
+            handleStop recvr
+        Call CallInfo{interfaceId, methodId, arguments, response} -> do
+            handleMethod
+                (handleCall recvr interfaceId methodId)
+                arguments
+                response
+            go
 
 
 -- Note [Method handling]
