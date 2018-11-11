@@ -64,7 +64,7 @@ common shared-opts
         base                              >= 4.11  && < 4.13
       , bytes                             ^>= 0.15.4
       , bytestring                        ^>= 0.10
-      , containers                        ^>= 0.6.0
+      , containers                        ^>= 0.5.9
       , data-default                      ^>= 0.7.1
       , exceptions                        ^>= 0.10.0
       , mtl                               ^>= 2.2.2
@@ -105,6 +105,7 @@ library
       , Capnp.TraversalLimit
       , Capnp.Promise
       , Capnp.Rpc
+      , Capnp.RpcReorg
       , Capnp.Tutorial
 
       , Data.Mutable
@@ -148,6 +149,7 @@ library
         cpu                               ^>= 0.1.2
       , data-default-instances-vector     ^>= 0.0.1
       , stm                               ^>= 2.5.0
+      , stm-containers                    ^>= 1.1.0
       , async                             ^>= 2.2.1
       , network-simple                    ^>= 0.4
       , network                           ^>= 2.8.0
