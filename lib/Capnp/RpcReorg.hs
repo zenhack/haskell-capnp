@@ -1,10 +1,11 @@
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE NamedFieldPuns      #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Capnp.RpcReorg
     (
     -- * Connections to other vats
@@ -64,15 +65,19 @@ import Supervisors            (Supervisor, withSupervisor)
 import UnliftIO.Async         (concurrently_)
 import UnliftIO.Exception     (Exception, bracket)
 
+import qualified Data.Vector       as V
+import qualified Focus
 import qualified StmContainers.Map as M
 
-import Capnp.Convert       (msgToValue)
+import Capnp.Convert       (msgToValue, valueToMsg)
 import Capnp.Message       (ConstMsg)
 import Capnp.Promise       (breakPromise)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg))
+import Internal.BuildPure  (createPure)
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Rpc.Server         as Server
+import qualified Capnp.Untyped.Pure       as Untyped
 
 
 -- | Errors which can be thrown by the rpc system.
@@ -107,7 +112,9 @@ data Conn = Conn
     , exportIdPool   :: IdPool
     -- Pools of identifiers for new questions and exports
 
-    -- TODO: the four tables.
+    , questions      :: M.Map QuestionId QuestionState
+    , answers        :: M.Map AnswerId QuestionState
+    -- TODO: imports/exports
 
     , embargos       :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
@@ -190,6 +197,9 @@ handleConn cfg@ConnConfig{maxQuestions, maxExports} transport =
         sendQ <- newTBQueue $ fromIntegral maxQuestions
         recvQ <- newTBQueue $ fromIntegral maxQuestions
 
+        questions <- M.new
+        answers <- M.new
+
         embargos <- M.new
 
         pure Conn
@@ -227,6 +237,17 @@ newId (IdPool pool) = readTVar pool >>= \case
 -- | Return an id to the pool.
 freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
+
+
+-- | The state an outstanding question or answer.
+data QuestionState = QuestionState
+    { qReturn :: Maybe RpcGen.Return
+    -- ^ The return message that is a response to this question.
+    -- 'Nothing' if we have not sent/received a return.
+    , qFinish :: Maybe RpcGen.Finish
+    -- ^ The finish message sent for this question. 'Nothing' if
+    -- we have not sent/received a finish.
+    }
 
 
 -- Note [Client representation]
@@ -386,9 +407,11 @@ coordinator conn@Conn{recvQ} = atomically $ do
     pureMsg <- msgToValue msg -- FIXME: handle decode errors
     case pureMsg of
         RpcGen.Message'abort exn ->
-            throwSTM (ReceivedAbort exn)
+            handleAbortMsg conn exn
         RpcGen.Message'unimplemented msg ->
             handleUnimplementedMsg conn msg
+        RpcGen.Message'bootstrap bs ->
+            handleBootstrapMsg conn bs
         _ ->
             error "TODO"
     error "TODO"
@@ -404,6 +427,57 @@ handleUnimplementedMsg conn = \case
     _ ->
         error "TODO"
 
+handleAbortMsg :: Conn -> RpcGen.Exception -> STM ()
+handleAbortMsg _ exn =
+    throwSTM (ReceivedAbort exn)
+
+-- | Get a CapDescriptor for this client, suitable for sending to the remote
+-- vat. If the client points to our own vat, this will increment the refcount
+-- in the exports table, and will allocate a new export ID if needed. Returns
+-- CapDescriptor'none if the client is 'nullClient'.
+sendableCapDesc :: Conn -> Client -> STM RpcGen.CapDescriptor
+sendableCapDesc _ (Client Nothing)  = pure RpcGen.CapDescriptor'none
+sendableCapDesc _ (Client (Just _)) = error "TODO"
+
+handleBootstrapMsg :: Conn -> RpcGen.Bootstrap -> STM ()
+handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
+    capDesc <- sendableCapDesc conn (bootstrap conn)
+    let ret = RpcGen.Return
+            { RpcGen.answerId = questionId
+            , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+            , RpcGen.union' = case capDesc of
+                RpcGen.CapDescriptor'none ->
+                    RpcGen.Return'exception def
+                        { RpcGen.type_ = RpcGen.Exception'Type'failed
+                        , RpcGen.reason = "No bootstrap interface for this connection."
+                        }
+                _ ->
+                    RpcGen.Return'results RpcGen.Payload
+                            -- XXX: this is a bit fragile; we're relying on
+                            -- the encode step -- to pick the right index
+                            -- for our capability.
+                        { content = Just $ Untyped.PtrCap $ error $
+                            "FIXME: this should be (bootstrap conn), but " ++
+                            "the generated code references the old 'Client' " ++
+                            "type from the pre-reorg implementation, so " ++
+                            "that doesn't type check."
+                        , capTable = V.singleton capDesc
+                        }
+            }
+    M.focus
+        (Focus.alterM $ insertBootstrap ret)
+        questionId
+        (questions conn)
+    msg <- createPure maxBound $ valueToMsg $ RpcGen.Message'return ret
+    writeTBQueue (sendQ conn) msg
+  where
+    insertBootstrap ret Nothing =
+        pure $ Just QuestionState
+            { qReturn = Just ret
+            , qFinish = Nothing
+            }
+    insertBootstrap _ (Just _) =
+        error "TODO: duplicate question ID; abort the connection."
 
 -- Note [Organization]
 -- ===================
