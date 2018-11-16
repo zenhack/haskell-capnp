@@ -120,7 +120,6 @@ data ConnConfig = ConnConfig
     -- but it can be useful for debugging.
     --
     -- Defaults to 'False'.
-    -- ^ Whether to emit extra debugging info in various p
     }
 
 instance Default ConnConfig where
