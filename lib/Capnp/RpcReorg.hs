@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
@@ -16,6 +17,9 @@ module Capnp.RpcReorg
     , decRef
     , call
     , nullClient
+
+    -- * Errors
+    , RpcError(..)
     ) where
 
 -- Note [Implementation checklist]
@@ -52,10 +56,13 @@ module Capnp.RpcReorg
 import Data.Word
 import UnliftIO.STM
 
-import Control.Monad  (forever, when)
-import Data.Default   (Default(def))
-import Supervisors    (Supervisor, withSupervisor)
-import UnliftIO.Async (concurrently_)
+import Control.Concurrent.STM (throwSTM)
+import Control.Monad          (forever, when)
+import Data.Default           (Default(def))
+import GHC.Generics           (Generic)
+import Supervisors            (Supervisor, withSupervisor)
+import UnliftIO.Async         (concurrently_)
+import UnliftIO.Exception     (Exception, bracket)
 
 import qualified StmContainers.Map as M
 
@@ -66,6 +73,15 @@ import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg))
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Rpc.Server         as Server
+
+
+-- | Errors which can be thrown by the rpc system.
+data RpcError
+    = ReceivedAbort RpcGen.Exception
+    -- ^ The remote vat sent us an abort message.
+    deriving(Show, Read, Generic)
+
+instance Exception RpcError
 
 -- These aliases are the same ones defined in rpc.capnp; unfortunately the
 -- schema compiler doesn't supply information about type aliases, so we
@@ -79,26 +95,26 @@ type EmbargoId  = Word32
 
 -- | A connection to a remote vat
 data Conn = Conn
-    { sendQ             :: TBQueue ConstMsg
-    , recvQ             :: TBQueue ConstMsg
+    { sendQ          :: TBQueue ConstMsg
+    , recvQ          :: TBQueue ConstMsg
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
 
-    , supervisor        :: Supervisor
+    , supervisor     :: Supervisor
     -- Supervisor managing the lifetimes of threads bound to this connection.
 
-    , questionIdPool    :: IdPool
-    , exportIdPool      :: IdPool
+    , questionIdPool :: IdPool
+    , exportIdPool   :: IdPool
     -- Pools of identifiers for new questions and exports
 
     -- TODO: the four tables.
 
-    , embargos          :: M.Map EmbargoId (STM ())
+    , embargos       :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and execute the STM we have registered.
 
-    , bootstrap         :: Client
+    , bootstrap      :: Client
     -- The capability which should be served as this connection's bootstrap
     -- interface.
     }
@@ -369,6 +385,8 @@ coordinator conn@Conn{recvQ} = atomically $ do
     msg <- readTBQueue recvQ
     pureMsg <- msgToValue msg -- FIXME: handle decode errors
     case pureMsg of
+        RpcGen.Message'abort exn ->
+            throwSTM (ReceivedAbort exn)
         RpcGen.Message'unimplemented msg ->
             handleUnimplementedMsg conn msg
         _ ->
