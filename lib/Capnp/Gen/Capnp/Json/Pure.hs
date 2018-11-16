@@ -51,7 +51,7 @@ data JsonValue
     | JsonValue'object (PU'.ListOf (JsonValue'Field))
     | JsonValue'call (JsonValue'Call)
     | JsonValue'unknown' Word16
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize JsonValue where
     type Cerial msg JsonValue = Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue msg
     decerialize raw = do
@@ -101,7 +101,7 @@ data JsonValue'Call
     = JsonValue'Call
         {function :: Text,
         params :: PU'.ListOf (JsonValue)}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize JsonValue'Call where
     type Cerial msg JsonValue'Call = Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'Call msg
     decerialize raw = do
@@ -130,7 +130,7 @@ data JsonValue'Field
     = JsonValue'Field
         {name :: Text,
         value :: JsonValue}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize JsonValue'Field where
     type Cerial msg JsonValue'Field = Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'Field msg
     decerialize raw = do

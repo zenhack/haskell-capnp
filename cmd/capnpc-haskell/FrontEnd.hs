@@ -39,7 +39,7 @@ data NodeMetaData = NodeMetaData
     , node      :: Node
     -- ^ The node itself.
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 -- | @'identifierFromMetaData' meta@ return a haskell identifier
 -- for a node based on the metadata @meta@, and @thisModule@, the id for

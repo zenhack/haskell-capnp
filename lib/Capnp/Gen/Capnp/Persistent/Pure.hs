@@ -46,7 +46,7 @@ import qualified Capnp.Gen.ById.Xb8630836983feed7
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 newtype Persistent = Persistent M'.Client
-    deriving(Show, Eq, Read, Generic)
+    deriving(Show, Eq, Generic)
 instance Rpc.IsClient Persistent where
     fromClient = Persistent
     toClient (Persistent client) = client
@@ -82,7 +82,7 @@ instance Persistent'server_ Persistent where
         result <- Rpc.waitIO resultPromise
         evalLimitT maxBound $ PH'.convertValue result
 newtype RealmGateway = RealmGateway M'.Client
-    deriving(Show, Eq, Read, Generic)
+    deriving(Show, Eq, Generic)
 instance Rpc.IsClient RealmGateway where
     fromClient = RealmGateway
     toClient (RealmGateway client) = client
@@ -130,7 +130,7 @@ instance RealmGateway'server_ RealmGateway where
 data Persistent'SaveParams
     = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize Persistent'SaveParams where
     type Cerial msg Persistent'SaveParams = Capnp.Gen.ById.Xb8630836983feed7.Persistent'SaveParams msg
     decerialize raw = do
@@ -152,7 +152,7 @@ instance Default Persistent'SaveParams where
 data Persistent'SaveResults
     = Persistent'SaveResults
         {sturdyRef :: Maybe (PU'.PtrType)}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize Persistent'SaveResults where
     type Cerial msg Persistent'SaveResults = Capnp.Gen.ById.Xb8630836983feed7.Persistent'SaveResults msg
     decerialize raw = do
@@ -175,7 +175,7 @@ data RealmGateway'export'params
     = RealmGateway'export'params
         {cap :: Persistent,
         params :: Persistent'SaveParams}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize RealmGateway'export'params where
     type Cerial msg RealmGateway'export'params = Capnp.Gen.ById.Xb8630836983feed7.RealmGateway'export'params msg
     decerialize raw = do
@@ -201,7 +201,7 @@ data RealmGateway'import'params
     = RealmGateway'import'params
         {cap :: Persistent,
         params :: Persistent'SaveParams}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize RealmGateway'import'params where
     type Cerial msg RealmGateway'import'params = Capnp.Gen.ById.Xb8630836983feed7.RealmGateway'import'params msg
     decerialize raw = do

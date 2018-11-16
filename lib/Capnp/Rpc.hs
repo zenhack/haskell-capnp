@@ -269,7 +269,7 @@ data RpcError
     | SentAbort Exception
     -- ^ We sent an abort message to the remote vat; this is thrown after
     -- sending the abort.
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 instance HsExn.Exception RpcError
 
 -- | Shut down the rpc connection, and all resources managed by the vat. This

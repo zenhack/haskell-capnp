@@ -259,7 +259,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
         pureValName name = fmtName Pure thisMod (valueName name)
     in vcat
     [ hcat [ "newtype ", pureName, " = ", pureName, " M'.Client" ]
-    , "    deriving(Show, Eq, Read, Generic)"
+    , "    deriving(Show, Eq, Generic)"
     , instance_ [] ("Rpc.IsClient " <> pureName)
         [ hcat [ "fromClient = ", pureName ]
         , hcat [ "toClient (", pureName, " client) = client" ]
@@ -377,7 +377,7 @@ fmtDataDef thisMod dataName dataDef =
                 in vcat
                 [ data_ (fmtName Pure thisMod dataName)
                     [ fmtVariant thisMod dataVariant ]
-                    ["Show", "Read", "Eq", "Generic"]
+                    ["Show", "Eq", "Generic"]
                 , instance_ [] ("C'.Decerialize " <> pureName)
                     [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
                     , "decerialize raw = do"
@@ -406,7 +406,7 @@ fmtDataDef thisMod dataName dataDef =
                     (map (fmtVariant thisMod) dataVariants ++
                         [ fmtName Pure thisMod unknownVariantName <> " Word16" ]
                     )
-                    ["Show", "Read", "Eq", "Generic"]
+                    ["Show", "Eq", "Generic"]
                 , instance_ [] ("C'.Decerialize " <> pureName)
                     [ hcat [ "type Cerial msg ", pureName, " = ", rawName, " msg" ]
                     , "decerialize raw = do"

@@ -47,7 +47,7 @@ data JoinKeyPart
         {joinId :: Word32,
         partCount :: Word16,
         partNum :: Word16}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize JoinKeyPart where
     type Cerial msg JoinKeyPart = Capnp.Gen.ById.Xa184c7885cdaf2a1.JoinKeyPart msg
     decerialize raw = do
@@ -74,7 +74,7 @@ data JoinResult
         {joinId :: Word32,
         succeeded :: Bool,
         cap :: Maybe (PU'.PtrType)}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize JoinResult where
     type Cerial msg JoinResult = Capnp.Gen.ById.Xa184c7885cdaf2a1.JoinResult msg
     decerialize raw = do
@@ -100,7 +100,7 @@ instance Default JoinResult where
 data ProvisionId
     = ProvisionId
         {joinId :: Word32}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize ProvisionId where
     type Cerial msg ProvisionId = Capnp.Gen.ById.Xa184c7885cdaf2a1.ProvisionId msg
     decerialize raw = do
@@ -120,7 +120,7 @@ instance Default ProvisionId where
     def = PH'.defaultStruct
 data RecipientId
     = RecipientId
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize RecipientId where
     type Cerial msg RecipientId = Capnp.Gen.ById.Xa184c7885cdaf2a1.RecipientId msg
     decerialize raw = do
@@ -141,7 +141,7 @@ instance C'.Decerialize Capnp.Gen.ById.Xa184c7885cdaf2a1.Side where
     decerialize = pure
 data ThirdPartyCapId
     = ThirdPartyCapId
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize ThirdPartyCapId where
     type Cerial msg ThirdPartyCapId = Capnp.Gen.ById.Xa184c7885cdaf2a1.ThirdPartyCapId msg
     decerialize raw = do
@@ -160,7 +160,7 @@ instance Default ThirdPartyCapId where
 data VatId
     = VatId
         {side :: Capnp.Gen.ById.Xa184c7885cdaf2a1.Side}
-    deriving(Show,Read,Eq,Generic)
+    deriving(Show,Eq,Generic)
 instance C'.Decerialize VatId where
     type Cerial msg VatId = Capnp.Gen.ById.Xa184c7885cdaf2a1.VatId msg
     decerialize raw = do
