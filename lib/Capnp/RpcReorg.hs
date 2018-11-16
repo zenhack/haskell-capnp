@@ -79,24 +79,28 @@ type EmbargoId  = Word32
 
 -- | A connection to a remote vat
 data Conn = Conn
-    { sendQ          :: TBQueue ConstMsg
-    , recvQ          :: TBQueue ConstMsg
+    { sendQ             :: TBQueue ConstMsg
+    , recvQ             :: TBQueue ConstMsg
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
 
-    , supervisor     :: Supervisor
+    , supervisor        :: Supervisor
     -- Supervisor managing the lifetimes of threads bound to this connection.
 
-    , questionIdPool :: IdPool
-    , exportIdPool   :: IdPool
+    , questionIdPool    :: IdPool
+    , exportIdPool      :: IdPool
     -- Pools of identifiers for new questions and exports
 
     -- TODO: the four tables.
 
-    , embargos       :: M.Map EmbargoId (STM ())
+    , embargos          :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and execute the STM we have registered.
+
+    , bootstrap         :: Client
+    -- The capability which should be served as this connection's bootstrap
+    -- interface.
     }
 
 -- | Configuration information for a connection.
@@ -120,6 +124,13 @@ data ConnConfig = ConnConfig
     -- but it can be useful for debugging.
     --
     -- Defaults to 'False'.
+
+    , getBootstrap :: Supervisor -> STM Client
+    -- ^ Get the bootstrap interface we should serve for this connection.
+    -- the argument is a supervisor whose lifetime is bound to the
+    -- connection.
+    --
+    -- The default always returns 'nullClient'.
     }
 
 instance Default ConnConfig where
@@ -127,6 +138,7 @@ instance Default ConnConfig where
         { maxQuestions = 32
         , maxExports   = 32
         , debugMode    = False
+        , getBootstrap = \_ -> pure nullClient
         }
 
 -- | Get a new question id. retries if we are out of available question ids.
@@ -147,29 +159,38 @@ freeExport = freeId . exportIdPool
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: ConnConfig -> Transport -> IO ()
-handleConn ConnConfig{maxQuestions, maxExports} transport =
+handleConn cfg@ConnConfig{maxQuestions, maxExports} transport =
     withSupervisor $ \sup -> do
-        conn <- atomically $ do
-            questionIdPool <- newIdPool maxQuestions
-            exportIdPool <- newIdPool maxExports
+        bracket
+            (newConn sup)
+            stopConn
+            runConn
+  where
+    newConn sup = atomically $ do
+        bootstrap <- getBootstrap cfg sup
+        questionIdPool <- newIdPool maxQuestions
+        exportIdPool <- newIdPool maxExports
 
-            sendQ <- newTBQueue $ fromIntegral maxQuestions
-            recvQ <- newTBQueue $ fromIntegral maxQuestions
+        sendQ <- newTBQueue $ fromIntegral maxQuestions
+        recvQ <- newTBQueue $ fromIntegral maxQuestions
 
-            embargos <- M.new
+        embargos <- M.new
 
-            pure Conn
-                { supervisor = sup
-                , questionIdPool
-                , exportIdPool
-                , recvQ
-                , sendQ
-                , embargos
-                }
-
+        pure Conn
+            { supervisor = sup
+            , questionIdPool
+            , exportIdPool
+            , recvQ
+            , sendQ
+            , embargos
+            , bootstrap
+            }
+    runConn conn =
         coordinator conn
             `concurrently_` sendLoop transport conn
             `concurrently_` recvLoop transport conn
+    stopConn conn =
+        atomically $ decRef (bootstrap conn)
 
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
