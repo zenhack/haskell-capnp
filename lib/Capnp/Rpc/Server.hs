@@ -1,13 +1,21 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE NamedFieldPuns   #-}
-module Capnp.Rpc.Object
+{-|
+Module: Capnp.Rpc.Server
+Description: handlers for incoming method calls.
+
+A 'Server' in this context refers to a thread that handles method calls for
+a particular capability (The capnproto rpc protocol itself has no concept of
+clients and servers).
+-}
+module Capnp.Rpc.Server
     ( MethodHandler
     , pureHandler
-    , MethodReceiver(..)
-    , ReceiverOp(..)
+    , ServerOps(..)
+    , ServerMsg(..)
     , CallInfo(..)
-    , runReceiver
+    , runServer
     ) where
 
 import Data.Word
@@ -47,9 +55,10 @@ pureHandler ::
     -> MethodHandler m (Cerial ConstMsg p) (Cerial ConstMsg r)
 pureHandler = undefined
 
--- | A value that can receive and handle method calls, i.e. an object. It is
--- parametrized over the monadic context in which methods are serviced.
-data MethodReceiver m = MethodReceiver
+-- | The operations necessary to receive and handle method calls, i.e.
+-- to implement an object. It is parametrized over the monadic context
+-- in which methods are serviced.
+data ServerOps m = ServerOps
     { handleCall
         :: Word64 -- ^ Interface Id
         -> Word16 -- ^ Method Id
@@ -74,10 +83,20 @@ data CallInfo = CallInfo
     -- ^ A 'Fulfiller' which accepts the method's return value.
     }
 
-data ReceiverOp = Stop | Call CallInfo
+-- | A message to be sent to a running server.
+data ServerMsg
+    = Stop
+    -- ^ Shut down the server
+    | Call CallInfo
+    -- ^ Call a method on the server.
 
-runReceiver :: TQueue ReceiverOp -> MethodReceiver IO -> Supervisor -> STM ()
-runReceiver q recvr sup =
+-- | Start a thread managing incoming messages for an object.
+--
+-- The new thread will be managed by the given supervisor. It will process
+-- 'ServerMsg's from the queue one at a time, using the provided 'ServerOps'.
+-- When it receives a 'Stop' message, it will exit.
+runServer :: TQueue ServerMsg -> ServerOps IO -> Supervisor -> STM ()
+runServer q recvr sup =
     superviseSTM sup go
   where
     go = atomically (readTQueue q) >>= \case

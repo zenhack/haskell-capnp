@@ -106,7 +106,7 @@ library
       , Capnp.Promise
       , Capnp.Rpc
       , Capnp.Rpc.Transport
-      , Capnp.Rpc.Object
+      , Capnp.Rpc.Server
       , Capnp.RpcReorg
       , Capnp.Tutorial
 

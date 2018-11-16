@@ -65,7 +65,7 @@ import Capnp.Promise       (breakPromise)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg))
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
-import qualified Capnp.Rpc.Object         as Object
+import qualified Capnp.Rpc.Server         as Server
 
 -- These aliases are the same ones defined in rpc.capnp; unfortunately the
 -- schema compiler doesn't supply information about type aliases, so we
@@ -229,10 +229,10 @@ data Client'
     | LocalClient
         { refCount :: TVar Word32
         -- ^ The number of live references to this object. When this
-        -- reaches zero, we will tell the receiver to stop.
-        , opQueue  :: TQueue Object.ReceiverOp
-        -- ^ A queue for submitting commands to the thread managing the
-        -- object.
+        -- reaches zero, we will tell the server to stop.
+        , opQueue  :: TQueue Server.ServerMsg
+        -- ^ A queue for submitting commands to the server thread managing
+        -- the object.
         }
     -- | A client for an object that lives in a remote vat.
     | RemoteClient
@@ -304,8 +304,8 @@ decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
         modifyTVar' refCount pred
         cnt <- readTVar refCount
         when (cnt == 0) $ do
-            -- Refcount is zero. Tell the receiver to stop:
-            writeTQueue opQueue Object.Stop
+            -- Refcount is zero. Tell the server to stop:
+            writeTQueue opQueue Server.Stop
             -- ...and then replace ourselves with a disconnected client:
             writeTVar clientVar disconnectedClient'
 
@@ -313,19 +313,19 @@ decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
 
 
 -- | Call a method on the object pointed to by this client.
-call :: Object.CallInfo -> Client -> STM ()
+call :: Server.CallInfo -> Client -> STM ()
 call info (Client Nothing) =
-    breakPromise (Object.response info) def
+    breakPromise (Server.response info) def
         { RpcGen.type_ = RpcGen.Exception'Type'failed
         , RpcGen.reason = "Client is null"
         }
 call info (Client (Just clientVar)) =
     readTVar clientVar >>= \case
         ExnClient e ->
-            breakPromise (Object.response info) e
+            breakPromise (Server.response info) e
 
         LocalClient{opQueue} ->
-            writeTQueue opQueue (Object.Call info)
+            writeTQueue opQueue (Server.Call info)
 
     -- TODO: RemoteClient
 
