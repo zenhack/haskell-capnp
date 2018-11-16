@@ -16,19 +16,9 @@ bikeshed, but consistency is worth a bit of that.
   automatically.
 * Use a tabstop of 4 spaces in Haskell source code, 2 spaces in the
   cabal file.
-* Don't align things unless stylish-haskell wants to. It will get basic
-  things like:
 
-```haskell
-data MyRecord = MyRecord
-    { short      :: Int
-    , longerName :: Bool
-    }
-```
-
-Where it doesn't contradict you, use more regular indentation.
-
-Bad:
+Where stylish-haskell doesn't contradict you, use more regular
+indentation. Bad:
 
 ```haskell
 data MyVariant = Apples Int
