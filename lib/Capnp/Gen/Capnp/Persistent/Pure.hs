@@ -66,7 +66,7 @@ class MonadIO m => Persistent'server_ m cap where
     {-# MINIMAL persistent'save #-}
     persistent'save :: cap -> Server.MethodHandler m (Persistent'SaveParams) (Persistent'SaveResults)
     persistent'save _ = Server.methodUnimplemented
-export_Persistent :: Persistent'server_ a => a -> IO Persistent
+export_Persistent :: Persistent'server_ IO a => a -> IO Persistent
 export_Persistent server_ = Persistent <$> Rpc.export Server.ServerOps
     { handleStop = pure () -- TODO
     , handleCall = \interfaceId methodId -> case interfaceId of
@@ -103,7 +103,7 @@ class MonadIO m => RealmGateway'server_ m cap where
     realmGateway'import _ = Server.methodUnimplemented
     realmGateway'export :: cap -> Server.MethodHandler m (RealmGateway'export'params) (Persistent'SaveResults)
     realmGateway'export _ = Server.methodUnimplemented
-export_RealmGateway :: RealmGateway'server_ a => a -> IO RealmGateway
+export_RealmGateway :: RealmGateway'server_ IO a => a -> IO RealmGateway
 export_RealmGateway server_ = RealmGateway <$> Rpc.export Server.ServerOps
     { handleStop = pure () -- TODO
     , handleCall = \interfaceId methodId -> case interfaceId of

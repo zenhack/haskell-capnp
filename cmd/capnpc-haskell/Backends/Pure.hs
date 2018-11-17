@@ -303,7 +303,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
             , hcat [ pureValName methodName, " _ = Server.methodUnimplemented" ]
             ]
         ]
-    , hcat [ "export_", pureName, " :: ", pureName, "'server_ a => a -> IO ", pureName ]
+    , hcat [ "export_", pureName, " :: ", pureName, "'server_ IO a => a -> IO ", pureName ]
     , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Server.ServerOps" ]
     , indent $ vcat
         [ "{ handleStop = pure () -- TODO"
