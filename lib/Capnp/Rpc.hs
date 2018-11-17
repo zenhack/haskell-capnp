@@ -64,6 +64,7 @@ import UnliftIO.STM
 import Control.Concurrent.STM (throwSTM)
 import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
+import Data.String            (fromString)
 import GHC.Generics           (Generic)
 import Supervisors            (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.Weak        (addFinalizer)
@@ -203,6 +204,7 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
         sendQ <- newTBQueue $ fromIntegral maxQuestions
         recvQ <- newTBQueue $ fromIntegral maxQuestions
 
+        questions <- M.new
         answers <- M.new
 
         embargos <- M.new
@@ -213,6 +215,7 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
             , exportIdPool
             , recvQ
             , sendQ
+            , questions
             , answers
             , embargos
             , bootstrap
@@ -528,8 +531,8 @@ lookupAbort keyTypeName conn m key f = do
             f val
         Nothing ->
             abortConn conn def
-                { type_ = RpcGen.Exception'Type'failed
-                , reason = mconcat
+                { RpcGen.type_ = RpcGen.Exception'Type'failed
+                , RpcGen.reason = mconcat
                     [ "No such "
                     , keyTypeName
                     ,  ": "
@@ -537,7 +540,7 @@ lookupAbort keyTypeName conn m key f = do
                     ]
                 }
 
-abortConn :: RpcGen.Exception -> STM ()
+abortConn :: Conn -> RpcGen.Exception -> STM ()
 abortConn = error "TODO"
 
 -- | Get a CapDescriptor for this client, suitable for sending to the remote
