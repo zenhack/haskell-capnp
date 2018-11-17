@@ -69,7 +69,7 @@ import Util
 import qualified Capnp.Untyped.Pure as Untyped
 
 newtype Namespace = Namespace [Text]
-    deriving(Show, Read, Eq, Ord, IsList)
+    deriving(Show, Eq, Ord, IsList)
 
 data Module = Module
     { modId      :: Id
@@ -83,27 +83,27 @@ data Module = Module
     -- anything -- but ideally we'd remove that information from the key.
     , modDecls   :: M.Map Name Decl
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Decl
     = DeclDef DataDef
     | DeclConst Const
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 newtype Import = Import ModuleRef
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data ModuleRef
     = FullyQualified Namespace
     | ByCapnpId Id
-    deriving(Show, Read, Eq, Ord)
+    deriving(Show, Eq, Ord)
 
 data Name = Name
     { nameModule      :: ModuleRef
     , nameLocalNS     :: Namespace
     , nameUnqualified :: Text
     }
-    deriving(Show, Read, Eq, Ord)
+    deriving(Show, Eq, Ord)
 
 subName :: Name -> Text -> Name
 subName name@Name{..} nextPart = name
@@ -136,61 +136,61 @@ data Type
     | VoidType
     | WordType WordType
     | PtrType PtrType
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data CompositeType
     = StructType Name [Type]
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data WordType
     = EnumType Name
     | PrimWord PrimWord
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data PtrType
     = ListOf Type
     | PrimPtr PrimPtr
     | PtrComposite CompositeType
     | PtrInterface Name
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data PrimWord
     = PrimInt { isSigned :: !Bool, size :: !Int }
     | PrimFloat32
     | PrimFloat64
     | PrimBool
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data PrimPtr
     = PrimText
     | PrimData
     | PrimAnyPtr AnyPtr
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data AnyPtr
     = Struct
     | List
     | Cap
     | Ptr
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Variant = Variant
     { variantName   :: Name
     , variantParams :: VariantParams
     , variantTag    :: !Word16
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data VariantParams
     = Unnamed Type FieldLocType
     | Record [Field]
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Field = Field
     { fieldName    :: Text
     , fieldLocType :: FieldLocType
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Const
     = WordConst
@@ -202,7 +202,7 @@ data Const
         { ptrValue :: Maybe Untyped.PtrType
         , ptrType  :: PtrType
         }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data DataDef
     = DefUnion
@@ -216,13 +216,13 @@ data DataDef
     | DefStruct StructDef
     | DefEnum [Name]
     | DefInterface InterfaceDef
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data StructDef = StructDef
     { fields :: [Field]
     , info   :: StructInfo
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data StructInfo
     = IsGroup
@@ -234,13 +234,13 @@ data StructInfo
     -- ^ The struct is a full-fledged struct that can be directly
     -- allocated, stored in a list, etc. Info contains the sizes
     -- of its sections.
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data InterfaceDef = InterfaceDef
     { interfaceId :: !Word64
     , methods     :: [Method]
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Method = Method
     { methodName :: Name
@@ -248,7 +248,7 @@ data Method = Method
     , paramType  :: CompositeType
     , resultType :: CompositeType
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 -- | The type and location of a field.
 data FieldLocType
@@ -261,7 +261,7 @@ data FieldLocType
     | HereField CompositeType
     -- | The field is of type void (and thus is zero-size).
     | VoidField
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 -- | The location of a field within a struct's data section.
 data DataLoc = DataLoc
@@ -273,4 +273,4 @@ data DataLoc = DataLoc
     -- to allow for encoding default values. Note that this is xor-ed
     -- with the bits representing the value, not the whole word.
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
