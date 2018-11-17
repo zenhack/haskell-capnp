@@ -149,6 +149,7 @@ library
     -- other-extensions:
     build-depends:
         cpu                               ^>= 0.1.2
+      , hashable                          ^>= 1.2.7
       , data-default-instances-vector     ^>= 0.0.1
       , stm                               ^>= 2.5.0
       , stm-containers                    ^>= 1.1.0

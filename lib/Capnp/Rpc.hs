@@ -64,9 +64,12 @@ import UnliftIO.STM
 import Control.Concurrent.STM (throwSTM)
 import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
+import Data.Hashable          (Hashable, hash, hashWithSalt)
 import Data.String            (fromString)
 import GHC.Generics           (Generic)
 import Supervisors            (Supervisor, superviseSTM, withSupervisor)
+import System.Mem.StableName
+    (StableName, eqStableName, hashStableName, makeStableName)
 import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
 import UnliftIO.Exception     (Exception, bracket)
@@ -106,7 +109,10 @@ type EmbargoId  = Word32
 
 -- | A connection to a remote vat
 data Conn = Conn
-    { sendQ          :: TBQueue ConstMsg
+    { stableName     :: StableName ()
+    -- So we can use the connection as a map key.
+
+    , sendQ          :: TBQueue ConstMsg
     , recvQ          :: TBQueue ConstMsg
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
@@ -131,6 +137,13 @@ data Conn = Conn
     -- The capability which should be served as this connection's bootstrap
     -- interface.
     }
+
+instance Eq Conn where
+    x == y = stableName x `eqStableName` stableName y
+
+instance Hashable Conn where
+    hash Conn{stableName} = hashStableName stableName
+    hashWithSalt _ = hash
 
 -- | Configuration information for a connection.
 data ConnConfig = ConnConfig
@@ -196,30 +209,33 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
             stopConn
             runConn
   where
-    newConn sup = atomically $ do
-        bootstrap <- getBootstrap cfg sup
-        questionIdPool <- newIdPool maxQuestions
-        exportIdPool <- newIdPool maxExports
+    newConn sup = do
+        stableName <- makeStableName ()
+        atomically $ do
+            bootstrap <- getBootstrap cfg sup
+            questionIdPool <- newIdPool maxQuestions
+            exportIdPool <- newIdPool maxExports
 
-        sendQ <- newTBQueue $ fromIntegral maxQuestions
-        recvQ <- newTBQueue $ fromIntegral maxQuestions
+            sendQ <- newTBQueue $ fromIntegral maxQuestions
+            recvQ <- newTBQueue $ fromIntegral maxQuestions
 
-        questions <- M.new
-        answers <- M.new
+            questions <- M.new
+            answers <- M.new
 
-        embargos <- M.new
+            embargos <- M.new
 
-        pure Conn
-            { supervisor = sup
-            , questionIdPool
-            , exportIdPool
-            , recvQ
-            , sendQ
-            , questions
-            , answers
-            , embargos
-            , bootstrap
-            }
+            pure Conn
+                { stableName
+                , supervisor = sup
+                , questionIdPool
+                , exportIdPool
+                , recvQ
+                , sendQ
+                , questions
+                , answers
+                , embargos
+                , bootstrap
+                }
     runConn conn =
         coordinator conn
             `concurrently_` sendLoop transport conn
