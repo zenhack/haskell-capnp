@@ -503,8 +503,8 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
                 _ ->
                     RpcGen.Return'results RpcGen.Payload
                             -- XXX: this is a bit fragile; we're relying on
-                            -- the encode step -- to pick the right index
-                            -- for our capability.
+                            -- the encode step to pick the right index for
+                            -- our capability.
                         { content = Just $ Untyped.PtrCap (bootstrap conn)
                         , capTable = V.singleton capDesc
                         }
