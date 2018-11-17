@@ -61,10 +61,10 @@ module Capnp.Rpc
 --       * [x] Unimplemented
 --       * [ ] ...
 --   * [ ] Level 0 messages
---     * [ ] Bootstrap
+--     * [x] Bootstrap
 --     * [ ] Call
 --     * [ ] Return
---     * [ ] Finish
+--     * [x] Finish
 --   * [ ] Level 1 messages
 --     * [ ] Resolve
 --     * [ ] Release
