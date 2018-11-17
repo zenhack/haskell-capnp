@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase       #-}
-{-# LANGUAGE NamedFieldPuns   #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 {-|
 Module: Capnp.Rpc.Server
 Description: handlers for incoming method calls.
@@ -12,6 +14,9 @@ clients and servers).
 module Capnp.Rpc.Server
     ( MethodHandler
     , pureHandler
+    , untypedHandler
+    , methodThrow
+    , methodUnimplemented
     , ServerOps(..)
     , ServerMsg(..)
     , CallInfo(..)
@@ -21,19 +26,23 @@ module Capnp.Rpc.Server
 import Data.Word
 import UnliftIO.STM
 
-import Control.Monad.Catch (MonadThrow)
-import Supervisors         (Supervisor, superviseSTM)
+import Control.Monad.Catch    (MonadThrow)
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Default           (def)
+import Supervisors            (Supervisor, superviseSTM)
 
 import Capnp.Classes (Cerialize, Decerialize(Cerial), FromPtr)
 import Capnp.Message (ConstMsg)
-import Capnp.Promise (Fulfiller)
+import Capnp.Promise (Fulfiller, breakPromiseIO)
 import Capnp.Untyped (Ptr)
+
+import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@. See Note [Method handling].
 newtype MethodHandler m p r = MethodHandler
     { handleMethod
-        ::  Maybe (Ptr ConstMsg)
+        :: Maybe (Ptr ConstMsg)
         -> Fulfiller (Maybe (Ptr ConstMsg))
         -> m ()
     }
@@ -54,6 +63,24 @@ pureHandler ::
     => (c -> p -> m r)
     -> MethodHandler m (Cerial ConstMsg p) (Cerial ConstMsg r)
 pureHandler = undefined
+
+-- | Convert a 'MethodHandler' for any parameter and return types into
+-- one that deals with untyped pointers.
+untypedHandler
+    :: MethodHandler m p r
+    -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+untypedHandler MethodHandler{..} = MethodHandler{..}
+
+methodThrow :: MonadIO m => RpcGen.Exception -> MethodHandler m p r
+methodThrow exn = MethodHandler
+    { handleMethod = \_ fulfiller -> liftIO $ breakPromiseIO fulfiller exn
+    }
+
+methodUnimplemented :: MonadIO m => MethodHandler m p r
+methodUnimplemented = methodThrow def
+    { RpcGen.type_ = RpcGen.Exception'Type'unimplemented
+    , RpcGen.reason = "Method unimplemented"
+    }
 
 -- | The operations necessary to receive and handle method calls, i.e.
 -- to implement an object. It is parametrized over the monadic context

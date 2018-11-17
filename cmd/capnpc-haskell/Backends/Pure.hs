@@ -118,7 +118,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , "import Capnp.Basics.Pure (Data, Text)"
     , "import Control.Monad.Catch (MonadThrow(throwM))"
     , "import Control.Concurrent.STM (atomically)"
-    , "import Control.Monad.IO.Class (liftIO)"
+    , "import Control.Monad.IO.Class (MonadIO(liftIO))"
     , "import Capnp.TraversalLimit (MonadLimit, evalLimitT)"
     , ""
     , "import Control.Monad (forM_)"
@@ -134,6 +134,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , if hasInterfaces mod then
         vcat
         [ "import qualified Capnp.Rpc as Rpc"
+        , "import qualified Capnp.Rpc.Server as Server"
         , "import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc"
         , "import qualified Capnp.Promise as Promise"
         , "import qualified Capnp.GenHelpers.Rpc as RH'"
@@ -277,7 +278,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
     , instance_ [] ("C'.Cerialize " <> pureName)
         [ hcat [ "cerialize msg (", pureName, " client) = ", rawName, " . Just <$> U'.appendCap msg client" ]
         ]
-    , class_ [] (pureName <> "'server_ cap")
+    , class_ ["MonadIO m"] (pureName <> "'server_ m cap")
         [ hcat
             -- We provide default definitions for all methods that just throw
             -- 'unimplemented', so that if a schema adds new methods, the code
@@ -293,39 +294,40 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
         , vcat $ flip map methods $ \Method{..} -> vcat
             [ hcat
                 [ pureValName methodName
-                , " :: "
+                , " :: cap -> Server.MethodHandler m ("
                 , fmtType thisMod (CompositeType paramType)
-                , " -> cap -> Rpc.RpcT IO ("
+                , ") ("
                 , fmtType thisMod (CompositeType resultType)
                 , ")"
                 ]
-            , hcat [ pureValName methodName, " _ _ = Rpc.throwMethodUnimplemented" ]
+            , hcat [ pureValName methodName, " _ = Server.methodUnimplemented" ]
             ]
         ]
-    , hcat [ "export_", pureName, " :: ", pureName, "'server_ a => a -> Rpc.RpcT IO ", pureName ]
-    , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Rpc.Server" ]
+    , hcat [ "export_", pureName, " :: ", pureName, "'server_ a => a -> IO ", pureName ]
+    , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Server.ServerOps" ]
     , indent $ vcat
         [ "{ handleStop = pure () -- TODO"
-        , ", handleCall = \\interfaceId methodId payload fulfiller -> case interfaceId of"
+        , ", handleCall = \\interfaceId methodId -> case interfaceId of"
         , indent $ vcat
             -- TODO: superclasses.
             [ hcat [ fromString (show interfaceId), " -> case methodId of" ]
             , indent $ vcat
                 [ vcat $ flip map methods $ \Method{..} -> vcat
-                    [ hcat [ fromString (show ordinal), " -> do" ]
-                    , indent $ vcat
-                        [ hcat [ "RH'.handleMethod server_ ", pureValName methodName, " payload fulfiller" ] ]
-                        -- TODO:
-                        --
-                        -- * handle exceptions
+                    [ hcat
+                        [ fromString (show ordinal)
+                        , " -> "
+                        , "Server.untypedHandler ("
+                        , pureValName methodName
+                        , " server_)"
+                        ]
                     ]
-                , "_ -> liftIO $ atomically $ Promise.breakPromise fulfiller Rpc.methodUnimplemented"
+                , "_ -> Server.methodUnimplemented"
                 ]
-            , "_ -> liftIO $ atomically $ Promise.breakPromise fulfiller Rpc.methodUnimplemented"
+            , "_ -> Server.methodUnimplemented"
             ]
         , "}"
         ]
-    , instance_ [] (pureName <> "'server_ " <> pureName)
+    , instance_ [] (pureName <> "'server_ IO " <> pureName)
         $ flip map methods $ \Method{..} -> vcat
             [ hcat [ pureValName methodName,  " args (", pureName, " client) = do" ]
             , indent $ vcat

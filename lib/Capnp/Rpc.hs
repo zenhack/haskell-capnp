@@ -21,6 +21,9 @@ module Capnp.Rpc
 
     , IsClient(..)
 
+    -- * Exporting local objects
+    , export
+
     -- * Errors
     , RpcError(..)
     , RpcGen.Exception(..)
@@ -66,6 +69,7 @@ import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
 import GHC.Generics           (Generic)
 import Supervisors            (Supervisor, withSupervisor)
+import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
 import UnliftIO.Exception     (Exception, bracket)
 
@@ -405,6 +409,22 @@ call info (Client (Just clientVar)) =
             writeTQueue opQueue (Server.Call info)
 
     -- TODO: RemoteClient
+
+-- | Spawn a local server with its lifetime bound to the supervisor,
+-- and return a client for it. When the client is garbage collected,
+-- the server will be stopped (if it is still running).
+export :: Supervisor -> Server.ServerOps IO -> IO Client
+export sup ops = do
+    q <- newTQueueIO
+    refCount <- newTVarIO 1
+    let client' = LocalClient
+            { refCount = refCount
+            , opQueue = q
+            }
+    addFinalizer client' $
+        atomically $ writeTQueue q Server.Stop
+    atomically $ Server.runServer q ops sup
+    Client . Just <$> newTVarIO client'
 
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
