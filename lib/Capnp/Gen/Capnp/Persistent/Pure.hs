@@ -44,6 +44,7 @@ import qualified Capnp.Promise as Promise
 import qualified Capnp.GenHelpers.Rpc as RH'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
+import qualified Supervisors
 import qualified Capnp.Gen.ById.Xb8630836983feed7
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
@@ -66,22 +67,17 @@ class MonadIO m => Persistent'server_ m cap where
     {-# MINIMAL persistent'save #-}
     persistent'save :: cap -> Server.MethodHandler m (Persistent'SaveParams) (Persistent'SaveResults)
     persistent'save _ = Server.methodUnimplemented
-export_Persistent :: Persistent'server_ IO a => a -> IO Persistent
-export_Persistent server_ = Persistent <$> Rpc.export Server.ServerOps
+export_Persistent :: Persistent'server_ IO a => Supervisors.Supervisor -> a -> IO Persistent
+export_Persistent sup_ server_ = Persistent <$> Rpc.export sup_ Server.ServerOps
     { handleStop = pure () -- TODO
     , handleCall = \interfaceId methodId -> case interfaceId of
         14468694717054801553 -> case methodId of
-            0 -> Server.untypedHandler (persistent'save server_)
+            0 -> Server.toUntypedHandler (persistent'save server_)
             _ -> Server.methodUnimplemented
         _ -> Server.methodUnimplemented
     }
 instance Persistent'server_ IO Persistent where
-    persistent'save args (Persistent client) = do
-        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
-        (resultPromise, resultFulfiller) <- Promise.newPromiseIO
-        Rpc.call client 14468694717054801553 0 (Just (U'.PtrStruct args')) resultFulfiller
-        result <- Promise.waitIO resultPromise
-        evalLimitT maxBound $ PH'.convertValue result
+    persistent'save (Persistent client) = Rpc.clientMethodHandler 14468694717054801553 0 client
 newtype RealmGateway = RealmGateway M'.Client
     deriving(Show, Eq, Generic)
 instance Rpc.IsClient RealmGateway where
@@ -103,29 +99,19 @@ class MonadIO m => RealmGateway'server_ m cap where
     realmGateway'import _ = Server.methodUnimplemented
     realmGateway'export :: cap -> Server.MethodHandler m (RealmGateway'export'params) (Persistent'SaveResults)
     realmGateway'export _ = Server.methodUnimplemented
-export_RealmGateway :: RealmGateway'server_ IO a => a -> IO RealmGateway
-export_RealmGateway server_ = RealmGateway <$> Rpc.export Server.ServerOps
+export_RealmGateway :: RealmGateway'server_ IO a => Supervisors.Supervisor -> a -> IO RealmGateway
+export_RealmGateway sup_ server_ = RealmGateway <$> Rpc.export sup_ Server.ServerOps
     { handleStop = pure () -- TODO
     , handleCall = \interfaceId methodId -> case interfaceId of
         9583422979879616212 -> case methodId of
-            0 -> Server.untypedHandler (realmGateway'import server_)
-            1 -> Server.untypedHandler (realmGateway'export server_)
+            0 -> Server.toUntypedHandler (realmGateway'import server_)
+            1 -> Server.toUntypedHandler (realmGateway'export server_)
             _ -> Server.methodUnimplemented
         _ -> Server.methodUnimplemented
     }
 instance RealmGateway'server_ IO RealmGateway where
-    realmGateway'import args (RealmGateway client) = do
-        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
-        (resultPromise, resultFulfiller) <- Promise.newPromiseIO
-        Rpc.call client 9583422979879616212 0 (Just (U'.PtrStruct args')) resultFulfiller
-        result <- Promise.waitIO resultPromise
-        evalLimitT maxBound $ PH'.convertValue result
-    realmGateway'export args (RealmGateway client) = do
-        args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot
-        (resultPromise, resultFulfiller) <- Promise.newPromiseIO
-        Rpc.call client 9583422979879616212 1 (Just (U'.PtrStruct args')) resultFulfiller
-        result <- Promise.waitIO resultPromise
-        evalLimitT maxBound $ PH'.convertValue result
+    realmGateway'import (RealmGateway client) = Rpc.clientMethodHandler 9583422979879616212 0 client
+    realmGateway'export (RealmGateway client) = Rpc.clientMethodHandler 9583422979879616212 1 client
 data Persistent'SaveParams
     = Persistent'SaveParams
         {sealFor :: Maybe (PU'.PtrType)}

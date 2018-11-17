@@ -118,7 +118,7 @@ library
       -- BEGIN GENERATED SCHEMA MODULES
       , Capnp.Gen.Capnp.Cxx.Pure
       , Capnp.Gen.Capnp.Json.Pure
-      -- , Capnp.Gen.Capnp.Persistent.Pure
+      , Capnp.Gen.Capnp.Persistent.Pure
       , Capnp.Gen.Capnp.Rpc.Pure
       , Capnp.Gen.Capnp.RpcTwoparty.Pure
       , Capnp.Gen.Capnp.Schema.Pure
@@ -130,7 +130,7 @@ library
       , Capnp.Gen.Capnp.Schema
       , Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
       , Capnp.Gen.ById.X8ef99297a43a5e34.Pure
-      -- , Capnp.Gen.ById.Xb8630836983feed7.Pure
+      , Capnp.Gen.ById.Xb8630836983feed7.Pure
       , Capnp.Gen.ById.Xb312981b2552a250.Pure
       , Capnp.Gen.ById.Xa184c7885cdaf2a1.Pure
       , Capnp.Gen.ById.Xa93fc509624c72d9.Pure

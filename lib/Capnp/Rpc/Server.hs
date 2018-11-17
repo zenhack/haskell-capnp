@@ -14,6 +14,8 @@ clients and servers).
 module Capnp.Rpc.Server
     ( MethodHandler
     , pureHandler
+    , toUntypedHandler
+    , fromUntypedHandler
     , untypedHandler
     , methodThrow
     , methodUnimplemented
@@ -66,10 +68,21 @@ pureHandler = undefined
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
 -- one that deals with untyped pointers.
-untypedHandler
+toUntypedHandler
     :: MethodHandler m p r
     -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
-untypedHandler MethodHandler{..} = MethodHandler{..}
+toUntypedHandler MethodHandler{..} = MethodHandler{..}
+
+-- | Inverse of toUntypedHandler
+fromUntypedHandler
+    :: MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+    -> MethodHandler m p r
+fromUntypedHandler MethodHandler{..} = MethodHandler{..}
+
+untypedHandler
+    :: (Maybe (Ptr ConstMsg) -> Fulfiller (Maybe (Ptr ConstMsg)) -> m ())
+    -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+untypedHandler = MethodHandler
 
 methodThrow :: MonadIO m => RpcGen.Exception -> MethodHandler m p r
 methodThrow exn = MethodHandler

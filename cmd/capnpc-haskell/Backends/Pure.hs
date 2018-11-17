@@ -144,6 +144,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import qualified Data.Vector as V"
     , "import qualified Data.ByteString as BS"
+    , "import qualified Supervisors"
     , ""
     , fmtImport Raw $ Import (ByCapnpId modId)
     , vcat $ map (fmtImport Pure) modImports
@@ -303,8 +304,8 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
             , hcat [ pureValName methodName, " _ = Server.methodUnimplemented" ]
             ]
         ]
-    , hcat [ "export_", pureName, " :: ", pureName, "'server_ IO a => a -> IO ", pureName ]
-    , hcat [ "export_", pureName, " server_ = ", pureName, " <$> Rpc.export Server.ServerOps" ]
+    , hcat [ "export_", pureName, " :: ", pureName, "'server_ IO a => Supervisors.Supervisor -> a -> IO ", pureName ]
+    , hcat [ "export_", pureName, " sup_ server_ = ", pureName, " <$> Rpc.export sup_ Server.ServerOps" ]
     , indent $ vcat
         [ "{ handleStop = pure () -- TODO"
         , ", handleCall = \\interfaceId methodId -> case interfaceId of"
@@ -316,7 +317,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                     [ hcat
                         [ fromString (show ordinal)
                         , " -> "
-                        , "Server.untypedHandler ("
+                        , "Server.toUntypedHandler ("
                         , pureValName methodName
                         , " server_)"
                         ]
@@ -328,28 +329,15 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
         , "}"
         ]
     , instance_ [] (pureName <> "'server_ IO " <> pureName)
-        $ flip map methods $ \Method{..} -> vcat
-            [ hcat [ pureValName methodName,  " args (", pureName, " client) = do" ]
-            , indent $ vcat
-                -- we're using maxBound as the traversal limit below. This is OK
-                -- because we're only touching values converted from already-validated
-                -- high-level api types that we serailize ourselves, so they can't
-                -- be malicious in the ways that the traversal limit is designed to
-                -- mitiage
-                [ "args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot"
-                , "(resultPromise, resultFulfiller) <- Promise.newPromiseIO"
-                , hcat
-                    [ "Rpc.call "
-                    , "client "
-                    , PP.textStrict $ T.pack $ show interfaceId
-                    , " "
-                    , PP.textStrict $ T.pack $ show ordinal
-                    , " (Just (U'.PtrStruct args'))"
-                    , " resultFulfiller"
-                    ]
-                , "result <- Promise.waitIO resultPromise"
-                , "evalLimitT maxBound $ PH'.convertValue result"
-                ]
+        $ flip map methods $ \Method{..} -> hcat
+            [ pureValName methodName
+            ,  " ("
+            , pureName
+            , " client) = Rpc.clientMethodHandler "
+            , fromString (show interfaceId)
+            , " "
+            , fromString (show ordinal)
+            , " client"
             ]
     ]
 fmtDataDef thisMod dataName dataDef =

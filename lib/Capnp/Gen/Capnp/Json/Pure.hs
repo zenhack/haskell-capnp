@@ -39,6 +39,7 @@ import qualified Capnp.GenHelpers.Pure as PH'
 import qualified Capnp.Classes as C'
 import qualified Data.Vector as V
 import qualified Data.ByteString as BS
+import qualified Supervisors
 import qualified Capnp.Gen.ById.X8ef99297a43a5e34
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
 import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81

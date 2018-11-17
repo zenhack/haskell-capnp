@@ -4,6 +4,7 @@
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.Rpc
@@ -23,6 +24,7 @@ module Capnp.Rpc
 
     -- * Exporting local objects
     , export
+    , clientMethodHandler
 
     -- * Errors
     , RpcError(..)
@@ -426,6 +428,10 @@ export sup ops = do
     atomically $ Server.runServer q ops sup
     Client . Just <$> newTVarIO client'
 
+clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
+clientMethodHandler interfaceId methodId client =
+    Server.fromUntypedHandler $ Server.untypedHandler $
+        \arguments response -> atomically $ call Server.CallInfo{..} client
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn -> IO ()
