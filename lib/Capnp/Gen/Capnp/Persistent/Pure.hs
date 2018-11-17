@@ -27,7 +27,7 @@ import Data.Default (Default(def))
 import GHC.Generics (Generic)
 import Capnp.Basics.Pure (Data, Text)
 import Control.Monad.Catch (MonadThrow(throwM))
-import Control.Concurrent.STM (atomically)
+import Control.Concurrent.STM (STM)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Capnp.TraversalLimit (MonadLimit, evalLimitT)
 import Control.Monad (forM_)
@@ -67,7 +67,7 @@ class MonadIO m => Persistent'server_ m cap where
     {-# MINIMAL persistent'save #-}
     persistent'save :: cap -> Server.MethodHandler m (Persistent'SaveParams) (Persistent'SaveResults)
     persistent'save _ = Server.methodUnimplemented
-export_Persistent :: Persistent'server_ IO a => Supervisors.Supervisor -> a -> IO Persistent
+export_Persistent :: Persistent'server_ IO a => Supervisors.Supervisor -> a -> STM Persistent
 export_Persistent sup_ server_ = Persistent <$> Rpc.export sup_ Server.ServerOps
     { handleStop = pure () -- TODO
     , handleCall = \interfaceId methodId -> case interfaceId of
@@ -99,7 +99,7 @@ class MonadIO m => RealmGateway'server_ m cap where
     realmGateway'import _ = Server.methodUnimplemented
     realmGateway'export :: cap -> Server.MethodHandler m (RealmGateway'export'params) (Persistent'SaveResults)
     realmGateway'export _ = Server.methodUnimplemented
-export_RealmGateway :: RealmGateway'server_ IO a => Supervisors.Supervisor -> a -> IO RealmGateway
+export_RealmGateway :: RealmGateway'server_ IO a => Supervisors.Supervisor -> a -> STM RealmGateway
 export_RealmGateway sup_ server_ = RealmGateway <$> Rpc.export sup_ Server.ServerOps
     { handleStop = pure () -- TODO
     , handleCall = \interfaceId methodId -> case interfaceId of

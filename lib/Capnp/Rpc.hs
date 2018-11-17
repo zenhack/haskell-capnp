@@ -70,7 +70,7 @@ import Control.Concurrent.STM (throwSTM)
 import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
 import GHC.Generics           (Generic)
-import Supervisors            (Supervisor, withSupervisor)
+import Supervisors            (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
 import UnliftIO.Exception     (Exception, bracket)
@@ -415,18 +415,19 @@ call info (Client (Just clientVar)) =
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
 -- the server will be stopped (if it is still running).
-export :: Supervisor -> Server.ServerOps IO -> IO Client
+export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
-    q <- newTQueueIO
-    refCount <- newTVarIO 1
+    q <- newTQueue
+    refCount <- newTVar 1
     let client' = LocalClient
             { refCount = refCount
             , opQueue = q
             }
-    addFinalizer client' $
-        atomically $ writeTQueue q Server.Stop
-    atomically $ Server.runServer q ops sup
-    Client . Just <$> newTVarIO client'
+    superviseSTM sup $ do
+        addFinalizer client' $
+            atomically $ writeTQueue q Server.Stop
+        Server.runServer q ops
+    Client . Just <$> newTVar client'
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =

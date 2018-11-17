@@ -117,7 +117,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     , ""
     , "import Capnp.Basics.Pure (Data, Text)"
     , "import Control.Monad.Catch (MonadThrow(throwM))"
-    , "import Control.Concurrent.STM (atomically)"
+    , "import Control.Concurrent.STM (STM)"
     , "import Control.Monad.IO.Class (MonadIO(liftIO))"
     , "import Capnp.TraversalLimit (MonadLimit, evalLimitT)"
     , ""
@@ -304,7 +304,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
             , hcat [ pureValName methodName, " _ = Server.methodUnimplemented" ]
             ]
         ]
-    , hcat [ "export_", pureName, " :: ", pureName, "'server_ IO a => Supervisors.Supervisor -> a -> IO ", pureName ]
+    , hcat [ "export_", pureName, " :: ", pureName, "'server_ IO a => Supervisors.Supervisor -> a -> STM ", pureName ]
     , hcat [ "export_", pureName, " sup_ server_ = ", pureName, " <$> Rpc.export sup_ Server.ServerOps" ]
     , indent $ vcat
         [ "{ handleStop = pure () -- TODO"

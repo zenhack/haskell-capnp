@@ -3,7 +3,6 @@
 module Main where
 
 import Network.Simple.TCP (serve)
-import Supervisors        (withSupervisor)
 
 import Capnp               (def, defaultLimit)
 import Capnp.Rpc           (ConnConfig(..), handleConn, toClient)
@@ -19,10 +18,8 @@ instance Echo'server_ IO MyEchoServer where
         pure def { reply = query params }
 
 main :: IO ()
-main = withSupervisor $ \sup -> do
-    bsClient <- export_Echo sup MyEchoServer
-    serve "localhost" "4000" $ \(sock, _addr) ->
-        handleConn (socketTransport sock defaultLimit) def
-            { debugMode = True
-            , getBootstrap = \_ -> pure (toClient bsClient)
-            }
+main = serve "localhost" "4000" $ \(sock, _addr) ->
+    handleConn (socketTransport sock defaultLimit) def
+        { debugMode = True
+        , getBootstrap = \sup -> toClient <$> export_Echo sup MyEchoServer
+        }

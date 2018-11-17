@@ -34,7 +34,6 @@ import Control.Monad.Catch     (MonadThrow)
 import Control.Monad.IO.Class  (MonadIO(liftIO))
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Data.Default            (def)
-import Supervisors             (Supervisor, superviseSTM)
 import UnliftIO                (MonadUnliftIO)
 import UnliftIO.Exception      (SomeException, fromException, try)
 
@@ -163,16 +162,15 @@ data ServerMsg
 -- The new thread will be managed by the given supervisor. It will process
 -- 'ServerMsg's from the queue one at a time, using the provided 'ServerOps'.
 -- When it receives a 'Stop' message, it will exit.
-runServer :: TQueue ServerMsg -> ServerOps IO -> Supervisor -> STM ()
-runServer q recvr sup =
-    superviseSTM sup go
+runServer :: TQueue ServerMsg -> ServerOps IO -> IO ()
+runServer q ops = go
   where
     go = atomically (readTQueue q) >>= \case
         Stop ->
-            handleStop recvr
+            handleStop ops
         Call CallInfo{interfaceId, methodId, arguments, response} -> do
             handleMethod
-                (handleCall recvr interfaceId methodId)
+                (handleCall ops interfaceId methodId)
                 arguments
                 response
             go
