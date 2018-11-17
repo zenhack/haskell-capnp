@@ -161,7 +161,8 @@ data ConnConfig = ConnConfig
     , getBootstrap :: Supervisor -> STM Client
     -- ^ Get the bootstrap interface we should serve for this connection.
     -- the argument is a supervisor whose lifetime is bound to the
-    -- connection.
+    -- connection. If 'getBootstrap' returns 'nullClient', we will respond
+    -- to bootstrap messages with an exception.
     --
     -- The default always returns 'nullClient'.
     }
