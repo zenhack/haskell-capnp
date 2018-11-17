@@ -137,8 +137,7 @@ data Conn = Conn
     , exportIdPool   :: IdPool
     -- Pools of identifiers for new questions and exports
 
-    , questions      :: M.Map QuestionId QuestionState
-    , answers        :: M.Map AnswerId QuestionState
+    , answers        :: M.Map AnswerId Answer
     -- TODO: imports/exports
 
     , embargos       :: M.Map EmbargoId (STM ())
@@ -223,7 +222,6 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
         sendQ <- newTBQueue $ fromIntegral maxQuestions
         recvQ <- newTBQueue $ fromIntegral maxQuestions
 
-        questions <- M.new
         answers <- M.new
 
         embargos <- M.new
@@ -234,7 +232,6 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
             , exportIdPool
             , recvQ
             , sendQ
-            , questions
             , answers
             , embargos
             , bootstrap
@@ -266,15 +263,10 @@ newId (IdPool pool) = readTVar pool >>= \case
 freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
 
-
--- | The state an outstanding question or answer.
-data QuestionState = QuestionState
-    { qReturn :: Maybe RpcGen.Return
-    -- ^ The return message that is a response to this question.
-    -- 'Nothing' if we have not sent/received a return.
-    , qFinish :: Maybe RpcGen.Finish
-    -- ^ The finish message sent for this question. 'Nothing' if
-    -- we have not sent/received a finish.
+-- | An entry in our answers table.
+data Answer = Answer
+    { onFinish     :: RpcGen.Finish -> STM ()
+    -- ^ Called when a the remote vat sends a finish message for this question.
     }
 
 
@@ -350,10 +342,10 @@ data Client'
 -- * In the case of an imported capability, it records whether the capability
 --   is an unresolved promise (answers are always unresolved by definition).
 data MsgTarget
-    = Answer !AnswerId
+    = AnswerTgt !AnswerId
     -- ^ Targets an entry in the remote vat's answers table/local vat's
     -- questions table.
-    | Import
+    | ImportTgt
         { importId   :: !ImportId
         -- ^ Targets an entry in the remote vat's export table/local vat's
         -- imports table.
@@ -474,6 +466,8 @@ coordinator conn@Conn{recvQ} = atomically $ do
             handleUnimplementedMsg conn msg
         RpcGen.Message'bootstrap bs ->
             handleBootstrapMsg conn bs
+        RpcGen.Message'finish finish ->
+            handleFinishMsg conn finish
         _ ->
             error "TODO"
     error "TODO"
@@ -522,17 +516,25 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
     M.focus
         (Focus.alterM $ insertBootstrap ret)
         questionId
-        (questions conn)
+        (answers conn)
     msg <- createPure maxBound $ valueToMsg $ RpcGen.Message'return ret
     writeTBQueue (sendQ conn) msg
   where
     insertBootstrap ret Nothing =
-        pure $ Just QuestionState
-            { qReturn = Just ret
-            , qFinish = Nothing
+        pure $ Just Answer
+            { onFinish = \_ -> M.delete questionId (answers conn)
             }
     insertBootstrap _ (Just _) =
         error "TODO: duplicate question ID; abort the connection."
+
+handleFinishMsg :: Conn -> RpcGen.Finish -> STM ()
+handleFinishMsg Conn{answers} finish@RpcGen.Finish{questionId} = do
+    answer <- M.lookup questionId answers
+    case answer of
+        Just Answer{onFinish} ->
+            onFinish finish
+        Nothing ->
+            error "TODO: abort the connection."
 
 -- | Get a CapDescriptor for this client, suitable for sending to the remote
 -- vat. If the client points to our own vat, this will increment the refcount
