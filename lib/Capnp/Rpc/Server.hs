@@ -1,8 +1,10 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NamedFieldPuns    #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NamedFieldPuns      #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-|
 Module: Capnp.Rpc.Server
 Description: handlers for incoming method calls.
@@ -28,17 +30,26 @@ module Capnp.Rpc.Server
 import Data.Word
 import UnliftIO.STM
 
-import Control.Monad.Catch    (MonadThrow)
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.Default           (def)
-import Supervisors            (Supervisor, superviseSTM)
+import Control.Monad.Catch     (MonadThrow)
+import Control.Monad.IO.Class  (MonadIO(liftIO))
+import Control.Monad.Primitive (PrimMonad, PrimState)
+import Data.Default            (def)
+import Supervisors             (Supervisor, superviseSTM)
+import UnliftIO                (MonadUnliftIO)
+import UnliftIO.Exception      (SomeException, fromException, try)
 
-import Capnp.Classes (Cerialize, Decerialize(Cerial), FromPtr)
-import Capnp.Message (ConstMsg)
-import Capnp.Promise (Fulfiller, breakPromiseIO)
-import Capnp.Untyped (Ptr)
+import Capnp.Classes
+    (Cerialize, Decerialize(Cerial, decerialize), FromPtr(fromPtr), ToStruct)
+import Capnp.Convert        (valueToMsg)
+import Capnp.Message        (ConstMsg, MutMsg)
+import Capnp.Promise        (Fulfiller, breakPromiseIO, fulfillIO)
+import Capnp.TraversalLimit (defaultLimit, evalLimitT)
+import Capnp.Untyped        (Ptr)
+import Data.Mutable         (freeze)
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
+import qualified Capnp.Message            as Message
+import qualified Capnp.Untyped            as Untyped
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@. See Note [Method handling].
@@ -49,22 +60,39 @@ newtype MethodHandler m p r = MethodHandler
         -> m ()
     }
 
--- | 'pureHandler' creates a method handler from a function accepting the
--- receiver and parameters, and returning a monadic value computing the
--- result. See Note [Method handling].
 pureHandler ::
     ( MonadThrow m
+    , MonadUnliftIO m
+    , PrimMonad m
+    , s ~ PrimState m
     , Decerialize p
     , FromPtr ConstMsg (Cerial ConstMsg p)
     , Cerialize r
-    -- TODO: something like the below is needed, but I(zenhack) am having a
-    -- hard time figuring out what the constraint should actually be; the
-    -- below doesn't type-check.
-    -- , ToPtr s (Cerial ConstMsg r)
-    )
-    => (c -> p -> m r)
-    -> MethodHandler m (Cerial ConstMsg p) (Cerial ConstMsg r)
-pureHandler = undefined
+    , ToStruct (MutMsg s) (Cerial (MutMsg s) r)
+    ) =>
+    (cap -> p -> m r)
+    -> cap
+    -> MethodHandler m p r
+pureHandler f cap = MethodHandler
+    { handleMethod = \ptr reply -> do
+        param <- evalLimitT defaultLimit $ do
+            fromPtr Message.empty ptr >>= decerialize
+        result <- try $ f cap param
+        case result of
+            Right val -> do
+                struct <- evalLimitT defaultLimit $
+                    valueToMsg val >>= freeze >>= Untyped.rootPtr
+                fulfillIO reply (Just (Untyped.PtrStruct struct))
+            Left (e :: SomeException) ->
+                case fromException e of
+                    Just (exn :: RpcGen.Exception) ->
+                        breakPromiseIO reply exn
+                    Nothing ->
+                        breakPromiseIO reply def
+                            { RpcGen.type_ = RpcGen.Exception'Type'failed
+                            , RpcGen.reason = "Method threw an unhandled exception"
+                            }
+    }
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
 -- one that deals with untyped pointers.
