@@ -50,31 +50,11 @@ module Capnp.Rpc
 -- Note [Implementation checklist]
 -- ===============================
 --
--- While RPC support is still incomplete, we keep a checklist of what
--- is implemented here; this is a little easier than using the bug
--- tracker, just because it's closer at hand.
+-- While RPC support is still incomplete, we keep a checklist of some things
+-- that still need is implemented. In many cases, it's more natural to put
+-- error "TODO: ..." in the relevant spots in the source code, but there are
+-- a few cross-cutting concerns that we keep track of here.
 --
--- * [ ] Handle each message type
---   * [ ] Abort
---   * [ ] Unimplemented
---     * [ ] For each message type
---       * [x] Unimplemented
---       * [ ] ...
---   * [ ] Level 0 messages
---     * [x] Bootstrap
---     * [ ] Call
---     * [ ] Return
---     * [x] Finish
---   * [ ] Level 1 messages
---     * [ ] Resolve
---     * [ ] Release
---     * [ ] Disembargo
---   * [x] Level 2 messages (there are none).
---   * [ ] Level 3 messages
---     * [ ] Provide
---     * [ ] Accept
---   * [ ] Level 4 messages
---     * [ ] Join
 -- * [ ] Handle decode errors
 -- * [ ] Resource limits (see Note [Limiting resource usage])
 
