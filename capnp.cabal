@@ -236,3 +236,4 @@ test-suite tests
       , heredoc
       , deepseq
       , pretty-show
+      , supervisors
