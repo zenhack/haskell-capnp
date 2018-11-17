@@ -32,6 +32,21 @@ module Capnp.Rpc
     , RpcGen.Exception'Type(..)
     ) where
 
+-- Note [Organization]
+-- ===================
+--
+-- As much as possible, the logic in this module is centralized according to
+-- type types of objects it concerns.
+--
+-- As an example, consider how we handle embargos: The 'Conn' type's 'embargos'
+-- table has values that are arbitrary 'STM' transactions. This allows the code
+-- which triggers sending embargoes to have full control over what happens when
+-- they return, while the code that routes incoming messages (in 'coordinator')
+-- doesn't need to concern itself with the details of embargos -- it just needs
+-- to route them to the right place.
+--
+-- This approach generally results in better separation of concerns.
+
 -- Note [Implementation checklist]
 -- ===============================
 --
@@ -465,6 +480,11 @@ coordinator conn@Conn{recvQ} = atomically $ do
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
+
+handleAbortMsg :: Conn -> RpcGen.Exception -> STM ()
+handleAbortMsg _ exn =
+    throwSTM (ReceivedAbort exn)
+
 handleUnimplementedMsg :: Conn -> RpcGen.Message -> STM ()
 handleUnimplementedMsg conn = \case
     RpcGen.Message'unimplemented _ ->
@@ -473,18 +493,6 @@ handleUnimplementedMsg conn = \case
         pure ()
     _ ->
         error "TODO"
-
-handleAbortMsg :: Conn -> RpcGen.Exception -> STM ()
-handleAbortMsg _ exn =
-    throwSTM (ReceivedAbort exn)
-
--- | Get a CapDescriptor for this client, suitable for sending to the remote
--- vat. If the client points to our own vat, this will increment the refcount
--- in the exports table, and will allocate a new export ID if needed. Returns
--- CapDescriptor'none if the client is 'nullClient'.
-sendableCapDesc :: Conn -> Client -> STM RpcGen.CapDescriptor
-sendableCapDesc _ (Client Nothing)  = pure RpcGen.CapDescriptor'none
-sendableCapDesc _ (Client (Just _)) = error "TODO"
 
 handleBootstrapMsg :: Conn -> RpcGen.Bootstrap -> STM ()
 handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
@@ -526,20 +534,13 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
     insertBootstrap _ (Just _) =
         error "TODO: duplicate question ID; abort the connection."
 
--- Note [Organization]
--- ===================
---
--- As much as possible, the logic in this module is centralized according to
--- type types of objects it concerns.
---
--- As an example, consider how we handle embargos: The 'Conn' type's 'embargos'
--- table has values that are arbitrary 'STM' transactions. This allows the code
--- which triggers sending embargoes to have full control over what happens when
--- they return, while the code that routes incoming messages (in 'coordinator')
--- doesn't need to concern itself with the details of embargos -- it just needs
--- to route them to the right place.
---
--- This approach generally results in better separation of concerns.
+-- | Get a CapDescriptor for this client, suitable for sending to the remote
+-- vat. If the client points to our own vat, this will increment the refcount
+-- in the exports table, and will allocate a new export ID if needed. Returns
+-- CapDescriptor'none if the client is 'nullClient'.
+sendableCapDesc :: Conn -> Client -> STM RpcGen.CapDescriptor
+sendableCapDesc _ (Client Nothing)  = pure RpcGen.CapDescriptor'none
+sendableCapDesc _ (Client (Just _)) = error "TODO"
 
 -- Note [Limiting resource usage]
 -- =============================
