@@ -137,6 +137,7 @@ data Conn = Conn
     , exportIdPool   :: IdPool
     -- Pools of identifiers for new questions and exports
 
+    , questions      :: M.Map QuestionId Question
     , answers        :: M.Map AnswerId Answer
     -- TODO: imports/exports
 
@@ -265,8 +266,13 @@ freeId (IdPool pool) id = modifyTVar' pool (id:)
 
 -- | An entry in our answers table.
 data Answer = Answer
-    { onFinish     :: RpcGen.Finish -> STM ()
+    { onFinish :: RpcGen.Finish -> STM ()
     -- ^ Called when a the remote vat sends a finish message for this question.
+    }
+
+data Question = Question
+    { onReturn :: RpcGen.Return -> STM ()
+    -- ^ Called when the remote vat sends a return message for this question.
     }
 
 
@@ -466,6 +472,8 @@ coordinator conn@Conn{recvQ} = atomically $ do
             handleUnimplementedMsg conn msg
         RpcGen.Message'bootstrap bs ->
             handleBootstrapMsg conn bs
+        RpcGen.Message'return ret ->
+            handleReturnMsg conn ret
         RpcGen.Message'finish finish ->
             handleFinishMsg conn finish
         _ ->
@@ -523,14 +531,34 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
     insertBootstrap _ (Just _) =
         error "TODO: duplicate question ID; abort the connection."
 
+handleReturnMsg :: Conn -> RpcGen.Return -> STM ()
+handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId} =
+    lookupAbort "question" conn questions answerId $
+        \Question{onReturn} -> onReturn ret
+
 handleFinishMsg :: Conn -> RpcGen.Finish -> STM ()
-handleFinishMsg Conn{answers} finish@RpcGen.Finish{questionId} = do
-    answer <- M.lookup questionId answers
-    case answer of
-        Just Answer{onFinish} ->
-            onFinish finish
+handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
+    lookupAbort "answer" conn answers questionId $
+        \Answer{onFinish} -> onFinish finish
+
+lookupAbort keyTypeName conn m key f = do
+    result <- M.lookup key m
+    case result of
+        Just val ->
+            f val
         Nothing ->
-            error "TODO: abort the connection."
+            abortConn conn def
+                { type_ = RpcGen.Exception'Type'failed
+                , reason = mconcat
+                    [ "No such "
+                    , keyTypeName
+                    ,  ": "
+                    , fromString (show key)
+                    ]
+                }
+
+abortConn :: RpcGen.Exception -> STM ()
+abortConn = error "TODO"
 
 -- | Get a CapDescriptor for this client, suitable for sending to the remote
 -- vat. If the client points to our own vat, this will increment the refcount
