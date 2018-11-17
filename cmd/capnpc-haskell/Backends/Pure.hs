@@ -135,6 +135,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
         vcat
         [ "import qualified Capnp.Rpc as Rpc"
         , "import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc"
+        , "import qualified Capnp.Promise as Promise"
         , "import qualified Capnp.GenHelpers.Rpc as RH'"
         ]
       else
@@ -318,9 +319,9 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                         --
                         -- * handle exceptions
                     ]
-                , "_ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented"
+                , "_ -> liftIO $ atomically $ Promise.breakPromise fulfiller Rpc.methodUnimplemented"
                 ]
-            , "_ -> liftIO $ atomically $ Rpc.breakPromise fulfiller Rpc.methodUnimplemented"
+            , "_ -> liftIO $ atomically $ Promise.breakPromise fulfiller Rpc.methodUnimplemented"
             ]
         , "}"
         ]
@@ -334,7 +335,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                 -- be malicious in the ways that the traversal limit is designed to
                 -- mitiage
                 [ "args' <- PH'.createPure maxBound $ Convert.valueToMsg args >>= PH'.getRoot"
-                , "(resultPromise, resultFulfiller) <- Rpc.newPromiseIO"
+                , "(resultPromise, resultFulfiller) <- Promise.newPromiseIO"
                 , hcat
                     [ "Rpc.call "
                     , "client "
@@ -344,7 +345,7 @@ fmtDataDef thisMod dataName (DefInterface InterfaceDef{interfaceId, methods}) =
                     , " (Just (U'.PtrStruct args'))"
                     , " resultFulfiller"
                     ]
-                , "result <- Rpc.waitIO resultPromise"
+                , "result <- Promise.waitIO resultPromise"
                 , "evalLimitT maxBound $ PH'.convertValue result"
                 ]
             ]
