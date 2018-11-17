@@ -512,7 +512,10 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
             { onFinish = \_ -> M.delete questionId (answers conn)
             }
     insertBootstrap _ (Just _) =
-        error "TODO: duplicate question ID; abort the connection."
+        abortConn conn def
+            { RpcGen.type_ = RpcGen.Exception'Type'failed
+            , RpcGen.reason = "Duplicate question ID"
+            }
 
 handleReturnMsg :: Conn -> RpcGen.Return -> STM ()
 handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId} =
@@ -540,7 +543,7 @@ lookupAbort keyTypeName conn m key f = do
                     ]
                 }
 
-abortConn :: Conn -> RpcGen.Exception -> STM ()
+abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn = error "TODO"
 
 -- | Get a CapDescriptor for this client, suitable for sending to the remote
