@@ -323,12 +323,14 @@ data Client'
     = ExnClient RpcGen.Exception
     -- | A client which lives in the same vat/process as us.
     | LocalClient
-        { refCount :: TVar Word32
+        { refCount  :: TVar Word32
         -- ^ The number of live references to this object. When this
         -- reaches zero, we will tell the server to stop.
-        , opQueue  :: TQueue Server.ServerMsg
+        , opQueue   :: TQueue Server.ServerMsg
         -- ^ A queue for submitting commands to the server thread managing
         -- the object.
+        , exportIds :: M.Map Conn ExportId
+        -- ^ A the ids under which this is exported on each connection.
         }
     -- | A client for an object that lives in a remote vat.
     | RemoteClient
@@ -432,9 +434,11 @@ export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
     q <- newTQueue
     refCount <- newTVar 1
+    exportIds <- M.new
     let client' = LocalClient
             { refCount = refCount
             , opQueue = q
+            , exportIds
             }
     superviseSTM sup $ do
         addFinalizer client' $
