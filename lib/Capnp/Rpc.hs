@@ -191,8 +191,8 @@ freeExport :: Conn -> ExportId -> STM ()
 freeExport = freeId . exportIdPool
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
-handleConn :: ConnConfig -> Transport -> IO ()
-handleConn cfg@ConnConfig{maxQuestions, maxExports} transport =
+handleConn :: Transport -> ConnConfig -> IO ()
+handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
     withSupervisor $ \sup -> do
         bracket
             (newConn sup)
