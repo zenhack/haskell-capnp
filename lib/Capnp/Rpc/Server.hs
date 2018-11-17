@@ -9,22 +9,24 @@
 Module: Capnp.Rpc.Server
 Description: handlers for incoming method calls.
 
-A 'Server' in this context refers to a thread that handles method calls for
+The term server in this context refers to a thread that handles method calls for
 a particular capability (The capnproto rpc protocol itself has no concept of
 clients and servers).
 -}
 module Capnp.Rpc.Server
-    ( MethodHandler
+    ( ServerOps(..)
+    , ServerMsg(..)
+    , CallInfo(..)
+    , runServer
+
+    -- * Method handlers
+    , MethodHandler
     , pureHandler
     , toUntypedHandler
     , fromUntypedHandler
     , untypedHandler
     , methodThrow
     , methodUnimplemented
-    , ServerOps(..)
-    , ServerMsg(..)
-    , CallInfo(..)
-    , runServer
     ) where
 
 import Data.Word
@@ -52,6 +54,17 @@ import qualified Capnp.Untyped            as Untyped
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@. See Note [Method handling].
+--
+-- We represent method handlers via an abstract type 'MethodHandler',
+-- parametrized over parameter (@p@) and return (@r@) types, and the
+-- monadic context in which it runs (@m@). This allows us to provide
+-- different strategies for actually handling methods; there are various
+-- helper functions which construct these handlers.
+--
+-- * We will likely additionally provide handlers affording:
+--   * Working directly with the low-level data types.
+--   * Replying to the method call asynchronously, allowing later method
+--     calls to be serviced before the current one is finished.
 newtype MethodHandler m p r = MethodHandler
     { handleMethod
         :: Maybe (Ptr ConstMsg)
@@ -59,6 +72,10 @@ newtype MethodHandler m p r = MethodHandler
         -> m ()
     }
 
+-- | @'pureHandler' f cap@ is a 'MethodHandler' which calls a function @f@
+-- that accepts the receiver and the parameter type as exposed by the
+-- high-level API, and returns the high-level API representation of the
+-- return type.
 pureHandler ::
     ( MonadThrow m
     , MonadUnliftIO m
@@ -100,22 +117,27 @@ toUntypedHandler
     -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
 toUntypedHandler MethodHandler{..} = MethodHandler{..}
 
--- | Inverse of toUntypedHandler
+-- | Inverse of 'toUntypedHandler'
 fromUntypedHandler
     :: MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
     -> MethodHandler m p r
 fromUntypedHandler MethodHandler{..} = MethodHandler{..}
 
+-- | Construct a method handler from a function accepting an untyped
+-- pointer for the method's parameter, and a 'Fulfiller' which accepts
+-- an untyped pointer for the method's return value.
 untypedHandler
     :: (Maybe (Ptr ConstMsg) -> Fulfiller (Maybe (Ptr ConstMsg)) -> m ())
     -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
 untypedHandler = MethodHandler
 
+-- | @'methodThrow' exn@ is a 'MethodHandler' which always throws @exn@.
 methodThrow :: MonadIO m => RpcGen.Exception -> MethodHandler m p r
 methodThrow exn = MethodHandler
     { handleMethod = \_ fulfiller -> liftIO $ breakPromiseIO fulfiller exn
     }
 
+-- | A 'MethodHandler' which always throws an @unimplemented@ exception.
 methodUnimplemented :: MonadIO m => MethodHandler m p r
 methodUnimplemented = methodThrow def
     { RpcGen.type_ = RpcGen.Exception'Type'unimplemented
@@ -137,8 +159,7 @@ data ServerOps m = ServerOps
     -- reference to the capability is dropped.
     }
 
--- | A 'CallInfo' contains the information necessary to handle an untyped
--- method call.
+-- | A 'CallInfo' contains information about a method call.
 data CallInfo = CallInfo
     { interfaceId :: !Word64
     -- ^ The id of the interface whose method is being called.
@@ -150,18 +171,17 @@ data CallInfo = CallInfo
     -- ^ A 'Fulfiller' which accepts the method's return value.
     }
 
--- | A message to be sent to a running server.
+-- | A message to be sent to a running server thread.
 data ServerMsg
     = Stop
     -- ^ Shut down the server
     | Call CallInfo
     -- ^ Call a method on the server.
 
--- | Start a thread managing incoming messages for an object.
+-- | Handle incoming messages for a given object.
 --
--- The new thread will be managed by the given supervisor. It will process
--- 'ServerMsg's from the queue one at a time, using the provided 'ServerOps'.
--- When it receives a 'Stop' message, it will exit.
+-- Accepts a queue of messages to handle, and 'ServerOps' used to handle them.
+-- returns when it receives a 'Stop' message.
 runServer :: TQueue ServerMsg -> ServerOps IO -> IO ()
 runServer q ops = go
   where
@@ -174,20 +194,3 @@ runServer q ops = go
                 arguments
                 response
             go
-
-
--- Note [Method handling]
--- ======================
---
--- We represent method handlers via an abstract type 'MethodHandler',
--- parametrized over the reciever type, parameter and return types, and the
--- monadic context in which it runs. This allows us to provide different
--- strategies for actually handling methods; there are helper functions
--- which construct these handlers. For example:
---
--- * 'pureHandler' constructs a 'MethodHandler' from a function that works
---   with the types exposed by the high-level API.
--- * We will likely additionally provide handlers affording:
---   * Working directly with the low-level data types.
---   * Replying to the method call asynchronously, allowing later method
---     calls to be serviced before the current one is finished.
