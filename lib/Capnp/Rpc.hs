@@ -505,11 +505,7 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
                             -- XXX: this is a bit fragile; we're relying on
                             -- the encode step -- to pick the right index
                             -- for our capability.
-                        { content = Just $ Untyped.PtrCap $ error $
-                            "FIXME: this should be (bootstrap conn), but " ++
-                            "the generated code references the old 'Client' " ++
-                            "type from the pre-reorg implementation, so " ++
-                            "that doesn't type check."
+                        { content = Just $ Untyped.PtrCap (bootstrap conn)
                         , capTable = V.singleton capDesc
                         }
             }
