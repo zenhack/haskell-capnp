@@ -177,7 +177,7 @@ instance Default ConnConfig where
 
 -- | Get a new question id. retries if we are out of available question ids.
 newQuestion :: Conn -> STM QuestionId
-newQuestion Conn{questionIdPool} = newId questionIdPool
+newQuestion = newId . questionIdPool
 
 -- | Return a question id to the pool of available ids.
 freeQuestion :: Conn -> QuestionId -> STM ()
@@ -185,7 +185,7 @@ freeQuestion = freeId . questionIdPool
 
 -- | Get a new export id. retries if we are out of available export ids.
 newExport :: Conn -> STM ExportId
-newExport Conn{exportIdPool} = newId exportIdPool
+newExport = newId . exportIdPool
 
 -- | Return a export id to the pool of available ids.
 freeExport :: Conn -> ExportId -> STM ()
