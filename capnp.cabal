@@ -107,7 +107,7 @@ library
       , Capnp.Rpc
       , Capnp.Rpc.Transport
       , Capnp.Rpc.Server
-      , Capnp.RpcReorg
+      -- , Capnp.RpcOld
       , Capnp.Tutorial
 
       , Data.Mutable

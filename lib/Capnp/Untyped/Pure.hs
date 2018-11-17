@@ -57,14 +57,14 @@ import qualified Data.Vector   as V
 -- having default values. Accordingly, equality is only defined if the
 -- element type is an instance of 'Default'.
 newtype Slice a = Slice (ListOf a)
-    deriving(Generic, Show, Read, Ord, Functor, Default, IsList)
+    deriving(Generic, Show, Ord, Functor, Default, IsList)
 
 -- | A capnproto pointer type.
 data PtrType
     = PtrStruct !Struct
     | PtrList   !List
     | PtrCap    !M.Client
-    deriving(Generic, Show, Read, Eq)
+    deriving(Generic, Show, Eq)
 
 -- | A capnproto struct.
 data Struct = Struct
@@ -73,7 +73,7 @@ data Struct = Struct
     , structPtrs :: Slice (Maybe PtrType)
     -- ^ The struct's pointer section
     }
-    deriving(Generic, Show, Read, Eq)
+    deriving(Generic, Show, Eq)
 instance Default Struct
 
 -- | An untyped list.
@@ -86,7 +86,7 @@ data List
     | List64 (ListOf Word64)
     | ListPtr (ListOf (Maybe PtrType))
     | ListStruct (ListOf Struct)
-    deriving(Generic, Show, Read, Eq)
+    deriving(Generic, Show, Eq)
 
 -- | Alias for 'V.Vector'. Using this alias may make upgrading to future
 -- versions of the library easier, as we will likely switch to a more

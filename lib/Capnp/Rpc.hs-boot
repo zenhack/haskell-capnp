@@ -6,4 +6,3 @@ nullClient :: Client
 
 instance Eq Client
 instance Show Client
-instance Read Client

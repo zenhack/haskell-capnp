@@ -15,6 +15,7 @@ import Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Errors          as E
 import qualified Capnp.GenHelpers.Pure as PH
 import qualified Capnp.Message         as M
+import qualified Capnp.Promise         as Promise
 import qualified Capnp.Rpc             as Rpc
 import qualified Capnp.Untyped         as U
 
@@ -26,13 +27,13 @@ handleMethod server method paramContent fulfiller = do
         evalLimitT maxBound $ PH.convertValue results
     case ret of
         Right resultStruct ->
-            Rpc.fulfillIO fulfiller resultStruct
+            Promise.fulfillIO fulfiller resultStruct
         Left e ->
             case fromException (e :: SomeException) of
                 Just exn ->
-                    atomically $ Rpc.breakPromise fulfiller exn
+                    atomically $ Promise.breakPromise fulfiller exn
                 Nothing ->
-                    atomically $ Rpc.breakPromise fulfiller def
+                    atomically $ Promise.breakPromise fulfiller def
                         { Rpc.type_ = Rpc.Exception'Type'failed
                         , Rpc.reason = "Method threw an unhandled exception."
                         }
