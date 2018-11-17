@@ -91,7 +91,7 @@ import qualified Capnp.Untyped.Pure       as Untyped
 
 
 -- | Errors which can be thrown by the rpc system.
-data RpcError
+newtype RpcError
     = ReceivedAbort RpcGen.Exception
     -- ^ The remote vat sent us an abort message.
     deriving(Show, Generic)
@@ -193,7 +193,7 @@ freeExport = freeId . exportIdPool
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
 handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
-    withSupervisor $ \sup -> do
+    withSupervisor $ \sup ->
         bracket
             (newConn sup)
             stopConn

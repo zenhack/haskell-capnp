@@ -74,7 +74,7 @@ pureHandler ::
     -> MethodHandler m p r
 pureHandler f cap = MethodHandler
     { handleMethod = \ptr reply -> do
-        param <- evalLimitT defaultLimit $ do
+        param <- evalLimitT defaultLimit $
             fromPtr Message.empty ptr >>= decerialize
         result <- try $ f cap param
         case result of
