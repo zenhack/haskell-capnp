@@ -19,6 +19,8 @@ module Capnp.Rpc.Server
     , CallInfo(..)
     , runServer
 
+    , wrapException
+
     -- * Method handlers
     , MethodHandler
     , pureHandler
@@ -36,6 +38,8 @@ import Control.Monad.Catch     (MonadThrow)
 import Control.Monad.IO.Class  (MonadIO(liftIO))
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Data.Default            (def)
+import Data.Maybe              (fromMaybe)
+import Data.String             (fromString)
 import UnliftIO                (MonadUnliftIO)
 import UnliftIO.Exception      (SomeException, fromException, try)
 
@@ -72,6 +76,24 @@ newtype MethodHandler m p r = MethodHandler
         -> m ()
     }
 
+-- | @'wrapException' debugMode e@ converts an arbitrary haskell exception
+-- @e@ into an rpc exception, which can be communicated to a remote vat.
+-- If @debugMode@ is true, the returned exception will include the text of
+-- @show e@.
+--
+-- TODO: this feels a bit out of place in this module; find a better home
+-- for it.
+wrapException :: Bool -> SomeException -> RpcGen.Exception
+wrapException debugMode e = fromMaybe
+    def { RpcGen.type_ = RpcGen.Exception'Type'failed
+        , RpcGen.reason =
+            if debugMode then
+                "Unhandled exception: " <> fromString (show e)
+            else
+                "Unhandled exception"
+        }
+    (fromException e)
+
 -- | @'pureHandler' f cap@ is a 'MethodHandler' which calls a function @f@
 -- that accepts the receiver and the parameter type as exposed by the
 -- high-level API, and returns the high-level API representation of the
@@ -99,15 +121,10 @@ pureHandler f cap = MethodHandler
                 struct <- evalLimitT defaultLimit $
                     valueToMsg val >>= freeze >>= Untyped.rootPtr
                 fulfillIO reply (Just (Untyped.PtrStruct struct))
-            Left (e :: SomeException) ->
-                case fromException e of
-                    Just (exn :: RpcGen.Exception) ->
-                        breakPromiseIO reply exn
-                    Nothing ->
-                        breakPromiseIO reply def
-                            { RpcGen.type_ = RpcGen.Exception'Type'failed
-                            , RpcGen.reason = "Method threw an unhandled exception"
-                            }
+            Left e ->
+                -- TODO: find a way to get the connection config's debugMode
+                -- option to be accessible from here, so we can use it.
+                breakPromiseIO reply (wrapException False e)
     }
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
