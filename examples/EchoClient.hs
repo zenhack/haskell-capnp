@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Monad.IO.Class (liftIO)
-import Data.Function          ((&))
-import Network.Simple.TCP     (connect)
+import Network.Simple.TCP (connect)
 
 import Capnp               (def, defaultLimit)
+import Capnp.Promise       (waitIO)
+import Capnp.Rpc           ((?))
 import Capnp.Rpc.Transport (socketTransport)
 import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn)
 
@@ -17,7 +17,7 @@ main = connect "localhost" "4000" $ \(sock, _addr) ->
         { debugMode = True
         , withBootstrap = Just $ \_sup client -> do
             let echoSrv = Echo client
-            result <- echoSrv & echo'echo def { query = "Hello, World!" }
-            print result
+            result <- echo'echo echoSrv ? def { query = "Hello, World!" }
+            waitIO result >>= print
             -- TODO: stop the vat.
         }

@@ -104,6 +104,7 @@ library
       , Capnp.Untyped.Pure
       , Capnp.TraversalLimit
       , Capnp.Promise
+      , Capnp.Rpc
       , Capnp.Rpc.Untyped
       , Capnp.Rpc.Transport
       , Capnp.Rpc.Server
