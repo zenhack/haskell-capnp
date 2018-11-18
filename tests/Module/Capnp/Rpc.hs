@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -13,6 +15,7 @@ import Control.Monad.Catch    (throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Foldable          (for_)
 import Data.Function          ((&))
+import Supervisors            (Supervisor)
 import UnliftIO               (bracket, concurrently_, race_, timeout, try)
 
 import qualified Data.ByteString.Builder as BB
@@ -21,11 +24,15 @@ import qualified Network.Socket          as Socket
 
 import Capnp
     (createPure, def, defaultLimit, lbsToMsg, msgToValue, valueToMsg)
-import Capnp.Bits (WordCount)
+import Capnp.Bits          (WordCount)
+import Capnp.Promise       (waitIO)
+import Capnp.Rpc.Server    (pureHandler)
+import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
 
 import Capnp.Gen.Aircraft.Pure
 import Capnp.Gen.Capnp.Rpc.Pure
 import Capnp.Rpc
+import Capnp.Rpc.Untyped
 
 import qualified Capnp.Gen.Echo.Pure as E
 import qualified Capnp.Pointer       as P
@@ -59,8 +66,8 @@ echoTests = describe "Echo server & client" $
 
 data TestEchoServer = TestEchoServer
 
-instance E.Echo'server_ TestEchoServer where
-    echo'echo params TestEchoServer = pure def { E.reply = E.query params }
+instance E.Echo'server_ IO TestEchoServer where
+    echo'echo = pureHandler $ \_ params -> pure def { E.reply = E.query params }
 
 -------------------------------------------------------------------------------
 -- Tests using aircraft.capnp.
@@ -69,8 +76,8 @@ instance E.Echo'server_ TestEchoServer where
 -------------------------------------------------------------------------------
 
 -- | Bump a counter n times, returning a list of the results.
-bumpN :: CallSequence -> Int -> RpcT IO [CallSequence'getNumber'results]
-bumpN ctr n = replicateM n $ ctr & callSequence'getNumber def
+bumpN :: CallSequence -> Int -> IO [CallSequence'getNumber'results]
+bumpN ctr n = replicateM n $ callSequence'getNumber ctr ? def
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
@@ -124,11 +131,12 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             stopVat
         )
     it "Methods returning interfaces work" $ runVatPair
-        (export_CounterFactory TestCtrFactory)
+        (\sup -> export_CounterFactory sup (TestCtrFactory sup))
         (\factory -> do
             let newCounter start = do
                     CounterFactory'newCounter'results{counter} <-
-                        factory & counterFactory'newCounter def { start }
+                        counterFactory'newCounter factory ? def { start }
+                        >>= waitIO
                     pure counter
 
             ctrA <- newCounter 2
@@ -171,7 +179,8 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             (\acceptor -> do
                 for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
                     ctr <- export_CallSequence ctrSrv
-                    acceptor & counterAcceptor'accept def { counter = ctr }
+                    counterAcceptor'accept acceptor ? CounterAcceptor'accept'params { counter = ctr }
+                        >>= waitIO
                 r <- traverse
                     (\(TestCtrServer var) -> liftIO $ readTVarIO var)
                     [ctrA, ctrB, ctrC]
@@ -181,36 +190,38 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
 data TestCtrAcceptor = TestCtrAcceptor
 
-instance CounterAcceptor'server_ TestCtrAcceptor where
-    counterAcceptor'accept CounterAcceptor'accept'params{counter} TestCtrAcceptor = do
-        [start] <- map n <$> bumpN counter 1
-        r <- bumpN counter 4
-        liftIO $ r `shouldBe`
-            [ def { n = start + 1 }
-            , def { n = start + 2 }
-            , def { n = start + 3 }
-            , def { n = start + 4 }
-            ]
-        pure def
+instance CounterAcceptor'server_ IO TestCtrAcceptor where
+    counterAcceptor'accept =
+        pureHandler $ \_ CounterAcceptor'accept'params{counter} -> do
+            [start] <- map n <$> bumpN counter 1
+            r <- bumpN counter 4
+            liftIO $ r `shouldBe`
+                [ def { n = start + 1 }
+                , def { n = start + 2 }
+                , def { n = start + 3 }
+                , def { n = start + 4 }
+                ]
+            pure def
 
 -------------------------------------------------------------------------------
 -- Implementations of various interfaces for testing purposes.
 -------------------------------------------------------------------------------
 
-data TestCtrFactory = TestCtrFactory
+data TestCtrFactory = TestCtrFactory { sup :: Supervisor }
 
-instance CounterFactory'server_ TestCtrFactory where
-    counterFactory'newCounter CounterFactory'newCounter'params{start} TestCtrFactory = do
-        ctr <- newTestCtr start >>= export_CallSequence
-        pure CounterFactory'newCounter'results { counter = ctr }
+instance CounterFactory'server_ IO TestCtrFactory where
+    counterFactory'newCounter =
+        pureHandler $ \TestCtrFactory{sup} CounterFactory'newCounter'params{start} -> do
+            ctr <- newTestCtr start >>= atomically . export_CallSequence sup
+            pure CounterFactory'newCounter'results { counter = ctr }
 
 newTestCtr :: MonadIO m => Word32 -> m TestCtrServer
 newTestCtr n = liftIO $ TestCtrServer <$> newTVarIO n
 
 newtype TestCtrServer = TestCtrServer (TVar Word32)
 
-instance CallSequence'server_ TestCtrServer  where
-    callSequence'getNumber _ (TestCtrServer tvar) = do
+instance CallSequence'server_ IO TestCtrServer  where
+    callSequence'getNumber = pureHandler $ \(TestCtrServer tvar) _ -> do
         ret <- liftIO $ atomically $ do
             modifyTVar' tvar (+1)
             readTVar tvar
@@ -219,8 +230,8 @@ instance CallSequence'server_ TestCtrServer  where
 -- a 'CallSequence' which always throws an exception.
 data ExnCtrServer = ExnCtrServer
 
-instance CallSequence'server_ ExnCtrServer where
-    callSequence'getNumber _ _ =
+instance CallSequence'server_ IO ExnCtrServer where
+    callSequence'getNumber = pureHandler $ \_ _ ->
         throwM def
             { type_ = Exception'Type'failed
             , reason = "Something went sideways."
@@ -229,13 +240,13 @@ instance CallSequence'server_ ExnCtrServer where
 -- a 'CallSequence' which doesn't implement its methods.
 data NoImplServer = NoImplServer
 
-instance CallSequence'server_ NoImplServer -- TODO: can we silence the warning somehow?
+instance CallSequence'server_ IO NoImplServer -- TODO: can we silence the warning somehow?
 
 -- Server that throws some non-rpc exception.
 data NonRpcExnServer = NonRpcExnServer
 
-instance CallSequence'server_ NonRpcExnServer where
-    callSequence'getNumber _ _ = error "OOPS"
+instance CallSequence'server_ IO NonRpcExnServer where
+    callSequence'getNumber = pureHandler $ \_ _ -> error "OOPS"
 
 -------------------------------------------------------------------------------
 -- Tests for unusual patterns of messages .
@@ -371,15 +382,15 @@ withTransportPair f =
 -- | @'runVatPair' server client@ runs a pair of vats connected to one another,
 -- using 'server' as the 'offerBootstrap' field in the one vat's config, and
 -- 'client' as the 'withBootstrap' field in the other's.
-runVatPair :: IsClient c => RpcT IO c -> (c -> RpcT IO ()) -> IO ()
-runVatPair offerBootstrap withBootstrap = withTransportPair $ \(clientTrans, serverTrans) -> do
-    let runClient = runVat (vatConfig clientTrans)
+runVatPair :: IsClient c => (Supervisor -> STM c) -> (Supervisor -> c -> IO ()) -> IO ()
+runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serverTrans) -> do
+    let runClient = handleConn (clientTrans defaultLimit) def
             { debugMode = True
-            , withBootstrap = Just (withBootstrap . fromClient)
+            , withBootstrap = Just $ \sup -> withBootstrap sup . fromClient
             }
-        runServer = runVat (vatConfig serverTrans)
+        runServer = handleConn (serverTrans defaultLimit) def
             { debugMode = True
-            , offerBootstrap = Just (toClient <$> offerBootstrap)
+            , getBootstrap = \sup -> toClient <$> getBootstrap sup
             }
     race_ runServer runClient
 
