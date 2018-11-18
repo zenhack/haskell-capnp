@@ -532,8 +532,7 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
         (Focus.alterM $ insertBootstrap ret)
         questionId
         (answers conn)
-    msg <- createPure maxBound $ valueToMsg $ RpcGen.Message'return ret
-    writeTBQueue (sendQ conn) msg
+    sendPureMsg conn $ RpcGen.Message'return ret
   where
     insertBootstrap ret Nothing =
         pure $ Just Answer
@@ -570,6 +569,10 @@ lookupAbort keyTypeName conn m key f = do
                     , fromString (show key)
                     ]
                 }
+
+sendPureMsg :: Conn -> RpcGen.Message -> STM ()
+sendPureMsg Conn{sendQ} msg =
+    createPure maxBound (valueToMsg msg) >>= writeTBQueue sendQ
 
 abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn = error "TODO"
