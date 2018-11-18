@@ -7,10 +7,13 @@ module Capnp.Rpc
     , invokePure
     , invokePurePromise
     , (?)
+    , throwFailed
     ) where
 
-import Control.Monad.Catch     (MonadThrow)
+import Control.Monad.Catch     (MonadThrow(throwM))
 import Control.Monad.Primitive (PrimMonad, PrimState)
+import Data.Default            (def)
+import Data.Text               (Text)
 import UnliftIO                (MonadUnliftIO, atomically)
 
 import Capnp.Classes
@@ -22,10 +25,11 @@ import Capnp.Classes
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Data.Mutable         (freeze)
 
-import qualified Capnp.Message    as M
-import qualified Capnp.Promise    as Promise
-import qualified Capnp.Rpc.Server as Server
-import qualified Capnp.Untyped    as U
+import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
+import qualified Capnp.Message            as M
+import qualified Capnp.Promise            as Promise
+import qualified Capnp.Rpc.Server         as Server
+import qualified Capnp.Untyped            as U
 
 
 invokeRaw ::
@@ -96,3 +100,11 @@ invokePurePromise method params = do
     -> p
     -> m (Promise.Promise r)
 (?) = invokePurePromise
+
+-- | Throw an exception with a type field of 'Exception'Type'failed' and
+-- the argument as a reason.
+throwFailed :: MonadThrow m => Text -> m a
+throwFailed reason = throwM (def
+    { RpcGen.reason = reason
+    , RpcGen.type_ = RpcGen.Exception'Type'failed
+} :: RpcGen.Exception)
