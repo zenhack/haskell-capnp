@@ -25,6 +25,8 @@
   re-exported via the `Capnp` module.
 * The `IsPtr` type class has been split into `FromPtr` and `ToPtr`. Most
   user code should not care about this.
+* Generated high-level types no longer have Read instances; interfaces
+  make this problematic.
 * `newMessage` now accepts an optional size hint.
 * The allocation strategy has changed to reduce unnecessary copying.
 * It is now possible to create messages with a size > 2GiB. Note that
