@@ -78,14 +78,18 @@ import qualified Data.Vector       as V
 import qualified Focus
 import qualified StmContainers.Map as M
 
-import Capnp.Convert       (msgToValue, valueToMsg)
-import Capnp.Message       (ConstMsg)
-import Capnp.Promise       (breakPromise)
-import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg))
-import Internal.BuildPure  (createPure)
+import Capnp.Classes        (cerialize, decerialize)
+import Capnp.Convert        (msgToValue, valueToMsg)
+import Capnp.Message        (ConstMsg)
+import Capnp.Promise        (breakPromise, fulfill)
+import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
+import Capnp.TraversalLimit (defaultLimit, evalLimitT)
+import Internal.BuildPure   (createPure)
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
+import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
+import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
 
 
@@ -436,7 +440,7 @@ call info (Client Nothing) =
         { RpcGen.type_ = RpcGen.Exception'Type'failed
         , RpcGen.reason = "Client is null"
         }
-call info (Client (Just clientVar)) =
+call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
     readTVar clientVar >>= \case
         ExnClient e ->
             breakPromise (Server.response info) e
@@ -444,7 +448,48 @@ call info (Client (Just clientVar)) =
         LocalClient{opQueue} ->
             writeTQueue opQueue (Server.Call info)
 
-    -- TODO: RemoteClient
+        RemoteClient{remoteConn, msgTarget} -> do
+            questionId <- newQuestion remoteConn
+            let caps = case Server.arguments info of
+                    Nothing  -> V.empty
+                    Just ptr -> Message.getCapTable (UntypedRaw.message ptr)
+            capTable <- traverse (sendableCapDesc remoteConn) caps
+            content <- evalLimitT defaultLimit $ decerialize (Server.arguments info)
+            sendPureMsg remoteConn $ RpcGen.Message'call def
+                { RpcGen.questionId = questionId
+                , RpcGen.target = case msgTarget of
+                    AnswerTgt answerId ->
+                        RpcGen.MessageTarget'promisedAnswer
+                            RpcGen.PromisedAnswer
+                                { RpcGen.questionId = answerId
+                                , RpcGen.transform = V.empty
+                                }
+                    ImportTgt {importId} ->
+                        RpcGen.MessageTarget'importedCap importId
+                , RpcGen.params = RpcGen.Payload
+                    { RpcGen.content = content
+                    , RpcGen.capTable = capTable
+                    }
+                , RpcGen.interfaceId = interfaceId
+                , RpcGen.methodId = methodId
+                }
+            M.insert
+                Question
+                    { onReturn = \RpcGen.Return{union'} -> case union' of
+                        RpcGen.Return'exception exn -> do
+                            breakPromise (Server.response info) exn
+                            -- TODO: send finish.
+                        RpcGen.Return'results RpcGen.Payload{content} -> do
+                            -- TODO: we need to initialize the cap table.
+                            rawPtr <-  createPure defaultLimit $ do
+                                msg <- Message.newMessage Nothing
+                                cerialize msg content
+                            fulfill (Server.response info) rawPtr
+                        _ ->
+                            error "TODO: handle other variants."
+                    }
+                questionId
+                (questions remoteConn)
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
