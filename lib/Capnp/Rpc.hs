@@ -22,8 +22,6 @@ module Capnp.Rpc
 
     , IsClient(..)
 
-    , requestBootstrap
-
     -- * Exporting local objects
     , export
     , clientMethodHandler
@@ -150,19 +148,19 @@ instance Hashable Conn where
 
 -- | Configuration information for a connection.
 data ConnConfig = ConnConfig
-    { maxQuestions :: !Word32
+    { maxQuestions  :: !Word32
     -- ^ The maximum number of simultanious outstanding requests to the peer
     -- vat. Once this limit is reached, further questsions will block until
     -- some of the existing questions have been answered.
     --
     -- Defaults to 32.
 
-    , maxExports   :: !Word32
+    , maxExports    :: !Word32
     -- ^ The maximum number of objects which may be exported on this connection.
     --
     -- Defaults to 32.
 
-    , debugMode    :: !Bool
+    , debugMode     :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
     -- contain extra information. This should not be used in production, as
     -- it is possible for these messages to contain sensitive information,
@@ -170,21 +168,28 @@ data ConnConfig = ConnConfig
     --
     -- Defaults to 'False'.
 
-    , getBootstrap :: Supervisor -> STM Client
+    , getBootstrap  :: Supervisor -> STM Client
     -- ^ Get the bootstrap interface we should serve for this connection.
     -- the argument is a supervisor whose lifetime is bound to the
     -- connection. If 'getBootstrap' returns 'nullClient', we will respond
     -- to bootstrap messages with an exception.
     --
     -- The default always returns 'nullClient'.
+
+    , withBootstrap :: Maybe (Supervisor -> Client -> IO ())
+    -- ^ An action to perform with access to the remote vat's bootstrap
+    -- interface. The supervisor argument is bound to the lifetime of the
+    -- connection. If this is 'Nothing' (the default), the bootstrap
+    -- interface will not be requested.
     }
 
 instance Default ConnConfig where
     def = ConnConfig
-        { maxQuestions = 32
-        , maxExports   = 32
-        , debugMode    = False
-        , getBootstrap = \_ -> pure nullClient
+        { maxQuestions  = 32
+        , maxExports    = 32
+        , debugMode     = False
+        , getBootstrap  = \_ -> pure nullClient
+        , withBootstrap = Nothing
         }
 
 -- | Get a new question id. retries if we are out of available question ids.
@@ -205,7 +210,7 @@ freeExport = freeId . exportIdPool
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
-handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
+handleConn transport cfg@ConnConfig{maxQuestions, maxExports, withBootstrap} =
     withSupervisor $ \sup ->
         bracket
             (newConn sup)
@@ -245,8 +250,12 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
         coordinator conn
             `concurrently_` sendLoop transport conn
             `concurrently_` recvLoop transport conn
+            `concurrently_` useBootstrap conn
     stopConn conn =
         atomically $ decRef (bootstrap conn)
+    useBootstrap conn = case withBootstrap of
+        Nothing -> pure ()
+        Just f  -> atomically (requestBootstrap conn) >>= f (supervisor conn)
 
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
