@@ -126,7 +126,8 @@ data Conn = Conn
 
     , questions      :: M.Map QuestionId Question
     , answers        :: M.Map AnswerId Answer
-    -- TODO: imports/exports
+    , exports        :: M.Map ExportId Export
+    -- TODO: imports
 
     , embargos       :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
@@ -221,6 +222,7 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
 
             questions <- M.new
             answers <- M.new
+            exports <- M.new
 
             embargos <- M.new
 
@@ -233,6 +235,7 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports} =
                 , sendQ
                 , questions
                 , answers
+                , exports
                 , embargos
                 , bootstrap
                 }
@@ -263,15 +266,20 @@ newId (IdPool pool) = readTVar pool >>= \case
 freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
 
+data Question = Question
+    { onReturn :: RpcGen.Return -> STM ()
+    -- ^ Called when the remote vat sends a return message for this question.
+    }
+
 -- | An entry in our answers table.
 data Answer = Answer
     { onFinish :: RpcGen.Finish -> STM ()
     -- ^ Called when a the remote vat sends a finish message for this question.
     }
 
-data Question = Question
-    { onReturn :: RpcGen.Return -> STM ()
-    -- ^ Called when the remote vat sends a return message for this question.
+data Export = Export
+    { client   :: Client
+    , refCount :: !Word32
     }
 
 
@@ -572,7 +580,29 @@ abortConn = error "TODO"
 -- CapDescriptor'none if the client is 'nullClient'.
 sendableCapDesc :: Conn -> Client -> STM RpcGen.CapDescriptor
 sendableCapDesc _ (Client Nothing)  = pure RpcGen.CapDescriptor'none
-sendableCapDesc _ (Client (Just _)) = error "TODO"
+sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
+    readTVar clientVar >>= \case
+        LocalClient{exportIds} ->
+            M.lookup conn exportIds >>= \case
+                Just exportId -> do
+                    -- This client is already exported on the connection; bump the
+                    -- refcount and use the existing export id.
+                    M.focus
+                        (Focus.adjust $ \e@Export{refCount} ->
+                            e { refCount = refCount + 1 } :: Export
+                        )
+                        exportId
+                        exports
+                    pure $ RpcGen.CapDescriptor'senderHosted exportId
+                Nothing -> do
+                    -- This client is not yet exported on this connection; allocate
+                    -- a new export ID and insert it into the exports table.
+                    exportId <- newExport conn
+                    M.insert exportId conn exportIds
+                    M.insert Export { client, refCount = 1 } exportId exports
+                    pure $ RpcGen.CapDescriptor'senderHosted exportId
+
+        -- TODO: other client types
 
 -- Note [Limiting resource usage]
 -- =============================
