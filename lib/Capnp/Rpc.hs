@@ -277,13 +277,13 @@ newId (IdPool pool) = readTVar pool >>= \case
 freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
 
-data Question = Question
+newtype Question = Question
     { onReturn :: RpcGen.Return -> STM ()
     -- ^ Called when the remote vat sends a return message for this question.
     }
 
 -- | An entry in our answers table.
-data Answer = Answer
+newtype Answer = Answer
     { onFinish :: RpcGen.Finish -> STM ()
     -- ^ Called when a the remote vat sends a finish message for this question.
     }
