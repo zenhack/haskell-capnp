@@ -251,6 +251,14 @@ tFlipP f list  = unflipP <$> tMsg f (FlipListP list)
 -- These all just call the underlying methods on the message, using 'TraverseMsg'.
 -------------------------------------------------------------------------------
 
+instance Thaw a => Thaw (Maybe a) where
+    type Mutable s (Maybe a) = Maybe (Mutable s a)
+
+    thaw         = traverse thaw
+    freeze       = traverse freeze
+    unsafeThaw   = traverse unsafeThaw
+    unsafeFreeze = traverse unsafeFreeze
+
 instance Thaw msg => Thaw (Ptr msg) where
     type Mutable s (Ptr msg) = Ptr (Mutable s msg)
 
