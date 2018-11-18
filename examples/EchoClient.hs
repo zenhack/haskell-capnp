@@ -6,8 +6,8 @@ import Data.Function          ((&))
 import Network.Simple.TCP     (connect)
 
 import Capnp               (def, defaultLimit)
-import Capnp.Rpc           (ConnConfig(..), handleConn)
 import Capnp.Rpc.Transport (socketTransport)
+import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn)
 
 import Capnp.Gen.Echo.Pure
 

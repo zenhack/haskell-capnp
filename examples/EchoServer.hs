@@ -5,9 +5,9 @@ module Main where
 import Network.Simple.TCP (serve)
 
 import Capnp               (def, defaultLimit)
-import Capnp.Rpc           (ConnConfig(..), handleConn, toClient)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (socketTransport)
+import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn, toClient)
 
 import Capnp.Gen.Echo.Pure
 

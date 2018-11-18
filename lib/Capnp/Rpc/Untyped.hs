@@ -7,7 +7,7 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
-module Capnp.Rpc
+module Capnp.Rpc.Untyped
     (
     -- * Connections to other vats
       ConnConfig(..)

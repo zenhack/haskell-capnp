@@ -133,7 +133,7 @@ fmtModule mod@Module{modName=Namespace modNameParts,..} =
     -- between the rpc system and the generated code for rpc.capnp:
     , if hasInterfaces mod then
         vcat
-        [ "import qualified Capnp.Rpc as Rpc"
+        [ "import qualified Capnp.Rpc.Untyped as Rpc"
         , "import qualified Capnp.Rpc.Server as Server"
         , "import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc"
         , "import qualified Capnp.Promise as Promise"

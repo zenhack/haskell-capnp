@@ -64,7 +64,7 @@ module Capnp.Message (
     , withCapTable
     ) where
 
-import {-# SOURCE #-} Capnp.Rpc (Client, nullClient)
+import {-# SOURCE #-} Capnp.Rpc.Untyped (Client, nullClient)
 
 import Prelude hiding (read)
 

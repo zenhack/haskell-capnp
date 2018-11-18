@@ -37,7 +37,7 @@ import qualified Capnp.Untyped as U'
 import qualified Capnp.Untyped.Pure as PU'
 import qualified Capnp.GenHelpers.Pure as PH'
 import qualified Capnp.Classes as C'
-import qualified Capnp.Rpc as Rpc
+import qualified Capnp.Rpc.Untyped as Rpc
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.Gen.Capnp.Rpc.Pure as Rpc
 import qualified Capnp.Promise as Promise

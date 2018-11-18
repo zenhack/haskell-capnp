@@ -1,4 +1,4 @@
-module Capnp.Rpc where
+module Capnp.Rpc.Untyped where
 
 data Client
 
