@@ -85,8 +85,7 @@ invokeIO
     -> Maybe (Ptr ConstMsg)
     -> Fulfiller (Maybe (Ptr ConstMsg))
     -> m ()
-invokeIO MethodHandler{handleMethod} arg reply =
-    handleMethod arg reply
+invokeIO = handleMethod
 
 -- | @'wrapException' debugMode e@ converts an arbitrary haskell exception
 -- @e@ into an rpc exception, which can be communicated to a remote vat.

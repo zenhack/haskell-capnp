@@ -113,6 +113,6 @@ eval _ (Expression'unknown' _) =
 main :: IO ()
 main = serve "localhost" "4000" $ \(sock, _addr) ->
     handleConn (socketTransport sock defaultLimit) def
-        { getBootstrap = \sup -> toClient <$> newCalculator sup
+        { getBootstrap = fmap toClient . newCalculator
         , debugMode = True
         }

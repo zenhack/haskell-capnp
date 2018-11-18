@@ -207,7 +207,7 @@ instance CounterAcceptor'server_ IO TestCtrAcceptor where
 -- Implementations of various interfaces for testing purposes.
 -------------------------------------------------------------------------------
 
-data TestCtrFactory = TestCtrFactory { sup :: Supervisor }
+newtype TestCtrFactory = TestCtrFactory { sup :: Supervisor }
 
 instance CounterFactory'server_ IO TestCtrFactory where
     counterFactory'newCounter =
@@ -390,7 +390,7 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
             }
         runServer = handleConn (serverTrans defaultLimit) def
             { debugMode = True
-            , getBootstrap = \sup -> toClient <$> getBootstrap sup
+            , getBootstrap = fmap toClient . getBootstrap sup
             }
     race_ runServer runClient
 
