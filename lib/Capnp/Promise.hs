@@ -6,6 +6,7 @@ module Capnp.Promise
     , Fulfiller
     , newPromise
     , newPromiseIO
+    , newPromiseWithCallback
     , fulfill
     , fulfillIO
     , breakPromise
@@ -27,19 +28,13 @@ instance HsExn.Exception Exception
 
 -- | A 'Fulfiller' is used to fulfill a promise.
 newtype Fulfiller a = Fulfiller
-    { var :: TVar (Maybe (Either Exception a))
+    { callback :: Either Exception a -> STM ()
     }
-    deriving(Eq)
 
 -- | Fulfill a promise by supplying the specified value. It is an error to
 -- call 'fulfill' if the promise has already been fulfilled (or broken).
 fulfill :: Fulfiller a -> a -> STM ()
-fulfill Fulfiller{var} val = modifyTVar' var $ \case
-    Nothing ->
-        Just (Right val)
-    Just _ ->
-        -- TODO: report this in a more controlled way.
-        error "BUG: tried to fullfill a promise twice!"
+fulfill Fulfiller{callback} val = callback (Right val)
 
 -- | Like 'fulfill', but in the IO monad.
 fulfillIO :: MonadIO m => Fulfiller a -> a -> m ()
@@ -49,11 +44,7 @@ fulfillIO fulfiller = atomically . fulfill fulfiller
 -- specified exception will be raised. It is an error to call 'breakPromise'
 -- if the promise has already been fulfilled (or broken).
 breakPromise :: Fulfiller a -> Exception -> STM ()
-breakPromise Fulfiller{var} exn = modifyTVar' var $ \case
-    Nothing ->
-        Just (Left exn)
-    Just _ ->
-        error "BUG: tried to break an already resolved promise!"
+breakPromise Fulfiller{callback} exn = callback (Left exn)
 
 breakPromiseIO :: MonadIO m => Fulfiller a -> Exception -> m ()
 breakPromiseIO fulfiller = atomically . breakPromise fulfiller
@@ -79,7 +70,28 @@ waitIO = atomically . wait
 newPromise :: STM (Promise a, Fulfiller a)
 newPromise = do
     var <- newTVar Nothing
-    pure (Promise{var}, Fulfiller{var})
+    pure
+        ( Promise{var}
+        , Fulfiller
+            { callback = \result -> modifyTVar' var $ \case
+                Nothing ->
+                    Just result
+                Just _ ->
+                    -- TODO: report this in a more controlled way.
+                    error "Tried to fulfill/break an already resolved promise"
+            }
+        )
+
+-- | Create a new promise which also excecutes an STM action when it is resolved.
+newPromiseWithCallback :: (Either Exception a -> STM ()) -> STM (Promise a, Fulfiller a)
+newPromiseWithCallback callback = do
+    (promise, Fulfiller{callback=oldCallback}) <- newPromise
+    pure
+        ( promise
+        , Fulfiller
+            { callback = \result -> oldCallback result >> callback result
+            }
+        )
 
 -- | Like 'newPromise', but in the IO monad.
 newPromiseIO :: MonadIO m => m (Promise a, Fulfiller a)
