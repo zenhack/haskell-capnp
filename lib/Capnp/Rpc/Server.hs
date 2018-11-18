@@ -21,7 +21,7 @@ module Capnp.Rpc.Server
 
     , wrapException
 
-    -- * Method handlers
+    -- * Handling methods
     , MethodHandler
     , pureHandler
     , toUntypedHandler
@@ -29,6 +29,9 @@ module Capnp.Rpc.Server
     , untypedHandler
     , methodThrow
     , methodUnimplemented
+
+    -- * Invoking methods
+    , invokeIO
     ) where
 
 import Data.Word
@@ -47,7 +50,8 @@ import Capnp.Classes
     (Cerialize, Decerialize(Cerial, decerialize), FromPtr(fromPtr), ToStruct)
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
-import Capnp.Promise        (Fulfiller, breakPromiseIO, fulfillIO)
+import Capnp.Promise
+    (Fulfiller, Promise, breakPromiseIO, fulfillIO, newPromiseIO)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
 import Data.Mutable         (freeze)
@@ -75,6 +79,15 @@ newtype MethodHandler m p r = MethodHandler
         -> Fulfiller (Maybe (Ptr ConstMsg))
         -> m ()
     }
+
+invokeIO
+    :: MethodHandler IO (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+    -> Maybe (Ptr ConstMsg)
+    -> IO (Promise (Maybe (Ptr ConstMsg)))
+invokeIO MethodHandler{handleMethod} arg = do
+    (promise, fulfiller) <- newPromiseIO
+    handleMethod arg fulfiller
+    pure promise
 
 -- | @'wrapException' debugMode e@ converts an arbitrary haskell exception
 -- @e@ into an rpc exception, which can be communicated to a remote vat.
