@@ -22,6 +22,8 @@ module Capnp.Rpc
 
     , IsClient(..)
 
+    , requestBootstrap
+
     -- * Exporting local objects
     , export
     , clientMethodHandler
@@ -606,6 +608,33 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
                     pure $ RpcGen.CapDescriptor'senderHosted exportId
 
         -- TODO: other client types
+
+-- | Request the remote vat's bootstrap interface.
+requestBootstrap :: Conn -> STM Client
+requestBootstrap conn = do
+    qid <- newQuestion conn
+    client' <- newTVar RemoteClient
+            { remoteConn = conn
+            , msgTarget = AnswerTgt qid
+            }
+    sendPureMsg conn $
+        RpcGen.Message'bootstrap def { RpcGen.questionId = qid }
+    M.insert
+        Question
+            { onReturn = \ret@RpcGen.Return{union'} -> case union' of
+                RpcGen.Return'exception exn -> do
+                    writeTVar client' (ExnClient exn)
+                    sendPureMsg conn $
+                        RpcGen.Message'finish def { RpcGen.questionId = qid }
+                    M.delete qid (questions conn)
+                    freeQuestion conn qid
+                _ ->
+                    error "TODO"
+            }
+        qid
+        (questions conn)
+    pure $ Client (Just client')
+
 
 -- Note [Limiting resource usage]
 -- =============================
