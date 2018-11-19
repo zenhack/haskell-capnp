@@ -19,8 +19,6 @@ module Capnp.Rpc.Server
     , CallInfo(..)
     , runServer
 
-    , wrapException
-
     -- * Handling methods
     , MethodHandler
     , pureHandler
@@ -51,6 +49,7 @@ import Capnp.Classes
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
 import Capnp.Promise        (Fulfiller, breakPromiseIO, fulfillIO)
+import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
 import Data.Mutable         (freeze)
@@ -86,24 +85,6 @@ invokeIO
     -> Fulfiller (Maybe (Ptr ConstMsg))
     -> m ()
 invokeIO = handleMethod
-
--- | @'wrapException' debugMode e@ converts an arbitrary haskell exception
--- @e@ into an rpc exception, which can be communicated to a remote vat.
--- If @debugMode@ is true, the returned exception will include the text of
--- @show e@.
---
--- TODO: this feels a bit out of place in this module; find a better home
--- for it.
-wrapException :: Bool -> SomeException -> RpcGen.Exception
-wrapException debugMode e = fromMaybe
-    def { RpcGen.type_ = RpcGen.Exception'Type'failed
-        , RpcGen.reason =
-            if debugMode then
-                "Unhandled exception: " <> fromString (show e)
-            else
-                "Unhandled exception"
-        }
-    (fromException e)
 
 -- | @'pureHandler' f cap@ is a 'MethodHandler' which calls a function @f@
 -- that accepts the receiver and the parameter type as exposed by the

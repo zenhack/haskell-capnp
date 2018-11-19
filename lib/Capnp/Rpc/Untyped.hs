@@ -83,6 +83,7 @@ import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
 import Capnp.Promise        (breakPromise, fulfill)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
+import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 
@@ -544,7 +545,7 @@ coordinator conn@Conn{recvQ,debugMode} = atomically $ do
     msg <- readTBQueue recvQ
     pureMsg <- msgToValue msg
         `catchSTM`
-        (abortConn conn . Server.wrapException debugMode)
+        (abortConn conn . wrapException debugMode)
     case pureMsg of
         RpcGen.Message'abort exn ->
             handleAbortMsg conn exn

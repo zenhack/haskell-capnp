@@ -106,6 +106,7 @@ library
       , Capnp.Promise
       , Capnp.Rpc
       , Capnp.Rpc.Untyped
+      , Capnp.Rpc.Util
       , Capnp.Rpc.Transport
       , Capnp.Rpc.Server
       -- , Capnp.RpcOld
