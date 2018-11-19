@@ -491,9 +491,7 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
                         RpcGen.Return'exception exn -> do
                             breakPromise (Server.response info) exn
                             writeTVar clientVar (ExnClient exn)
-                            sendPureMsg remoteConn $
-                                RpcGen.Message'finish def { RpcGen.questionId = questionId }
-                            freeQuestion remoteConn questionId
+                            finishQuestion remoteConn def { RpcGen.questionId = questionId }
                         RpcGen.Return'results RpcGen.Payload{content} -> do
                             -- TODO: we need to initialize the cap table.
                             rawPtr <-  createPure defaultLimit $ do
@@ -657,6 +655,15 @@ sendPureMsg :: Conn -> RpcGen.Message -> STM ()
 sendPureMsg Conn{sendQ} msg =
     createPure maxBound (valueToMsg msg) >>= writeTBQueue sendQ
 
+-- | Send a finish message, and then remove the corresponding
+-- question from our table, and return the question id to the
+-- pool of available ids.
+finishQuestion :: Conn -> RpcGen.Finish -> STM ()
+finishQuestion conn@Conn{questions} finish@RpcGen.Finish{questionId} = do
+    sendPureMsg conn $ RpcGen.Message'finish finish
+    freeQuestion conn questionId
+    M.delete questionId questions
+
 abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn = error "TODO"
 
@@ -705,10 +712,7 @@ requestBootstrap conn = do
             { onReturn = \ret@RpcGen.Return{union'} -> case union' of
                 RpcGen.Return'exception exn -> do
                     writeTVar client' (ExnClient exn)
-                    sendPureMsg conn $
-                        RpcGen.Message'finish def { RpcGen.questionId = qid }
-                    M.delete qid (questions conn)
-                    freeQuestion conn qid
+                    finishQuestion conn def { RpcGen.questionId = qid }
                 _ ->
                     error "TODO"
             }
