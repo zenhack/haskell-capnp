@@ -133,7 +133,7 @@ data Conn = Conn
     , questions      :: M.Map QuestionId Question
     , answers        :: M.Map AnswerId Answer
     , exports        :: M.Map ExportId Export
-    -- TODO: imports
+    , imports        :: M.Map ImportId Import
 
     , embargos       :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
@@ -246,6 +246,7 @@ handleConn
             questions <- M.new
             answers <- M.new
             exports <- M.new
+            imports <- M.new
 
             embargos <- M.new
 
@@ -259,6 +260,7 @@ handleConn
                 , questions
                 , answers
                 , exports
+                , imports
                 , embargos
                 , bootstrap
                 , debugMode
@@ -308,6 +310,17 @@ newtype Answer = Answer
 data Export = Export
     { client   :: Client
     , refCount :: !Word32
+    }
+
+-- | An entry in our imports table.
+data Import = Import
+    { client   :: Client
+    -- ^ The client. We cache it in the table so there's only one object
+    -- floating around, which lets us attach a finalizer without worrying
+    -- about it being run more than once.
+    , refCount :: !Word32
+    -- ^ The refcount as understood by the remote vat. This tells us what
+    -- to put in a release message when we're ready to free the object.
     }
 
 
@@ -710,12 +723,38 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
 -- from it. Bumps reference counts/modifies tables etc. as needed. CapDescriptor'none
 -- returns 'nullClient'.
 interpretCapDesc :: Conn -> RpcGen.CapDescriptor -> STM Client
-interpretCapDesc conn = \case
+interpretCapDesc conn@Conn{imports} = \case
     RpcGen.CapDescriptor'none ->
         pure nullClient
 
-    RpcGen.CapDescriptor'senderHosted importId ->
-        error "TODO: handle senderHosted!"
+    RpcGen.CapDescriptor'senderHosted importId -> do
+        M.focus
+            (Focus.alterM $ \case
+                Nothing -> do
+                    client <- Client . Just <$> newTVar RemoteClient
+                        { remoteConn = conn
+                        , msgTarget = ImportTgt
+                            { importId
+                            , isResolved = True
+                            }
+                        }
+                    -- TODO: set up a finalizer somehow.
+                    pure $ Just Import
+                        { client
+                        , refCount = 1
+                        }
+                Just Import{refCount, client} ->
+                    pure $ Just Import
+                        { client
+                        , refCount = refCount + 1
+                        }
+            )
+            importId
+            imports
+        ret <- M.lookup importId imports
+        case ret of
+            Just Import{client} ->  pure client
+            Nothing             -> error "Impossible"
 
     -- TODO: other variants
 
