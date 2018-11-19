@@ -640,7 +640,9 @@ handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
 -- | Interpret the list of cap descriptors, and replace the message's capability
 -- table with the result.
 fixCapTable :: V.Vector RpcGen.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
-fixCapTable = error "TODO"
+fixCapTable capDescs conn msg = do
+    clients <- traverse (interpretCapDesc conn) capDescs
+    pure $ Message.withCapTable clients msg
 
 lookupAbort keyTypeName conn m key f = do
     result <- M.lookup key m
@@ -703,6 +705,19 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
                     pure $ RpcGen.CapDescriptor'senderHosted exportId
 
         -- TODO: other client types
+
+-- The dual of sendableCapDesc; takes a cap descriptor and creates/fetches a client
+-- from it. Bumps reference counts/modifies tables etc. as needed. CapDescriptor'none
+-- returns 'nullClient'.
+interpretCapDesc :: Conn -> RpcGen.CapDescriptor -> STM Client
+interpretCapDesc conn = \case
+    RpcGen.CapDescriptor'none ->
+        pure nullClient
+
+    RpcGen.CapDescriptor'senderHosted importId ->
+        error "TODO: handle senderHosted!"
+
+    -- TODO: other variants
 
 -- | Request the remote vat's bootstrap interface.
 requestBootstrap :: Conn -> STM Client
