@@ -553,7 +553,7 @@ coordinator conn@Conn{recvQ,debugMode} = atomically $ do
         RpcGen.Message'bootstrap bs ->
             handleBootstrapMsg conn bs
         RpcGen.Message'return ret ->
-            handleReturnMsg conn ret
+            handleReturnMsg conn ret msg
         RpcGen.Message'finish finish ->
             handleFinishMsg conn finish
         _ ->
@@ -612,8 +612,14 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
             , RpcGen.reason = "Duplicate question ID"
             }
 
-handleReturnMsg :: Conn -> RpcGen.Return -> STM ()
-handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId} =
+handleReturnMsg :: Conn -> RpcGen.Return -> ConstMsg -> STM ()
+handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = do
+    ret <- case union' of
+        RpcGen.Return'results RpcGen.Payload{capTable} ->
+            error "TODO: fix up cap table"
+        _ ->
+            -- there's no payload, so we can just leave this as-is.
+            pure ret
     lookupAbort "question" conn questions answerId $
         \Question{onReturn} -> onReturn ret
 
@@ -621,6 +627,11 @@ handleFinishMsg :: Conn -> RpcGen.Finish -> STM ()
 handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
     lookupAbort "answer" conn answers questionId $
         \Answer{onFinish} -> onFinish finish
+
+-- | Interpret the list of cap descriptors, and replace the message's capability
+-- table with the result.
+fixCapTable :: V.Vector RpcGen.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
+fixCapTable = error "TODO"
 
 lookupAbort keyTypeName conn m key f = do
     result <- M.lookup key m
