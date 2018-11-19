@@ -487,7 +487,7 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
             M.insert
                 Question
                     { onReturn = \RpcGen.Return{union'} -> case union' of
-                        RpcGen.Return'exception exn -> do
+                        RpcGen.Return'exception exn ->
                             breakPromise (Server.response info) exn
                             -- TODO: send finish.
                         RpcGen.Return'results RpcGen.Payload{content} -> do
