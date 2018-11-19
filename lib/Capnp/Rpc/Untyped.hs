@@ -87,6 +87,7 @@ import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 
+import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
@@ -617,8 +618,14 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
 handleReturnMsg :: Conn -> RpcGen.Return -> ConstMsg -> STM ()
 handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = do
     ret <- case union' of
-        RpcGen.Return'results RpcGen.Payload{capTable} ->
-            error "TODO: fix up cap table"
+        RpcGen.Return'results RpcGen.Payload{capTable} -> do
+            msgWithCaps <- fixCapTable capTable conn msg
+            evalLimitT defaultLimit $
+                msgToValue msgWithCaps >>= \case
+                    RawRpc.Message'return rawRet ->
+                        decerialize rawRet
+                    _ ->
+                        error "BUG: handleReturnMsg was passed a non-return message!"
         _ ->
             -- there's no payload, so we can just leave this as-is.
             pure ret
