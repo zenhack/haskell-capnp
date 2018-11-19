@@ -27,9 +27,6 @@ module Capnp.Bits
     )
   where
 
--- TODO: the only reason this module is in exposed-modules is so it can be
--- seen by the test suite. We should find a way to avoid this.
-
 import Data.Bits
 import Data.Int
 import Data.Word
