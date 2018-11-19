@@ -4,6 +4,7 @@
 module Capnp.Promise
     ( Promise
     , Fulfiller
+    , ErrAlreadyResolved(..)
     , newPromise
     , newPromiseIO
     , newPromiseWithCallback
@@ -25,6 +26,11 @@ import qualified UnliftIO.Exception as HsExn
 import Capnp.Gen.Capnp.Rpc.Pure
 
 instance HsExn.Exception Exception
+
+-- | An exception thrown if 'breakPromise' or 'fulfill' is called on an
+-- already-resolved fulfiller.
+data ErrAlreadyResolved = ErrAlreadyResolved deriving(Show)
+instance HsExn.Exception ErrAlreadyResolved
 
 -- | A 'Fulfiller' is used to fulfill a promise.
 newtype Fulfiller a = Fulfiller
@@ -73,12 +79,13 @@ newPromise = do
     pure
         ( Promise{var}
         , Fulfiller
-            { callback = \result -> modifyTVar' var $ \case
-                Nothing ->
-                    Just result
-                Just _ ->
-                    -- TODO: report this in a more controlled way.
-                    error "Tried to fulfill/break an already resolved promise"
+            { callback = \result -> do
+                val <- readTVar var
+                case val of
+                    Nothing ->
+                        writeTVar var (Just result)
+                    Just _ ->
+                        throwSTM ErrAlreadyResolved
             }
         )
 
