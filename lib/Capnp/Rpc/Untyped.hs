@@ -488,9 +488,12 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
             M.insert
                 Question
                     { onReturn = \RpcGen.Return{union'} -> case union' of
-                        RpcGen.Return'exception exn ->
+                        RpcGen.Return'exception exn -> do
                             breakPromise (Server.response info) exn
-                            -- TODO: send finish.
+                            writeTVar clientVar (ExnClient exn)
+                            sendPureMsg remoteConn $
+                                RpcGen.Message'finish def { RpcGen.questionId = questionId }
+                            freeQuestion remoteConn questionId
                         RpcGen.Return'results RpcGen.Payload{content} -> do
                             -- TODO: we need to initialize the cap table.
                             rawPtr <-  createPure defaultLimit $ do
