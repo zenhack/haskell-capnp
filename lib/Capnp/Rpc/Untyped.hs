@@ -61,7 +61,7 @@ module Capnp.Rpc.Untyped
 import Data.Word
 import UnliftIO.STM
 
-import Control.Concurrent.STM (throwSTM)
+import Control.Concurrent.STM (catchSTM, throwSTM)
 import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
 import Data.Hashable          (Hashable, hash, hashWithSalt)
@@ -72,7 +72,7 @@ import System.Mem.StableName
     (StableName, eqStableName, hashStableName, makeStableName)
 import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
-import UnliftIO.Exception     (Exception, bracket)
+import UnliftIO.Exception     (Exception, bracket, try)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -141,6 +141,9 @@ data Conn = Conn
     , bootstrap      :: Client
     -- The capability which should be served as this connection's bootstrap
     -- interface.
+
+    , debugMode      :: !Bool
+    -- whether to include extra (possibly sensitive) info in error messages.
     }
 
 instance Eq Conn where
@@ -214,8 +217,15 @@ freeExport = freeId . exportIdPool
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
-handleConn transport cfg@ConnConfig{maxQuestions, maxExports, withBootstrap} =
-    withSupervisor $ \sup ->
+handleConn
+    transport
+    cfg@ConnConfig
+        { maxQuestions
+        , maxExports
+        , withBootstrap
+        , debugMode
+        }
+    = withSupervisor $ \sup ->
         bracket
             (newConn sup)
             stopConn
@@ -249,6 +259,7 @@ handleConn transport cfg@ConnConfig{maxQuestions, maxExports, withBootstrap} =
                 , exports
                 , embargos
                 , bootstrap
+                , debugMode
                 }
     runConn conn =
         coordinator conn
@@ -529,9 +540,11 @@ recvLoop transport Conn{recvQ} =
 coordinator :: Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator conn@Conn{recvQ} = atomically $ do
+coordinator conn@Conn{recvQ,debugMode} = atomically $ do
     msg <- readTBQueue recvQ
-    pureMsg <- msgToValue msg -- FIXME: handle decode errors
+    pureMsg <- msgToValue msg
+        `catchSTM`
+        (abortConn conn . Server.wrapException debugMode)
     case pureMsg of
         RpcGen.Message'abort exn ->
             handleAbortMsg conn exn
@@ -545,7 +558,6 @@ coordinator conn@Conn{recvQ} = atomically $ do
             handleFinishMsg conn finish
         _ ->
             error "TODO"
-    error "TODO"
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
