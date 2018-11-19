@@ -72,7 +72,7 @@ import System.Mem.StableName
     (StableName, eqStableName, hashStableName, makeStableName)
 import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
-import UnliftIO.Exception     (Exception, bracket, try)
+import UnliftIO.Exception     (Exception, bracket)
 
 import qualified Data.Vector       as V
 import qualified Focus
