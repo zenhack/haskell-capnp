@@ -302,10 +302,28 @@ newtype Question = Question
     }
 
 -- | An entry in our answers table.
-newtype Answer = Answer
-    { onFinish :: RpcGen.Finish -> STM ()
-    -- ^ Called when a the remote vat sends a finish message for this question.
-    }
+data Answer
+    -- | An answer entry for which we have neither received a finish, nor sent a
+    -- return. Contains two callbacks, to invoke when we receive each type of
+    -- message.
+    = NewAnswer
+        { onFinish :: RpcGen.Finish -> STM ()
+        , onReturn :: RpcGen.Return -> STM ()
+        }
+    -- | An answer entry for which we've sent a return, but not received a
+    -- finish. Contains the return message we sent, and a callback to invoke
+    -- when we receive a finish.
+    | HaveReturn
+        { returnMsg :: RpcGen.Return
+        , onFinish  :: RpcGen.Finish -> STM ()
+        }
+    -- | An answer entry for which we've received a finish, but not sen a
+    -- return. Contains the finish message we received, and a callback to
+    -- invoke when we send the return.
+    | HaveFinish
+        { finishMsg :: RpcGen.Finish
+        , onReturn  :: RpcGen.Return -> STM ()
+        }
 
 data Export = Export
     { client   :: Client
@@ -627,8 +645,9 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
     sendPureMsg conn $ RpcGen.Message'return ret
   where
     insertBootstrap ret Nothing =
-        pure $ Just Answer
-            { onFinish = \_ -> M.delete questionId (answers conn)
+        pure $ Just HaveReturn
+            { returnMsg = ret
+            , onFinish = \_ -> pure ()
             }
     insertBootstrap _ (Just _) =
         abortConn conn def
@@ -703,8 +722,26 @@ handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = d
 
 handleFinishMsg :: Conn -> RpcGen.Finish -> STM ()
 handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
-    lookupAbort "answer" conn answers questionId $
-        \Answer{onFinish} -> onFinish finish
+    lookupAbort "answer" conn answers questionId $ \case
+        ans@NewAnswer{onFinish, onReturn} -> do
+            onFinish finish
+            M.insert
+                HaveFinish
+                    { finishMsg = finish
+                    , onReturn
+                    }
+                questionId
+                answers
+        ans@HaveReturn{onFinish} -> do
+            onFinish finish
+            M.delete questionId answers
+        HaveFinish{} ->
+            abortConn conn def
+                { RpcGen.type_ = RpcGen.Exception'Type'failed
+                , RpcGen.reason =
+                    "Duplicate finish message for question #"
+                    <> fromString (show questionId)
+                }
 
 -- | Interpret the list of cap descriptors, and replace the message's capability
 -- table with the result.
