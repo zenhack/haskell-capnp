@@ -677,7 +677,7 @@ handleCallMsg
                 error "BUG: handleCallMsg was passed a non-call message!"
     (_, fulfiller) <- newPromiseWithCallback $ \case
         Left e ->
-            sendPureMsg conn $ RpcGen.Message'return def
+            returnAnswer conn def
                 { RpcGen.answerId = questionId
                 , RpcGen.union' = RpcGen.Return'exception e
                 }
