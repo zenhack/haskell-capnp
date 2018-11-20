@@ -81,7 +81,7 @@ import qualified StmContainers.Map as M
 import Capnp.Classes        (cerialize, decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
-import Capnp.Promise        (breakPromise, fulfill)
+import Capnp.Promise        (breakPromise, fulfill, newPromiseWithCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
@@ -574,6 +574,8 @@ coordinator conn@Conn{recvQ,debugMode} = forever $ atomically $ do
             handleUnimplementedMsg conn msg
         RpcGen.Message'bootstrap bs ->
             handleBootstrapMsg conn bs
+        RpcGen.Message'call call ->
+            handleCallMsg conn call msg
         RpcGen.Message'return ret ->
             handleReturnMsg conn ret msg
         RpcGen.Message'finish finish ->
@@ -633,6 +635,54 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
             { RpcGen.type_ = RpcGen.Exception'Type'failed
             , RpcGen.reason = "Duplicate question ID"
             }
+
+handleCallMsg :: Conn -> RpcGen.Call -> ConstMsg -> STM ()
+handleCallMsg
+        conn@Conn{exports}
+        RpcGen.Call
+            { questionId
+            , target
+            , interfaceId
+            , methodId
+            , sendResultsTo
+            , params=RpcGen.Payload{capTable}
+            }
+        msg = do
+    msgWithCaps <- fixCapTable capTable conn msg
+    callParams <- evalLimitT defaultLimit $
+        msgToValue msgWithCaps >>= \case
+            RawRpc.Message'call rawCall ->
+                RawRpc.get_Call'params rawCall
+                    >>= RawRpc.get_Payload'content
+            _ ->
+                error "BUG: handleCallMsg was passed a non-call message!"
+    (_, fulfiller) <- newPromiseWithCallback $ \case
+        Left e ->
+            sendPureMsg conn $ RpcGen.Message'return def
+                { RpcGen.answerId = questionId
+                , RpcGen.union' = RpcGen.Return'exception e
+                }
+        Right v ->
+            error "TODO"
+    -- TODO: put something in the answers table.
+    let callInfo = Server.CallInfo
+            { interfaceId
+            , methodId
+            , arguments = callParams
+            , response = fulfiller
+            }
+    case target of
+        RpcGen.MessageTarget'importedCap exportId ->
+            M.lookup exportId exports >>= \case
+                Nothing ->
+                    abortConn conn def
+                        { RpcGen.type_ = RpcGen.Exception'Type'failed
+                        , RpcGen.reason = "No such export ID."
+                        }
+                Just Export{client} ->
+                    call callInfo client
+        _ ->
+            error "TODO"
 
 handleReturnMsg :: Conn -> RpcGen.Return -> ConstMsg -> STM ()
 handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = do
