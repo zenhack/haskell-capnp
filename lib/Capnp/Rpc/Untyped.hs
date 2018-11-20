@@ -828,7 +828,7 @@ requestBootstrap conn = do
         Question
             { onReturn = \ret@RpcGen.Return{union'} -> do
                 case union' of
-                    RpcGen.Return'exception exn -> do
+                    RpcGen.Return'exception exn ->
                         writeTVar client' (ExnClient exn)
                     RpcGen.Return'results RpcGen.Payload{content} ->
                         case content of
