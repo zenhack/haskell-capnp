@@ -419,6 +419,12 @@ data MsgTarget
 nullClient :: Client
 nullClient = Client Nothing
 
+nullClient' :: Client'
+nullClient' = ExnClient def
+    { RpcGen.type_ = RpcGen.Exception'Type'failed
+    , RpcGen.reason = "Client is null"
+    }
+
 -- | A client that is disconnected; always throws disconnected exceptions.
 disconnectedClient' :: Client'
 disconnectedClient' = ExnClient def
@@ -770,12 +776,34 @@ requestBootstrap conn = do
         RpcGen.Message'bootstrap def { RpcGen.questionId = qid }
     M.insert
         Question
-            { onReturn = \ret@RpcGen.Return{union'} -> case union' of
-                RpcGen.Return'exception exn -> do
-                    writeTVar client' (ExnClient exn)
-                    finishQuestion conn def { RpcGen.questionId = qid }
-                _ ->
-                    error "TODO"
+            { onReturn = \ret@RpcGen.Return{union'} -> do
+                case union' of
+                    RpcGen.Return'exception exn -> do
+                        writeTVar client' (ExnClient exn)
+                    RpcGen.Return'results RpcGen.Payload{content} ->
+                        case content of
+                            Nothing ->
+                                -- XXX: this really should be nullClient, but
+                                -- we can't swap that in. This is not pretty
+                                -- but close enough:
+                                writeTVar client' nullClient'
+                            Just (Untyped.PtrCap (Client Nothing)) ->
+                                writeTVar client' nullClient'
+                            Just (Untyped.PtrCap (Client (Just newClientVar))) ->
+                                -- TODO FIXME: deal with embargos as necessary.
+                                -- Also, when dealing with finalization of clients,
+                                -- we need to think about how moving the underlying
+                                -- Client' will affect things.
+                                readTVar newClientVar >>= writeTVar client'
+                            Just _ ->
+                                abortConn conn (def
+                                    { RpcGen.type_ = RpcGen.Exception'Type'failed
+                                    , RpcGen.reason =
+                                        "Bootstrap message resolved to a non-capability pointer."
+                                    } :: RpcGen.Exception)
+                    _ ->
+                        error "TODO"
+                finishQuestion conn def { RpcGen.questionId = qid }
             }
         qid
         (questions conn)
