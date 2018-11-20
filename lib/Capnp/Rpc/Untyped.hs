@@ -682,7 +682,13 @@ handleCallMsg
                 , RpcGen.union' = RpcGen.Return'exception e
                 }
         Right v ->
-            error "TODO"
+            returnAnswer conn def
+                { RpcGen.answerId = questionId
+                , RpcGen.union' = RpcGen.Return'results def
+                    { RpcGen.content = error "TODO"
+                    , RpcGen.capTable = error "TODO"
+                    }
+                }
     -- TODO: put something in the answers table.
     let callInfo = Server.CallInfo
             { interfaceId
@@ -701,14 +707,24 @@ handleCallMsg
                 Just Export{client} ->
                     call callInfo client
         RpcGen.MessageTarget'promisedAnswer
-            RpcGen.PromisedAnswer { questionId = targetQid, transform } ->
-                M.focus
+            RpcGen.PromisedAnswer { questionId = targetQid, transform }
+                | V.length transform /= 0 ->
+                    error "TODO: handle transforms"
+                | otherwise -> M.focus
                     (Focus.alterM $ subscribeReturn $ \ret@RpcGen.Return{union'} ->
                         case union' of
                             RpcGen.Return'exception _ ->
                                 returnAnswer conn ret { RpcGen.answerId = questionId }
-                            RpcGen.Return'results RpcGen.Payload{content} ->
-                                error "TODO"
+                            RpcGen.Return'results RpcGen.Payload{content=Nothing} ->
+                                call callInfo nullClient
+                            RpcGen.Return'results RpcGen.Payload
+                                { content=Just (Untyped.PtrCap client) } ->
+                                    call callInfo client
+                            RpcGen.Return'results RpcGen.Payload{content=Just _} ->
+                                abortConn conn def
+                                    { RpcGen.type_ = RpcGen.Exception'Type'failed
+                                    , RpcGen.reason = "Tried to call method on non-capability."
+                                    }
                             -- TODO: other variants
                     )
                     targetQid
