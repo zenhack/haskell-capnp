@@ -657,7 +657,7 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
 
 handleCallMsg :: Conn -> RpcGen.Call -> ConstMsg -> STM ()
 handleCallMsg
-        conn@Conn{exports}
+        conn@Conn{exports, answers}
         RpcGen.Call
             { questionId
             , target
@@ -700,6 +700,19 @@ handleCallMsg
                         }
                 Just Export{client} ->
                     call callInfo client
+        RpcGen.MessageTarget'promisedAnswer
+            RpcGen.PromisedAnswer { questionId = targetQid, transform } ->
+                M.focus
+                    (Focus.alterM $ subscribeReturn $ \ret@RpcGen.Return{union'} ->
+                        case union' of
+                            RpcGen.Return'exception _ ->
+                                returnAnswer conn ret { RpcGen.answerId = questionId }
+                            RpcGen.Return'results RpcGen.Payload{content} ->
+                                error "TODO"
+                            -- TODO: other variants
+                    )
+                    targetQid
+                    answers
         _ ->
             error "TODO"
 
@@ -802,6 +815,27 @@ returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
         )
         answerId
         answers
+
+subscribeReturn :: (RpcGen.Return -> STM ()) -> Maybe Answer -> STM (Maybe Answer)
+subscribeReturn onRet = \case
+    Just NewAnswer{onFinish, onReturn} ->
+        pure $ Just NewAnswer
+            { onFinish
+            , onReturn = \ret -> onReturn ret *> onRet ret
+            }
+
+    Just HaveFinish{finishMsg, onReturn} ->
+        pure $ Just HaveFinish
+            { finishMsg
+            , onReturn = \ret -> onReturn ret *> onRet ret
+            }
+
+    val@(Just HaveReturn{returnMsg}) -> do
+        onRet returnMsg
+        pure val
+
+    Nothing ->
+        error "BUG: tried to subscribe to return for non-existent answer."
 
 abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn = error "TODO"
