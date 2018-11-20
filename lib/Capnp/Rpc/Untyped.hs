@@ -81,7 +81,7 @@ import qualified StmContainers.Map as M
 import Capnp.Classes        (cerialize, decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
-import Capnp.Promise        (breakPromise, fulfill, newPromiseWithCallback)
+import Capnp.Promise        (breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
@@ -675,7 +675,7 @@ handleCallMsg
                     >>= RawRpc.get_Payload'content
             _ ->
                 error "BUG: handleCallMsg was passed a non-call message!"
-    (_, fulfiller) <- newPromiseWithCallback $ \case
+    fulfiller <- newCallback $ \case
         Left e ->
             returnAnswer conn def
                 { RpcGen.answerId = questionId

@@ -7,6 +7,7 @@ module Capnp.Promise
     , newPromise
     , newPromiseIO
     , newPromiseWithCallback
+    , newCallback
     , fulfill
     , fulfillIO
     , breakPromise
@@ -97,6 +98,9 @@ newPromiseWithCallback callback = do
             { callback = \result -> oldCallback result >> callback result
             }
         )
+
+newCallback :: (Either Exception a -> STM ()) -> STM (Fulfiller a)
+newCallback = fmap snd . newPromiseWithCallback
 
 -- | Like 'newPromise', but in the IO monad.
 newPromiseIO :: MonadIO m => m (Promise a, Fulfiller a)
