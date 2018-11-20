@@ -779,6 +779,30 @@ finishQuestion conn@Conn{questions} finish@RpcGen.Finish{questionId} = do
     freeQuestion conn questionId
     M.delete questionId questions
 
+returnAnswer :: Conn -> RpcGen.Return -> STM ()
+returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
+    sendPureMsg conn $ RpcGen.Message'return ret
+    M.focus
+        (Focus.alterM $ \case
+            Just NewAnswer{onFinish, onReturn} -> do
+                onReturn ret
+                pure $ Just HaveReturn
+                    { returnMsg = ret
+                    , onFinish
+                    }
+            Just HaveFinish{onReturn} -> do
+                onReturn ret
+                pure Nothing
+
+            Just HaveReturn{} ->
+                error "BUG: sent a second return"
+
+            Nothing ->
+                error "BUG: sent a return for non-existent answer"
+        )
+        answerId
+        answers
+
 abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn = error "TODO"
 
