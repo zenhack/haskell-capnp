@@ -808,6 +808,10 @@ finishQuestion conn@Conn{questions} finish@RpcGen.Finish{questionId} = do
     freeQuestion conn questionId
     M.delete questionId questions
 
+-- | Send a return message, and update the corresponding entry in our
+-- answers table, invoking any registered callbacks. Calls 'error' if
+-- the answerId is not in the table, or if we've already sent a return
+-- for this answer.
 returnAnswer :: Conn -> RpcGen.Return -> STM ()
 returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
     sendPureMsg conn $ RpcGen.Message'return ret
@@ -832,6 +836,9 @@ returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
         answerId
         answers
 
+-- | Update an entry in the answers table to run the given callback when
+-- the return message for that answer comes in. If the return has already
+-- arrived, the callback is run immediately.
 subscribeReturn :: (RpcGen.Return -> STM ()) -> Maybe Answer -> STM (Maybe Answer)
 subscribeReturn onRet = \case
     Just NewAnswer{onFinish, onReturn} ->
