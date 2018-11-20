@@ -39,10 +39,8 @@ import Control.Monad.Catch     (MonadThrow)
 import Control.Monad.IO.Class  (MonadIO(liftIO))
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Data.Default            (def)
-import Data.Maybe              (fromMaybe)
-import Data.String             (fromString)
 import UnliftIO                (MonadUnliftIO)
-import UnliftIO.Exception      (SomeException, fromException, try)
+import UnliftIO.Exception      (try)
 
 import Capnp.Classes
     (Cerialize, Decerialize(Cerial, decerialize), FromPtr(fromPtr), ToStruct)
