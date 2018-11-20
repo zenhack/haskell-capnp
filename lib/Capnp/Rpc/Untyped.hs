@@ -562,7 +562,7 @@ recvLoop transport Conn{recvQ} =
 coordinator :: Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator conn@Conn{recvQ,debugMode} = atomically $ do
+coordinator conn@Conn{recvQ,debugMode} = forever $ atomically $ do
     msg <- readTBQueue recvQ
     pureMsg <- msgToValue msg
         `catchSTM`
