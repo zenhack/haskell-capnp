@@ -605,7 +605,10 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
 export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
     q <- newTQueue
-    refCount <- newTVar 1
+    -- The reference count is initially zero; it gets bumped to one when it is
+    -- added to a connection. The refcount is only checked when it is decremented,
+    -- so this does not result in it being freed early:
+    refCount <- newTVar 0
     exportIds <- M.new
     let client' = LocalExportClient
             { refCount = refCount
@@ -1078,7 +1081,10 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
                     pure $ RpcGen.CapDescriptor'senderHosted exportId
                 Nothing -> do
                     -- This client is not yet exported on this connection; allocate
-                    -- a new export ID and insert it into the exports table.
+                    -- a new export ID and insert it into the exports table. Also,
+                    -- increment the client's refcount, to indicate that this
+                    -- connection now holds a reference.
+                    incRef client
                     exportId <- newExport conn
                     M.insert exportId conn exportIds
                     M.insert Export { client, refCount = 1 } exportId exports
