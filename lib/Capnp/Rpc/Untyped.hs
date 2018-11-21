@@ -66,6 +66,7 @@ import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
 import Data.Hashable          (Hashable, hash, hashWithSalt)
 import Data.String            (fromString)
+import Data.Text              (Text)
 import GHC.Generics           (Generic)
 import Supervisors            (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.StableName
@@ -667,6 +668,18 @@ handleCallMsg
             , params=RpcGen.Payload{capTable}
             }
         msg = do
+    -- First, add an entry in our answers table:
+    insertNewAbort
+        "answer"
+        conn
+        questionId
+        NewAnswer
+            { onReturn = \_ -> pure ()
+            , onFinish = \_ -> pure ()
+            }
+        answers
+    -- Next, fish out the parameters to the call, and make sure
+    -- the capability table is set up:
     msgWithCaps <- fixCapTable capTable conn msg
     callParams <- evalLimitT defaultLimit $
         msgToValue msgWithCaps >>= \case
@@ -675,6 +688,9 @@ handleCallMsg
                     >>= RawRpc.get_Payload'content
             _ ->
                 error "BUG: handleCallMsg was passed a non-call message!"
+
+    -- Set up a callback for when the call is finished, to
+    -- send the return message:
     fulfiller <- newCallback $ \case
         Left e ->
             returnAnswer conn def
@@ -691,13 +707,14 @@ handleCallMsg
                     , RpcGen.capTable = capTable
                     }
                 }
-    -- TODO: put something in the answers table.
+    -- Package up the info for the call:
     let callInfo = Server.CallInfo
             { interfaceId
             , methodId
             , arguments = callParams
             , response = fulfiller
             }
+    -- Finally, figure out where to send it:
     case target of
         RpcGen.MessageTarget'importedCap exportId ->
             M.lookup exportId exports >>= \case
@@ -712,6 +729,7 @@ handleCallMsg
             RpcGen.PromisedAnswer { questionId = targetQid, transform }
                 | V.length transform /= 0 ->
                     error "TODO: handle transforms"
+                -- Set up a callback to run once the answer is available:
                 | otherwise -> M.focus
                     (Focus.alterM $ subscribeReturn $ \ret@RpcGen.Return{union'} ->
                         case union' of
@@ -796,6 +814,24 @@ lookupAbort keyTypeName conn m key f = do
                     , fromString (show key)
                     ]
                 }
+
+-- | @'insertNewAbort' keyTypeName conn key value stmMap@ inserts a key into a
+-- map, aborting the connection if it is already present. @keyTypeName@ will be
+-- used in the error message sent to the remote vat.
+insertNewAbort :: (Eq k, Hashable k) => Text -> Conn -> k -> v -> M.Map k v -> STM ()
+insertNewAbort keyTypeName conn key value stmMap =
+    M.focus
+        (Focus.alterM $ \case
+            Just _ ->
+                abortConn conn def
+                    { RpcGen.type_ = RpcGen.Exception'Type'failed
+                    , RpcGen.reason = "duplicate entry in " <> keyTypeName <> " table."
+                    }
+            Nothing ->
+                pure (Just value)
+        )
+        key
+        stmMap
 
 -- | Generate a cap table describing the capabilities reachable from the given
 -- pointer. The capability table will be correct for any message where all of
