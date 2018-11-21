@@ -414,7 +414,7 @@ data Client'
     -- to calls.
     = ExnClient RpcGen.Exception
     -- | A client which lives in the same vat/process as us.
-    | LocalClient
+    | LocalExportClient
         { refCount  :: TVar Word32
         -- ^ The number of live references to this object. When this
         -- reaches zero, we will tell the server to stop.
@@ -482,7 +482,7 @@ incRef (Client (Just clientVar)) = readTVar clientVar >>= \case
     ExnClient _ ->
         pure ()
 
-    LocalClient{refCount} ->
+    LocalExportClient{refCount} ->
         modifyTVar' refCount succ
 
     -- TODO: RemoteClient
@@ -496,7 +496,7 @@ decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
     ExnClient _ ->
         pure ()
 
-    LocalClient{refCount, opQueue} -> do
+    LocalExportClient{refCount, opQueue} -> do
         modifyTVar' refCount pred
         cnt <- readTVar refCount
         when (cnt == 0) $ do
@@ -520,7 +520,7 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
         ExnClient e ->
             breakPromise (Server.response info) e
 
-        LocalClient{opQueue} ->
+        LocalExportClient{opQueue} ->
             writeTQueue opQueue (Server.Call info)
 
         RemoteClient{remoteConn, msgTarget} -> do
@@ -574,7 +574,7 @@ export sup ops = do
     q <- newTQueue
     refCount <- newTVar 1
     exportIds <- M.new
-    let client' = LocalClient
+    let client' = LocalExportClient
             { refCount = refCount
             , opQueue = q
             , exportIds
@@ -990,7 +990,7 @@ sendableCapDesc :: Conn -> Client -> STM RpcGen.CapDescriptor
 sendableCapDesc _ (Client Nothing)  = pure RpcGen.CapDescriptor'none
 sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
     readTVar clientVar >>= \case
-        LocalClient{exportIds} ->
+        LocalExportClient{exportIds} ->
             M.lookup conn exportIds >>= \case
                 Just exportId -> do
                     -- This client is already exported on the connection; bump the
