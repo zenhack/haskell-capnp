@@ -106,7 +106,7 @@ data RpcError
     -- ^ The remote vat sent us an abort message.
     | SentAbort RpcGen.Exception
     -- ^ We sent an abort to the remote vat.
-    deriving(Show, Generic)
+    deriving(Show, Eq, Generic)
 
 instance Exception RpcError
 

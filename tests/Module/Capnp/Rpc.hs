@@ -12,9 +12,8 @@ import Test.Hspec
 
 import Control.Monad          (replicateM)
 import Control.Monad.Catch    (throwM)
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.IO.Class (liftIO)
 import Data.Foldable          (for_)
-import Data.Function          ((&))
 import Supervisors            (Supervisor)
 import UnliftIO               (bracket, concurrently_, race_, timeout, try)
 
@@ -50,13 +49,13 @@ rpcTests = do
 echoTests :: Spec
 echoTests = describe "Echo server & client" $
     it "Should echo back the same message." $ runVatPair
-        (E.export_Echo TestEchoServer)
-        (\echoSrv -> do
+        (\sup -> E.export_Echo sup TestEchoServer)
+        (\_sup echoSrv -> do
                 let msgs =
                         [ def { E.query = "Hello #1" }
                         , def { E.query = "Hello #2" }
                         ]
-                rets <- traverse (\msg -> echoSrv & E.echo'echo msg) msgs
+                rets <- traverse (\msg -> E.echo'echo echoSrv ? msg >>= waitIO) msgs
                 liftIO $ rets `shouldBe`
                     [ def { E.reply = "Hello #1" }
                     , def { E.reply = "Hello #2" }
@@ -77,51 +76,51 @@ instance E.Echo'server_ IO TestEchoServer where
 
 -- | Bump a counter n times, returning a list of the results.
 bumpN :: CallSequence -> Int -> IO [CallSequence'getNumber'results]
-bumpN ctr n = replicateM n $ callSequence'getNumber ctr ? def
+bumpN ctr n = (replicateM n $ callSequence'getNumber ctr ? def) >>= traverse waitIO
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
     it "Should propogate server-side exceptions to client method calls" $ runVatPair
-        (export_CallSequence ExnCtrServer)
-        (expectException
-            (callSequence'getNumber def)
+        (\sup -> export_CallSequence sup ExnCtrServer)
+        (\_sup -> expectException
+            (\cap -> callSequence'getNumber cap ? def)
             def
                 { type_ = Exception'Type'failed
                 , reason = "Something went sideways."
                 }
         )
     it "Should receive unimplemented when calling a method on a null cap." $ runVatPair
-        (pure $ CallSequence nullClient)
-        (expectException
-            (callSequence'getNumber def)
+        (\_sup -> pure $ CallSequence nullClient)
+        (\_sup -> expectException
+            (\cap -> callSequence'getNumber cap ? def)
             def
                 { type_ = Exception'Type'unimplemented
                 , reason = "Client is null"
                 }
         )
     it "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair
-        (export_CallSequence NoImplServer)
-        (expectException
-            (callSequence'getNumber def)
+        (\sup -> export_CallSequence sup NoImplServer)
+        (\_sup -> expectException
+            (\cap -> callSequence'getNumber cap ? def)
             def
                 { type_ = Exception'Type'unimplemented
                 , reason = "Method unimplemented"
                 }
         )
     it "Should throw an opaque exception when the server throws a non-rpc exception" $ runVatPair
-        (export_CallSequence NonRpcExnServer)
-        (expectException
-            (callSequence'getNumber def)
+        (\sup -> export_CallSequence sup NonRpcExnServer)
+        (\_sup -> expectException
+            (\cap -> callSequence'getNumber cap ? def)
             def
                 { type_ = Exception'Type'failed
                 , reason = "Method threw an unhandled exception."
                 }
         )
     it "A counter should maintain state" $ runVatPair
-        (newTestCtr 0 >>= export_CallSequence)
-        (\ctr -> do
-            results <- replicateM 4 $
-                ctr & callSequence'getNumber def
+        (\sup -> newTestCtr 0 >>= export_CallSequence sup)
+        (\sup ctr -> do
+            results <- (replicateM 4 $ callSequence'getNumber ctr ? def)
+                >>= traverse waitIO
             liftIO $ results `shouldBe`
                 [ def { n = 1 }
                 , def { n = 2 }
@@ -132,7 +131,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         )
     it "Methods returning interfaces work" $ runVatPair
         (\sup -> export_CounterFactory sup (TestCtrFactory sup))
-        (\factory -> do
+        (\_sup factory -> do
             let newCounter start = do
                     CounterFactory'newCounter'results{counter} <-
                         counterFactory'newCounter factory ? def { start }
@@ -171,14 +170,14 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             stopVat
         )
     it "Methods with interface parameters work" $ do
-        ctrA <- newTestCtr 2
-        ctrB <- newTestCtr 0
-        ctrC <- newTestCtr 30
+        ctrA <- atomically $ newTestCtr 2
+        ctrB <- atomically $ newTestCtr 0
+        ctrC <- atomically $ newTestCtr 30
         runVatPair
-            (export_CounterAcceptor TestCtrAcceptor)
-            (\acceptor -> do
+            (\sup -> export_CounterAcceptor sup TestCtrAcceptor)
+            (\sup acceptor -> do
                 for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
-                    ctr <- export_CallSequence ctrSrv
+                    ctr <- atomically $ export_CallSequence sup ctrSrv
                     counterAcceptor'accept acceptor ? CounterAcceptor'accept'params { counter = ctr }
                         >>= waitIO
                 r <- traverse
@@ -212,11 +211,11 @@ newtype TestCtrFactory = TestCtrFactory { sup :: Supervisor }
 instance CounterFactory'server_ IO TestCtrFactory where
     counterFactory'newCounter =
         pureHandler $ \TestCtrFactory{sup} CounterFactory'newCounter'params{start} -> do
-            ctr <- newTestCtr start >>= atomically . export_CallSequence sup
+            ctr <- atomically $ newTestCtr start >>= export_CallSequence sup
             pure CounterFactory'newCounter'results { counter = ctr }
 
-newTestCtr :: MonadIO m => Word32 -> m TestCtrServer
-newTestCtr n = liftIO $ TestCtrServer <$> newTVarIO n
+newTestCtr :: Word32 -> STM TestCtrServer
+newTestCtr n = TestCtrServer <$> newTVar n
 
 newtype TestCtrServer = TestCtrServer (TVar Word32)
 
@@ -268,7 +267,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                 }
         withTransportPair $ \(vatTrans, probeTrans) -> do
             ret <- try $ concurrently_
-                (runVat $ (vatConfig vatTrans) { debugMode = True})
+                (handleConn (vatTrans defaultLimit) def { debugMode = True})
                 $ do
                     msg <- createPure maxBound $ valueToMsg $ Message'abort exn
                     sendMsg (probeTrans defaultLimit) msg
@@ -301,7 +300,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
             concurrently_
                 (do
                     Left (e :: RpcError) <- try $
-                        runVat (vatConfig vatTrans) { debugMode = True }
+                        handleConn (vatTrans defaultLimit) def { debugMode = True }
                     e `shouldBe` SentAbort wantAbortExn
                 )
                 (do
@@ -322,7 +321,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
     it "Should reply with unimplemented when sent a join (level 4 only)." $
         withTransportPair $ \(vatTrans, probeTrans) ->
         race_
-            (runVat $ (vatConfig vatTrans) { debugMode = True })
+            (handleConn (vatTrans defaultLimit) def { debugMode = True })
             $ do
                 msg <- createPure maxBound $ valueToMsg $ Message'join def
                 sendMsg (probeTrans defaultLimit) msg
@@ -342,7 +341,7 @@ triggerAbort msg reason =
         withTransportPair $ \(vatTrans, probeTrans) ->
             concurrently_
                 (do
-                    ret <- try $ runVat $ (vatConfig vatTrans) { debugMode = True }
+                    ret <- try $ handleConn (vatTrans defaultLimit) def { debugMode = True }
                     ret `shouldBe` Left (SentAbort wantAbortExn)
                 )
                 (do
@@ -390,12 +389,12 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
             }
         runServer = handleConn (serverTrans defaultLimit) def
             { debugMode = True
-            , getBootstrap = fmap toClient . getBootstrap sup
+            , getBootstrap = fmap toClient . getBootstrap
             }
     race_ runServer runClient
 
 expectException call wantExn cap = do
-    ret <- try $ cap & call
+    ret <- try $ call cap >>= waitIO
     case ret of
         Left (e :: Exception) -> do
             liftIO $ e `shouldBe` wantExn
