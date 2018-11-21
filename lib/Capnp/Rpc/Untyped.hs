@@ -752,14 +752,8 @@ handleCallMsg
     -- Finally, figure out where to send it:
     case target of
         RpcGen.MessageTarget'importedCap exportId ->
-            M.lookup exportId exports >>= \case
-                Nothing ->
-                    abortConn conn def
-                        { RpcGen.type_ = RpcGen.Exception'Type'failed
-                        , RpcGen.reason = "No such export ID."
-                        }
-                Just Export{client} ->
-                    call callInfo client
+            lookupAbort "export" conn exports exportId $
+                \Export{client} -> call callInfo client
         RpcGen.MessageTarget'promisedAnswer
             RpcGen.PromisedAnswer { questionId = targetQid, transform }
                 | V.length transform /= 0 ->

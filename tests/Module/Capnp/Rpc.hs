@@ -281,19 +281,19 @@ unusualTests = describe "Tests for unusual message patterns" $ do
             { target = MessageTarget'importedCap 443
             }
         )
-        "Received 'Call' on non-existent export #443"
+        "No such export: 443"
     triggerAbort
         (Message'call def
             { target = MessageTarget'promisedAnswer def { questionId=300 }
             }
         )
-        "Received 'Call' on non-existent promised answer #300"
+        "No such answer: 300"
     triggerAbort
         (Message'return def { answerId = 234 })
-        "Received 'Return' for non-existant question #234"
+        "No such question: 234"
     it "Should respond with an abort if sent junk data" $ do
         let wantAbortExn = def
-                { reason = "Error decoding message: TraversalLimitError"
+                { reason = "Unhandled exception: TraversalLimitError"
                 , type_ = Exception'Type'failed
                 }
         withTransportPair $ \(vatTrans, probeTrans) ->
