@@ -770,25 +770,23 @@ handleCallMsg
                 | V.length transform /= 0 ->
                     error "TODO: handle transforms"
                 -- Set up a callback to run once the answer is available:
-                | otherwise -> M.focus
-                    (Focus.alterM $ subscribeReturn $ \ret@RpcGen.Return{union'} ->
-                        case union' of
-                            RpcGen.Return'exception _ ->
-                                returnAnswer conn ret { RpcGen.answerId = questionId }
-                            RpcGen.Return'results RpcGen.Payload{content=Nothing} ->
-                                call callInfo nullClient
-                            RpcGen.Return'results RpcGen.Payload
-                                { content=Just (Untyped.PtrCap client) } ->
-                                    call callInfo client
-                            RpcGen.Return'results RpcGen.Payload{content=Just _} ->
-                                abortConn conn def
-                                    { RpcGen.type_ = RpcGen.Exception'Type'failed
-                                    , RpcGen.reason = "Tried to call method on non-capability."
-                                    }
-                            -- TODO: other variants
-                    )
-                    targetQid
-                    answers
+                | otherwise ->
+                    lookupAbort "answer" conn answers targetQid $ \ans -> do
+                        ans' <- subscribeReturn ans $ \ret@RpcGen.Return{union'} ->
+                            case union' of
+                                RpcGen.Return'exception _ ->
+                                    returnAnswer conn ret { RpcGen.answerId = questionId }
+                                RpcGen.Return'results RpcGen.Payload{content=Nothing} ->
+                                    call callInfo nullClient
+                                RpcGen.Return'results RpcGen.Payload
+                                    { content=Just (Untyped.PtrCap client) } ->
+                                        call callInfo client
+                                RpcGen.Return'results RpcGen.Payload{content=Just _} ->
+                                    abortConn conn def
+                                        { RpcGen.type_ = RpcGen.Exception'Type'failed
+                                        , RpcGen.reason = "Tried to call method on non-capability."
+                                        }
+                        M.insert ans' targetQid answers
         _ ->
             error "TODO"
 
@@ -932,26 +930,23 @@ returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
 -- | Update an entry in the answers table to run the given callback when
 -- the return message for that answer comes in. If the return has already
 -- arrived, the callback is run immediately.
-subscribeReturn :: (RpcGen.Return -> STM ()) -> Maybe Answer -> STM (Maybe Answer)
-subscribeReturn onRet = \case
-    Just NewAnswer{onFinish, onReturn} ->
-        pure $ Just NewAnswer
+subscribeReturn :: Answer -> (RpcGen.Return -> STM ()) -> STM Answer
+subscribeReturn ans onRet = case ans of
+    NewAnswer{onFinish, onReturn} ->
+        pure NewAnswer
             { onFinish
             , onReturn = \ret -> onReturn ret *> onRet ret
             }
 
-    Just HaveFinish{finishMsg, onReturn} ->
-        pure $ Just HaveFinish
+    HaveFinish{finishMsg, onReturn} ->
+        pure HaveFinish
             { finishMsg
             , onReturn = \ret -> onReturn ret *> onRet ret
             }
 
-    val@(Just HaveReturn{returnMsg}) -> do
+    val@HaveReturn{returnMsg} -> do
         onRet returnMsg
         pure val
-
-    Nothing ->
-        error "BUG: tried to subscribe to return for non-existent answer."
 
 abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
