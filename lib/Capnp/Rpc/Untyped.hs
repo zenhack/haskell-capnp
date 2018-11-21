@@ -1015,17 +1015,20 @@ interpretCapDesc :: Conn -> RpcGen.CapDescriptor -> STM Client
 interpretCapDesc conn@Conn{imports} = \case
     RpcGen.CapDescriptor'none ->
         pure nullClient
-
-    RpcGen.CapDescriptor'senderHosted importId -> do
+    RpcGen.CapDescriptor'senderHosted importId ->
+        senderHostedOrPromise True importId
+    RpcGen.CapDescriptor'senderPromise importId ->
+        senderHostedOrPromise False importId
+    other ->
+        error $ "TODO: unsupported cap descriptor: " ++ show other
+  where
+    senderHostedOrPromise isResolved importId = do
         M.focus
             (Focus.alterM $ \case
                 Nothing -> do
                     client <- Client . Just <$> newTVar RemoteClient
                         { remoteConn = conn
-                        , msgTarget = ImportTgt
-                            { importId
-                            , isResolved = True
-                            }
+                        , msgTarget = ImportTgt{importId, isResolved}
                         }
                     -- TODO: set up a finalizer somehow.
                     pure $ Just Import
@@ -1042,10 +1045,9 @@ interpretCapDesc conn@Conn{imports} = \case
             imports
         ret <- M.lookup importId imports
         case ret of
-            Just Import{client} ->  pure client
+            Just Import{client} -> pure client
             Nothing             -> error "Impossible"
 
-    -- TODO: other variants
 
 -- | Request the remote vat's bootstrap interface.
 requestBootstrap :: Conn -> STM Client
