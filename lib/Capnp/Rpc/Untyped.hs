@@ -65,9 +65,10 @@ import Data.Word
 import UnliftIO.STM
 
 import Control.Concurrent     (threadDelay)
-import Control.Concurrent.STM (catchSTM, throwSTM)
+import Control.Concurrent.STM (catchSTM, flushTBQueue, throwSTM)
 import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
+import Data.Foldable          (traverse_)
 import Data.Hashable          (Hashable, hash, hashWithSalt)
 import Data.String            (fromString)
 import Data.Text              (Text)
@@ -151,6 +152,9 @@ data Conn = Conn
     , exportIdPool   :: IdPool
     -- Pools of identifiers for new questions and exports
 
+    , maxAnswerCalls :: !Int
+    -- Maximum number of calls that can be outstanding on an unresolved answer.
+
     , questions      :: M.Map QuestionId Question
     , answers        :: M.Map AnswerId Answer
     , exports        :: M.Map ExportId Export
@@ -178,19 +182,24 @@ instance Hashable Conn where
 
 -- | Configuration information for a connection.
 data ConnConfig = ConnConfig
-    { maxQuestions  :: !Word32
+    { maxQuestions   :: !Word32
     -- ^ The maximum number of simultanious outstanding requests to the peer
     -- vat. Once this limit is reached, further questsions will block until
     -- some of the existing questions have been answered.
     --
     -- Defaults to 32.
 
-    , maxExports    :: !Word32
+    , maxExports     :: !Word32
     -- ^ The maximum number of objects which may be exported on this connection.
     --
     -- Defaults to 32.
 
-    , debugMode     :: !Bool
+    , maxAnswerCalls :: !Int
+    -- Maximum number of calls that can be outstanding on an unresolved answer.
+    --
+    -- Defaults to 16.
+
+    , debugMode      :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
     -- contain extra information. This should not be used in production, as
     -- it is possible for these messages to contain sensitive information,
@@ -198,7 +207,7 @@ data ConnConfig = ConnConfig
     --
     -- Defaults to 'False'.
 
-    , getBootstrap  :: Supervisor -> STM (Maybe Client)
+    , getBootstrap   :: Supervisor -> STM (Maybe Client)
     -- ^ Get the bootstrap interface we should serve for this connection.
     -- the argument is a supervisor whose lifetime is bound to the
     -- connection. If 'getBootstrap' returns 'Nothing', we will respond
@@ -206,7 +215,7 @@ data ConnConfig = ConnConfig
     --
     -- The default always returns 'nullClient'.
 
-    , withBootstrap :: Maybe (Supervisor -> Client -> IO ())
+    , withBootstrap  :: Maybe (Supervisor -> Client -> IO ())
     -- ^ An action to perform with access to the remote vat's bootstrap
     -- interface. The supervisor argument is bound to the lifetime of the
     -- connection. If this is 'Nothing' (the default), the bootstrap
@@ -215,11 +224,12 @@ data ConnConfig = ConnConfig
 
 instance Default ConnConfig where
     def = ConnConfig
-        { maxQuestions  = 32
-        , maxExports    = 32
-        , debugMode     = False
-        , getBootstrap  = \_ -> pure Nothing
-        , withBootstrap = Nothing
+        { maxQuestions   = 32
+        , maxExports     = 32
+        , maxAnswerCalls = 16
+        , debugMode      = False
+        , getBootstrap   = \_ -> pure Nothing
+        , withBootstrap  = Nothing
         }
 
 -- | Get a new question id. retries if we are out of available question ids.
@@ -247,6 +257,7 @@ handleConn
         , maxExports
         , withBootstrap
         , debugMode
+        , maxAnswerCalls
         }
     = withSupervisor $ \sup ->
         handle
@@ -280,6 +291,7 @@ handleConn
                 , exportIdPool
                 , recvQ
                 , sendQ
+                , maxAnswerCalls
                 , questions
                 , answers
                 , exports
@@ -424,6 +436,14 @@ data Client'
         , exportIds :: M.Map Conn ExportId
         -- ^ A the ids under which this is exported on each connection.
         }
+    -- | A client for a question that we have yet to answer.
+    | LocalAnswerClient
+        { transform :: V.Vector RpcGen.PromisedAnswer'Op
+        -- ^ Transform to find the capability within the results.
+        , calls     :: TBQueue Server.CallInfo
+        -- ^ Outstanding calls on the client; when the question is answered,
+        -- these will be forwarded.
+        }
     -- | A client for an object that lives in a remote vat.
     | RemoteClient
         { remoteConn :: Conn
@@ -475,6 +495,10 @@ disconnectedClient' = ExnClient def
     , RpcGen.reason = "disconnected"
     }
 
+getClient' :: Client -> STM Client'
+getClient' (Client Nothing)     = pure nullClient'
+getClient' (Client (Just tvar)) = readTVar tvar
+
 -- | Increment the reference count on a client.
 incRef :: Client -> STM ()
 incRef (Client Nothing) = pure ()
@@ -484,6 +508,9 @@ incRef (Client (Just clientVar)) = readTVar clientVar >>= \case
 
     LocalExportClient{refCount} ->
         modifyTVar' refCount succ
+
+    LocalAnswerClient{} ->
+        pure ()
 
     -- TODO: RemoteClient
 
@@ -505,6 +532,9 @@ decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
             -- ...and then replace ourselves with a disconnected client:
             writeTVar clientVar disconnectedClient'
 
+    LocalAnswerClient{} ->
+        pure ()
+
     -- TODO: RemoteClient
 
 
@@ -522,6 +552,9 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
 
         LocalExportClient{opQueue} ->
             writeTQueue opQueue (Server.Call info)
+
+        LocalAnswerClient{calls} ->
+            writeTBQueue calls info
 
         RemoteClient{remoteConn, msgTarget} -> do
             questionId <- newQuestion remoteConn
@@ -778,21 +811,29 @@ handleCallMsg
                         RpcGen.Return'exception _ ->
                             returnAnswer conn ret { RpcGen.answerId = questionId }
                         RpcGen.Return'results RpcGen.Payload{content} ->
-                            case followTransform transform content of
-                                Left e ->
-                                    abortConn conn e
-                                Right Nothing ->
-                                    call callInfo nullClient
-                                Right (Just (Untyped.PtrCap client)) ->
-                                    call callInfo client
-                                Right (Just _) ->
-                                    abortConn conn def
-                                        { RpcGen.type_ = RpcGen.Exception'Type'failed
-                                        , RpcGen.reason = "Tried to call method on non-capability."
-                                        }
+                            transformClient transform content conn >>= call callInfo
                 M.insert ans' targetQid answers
         _ ->
             error "TODO"
+
+transformClient
+    :: V.Vector RpcGen.PromisedAnswer'Op
+    -> Maybe Untyped.PtrType
+    -> Conn
+    -> STM Client
+transformClient transform ptr conn =
+    case followTransform transform ptr of
+        Left e ->
+            abortConn conn e
+        Right Nothing ->
+            pure nullClient
+        Right (Just (Untyped.PtrCap client)) ->
+            pure client
+        Right (Just _) ->
+            abortConn conn def
+                { RpcGen.type_ = RpcGen.Exception'Type'failed
+                , RpcGen.reason = "Tried to call method on non-capability."
+                }
 
 followTransform
     :: V.Vector RpcGen.PromisedAnswer'Op
@@ -1016,7 +1057,7 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
 -- from it. Bumps reference counts/modifies tables etc. as needed. CapDescriptor'none
 -- returns 'nullClient'.
 interpretCapDesc :: Conn -> RpcGen.CapDescriptor -> STM Client
-interpretCapDesc conn@Conn{imports, exports} = \case
+interpretCapDesc conn@Conn{imports, exports, answers, maxAnswerCalls} = \case
     RpcGen.CapDescriptor'none ->
         pure nullClient
     RpcGen.CapDescriptor'senderHosted importId ->
@@ -1028,6 +1069,22 @@ interpretCapDesc conn@Conn{imports, exports} = \case
             \Export{client} ->
                 -- TODO: we probably need to do some bookkeeping re: refcounts.
                 pure client
+    RpcGen.CapDescriptor'receiverAnswer RpcGen.PromisedAnswer{transform, questionId} -> do
+        calls <- newTBQueue (fromIntegral maxAnswerCalls)
+        client' <- newTVar LocalAnswerClient{transform, calls}
+        lookupAbort "answer" conn answers questionId $ \ans ->
+            subscribeReturn ans $ \ret@RpcGen.Return{union'} ->
+                case union' of
+                    RpcGen.Return'exception exn -> do
+                        writeTVar client' (ExnClient exn)
+                        flushTBQueue calls >>= traverse_
+                            (\Server.CallInfo{response} -> breakPromise response exn)
+                    RpcGen.Return'results RpcGen.Payload{content} -> do
+                        finalClient <- transformClient transform content conn
+                        getClient' finalClient >>= writeTVar client'
+                        flushTBQueue calls >>= traverse_ (`call` finalClient)
+                    -- TODO: other variants
+        pure $ Client (Just client')
     other ->
         error $ "TODO: unsupported cap descriptor: " ++ show other
   where
