@@ -799,7 +799,7 @@ followTransform
     :: V.Vector RpcGen.PromisedAnswer'Op
     -> Maybe Untyped.PtrType
     -> Either RpcGen.Exception (Maybe Untyped.PtrType)
-followTransform ops ptr = go (V.toList ops) ptr
+followTransform ops = go (V.toList ops)
   where
     go [] ptr = Right ptr
     go (RpcGen.PromisedAnswer'Op'noop:cs) ptr = go cs ptr
