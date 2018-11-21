@@ -556,8 +556,7 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
                             writeTVar clientVar (ExnClient exn)
                             finishQuestion remoteConn def { RpcGen.questionId = questionId }
                         RpcGen.Return'results RpcGen.Payload{content} -> do
-                            -- TODO: we need to initialize the cap table.
-                            rawPtr <-  createPure defaultLimit $ do
+                            rawPtr <- createPure defaultLimit $ do
                                 msg <- Message.newMessage Nothing
                                 cerialize msg content
                             fulfill (Server.response info) rawPtr
