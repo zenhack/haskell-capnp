@@ -956,6 +956,11 @@ returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
 -- | Update an entry in the answers table to run the given callback when
 -- the return message for that answer comes in. If the return has already
 -- arrived, the callback is run immediately.
+--
+-- If the answer already has other callbacks registered, this callback is
+-- run *after* the others. Note that this is an important property, as it
+-- is necessary to preserve E-order if the callbacks are successive method
+-- calls on the returned object.
 subscribeReturn :: Answer -> (RpcGen.Return -> STM ()) -> STM Answer
 subscribeReturn ans onRet = case ans of
     NewAnswer{onFinish, onReturn} ->
