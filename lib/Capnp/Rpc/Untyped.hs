@@ -681,12 +681,14 @@ handleCallMsg
                 { RpcGen.answerId = questionId
                 , RpcGen.union' = RpcGen.Return'exception e
                 }
-        Right v ->
+        Right v -> do
+            content <- evalLimitT defaultLimit (decerialize v)
+            capTable <- genSendableCapTable conn content
             returnAnswer conn def
                 { RpcGen.answerId = questionId
-                , RpcGen.union' = RpcGen.Return'results def
-                    { RpcGen.content = error "TODO"
-                    , RpcGen.capTable = error "TODO"
+                , RpcGen.union'   = RpcGen.Return'results def
+                    { RpcGen.content  = content
+                    , RpcGen.capTable = capTable
                     }
                 }
     -- TODO: put something in the answers table.
@@ -794,6 +796,21 @@ lookupAbort keyTypeName conn m key f = do
                     , fromString (show key)
                     ]
                 }
+
+-- | Generate a cap table describing the capabilities reachable from the given
+-- pointer. The capability table will be correct for any message where all of
+-- the capabilities are within the subtree under the pointer.
+--
+-- XXX: it's kinda gross that we're serializing the pointer just to collect
+-- this, then decerializing to put it in the larger adt, then reserializing
+-- again... at some point we'll probably want to overhaul much of this module
+-- for performance. This kind of thing is the motivation for #52.
+genSendableCapTable :: Conn -> Maybe Untyped.PtrType -> STM (V.Vector RpcGen.CapDescriptor)
+genSendableCapTable conn ptr = do
+    msg <- createPure defaultLimit $ valueToMsg $ Untyped.Struct
+        (Untyped.Slice V.empty)
+        (Untyped.Slice $ V.singleton ptr)
+    traverse (sendableCapDesc conn) (Message.getCapTable msg)
 
 sendPureMsg :: Conn -> RpcGen.Message -> STM ()
 sendPureMsg Conn{sendQ} msg =
