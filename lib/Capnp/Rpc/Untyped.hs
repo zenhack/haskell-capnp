@@ -61,6 +61,7 @@ module Capnp.Rpc.Untyped
 import Data.Word
 import UnliftIO.STM
 
+import Control.Concurrent     (threadDelay)
 import Control.Concurrent.STM (catchSTM, throwSTM)
 import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
@@ -73,7 +74,7 @@ import System.Mem.StableName
     (StableName, eqStableName, hashStableName, makeStableName)
 import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
-import UnliftIO.Exception     (Exception, bracket)
+import UnliftIO.Exception     (Exception, bracket, throwIO, try)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -97,9 +98,11 @@ import qualified Capnp.Untyped.Pure       as Untyped
 
 
 -- | Errors which can be thrown by the rpc system.
-newtype RpcError
+data RpcError
     = ReceivedAbort RpcGen.Exception
     -- ^ The remote vat sent us an abort message.
+    | SentAbort RpcGen.Exception
+    -- ^ We sent an abort to the remote vat.
     deriving(Show, Generic)
 
 instance Exception RpcError
@@ -581,26 +584,40 @@ recvLoop transport Conn{recvQ} =
 coordinator :: Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator conn@Conn{recvQ,debugMode} = forever $ atomically $ do
-    msg <- readTBQueue recvQ
-    pureMsg <- msgToValue msg
-        `catchSTM`
-        (abortConn conn . wrapException debugMode)
-    case pureMsg of
-        RpcGen.Message'abort exn ->
-            handleAbortMsg conn exn
-        RpcGen.Message'unimplemented msg ->
-            handleUnimplementedMsg conn msg
-        RpcGen.Message'bootstrap bs ->
-            handleBootstrapMsg conn bs
-        RpcGen.Message'call call ->
-            handleCallMsg conn call msg
-        RpcGen.Message'return ret ->
-            handleReturnMsg conn ret msg
-        RpcGen.Message'finish finish ->
-            handleFinishMsg conn finish
-        _ ->
-            error "TODO"
+coordinator conn@Conn{recvQ,debugMode} = go
+  where
+    go = do
+        result <- try (atomically handleMsg)
+        case result of
+            Right () ->
+                go
+            Left (SentAbort e) -> do
+                atomically $ sendPureMsg conn $ RpcGen.Message'abort e
+                -- Give the message a bit of time to reach the remote vat:
+                threadDelay 1000000
+                throwIO (SentAbort e)
+            Left e ->
+                throwIO e
+    handleMsg = do
+        msg <- readTBQueue recvQ
+        pureMsg <- msgToValue msg
+            `catchSTM`
+            (abortConn conn . wrapException debugMode)
+        case pureMsg of
+            RpcGen.Message'abort exn ->
+                handleAbortMsg conn exn
+            RpcGen.Message'unimplemented msg ->
+                handleUnimplementedMsg conn msg
+            RpcGen.Message'bootstrap bs ->
+                handleBootstrapMsg conn bs
+            RpcGen.Message'call call ->
+                handleCallMsg conn call msg
+            RpcGen.Message'return ret ->
+                handleReturnMsg conn ret msg
+            RpcGen.Message'finish finish ->
+                handleFinishMsg conn finish
+            _ ->
+                error "TODO"
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
@@ -914,7 +931,7 @@ subscribeReturn onRet = \case
         error "BUG: tried to subscribe to return for non-existent answer."
 
 abortConn :: Conn -> RpcGen.Exception -> STM a
-abortConn = error "TODO"
+abortConn _ e = throwSTM (SentAbort e)
 
 -- | Get a CapDescriptor for this client, suitable for sending to the remote
 -- vat. If the client points to our own vat, this will increment the refcount
