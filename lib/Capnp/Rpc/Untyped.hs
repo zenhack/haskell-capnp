@@ -772,30 +772,51 @@ handleCallMsg
         RpcGen.MessageTarget'importedCap exportId ->
             lookupAbort "export" conn exports exportId $
                 \Export{client} -> call callInfo client
-        RpcGen.MessageTarget'promisedAnswer
-            RpcGen.PromisedAnswer { questionId = targetQid, transform }
-                | V.length transform /= 0 ->
-                    error "TODO: handle transforms"
-                -- Set up a callback to run once the answer is available:
-                | otherwise ->
-                    lookupAbort "answer" conn answers targetQid $ \ans -> do
-                        ans' <- subscribeReturn ans $ \ret@RpcGen.Return{union'} ->
-                            case union' of
-                                RpcGen.Return'exception _ ->
-                                    returnAnswer conn ret { RpcGen.answerId = questionId }
-                                RpcGen.Return'results RpcGen.Payload{content=Nothing} ->
+        RpcGen.MessageTarget'promisedAnswer RpcGen.PromisedAnswer { questionId = targetQid, transform } ->
+            lookupAbort "answer" conn answers targetQid $ \ans -> do
+                ans' <- subscribeReturn ans $ \ret@RpcGen.Return{union'} ->
+                    case union' of
+                        RpcGen.Return'exception _ ->
+                            returnAnswer conn ret { RpcGen.answerId = questionId }
+                        RpcGen.Return'results RpcGen.Payload{content} ->
+                            case followTransform transform content of
+                                Left e ->
+                                    abortConn conn e
+                                Right Nothing ->
                                     call callInfo nullClient
-                                RpcGen.Return'results RpcGen.Payload
-                                    { content=Just (Untyped.PtrCap client) } ->
-                                        call callInfo client
-                                RpcGen.Return'results RpcGen.Payload{content=Just _} ->
+                                Right (Just (Untyped.PtrCap client)) ->
+                                    call callInfo client
+                                Right (Just _) ->
                                     abortConn conn def
                                         { RpcGen.type_ = RpcGen.Exception'Type'failed
                                         , RpcGen.reason = "Tried to call method on non-capability."
                                         }
-                        M.insert ans' targetQid answers
+                M.insert ans' targetQid answers
         _ ->
             error "TODO"
+
+followTransform
+    :: V.Vector RpcGen.PromisedAnswer'Op
+    -> Maybe Untyped.PtrType
+    -> Either RpcGen.Exception (Maybe Untyped.PtrType)
+followTransform ops ptr = go (V.toList ops) ptr
+  where
+    go [] ptr = Right ptr
+    go (RpcGen.PromisedAnswer'Op'noop:cs) ptr = go cs ptr
+    go (RpcGen.PromisedAnswer'Op'getPointerField idx:cs) ptr = case ptr of
+        Nothing -> go cs Nothing
+        Just (Untyped.PtrStruct (Untyped.Struct _ ptrs)) ->
+            go cs (Untyped.sliceIndex (fromIntegral idx) ptrs)
+        Just _ ->
+            Left def
+                { RpcGen.type_ = RpcGen.Exception'Type'failed
+                , RpcGen.reason = "Tried to access pointer field of non-struct."
+                }
+    go (RpcGen.PromisedAnswer'Op'unknown' op:_) ptr =
+        Left def
+            { RpcGen.type_ = RpcGen.Exception'Type'failed
+            , RpcGen.reason = "Unknown PromisedAnswer.Op: " <> fromString (show op)
+            }
 
 handleReturnMsg :: Conn -> RpcGen.Return -> ConstMsg -> STM ()
 handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = do
