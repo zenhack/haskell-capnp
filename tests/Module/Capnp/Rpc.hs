@@ -389,7 +389,7 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
             }
         runServer = handleConn (serverTrans defaultLimit) def
             { debugMode = True
-            , getBootstrap = fmap toClient . getBootstrap
+            , getBootstrap = fmap (Just . toClient) . getBootstrap
             }
     race_ runServer runClient
 

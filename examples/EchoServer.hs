@@ -21,5 +21,5 @@ main :: IO ()
 main = serve "localhost" "4000" $ \(sock, _addr) ->
     handleConn (socketTransport sock defaultLimit) def
         { debugMode = True
-        , getBootstrap = \sup -> toClient <$> export_Echo sup MyEchoServer
+        , getBootstrap = \sup -> Just . toClient <$> export_Echo sup MyEchoServer
         }

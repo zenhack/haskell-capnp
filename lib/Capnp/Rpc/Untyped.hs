@@ -161,9 +161,9 @@ data Conn = Conn
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and execute the STM we have registered.
 
-    , bootstrap      :: Client
+    , bootstrap      :: Maybe Client
     -- The capability which should be served as this connection's bootstrap
-    -- interface.
+    -- interface (if any).
 
     , debugMode      :: !Bool
     -- whether to include extra (possibly sensitive) info in error messages.
@@ -198,10 +198,10 @@ data ConnConfig = ConnConfig
     --
     -- Defaults to 'False'.
 
-    , getBootstrap  :: Supervisor -> STM Client
+    , getBootstrap  :: Supervisor -> STM (Maybe Client)
     -- ^ Get the bootstrap interface we should serve for this connection.
     -- the argument is a supervisor whose lifetime is bound to the
-    -- connection. If 'getBootstrap' returns 'nullClient', we will respond
+    -- connection. If 'getBootstrap' returns 'Nothing', we will respond
     -- to bootstrap messages with an exception.
     --
     -- The default always returns 'nullClient'.
@@ -218,7 +218,7 @@ instance Default ConnConfig where
         { maxQuestions  = 32
         , maxExports    = 32
         , debugMode     = False
-        , getBootstrap  = \_ -> pure nullClient
+        , getBootstrap  = \_ -> pure Nothing
         , withBootstrap = Nothing
         }
 
@@ -293,8 +293,10 @@ handleConn
             `concurrently_` sendLoop transport conn
             `concurrently_` recvLoop transport conn
             `concurrently_` useBootstrap conn
-    stopConn conn =
-        atomically $ decRef (bootstrap conn)
+    stopConn conn@Conn{bootstrap=Nothing} =
+        pure ()
+    stopConn conn@Conn{bootstrap=Just client} =
+        atomically $ decRef client
     useBootstrap conn = case withBootstrap of
         Nothing -> pure ()
         Just f  -> atomically (requestBootstrap conn) >>= f (supervisor conn)
@@ -510,7 +512,7 @@ decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
 call :: Server.CallInfo -> Client -> STM ()
 call info (Client Nothing) =
     breakPromise (Server.response info) def
-        { RpcGen.type_ = RpcGen.Exception'Type'failed
+        { RpcGen.type_ = RpcGen.Exception'Type'unimplemented
         , RpcGen.reason = "Client is null"
         }
 call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
@@ -666,25 +668,31 @@ handleUnimplementedMsg conn = \case
 
 handleBootstrapMsg :: Conn -> RpcGen.Bootstrap -> STM ()
 handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
-    capDesc <- sendableCapDesc conn (bootstrap conn)
-    let ret = RpcGen.Return
-            { RpcGen.answerId = questionId
-            , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
-            , RpcGen.union' = case capDesc of
-                RpcGen.CapDescriptor'none ->
+    ret <- case bootstrap conn of
+        Nothing ->
+            pure $ RpcGen.Return
+                { RpcGen.answerId = questionId
+                , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+                , RpcGen.union' =
                     RpcGen.Return'exception def
                         { RpcGen.type_ = RpcGen.Exception'Type'failed
                         , RpcGen.reason = "No bootstrap interface for this connection."
                         }
-                _ ->
+                }
+        Just client -> do
+            capDesc <- sendableCapDesc conn client
+            pure $ RpcGen.Return
+                { RpcGen.answerId = questionId
+                , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+                , RpcGen.union' =
                     RpcGen.Return'results RpcGen.Payload
                             -- XXX: this is a bit fragile; we're relying on
                             -- the encode step to pick the right index for
                             -- our capability.
-                        { content = Just $ Untyped.PtrCap (bootstrap conn)
+                        { content = Just (Untyped.PtrCap client)
                         , capTable = V.singleton capDesc
                         }
-            }
+                }
     M.focus
         (Focus.alterM $ insertBootstrap ret)
         questionId
