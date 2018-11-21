@@ -650,8 +650,19 @@ handleUnimplementedMsg conn = \case
         -- If the client itself doesn't handle unimplemented messages, that's
         -- weird, but ultimately their problem.
         pure ()
+    RpcGen.Message'abort _ ->
+        abortConn conn def
+            { RpcGen.type_ = RpcGen.Exception'Type'failed
+            , RpcGen.reason =
+                "Your vat sent an 'unimplemented' message for an abort message " <>
+                "that its remote peer never sent. This is likely a bug in your " <>
+                "capnproto library."
+            }
     _ ->
-        error "TODO"
+        abortConn conn def
+            { RpcGen.type_ = RpcGen.Exception'Type'failed
+            , RpcGen.reason = "Received unimplemented response for required message."
+            }
 
 handleBootstrapMsg :: Conn -> RpcGen.Bootstrap -> STM ()
 handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
