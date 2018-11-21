@@ -1012,13 +1012,18 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
 -- from it. Bumps reference counts/modifies tables etc. as needed. CapDescriptor'none
 -- returns 'nullClient'.
 interpretCapDesc :: Conn -> RpcGen.CapDescriptor -> STM Client
-interpretCapDesc conn@Conn{imports} = \case
+interpretCapDesc conn@Conn{imports, exports} = \case
     RpcGen.CapDescriptor'none ->
         pure nullClient
     RpcGen.CapDescriptor'senderHosted importId ->
         senderHostedOrPromise True importId
     RpcGen.CapDescriptor'senderPromise importId ->
         senderHostedOrPromise False importId
+    RpcGen.CapDescriptor'receiverHosted exportId ->
+        lookupAbort "export" conn exports exportId $
+            \Export{client} ->
+                -- TODO: we probably need to do some bookkeeping re: refcounts.
+                pure client
     other ->
         error $ "TODO: unsupported cap descriptor: " ++ show other
   where
