@@ -113,7 +113,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             (\cap -> callSequence'getNumber cap ? def)
             def
                 { type_ = Exception'Type'failed
-                , reason = "Method threw an unhandled exception."
+                , reason = "Unhandled exception"
                 }
         )
     it "A counter should maintain state" $ runVatPair
