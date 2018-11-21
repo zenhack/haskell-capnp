@@ -667,6 +667,8 @@ coordinator conn@Conn{recvQ,debugMode} = go
                 handleReturnMsg conn ret msg
             RpcGen.Message'finish finish ->
                 handleFinishMsg conn finish
+            RpcGen.Message'release release ->
+                handleReleaseMsg conn release
             _ ->
                 sendPureMsg conn $ RpcGen.Message'unimplemented pureMsg
 
@@ -897,6 +899,37 @@ handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
                     "Duplicate finish message for question #"
                     <> fromString (show questionId)
                 }
+
+handleReleaseMsg :: Conn -> RpcGen.Release -> STM ()
+handleReleaseMsg conn@Conn{exports} RpcGen.Release{id, referenceCount} =
+    M.focus
+        (Focus.alterM $ \case
+            Nothing ->
+                abortConn conn def
+                    { RpcGen.type_ = RpcGen.Exception'Type'failed
+                    , RpcGen.reason =
+                        "No such export: " <> fromString (show id)
+                    }
+            Just Export{client, refCount} ->
+                case compare refCount referenceCount of
+                    LT ->
+                        abortConn conn def
+                            { RpcGen.type_ = RpcGen.Exception'Type'failed
+                            , RpcGen.reason =
+                                "Received release for export with referenceCount " <>
+                                "greater than our recorded total ref count."
+                            }
+                    EQ -> do
+                        decRef client
+                        pure Nothing
+                    GT ->
+                        pure $ Just Export
+                            { client
+                            , refCount = refCount - referenceCount
+                            }
+        )
+        id
+        exports
 
 -- | Interpret the list of cap descriptors, and replace the message's capability
 -- table with the result.
