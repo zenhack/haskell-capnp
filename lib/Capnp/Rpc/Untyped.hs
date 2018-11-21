@@ -30,6 +30,9 @@ module Capnp.Rpc.Untyped
     , RpcError(..)
     , RpcGen.Exception(..)
     , RpcGen.Exception'Type(..)
+
+    -- * Shutting down the connection
+    , stopVat
     ) where
 
 -- Note [Organization]
@@ -74,7 +77,7 @@ import System.Mem.StableName
     (StableName, eqStableName, hashStableName, makeStableName)
 import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
-import UnliftIO.Exception     (Exception, bracket, throwIO, try)
+import UnliftIO.Exception     (Exception, bracket, handle, throwIO, try)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -106,6 +109,20 @@ data RpcError
     deriving(Show, Generic)
 
 instance Exception RpcError
+
+-- | 'StopVat' is an exception used to terminate a capnproto connection; it is
+-- raised by `stopVat`.
+--
+-- XXX TODO: this is not a good mechanism. For one thing, it only actually works
+-- if thrown from the same thread as 'handleConn'. Come up with something better.
+data StopVat = StopVat deriving(Show)
+instance Exception StopVat
+
+-- | Shut down the rpc connection, and all resources managed by the vat. This
+-- does not return (it raises an exception used to actually signal termination
+-- of the connection).
+stopVat :: IO ()
+stopVat = throwIO StopVat
 
 -- These aliases are the same ones defined in rpc.capnp; unfortunately the
 -- schema compiler doesn't supply information about type aliases, so we
@@ -231,11 +248,13 @@ handleConn
         , withBootstrap
         , debugMode
         }
-    = withSupervisor $ \sup ->
-        bracket
-            (newConn sup)
-            stopConn
-            runConn
+    = withSupervisor $ \sup -> do
+        handle
+            (\StopVat -> pure ())
+            $ bracket
+                (newConn sup)
+                stopConn
+                runConn
   where
     newConn sup = do
         stableName <- makeStableName ()
@@ -587,8 +606,7 @@ coordinator :: Conn -> IO ()
 coordinator conn@Conn{recvQ,debugMode} = go
   where
     go = do
-        result <- try (atomically handleMsg)
-        case result of
+        try (atomically handleMsg) >>= \case
             Right () ->
                 go
             Left (SentAbort e) -> do
