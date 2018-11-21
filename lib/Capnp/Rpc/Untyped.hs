@@ -248,7 +248,7 @@ handleConn
         , withBootstrap
         , debugMode
         }
-    = withSupervisor $ \sup -> do
+    = withSupervisor $ \sup ->
         handle
             (\StopVat -> pure ())
             $ bracket
@@ -607,17 +607,16 @@ coordinator :: Conn -> IO ()
 -- more about the objects in question; See Note [Organization] for more info.
 coordinator conn@Conn{recvQ,debugMode} = go
   where
-    go = do
-        try (atomically handleMsg) >>= \case
-            Right () ->
-                go
-            Left (SentAbort e) -> do
-                atomically $ sendPureMsg conn $ RpcGen.Message'abort e
-                -- Give the message a bit of time to reach the remote vat:
-                threadDelay 1000000
-                throwIO (SentAbort e)
-            Left e ->
-                throwIO e
+    go = try (atomically handleMsg) >>= \case
+        Right () ->
+            go
+        Left (SentAbort e) -> do
+            atomically $ sendPureMsg conn $ RpcGen.Message'abort e
+            -- Give the message a bit of time to reach the remote vat:
+            threadDelay 1000000
+            throwIO (SentAbort e)
+        Left e ->
+            throwIO e
     handleMsg = do
         msg <- readTBQueue recvQ
         pureMsg <- msgToValue msg
@@ -865,7 +864,7 @@ lookupAbort keyTypeName conn m key f = do
 -- map, aborting the connection if it is already present. @keyTypeName@ will be
 -- used in the error message sent to the remote vat.
 insertNewAbort :: (Eq k, Hashable k) => Text -> Conn -> k -> v -> M.Map k v -> STM ()
-insertNewAbort keyTypeName conn key value stmMap =
+insertNewAbort keyTypeName conn key value =
     M.focus
         (Focus.alterM $ \case
             Just _ ->
@@ -877,7 +876,6 @@ insertNewAbort keyTypeName conn key value stmMap =
                 pure (Just value)
         )
         key
-        stmMap
 
 -- | Generate a cap table describing the capabilities reachable from the given
 -- pointer. The capability table will be correct for any message where all of

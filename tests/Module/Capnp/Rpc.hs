@@ -10,7 +10,7 @@ import Control.Concurrent.STM
 import Data.Word
 import Test.Hspec
 
-import Control.Monad          (replicateM)
+import Control.Monad          (replicateM, (>=>))
 import Control.Monad.Catch    (throwM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Foldable          (for_)
@@ -49,13 +49,13 @@ rpcTests = do
 echoTests :: Spec
 echoTests = describe "Echo server & client" $
     it "Should echo back the same message." $ runVatPair
-        (\sup -> E.export_Echo sup TestEchoServer)
+        (`E.export_Echo` TestEchoServer)
         (\_sup echoSrv -> do
                 let msgs =
                         [ def { E.query = "Hello #1" }
                         , def { E.query = "Hello #2" }
                         ]
-                rets <- traverse (\msg -> E.echo'echo echoSrv ? msg >>= waitIO) msgs
+                rets <- traverse ((E.echo'echo echoSrv ?) >=> waitIO) msgs
                 liftIO $ rets `shouldBe`
                     [ def { E.reply = "Hello #1" }
                     , def { E.reply = "Hello #2" }
@@ -76,12 +76,12 @@ instance E.Echo'server_ IO TestEchoServer where
 
 -- | Bump a counter n times, returning a list of the results.
 bumpN :: CallSequence -> Int -> IO [CallSequence'getNumber'results]
-bumpN ctr n = (replicateM n $ callSequence'getNumber ctr ? def) >>= traverse waitIO
+bumpN ctr n = replicateM n (callSequence'getNumber ctr ? def) >>= traverse waitIO
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
     it "Should propogate server-side exceptions to client method calls" $ runVatPair
-        (\sup -> export_CallSequence sup ExnCtrServer)
+        (`export_CallSequence` ExnCtrServer)
         (\_sup -> expectException
             (\cap -> callSequence'getNumber cap ? def)
             def
@@ -99,7 +99,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 }
         )
     it "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair
-        (\sup -> export_CallSequence sup NoImplServer)
+        (`export_CallSequence` NoImplServer)
         (\_sup -> expectException
             (\cap -> callSequence'getNumber cap ? def)
             def
@@ -108,7 +108,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 }
         )
     it "Should throw an opaque exception when the server throws a non-rpc exception" $ runVatPair
-        (\sup -> export_CallSequence sup NonRpcExnServer)
+        (`export_CallSequence` NonRpcExnServer)
         (\_sup -> expectException
             (\cap -> callSequence'getNumber cap ? def)
             def
@@ -119,7 +119,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
     it "A counter should maintain state" $ runVatPair
         (\sup -> newTestCtr 0 >>= export_CallSequence sup)
         (\sup ctr -> do
-            results <- (replicateM 4 $ callSequence'getNumber ctr ? def)
+            results <- replicateM 4 (callSequence'getNumber ctr ? def)
                 >>= traverse waitIO
             liftIO $ results `shouldBe`
                 [ def { n = 1 }
@@ -174,7 +174,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         ctrB <- atomically $ newTestCtr 0
         ctrC <- atomically $ newTestCtr 30
         runVatPair
-            (\sup -> export_CounterAcceptor sup TestCtrAcceptor)
+            (`export_CounterAcceptor` TestCtrAcceptor)
             (\sup acceptor -> do
                 for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
                     ctr <- atomically $ export_CallSequence sup ctrSrv
