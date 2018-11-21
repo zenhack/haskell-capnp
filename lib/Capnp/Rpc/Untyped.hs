@@ -635,7 +635,7 @@ coordinator conn@Conn{recvQ,debugMode} = go
             RpcGen.Message'finish finish ->
                 handleFinishMsg conn finish
             _ ->
-                error "TODO"
+                sendPureMsg conn $ RpcGen.Message'unimplemented pureMsg
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
