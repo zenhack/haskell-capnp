@@ -587,7 +587,10 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
                         RpcGen.Return'exception exn -> do
                             breakPromise (Server.response info) exn
                             writeTVar clientVar (ExnClient exn)
-                            finishQuestion remoteConn def { RpcGen.questionId = questionId }
+                            finishQuestion remoteConn def
+                                { RpcGen.questionId = questionId
+                                , RpcGen.releaseResultCaps = False
+                                }
                         RpcGen.Return'results RpcGen.Payload{content} -> do
                             rawPtr <- createPure defaultLimit $ do
                                 msg <- Message.newMessage Nothing
@@ -785,6 +788,7 @@ handleCallMsg
         Left e ->
             returnAnswer conn def
                 { RpcGen.answerId = questionId
+                , RpcGen.releaseParamCaps = False
                 , RpcGen.union' = RpcGen.Return'exception e
                 }
         Right v -> do
@@ -792,6 +796,7 @@ handleCallMsg
             capTable <- genSendableCapTable conn content
             returnAnswer conn def
                 { RpcGen.answerId = questionId
+                , RpcGen.releaseParamCaps = False
                 , RpcGen.union'   = RpcGen.Return'results def
                     { RpcGen.content  = content
                     , RpcGen.capTable = capTable
@@ -1193,7 +1198,10 @@ requestBootstrap conn = do
                                     } :: RpcGen.Exception)
                     _ ->
                         error "TODO"
-                finishQuestion conn def { RpcGen.questionId = qid }
+                finishQuestion conn def
+                    { RpcGen.questionId = qid
+                    , RpcGen.releaseResultCaps = False
+                    }
             }
         qid
         (questions conn)
