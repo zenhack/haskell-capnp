@@ -46,6 +46,10 @@ executable echo-server
   import: shared-opts
   main-is:             EchoServer.hs
 
+executable calculator-client
+  import: shared-opts
+  main-is:             CalculatorClient.hs
+
 executable calculator-server
   import: shared-opts
   main-is:             CalculatorServer.hs
