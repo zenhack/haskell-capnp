@@ -575,17 +575,7 @@ callRemote
     content <- evalLimitT defaultLimit (decerialize arguments)
     sendPureMsg conn $ R.Message'call def
         { R.questionId = qid
-        , R.target = case target of
-            ImportTgt importId ->
-                R.MessageTarget'importedCap importId
-            AnswerTgt { answerId, transform } ->
-                R.MessageTarget'promisedAnswer
-                    R.PromisedAnswer
-                        { R.questionId = answerId
-                        , R.transform = V.fromList $
-                            map R.PromisedAnswer'Op'getPointerField $
-                            DList.toList transform
-                        }
+        , R.target = marshalMsgTarget target
         , R.params = R.Payload { content, capTable }
         , R.interfaceId = interfaceId
         , R.methodId = methodId
@@ -610,6 +600,20 @@ callRemote
             }
         qid
         questions
+
+
+marshalMsgTarget :: MsgTarget -> R.MessageTarget
+marshalMsgTarget = \case
+    ImportTgt importId ->
+        R.MessageTarget'importedCap importId
+    AnswerTgt { answerId, transform } ->
+        R.MessageTarget'promisedAnswer
+            R.PromisedAnswer
+                { R.questionId = answerId
+                , R.transform = V.fromList $
+                    map R.PromisedAnswer'Op'getPointerField $
+                    DList.toList transform
+                }
 
 
 -- | A null client. This is the only client value that can be represented
