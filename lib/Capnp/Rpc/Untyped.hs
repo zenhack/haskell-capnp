@@ -98,9 +98,9 @@ import Capnp.Classes        (decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
 import Capnp.Promise        (breakPromise, newCallback)
-import Capnp.Rpc.Errors     (eDisconnected, eFailed, eMethodUnimplemented)
+import Capnp.Rpc.Errors
+    (eDisconnected, eFailed, eMethodUnimplemented, wrapException)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
-import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 

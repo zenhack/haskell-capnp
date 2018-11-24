@@ -24,7 +24,8 @@ import Control.Monad.IO.Class (MonadIO)
 import qualified UnliftIO.Exception as HsExn
 
 import Capnp.Gen.Capnp.Rpc.Pure
-import Capnp.Rpc.Util ()
+-- For exception instance:
+import Capnp.Rpc.Errors ()
 
 -- | An exception thrown if 'breakPromise' or 'fulfill' is called on an
 -- already-resolved fulfiller.

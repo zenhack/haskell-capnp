@@ -116,7 +116,6 @@ library
       , Capnp.Promise
       , Capnp.Rpc
       , Capnp.Rpc.Untyped
-      , Capnp.Rpc.Util
       , Capnp.Rpc.Errors
       , Capnp.Rpc.Transport
       , Capnp.Rpc.Server
