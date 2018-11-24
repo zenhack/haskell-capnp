@@ -14,7 +14,6 @@ clients and servers).
 -}
 module Capnp.Rpc.Server
     ( ServerOps(..)
-    , ServerMsg(..)
     , CallInfo(..)
     , runServer
 
@@ -53,6 +52,7 @@ import Data.Mutable         (freeze)
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Message            as Message
 import qualified Capnp.Untyped            as Untyped
+import qualified Internal.TCloseQ         as TCloseQ
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@. See Note [Method handling].
@@ -173,24 +173,17 @@ data CallInfo = CallInfo
     -- ^ A 'Fulfiller' which accepts the method's return value.
     }
 
--- | A message to be sent to a running server thread.
-data ServerMsg
-    = Stop
-    -- ^ Shut down the server
-    | Call CallInfo
-    -- ^ Call a method on the server.
-
 -- | Handle incoming messages for a given object.
 --
 -- Accepts a queue of messages to handle, and 'ServerOps' used to handle them.
 -- returns when it receives a 'Stop' message.
-runServer :: TQueue ServerMsg -> ServerOps IO -> IO ()
+runServer :: TCloseQ.Q CallInfo -> ServerOps IO -> IO ()
 runServer q ops = go
   where
-    go = atomically (readTQueue q) >>= \case
-        Stop ->
+    go = atomically (TCloseQ.read q) >>= \case
+        Nothing ->
             handleStop ops
-        Call CallInfo{interfaceId, methodId, arguments, response} -> do
+        Just CallInfo{interfaceId, methodId, arguments, response} -> do
             handleMethod
                 (handleCall ops interfaceId methodId)
                 arguments

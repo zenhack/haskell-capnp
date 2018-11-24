@@ -113,6 +113,7 @@ import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
 import qualified Internal.Rc              as Rc
 import qualified Internal.SnocList        as SnocList
+import qualified Internal.TCloseQ         as TCloseQ
 
 -- We use this type often enough that the types get noisy without a shorthand:
 type MPtr = Maybe Untyped.Ptr
@@ -472,7 +473,7 @@ data Client
         { connRefs :: ConnRefs
         -- ^ Record of what export IDs this client has on different remote
         -- connections.
-        , opQ      :: Rc (TQueue Server.ServerMsg)
+        , opQ      :: Rc (TCloseQ.Q Server.CallInfo)
         -- ^ A queue of operations for the local capability to handle. This is
         -- wrapped in a reference counted cell, whose finalizer sends a Stop
         -- message to the server.
@@ -594,7 +595,7 @@ call info@Server.CallInfo { response } = \case
 
     LocalClient { opQ } -> Rc.get opQ >>= \case
         Just q -> do
-            writeTQueue q (Server.Call info)
+            TCloseQ.write q info
         Nothing ->
             breakPromise response eDisconnected
 
@@ -719,8 +720,8 @@ decRef _                = error "TODO"
 -- the server will be stopped (if it is still running).
 export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
-    q <- newTQueue
-    opQ <- Rc.new q (writeTQueue q Server.Stop)
+    q <- TCloseQ.new
+    opQ <- Rc.new q (TCloseQ.close q)
     connRefs <- ConnRefs <$> M.new
     let client = LocalClient
             { opQ
