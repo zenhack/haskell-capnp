@@ -77,7 +77,6 @@ import Control.Concurrent     (threadDelay)
 import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
 import Control.Monad          (forever)
 import Data.Default           (Default(def))
-import Data.DList             (DList)
 import Data.Foldable          (traverse_)
 import Data.Hashable          (Hashable, hash, hashWithSalt)
 import Data.String            (fromString)
@@ -90,7 +89,6 @@ import System.Mem.Weak        (addFinalizer)
 import UnliftIO.Async         (concurrently_)
 import UnliftIO.Exception     (Exception, bracket, handle, throwIO, try)
 
-import qualified Data.DList        as DList
 import qualified Data.Vector       as V
 import qualified Focus
 import qualified StmContainers.Map as M
@@ -104,6 +102,7 @@ import Capnp.Rpc.Errors
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
+import Internal.SnocList    (SnocList)
 
 import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as R
@@ -111,6 +110,7 @@ import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
 import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
+import qualified Internal.SnocList        as SnocList
 
 -- We use this type often enough that the types get noisy without a shorthand:
 type MPtr = Maybe Untyped.Ptr
@@ -517,7 +517,7 @@ data TmpDest
         -- ^ The connection to the remote vat.
         , answerId  :: !AnswerId
         -- ^ The answer to target.
-        , transform :: DList Word16
+        , transform :: SnocList Word16
         -- ^ A series of pointer indexes to follow from the result
         -- struct to the capability. This corresponds to MessageTarget's
         -- transform field in rpc.capnp.
@@ -568,7 +568,7 @@ data MsgTarget
     = ImportTgt !ImportId
     | AnswerTgt
         { answerId  :: !AnswerId
-        , transform :: DList Word16
+        , transform :: SnocList Word16
         }
 
 -- Note [proxies]
@@ -667,7 +667,7 @@ marshalMsgTarget = \case
                 { R.questionId = answerId
                 , R.transform = V.fromList $
                     map R.PromisedAnswer'Op'getPointerField $
-                    DList.toList transform
+                    SnocList.toList transform
                 }
 
 
@@ -1295,7 +1295,7 @@ requestBootstrap conn@Conn{questions} = do
     let tmpDest = AnswerDest
             { conn
             , answerId = qid
-            , transform = mempty
+            , transform = SnocList.empty
             }
     pState <- newTVar Pending { tmpDest }
     sendPureMsg conn $

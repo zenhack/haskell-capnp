@@ -82,7 +82,6 @@ common shared-opts
       , text                              >= 1.2 && < 2.0
       , transformers                      ^>= 0.5.2
       , vector                            ^>= 0.12.0
-      , dlist                             ^>= 0.8.0
   ghc-options:
     -Wnoncanonical-monad-instances
     -Wincomplete-patterns
@@ -155,6 +154,7 @@ library
       -- END GENERATED SCHEMA MODULES
     other-modules:
         Internal.AppendVec
+      , Internal.SnocList
       , Internal.Gen.Instances
       , Internal.BuildPure
       , Codec.Capnp
