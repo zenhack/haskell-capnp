@@ -473,10 +473,9 @@ data Client
         { connRefs :: ConnRefs
         -- ^ Record of what export IDs this client has on different remote
         -- connections.
-        , opQ      :: Rc (TCloseQ.Q Server.CallInfo)
-        -- ^ A queue of operations for the local capability to handle. This is
-        -- wrapped in a reference counted cell, whose finalizer sends a Stop
-        -- message to the server.
+        , qCall    :: Rc (Server.CallInfo -> STM ())
+        -- ^ Queue a call for the local capability to handle. This is wrapped
+        -- in a reference counted cell, whose finalizer stops the server.
         }
     -- | A client which will resolve to some other capability at
     -- some point.
@@ -553,7 +552,7 @@ instance Eq ImportRef where
 instance Eq Client where
     NullClient == NullClient =
         True
-    LocalClient { opQ = x } == LocalClient { opQ = y } =
+    LocalClient { qCall = x } == LocalClient { qCall = y } =
         x == y
     PromiseClient { pState = x } == PromiseClient { pState = y } =
         x == y
@@ -593,9 +592,9 @@ call info@Server.CallInfo { response } = \case
     NullClient ->
         breakPromise response eMethodUnimplemented
 
-    LocalClient { opQ } -> Rc.get opQ >>= \case
+    LocalClient { qCall } -> Rc.get qCall >>= \case
         Just q -> do
-            TCloseQ.write q info
+            q info
         Nothing ->
             breakPromise response eDisconnected
 
@@ -703,17 +702,17 @@ nullClient = NullClient
 
 -- | Increment the reference count on a client.
 incRef :: Client -> STM ()
-incRef NullClient       = pure ()
-incRef LocalClient{opQ} = Rc.incr opQ
-incRef _                = error "TODO"
+incRef NullClient         = pure ()
+incRef LocalClient{qCall} = Rc.incr qCall
+incRef _                  = error "TODO"
 
 
 -- | Decrement the reference count on a client. If the count reaches zero,
 -- the object is destroyed.
 decRef :: Client -> STM ()
-decRef NullClient       = pure ()
-decRef LocalClient{opQ} = Rc.decr opQ
-decRef _                = error "TODO"
+decRef NullClient         = pure ()
+decRef LocalClient{qCall} = Rc.decr qCall
+decRef _                  = error "TODO"
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
@@ -721,14 +720,14 @@ decRef _                = error "TODO"
 export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
     q <- TCloseQ.new
-    opQ <- Rc.new q (TCloseQ.close q)
+    qCall <- Rc.new (TCloseQ.write q) (TCloseQ.close q)
     connRefs <- ConnRefs <$> M.new
     let client = LocalClient
-            { opQ
+            { qCall
             , connRefs
             }
     superviseSTM sup $ do
-        addFinalizer client $ atomically $ Rc.release opQ
+        addFinalizer client $ atomically $ Rc.release qCall
         Server.runServer q ops
     pure client
 
