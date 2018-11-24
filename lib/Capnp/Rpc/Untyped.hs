@@ -594,7 +594,7 @@ callRemote
         Question
             { onReturn = \RpcGen.Return{ union' } -> do
                 case union' of
-                    RpcGen.Return'exception exn -> do
+                    RpcGen.Return'exception exn ->
                         breakPromise response exn
                     RpcGen.Return'results RpcGen.Payload{ content } -> do
                         rawPtr <- createPure defaultLimit $ do
@@ -1283,9 +1283,9 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 
 -- | Resolve a promised client to another client. See Note [resolveClient]
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
-resolveClientClient tmpDest resolve client = case tmpDest of
+resolveClientClient tmpDest resolve client =
     -- NB: make sure to handle embargos.
-    _ -> error "TODO"
+    error "TODO"
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> RpcGen.Return -> STM ()

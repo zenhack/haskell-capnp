@@ -32,5 +32,5 @@ main = hspec $ parallel $ do
         describe "tests using tests/data/schema-codegenreq" walkSchemaCodeGenRequestTest
         describe "property tests for schema" schemaCGRQuickCheck
     describe "Regression tests" regressionTests
-    describe "Self-tests for individual modules" $
+    describe "Self-tests for individual modules"
         Capnp.Rpc.Untyped.selfTests
