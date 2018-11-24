@@ -177,8 +177,8 @@ data Conn = Conn
 
     , questions        :: M.Map QuestionId Question
     , answers          :: M.Map AnswerId Answer
-    , exports          :: M.Map ExportId Export
-    , imports          :: M.Map ImportId Import
+    , exports          :: M.Map ExportId EntryIE
+    , imports          :: M.Map ImportId EntryIE
 
     , embargos         :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
@@ -435,20 +435,17 @@ data Answer
         , onReturn  :: SnocList (R.Return -> STM ())
         }
 
-data Export = Export
-    { client   :: Client
-    , refCount :: !Word32
-    }
-
--- | An entry in our imports table.
-data Import = Import
+-- | An entry in our imports or exports table.
+data EntryIE = EntryIE
     { client   :: Client
     -- ^ The client. We cache it in the table so there's only one object
     -- floating around, which lets us attach a finalizer without worrying
     -- about it being run more than once.
     , refCount :: !Word32
-    -- ^ The refcount as understood by the remote vat. This tells us what
-    -- to put in a release message when we're ready to free the object.
+    -- ^ The refcount for this entry. For imports, this tells us what to
+    -- put in a release message when we're ready to free the object. For
+    -- exports, This lets us know when we can drop the entry from the
+    -- table.
     }
 
 -- | Types which may be converted to and from 'Client's. Typically these
@@ -928,7 +925,7 @@ handleCallMsg
     case target of
         R.MessageTarget'importedCap exportId ->
             lookupAbort "export" conn exports exportId $
-                \Export{client} -> call callInfo client
+                \EntryIE{client} -> call callInfo client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
             lookupAbort "answer" conn answers targetQid $ \ans -> do
                 ans' <- subscribeReturn ans $ \ret@R.Return{union'} ->
@@ -1044,7 +1041,7 @@ handleReleaseMsg conn@Conn{exports} R.Release{id, referenceCount} =
                     , R.reason =
                         "No such export: " <> fromString (show id)
                     }
-            Just Export{client, refCount} ->
+            Just EntryIE{client, refCount} ->
                 case compare refCount referenceCount of
                     LT ->
                         abortConn conn def
@@ -1057,7 +1054,7 @@ handleReleaseMsg conn@Conn{exports} R.Release{id, referenceCount} =
                         decRef client
                         pure Nothing
                     GT ->
-                        pure $ Just Export
+                        pure $ Just EntryIE
                             { client
                             , refCount = refCount - referenceCount
                             }
@@ -1416,18 +1413,18 @@ emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
 -- id, call 'error'.
-addBumpExport :: ExportId -> Client -> M.Map ExportId Export -> STM ()
+addBumpExport :: ExportId -> Client -> M.Map ExportId EntryIE -> STM ()
 addBumpExport exportId client =
     M.focus (Focus.alter go) exportId
   where
-    go Nothing = Just Export { client, refCount = 1 }
-    go (Just ex@Export{ client = oldClient, refCount } )
+    go Nothing = Just EntryIE { client, refCount = 1 }
+    go (Just ex@EntryIE{ client = oldClient, refCount } )
         | client /= oldClient =
             error $
                 "BUG: addExportRef called with a client that is different " ++
                 "from what is already in our exports table."
         | otherwise =
-            Just Export { client, refCount = refCount + 1 }
+            Just EntryIE { client, refCount = refCount + 1 }
 
 -- | Helper for 'emitCap'; generate a CapDescriptor for a 'PromiseClient', which
 -- has the given state.
@@ -1441,14 +1438,14 @@ acceptCap _ R.CapDescriptor'none = pure NullClient
 acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted importId) = do
     entry <- M.lookup importId imports
     case entry of
-        Just Import{ client, refCount } -> do
-            M.insert Import { client, refCount = refCount + 1 } importId imports
+        Just EntryIE{ client, refCount } -> do
+            M.insert EntryIE { client, refCount = refCount + 1 } importId imports
             pure client
 
         Nothing -> do
             proxies <- ExportMap <$> M.new
             let client = ImportClient ImportRef { conn, importId, proxies }
-            M.insert Import { client, refCount = 1 } importId imports
+            M.insert EntryIE { client, refCount = 1 } importId imports
             pure client
 acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
     entry <- M.lookup exportId exports
@@ -1456,7 +1453,7 @@ acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
         Nothing ->
             error "TODO"
 
-        Just Export{ client } ->
+        Just EntryIE{ client } ->
             pure client
 acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
     case unmarshalMsgTarget (R.MessageTarget'promisedAnswer pa) of
