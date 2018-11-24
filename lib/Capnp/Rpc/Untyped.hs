@@ -175,8 +175,8 @@ data Conn = Conn
     , maxAnswerCalls   :: !Int
     -- Maximum number of calls that can be outstanding on an unresolved answer.
 
-    , questions        :: M.Map QuestionId Question
-    , answers          :: M.Map AnswerId Answer
+    , questions        :: M.Map QuestionId EntryQA
+    , answers          :: M.Map AnswerId EntryQA
     , exports          :: M.Map ExportId EntryIE
     , imports          :: M.Map ImportId EntryIE
 
@@ -406,30 +406,25 @@ newId (IdPool pool) = readTVar pool >>= \case
 freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
 
-newtype Question = Question
-    { onReturn :: SnocList (R.Return -> STM ())
-    -- ^ Called when the remote vat sends a return message for this question.
-    }
-
--- | An entry in our answers table.
-data Answer
-    -- | An answer entry for which we have neither received a finish, nor sent a
-    -- return. Contains two sets of callbacks, to invoke when we receive each
-    -- type of message.
-    = NewAnswer
+-- | An entry in our questions or answers table.
+data EntryQA
+    -- | An entry for which we have neither sent/received a finish, nor
+    -- a return. Contains two sets of callbacks, to invoke on each type
+    -- of message.
+    = NewQA
         { onFinish :: SnocList (R.Finish -> STM ())
         , onReturn :: SnocList (R.Return -> STM ())
         }
-    -- | An answer entry for which we've sent a return, but not received a
-    -- finish. Contains the return message we sent, and a set of callbacks
-    -- to invoke when we receive a finish.
+    -- | An entry for which we've sent/received a return, but not a finish.
+    -- Contains the return message, and a set of callbacks to invoke on the
+    -- finish.
     | HaveReturn
         { returnMsg :: R.Return
         , onFinish  :: SnocList (R.Finish -> STM ())
         }
-    -- | An answer entry for which we've received a finish, but not sent a
-    -- return. Contains the finish message we received, and a set of
-    -- callbacks to invoke when we send the return.
+    -- | An entry for which we've sent/received a finish, but not a return.
+    -- Contains the finish message, and a set of callbacks to invoke on the
+    -- return.
     | HaveFinish
         { finishMsg :: R.Finish
         , onReturn  :: SnocList (R.Return -> STM ())
@@ -636,7 +631,10 @@ callRemote
         , R.methodId = methodId
         }
     M.insert
-        Question { onReturn = SnocList.singleton $ cbCallReturn conn response }
+        NewQA
+            { onReturn = SnocList.singleton $ cbCallReturn conn response
+            , onFinish = SnocList.empty
+            }
         qid
         questions
 
@@ -878,7 +876,7 @@ handleCallMsg
         "answer"
         conn
         questionId
-        NewAnswer
+        NewQA
             { onReturn = SnocList.empty
             , onFinish = SnocList.empty
             }
@@ -1004,32 +1002,11 @@ handleReturnMsg conn@Conn{questions} ret@R.Return{answerId, union'} msg = do
         _ ->
             -- there's no payload, so we can just leave this as-is.
             pure ret
-    lookupAbort "question" conn questions answerId $
-        \Question{onReturn} ->
-            mapQueueSTM conn onReturn ret
+    updateQAReturn conn questions "question" ret
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
-handleFinishMsg conn@Conn{answers} finish@R.Finish{questionId} =
-    lookupAbort "answer" conn answers questionId $ \case
-        ans@NewAnswer{onFinish, onReturn} -> do
-            mapQueueSTM conn onFinish finish
-            M.insert
-                HaveFinish
-                    { finishMsg = finish
-                    , onReturn
-                    }
-                questionId
-                answers
-        ans@HaveReturn{onFinish} -> do
-            mapQueueSTM conn onFinish finish
-            M.delete questionId answers
-        HaveFinish{} ->
-            abortConn conn def
-                { R.type_ = R.Exception'Type'failed
-                , R.reason =
-                    "Duplicate finish message for question #"
-                    <> fromString (show questionId)
-                }
+handleFinishMsg conn@Conn{answers} =
+    updateQAFinish conn answers "answer"
 
 handleReleaseMsg :: Conn -> R.Release -> STM ()
 handleReleaseMsg conn@Conn{exports} R.Release{id, referenceCount} =
@@ -1145,49 +1122,75 @@ sendPureMsg Conn{sendQ} msg =
 finishQuestion :: Conn -> R.Finish -> STM ()
 finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
     sendPureMsg conn $ R.Message'finish finish
+    updateQAFinish conn questions "question" finish
     freeQuestion conn questionId
-    M.delete questionId questions
 
 -- | Send a return message, update the corresponding entry in our
 -- answers table, and queue any registered callbacks. Calls 'error'
 -- if the answerId is not in the table, or if we've already sent a
 -- return for this answer.
 returnAnswer :: Conn -> R.Return -> STM ()
-returnAnswer conn@Conn{answers} ret@R.Return{answerId} = do
+returnAnswer conn@Conn{answers} ret = do
     sendPureMsg conn $ R.Message'return ret
-    M.focus
-        (Focus.alterM $ \case
-            Just NewAnswer{onFinish, onReturn} -> do
-                mapQueueSTM conn onReturn ret
-                pure $ Just HaveReturn
+    updateQAReturn conn answers "answer" ret
+
+-- TODO: updateQAReturn/Finish have a lot in common; can we refactor?
+
+updateQAReturn :: Conn -> M.Map Word32 EntryQA -> Text -> R.Return -> STM ()
+updateQAReturn conn table tableName ret@R.Return{answerId} =
+    lookupAbort tableName conn table answerId $ \case
+        NewQA{onFinish, onReturn} -> do
+            mapQueueSTM conn onReturn ret
+            M.insert
+                HaveReturn
                     { returnMsg = ret
                     , onFinish
                     }
-            Just HaveFinish{onReturn} -> do
-                mapQueueSTM conn onReturn ret
-                pure Nothing
+                answerId
+                table
+        HaveFinish{onReturn} -> do
+            mapQueueSTM conn onReturn ret
+            M.delete answerId table
+        HaveReturn{} ->
+            abortConn conn $ eFailed $
+                "Duplicate return message for " <> tableName <> " #"
+                <> fromString (show answerId)
 
-            Just HaveReturn{} ->
-                error "BUG: sent a second return"
+updateQAFinish :: Conn -> M.Map Word32 EntryQA -> Text -> R.Finish -> STM ()
+updateQAFinish conn table tableName finish@R.Finish{questionId} =
+    lookupAbort tableName conn table questionId $ \case
+        NewQA{onFinish, onReturn} -> do
+            mapQueueSTM conn onFinish finish
+            M.insert
+                HaveFinish
+                    { finishMsg = finish
+                    , onReturn
+                    }
+                questionId
+                table
+        HaveReturn{onFinish} -> do
+            mapQueueSTM conn onFinish finish
+            M.delete questionId table
+        HaveFinish{} ->
+            abortConn conn def
+                { R.type_ = R.Exception'Type'failed
+                , R.reason =
+                    "Duplicate finish message for " <> tableName <> " #"
+                    <> fromString (show questionId)
+                }
 
-            Nothing ->
-                error "BUG: sent a return for non-existent answer"
-        )
-        answerId
-        answers
-
--- | Update an entry in the answers table to run the given callback when
--- the return message for that answer comes in. If the return has already
--- arrived, the callback is run immediately.
+-- | Update an entry in the questions or answers table to queue the given
+-- callback when the return message for that answer comes in. If the return
+-- has already arrived, the callback is queued immediately.
 --
--- If the answer already has other callbacks registered, this callback is
--- run *after* the others. Note that this is an important property, as it
--- is necessary to preserve E-order if the callbacks are successive method
--- calls on the returned object.
-subscribeReturn :: Answer -> (R.Return -> STM ()) -> STM Answer
+-- If the entry already has other callbacks registered, this callback is
+-- run *after* the others (see Note [callbacks]). Note that this is an
+-- important property, as it is necessary to preserve E-order if the
+-- callbacks are successive method calls on the returned object.
+subscribeReturn :: EntryQA -> (R.Return -> STM ()) -> STM EntryQA
 subscribeReturn ans onRet = case ans of
-    NewAnswer{onFinish, onReturn} ->
-        pure NewAnswer
+    NewQA{onFinish, onReturn} ->
+        pure NewQA
             { onFinish
             , onReturn = SnocList.snoc onReturn onRet
             }
@@ -1283,9 +1286,10 @@ requestBootstrap conn@Conn{questions} = do
     sendPureMsg conn $
         R.Message'bootstrap def { R.questionId = qid }
     M.insert
-        Question
+        NewQA
             { onReturn = SnocList.singleton $
                 resolveClientReturn tmpDest (writeTVar pState)
+            , onFinish = SnocList.empty
             }
         qid
         questions
