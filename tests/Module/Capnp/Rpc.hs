@@ -95,7 +95,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             (\cap -> callSequence'getNumber cap ? def)
             def
                 { type_ = Exception'Type'unimplemented
-                , reason = "Client is null"
+                , reason = "Method unimplemented"
                 }
         )
     it "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair

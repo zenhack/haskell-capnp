@@ -1331,17 +1331,27 @@ resolveClientClient tmpDest resolve client =
             flushTQueue callBuffer >>= traverse_ (`call` client)
             resolve (Ready client)
             error "TODO: drop a reference to the answer/import if necessary"
-        ( ImportClient _, AnswerDest{ conn, answerId, transform } )
+        ( PromiseClient{}, _ ) ->
+            error "TODO"
+        ( _, AnswerDest{ transform } )
             | length (toList transform) /= 0 ->
                 error "TODO"
             | otherwise -> do
-                finishQuestion conn def
-                    { R.questionId = answerId
-                    , R.releaseResultCaps = False
-                    }
+                releaseTmpDest tmpDest
                 resolve (Ready client)
         _ ->
             error "TODO"
+
+-- Do any cleanup of a TmpDest; this should be called after resolving a
+-- pending promise.
+releaseTmpDest :: TmpDest -> STM ()
+releaseTmpDest LocalBuffer{} = pure ()
+releaseTmpDest AnswerDest { conn, answerId } =
+    finishQuestion conn def
+        { R.questionId = answerId
+        , R.releaseResultCaps = False
+        }
+releaseTmpDest (ImportDest _) = error "TODO"
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> R.Return -> STM ()
