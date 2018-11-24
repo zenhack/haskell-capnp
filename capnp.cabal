@@ -155,6 +155,7 @@ library
     other-modules:
         Internal.AppendVec
       , Internal.SnocList
+      , Internal.Rc
       , Internal.Gen.Instances
       , Internal.BuildPure
       , Codec.Capnp
