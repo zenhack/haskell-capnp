@@ -102,6 +102,7 @@ import Capnp.Rpc.Errors
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
+import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
 
 import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
@@ -110,6 +111,7 @@ import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
 import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
+import qualified Internal.Rc              as Rc
 import qualified Internal.SnocList        as SnocList
 
 -- We use this type often enough that the types get noisy without a shorthand:
@@ -470,11 +472,10 @@ data Client
         { connRefs :: ConnRefs
         -- ^ Record of what export IDs this client has on different remote
         -- connections.
-        , opQ      :: TQueue Server.ServerMsg
-        -- ^ A queue of operations for the local capability to handle.
-        , refCount :: TVar Word32
-        -- ^ The number of live references to this capability. when this hits
-        -- zero, we send a stop message to the server.
+        , opQ      :: Rc (TQueue Server.ServerMsg)
+        -- ^ A queue of operations for the local capability to handle. This is
+        -- wrapped in a reference counted cell, whose finalizer sends a Stop
+        -- message to the server.
         }
     -- | A client which will resolve to some other capability at
     -- some point.
@@ -551,7 +552,7 @@ instance Eq ImportRef where
 instance Eq Client where
     NullClient == NullClient =
         True
-    LocalClient { refCount = x } == LocalClient { refCount = y } =
+    LocalClient { opQ = x } == LocalClient { opQ = y } =
         x == y
     PromiseClient { pState = x } == PromiseClient { pState = y } =
         x == y
@@ -591,11 +592,11 @@ call info@Server.CallInfo { response } = \case
     NullClient ->
         breakPromise response eMethodUnimplemented
 
-    LocalClient { opQ, refCount } -> do
-        refs <- readTVar refCount
-        if refs > 0
-            then writeTQueue opQ (Server.Call info)
-            else breakPromise response eDisconnected
+    LocalClient { opQ } -> Rc.get opQ >>= \case
+        Just q -> do
+            writeTQueue q (Server.Call info)
+        Nothing ->
+            breakPromise response eDisconnected
 
     PromiseClient stVar -> readTVar stVar >>= \case
         Ready { target }  ->
@@ -701,43 +702,33 @@ nullClient = NullClient
 
 -- | Increment the reference count on a client.
 incRef :: Client -> STM ()
-incRef NullClient            = pure ()
-incRef LocalClient{refCount} = modifyTVar' refCount (+1)
-incRef _                     = error "TODO"
+incRef NullClient       = pure ()
+incRef LocalClient{opQ} = Rc.incr opQ
+incRef _                = error "TODO"
 
 
 -- | Decrement the reference count on a client. If the count reaches zero,
 -- the object is destroyed.
 decRef :: Client -> STM ()
-decRef NullClient = pure ()
-decRef LocalClient{refCount, opQ} = do
-    count <- readTVar refCount
-    case count of
-        0 -> pure ()
-        1 -> do
-            writeTVar refCount 0
-            writeTQueue opQ Server.Stop
-        n ->
-            writeTVar refCount $! n - 1
-decRef _ = error "TODO"
+decRef NullClient       = pure ()
+decRef LocalClient{opQ} = Rc.decr opQ
+decRef _                = error "TODO"
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
 -- the server will be stopped (if it is still running).
 export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
-    opQ <- newTQueue
-    refCount <- newTVar 1
+    q <- newTQueue
+    opQ <- Rc.new q (writeTQueue q Server.Stop)
     connRefs <- ConnRefs <$> M.new
     let client = LocalClient
-            { refCount
-            , opQ
+            { opQ
             , connRefs
             }
     superviseSTM sup $ do
-        addFinalizer client $
-            atomically $ writeTQueue opQ Server.Stop
-        Server.runServer opQ ops
+        addFinalizer client $ atomically $ Rc.release opQ
+        Server.runServer q ops
     pure client
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
