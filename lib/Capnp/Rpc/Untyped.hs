@@ -673,6 +673,26 @@ marshalMsgTarget = \case
                     toList transform
                 }
 
+unmarshalMsgTarget :: R.MessageTarget -> Either R.Exception MsgTarget
+unmarshalMsgTarget (R.MessageTarget'importedCap importId) =
+    Right $ ImportTgt importId
+unmarshalMsgTarget (R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId, transform }) = do
+    idxes <- unmarshalOps (toList transform)
+    pure AnswerTgt
+        { answerId = questionId
+        , transform = SnocList.fromList idxes
+        }
+  where
+    unmarshalOps [] = Right []
+    unmarshalOps (R.PromisedAnswer'Op'noop:ops) =
+        unmarshalOps ops
+    unmarshalOps (R.PromisedAnswer'Op'getPointerField i:ops) =
+        (i:) <$> unmarshalOps ops
+    unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
+        Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
+unmarshalMsgTarget (R.MessageTarget'unknown' tag) =
+    Left $ eFailed $ "Unknown MessageTarget: " <> fromString (show tag)
+
 
 -- | A null client. This is the only client value that can be represented
 -- statically. Throws exceptions in response to all method calls.
