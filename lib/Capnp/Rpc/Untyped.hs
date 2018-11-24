@@ -1196,38 +1196,6 @@ abortConn :: Conn -> R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
 
 {-
--- | Get a CapDescriptor for this client, suitable for sending to the remote
--- vat. If the client points to our own vat, this will increment the refcount
--- in the exports table, and will allocate a new export ID if needed. Returns
--- CapDescriptor'none if the client is 'nullClient'.
-sendableCapDesc :: Conn -> Client -> STM R.CapDescriptor
-sendableCapDesc _ (Client Nothing)  = pure R.CapDescriptor'none
-sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
-    readTVar clientVar >>= \case
-        LocalExportClient{exportIds} ->
-            M.lookup conn exportIds >>= \case
-                Just exportId -> do
-                    -- This client is already exported on the connection; bump the
-                    -- refcount and use the existing export id.
-                    M.focus
-                        (Focus.adjust $ \e@Export{refCount} ->
-                            e { refCount = refCount + 1 } :: Export
-                        )
-                        exportId
-                        exports
-                    pure $ R.CapDescriptor'senderHosted exportId
-                Nothing -> do
-                    -- This client is not yet exported on this connection; allocate
-                    -- a new export ID and insert it into the exports table. Also,
-                    -- increment the client's refcount, to indicate that this
-                    -- connection now holds a reference.
-                    incRef client
-                    exportId <- newExport conn
-                    M.insert exportId conn exportIds
-                    M.insert Export { client, refCount = 1 } exportId exports
-                    pure $ R.CapDescriptor'senderHosted exportId
-
-        -- TODO: other client types
 
 -- The dual of sendableCapDesc; takes a cap descriptor and creates/fetches a client
 -- from it. Bumps reference counts/modifies tables etc. as needed. CapDescriptor'none
