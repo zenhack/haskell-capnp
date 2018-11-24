@@ -1445,6 +1445,8 @@ acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
 
         Just Export{ client } ->
             pure client
+acceptCap _ (R.CapDescriptor'receiverAnswer R.PromisedAnswer{ questionId, transform }) =
+    error "TODO"
 acceptCap _ d                    = error $ "TODO: " ++ show d
 
 
