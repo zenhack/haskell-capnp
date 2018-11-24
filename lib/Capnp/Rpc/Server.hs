@@ -38,7 +38,6 @@ import UnliftIO.STM
 import Control.Monad.Catch     (MonadThrow)
 import Control.Monad.IO.Class  (MonadIO(liftIO))
 import Control.Monad.Primitive (PrimMonad, PrimState)
-import Data.Default            (def)
 import UnliftIO                (MonadUnliftIO)
 import UnliftIO.Exception      (try)
 
@@ -47,6 +46,7 @@ import Capnp.Classes
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
 import Capnp.Promise        (Fulfiller, breakPromiseIO, fulfillIO)
+import Capnp.Rpc.Errors     (eMethodUnimplemented)
 import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
@@ -146,10 +146,7 @@ methodThrow exn = MethodHandler
 
 -- | A 'MethodHandler' which always throws an @unimplemented@ exception.
 methodUnimplemented :: MonadIO m => MethodHandler m p r
-methodUnimplemented = methodThrow def
-    { RpcGen.type_ = RpcGen.Exception'Type'unimplemented
-    , RpcGen.reason = "Method unimplemented"
-    }
+methodUnimplemented = methodThrow eMethodUnimplemented
 
 -- | The operations necessary to receive and handle method calls, i.e.
 -- to implement an object. It is parametrized over the monadic context

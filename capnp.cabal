@@ -82,6 +82,7 @@ common shared-opts
       , text                              >= 1.2 && < 2.0
       , transformers                      ^>= 0.5.2
       , vector                            ^>= 0.12.0
+      , dlist                             ^>= 0.8.0
   ghc-options:
     -Wnoncanonical-monad-instances
     -Wincomplete-patterns
@@ -116,6 +117,7 @@ library
       , Capnp.Rpc
       , Capnp.Rpc.Untyped
       , Capnp.Rpc.Util
+      , Capnp.Rpc.Errors
       , Capnp.Rpc.Transport
       , Capnp.Rpc.Server
       -- , Capnp.RpcOld

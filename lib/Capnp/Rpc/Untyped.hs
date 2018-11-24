@@ -74,9 +74,10 @@ import Data.Word
 import UnliftIO.STM
 
 import Control.Concurrent     (threadDelay)
-import Control.Concurrent.STM (catchSTM, flushTBQueue, throwSTM)
-import Control.Monad          (forever, when)
+import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
+import Control.Monad          (forever)
 import Data.Default           (Default(def))
+import Data.DList             (DList)
 import Data.Foldable          (traverse_)
 import Data.Hashable          (Hashable, hash, hashWithSalt)
 import Data.String            (fromString)
@@ -93,10 +94,11 @@ import qualified Data.Vector       as V
 import qualified Focus
 import qualified StmContainers.Map as M
 
-import Capnp.Classes        (cerialize, decerialize)
+import Capnp.Classes        (decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
-import Capnp.Promise        (breakPromise, fulfill, newCallback)
+import Capnp.Promise        (breakPromise, newCallback)
+import Capnp.Rpc.Errors     (eDisconnected, eFailed, eMethodUnimplemented)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.Rpc.Util       (wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
@@ -106,7 +108,6 @@ import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
-import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
 
 
@@ -387,36 +388,6 @@ data Import = Import
     -- to put in a release message when we're ready to free the object.
     }
 
-
--- Note [Client representation]
--- ============================
---
--- A client is a reference to a capability, which can be used to
--- call methods on an object. The implementation is composed of two
--- types, Client and Client'. Only the former is exposed by the API.
--- Client contains a @TVar Client'@ (or Nothing if it is a null
--- client).
---
--- The reason for the indirection is so that we can swap out the
--- implementation. Some examples of when this is useful include:
---
--- * When a promise resolves, we want to redirect it to the thing it
---   resolved to.
--- * When a connection is dropped, we replace the relevant clients
---   with ones that always throw disconnected exceptions.
---
--- The reason for not using the TVar to represent null clients is so
--- that we can define the top-level definition 'nullClient', which
--- can be used statically. If the value 'nullClient' included a 'TVar',
--- we would have to create it at runtime.
-
-
--- | An untyped capability on which methods may be called.
-newtype Client =
-    -- See Note [Client representation]
-    Client (Maybe (TVar Client'))
-    deriving(Eq)
-
 -- | Types which may be converted to and from 'Client's. Typically these
 -- will be simple type wrappers for capabilities.
 class IsClient a where
@@ -426,127 +397,204 @@ class IsClient a where
     fromClient :: Client -> a
 
 instance Show Client where
-    show (Client Nothing) = "nullClient"
-    show (Client (Just _)) = "({- capability; not statically representable -})"
+    show NullClient = "nullClient"
+    show _          = "({- capability; not statically representable -})"
 
--- See Note [Client representation]
-data Client'
-    -- | A client which always throws an exception in response
-    -- to calls.
-    = ExnClient RpcGen.Exception
-    -- | A client which lives in the same vat/process as us.
-    | LocalExportClient
-        { refCount  :: TVar Word32
-        -- ^ The number of live references to this object. When this
-        -- reaches zero, we will tell the server to stop.
-        , opQueue   :: TQueue Server.ServerMsg
-        -- ^ A queue for submitting commands to the server thread managing
-        -- the object.
-        , exportIds :: M.Map Conn ExportId
-        -- ^ A the ids under which this is exported on each connection.
+-- | A reference to a capability, which may be live either in the current vat
+-- or elsewhere. Holding a client affords making method calls on a capability
+-- or modifying the local vat's reference count to it.
+data Client
+    -- | A client corresponding to a null pointer. Replies to all
+    -- method calls with an "unimplemented" exception.
+    = NullClient
+    -- | A client pointing at a capability local to our own vat.
+    | LocalClient
+        { connRefs :: ConnRefs
+        -- ^ Record of what export IDs this client has on different remote
+        -- connections.
+        , opQ      :: TQueue Server.ServerMsg
+        -- ^ A queue of operations for the local capability to handle.
+        , refCount :: TVar Word32
+        -- ^ The number of live references to this capability. when this hits
+        -- zero, we send a stop message to the server.
         }
-    -- | A client for a question that we have yet to answer.
-    | LocalAnswerClient
-        { transform :: V.Vector RpcGen.PromisedAnswer'Op
-        -- ^ Transform to find the capability within the results.
-        , calls     :: TBQueue Server.CallInfo
-        -- ^ Outstanding calls on the client; when the question is answered,
-        -- these will be forwarded.
+    -- | A client which will resolve to some other capability at
+    -- some point.
+    | PromiseClient
+        { pState :: TVar PromiseState
+        -- ^ The current state of the promise; the indirection allows
+        -- the promise to be updated.
         }
-    -- | A client for an object that lives in a remote vat.
-    | RemoteClient
-        { remoteConn :: Conn
-        -- ^ The connection to the vat where the object lives.
-        , msgTarget  :: MsgTarget
-        -- ^ The address of the object in the remote vat.
-        }
+    -- | A client which points to a (resolved) capability in a remote vat.
+    | ImportClient ImportRef
 
--- | The destination of a remote method call. This is closely related to
--- the 'MessageTarget' type defined in rpc.capnp, but has a couple
--- differences:
---
--- * It does not have an unknown' variant, which is more convienent to work
---   with. See also issue #60.
--- * In the case of an imported capability, it records whether the capability
---   is an unresolved promise (answers are always unresolved by definition).
+-- | The current state of a 'PromiseClient'.
+data PromiseState
+    -- | The promise is fully resolved.
+    = Ready
+        { target :: Client
+        -- ^ Capability to which the promise resolved.
+        }
+    -- | The promise has resolved, but is waiting on a Disembargo message
+    -- before it is safe to send it messages.
+    | Embargo
+        { callBuffer :: TQueue Server.CallInfo
+        -- ^ A queue in which to buffer calls while waiting for the
+        -- disembargo.
+        }
+    -- | The promise has not yet resolved.
+    | Pending
+        { tmpDest :: TmpDest
+        -- ^ A temporary destination to send calls, while we wait for the
+        -- promise to resolve.
+        }
+    -- | The promise resolved to an exception.
+    | Error RpcGen.Exception
+
+-- | A temporary destination for calls on an unresolved promise.
+data TmpDest
+    -- | Queue the calls locally, rather than sending them elsewhere.
+    = LocalBuffer { callBuffer :: TQueue Server.CallInfo }
+    -- | Send call messages to a remote vat, targeting the results
+    -- of an outstanding question.
+    | AnswerDest
+        { conn      :: Conn
+        -- ^ The connection to the remote vat.
+        , answerId  :: !AnswerId
+        -- ^ The answer to target.
+        , transform :: DList Word16
+        -- ^ A series of pointer indexes to follow from the result
+        -- struct to the capability. This corresponds to MessageTarget's
+        -- transform field in rpc.capnp.
+        }
+    -- | Send call messages to a remote vat, targeting an entry in our
+    -- imports table.
+    | ImportDest ImportRef
+
+-- | A reference to a capability in our import table/a remote vat's export
+-- table.
+data ImportRef = ImportRef
+    { conn     :: Conn
+    -- ^ The connection to the remote vat.
+    , importId :: !ImportId
+    -- ^ The import id for this capability.
+    , proxies  :: ConnRefs
+    -- ^ Export ids to use when this client is passed to a vat other than
+    -- the one identified by 'conn'. See Note [proxies]
+    }
+
+-- Ideally we could just derive these, but stm-containers doesn't have Eq
+-- instances, so neither does ConnRefs. not all of the fields are actually
+-- necessary to check equality though. See also
+-- https://github.com/nikita-volkov/stm-hamt/pull/1
+instance Eq ImportRef where
+    ImportRef { conn=cx, importId=ix } == ImportRef { conn=cy, importId=iy } =
+        cx == cy && ix == iy
+instance Eq Client where
+    NullClient == NullClient =
+        True
+    LocalClient { refCount = x } == LocalClient { refCount = y } =
+        x == y
+    PromiseClient { pState = x } == PromiseClient { pState = y } =
+        x == y
+    ImportClient x == ImportClient y =
+        x == y
+    _ == _ =
+        False
+
+
+-- | a 'ConnRefs' tracks a mapping from connections to export IDs; it is used
+-- to ensure that we re-use export IDs for capabilities when passing them
+-- to remote vats. This used for locally hosted capabilities, but also by
+-- proxied imports (see Note [proxies]).
+newtype ConnRefs = ConnRefs (M.Map Conn ExportId)
+
 data MsgTarget
-    = AnswerTgt !AnswerId
-    -- ^ Targets an entry in the remote vat's answers table/local vat's
-    -- questions table.
-    | ImportTgt
-        { importId   :: !ImportId
-        -- ^ Targets an entry in the remote vat's export table/local vat's
-        -- imports table.
-        , isResolved :: !Bool
-        -- ^ Records whether the capability has resolved to its final value.
-        -- This is True iff the target is not a promise. If it is an unresolved
-        -- promise, this will be false. When the promise resolves, clients using
-        -- this message target will have their target replaced with the target
-        -- to which the promise resolved, so a client should never actually point
-        -- at a promise which has already resolved.
+    = ImportTgt !ImportId
+    | AnswerTgt
+        { answerId  :: !AnswerId
+        , transform :: DList Word16
         }
+
+-- Note [proxies]
+-- ==============
+--
+-- It is possible to have multiple connections open at once, and pass around
+-- clients freely between them. Without level 3 support, this means that when
+-- we pass a capability pointing into Vat A to another Vat B, we must proxy it.
+--
+-- To achieve this, capabilities pointing into a remote vat hold a 'ConnRefs',
+-- which tracks which export IDs we should be using to proxy the client on each
+-- connection.
+
+-- | Queue a call on a client.
+call :: Server.CallInfo -> Client -> STM ()
+call info@Server.CallInfo { response } = \case
+    NullClient ->
+        breakPromise response eMethodUnimplemented
+
+    LocalClient { opQ, refCount } -> do
+        refs <- readTVar refCount
+        if refs > 0
+            then writeTQueue opQ (Server.Call info)
+            else breakPromise response eDisconnected
+
+    PromiseClient stVar -> readTVar stVar >>= \case
+        Ready { target }  ->
+            call info target
+
+        Embargo { callBuffer } ->
+            writeTQueue callBuffer info
+
+        Pending { tmpDest } -> case tmpDest of
+            LocalBuffer { callBuffer } ->
+                writeTQueue callBuffer info
+
+            AnswerDest { conn, answerId, transform } ->
+                callRemote conn info AnswerTgt { answerId, transform }
+
+            ImportDest ImportRef { conn, importId } ->
+                callRemote conn info (ImportTgt importId)
+
+        Error exn ->
+            breakPromise response exn
+
+    ImportClient ImportRef { conn, importId } ->
+        callRemote conn info (ImportTgt importId)
+
+-- | Send a call to a remote capability.
+callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM ()
+callRemote = error "TODO"
 
 -- | A null client. This is the only client value that can be represented
 -- statically. Throws exceptions in response to all method calls.
 nullClient :: Client
-nullClient = Client Nothing
-
-nullClient' :: Client'
-nullClient' = ExnClient def
-    { RpcGen.type_ = RpcGen.Exception'Type'failed
-    , RpcGen.reason = "Client is null"
-    }
-
--- | A client that is disconnected; always throws disconnected exceptions.
-disconnectedClient' :: Client'
-disconnectedClient' = ExnClient def
-    { RpcGen.type_ = RpcGen.Exception'Type'disconnected
-    , RpcGen.reason = "disconnected"
-    }
-
-getClient' :: Client -> STM Client'
-getClient' (Client Nothing)     = pure nullClient'
-getClient' (Client (Just tvar)) = readTVar tvar
+nullClient = NullClient
 
 -- | Increment the reference count on a client.
 incRef :: Client -> STM ()
-incRef (Client Nothing) = pure ()
-incRef (Client (Just clientVar)) = readTVar clientVar >>= \case
-    ExnClient _ ->
-        pure ()
-
-    LocalExportClient{refCount} ->
-        modifyTVar' refCount succ
-
-    LocalAnswerClient{} ->
-        pure ()
-
-    -- TODO: RemoteClient
+incRef NullClient            = pure ()
+incRef LocalClient{refCount} = modifyTVar' refCount (+1)
+incRef _                     = error "TODO"
 
 
 -- | Decrement the reference count on a client. If the count reaches zero,
 -- the object is destroyed.
 decRef :: Client -> STM ()
-decRef (Client Nothing) = pure ()
-decRef (Client (Just clientVar)) = readTVar clientVar >>= \case
-    ExnClient _ ->
-        pure ()
-
-    LocalExportClient{refCount, opQueue} -> do
-        modifyTVar' refCount pred
-        cnt <- readTVar refCount
-        when (cnt == 0) $ do
-            -- Refcount is zero. Tell the server to stop:
-            writeTQueue opQueue Server.Stop
-            -- ...and then replace ourselves with a disconnected client:
-            writeTVar clientVar disconnectedClient'
-
-    LocalAnswerClient{} ->
-        pure ()
-
-    -- TODO: RemoteClient
+decRef NullClient = pure ()
+decRef LocalClient{refCount, opQ} = do
+    count <- readTVar refCount
+    case count of
+        0 -> pure ()
+        1 -> do
+            writeTVar refCount 0
+            writeTQueue opQ Server.Stop
+        n ->
+            writeTVar refCount $! n - 1
+decRef _ = error "TODO"
 
 
+{-
 -- | Call a method on the object pointed to by this client.
 call :: Server.CallInfo -> Client -> STM ()
 call info (Client Nothing) =
@@ -610,28 +658,26 @@ call info@Server.CallInfo{interfaceId, methodId} (Client (Just clientVar)) =
                     }
                 questionId
                 (questions remoteConn)
+-}
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
 -- the server will be stopped (if it is still running).
 export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
-    q <- newTQueue
-    -- The reference count is initially zero; it gets bumped to one when it is
-    -- added to a connection. The refcount is only checked when it is decremented,
-    -- so this does not result in it being freed early:
-    refCount <- newTVar 0
-    exportIds <- M.new
-    let client' = LocalExportClient
-            { refCount = refCount
-            , opQueue = q
-            , exportIds
+    opQ <- newTQueue
+    refCount <- newTVar 1
+    connRefs <- ConnRefs <$> M.new
+    let client = LocalClient
+            { refCount
+            , opQ
+            , connRefs
             }
     superviseSTM sup $ do
-        addFinalizer client' $
-            atomically $ writeTQueue q Server.Stop
-        Server.runServer q ops
-    Client . Just <$> newTVar client'
+        addFinalizer client $
+            atomically $ writeTQueue opQ Server.Stop
+        Server.runServer opQ ops
+    pure client
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =
@@ -728,7 +774,7 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
                         }
                 }
         Just client -> do
-            capDesc <- sendableCapDesc conn client
+            capDesc <- marshalCap conn client
             pure $ RpcGen.Return
                 { RpcGen.answerId = questionId
                 , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
@@ -831,6 +877,8 @@ handleCallMsg
                             returnAnswer conn ret { RpcGen.answerId = questionId }
                         RpcGen.Return'results RpcGen.Payload{content} ->
                             transformClient transform content conn >>= call callInfo
+                        _ ->
+                            error "TODO"
                 M.insert ans' targetQid answers
         _ ->
             error "TODO"
@@ -876,6 +924,24 @@ followTransform ops = go (V.toList ops)
             { RpcGen.type_ = RpcGen.Exception'Type'failed
             , RpcGen.reason = "Unknown PromisedAnswer.Op: " <> fromString (show op)
             }
+
+-- | Follow a series of pointer indicies, returning the final value, or 'Left'
+-- with an error if any of the pointers in the chain (except the last one) is
+-- a non-null non struct.
+--
+-- TODO: use this in place of followTransform.
+followPtrs
+    :: [Word16]
+    -> Maybe Untyped.PtrType
+    -> Either RpcGen.Exception (Maybe Untyped.PtrType)
+followPtrs [] ptr =
+    Right ptr
+followPtrs (_:_) Nothing =
+    Right Nothing
+followPtrs (i:is) (Just (Untyped.PtrStruct (Untyped.Struct _ ptrs))) =
+    followPtrs is (Untyped.sliceIndex (fromIntegral i) ptrs)
+followPtrs (_:_) (Just _) =
+    Left (eFailed "Tried to access pointer field of non-struct.")
 
 handleReturnMsg :: Conn -> RpcGen.Return -> ConstMsg -> STM ()
 handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = do
@@ -952,7 +1018,7 @@ handleReleaseMsg conn@Conn{exports} RpcGen.Release{id, referenceCount} =
 -- table with the result.
 fixCapTable :: V.Vector RpcGen.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
 fixCapTable capDescs conn msg = do
-    clients <- traverse (interpretCapDesc conn) capDescs
+    clients <- traverse (unmarshalCap conn) capDescs
     pure $ Message.withCapTable clients msg
 
 lookupAbort keyTypeName conn m key f = do
@@ -1001,7 +1067,7 @@ genSendableCapTable conn ptr = do
     msg <- createPure defaultLimit $ valueToMsg $ Untyped.Struct
         (Untyped.Slice V.empty)
         (Untyped.Slice $ V.singleton ptr)
-    traverse (sendableCapDesc conn) (Message.getCapTable msg)
+    traverse (marshalCap conn) (Message.getCapTable msg)
 
 sendPureMsg :: Conn -> RpcGen.Message -> STM ()
 sendPureMsg Conn{sendQ} msg =
@@ -1073,6 +1139,7 @@ subscribeReturn ans onRet = case ans of
 abortConn :: Conn -> RpcGen.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
 
+{-
 -- | Get a CapDescriptor for this client, suitable for sending to the remote
 -- vat. If the client points to our own vat, this will increment the refcount
 -- in the exports table, and will allocate a new export ID if needed. Returns
@@ -1166,59 +1233,114 @@ interpretCapDesc conn@Conn{imports, exports, answers, maxAnswerCalls} = \case
         case ret of
             Just Import{client} -> pure client
             Nothing             -> error "Impossible"
+-}
 
 
 -- | Request the remote vat's bootstrap interface.
 requestBootstrap :: Conn -> STM Client
-requestBootstrap conn = do
+requestBootstrap conn@Conn{questions} = do
     qid <- newQuestion conn
-    client' <- newTVar RemoteClient
-            { remoteConn = conn
-            , msgTarget = AnswerTgt qid
+    let tmpDest = AnswerDest
+            { conn
+            , answerId = qid
+            , transform = mempty
             }
+    pState <- newTVar Pending { tmpDest }
     sendPureMsg conn $
         RpcGen.Message'bootstrap def { RpcGen.questionId = qid }
     M.insert
-        Question
-            { onReturn = \ret@RpcGen.Return{union'} -> do
-                case union' of
-                    RpcGen.Return'exception exn ->
-                        writeTVar client' (ExnClient exn)
-                    RpcGen.Return'results RpcGen.Payload{content} ->
-                        case content of
-                            Nothing ->
-                                -- XXX: this really should be nullClient, but
-                                -- we can't swap that in. This is not pretty
-                                -- but close enough:
-                                writeTVar client' nullClient'
-                            Just (Untyped.PtrCap (Client Nothing)) ->
-                                writeTVar client' nullClient'
-                            Just (Untyped.PtrCap (Client (Just newClientVar))) ->
-                                -- TODO FIXME: deal with embargos as necessary.
-                                -- Also, when dealing with finalization of clients,
-                                -- we need to think about how moving the underlying
-                                -- Client' will affect things.
-                                readTVar newClientVar >>= writeTVar client'
-                            Just _ ->
-                                abortConn conn (def
-                                    { RpcGen.type_ = RpcGen.Exception'Type'failed
-                                    , RpcGen.reason =
-                                        "Bootstrap message resolved to a non-capability pointer."
-                                    } :: RpcGen.Exception)
-                    _ ->
-                        error "TODO"
-                finishQuestion conn def
-                    { RpcGen.questionId = qid
-                    , RpcGen.releaseResultCaps = False
-                    }
-            }
+        Question { onReturn = resolveClientReturn tmpDest (writeTVar pState) }
         qid
-        (questions conn)
-    pure $ Client (Just client')
+        questions
+    pure PromiseClient { pState }
+
+-- Note [resolveClient]
+-- ====================
+--
+-- There are several functions resolveClient*, each of which resolves a
+-- 'PromiseClient', which will previously have been in the 'Pending' state.
+-- Each function accepts three parameters: the 'TmpDest' that the
+-- pending promise had been targeting, a function for setting the new state,
+-- and a thing to resolve the promise to. The type of the latter is specific
+-- to each function.
+
+-- | Resolve a promised client to an exception. See Note [resolveClient]
+resolveClientExn :: TmpDest -> (PromiseState -> STM ()) -> RpcGen.Exception -> STM ()
+resolveClientExn tmpDest resolve exn = do
+    case tmpDest of
+        LocalBuffer { callBuffer } -> do
+            calls <- flushTQueue callBuffer
+            traverse_
+                (\Server.CallInfo{response} ->
+                    breakPromise response exn)
+                calls
+        AnswerDest {} ->
+            pure ()
+        ImportDest imp ->
+            pure () -- FIXME TODO: decrement the refcount for the import?
+    resolve $ Error exn
+
+-- Resolve a promised client to a pointer. If it is a non-null non-capability
+-- pointer, it resolves to an exception. See Note [resolveClient]
+resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> Maybe Untyped.PtrType -> STM ()
+resolveClientPtr tmpDest resolve ptr = case ptr of
+    Nothing ->
+        resolveClientClient tmpDest resolve nullClient
+    Just (Untyped.PtrCap c) ->
+        resolveClientClient tmpDest resolve c
+    Just _ ->
+        resolveClientExn tmpDest resolve $
+            eFailed "Promise resolved to non-capability pointer"
+
+-- | Resolve a promised client to another client. See Note [resolveClient]
+resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
+resolveClientClient tmpDest resolve client = case tmpDest of
+    -- NB: make sure to handle embargos.
+    _ -> error "TODO"
+
+-- | Resolve a promised client to the result of a return. See Note [resolveClient]
+resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> RpcGen.Return -> STM ()
+resolveClientReturn tmpDest resolve RpcGen.Return { union' } = case union' of
+    RpcGen.Return'exception exn ->
+        resolveClientExn tmpDest resolve exn
+    RpcGen.Return'results RpcGen.Payload{ content } ->
+        resolveClientPtr tmpDest resolve content
+    _ ->
+        error $
+            "TODO: handle other return variants:\n" ++
+            "   - canceled\n" ++
+            "   - resultsSentElseWhere\n" ++
+            "   - acceptFromThirdParty\n" ++
+            "   - unknown\n"
+
+getConnExport :: Conn -> ConnRefs -> Client -> STM ExportId
+getConnExport = error "TODO"
+
+marshalCap :: Conn -> Client -> STM RpcGen.CapDescriptor
+marshalCap _conn NullClient =
+    pure RpcGen.CapDescriptor'none
+marshalCap conn client@LocalClient { connRefs } =
+    RpcGen.CapDescriptor'senderHosted <$> getConnExport conn connRefs client
+marshalCap conn PromiseClient { pState } =
+    marshalPromiseCap conn pState
+marshalCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
+    | conn == remoteConn =
+        pure (RpcGen.CapDescriptor'receiverHosted importId)
+    | otherwise =
+        RpcGen.CapDescriptor'senderHosted <$> getConnExport conn proxies client
+
+marshalPromiseCap :: Conn -> TVar PromiseState -> STM RpcGen.CapDescriptor
+marshalPromiseCap = error "TODO"
+
+unmarshalCap :: Conn -> RpcGen.CapDescriptor -> STM Client
+unmarshalCap = error "TODO"
 
 
 -- Note [Limiting resource usage]
 -- =============================
+--
+-- N.B. much of this Note is future tense; the library is not yet robust against
+-- resource useage attacks.
 --
 -- We employ various strategies to prevent remote vats from causing excessive
 -- resource usage. In particular:
