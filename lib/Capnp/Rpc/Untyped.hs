@@ -753,7 +753,7 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
                         }
                 }
         Just client -> do
-            capDesc <- marshalCap conn client
+            capDesc <- emitCap conn client
             pure $ RpcGen.Return
                 { RpcGen.answerId = questionId
                 , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
@@ -997,7 +997,7 @@ handleReleaseMsg conn@Conn{exports} RpcGen.Release{id, referenceCount} =
 -- table with the result.
 fixCapTable :: V.Vector RpcGen.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
 fixCapTable capDescs conn msg = do
-    clients <- traverse (unmarshalCap conn) capDescs
+    clients <- traverse (acceptCap conn) capDescs
     pure $ Message.withCapTable clients msg
 
 lookupAbort keyTypeName conn m key f = do
@@ -1055,7 +1055,7 @@ genSendableCapTableRaw
 genSendableCapTableRaw _ Nothing = pure V.empty
 genSendableCapTableRaw conn (Just ptr) =
     traverse
-        (marshalCap conn)
+        (emitCap conn)
         (Message.getCapTable (UntypedRaw.message ptr))
 
 sendPureMsg :: Conn -> RpcGen.Message -> STM ()
@@ -1305,24 +1305,31 @@ resolveClientReturn tmpDest resolve RpcGen.Return { union' } = case union' of
 getConnExport :: Conn -> ConnRefs -> Client -> STM ExportId
 getConnExport = error "TODO"
 
-marshalCap :: Conn -> Client -> STM RpcGen.CapDescriptor
-marshalCap _conn NullClient =
+-- | Generate a CapDescriptor, which the connection's remote vat may use to
+-- refer to the client. In the process, this may allocate export ids, update
+-- reference counts, and so forth.
+emitCap :: Conn -> Client -> STM RpcGen.CapDescriptor
+emitCap _conn NullClient =
     pure RpcGen.CapDescriptor'none
-marshalCap conn client@LocalClient { connRefs } =
+emitCap conn client@LocalClient { connRefs } =
     RpcGen.CapDescriptor'senderHosted <$> getConnExport conn connRefs client
-marshalCap conn PromiseClient { pState } =
-    marshalPromiseCap conn pState
-marshalCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
+emitCap conn PromiseClient { pState } =
+    emitPromiseCap conn pState
+emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
     | conn == remoteConn =
         pure (RpcGen.CapDescriptor'receiverHosted importId)
     | otherwise =
         RpcGen.CapDescriptor'senderHosted <$> getConnExport conn proxies client
 
-marshalPromiseCap :: Conn -> TVar PromiseState -> STM RpcGen.CapDescriptor
-marshalPromiseCap = error "TODO"
+-- | Helper for 'emitCap'; generate a CapDescriptor for a 'PromiseClient', which
+-- has the given state.
+emitPromiseCap :: Conn -> TVar PromiseState -> STM RpcGen.CapDescriptor
+emitPromiseCap = error "TODO"
 
-unmarshalCap :: Conn -> RpcGen.CapDescriptor -> STM Client
-unmarshalCap = error "TODO"
+-- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
+-- received via the connection. May update connection state as necessary.
+acceptCap :: Conn -> RpcGen.CapDescriptor -> STM Client
+acceptCap = error "TODO"
 
 
 -- Note [Limiting resource usage]
