@@ -1340,8 +1340,18 @@ resolveClientReturn tmpDest resolve R.Return { union' } = case union' of
             "   - acceptFromThirdParty\n" ++
             "   - unknown\n"
 
-getConnExport :: Conn -> ConnRefs -> Client -> STM ExportId
-getConnExport = error "TODO"
+-- | Get the export ID for this connection, or allocate a new one if needed.
+getConnExport :: Conn -> ConnRefs -> STM ExportId
+getConnExport conn (ConnRefs m) = do
+    val <- M.lookup conn m
+    case val of
+        Just ret ->
+            pure ret
+
+        Nothing -> do
+            ret <- newExport conn
+            M.insert ret conn m
+            pure ret
 
 -- | Generate a CapDescriptor, which the connection's remote vat may use to
 -- refer to the client. In the process, this may allocate export ids, update
@@ -1350,14 +1360,14 @@ emitCap :: Conn -> Client -> STM R.CapDescriptor
 emitCap _conn NullClient =
     pure R.CapDescriptor'none
 emitCap conn client@LocalClient { connRefs } =
-    R.CapDescriptor'senderHosted <$> getConnExport conn connRefs client
+    R.CapDescriptor'senderHosted <$> getConnExport conn connRefs
 emitCap conn PromiseClient { pState } =
     emitPromiseCap conn pState
 emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
     | conn == remoteConn =
         pure (R.CapDescriptor'receiverHosted importId)
     | otherwise =
-        R.CapDescriptor'senderHosted <$> getConnExport conn proxies client
+        R.CapDescriptor'senderHosted <$> getConnExport conn proxies
 
 -- | Helper for 'emitCap'; generate a CapDescriptor for a 'PromiseClient', which
 -- has the given state.
