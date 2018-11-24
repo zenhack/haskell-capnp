@@ -587,7 +587,7 @@ call info@Server.CallInfo { response } = \case
         breakPromise response eMethodUnimplemented
 
     LocalClient { qCall } -> Rc.get qCall >>= \case
-        Just q -> do
+        Just q ->
             q info
         Nothing ->
             breakPromise response eDisconnected
