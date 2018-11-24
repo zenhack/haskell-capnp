@@ -576,12 +576,11 @@ callRemote
         Server.CallInfo{ interfaceId, methodId, arguments, response }
         target = do
     qid <- newQuestion conn
-    capTable <- genSendableCapTableRaw conn arguments
-    content <- evalLimitT defaultLimit (decerialize arguments)
+    payload <- makeOutgoingPayload conn arguments
     sendPureMsg conn $ R.Message'call def
         { R.questionId = qid
         , R.target = marshalMsgTarget target
-        , R.params = R.Payload { content, capTable }
+        , R.params = payload
         , R.interfaceId = interfaceId
         , R.methodId = methodId
         }
@@ -1059,6 +1058,14 @@ genSendableCapTableRaw conn (Just ptr) =
     traverse
         (emitCap conn)
         (Message.getCapTable (UntypedRaw.message ptr))
+
+-- | Convert the pointer into a Payload, including a capability table for
+-- the clients in the pointer's cap table.
+makeOutgoingPayload :: Conn -> RawMPtr -> STM R.Payload
+makeOutgoingPayload conn rawContent = do
+    capTable <- genSendableCapTableRaw conn rawContent
+    content <- evalLimitT defaultLimit (decerialize rawContent)
+    pure R.Payload { content, capTable }
 
 sendPureMsg :: Conn -> R.Message -> STM ()
 sendPureMsg Conn{sendQ} msg =
