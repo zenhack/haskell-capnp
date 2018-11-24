@@ -925,16 +925,14 @@ handleCallMsg
             lookupAbort "export" conn exports exportId $
                 \EntryIE{client} -> call callInfo client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
-            lookupAbort "answer" conn answers targetQid $ \ans -> do
-                ans' <- subscribeReturn ans $ \ret@R.Return{union'} ->
-                    case union' of
-                        R.Return'exception _ ->
-                            returnAnswer conn ret { R.answerId = questionId }
-                        R.Return'results R.Payload{content} ->
-                            transformClient transform content conn >>= call callInfo
-                        _ ->
-                            error "TODO"
-                M.insert ans' targetQid answers
+            subscribeReturn "answer" conn answers targetQid $ \ret@R.Return{union'} ->
+                case union' of
+                    R.Return'exception _ ->
+                        returnAnswer conn ret { R.answerId = questionId }
+                    R.Return'results R.Payload{content} ->
+                        transformClient transform content conn >>= call callInfo
+                    _ ->
+                        error "TODO"
         _ ->
             error "TODO"
 
@@ -1187,23 +1185,28 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
 -- run *after* the others (see Note [callbacks]). Note that this is an
 -- important property, as it is necessary to preserve E-order if the
 -- callbacks are successive method calls on the returned object.
-subscribeReturn :: EntryQA -> (R.Return -> STM ()) -> STM EntryQA
-subscribeReturn ans onRet = case ans of
-    NewQA{onFinish, onReturn} ->
-        pure NewQA
-            { onFinish
-            , onReturn = SnocList.snoc onReturn onRet
-            }
+subscribeReturn :: Text -> Conn -> M.Map Word32 EntryQA -> Word32 -> (R.Return -> STM ()) -> STM ()
+subscribeReturn tableName conn table qaId onRet =
+    lookupAbort tableName conn table qaId $ \ret -> do
+        new <- go ret
+        M.insert new qaId table
+  where
+    go = \case
+        NewQA{onFinish, onReturn} ->
+            pure NewQA
+                { onFinish
+                , onReturn = SnocList.snoc onReturn onRet
+                }
 
-    HaveFinish{finishMsg, onReturn} ->
-        pure HaveFinish
-            { finishMsg
-            , onReturn = SnocList.snoc onReturn onRet
-            }
+        HaveFinish{finishMsg, onReturn} ->
+            pure HaveFinish
+                { finishMsg
+                , onReturn = SnocList.snoc onReturn onRet
+                }
 
-    val@HaveReturn{returnMsg} -> do
-        onRet returnMsg
-        pure val
+        val@HaveReturn{returnMsg} -> do
+            queueSTM conn (onRet returnMsg)
+            pure val
 
 abortConn :: Conn -> R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
@@ -1468,15 +1471,16 @@ acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
 acceptCap _ d                    = error $ "TODO: " ++ show d
 
 newLocalTgtClient :: Conn -> MsgTarget -> STM Client
-newLocalTgtClient conn AnswerTgt { answerId, transform } = do
-    pState <- newTVar Pending
-        { tmpDest = AnswerDest
+newLocalTgtClient conn@Conn{answers} AnswerTgt { answerId, transform } = do
+    let tmpDest = AnswerDest
             { conn
             , answerId
             , transform
             }
-        }
-    error "TODO: subscribe to the answer!"
+    pState <- newTVar Pending { tmpDest }
+    subscribeReturn "answer" conn answers answerId $
+        resolveClientReturn tmpDest (writeTVar pState)
+    pure PromiseClient { pState }
 newLocalTgtClient conn (ImportTgt _) =
     error "TODO"
 
