@@ -1378,7 +1378,19 @@ emitPromiseCap = error "TODO"
 -- received via the connection. May update connection state as necessary.
 acceptCap :: Conn -> R.CapDescriptor -> STM Client
 acceptCap _ R.CapDescriptor'none = pure NullClient
-acceptCap _ _                    = error "TODO"
+acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted importId) = do
+    entry <- M.lookup importId imports
+    case entry of
+        Just Import{ client, refCount } -> do
+            M.insert Import { client, refCount = refCount + 1 } importId imports
+            pure client
+
+        Nothing -> do
+            proxies <- ConnRefs <$> M.new
+            let client = ImportClient ImportRef { conn, importId, proxies }
+            M.insert Import { client, refCount = 1 } importId imports
+            pure client
+acceptCap _ d                    = error $ "TODO: " ++ show d
 
 
 -- Note [Limiting resource usage]
