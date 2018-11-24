@@ -1,11 +1,12 @@
 module Internal.SnocList
     ( SnocList
-    , toList
     , fromList
     , empty
     , snoc
     , singleton
     ) where
+
+import Data.Foldable
 
 -- | A 'SnocList' is just a list, but with efficient appending instead of
 -- prepending. The indended use case is when you want to append a bunch of
@@ -16,11 +17,8 @@ module Internal.SnocList
 -- just packages up this trick so you can't forget to do the reverse.
 newtype SnocList a = SnocList [a]
 
--- | Convert a 'SnocList' to a list. O(n).
-toList :: SnocList a -> [a]
-toList (SnocList xs) = reverse xs
-
--- | Convert a list to a 'SnocList'. O(n).
+-- | Convert a list to a 'SnocList'. O(n)
+fromList :: [a] -> SnocList a
 fromList = SnocList . reverse
 
 -- | A one-element 'SnocList'.
@@ -35,3 +33,7 @@ empty = SnocList []
 -- backwards.
 snoc :: SnocList a -> a -> SnocList a
 snoc (SnocList xs) x = SnocList (x:xs)
+
+instance Foldable SnocList where
+    foldMap f = foldMap f . toList
+    toList (SnocList xs) = reverse xs

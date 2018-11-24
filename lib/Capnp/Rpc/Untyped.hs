@@ -77,7 +77,7 @@ import Control.Concurrent     (threadDelay)
 import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
 import Control.Monad          (forever)
 import Data.Default           (Default(def))
-import Data.Foldable          (traverse_)
+import Data.Foldable          (toList, traverse_)
 import Data.Hashable          (Hashable, hash, hashWithSalt)
 import Data.String            (fromString)
 import Data.Text              (Text)
@@ -261,6 +261,9 @@ instance Default ConnConfig where
 queueSTM :: Conn -> STM () -> STM ()
 queueSTM Conn{pendingCallbacks} = writeTQueue pendingCallbacks
 
+mapQueueSTM :: Foldable t => Conn -> t (a -> STM ()) -> a -> STM ()
+mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
+
 -- Note [callbacks]
 -- ================
 --
@@ -399,32 +402,32 @@ freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
 
 newtype Question = Question
-    { onReturn :: R.Return -> STM ()
+    { onReturn :: SnocList (R.Return -> STM ())
     -- ^ Called when the remote vat sends a return message for this question.
     }
 
 -- | An entry in our answers table.
 data Answer
     -- | An answer entry for which we have neither received a finish, nor sent a
-    -- return. Contains two callbacks, to invoke when we receive each type of
-    -- message.
+    -- return. Contains two sets of callbacks, to invoke when we receive each
+    -- type of message.
     = NewAnswer
-        { onFinish :: R.Finish -> STM ()
-        , onReturn :: R.Return -> STM ()
+        { onFinish :: SnocList (R.Finish -> STM ())
+        , onReturn :: SnocList (R.Return -> STM ())
         }
     -- | An answer entry for which we've sent a return, but not received a
-    -- finish. Contains the return message we sent, and a callback to invoke
-    -- when we receive a finish.
+    -- finish. Contains the return message we sent, and a set of callbacks
+    -- to invoke when we receive a finish.
     | HaveReturn
         { returnMsg :: R.Return
-        , onFinish  :: R.Finish -> STM ()
+        , onFinish  :: SnocList (R.Finish -> STM ())
         }
-    -- | An answer entry for which we've received a finish, but not sen a
-    -- return. Contains the finish message we received, and a callback to
-    -- invoke when we send the return.
+    -- | An answer entry for which we've received a finish, but not sent a
+    -- return. Contains the finish message we received, and a set of
+    -- callbacks to invoke when we send the return.
     | HaveFinish
         { finishMsg :: R.Finish
-        , onReturn  :: R.Return -> STM ()
+        , onReturn  :: SnocList (R.Return -> STM ())
         }
 
 data Export = Export
@@ -633,7 +636,7 @@ callRemote
         , R.methodId = methodId
         }
     M.insert
-        Question { onReturn = cbCallReturn conn response }
+        Question { onReturn = SnocList.singleton $ cbCallReturn conn response }
         qid
         questions
 
@@ -667,7 +670,7 @@ marshalMsgTarget = \case
                 { R.questionId = answerId
                 , R.transform = V.fromList $
                     map R.PromisedAnswer'Op'getPointerField $
-                    SnocList.toList transform
+                    toList transform
                 }
 
 
@@ -840,7 +843,7 @@ handleBootstrapMsg conn R.Bootstrap{questionId} = do
     insertBootstrap ret Nothing =
         pure $ Just HaveReturn
             { returnMsg = ret
-            , onFinish = \_ -> pure ()
+            , onFinish = SnocList.empty
             }
     insertBootstrap _ (Just _) =
         abortConn conn def
@@ -866,8 +869,8 @@ handleCallMsg
         conn
         questionId
         NewAnswer
-            { onReturn = \_ -> pure ()
-            , onFinish = \_ -> pure ()
+            { onReturn = SnocList.empty
+            , onFinish = SnocList.empty
             }
         answers
     -- Next, fish out the parameters to the call, and make sure
@@ -992,13 +995,14 @@ handleReturnMsg conn@Conn{questions} ret@R.Return{answerId, union'} msg = do
             -- there's no payload, so we can just leave this as-is.
             pure ret
     lookupAbort "question" conn questions answerId $
-        \Question{onReturn} -> onReturn ret
+        \Question{onReturn} ->
+            mapQueueSTM conn onReturn ret
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
 handleFinishMsg conn@Conn{answers} finish@R.Finish{questionId} =
     lookupAbort "answer" conn answers questionId $ \case
         ans@NewAnswer{onFinish, onReturn} -> do
-            onFinish finish
+            mapQueueSTM conn onFinish finish
             M.insert
                 HaveFinish
                     { finishMsg = finish
@@ -1007,7 +1011,7 @@ handleFinishMsg conn@Conn{answers} finish@R.Finish{questionId} =
                 questionId
                 answers
         ans@HaveReturn{onFinish} -> do
-            onFinish finish
+            mapQueueSTM conn onFinish finish
             M.delete questionId answers
         HaveFinish{} ->
             abortConn conn def
@@ -1144,13 +1148,13 @@ returnAnswer conn@Conn{answers} ret@R.Return{answerId} = do
     M.focus
         (Focus.alterM $ \case
             Just NewAnswer{onFinish, onReturn} -> do
-                queueSTM conn (onReturn ret)
+                mapQueueSTM conn onReturn ret
                 pure $ Just HaveReturn
                     { returnMsg = ret
                     , onFinish
                     }
             Just HaveFinish{onReturn} -> do
-                queueSTM conn (onReturn ret)
+                mapQueueSTM conn onReturn ret
                 pure Nothing
 
             Just HaveReturn{} ->
@@ -1175,13 +1179,13 @@ subscribeReturn ans onRet = case ans of
     NewAnswer{onFinish, onReturn} ->
         pure NewAnswer
             { onFinish
-            , onReturn = \ret -> onReturn ret *> onRet ret
+            , onReturn = SnocList.snoc onReturn onRet
             }
 
     HaveFinish{finishMsg, onReturn} ->
         pure HaveFinish
             { finishMsg
-            , onReturn = \ret -> onReturn ret *> onRet ret
+            , onReturn = SnocList.snoc onReturn onRet
             }
 
     val@HaveReturn{returnMsg} -> do
@@ -1301,7 +1305,10 @@ requestBootstrap conn@Conn{questions} = do
     sendPureMsg conn $
         R.Message'bootstrap def { R.questionId = qid }
     M.insert
-        Question { onReturn = resolveClientReturn tmpDest (writeTVar pState) }
+        Question
+            { onReturn = SnocList.singleton $
+                resolveClientReturn tmpDest (writeTVar pState)
+            }
         qid
         questions
     pure PromiseClient { pState }
