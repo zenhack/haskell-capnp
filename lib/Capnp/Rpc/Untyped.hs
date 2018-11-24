@@ -1322,8 +1322,17 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 -- | Resolve a promised client to another client. See Note [resolveClient]
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
 resolveClientClient tmpDest resolve client =
-    -- NB: make sure to handle embargos.
-    error "TODO"
+    case (client, tmpDest) of
+        ( LocalClient{}, AnswerDest{} ) ->
+            error "TODO: embargo"
+        ( LocalClient{}, ImportDest _ ) ->
+            error "TODO: embargo"
+        ( _, LocalBuffer { callBuffer } ) -> do
+            flushTQueue callBuffer >>= traverse_ (`call` client)
+            resolve (Ready client)
+            error "TODO: drop a reference to the answer/import if necessary"
+        _ ->
+            error "TODO"
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> R.Return -> STM ()
