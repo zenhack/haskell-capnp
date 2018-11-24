@@ -1331,6 +1331,15 @@ resolveClientClient tmpDest resolve client =
             flushTQueue callBuffer >>= traverse_ (`call` client)
             resolve (Ready client)
             error "TODO: drop a reference to the answer/import if necessary"
+        ( ImportClient _, AnswerDest{ conn, answerId, transform } )
+            | length (toList transform) /= 0 ->
+                error "TODO"
+            | otherwise -> do
+                finishQuestion conn def
+                    { R.questionId = answerId
+                    , R.releaseResultCaps = False
+                    }
+                resolve (Ready client)
         _ ->
             error "TODO"
 
