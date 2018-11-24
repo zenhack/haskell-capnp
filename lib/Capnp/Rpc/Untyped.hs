@@ -1437,6 +1437,14 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted importId) = do
             let client = ImportClient ImportRef { conn, importId, proxies }
             M.insert Import { client, refCount = 1 } importId imports
             pure client
+acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
+    entry <- M.lookup exportId exports
+    case entry of
+        Nothing ->
+            error "TODO"
+
+        Just Export{ client } ->
+            pure client
 acceptCap _ d                    = error $ "TODO: " ++ show d
 
 
