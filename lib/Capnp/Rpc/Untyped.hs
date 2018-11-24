@@ -1377,15 +1377,34 @@ getConnExport conn (ConnRefs m) = do
 emitCap :: Conn -> Client -> STM R.CapDescriptor
 emitCap _conn NullClient =
     pure R.CapDescriptor'none
-emitCap conn client@LocalClient { connRefs } =
-    R.CapDescriptor'senderHosted <$> getConnExport conn connRefs
+emitCap conn@Conn{exports} client@LocalClient { connRefs } = do
+    exportId <- getConnExport conn connRefs
+    addBumpExport exportId client exports
+    pure $ R.CapDescriptor'senderHosted exportId
 emitCap conn PromiseClient { pState } =
     emitPromiseCap conn pState
 emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
     | conn == remoteConn =
         pure (R.CapDescriptor'receiverHosted importId)
-    | otherwise =
+    | otherwise = do
+        error "TODO: bump the refcount."
         R.CapDescriptor'senderHosted <$> getConnExport conn proxies
+
+-- | insert the client into the exports table, bumping the refcount if it is
+-- already there. If a different client is already in the table at the same
+-- id, call 'error'.
+addBumpExport :: ExportId -> Client -> M.Map ExportId Export -> STM ()
+addBumpExport exportId client exports =
+    M.focus (Focus.alter go) exportId exports
+  where
+    go Nothing = Just Export { client, refCount = 1 }
+    go (Just ex@Export{ client = oldClient, refCount } )
+        | client /= oldClient =
+            error $
+                "BUG: addExportRef called with a client that is different " ++
+                "from what is already in our exports table."
+        | otherwise =
+            Just Export { client, refCount = refCount + 1 }
 
 -- | Helper for 'emitCap'; generate a CapDescriptor for a 'PromiseClient', which
 -- has the given state.
