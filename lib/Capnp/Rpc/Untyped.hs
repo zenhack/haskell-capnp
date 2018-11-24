@@ -1465,9 +1465,26 @@ acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
 
         Just Export{ client } ->
             pure client
-acceptCap _ (R.CapDescriptor'receiverAnswer R.PromisedAnswer{ questionId, transform }) =
-    error "TODO"
+acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
+    case unmarshalMsgTarget (R.MessageTarget'promisedAnswer pa) of
+        Left e ->
+            error "TODO"
+        Right msgTgt ->
+            newLocalTgtClient conn msgTgt
 acceptCap _ d                    = error $ "TODO: " ++ show d
+
+newLocalTgtClient :: Conn -> MsgTarget -> STM Client
+newLocalTgtClient conn AnswerTgt { answerId, transform } = do
+    pState <- newTVar Pending
+        { tmpDest = AnswerDest
+            { conn
+            , answerId
+            , transform
+            }
+        }
+    error "TODO: subscribe to the answer!"
+newLocalTgtClient conn (ImportTgt _) =
+    error "TODO"
 
 
 -- Note [Limiting resource usage]
