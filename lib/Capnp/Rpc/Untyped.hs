@@ -1367,7 +1367,8 @@ emitPromiseCap = error "TODO"
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
 acceptCap :: Conn -> R.CapDescriptor -> STM Client
-acceptCap = error "TODO"
+acceptCap _ R.CapDescriptor'none = pure NullClient
+acceptCap _ _                    = error "TODO"
 
 
 -- Note [Limiting resource usage]
