@@ -29,8 +29,8 @@ module Capnp.Rpc.Untyped
 
     -- * Errors
     , RpcError(..)
-    , RpcGen.Exception(..)
-    , RpcGen.Exception'Type(..)
+    , R.Exception(..)
+    , R.Exception'Type(..)
 
     -- * Shutting down the connection
     , stopVat
@@ -106,7 +106,7 @@ import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 
 import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
-import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
+import qualified Capnp.Gen.Capnp.Rpc.Pure as R
 import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
 import qualified Capnp.Untyped            as UntypedRaw
@@ -115,9 +115,9 @@ import qualified Capnp.Untyped.Pure       as Untyped
 
 -- | Errors which can be thrown by the rpc system.
 data RpcError
-    = ReceivedAbort RpcGen.Exception
+    = ReceivedAbort R.Exception
     -- ^ The remote vat sent us an abort message.
-    | SentAbort RpcGen.Exception
+    | SentAbort R.Exception
     -- ^ We sent an abort to the remote vat.
     deriving(Show, Eq, Generic)
 
@@ -346,7 +346,7 @@ freeId :: IdPool -> Word32 -> STM ()
 freeId (IdPool pool) id = modifyTVar' pool (id:)
 
 newtype Question = Question
-    { onReturn :: RpcGen.Return -> STM ()
+    { onReturn :: R.Return -> STM ()
     -- ^ Called when the remote vat sends a return message for this question.
     }
 
@@ -356,22 +356,22 @@ data Answer
     -- return. Contains two callbacks, to invoke when we receive each type of
     -- message.
     = NewAnswer
-        { onFinish :: RpcGen.Finish -> STM ()
-        , onReturn :: RpcGen.Return -> STM ()
+        { onFinish :: R.Finish -> STM ()
+        , onReturn :: R.Return -> STM ()
         }
     -- | An answer entry for which we've sent a return, but not received a
     -- finish. Contains the return message we sent, and a callback to invoke
     -- when we receive a finish.
     | HaveReturn
-        { returnMsg :: RpcGen.Return
-        , onFinish  :: RpcGen.Finish -> STM ()
+        { returnMsg :: R.Return
+        , onFinish  :: R.Finish -> STM ()
         }
     -- | An answer entry for which we've received a finish, but not sen a
     -- return. Contains the finish message we received, and a callback to
     -- invoke when we send the return.
     | HaveFinish
-        { finishMsg :: RpcGen.Finish
-        , onReturn  :: RpcGen.Return -> STM ()
+        { finishMsg :: R.Finish
+        , onReturn  :: R.Return -> STM ()
         }
 
 data Export = Export
@@ -451,7 +451,7 @@ data PromiseState
         -- promise to resolve.
         }
     -- | The promise resolved to an exception.
-    | Error RpcGen.Exception
+    | Error R.Exception
 
 -- | A temporary destination for calls on an unresolved promise.
 data TmpDest
@@ -573,30 +573,30 @@ callRemote
     qid <- newQuestion conn
     capTable <- genSendableCapTableRaw conn arguments
     content <- evalLimitT defaultLimit (decerialize arguments)
-    sendPureMsg conn $ RpcGen.Message'call def
-        { RpcGen.questionId = qid
-        , RpcGen.target = case target of
+    sendPureMsg conn $ R.Message'call def
+        { R.questionId = qid
+        , R.target = case target of
             ImportTgt importId ->
-                RpcGen.MessageTarget'importedCap importId
+                R.MessageTarget'importedCap importId
             AnswerTgt { answerId, transform } ->
-                RpcGen.MessageTarget'promisedAnswer
-                    RpcGen.PromisedAnswer
-                        { RpcGen.questionId = answerId
-                        , RpcGen.transform = V.fromList $
-                            map RpcGen.PromisedAnswer'Op'getPointerField $
+                R.MessageTarget'promisedAnswer
+                    R.PromisedAnswer
+                        { R.questionId = answerId
+                        , R.transform = V.fromList $
+                            map R.PromisedAnswer'Op'getPointerField $
                             DList.toList transform
                         }
-        , RpcGen.params = RpcGen.Payload { content, capTable }
-        , RpcGen.interfaceId = interfaceId
-        , RpcGen.methodId = methodId
+        , R.params = R.Payload { content, capTable }
+        , R.interfaceId = interfaceId
+        , R.methodId = methodId
         }
     M.insert
         Question
-            { onReturn = \RpcGen.Return{ union' } -> do
+            { onReturn = \R.Return{ union' } -> do
                 case union' of
-                    RpcGen.Return'exception exn ->
+                    R.Return'exception exn ->
                         breakPromise response exn
-                    RpcGen.Return'results RpcGen.Payload{ content } -> do
+                    R.Return'results R.Payload{ content } -> do
                         rawPtr <- createPure defaultLimit $ do
                             msg <- Message.newMessage Nothing
                             cerialize msg content
@@ -604,8 +604,8 @@ callRemote
                     _ ->
                         error "TODO: handle other variants."
                 finishQuestion conn def
-                    { RpcGen.questionId = qid
-                    , RpcGen.releaseResultCaps = False
+                    { R.questionId = qid
+                    , R.releaseResultCaps = False
                     }
             }
         qid
@@ -683,7 +683,7 @@ coordinator conn@Conn{recvQ,debugMode} = go
         Right () ->
             go
         Left (SentAbort e) -> do
-            atomically $ sendPureMsg conn $ RpcGen.Message'abort e
+            atomically $ sendPureMsg conn $ R.Message'abort e
             -- Give the message a bit of time to reach the remote vat:
             threadDelay 1000000
             throwIO (SentAbort e)
@@ -695,70 +695,70 @@ coordinator conn@Conn{recvQ,debugMode} = go
             `catchSTM`
             (abortConn conn . wrapException debugMode)
         case pureMsg of
-            RpcGen.Message'abort exn ->
+            R.Message'abort exn ->
                 handleAbortMsg conn exn
-            RpcGen.Message'unimplemented msg ->
+            R.Message'unimplemented msg ->
                 handleUnimplementedMsg conn msg
-            RpcGen.Message'bootstrap bs ->
+            R.Message'bootstrap bs ->
                 handleBootstrapMsg conn bs
-            RpcGen.Message'call call ->
+            R.Message'call call ->
                 handleCallMsg conn call msg
-            RpcGen.Message'return ret ->
+            R.Message'return ret ->
                 handleReturnMsg conn ret msg
-            RpcGen.Message'finish finish ->
+            R.Message'finish finish ->
                 handleFinishMsg conn finish
-            RpcGen.Message'release release ->
+            R.Message'release release ->
                 handleReleaseMsg conn release
             _ ->
-                sendPureMsg conn $ RpcGen.Message'unimplemented pureMsg
+                sendPureMsg conn $ R.Message'unimplemented pureMsg
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
 
-handleAbortMsg :: Conn -> RpcGen.Exception -> STM ()
+handleAbortMsg :: Conn -> R.Exception -> STM ()
 handleAbortMsg _ exn =
     throwSTM (ReceivedAbort exn)
 
-handleUnimplementedMsg :: Conn -> RpcGen.Message -> STM ()
+handleUnimplementedMsg :: Conn -> R.Message -> STM ()
 handleUnimplementedMsg conn = \case
-    RpcGen.Message'unimplemented _ ->
+    R.Message'unimplemented _ ->
         -- If the client itself doesn't handle unimplemented messages, that's
         -- weird, but ultimately their problem.
         pure ()
-    RpcGen.Message'abort _ ->
+    R.Message'abort _ ->
         abortConn conn def
-            { RpcGen.type_ = RpcGen.Exception'Type'failed
-            , RpcGen.reason =
+            { R.type_ = R.Exception'Type'failed
+            , R.reason =
                 "Your vat sent an 'unimplemented' message for an abort message " <>
                 "that its remote peer never sent. This is likely a bug in your " <>
                 "capnproto library."
             }
     _ ->
         abortConn conn def
-            { RpcGen.type_ = RpcGen.Exception'Type'failed
-            , RpcGen.reason = "Received unimplemented response for required message."
+            { R.type_ = R.Exception'Type'failed
+            , R.reason = "Received unimplemented response for required message."
             }
 
-handleBootstrapMsg :: Conn -> RpcGen.Bootstrap -> STM ()
-handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
+handleBootstrapMsg :: Conn -> R.Bootstrap -> STM ()
+handleBootstrapMsg conn R.Bootstrap{questionId} = do
     ret <- case bootstrap conn of
         Nothing ->
-            pure $ RpcGen.Return
-                { RpcGen.answerId = questionId
-                , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
-                , RpcGen.union' =
-                    RpcGen.Return'exception def
-                        { RpcGen.type_ = RpcGen.Exception'Type'failed
-                        , RpcGen.reason = "No bootstrap interface for this connection."
+            pure $ R.Return
+                { R.answerId = questionId
+                , R.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+                , R.union' =
+                    R.Return'exception def
+                        { R.type_ = R.Exception'Type'failed
+                        , R.reason = "No bootstrap interface for this connection."
                         }
                 }
         Just client -> do
             capDesc <- emitCap conn client
-            pure $ RpcGen.Return
-                { RpcGen.answerId = questionId
-                , RpcGen.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
-                , RpcGen.union' =
-                    RpcGen.Return'results RpcGen.Payload
+            pure $ R.Return
+                { R.answerId = questionId
+                , R.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+                , R.union' =
+                    R.Return'results R.Payload
                             -- XXX: this is a bit fragile; we're relying on
                             -- the encode step to pick the right index for
                             -- our capability.
@@ -770,7 +770,7 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
         (Focus.alterM $ insertBootstrap ret)
         questionId
         (answers conn)
-    sendPureMsg conn $ RpcGen.Message'return ret
+    sendPureMsg conn $ R.Message'return ret
   where
     insertBootstrap ret Nothing =
         pure $ Just HaveReturn
@@ -779,20 +779,20 @@ handleBootstrapMsg conn RpcGen.Bootstrap{questionId} = do
             }
     insertBootstrap _ (Just _) =
         abortConn conn def
-            { RpcGen.type_ = RpcGen.Exception'Type'failed
-            , RpcGen.reason = "Duplicate question ID"
+            { R.type_ = R.Exception'Type'failed
+            , R.reason = "Duplicate question ID"
             }
 
-handleCallMsg :: Conn -> RpcGen.Call -> ConstMsg -> STM ()
+handleCallMsg :: Conn -> R.Call -> ConstMsg -> STM ()
 handleCallMsg
         conn@Conn{exports, answers}
-        RpcGen.Call
+        R.Call
             { questionId
             , target
             , interfaceId
             , methodId
             , sendResultsTo
-            , params=RpcGen.Payload{capTable}
+            , params=R.Payload{capTable}
             }
         msg = do
     -- First, add an entry in our answers table:
@@ -821,19 +821,19 @@ handleCallMsg
     fulfiller <- newCallback $ \case
         Left e ->
             returnAnswer conn def
-                { RpcGen.answerId = questionId
-                , RpcGen.releaseParamCaps = False
-                , RpcGen.union' = RpcGen.Return'exception e
+                { R.answerId = questionId
+                , R.releaseParamCaps = False
+                , R.union' = R.Return'exception e
                 }
         Right v -> do
             content <- evalLimitT defaultLimit (decerialize v)
             capTable <- genSendableCapTable conn content
             returnAnswer conn def
-                { RpcGen.answerId = questionId
-                , RpcGen.releaseParamCaps = False
-                , RpcGen.union'   = RpcGen.Return'results def
-                    { RpcGen.content  = content
-                    , RpcGen.capTable = capTable
+                { R.answerId = questionId
+                , R.releaseParamCaps = False
+                , R.union'   = R.Return'results def
+                    { R.content  = content
+                    , R.capTable = capTable
                     }
                 }
     -- Package up the info for the call:
@@ -845,16 +845,16 @@ handleCallMsg
             }
     -- Finally, figure out where to send it:
     case target of
-        RpcGen.MessageTarget'importedCap exportId ->
+        R.MessageTarget'importedCap exportId ->
             lookupAbort "export" conn exports exportId $
                 \Export{client} -> call callInfo client
-        RpcGen.MessageTarget'promisedAnswer RpcGen.PromisedAnswer { questionId = targetQid, transform } ->
+        R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
             lookupAbort "answer" conn answers targetQid $ \ans -> do
-                ans' <- subscribeReturn ans $ \ret@RpcGen.Return{union'} ->
+                ans' <- subscribeReturn ans $ \ret@R.Return{union'} ->
                     case union' of
-                        RpcGen.Return'exception _ ->
-                            returnAnswer conn ret { RpcGen.answerId = questionId }
-                        RpcGen.Return'results RpcGen.Payload{content} ->
+                        R.Return'exception _ ->
+                            returnAnswer conn ret { R.answerId = questionId }
+                        R.Return'results R.Payload{content} ->
                             transformClient transform content conn >>= call callInfo
                         _ ->
                             error "TODO"
@@ -863,7 +863,7 @@ handleCallMsg
             error "TODO"
 
 transformClient
-    :: V.Vector RpcGen.PromisedAnswer'Op
+    :: V.Vector R.PromisedAnswer'Op
     -> Maybe Untyped.PtrType
     -> Conn
     -> STM Client
@@ -877,31 +877,31 @@ transformClient transform ptr conn =
             pure client
         Right (Just _) ->
             abortConn conn def
-                { RpcGen.type_ = RpcGen.Exception'Type'failed
-                , RpcGen.reason = "Tried to call method on non-capability."
+                { R.type_ = R.Exception'Type'failed
+                , R.reason = "Tried to call method on non-capability."
                 }
 
 followTransform
-    :: V.Vector RpcGen.PromisedAnswer'Op
+    :: V.Vector R.PromisedAnswer'Op
     -> Maybe Untyped.PtrType
-    -> Either RpcGen.Exception (Maybe Untyped.PtrType)
+    -> Either R.Exception (Maybe Untyped.PtrType)
 followTransform ops = go (V.toList ops)
   where
     go [] ptr = Right ptr
-    go (RpcGen.PromisedAnswer'Op'noop:cs) ptr = go cs ptr
-    go (RpcGen.PromisedAnswer'Op'getPointerField idx:cs) ptr = case ptr of
+    go (R.PromisedAnswer'Op'noop:cs) ptr = go cs ptr
+    go (R.PromisedAnswer'Op'getPointerField idx:cs) ptr = case ptr of
         Nothing -> go cs Nothing
         Just (Untyped.PtrStruct (Untyped.Struct _ ptrs)) ->
             go cs (Untyped.sliceIndex (fromIntegral idx) ptrs)
         Just _ ->
             Left def
-                { RpcGen.type_ = RpcGen.Exception'Type'failed
-                , RpcGen.reason = "Tried to access pointer field of non-struct."
+                { R.type_ = R.Exception'Type'failed
+                , R.reason = "Tried to access pointer field of non-struct."
                 }
-    go (RpcGen.PromisedAnswer'Op'unknown' op:_) ptr =
+    go (R.PromisedAnswer'Op'unknown' op:_) ptr =
         Left def
-            { RpcGen.type_ = RpcGen.Exception'Type'failed
-            , RpcGen.reason = "Unknown PromisedAnswer.Op: " <> fromString (show op)
+            { R.type_ = R.Exception'Type'failed
+            , R.reason = "Unknown PromisedAnswer.Op: " <> fromString (show op)
             }
 
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
@@ -912,7 +912,7 @@ followTransform ops = go (V.toList ops)
 followPtrs
     :: [Word16]
     -> Maybe Untyped.PtrType
-    -> Either RpcGen.Exception (Maybe Untyped.PtrType)
+    -> Either R.Exception (Maybe Untyped.PtrType)
 followPtrs [] ptr =
     Right ptr
 followPtrs (_:_) Nothing =
@@ -922,10 +922,10 @@ followPtrs (i:is) (Just (Untyped.PtrStruct (Untyped.Struct _ ptrs))) =
 followPtrs (_:_) (Just _) =
     Left (eFailed "Tried to access pointer field of non-struct.")
 
-handleReturnMsg :: Conn -> RpcGen.Return -> ConstMsg -> STM ()
-handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = do
+handleReturnMsg :: Conn -> R.Return -> ConstMsg -> STM ()
+handleReturnMsg conn@Conn{questions} ret@R.Return{answerId, union'} msg = do
     ret <- case union' of
-        RpcGen.Return'results RpcGen.Payload{capTable} -> do
+        R.Return'results R.Payload{capTable} -> do
             msgWithCaps <- fixCapTable capTable conn msg
             evalLimitT defaultLimit $
                 msgToValue msgWithCaps >>= \case
@@ -939,8 +939,8 @@ handleReturnMsg conn@Conn{questions} ret@RpcGen.Return{answerId, union'} msg = d
     lookupAbort "question" conn questions answerId $
         \Question{onReturn} -> onReturn ret
 
-handleFinishMsg :: Conn -> RpcGen.Finish -> STM ()
-handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
+handleFinishMsg :: Conn -> R.Finish -> STM ()
+handleFinishMsg conn@Conn{answers} finish@R.Finish{questionId} =
     lookupAbort "answer" conn answers questionId $ \case
         ans@NewAnswer{onFinish, onReturn} -> do
             onFinish finish
@@ -956,28 +956,28 @@ handleFinishMsg conn@Conn{answers} finish@RpcGen.Finish{questionId} =
             M.delete questionId answers
         HaveFinish{} ->
             abortConn conn def
-                { RpcGen.type_ = RpcGen.Exception'Type'failed
-                , RpcGen.reason =
+                { R.type_ = R.Exception'Type'failed
+                , R.reason =
                     "Duplicate finish message for question #"
                     <> fromString (show questionId)
                 }
 
-handleReleaseMsg :: Conn -> RpcGen.Release -> STM ()
-handleReleaseMsg conn@Conn{exports} RpcGen.Release{id, referenceCount} =
+handleReleaseMsg :: Conn -> R.Release -> STM ()
+handleReleaseMsg conn@Conn{exports} R.Release{id, referenceCount} =
     M.focus
         (Focus.alterM $ \case
             Nothing ->
                 abortConn conn def
-                    { RpcGen.type_ = RpcGen.Exception'Type'failed
-                    , RpcGen.reason =
+                    { R.type_ = R.Exception'Type'failed
+                    , R.reason =
                         "No such export: " <> fromString (show id)
                     }
             Just Export{client, refCount} ->
                 case compare refCount referenceCount of
                     LT ->
                         abortConn conn def
-                            { RpcGen.type_ = RpcGen.Exception'Type'failed
-                            , RpcGen.reason =
+                            { R.type_ = R.Exception'Type'failed
+                            , R.reason =
                                 "Received release for export with referenceCount " <>
                                 "greater than our recorded total ref count."
                             }
@@ -995,7 +995,7 @@ handleReleaseMsg conn@Conn{exports} RpcGen.Release{id, referenceCount} =
 
 -- | Interpret the list of cap descriptors, and replace the message's capability
 -- table with the result.
-fixCapTable :: V.Vector RpcGen.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
+fixCapTable :: V.Vector R.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
 fixCapTable capDescs conn msg = do
     clients <- traverse (acceptCap conn) capDescs
     pure $ Message.withCapTable clients msg
@@ -1007,8 +1007,8 @@ lookupAbort keyTypeName conn m key f = do
             f val
         Nothing ->
             abortConn conn def
-                { RpcGen.type_ = RpcGen.Exception'Type'failed
-                , RpcGen.reason = mconcat
+                { R.type_ = R.Exception'Type'failed
+                , R.reason = mconcat
                     [ "No such "
                     , keyTypeName
                     ,  ": "
@@ -1025,8 +1025,8 @@ insertNewAbort keyTypeName conn key value =
         (Focus.alterM $ \case
             Just _ ->
                 abortConn conn def
-                    { RpcGen.type_ = RpcGen.Exception'Type'failed
-                    , RpcGen.reason = "duplicate entry in " <> keyTypeName <> " table."
+                    { R.type_ = R.Exception'Type'failed
+                    , R.reason = "duplicate entry in " <> keyTypeName <> " table."
                     }
             Nothing ->
                 pure (Just value)
@@ -1041,7 +1041,7 @@ insertNewAbort keyTypeName conn key value =
 -- this, then decerializing to put it in the larger adt, then reserializing
 -- again... at some point we'll probably want to overhaul much of this module
 -- for performance. This kind of thing is the motivation for #52.
-genSendableCapTable :: Conn -> Maybe Untyped.PtrType -> STM (V.Vector RpcGen.CapDescriptor)
+genSendableCapTable :: Conn -> Maybe Untyped.PtrType -> STM (V.Vector R.CapDescriptor)
 genSendableCapTable conn ptr = do
     rawPtr <- createPure defaultLimit $ do
         msg <- Message.newMessage Nothing
@@ -1051,23 +1051,23 @@ genSendableCapTable conn ptr = do
 genSendableCapTableRaw
     :: Conn
     -> Maybe (UntypedRaw.Ptr ConstMsg)
-    -> STM (V.Vector RpcGen.CapDescriptor)
+    -> STM (V.Vector R.CapDescriptor)
 genSendableCapTableRaw _ Nothing = pure V.empty
 genSendableCapTableRaw conn (Just ptr) =
     traverse
         (emitCap conn)
         (Message.getCapTable (UntypedRaw.message ptr))
 
-sendPureMsg :: Conn -> RpcGen.Message -> STM ()
+sendPureMsg :: Conn -> R.Message -> STM ()
 sendPureMsg Conn{sendQ} msg =
     createPure maxBound (valueToMsg msg) >>= writeTBQueue sendQ
 
 -- | Send a finish message, and then remove the corresponding
 -- question from our table, and return the question id to the
 -- pool of available ids.
-finishQuestion :: Conn -> RpcGen.Finish -> STM ()
-finishQuestion conn@Conn{questions} finish@RpcGen.Finish{questionId} = do
-    sendPureMsg conn $ RpcGen.Message'finish finish
+finishQuestion :: Conn -> R.Finish -> STM ()
+finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
+    sendPureMsg conn $ R.Message'finish finish
     freeQuestion conn questionId
     M.delete questionId questions
 
@@ -1075,9 +1075,9 @@ finishQuestion conn@Conn{questions} finish@RpcGen.Finish{questionId} = do
 -- answers table, invoking any registered callbacks. Calls 'error' if
 -- the answerId is not in the table, or if we've already sent a return
 -- for this answer.
-returnAnswer :: Conn -> RpcGen.Return -> STM ()
-returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
-    sendPureMsg conn $ RpcGen.Message'return ret
+returnAnswer :: Conn -> R.Return -> STM ()
+returnAnswer conn@Conn{answers} ret@R.Return{answerId} = do
+    sendPureMsg conn $ R.Message'return ret
     M.focus
         (Focus.alterM $ \case
             Just NewAnswer{onFinish, onReturn} -> do
@@ -1107,7 +1107,7 @@ returnAnswer conn@Conn{answers} ret@RpcGen.Return{answerId} = do
 -- run *after* the others. Note that this is an important property, as it
 -- is necessary to preserve E-order if the callbacks are successive method
 -- calls on the returned object.
-subscribeReturn :: Answer -> (RpcGen.Return -> STM ()) -> STM Answer
+subscribeReturn :: Answer -> (R.Return -> STM ()) -> STM Answer
 subscribeReturn ans onRet = case ans of
     NewAnswer{onFinish, onReturn} ->
         pure NewAnswer
@@ -1125,7 +1125,7 @@ subscribeReturn ans onRet = case ans of
         onRet returnMsg
         pure val
 
-abortConn :: Conn -> RpcGen.Exception -> STM a
+abortConn :: Conn -> R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
 
 {-
@@ -1133,8 +1133,8 @@ abortConn _ e = throwSTM (SentAbort e)
 -- vat. If the client points to our own vat, this will increment the refcount
 -- in the exports table, and will allocate a new export ID if needed. Returns
 -- CapDescriptor'none if the client is 'nullClient'.
-sendableCapDesc :: Conn -> Client -> STM RpcGen.CapDescriptor
-sendableCapDesc _ (Client Nothing)  = pure RpcGen.CapDescriptor'none
+sendableCapDesc :: Conn -> Client -> STM R.CapDescriptor
+sendableCapDesc _ (Client Nothing)  = pure R.CapDescriptor'none
 sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
     readTVar clientVar >>= \case
         LocalExportClient{exportIds} ->
@@ -1148,7 +1148,7 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
                         )
                         exportId
                         exports
-                    pure $ RpcGen.CapDescriptor'senderHosted exportId
+                    pure $ R.CapDescriptor'senderHosted exportId
                 Nothing -> do
                     -- This client is not yet exported on this connection; allocate
                     -- a new export ID and insert it into the exports table. Also,
@@ -1158,37 +1158,37 @@ sendableCapDesc conn@Conn{exports} client@(Client (Just clientVar)) =
                     exportId <- newExport conn
                     M.insert exportId conn exportIds
                     M.insert Export { client, refCount = 1 } exportId exports
-                    pure $ RpcGen.CapDescriptor'senderHosted exportId
+                    pure $ R.CapDescriptor'senderHosted exportId
 
         -- TODO: other client types
 
 -- The dual of sendableCapDesc; takes a cap descriptor and creates/fetches a client
 -- from it. Bumps reference counts/modifies tables etc. as needed. CapDescriptor'none
 -- returns 'nullClient'.
-interpretCapDesc :: Conn -> RpcGen.CapDescriptor -> STM Client
+interpretCapDesc :: Conn -> R.CapDescriptor -> STM Client
 interpretCapDesc conn@Conn{imports, exports, answers, maxAnswerCalls} = \case
-    RpcGen.CapDescriptor'none ->
+    R.CapDescriptor'none ->
         pure nullClient
-    RpcGen.CapDescriptor'senderHosted importId ->
+    R.CapDescriptor'senderHosted importId ->
         senderHostedOrPromise True importId
-    RpcGen.CapDescriptor'senderPromise importId ->
+    R.CapDescriptor'senderPromise importId ->
         senderHostedOrPromise False importId
-    RpcGen.CapDescriptor'receiverHosted exportId ->
+    R.CapDescriptor'receiverHosted exportId ->
         lookupAbort "export" conn exports exportId $
             \Export{client} ->
                 -- TODO: we probably need to do some bookkeeping re: refcounts.
                 pure client
-    RpcGen.CapDescriptor'receiverAnswer RpcGen.PromisedAnswer{transform, questionId} -> do
+    R.CapDescriptor'receiverAnswer R.PromisedAnswer{transform, questionId} -> do
         calls <- newTBQueue (fromIntegral maxAnswerCalls)
         client' <- newTVar LocalAnswerClient{transform, calls}
         lookupAbort "answer" conn answers questionId $ \ans ->
-            subscribeReturn ans $ \ret@RpcGen.Return{union'} ->
+            subscribeReturn ans $ \ret@R.Return{union'} ->
                 case union' of
-                    RpcGen.Return'exception exn -> do
+                    R.Return'exception exn -> do
                         writeTVar client' (ExnClient exn)
                         flushTBQueue calls >>= traverse_
                             (\Server.CallInfo{response} -> breakPromise response exn)
-                    RpcGen.Return'results RpcGen.Payload{content} -> do
+                    R.Return'results R.Payload{content} -> do
                         finalClient <- transformClient transform content conn
                         getClient' finalClient >>= writeTVar client'
                         flushTBQueue calls >>= traverse_ (`call` finalClient)
@@ -1236,7 +1236,7 @@ requestBootstrap conn@Conn{questions} = do
             }
     pState <- newTVar Pending { tmpDest }
     sendPureMsg conn $
-        RpcGen.Message'bootstrap def { RpcGen.questionId = qid }
+        R.Message'bootstrap def { R.questionId = qid }
     M.insert
         Question { onReturn = resolveClientReturn tmpDest (writeTVar pState) }
         qid
@@ -1254,7 +1254,7 @@ requestBootstrap conn@Conn{questions} = do
 -- to each function.
 
 -- | Resolve a promised client to an exception. See Note [resolveClient]
-resolveClientExn :: TmpDest -> (PromiseState -> STM ()) -> RpcGen.Exception -> STM ()
+resolveClientExn :: TmpDest -> (PromiseState -> STM ()) -> R.Exception -> STM ()
 resolveClientExn tmpDest resolve exn = do
     case tmpDest of
         LocalBuffer { callBuffer } -> do
@@ -1288,11 +1288,11 @@ resolveClientClient tmpDest resolve client =
     error "TODO"
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
-resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> RpcGen.Return -> STM ()
-resolveClientReturn tmpDest resolve RpcGen.Return { union' } = case union' of
-    RpcGen.Return'exception exn ->
+resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> R.Return -> STM ()
+resolveClientReturn tmpDest resolve R.Return { union' } = case union' of
+    R.Return'exception exn ->
         resolveClientExn tmpDest resolve exn
-    RpcGen.Return'results RpcGen.Payload{ content } ->
+    R.Return'results R.Payload{ content } ->
         resolveClientPtr tmpDest resolve content
     _ ->
         error $
@@ -1308,27 +1308,27 @@ getConnExport = error "TODO"
 -- | Generate a CapDescriptor, which the connection's remote vat may use to
 -- refer to the client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
-emitCap :: Conn -> Client -> STM RpcGen.CapDescriptor
+emitCap :: Conn -> Client -> STM R.CapDescriptor
 emitCap _conn NullClient =
-    pure RpcGen.CapDescriptor'none
+    pure R.CapDescriptor'none
 emitCap conn client@LocalClient { connRefs } =
-    RpcGen.CapDescriptor'senderHosted <$> getConnExport conn connRefs client
+    R.CapDescriptor'senderHosted <$> getConnExport conn connRefs client
 emitCap conn PromiseClient { pState } =
     emitPromiseCap conn pState
 emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
     | conn == remoteConn =
-        pure (RpcGen.CapDescriptor'receiverHosted importId)
+        pure (R.CapDescriptor'receiverHosted importId)
     | otherwise =
-        RpcGen.CapDescriptor'senderHosted <$> getConnExport conn proxies client
+        R.CapDescriptor'senderHosted <$> getConnExport conn proxies client
 
 -- | Helper for 'emitCap'; generate a CapDescriptor for a 'PromiseClient', which
 -- has the given state.
-emitPromiseCap :: Conn -> TVar PromiseState -> STM RpcGen.CapDescriptor
+emitPromiseCap :: Conn -> TVar PromiseState -> STM R.CapDescriptor
 emitPromiseCap = error "TODO"
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
-acceptCap :: Conn -> RpcGen.CapDescriptor -> STM Client
+acceptCap :: Conn -> R.CapDescriptor -> STM Client
 acceptCap = error "TODO"
 
 
