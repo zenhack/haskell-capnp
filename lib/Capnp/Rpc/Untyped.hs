@@ -98,7 +98,7 @@ import qualified StmContainers.Map as M
 import Capnp.Classes        (cerialize, decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
-import Capnp.Promise        (breakPromise, fulfill, newCallback)
+import Capnp.Promise        (Fulfiller, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Errors
     (eDisconnected, eFailed, eMethodUnimplemented, wrapException)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
@@ -114,6 +114,8 @@ import qualified Capnp.Untyped.Pure       as Untyped
 
 -- We use this type often enough that the types get noisy without a shorthand:
 type MPtr = Maybe Untyped.Ptr
+-- Less often, but still helpful:
+type RawMPtr = Maybe (UntypedRaw.Ptr ConstMsg)
 
 
 -- | Errors which can be thrown by the rpc system.
@@ -584,25 +586,28 @@ callRemote
         , R.methodId = methodId
         }
     M.insert
-        Question
-            { onReturn = \R.Return{ union' } -> do
-                case union' of
-                    R.Return'exception exn ->
-                        breakPromise response exn
-                    R.Return'results R.Payload{ content } -> do
-                        rawPtr <- createPure defaultLimit $ do
-                            msg <- Message.newMessage Nothing
-                            cerialize msg content
-                        fulfill response rawPtr
-                    _ ->
-                        error "TODO: handle other variants."
-                finishQuestion conn def
-                    { R.questionId = qid
-                    , R.releaseResultCaps = False
-                    }
-            }
+        Question { onReturn = cbCallReturn conn response }
         qid
         questions
+
+-- | Callback to run when a return comes in that corresponds to a call
+-- we sent. Registered in callRemote.
+cbCallReturn :: Conn -> Fulfiller RawMPtr -> R.Return -> STM ()
+cbCallReturn conn response R.Return{ answerId, union' } = do
+    case union' of
+        R.Return'exception exn ->
+            breakPromise response exn
+        R.Return'results R.Payload{ content } -> do
+            rawPtr <- createPure defaultLimit $ do
+                msg <- Message.newMessage Nothing
+                cerialize msg content
+            fulfill response rawPtr
+        _ ->
+            error "TODO: handle other variants."
+    finishQuestion conn def
+        { R.questionId = answerId
+        , R.releaseResultCaps = False
+        }
 
 
 marshalMsgTarget :: MsgTarget -> R.MessageTarget
