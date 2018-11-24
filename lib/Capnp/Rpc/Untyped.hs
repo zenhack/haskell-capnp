@@ -154,39 +154,42 @@ type EmbargoId  = Word32
 
 -- | A connection to a remote vat
 data Conn = Conn
-    { stableName     :: StableName ()
+    { stableName       :: StableName ()
     -- So we can use the connection as a map key.
 
-    , sendQ          :: TBQueue ConstMsg
-    , recvQ          :: TBQueue ConstMsg
+    , sendQ            :: TBQueue ConstMsg
+    , recvQ            :: TBQueue ConstMsg
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
 
-    , supervisor     :: Supervisor
+    , supervisor       :: Supervisor
     -- Supervisor managing the lifetimes of threads bound to this connection.
 
-    , questionIdPool :: IdPool
-    , exportIdPool   :: IdPool
+    , questionIdPool   :: IdPool
+    , exportIdPool     :: IdPool
     -- Pools of identifiers for new questions and exports
 
-    , maxAnswerCalls :: !Int
+    , maxAnswerCalls   :: !Int
     -- Maximum number of calls that can be outstanding on an unresolved answer.
 
-    , questions      :: M.Map QuestionId Question
-    , answers        :: M.Map AnswerId Answer
-    , exports        :: M.Map ExportId Export
-    , imports        :: M.Map ImportId Import
+    , questions        :: M.Map QuestionId Question
+    , answers          :: M.Map AnswerId Answer
+    , exports          :: M.Map ExportId Export
+    , imports          :: M.Map ImportId Import
 
-    , embargos       :: M.Map EmbargoId (STM ())
+    , embargos         :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and execute the STM we have registered.
 
-    , bootstrap      :: Maybe Client
+    , pendingCallbacks :: TQueue (STM ())
+    -- See Note [callbacks]
+
+    , bootstrap        :: Maybe Client
     -- The capability which should be served as this connection's bootstrap
     -- interface (if any).
 
-    , debugMode      :: !Bool
+    , debugMode        :: !Bool
     -- whether to include extra (possibly sensitive) info in error messages.
     }
 
@@ -249,6 +252,48 @@ instance Default ConnConfig where
         , withBootstrap  = Nothing
         }
 
+-- | Queue another transaction to be run some time after this transaction
+-- commits, in a thread bound to the lifetime of the connection. If this is
+-- called multiple times within the same transaction, the transactions will
+-- be run in the order they were queued.
+--
+-- See Note [callbacks]
+queueSTM :: Conn -> STM () -> STM ()
+queueSTM Conn{pendingCallbacks} = writeTQueue pendingCallbacks
+
+-- Note [callbacks]
+-- ================
+--
+-- There are many places where we want to register some code to run after
+-- some later event has happened -- for exmaple:
+--
+-- * We send a Call to the remote vat, and when a corresponding Return message
+--   is received, we want to fulfill (or break) the local promise for the
+--   result.
+-- * We send a Disembargo (with senderLoopback set), and want to actually lift
+--   the embargo when the corresponding (receiverLoopback) message arrives.
+--
+-- Keeping the two parts of these patterns together tends to result in better
+-- separation of concerns, and is easier to maintain.
+--
+-- To achieve this, the four tables and other connection state have fields in
+-- which callbacks can be registered -- for example, an outstanding question has
+-- fields containing transactions to run when the return and/or finish messages
+-- arrive.
+--
+-- When it is time to actually run these, we want to make sure that each of them
+-- runs as their own transaction. If, for example, when registering a callback to
+-- run when a return message is received, we find that the return message is
+-- already available, it might be tempting to just run the transaction immediately.
+-- But this means that the synchronization semantics are totally different from the
+-- case where the callback really does get run later!
+--
+-- Instead, the connection maintains a queue of all callback transactions that are
+-- ready to run, and when the event a callback is waiting for occurs, we simply
+-- move the callback to the queue, using 'queueSTM'. When the connection starts up,
+-- it creates a thread running 'callbackLoop', which just continually flushes the
+-- queue, running the callbacks in sequence, each in its own transaction.
+
 -- | Get a new question id. retries if we are out of available question ids.
 newQuestion :: Conn -> STM QuestionId
 newQuestion = newId . questionIdPool
@@ -300,6 +345,7 @@ handleConn
             imports <- M.new
 
             embargos <- M.new
+            pendingCallbacks <- newTQueue
 
             pure Conn
                 { stableName
@@ -314,6 +360,7 @@ handleConn
                 , exports
                 , imports
                 , embargos
+                , pendingCallbacks
                 , bootstrap
                 , debugMode
                 }
@@ -321,6 +368,7 @@ handleConn
         coordinator conn
             `concurrently_` sendLoop transport conn
             `concurrently_` recvLoop transport conn
+            `concurrently_` callbacksLoop conn
             `concurrently_` useBootstrap conn
     stopConn conn@Conn{bootstrap=Nothing} =
         pure ()
@@ -673,6 +721,12 @@ clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =
     Server.fromUntypedHandler $ Server.untypedHandler $
         \arguments response -> atomically $ call Server.CallInfo{..} client
+
+-- | See Note [callbacks]
+callbacksLoop :: Conn -> IO ()
+callbacksLoop Conn{pendingCallbacks} = forever $
+    atomically (flushTQueue pendingCallbacks)
+    >>= traverse_ atomically
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn -> IO ()
@@ -1080,23 +1134,23 @@ finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
     freeQuestion conn questionId
     M.delete questionId questions
 
--- | Send a return message, and update the corresponding entry in our
--- answers table, invoking any registered callbacks. Calls 'error' if
--- the answerId is not in the table, or if we've already sent a return
--- for this answer.
+-- | Send a return message, update the corresponding entry in our
+-- answers table, and queue any registered callbacks. Calls 'error'
+-- if the answerId is not in the table, or if we've already sent a
+-- return for this answer.
 returnAnswer :: Conn -> R.Return -> STM ()
 returnAnswer conn@Conn{answers} ret@R.Return{answerId} = do
     sendPureMsg conn $ R.Message'return ret
     M.focus
         (Focus.alterM $ \case
             Just NewAnswer{onFinish, onReturn} -> do
-                onReturn ret
+                queueSTM conn (onReturn ret)
                 pure $ Just HaveReturn
                     { returnMsg = ret
                     , onFinish
                     }
             Just HaveFinish{onReturn} -> do
-                onReturn ret
+                queueSTM conn (onReturn ret)
                 pure Nothing
 
             Just HaveReturn{} ->
