@@ -112,6 +112,9 @@ import qualified Capnp.Rpc.Server         as Server
 import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
 
+-- We use this type often enough that the types get noisy without a shorthand:
+type MPtr = Maybe Untyped.Ptr
+
 
 -- | Errors which can be thrown by the rpc system.
 data RpcError
@@ -866,11 +869,7 @@ handleCallMsg
         _ ->
             error "TODO"
 
-transformClient
-    :: V.Vector R.PromisedAnswer'Op
-    -> Maybe Untyped.Ptr
-    -> Conn
-    -> STM Client
+transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn -> STM Client
 transformClient transform ptr conn =
     case followTransform transform ptr of
         Left e ->
@@ -885,10 +884,7 @@ transformClient transform ptr conn =
                 , R.reason = "Tried to call method on non-capability."
                 }
 
-followTransform
-    :: V.Vector R.PromisedAnswer'Op
-    -> Maybe Untyped.Ptr
-    -> Either R.Exception (Maybe Untyped.Ptr)
+followTransform :: V.Vector R.PromisedAnswer'Op -> MPtr -> Either R.Exception MPtr
 followTransform ops = go (V.toList ops)
   where
     go [] ptr = Right ptr
@@ -913,10 +909,7 @@ followTransform ops = go (V.toList ops)
 -- a non-null non struct.
 --
 -- TODO: use this in place of followTransform.
-followPtrs
-    :: [Word16]
-    -> Maybe Untyped.Ptr
-    -> Either R.Exception (Maybe Untyped.Ptr)
+followPtrs :: [Word16] -> MPtr -> Either R.Exception MPtr
 followPtrs [] ptr =
     Right ptr
 followPtrs (_:_) Nothing =
@@ -1045,7 +1038,7 @@ insertNewAbort keyTypeName conn key value =
 -- this, then decerializing to put it in the larger adt, then reserializing
 -- again... at some point we'll probably want to overhaul much of this module
 -- for performance. This kind of thing is the motivation for #52.
-genSendableCapTable :: Conn -> Maybe Untyped.Ptr -> STM (V.Vector R.CapDescriptor)
+genSendableCapTable :: Conn -> MPtr -> STM (V.Vector R.CapDescriptor)
 genSendableCapTable conn ptr = do
     rawPtr <- createPure defaultLimit $ do
         msg <- Message.newMessage Nothing
@@ -1275,7 +1268,7 @@ resolveClientExn tmpDest resolve exn = do
 
 -- Resolve a promised client to a pointer. If it is a non-null non-capability
 -- pointer, it resolves to an exception. See Note [resolveClient]
-resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> Maybe Untyped.Ptr -> STM ()
+resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> MPtr -> STM ()
 resolveClientPtr tmpDest resolve ptr = case ptr of
     Nothing ->
         resolveClientClient tmpDest resolve nullClient
