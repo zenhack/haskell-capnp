@@ -264,7 +264,9 @@ instance Default ConnConfig where
 queueSTM :: Conn -> STM () -> STM ()
 queueSTM Conn{pendingCallbacks} = writeTQueue pendingCallbacks
 
-mapQueueSTM :: Foldable t => Conn -> t (a -> STM ()) -> a -> STM ()
+-- | @'mapQueueSTM' conn fs val@ queues the list of transactions obtained
+-- by applying each element of @fs@ to @val@.
+mapQueueSTM :: Conn -> SnocList (a -> STM ()) -> a -> STM ()
 mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 
 -- Note [callbacks]
