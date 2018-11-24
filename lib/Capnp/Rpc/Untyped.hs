@@ -1354,7 +1354,7 @@ resolveClientClient tmpDest resolve client =
         ( PromiseClient{}, _ ) ->
             error "TODO"
         ( _, AnswerDest{ transform } )
-            | length (toList transform) /= 0 ->
+            | not (null transform) ->
                 error "TODO"
             | otherwise -> do
                 releaseTmpDest tmpDest
@@ -1424,8 +1424,8 @@ emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
 -- already there. If a different client is already in the table at the same
 -- id, call 'error'.
 addBumpExport :: ExportId -> Client -> M.Map ExportId Export -> STM ()
-addBumpExport exportId client exports =
-    M.focus (Focus.alter go) exportId exports
+addBumpExport exportId client =
+    M.focus (Focus.alter go) exportId
   where
     go Nothing = Just Export { client, refCount = 1 }
     go (Just ex@Export{ client = oldClient, refCount } )
