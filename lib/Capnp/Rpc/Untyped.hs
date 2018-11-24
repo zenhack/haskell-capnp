@@ -470,10 +470,10 @@ data Client
     = NullClient
     -- | A client pointing at a capability local to our own vat.
     | LocalClient
-        { connRefs :: ConnRefs
+        { exportMap :: ExportMap
         -- ^ Record of what export IDs this client has on different remote
         -- connections.
-        , qCall    :: Rc (Server.CallInfo -> STM ())
+        , qCall     :: Rc (Server.CallInfo -> STM ())
         -- ^ Queue a call for the local capability to handle. This is wrapped
         -- in a reference counted cell, whose finalizer stops the server.
         }
@@ -537,13 +537,13 @@ data ImportRef = ImportRef
     -- ^ The connection to the remote vat.
     , importId :: !ImportId
     -- ^ The import id for this capability.
-    , proxies  :: ConnRefs
+    , proxies  :: ExportMap
     -- ^ Export ids to use when this client is passed to a vat other than
     -- the one identified by 'conn'. See Note [proxies]
     }
 
 -- Ideally we could just derive these, but stm-containers doesn't have Eq
--- instances, so neither does ConnRefs. not all of the fields are actually
+-- instances, so neither does ExportMap. not all of the fields are actually
 -- necessary to check equality though. See also
 -- https://github.com/nikita-volkov/stm-hamt/pull/1
 instance Eq ImportRef where
@@ -562,11 +562,11 @@ instance Eq Client where
         False
 
 
--- | a 'ConnRefs' tracks a mapping from connections to export IDs; it is used
--- to ensure that we re-use export IDs for capabilities when passing them
--- to remote vats. This used for locally hosted capabilities, but also by
--- proxied imports (see Note [proxies]).
-newtype ConnRefs = ConnRefs (M.Map Conn ExportId)
+-- | an 'ExportMap' tracks a mapping from connections to export IDs; it is
+-- used to ensure that we re-use export IDs for capabilities when passing
+-- them to remote vats. This used for locally hosted capabilities, but also
+-- by proxied imports (see Note [proxies]).
+newtype ExportMap = ExportMap (M.Map Conn ExportId)
 
 data MsgTarget
     = ImportTgt !ImportId
@@ -582,7 +582,7 @@ data MsgTarget
 -- clients freely between them. Without level 3 support, this means that when
 -- we pass a capability pointing into Vat A to another Vat B, we must proxy it.
 --
--- To achieve this, capabilities pointing into a remote vat hold a 'ConnRefs',
+-- To achieve this, capabilities pointing into a remote vat hold an 'ExportMap',
 -- which tracks which export IDs we should be using to proxy the client on each
 -- connection.
 
@@ -721,10 +721,10 @@ export :: Supervisor -> Server.ServerOps IO -> STM Client
 export sup ops = do
     q <- TCloseQ.new
     qCall <- Rc.new (TCloseQ.write q) (TCloseQ.close q)
-    connRefs <- ConnRefs <$> M.new
+    exportMap <- ExportMap <$> M.new
     let client = LocalClient
             { qCall
-            , connRefs
+            , exportMap
             }
     superviseSTM sup $ do
         addFinalizer client $ atomically $ Rc.release qCall
@@ -1380,8 +1380,8 @@ resolveClientReturn tmpDest resolve R.Return { union' } = case union' of
             "   - unknown\n"
 
 -- | Get the export ID for this connection, or allocate a new one if needed.
-getConnExport :: Conn -> ConnRefs -> STM ExportId
-getConnExport conn (ConnRefs m) = do
+getConnExport :: Conn -> ExportMap -> STM ExportId
+getConnExport conn (ExportMap m) = do
     val <- M.lookup conn m
     case val of
         Just ret ->
@@ -1398,8 +1398,8 @@ getConnExport conn (ConnRefs m) = do
 emitCap :: Conn -> Client -> STM R.CapDescriptor
 emitCap _conn NullClient =
     pure R.CapDescriptor'none
-emitCap conn@Conn{exports} client@LocalClient { connRefs } = do
-    exportId <- getConnExport conn connRefs
+emitCap conn@Conn{exports} client@LocalClient { exportMap } = do
+    exportId <- getConnExport conn exportMap
     addBumpExport exportId client exports
     pure $ R.CapDescriptor'senderHosted exportId
 emitCap conn PromiseClient { pState } =
@@ -1444,7 +1444,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted importId) = do
             pure client
 
         Nothing -> do
-            proxies <- ConnRefs <$> M.new
+            proxies <- ExportMap <$> M.new
             let client = ImportClient ImportRef { conn, importId, proxies }
             M.insert Import { client, refCount = 1 } importId imports
             pure client
