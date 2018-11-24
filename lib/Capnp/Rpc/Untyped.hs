@@ -868,7 +868,7 @@ handleCallMsg
 
 transformClient
     :: V.Vector R.PromisedAnswer'Op
-    -> Maybe Untyped.PtrType
+    -> Maybe Untyped.Ptr
     -> Conn
     -> STM Client
 transformClient transform ptr conn =
@@ -887,8 +887,8 @@ transformClient transform ptr conn =
 
 followTransform
     :: V.Vector R.PromisedAnswer'Op
-    -> Maybe Untyped.PtrType
-    -> Either R.Exception (Maybe Untyped.PtrType)
+    -> Maybe Untyped.Ptr
+    -> Either R.Exception (Maybe Untyped.Ptr)
 followTransform ops = go (V.toList ops)
   where
     go [] ptr = Right ptr
@@ -915,8 +915,8 @@ followTransform ops = go (V.toList ops)
 -- TODO: use this in place of followTransform.
 followPtrs
     :: [Word16]
-    -> Maybe Untyped.PtrType
-    -> Either R.Exception (Maybe Untyped.PtrType)
+    -> Maybe Untyped.Ptr
+    -> Either R.Exception (Maybe Untyped.Ptr)
 followPtrs [] ptr =
     Right ptr
 followPtrs (_:_) Nothing =
@@ -1045,7 +1045,7 @@ insertNewAbort keyTypeName conn key value =
 -- this, then decerializing to put it in the larger adt, then reserializing
 -- again... at some point we'll probably want to overhaul much of this module
 -- for performance. This kind of thing is the motivation for #52.
-genSendableCapTable :: Conn -> Maybe Untyped.PtrType -> STM (V.Vector R.CapDescriptor)
+genSendableCapTable :: Conn -> Maybe Untyped.Ptr -> STM (V.Vector R.CapDescriptor)
 genSendableCapTable conn ptr = do
     rawPtr <- createPure defaultLimit $ do
         msg <- Message.newMessage Nothing
@@ -1275,7 +1275,7 @@ resolveClientExn tmpDest resolve exn = do
 
 -- Resolve a promised client to a pointer. If it is a non-null non-capability
 -- pointer, it resolves to an exception. See Note [resolveClient]
-resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> Maybe Untyped.PtrType -> STM ()
+resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> Maybe Untyped.Ptr -> STM ()
 resolveClientPtr tmpDest resolve ptr = case ptr of
     Nothing ->
         resolveClientClient tmpDest resolve nullClient

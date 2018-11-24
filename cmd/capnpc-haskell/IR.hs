@@ -199,7 +199,7 @@ data Const
         }
     | VoidConst
     | PtrConst
-        { ptrValue :: Maybe Untyped.PtrType
+        { ptrValue :: Maybe Untyped.Ptr
         , ptrType  :: PtrType
         }
     deriving(Show, Eq)

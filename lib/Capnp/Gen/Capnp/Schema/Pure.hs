@@ -501,11 +501,11 @@ data Value
     | Value'float64 (Double)
     | Value'text (Text)
     | Value'data_ (Data)
-    | Value'list (Maybe (PU'.PtrType))
+    | Value'list (Maybe (PU'.Ptr))
     | Value'enum (Word16)
-    | Value'struct (Maybe (PU'.PtrType))
+    | Value'struct (Maybe (PU'.Ptr))
     | Value'interface
-    | Value'anyPointer (Maybe (PU'.PtrType))
+    | Value'anyPointer (Maybe (PU'.Ptr))
     | Value'unknown' Word16
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Value where

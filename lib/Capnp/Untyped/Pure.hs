@@ -21,7 +21,7 @@ provides support for converting from the lower-level types in
 -}
 module Capnp.Untyped.Pure
     ( Slice(..)
-    , PtrType(..)
+    , Ptr(..)
     , Struct(..)
     , List(..)
     , ListOf(..)
@@ -60,7 +60,7 @@ newtype Slice a = Slice (ListOf a)
     deriving(Generic, Show, Ord, Functor, Default, IsList)
 
 -- | A capnproto pointer type.
-data PtrType
+data Ptr
     = PtrStruct !Struct
     | PtrList   !List
     | PtrCap    !M.Client
@@ -70,7 +70,7 @@ data PtrType
 data Struct = Struct
     { structData :: Slice Word64
     -- ^ The struct's data section
-    , structPtrs :: Slice (Maybe PtrType)
+    , structPtrs :: Slice (Maybe Ptr)
     -- ^ The struct's pointer section
     }
     deriving(Generic, Show, Eq)
@@ -84,7 +84,7 @@ data List
     | List16 (ListOf Word16)
     | List32 (ListOf Word32)
     | List64 (ListOf Word64)
-    | ListPtr (ListOf (Maybe PtrType))
+    | ListPtr (ListOf (Maybe Ptr))
     | ListStruct (ListOf Struct)
     deriving(Generic, Show, Eq)
 
@@ -137,8 +137,8 @@ instance Cerialize Struct where
         marshalInto raw struct
         pure raw
 
-instance Decerialize (Maybe PtrType) where
-    type Cerial msg (Maybe PtrType) = Maybe (U.Ptr msg)
+instance Decerialize (Maybe Ptr) where
+    type Cerial msg (Maybe Ptr) = Maybe (U.Ptr msg)
 
     decerialize Nothing = pure Nothing
     decerialize (Just ptr) = Just <$> case ptr of
@@ -146,7 +146,7 @@ instance Decerialize (Maybe PtrType) where
         U.PtrStruct struct -> PtrStruct <$> decerialize struct
         U.PtrList list     -> PtrList <$> decerialize list
 
-instance Cerialize (Maybe PtrType) where
+instance Cerialize (Maybe Ptr) where
     cerialize _ Nothing                     = pure Nothing
     cerialize msg (Just (PtrStruct struct)) = cerialize msg struct >>= toPtr msg
     cerialize msg (Just (PtrList     list)) = Just . U.PtrList <$> cerialize msg list

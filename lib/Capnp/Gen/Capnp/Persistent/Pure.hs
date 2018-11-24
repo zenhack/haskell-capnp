@@ -114,7 +114,7 @@ instance RealmGateway'server_ IO RealmGateway where
     realmGateway'export (RealmGateway client) = Rpc.clientMethodHandler 9583422979879616212 1 client
 data Persistent'SaveParams
     = Persistent'SaveParams
-        {sealFor :: Maybe (PU'.PtrType)}
+        {sealFor :: Maybe (PU'.Ptr)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Persistent'SaveParams where
     type Cerial msg Persistent'SaveParams = Capnp.Gen.ById.Xb8630836983feed7.Persistent'SaveParams msg
@@ -136,7 +136,7 @@ instance Default Persistent'SaveParams where
     def = PH'.defaultStruct
 data Persistent'SaveResults
     = Persistent'SaveResults
-        {sturdyRef :: Maybe (PU'.PtrType)}
+        {sturdyRef :: Maybe (PU'.Ptr)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Persistent'SaveResults where
     type Cerial msg Persistent'SaveResults = Capnp.Gen.ById.Xb8630836983feed7.Persistent'SaveResults msg

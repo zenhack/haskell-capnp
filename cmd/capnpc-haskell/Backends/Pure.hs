@@ -202,7 +202,7 @@ fmtAnyPtr :: AnyPtr -> PP.Doc
 fmtAnyPtr Struct = "PU'.Struct"
 fmtAnyPtr List   = "PU'.List"
 fmtAnyPtr Cap    = "PU'.Cap"
-fmtAnyPtr Ptr    = "PU'.PtrType"
+fmtAnyPtr Ptr    = "PU'.Ptr"
 
 fmtVariant :: Id -> Variant -> PP.Doc
 fmtVariant thisMod Variant{variantName,variantParams} =

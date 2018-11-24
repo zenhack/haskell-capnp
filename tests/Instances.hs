@@ -313,7 +313,7 @@ instance Arbitrary PU.List where
         , PU.ListStruct <$> arbitrarySmallerVec
         ]
 
-instance Arbitrary PU.PtrType where
+instance Arbitrary PU.Ptr where
     shrink (PU.PtrStruct s) = PU.PtrStruct <$> shrink s
     shrink (PU.PtrList   l) = PU.PtrList   <$> shrink l
     shrink (PU.PtrCap    c) = []

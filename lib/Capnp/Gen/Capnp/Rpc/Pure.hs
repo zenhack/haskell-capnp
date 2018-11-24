@@ -46,7 +46,7 @@ import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 data Accept
     = Accept
         {questionId :: Word32,
-        provision :: Maybe (PU'.PtrType),
+        provision :: Maybe (PU'.Ptr),
         embargo :: Bool}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Accept where
@@ -74,7 +74,7 @@ instance Default Accept where
 data Bootstrap
     = Bootstrap
         {questionId :: Word32,
-        deprecatedObjectId :: Maybe (PU'.PtrType)}
+        deprecatedObjectId :: Maybe (PU'.Ptr)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Bootstrap where
     type Cerial msg Bootstrap = Capnp.Gen.ById.Xb312981b2552a250.Bootstrap msg
@@ -265,7 +265,7 @@ data Join
     = Join
         {questionId :: Word32,
         target :: MessageTarget,
-        keyPart :: Maybe (PU'.PtrType)}
+        keyPart :: Maybe (PU'.Ptr)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Join where
     type Cerial msg Join = Capnp.Gen.ById.Xb312981b2552a250.Join msg
@@ -298,9 +298,9 @@ data Message
     | Message'finish (Finish)
     | Message'resolve (Resolve)
     | Message'release (Release)
-    | Message'obsoleteSave (Maybe (PU'.PtrType))
+    | Message'obsoleteSave (Maybe (PU'.Ptr))
     | Message'bootstrap (Bootstrap)
-    | Message'obsoleteDelete (Maybe (PU'.PtrType))
+    | Message'obsoleteDelete (Maybe (PU'.Ptr))
     | Message'provide (Provide)
     | Message'accept (Accept)
     | Message'join (Join)
@@ -410,7 +410,7 @@ instance Default MessageTarget where
     def = PH'.defaultStruct
 data Payload
     = Payload
-        {content :: Maybe (PU'.PtrType),
+        {content :: Maybe (PU'.Ptr),
         capTable :: PU'.ListOf (CapDescriptor)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Payload where
@@ -469,7 +469,7 @@ data Provide
     = Provide
         {questionId :: Word32,
         target :: MessageTarget,
-        recipient :: Maybe (PU'.PtrType)}
+        recipient :: Maybe (PU'.Ptr)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Provide where
     type Cerial msg Provide = Capnp.Gen.ById.Xb312981b2552a250.Provide msg
@@ -573,7 +573,7 @@ instance Default Return where
     def = PH'.defaultStruct
 data ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor
-        {id :: Maybe (PU'.PtrType),
+        {id :: Maybe (PU'.Ptr),
         vineId :: Word32}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize ThirdPartyCapDescriptor where
@@ -599,7 +599,7 @@ instance Default ThirdPartyCapDescriptor where
 data Call'sendResultsTo
     = Call'sendResultsTo'caller
     | Call'sendResultsTo'yourself
-    | Call'sendResultsTo'thirdParty (Maybe (PU'.PtrType))
+    | Call'sendResultsTo'thirdParty (Maybe (PU'.Ptr))
     | Call'sendResultsTo'unknown' Word16
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Call'sendResultsTo where
@@ -722,7 +722,7 @@ data Return'
     | Return'canceled
     | Return'resultsSentElsewhere
     | Return'takeFromOtherQuestion (Word32)
-    | Return'acceptFromThirdParty (Maybe (PU'.PtrType))
+    | Return'acceptFromThirdParty (Maybe (PU'.Ptr))
     | Return'unknown' Word16
     deriving(Show,Eq,Generic)
 instance C'.Decerialize Return' where

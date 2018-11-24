@@ -74,7 +74,7 @@ data JoinResult
     = JoinResult
         {joinId :: Word32,
         succeeded :: Bool,
-        cap :: Maybe (PU'.PtrType)}
+        cap :: Maybe (PU'.Ptr)}
     deriving(Show,Eq,Generic)
 instance C'.Decerialize JoinResult where
     type Cerial msg JoinResult = Capnp.Gen.ById.Xa184c7885cdaf2a1.JoinResult msg
