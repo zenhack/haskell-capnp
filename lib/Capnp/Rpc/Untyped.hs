@@ -1,13 +1,15 @@
-{-# LANGUAGE CPP                   #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DuplicateRecordFields      #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 module Capnp.Rpc.Untyped
     (
     -- * Connections to other vats
@@ -145,15 +147,9 @@ instance Exception StopVat
 stopVat :: IO ()
 stopVat = throwIO StopVat
 
--- These aliases are the same ones defined in rpc.capnp; unfortunately the
--- schema compiler doesn't supply information about type aliases, so we
--- have to re-define them ourselves. See the comments in rpc.capnp for
--- more information.
-type QuestionId = Word32
-type AnswerId   = QuestionId
-type ExportId   = Word32
-type ImportId   = ExportId
-type EmbargoId  = Word32
+newtype EmbargoId = EmbargoId { embargoWord :: Word32 }
+newtype QAId = QAId { qaWord :: Word32 } deriving(Show, Eq, Hashable)
+newtype IEId = IEId { ieWord :: Word32 } deriving(Show, Eq, Hashable)
 
 -- | A connection to a remote vat
 data Conn = Conn
@@ -175,10 +171,10 @@ data Conn = Conn
     , maxAnswerCalls   :: !Int
     -- Maximum number of calls that can be outstanding on an unresolved answer.
 
-    , questions        :: M.Map QuestionId EntryQA
-    , answers          :: M.Map AnswerId EntryQA
-    , exports          :: M.Map ExportId EntryIE
-    , imports          :: M.Map ImportId EntryIE
+    , questions        :: M.Map QAId EntryQA
+    , answers          :: M.Map QAId EntryQA
+    , exports          :: M.Map IEId EntryIE
+    , imports          :: M.Map IEId EntryIE
 
     , embargos         :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
@@ -303,20 +299,20 @@ mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 -- queue, running the callbacks in sequence, each in its own transaction.
 
 -- | Get a new question id. retries if we are out of available question ids.
-newQuestion :: Conn -> STM QuestionId
-newQuestion = newId . questionIdPool
+newQuestion :: Conn -> STM QAId
+newQuestion = fmap QAId . newId . questionIdPool
 
 -- | Return a question id to the pool of available ids.
-freeQuestion :: Conn -> QuestionId -> STM ()
-freeQuestion = freeId . questionIdPool
+freeQuestion :: Conn -> QAId -> STM ()
+freeQuestion conn = freeId (questionIdPool conn) . qaWord
 
 -- | Get a new export id. retries if we are out of available export ids.
-newExport :: Conn -> STM ExportId
-newExport = newId . exportIdPool
+newExport :: Conn -> STM IEId
+newExport = fmap IEId . newId . exportIdPool
 
 -- | Return a export id to the pool of available ids.
-freeExport :: Conn -> ExportId -> STM ()
-freeExport = freeId . exportIdPool
+freeExport :: Conn -> IEId -> STM ()
+freeExport conn = freeId (exportIdPool conn) . ieWord
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
@@ -513,7 +509,7 @@ data TmpDest
     | AnswerDest
         { conn      :: Conn
         -- ^ The connection to the remote vat.
-        , answerId  :: !AnswerId
+        , answerId  :: !QAId
         -- ^ The answer to target.
         , transform :: SnocList Word16
         -- ^ A series of pointer indexes to follow from the result
@@ -529,7 +525,7 @@ data TmpDest
 data ImportRef = ImportRef
     { conn     :: Conn
     -- ^ The connection to the remote vat.
-    , importId :: !ImportId
+    , importId :: !IEId
     -- ^ The import id for this capability.
     , proxies  :: ExportMap
     -- ^ Export ids to use when this client is passed to a vat other than
@@ -560,12 +556,12 @@ instance Eq Client where
 -- used to ensure that we re-use export IDs for capabilities when passing
 -- them to remote vats. This used for locally hosted capabilities, but also
 -- by proxied imports (see Note [proxies]).
-newtype ExportMap = ExportMap (M.Map Conn ExportId)
+newtype ExportMap = ExportMap (M.Map Conn IEId)
 
 data MsgTarget
-    = ImportTgt !ImportId
+    = ImportTgt !IEId
     | AnswerTgt
-        { answerId  :: !AnswerId
+        { answerId  :: !QAId
         , transform :: SnocList Word16
         }
 
@@ -624,7 +620,7 @@ callRemote
     qid <- newQuestion conn
     payload <- makeOutgoingPayload conn arguments
     sendPureMsg conn $ R.Message'call def
-        { R.questionId = qid
+        { R.questionId = qaWord qid
         , R.target = marshalMsgTarget target
         , R.params = payload
         , R.interfaceId = interfaceId
@@ -661,11 +657,11 @@ cbCallReturn conn response R.Return{ answerId, union' } = do
 marshalMsgTarget :: MsgTarget -> R.MessageTarget
 marshalMsgTarget = \case
     ImportTgt importId ->
-        R.MessageTarget'importedCap importId
+        R.MessageTarget'importedCap (ieWord importId)
     AnswerTgt { answerId, transform } ->
         R.MessageTarget'promisedAnswer
             R.PromisedAnswer
-                { R.questionId = answerId
+                { R.questionId = qaWord answerId
                 , R.transform = V.fromList $
                     map R.PromisedAnswer'Op'getPointerField $
                     toList transform
@@ -673,11 +669,11 @@ marshalMsgTarget = \case
 
 unmarshalMsgTarget :: R.MessageTarget -> Either R.Exception MsgTarget
 unmarshalMsgTarget (R.MessageTarget'importedCap importId) =
-    Right $ ImportTgt importId
+    Right $ ImportTgt (IEId importId)
 unmarshalMsgTarget (R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId, transform }) = do
     idxes <- unmarshalOps (toList transform)
     pure AnswerTgt
-        { answerId = questionId
+        { answerId = QAId questionId
         , transform = SnocList.fromList idxes
         }
   where
@@ -816,7 +812,7 @@ handleUnimplementedMsg conn = \case
             }
 
 handleBootstrapMsg :: Conn -> R.Bootstrap -> STM ()
-handleBootstrapMsg conn R.Bootstrap{questionId} = do
+handleBootstrapMsg conn R.Bootstrap{ questionId } = do
     ret <- case bootstrap conn of
         Nothing ->
             pure $ R.Return
@@ -844,7 +840,7 @@ handleBootstrapMsg conn R.Bootstrap{questionId} = do
                 }
     M.focus
         (Focus.alterM $ insertBootstrap ret)
-        questionId
+        (QAId questionId)
         (answers conn)
     sendPureMsg conn $ R.Message'return ret
   where
@@ -875,7 +871,7 @@ handleCallMsg
     insertNewAbort
         "answer"
         conn
-        questionId
+        (QAId questionId)
         NewQA
             { onReturn = SnocList.empty
             , onFinish = SnocList.empty
@@ -922,10 +918,10 @@ handleCallMsg
     -- Finally, figure out where to send it:
     case target of
         R.MessageTarget'importedCap exportId ->
-            lookupAbort "export" conn exports exportId $
+            lookupAbort "export" conn exports (IEId exportId) $
                 \EntryIE{client} -> call callInfo client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
-            subscribeReturn "answer" conn answers targetQid $ \ret@R.Return{union'} ->
+            subscribeReturn "answer" conn answers (QAId targetQid) $ \ret@R.Return{union'} ->
                 case union' of
                     R.Return'exception _ ->
                         returnAnswer conn ret { R.answerId = questionId }
@@ -1034,7 +1030,7 @@ handleReleaseMsg conn@Conn{exports} R.Release{id, referenceCount} =
                             , refCount = refCount - referenceCount
                             }
         )
-        id
+        (IEId id)
         exports
 
 -- | Interpret the list of cap descriptors, and replace the message's capability
@@ -1044,6 +1040,9 @@ fixCapTable capDescs conn msg = do
     clients <- traverse (acceptCap conn) capDescs
     pure $ Message.withCapTable clients msg
 
+lookupAbort
+    :: (Eq k, Hashable k, Show k)
+    => Text -> Conn -> M.Map k v -> k -> (v -> STM a) -> STM a
 lookupAbort keyTypeName conn m key f = do
     result <- M.lookup key m
     case result of
@@ -1120,8 +1119,8 @@ finishQuestion :: Conn -> R.Finish -> STM ()
 finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
     -- arrange for the question ID to be returned to the pool once
     -- the return has also been received:
-    subscribeReturn "question" conn questions questionId $ \_ ->
-        freeQuestion conn questionId
+    subscribeReturn "question" conn questions (QAId questionId) $ \_ ->
+        freeQuestion conn (QAId questionId)
     sendPureMsg conn $ R.Message'finish finish
     updateQAFinish conn questions "question" finish
 
@@ -1136,9 +1135,9 @@ returnAnswer conn@Conn{answers} ret = do
 
 -- TODO: updateQAReturn/Finish have a lot in common; can we refactor?
 
-updateQAReturn :: Conn -> M.Map Word32 EntryQA -> Text -> R.Return -> STM ()
+updateQAReturn :: Conn -> M.Map QAId EntryQA -> Text -> R.Return -> STM ()
 updateQAReturn conn table tableName ret@R.Return{answerId} =
-    lookupAbort tableName conn table answerId $ \case
+    lookupAbort tableName conn table (QAId answerId) $ \case
         NewQA{onFinish, onReturn} -> do
             mapQueueSTM conn onReturn ret
             M.insert
@@ -1146,19 +1145,19 @@ updateQAReturn conn table tableName ret@R.Return{answerId} =
                     { returnMsg = ret
                     , onFinish
                     }
-                answerId
+                (QAId answerId)
                 table
         HaveFinish{onReturn} -> do
             mapQueueSTM conn onReturn ret
-            M.delete answerId table
+            M.delete (QAId answerId) table
         HaveReturn{} ->
             abortConn conn $ eFailed $
                 "Duplicate return message for " <> tableName <> " #"
                 <> fromString (show answerId)
 
-updateQAFinish :: Conn -> M.Map Word32 EntryQA -> Text -> R.Finish -> STM ()
+updateQAFinish :: Conn -> M.Map QAId EntryQA -> Text -> R.Finish -> STM ()
 updateQAFinish conn table tableName finish@R.Finish{questionId} =
-    lookupAbort tableName conn table questionId $ \case
+    lookupAbort tableName conn table (QAId questionId) $ \case
         NewQA{onFinish, onReturn} -> do
             mapQueueSTM conn onFinish finish
             M.insert
@@ -1166,11 +1165,11 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
                     { finishMsg = finish
                     , onReturn
                     }
-                questionId
+                (QAId questionId)
                 table
         HaveReturn{onFinish} -> do
             mapQueueSTM conn onFinish finish
-            M.delete questionId table
+            M.delete (QAId questionId) table
         HaveFinish{} ->
             abortConn conn def
                 { R.type_ = R.Exception'Type'failed
@@ -1187,10 +1186,10 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
 -- run *after* the others (see Note [callbacks]). Note that this is an
 -- important property, as it is necessary to preserve E-order if the
 -- callbacks are successive method calls on the returned object.
-subscribeReturn :: Text -> Conn -> M.Map Word32 EntryQA -> Word32 -> (R.Return -> STM ()) -> STM ()
+subscribeReturn :: Text -> Conn -> M.Map QAId EntryQA -> QAId -> (R.Return -> STM ()) -> STM ()
 subscribeReturn tableName conn table qaId onRet =
-    lookupAbort tableName conn table qaId $ \ret -> do
-        new <- go ret
+    lookupAbort tableName conn table qaId $ \qa -> do
+        new <- go qa
         M.insert new qaId table
   where
     go = \case
@@ -1224,7 +1223,7 @@ requestBootstrap conn@Conn{questions} = do
             }
     pState <- newTVar Pending { tmpDest }
     sendPureMsg conn $
-        R.Message'bootstrap def { R.questionId = qid }
+        R.Message'bootstrap def { R.questionId = qaWord qid }
     M.insert
         NewQA
             { onReturn = SnocList.singleton $
@@ -1301,7 +1300,7 @@ releaseTmpDest :: TmpDest -> STM ()
 releaseTmpDest LocalBuffer{} = pure ()
 releaseTmpDest AnswerDest { conn, answerId } =
     finishQuestion conn def
-        { R.questionId = answerId
+        { R.questionId = qaWord answerId
         , R.releaseResultCaps = False
         }
 releaseTmpDest (ImportDest _) = error "TODO"
@@ -1328,7 +1327,7 @@ resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' 
             "   - unknown\n"
 
 -- | Get the export ID for this connection, or allocate a new one if needed.
-getConnExport :: Conn -> ExportMap -> STM ExportId
+getConnExport :: Conn -> ExportMap -> STM IEId
 getConnExport conn (ExportMap m) = do
     val <- M.lookup conn m
     case val of
@@ -1349,20 +1348,20 @@ emitCap _conn NullClient =
 emitCap conn@Conn{exports} client@LocalClient { exportMap } = do
     exportId <- getConnExport conn exportMap
     addBumpExport exportId client exports
-    pure $ R.CapDescriptor'senderHosted exportId
+    pure $ R.CapDescriptor'senderHosted (ieWord exportId)
 emitCap conn PromiseClient { pState } =
     emitPromiseCap conn pState
 emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
     | conn == remoteConn =
-        pure (R.CapDescriptor'receiverHosted importId)
+        pure (R.CapDescriptor'receiverHosted (ieWord importId))
     | otherwise = do
         error "TODO: bump the refcount."
-        R.CapDescriptor'senderHosted <$> getConnExport conn proxies
+        R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn proxies
 
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
 -- id, call 'error'.
-addBumpExport :: ExportId -> Client -> M.Map ExportId EntryIE -> STM ()
+addBumpExport :: IEId -> Client -> M.Map IEId EntryIE -> STM ()
 addBumpExport exportId client =
     M.focus (Focus.alter go) exportId
   where
@@ -1384,7 +1383,7 @@ emitPromiseCap = error "TODO"
 -- received via the connection. May update connection state as necessary.
 acceptCap :: Conn -> R.CapDescriptor -> STM Client
 acceptCap _ R.CapDescriptor'none = pure NullClient
-acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted importId) = do
+acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
     entry <- M.lookup importId imports
     case entry of
         Just EntryIE{ client, refCount } -> do
@@ -1397,7 +1396,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted importId) = do
             M.insert EntryIE { client, refCount = 1 } importId imports
             pure client
 acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
-    entry <- M.lookup exportId exports
+    entry <- M.lookup (IEId exportId) exports
     case entry of
         Nothing ->
             error "TODO"
