@@ -75,7 +75,7 @@ import UnliftIO.STM
 
 import Control.Concurrent     (threadDelay)
 import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
-import Control.Monad          (forever, when)
+import Control.Monad          (forever)
 import Data.Default           (Default(def))
 import Data.Foldable          (toList, traverse_)
 import Data.Hashable          (Hashable, hash, hashWithSalt)
@@ -1228,7 +1228,7 @@ requestBootstrap conn@Conn{questions} = do
     M.insert
         NewQA
             { onReturn = SnocList.singleton $
-                resolveClientReturn tmpDest (writeTVar pState)
+                resolveClientReturn tmpDest (writeTVar pState) []
             , onFinish = SnocList.empty
             }
         qid
@@ -1308,12 +1308,18 @@ releaseTmpDest AnswerDest { conn, answerId } =
 releaseTmpDest (ImportDest _) = error "TODO"
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
-resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> R.Return -> STM ()
-resolveClientReturn tmpDest resolve R.Return { union' } = case union' of
+--
+-- The [Word16] is a list of pointer indexes to follow from the result.
+resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> [Word16] -> R.Return -> STM ()
+resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' of
     R.Return'exception exn ->
         resolveClientExn tmpDest resolve exn
     R.Return'results R.Payload{ content } ->
-        resolveClientPtr tmpDest resolve content
+        case followPtrs transform content of
+            Right v ->
+                resolveClientPtr tmpDest resolve v
+            Left e ->
+                error $ "TODO: " ++ show e
     _ ->
         error $
             "TODO: handle other return variants:\n" ++
@@ -1412,13 +1418,14 @@ acceptCap _ d                    = error $ "TODO: " ++ show d
 -- have recevied, not sent.
 newLocalTgtClient :: Conn -> MsgTarget -> STM Client
 newLocalTgtClient conn@Conn{answers} AnswerTgt { answerId, transform } = do
-    when (not (null transform)) $
-        error "TODO: handle transform"
     callBuffer <- newTQueue
     let tmpDest = LocalBuffer { callBuffer }
     pState <- newTVar Pending { tmpDest }
     subscribeReturn "answer" conn answers answerId $
-        resolveClientReturn tmpDest (writeTVar pState)
+        resolveClientReturn
+            tmpDest
+            (writeTVar pState)
+            (toList transform)
     pure PromiseClient { pState }
 newLocalTgtClient conn (ImportTgt _) =
     error "TODO"
