@@ -83,9 +83,7 @@ common shared-opts
       , transformers                      ^>= 0.5.2
       , vector                            ^>= 0.12.0
   ghc-options:
-    -Wnoncanonical-monad-instances
-    -Wincomplete-patterns
-    -Wunused-imports
+    -Wall
   default-language:     Haskell2010
 
 --------------------------------------------------------------------------------
