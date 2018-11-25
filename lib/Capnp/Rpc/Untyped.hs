@@ -1284,7 +1284,6 @@ resolveClientClient tmpDest resolve client =
         ( _, LocalBuffer { callBuffer } ) -> do
             flushTQueue callBuffer >>= traverse_ (`call` client)
             resolve (Ready client)
-            error "TODO: drop a reference to the answer/import if necessary"
         ( PromiseClient{}, _ ) ->
             error "TODO"
         ( _, AnswerDest{ transform } )
