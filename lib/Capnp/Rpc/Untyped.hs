@@ -148,8 +148,16 @@ stopVat :: IO ()
 stopVat = throwIO StopVat
 
 newtype EmbargoId = EmbargoId { embargoWord :: Word32 }
-newtype QAId = QAId { qaWord :: Word32 } deriving(Show, Eq, Hashable)
-newtype IEId = IEId { ieWord :: Word32 } deriving(Show, Eq, Hashable)
+newtype QAId = QAId { qaWord :: Word32 } deriving(Eq, Hashable)
+newtype IEId = IEId { ieWord :: Word32 } deriving(Eq, Hashable)
+
+-- We define these to just show the number; the derived instances would include
+-- data constructors, which is a bit weird since these show up in output that
+-- is sometimes show to users.
+instance Show QAId where
+    show = show . qaWord
+instance Show IEId where
+    show = show . ieWord
 
 -- | A connection to a remote vat
 data Conn = Conn
