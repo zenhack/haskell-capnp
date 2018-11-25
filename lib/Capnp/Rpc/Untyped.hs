@@ -378,6 +378,7 @@ handleConn
         pure ()
     stopConn conn@Conn{bootstrap=Just client} =
         atomically $ dropConnExport conn client
+        -- TODO: clear out the rest of the connection state.
     useBootstrap conn = case withBootstrap of
         Nothing -> pure ()
         Just f  -> atomically (requestBootstrap conn) >>= f (supervisor conn)
@@ -1320,19 +1321,28 @@ resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' 
             "   - acceptFromThirdParty\n" ++
             "   - unknown\n"
 
--- | Get the export ID for this connection, or allocate a new one if needed.
-getConnExport :: Conn -> ExportMap -> STM IEId
-getConnExport conn (ExportMap m) = do
+-- | Get the client's export ID for this connection, or allocate a new one if needed.
+-- If this is the first time this client has been exported on this connection,
+-- bump the refcount.
+getConnExport :: Conn -> Client -> STM IEId
+getConnExport conn@Conn{exports} client = do
+    let ExportMap m = clientExportMap client
     val <- M.lookup conn m
     case val of
-        Just ret ->
-            pure ret
+        Just eid -> do
+            addBumpExport eid client exports
+            pure eid
 
         Nothing -> do
-            ret <- newExport conn
-            M.insert ret conn m
-            pure ret
+            eid <- newExport conn
+            addBumpExport eid client exports
+            M.insert eid conn m
+            incRef client
+            pure eid
 
+-- | Remove export of the client on the connection. This entails removing it
+-- from the export id, removing the connection from the client's ExportMap,
+-- freeing the export id, and dropping the client's refcount.
 dropConnExport :: Conn -> Client -> STM ()
 dropConnExport conn@Conn{exports} client = do
     let ExportMap eMap = clientExportMap client
@@ -1346,6 +1356,7 @@ dropConnExport conn@Conn{exports} client = do
         Nothing ->
             error "BUG: tried to drop an export that doesn't exist."
 
+-- | Get the export map for the client.
 clientExportMap :: Client -> ExportMap
 clientExportMap LocalClient{exportMap}            = exportMap
 clientExportMap (ImportClient ImportRef{proxies}) = proxies
@@ -1357,18 +1368,15 @@ clientExportMap _                                 = error "TODO"
 emitCap :: Conn -> Client -> STM R.CapDescriptor
 emitCap _conn NullClient =
     pure R.CapDescriptor'none
-emitCap conn@Conn{exports} client@LocalClient { exportMap } = do
-    exportId <- getConnExport conn exportMap
-    addBumpExport exportId client exports
-    pure $ R.CapDescriptor'senderHosted (ieWord exportId)
+emitCap conn@Conn{exports} client@LocalClient{} =
+    R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client
 emitCap conn PromiseClient { pState } =
     emitPromiseCap conn pState
-emitCap remoteConn client@(ImportClient ImportRef { conn, proxies, importId })
-    | conn == remoteConn =
+emitCap targetConn client@(ImportClient ImportRef { conn=hostConn, importId })
+    | hostConn == targetConn =
         pure (R.CapDescriptor'receiverHosted (ieWord importId))
-    | otherwise = do
-        error "TODO: bump the refcount."
-        R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn proxies
+    | otherwise =
+        R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client
 
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
