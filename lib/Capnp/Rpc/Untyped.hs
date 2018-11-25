@@ -377,7 +377,7 @@ handleConn
     stopConn conn@Conn{bootstrap=Nothing} =
         pure ()
     stopConn conn@Conn{bootstrap=Just client} =
-        atomically $ decRef client
+        atomically $ dropConnExport conn client
     useBootstrap conn = case withBootstrap of
         Nothing -> pure ()
         Just f  -> atomically (requestBootstrap conn) >>= f (supervisor conn)
@@ -1003,35 +1003,29 @@ handleFinishMsg conn@Conn{answers} =
     updateQAFinish conn answers "answer"
 
 handleReleaseMsg :: Conn -> R.Release -> STM ()
-handleReleaseMsg conn@Conn{exports} R.Release{id, referenceCount} =
-    M.focus
-        (Focus.alterM $ \case
-            Nothing ->
-                abortConn conn def
-                    { R.type_ = R.Exception'Type'failed
-                    , R.reason =
-                        "No such export: " <> fromString (show id)
-                    }
-            Just EntryIE{client, refCount} ->
-                case compare refCount referenceCount of
-                    LT ->
-                        abortConn conn def
-                            { R.type_ = R.Exception'Type'failed
-                            , R.reason =
-                                "Received release for export with referenceCount " <>
-                                "greater than our recorded total ref count."
-                            }
-                    EQ -> do
-                        decRef client
-                        pure Nothing
-                    GT ->
-                        pure $ Just EntryIE
+handleReleaseMsg
+        conn@Conn{exports}
+        R.Release
+            { id=(IEId -> eid)
+            , referenceCount=refCountDiff
+            } =
+    lookupAbort "export" conn exports eid $
+        \EntryIE{client, refCount=oldRefCount} ->
+            case compare oldRefCount refCountDiff of
+                LT ->
+                    abortConn conn $ eFailed $
+                        "Received release for export with referenceCount " <>
+                        "greater than our recorded total ref count."
+                EQ ->
+                    dropConnExport conn client
+                GT ->
+                    M.insert
+                        EntryIE
                             { client
-                            , refCount = refCount - referenceCount
+                            , refCount = oldRefCount - refCountDiff
                             }
-        )
-        (IEId id)
-        exports
+                        eid
+                        exports
 
 -- | Interpret the list of cap descriptors, and replace the message's capability
 -- table with the result.
@@ -1338,6 +1332,24 @@ getConnExport conn (ExportMap m) = do
             ret <- newExport conn
             M.insert ret conn m
             pure ret
+
+dropConnExport :: Conn -> Client -> STM ()
+dropConnExport conn@Conn{exports} client = do
+    let ExportMap eMap = clientExportMap client
+    val <- M.lookup conn eMap
+    case val of
+        Just eid -> do
+            M.delete conn eMap
+            M.delete eid exports
+            freeExport conn eid
+            decRef client
+        Nothing ->
+            error "BUG: tried to drop an export that doesn't exist."
+
+clientExportMap :: Client -> ExportMap
+clientExportMap LocalClient{exportMap}            = exportMap
+clientExportMap (ImportClient ImportRef{proxies}) = proxies
+clientExportMap _                                 = error "TODO"
 
 -- | Generate a CapDescriptor, which the connection's remote vat may use to
 -- refer to the client. In the process, this may allocate export ids, update
