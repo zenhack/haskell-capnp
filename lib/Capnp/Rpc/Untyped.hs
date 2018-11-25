@@ -75,7 +75,7 @@ import UnliftIO.STM
 
 import Control.Concurrent     (threadDelay)
 import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
-import Control.Monad          (forever)
+import Control.Monad          (forever, when)
 import Data.Default           (Default(def))
 import Data.Foldable          (toList, traverse_)
 import Data.Hashable          (Hashable, hash, hashWithSalt)
@@ -1472,13 +1472,15 @@ acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
             newLocalTgtClient conn msgTgt
 acceptCap _ d                    = error $ "TODO: " ++ show d
 
+-- | Create a new client targeting an object in our answers table.
+-- Important: in this case the 'MsgTarget' refers to a question we
+-- have recevied, not sent.
 newLocalTgtClient :: Conn -> MsgTarget -> STM Client
 newLocalTgtClient conn@Conn{answers} AnswerTgt { answerId, transform } = do
-    let tmpDest = AnswerDest
-            { conn
-            , answerId
-            , transform
-            }
+    when (not (null transform)) $
+        error "TODO: handle transform"
+    callBuffer <- newTQueue
+    let tmpDest = LocalBuffer { callBuffer }
     pState <- newTVar Pending { tmpDest }
     subscribeReturn "answer" conn answers answerId $
         resolveClientReturn tmpDest (writeTVar pState)
