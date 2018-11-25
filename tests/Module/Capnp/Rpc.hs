@@ -24,7 +24,7 @@ import qualified Network.Socket          as Socket
 import Capnp
     (createPure, def, defaultLimit, lbsToMsg, msgToValue, valueToMsg)
 import Capnp.Bits          (WordCount)
-import Capnp.Promise       (waitIO)
+import Capnp.Promise       (Promise, waitIO)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
 
@@ -118,7 +118,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         )
     it "A counter should maintain state" $ runVatPair
         (\sup -> newTestCtr 0 >>= export_CallSequence sup)
-        (\sup ctr -> do
+        (\_sup ctr -> do
             results <- replicateM 4 (callSequence'getNumber ctr ? def)
                 >>= traverse waitIO
             liftIO $ results `shouldBe`
@@ -141,31 +141,31 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             ctrA <- newCounter 2
             ctrB <- newCounter 0
 
-            r <- bumpN ctrA 4
-            liftIO $ r `shouldBe`
+            r1 <- bumpN ctrA 4
+            liftIO $ r1 `shouldBe`
                 [ def { n = 3 }
                 , def { n = 4 }
                 , def { n = 5 }
                 , def { n = 6 }
                 ]
 
-            r <- bumpN ctrB 2
-            liftIO $ r `shouldBe`
+            r2 <- bumpN ctrB 2
+            liftIO $ r2 `shouldBe`
                 [ def { n = 1 }
                 , def { n = 2 }
                 ]
 
             ctrC <- newCounter 30
 
-            r <- bumpN ctrA 3
-            liftIO $ r `shouldBe`
+            r3 <- bumpN ctrA 3
+            liftIO $ r3 `shouldBe`
                 [ def { n = 7 }
                 , def { n = 8 }
                 , def { n = 9 }
                 ]
 
-            r <- bumpN ctrC 1
-            liftIO $ r `shouldBe` [ def { n = 31 } ]
+            r4 <- bumpN ctrC 1
+            liftIO $ r4 `shouldBe` [ def { n = 31 } ]
 
             stopVat
         )
@@ -393,8 +393,9 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
             }
     race_ runServer runClient
 
-expectException call wantExn cap = do
-    ret <- try $ call cap >>= waitIO
+expectException :: Show a => (cap -> IO (Promise a)) -> Exception -> cap -> IO ()
+expectException callFn wantExn cap = do
+    ret <- try $ callFn cap >>= waitIO
     case ret of
         Left (e :: Exception) -> do
             liftIO $ e `shouldBe` wantExn
