@@ -1114,14 +1114,16 @@ sendPureMsg :: Conn -> R.Message -> STM ()
 sendPureMsg Conn{sendQ} msg =
     createPure maxBound (valueToMsg msg) >>= writeTBQueue sendQ
 
--- | Send a finish message, and then remove the corresponding
--- question from our table, and return the question id to the
--- pool of available ids.
+-- | Send a finish message, updating connection state and triggering
+-- callbacks as necessary.
 finishQuestion :: Conn -> R.Finish -> STM ()
 finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
+    -- arrange for the question ID to be returned to the pool once
+    -- the return has also been received:
+    subscribeReturn "question" conn questions questionId $ \_ ->
+        freeQuestion conn questionId
     sendPureMsg conn $ R.Message'finish finish
     updateQAFinish conn questions "question" finish
-    freeQuestion conn questionId
 
 -- | Send a return message, update the corresponding entry in our
 -- answers table, and queue any registered callbacks. Calls 'error'
