@@ -382,7 +382,7 @@ handleConn
             `concurrently_` recvLoop transport conn
             `concurrently_` callbacksLoop conn
             `concurrently_` useBootstrap conn
-    stopConn conn@Conn{bootstrap=Nothing} =
+    stopConn Conn{bootstrap=Nothing} =
         pure ()
     stopConn conn@Conn{bootstrap=Just client} =
         atomically $ dropConnExport conn client
@@ -872,7 +872,6 @@ handleCallMsg
             , target
             , interfaceId
             , methodId
-            , sendResultsTo
             , params=R.Payload{capTable}
             }
         msg = do
@@ -970,7 +969,7 @@ followTransform ops = go (V.toList ops)
                 { R.type_ = R.Exception'Type'failed
                 , R.reason = "Tried to access pointer field of non-struct."
                 }
-    go (R.PromisedAnswer'Op'unknown' op:_) ptr =
+    go (R.PromisedAnswer'Op'unknown' op:_) _ptr =
         Left def
             { R.type_ = R.Exception'Type'failed
             , R.reason = "Unknown PromisedAnswer.Op: " <> fromString (show op)
@@ -992,7 +991,7 @@ followPtrs (_:_) (Just _) =
     Left (eFailed "Tried to access pointer field of non-struct.")
 
 handleReturnMsg :: Conn -> R.Return -> ConstMsg -> STM ()
-handleReturnMsg conn@Conn{questions} ret@R.Return{answerId, union'} msg = do
+handleReturnMsg conn@Conn{questions} ret@R.Return{union'} msg = do
     ret <- case union' of
         R.Return'results R.Payload{capTable} -> do
             msgWithCaps <- fixCapTable capTable conn msg
@@ -1259,7 +1258,7 @@ resolveClientExn tmpDest resolve exn = do
                 calls
         AnswerDest {} ->
             pure ()
-        ImportDest imp ->
+        ImportDest _ ->
             pure () -- FIXME TODO: decrement the refcount for the import?
     resolve $ Error exn
 
@@ -1376,7 +1375,7 @@ clientExportMap _                                 = error "TODO"
 emitCap :: Conn -> Client -> STM R.CapDescriptor
 emitCap _conn NullClient =
     pure R.CapDescriptor'none
-emitCap conn@Conn{exports} client@LocalClient{} =
+emitCap conn client@LocalClient{} =
     R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client
 emitCap conn PromiseClient { pState } =
     emitPromiseCap conn pState
@@ -1394,7 +1393,7 @@ addBumpExport exportId client =
     M.focus (Focus.alter go) exportId
   where
     go Nothing = Just EntryIE { client, refCount = 1 }
-    go (Just ex@EntryIE{ client = oldClient, refCount } )
+    go (Just EntryIE{ client = oldClient, refCount } )
         | client /= oldClient =
             error $
                 "BUG: addExportRef called with a client that is different " ++
@@ -1423,7 +1422,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
             let client = ImportClient ImportRef { conn, importId, proxies }
             M.insert EntryIE { client, refCount = 1 } importId imports
             pure client
-acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
+acceptCap Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
     entry <- M.lookup (IEId exportId) exports
     case entry of
         Nothing ->
@@ -1433,7 +1432,7 @@ acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
             pure client
 acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
     case unmarshalMsgTarget (R.MessageTarget'promisedAnswer pa) of
-        Left e ->
+        Left _ ->
             error "TODO"
         Right msgTgt ->
             newLocalTgtClient conn msgTgt
@@ -1453,7 +1452,7 @@ newLocalTgtClient conn@Conn{answers} AnswerTgt { answerId, transform } = do
             (writeTVar pState)
             (toList transform)
     pure PromiseClient { pState }
-newLocalTgtClient conn (ImportTgt _) =
+newLocalTgtClient _conn (ImportTgt _) =
     error "TODO"
 
 
