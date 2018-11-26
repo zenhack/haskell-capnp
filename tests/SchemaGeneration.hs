@@ -161,7 +161,7 @@ genStructDef depth = do
     structDefs <- replicateM structNum (genStructDef (depth - 1))
 
     -- extract the available struct types
-    let structTypes = map (\(StructDef sn _) -> (StructType sn)) structDefs
+    let structTypes = map (\(StructDef sn _) -> StructType sn) structDefs
 
     -- generate the fields using available struct types
     fieldNum  <- liftGen (QC.sized (\n -> QC.choose (1, 1 `max` n)))
