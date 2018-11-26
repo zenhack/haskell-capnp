@@ -233,6 +233,7 @@ test-suite tests
       , Regression
       , WalkSchemaCodeGenRequest
       , SchemaQuickCheck
+      , CalculatorExample
     build-depends:
         capnp
       , network
