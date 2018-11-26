@@ -20,7 +20,7 @@ test:alltests:
     - git diff --exit-code
     # Now build everything else (incl. examples):
     - cabal new-build all
-    # ...run the tests. We use new-run so we can tell pass rts options
+    # ...run the tests. We use new-run so we can pass rts options
     # to the test binary -- these tell it to parallelize the tests.
     - cabal new-run test:tests -- +RTS -N
     # Linting:
