@@ -17,6 +17,12 @@ RUN cabal update
 RUN cabal install happy alex
 RUN cabal install hlint stylish-haskell
 
+# We're getting an error from cabal re: creating these symlinks automatically,
+# so we just do it ourselves. TODO: figure out why this is happening
+
+RUN ln -s /root/.cabal/bin/hlint /usr/local/bin/hlint
+RUN ln -s /root/.cabal/bin/stylish-haskell /usr/local/bin/stylish-haskell
+
 # Install stuff needed to build capnproto:
 RUN apk add \
 	autoconf \
