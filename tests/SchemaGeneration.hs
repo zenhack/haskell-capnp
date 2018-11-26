@@ -107,7 +107,7 @@ popFieldGen :: FieldGen ()
 popFieldGen = FieldGen $ do
     original <- get
     case original of
-        (x :| (y : rest)) -> put (y :| rest)
+        (_ :| (y : rest)) -> put (y :| rest)
         (x :| [])         -> put (x :| [])
 
 getStructOrder :: FieldGen Int
