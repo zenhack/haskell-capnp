@@ -6,15 +6,14 @@ import Test.Hspec
 
 import Control.Concurrent (threadDelay)
 import Control.Exception  (SomeException, try)
-import Control.Monad      (void)
-import Data.Traversable   (for)
+import Data.Foldable      (for_)
 import System.Environment (getEnv)
 import System.Exit        (ExitCode(ExitSuccess))
 import System.Process     (proc, readProcessWithExitCode, withCreateProcess)
 
 tests :: Spec
 tests = describe "Check our example against the C++ implementation" $ do
-    cxxPath <- runIO $ do
+    cxxPath <- runIO $
         try (getEnv "CXX_CALCULATOR_CLIENT") >>= \case
             -- XXX TODO: only catch the exception that getEnv throws:
             Left (_ :: SomeException) -> do
@@ -22,7 +21,7 @@ tests = describe "Check our example against the C++ implementation" $ do
                 pure Nothing
             Right path ->
                 pure (Just path)
-    void $ for cxxPath $ \path ->
+    for_ cxxPath $ \path ->
         it "Should pass when run against our server" $ do
             (eStatus, out, err)  <- withCreateProcess
                     (proc "cabal" ["new-run", "calculator-server"]) $
