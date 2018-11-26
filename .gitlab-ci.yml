@@ -11,7 +11,7 @@ before_script:
 test:alltests:
   image: zenhack/haskell-capnp-ci
   variables:
-    - CXX_CALCULATOR_CLIENT: /usr/local/bin/c++-calculator-client
+    CXX_CALCULATOR_CLIENT: /usr/local/bin/c++-calculator-client
   script:
     # First build the code generator plugin.
     - cabal new-build capnpc-haskell
