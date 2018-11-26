@@ -59,3 +59,7 @@ RUN cd capnproto-*/c++/samples && \
 		-o calculator-server && \
 	install -Dm755 calculator-client /usr/local/bin/c++-calculator-client && \
 	install -Dm755 calculator-server /usr/local/bin/c++-calculator-server
+
+# Add other tools we use during the run:
+RUN apk add \
+	git
