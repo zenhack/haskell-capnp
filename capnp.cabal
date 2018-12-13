@@ -85,6 +85,12 @@ common shared-opts
   ghc-options:
     -Wall
     -Wno-name-shadowing
+
+    -- I(zenhack) find it rather odd that orphan instances are flagged when the
+    -- class and the type are in different modules but, the same *package*. We do
+    -- this in a number of places in the capnp package, so we disable this
+    -- warning. It's not super easy to write a package-level orphan by accident,
+    -- so we're not losing much.
     -Wno-orphans
   default-language:     Haskell2010
 
