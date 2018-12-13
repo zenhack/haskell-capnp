@@ -17,8 +17,8 @@ Unlike with the low-level API, typed lists do not require special
 treatment -- they're just Vectors.
 -}
 module Capnp.Basics.Pure
-    ( Data(..)
-    , Text(..)
+    ( Data
+    , Text
     ) where
 
 import Prelude hiding (length)

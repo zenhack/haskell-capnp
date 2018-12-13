@@ -79,7 +79,7 @@ data EltSpec
 parsePtr :: Word64 -> Maybe Ptr
 parsePtr 0 = Nothing
 parsePtr word = Just $
-    case bitRange word 0 2 of
+    case bitRange word 0 2 :: Word64 of
         0 -> StructPtr
             (i30 (lo word))
             (bitRange word 32 48)

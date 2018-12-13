@@ -24,7 +24,7 @@ module Capnp.Untyped.Pure
     , Ptr(..)
     , Struct(..)
     , List(..)
-    , ListOf(..)
+    , ListOf
     , length
     , sliceIndex
     )

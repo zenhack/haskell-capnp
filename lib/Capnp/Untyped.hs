@@ -241,6 +241,9 @@ instance TraverseMsg FlipListS where
         FlipListS <$> (ListOfStruct <$> tMsg f tag <*> pure size)
 
 -- helpers for applying tMsg to a @ListOf@.
+tFlip  :: (TraverseMsg (FlipList a), Applicative m) => (msgA -> m msg) -> ListOf msgA a -> m (ListOf msg a)
+tFlipS :: Applicative m => (msgA -> m msg) -> ListOf msgA (Struct msgA) -> m (ListOf msg (Struct msg))
+tFlipP :: Applicative m => (msgA -> m msg) -> ListOf msgA (Maybe (Ptr msgA)) -> m (ListOf msg (Maybe (Ptr msg)))
 tFlip  f list  = unflip  <$> tMsg f (FlipList  list)
 tFlipS f list  = unflipS <$> tMsg f (FlipListS list)
 tFlipP f list  = unflipP <$> tMsg f (FlipListP list)
@@ -532,7 +535,7 @@ get msg addr = do
 
 -- | Return the EltSpec needed for a pointer to the given list.
 listEltSpec :: List msg -> P.EltSpec
-listEltSpec (ListStruct list@(ListOfStruct (Struct msg _ dataSz ptrSz) _)) =
+listEltSpec (ListStruct list@(ListOfStruct (Struct _ _ dataSz ptrSz) _)) =
     P.EltComposite $ fromIntegral (length list) * (fromIntegral dataSz + fromIntegral ptrSz)
 listEltSpec (List0 list)   = P.EltNormal Sz0 $ fromIntegral (length list)
 listEltSpec (List1 list)   = P.EltNormal Sz1 $ fromIntegral (length list)
@@ -565,7 +568,7 @@ ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
 setIndex :: RWCtx m s => a -> Int -> ListOf (M.MutMsg s) a -> m ()
-setIndex value i list | length list <= i =
+setIndex _ i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
     ListOfVoid _ _     -> pure ()
@@ -582,7 +585,7 @@ setIndex value i list = case list of
         Just (PtrCap (Cap _ cap))    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
         Just p@(PtrList ptrList)     ->
             setPtrIndex nlist p $ P.ListPtr 0 (listEltSpec ptrList)
-        Just p@(PtrStruct (Struct _ addr dataSz ptrSz)) ->
+        Just p@(PtrStruct (Struct _ _ dataSz ptrSz)) ->
             setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
     list@(ListOfStruct _ _) -> do
         dest <- index i list
@@ -595,7 +598,7 @@ setIndex value i list = case list of
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         M.setWord nMsg wordAddr $ replaceBits value word shift
     setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
-    setPtrIndex nlist@NormalList{..} absPtr relPtr =
+    setPtrIndex NormalList{..} absPtr relPtr =
         let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
         in setPointerTo nMsg srcAddr (ptrAddr absPtr) relPtr
 
@@ -631,7 +634,7 @@ copyCap :: RWCtx m s => M.MutMsg s -> Cap (M.MutMsg s) -> m (Cap (M.MutMsg s))
 copyCap dest cap = getClient cap >>= appendCap dest
 
 copyPtr :: RWCtx m s => M.MutMsg s -> Maybe (Ptr (M.MutMsg s)) -> m (Maybe (Ptr (M.MutMsg s)))
-copyPtr dest Nothing                = pure Nothing
+copyPtr _ Nothing                = pure Nothing
 copyPtr dest (Just (PtrCap cap))    = Just . PtrCap <$> copyCap dest cap
 copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
 copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do

@@ -57,7 +57,7 @@ module Capnp.Message (
     , setCap
     , appendCap
 
-    , WriteCtx(..)
+    , WriteCtx
 
     , Client
     , nullClient
@@ -456,7 +456,7 @@ allocInSeg msg segIndex (WordCount size) = do
 alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
 alloc msg size@(WordCount sizeInt) = do
     segIndex <- pred <$> numSegs msg
-    oldSeg@(MutSegment vec) <- getSegment msg segIndex
+    MutSegment vec <- getSegment msg segIndex
     if AppendVec.canGrowWithoutCopy vec sizeInt
         then
             allocInSeg msg segIndex size
@@ -488,8 +488,8 @@ newMessage (Just (WordCount sizeHint)) = do
     mutCaps <- MV.new 0 >>= newMutVar . AppendVec.makeEmpty
     let msg = MutMsg{mutSegs,mutCaps}
     -- allocte the first segment, and make space for the root pointer:
-    newSegment msg sizeHint
-    alloc msg 1
+    _ <- newSegment msg sizeHint
+    _ <- alloc msg 1
     pure msg
 
 
@@ -502,8 +502,19 @@ instance Thaw (Segment ConstMsg) where
     unsafeFreeze = freezeSeg unsafeFreeze
 
 -- Helpers for @Segment ConstMsg@'s Thaw instance.
+thawSeg
+    :: (PrimMonad m, s ~ PrimState m)
+    => (AppendVec.FrozenAppendVec SV.Vector Word64 -> m (AppendVec SMV.MVector s Word64))
+    -> Segment ConstMsg
+    -> m (Segment (MutMsg s))
 thawSeg thaw (ConstSegment vec) =
     MutSegment <$> thaw (AppendVec.FrozenAppendVec vec)
+
+freezeSeg
+    :: (PrimMonad m, s ~ PrimState m)
+    => (AppendVec SMV.MVector s Word64 -> m (AppendVec.FrozenAppendVec SV.Vector Word64))
+    -> Segment (MutMsg s)
+    -> m (Segment ConstMsg)
 freezeSeg freeze (MutSegment mvec) =
     ConstSegment . AppendVec.getFrozenVector <$> freeze mvec
 
@@ -532,7 +543,7 @@ freezeMsg :: (PrimMonad m, s ~ PrimState m)
     -> m ConstMsg
 freezeMsg freezeSeg freezeCaps msg@MutMsg{mutCaps} = do
     len <- numSegs msg
-    constSegs <- V.generateM len (internalGetSeg msg >=> freeze)
+    constSegs <- V.generateM len (internalGetSeg msg >=> freezeSeg)
     constCaps <- freezeCaps . AppendVec.getVector =<< readMutVar mutCaps
     pure ConstMsg{constSegs, constCaps}
 

@@ -33,6 +33,7 @@ import Capnp
 import qualified Capnp.Untyped.Pure as Untyped
 
 -- | Sort varaints by their tag, in decending order (with no tag at all being last).
+sortVariants :: [Variant] -> [Variant]
 sortVariants = sortOn (Down . variantTag)
 
 fmtModule :: Module -> [(FilePath, PP.Doc)]

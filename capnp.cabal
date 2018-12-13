@@ -85,6 +85,7 @@ common shared-opts
   ghc-options:
     -Wall
     -Wno-name-shadowing
+    -Wno-orphans
   default-language:     Haskell2010
 
 --------------------------------------------------------------------------------
