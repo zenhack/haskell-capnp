@@ -41,6 +41,7 @@ nodeNames =
 
 -- TODO: This contains a bit of copypasta from some of the untyped tests; should
 -- factor that out.
+walkSchemaCodeGenRequestTest :: Spec
 walkSchemaCodeGenRequestTest =
     describe "Various sanity checks on a known schema CodeGeneratorRequest" $
         it "Should match misc. expectations" $ do

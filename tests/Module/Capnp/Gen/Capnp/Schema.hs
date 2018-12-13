@@ -6,14 +6,13 @@ import Test.Hspec
 
 import Control.Monad.Primitive (RealWorld)
 import Data.Foldable           (traverse_)
-import Text.Heredoc            (there)
 
 import Capnp.Gen.Capnp.Schema
 
 import Capnp                (newRoot)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
 import Data.Mutable         (Thaw(..))
-import Util                 (decodeValue)
+import Util                 (decodeValue, schemaSchemaSrc)
 
 import qualified Capnp.Message as M
 
@@ -23,6 +22,7 @@ data BuildTest = BuildTest
     , builder  :: M.MutMsg RealWorld -> LimitT IO ()
     }
 
+schemaTests :: Spec
 schemaTests = describe "tests for typed setters" $ traverse_ testCase
     [ BuildTest
         { typeName = "Field"
@@ -48,7 +48,5 @@ schemaTests = describe "tests for typed setters" $ traverse_ testCase
         msg <- M.newMessage Nothing
         evalLimitT maxBound $ builder msg
         constMsg <- freeze msg
-        actual <- decodeValue schemaSchema typeName constMsg
+        actual <- decodeValue schemaSchemaSrc typeName constMsg
         actual `shouldBe` expected
-
-schemaSchema = [there|core-schema/capnp/schema.capnp|]

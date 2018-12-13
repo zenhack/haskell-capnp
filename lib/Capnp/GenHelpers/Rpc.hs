@@ -5,14 +5,11 @@
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.GenHelpers.Rpc where
 
-import Control.Monad.Catch     (MonadThrow(..))
-import Control.Monad.Primitive (PrimMonad(PrimState))
-import Data.Default            (def)
-import UnliftIO
-    (MonadUnliftIO, SomeException, atomically, fromException, try)
+import Control.Monad.Catch (MonadThrow(..))
+import Data.Default        (def)
+import UnliftIO            (SomeException, atomically, fromException, try)
 
-import Capnp.Classes
-    (Cerialize, Decerialize(..), FromPtr(..), FromStruct, ToStruct)
+import Capnp.Classes        (Decerialize(..), FromPtr(..))
 import Capnp.TraversalLimit (evalLimitT)
 
 import qualified Capnp.Errors          as E

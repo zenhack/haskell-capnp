@@ -48,10 +48,12 @@ instance Arbitrary Ptr where
                       , CapPtr <$> arbitrary
                       ]
 
+ptrTests :: Spec
 ptrTests = do
     ptrProps
     parsePtrExamples
 
+ptrProps :: Spec
 ptrProps = describe "Pointer Properties" $ do
     it "Should satisfy: parseEltSpec . serializeEltSpec == id" $
         property $ \spec -> parseEltSpec (serializeEltSpec spec) == spec
@@ -67,6 +69,7 @@ ptrProps = describe "Pointer Properties" $ do
                 _                        -> parsePtr (serializePtr ptr) == ptr
 
 
+parsePtrExamples :: Spec
 parsePtrExamples = describe "parsePtr (examples)" $
     it "Should parse this example correctly" $
         parsePtr 0x0000000200000000 `shouldBe` (Just $ StructPtr 0 2 0)

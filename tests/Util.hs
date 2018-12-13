@@ -29,6 +29,7 @@ import qualified Data.ByteString.Lazy.Char8 as LBSC8
 
 import qualified Capnp.Message as M
 
+aircraftSchemaSrc, schemaSchemaSrc :: String
 aircraftSchemaSrc = [there|tests/data/aircraft.capnp|]
 schemaSchemaSrc = [there|tests/data/schema.capnp|]
 
@@ -82,8 +83,7 @@ interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
                 (\(_, hndl) -> hClose hndl)
             lift $ hPutStr hndl msgSchema
             return path
-    let saveTmpSchema msgSchema = snd <$> allocate writeTempFile removeFile
-    schemaFile <- saveTmpSchema msgSchema
+    schemaFile <- snd <$> allocate writeTempFile removeFile
     lift $ readCreateProcessWithExitCode (proc "capnp" ([subCommand, schemaFile] ++ args)) stdInBytes
 
 -- | @'decodeValue' schema typename message@ decodes the value at the root of

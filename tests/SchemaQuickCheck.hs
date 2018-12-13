@@ -39,7 +39,7 @@ decodeCGR bytes = do
         reader struct = do
             req :: Schema.CodeGeneratorRequest M.ConstMsg <- fromStruct struct
             nodes <- Schema.get_CodeGeneratorRequest'nodes req
-            requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
+            _ <- Schema.get_CodeGeneratorRequest'requestedFiles req
             return (Basics.length nodes)
     msg <- M.decode bytes
     (numNodes, endQuota) <- runLimitT 1024 (Untyped.rootPtr msg >>= reader)
@@ -55,6 +55,7 @@ prop_schemaValid schema = ioProperty $ do
         Left _  -> False
         Right _ -> True
 
+schemaCGRQuickCheck :: Spec
 schemaCGRQuickCheck =
     describe "generateCGR an decodeCGR agree" $
         it "successfully decodes generated schema" $

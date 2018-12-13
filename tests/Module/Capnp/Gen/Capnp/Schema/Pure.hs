@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE NegativeLiterals      #-}
 {-# LANGUAGE OverloadedLists       #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
@@ -45,12 +46,14 @@ import Data.Mutable         (Thaw(..))
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 
+pureSchemaTests :: Spec
 pureSchemaTests = describe "Tests for generated high-level modules." $ do
     decodeTests
     decodeDefaultTests
     encodeTests
     propTests
 
+encodeTests :: Spec
 encodeTests = describe "schema encode tests" $
     testCase
         ( "Node.Parameter"
@@ -86,6 +89,7 @@ encodeTests = describe "schema encode tests" $
                 decerialize cerialIn
             actualValue `shouldBe` expectedValue
 
+decodeTests :: Spec
 decodeTests = describe "schema decode tests" $ sequence_ $
     [ decodeTests "CodeGeneratorRequest"
         [ ( [here|
@@ -231,7 +235,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
         [ ("(bool = true)", Value'bool True)
         , ("(bool = false)", Value'bool False)
         , ("(int8 = -4)", Value'int8 (-4))
-        , ("(int8 = -128)", Value'int8 (fromIntegral $ -128))
+        , ("(int8 = -128)", Value'int8 (-128))
         , ("(int8 = 127)", Value'int8 127)
         , ("(uint8 = 23)", Value'uint8 23)
         , ("(uint8 = 255)", Value'uint8 255)
@@ -407,6 +411,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
             actual <- evalLimitT 128 $ getRoot msg
             ppAssertEqual actual expected
 
+decodeDefaultTests :: Spec
 decodeDefaultTests = describe "Decoding default values" $ do
     decodeDefault "Type" (Proxy :: Proxy Type)
     decodeDefault "Value" (Proxy :: Proxy Value)
@@ -465,7 +470,7 @@ prop_hGetPutInverses ::
     , Cerialize a
     , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
     ) => Proxy a -> a -> Property
-prop_hGetPutInverses proxy expected = propertyIO $ do
+prop_hGetPutInverses _proxy expected = propertyIO $ do
     -- This is a little more complicated than I'd like due to resource
     -- management issues. We create a temporary file, then immediately
     -- close the handle to it, and open it again in a separate call to

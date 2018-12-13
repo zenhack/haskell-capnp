@@ -296,7 +296,7 @@ arbitrarySmallerVec = sized $ \size -> do
 
 instance Arbitrary PU.Struct where
     shrink = genericShrink
-    arbitrary = sized $ \size -> PU.Struct
+    arbitrary = sized $ \_ -> PU.Struct
         <$> arbitrary
         <*> arbitrary
 
@@ -316,7 +316,7 @@ instance Arbitrary PU.List where
 instance Arbitrary PU.Ptr where
     shrink (PU.PtrStruct s) = PU.PtrStruct <$> shrink s
     shrink (PU.PtrList   l) = PU.PtrList   <$> shrink l
-    shrink (PU.PtrCap    c) = []
+    shrink (PU.PtrCap    _) = []
     arbitrary = oneof
         [ PU.PtrStruct <$> arbitrary
         , PU.PtrList <$> arbitrary

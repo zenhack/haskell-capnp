@@ -21,6 +21,7 @@ import qualified Capnp.Untyped as U
 
 -- This is analogous to Tests.Module.Capnp.Untyped.untypedTests, but
 -- using the Pure module:
+pureUntypedTests :: Spec
 pureUntypedTests =
     describe "high-level untyped decoding" $
         it "Should agree with `capnp decode`" $ do
