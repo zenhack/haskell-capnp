@@ -15,6 +15,7 @@ import Text.PrettyPrint.Leijen.Text (Doc, hcat, vcat)
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
+indent :: Doc -> Doc
 indent = PP.indent 4
 
 -- | @'data_' typeCon dataCons derving_@ generates a @data@

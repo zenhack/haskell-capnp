@@ -58,7 +58,7 @@ identifierFromMetaData meta =
 -- Helper for makeNodeMap; recursively collect metadata for a node and
 -- all of its descendants in the tree.
 collectMetaData :: M.Map Id Node -> NodeMetaData -> [(Id, NodeMetaData)]
-collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
+collectMetaData nodeMap meta@NodeMetaData{node=Node{..}, ..} = concat
     [ [(id, meta)]
     , concatMap collectNested $ V.toList nestedNodes
     , case union' of
@@ -107,7 +107,7 @@ collectMetaData nodeMap meta@NodeMetaData{node=node@Node{..}, ..} = concat
             []
 
     -- Collect metadata for nodes under a NestedNode.
-    collectNested nn@Node'NestedNode{..} = case M.lookup id nodeMap of
+    collectNested Node'NestedNode{..} = case M.lookup id nodeMap of
         Just node -> collectMetaData nodeMap
             meta
                 { node = node
@@ -225,8 +225,8 @@ generateMethodStructs thisMod nodeMap Method{..} =
             -- not an anonymous struct; will be taken care of elsewhere.
             []
 
-generateMethod :: Id -> NodeMap -> IR.Name -> Word16 -> Method -> IR.Method
-generateMethod thisMod nodeMap parentName ordinal Method{..} =
+generateMethod :: NodeMap -> IR.Name -> Word16 -> Method -> IR.Method
+generateMethod nodeMap parentName ordinal Method{..} =
     IR.Method
         { methodName = IR.subName parentName name
         , ordinal = ordinal
@@ -291,7 +291,7 @@ generateDecls thisModule nodeMap meta@NodeMetaData{..} =
             , IR.DeclDef $ IR.DefInterface $ IR.InterfaceDef
                 { interfaceId = id
                 , methods = zipWith
-                    (generateMethod thisModule nodeMap name)
+                    (generateMethod nodeMap name)
                     [0..]
                     (V.toList methods)
                 }
@@ -469,7 +469,7 @@ generateVariant thisModule nodeMap parentName Field{..} = case union' of
         , variantTag = discriminantValue
         }
     Field'group{..} ->
-        let NodeMetaData{node=node@Node{..},..} = nodeMap M.! typeId
+        let NodeMetaData{node=Node{..},..} = nodeMap M.! typeId
         in case union' of
             Node'struct{..} -> IR.Variant
                 { variantName

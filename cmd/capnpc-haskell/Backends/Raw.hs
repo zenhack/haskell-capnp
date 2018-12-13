@@ -232,7 +232,6 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
     getName = accessorName "get_"
     hasName = accessorName "has_"
     setName = accessorName "set_"
-    newName = accessorName "new_"
 
     typeCon = fmtName thisMod typeName
     dataCon = typeCon <> "_newtype_"

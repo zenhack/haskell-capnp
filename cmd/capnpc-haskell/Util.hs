@@ -1,5 +1,5 @@
 -- | Misc. helpers.
-module Util (Id(..), mintercalate, splitOn) where
+module Util (Id, mintercalate, splitOn) where
 
 import Data.Word
 
