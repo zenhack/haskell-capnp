@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {- |
 Module: Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
 Description: Machine-addressable alias for 'Capnp.Gen.Capnp.Cxx.Pure'.
