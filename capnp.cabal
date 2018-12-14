@@ -160,6 +160,7 @@ library
       -- END GENERATED SCHEMA MODULES
     other-modules:
         Internal.AppendVec
+      , Internal.FinalizerKey
       , Internal.SnocList
       , Internal.Rc
       , Internal.TCloseQ
