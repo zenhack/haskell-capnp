@@ -1,4 +1,3 @@
-{-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE RecordWildCards #-}
 module Module.Capnp.Gen.Capnp.Schema (schemaTests) where
 
