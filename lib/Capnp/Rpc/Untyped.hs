@@ -1457,7 +1457,7 @@ newLocalTgtClient _conn (ImportTgt _) =
 
 
 -- Note [Limiting resource usage]
--- =============================
+-- ==============================
 --
 -- N.B. much of this Note is future tense; the library is not yet robust against
 -- resource useage attacks.
