@@ -100,7 +100,12 @@ import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
 import Capnp.Promise        (Fulfiller, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Errors
-    (eDisconnected, eFailed, eMethodUnimplemented, wrapException)
+    ( eDisconnected
+    , eFailed
+    , eMethodUnimplemented
+    , eUnimplemented
+    , wrapException
+    )
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
@@ -971,8 +976,9 @@ handleCallMsg
                         transformClient transform content conn >>= call callInfo
                     _ ->
                         error "TODO"
-        _ ->
-            error "TODO"
+        R.MessageTarget'unknown' ordinal ->
+            abortConn conn $ eUnimplemented $
+                "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
 
 transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn -> STM Client
 transformClient transform ptr conn =

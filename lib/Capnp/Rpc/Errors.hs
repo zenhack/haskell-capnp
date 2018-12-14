@@ -13,6 +13,7 @@ module Capnp.Rpc.Errors
       wrapException
     -- * Helpers for constructing exceptions
     , eMethodUnimplemented
+    , eUnimplemented
     , eDisconnected
     , eFailed
     ) where
@@ -43,9 +44,14 @@ eDisconnected = def
 
 -- | An exception indicating an unimplemented method.
 eMethodUnimplemented :: Exception
-eMethodUnimplemented = def
+eMethodUnimplemented =
+    eUnimplemented "Method unimplemented"
+
+-- | An @unimplemented@ exception with a custom reason message.
+eUnimplemented :: Text -> Exception
+eUnimplemented reason = def
     { type_ = Exception'Type'unimplemented
-    , reason = "Method unimplemented"
+    , reason = reason
     }
 
 instance E.Exception Exception
