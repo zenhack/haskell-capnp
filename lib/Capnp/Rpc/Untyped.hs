@@ -663,6 +663,8 @@ cbCallReturn conn response R.Return{ answerId, union' } = do
                 msg <- Message.newMessage Nothing
                 cerialize msg content
             fulfill response rawPtr
+        R.Return'canceled ->
+            breakPromise response $ eFailed "Canceled"
         _ ->
             error "TODO: handle other variants."
     finishQuestion conn def
@@ -1296,11 +1298,12 @@ resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' 
             Right v ->
                 resolveClientPtr tmpDest resolve v
             Left e ->
-                error $ "TODO: " ++ show e
+                resolveClientExn tmpDest resolve e
+    R.Return'canceled ->
+        resolveClientExn tmpDest resolve $ eFailed "Canceled"
     _ ->
         error $
             "TODO: handle other return variants:\n" ++
-            "   - canceled\n" ++
             "   - resultsSentElseWhere\n" ++
             "   - acceptFromThirdParty\n" ++
             "   - unknown\n"
