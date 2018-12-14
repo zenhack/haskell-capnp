@@ -702,14 +702,15 @@ unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
         { answerId = QAId questionId
         , transform = SnocList.fromList idxes
         }
-  where
-    unmarshalOps [] = Right []
-    unmarshalOps (R.PromisedAnswer'Op'noop:ops) =
-        unmarshalOps ops
-    unmarshalOps (R.PromisedAnswer'Op'getPointerField i:ops) =
-        (i:) <$> unmarshalOps ops
-    unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
-        Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
+
+unmarshalOps :: [R.PromisedAnswer'Op] -> Either R.Exception [Word16]
+unmarshalOps [] = Right []
+unmarshalOps (R.PromisedAnswer'Op'noop:ops) =
+    unmarshalOps ops
+unmarshalOps (R.PromisedAnswer'Op'getPointerField i:ops) =
+    (i:) <$> unmarshalOps ops
+unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
+    Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
 
 
 -- | A null client. This is the only client value that can be represented
@@ -962,7 +963,7 @@ handleCallMsg
 
 transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn -> STM Client
 transformClient transform ptr conn =
-    case followTransform transform ptr of
+    case unmarshalOps (V.toList transform) >>= flip followPtrs ptr of
         Left e ->
             abortConn conn e
         Right Nothing ->
@@ -972,25 +973,9 @@ transformClient transform ptr conn =
         Right (Just _) ->
             abortConn conn $ eFailed "Tried to call method on non-capability."
 
-followTransform :: V.Vector R.PromisedAnswer'Op -> MPtr -> Either R.Exception MPtr
-followTransform ops = go (V.toList ops)
-  where
-    go [] ptr = Right ptr
-    go (R.PromisedAnswer'Op'noop:cs) ptr = go cs ptr
-    go (R.PromisedAnswer'Op'getPointerField idx:cs) ptr = case ptr of
-        Nothing -> go cs Nothing
-        Just (Untyped.PtrStruct (Untyped.Struct _ ptrs)) ->
-            go cs (Untyped.sliceIndex (fromIntegral idx) ptrs)
-        Just _ ->
-            Left $ eFailed "Tried to access pointer field of non-struct."
-    go (R.PromisedAnswer'Op'unknown' op:_) _ptr =
-        Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show op)
-
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
 -- with an error if any of the pointers in the chain (except the last one) is
 -- a non-null non struct.
---
--- TODO: use this in place of followTransform.
 followPtrs :: [Word16] -> MPtr -> Either R.Exception MPtr
 followPtrs [] ptr =
     Right ptr
