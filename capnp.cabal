@@ -218,6 +218,14 @@ test-suite tests
       , Instances
       , SchemaGeneration
 
+      , Examples.CalculatorServer
+
+      -- Generated code for examples/calculator.capnp
+      , Capnp.Gen.ById.X85150b117366d14b
+      , Capnp.Gen.ById.X85150b117366d14b.Pure
+      , Capnp.Gen.Calculator
+      , Capnp.Gen.Calculator.Pure
+
       -- Generated code for examples/echo.capnp
       , Capnp.Gen.Echo
       , Capnp.Gen.Echo.Pure
@@ -225,10 +233,10 @@ test-suite tests
       , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
 
       -- generated from tests/data/aircraft.capnp
-     , Capnp.Gen.Aircraft
-     , Capnp.Gen.Aircraft.Pure
-     , Capnp.Gen.ById.X832bcc6686a26d56
-     , Capnp.Gen.ById.X832bcc6686a26d56.Pure
+      , Capnp.Gen.Aircraft
+      , Capnp.Gen.Aircraft.Pure
+      , Capnp.Gen.ById.X832bcc6686a26d56
+      , Capnp.Gen.ById.X832bcc6686a26d56.Pure
 
       -- Actual tests:
       , Module.Capnp.Gen.Capnp.Schema
@@ -246,6 +254,7 @@ test-suite tests
     build-depends:
         capnp
       , network
+      , network-simple
       , unliftio
       , stm
       , async
