@@ -575,10 +575,12 @@ newtype ExportMap = ExportMap (M.Map Conn IEId)
 
 data MsgTarget
     = ImportTgt !IEId
-    | AnswerTgt
-        { answerId  :: !QAId
-        , transform :: SnocList Word16
-        }
+    | AnswerTgt PromisedAnswer
+
+data PromisedAnswer = PromisedAnswer
+    { answerId  :: !QAId
+    , transform :: SnocList Word16
+    }
 
 -- Note [proxies]
 -- ==============
@@ -615,7 +617,7 @@ call info@Server.CallInfo { response } = \case
                 writeTQueue callBuffer info
 
             AnswerDest { conn, answerId, transform } ->
-                callRemote conn info AnswerTgt { answerId, transform }
+                callRemote conn info $ AnswerTgt PromisedAnswer{ answerId, transform }
 
             ImportDest ImportRef { conn, importId } ->
                 callRemote conn info (ImportTgt importId)
@@ -673,21 +675,30 @@ marshalMsgTarget :: MsgTarget -> R.MessageTarget
 marshalMsgTarget = \case
     ImportTgt importId ->
         R.MessageTarget'importedCap (ieWord importId)
-    AnswerTgt { answerId, transform } ->
-        R.MessageTarget'promisedAnswer
-            R.PromisedAnswer
-                { R.questionId = qaWord answerId
-                , R.transform = V.fromList $
-                    map R.PromisedAnswer'Op'getPointerField $
-                    toList transform
-                }
+    AnswerTgt tgt ->
+        R.MessageTarget'promisedAnswer $ marshalPromisedAnswer tgt
+
+marshalPromisedAnswer :: PromisedAnswer -> R.PromisedAnswer
+marshalPromisedAnswer PromisedAnswer{ answerId, transform } =
+    R.PromisedAnswer
+        { R.questionId = qaWord answerId
+        , R.transform = V.fromList $
+            map R.PromisedAnswer'Op'getPointerField $
+            toList transform
+        }
 
 unmarshalMsgTarget :: R.MessageTarget -> Either R.Exception MsgTarget
 unmarshalMsgTarget (R.MessageTarget'importedCap importId) =
     Right $ ImportTgt (IEId importId)
-unmarshalMsgTarget (R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId, transform }) = do
+unmarshalMsgTarget (R.MessageTarget'promisedAnswer pa) =
+    AnswerTgt <$> unmarshalPromisedAnswer pa
+unmarshalMsgTarget (R.MessageTarget'unknown' tag) =
+    Left $ eFailed $ "Unknown MessageTarget: " <> fromString (show tag)
+
+unmarshalPromisedAnswer :: R.PromisedAnswer -> Either R.Exception PromisedAnswer
+unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
     idxes <- unmarshalOps (toList transform)
-    pure AnswerTgt
+    pure PromisedAnswer
         { answerId = QAId questionId
         , transform = SnocList.fromList idxes
         }
@@ -699,8 +710,6 @@ unmarshalMsgTarget (R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId
         (i:) <$> unmarshalOps ops
     unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
         Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
-unmarshalMsgTarget (R.MessageTarget'unknown' tag) =
-    Left $ eFailed $ "Unknown MessageTarget: " <> fromString (show tag)
 
 
 -- | A null client. This is the only client value that can be represented
@@ -1404,27 +1413,23 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
             let client = ImportClient ImportRef { conn, importId, proxies }
             M.insert EntryIE { client, refCount = 1 } importId imports
             pure client
-acceptCap Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
-    entry <- M.lookup (IEId exportId) exports
-    case entry of
-        Nothing ->
-            error "TODO"
-
-        Just EntryIE{ client } ->
+acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
+    lookupAbort "export" conn exports (IEId exportId) $
+        \EntryIE{client} ->
             pure client
 acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
-    case unmarshalMsgTarget (R.MessageTarget'promisedAnswer pa) of
-        Left _ ->
-            error "TODO"
-        Right msgTgt ->
-            newLocalTgtClient conn msgTgt
+    case unmarshalPromisedAnswer pa of
+        Left e ->
+            abortConn conn e
+        Right pa ->
+            newLocalAnswerClient conn pa
 acceptCap _ d                    = error $ "TODO: " ++ show d
 
 -- | Create a new client targeting an object in our answers table.
--- Important: in this case the 'MsgTarget' refers to a question we
+-- Important: in this case the 'PromisedAnswer' refers to a question we
 -- have recevied, not sent.
-newLocalTgtClient :: Conn -> MsgTarget -> STM Client
-newLocalTgtClient conn@Conn{answers} AnswerTgt { answerId, transform } = do
+newLocalAnswerClient :: Conn -> PromisedAnswer -> STM Client
+newLocalAnswerClient conn@Conn{answers} PromisedAnswer{ answerId, transform } = do
     callBuffer <- newTQueue
     let tmpDest = LocalBuffer { callBuffer }
     pState <- newTVar Pending { tmpDest }
@@ -1434,8 +1439,6 @@ newLocalTgtClient conn@Conn{answers} AnswerTgt { answerId, transform } = do
             (writeTVar pState)
             (toList transform)
     pure PromiseClient { pState }
-newLocalTgtClient _conn (ImportTgt _) =
-    error "TODO"
 
 
 -- Note [Limiting resource usage]
