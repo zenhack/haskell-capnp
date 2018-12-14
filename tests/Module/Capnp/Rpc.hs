@@ -43,7 +43,7 @@ rpcTests = do
     unusualTests
 
 -------------------------------------------------------------------------------
--- Tests using echo.capnp. This is the schema used by the example.
+-- Tests using echo.capnp.
 -------------------------------------------------------------------------------
 
 echoTests :: Spec
