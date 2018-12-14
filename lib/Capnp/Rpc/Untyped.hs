@@ -1265,7 +1265,8 @@ resolveClientClient tmpDest resolve client =
             error "TODO"
         ( _, AnswerDest{ transform } )
             | not (null transform) ->
-                error "TODO"
+                resolveClientExn tmpDest resolve $ eFailed
+                    "Tried to access pointer fields on a client"
             | otherwise -> do
                 releaseTmpDest tmpDest
                 resolve (Ready client)
