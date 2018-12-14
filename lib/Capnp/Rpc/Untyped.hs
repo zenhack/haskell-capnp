@@ -856,18 +856,13 @@ handleUnimplementedMsg conn = \case
         -- weird, but ultimately their problem.
         pure ()
     R.Message'abort _ ->
-        abortConn conn def
-            { R.type_ = R.Exception'Type'failed
-            , R.reason =
-                "Your vat sent an 'unimplemented' message for an abort message " <>
-                "that its remote peer never sent. This is likely a bug in your " <>
-                "capnproto library."
-            }
+        abortConn conn $ eFailed $
+            "Your vat sent an 'unimplemented' message for an abort message " <>
+            "that its remote peer never sent. This is likely a bug in your " <>
+            "capnproto library."
     _ ->
-        abortConn conn def
-            { R.type_ = R.Exception'Type'failed
-            , R.reason = "Received unimplemented response for required message."
-            }
+        abortConn conn $
+            eFailed "Received unimplemented response for required message."
 
 handleBootstrapMsg :: Conn -> R.Bootstrap -> STM ()
 handleBootstrapMsg conn R.Bootstrap{ questionId } = do
@@ -877,10 +872,8 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = do
                 { R.answerId = questionId
                 , R.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
                 , R.union' =
-                    R.Return'exception def
-                        { R.type_ = R.Exception'Type'failed
-                        , R.reason = "No bootstrap interface for this connection."
-                        }
+                    R.Return'exception $
+                        eFailed "No bootstrap interface for this connection."
                 }
         Just client -> do
             capDesc <- emitCap conn client
@@ -908,10 +901,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = do
             , onFinish = SnocList.empty
             }
     insertBootstrap _ (Just _) =
-        abortConn conn def
-            { R.type_ = R.Exception'Type'failed
-            , R.reason = "Duplicate question ID"
-            }
+        abortConn conn $ eFailed "Duplicate question ID"
 
 handleCallMsg :: Conn -> R.Call -> STM ()
 handleCallMsg
@@ -994,10 +984,7 @@ transformClient transform ptr conn =
         Right (Just (Untyped.PtrCap client)) ->
             pure client
         Right (Just _) ->
-            abortConn conn def
-                { R.type_ = R.Exception'Type'failed
-                , R.reason = "Tried to call method on non-capability."
-                }
+            abortConn conn $ eFailed "Tried to call method on non-capability."
 
 followTransform :: V.Vector R.PromisedAnswer'Op -> MPtr -> Either R.Exception MPtr
 followTransform ops = go (V.toList ops)
@@ -1009,15 +996,9 @@ followTransform ops = go (V.toList ops)
         Just (Untyped.PtrStruct (Untyped.Struct _ ptrs)) ->
             go cs (Untyped.sliceIndex (fromIntegral idx) ptrs)
         Just _ ->
-            Left def
-                { R.type_ = R.Exception'Type'failed
-                , R.reason = "Tried to access pointer field of non-struct."
-                }
+            Left $ eFailed "Tried to access pointer field of non-struct."
     go (R.PromisedAnswer'Op'unknown' op:_) _ptr =
-        Left def
-            { R.type_ = R.Exception'Type'failed
-            , R.reason = "Unknown PromisedAnswer.Op: " <> fromString (show op)
-            }
+        Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show op)
 
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
 -- with an error if any of the pointers in the chain (except the last one) is
@@ -1083,15 +1064,12 @@ lookupAbort keyTypeName conn m key f = do
         Just val ->
             f val
         Nothing ->
-            abortConn conn def
-                { R.type_ = R.Exception'Type'failed
-                , R.reason = mconcat
-                    [ "No such "
-                    , keyTypeName
-                    ,  ": "
-                    , fromString (show key)
-                    ]
-                }
+            abortConn conn $ eFailed $ mconcat
+                [ "No such "
+                , keyTypeName
+                ,  ": "
+                , fromString (show key)
+                ]
 
 -- | @'insertNewAbort' keyTypeName conn key value stmMap@ inserts a key into a
 -- map, aborting the connection if it is already present. @keyTypeName@ will be
@@ -1101,10 +1079,8 @@ insertNewAbort keyTypeName conn key value =
     M.focus
         (Focus.alterM $ \case
             Just _ ->
-                abortConn conn def
-                    { R.type_ = R.Exception'Type'failed
-                    , R.reason = "duplicate entry in " <> keyTypeName <> " table."
-                    }
+                abortConn conn $ eFailed $
+                    "duplicate entry in " <> keyTypeName <> " table."
             Nothing ->
                 pure (Just value)
         )
@@ -1205,12 +1181,9 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
             mapQueueSTM conn onFinish finish
             M.delete (QAId questionId) table
         HaveFinish{} ->
-            abortConn conn def
-                { R.type_ = R.Exception'Type'failed
-                , R.reason =
-                    "Duplicate finish message for " <> tableName <> " #"
-                    <> fromString (show questionId)
-                }
+            abortConn conn $ eFailed $
+                "Duplicate finish message for " <> tableName <> " #"
+                <> fromString (show questionId)
 
 -- | Update an entry in the questions or answers table to queue the given
 -- callback when the return message for that answer comes in. If the return
