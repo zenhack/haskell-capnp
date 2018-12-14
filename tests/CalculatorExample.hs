@@ -6,10 +6,11 @@ import Test.Hspec
 
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (race_)
-import Control.Exception        (SomeException, try)
+import Control.Exception        (throwIO, try)
 import Data.Foldable            (for_)
 import System.Environment       (getEnv)
 import System.Exit              (ExitCode(ExitSuccess))
+import System.IO.Error          (isDoesNotExistError)
 import System.Process           (readProcessWithExitCode)
 
 import qualified Examples.CalculatorServer
@@ -20,10 +21,12 @@ getCxxClient = getExe "CXX_CALCULATOR_CLIENT"
 getExe :: String -> IO (Maybe FilePath)
 getExe varName =
     try (getEnv varName) >>= \case
-        -- XXX TODO: only catch the exception that getEnv throws:
-        Left (_ :: SomeException) -> do
-            putStrLn $ varName ++ " not set; skipping."
-            pure Nothing
+        Left e
+            | isDoesNotExistError e -> do
+                putStrLn $ varName ++ " not set; skipping."
+                pure Nothing
+            | otherwise ->
+                throwIO e
         Right path ->
             pure (Just path)
 
