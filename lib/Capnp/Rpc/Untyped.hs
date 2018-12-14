@@ -107,7 +107,6 @@ import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
 
-import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as R
 import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
@@ -804,27 +803,44 @@ coordinator conn@Conn{recvQ,debugMode} = go
         Left e ->
             throwIO e
     handleMsg = do
-        msg <- readTBQueue recvQ
-        pureMsg <- msgToValue msg
+        msg <- (readTBQueue recvQ >>= parseWithCaps conn)
             `catchSTM`
             (abortConn conn . wrapException debugMode)
-        case pureMsg of
+        case msg of
             R.Message'abort exn ->
                 handleAbortMsg conn exn
-            R.Message'unimplemented msg ->
-                handleUnimplementedMsg conn msg
+            R.Message'unimplemented oldMsg ->
+                handleUnimplementedMsg conn oldMsg
             R.Message'bootstrap bs ->
                 handleBootstrapMsg conn bs
             R.Message'call call ->
-                handleCallMsg conn call msg
+                handleCallMsg conn call
             R.Message'return ret ->
-                handleReturnMsg conn ret msg
+                handleReturnMsg conn ret
             R.Message'finish finish ->
                 handleFinishMsg conn finish
             R.Message'release release ->
                 handleReleaseMsg conn release
             _ ->
-                sendPureMsg conn $ R.Message'unimplemented pureMsg
+                sendPureMsg conn $ R.Message'unimplemented msg
+
+-- | 'parseWithCaps' parses a message, making sure to interpret its capability
+-- table. The latter bit is the difference between this and just calling
+-- 'msgToValue'; 'msgToValue' will leave all of the clients in the message
+-- null.
+parseWithCaps :: Conn -> ConstMsg -> STM R.Message
+parseWithCaps conn msg = do
+    pureMsg <- msgToValue msg
+    case pureMsg of
+        -- capabilities only appear in call and return messages, and in the
+        -- latter only in the 'results' variant. In the other cases we can
+        -- just leave the result alone.
+        R.Message'call R.Call{params=R.Payload{capTable}} ->
+            fixCapTable capTable conn msg >>= msgToValue
+        R.Message'return R.Return{union'=R.Return'results R.Payload{capTable}} ->
+            fixCapTable capTable conn msg >>= msgToValue
+        _ ->
+            pure pureMsg
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
@@ -897,7 +913,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = do
             , R.reason = "Duplicate question ID"
             }
 
-handleCallMsg :: Conn -> R.Call -> ConstMsg -> STM ()
+handleCallMsg :: Conn -> R.Call -> STM ()
 handleCallMsg
         conn@Conn{exports, answers}
         R.Call
@@ -905,9 +921,9 @@ handleCallMsg
             , target
             , interfaceId
             , methodId
-            , params=R.Payload{capTable}
+            , params=R.Payload{content}
             }
-        msg = do
+        = do
     -- First, add an entry in our answers table:
     insertNewAbort
         "answer"
@@ -918,16 +934,11 @@ handleCallMsg
             , onFinish = SnocList.empty
             }
         answers
-    -- Next, fish out the parameters to the call, and make sure
-    -- the capability table is set up:
-    msgWithCaps <- fixCapTable capTable conn msg
-    callParams <- evalLimitT defaultLimit $
-        msgToValue msgWithCaps >>= \case
-            RawRpc.Message'call rawCall ->
-                RawRpc.get_Call'params rawCall
-                    >>= RawRpc.get_Payload'content
-            _ ->
-                error "BUG: handleCallMsg was passed a non-call message!"
+
+    -- Marshal the parameters to the call back into the low-level form:
+    callParams <- createPure defaultLimit $ do
+        msg <- Message.newMessage Nothing
+        cerialize msg content
 
     -- Set up a callback for when the call is finished, to
     -- send the return message:
@@ -1023,21 +1034,9 @@ followPtrs (i:is) (Just (Untyped.PtrStruct (Untyped.Struct _ ptrs))) =
 followPtrs (_:_) (Just _) =
     Left (eFailed "Tried to access pointer field of non-struct.")
 
-handleReturnMsg :: Conn -> R.Return -> ConstMsg -> STM ()
-handleReturnMsg conn@Conn{questions} ret@R.Return{union'} msg = do
-    ret <- case union' of
-        R.Return'results R.Payload{capTable} -> do
-            msgWithCaps <- fixCapTable capTable conn msg
-            evalLimitT defaultLimit $
-                msgToValue msgWithCaps >>= \case
-                    RawRpc.Message'return rawRet ->
-                        decerialize rawRet
-                    _ ->
-                        error "BUG: handleReturnMsg was passed a non-return message!"
-        _ ->
-            -- there's no payload, so we can just leave this as-is.
-            pure ret
-    updateQAReturn conn questions "question" ret
+handleReturnMsg :: Conn -> R.Return -> STM ()
+handleReturnMsg conn@Conn{questions} =
+    updateQAReturn conn questions "question"
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
 handleFinishMsg conn@Conn{answers} =
