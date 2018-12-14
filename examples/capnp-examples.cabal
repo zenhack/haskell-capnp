@@ -13,7 +13,7 @@ maintainer:          ian@zenhack.net
 build-type:          Simple
 extra-source-files:  ChangeLog.md
 
-common shared-opts
+library
   build-depends:
       base >=4.11 && <5.0
     , capnp
@@ -25,9 +25,16 @@ common shared-opts
     , network ^>= 2.8.0
     , network-simple ^>= 0.4
     , supervisors ^>= 0.1
-  default-language:    Haskell2010
-  other-modules:
-      Capnp.Gen.ById.X85150b117366d14b
+  hs-source-dirs:
+    lib
+  exposed-modules:
+      Examples.EchoClient
+    , Examples.EchoServer
+    , Examples.CalculatorClient
+    , Examples.CalculatorServer
+
+    -- Generated code
+    , Capnp.Gen.ById.X85150b117366d14b
     , Capnp.Gen.ById.X85150b117366d14b.Pure
     , Capnp.Gen.ById.Xd0a87f36fa0182f5
     , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
@@ -37,19 +44,16 @@ common shared-opts
     , Capnp.Gen.Echo
   ghc-options:
     -Wall
+  default-language:    Haskell2010
 
-executable echo-client
-  import: shared-opts
-  main-is:             EchoClient.hs
-
-executable echo-server
-  import: shared-opts
-  main-is:             EchoServer.hs
-
-executable calculator-client
-  import: shared-opts
-  main-is:             CalculatorClient.hs
-
-executable calculator-server
-  import: shared-opts
-  main-is:             CalculatorServer.hs
+executable run-capnp-example
+  build-depends:
+      base
+    , capnp-examples
+  hs-source-dirs:
+    cmd
+  main-is:
+    Main.hs
+  ghc-options:
+    -Wall
+  default-language:    Haskell2010

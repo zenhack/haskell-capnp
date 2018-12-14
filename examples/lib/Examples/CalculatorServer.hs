@@ -3,7 +3,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecordWildCards       #-}
-module Main where
+module Examples.CalculatorServer (main) where
 
 import Prelude hiding (subtract)
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Main where
+module Examples.EchoServer (main) where
 
 import Network.Simple.TCP (serve)
 

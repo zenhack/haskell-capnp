@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Main where
+module Examples.CalculatorClient (main) where
 
 import Network.Simple.TCP (connect)
 import Supervisors        (Supervisor)

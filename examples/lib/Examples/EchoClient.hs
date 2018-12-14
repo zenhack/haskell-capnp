@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Main where
+module Examples.EchoClient (main) where
 
 import Network.Simple.TCP (connect)
 
