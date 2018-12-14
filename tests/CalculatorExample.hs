@@ -14,16 +14,22 @@ import System.Process           (readProcessWithExitCode)
 
 import qualified Examples.CalculatorServer
 
+getCxxClient :: IO (Maybe FilePath)
+getCxxClient = getExe "CXX_CALCULATOR_CLIENT"
+
+getExe :: String -> IO (Maybe FilePath)
+getExe varName =
+    try (getEnv varName) >>= \case
+        -- XXX TODO: only catch the exception that getEnv throws:
+        Left (_ :: SomeException) -> do
+            putStrLn $ varName ++ " not set; skipping."
+            pure Nothing
+        Right path ->
+            pure (Just path)
+
 tests :: Spec
 tests = describe "Check our example against the C++ implementation" $ do
-    cxxPath <- runIO $
-        try (getEnv "CXX_CALCULATOR_CLIENT") >>= \case
-            -- XXX TODO: only catch the exception that getEnv throws:
-            Left (_ :: SomeException) -> do
-                putStrLn "CXX_CALCULATOR_CLIENT not sent; skipping."
-                pure Nothing
-            Right path ->
-                pure (Just path)
+    cxxPath <- runIO $ getCxxClient
     for_ cxxPath $ \path ->
         it "Should pass when run against our server" $
             race_
