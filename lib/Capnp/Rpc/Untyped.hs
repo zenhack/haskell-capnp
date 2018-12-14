@@ -75,21 +75,21 @@ import Test.Hspec
 import Data.Word
 import UnliftIO.STM
 
-import Control.Concurrent     (threadDelay)
-import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
-import Control.Monad          (forever)
-import Data.Default           (Default(def))
-import Data.Foldable          (toList, traverse_)
-import Data.Hashable          (Hashable, hash, hashWithSalt)
-import Data.String            (fromString)
-import Data.Text              (Text)
-import GHC.Generics           (Generic)
-import Supervisors            (Supervisor, superviseSTM, withSupervisor)
+import Control.Concurrent      (threadDelay)
+import Control.Concurrent.MVar (MVar, mkWeakMVar, newEmptyMVar)
+import Control.Concurrent.STM  (catchSTM, flushTQueue, throwSTM)
+import Control.Monad           (forever)
+import Data.Default            (Default(def))
+import Data.Foldable           (toList, traverse_)
+import Data.Hashable           (Hashable, hash, hashWithSalt)
+import Data.String             (fromString)
+import Data.Text               (Text)
+import GHC.Generics            (Generic)
+import Supervisors             (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.StableName
     (StableName, eqStableName, hashStableName, makeStableName)
-import System.Mem.Weak        (addFinalizer)
-import UnliftIO.Async         (concurrently_)
-import UnliftIO.Exception     (Exception, bracket, handle, throwIO, try)
+import UnliftIO.Async          (concurrently_)
+import UnliftIO.Exception      (Exception, bracket, handle, throwIO, try)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -469,12 +469,14 @@ data Client
     = NullClient
     -- | A client pointing at a capability local to our own vat.
     | LocalClient
-        { exportMap :: ExportMap
+        { exportMap    :: ExportMap
         -- ^ Record of what export IDs this client has on different remote
         -- connections.
-        , qCall     :: Rc (Server.CallInfo -> STM ())
+        , qCall        :: Rc (Server.CallInfo -> STM ())
         -- ^ Queue a call for the local capability to handle. This is wrapped
         -- in a reference counted cell, whose finalizer stops the server.
+        , finalizerKey :: TVar (Maybe (MVar ()))
+        -- ^ See Note [Client Finalizer]
         }
     -- | A client which will resolve to some other capability at
     -- some point.
@@ -724,14 +726,45 @@ export sup ops = do
     q <- TCloseQ.new
     qCall <- Rc.new (TCloseQ.write q) (TCloseQ.close q)
     exportMap <- ExportMap <$> M.new
+    finalizerKey <- newTVar Nothing
     let client = LocalClient
             { qCall
             , exportMap
+            , finalizerKey
             }
     superviseSTM sup $ do
-        addFinalizer client $ atomically $ Rc.release qCall
+        -- See Note [Client Finalizer]
+        mvar <- newEmptyMVar
+        _ <- mkWeakMVar mvar $ atomically $ Rc.release qCall
+        atomically $ writeTVar finalizerKey (Just mvar)
+
         Server.runServer q ops
     pure client
+
+-- Note [Client Finalizer]
+-- =======================
+--
+-- We want to make sure than when a (local) client is connected, the
+-- corresponding server is shut down. The naive way to do this would
+-- be to just stick a finalizer on the client itself, but this is
+-- unsafe. From the docs for the 'Weak' type:
+--
+-- > WARNING: weak pointers to ordinary non-primitive Haskell types
+-- > are particularly fragile, because the compiler is free to optimise
+-- > away or duplicate the underlying data structure. Therefore
+-- > attempting to place a finalizer on an ordinary Haskell type may
+-- > well result in the finalizer running earlier than you expected.
+-- >
+-- > [...]
+-- >
+-- > Finalizers can be used reliably for types that are created
+-- > explicitly and have identity, such as IORef and MVar. [...]
+--
+-- The documentation is not explicit about whether TVars are safe
+-- here, so we use an MVar instead (which we end up storing in a
+-- TVar, because we can't create it in STM). When we tried to use
+-- a TVar directly, the finalizer was sometimes running early, so
+-- I(zenhack) assume TVars are in fact not finalizer-safe.
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =
