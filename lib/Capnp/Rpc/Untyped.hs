@@ -1427,7 +1427,7 @@ acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
             abortConn conn e
         Right pa ->
             newLocalAnswerClient conn pa
-acceptCap _ d                    = error $ "TODO: " ++ show d
+acceptCap _ d = error $ "TODO: " ++ show d
 
 -- | Create a new client targeting an object in our answers table.
 -- Important: in this case the 'PromisedAnswer' refers to a question we
