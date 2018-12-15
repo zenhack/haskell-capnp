@@ -485,9 +485,10 @@ data Client
     -- | A client which will resolve to some other capability at
     -- some point.
     | PromiseClient
-        { pState :: TVar PromiseState
+        { pState    :: TVar PromiseState
         -- ^ The current state of the promise; the indirection allows
         -- the promise to be updated.
+        , exportMap :: ExportMap
         }
     -- | A client which points to a (resolved) capability in a remote vat.
     | ImportClient ImportRef
@@ -605,7 +606,7 @@ call info@Server.CallInfo { response } = \case
         Nothing ->
             breakPromise response eDisconnected
 
-    PromiseClient stVar -> readTVar stVar >>= \case
+    PromiseClient { pState } -> readTVar pState >>= \case
         Ready { target }  ->
             call info target
 
@@ -1212,7 +1213,8 @@ requestBootstrap conn@Conn{questions} = do
             }
         qid
         questions
-    pure PromiseClient { pState }
+    exportMap <- ExportMap <$> M.new
+    pure PromiseClient { pState, exportMap }
 
 -- Note [resolveClient]
 -- ====================
@@ -1346,6 +1348,7 @@ dropConnExport conn@Conn{exports} client = do
 -- | Get the export map for the client.
 clientExportMap :: Client -> ExportMap
 clientExportMap LocalClient{exportMap}            = exportMap
+clientExportMap PromiseClient{exportMap}          = exportMap
 clientExportMap (ImportClient ImportRef{proxies}) = proxies
 clientExportMap _                                 = error "TODO"
 
@@ -1357,8 +1360,8 @@ emitCap _conn NullClient =
     pure R.CapDescriptor'none
 emitCap conn client@LocalClient{} =
     R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client
-emitCap conn PromiseClient { pState } =
-    emitPromiseCap conn pState
+emitCap conn client@PromiseClient{} =
+    R.CapDescriptor'senderPromise . ieWord <$> getConnExport conn client
 emitCap targetConn client@(ImportClient ImportRef { conn=hostConn, importId })
     | hostConn == targetConn =
         pure (R.CapDescriptor'receiverHosted (ieWord importId))
@@ -1380,11 +1383,6 @@ addBumpExport exportId client =
                 "from what is already in our exports table."
         | otherwise =
             Just EntryIE { client, refCount = refCount + 1 }
-
--- | Helper for 'emitCap'; generate a CapDescriptor for a 'PromiseClient', which
--- has the given state.
-emitPromiseCap :: Conn -> TVar PromiseState -> STM R.CapDescriptor
-emitPromiseCap = error "TODO"
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
@@ -1427,7 +1425,8 @@ newLocalAnswerClient conn@Conn{answers} PromisedAnswer{ answerId, transform } = 
             tmpDest
             (writeTVar pState)
             (toList transform)
-    pure PromiseClient { pState }
+    exportMap <- ExportMap <$> M.new
+    pure PromiseClient { pState, exportMap }
 
 
 -- Note [Limiting resource usage]
