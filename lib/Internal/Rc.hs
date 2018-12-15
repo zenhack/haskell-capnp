@@ -58,7 +58,7 @@ decr (Rc tv) = readTVar tv >>= \case
         writeTVar tv $ Just s { refCount = refCount - 1 }
 
 -- | Release the value immediately, and run the finalizer, regardless of the
--- current value.
+-- current reference count.
 release :: Rc a -> STM ()
 release (Rc tv) = readTVar tv >>= \case
     Nothing ->
