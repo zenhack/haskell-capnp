@@ -193,7 +193,7 @@ data Conn = Conn
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and execute the STM we have registered.
 
-    , pendingCallbacks :: TQueue (STM ())
+    , pendingCallbacks :: TQueue (IO ())
     -- See Note [callbacks]
 
     , bootstrap        :: Maybe Client
@@ -263,14 +263,19 @@ instance Default ConnConfig where
         , withBootstrap  = Nothing
         }
 
+-- | Queue an IO action to be run some time after this transaction commits.
+-- See Note [callbacks].
+queueIO :: Conn -> IO () -> STM ()
+queueIO Conn{pendingCallbacks} = writeTQueue pendingCallbacks
+
 -- | Queue another transaction to be run some time after this transaction
 -- commits, in a thread bound to the lifetime of the connection. If this is
--- called multiple times within the same transaction, the transactions will
--- be run in the order they were queued.
+-- called multiple times within the same transaction, each of the
+-- transactions will be run separately, in the order they were queued.
 --
 -- See Note [callbacks]
 queueSTM :: Conn -> STM () -> STM ()
-queueSTM Conn{pendingCallbacks} = writeTQueue pendingCallbacks
+queueSTM conn = queueIO conn . atomically
 
 -- | @'mapQueueSTM' conn fs val@ queues the list of transactions obtained
 -- by applying each element of @fs@ to @val@.
@@ -304,11 +309,14 @@ mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 -- But this means that the synchronization semantics are totally different from the
 -- case where the callback really does get run later!
 --
--- Instead, the connection maintains a queue of all callback transactions that are
--- ready to run, and when the event a callback is waiting for occurs, we simply
--- move the callback to the queue, using 'queueSTM'. When the connection starts up,
--- it creates a thread running 'callbackLoop', which just continually flushes the
--- queue, running the callbacks in sequence, each in its own transaction.
+-- In addition, we sometimes want to register a finalizer, inside a transaction,
+-- but this can only be done in IO.
+--
+-- To solve these issues, the connection maintains a queue of all callback actions
+-- that are ready to run, and when the event a callback is waiting for occurs, we
+-- simply move the callback to the queue, using 'queueIO' or 'queueSTM'. When the
+-- connection starts up, it creates a thread running 'callbackLoop', which just
+-- continually flushes the queue, running the actions in the queue.
 
 -- | Get a new question id. retries if we are out of available question ids.
 newQuestion :: Conn -> STM QAId
@@ -778,7 +786,7 @@ clientMethodHandler interfaceId methodId client =
 callbacksLoop :: Conn -> IO ()
 callbacksLoop Conn{pendingCallbacks} = forever $
     atomically (flushTQueue pendingCallbacks)
-    >>= traverse_ atomically
+    >>= sequence_
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn -> IO ()
