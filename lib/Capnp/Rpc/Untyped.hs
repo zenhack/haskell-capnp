@@ -725,7 +725,17 @@ nullClient = NullClient
 incRef :: Client -> STM ()
 incRef NullClient         = pure ()
 incRef LocalClient{qCall} = Rc.incr qCall
-incRef _                  = error "TODO"
+incRef PromiseClient { pState } = readTVar pState >>= \case
+    Ready {} ->
+        error "TODO: Ready"
+    Embargo {} ->
+        error "TODO: Embargo"
+    Pending {} ->
+        error "TODO: Pending"
+    Error _ ->
+        error "TODO: Error"
+incRef (ImportClient _) =
+    error "TODO: ImportClient"
 
 
 -- | Decrement the reference count on a client. If the count reaches zero,
