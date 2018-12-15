@@ -84,11 +84,11 @@ tests = describe "Check our example against the C++ implementation" $ do
 -- on clientPort, offering a proxy of the server's bootstrap interface as our
 -- own.
 runProxy :: Word16 -> Word16 -> IO ()
-runProxy serverPort clientPort = do
+runProxy serverPort clientPort =
     connect "localhost" (fromString $ show serverPort) $ \(serverSock, _addr) ->
         handleConn (socketTransport serverSock defaultLimit) def
             { debugMode = True
-            , withBootstrap = Just $ \_sup client -> do
+            , withBootstrap = Just $ \_sup client ->
                 serve "localhost" (fromString $ show clientPort) $ \(clientSock, _addr) ->
                     handleConn (socketTransport clientSock defaultLimit) def
                         { getBootstrap = \_sup -> pure $ Just client

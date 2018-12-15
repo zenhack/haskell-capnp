@@ -1417,7 +1417,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
             let client = ImportClient ImportRef { conn, importId, proxies }
             M.insert EntryIE { client, refCount = 1 } importId imports
             pure client
-acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) = do
+acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) =
     lookupAbort "export" conn exports (IEId exportId) $
         \EntryIE{client} ->
             pure client
