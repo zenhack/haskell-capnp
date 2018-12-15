@@ -3,20 +3,19 @@
 module Examples.CalculatorClient (main) where
 
 import Network.Simple.TCP (connect)
-import Supervisors        (Supervisor)
 
 import qualified Data.Vector as V
 
 import Capnp               (def, defaultLimit)
 import Capnp.Promise       (waitIO)
-import Capnp.Rpc           (throwFailed, (?))
-import Capnp.Rpc.Server    (pureHandler)
+import Capnp.Rpc           ((?))
 import Capnp.Rpc.Transport (socketTransport)
-import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn, stopVat, toClient)
+import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn, stopVat)
 import Control.Monad       (when)
 
 import Capnp.Gen.Calculator.Pure
 
+main :: IO ()
 main = connect "localhost" "4000" $ \(sock, _addr) ->
     handleConn (socketTransport sock defaultLimit) def
         { debugMode = True

@@ -84,6 +84,9 @@ common shared-opts
       , vector                            ^>= 0.12.0
   ghc-options:
     -Wall
+
+    -- This warning is triggered by normal use of NamedFieldPuns, so it's a no-go
+    -- for us:
     -Wno-name-shadowing
 
     -- I(zenhack) find it rather odd that orphan instances are flagged when the
