@@ -756,7 +756,9 @@ incRef PromiseClient { pState } = readTVar pState >>= \case
     Error _ ->
         error "TODO: Error"
 incRef (ImportClient _) =
-    error "TODO: ImportClient"
+    -- No need to do refcounting for ImportClients; we set upfinalizers
+    -- instead.
+    pure ()
 
 
 -- | Decrement the reference count on a client. If the count reaches zero,
@@ -769,7 +771,10 @@ decRef PromiseClient { pState } = readTVar pState >>= \case
         decRef target
     _ ->
         error "TODO"
-decRef _                  = error "TODO"
+decRef (ImportClient _) =
+    -- No need to do refcounting for ImportClients; we set upfinalizers
+    -- instead.
+    pure ()
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
