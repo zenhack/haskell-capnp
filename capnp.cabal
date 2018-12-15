@@ -222,6 +222,7 @@ test-suite tests
       , Instances
       , SchemaGeneration
 
+      , Examples.CalculatorClient
       , Examples.CalculatorServer
 
       -- Generated code for examples/calculator.capnp
