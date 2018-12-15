@@ -726,8 +726,8 @@ incRef :: Client -> STM ()
 incRef NullClient         = pure ()
 incRef LocalClient{qCall} = Rc.incr qCall
 incRef PromiseClient { pState } = readTVar pState >>= \case
-    Ready {} ->
-        error "TODO: Ready"
+    Ready { target } ->
+        incRef target
     Embargo {} ->
         error "TODO: Embargo"
     Pending {} ->
@@ -743,6 +743,11 @@ incRef (ImportClient _) =
 decRef :: Client -> STM ()
 decRef NullClient         = pure ()
 decRef LocalClient{qCall} = Rc.decr qCall
+decRef PromiseClient { pState } = readTVar pState >>= \case
+    Ready { target } ->
+        decRef target
+    _ ->
+        error "TODO"
 decRef _                  = error "TODO"
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
