@@ -22,6 +22,7 @@ import Capnp.Rpc.Transport  (socketTransport)
 import Capnp.Rpc.Untyped    (ConnConfig(..), handleConn)
 import Capnp.TraversalLimit (defaultLimit)
 
+import qualified Examples.CalculatorClient
 import qualified Examples.CalculatorServer
 
 getExe :: String -> IO (Maybe FilePath)
@@ -44,6 +45,10 @@ tests = describe "Check our example against the C++ implementation" $ do
         it "Should pass when run against our server" $
             Examples.CalculatorServer.main
                 `race_` (waitForServer >> cxxClient clientPath 4000)
+    for_ serverPath $ \serverPath ->
+        it "Should pass when run against our client" $
+            cxxServer serverPath 4000
+                `race_` (waitForServer >> Examples.CalculatorClient.main)
     for_ ((,) <$> clientPath <*> serverPath) $ \(clientPath, serverPath) ->
         it "Should pass when run aginst the C++ server, proxied through us." $
             cxxServer serverPath 4000
