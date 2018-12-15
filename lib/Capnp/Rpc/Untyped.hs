@@ -185,8 +185,8 @@ data Conn = Conn
 
     , questions        :: M.Map QAId EntryQA
     , answers          :: M.Map QAId EntryQA
-    , exports          :: M.Map IEId EntryIE
-    , imports          :: M.Map IEId EntryIE
+    , exports          :: M.Map IEId EntryE
+    , imports          :: M.Map IEId EntryI
 
     , embargos         :: M.Map EmbargoId (STM ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
@@ -447,17 +447,29 @@ data EntryQA
         , onReturn  :: SnocList (R.Return -> STM ())
         }
 
--- | An entry in our imports or exports table.
-data EntryIE = EntryIE
+
+-- | An entry in our imports table.
+data EntryI = EntryI
+    { localRc  :: Rc ()
+    -- ^ A refcount cell with a finalizer attached to it; when the finalizer
+    -- runs it will remove this entry from the table and send a release
+    -- message to the remote vat.
+    , remoteRc :: !Word32
+    -- ^ The reference count for this object as understood by the remote
+    -- vat. This tells us what to send in the release message's count field.
+    , proxies  :: ExportMap
+    -- ^ See Note [proxies]
+    }
+
+-- | An entry in our exports table.
+data EntryE = EntryE
     { client   :: Client
     -- ^ The client. We cache it in the table so there's only one object
     -- floating around, which lets us attach a finalizer without worrying
     -- about it being run more than once.
     , refCount :: !Word32
-    -- ^ The refcount for this entry. For imports, this tells us what to
-    -- put in a release message when we're ready to free the object. For
-    -- exports, This lets us know when we can drop the entry from the
-    -- table.
+    -- ^ The refcount for this entry. This lets us know when we can drop
+    -- the entry from the table.
     }
 
 -- | Types which may be converted to and from 'Client's. Typically these
@@ -547,13 +559,14 @@ data TmpDest
 -- | A reference to a capability in our import table/a remote vat's export
 -- table.
 data ImportRef = ImportRef
-    { conn     :: Conn
+    { conn         :: Conn
     -- ^ The connection to the remote vat.
-    , importId :: !IEId
+    , importId     :: !IEId
     -- ^ The import id for this capability.
-    , proxies  :: ExportMap
+    , proxies      :: ExportMap
     -- ^ Export ids to use when this client is passed to a vat other than
     -- the one identified by 'conn'. See Note [proxies]
+    , finalizerKey :: FinalizerKey.Key
     }
 
 -- Ideally we could just derive these, but stm-containers doesn't have Eq
@@ -973,7 +986,7 @@ handleCallMsg
     case target of
         R.MessageTarget'importedCap exportId ->
             lookupAbort "export" conn exports (IEId exportId) $
-                \EntryIE{client} -> call callInfo client
+                \EntryE{client} -> call callInfo client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
             subscribeReturn "answer" conn answers (QAId targetQid) $ \ret@R.Return{union'} ->
                 case union' of
@@ -1030,7 +1043,7 @@ handleReleaseMsg
             , referenceCount=refCountDiff
             } =
     lookupAbort "export" conn exports eid $
-        \EntryIE{client, refCount=oldRefCount} ->
+        \EntryE{client, refCount=oldRefCount} ->
             case compare oldRefCount refCountDiff of
                 LT ->
                     abortConn conn $ eFailed $
@@ -1040,7 +1053,7 @@ handleReleaseMsg
                     dropConnExport conn client
                 GT ->
                     M.insert
-                        EntryIE
+                        EntryE
                             { client
                             , refCount = oldRefCount - refCountDiff
                             }
@@ -1396,18 +1409,18 @@ emitCap targetConn client@(ImportClient ImportRef { conn=hostConn, importId })
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
 -- id, call 'error'.
-addBumpExport :: IEId -> Client -> M.Map IEId EntryIE -> STM ()
+addBumpExport :: IEId -> Client -> M.Map IEId EntryE -> STM ()
 addBumpExport exportId client =
     M.focus (Focus.alter go) exportId
   where
-    go Nothing = Just EntryIE { client, refCount = 1 }
-    go (Just EntryIE{ client = oldClient, refCount } )
+    go Nothing = Just EntryE { client, refCount = 1 }
+    go (Just EntryE{ client = oldClient, refCount } )
         | client /= oldClient =
             error $
                 "BUG: addExportRef called with a client that is different " ++
                 "from what is already in our exports table."
         | otherwise =
-            Just EntryIE { client, refCount = refCount + 1 }
+            Just EntryE { client, refCount = refCount + 1 }
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
@@ -1415,19 +1428,39 @@ acceptCap :: Conn -> R.CapDescriptor -> STM Client
 acceptCap _ R.CapDescriptor'none = pure NullClient
 acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
     entry <- M.lookup importId imports
+    finalizerKey <- FinalizerKey.newSTM
     case entry of
-        Just EntryIE{ client, refCount } -> do
-            M.insert EntryIE { client, refCount = refCount + 1 } importId imports
-            pure client
+        Just EntryI{ localRc, remoteRc, proxies } -> do
+            Rc.incr localRc
+            M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies } importId imports
+            queueIO conn $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
+            pure $ ImportClient ImportRef
+                { conn
+                , importId
+                , proxies
+                , finalizerKey
+                }
 
         Nothing -> do
+            localRc <- Rc.new () $ do
+                lookupAbort "imports" conn imports importId $ \EntryI { remoteRc } -> do
+                    sendPureMsg conn $ R.Message'release
+                        R.Release
+                            { id = ieWord importId
+                            , referenceCount = remoteRc
+                            }
+                    M.delete importId imports
             proxies <- ExportMap <$> M.new
-            let client = ImportClient ImportRef { conn, importId, proxies }
-            M.insert EntryIE { client, refCount = 1 } importId imports
-            pure client
+            M.insert EntryI { localRc, remoteRc = 1, proxies } importId imports
+            pure $ ImportClient ImportRef
+                { conn
+                , importId
+                , proxies
+                , finalizerKey
+                }
 acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) =
     lookupAbort "export" conn exports (IEId exportId) $
-        \EntryIE{client} ->
+        \EntryE{client} ->
             pure client
 acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
     case unmarshalPromisedAnswer pa of
