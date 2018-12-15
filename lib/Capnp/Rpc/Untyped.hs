@@ -851,6 +851,8 @@ coordinator conn@Conn{recvQ,debugMode} = go
                 handleFinishMsg conn finish
             R.Message'release release ->
                 handleReleaseMsg conn release
+            R.Message'disembargo disembargo ->
+                handleDisembargoMsg conn disembargo
             _ ->
                 sendPureMsg conn $ R.Message'unimplemented msg
 
@@ -1064,6 +1066,58 @@ handleReleaseMsg
                             }
                         eid
                         exports
+
+handleDisembargoMsg :: Conn -> R.Disembargo -> STM ()
+handleDisembargoMsg
+        conn@Conn{exports, answers}
+        R.Disembargo{ target, context=R.Disembargo'context'senderLoopback embargoId }
+    =
+    case target of
+        R.MessageTarget'importedCap exportId ->
+            lookupAbort "export" conn exports (IEId exportId) $ \EntryE{ client } ->
+                disembargoPromise client
+        R.MessageTarget'promisedAnswer R.PromisedAnswer{ questionId, transform } ->
+            lookupAbort "answer" conn answers (QAId questionId) $ \case
+                HaveReturn { returnMsg=R.Return{union'=R.Return'results R.Payload{content} } } ->
+                    transformClient transform content conn >>= disembargoClient
+                _ ->
+                    abortDisembargo $
+                        "does not target an answer which has resolved to a value hosted by"
+                        <> " the sender."
+        R.MessageTarget'unknown' ordinal ->
+            abortConn conn $ eUnimplemented $
+                "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
+  where
+    disembargoPromise PromiseClient{ pState } = readTVar pState >>= \case
+        Ready client ->
+            disembargoClient client
+        _ ->
+            abortDisembargo "targets a promise which has not resolved."
+    disembargoPromise _ =
+        abortDisembargo "targets something that is not a promise."
+
+    disembargoClient (ImportClient ImportRef {conn=targetConn, importId})
+        | conn == targetConn =
+            sendPureMsg conn $ R.Message'disembargo R.Disembargo
+                { context = R.Disembargo'context'receiverLoopback embargoId
+                , target = R.MessageTarget'importedCap (ieWord importId)
+                }
+    disembargoClient _ =
+            abortDisembargo $
+                "targets a promise which has not resolved to a capability"
+                <> " hosted by the sender."
+
+    abortDisembargo info =
+        abortConn conn $ eFailed $ mconcat
+            [ "Disembargo #"
+            , fromString (show embargoId)
+            , " with context = senderLoopback "
+            , info
+            ]
+handleDisembargoMsg _ _ =
+    error "TODO"
+
+
 
 -- | Interpret the list of cap descriptors, and replace the message's capability
 -- table with the result.
