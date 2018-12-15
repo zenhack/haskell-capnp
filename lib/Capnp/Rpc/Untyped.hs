@@ -1006,10 +1006,12 @@ followPtrs (_:_) (Just _) =
 
 handleReturnMsg :: Conn -> R.Return -> STM ()
 handleReturnMsg conn@Conn{questions} =
+    -- TODO: handle releaseParamCaps
     updateQAReturn conn questions "question"
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
 handleFinishMsg conn@Conn{answers} =
+    -- TODO: handle releaseResultCaps
     updateQAFinish conn answers "answer"
 
 handleReleaseMsg :: Conn -> R.Release -> STM ()
