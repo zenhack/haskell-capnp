@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
@@ -35,14 +34,7 @@ module Capnp.Rpc.Untyped
     -- * Shutting down the connection
     , stopVat
 
-#ifdef SELF_TESTS
-    , selfTests
-#endif
     ) where
-
-#ifdef SELF_TESTS
-import Test.Hspec
-#endif
 
 -- Note [Organization]
 -- ===================
@@ -1552,8 +1544,3 @@ newLocalAnswerClient conn@Conn{answers} PromisedAnswer{ answerId, transform } = 
 --
 --   If we just block, we need to make sure this doesn't hang the vat;
 --   we probably need a timeout at some level.
-
-#ifdef SELF_TESTS
-selfTests :: Spec
-selfTests = pure ()
-#endif

@@ -59,16 +59,7 @@ source-repository head
 
 --------------------------------------------------------------------------------
 
-flag self-tests
-  description: enable "in-line" module self-tests.
-  default: False
-
 common shared-opts
-  if flag(self-tests)
-    build-depends:
-      hspec
-    cpp-options:
-      -DSELF_TESTS
   build-depends:
         base                              >= 4.11  && < 4.13
       , bytes                             ^>= 0.15.4

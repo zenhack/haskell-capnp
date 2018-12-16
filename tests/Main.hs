@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Main (main) where
 
 import Test.Hspec
@@ -17,10 +16,6 @@ import WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 
 import qualified CalculatorExample
 
-#ifdef SELF_TESTS
-import qualified Capnp.Rpc.Untyped
-#endif
-
 main :: IO ()
 main = hspec $ parallel $ do
     describe "Tests for specific modules" $ do
@@ -38,7 +33,3 @@ main = hspec $ parallel $ do
         describe "property tests for schema" schemaCGRQuickCheck
     describe "Regression tests" regressionTests
     CalculatorExample.tests
-#ifdef SELF_TESTS
-    describe "Self-tests for individual modules"
-        Capnp.Rpc.Untyped.selfTests
-#endif
