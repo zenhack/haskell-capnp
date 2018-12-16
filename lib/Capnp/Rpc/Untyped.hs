@@ -667,7 +667,7 @@ callRemote
 -- | Callback to run when a return comes in that corresponds to a call
 -- we sent. Registered in callRemote.
 cbCallReturn :: Conn -> Fulfiller RawMPtr -> R.Return -> STM ()
-cbCallReturn conn response R.Return{ answerId, union' } = do
+cbCallReturn conn@Conn{answers} response R.Return{ answerId, union' } = do
     case union' of
         R.Return'exception exn ->
             breakPromise response exn
@@ -678,8 +678,30 @@ cbCallReturn conn response R.Return{ answerId, union' } = do
             fulfill response rawPtr
         R.Return'canceled ->
             breakPromise response $ eFailed "Canceled"
-        _ ->
-            error "TODO: handle other variants."
+
+        R.Return'resultsSentElsewhere ->
+            -- This should never happen, since we always set
+            -- sendResultsTo = caller
+            abortConn conn $ eFailed $ mconcat
+                [ "Received Return.resultsSentElswhere for a call "
+                , "with sendResultsTo = caller."
+                ]
+
+        R.Return'takeFromOtherQuestion (QAId -> qid) ->
+            -- TODO(cleanup): we should be a little stricter; the protocol
+            -- requires that (1) each answer is only used this way once, and
+            -- (2) The question was sent with sendResultsTo set to 'yourself',
+            -- but we don't enforce either of these requirements.
+            subscribeReturn "answer" conn answers qid $
+                cbCallReturn conn response
+
+        R.Return'acceptFromThirdParty _ ->
+            -- LEVEL 3
+            abortConn conn $ eUnimplemented $
+                "This vat does not support level 3."
+        R.Return'unknown' ordinal ->
+            abortConn conn $ eUnimplemented $
+                "Unknown return variant #" <> fromString (show ordinal)
     finishQuestion conn def
         { R.questionId = answerId
         , R.releaseResultCaps = False
