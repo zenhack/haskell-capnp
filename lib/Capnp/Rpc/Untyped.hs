@@ -697,7 +697,7 @@ cbCallReturn conn@Conn{answers} response R.Return{ answerId, union' } = do
 
         R.Return'acceptFromThirdParty _ ->
             -- LEVEL 3
-            abortConn conn $ eUnimplemented $
+            abortConn conn $ eUnimplemented
                 "This vat does not support level 3."
         R.Return'unknown' ordinal ->
             abortConn conn $ eUnimplemented $
@@ -1401,7 +1401,7 @@ resolveClientReturn tmpDest resolve conn@Conn{answers} transform R.Return { unio
 
     R.Return'acceptFromThirdParty _ ->
         -- LEVEL 3
-        abortConn conn $ eUnimplemented $
+        abortConn conn $ eUnimplemented
             "This vat does not support level 3."
 
     R.Return'unknown' ordinal ->
