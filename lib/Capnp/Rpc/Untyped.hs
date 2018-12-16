@@ -1347,7 +1347,7 @@ releaseTmpDest AnswerDest { conn, answerId } =
         { R.questionId = qaWord answerId
         , R.releaseResultCaps = False
         }
-releaseTmpDest (ImportDest _) = error "TODO"
+releaseTmpDest (ImportDest _) = pure ()
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
