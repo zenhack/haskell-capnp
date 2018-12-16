@@ -392,10 +392,10 @@ handleConn
             `concurrently_` recvLoop transport conn
             `concurrently_` callbacksLoop conn
             `concurrently_` useBootstrap conn
-    stopConn Conn{bootstrap=Nothing} =
-        pure ()
-    stopConn conn@Conn{bootstrap=Just client} =
-        atomically $ dropConnExport conn client
+    stopConn Conn{bootstrap=Nothing} = pure ()
+    stopConn Conn{bootstrap=Just (Client Nothing)} = pure ()
+    stopConn conn@Conn{bootstrap=Just (Client (Just client'))} =
+        atomically $ dropConnExport conn client'
         -- TODO: clear out the rest of the connection state.
     useBootstrap conn = case withBootstrap of
         Nothing -> pure ()
@@ -461,7 +461,7 @@ data EntryI = EntryI
 
 -- | An entry in our exports table.
 data EntryE = EntryE
-    { client   :: Client
+    { client   :: Client'
     -- ^ The client. We cache it in the table so there's only one object
     -- floating around, which lets us attach a finalizer without worrying
     -- about it being run more than once.
@@ -479,18 +479,22 @@ class IsClient a where
     fromClient :: Client -> a
 
 instance Show Client where
-    show NullClient = "nullClient"
-    show _          = "({- capability; not statically representable -})"
+    show (Client Nothing) = "nullClient"
+    show _                = "({- capability; not statically representable -})"
 
 -- | A reference to a capability, which may be live either in the current vat
 -- or elsewhere. Holding a client affords making method calls on a capability
 -- or modifying the local vat's reference count to it.
-data Client
-    -- | A client corresponding to a null pointer. Replies to all
-    -- method calls with an "unimplemented" exception.
-    = NullClient
+newtype Client =
+    -- We wrap the real client in a Maybe, with Nothing representing a 'null'
+    -- capability.
+    Client (Maybe Client')
+    deriving(Eq)
+
+-- | A non-null client.
+data Client'
     -- | A client pointing at a capability local to our own vat.
-    | LocalClient
+    = LocalClient
         { exportMap    :: ExportMap
         -- ^ Record of what export IDs this client has on different remote
         -- connections.
@@ -574,9 +578,7 @@ data ImportRef = ImportRef
 instance Eq ImportRef where
     ImportRef { conn=cx, importId=ix } == ImportRef { conn=cy, importId=iy } =
         cx == cy && ix == iy
-instance Eq Client where
-    NullClient == NullClient =
-        True
+instance Eq Client' where
     LocalClient { qCall = x } == LocalClient { qCall = y } =
         x == y
     PromiseClient { pState = x } == PromiseClient { pState = y } =
@@ -615,10 +617,9 @@ data PromisedAnswer = PromisedAnswer
 
 -- | Queue a call on a client.
 call :: Server.CallInfo -> Client -> STM ()
-call info@Server.CallInfo { response } = \case
-    NullClient ->
-        breakPromise response eMethodUnimplemented
-
+call Server.CallInfo { response } (Client Nothing) =
+    breakPromise response eMethodUnimplemented
+call info@Server.CallInfo { response } (Client (Just client')) = case client' of
     LocalClient { qCall } -> Rc.get qCall >>= \case
         Just q ->
             q info
@@ -738,7 +739,7 @@ unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
 -- | A null client. This is the only client value that can be represented
 -- statically. Throws exceptions in response to all method calls.
 nullClient :: Client
-nullClient = NullClient
+nullClient = Client Nothing
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
@@ -749,7 +750,7 @@ export sup ops = do
     qCall <- Rc.new (TCloseQ.write q) (TCloseQ.close q)
     exportMap <- ExportMap <$> M.new
     finalizerKey <- FinalizerKey.newSTM
-    let client = LocalClient
+    let client' = LocalClient
             { qCall
             , exportMap
             , finalizerKey
@@ -757,7 +758,7 @@ export sup ops = do
     superviseSTM sup $ do
         FinalizerKey.set finalizerKey $ atomically $ Rc.release qCall
         Server.runServer q ops
-    pure client
+    pure $ Client (Just client')
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =
@@ -957,7 +958,7 @@ handleCallMsg
     case target of
         R.MessageTarget'importedCap exportId ->
             lookupAbort "export" conn exports (IEId exportId) $
-                \EntryE{client} -> call callInfo client
+                \EntryE{client} -> call callInfo $ Client $ Just client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
             subscribeReturn "answer" conn answers (QAId targetQid) $ \ret@R.Return{union'} ->
                 case union' of
@@ -1043,7 +1044,9 @@ handleDisembargoMsg
         R.MessageTarget'promisedAnswer R.PromisedAnswer{ questionId, transform } ->
             lookupAbort "answer" conn answers (QAId questionId) $ \case
                 HaveReturn { returnMsg=R.Return{union'=R.Return'results R.Payload{content} } } ->
-                    transformClient transform content conn >>= disembargoClient
+                    transformClient transform content conn >>= \case
+                        Client (Just client') -> disembargoClient client'
+                        Client Nothing -> abortDisembargo "targets a null capability"
                 _ ->
                     abortDisembargo $
                         "does not target an answer which has resolved to a value hosted by"
@@ -1053,8 +1056,10 @@ handleDisembargoMsg
                 "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
   where
     disembargoPromise PromiseClient{ pState } = readTVar pState >>= \case
-        Ready client ->
+        Ready (Client (Just client)) ->
             disembargoClient client
+        Ready (Client Nothing) ->
+            abortDisembargo "targets a promise which resolved to null."
         _ ->
             abortDisembargo "targets a promise which has not resolved."
     disembargoPromise _ =
@@ -1275,7 +1280,7 @@ requestBootstrap conn@Conn{questions} = do
         qid
         questions
     exportMap <- ExportMap <$> M.new
-    pure PromiseClient { pState, exportMap }
+    pure $ Client $ Just PromiseClient { pState, exportMap }
 
 -- Note [resolveClient]
 -- ====================
@@ -1317,16 +1322,16 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 
 -- | Resolve a promised client to another client. See Note [resolveClient]
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
-resolveClientClient tmpDest resolve client =
+resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
-        ( LocalClient{}, AnswerDest{} ) ->
+        ( Just LocalClient{}, AnswerDest{} ) ->
             error "TODO: embargo"
-        ( LocalClient{}, ImportDest _ ) ->
+        ( Just LocalClient{}, ImportDest _ ) ->
             error "TODO: embargo"
         ( _, LocalBuffer { callBuffer } ) -> do
-            flushTQueue callBuffer >>= traverse_ (`call` client)
-            resolve (Ready client)
-        ( PromiseClient{}, _ ) ->
+            flushTQueue callBuffer >>= traverse_ (`call` Client client)
+            resolve $ Ready (Client client)
+        ( Just PromiseClient{}, _ ) ->
             error "TODO"
         ( _, AnswerDest{ transform } )
             | not (null transform) ->
@@ -1334,7 +1339,7 @@ resolveClientClient tmpDest resolve client =
                     "Tried to access pointer fields on a client"
             | otherwise -> do
                 releaseTmpDest tmpDest
-                resolve (Ready client)
+                resolve $ Ready (Client client)
         _ ->
             error "TODO"
 
@@ -1374,7 +1379,7 @@ resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' 
 -- | Get the client's export ID for this connection, or allocate a new one if needed.
 -- If this is the first time this client has been exported on this connection,
 -- bump the refcount.
-getConnExport :: Conn -> Client -> STM IEId
+getConnExport :: Conn -> Client' -> STM IEId
 getConnExport conn@Conn{exports} client = do
     let ExportMap m = clientExportMap client
     val <- M.lookup conn m
@@ -1392,9 +1397,9 @@ getConnExport conn@Conn{exports} client = do
 -- | Remove export of the client on the connection. This entails removing it
 -- from the export id, removing the connection from the client's ExportMap,
 -- freeing the export id, and dropping the client's refcount.
-dropConnExport :: Conn -> Client -> STM ()
-dropConnExport conn@Conn{exports} client = do
-    let ExportMap eMap = clientExportMap client
+dropConnExport :: Conn -> Client' -> STM ()
+dropConnExport conn@Conn{exports} client' = do
+    let ExportMap eMap = clientExportMap client'
     val <- M.lookup conn eMap
     case val of
         Just eid -> do
@@ -1404,33 +1409,32 @@ dropConnExport conn@Conn{exports} client = do
         Nothing ->
             error "BUG: tried to drop an export that doesn't exist."
 
--- | Get the export map for the client.
-clientExportMap :: Client -> ExportMap
+clientExportMap :: Client' -> ExportMap
 clientExportMap LocalClient{exportMap}            = exportMap
 clientExportMap PromiseClient{exportMap}          = exportMap
 clientExportMap (ImportClient ImportRef{proxies}) = proxies
-clientExportMap _                                 = error "TODO"
 
 -- | Generate a CapDescriptor, which the connection's remote vat may use to
 -- refer to the client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
 emitCap :: Conn -> Client -> STM R.CapDescriptor
-emitCap _conn NullClient =
+emitCap _conn (Client Nothing) =
     pure R.CapDescriptor'none
-emitCap conn client@LocalClient{} =
-    R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client
-emitCap conn client@PromiseClient{} =
-    R.CapDescriptor'senderPromise . ieWord <$> getConnExport conn client
-emitCap targetConn client@(ImportClient ImportRef { conn=hostConn, importId })
-    | hostConn == targetConn =
-        pure (R.CapDescriptor'receiverHosted (ieWord importId))
-    | otherwise =
-        R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client
+emitCap conn (Client (Just client')) = case client' of
+    LocalClient{} ->
+        R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client'
+    PromiseClient{} ->
+        R.CapDescriptor'senderPromise . ieWord <$> getConnExport conn client'
+    ImportClient ImportRef { conn=hostConn, importId }
+        | hostConn == conn ->
+            pure (R.CapDescriptor'receiverHosted (ieWord importId))
+        | otherwise ->
+            R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client'
 
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
 -- id, call 'error'.
-addBumpExport :: IEId -> Client -> M.Map IEId EntryE -> STM ()
+addBumpExport :: IEId -> Client' -> M.Map IEId EntryE -> STM ()
 addBumpExport exportId client =
     M.focus (Focus.alter go) exportId
   where
@@ -1446,7 +1450,7 @@ addBumpExport exportId client =
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
 acceptCap :: Conn -> R.CapDescriptor -> STM Client
-acceptCap _ R.CapDescriptor'none = pure NullClient
+acceptCap _ R.CapDescriptor'none = pure (Client Nothing)
 acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
     entry <- M.lookup importId imports
     finalizerKey <- FinalizerKey.newSTM
@@ -1455,7 +1459,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
             Rc.incr localRc
             M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies } importId imports
             queueIO conn $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
-            pure $ ImportClient ImportRef
+            pure $ Client $ Just $ ImportClient ImportRef
                 { conn
                 , importId
                 , proxies
@@ -1473,7 +1477,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
                     M.delete importId imports
             proxies <- ExportMap <$> M.new
             M.insert EntryI { localRc, remoteRc = 1, proxies } importId imports
-            pure $ ImportClient ImportRef
+            pure $ Client $ Just $ ImportClient ImportRef
                 { conn
                 , importId
                 , proxies
@@ -1482,7 +1486,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
 acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) =
     lookupAbort "export" conn exports (IEId exportId) $
         \EntryE{client} ->
-            pure client
+            pure $ Client $ Just client
 acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
     case unmarshalPromisedAnswer pa of
         Left e ->
@@ -1505,7 +1509,7 @@ newLocalAnswerClient conn@Conn{answers} PromisedAnswer{ answerId, transform } = 
             (writeTVar pState)
             (toList transform)
     exportMap <- ExportMap <$> M.new
-    pure PromiseClient { pState, exportMap }
+    pure $ Client $ Just PromiseClient { pState, exportMap }
 
 
 -- Note [Limiting resource usage]
