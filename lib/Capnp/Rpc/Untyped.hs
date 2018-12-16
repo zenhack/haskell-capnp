@@ -1288,7 +1288,7 @@ requestBootstrap conn@Conn{questions} = do
     M.insert
         NewQA
             { onReturn = SnocList.singleton $
-                resolveClientReturn tmpDest (writeTVar pState) []
+                resolveClientReturn tmpDest (writeTVar pState) conn []
             , onFinish = SnocList.empty
             }
         qid
@@ -1371,8 +1371,10 @@ releaseTmpDest (ImportDest _) = pure ()
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
 -- The [Word16] is a list of pointer indexes to follow from the result.
-resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> [Word16] -> R.Return -> STM ()
-resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' of
+resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> Conn -> [Word16] -> R.Return -> STM ()
+resolveClientReturn tmpDest resolve conn@Conn{answers} transform R.Return { union' } = case union' of
+    -- TODO(cleanup) there is a lot of redundency betwen this and cbCallReturn; can
+    -- we refactor?
     R.Return'exception exn ->
         resolveClientExn tmpDest resolve exn
     R.Return'results R.Payload{ content } ->
@@ -1381,14 +1383,30 @@ resolveClientReturn tmpDest resolve transform R.Return { union' } = case union' 
                 resolveClientPtr tmpDest resolve v
             Left e ->
                 resolveClientExn tmpDest resolve e
+
     R.Return'canceled ->
         resolveClientExn tmpDest resolve $ eFailed "Canceled"
-    _ ->
-        error $
-            "TODO: handle other return variants:\n" ++
-            "   - resultsSentElseWhere\n" ++
-            "   - acceptFromThirdParty\n" ++
-            "   - unknown\n"
+
+    R.Return'resultsSentElsewhere ->
+        -- Should never happen; we don't set sendResultsTo to anything other than
+        -- caller.
+        abortConn conn $ eFailed $ mconcat
+            [ "Received Return.resultsSentElsewhere for a call "
+            , "with sendResultsTo = caller."
+            ]
+
+    R.Return'takeFromOtherQuestion (QAId -> qid) ->
+        subscribeReturn "answer" conn answers qid $
+            resolveClientReturn tmpDest resolve conn transform
+
+    R.Return'acceptFromThirdParty _ ->
+        -- LEVEL 3
+        abortConn conn $ eUnimplemented $
+            "This vat does not support level 3."
+
+    R.Return'unknown' ordinal ->
+        abortConn conn $ eUnimplemented $
+            "Unknown return variant #" <> fromString (show ordinal)
 
 -- | Get the client's export ID for this connection, or allocate a new one if needed.
 -- If this is the first time this client has been exported on this connection,
@@ -1521,6 +1539,7 @@ newLocalAnswerClient conn@Conn{answers} PromisedAnswer{ answerId, transform } = 
         resolveClientReturn
             tmpDest
             (writeTVar pState)
+            conn
             (toList transform)
     exportMap <- ExportMap <$> M.new
     pure $ Client $ Just PromiseClient { pState, exportMap }
