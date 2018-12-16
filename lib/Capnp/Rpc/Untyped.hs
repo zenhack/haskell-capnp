@@ -18,8 +18,6 @@ module Capnp.Rpc.Untyped
 
     -- * Clients for capabilities
     , Client
-    , incRef
-    , decRef
     , call
     , nullClient
 
@@ -742,40 +740,6 @@ unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
 nullClient :: Client
 nullClient = NullClient
 
--- | Increment the reference count on a client.
-incRef :: Client -> STM ()
-incRef NullClient         = pure ()
-incRef LocalClient{qCall} = Rc.incr qCall
-incRef PromiseClient { pState } = readTVar pState >>= \case
-    Ready { target } ->
-        incRef target
-    Embargo {} ->
-        error "TODO: Embargo"
-    Pending {} ->
-        error "TODO: Pending"
-    Error _ ->
-        error "TODO: Error"
-incRef (ImportClient _) =
-    -- No need to do refcounting for ImportClients; we set upfinalizers
-    -- instead.
-    pure ()
-
-
--- | Decrement the reference count on a client. If the count reaches zero,
--- the object is destroyed.
-decRef :: Client -> STM ()
-decRef NullClient         = pure ()
-decRef LocalClient{qCall} = Rc.decr qCall
-decRef PromiseClient { pState } = readTVar pState >>= \case
-    Ready { target } ->
-        decRef target
-    _ ->
-        error "TODO"
-decRef (ImportClient _) =
-    -- No need to do refcounting for ImportClients; we set upfinalizers
-    -- instead.
-    pure ()
-
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
 -- the server will be stopped (if it is still running).
@@ -1423,7 +1387,6 @@ getConnExport conn@Conn{exports} client = do
             eid <- newExport conn
             addBumpExport eid client exports
             M.insert eid conn m
-            incRef client
             pure eid
 
 -- | Remove export of the client on the connection. This entails removing it
@@ -1438,7 +1401,6 @@ dropConnExport conn@Conn{exports} client = do
             M.delete conn eMap
             M.delete eid exports
             freeExport conn eid
-            decRef client
         Nothing ->
             error "BUG: tried to drop an export that doesn't exist."
 
