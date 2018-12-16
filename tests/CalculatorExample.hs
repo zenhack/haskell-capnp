@@ -58,7 +58,7 @@ tests = describe "Check our example against the C++ implementation" $ do
   where
     -- | Give the server a bit of time to start up.
     waitForServer :: IO ()
-    waitForServer = threadDelay 1000000
+    waitForServer = threadDelay 100000
 
     cxxServer :: FilePath -> Word16 -> IO ()
     cxxServer path port =
