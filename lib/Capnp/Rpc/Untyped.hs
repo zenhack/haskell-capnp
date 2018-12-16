@@ -1463,7 +1463,7 @@ acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) =
                 }
 
         Nothing -> do
-            localRc <- Rc.new () $ do
+            localRc <- Rc.new () $
                 lookupAbort "imports" conn imports importId $ \EntryI { remoteRc } -> do
                     sendPureMsg conn $ R.Message'release
                         R.Release
