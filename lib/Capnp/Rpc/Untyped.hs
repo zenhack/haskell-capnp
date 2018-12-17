@@ -1347,10 +1347,10 @@ resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
         ( Just LocalClient{}, AnswerDest{ conn, answer } ) -> do
             callBuffer <- newTQueue
-            disembargo conn (AnswerTgt answer) $ do
+            disembargo conn (AnswerTgt answer) $
                 flushAndResolve callBuffer
             resolve $ Embargo { callBuffer }
-        ( _, LocalBuffer { callBuffer } ) -> do
+        ( _, LocalBuffer { callBuffer } ) ->
             flushAndResolve callBuffer
         ( Just PromiseClient{}, _ ) ->
             error "TODO"
