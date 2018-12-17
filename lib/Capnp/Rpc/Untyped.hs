@@ -141,7 +141,7 @@ instance Exception StopVat
 stopVat :: IO ()
 stopVat = throwIO StopVat
 
-newtype EmbargoId = EmbargoId { embargoWord :: Word32 }
+newtype EmbargoId = EmbargoId { embargoWord :: Word32 } deriving(Eq, Hashable)
 newtype QAId = QAId { qaWord :: Word32 } deriving(Eq, Hashable)
 newtype IEId = IEId { ieWord :: Word32 } deriving(Eq, Hashable)
 
@@ -323,6 +323,14 @@ newExport = fmap IEId . newId . exportIdPool
 -- | Return a export id to the pool of available ids.
 freeExport :: Conn -> IEId -> STM ()
 freeExport conn = freeId (exportIdPool conn) . ieWord
+
+-- | Get a new embargo id. This shares the same pool as questions.
+newEmbargo :: Conn -> STM EmbargoId
+newEmbargo = fmap EmbargoId . newId . questionIdPool
+
+-- | Return an embargo id. to the available pool.
+freeEmbargo :: Conn -> EmbargoId -> STM ()
+freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
@@ -1051,6 +1059,19 @@ handleReleaseMsg
 
 handleDisembargoMsg :: Conn -> R.Disembargo -> STM ()
 handleDisembargoMsg
+        conn@Conn{embargos}
+        R.Disembargo { context=R.Disembargo'context'receiverLoopback (EmbargoId -> eid) }
+    = do
+        result <- M.lookup eid embargos
+        case result of
+            Nothing ->
+                abortConn conn $ eFailed $
+                    "No such embargo: " <> fromString (show $ embargoWord eid)
+            Just callback -> do
+                queueSTM conn callback
+                M.delete eid embargos
+                freeEmbargo conn eid
+handleDisembargoMsg
         conn@Conn{exports, answers}
         R.Disembargo{ target, context=R.Disembargo'context'senderLoopback embargoId }
     =
@@ -1343,13 +1364,13 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
 resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
-        ( Just LocalClient{}, AnswerDest{} ) ->
-            error "TODO: embargo"
-        ( Just LocalClient{}, ImportDest _ ) ->
-            error "TODO: embargo"
+        ( Just LocalClient{}, AnswerDest{ conn, answer } ) -> do
+            callBuffer <- newTQueue
+            disembargo conn (AnswerTgt answer) $ do
+                flushAndResolve callBuffer
+            resolve $ Embargo { callBuffer }
         ( _, LocalBuffer { callBuffer } ) -> do
-            flushTQueue callBuffer >>= traverse_ (`call` Client client)
-            resolve $ Ready (Client client)
+            flushAndResolve callBuffer
         ( Just PromiseClient{}, _ ) ->
             error "TODO"
         ( _, AnswerDest{ answer=PromisedAnswer{ transform } } )
@@ -1361,6 +1382,24 @@ resolveClientClient tmpDest resolve (Client client) =
                 resolve $ Ready (Client client)
         _ ->
             error "TODO"
+  where
+    -- Flush the call buffer into the client's queue, and then pass the client
+    -- to resolve.
+    flushAndResolve callBuffer = do
+        flushTQueue callBuffer >>= traverse_ (`call` Client client)
+        resolve $ Ready (Client client)
+
+-- | Send a (senderLoopback) disembargo to the given message target, and
+-- register the transaction to run when the corresponding receiverLoopback
+-- message is received.
+disembargo :: Conn -> MsgTarget -> STM () -> STM ()
+disembargo conn@Conn{embargos} tgt callback = do
+    eid <- newEmbargo conn
+    M.insert callback eid embargos
+    sendPureMsg conn $ R.Message'disembargo R.Disembargo
+        { target = marshalMsgTarget tgt
+        , context = R.Disembargo'context'senderLoopback (embargoWord eid)
+        }
 
 -- Do any cleanup of a TmpDest; this should be called after resolving a
 -- pending promise.
