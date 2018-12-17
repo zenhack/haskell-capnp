@@ -30,9 +30,8 @@ arbitraryI32 = arbitrary
 arbitraryI30 = (`shiftR` 2) <$> arbitraryI32
 arbitraryI29 = (`shiftR` 3) <$> arbitraryI32
 -- | arbitraryUN is an arbitrary N bit unsigned integer as a Word32.
-arbitraryU32, arbitraryU30, arbitraryU29 :: Gen Word32
+arbitraryU32, arbitraryU29 :: Gen Word32
 arbitraryU32 = arbitrary
-arbitraryU30 = (`shiftR` 2) <$> arbitraryU32
 arbitraryU29 = (`shiftR` 3) <$> arbitraryU32
 
 
