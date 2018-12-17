@@ -14,7 +14,7 @@ import Control.Monad.Catch     (MonadThrow(throwM))
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Data.Default            (def)
 import Data.Text               (Text)
-import UnliftIO                (MonadUnliftIO, atomically)
+import UnliftIO                (MonadIO, atomically)
 
 import Capnp.Classes
     ( Cerialize(cerialize)
@@ -34,7 +34,7 @@ import qualified Capnp.Untyped            as U
 
 invokeRaw ::
     ( MonadThrow m
-    , MonadUnliftIO m
+    , MonadIO m
     , PrimMonad m
     , Decerialize r
     , Decerialize p
@@ -56,7 +56,7 @@ invokeRaw method params typedFulfiller = do
 
 type InvokePureCtx m p r =
     ( MonadThrow m
-    , MonadUnliftIO m
+    , MonadIO m
     , PrimMonad m
     , Decerialize r
     , ToStruct M.ConstMsg (Cerial M.ConstMsg p)
