@@ -170,9 +170,6 @@ data Conn = Conn
     , exportIdPool     :: IdPool
     -- Pools of identifiers for new questions and exports
 
-    , maxAnswerCalls   :: !Int
-    -- Maximum number of calls that can be outstanding on an unresolved answer.
-
     , questions        :: M.Map QAId EntryQA
     , answers          :: M.Map QAId EntryQA
     , exports          :: M.Map IEId EntryE
@@ -203,24 +200,19 @@ instance Hashable Conn where
 
 -- | Configuration information for a connection.
 data ConnConfig = ConnConfig
-    { maxQuestions   :: !Word32
+    { maxQuestions  :: !Word32
     -- ^ The maximum number of simultanious outstanding requests to the peer
     -- vat. Once this limit is reached, further questsions will block until
     -- some of the existing questions have been answered.
     --
     -- Defaults to 32.
 
-    , maxExports     :: !Word32
+    , maxExports    :: !Word32
     -- ^ The maximum number of objects which may be exported on this connection.
     --
     -- Defaults to 32.
 
-    , maxAnswerCalls :: !Int
-    -- Maximum number of calls that can be outstanding on an unresolved answer.
-    --
-    -- Defaults to 16.
-
-    , debugMode      :: !Bool
+    , debugMode     :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
     -- contain extra information. This should not be used in production, as
     -- it is possible for these messages to contain sensitive information,
@@ -228,7 +220,7 @@ data ConnConfig = ConnConfig
     --
     -- Defaults to 'False'.
 
-    , getBootstrap   :: Supervisor -> STM (Maybe Client)
+    , getBootstrap  :: Supervisor -> STM (Maybe Client)
     -- ^ Get the bootstrap interface we should serve for this connection.
     -- the argument is a supervisor whose lifetime is bound to the
     -- connection. If 'getBootstrap' returns 'Nothing', we will respond
@@ -236,7 +228,7 @@ data ConnConfig = ConnConfig
     --
     -- The default always returns 'nullClient'.
 
-    , withBootstrap  :: Maybe (Supervisor -> Client -> IO ())
+    , withBootstrap :: Maybe (Supervisor -> Client -> IO ())
     -- ^ An action to perform with access to the remote vat's bootstrap
     -- interface. The supervisor argument is bound to the lifetime of the
     -- connection. If this is 'Nothing' (the default), the bootstrap
@@ -247,7 +239,6 @@ instance Default ConnConfig where
     def = ConnConfig
         { maxQuestions   = 32
         , maxExports     = 32
-        , maxAnswerCalls = 16
         , debugMode      = False
         , getBootstrap   = \_ -> pure Nothing
         , withBootstrap  = Nothing
@@ -341,7 +332,6 @@ handleConn
         , maxExports
         , withBootstrap
         , debugMode
-        , maxAnswerCalls
         }
     = withSupervisor $ \sup ->
         handle
@@ -376,7 +366,6 @@ handleConn
                 , exportIdPool
                 , recvQ
                 , sendQ
-                , maxAnswerCalls
                 , questions
                 , answers
                 , exports
