@@ -12,7 +12,8 @@ import Prelude hiding (length)
 
 import Test.Hspec
 
-import Control.Monad (mapM_, when)
+import Control.Monad             (mapM_, when)
+import Control.Monad.Trans.Class (lift)
 
 import qualified Data.ByteString as BS
 import qualified Prelude
@@ -63,8 +64,8 @@ walkSchemaCodeGenRequestTest =
         req :: Schema.CodeGeneratorRequest M.ConstMsg <- fromStruct root
         nodes <- Schema.get_CodeGeneratorRequest'nodes req
         requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
-        let 37 = length nodes
-        let 1 = length requestedFiles
+        lift $ length nodes `shouldBe` 37
+        lift $ length requestedFiles `shouldBe` 1
         mapM_ (walkNode nodes) [0,1..36]
     walkNode nodes i = do
         node <- index i nodes
