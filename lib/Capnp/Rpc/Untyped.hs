@@ -724,14 +724,6 @@ marshalPromisedAnswer PromisedAnswer{ answerId, transform } =
             toList transform
         }
 
-unmarshalMsgTarget :: R.MessageTarget -> Either R.Exception MsgTarget
-unmarshalMsgTarget (R.MessageTarget'importedCap importId) =
-    Right $ ImportTgt (IEId importId)
-unmarshalMsgTarget (R.MessageTarget'promisedAnswer pa) =
-    AnswerTgt <$> unmarshalPromisedAnswer pa
-unmarshalMsgTarget (R.MessageTarget'unknown' tag) =
-    Left $ eFailed $ "Unknown MessageTarget: " <> fromString (show tag)
-
 unmarshalPromisedAnswer :: R.PromisedAnswer -> Either R.Exception PromisedAnswer
 unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
     idxes <- unmarshalOps (toList transform)
