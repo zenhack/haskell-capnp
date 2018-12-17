@@ -537,14 +537,10 @@ data TmpDest
     -- | Send call messages to a remote vat, targeting the results
     -- of an outstanding question.
     | AnswerDest
-        { conn      :: Conn
+        { conn   :: Conn
         -- ^ The connection to the remote vat.
-        , answerId  :: !QAId
+        , answer :: PromisedAnswer
         -- ^ The answer to target.
-        , transform :: SnocList Word16
-        -- ^ A series of pointer indexes to follow from the result
-        -- struct to the capability. This corresponds to MessageTarget's
-        -- transform field in rpc.capnp.
         }
     -- | Send call messages to a remote vat, targeting an entry in our
     -- imports table.
@@ -587,10 +583,17 @@ instance Eq Client' where
 -- by proxied imports (see Note [proxies]).
 newtype ExportMap = ExportMap (M.Map Conn IEId)
 
+-- MsgTarget and PromisedAnswer correspond to the similarly named types in
+-- rpc.capnp, except:
+--
+-- * They use our newtype wrappers for ids
+-- * They don't have unknown variants
+-- * PromisedAnswer's transform field is just a list of pointer offsets,
+--   rather than a union with no other actually-useful variants.
+-- * PromisedAnswer's transform field is a SnocList, efficient appending.
 data MsgTarget
     = ImportTgt !IEId
     | AnswerTgt PromisedAnswer
-
 data PromisedAnswer = PromisedAnswer
     { answerId  :: !QAId
     , transform :: SnocList Word16
@@ -629,8 +632,8 @@ call info@Server.CallInfo { response } (Client (Just client')) = case client' of
             LocalBuffer { callBuffer } ->
                 writeTQueue callBuffer info
 
-            AnswerDest { conn, answerId, transform } ->
-                callRemote conn info $ AnswerTgt PromisedAnswer{ answerId, transform }
+            AnswerDest { conn, answer } ->
+                callRemote conn info $ AnswerTgt answer
 
             ImportDest ImportRef { conn, importId } ->
                 callRemote conn info (ImportTgt importId)
@@ -1279,8 +1282,10 @@ requestBootstrap conn@Conn{questions} = do
     qid <- newQuestion conn
     let tmpDest = AnswerDest
             { conn
-            , answerId = qid
-            , transform = SnocList.empty
+            , answer = PromisedAnswer
+                { answerId = qid
+                , transform = SnocList.empty
+                }
             }
     pState <- newTVar Pending { tmpDest }
     sendPureMsg conn $
@@ -1347,7 +1352,7 @@ resolveClientClient tmpDest resolve (Client client) =
             resolve $ Ready (Client client)
         ( Just PromiseClient{}, _ ) ->
             error "TODO"
-        ( _, AnswerDest{ transform } )
+        ( _, AnswerDest{ answer=PromisedAnswer{ transform } } )
             | not (null transform) ->
                 resolveClientExn tmpDest resolve $ eFailed
                     "Tried to access pointer fields on a client"
@@ -1361,7 +1366,7 @@ resolveClientClient tmpDest resolve (Client client) =
 -- pending promise.
 releaseTmpDest :: TmpDest -> STM ()
 releaseTmpDest LocalBuffer{} = pure ()
-releaseTmpDest AnswerDest { conn, answerId } =
+releaseTmpDest AnswerDest { conn, answer=PromisedAnswer{ answerId } } =
     finishQuestion conn def
         { R.questionId = qaWord answerId
         , R.releaseResultCaps = False
