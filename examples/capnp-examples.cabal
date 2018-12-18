@@ -24,7 +24,7 @@ library
     , vector ^>=0.12
     , network ^>= 2.8.0
     , network-simple ^>= 0.4
-    , supervisors ^>= 0.1
+    , supervisors ^>= 0.2
   hs-source-dirs:
     lib
   exposed-modules:
