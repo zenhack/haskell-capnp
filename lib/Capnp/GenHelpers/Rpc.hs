@@ -6,7 +6,7 @@
 module Capnp.GenHelpers.Rpc where
 
 import Control.Concurrent.STM (atomically)
-import Control.Exception.Safe (SomeException, fromException, try)
+import Control.Exception.Safe (fromException, tryAny)
 import Control.Monad.Catch    (MonadThrow(..))
 import Control.Monad.IO.Class (liftIO)
 import Data.Default           (def)
@@ -22,7 +22,7 @@ import qualified Capnp.Rpc.Untyped     as Rpc
 import qualified Capnp.Untyped         as U
 
 handleMethod server method paramContent fulfiller = do
-    ret <- try $ do
+    ret <- tryAny $ do
         content <- evalLimitT maxBound $
             fromPtr M.empty paramContent >>= decerialize
         results <- method content server
@@ -31,7 +31,7 @@ handleMethod server method paramContent fulfiller = do
         Right resultStruct ->
             Promise.fulfillIO fulfiller resultStruct
         Left e ->
-            case fromException (e :: SomeException) of
+            case fromException e of
                 Just exn ->
                     liftIO $ atomically $ Promise.breakPromise fulfiller exn
                 Nothing ->
