@@ -12,6 +12,7 @@ import Data.List                    (sortOn)
 import Data.Maybe                   (fromJust)
 import Data.Ord                     (Down(..))
 import Data.String                  (IsString(..))
+import Data.Word                    (Word16)
 import GHC.Exts                     (IsList(fromList))
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import Text.Printf                  (printf)
@@ -318,6 +319,7 @@ fmtFieldAccessor thisMod typeName variantName Field{..} = vcat
 -- * @typeCon@: The name of the type constructor for the type owning the
 --   field.
 -- * @fieldLocType@: the field location and type.
+fmtNew :: IsString t => Module -> (t -> PP.Doc) -> PP.Doc -> FieldLocType -> PP.Doc
 fmtNew thisMod accessorName typeCon fieldLocType =
     case fieldLocType of
         PtrField _ fieldType ->
@@ -629,9 +631,11 @@ fmtDataDef thisMod dataName (DefEnum enumerants) =
     ]
   where
     -- | Format an equation in an enum's IsWord.fromWord implementation.
+    fmtFromWordCase :: Name -> Word16 -> PP.Doc
     fmtFromWordCase name ordinal =
         hcat [ "go ", fromString (show ordinal), " = ", fmtName thisMod name ]
     -- | Format an equation in an enum's IsWord.toWord implementation.
+    fmtToWordCase :: Name -> Word16 -> PP.Doc
     fmtToWordCase name ordinal =
         hcat [ "toWord ", fmtName thisMod name, " = ", fromString (show ordinal) ]
 
