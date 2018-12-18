@@ -5,9 +5,11 @@
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.GenHelpers.Rpc where
 
-import Control.Monad.Catch (MonadThrow(..))
-import Data.Default        (def)
-import UnliftIO            (SomeException, atomically, fromException, try)
+import Control.Concurrent.STM (atomically)
+import Control.Exception.Safe (SomeException, fromException, try)
+import Control.Monad.Catch    (MonadThrow(..))
+import Control.Monad.IO.Class (liftIO)
+import Data.Default           (def)
 
 import Capnp.Classes        (Decerialize(..), FromPtr(..))
 import Capnp.TraversalLimit (evalLimitT)
@@ -31,9 +33,9 @@ handleMethod server method paramContent fulfiller = do
         Left e ->
             case fromException (e :: SomeException) of
                 Just exn ->
-                    atomically $ Promise.breakPromise fulfiller exn
+                    liftIO $ atomically $ Promise.breakPromise fulfiller exn
                 Nothing ->
-                    atomically $ Promise.breakPromise fulfiller def
+                    liftIO $ atomically $ Promise.breakPromise fulfiller def
                         { Rpc.type_ = Rpc.Exception'Type'failed
                         , Rpc.reason = "Method threw an unhandled exception."
                         }

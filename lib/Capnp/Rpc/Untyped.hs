@@ -62,23 +62,22 @@ module Capnp.Rpc.Untyped
 -- * [ ] Handle decode errors
 -- * [ ] Resource limits (see Note [Limiting resource usage])
 
+import Control.Concurrent.STM
 import Data.Word
-import UnliftIO.STM
 
-import Control.Concurrent     (threadDelay)
-import Control.Concurrent.STM (catchSTM, flushTQueue, throwSTM)
-import Control.Monad          (forever)
-import Data.Default           (Default(def))
-import Data.Foldable          (toList, traverse_)
-import Data.Hashable          (Hashable, hash, hashWithSalt)
-import Data.String            (fromString)
-import Data.Text              (Text)
-import GHC.Generics           (Generic)
-import Supervisors            (Supervisor, superviseSTM, withSupervisor)
+import Control.Concurrent       (threadDelay)
+import Control.Concurrent.Async (concurrently_)
+import Control.Exception.Safe   (Exception, bracket, handle, throwIO, try)
+import Control.Monad            (forever)
+import Data.Default             (Default(def))
+import Data.Foldable            (toList, traverse_)
+import Data.Hashable            (Hashable, hash, hashWithSalt)
+import Data.String              (fromString)
+import Data.Text                (Text)
+import GHC.Generics             (Generic)
+import Supervisors              (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.StableName
     (StableName, eqStableName, hashStableName, makeStableName)
-import UnliftIO.Async         (concurrently_)
-import UnliftIO.Exception     (Exception, bracket, handle, throwIO, try)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -401,7 +400,7 @@ newIdPool size = IdPool <$> newTVar [0..size-1]
 -- | Get a new id from the pool. Retries if the pool is empty.
 newId :: IdPool -> STM Word32
 newId (IdPool pool) = readTVar pool >>= \case
-    [] -> retrySTM
+    [] -> retry
     (id:ids) -> do
         writeTVar pool $! ids
         pure id

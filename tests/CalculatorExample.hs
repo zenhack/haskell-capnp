@@ -8,7 +8,7 @@ import Test.Hspec
 
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (race_)
-import Control.Exception        (throwIO, try)
+import Control.Exception.Safe   (throwIO, try)
 import Data.Default             (def)
 import Data.Foldable            (for_)
 import Data.String              (fromString)

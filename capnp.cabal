@@ -70,6 +70,7 @@ common shared-opts
       , mtl                               ^>= 2.2.2
       , primitive                         ^>= 0.6.3
       , reinterpret-cast                  ^>= 0.1.0
+      , safe-exceptions                   ^>= 0.1.7
       , text                              >= 1.2 && < 2.0
       , transformers                      ^>= 0.5.2
       , vector                            ^>= 0.12.0
@@ -172,7 +173,6 @@ library
       , async                             ^>= 2.2.1
       , network-simple                    ^>= 0.4
       , network                           ^>= 2.8.0
-      , unliftio                          ^>= 0.2.8
       , supervisors                       ^>= 0.1.0
 
 --------------------------------------------------------------------------------
@@ -251,7 +251,6 @@ test-suite tests
         capnp
       , network
       , network-simple
-      , unliftio
       , stm
       , async
       , process

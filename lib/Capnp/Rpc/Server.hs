@@ -30,14 +30,12 @@ module Capnp.Rpc.Server
     , invokeIO
     ) where
 
+import Control.Concurrent.STM
 import Data.Word
-import UnliftIO.STM
 
-import Control.Monad.Catch     (MonadThrow)
-import Control.Monad.IO.Class  (MonadIO(liftIO))
+import Control.Exception.Safe  (MonadCatch, try)
+import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
-import UnliftIO                (MonadUnliftIO)
-import UnliftIO.Exception      (try)
 
 import Capnp.Classes
     (Cerialize, Decerialize(Cerial, decerialize), FromPtr(fromPtr), ToStruct)
@@ -87,8 +85,8 @@ invokeIO = handleMethod
 -- high-level API, and returns the high-level API representation of the
 -- return type.
 pureHandler ::
-    ( MonadThrow m
-    , MonadUnliftIO m
+    ( MonadCatch m
+    , MonadIO m
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p

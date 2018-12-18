@@ -10,11 +10,12 @@ module Capnp.Rpc
     , throwFailed
     ) where
 
+import Control.Concurrent.STM  (atomically)
 import Control.Monad.Catch     (MonadThrow(throwM))
+import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Data.Default            (def)
 import Data.Text               (Text)
-import UnliftIO                (MonadIO, atomically)
 
 import Capnp.Classes
     ( Cerialize(cerialize)
@@ -46,7 +47,7 @@ invokeRaw ::
     -> Promise.Fulfiller (Cerial M.ConstMsg r)
     -> m ()
 invokeRaw method params typedFulfiller = do
-    (_, untypedFulfiller) <- atomically $ Promise.newPromiseWithCallback $ \case
+    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallback $ \case
         Left e -> Promise.breakPromise typedFulfiller e
         Right v -> evalLimitT defaultLimit (fromPtr M.empty v) >>= Promise.fulfill typedFulfiller
     Server.invokeIO
@@ -75,7 +76,7 @@ invokePure method params pureFulfiller = do
     struct <- evalLimitT defaultLimit $ do
         msg <- M.newMessage Nothing
         (toStruct <$> cerialize msg params) >>= freeze
-    (_, untypedFulfiller) <- atomically $ Promise.newPromiseWithCallback $ \case
+    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallback $ \case
         Left e -> Promise.breakPromise pureFulfiller e
         Right v ->
             evalLimitT defaultLimit (fromPtr M.empty v >>= decerialize)

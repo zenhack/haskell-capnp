@@ -10,7 +10,7 @@ module Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 import Data.Proxy
 import Test.Hspec
 
-import Control.Exception         (bracket)
+import Control.Exception.Safe    (bracket)
 import Control.Monad             (when)
 import Control.Monad.Primitive   (RealWorld)
 import Data.Default              (Default(..))

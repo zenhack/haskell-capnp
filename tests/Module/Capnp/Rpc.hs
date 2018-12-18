@@ -10,12 +10,14 @@ import Control.Concurrent.STM
 import Data.Word
 import Test.Hspec
 
-import Control.Monad          (replicateM, (>=>))
-import Control.Monad.Catch    (throwM)
-import Control.Monad.IO.Class (liftIO)
-import Data.Foldable          (for_)
-import Supervisors            (Supervisor)
-import UnliftIO               (bracket, concurrently_, race_, timeout, try)
+import Control.Concurrent.Async (concurrently_, race_)
+import Control.Exception.Safe   (bracket, try)
+import Control.Monad            (replicateM, (>=>))
+import Control.Monad.Catch      (throwM)
+import Control.Monad.IO.Class   (liftIO)
+import Data.Foldable            (for_)
+import Supervisors              (Supervisor)
+import System.Timeout           (timeout)
 
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
