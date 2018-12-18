@@ -62,7 +62,7 @@ tests = describe "Check our example against the C++ implementation" $ do
 
     cxxServer :: FilePath -> Word16 -> IO ()
     cxxServer path port =
-        callProcess path ["localhost:" ++ show port ]
+        callProcess path ["localhost:" ++ show port]
     cxxClient :: FilePath -> Word16 -> IO ()
     cxxClient path port = do
         (eStatus, out, err) <- readProcessWithExitCode path ["localhost:" ++ show port] ""
