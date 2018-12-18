@@ -1474,18 +1474,18 @@ clientExportMap (ImportClient ImportRef{proxies}) = proxies
 -- refer to the client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
 emitCap :: Conn -> Client -> STM R.CapDescriptor
-emitCap _conn (Client Nothing) =
+emitCap _targetConn (Client Nothing) =
     pure R.CapDescriptor'none
-emitCap conn (Client (Just client')) = case client' of
+emitCap targetConn (Client (Just client')) = case client' of
     LocalClient{} ->
-        R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client'
+        R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
     PromiseClient{} ->
-        R.CapDescriptor'senderPromise . ieWord <$> getConnExport conn client'
+        R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
     ImportClient ImportRef { conn=hostConn, importId }
-        | hostConn == conn ->
+        | hostConn == targetConn ->
             pure (R.CapDescriptor'receiverHosted (ieWord importId))
         | otherwise ->
-            R.CapDescriptor'senderHosted . ieWord <$> getConnExport conn client'
+            R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
 
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
