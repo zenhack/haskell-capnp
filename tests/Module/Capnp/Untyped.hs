@@ -38,12 +38,14 @@ import qualified Capnp.Message as M
 
 import qualified Capnp.Gen.Capnp.Schema as Schema
 
+untypedTests :: Spec
 untypedTests = describe "low-level untyped API tests" $ do
     readTests
     modifyTests
     farPtrTest
     otherMessageTest
 
+readTests :: Spec
 readTests = describe "read tests" $
     it "Should agree with `capnp decode`" $ do
         msg <- encodeValue
@@ -105,6 +107,7 @@ data ModTest s = ModTest
     , testType :: String
     }
 
+modifyTests :: Spec
 modifyTests = describe "modification tests" $ traverse_ testCase
     -- tests for setIndex
     [ ModTest
@@ -278,6 +281,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
             actualOut `shouldBe` testOut
 
 
+farPtrTest :: Spec
 farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
     -- I(zenhack) am disappointed in hindsight that we only check for crashes
     -- here; we should make these more thorough, actually checking validity
@@ -301,6 +305,7 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
             ptr <- C.toPtr msg dstStruct
             setPtr ptr 0 srcStruct
 
+otherMessageTest :: Spec
 otherMessageTest = describe "Setting pointers in other messages" $
     it "Should copy them if needed." $
         property $ \(name :: Text) (params :: V.Vector Node'Parameter) (brand :: Brand) ->
