@@ -119,7 +119,6 @@ library
       , Capnp.Rpc.Errors
       , Capnp.Rpc.Transport
       , Capnp.Rpc.Server
-      -- , Capnp.RpcOld
       , Capnp.Tutorial
 
       , Data.Mutable
