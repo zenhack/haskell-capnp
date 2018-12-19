@@ -57,7 +57,7 @@ instance B'.ListElem msg (Persistent'SaveParams msg) where
     listFromPtr msg ptr = List_Persistent'SaveParams <$> C'.fromPtr msg ptr
     toUntypedList (List_Persistent'SaveParams l) = U'.ListStruct l
     length (List_Persistent'SaveParams l) = U'.length l
-    index i (List_Persistent'SaveParams l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveParams msg); go = C'.fromStruct} in go)
+    index i (List_Persistent'SaveParams l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (Persistent'SaveParams msg) where
     fromPtr msg ptr = Persistent'SaveParams_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (Persistent'SaveParams (M'.MutMsg s)) where
@@ -94,7 +94,7 @@ instance B'.ListElem msg (Persistent'SaveResults msg) where
     listFromPtr msg ptr = List_Persistent'SaveResults <$> C'.fromPtr msg ptr
     toUntypedList (List_Persistent'SaveResults l) = U'.ListStruct l
     length (List_Persistent'SaveResults l) = U'.length l
-    index i (List_Persistent'SaveResults l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (Persistent'SaveResults msg); go = C'.fromStruct} in go)
+    index i (List_Persistent'SaveResults l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (Persistent'SaveResults msg) where
     fromPtr msg ptr = Persistent'SaveResults_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (Persistent'SaveResults (M'.MutMsg s)) where
@@ -131,7 +131,7 @@ instance B'.ListElem msg (RealmGateway'export'params msg) where
     listFromPtr msg ptr = List_RealmGateway'export'params <$> C'.fromPtr msg ptr
     toUntypedList (List_RealmGateway'export'params l) = U'.ListStruct l
     length (List_RealmGateway'export'params l) = U'.length l
-    index i (List_RealmGateway'export'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RealmGateway'export'params msg); go = C'.fromStruct} in go)
+    index i (List_RealmGateway'export'params l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (RealmGateway'export'params msg) where
     fromPtr msg ptr = RealmGateway'export'params_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (RealmGateway'export'params (M'.MutMsg s)) where
@@ -183,7 +183,7 @@ instance B'.ListElem msg (RealmGateway'import'params msg) where
     listFromPtr msg ptr = List_RealmGateway'import'params <$> C'.fromPtr msg ptr
     toUntypedList (List_RealmGateway'import'params l) = U'.ListStruct l
     length (List_RealmGateway'import'params l) = U'.length l
-    index i (List_RealmGateway'import'params l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RealmGateway'import'params msg); go = C'.fromStruct} in go)
+    index i (List_RealmGateway'import'params l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (RealmGateway'import'params msg) where
     fromPtr msg ptr = RealmGateway'import'params_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (RealmGateway'import'params (M'.MutMsg s)) where

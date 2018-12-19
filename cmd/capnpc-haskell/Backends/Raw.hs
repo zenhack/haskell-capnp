@@ -177,18 +177,8 @@ fmtStructListElem nameText =
         , hcat [ "listFromPtr msg ptr = List_", nameText, " <$> C'.fromPtr msg ptr" ]
         , hcat [ "toUntypedList (List_", nameText, " l) = U'.ListStruct l" ]
         , hcat [ "length (List_", nameText, " l) = U'.length l" ]
-        , hcat [ "index i (List_", nameText, " l) = U'.index i l >>= ", fmtRestrictedFromStruct nameText ]
+        , hcat [ "index i (List_", nameText, " l) = U'.index i l >>= C'.fromStruct" ]
         ]
-
--- | Output an expression equivalent to fromStruct, but restricted to the type
--- with the given type constructor (which must have kind * -> *).
-fmtRestrictedFromStruct :: PP.Doc -> PP.Doc
-fmtRestrictedFromStruct nameText = hcat
-    [ "(let {"
-    , "go :: U'.ReadCtx m msg => U'.Struct msg -> m (", nameText, " msg); "
-    , "go = C'.fromStruct"
-    , "} in go)"
-    ]
 
 -- | Generate a call to 'H'.getWordField' based on a 'DataLoc'.
 -- The first argument is an expression for the struct.

@@ -45,7 +45,7 @@ instance B'.ListElem msg (JoinKeyPart msg) where
     listFromPtr msg ptr = List_JoinKeyPart <$> C'.fromPtr msg ptr
     toUntypedList (List_JoinKeyPart l) = U'.ListStruct l
     length (List_JoinKeyPart l) = U'.length l
-    index i (List_JoinKeyPart l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinKeyPart msg); go = C'.fromStruct} in go)
+    index i (List_JoinKeyPart l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (JoinKeyPart msg) where
     fromPtr msg ptr = JoinKeyPart_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (JoinKeyPart (M'.MutMsg s)) where
@@ -84,7 +84,7 @@ instance B'.ListElem msg (JoinResult msg) where
     listFromPtr msg ptr = List_JoinResult <$> C'.fromPtr msg ptr
     toUntypedList (List_JoinResult l) = U'.ListStruct l
     length (List_JoinResult l) = U'.length l
-    index i (List_JoinResult l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JoinResult msg); go = C'.fromStruct} in go)
+    index i (List_JoinResult l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (JoinResult msg) where
     fromPtr msg ptr = JoinResult_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (JoinResult (M'.MutMsg s)) where
@@ -129,7 +129,7 @@ instance B'.ListElem msg (ProvisionId msg) where
     listFromPtr msg ptr = List_ProvisionId <$> C'.fromPtr msg ptr
     toUntypedList (List_ProvisionId l) = U'.ListStruct l
     length (List_ProvisionId l) = U'.length l
-    index i (List_ProvisionId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ProvisionId msg); go = C'.fromStruct} in go)
+    index i (List_ProvisionId l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (ProvisionId msg) where
     fromPtr msg ptr = ProvisionId_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (ProvisionId (M'.MutMsg s)) where
@@ -160,7 +160,7 @@ instance B'.ListElem msg (RecipientId msg) where
     listFromPtr msg ptr = List_RecipientId <$> C'.fromPtr msg ptr
     toUntypedList (List_RecipientId l) = U'.ListStruct l
     length (List_RecipientId l) = U'.length l
-    index i (List_RecipientId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (RecipientId msg); go = C'.fromStruct} in go)
+    index i (List_RecipientId l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (RecipientId msg) where
     fromPtr msg ptr = RecipientId_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (RecipientId (M'.MutMsg s)) where
@@ -212,7 +212,7 @@ instance B'.ListElem msg (ThirdPartyCapId msg) where
     listFromPtr msg ptr = List_ThirdPartyCapId <$> C'.fromPtr msg ptr
     toUntypedList (List_ThirdPartyCapId l) = U'.ListStruct l
     length (List_ThirdPartyCapId l) = U'.length l
-    index i (List_ThirdPartyCapId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (ThirdPartyCapId msg); go = C'.fromStruct} in go)
+    index i (List_ThirdPartyCapId l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (ThirdPartyCapId msg) where
     fromPtr msg ptr = ThirdPartyCapId_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (ThirdPartyCapId (M'.MutMsg s)) where
@@ -239,7 +239,7 @@ instance B'.ListElem msg (VatId msg) where
     listFromPtr msg ptr = List_VatId <$> C'.fromPtr msg ptr
     toUntypedList (List_VatId l) = U'.ListStruct l
     length (List_VatId l) = U'.length l
-    index i (List_VatId l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (VatId msg); go = C'.fromStruct} in go)
+    index i (List_VatId l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (VatId msg) where
     fromPtr msg ptr = VatId_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (VatId (M'.MutMsg s)) where

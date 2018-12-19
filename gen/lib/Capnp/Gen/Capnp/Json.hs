@@ -45,7 +45,7 @@ instance B'.ListElem msg (JsonValue msg) where
     listFromPtr msg ptr = List_JsonValue <$> C'.fromPtr msg ptr
     toUntypedList (List_JsonValue l) = U'.ListStruct l
     length (List_JsonValue l) = U'.length l
-    index i (List_JsonValue l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue msg); go = C'.fromStruct} in go)
+    index i (List_JsonValue l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (JsonValue msg) where
     fromPtr msg ptr = JsonValue_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (JsonValue (M'.MutMsg s)) where
@@ -147,7 +147,7 @@ instance B'.ListElem msg (JsonValue'Call msg) where
     listFromPtr msg ptr = List_JsonValue'Call <$> C'.fromPtr msg ptr
     toUntypedList (List_JsonValue'Call l) = U'.ListStruct l
     length (List_JsonValue'Call l) = U'.length l
-    index i (List_JsonValue'Call l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Call msg); go = C'.fromStruct} in go)
+    index i (List_JsonValue'Call l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (JsonValue'Call msg) where
     fromPtr msg ptr = JsonValue'Call_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (JsonValue'Call (M'.MutMsg s)) where
@@ -204,7 +204,7 @@ instance B'.ListElem msg (JsonValue'Field msg) where
     listFromPtr msg ptr = List_JsonValue'Field <$> C'.fromPtr msg ptr
     toUntypedList (List_JsonValue'Field l) = U'.ListStruct l
     length (List_JsonValue'Field l) = U'.length l
-    index i (List_JsonValue'Field l) = U'.index i l >>= (let {go :: U'.ReadCtx m msg => U'.Struct msg -> m (JsonValue'Field msg); go = C'.fromStruct} in go)
+    index i (List_JsonValue'Field l) = U'.index i l >>= C'.fromStruct
 instance C'.FromPtr msg (JsonValue'Field msg) where
     fromPtr msg ptr = JsonValue'Field_newtype_ <$> C'.fromPtr msg ptr
 instance C'.ToPtr s (JsonValue'Field (M'.MutMsg s)) where
