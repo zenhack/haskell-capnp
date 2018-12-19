@@ -1105,8 +1105,9 @@ handleDisembargoMsg
             , " with context = senderLoopback "
             , info
             ]
-handleDisembargoMsg _ _ =
-    error "TODO"
+-- LEVEL 3+
+handleDisembargoMsg conn d =
+    sendPureMsg conn $ R.Message'unimplemented $ R.Message'disembargo d
 
 
 
