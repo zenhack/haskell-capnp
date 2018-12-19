@@ -116,7 +116,7 @@ fmtImport (Import ref) = "import qualified " <> fmtModRef ref
 --
 -- * thisMod - the module that we are generating.
 -- * name    - the name of the type.
--- * info    - the StructInfo; this is a group, some instances will be skipped.
+-- * info    - the StructInfo; if this is a group, some instances will be skipped.
 fmtNewtypeStruct :: Module -> Name -> IR.StructInfo -> PP.Doc
 fmtNewtypeStruct thisMod name info =
     let typeCon = fmtName thisMod name
