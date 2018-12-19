@@ -76,8 +76,7 @@ import Data.String              (fromString)
 import Data.Text                (Text)
 import GHC.Generics             (Generic)
 import Supervisors              (Supervisor, superviseSTM, withSupervisor)
-import System.Mem.StableName
-    (StableName, eqStableName, hashStableName, makeStableName)
+import System.Mem.StableName    (StableName, hashStableName, makeStableName)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -191,7 +190,7 @@ data Conn = Conn
     }
 
 instance Eq Conn where
-    x == y = stableName x `eqStableName` stableName y
+    x == y = stableName x == stableName y
 
 instance Hashable Conn where
     hash Conn{stableName} = hashStableName stableName
