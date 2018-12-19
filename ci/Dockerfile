@@ -31,8 +31,8 @@ RUN apk add \
 	linux-headers
 
 # Build and install a recent version of capnproto; it isn't in the alpine
-# repos. Furthermore, we use the calculator-client example as part of our
-# test suite, so we need to build that anyway:
+# repos. Furthermore, we use the calculator-client & server examples as
+# part of our test suite, so we need to build that anyway:
 RUN wget "https://github.com/capnproto/capnproto/archive/v0.6.1.tar.gz"
 RUN tar -xvf *.tar.gz
 RUN cd capnproto-*/c++ && \
