@@ -1,6 +1,22 @@
 Firstly, thanks!
 
-# Style
+The easiest way to contribute is just feedback: use the library, let me
+know how the experience was. Tell me how you're using the library. Open
+issues if you find them.
+
+If you're looking to hack on the library, great! If you don't have
+something specific in mind and you're looking for a task to get your
+feet wet, there are a number of open issues labeled
+["good first issue"](https://github.com/zenhack/haskell-capnp/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22);
+these are self-contained, well-defined tasks that touch a relatively
+small portion of the code, and so don't require deep understanding of
+the structure of the library as a whole; as such they're great for new
+contributors. If you want to work on an existing issue, leave a comment
+on the issue saying you're planning on tacking a whack at it.  I'll
+probably reply before too long. Send a pull request when you've got
+something to review.
+
+# Style Guide
 
 Generally, do what the rest of the code does. Much of this section is
 bikeshed, but consistency is worth a bit of that.
