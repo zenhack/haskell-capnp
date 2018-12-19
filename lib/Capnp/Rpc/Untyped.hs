@@ -67,6 +67,7 @@ import Data.Word
 
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_)
+import Control.Concurrent.MVar  (MVar, newEmptyMVar)
 import Control.Exception.Safe   (Exception, bracket, handle, throwIO, try)
 import Control.Monad            (forever)
 import Data.Default             (Default(def))
@@ -153,8 +154,11 @@ instance Show IEId where
 
 -- | A connection to a remote vat
 data Conn = Conn
-    { stableName       :: StableName ()
-    -- So we can use the connection as a map key.
+    { stableName       :: StableName (MVar ())
+    -- So we can use the connection as a map key. The MVar used to create
+    -- this is just an arbitrary value; the only property we care about
+    -- is that it is distinct for each 'Conn', so we use something with
+    -- reference semantics to guarantee this.
 
     , sendQ            :: TBQueue ConstMsg
     , recvQ            :: TBQueue ConstMsg
@@ -340,7 +344,7 @@ handleConn
                 runConn
   where
     newConn sup = do
-        stableName <- makeStableName ()
+        stableName <- makeStableName =<< newEmptyMVar
         atomically $ do
             bootstrap <- getBootstrap cfg sup
             questionIdPool <- newIdPool maxQuestions
