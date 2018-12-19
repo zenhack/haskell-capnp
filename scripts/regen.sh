@@ -22,14 +22,14 @@ runhaskell scripts/gen-basic-instances.hs
 
 # Make sure the compiler plugin is up to date.
 log "Rebuilding schema compiler plugin..."
-cabal new-build capnpc-haskell
+cabal v2-build capnpc-haskell
 
 # We run the code generator from inside gen/lib/, so that it outputs
 # modules to the right locations:
 cd "$repo_root/gen/lib/"
 
 # Find the compiler plugin executable. It would be nice to just
-# use new-run here, but doing so from a subdirectory is a bit fiddly
+# use v2-run here, but doing so from a subdirectory is a bit fiddly
 # and I(zenhack) haven't found a nice way to do it.
 exe="$(find $repo_root/dist-newstyle -type f -name capnpc-haskell)"
 
