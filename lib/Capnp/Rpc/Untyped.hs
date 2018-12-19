@@ -721,9 +721,10 @@ marshalPromisedAnswer :: PromisedAnswer -> R.PromisedAnswer
 marshalPromisedAnswer PromisedAnswer{ answerId, transform } =
     R.PromisedAnswer
         { R.questionId = qaWord answerId
-        , R.transform = V.fromList $
-            map R.PromisedAnswer'Op'getPointerField $
-            toList transform
+        , R.transform =
+            V.fromList $
+                map R.PromisedAnswer'Op'getPointerField $
+                    toList transform
         }
 
 unmarshalPromisedAnswer :: R.PromisedAnswer -> Either R.Exception PromisedAnswer
