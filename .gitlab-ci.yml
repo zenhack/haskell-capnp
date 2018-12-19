@@ -15,17 +15,17 @@ test:alltests:
     CXX_CALCULATOR_SERVER: /usr/local/bin/c++-calculator-server
   script:
     # First build the code generator plugin.
-    - cabal v2-build capnpc-haskell
+    - cabal new-build capnpc-haskell
     # Then, regenerate the schema modules, and make sure they're in-sync
     # with what was committed. This is also necessary to generate the
     # Schema modules used by the test suite, which are not committed.
     - ./scripts/regen.sh
     - git diff --exit-code
     # Now build everything else (incl. examples):
-    - cabal v2-build all
-    # ...run the tests. We use v2-run so we can pass rts options
+    - cabal new-build all
+    # ...run the tests. We use new-run so we can pass rts options
     # to the test binary -- these tell it to parallelize the tests.
-    - cabal v2-run test:tests -- +RTS -N
+    - cabal new-run test:tests -- +RTS -N
     # Linting:
     - ./scripts/hlint.sh
     # Run stylish-haskell, and fail if it changes anything:
