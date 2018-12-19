@@ -448,9 +448,15 @@ fmtUnionSetter thisMod parentType tagLoc variant =
                 ]
             ]
 
-fmtDecl :: Module -> (Name, Decl) -> PP.Doc
-fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
-fmtDecl thisMod (name, DeclConst c) = fmtConst thisMod name c
+fmtDecl :: Module -> (LocalName, Decl) -> PP.Doc
+fmtDecl thisMod (localName, decl) =
+    let name = Name
+            { nameLocal = localName
+            , nameModule = ByCapnpId (modId thisMod)
+            }
+    in case decl of
+        DeclDef d   -> fmtDataDef thisMod name d
+        DeclConst c -> fmtConst thisMod name c
 
 -- | Format a constant declaration.
 fmtConst :: Module -> Name -> Const -> PP.Doc
@@ -666,7 +672,16 @@ fmtAnyPtr _ Cap      = "Word32"
 fmtAnyPtr msg Ptr    = "(U'.Ptr " <> msg <> ")"
 
 fmtName :: Module -> Name -> PP.Doc
-fmtName Module{modId=thisMod} Name{nameModule, nameLocalNS=Namespace parts, nameUnqualified=localName} =
+fmtName
+    Module{modId=thisMod}
+    Name
+        { nameModule
+        , nameLocal=LocalName
+            { localNameNS=Namespace parts
+            , localNameBase=localName
+            }
+        }
+  =
     modPrefix <> mintercalate "'" (map PP.textStrict $ parts <> [localName])
   where
     modPrefix = case nameModule of

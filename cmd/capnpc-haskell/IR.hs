@@ -25,6 +25,7 @@
 --   (TODO).
 module IR
     ( Name(..)
+    , LocalName(..)
     , Namespace(..)
     , Method(..)
     , Module(..)
@@ -76,12 +77,7 @@ data Module = Module
     , modName    :: Namespace
     , modFile    :: Text
     , modImports :: [Import]
-    -- XXX TODO: 'Name' includes a 'ModuleRef', which means it is possible
-    -- for two different 'Name's to refer to the same actual variable; using
-    -- them as map keys is questionable. In practice, when building a module
-    -- all of the ModuleRefs are the same, though, so this won't *break*
-    -- anything -- but ideally we'd remove that information from the key.
-    , modDecls   :: M.Map Name Decl
+    , modDecls   :: M.Map LocalName Decl
     }
     deriving(Show, Eq)
 
@@ -99,36 +95,46 @@ data ModuleRef
     deriving(Show, Eq, Ord)
 
 data Name = Name
-    { nameModule      :: ModuleRef
-    , nameLocalNS     :: Namespace
-    , nameUnqualified :: Text
+    { nameModule :: ModuleRef
+    , nameLocal  :: LocalName
+    }
+    deriving(Show, Eq, Ord)
+
+data LocalName = LocalName
+    { localNameNS   :: Namespace
+    , localNameBase :: Text
     }
     deriving(Show, Eq, Ord)
 
 subName :: Name -> Text -> Name
-subName name@Name{..} nextPart = name
-    { nameLocalNS = fromList $ toList nameLocalNS ++ [nameUnqualified]
-    , nameUnqualified = nextPart
+subName name@Name{nameLocal=LocalName{localNameBase, localNameNS}} nextPart = name
+    { nameLocal = LocalName
+        { localNameNS = fromList $ toList localNameNS ++ [localNameBase]
+        , localNameBase = nextPart
+        }
     }
 
 prefixName :: Text -> Name -> Name
-prefixName prefix name@Name{nameLocalNS=(toList -> (x:xs))} =
-    name { nameLocalNS = fromList $ (prefix <> x):xs }
-prefixName prefix name = name { nameLocalNS = fromList [prefix] }
+prefixName prefix name@Name{nameLocal=local@LocalName{ localNameNS = (toList -> (x:xs)) }} =
+    name { nameLocal = local { localNameNS = fromList $ (prefix <> x):xs } }
+prefixName prefix name@Name{nameLocal} =
+    name { nameLocal = nameLocal { localNameNS = fromList [prefix] } }
 
 -- | 'valueName' converts a name to one which starts with a lowercase
 -- letter, so that it is valid to use as a name for a value (as opposed
 -- to a type).
 valueName :: Name -> Name
-valueName name@Name{nameLocalNS=(toList -> (T.unpack -> (c:cs)):xs)} =
-    name { nameLocalNS = fromList $ T.pack (toLower c : cs) : xs }
+valueName name@Name{nameLocal=local@LocalName { localNameNS =(toList -> (T.unpack -> (c:cs)):xs) } } =
+    name { nameLocal = local { localNameNS = fromList $ T.pack (toLower c : cs) : xs } }
 valueName name = name
 
 instance IsString Name where
     fromString str = Name
         { nameModule = FullyQualified []
-        , nameLocalNS = []
-        , nameUnqualified = T.pack str
+        , nameLocal = LocalName
+            { localNameNS = []
+            , localNameBase = T.pack str
+            }
         }
 
 data Type

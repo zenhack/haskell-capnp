@@ -48,8 +48,10 @@ identifierFromMetaData :: NodeMetaData -> IR.Name
 identifierFromMetaData NodeMetaData{moduleId, namespace=(unqualified:localNS)} =
     IR.Name
         { nameModule = IR.ByCapnpId moduleId
-        , nameLocalNS = IR.Namespace $ reverse localNS
-        , nameUnqualified = unqualified
+        , nameLocal = IR.LocalName
+            { localNameNS = IR.Namespace $ reverse localNS
+            , localNameBase = unqualified
+            }
         }
 identifierFromMetaData meta =
     -- TODO: rule out this possibility statically; shouldn't be too hard.
@@ -167,7 +169,9 @@ generateModule nodeMap CodeGeneratorRequest'RequestedFile{..} =
             $ splitOn '/' (T.unpack filename)
         , modFile = filename
         , modImports = map generateImport $ V.toList imports
-        , modDecls = M.fromList $ concatMap (generateDecls id nodeMap)
+        , modDecls = M.fromList
+            $ map (\(IR.Name{nameLocal}, decl) -> (nameLocal, decl))
+            $ concatMap (generateDecls id nodeMap)
             $ filter (\NodeMetaData{..} -> moduleId == id)
             $ map snd
             $ M.toList nodeMap

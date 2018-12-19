@@ -28,10 +28,11 @@ data ModRefType = Pure | Raw
     deriving(Show, Read, Eq)
 
 fmtName :: ModRefType -> Id -> Name -> PP.Doc
-fmtName refTy thisMod Name{..} = modPrefix <> localName
+fmtName refTy thisMod Name{nameModule, nameLocal=LocalName{localNameNS, localNameBase}} =
+    modPrefix <> localName
   where
     localName = mintercalate "'" $
-        map PP.textStrict $ fromList $ toList nameLocalNS ++ [nameUnqualified]
+        map PP.textStrict $ fromList $ toList localNameNS ++ [localNameBase]
     modPrefix
         | null nsParts = ""
         | refTy == Pure && modRefToNS refTy (ByCapnpId thisMod) == ns = ""
@@ -158,26 +159,32 @@ fmtExportList :: Module -> PP.Doc
 fmtExportList Module{modId,modDecls} =
     mintercalate ", " (map (fmtExport modId) (M.toList modDecls))
 
-fmtExport :: Id -> (Name, Decl) -> PP.Doc
-fmtExport thisMod (name, DeclDef DefStruct{}) =
-    fmtName Pure thisMod name <> "(..)"
-fmtExport thisMod (name, DeclDef DefUnion{}) =
-    fmtName Pure thisMod name <> "(..)"
-fmtExport thisMod (name, DeclDef (DefInterface _)) = mconcat
-    [ fmtName Pure thisMod name, "(..), "
-    , fmtName Pure thisMod name, "'server_(..),"
-    , "export_", fmtName Pure thisMod name
-    ]
--- These are 'Raw' because we're just re-exporting them:
-fmtExport thisMod (name, DeclDef DefEnum{}) =
-    fmtName Raw thisMod name <> "(..)"
-fmtExport thisMod (name, DeclConst VoidConst) =
-    fmtName Raw thisMod (valueName name)
-fmtExport thisMod (name, DeclConst WordConst{}) =
-    fmtName Raw thisMod (valueName name)
+fmtExport :: Id -> (LocalName, Decl) -> PP.Doc
+fmtExport thisMod (localName, decl) =
+    let name = Name
+            { nameLocal = localName
+            , nameModule = ByCapnpId thisMod
+            }
+    in case decl of
+        DeclDef DefStruct{} ->
+            fmtName Pure thisMod name <> "(..)"
+        DeclDef DefUnion{} ->
+            fmtName Pure thisMod name <> "(..)"
+        DeclDef (DefInterface _) -> mconcat
+            [ fmtName Pure thisMod name, "(..), "
+            , fmtName Pure thisMod name, "'server_(..),"
+            , "export_", fmtName Pure thisMod name
+            ]
+        -- These are 'Raw' because we're just re-exporting them:
+        DeclDef DefEnum{} ->
+            fmtName Raw thisMod name <> "(..)"
+        DeclConst VoidConst ->
+            fmtName Raw thisMod (valueName name)
+        DeclConst WordConst{} ->
+            fmtName Raw thisMod (valueName name)
 
-fmtExport thisMod (name, DeclConst _) =
-    fmtName Pure thisMod (valueName name)
+        DeclConst _ ->
+            fmtName Pure thisMod (valueName name)
 
 fmtImport :: ModRefType -> Import -> PP.Doc
 fmtImport ty (Import ref) = "import qualified " <> fmtModRef ty ref
@@ -226,9 +233,15 @@ fmtField thisMod Field{fieldName,fieldLocType} =
         PtrField _ ty  -> PtrType ty
         HereField ty   -> CompositeType ty
 
-fmtDecl :: Id -> (Name, Decl) -> PP.Doc
-fmtDecl thisMod (name, DeclDef d)   = fmtDataDef thisMod name d
-fmtDecl thisMod (name, DeclConst c) = fmtConst thisMod name c
+fmtDecl :: Id -> (LocalName, Decl) -> PP.Doc
+fmtDecl thisMod (localName, decl) =
+    let name = Name
+            { nameLocal = localName
+            , nameModule = ByCapnpId thisMod
+            }
+    in case decl of
+        DeclDef d   -> fmtDataDef thisMod name d
+        DeclConst c -> fmtConst thisMod name c
 
 -- | Format a constant declaration.
 fmtConst :: Id -> Name -> Const -> PP.Doc
