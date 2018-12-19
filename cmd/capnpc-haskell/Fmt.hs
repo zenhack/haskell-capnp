@@ -19,7 +19,7 @@ indent :: Doc -> Doc
 indent = PP.indent 4
 
 -- | @'data_' typeCon dataCons derving_@ generates a @data@
--- declaration. @typeCon@ is the texst of the type constructor
+-- declaration. @typeCon@ is the text of the type constructor
 -- *and type parameters*. @dataCons@ are the data constructors.
 -- @deriving_@ is a list of type classes to go in the deriving
 -- clause, if any.
