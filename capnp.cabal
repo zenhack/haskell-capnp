@@ -94,7 +94,10 @@ common shared-opts
 -- main runtime library.
 library
     import: shared-opts
-    hs-source-dirs:       lib
+    hs-source-dirs:
+      lib
+      -- generated code:
+      gen/lib
     exposed-modules:
         Capnp
       , Capnp.Address
@@ -203,7 +206,9 @@ test-suite tests
     main-is:              Main.hs
     hs-source-dirs:
       tests
+      gen/tests
       examples/lib
+      examples/gen/lib
     ghc-options:
       -threaded
     other-modules:

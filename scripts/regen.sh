@@ -24,9 +24,9 @@ runhaskell scripts/gen-basic-instances.hs
 log "Rebuilding schema compiler plugin..."
 cabal new-build capnpc-haskell
 
-# We run the code generator from inside lib/, so that it outputs
+# We run the code generator from inside gen/lib/, so that it outputs
 # modules to the right locations:
-cd lib
+cd "$repo_root/gen/lib/"
 
 # Find the compiler plugin executable. It would be nice to just
 # use new-run here, but doing so from a subdirectory is a bit fiddly
@@ -56,25 +56,19 @@ capnp compile \
 		$core_inc/capnp/*.capnp
 
 log "Generating schema modules for aircraft.capnp (test suite)..."
-cd "$repo_root/tests"
+cd "$repo_root/gen/tests"
 capnp compile \
 		-I $core_inc \
-		--src-prefix=data/ \
+		--src-prefix=../../tests/data/ \
 		-ohaskell \
-		data/aircraft.capnp
+		../../tests/data/aircraft.capnp
 
 log "Generating schema modules for echo.capnp (examples)..."
-cd "$repo_root/examples"
+cd "$repo_root/examples/gen/lib"
 capnp compile \
 		-I $core_inc \
+		--src-prefix=../../ \
 		-ohaskell \
-		*.capnp
-
-log "Linking echo schema into test suite"
-for file in $(find Capnp -type f -name '*.hs'); do
-		cd "$repo_root/tests/"
-		[ -d $(dirname $file) ] || mkdir -p $(dirname $file)
-		ln -sf "$repo_root/examples/$file" "$file"
-done
+		../../*.capnp
 
 # vim: set ts=2 sw=2 noet :

@@ -92,5 +92,5 @@ instances =
         }
     ]
 
-main = writeFile "lib/Internal/Gen/Instances.hs" $
+main = writeFile "gen/lib/Internal/Gen/Instances.hs" $
     header ++ concatMap genInstance instances

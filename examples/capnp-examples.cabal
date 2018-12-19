@@ -27,6 +27,7 @@ library
     , supervisors ^>= 0.2
   hs-source-dirs:
     lib
+    gen/lib
   exposed-modules:
       Examples.EchoClient
     , Examples.EchoServer
