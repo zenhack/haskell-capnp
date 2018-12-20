@@ -212,6 +212,7 @@ executable cg2
     , Trans.FlatToHaskell
   build-depends:
       capnp
+    , wl-pprint-text                    ^>= 1.2
 
 --------------------------------------------------------------------------------
 

@@ -1,6 +1,8 @@
 module Main (main) where
 
-import qualified Data.Text as T
+import qualified Text.PrettyPrint.Leijen.Text as PP
+
+import System.IO (stdout)
 
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
@@ -16,10 +18,11 @@ main = do
     handleCGR cgr
 
 handleCGR :: CodeGeneratorRequest -> IO ()
-handleCGR = mapM_ putStrLn
+handleCGR =
+    PP.hPutDoc stdout
+    . PP.vcat
     . map
-        ( T.unpack
-        . Haskell.format
+        ( Haskell.format
         . Trans.FlatToHaskell.fileToModule
         . Trans.Stage1ToFlat.fileToFile
         )

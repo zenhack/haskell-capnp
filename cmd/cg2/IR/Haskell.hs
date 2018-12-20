@@ -2,23 +2,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 module IR.Haskell where
 
-import Data.List (intersperse)
+import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
-import qualified Data.Text as T
+import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import qualified IR.Name as Name
-
-class Format a where
-    format :: a -> T.Text
 
 data Module = Module
     { modDecls :: [Decl]
     }
     deriving(Show, Read)
-
-instance Format Module where
-    format Module{modDecls} =
-        mconcat $ intersperse "\n" (map format modDecls)
 
 data Decl = DataDecl
     { dataName     :: Name.UnQ
@@ -27,21 +20,35 @@ data Decl = DataDecl
     }
     deriving(Show, Read)
 
-instance Format Decl where
-    format DataDecl{dataName, dataVariants, derives} = mconcat
-        [ "data "
-        , Name.renderUnQ dataName
-        , " = "
-        , mconcat $ intersperse " | " (map format dataVariants)
-        , " deriving("
-        , mconcat $ intersperse ", " (map Name.renderUnQ derives)
-        , ")"
-        ]
-
 data DataVariant = DataVariant
     { dvCtorName :: Name.UnQ
     }
     deriving(Show, Read)
 
+indent :: PP.Doc -> PP.Doc
+indent = PP.indent 4
+
+class Format a where
+    format :: a -> PP.Doc
+
+instance Format Name.UnQ where
+    format = PP.textStrict . Name.renderUnQ
+
+instance Format Module where
+    format Module{modDecls} = vcat (map format modDecls)
+
+instance Format Decl where
+    format DataDecl{dataName, dataVariants, derives} = vcat
+        [ hcat [ "data ", format dataName ]
+        , indent $ vcat
+            [ case dataVariants of
+                (d:ds) -> vcat $ ("= " <> format d) : map (("| " <>) . format) ds
+                []     -> ""
+            , case derives of
+                [] -> ""
+                _  -> "deriving" <> PP.tupled (map format derives)
+            ]
+        ]
+
 instance Format DataVariant where
-    format DataVariant{dvCtorName} = Name.renderUnQ dvCtorName
+    format DataVariant{dvCtorName} = format dvCtorName
