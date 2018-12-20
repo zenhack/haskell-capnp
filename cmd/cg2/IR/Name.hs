@@ -20,6 +20,11 @@ data LocalQ = LocalQ
     }
     deriving(Show, Read, Eq, Ord)
 
+data GlobalQ = GlobalQ
+    { local    :: LocalQ
+    , globalNS :: NS
+    }
+
 emptyNS :: NS
 emptyNS = NS []
 

@@ -12,7 +12,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
-import IR.Common (IntSize(..), PrimType(..), Sign(..))
+import IR.Common (IntSize(..), IntType(..), PrimType(..), Sign(..))
 
 import qualified Capnp.Gen.Capnp.Schema.Pure as Schema
 import qualified IR.Name                     as Name
@@ -91,14 +91,14 @@ cgrToFiles Schema.CodeGeneratorRequest{nodes, requestedFiles} =
 typeToType :: Schema.Type -> Maybe Stage1.FieldType
 typeToType Schema.Type'void    = Just $ Stage1.Prim PTyVoid
 typeToType Schema.Type'bool    = Just $ Stage1.Prim PTyBool
-typeToType Schema.Type'int8    = Just $ Stage1.Prim (PTyInt Signed Sz8)
-typeToType Schema.Type'int16   = Just $ Stage1.Prim (PTyInt Signed Sz16)
-typeToType Schema.Type'int32   = Just $ Stage1.Prim (PTyInt Signed Sz32)
-typeToType Schema.Type'int64   = Just $ Stage1.Prim (PTyInt Signed Sz64)
-typeToType Schema.Type'uint8   = Just $ Stage1.Prim (PTyInt Unsigned Sz8)
-typeToType Schema.Type'uint16  = Just $ Stage1.Prim (PTyInt Unsigned Sz16)
-typeToType Schema.Type'uint32  = Just $ Stage1.Prim (PTyInt Unsigned Sz32)
-typeToType Schema.Type'uint64  = Just $ Stage1.Prim (PTyInt Unsigned Sz64)
+typeToType Schema.Type'int8    = Just $ Stage1.Prim $ PTyInt $ IntType Signed Sz8
+typeToType Schema.Type'int16   = Just $ Stage1.Prim $ PTyInt $ IntType Signed Sz16
+typeToType Schema.Type'int32   = Just $ Stage1.Prim $ PTyInt $ IntType Signed Sz32
+typeToType Schema.Type'int64   = Just $ Stage1.Prim $ PTyInt $ IntType Signed Sz64
+typeToType Schema.Type'uint8   = Just $ Stage1.Prim $ PTyInt $ IntType Unsigned Sz8
+typeToType Schema.Type'uint16  = Just $ Stage1.Prim $ PTyInt $ IntType Unsigned Sz16
+typeToType Schema.Type'uint32  = Just $ Stage1.Prim $ PTyInt $ IntType Unsigned Sz32
+typeToType Schema.Type'uint64  = Just $ Stage1.Prim $ PTyInt $ IntType Unsigned Sz64
 typeToType Schema.Type'float32 = Just $ Stage1.Prim PTyFloat32
 typeToType Schema.Type'float64 = Just $ Stage1.Prim PTyFloat64
 typeToType _                   = Nothing

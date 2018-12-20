@@ -22,21 +22,32 @@ module IR.Haskell
     ) where
 
 import Data.List                    (intercalate, intersperse)
+import Data.String                  (fromString)
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
+import IR.Common (IntType(..), PrimType(..), Sign(..), sizeBits)
+
 import qualified IR.Name as Name
 
 -- | A Haskell module
 data Module = Module
-    { modName  :: [Name.UnQ]
+    { modName    :: [Name.UnQ]
     -- ^ The parts of the module path
-    , modDecls :: [Decl]
+    , modDecls   :: [Decl]
     -- ^ The declarations in the module.
+    , modImports :: [Import]
+    -- ^ Modules to import.
     }
-    deriving(Show, Read)
+    deriving(Show, Read, Eq)
+
+data Import = Import
+    { importAs :: Name.UnQ
+    , parts    :: [Name.UnQ]
+    }
+    deriving(Show, Read, Eq)
 
 -- | A declaration.
 data Decl
@@ -56,14 +67,14 @@ data Decl
     | ValueDecl
         { name :: Name.UnQ
         }
-    deriving(Show, Read)
+    deriving(Show, Read, Eq)
 
 -- | A data constructor
 data DataVariant = DataVariant
     { dvCtorName :: Name.UnQ
     -- ^ The name of the constructor.
     }
-    deriving(Show, Read)
+    deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will
 -- have a file path of @Foo/Bar/Baz.hs@.
@@ -83,15 +94,21 @@ modFilePath Module{modName} =
 class Format a where
     format :: a -> PP.Doc
 
-instance Format Name.UnQ where
-    format = PP.textStrict . Name.renderUnQ
-
 instance Format Module where
-    format Module{modName, modDecls} = vcat
+    format Module{modName, modDecls, modImports} = vcat
         [ hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
             , " where"
+            ]
+        , vcat $ map format modImports
+        -- We import many things, including the prelude, qualified under the
+        -- "Std_" namespace, so that they don't collide with names in the
+        -- generated code; see issue #58.
+        , vcat $ map format
+            [ Import { importAs = "Std_", parts = ["Prelude"] }
+            , Import { importAs = "Std_", parts = ["Data", "Word"] }
+            , Import { importAs = "Std_", parts = ["Data", "Int"] }
             ]
         , vcat $ map format modDecls
         ]
@@ -114,14 +131,38 @@ instance Format Decl where
             ]
         ]
     format ValueDecl{name} = hcat
-        [ PP.textStrict $ Name.renderUnQ name, " = error \"TODO\"" ]
+        [ format name, " = error \"TODO\"" ]
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
 formatDerives ds = " deriving" <> PP.tupled (map format ds)
 
+instance Format Name.UnQ where
+    format = PP.textStrict . Name.renderUnQ
+
 instance Format DataVariant where
     format DataVariant{dvCtorName} = format dvCtorName
+
+instance Format Import where
+    format Import{importAs, parts} = hcat
+        [ "import qualified "
+        , mconcat $ intersperse "." (map format parts)
+        , " as "
+        , format importAs
+        ]
+
+instance Format PrimType where
+    format PTyVoid = "()"
+    format PTyBool = "Std_.Bool"
+    format (PTyInt (IntType sign sz)) =
+        let szDoc = fromString $ show $ sizeBits sz
+            typePrefix = case sign of
+                Signed   -> "Int"
+                Unsigned -> "Word"
+        in
+        "Std_." <> typePrefix <> szDoc
+    format PTyFloat32 = "Std_.Float"
+    format PTyFloat64 = "Std_.Double"
 
 -- | Indent the argument by four spaces.
 indent :: PP.Doc -> PP.Doc
