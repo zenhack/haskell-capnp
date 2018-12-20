@@ -207,6 +207,7 @@ executable cg2
     , IR.Stage1
     , IR.Flat
     , IR.Haskell
+    , Trans.CgrToStage1
     , Trans.FlatToHaskell
   build-depends:
       capnp
