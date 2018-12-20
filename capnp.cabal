@@ -198,6 +198,19 @@ executable capnpc-haskell
       , filepath                          ^>= 1.4.1
       , wl-pprint-text                    ^>= 1.2
 
+executable cg2
+  import: shared-opts
+  hs-source-dirs:       cmd/cg2
+  main-is: Main.hs
+  other-modules:
+      IR.Name
+    , IR.Stage1
+    , IR.Flat
+    , IR.Haskell
+    , Trans.FlatToHaskell
+  build-depends:
+      capnp
+
 --------------------------------------------------------------------------------
 
 test-suite tests
