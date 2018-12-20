@@ -204,6 +204,7 @@ executable cg2
   main-is: Main.hs
   other-modules:
       IR.Name
+    , IR.Common
     , IR.Stage1
     , IR.Flat
     , IR.Haskell

@@ -11,6 +11,7 @@
 module IR.Flat
     ( File(..)
     , Node(..)
+    , Field(..)
     ) where
 
 -- Note to self: evolve this to generally making the tree the "right shape",
@@ -19,6 +20,8 @@ module IR.Flat
 
 import Data.Word
 
+import IR.Common (PrimType)
+
 import qualified IR.Name as Name
 
 data File = File
@@ -26,8 +29,17 @@ data File = File
     , fileId   :: !Word64
     , fileName :: FilePath
     }
-    deriving(Show, Read, Eq, Ord)
+    deriving(Show, Read, Eq)
 
 data Node
     = Enum [Name.UnQ]
-    deriving(Show, Read, Eq, Ord)
+    | Struct
+        { fields :: [Field]
+        }
+    deriving(Show, Read, Eq)
+
+data Field = Field
+    { fieldName :: Name.UnQ
+    , fieldType :: PrimType
+    }
+    deriving(Show, Read, Eq)

@@ -28,6 +28,18 @@ nodeToDecl (nodeName, Flat.Enum enumerants) =
         , Haskell.dataVariants = map (enumerantToVariant nodeName) enumerants
         , Haskell.derives = [ "Show", "Eq", "Enum" ]
         }
+nodeToDecl (nodeName, Flat.Struct{}) =
+    let name = Name.UnQ (Name.renderLocalQ nodeName)
+    in Haskell.DataDecl
+        { Haskell.dataName = name
+        , Haskell.dataVariants =
+            [ Haskell.DataVariant
+                { Haskell.dvCtorName = name
+                -- TODO: fields
+                }
+            ]
+        , Haskell.derives = [ "Show", "Eq", "Enum" ]
+        }
 
 enumerantToVariant :: Name.LocalQ -> Name.UnQ -> Haskell.DataVariant
 enumerantToVariant nodeName variantName =

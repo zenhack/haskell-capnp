@@ -12,9 +12,12 @@ module IR.Stage1
     , Node'(..)
     , Struct(..)
     , Field(..)
+    , FieldType(..)
     ) where
 
 import Data.Word
+
+import IR.Common (PrimType)
 
 import qualified IR.Name as Name
 
@@ -49,5 +52,11 @@ data Struct = Struct
 data Field = Field
     { name :: Name.UnQ
     , tag  :: Maybe Word16
+    , typ  :: FieldType
     }
+    deriving(Show, Read, Eq)
+
+data FieldType
+    = Group
+    | Prim PrimType
     deriving(Show, Read, Eq)

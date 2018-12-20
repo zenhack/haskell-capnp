@@ -22,6 +22,20 @@ nodeToNodes ns (unQ, Stage1.Node{nodeNested, nodeUnion}) =
     let name = Name.mkLocal ns unQ
         kids = concatMap (nodeToNodes (Name.localQToNS name)) nodeNested
     in case nodeUnion of
-        Stage1.NodeEnum enumerants -> (name, Flat.Enum enumerants) : kids
-        Stage1.NodeStruct{}        -> error "TODO"
-        Stage1.NodeOther           -> kids
+        Stage1.NodeEnum enumerants ->
+            (name, Flat.Enum enumerants) : kids
+        Stage1.NodeStruct Stage1.Struct{fields}  ->
+            ( name
+            , Flat.Struct
+                { fields =
+                    [ Flat.Field
+                        { fieldName = name
+                        , fieldType
+                        }
+                    | Stage1.Field{name, typ=Stage1.Prim fieldType, tag} <- fields
+                    , tag == Nothing
+                    ]
+                }
+            ) : kids
+        Stage1.NodeOther ->
+            kids
