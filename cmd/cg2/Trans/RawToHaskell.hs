@@ -17,7 +17,12 @@ fileToModule Raw.File{fileName, decls} =
     Haskell.Module
         { modName = makeModName fileName
         , modDecls = map declToDecl decls
-        , modImports = []
+        , modImports =
+            [ Haskell.Import
+                { importAs = "Untyped"
+                , parts = ["Capnp", "Untyped"]
+                }
+            ]
         }
 
 declToDecl :: Raw.Decl -> Haskell.Decl
