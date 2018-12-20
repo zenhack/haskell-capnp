@@ -1,5 +1,6 @@
-{-# LANGUAGE NamedFieldPuns    #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 -- A last-leg intermediate form, before emitting actually Haskell source code.
 --
 -- This module contains a *simplified* Haskell AST; it only includes the
@@ -17,8 +18,10 @@ module IR.Haskell
     , modFilePath
 
     , Module(..)
+    , Import(..)
     , Decl(..)
     , DataVariant(..)
+    , DataArgs(..)
     ) where
 
 import Data.List                    (intercalate, intersperse)
@@ -73,7 +76,14 @@ data Decl
 data DataVariant = DataVariant
     { dvCtorName :: Name.UnQ
     -- ^ The name of the constructor.
+    , dvArgs     :: DataArgs
     }
+    deriving(Show, Read, Eq)
+
+-- | Arguments to a data constructor
+data DataArgs
+    = PosArgs [PrimType]
+    -- we'll add records at some point.
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will
@@ -135,13 +145,26 @@ instance Format Decl where
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
-formatDerives ds = " deriving" <> PP.tupled (map format ds)
+formatDerives ds = "deriving" <> PP.tupled (map format ds)
 
 instance Format Name.UnQ where
     format = PP.textStrict . Name.renderUnQ
 
 instance Format DataVariant where
-    format DataVariant{dvCtorName} = format dvCtorName
+    format DataVariant{dvCtorName, dvArgs} =
+        hcat [ format dvCtorName, " ", format dvArgs ]
+
+instance Format DataArgs where
+    format (PosArgs types) =
+        mconcat $ intersperse " " (map format types)
+
+instance Format Name.GlobalQ where
+    format Name.GlobalQ{local, globalNS=Name.NS parts} =
+        mconcat
+            [ mconcat $ intersperse "." (map PP.textStrict parts)
+            , "."
+            , PP.textStrict $ Name.renderLocalQ local
+            ]
 
 instance Format Import where
     format Import{importAs, parts} = hcat

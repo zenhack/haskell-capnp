@@ -8,6 +8,8 @@ import System.FilePath (splitDirectories)
 
 import qualified Data.Text as T
 
+import IR.Common (PrimType(..))
+
 import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
@@ -35,14 +37,18 @@ declToDecl Raw.Enum{typeCtor, dataCtors} =
   where
     enumerantToVariant variantName =
         Haskell.DataVariant
-            { Haskell.dvCtorName =
+            { dvCtorName =
                 Name.localToUnQ variantName
+            , dvArgs = Haskell.PosArgs []
             }
 declToDecl Raw.StructWrapper{ctorName} =
     let name = Name.localToUnQ ctorName
     in Haskell.NewtypeDecl
         { dataName = name
-        , dataVariant = Haskell.DataVariant { dvCtorName = name }
+        , dataVariant = Haskell.DataVariant
+            { dvCtorName = name
+            , dvArgs = Haskell.PosArgs [ PTyVoid ] -- TODO: change this to struct.
+            }
         , derives = [ "Show", "Eq" ]
         }
 declToDecl Raw.Getter{fieldName} =
