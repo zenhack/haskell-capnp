@@ -13,6 +13,10 @@ module IR.Flat
     , Node(..)
     ) where
 
+-- Note to self: evolve this to generally making the tree the "right shape",
+-- e.g. also do product/sum separation here. Just the flattening is little
+-- enough that we end up with a lot of redundant data structures.
+
 import Data.Word
 
 import qualified IR.Name as Name

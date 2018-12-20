@@ -4,10 +4,14 @@
 -- * Lots of information which we won't use is discarded.
 -- * Nodes no longer reference eachother by ID; instead we include direct
 --   references to the objects.
+-- * The details of some structures are tweaked to make them more ergonomic
+--   to use and/or more idiomatic Haskell.
 module IR.Stage1
     ( File(..)
     , Node(..)
     , Node'(..)
+    , Struct(..)
+    , Field(..)
     ) where
 
 import Data.Word
@@ -28,6 +32,22 @@ data Node = Node
     deriving(Show, Read, Eq)
 
 data Node'
-    = Enum [Name.UnQ]
-    | Other
+    = NodeEnum [Name.UnQ]
+    | NodeStruct Struct
+    | NodeOther
+    deriving(Show, Read, Eq)
+
+data Struct = Struct
+    { dataWordCount :: !Word16
+    , pointerCount  :: !Word16
+    , isGroup       :: !Bool
+    , tagOffset     :: !Word32
+    , fields        :: [Field]
+    }
+    deriving(Show, Read, Eq)
+
+data Field = Field
+    { name :: Name.UnQ
+    , tag  :: Maybe Word16
+    }
     deriving(Show, Read, Eq)

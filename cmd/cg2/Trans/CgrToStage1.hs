@@ -19,6 +19,17 @@ type NodeMap = M.Map Word64 Schema.Node
 enumerantToName :: Schema.Enumerant -> Name.UnQ
 enumerantToName Schema.Enumerant{name} = Name.UnQ name
 
+fieldToField :: Schema.Field -> Stage1.Field
+fieldToField Schema.Field{name, discriminantValue} =
+    Stage1.Field
+        { name = Name.UnQ name
+        , tag =
+            if discriminantValue == Schema.field'noDiscriminant then
+                Nothing
+            else
+                Just discriminantValue
+        }
+
 nestedToNPair :: NodeMap -> Schema.Node'NestedNode -> (Name.UnQ, Stage1.Node)
 nestedToNPair nodeMap Schema.Node'NestedNode{name, id} =
     ( Name.UnQ name
@@ -32,9 +43,23 @@ nodeToNode nodeMap Schema.Node{id} =
         { nodeNested = map (nestedToNPair nodeMap) (V.toList nestedNodes)
         , nodeUnion = case union' of
             Schema.Node'enum enumerants ->
-                Stage1.Enum $ map enumerantToName $ V.toList enumerants
+                Stage1.NodeEnum $ map enumerantToName $ V.toList enumerants
+            Schema.Node'struct
+                    { dataWordCount
+                    , pointerCount
+                    , isGroup
+                    , discriminantOffset
+                    , fields
+                    } ->
+                Stage1.NodeStruct Stage1.Struct
+                    { dataWordCount
+                    , pointerCount
+                    , isGroup
+                    , tagOffset = discriminantOffset
+                    , fields = map fieldToField (V.toList fields)
+                    }
             _ ->
-                Stage1.Other
+                Stage1.NodeOther
         }
 
 reqFileToFile :: NodeMap -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.File
