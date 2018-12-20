@@ -40,3 +40,8 @@ reqFileToFile :: NodeMap -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.
 reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id} =
     let Stage1.Node{nodeNested} = nodeToNode nodeMap (nodeMap M.! id)
     in Stage1.File { fileNodes = nodeNested }
+
+cgrToFiles :: Schema.CodeGeneratorRequest -> [Stage1.File]
+cgrToFiles Schema.CodeGeneratorRequest{nodes, requestedFiles} =
+    let nodeMap = M.fromList [(id, node) | node@Schema.Node{id} <- V.toList nodes]
+    in map (reqFileToFile nodeMap) $ V.toList requestedFiles

@@ -28,17 +28,22 @@ data GlobalCapnp = GlobalCapnp
     }
     deriving(Show, Read, Eq, Ord)
 
-isEmptyNS :: NS -> Bool
-isEmptyNS (NS [])    = True
-isEmptyNS (NS (_:_)) = False
+emptyNS :: NS
+emptyNS = NS []
+
+mkLocal :: NS -> UnQ -> LocalQ
+mkLocal localNS localUnQ = LocalQ{localNS, localUnQ}
+
+localQToNS :: LocalQ -> NS
+localQToNS LocalQ{localUnQ=UnQ part, localNS=NS parts} = NS (part:parts)
 
 renderUnQ :: UnQ -> T.Text
 renderUnQ (UnQ name) = name
 
 renderLocalQ :: LocalQ -> T.Text
 renderLocalQ LocalQ{localUnQ, localNS}
-    | isEmptyNS localNS = renderUnQ localUnQ
-    | otherwise = renderLocalNS localNS <> "." <> renderUnQ localUnQ
+    | localNS == emptyNS = renderUnQ localUnQ
+    | otherwise = renderLocalNS localNS <> "'" <> renderUnQ localUnQ
 
 renderLocalNS :: NS -> T.Text
-renderLocalNS (NS parts) = mconcat (intersperse "'" parts)
+renderLocalNS (NS parts) = mconcat $ intersperse "'" $ reverse parts
