@@ -2,11 +2,12 @@
 -- Description: Translate from schema.capnp's codegenerator request to IR.Stage1.
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Trans.CgrToStage1 where
+module Trans.CgrToStage1 (cgrToFiles) where
 
 import Data.Word
 
 import qualified Data.Map.Strict as M
+import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
 import qualified Capnp.Gen.Capnp.Schema.Pure as Schema
@@ -37,9 +38,13 @@ nodeToNode nodeMap Schema.Node{id} =
         }
 
 reqFileToFile :: NodeMap -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.File
-reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id} =
+reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename} =
     let Stage1.Node{nodeNested} = nodeToNode nodeMap (nodeMap M.! id)
-    in Stage1.File { fileNodes = nodeNested }
+    in Stage1.File
+        { fileNodes = nodeNested
+        , fileName = T.unpack filename
+        , fileId = id
+        }
 
 cgrToFiles :: Schema.CodeGeneratorRequest -> [Stage1.File]
 cgrToFiles Schema.CodeGeneratorRequest{nodes, requestedFiles} =

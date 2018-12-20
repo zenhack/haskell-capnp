@@ -1,15 +1,26 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
-module IR.Haskell where
+module IR.Haskell
+    ( Format(..)
 
+    , modFilePath
+
+    , Module(..)
+    , Decl(..)
+    , DataVariant(..)
+    ) where
+
+import Data.List                    (intercalate, intersperse)
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
+import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import qualified IR.Name as Name
 
 data Module = Module
-    { modDecls :: [Decl]
+    { modName  :: [Name.UnQ]
+    , modDecls :: [Decl]
     }
     deriving(Show, Read)
 
@@ -25,6 +36,10 @@ data DataVariant = DataVariant
     }
     deriving(Show, Read)
 
+modFilePath :: Module -> FilePath
+modFilePath Module{modName} =
+    intercalate "/" (map (T.unpack . Name.renderUnQ) modName) ++ ".hs"
+
 indent :: PP.Doc -> PP.Doc
 indent = PP.indent 4
 
@@ -35,7 +50,14 @@ instance Format Name.UnQ where
     format = PP.textStrict . Name.renderUnQ
 
 instance Format Module where
-    format Module{modDecls} = vcat (map format modDecls)
+    format Module{modName, modDecls} = vcat
+        [ hcat
+            [ "module "
+            , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
+            , " where"
+            ]
+        , vcat $ map format modDecls
+        ]
 
 instance Format Decl where
     format DataDecl{dataName, dataVariants, derives} = vcat

@@ -1,14 +1,18 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Trans.Stage1ToFlat where
+module Trans.Stage1ToFlat (fileToFile) where
 
 import qualified IR.Flat   as Flat
 import qualified IR.Name   as Name
 import qualified IR.Stage1 as Stage1
 
 fileToFile :: Stage1.File -> Flat.File
-fileToFile Stage1.File{fileNodes} =
-    Flat.File { nodes = concatMap (nodeToNodes Name.emptyNS) fileNodes }
+fileToFile Stage1.File{fileNodes, fileName, fileId} =
+    Flat.File
+        { nodes = concatMap (nodeToNodes Name.emptyNS) fileNodes
+        , fileName
+        , fileId
+        }
 
 nodeToNodes :: Name.NS -> (Name.UnQ, Stage1.Node) -> [(Name.LocalQ, Flat.Node)]
 nodeToNodes ns (unQ, Stage1.Node{nodeNested, nodeUnion}) =

@@ -3,8 +3,6 @@
 {-# LANGUAGE OverloadedStrings          #-}
 module IR.Name where
 
-import Data.Word
-
 import Data.List   (intersperse)
 import Data.String (IsString)
 
@@ -19,12 +17,6 @@ newtype NS = NS [T.Text]
 data LocalQ = LocalQ
     { localUnQ :: UnQ
     , localNS  :: NS
-    }
-    deriving(Show, Read, Eq, Ord)
-
-data GlobalCapnp = GlobalCapnp
-    { capLocal  :: LocalQ
-    , capFileId :: !Word64
     }
     deriving(Show, Read, Eq, Ord)
 

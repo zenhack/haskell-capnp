@@ -1,9 +1,16 @@
-module IR.Flat where
+module IR.Flat
+    ( File(..)
+    , Node(..)
+    ) where
+
+import Data.Word
 
 import qualified IR.Name as Name
 
 data File = File
-    { nodes  :: [(Name.LocalQ, Node)]
+    { nodes    :: [(Name.LocalQ, Node)]
+    , fileId   :: !Word64
+    , fileName :: FilePath
     }
     deriving(Show, Read, Eq, Ord)
 

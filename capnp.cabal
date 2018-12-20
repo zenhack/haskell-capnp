@@ -212,7 +212,9 @@ executable cg2
     , Trans.FlatToHaskell
   build-depends:
       capnp
-    , wl-pprint-text                    ^>= 1.2
+    , wl-pprint-text ^>= 1.2
+    , filepath ^>= 1.4.2
+    , directory ^>= 1.3.0
 
 --------------------------------------------------------------------------------
 

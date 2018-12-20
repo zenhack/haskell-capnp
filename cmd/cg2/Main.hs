@@ -2,7 +2,10 @@ module Main (main) where
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
-import System.IO (stdout)
+import Data.Foldable    (for_)
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath  (takeDirectory)
+import System.IO        (IOMode(WriteMode), withFile)
 
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
@@ -15,15 +18,19 @@ import qualified Trans.Stage1ToFlat
 main :: IO ()
 main = do
     cgr <- getValue defaultLimit
-    handleCGR cgr
+    for_ (handleCGR cgr) $ \(path, doc) -> do
+        createDirectoryIfMissing True (takeDirectory path)
+        withFile path WriteMode $ \h ->
+            PP.hPutDoc h doc
 
-handleCGR :: CodeGeneratorRequest -> IO ()
-handleCGR =
-    PP.hPutDoc stdout
-    . PP.vcat
-    . map
-        ( Haskell.format
-        . Trans.FlatToHaskell.fileToModule
-        . Trans.Stage1ToFlat.fileToFile
-        )
-    . Trans.CgrToStage1.cgrToFiles
+handleCGR :: CodeGeneratorRequest -> [(FilePath, PP.Doc)]
+handleCGR cgr =
+    let modules =
+            map Trans.FlatToHaskell.fileToModule $
+            map Trans.Stage1ToFlat.fileToFile $
+            Trans.CgrToStage1.cgrToFiles cgr
+    in
+    map
+        (\mod -> (Haskell.modFilePath mod, Haskell.format mod))
+        modules
+
