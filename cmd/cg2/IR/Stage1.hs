@@ -1,3 +1,9 @@
+-- First stage IR. This models the data structures in schema.capnp more closely
+-- than the other intermediate forms. Differences:
+--
+-- * Lots of information which we won't use is discarded.
+-- * Nodes no longer reference eachother by ID; instead we include direct
+--   references to the objects.
 module IR.Stage1
     ( File(..)
     , Node(..)

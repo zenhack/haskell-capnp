@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
+-- Translate the 'Flat' IR into a Haskell AST.
 module Trans.FlatToHaskell (fileToModule) where
 
 

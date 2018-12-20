@@ -1,5 +1,8 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+-- Translate from the 'Stage1' IR to the 'Flat' IR.
+--
+-- As the name of the latter suggests, this involves flattening the namepace.
 module Trans.Stage1ToFlat (fileToFile) where
 
 import qualified IR.Flat   as Flat

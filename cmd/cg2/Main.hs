@@ -1,3 +1,5 @@
+-- This module is the main entry point for the capnpc-haskell code
+-- generator plugin.
 module Main (main) where
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
@@ -23,6 +25,7 @@ main = do
         withFile path WriteMode $ \h ->
             PP.hPutDoc h doc
 
+-- | Convert a 'CodeGeneratorRequest' to a list of files to create.
 handleCGR :: CodeGeneratorRequest -> [(FilePath, PP.Doc)]
 handleCGR cgr =
     let modules =
