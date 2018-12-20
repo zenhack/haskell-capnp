@@ -9,7 +9,7 @@
 --    by libraries for working with Haskell source reflect this. What we need
 --    is much simpler.
 -- 2. At some point we'll want to inject Haddock comments into the source (see
---    #..), and I(zenhack) don't see a good way to do that with the libraries
+--    #32), and I(zenhack) don't see a good way to do that with the libraries
 --    I looked at.
 module IR.Haskell
     ( Format(..)
