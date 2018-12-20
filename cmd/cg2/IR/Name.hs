@@ -26,16 +26,22 @@ emptyNS = NS []
 mkLocal :: NS -> UnQ -> LocalQ
 mkLocal localNS localUnQ = LocalQ{localNS, localUnQ}
 
+mkSub :: LocalQ -> UnQ -> LocalQ
+mkSub q unQ = mkLocal (localQToNS q) unQ
+
 localQToNS :: LocalQ -> NS
 localQToNS LocalQ{localUnQ=UnQ part, localNS=NS parts} = NS (part:parts)
+
+localToUnQ :: LocalQ -> UnQ
+localToUnQ LocalQ{localUnQ, localNS}
+    | localNS == emptyNS = localUnQ
+    | otherwise = UnQ (renderLocalNS localNS <> "'" <> renderUnQ localUnQ)
 
 renderUnQ :: UnQ -> T.Text
 renderUnQ (UnQ name) = name
 
 renderLocalQ :: LocalQ -> T.Text
-renderLocalQ LocalQ{localUnQ, localNS}
-    | localNS == emptyNS = renderUnQ localUnQ
-    | otherwise = renderLocalNS localNS <> "'" <> renderUnQ localUnQ
+renderLocalQ = renderUnQ . localToUnQ
 
 renderLocalNS :: NS -> T.Text
 renderLocalNS (NS parts) = mconcat $ intersperse "'" $ reverse parts

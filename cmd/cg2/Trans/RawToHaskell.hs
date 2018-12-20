@@ -1,51 +1,48 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
--- Translate the 'Flat' IR into a Haskell AST.
-module Trans.FlatToHaskell (fileToModule) where
-
+module Trans.RawToHaskell (fileToModule) where
 
 import Data.Char       (toUpper)
 import System.FilePath (splitDirectories)
 
 import qualified Data.Text as T
 
-import qualified IR.Flat    as Flat
 import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
+import qualified IR.Raw     as Raw
 
-fileToModule :: Flat.File -> Haskell.Module
-fileToModule Flat.File{nodes, fileName} =
+fileToModule :: Raw.File -> Haskell.Module
+fileToModule Raw.File{fileName, decls} =
     Haskell.Module
         { modName = makeModName fileName
-        , modDecls = map nodeToDecl nodes
+        , modDecls = map declToDecl decls
         }
 
-nodeToDecl :: (Name.LocalQ, Flat.Node) -> Haskell.Decl
-nodeToDecl (nodeName, Flat.Enum enumerants) =
+declToDecl :: Raw.Decl -> Haskell.Decl
+declToDecl Raw.Enum{typeCtor, dataCtors} =
     Haskell.DataDecl
-        { Haskell.dataName = Name.UnQ (Name.renderLocalQ nodeName)
-        , Haskell.dataVariants = map (enumerantToVariant nodeName) enumerants
+        { Haskell.dataName = Name.UnQ (Name.renderLocalQ typeCtor)
+        , Haskell.dataVariants = map enumerantToVariant dataCtors
         , Haskell.derives = [ "Show", "Eq", "Enum" ]
         }
-nodeToDecl (nodeName, Flat.Struct{}) =
-    let name = Name.UnQ (Name.renderLocalQ nodeName)
-    in Haskell.DataDecl
-        { Haskell.dataName = name
-        , Haskell.dataVariants =
-            [ Haskell.DataVariant
-                { Haskell.dvCtorName = name
-                -- TODO: fields
-                }
-            ]
-        , Haskell.derives = [ "Show", "Eq", "Enum" ]
+  where
+    enumerantToVariant variantName =
+        Haskell.DataVariant
+            { Haskell.dvCtorName =
+                Name.localToUnQ variantName
+            }
+declToDecl Raw.StructWrapper{ctorName} =
+    let name = Name.localToUnQ ctorName
+    in Haskell.NewtypeDecl
+        { dataName = name
+        , dataVariant = Haskell.DataVariant { dvCtorName = name }
+        , derives = [ "Show", "Eq" ]
         }
-
-enumerantToVariant :: Name.LocalQ -> Name.UnQ -> Haskell.DataVariant
-enumerantToVariant nodeName variantName =
-    Haskell.DataVariant
-        { Haskell.dvCtorName =
-            Name.UnQ $ Name.renderLocalQ $ Name.mkLocal (Name.localQToNS nodeName) variantName
+declToDecl Raw.Getter{fieldName} =
+    Haskell.ValueDecl
+        { name = Name.UnQ $
+            "get_" <> Name.renderLocalQ fieldName
         }
 
 -- | Transform the file path into a valid haskell module name.

@@ -38,15 +38,24 @@ data Module = Module
     }
     deriving(Show, Read)
 
--- | A declaration. For the moment, this is only @data@ declarations.
-data Decl = DataDecl
-    { dataName     :: Name.UnQ
-    -- ^ The name of the declared type.
-    , dataVariants :: [DataVariant]
-    -- ^ The variants/data constructors for the type.
-    , derives      :: [Name.UnQ]
-    -- ^ A list of type classes to include in the deriving clause.
-    }
+-- | A declaration.
+data Decl
+    = DataDecl
+        { dataName     :: Name.UnQ
+        -- ^ The name of the declared type.
+        , dataVariants :: [DataVariant]
+        -- ^ The variants/data constructors for the type.
+        , derives      :: [Name.UnQ]
+        -- ^ A list of type classes to include in the deriving clause.
+        }
+    | NewtypeDecl
+        { dataName    :: Name.UnQ
+        , dataVariant :: DataVariant
+        , derives     :: [Name.UnQ]
+        }
+    | ValueDecl
+        { name :: Name.UnQ
+        }
     deriving(Show, Read)
 
 -- | A data constructor
@@ -94,11 +103,22 @@ instance Format Decl where
             [ case dataVariants of
                 (d:ds) -> vcat $ ("= " <> format d) : map (("| " <>) . format) ds
                 []     -> ""
-            , case derives of
-                [] -> ""
-                _  -> "deriving" <> PP.tupled (map format derives)
+            , formatDerives derives
             ]
         ]
+    format NewtypeDecl{dataName, dataVariant, derives} = vcat
+        [ hcat [ "newtype ", format dataName ]
+        , indent $ vcat
+            [ hcat [ "= ", format dataVariant ]
+            , formatDerives derives
+            ]
+        ]
+    format ValueDecl{name} = hcat
+        [ PP.textStrict $ Name.renderUnQ name, " = error \"TODO\"" ]
+
+formatDerives :: [Name.UnQ] -> PP.Doc
+formatDerives [] = ""
+formatDerives ds = " deriving" <> PP.tupled (map format ds)
 
 instance Format DataVariant where
     format DataVariant{dvCtorName} = format dvCtorName

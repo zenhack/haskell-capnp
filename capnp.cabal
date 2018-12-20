@@ -207,10 +207,12 @@ executable cg2
     , IR.Common
     , IR.Stage1
     , IR.Flat
+    , IR.Raw
     , IR.Haskell
     , Trans.CgrToStage1
     , Trans.Stage1ToFlat
-    , Trans.FlatToHaskell
+    , Trans.FlatToRaw
+    , Trans.RawToHaskell
   build-depends:
       capnp
     , wl-pprint-text ^>= 1.2
