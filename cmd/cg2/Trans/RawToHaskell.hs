@@ -68,7 +68,7 @@ declToDecl Raw.StructWrapper{ctorName} =
                     [Haskell.TypeVar "msg"]
                 ]
             }
-        , derives = [ "Show", "Eq" ]
+        , derives = []
         }
 declToDecl Raw.Getter{fieldName} =
     Haskell.ValueDecl
