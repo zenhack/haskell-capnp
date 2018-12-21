@@ -59,9 +59,14 @@ declToDecl Raw.StructWrapper{ctorName} =
     let name = Name.localToUnQ ctorName
     in Haskell.NewtypeDecl
         { dataName = name
+        , typeArgs = [ "msg" ]
         , dataVariant = Haskell.DataVariant
             { dvCtorName = name
-            , dvArgs = Haskell.PosArgs [ Haskell.NamedType untypedStruct ]
+            , dvArgs = Haskell.PosArgs
+                [ Haskell.TypeApp
+                    (Haskell.NamedType untypedStruct)
+                    [Haskell.TypeVar "msg"]
+                ]
             }
         , derives = [ "Show", "Eq" ]
         }

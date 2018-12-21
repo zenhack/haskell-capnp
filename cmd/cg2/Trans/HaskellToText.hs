@@ -58,8 +58,13 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.NewtypeDecl{dataName, dataVariant, derives} = vcat
-        [ hcat [ "newtype ", format dataName ]
+    format Haskell.NewtypeDecl{dataName, typeArgs, dataVariant, derives} = vcat
+        [ hcat
+            [ "newtype "
+            , format dataName
+            , " "
+            , mconcat $ intersperse " " $ map PP.textStrict typeArgs
+            ]
         , indent $ vcat
             [ hcat [ "= ", format dataVariant ]
             , formatDerives derives
@@ -86,6 +91,9 @@ instance Format Haskell.DataArgs where
 instance Format Haskell.Type where
     format (Haskell.PrimType ty)  = format ty
     format (Haskell.NamedType ty) = format ty
+    format (Haskell.TypeVar txt)  = PP.textStrict txt
+    format (Haskell.TypeApp f xs) =
+        "(" <> (mconcat $ intersperse " " $ map format (f:xs)) <> ")"
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =

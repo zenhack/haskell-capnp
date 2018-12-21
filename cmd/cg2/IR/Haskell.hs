@@ -60,6 +60,7 @@ data Decl
         }
     | NewtypeDecl
         { dataName    :: Name.UnQ
+        , typeArgs    :: [T.Text]
         , dataVariant :: DataVariant
         , derives     :: [Name.UnQ]
         }
@@ -84,6 +85,8 @@ data DataArgs
 
 data Type
     = NamedType Name.GlobalQ
+    | TypeVar T.Text
+    | TypeApp Type [Type]
     | PrimType PrimType
     deriving(Show, Read, Eq)
 
