@@ -14,6 +14,12 @@ import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
 
+untypedStruct :: Name.GlobalQ
+untypedStruct = Name.GlobalQ
+    { globalNS = Name.NS ["Capnp", "Untyped"]
+    , local = Name.mkLocal Name.emptyNS "Struct"
+    }
+
 fileToModule :: Raw.File -> Haskell.Module
 fileToModule Raw.File{fileName, decls} =
     Haskell.Module
@@ -36,7 +42,8 @@ declToDecl Raw.Enum{typeCtor, dataCtors} =
             ++
             [ Haskell.DataVariant
                 { dvCtorName = Name.localToUnQ $ Name.mkSub typeCtor "unknown'"
-                , dvArgs = Haskell.PosArgs [ PTyInt $ IntType Unsigned Sz16 ]
+                , dvArgs = Haskell.PosArgs
+                    [ Haskell.PrimType $ PTyInt $ IntType Unsigned Sz16 ]
                 }
             ]
         , Haskell.derives = [ "Show", "Eq", "Enum" ]
@@ -54,7 +61,7 @@ declToDecl Raw.StructWrapper{ctorName} =
         { dataName = name
         , dataVariant = Haskell.DataVariant
             { dvCtorName = name
-            , dvArgs = Haskell.PosArgs [ PTyVoid ] -- TODO: change this to struct.
+            , dvArgs = Haskell.PosArgs [ Haskell.NamedType untypedStruct ]
             }
         , derives = [ "Show", "Eq" ]
         }

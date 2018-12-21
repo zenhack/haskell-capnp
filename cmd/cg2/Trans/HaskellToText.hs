@@ -83,6 +83,10 @@ instance Format Haskell.DataArgs where
     format (Haskell.PosArgs types) =
         mconcat $ intersperse " " (map format types)
 
+instance Format Haskell.Type where
+    format (Haskell.PrimType ty)  = format ty
+    format (Haskell.NamedType ty) = format ty
+
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
         mconcat

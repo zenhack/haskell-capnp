@@ -24,6 +24,7 @@ data GlobalQ = GlobalQ
     { local    :: LocalQ
     , globalNS :: NS
     }
+    deriving(Show, Read, Eq, Ord)
 
 emptyNS :: NS
 emptyNS = NS []

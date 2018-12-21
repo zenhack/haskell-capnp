@@ -17,6 +17,7 @@ module IR.Haskell
 
     , Module(..)
     , Import(..)
+    , Type(..)
     , Decl(..)
     , DataVariant(..)
     , DataArgs(..)
@@ -77,8 +78,13 @@ data DataVariant = DataVariant
 
 -- | Arguments to a data constructor
 data DataArgs
-    = PosArgs [PrimType]
+    = PosArgs [Type]
     -- we'll add records at some point.
+    deriving(Show, Read, Eq)
+
+data Type
+    = NamedType Name.GlobalQ
+    | PrimType PrimType
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will
