@@ -20,6 +20,18 @@ untypedStruct = Name.GlobalQ
     , local = Name.mkLocal Name.emptyNS "Struct"
     }
 
+readCtx :: T.Text -> T.Text -> Haskell.Type
+readCtx m msg = Haskell.TypeApp
+    (Haskell.GlobalNamedType
+        Name.GlobalQ
+            { globalNS = Name.NS ["Capnp", "Untyped"]
+            , local = Name.mkLocal Name.emptyNS "ReadCtx"
+            }
+    )
+    [ Haskell.TypeVar m
+    , Haskell.TypeVar msg
+    ]
+
 fileToModule :: Raw.File -> Haskell.Module
 fileToModule Raw.File{fileName, decls} =
     Haskell.Module
@@ -64,16 +76,27 @@ declToDecl Raw.StructWrapper{ctorName} =
             { dvCtorName = name
             , dvArgs = Haskell.PosArgs
                 [ Haskell.TypeApp
-                    (Haskell.NamedType untypedStruct)
+                    (Haskell.GlobalNamedType untypedStruct)
                     [Haskell.TypeVar "msg"]
                 ]
             }
         , derives = []
         }
-declToDecl Raw.Getter{fieldName} =
+declToDecl Raw.Getter{fieldName, fieldType, containerType} =
     Haskell.ValueDecl
         { name = Name.UnQ $
             "get_" <> Name.renderLocalQ fieldName
+        , typ = Haskell.CtxType
+            [readCtx "m" "msg"]
+            (Haskell.FnType
+                [ Haskell.TypeApp
+                    (Haskell.LocalNamedType containerType)
+                    [ Haskell.TypeVar "msg" ]
+                , Haskell.TypeApp
+                    (Haskell.TypeVar "m")
+                    [Haskell.PrimType fieldType]
+                ]
+            )
         }
 
 -- | Transform the file path into a valid haskell module name.

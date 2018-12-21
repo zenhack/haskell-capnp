@@ -70,15 +70,14 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.ValueDecl{name} = hcat
-        [ format name, " = error \"TODO\"" ]
+    format Haskell.ValueDecl{name, typ} = vcat
+        [ hcat [ format name, " :: ", format typ ]
+        , hcat [ format name, " = error \"TODO\"" ]
+        ]
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
 formatDerives ds = "deriving" <> PP.tupled (map format ds)
-
-instance Format Name.UnQ where
-    format = PP.textStrict . Name.renderUnQ
 
 instance Format Haskell.DataVariant where
     format Haskell.DataVariant{dvCtorName, dvArgs} =
@@ -90,18 +89,31 @@ instance Format Haskell.DataArgs where
 
 instance Format Haskell.Type where
     format (Haskell.PrimType ty)  = format ty
-    format (Haskell.NamedType ty) = format ty
+    format (Haskell.GlobalNamedType ty) = format ty
+    format (Haskell.LocalNamedType ty) = format ty
     format (Haskell.TypeVar txt)  = PP.textStrict txt
     format (Haskell.TypeApp f xs) =
         "(" <> (mconcat $ intersperse " " $ map format (f:xs)) <> ")"
+    format (Haskell.FnType types) =
+        mconcat $ intersperse " -> " $ map format types
+    format (Haskell.CtxType [] ty) = format ty
+    format (Haskell.CtxType constraints ty) =
+        PP.tupled (map format constraints) <> " => " <> format ty
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
         mconcat
             [ mconcat $ intersperse "." (map PP.textStrict parts)
             , "."
-            , PP.textStrict $ Name.renderLocalQ local
+            , format local
             ]
+
+instance Format Name.LocalQ where
+    format = PP.textStrict . Name.renderLocalQ
+
+instance Format Name.UnQ where
+    format = PP.textStrict . Name.renderUnQ
+
 
 instance Format Haskell.Import where
     format Haskell.Import{importAs, parts} = hcat
