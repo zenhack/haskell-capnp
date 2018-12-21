@@ -20,9 +20,8 @@ module IR.Flat
 
 import Data.Word
 
-import IR.Common (PrimType)
-
-import qualified IR.Name as Name
+import qualified IR.Common as Common
+import qualified IR.Name   as Name
 
 data File = File
     { nodes    :: [(Name.LocalQ, Node)]
@@ -39,7 +38,7 @@ data Node
     deriving(Show, Read, Eq)
 
 data Field = Field
-    { fieldName :: Name.UnQ
-    , fieldType :: PrimType
+    { fieldName    :: Name.UnQ
+    , fieldLocType :: Common.FieldLocType
     }
     deriving(Show, Read, Eq)

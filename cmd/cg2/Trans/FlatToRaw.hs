@@ -28,10 +28,10 @@ nodeToDecls name Flat.Struct{fields} =
     : concatMap (fieldToDecls name) fields
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
-fieldToDecls containerType Flat.Field{fieldName, fieldType} =
+fieldToDecls containerType Flat.Field{fieldName, fieldLocType} =
     [ Raw.Getter
         { fieldName = Name.mkSub containerType fieldName
         , containerType
-        , fieldType
+        , fieldLocType
         }
     ]

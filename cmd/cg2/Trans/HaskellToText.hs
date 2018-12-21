@@ -9,8 +9,7 @@ import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
-import IR.Common (IntType(..), PrimType(..), Sign(..), sizeBits)
-
+import qualified IR.Common  as C
 import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
 
@@ -88,7 +87,6 @@ instance Format Haskell.DataArgs where
         mconcat $ intersperse " " (map format types)
 
 instance Format Haskell.Type where
-    format (Haskell.PrimType ty)  = format ty
     format (Haskell.GlobalNamedType ty) = format ty
     format (Haskell.LocalNamedType ty) = format ty
     format (Haskell.TypeVar txt)  = PP.textStrict txt
@@ -99,6 +97,8 @@ instance Format Haskell.Type where
     format (Haskell.CtxType [] ty) = format ty
     format (Haskell.CtxType constraints ty) =
         PP.tupled (map format constraints) <> " => " <> format ty
+    format (Haskell.PrimType ty) = format ty
+    format Haskell.UnitType = "()"
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
@@ -123,18 +123,17 @@ instance Format Haskell.Import where
         , format importAs
         ]
 
-instance Format PrimType where
-    format PTyVoid = "()"
-    format PTyBool = "Std_.Bool"
-    format (PTyInt (IntType sign sz)) =
-        let szDoc = fromString $ show $ sizeBits sz
+instance Format C.PrimWord where
+    format C.PrimBool = "Std_.Bool"
+    format (C.PrimInt (C.IntType sign sz)) =
+        let szDoc = fromString $ show $ C.sizeBits sz
             typePrefix = case sign of
-                Signed   -> "Int"
-                Unsigned -> "Word"
+                C.Signed   -> "Int"
+                C.Unsigned -> "Word"
         in
         "Std_." <> typePrefix <> szDoc
-    format PTyFloat32 = "Std_.Float"
-    format PTyFloat64 = "Std_.Double"
+    format C.PrimFloat32 = "Std_.Float"
+    format C.PrimFloat64 = "Std_.Double"
 
 -- | Indent the argument by four spaces.
 indent :: PP.Doc -> PP.Doc

@@ -12,14 +12,12 @@ module IR.Stage1
     , Node'(..)
     , Struct(..)
     , Field(..)
-    , FieldType(..)
     ) where
 
 import Data.Word
 
-import IR.Common (PrimType)
-
-import qualified IR.Name as Name
+import qualified IR.Common as Common
+import qualified IR.Name   as Name
 
 data File = File
     { fileNodes :: [(Name.UnQ, Node)]
@@ -50,13 +48,8 @@ data Struct = Struct
     deriving(Show, Read, Eq)
 
 data Field = Field
-    { name :: Name.UnQ
-    , tag  :: Maybe Word16
-    , typ  :: FieldType
+    { name    :: Name.UnQ
+    , tag     :: Maybe Word16
+    , locType :: Common.FieldLocType
     }
-    deriving(Show, Read, Eq)
-
-data FieldType
-    = Group
-    | Prim PrimType
     deriving(Show, Read, Eq)

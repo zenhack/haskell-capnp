@@ -27,9 +27,8 @@ import Data.List (intercalate)
 
 import qualified Data.Text as T
 
-import IR.Common (PrimType)
-
-import qualified IR.Name as Name
+import qualified IR.Common as Common
+import qualified IR.Name   as Name
 
 -- | A Haskell module
 data Module = Module
@@ -89,9 +88,10 @@ data Type
     | LocalNamedType Name.LocalQ
     | TypeVar T.Text
     | TypeApp Type [Type]
-    | PrimType PrimType
     | FnType [Type]
     | CtxType [Type] Type
+    | PrimType Common.PrimWord
+    | UnitType
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will

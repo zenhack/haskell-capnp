@@ -30,9 +30,9 @@ nodeToNodes ns (unQ, Stage1.Node{nodeNested, nodeUnion}) =
                 { fields =
                     [ Flat.Field
                         { fieldName = name
-                        , fieldType
+                        , fieldLocType = locType
                         }
-                    | Stage1.Field{name, typ=Stage1.Prim fieldType, tag} <- fields
+                    | Stage1.Field{name, locType, tag} <- fields
                     , tag == Nothing
                     ]
                 }

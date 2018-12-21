@@ -8,8 +8,7 @@ import System.FilePath (splitDirectories)
 
 import qualified Data.Text as T
 
-import IR.Common (IntSize(..), IntType(..), PrimType(..), Sign(..))
-
+import qualified IR.Common  as C
 import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
@@ -42,6 +41,10 @@ fileToModule Raw.File{fileName, decls} =
                 { importAs = "Untyped"
                 , parts = ["Capnp", "Untyped"]
                 }
+            , Haskell.Import
+                { importAs = "Basics"
+                , parts = ["Capnp", "Basics"]
+                }
             ]
         }
 
@@ -55,7 +58,7 @@ declToDecl Raw.Enum{typeCtor, dataCtors} =
             [ Haskell.DataVariant
                 { dvCtorName = Name.localToUnQ $ Name.mkSub typeCtor "unknown'"
                 , dvArgs = Haskell.PosArgs
-                    [ Haskell.PrimType $ PTyInt $ IntType Unsigned Sz16 ]
+                    [ Haskell.PrimType $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
                 }
             ]
         , Haskell.derives = [ "Std_.Show", "Std_.Eq" ]
@@ -82,7 +85,7 @@ declToDecl Raw.StructWrapper{ctorName} =
             }
         , derives = []
         }
-declToDecl Raw.Getter{fieldName, fieldType, containerType} =
+declToDecl Raw.Getter{fieldName, fieldLocType, containerType} =
     Haskell.ValueDecl
         { name = Name.UnQ $
             "get_" <> Name.renderLocalQ fieldName
@@ -94,10 +97,24 @@ declToDecl Raw.Getter{fieldName, fieldType, containerType} =
                     [ Haskell.TypeVar "msg" ]
                 , Haskell.TypeApp
                     (Haskell.TypeVar "m")
-                    [Haskell.PrimType fieldType]
+                    [ typeToType (C.fieldType fieldLocType) "msg"
+                    ]
                 ]
             )
         }
+
+typeToType :: C.Type -> T.Text -> Haskell.Type
+typeToType C.VoidType _var = Haskell.UnitType
+typeToType (C.WordType (C.PrimWord ty)) _var = Haskell.PrimType ty
+typeToType (C.PtrType (C.PrimPtr C.PrimText)) var =
+    Haskell.TypeApp
+        ( Haskell.GlobalNamedType Name.GlobalQ
+            { globalNS = Name.NS [ "Basics" ]
+            , local = Name.mkLocal Name.emptyNS "Text"
+            }
+        )
+        [Haskell.TypeVar var]
+typeToType ty _ = error $ "TODO: " ++ show ty
 
 -- | Transform the file path into a valid haskell module name.
 -- TODO: this is a best-effort transformation; it gives good

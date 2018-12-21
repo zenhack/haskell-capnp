@@ -8,9 +8,8 @@ module IR.Raw (File(..), Decl(..)) where
 
 import Data.Word
 
-import IR.Common (PrimType)
-
-import qualified IR.Name as Name
+import qualified IR.Common as Common
+import qualified IR.Name   as Name
 
 data File = File
     { fileId   :: !Word64
@@ -30,6 +29,6 @@ data Decl
     | Getter
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
-        , fieldType     :: PrimType
+        , fieldLocType  :: Common.FieldLocType
         }
     deriving(Show, Read, Eq)
