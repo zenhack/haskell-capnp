@@ -17,25 +17,33 @@ fileToFile Stage1.File{fileNodes, fileName, fileId} =
         , fileId
         }
 
-nodeToNodes :: Name.NS -> (Name.UnQ, Stage1.Node) -> [(Name.LocalQ, Flat.Node)]
-nodeToNodes ns (unQ, Stage1.Node{nodeNested, nodeUnion}) =
+nodeToNodes :: Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
+nodeToNodes ns (unQ, Stage1.Node{nodeId, nodeNested, nodeUnion}) =
     let name = Name.mkLocal ns unQ
         kids = concatMap (nodeToNodes (Name.localQToNS name)) nodeNested
     in case nodeUnion of
         Stage1.NodeEnum enumerants ->
-            (name, Flat.Enum enumerants) : kids
-        Stage1.NodeStruct Stage1.Struct{fields}  ->
-            ( name
-            , Flat.Struct
-                { fields =
-                    [ Flat.Field
-                        { fieldName = name
-                        , fieldLocType = locType
-                        }
-                    | Stage1.Field{name, locType, tag} <- fields
-                    , tag == Nothing
-                    ]
+            Flat.Node
+                { name
+                , nodeId
+                , union_ = Flat.enum enumerants
                 }
-            ) : kids
+            : kids
+        Stage1.NodeStruct Stage1.Struct{fields}  ->
+            Flat.Node
+                { name
+                , nodeId
+                , union_ = Flat.Struct
+                    { fields =
+                        [ Flat.Field
+                            { fieldName = name
+                            , fieldLocType = locType
+                            }
+                        | Stage1.Field{name, locType, tag} <- fields
+                        , tag == Nothing
+                        ]
+                    }
+                }
+            : kids
         Stage1.NodeOther ->
             kids

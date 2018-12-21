@@ -103,7 +103,7 @@ declToDecl Raw.Getter{fieldName, fieldLocType, containerType} =
             )
         }
 
-typeToType :: C.Type -> T.Text -> Haskell.Type
+typeToType :: C.Type r -> T.Text -> Haskell.Type
 typeToType C.VoidType _var = Haskell.UnitType
 typeToType (C.WordType (C.PrimWord ty)) _var = Haskell.PrimType ty
 typeToType (C.PtrType (C.PrimPtr C.PrimText)) var =

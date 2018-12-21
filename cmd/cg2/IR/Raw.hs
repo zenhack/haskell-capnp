@@ -29,6 +29,6 @@ data Decl
     | Getter
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
-        , fieldLocType  :: Common.FieldLocType
+        , fieldLocType  :: Common.FieldLocType Name.GlobalQ
         }
     deriving(Show, Read, Eq)

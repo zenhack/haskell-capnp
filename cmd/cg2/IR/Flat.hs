@@ -8,9 +8,11 @@
 --
 -- The names in this flat namespace do have some internal structure
 -- to them; see 'IR.Name' for details.
+{-# LANGUAGE NamedFieldPuns #-}
 module IR.Flat
     ( File(..)
     , Node(..)
+    , Node'(..)
     , Field(..)
     ) where
 
@@ -23,22 +25,29 @@ import Data.Word
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
-data File = File
-    { nodes    :: [(Name.LocalQ, Node)]
+data File r = File
+    { nodes    :: [Node r]
     , fileId   :: !Word64
     , fileName :: FilePath
     }
     deriving(Show, Read, Eq)
 
-data Node
+data Node r = Node
+    { name   :: Name.LocalQ
+    , nodeId :: !Word64
+    , union_ :: Node' r
+    }
+    deriving(Show, Read, Eq)
+
+data Node' r
     = Enum [Name.UnQ]
     | Struct
-        { fields :: [Field]
+        { fields :: [Field r]
         }
     deriving(Show, Read, Eq)
 
-data Field = Field
+data Field r = Field
     { fieldName    :: Name.UnQ
-    , fieldLocType :: Common.FieldLocType
+    , fieldLocType :: Common.FieldLocType r
     }
     deriving(Show, Read, Eq)
