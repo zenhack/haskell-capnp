@@ -213,6 +213,7 @@ executable cg2
     , Trans.Stage1ToFlat
     , Trans.FlatToRaw
     , Trans.RawToHaskell
+    , Trans.HaskellToText
   build-depends:
       capnp
     , wl-pprint-text ^>= 1.2

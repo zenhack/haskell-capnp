@@ -12,9 +12,10 @@ import System.IO        (IOMode(WriteMode), withFile)
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
 
-import qualified IR.Haskell         as Haskell
+import qualified IR.Haskell          as Haskell
 import qualified Trans.CgrToStage1
 import qualified Trans.FlatToRaw
+import qualified Trans.HaskellToText
 import qualified Trans.RawToHaskell
 import qualified Trans.Stage1ToFlat
 
@@ -36,6 +37,10 @@ handleCGR cgr =
             Trans.CgrToStage1.cgrToFiles cgr
     in
     map
-        (\mod -> (Haskell.modFilePath mod, Haskell.format mod))
+        (\mod ->
+            ( Haskell.modFilePath mod
+            , Trans.HaskellToText.moduleToText mod
+            )
+        )
         modules
 
