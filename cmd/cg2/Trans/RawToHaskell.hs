@@ -8,7 +8,7 @@ import System.FilePath (splitDirectories)
 
 import qualified Data.Text as T
 
-import IR.Common (PrimType(..))
+import IR.Common (IntSize(..), IntType(..), PrimType(..), Sign(..))
 
 import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
@@ -31,7 +31,14 @@ declToDecl :: Raw.Decl -> Haskell.Decl
 declToDecl Raw.Enum{typeCtor, dataCtors} =
     Haskell.DataDecl
         { Haskell.dataName = Name.UnQ (Name.renderLocalQ typeCtor)
-        , Haskell.dataVariants = map enumerantToVariant dataCtors
+        , Haskell.dataVariants =
+            map enumerantToVariant dataCtors
+            ++
+            [ Haskell.DataVariant
+                { dvCtorName = Name.localToUnQ $ Name.mkSub typeCtor "unknown'"
+                , dvArgs = Haskell.PosArgs [ PTyInt $ IntType Unsigned Sz16 ]
+                }
+            ]
         , Haskell.derives = [ "Show", "Eq", "Enum" ]
         }
   where
