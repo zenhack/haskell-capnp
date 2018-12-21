@@ -16,7 +16,7 @@ import qualified IR.Raw     as Raw
 
 untypedStruct :: Name.GlobalQ
 untypedStruct = Name.GlobalQ
-    { globalNS = Name.NS ["Capnp", "Untyped"]
+    { globalNS = Name.NS ["Untyped"]
     , local = Name.mkLocal Name.emptyNS "Struct"
     }
 
@@ -24,7 +24,7 @@ readCtx :: T.Text -> T.Text -> Haskell.Type
 readCtx m msg = Haskell.TypeApp
     (Haskell.GlobalNamedType
         Name.GlobalQ
-            { globalNS = Name.NS ["Capnp", "Untyped"]
+            { globalNS = Name.NS ["Untyped"]
             , local = Name.mkLocal Name.emptyNS "ReadCtx"
             }
     )
@@ -58,7 +58,7 @@ declToDecl Raw.Enum{typeCtor, dataCtors} =
                     [ Haskell.PrimType $ PTyInt $ IntType Unsigned Sz16 ]
                 }
             ]
-        , Haskell.derives = [ "Show", "Eq", "Enum" ]
+        , Haskell.derives = [ "Std_.Show", "Std_.Eq" ]
         }
   where
     enumerantToVariant variantName =
