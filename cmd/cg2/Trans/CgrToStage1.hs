@@ -35,7 +35,7 @@ fieldToField Schema.Field{name, discriminantValue, union'} =
         , locType = getFieldLocType union'
         }
 
-getFieldLocType :: Schema.Field' -> C.FieldLocType Word64
+getFieldLocType :: Schema.Field' -> C.FieldLocType
 getFieldLocType = \case
     Schema.Field'slot{type_, defaultValue, hadExplicitDefault, offset} ->
         case typeToType type_ of
@@ -70,7 +70,7 @@ getFieldLocType = \case
 
 -- | Given the offset field from the capnp schema, a type, and a
 -- default value, return a DataLoc describing the location of a field.
-dataLoc :: Word32 -> C.WordType r -> Word64 -> C.DataLoc
+dataLoc :: Word32 -> C.WordType -> Word64 -> C.DataLoc
 dataLoc offset ty defaultVal =
     let bitsOffset = fromIntegral offset * C.dataFieldSize ty
     in C.DataLoc
@@ -146,7 +146,7 @@ cgrToFiles Schema.CodeGeneratorRequest{nodes, requestedFiles} =
     let nodeMap = M.fromList [(id, node) | node@Schema.Node{id} <- V.toList nodes]
     in map (reqFileToFile nodeMap) $ V.toList requestedFiles
 
-typeToType :: Schema.Type -> C.Type Word64
+typeToType :: Schema.Type -> C.Type
 typeToType ty = case ty of
     Schema.Type'void       -> C.VoidType
     Schema.Type'bool       -> C.WordType $ C.PrimWord C.PrimBool

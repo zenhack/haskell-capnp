@@ -51,6 +51,6 @@ data Struct = Struct
 data Field = Field
     { name    :: Name.UnQ
     , tag     :: Maybe Word16
-    , locType :: Common.FieldLocType Word64
+    , locType :: Common.FieldLocType
     }
     deriving(Show, Read, Eq)

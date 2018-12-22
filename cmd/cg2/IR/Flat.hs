@@ -25,29 +25,29 @@ import Data.Word
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
-data File r = File
-    { nodes    :: [Node r]
+data File = File
+    { nodes    :: [Node]
     , fileId   :: !Word64
     , fileName :: FilePath
     }
     deriving(Show, Read, Eq)
 
-data Node r = Node
+data Node = Node
     { name   :: Name.LocalQ
     , nodeId :: !Word64
-    , union_ :: Node' r
+    , union_ :: Node'
     }
     deriving(Show, Read, Eq)
 
-data Node' r
+data Node'
     = Enum [Name.UnQ]
     | Struct
-        { fields :: [Field r]
+        { fields :: [Field]
         }
     deriving(Show, Read, Eq)
 
-data Field r = Field
+data Field = Field
     { fieldName    :: Name.UnQ
-    , fieldLocType :: Common.FieldLocType r
+    , fieldLocType :: Common.FieldLocType
     }
     deriving(Show, Read, Eq)
