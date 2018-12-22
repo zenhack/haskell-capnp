@@ -26,7 +26,7 @@ nodeToNodes ns (unQ, Stage1.Node{nodeId, nodeNested, nodeUnion}) =
             Flat.Node
                 { name
                 , nodeId
-                , union_ = Flat.enum enumerants
+                , union_ = Flat.Enum enumerants
                 }
             : kids
         Stage1.NodeStruct Stage1.Struct{fields}  ->
