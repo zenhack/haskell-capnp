@@ -1,6 +1,7 @@
 -- Data types that are used by more than one intermediate form.
 -- See also IR.Name, which defines identifiers, which are also
 -- used in more than one IR.
+{-# LANGUAGE DeriveFunctor #-}
 module IR.Common where
 
 import Data.Word
@@ -30,7 +31,7 @@ sizeBits Sz32 = 32
 sizeBits Sz64 = 64
 
 -- | Return the size in bits of a type that belongs in the data section of a struct.
-dataFieldSize :: WordType -> Int
+dataFieldSize :: WordType r -> Int
 dataFieldSize fieldType = case fieldType of
     EnumType _                          -> 16
     PrimWord (PrimInt (IntType _ size)) -> sizeBits size
@@ -38,30 +39,31 @@ dataFieldSize fieldType = case fieldType of
     PrimWord PrimFloat64                -> 64
     PrimWord PrimBool                   -> 1
 
--- Capnproto types.
+-- Capnproto types. The 'r' type parameter is the type of references to other nodes,
+-- which may be different in different stages of the pipeline.
 
-data Type
-    = CompositeType CompositeType
+data Type r
+    = CompositeType (CompositeType r)
     | VoidType
-    | WordType WordType
-    | PtrType PtrType
-    deriving(Show, Read, Eq)
+    | WordType (WordType r)
+    | PtrType (PtrType r)
+    deriving(Show, Read, Eq, Functor)
 
-data CompositeType
-    = StructType TypeId
-    deriving(Show, Read, Eq)
+newtype CompositeType r
+    = StructType r
+    deriving(Show, Read, Eq, Functor)
 
-data WordType
-    = EnumType TypeId
+data WordType r
+    = EnumType r
     | PrimWord PrimWord
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Functor)
 
-data PtrType
-    = ListOf Type
+data PtrType r
+    = ListOf (Type r)
     | PrimPtr PrimPtr
-    | PtrComposite CompositeType
-    | PtrInterface TypeId
-    deriving(Show, Read, Eq)
+    | PtrComposite (CompositeType r)
+    | PtrInterface r
+    deriving(Show, Read, Eq, Functor)
 
 data PrimWord
     = PrimInt IntType
@@ -84,17 +86,17 @@ data AnyPtr
     deriving(Show, Read, Eq)
 
 -- | The type and location of a field.
-data FieldLocType
+data FieldLocType r
     -- | The field is in the struct's data section.
-    = DataField DataLoc WordType
+    = DataField DataLoc (WordType r)
     -- | The field is in the struct's pointer section (the argument is the
     -- index).
-    | PtrField !Word16 PtrType
+    | PtrField !Word16 (PtrType r)
     -- | The field is a group or union; it's "location" is the whole struct.
-    | HereField CompositeType
+    | HereField (CompositeType r)
     -- | The field is of type void (and thus is zero-size).
     | VoidField
-    deriving(Show, Read, Eq)
+    deriving(Show, Read, Eq, Functor)
 
 -- | The location of a field within a struct's data section.
 data DataLoc = DataLoc
@@ -109,7 +111,7 @@ data DataLoc = DataLoc
     deriving(Show, Read, Eq)
 
 -- | Extract the type from a 'FildLocType'.
-fieldType :: FieldLocType -> Type
+fieldType :: FieldLocType r -> Type r
 fieldType (DataField _ ty) = WordType ty
 fieldType (PtrField _ ty)  = PtrType ty
 fieldType (HereField ty)   = CompositeType ty

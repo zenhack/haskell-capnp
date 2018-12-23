@@ -1,28 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Trans.FlatToRaw (filesToCgr) where
+module Trans.FlatToRaw (fileToFile) where
 
-import qualified Data.Map.Strict as M
-
-import qualified IR.Common as C
-import qualified IR.Flat   as Flat
-import qualified IR.Name   as Name
-import qualified IR.Raw    as Raw
-
-filesToCgr :: [Flat.File] -> Raw.CgReq
-filesToCgr files =
-    Raw.CgReq
-        { files = map fileToFile files
-        , typeMap = M.unions $ map collectTypes files
-        }
-
-collectTypes :: Flat.File -> M.Map C.TypeId Raw.TypeRef
-collectTypes Flat.File{fileId, nodes} = M.fromList $ map collectNode nodes
-  where
-    collectNode Flat.Node{name, nodeId} =
-        ( C.TypeId nodeId
-        , Raw.TypeRef{ tyName = name, tyModule = fileId }
-        )
+import qualified IR.Flat as Flat
+import qualified IR.Name as Name
+import qualified IR.Raw  as Raw
 
 fileToFile :: Flat.File -> Raw.File
 fileToFile Flat.File{nodes, fileId, fileName} =
@@ -33,29 +15,29 @@ fileToFile Flat.File{nodes, fileId, fileName} =
         }
 
 nodeToDecls :: Flat.Node -> [Raw.Decl]
-nodeToDecls Flat.Node{name, union_} = case union_ of
+nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
     Flat.Enum variants ->
         [ Raw.Enum
-            { typeCtor = name
-            , dataCtors = map (Name.mkSub name) variants
+            { typeCtor = local
+            , dataCtors = map (Name.mkSub local) variants
             }
         ]
     Flat.Struct{fields} ->
         Raw.StructWrapper
-            { ctorName = name
+            { ctorName = local
             }
-        : concatMap (fieldToDecls name) fields
+        : concatMap (fieldToDecls local) fields
     Flat.Interface ->
         [ Raw.InterfaceWrapper
-            { ctorName = name
+            { ctorName = local
             }
         ]
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
 fieldToDecls containerType Flat.Field{fieldName, fieldLocType} =
     [ Raw.Getter
-        { fieldName = Name.mkSub containerType fieldName
+        { fieldName = Name.mkSub containerType (Name.getUnQ fieldName)
         , containerType
-        , fieldLocType
+        , fieldLocType = fmap Flat.name fieldLocType
         }
     ]

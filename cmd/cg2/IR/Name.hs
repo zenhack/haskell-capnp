@@ -1,12 +1,29 @@
+{-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedStrings          #-}
 module IR.Name where
 
+import Data.Word
+
 import Data.List   (intersperse)
 import Data.String (IsString)
 
 import qualified Data.Text as T
+
+class HasUnQ a where
+    getUnQ :: a -> UnQ
+class MkSub a where
+    mkSub :: a -> UnQ -> a
+
+instance HasUnQ UnQ where
+    getUnQ = id
+instance HasUnQ LocalQ where
+    getUnQ = localUnQ
+instance HasUnQ CapnpQ where
+    getUnQ CapnpQ{local} = getUnQ local
+instance HasUnQ GlobalQ where
+    getUnQ GlobalQ{local} = getUnQ local
 
 newtype UnQ = UnQ T.Text
     deriving(Show, Read, Eq, Ord, IsString)
@@ -17,6 +34,14 @@ newtype NS = NS [T.Text]
 data LocalQ = LocalQ
     { localUnQ :: UnQ
     , localNS  :: NS
+    }
+    deriving(Show, Read, Eq, Ord)
+
+-- | A fully qualified name for something defined in a capnproto schema.
+-- this includes a local name within a file, and the file's capnp id.
+data CapnpQ = CapnpQ
+    { local  :: LocalQ
+    , fileId :: !Word64
     }
     deriving(Show, Read, Eq, Ord)
 
@@ -32,8 +57,14 @@ emptyNS = NS []
 mkLocal :: NS -> UnQ -> LocalQ
 mkLocal localNS localUnQ = LocalQ{localNS, localUnQ}
 
-mkSub :: LocalQ -> UnQ -> LocalQ
-mkSub q unQ = mkLocal (localQToNS q) unQ
+instance MkSub LocalQ where
+    mkSub q unQ = mkLocal (localQToNS q) unQ
+
+instance MkSub GlobalQ where
+    mkSub q@GlobalQ{local} unQ = q { local = mkSub local unQ }
+
+instance MkSub CapnpQ where
+    mkSub q@CapnpQ{local} unQ = q { local = mkSub local unQ }
 
 localQToNS :: LocalQ -> NS
 localQToNS LocalQ{localUnQ=UnQ part, localNS=NS parts} = NS (part:parts)

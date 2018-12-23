@@ -1,7 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Trans.RawToHaskell (cgrToModules) where
+module Trans.RawToHaskell (fileToModule) where
 
 import Data.Word
 
@@ -15,8 +15,6 @@ import qualified IR.Common  as C
 import qualified IR.Haskell as Haskell
 import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
-
-import qualified Data.Map.Strict as M
 
 untypedStruct :: Name.GlobalQ
 untypedStruct = Name.GlobalQ
@@ -42,14 +40,11 @@ readCtx m msg = Haskell.TypeApp
     , Haskell.TypeVar msg
     ]
 
-cgrToModules :: Raw.CgReq -> [Haskell.Module]
-cgrToModules Raw.CgReq{files, typeMap} = map (fileToModule typeMap) files
-
-fileToModule :: M.Map C.TypeId Raw.TypeRef -> Raw.File -> Haskell.Module
-fileToModule env Raw.File{fileName, fileId, decls} =
+fileToModule :: Raw.File -> Haskell.Module
+fileToModule Raw.File{fileName, fileId, decls} =
     Haskell.Module
         { modName = makeModName fileName
-        , modDecls = map (declToDecl fileId env) decls
+        , modDecls = map (declToDecl fileId) decls
         , modImports =
             [ Haskell.Import
                 { importAs = "Message"
@@ -66,8 +61,8 @@ fileToModule env Raw.File{fileName, fileId, decls} =
             ]
         }
 
-declToDecl :: Word64 -> M.Map C.TypeId Raw.TypeRef -> Raw.Decl -> Haskell.Decl
-declToDecl _thisMod _env Raw.Enum{typeCtor, dataCtors} =
+declToDecl :: Word64 -> Raw.Decl -> Haskell.Decl
+declToDecl _thisMod Raw.Enum{typeCtor, dataCtors} =
     Haskell.DataDecl
         { Haskell.dataName = Name.UnQ (Name.renderLocalQ typeCtor)
         , Haskell.dataVariants =
@@ -88,11 +83,11 @@ declToDecl _thisMod _env Raw.Enum{typeCtor, dataCtors} =
                 Name.localToUnQ variantName
             , dvArgs = Haskell.PosArgs []
             }
-declToDecl _thisMod _env Raw.InterfaceWrapper{ctorName} =
+declToDecl _thisMod Raw.InterfaceWrapper{ctorName} =
     newtypeWrapper ctorName untypedClient
-declToDecl _thisMod _env Raw.StructWrapper{ctorName} =
+declToDecl _thisMod Raw.StructWrapper{ctorName} =
     newtypeWrapper ctorName untypedStruct
-declToDecl thisMod env Raw.Getter{fieldName, fieldLocType, containerType} =
+declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
     Haskell.ValueDecl
         { name = Name.UnQ $
             "get_" <> Name.renderLocalQ fieldName
@@ -104,7 +99,7 @@ declToDecl thisMod env Raw.Getter{fieldName, fieldLocType, containerType} =
                     [ Haskell.TypeVar "msg" ]
                 , Haskell.TypeApp
                     (Haskell.TypeVar "m")
-                    [ typeToType thisMod env (C.fieldType fieldLocType) "msg"
+                    [ typeToType thisMod (C.fieldType fieldLocType) "msg"
                     ]
                 ]
             )
@@ -127,54 +122,46 @@ newtypeWrapper ctorName wrappedType =
         , derives = []
         }
 
-typeToType :: Word64 -> M.Map C.TypeId Raw.TypeRef -> C.Type -> T.Text -> Haskell.Type
-typeToType thisMod env ty var = case ty of
+nameToType :: Word64 -> Name.CapnpQ -> Haskell.Type
+nameToType thisMod Name.CapnpQ{local, fileId} =
+    if fileId == thisMod
+        then Haskell.LocalNamedType local
+        else Haskell.GlobalNamedType Name.GlobalQ
+                { globalNS = Name.NS [ "Capnp", "Gen", T.pack $ printf "X%x" fileId ]
+                , local
+                }
+typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> Haskell.Type
+typeToType thisMod ty var = case ty of
     C.VoidType -> Haskell.UnitType
     C.WordType (C.PrimWord ty) -> Haskell.PrimType ty
     C.WordType (C.EnumType typeId) ->
-        getNamedType thisMod env typeId
+        nameToType thisMod typeId
     C.PtrType (C.ListOf elt) ->
         Haskell.TypeApp (basics "List")
             [ Haskell.TypeVar var
-            , typeToType thisMod env elt var
+            , typeToType thisMod elt var
             ]
     C.PtrType (C.PrimPtr C.PrimText) ->
         appV $ basics "Text"
     C.PtrType (C.PrimPtr C.PrimData) ->
         appV $ basics "Data"
     C.PtrType (C.PtrComposite (C.StructType typeId)) ->
-        appV $ getNamedType thisMod env typeId
+        appV $ nameToType thisMod typeId
     C.PtrType (C.PtrInterface typeId) ->
-        getNamedType thisMod env typeId
+        nameToType thisMod typeId
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
         appV $ Haskell.GlobalNamedType Name.GlobalQ
             { globalNS = Name.NS [ "Untyped" ]
             , local = Name.mkLocal Name.emptyNS "Ptr"
             }
     C.CompositeType (C.StructType typeId) ->
-        appV $ getNamedType thisMod env typeId
+        appV $ nameToType thisMod typeId
   where
     appV t = Haskell.TypeApp t [Haskell.TypeVar var]
     basics name = Haskell.GlobalNamedType Name.GlobalQ
         { globalNS = Name.NS [ "Basics" ]
         , local = Name.mkLocal Name.emptyNS name
         }
-
-
-getNamedType :: Word64 -> M.Map C.TypeId Raw.TypeRef -> C.TypeId -> Haskell.Type
-getNamedType thisMod env typeId =
-    let Raw.TypeRef{tyModule, tyName} =
-            case M.lookup typeId env of
-                Just v  -> v
-                Nothing ->
-                    -- hypothesis: typeId is for some type we currently skip.
-                    error $ "Not found: " ++ show typeId
-    in if tyModule == thisMod
-        then Haskell.LocalNamedType tyName
-        else Haskell.GlobalNamedType Name.GlobalQ
-                { globalNS = Name.NS [ "Capnp", "Gen", T.pack $ printf "X%x" tyModule ]
-                , local = tyName
-                }
 
 -- | Transform the file path into a valid haskell module name.
 -- TODO: this is a best-effort transformation; it gives good

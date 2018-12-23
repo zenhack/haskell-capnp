@@ -33,7 +33,7 @@ data File = File
     deriving(Show, Read, Eq)
 
 data Node = Node
-    { name   :: Name.LocalQ
+    { name   :: Name.CapnpQ
     , nodeId :: !Word64
     , union_ :: Node'
     }
@@ -48,7 +48,7 @@ data Node'
     deriving(Show, Read, Eq)
 
 data Field = Field
-    { fieldName    :: Name.UnQ
-    , fieldLocType :: Common.FieldLocType
+    { fieldName    :: Name.CapnpQ
+    , fieldLocType :: Common.FieldLocType Node
     }
     deriving(Show, Read, Eq)

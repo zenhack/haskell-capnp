@@ -18,13 +18,52 @@ import qualified IR.Common                   as C
 import qualified IR.Name                     as Name
 import qualified IR.Stage1                   as Stage1
 
-type NodeMap = M.Map Word64 Schema.Node
+type NodeMap v = M.Map Word64 v
+
+nodesToNodes :: NodeMap Schema.Node -> NodeMap Stage1.Node
+nodesToNodes inMap = outMap
+  where
+    outMap = M.map translate inMap
+
+    translate Schema.Node{scopeId, id, nestedNodes, union'} = Stage1.Node
+        { nodeId = id
+        , nodeNested =
+            [ (Name.UnQ name, outMap M.! id)
+            | Schema.Node'NestedNode{name, id} <- V.toList nestedNodes
+            ]
+        , nodeParent =
+            if scopeId == 0 then
+                Nothing
+            else
+                Just (outMap M.! id)
+        , nodeUnion = case union' of
+            Schema.Node'enum enumerants ->
+                Stage1.NodeEnum $ map enumerantToName $ V.toList enumerants
+            Schema.Node'struct
+                    { dataWordCount
+                    , pointerCount
+                    , isGroup
+                    , discriminantOffset
+                    , fields
+                    } ->
+                Stage1.NodeStruct Stage1.Struct
+                    { dataWordCount
+                    , pointerCount
+                    , isGroup
+                    , tagOffset = discriminantOffset
+                    , fields = map (fieldToField outMap) (V.toList fields)
+                    }
+            Schema.Node'interface{} ->
+                Stage1.NodeInterface
+            _ ->
+                Stage1.NodeOther
+        }
 
 enumerantToName :: Schema.Enumerant -> Name.UnQ
 enumerantToName Schema.Enumerant{name} = Name.UnQ name
 
-fieldToField :: Schema.Field -> Stage1.Field
-fieldToField Schema.Field{name, discriminantValue, union'} =
+fieldToField :: NodeMap Stage1.Node -> Schema.Field -> Stage1.Field
+fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
     Stage1.Field
         { name = Name.UnQ name
         , tag =
@@ -32,13 +71,13 @@ fieldToField Schema.Field{name, discriminantValue, union'} =
                 Nothing
             else
                 Just discriminantValue
-        , locType = getFieldLocType union'
+        , locType = getFieldLocType nodeMap union'
         }
 
-getFieldLocType :: Schema.Field' -> C.FieldLocType
-getFieldLocType = \case
+getFieldLocType :: NodeMap  Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
+getFieldLocType nodeMap = \case
     Schema.Field'slot{type_, defaultValue, hadExplicitDefault, offset} ->
-        case typeToType type_ of
+        case typeToType nodeMap type_ of
             C.VoidType ->
                 C.VoidField
             C.PtrType ty
@@ -61,7 +100,7 @@ getFieldLocType = \case
             C.CompositeType ty ->
                 C.PtrField (fromIntegral offset) (C.PtrComposite ty)
     Schema.Field'group{typeId} ->
-        C.HereField $ C.StructType $ C.TypeId typeId
+        C.HereField $ C.StructType $ nodeMap M.! typeId
     Schema.Field'unknown' _ ->
         -- Don't know how to interpret this; we'll have to leave the argument
         -- opaque.
@@ -69,7 +108,7 @@ getFieldLocType = \case
 
 -- | Given the offset field from the capnp schema, a type, and a
 -- default value, return a DataLoc describing the location of a field.
-dataLoc :: Word32 -> C.WordType -> Word64 -> C.DataLoc
+dataLoc :: Word32 -> C.WordType Stage1.Node -> Word64 -> C.DataLoc
 dataLoc offset ty defaultVal =
     let bitsOffset = fromIntegral offset * C.dataFieldSize ty
     in C.DataLoc
@@ -98,44 +137,9 @@ valueBits = \case
     Schema.Value'enum n -> Just $ fromIntegral n
     _ -> Nothing -- some non-word type.
 
-nestedToNPair :: NodeMap -> Schema.Node'NestedNode -> (Name.UnQ, Stage1.Node)
-nestedToNPair nodeMap Schema.Node'NestedNode{name, id} =
-    ( Name.UnQ name
-    , nodeToNode nodeMap (nodeMap M.! id)
-    )
-
-nodeToNode :: NodeMap -> Schema.Node -> Stage1.Node
-nodeToNode nodeMap Schema.Node{id} =
-    let Schema.Node{nestedNodes, union'} = nodeMap M.! id
-    in Stage1.Node
-        { nodeId = id
-        , nodeNested = map (nestedToNPair nodeMap) (V.toList nestedNodes)
-        , nodeUnion = case union' of
-            Schema.Node'enum enumerants ->
-                Stage1.NodeEnum $ map enumerantToName $ V.toList enumerants
-            Schema.Node'struct
-                    { dataWordCount
-                    , pointerCount
-                    , isGroup
-                    , discriminantOffset
-                    , fields
-                    } ->
-                Stage1.NodeStruct Stage1.Struct
-                    { dataWordCount
-                    , pointerCount
-                    , isGroup
-                    , tagOffset = discriminantOffset
-                    , fields = map fieldToField (V.toList fields)
-                    }
-            Schema.Node'interface{} ->
-                Stage1.NodeInterface
-            _ ->
-                Stage1.NodeOther
-        }
-
-reqFileToFile :: NodeMap -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.File
+reqFileToFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.File
 reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename} =
-    let Stage1.Node{nodeNested} = nodeToNode nodeMap (nodeMap M.! id)
+    let Stage1.Node{nodeNested} = nodeMap M.! id
     in Stage1.File
         { fileNodes = nodeNested
         , fileName = T.unpack filename
@@ -144,11 +148,11 @@ reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename} =
 
 cgrToFiles :: Schema.CodeGeneratorRequest -> [Stage1.File]
 cgrToFiles Schema.CodeGeneratorRequest{nodes, requestedFiles} =
-    let nodeMap = M.fromList [(id, node) | node@Schema.Node{id} <- V.toList nodes]
+    let nodeMap = nodesToNodes $ M.fromList [(id, node) | node@Schema.Node{id} <- V.toList nodes]
     in map (reqFileToFile nodeMap) $ V.toList requestedFiles
 
-typeToType :: Schema.Type -> C.Type
-typeToType ty = case ty of
+typeToType :: NodeMap Stage1.Node -> Schema.Type -> C.Type Stage1.Node
+typeToType nodeMap = \case
     Schema.Type'void       -> C.VoidType
     Schema.Type'bool       -> C.WordType $ C.PrimWord C.PrimBool
     Schema.Type'int8       -> C.WordType $ C.PrimWord $ C.PrimInt $ C.IntType C.Signed C.Sz8
@@ -163,11 +167,11 @@ typeToType ty = case ty of
     Schema.Type'float64    -> C.WordType $ C.PrimWord C.PrimFloat64
     Schema.Type'text       -> C.PtrType $ C.PrimPtr C.PrimText
     Schema.Type'data_      -> C.PtrType $ C.PrimPtr C.PrimData
-    Schema.Type'list elt   -> C.PtrType $ C.ListOf (typeToType elt)
+    Schema.Type'list elt   -> C.PtrType $ C.ListOf (typeToType nodeMap elt)
     -- TODO: use 'brand' to generate type parameters.
-    Schema.Type'enum{typeId} -> C.WordType $ C.EnumType $ C.TypeId typeId
-    Schema.Type'struct{typeId} -> C.CompositeType $ C.StructType $ C.TypeId typeId
-    Schema.Type'interface{typeId} -> C.PtrType $ C.PtrInterface $ C.TypeId typeId
+    Schema.Type'enum{typeId} -> C.WordType $ C.EnumType $ nodeMap M.! typeId
+    Schema.Type'struct{typeId} -> C.CompositeType $ C.StructType $ nodeMap M.! typeId
+    Schema.Type'interface{typeId} -> C.PtrType $ C.PtrInterface $ nodeMap M.! typeId
     Schema.Type'anyPointer anyPtr -> C.PtrType $ C.PrimPtr $ C.PrimAnyPtr $
         case anyPtr of
             Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'anyKind ->

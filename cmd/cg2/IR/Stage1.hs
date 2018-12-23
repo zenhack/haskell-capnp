@@ -29,6 +29,7 @@ data File = File
 data Node = Node
     { nodeNested :: [(Name.UnQ, Node)]
     , nodeUnion  :: Node'
+    , nodeParent :: Maybe Node
     , nodeId     :: !Word64
     }
     deriving(Show, Read, Eq)
@@ -52,6 +53,6 @@ data Struct = Struct
 data Field = Field
     { name    :: Name.UnQ
     , tag     :: Maybe Word16
-    , locType :: Common.FieldLocType
+    , locType :: Common.FieldLocType Node
     }
     deriving(Show, Read, Eq)

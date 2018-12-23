@@ -4,24 +4,12 @@
 -- etc. It's still not at the level of detail of actual Haskell, but encodes
 -- the constructs to be generated, as opposed to the declarative description
 -- of the schema.
-module IR.Raw (CgReq(..), TypeRef(..), File(..), Decl(..)) where
+module IR.Raw (File(..), Decl(..)) where
 
 import Data.Word
 
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
-
-import qualified Data.Map.Strict as M
-
-data TypeRef = TypeRef
-    { tyModule :: !Word64
-    , tyName   :: Name.LocalQ
-    }
-
-data CgReq = CgReq
-    { files   :: [File]
-    , typeMap :: M.Map Common.TypeId TypeRef
-    }
 
 data File = File
     { fileId   :: !Word64
@@ -44,6 +32,6 @@ data Decl
     | Getter
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
-        , fieldLocType  :: Common.FieldLocType
+        , fieldLocType  :: Common.FieldLocType Name.CapnpQ
         }
     deriving(Show, Read, Eq)
