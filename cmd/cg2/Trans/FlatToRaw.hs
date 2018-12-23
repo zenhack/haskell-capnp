@@ -1,10 +1,28 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Trans.FlatToRaw where
+module Trans.FlatToRaw (filesToCgr) where
 
-import qualified IR.Flat as Flat
-import qualified IR.Name as Name
-import qualified IR.Raw  as Raw
+import qualified Data.Map.Strict as M
+
+import qualified IR.Common as C
+import qualified IR.Flat   as Flat
+import qualified IR.Name   as Name
+import qualified IR.Raw    as Raw
+
+filesToCgr :: [Flat.File] -> Raw.CgReq
+filesToCgr files =
+    Raw.CgReq
+        { files = map fileToFile files
+        , typeMap = M.unions $ map collectTypes files
+        }
+
+collectTypes :: Flat.File -> M.Map C.TypeId Raw.TypeRef
+collectTypes Flat.File{fileId, nodes} = M.fromList $ map collectNode nodes
+  where
+    collectNode Flat.Node{name, nodeId} =
+        ( C.TypeId nodeId
+        , Raw.TypeRef{ tyName = name, tyModule = fileId }
+        )
 
 fileToFile :: Flat.File -> Raw.File
 fileToFile Flat.File{nodes, fileId, fileName} =

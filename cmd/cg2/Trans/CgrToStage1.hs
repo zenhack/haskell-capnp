@@ -60,9 +60,8 @@ getFieldLocType = \case
                             ty
             C.CompositeType ty ->
                 C.PtrField (fromIntegral offset) (C.PtrComposite ty)
-    Schema.Field'group{typeId=_} ->
-        error "TODO"
-        -- C.HereField $ C.StructType typeId
+    Schema.Field'group{typeId} ->
+        C.HereField $ C.StructType $ C.TypeId typeId
     Schema.Field'unknown' _ ->
         -- Don't know how to interpret this; we'll have to leave the argument
         -- opaque.
