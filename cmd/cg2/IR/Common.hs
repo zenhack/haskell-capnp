@@ -5,6 +5,9 @@ module IR.Common where
 
 import Data.Word
 
+newtype TypeId = TypeId Word64
+    deriving(Show, Read, Eq, Ord)
+
 data IntType = IntType !Sign !IntSize
     deriving(Show, Read, Eq)
 
@@ -45,11 +48,11 @@ data Type
     deriving(Show, Read, Eq)
 
 data CompositeType
-    = StructType Word64
+    = StructType TypeId
     deriving(Show, Read, Eq)
 
 data WordType
-    = EnumType Word64
+    = EnumType TypeId
     | PrimWord PrimWord
     deriving(Show, Read, Eq)
 
@@ -57,7 +60,7 @@ data PtrType
     = ListOf Type
     | PrimPtr PrimPtr
     | PtrComposite CompositeType
-    | PtrInterface Word64
+    | PtrInterface TypeId
     deriving(Show, Read, Eq)
 
 data PrimWord

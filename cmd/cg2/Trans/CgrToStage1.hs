@@ -164,9 +164,9 @@ typeToType ty = case ty of
     Schema.Type'data_      -> C.PtrType $ C.PrimPtr C.PrimData
     Schema.Type'list elt   -> C.PtrType $ C.ListOf (typeToType elt)
     -- TODO: use 'brand' to generate type parameters.
-    Schema.Type'enum{typeId} -> C.WordType $ C.EnumType typeId
-    Schema.Type'struct{typeId} -> C.CompositeType $ C.StructType typeId
-    Schema.Type'interface{typeId} -> C.PtrType $ C.PtrInterface typeId
+    Schema.Type'enum{typeId} -> C.WordType $ C.EnumType $ C.TypeId typeId
+    Schema.Type'struct{typeId} -> C.CompositeType $ C.StructType $ C.TypeId typeId
+    Schema.Type'interface{typeId} -> C.PtrType $ C.PtrInterface $ C.TypeId typeId
     Schema.Type'anyPointer anyPtr -> C.PtrType $ C.PrimPtr $ C.PrimAnyPtr $
         case anyPtr of
             Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'anyKind ->
