@@ -1348,7 +1348,7 @@ resolveClientExn tmpDest resolve exn = do
         AnswerDest {} ->
             pure ()
         ImportDest _ ->
-            pure () -- FIXME TODO: decrement the refcount for the import?
+            pure ()
     resolve $ Error exn
 
 -- Resolve a promised client to a pointer. If it is a non-null non-capability
