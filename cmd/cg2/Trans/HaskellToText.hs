@@ -48,7 +48,7 @@ instance Format H.Module where
         ]
 
 instance Format H.Decl where
-    format H.DataDecl{dataName, dataVariants, derives} = vcat
+    format H.DcData{dataName, dataVariants, derives} = vcat
         [ hcat [ "data ", format dataName ]
         , indent $ vcat
             [ case dataVariants of
@@ -57,7 +57,7 @@ instance Format H.Decl where
             , formatDerives derives
             ]
         ]
-    format H.NewtypeDecl{dataName, typeArgs, dataVariant, derives} = vcat
+    format H.DcNewtype{dataName, typeArgs, dataVariant, derives} = vcat
         [ hcat
             [ "newtype "
             , format dataName
@@ -69,14 +69,14 @@ instance Format H.Decl where
             , formatDerives derives
             ]
         ]
-    format H.ValueDecl{typ, def=def@H.ValueDef{name}} = vcat
+    format H.DcValue{typ, def=def@H.DfValue{name}} = vcat
         [ hcat [ format name, " :: ", format typ ]
         , format def
         ]
-    format H.InstanceDecl{ctx, typ, defs} = vcat
+    format H.DcInstance{ctx, typ, defs} = vcat
         [ hcat
             [ "instance "
-            , format (H.CtxType ctx typ)
+            , format (H.TCtx ctx typ)
             , case defs of
                 []  -> ""
                 _:_ -> " where"
@@ -86,7 +86,7 @@ instance Format H.Decl where
         ]
 
 instance Format H.ValueDef where
-    format H.ValueDef{name, value, params} = hcat
+    format H.DfValue{name, value, params} = hcat
         [ format name
         , " "
         , hcat $ intersperse " " $ map format params
@@ -95,31 +95,31 @@ instance Format H.ValueDef where
         ]
 
 instance Format H.Exp where
-    format (H.ExApp e es) = hcat
+    format (H.EApp e es) = hcat
         [ "("
         , hcat $ intersperse " " $ map format (e:es)
         , ")"
         ]
-    format (H.ExGlobalName e) = format e
-    format (H.ExLocalName e) = format e
-    format (H.ExInteger n) = fromString (show n)
-    format (H.ExDo ds ex) = vcat
+    format (H.EGName e) = format e
+    format (H.ELName e) = format e
+    format (H.EInt n) = fromString (show n)
+    format (H.EDo ds ex) = vcat
         [ "(do"
         , indent $ vcat (map format ds ++ [format ex, ")"])
         ]
-    format (H.ExTuple es) = PP.tupled (map format es)
+    format (H.ETup es) = PP.tupled (map format es)
 
-instance Format H.DoClause where
+instance Format H.Do where
     format (H.DoBind var ex) = format var <> " <- " <> format ex
 
 instance Format H.Pattern where
     format (H.PVar v) = PP.textStrict v
-    format (H.PLocalCtor c ps) = hcat
+    format (H.PLCtor c ps) = hcat
         [ "("
         , mconcat $ intersperse " " (format c : map format ps)
         , ")"
         ]
-    format (H.PInteger n) = fromString (show n)
+    format (H.PInt n) = fromString (show n)
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
@@ -130,22 +130,22 @@ instance Format H.DataVariant where
         hcat [ format dvCtorName, " ", format dvArgs ]
 
 instance Format H.DataArgs where
-    format (H.PosArgs types) =
+    format (H.APos types) =
         mconcat $ intersperse " " (map format types)
 
 instance Format H.Type where
-    format (H.GlobalNamedType ty) = format ty
-    format (H.LocalNamedType ty) = format ty
-    format (H.TypeVar txt)  = PP.textStrict txt
-    format (H.TypeApp f xs) =
+    format (H.TGName ty) = format ty
+    format (H.TLName ty) = format ty
+    format (H.TVar txt)  = PP.textStrict txt
+    format (H.TApp f xs) =
         "(" <> (mconcat $ intersperse " " $ map format (f:xs)) <> ")"
-    format (H.FnType types) =
+    format (H.TFn types) =
         mconcat $ intersperse " -> " $ map format types
-    format (H.CtxType [] ty) = format ty
-    format (H.CtxType constraints ty) =
+    format (H.TCtx[] ty) = format ty
+    format (H.TCtx constraints ty) =
         PP.tupled (map format constraints) <> " => " <> format ty
-    format (H.PrimType ty) = format ty
-    format H.UnitType = "()"
+    format (H.TPrim ty) = format ty
+    format H.TUnit = "()"
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =

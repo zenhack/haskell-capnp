@@ -19,7 +19,7 @@ module IR.Haskell
     , Import(..)
     , Type(..)
     , Exp(..)
-    , DoClause(..)
+    , Do(..)
     , Pattern(..)
     , Decl(..)
     , ValueDef(..)
@@ -53,7 +53,7 @@ data Import = Import
 
 -- | A declaration.
 data Decl
-    = DataDecl
+    = DcData
         { dataName     :: Name.UnQ
         -- ^ The name of the declared type.
         , dataVariants :: [DataVariant]
@@ -61,24 +61,24 @@ data Decl
         , derives      :: [Name.UnQ]
         -- ^ A list of type classes to include in the deriving clause.
         }
-    | NewtypeDecl
+    | DcNewtype
         { dataName    :: Name.UnQ
         , typeArgs    :: [T.Text]
         , dataVariant :: DataVariant
         , derives     :: [Name.UnQ]
         }
-    | ValueDecl
+    | DcValue
         { typ :: Type
         , def :: ValueDef
         }
-    | InstanceDecl
+    | DcInstance
         { ctx  :: [Type]
         , typ  :: Type
         , defs :: [ValueDef]
         }
     deriving(Show, Read, Eq)
 
-data ValueDef = ValueDef
+data ValueDef = DfValue
     { name   :: Name.UnQ
     , value  :: Exp
     , params :: [Pattern]
@@ -95,38 +95,38 @@ data DataVariant = DataVariant
 
 -- | Arguments to a data constructor
 data DataArgs
-    = PosArgs [Type]
+    = APos [Type]
     -- we'll add records at some point.
     deriving(Show, Read, Eq)
 
 data Type
-    = GlobalNamedType Name.GlobalQ
-    | LocalNamedType Name.LocalQ
-    | TypeVar T.Text
-    | TypeApp Type [Type]
-    | FnType [Type]
-    | CtxType [Type] Type
-    | PrimType Common.PrimWord
-    | UnitType
+    = TGName Name.GlobalQ
+    | TLName Name.LocalQ
+    | TVar T.Text
+    | TApp Type [Type]
+    | TFn [Type]
+    | TCtx [Type] Type
+    | TPrim Common.PrimWord
+    | TUnit
     deriving(Show, Read, Eq)
 
 data Exp
-    = ExApp Exp [Exp]
-    | ExGlobalName Name.GlobalQ
-    | ExLocalName Name.LocalQ
-    | ExInteger Integer
-    | ExDo [DoClause] Exp
-    | ExTuple [Exp]
+    = EApp Exp [Exp]
+    | EGName Name.GlobalQ
+    | ELName Name.LocalQ
+    | EInt Integer
+    | EDo [Do] Exp
+    | ETup [Exp]
     deriving(Show, Read, Eq)
 
-data DoClause
+data Do
     = DoBind Name.UnQ Exp
     deriving(Show, Read, Eq)
 
 data Pattern
     = PVar T.Text
-    | PLocalCtor Name.LocalQ [Pattern]
-    | PInteger Integer
+    | PLCtor Name.LocalQ [Pattern]
+    | PInt Integer
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will
