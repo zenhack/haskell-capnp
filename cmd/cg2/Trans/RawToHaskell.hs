@@ -12,7 +12,7 @@ import Text.Printf     (printf)
 import qualified Data.Text as T
 
 import qualified IR.Common  as C
-import qualified IR.Haskell as Haskell
+import qualified IR.Haskell as H
 import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
 
@@ -28,202 +28,202 @@ untypedClient = Name.GlobalQ
     , local = Name.mkLocal Name.emptyNS "Client"
     }
 
-readCtx :: T.Text -> T.Text -> Haskell.Type
-readCtx m msg = Haskell.TypeApp
-    (Haskell.GlobalNamedType
+readCtx :: T.Text -> T.Text -> H.Type
+readCtx m msg = H.TypeApp
+    (H.GlobalNamedType
         Name.GlobalQ
             { globalNS = Name.NS ["Untyped"]
             , local = Name.mkLocal Name.emptyNS "ReadCtx"
             }
     )
-    [ Haskell.TypeVar m
-    , Haskell.TypeVar msg
+    [ H.TypeVar m
+    , H.TypeVar msg
     ]
 
-fileToModule :: Raw.File -> Haskell.Module
+fileToModule :: Raw.File -> H.Module
 fileToModule Raw.File{fileName, fileId, decls} =
-    Haskell.Module
+    H.Module
         { modName = makeModName fileName
         , modDecls = concatMap (declToDecls fileId) decls
         , modImports =
-            [ Haskell.Import
+            [ H.Import
                 { importAs = "Message"
                 , parts = ["Capnp", "Message"]
                 }
-            , Haskell.Import
+            , H.Import
                 { importAs = "Untyped"
                 , parts = ["Capnp", "Untyped"]
                 }
-            , Haskell.Import
+            , H.Import
                 { importAs = "Basics"
                 , parts = ["Capnp", "Basics"]
                 }
-            , Haskell.Import
+            , H.Import
                 { importAs = "GenHelpers"
                 , parts = ["Capnp", "GenHelpers"]
                 }
-            , Haskell.Import
+            , H.Import
                 { importAs = "Classes"
                 , parts = ["Capnp", "Classes"]
                 }
             ]
         }
 
-declToDecls :: Word64 -> Raw.Decl -> [Haskell.Decl]
+declToDecls :: Word64 -> Raw.Decl -> [H.Decl]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     let unknownCtor = Name.mkSub typeCtor "unknown'" in
-    [ Haskell.DataDecl
-        { Haskell.dataName = Name.localToUnQ typeCtor
-        , Haskell.dataVariants =
+    [ H.DataDecl
+        { H.dataName = Name.localToUnQ typeCtor
+        , H.dataVariants =
             map enumerantToVariant dataCtors
             ++
-            [ Haskell.DataVariant
+            [ H.DataVariant
                 { dvCtorName = Name.localToUnQ unknownCtor
-                , dvArgs = Haskell.PosArgs
-                    [ Haskell.PrimType $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
+                , dvArgs = H.PosArgs
+                    [ H.PrimType $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
                 }
             ]
-        , Haskell.derives = [ "Std_.Show", "Std_.Eq" ]
+        , H.derives = [ "Std_.Show", "Std_.Eq" ]
         }
     , mkIsWordInstance typeCtor dataCtors unknownCtor
     ]
   where
     enumerantToVariant variantName =
-        Haskell.DataVariant
+        H.DataVariant
             { dvCtorName =
                 Name.localToUnQ variantName
-            , dvArgs = Haskell.PosArgs []
+            , dvArgs = H.PosArgs []
             }
 declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
     [ newtypeWrapper ctorName untypedClient ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
     [ newtypeWrapper ctorName untypedStruct ]
 declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
-    [ Haskell.ValueDecl
-        { typ = Haskell.CtxType
+    [ H.ValueDecl
+        { typ = H.CtxType
             [readCtx "m" "msg"]
-            (Haskell.FnType
-                [ Haskell.TypeApp
-                    (Haskell.LocalNamedType containerType)
-                    [ Haskell.TypeVar "msg" ]
-                , Haskell.TypeApp
-                    (Haskell.TypeVar "m")
+            (H.FnType
+                [ H.TypeApp
+                    (H.LocalNamedType containerType)
+                    [ H.TypeVar "msg" ]
+                , H.TypeApp
+                    (H.TypeVar "m")
                     [ typeToType thisMod (C.fieldType fieldLocType) "msg"
                     ]
                 ]
             )
-        , def = Haskell.ValueDef
+        , def = H.ValueDef
             { name = Name.UnQ $
                 "get_" <> Name.renderLocalQ fieldName
-            , params = [Haskell.PLocalCtor containerType [Haskell.PVar "struct"]]
+            , params = [H.PLocalCtor containerType [H.PVar "struct"]]
             , value = case fieldLocType of
                 C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
-                    Haskell.ExApp
-                        (Haskell.ExGlobalName
+                    H.ExApp
+                        (H.ExGlobalName
                             Name.GlobalQ
                                 { globalNS = Name.NS [ "GenHelpers" ]
                                 , local = "getWordField"
                                 }
                         )
-                        [ Haskell.ExLocalName "struct"
-                        , Haskell.ExInteger $ fromIntegral dataIdx
-                        , Haskell.ExInteger $ fromIntegral dataOff
-                        , Haskell.ExInteger $ fromIntegral dataDef
+                        [ H.ExLocalName "struct"
+                        , H.ExInteger $ fromIntegral dataIdx
+                        , H.ExInteger $ fromIntegral dataOff
+                        , H.ExInteger $ fromIntegral dataDef
                         ]
                 _ ->
-                    Haskell.ExLocalName "undefined"
+                    H.ExLocalName "undefined"
             }
         }
     ]
 
 -- | Make an instance of the IsWord type class for an enum.
-mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> Haskell.Decl
-mkIsWordInstance typeCtor dataCtors unknownCtor = Haskell.InstanceDecl
+mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> H.Decl
+mkIsWordInstance typeCtor dataCtors unknownCtor = H.InstanceDecl
     { ctx = []
-    , typ = Haskell.TypeApp
-        (Haskell.GlobalNamedType Name.GlobalQ
+    , typ = H.TypeApp
+        (H.GlobalNamedType Name.GlobalQ
             { globalNS = Name.NS ["Classes"]
             , local = "IsWord"
             })
-        [Haskell.LocalNamedType typeCtor]
+        [H.LocalNamedType typeCtor]
     , defs =
-        [ Haskell.ValueDef
+        [ H.ValueDef
             { name = "fromWord"
-            , params = [ Haskell.PInteger i ]
-            , value = Haskell.ExLocalName ctor
+            , params = [ H.PInteger i ]
+            , value = H.ExLocalName ctor
             }
         | (i, ctor) <- zip [0..] dataCtors
         ] ++
-        [ Haskell.ValueDef
+        [ H.ValueDef
             { name = "fromWord"
-            , params = [ Haskell.PVar "tag" ]
-            , value = Haskell.ExApp
-                (Haskell.ExLocalName unknownCtor)
-                [ Haskell.ExApp
-                    (Haskell.ExGlobalName Name.GlobalQ
+            , params = [ H.PVar "tag" ]
+            , value = H.ExApp
+                (H.ExLocalName unknownCtor)
+                [ H.ExApp
+                    (H.ExGlobalName Name.GlobalQ
                         { globalNS = Name.NS ["Std_"]
                         , local = "fromIntegral"
                         })
-                    [Haskell.ExLocalName "tag"]
+                    [H.ExLocalName "tag"]
                 ]
             }
         ] ++
-        [ Haskell.ValueDef
+        [ H.ValueDef
             { name = "toWord"
-            , params = [ Haskell.PLocalCtor ctor [] ]
-            , value = Haskell.ExInteger i
+            , params = [ H.PLocalCtor ctor [] ]
+            , value = H.ExInteger i
             }
         | (i, ctor) <- zip [0..] dataCtors
         ] ++
-        [ Haskell.ValueDef
+        [ H.ValueDef
             { name = "toWord"
             , params =
-                [ Haskell.PLocalCtor unknownCtor [Haskell.PVar "tag"] ]
+                [ H.PLocalCtor unknownCtor [H.PVar "tag"] ]
             , value =
-                Haskell.ExApp
-                    (Haskell.ExGlobalName Name.GlobalQ
+                H.ExApp
+                    (H.ExGlobalName Name.GlobalQ
                         { globalNS = Name.NS ["Std_"]
                         , local = "fromIntegral"
                         })
-                    [Haskell.ExLocalName "tag"]
+                    [H.ExLocalName "tag"]
             }
         ]
     }
 
-newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Haskell.Decl
+newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> H.Decl
 newtypeWrapper ctorName wrappedType =
     let name = Name.localToUnQ ctorName
-    in Haskell.NewtypeDecl
+    in H.NewtypeDecl
         { dataName = name
         , typeArgs = [ "msg" ]
-        , dataVariant = Haskell.DataVariant
+        , dataVariant = H.DataVariant
             { dvCtorName = name
-            , dvArgs = Haskell.PosArgs
-                [ Haskell.TypeApp
-                    (Haskell.GlobalNamedType wrappedType)
-                    [Haskell.TypeVar "msg"]
+            , dvArgs = H.PosArgs
+                [ H.TypeApp
+                    (H.GlobalNamedType wrappedType)
+                    [H.TypeVar "msg"]
                 ]
             }
         , derives = []
         }
 
-nameToType :: Word64 -> Name.CapnpQ -> Haskell.Type
+nameToType :: Word64 -> Name.CapnpQ -> H.Type
 nameToType thisMod Name.CapnpQ{local, fileId} =
     if fileId == thisMod
-        then Haskell.LocalNamedType local
-        else Haskell.GlobalNamedType Name.GlobalQ
+        then H.LocalNamedType local
+        else H.GlobalNamedType Name.GlobalQ
                 { globalNS = Name.NS [ "Capnp", "Gen", T.pack $ printf "X%x" fileId ]
                 , local
                 }
-typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> Haskell.Type
+typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> H.Type
 typeToType thisMod ty var = case ty of
-    C.VoidType -> Haskell.UnitType
-    C.WordType (C.PrimWord ty) -> Haskell.PrimType ty
+    C.VoidType -> H.UnitType
+    C.WordType (C.PrimWord ty) -> H.PrimType ty
     C.WordType (C.EnumType typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.ListOf elt) ->
-        Haskell.TypeApp (basics "List")
-            [ Haskell.TypeVar var
+        H.TypeApp (basics "List")
+            [ H.TypeVar var
             , typeToType thisMod elt var
             ]
     C.PtrType (C.PrimPtr C.PrimText) ->
@@ -235,15 +235,15 @@ typeToType thisMod ty var = case ty of
     C.PtrType (C.PtrInterface typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
-        appV $ Haskell.GlobalNamedType Name.GlobalQ
+        appV $ H.GlobalNamedType Name.GlobalQ
             { globalNS = Name.NS [ "Untyped" ]
             , local = Name.mkLocal Name.emptyNS "Ptr"
             }
     C.CompositeType (C.StructType typeId) ->
         appV $ nameToType thisMod typeId
   where
-    appV t = Haskell.TypeApp t [Haskell.TypeVar var]
-    basics name = Haskell.GlobalNamedType Name.GlobalQ
+    appV t = H.TypeApp t [H.TypeVar var]
+    basics name = H.GlobalNamedType Name.GlobalQ
         { globalNS = Name.NS [ "Basics" ]
         , local = Name.mkLocal Name.emptyNS name
         }

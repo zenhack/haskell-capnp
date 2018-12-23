@@ -10,10 +10,10 @@ import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import qualified IR.Common  as C
-import qualified IR.Haskell as Haskell
+import qualified IR.Haskell as H
 import qualified IR.Name    as Name
 
-moduleToText :: Haskell.Module -> PP.Doc
+moduleToText :: H.Module -> PP.Doc
 moduleToText = format
 
 -- | Types which can be rendered as haskell source code.
@@ -28,8 +28,8 @@ moduleToText = format
 class Format a where
     format :: a -> PP.Doc
 
-instance Format Haskell.Module where
-    format Haskell.Module{modName, modDecls, modImports} = vcat
+instance Format H.Module where
+    format H.Module{modName, modDecls, modImports} = vcat
         [ hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
@@ -40,15 +40,15 @@ instance Format Haskell.Module where
         -- "Std_" namespace, so that they don't collide with names in the
         -- generated code; see issue #58.
         , vcat $ map format
-            [ Haskell.Import { importAs = "Std_", parts = ["Prelude"] }
-            , Haskell.Import { importAs = "Std_", parts = ["Data", "Word"] }
-            , Haskell.Import { importAs = "Std_", parts = ["Data", "Int"] }
+            [ H.Import { importAs = "Std_", parts = ["Prelude"] }
+            , H.Import { importAs = "Std_", parts = ["Data", "Word"] }
+            , H.Import { importAs = "Std_", parts = ["Data", "Int"] }
             ]
         , vcat $ map format modDecls
         ]
 
-instance Format Haskell.Decl where
-    format Haskell.DataDecl{dataName, dataVariants, derives} = vcat
+instance Format H.Decl where
+    format H.DataDecl{dataName, dataVariants, derives} = vcat
         [ hcat [ "data ", format dataName ]
         , indent $ vcat
             [ case dataVariants of
@@ -57,7 +57,7 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.NewtypeDecl{dataName, typeArgs, dataVariant, derives} = vcat
+    format H.NewtypeDecl{dataName, typeArgs, dataVariant, derives} = vcat
         [ hcat
             [ "newtype "
             , format dataName
@@ -69,14 +69,14 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.ValueDecl{typ, def=def@Haskell.ValueDef{name}} = vcat
+    format H.ValueDecl{typ, def=def@H.ValueDef{name}} = vcat
         [ hcat [ format name, " :: ", format typ ]
         , format def
         ]
-    format Haskell.InstanceDecl{ctx, typ, defs} = vcat
+    format H.InstanceDecl{ctx, typ, defs} = vcat
         [ hcat
             [ "instance "
-            , format (Haskell.CtxType ctx typ)
+            , format (H.CtxType ctx typ)
             , case defs of
                 []  -> ""
                 _:_ -> " where"
@@ -85,8 +85,8 @@ instance Format Haskell.Decl where
             map format defs
         ]
 
-instance Format Haskell.ValueDef where
-    format Haskell.ValueDef{name, value, params} = hcat
+instance Format H.ValueDef where
+    format H.ValueDef{name, value, params} = hcat
         [ format name
         , " "
         , hcat $ intersperse " " $ map format params
@@ -94,50 +94,50 @@ instance Format Haskell.ValueDef where
         , format value
         ]
 
-instance Format Haskell.Exp where
-    format (Haskell.ExApp e es) = hcat
+instance Format H.Exp where
+    format (H.ExApp e es) = hcat
         [ "("
         , hcat $ intersperse " " $ map format (e:es)
         , ")"
         ]
-    format (Haskell.ExGlobalName e) = format e
-    format (Haskell.ExLocalName e) = format e
-    format (Haskell.ExInteger n) = fromString (show n)
+    format (H.ExGlobalName e) = format e
+    format (H.ExLocalName e) = format e
+    format (H.ExInteger n) = fromString (show n)
 
-instance Format Haskell.Pattern where
-    format (Haskell.PVar v) = PP.textStrict v
-    format (Haskell.PLocalCtor c ps) = hcat
+instance Format H.Pattern where
+    format (H.PVar v) = PP.textStrict v
+    format (H.PLocalCtor c ps) = hcat
         [ "("
         , mconcat $ intersperse " " (format c : map format ps)
         , ")"
         ]
-    format (Haskell.PInteger n) = fromString (show n)
+    format (H.PInteger n) = fromString (show n)
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
 formatDerives ds = "deriving" <> PP.tupled (map format ds)
 
-instance Format Haskell.DataVariant where
-    format Haskell.DataVariant{dvCtorName, dvArgs} =
+instance Format H.DataVariant where
+    format H.DataVariant{dvCtorName, dvArgs} =
         hcat [ format dvCtorName, " ", format dvArgs ]
 
-instance Format Haskell.DataArgs where
-    format (Haskell.PosArgs types) =
+instance Format H.DataArgs where
+    format (H.PosArgs types) =
         mconcat $ intersperse " " (map format types)
 
-instance Format Haskell.Type where
-    format (Haskell.GlobalNamedType ty) = format ty
-    format (Haskell.LocalNamedType ty) = format ty
-    format (Haskell.TypeVar txt)  = PP.textStrict txt
-    format (Haskell.TypeApp f xs) =
+instance Format H.Type where
+    format (H.GlobalNamedType ty) = format ty
+    format (H.LocalNamedType ty) = format ty
+    format (H.TypeVar txt)  = PP.textStrict txt
+    format (H.TypeApp f xs) =
         "(" <> (mconcat $ intersperse " " $ map format (f:xs)) <> ")"
-    format (Haskell.FnType types) =
+    format (H.FnType types) =
         mconcat $ intersperse " -> " $ map format types
-    format (Haskell.CtxType [] ty) = format ty
-    format (Haskell.CtxType constraints ty) =
+    format (H.CtxType [] ty) = format ty
+    format (H.CtxType constraints ty) =
         PP.tupled (map format constraints) <> " => " <> format ty
-    format (Haskell.PrimType ty) = format ty
-    format Haskell.UnitType = "()"
+    format (H.PrimType ty) = format ty
+    format H.UnitType = "()"
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
@@ -154,8 +154,8 @@ instance Format Name.UnQ where
     format = PP.textStrict . Name.renderUnQ
 
 
-instance Format Haskell.Import where
-    format Haskell.Import{importAs, parts} = hcat
+instance Format H.Import where
+    format H.Import{importAs, parts} = hcat
         [ "import qualified "
         , mconcat $ intersperse "." (map format parts)
         , " as "
