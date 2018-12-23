@@ -44,7 +44,7 @@ fileToModule :: Raw.File -> Haskell.Module
 fileToModule Raw.File{fileName, fileId, decls} =
     Haskell.Module
         { modName = makeModName fileName
-        , modDecls = map (declToDecl fileId) decls
+        , modDecls = concatMap (declToDecls fileId) decls
         , modImports =
             [ Haskell.Import
                 { importAs = "Message"
@@ -62,24 +62,31 @@ fileToModule Raw.File{fileName, fileId, decls} =
                 { importAs = "GenHelpers"
                 , parts = ["Capnp", "GenHelpers"]
                 }
+            , Haskell.Import
+                { importAs = "Classes"
+                , parts = ["Capnp", "Classes"]
+                }
             ]
         }
 
-declToDecl :: Word64 -> Raw.Decl -> Haskell.Decl
-declToDecl _thisMod Raw.Enum{typeCtor, dataCtors} =
-    Haskell.DataDecl
+declToDecls :: Word64 -> Raw.Decl -> [Haskell.Decl]
+declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
+    let unknownCtor = Name.mkSub typeCtor "unknown'" in
+    [ Haskell.DataDecl
         { Haskell.dataName = Name.localToUnQ typeCtor
         , Haskell.dataVariants =
             map enumerantToVariant dataCtors
             ++
             [ Haskell.DataVariant
-                { dvCtorName = Name.localToUnQ $ Name.mkSub typeCtor "unknown'"
+                { dvCtorName = Name.localToUnQ unknownCtor
                 , dvArgs = Haskell.PosArgs
                     [ Haskell.PrimType $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
                 }
             ]
         , Haskell.derives = [ "Std_.Show", "Std_.Eq" ]
         }
+    , mkIsWordInstance typeCtor dataCtors unknownCtor
+    ]
   where
     enumerantToVariant variantName =
         Haskell.DataVariant
@@ -87,12 +94,12 @@ declToDecl _thisMod Raw.Enum{typeCtor, dataCtors} =
                 Name.localToUnQ variantName
             , dvArgs = Haskell.PosArgs []
             }
-declToDecl _thisMod Raw.InterfaceWrapper{ctorName} =
-    newtypeWrapper ctorName untypedClient
-declToDecl _thisMod Raw.StructWrapper{ctorName} =
-    newtypeWrapper ctorName untypedStruct
-declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
-    Haskell.ValueDecl
+declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
+    [ newtypeWrapper ctorName untypedClient ]
+declToDecls _thisMod Raw.StructWrapper{ctorName} =
+    [ newtypeWrapper ctorName untypedStruct ]
+declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
+    [ Haskell.ValueDecl
         { typ = Haskell.CtxType
             [readCtx "m" "msg"]
             (Haskell.FnType
@@ -127,6 +134,61 @@ declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                     Haskell.ExLocalName "undefined"
             }
         }
+    ]
+
+-- | Make an instance of the IsWord type class for an enum.
+mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> Haskell.Decl
+mkIsWordInstance typeCtor dataCtors unknownCtor = Haskell.InstanceDecl
+    { ctx = []
+    , typ = Haskell.TypeApp
+        (Haskell.GlobalNamedType Name.GlobalQ
+            { globalNS = Name.NS ["Classes"]
+            , local = "IsWord"
+            })
+        [Haskell.LocalNamedType typeCtor]
+    , defs =
+        [ Haskell.ValueDef
+            { name = "fromWord"
+            , params = [ Haskell.PInteger i ]
+            , value = Haskell.ExLocalName ctor
+            }
+        | (i, ctor) <- zip [0..] dataCtors
+        ] ++
+        [ Haskell.ValueDef
+            { name = "fromWord"
+            , params = [ Haskell.PVar "tag" ]
+            , value = Haskell.ExApp
+                (Haskell.ExLocalName unknownCtor)
+                [ Haskell.ExApp
+                    (Haskell.ExGlobalName Name.GlobalQ
+                        { globalNS = Name.NS ["Std_"]
+                        , local = "fromIntegral"
+                        })
+                    [Haskell.ExLocalName "tag"]
+                ]
+            }
+        ] ++
+        [ Haskell.ValueDef
+            { name = "toWord"
+            , params = [ Haskell.PLocalCtor ctor [] ]
+            , value = Haskell.ExInteger i
+            }
+        | (i, ctor) <- zip [0..] dataCtors
+        ] ++
+        [ Haskell.ValueDef
+            { name = "toWord"
+            , params =
+                [ Haskell.PLocalCtor unknownCtor [Haskell.PVar "tag"] ]
+            , value =
+                Haskell.ExApp
+                    (Haskell.ExGlobalName Name.GlobalQ
+                        { globalNS = Name.NS ["Std_"]
+                        , local = "fromIntegral"
+                        })
+                    [Haskell.ExLocalName "tag"]
+            }
+        ]
+    }
 
 newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Haskell.Decl
 newtypeWrapper ctorName wrappedType =

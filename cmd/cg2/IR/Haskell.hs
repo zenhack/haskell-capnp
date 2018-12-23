@@ -119,6 +119,7 @@ data Exp
 data Pattern
     = PVar T.Text
     | PLocalCtor Name.LocalQ [Pattern]
+    | PInteger Integer
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will

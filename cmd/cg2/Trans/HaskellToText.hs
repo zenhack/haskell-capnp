@@ -108,6 +108,7 @@ instance Format Haskell.Pattern where
         , mconcat $ intersperse " " (format c : map format ps)
         , ")"
         ]
+    format (Haskell.PInteger n) = fromString (show n)
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
