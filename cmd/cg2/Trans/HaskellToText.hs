@@ -69,7 +69,7 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.ValueDecl{name, typ, value, params} = vcat
+    format Haskell.ValueDecl{typ, def=Haskell.ValueDef{name, value, params}} = vcat
         [ hcat [ format name, " :: ", format typ ]
         , hcat
             [ format name

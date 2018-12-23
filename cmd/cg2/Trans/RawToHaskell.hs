@@ -93,9 +93,7 @@ declToDecl _thisMod Raw.StructWrapper{ctorName} =
     newtypeWrapper ctorName untypedStruct
 declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
     Haskell.ValueDecl
-        { name = Name.UnQ $
-            "get_" <> Name.renderLocalQ fieldName
-        , typ = Haskell.CtxType
+        { typ = Haskell.CtxType
             [readCtx "m" "msg"]
             (Haskell.FnType
                 [ Haskell.TypeApp
@@ -107,23 +105,27 @@ declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                     ]
                 ]
             )
-        , params = [Haskell.PLocalCtor containerType [Haskell.PVar "struct"]]
-        , value = case fieldLocType of
-            C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
-                Haskell.ExApp
-                    (Haskell.ExGlobalName
-                        Name.GlobalQ
-                            { globalNS = Name.NS [ "GenHelpers" ]
-                            , local = "getWordField"
-                            }
-                    )
-                    [ Haskell.ExLocalName "struct"
-                    , Haskell.ExInteger $ fromIntegral dataIdx
-                    , Haskell.ExInteger $ fromIntegral dataOff
-                    , Haskell.ExInteger $ fromIntegral dataDef
-                    ]
-            _ ->
-                Haskell.ExLocalName "undefined"
+        , def = Haskell.ValueDef
+            { name = Name.UnQ $
+                "get_" <> Name.renderLocalQ fieldName
+            , params = [Haskell.PLocalCtor containerType [Haskell.PVar "struct"]]
+            , value = case fieldLocType of
+                C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
+                    Haskell.ExApp
+                        (Haskell.ExGlobalName
+                            Name.GlobalQ
+                                { globalNS = Name.NS [ "GenHelpers" ]
+                                , local = "getWordField"
+                                }
+                        )
+                        [ Haskell.ExLocalName "struct"
+                        , Haskell.ExInteger $ fromIntegral dataIdx
+                        , Haskell.ExInteger $ fromIntegral dataOff
+                        , Haskell.ExInteger $ fromIntegral dataDef
+                        ]
+                _ ->
+                    Haskell.ExLocalName "undefined"
+            }
         }
 
 newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Haskell.Decl

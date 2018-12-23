@@ -21,6 +21,7 @@ module IR.Haskell
     , Exp(..)
     , Pattern(..)
     , Decl(..)
+    , ValueDef(..)
     , DataVariant(..)
     , DataArgs(..)
     ) where
@@ -66,11 +67,16 @@ data Decl
         , derives     :: [Name.UnQ]
         }
     | ValueDecl
-        { name   :: Name.UnQ
-        , typ    :: Type
-        , value  :: Exp
-        , params :: [Pattern]
+        { typ :: Type
+        , def :: ValueDef
         }
+    deriving(Show, Read, Eq)
+
+data ValueDef = ValueDef
+    { name   :: Name.UnQ
+    , value  :: Exp
+    , params :: [Pattern]
+    }
     deriving(Show, Read, Eq)
 
 -- | A data constructor
