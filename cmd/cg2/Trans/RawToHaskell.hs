@@ -68,7 +68,7 @@ fileToModule Raw.File{fileName, fileId, decls} =
 declToDecl :: Word64 -> Raw.Decl -> Haskell.Decl
 declToDecl _thisMod Raw.Enum{typeCtor, dataCtors} =
     Haskell.DataDecl
-        { Haskell.dataName = Name.UnQ (Name.renderLocalQ typeCtor)
+        { Haskell.dataName = Name.localToUnQ typeCtor
         , Haskell.dataVariants =
             map enumerantToVariant dataCtors
             ++
