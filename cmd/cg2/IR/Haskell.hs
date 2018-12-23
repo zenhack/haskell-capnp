@@ -109,6 +109,8 @@ data Type
 
 data Exp
     = EApp Exp [Exp]
+    | EFApp Exp [Exp]
+    -- ^ "Functorial" application, i.e. f <$> x <*> y <*> z.
     | EGName Name.GlobalQ
     | ELName Name.LocalQ
     | EInt Integer

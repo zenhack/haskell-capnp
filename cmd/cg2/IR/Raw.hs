@@ -22,6 +22,9 @@ data Decl
     = StructWrapper
         { ctorName :: Name.LocalQ
         }
+    | StructListElem
+        { ctorName :: Name.LocalQ
+        }
     | InterfaceWrapper
         { ctorName :: Name.LocalQ
         }

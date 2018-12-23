@@ -25,6 +25,9 @@ gName parts local = Name.GlobalQ
     , local
     }
 
+dfValue :: Name.UnQ -> [H.Pattern] -> H.Exp -> H.ValueDef
+dfValue name params value = H.DfValue {name, params, value}
+
 readCtx :: T.Text -> T.Text -> H.Type
 readCtx m msg = H.TApp
     (H.TGName $ gName ["Untyped"] "ReadCtx")
@@ -79,6 +82,45 @@ declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
     [ newtypeWrapper ctorName $ gName ["Message"] "Client" ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
     [ newtypeWrapper ctorName $ gName ["Untyped"] "Struct" ]
+declToDecls _thisMod Raw.StructListElem{ctorName} =
+    [ H.DcInstance
+        { ctx = []
+        , typ = H.TApp
+            (H.TGName (gName ["Basics"] "ListElem"))
+            [ H.TVar "msg"
+            , H.TApp
+                (H.TLName ctorName)
+                [H.TVar "msg"]
+            ]
+        , defs =
+            let listCtor = Name.mkSub ctorName "List_" in
+            [ -- TODO: List newtype.
+              dfValue "listFromPtr" [H.PVar "msg", H.PVar "ptr"] $ H.EFApp
+                (H.ELName listCtor)
+                [ H.EApp
+                    (H.EGName $ gName ["Classes"] "fromPtr")
+                    [H.ELName "msg", H.ELName "ptr"]
+                ]
+            , dfValue "toUntypedList" [H.PLCtor listCtor [H.PVar "l"]] $ H.EApp
+                (H.EGName $ gName ["Untyped"] "ListStruct")
+                [H.ELName "l"]
+            , dfValue "length" [H.PLCtor listCtor [H.PVar "l"]] $ H.EApp
+                (H.EGName $ gName ["Untyped"] "length")
+                [H.ELName "l"]
+            , dfValue "index" [H.PVar "i", H.PLCtor listCtor [H.PVar "l"]] $ H.EDo
+                [ H.DoBind "elt" $ H.EApp
+                    (H.EGName $ gName ["Untyped"] "index")
+                    [ H.ELName "i"
+                    , H.ELName "l"
+                    ]
+                ]
+                ( H.EApp
+                    (H.EGName $ gName ["Classes"] "fromStruct")
+                    [H.ELName "elt"]
+                )
+            ]
+        }
+    ]
 declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
     [ H.DcValue
         { typ = H.TCtx

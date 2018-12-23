@@ -95,6 +95,14 @@ instance Format H.Exp where
         , hcat $ intersperse " " $ map format (e:es)
         , ")"
         ]
+    format (H.EFApp e []) = format e
+    format (H.EFApp e es) = hcat
+        [ "("
+        , format e
+        , " <$> "
+        , hcat $ intersperse " <*> " $ map format es
+        , ")"
+        ]
     format (H.EGName e) = format e
     format (H.ELName e) = format e
     format (H.EInt n) = fromString (show n)
