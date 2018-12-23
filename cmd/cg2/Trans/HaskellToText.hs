@@ -69,15 +69,29 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.ValueDecl{typ, def=Haskell.ValueDef{name, value, params}} = vcat
+    format Haskell.ValueDecl{typ, def=def@Haskell.ValueDef{name}} = vcat
         [ hcat [ format name, " :: ", format typ ]
-        , hcat
-            [ format name
-            , " "
-            , hcat $ intersperse " " $ map format params
-            , " = "
-            , format value
+        , format def
+        ]
+    format Haskell.InstanceDecl{ctx, typ, defs} = vcat
+        [ hcat
+            [ "instance "
+            , format (Haskell.CtxType ctx typ)
+            , case defs of
+                []  -> ""
+                _:_ -> " where"
             ]
+        , indent $ vcat $
+            map format defs
+        ]
+
+instance Format Haskell.ValueDef where
+    format Haskell.ValueDef{name, value, params} = hcat
+        [ format name
+        , " "
+        , hcat $ intersperse " " $ map format params
+        , " = "
+        , format value
         ]
 
 instance Format Haskell.Exp where

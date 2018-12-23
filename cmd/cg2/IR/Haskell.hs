@@ -70,6 +70,11 @@ data Decl
         { typ :: Type
         , def :: ValueDef
         }
+    | InstanceDecl
+        { ctx  :: [Type]
+        , typ  :: Type
+        , defs :: [ValueDef]
+        }
     deriving(Show, Read, Eq)
 
 data ValueDef = ValueDef
