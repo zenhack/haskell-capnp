@@ -21,29 +21,39 @@ nodeToNodes :: Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
 nodeToNodes ns (unQ, Stage1.Node{nodeId, nodeNested, nodeUnion}) =
     let name = Name.mkLocal ns unQ
         kids = concatMap (nodeToNodes (Name.localQToNS name)) nodeNested
-    in case nodeUnion of
-        Stage1.NodeEnum enumerants ->
-            Flat.Node
-                { name
-                , nodeId
-                , union_ = Flat.Enum enumerants
-                }
-            : kids
-        Stage1.NodeStruct Stage1.Struct{fields}  ->
-            Flat.Node
-                { name
-                , nodeId
-                , union_ = Flat.Struct
-                    { fields =
-                        [ Flat.Field
-                            { fieldName = name
-                            , fieldLocType = locType
-                            }
-                        | Stage1.Field{name, locType, tag} <- fields
-                        , tag == Nothing
-                        ]
+
+        mine = case nodeUnion of
+            Stage1.NodeEnum enumerants ->
+                [ Flat.Node
+                    { name
+                    , nodeId
+                    , union_ = Flat.Enum enumerants
                     }
-                }
-            : kids
-        Stage1.NodeOther ->
-            kids
+                ]
+            Stage1.NodeStruct Stage1.Struct{fields}  ->
+                [ Flat.Node
+                    { name
+                    , nodeId
+                    , union_ = Flat.Struct
+                        { fields =
+                            [ Flat.Field
+                                { fieldName = name
+                                , fieldLocType = locType
+                                }
+                            | Stage1.Field{name, locType, tag} <- fields
+                            , tag == Nothing
+                            ]
+                        }
+                    }
+                ]
+            Stage1.NodeInterface ->
+                [ Flat.Node
+                    { name
+                    , nodeId
+                    , union_ = Flat.Interface
+                    }
+                ]
+
+            Stage1.NodeOther ->
+                []
+    in mine ++ kids

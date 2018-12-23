@@ -34,6 +34,9 @@ data Decl
     = StructWrapper
         { ctorName :: Name.LocalQ
         }
+    | InterfaceWrapper
+        { ctorName :: Name.LocalQ
+        }
     | Enum
         { typeCtor  :: Name.LocalQ
         , dataCtors :: [Name.LocalQ]

@@ -45,6 +45,11 @@ nodeToDecls Flat.Node{name, union_} = case union_ of
             { ctorName = name
             }
         : concatMap (fieldToDecls name) fields
+    Flat.Interface ->
+        [ Raw.InterfaceWrapper
+            { ctorName = name
+            }
+        ]
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
 fieldToDecls containerType Flat.Field{fieldName, fieldLocType} =

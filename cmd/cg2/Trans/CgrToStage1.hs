@@ -127,6 +127,8 @@ nodeToNode nodeMap Schema.Node{id} =
                     , tagOffset = discriminantOffset
                     , fields = map fieldToField (V.toList fields)
                     }
+            Schema.Node'interface{} ->
+                Stage1.NodeInterface
             _ ->
                 Stage1.NodeOther
         }

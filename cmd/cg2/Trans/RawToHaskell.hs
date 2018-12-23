@@ -24,6 +24,12 @@ untypedStruct = Name.GlobalQ
     , local = Name.mkLocal Name.emptyNS "Struct"
     }
 
+untypedClient :: Name.GlobalQ
+untypedClient = Name.GlobalQ
+    { globalNS = Name.NS ["Message"]
+    , local = Name.mkLocal Name.emptyNS "Client"
+    }
+
 readCtx :: T.Text -> T.Text -> Haskell.Type
 readCtx m msg = Haskell.TypeApp
     (Haskell.GlobalNamedType
@@ -46,6 +52,10 @@ fileToModule env Raw.File{fileName, fileId, decls} =
         , modDecls = map (declToDecl fileId env) decls
         , modImports =
             [ Haskell.Import
+                { importAs = "Message"
+                , parts = ["Capnp", "Message"]
+                }
+            , Haskell.Import
                 { importAs = "Untyped"
                 , parts = ["Capnp", "Untyped"]
                 }
@@ -78,21 +88,10 @@ declToDecl _thisMod _env Raw.Enum{typeCtor, dataCtors} =
                 Name.localToUnQ variantName
             , dvArgs = Haskell.PosArgs []
             }
+declToDecl _thisMod _env Raw.InterfaceWrapper{ctorName} =
+    newtypeWrapper ctorName untypedClient
 declToDecl _thisMod _env Raw.StructWrapper{ctorName} =
-    let name = Name.localToUnQ ctorName
-    in Haskell.NewtypeDecl
-        { dataName = name
-        , typeArgs = [ "msg" ]
-        , dataVariant = Haskell.DataVariant
-            { dvCtorName = name
-            , dvArgs = Haskell.PosArgs
-                [ Haskell.TypeApp
-                    (Haskell.GlobalNamedType untypedStruct)
-                    [Haskell.TypeVar "msg"]
-                ]
-            }
-        , derives = []
-        }
+    newtypeWrapper ctorName untypedStruct
 declToDecl thisMod env Raw.Getter{fieldName, fieldLocType, containerType} =
     Haskell.ValueDecl
         { name = Name.UnQ $
@@ -109,6 +108,23 @@ declToDecl thisMod env Raw.Getter{fieldName, fieldLocType, containerType} =
                     ]
                 ]
             )
+        }
+
+newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Haskell.Decl
+newtypeWrapper ctorName wrappedType =
+    let name = Name.localToUnQ ctorName
+    in Haskell.NewtypeDecl
+        { dataName = name
+        , typeArgs = [ "msg" ]
+        , dataVariant = Haskell.DataVariant
+            { dvCtorName = name
+            , dvArgs = Haskell.PosArgs
+                [ Haskell.TypeApp
+                    (Haskell.GlobalNamedType wrappedType)
+                    [Haskell.TypeVar "msg"]
+                ]
+            }
+        , derives = []
         }
 
 typeToType :: Word64 -> M.Map C.TypeId Raw.TypeRef -> C.Type -> T.Text -> Haskell.Type

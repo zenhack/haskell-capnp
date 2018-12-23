@@ -36,6 +36,7 @@ data Node = Node
 data Node'
     = NodeEnum [Name.UnQ]
     | NodeStruct Struct
+    | NodeInterface
     | NodeOther
     deriving(Show, Read, Eq)
 

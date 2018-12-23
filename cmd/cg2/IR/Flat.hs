@@ -44,6 +44,7 @@ data Node'
     | Struct
         { fields :: [Field]
         }
+    | Interface
     deriving(Show, Read, Eq)
 
 data Field = Field
