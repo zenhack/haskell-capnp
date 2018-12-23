@@ -107,6 +107,7 @@ declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                     ]
                 ]
             )
+        , params = [Haskell.PLocalCtor containerType [Haskell.PVar "struct"]]
         , value = case fieldLocType of
             C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
                 Haskell.ExApp

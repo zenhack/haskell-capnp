@@ -69,9 +69,15 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.ValueDecl{name, typ, value} = vcat
+    format Haskell.ValueDecl{name, typ, value, params} = vcat
         [ hcat [ format name, " :: ", format typ ]
-        , hcat [ format name, " = ", format value ]
+        , hcat
+            [ format name
+            , " "
+            , hcat $ intersperse " " $ map format params
+            , " = "
+            , format value
+            ]
         ]
 
 instance Format Haskell.Exp where
@@ -80,6 +86,14 @@ instance Format Haskell.Exp where
     format (Haskell.ExGlobalName e) = format e
     format (Haskell.ExLocalName e) = format e
     format (Haskell.ExInteger n) = fromString (show n)
+
+instance Format Haskell.Pattern where
+    format (Haskell.PVar v) = PP.textStrict v
+    format (Haskell.PLocalCtor c ps) = hcat
+        [ "("
+        , mconcat $ intersperse " " (format c : map format ps)
+        , ")"
+        ]
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
