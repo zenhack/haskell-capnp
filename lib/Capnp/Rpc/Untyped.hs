@@ -969,14 +969,32 @@ handleCallMsg
             lookupAbort "export" conn exports (IEId exportId) $
                 \EntryE{client} -> call callInfo $ Client $ Just client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
-            subscribeReturn "answer" conn answers (QAId targetQid) $ \ret@R.Return{union'} ->
-                case union' of
-                    R.Return'exception _ ->
-                        returnAnswer conn ret { R.answerId = questionId }
-                    R.Return'results R.Payload{content} ->
-                        transformClient transform content conn >>= call callInfo
-                    _ ->
-                        error "TODO"
+            let onReturn ret@R.Return{union'} =
+                    case union' of
+                        R.Return'exception _ ->
+                            returnAnswer conn ret { R.answerId = questionId }
+                        R.Return'canceled ->
+                            returnAnswer conn ret { R.answerId = questionId }
+                        R.Return'results R.Payload{content} ->
+                            transformClient transform content conn >>= call callInfo
+                        R.Return'resultsSentElsewhere ->
+                            -- our implementation should never actually do this, but
+                            -- this way we don't have to change this if/when we
+                            -- support the feature:
+                            abortConn conn $ eFailed $
+                                "Tried to call a method on a promised answer that " <>
+                                "returned resultsSentElsewhere"
+                        R.Return'takeFromOtherQuestion otherQid ->
+                            subscribeReturn "answer" conn answers (QAId otherQid) onReturn
+                        R.Return'acceptFromThirdParty _ ->
+                            -- LEVEL 3
+                            error "BUG: our implementation unexpectedly used a level 3 feature"
+                        R.Return'unknown' tag ->
+                            error $
+                                "BUG: our implemented unexpectedly returned unknown " ++
+                                "result variant #" ++ show tag
+            in
+            subscribeReturn "answer" conn answers (QAId targetQid) onReturn
         R.MessageTarget'unknown' ordinal ->
             abortConn conn $ eUnimplemented $
                 "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
