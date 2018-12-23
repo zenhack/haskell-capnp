@@ -26,12 +26,18 @@ gName parts local = Name.GlobalQ
     , local
     }
 
+egName :: [T.Text] -> Name.LocalQ -> Exp
+egName parts local = EGName $ gName parts local
+
+tgName :: [T.Text] -> Name.LocalQ -> Type
+tgName parts local = TGName $ gName parts local
+
 dfValue :: Name.UnQ -> [Pattern] -> Exp -> ValueDef
 dfValue name params value = DfValue {name, params, value}
 
 readCtx :: T.Text -> T.Text -> Type
 readCtx m msg = TApp
-    (TGName $ gName ["Untyped"] "ReadCtx")
+    (tgName ["Untyped"] "ReadCtx")
     [ TVar m
     , TVar msg
     ]
@@ -87,7 +93,7 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
     [ DcInstance
         { ctx = []
         , typ = TApp
-            (TGName (gName ["Basics"] "ListElem"))
+            (tgName ["Basics"] "ListElem")
             [ TVar "msg"
             , TApp
                 (TLName ctorName)
@@ -99,24 +105,24 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
               dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
                 (ELName listCtor)
                 [ EApp
-                    (EGName $ gName ["Classes"] "fromPtr")
+                    (egName ["Classes"] "fromPtr")
                     [ELName "msg", ELName "ptr"]
                 ]
             , dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
-                (EGName $ gName ["Untyped"] "ListStruct")
+                (egName ["Untyped"] "ListStruct")
                 [ELName "l"]
             , dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
-                (EGName $ gName ["Untyped"] "length")
+                (egName ["Untyped"] "length")
                 [ELName "l"]
             , dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EDo
                 [ DoBind "elt" $ EApp
-                    (EGName $ gName ["Untyped"] "index")
+                    (egName ["Untyped"] "index")
                     [ ELName "i"
                     , ELName "l"
                     ]
                 ]
                 ( EApp
-                    (EGName $ gName ["Classes"] "fromStruct")
+                    (egName ["Classes"] "fromStruct")
                     [ELName "elt"]
                 )
             ]
@@ -143,7 +149,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
             , value = case fieldLocType of
                 C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
                     EApp
-                        (EGName $ gName ["GenHelpers"] "getWordField")
+                        (egName ["GenHelpers"] "getWordField")
                         [ ELName "struct"
                         , EInt $ fromIntegral dataIdx
                         , EInt $ fromIntegral dataOff
@@ -151,22 +157,22 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                         ]
                 C.PtrField idx _ -> EDo
                     [ DoBind "ptr" $ EApp
-                        (EGName $ gName ["Untyped"] "getPtr")
+                        (egName ["Untyped"] "getPtr")
                         [ EInt (fromIntegral idx)
                         , ELName "struct"
                         ]
                     ]
                     (EApp
-                        (EGName $ gName ["Classes"] "fromPtr")
+                        (egName ["Classes"] "fromPtr")
                         [ EApp
-                            (EGName $ gName ["Untyped"] "message")
+                            (egName ["Untyped"] "message")
                             [ELName "struct"]
                         , ELName "ptr"
                         ]
                     )
                 C.HereField _ ->
                     EApp
-                        (EGName $ gName ["Classes"] "fromStruct")
+                        (egName ["Classes"] "fromStruct")
                         [ELName "struct"]
                 C.VoidField ->
                     EApp
@@ -181,7 +187,7 @@ mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> Decl
 mkIsWordInstance typeCtor dataCtors unknownCtor = DcInstance
     { ctx = []
     , typ = TApp
-        (TGName $ gName ["Classes"] "IsWord")
+        (tgName ["Classes"] "IsWord")
         [TLName typeCtor]
     , defs =
         [ DfValue
@@ -245,7 +251,7 @@ nameToType :: Word64 -> Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId} =
     if fileId == thisMod
         then TLName local
-        else TGName $ gName
+        else tgName
             ["Capnp", "Gen", T.pack $ printf "X%x" fileId]
             local
 typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> Type
@@ -255,25 +261,24 @@ typeToType thisMod ty var = case ty of
     C.WordType (C.EnumType typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.ListOf elt) ->
-        TApp (basics "List")
+        TApp (tgName ["Basics"] "List")
             [ TVar var
             , typeToType thisMod elt var
             ]
     C.PtrType (C.PrimPtr C.PrimText) ->
-        appV $ basics "Text"
+        appV $ tgName ["Basics"] "Text"
     C.PtrType (C.PrimPtr C.PrimData) ->
-        appV $ basics "Data"
+        appV $ tgName ["Basics"] "Data"
     C.PtrType (C.PtrComposite (C.StructType typeId)) ->
         appV $ nameToType thisMod typeId
     C.PtrType (C.PtrInterface typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
-        appV $ TGName $ gName ["Untyped"] "Ptr"
+        appV $ tgName ["Untyped"] "Ptr"
     C.CompositeType (C.StructType typeId) ->
         appV $ nameToType thisMod typeId
   where
     appV t = TApp t [TVar var]
-    basics = TGName . gName ["Basics"]
 
 -- | Transform the file path into a valid haskell module name.
 -- TODO: this is a best-effort transformation; it gives good
