@@ -11,10 +11,11 @@ import Text.Printf     (printf)
 
 import qualified Data.Text as T
 
-import qualified IR.Common  as C
-import qualified IR.Haskell as H
-import qualified IR.Name    as Name
-import qualified IR.Raw     as Raw
+import IR.Haskell
+
+import qualified IR.Common as C
+import qualified IR.Name   as Name
+import qualified IR.Raw    as Raw
 
 std_ :: Name.UnQ -> Name.GlobalQ
 std_ name = gName ["Std_"] (Name.mkLocal Name.emptyNS name)
@@ -25,19 +26,19 @@ gName parts local = Name.GlobalQ
     , local
     }
 
-dfValue :: Name.UnQ -> [H.Pattern] -> H.Exp -> H.ValueDef
-dfValue name params value = H.DfValue {name, params, value}
+dfValue :: Name.UnQ -> [Pattern] -> Exp -> ValueDef
+dfValue name params value = DfValue {name, params, value}
 
-readCtx :: T.Text -> T.Text -> H.Type
-readCtx m msg = H.TApp
-    (H.TGName $ gName ["Untyped"] "ReadCtx")
-    [ H.TVar m
-    , H.TVar msg
+readCtx :: T.Text -> T.Text -> Type
+readCtx m msg = TApp
+    (TGName $ gName ["Untyped"] "ReadCtx")
+    [ TVar m
+    , TVar msg
     ]
 
-fileToModule :: Raw.File -> H.Module
+fileToModule :: Raw.File -> Module
 fileToModule Raw.File{fileName, fileId, decls} =
-    H.Module
+    Module
         { modName = makeModName fileName
         , modImports =
             [ imp ["Capnp", "Message"] "Message"
@@ -49,213 +50,213 @@ fileToModule Raw.File{fileName, fileId, decls} =
         , modDecls = concatMap (declToDecls fileId) decls
         }
   where
-    imp parts importAs = H.Import {parts, importAs}
+    imp parts importAs = Import {parts, importAs}
 
-declToDecls :: Word64 -> Raw.Decl -> [H.Decl]
+declToDecls :: Word64 -> Raw.Decl -> [Decl]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     let unknownCtor = Name.mkSub typeCtor "unknown'" in
-    [ H.DcData
-        { H.dataName = Name.localToUnQ typeCtor
-        , H.dataNewtype = False
-        , H.typeArgs = []
-        , H.dataVariants =
+    [ DcData
+        { dataName = Name.localToUnQ typeCtor
+        , dataNewtype = False
+        , typeArgs = []
+        , dataVariants =
             map enumerantToVariant dataCtors
             ++
-            [ H.DataVariant
+            [ DataVariant
                 { dvCtorName = Name.localToUnQ unknownCtor
-                , dvArgs = H.APos
-                    [ H.TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
+                , dvArgs = APos
+                    [ TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
                 }
             ]
-        , H.derives = [ "Std_.Show", "Std_.Eq" ]
+        , derives = [ "Std_.Show", "Std_.Eq" ]
         }
     , mkIsWordInstance typeCtor dataCtors unknownCtor
     ]
   where
     enumerantToVariant variantName =
-        H.DataVariant
+        DataVariant
             { dvCtorName =
                 Name.localToUnQ variantName
-            , dvArgs = H.APos []
+            , dvArgs = APos []
             }
 declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
     [ newtypeWrapper ctorName $ gName ["Message"] "Client" ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
     [ newtypeWrapper ctorName $ gName ["Untyped"] "Struct" ]
 declToDecls _thisMod Raw.StructListElem{ctorName} =
-    [ H.DcInstance
+    [ DcInstance
         { ctx = []
-        , typ = H.TApp
-            (H.TGName (gName ["Basics"] "ListElem"))
-            [ H.TVar "msg"
-            , H.TApp
-                (H.TLName ctorName)
-                [H.TVar "msg"]
+        , typ = TApp
+            (TGName (gName ["Basics"] "ListElem"))
+            [ TVar "msg"
+            , TApp
+                (TLName ctorName)
+                [TVar "msg"]
             ]
         , defs =
             let listCtor = Name.mkSub ctorName "List_" in
             [ -- TODO: List newtype.
-              dfValue "listFromPtr" [H.PVar "msg", H.PVar "ptr"] $ H.EFApp
-                (H.ELName listCtor)
-                [ H.EApp
-                    (H.EGName $ gName ["Classes"] "fromPtr")
-                    [H.ELName "msg", H.ELName "ptr"]
+              dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+                (ELName listCtor)
+                [ EApp
+                    (EGName $ gName ["Classes"] "fromPtr")
+                    [ELName "msg", ELName "ptr"]
                 ]
-            , dfValue "toUntypedList" [H.PLCtor listCtor [H.PVar "l"]] $ H.EApp
-                (H.EGName $ gName ["Untyped"] "ListStruct")
-                [H.ELName "l"]
-            , dfValue "length" [H.PLCtor listCtor [H.PVar "l"]] $ H.EApp
-                (H.EGName $ gName ["Untyped"] "length")
-                [H.ELName "l"]
-            , dfValue "index" [H.PVar "i", H.PLCtor listCtor [H.PVar "l"]] $ H.EDo
-                [ H.DoBind "elt" $ H.EApp
-                    (H.EGName $ gName ["Untyped"] "index")
-                    [ H.ELName "i"
-                    , H.ELName "l"
+            , dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
+                (EGName $ gName ["Untyped"] "ListStruct")
+                [ELName "l"]
+            , dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
+                (EGName $ gName ["Untyped"] "length")
+                [ELName "l"]
+            , dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EDo
+                [ DoBind "elt" $ EApp
+                    (EGName $ gName ["Untyped"] "index")
+                    [ ELName "i"
+                    , ELName "l"
                     ]
                 ]
-                ( H.EApp
-                    (H.EGName $ gName ["Classes"] "fromStruct")
-                    [H.ELName "elt"]
+                ( EApp
+                    (EGName $ gName ["Classes"] "fromStruct")
+                    [ELName "elt"]
                 )
             ]
         }
     ]
 declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
-    [ H.DcValue
-        { typ = H.TCtx
+    [ DcValue
+        { typ = TCtx
             [readCtx "m" "msg"]
-            (H.TFn
-                [ H.TApp
-                    (H.TLName containerType)
-                    [ H.TVar "msg" ]
-                , H.TApp
-                    (H.TVar "m")
+            (TFn
+                [ TApp
+                    (TLName containerType)
+                    [ TVar "msg" ]
+                , TApp
+                    (TVar "m")
                     [ typeToType thisMod (C.fieldType fieldLocType) "msg"
                     ]
                 ]
             )
-        , def = H.DfValue
+        , def = DfValue
             { name = Name.UnQ $
                 "get_" <> Name.renderLocalQ fieldName
-            , params = [H.PLCtor containerType [H.PVar "struct"]]
+            , params = [PLCtor containerType [PVar "struct"]]
             , value = case fieldLocType of
                 C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
-                    H.EApp
-                        (H.EGName $ gName ["GenHelpers"] "getWordField")
-                        [ H.ELName "struct"
-                        , H.EInt $ fromIntegral dataIdx
-                        , H.EInt $ fromIntegral dataOff
-                        , H.EInt $ fromIntegral dataDef
+                    EApp
+                        (EGName $ gName ["GenHelpers"] "getWordField")
+                        [ ELName "struct"
+                        , EInt $ fromIntegral dataIdx
+                        , EInt $ fromIntegral dataOff
+                        , EInt $ fromIntegral dataDef
                         ]
-                C.PtrField idx _ -> H.EDo
-                    [ H.DoBind "ptr" $ H.EApp
-                        (H.EGName $ gName ["Untyped"] "getPtr")
-                        [ H.EInt (fromIntegral idx)
-                        , H.ELName "struct"
+                C.PtrField idx _ -> EDo
+                    [ DoBind "ptr" $ EApp
+                        (EGName $ gName ["Untyped"] "getPtr")
+                        [ EInt (fromIntegral idx)
+                        , ELName "struct"
                         ]
                     ]
-                    (H.EApp
-                        (H.EGName $ gName ["Classes"] "fromPtr")
-                        [ H.EApp
-                            (H.EGName $ gName ["Untyped"] "message")
-                            [H.ELName "struct"]
-                        , H.ELName "ptr"
+                    (EApp
+                        (EGName $ gName ["Classes"] "fromPtr")
+                        [ EApp
+                            (EGName $ gName ["Untyped"] "message")
+                            [ELName "struct"]
+                        , ELName "ptr"
                         ]
                     )
                 C.HereField _ ->
-                    H.EApp
-                        (H.EGName $ gName ["Classes"] "fromStruct")
-                        [H.ELName "struct"]
+                    EApp
+                        (EGName $ gName ["Classes"] "fromStruct")
+                        [ELName "struct"]
                 C.VoidField ->
-                    H.EApp
-                        (H.EGName $ std_ "pure")
-                        [H.ETup []]
+                    EApp
+                        (EGName $ std_ "pure")
+                        [ETup []]
             }
         }
     ]
 
 -- | Make an instance of the IsWord type class for an enum.
-mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> H.Decl
-mkIsWordInstance typeCtor dataCtors unknownCtor = H.DcInstance
+mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> Decl
+mkIsWordInstance typeCtor dataCtors unknownCtor = DcInstance
     { ctx = []
-    , typ = H.TApp
-        (H.TGName $ gName ["Classes"] "IsWord")
-        [H.TLName typeCtor]
+    , typ = TApp
+        (TGName $ gName ["Classes"] "IsWord")
+        [TLName typeCtor]
     , defs =
-        [ H.DfValue
+        [ DfValue
             { name = "fromWord"
-            , params = [H.PInt i]
-            , value = H.ELName ctor
+            , params = [PInt i]
+            , value = ELName ctor
             }
         | (i, ctor) <- zip [0..] dataCtors
         ] ++
-        [ H.DfValue
+        [ DfValue
             { name = "fromWord"
-            , params = [H.PVar "tag"]
-            , value = H.EApp
-                (H.ELName unknownCtor)
-                [ H.EApp
-                    (H.EGName $ std_ "fromIntegral")
-                    [H.ELName "tag"]
+            , params = [PVar "tag"]
+            , value = EApp
+                (ELName unknownCtor)
+                [ EApp
+                    (EGName $ std_ "fromIntegral")
+                    [ELName "tag"]
                 ]
             }
         ] ++
-        [ H.DfValue
+        [ DfValue
             { name = "toWord"
-            , params = [H.PLCtor ctor []]
-            , value = H.EInt i
+            , params = [PLCtor ctor []]
+            , value = EInt i
             }
         | (i, ctor) <- zip [0..] dataCtors
         ] ++
-        [ H.DfValue
+        [ DfValue
             { name = "toWord"
             , params =
-                [ H.PLCtor unknownCtor [H.PVar "tag"] ]
+                [ PLCtor unknownCtor [PVar "tag"] ]
             , value =
-                H.EApp
-                    (H.EGName $ std_ "fromIntegral")
-                    [H.ELName "tag"]
+                EApp
+                    (EGName $ std_ "fromIntegral")
+                    [ELName "tag"]
             }
         ]
     }
 
-newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> H.Decl
+newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Decl
 newtypeWrapper ctorName wrappedType =
     let name = Name.localToUnQ ctorName
-    in H.DcData
+    in DcData
         { dataName = name
         , dataNewtype = True
         , typeArgs = [ "msg" ]
         , dataVariants =
-            [ H.DataVariant
+            [ DataVariant
                 { dvCtorName = name
-                , dvArgs = H.APos
-                    [ H.TApp
-                        (H.TGName wrappedType)
-                        [H.TVar "msg"]
+                , dvArgs = APos
+                    [ TApp
+                        (TGName wrappedType)
+                        [TVar "msg"]
                     ]
                 }
             ]
         , derives = []
         }
 
-nameToType :: Word64 -> Name.CapnpQ -> H.Type
+nameToType :: Word64 -> Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId} =
     if fileId == thisMod
-        then H.TLName local
-        else H.TGName $ gName
+        then TLName local
+        else TGName $ gName
             ["Capnp", "Gen", T.pack $ printf "X%x" fileId]
             local
-typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> H.Type
+typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> Type
 typeToType thisMod ty var = case ty of
-    C.VoidType -> H.TUnit
-    C.WordType (C.PrimWord ty) -> H.TPrim ty
+    C.VoidType -> TUnit
+    C.WordType (C.PrimWord ty) -> TPrim ty
     C.WordType (C.EnumType typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.ListOf elt) ->
-        H.TApp (basics "List")
-            [ H.TVar var
+        TApp (basics "List")
+            [ TVar var
             , typeToType thisMod elt var
             ]
     C.PtrType (C.PrimPtr C.PrimText) ->
@@ -267,12 +268,12 @@ typeToType thisMod ty var = case ty of
     C.PtrType (C.PtrInterface typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
-        appV $ H.TGName $ gName ["Untyped"] "Ptr"
+        appV $ TGName $ gName ["Untyped"] "Ptr"
     C.CompositeType (C.StructType typeId) ->
         appV $ nameToType thisMod typeId
   where
-    appV t = H.TApp t [H.TVar var]
-    basics = H.TGName . gName ["Basics"]
+    appV t = TApp t [TVar var]
+    basics = TGName . gName ["Basics"]
 
 -- | Transform the file path into a valid haskell module name.
 -- TODO: this is a best-effort transformation; it gives good

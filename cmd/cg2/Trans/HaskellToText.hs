@@ -9,11 +9,12 @@ import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
-import qualified IR.Common  as C
-import qualified IR.Haskell as H
-import qualified IR.Name    as Name
+import IR.Haskell
 
-moduleToText :: H.Module -> PP.Doc
+import qualified IR.Common as C
+import qualified IR.Name   as Name
+
+moduleToText :: Module -> PP.Doc
 moduleToText = format
 
 -- | Types which can be rendered as haskell source code.
@@ -28,8 +29,8 @@ moduleToText = format
 class Format a where
     format :: a -> PP.Doc
 
-instance Format H.Module where
-    format H.Module{modName, modDecls, modImports} = vcat
+instance Format Module where
+    format Module{modName, modDecls, modImports} = vcat
         [ hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
@@ -40,15 +41,15 @@ instance Format H.Module where
         -- "Std_" namespace, so that they don't collide with names in the
         -- generated code; see issue #58.
         , vcat $ map format
-            [ H.Import { importAs = "Std_", parts = ["Prelude"] }
-            , H.Import { importAs = "Std_", parts = ["Data", "Word"] }
-            , H.Import { importAs = "Std_", parts = ["Data", "Int"] }
+            [ Import { importAs = "Std_", parts = ["Prelude"] }
+            , Import { importAs = "Std_", parts = ["Data", "Word"] }
+            , Import { importAs = "Std_", parts = ["Data", "Int"] }
             ]
         , vcat $ map format modDecls
         ]
 
-instance Format H.Decl where
-    format H.DcData{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
+instance Format Decl where
+    format DcData{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
         [ hcat
             [ if dataNewtype
                 then "newtype "
@@ -64,14 +65,14 @@ instance Format H.Decl where
             , formatDerives derives
             ]
         ]
-    format H.DcValue{typ, def=def@H.DfValue{name}} = vcat
+    format DcValue{typ, def=def@DfValue{name}} = vcat
         [ hcat [ format name, " :: ", format typ ]
         , format def
         ]
-    format H.DcInstance{ctx, typ, defs} = vcat
+    format DcInstance{ctx, typ, defs} = vcat
         [ hcat
             [ "instance "
-            , format (H.TCtx ctx typ)
+            , format (TCtx ctx typ)
             , case defs of
                 []  -> ""
                 _:_ -> " where"
@@ -80,8 +81,8 @@ instance Format H.Decl where
             map format defs
         ]
 
-instance Format H.ValueDef where
-    format H.DfValue{name, value, params} = hcat
+instance Format ValueDef where
+    format DfValue{name, value, params} = hcat
         [ format name
         , " "
         , hcat $ intersperse " " $ map format params
@@ -89,66 +90,66 @@ instance Format H.ValueDef where
         , format value
         ]
 
-instance Format H.Exp where
-    format (H.EApp e es) = hcat
+instance Format Exp where
+    format (EApp e es) = hcat
         [ "("
         , hcat $ intersperse " " $ map format (e:es)
         , ")"
         ]
-    format (H.EFApp e []) = format e
-    format (H.EFApp e es) = hcat
+    format (EFApp e []) = format e
+    format (EFApp e es) = hcat
         [ "("
         , format e
         , " <$> "
         , hcat $ intersperse " <*> " $ map format es
         , ")"
         ]
-    format (H.EGName e) = format e
-    format (H.ELName e) = format e
-    format (H.EInt n) = fromString (show n)
-    format (H.EDo ds ex) = vcat
+    format (EGName e) = format e
+    format (ELName e) = format e
+    format (EInt n) = fromString (show n)
+    format (EDo ds ex) = vcat
         [ "(do"
         , indent $ vcat (map format ds ++ [format ex, ")"])
         ]
-    format (H.ETup es) = PP.tupled (map format es)
+    format (ETup es) = PP.tupled (map format es)
 
-instance Format H.Do where
-    format (H.DoBind var ex) = format var <> " <- " <> format ex
+instance Format Do where
+    format (DoBind var ex) = format var <> " <- " <> format ex
 
-instance Format H.Pattern where
-    format (H.PVar v) = PP.textStrict v
-    format (H.PLCtor c ps) = hcat
+instance Format Pattern where
+    format (PVar v) = PP.textStrict v
+    format (PLCtor c ps) = hcat
         [ "("
         , mconcat $ intersperse " " (format c : map format ps)
         , ")"
         ]
-    format (H.PInt n) = fromString (show n)
+    format (PInt n) = fromString (show n)
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
 formatDerives ds = "deriving" <> PP.tupled (map format ds)
 
-instance Format H.DataVariant where
-    format H.DataVariant{dvCtorName, dvArgs} =
+instance Format DataVariant where
+    format DataVariant{dvCtorName, dvArgs} =
         hcat [ format dvCtorName, " ", format dvArgs ]
 
-instance Format H.DataArgs where
-    format (H.APos types) =
+instance Format DataArgs where
+    format (APos types) =
         mconcat $ intersperse " " (map format types)
 
-instance Format H.Type where
-    format (H.TGName ty) = format ty
-    format (H.TLName ty) = format ty
-    format (H.TVar txt)  = PP.textStrict txt
-    format (H.TApp f xs) =
+instance Format Type where
+    format (TGName ty) = format ty
+    format (TLName ty) = format ty
+    format (TVar txt)  = PP.textStrict txt
+    format (TApp f xs) =
         "(" <> (mconcat $ intersperse " " $ map format (f:xs)) <> ")"
-    format (H.TFn types) =
+    format (TFn types) =
         mconcat $ intersperse " -> " $ map format types
-    format (H.TCtx[] ty) = format ty
-    format (H.TCtx constraints ty) =
+    format (TCtx[] ty) = format ty
+    format (TCtx constraints ty) =
         PP.tupled (map format constraints) <> " => " <> format ty
-    format (H.TPrim ty) = format ty
-    format H.TUnit = "()"
+    format (TPrim ty) = format ty
+    format TUnit = "()"
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
@@ -165,8 +166,8 @@ instance Format Name.UnQ where
     format = PP.textStrict . Name.renderUnQ
 
 
-instance Format H.Import where
-    format H.Import{importAs, parts} = hcat
+instance Format Import where
+    format Import{importAs, parts} = hcat
         [ "import qualified "
         , mconcat $ intersperse "." (map format parts)
         , " as "
