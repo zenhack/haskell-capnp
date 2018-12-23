@@ -36,30 +36,17 @@ fileToModule :: Raw.File -> H.Module
 fileToModule Raw.File{fileName, fileId, decls} =
     H.Module
         { modName = makeModName fileName
-        , modDecls = concatMap (declToDecls fileId) decls
         , modImports =
-            [ H.Import
-                { importAs = "Message"
-                , parts = ["Capnp", "Message"]
-                }
-            , H.Import
-                { importAs = "Untyped"
-                , parts = ["Capnp", "Untyped"]
-                }
-            , H.Import
-                { importAs = "Basics"
-                , parts = ["Capnp", "Basics"]
-                }
-            , H.Import
-                { importAs = "GenHelpers"
-                , parts = ["Capnp", "GenHelpers"]
-                }
-            , H.Import
-                { importAs = "Classes"
-                , parts = ["Capnp", "Classes"]
-                }
+            [ imp ["Capnp", "Message"] "Message"
+            , imp ["Capnp", "Untyped"] "Untyped"
+            , imp ["Capnp", "Basics"] "Basics"
+            , imp ["Capnp", "GenHelpers"] "GenHelpers"
+            , imp ["Capnp", "Classes"] "Classes"
             ]
+        , modDecls = concatMap (declToDecls fileId) decls
         }
+  where
+    imp parts importAs = H.Import {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [H.Decl]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
