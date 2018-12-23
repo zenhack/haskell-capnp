@@ -18,6 +18,7 @@ module IR.Haskell
     , Module(..)
     , Import(..)
     , Type(..)
+    , Exp(..)
     , Decl(..)
     , DataVariant(..)
     , DataArgs(..)
@@ -64,8 +65,9 @@ data Decl
         , derives     :: [Name.UnQ]
         }
     | ValueDecl
-        { name :: Name.UnQ
-        , typ  :: Type
+        { name  :: Name.UnQ
+        , typ   :: Type
+        , value :: Exp
         }
     deriving(Show, Read, Eq)
 
@@ -92,6 +94,13 @@ data Type
     | CtxType [Type] Type
     | PrimType Common.PrimWord
     | UnitType
+    deriving(Show, Read, Eq)
+
+data Exp
+    = ExApp Exp [Exp]
+    | ExGlobalName Name.GlobalQ
+    | ExLocalName Name.LocalQ
+    | ExInteger Integer
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will

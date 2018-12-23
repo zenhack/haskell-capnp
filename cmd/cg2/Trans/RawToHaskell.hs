@@ -58,6 +58,10 @@ fileToModule Raw.File{fileName, fileId, decls} =
                 { importAs = "Basics"
                 , parts = ["Capnp", "Basics"]
                 }
+            , Haskell.Import
+                { importAs = "GenHelpers"
+                , parts = ["Capnp", "GenHelpers"]
+                }
             ]
         }
 
@@ -103,6 +107,22 @@ declToDecl thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                     ]
                 ]
             )
+        , value = case fieldLocType of
+            C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
+                Haskell.ExApp
+                    (Haskell.ExGlobalName
+                        Name.GlobalQ
+                            { globalNS = Name.NS [ "GenHelpers" ]
+                            , local = "getWordField"
+                            }
+                    )
+                    [ Haskell.ExLocalName "struct"
+                    , Haskell.ExInteger $ fromIntegral dataIdx
+                    , Haskell.ExInteger $ fromIntegral dataOff
+                    , Haskell.ExInteger $ fromIntegral dataDef
+                    ]
+            _ ->
+                Haskell.ExLocalName "undefined"
         }
 
 newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Haskell.Decl

@@ -7,7 +7,7 @@ module IR.Name where
 import Data.Word
 
 import Data.List   (intersperse)
-import Data.String (IsString)
+import Data.String (IsString(fromString))
 
 import qualified Data.Text as T
 
@@ -36,6 +36,12 @@ data LocalQ = LocalQ
     , localNS  :: NS
     }
     deriving(Show, Read, Eq, Ord)
+
+instance IsString LocalQ where
+    fromString s = LocalQ
+        { localUnQ = fromString s
+        , localNS = emptyNS
+        }
 
 -- | A fully qualified name for something defined in a capnproto schema.
 -- this includes a local name within a file, and the file's capnp id.

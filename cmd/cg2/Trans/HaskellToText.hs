@@ -69,10 +69,17 @@ instance Format Haskell.Decl where
             , formatDerives derives
             ]
         ]
-    format Haskell.ValueDecl{name, typ} = vcat
+    format Haskell.ValueDecl{name, typ, value} = vcat
         [ hcat [ format name, " :: ", format typ ]
-        , hcat [ format name, " = error \"TODO\"" ]
+        , hcat [ format name, " = ", format value ]
         ]
+
+instance Format Haskell.Exp where
+    format (Haskell.ExApp e es) =
+        mconcat $ intersperse " " $ map format (e:es)
+    format (Haskell.ExGlobalName e) = format e
+    format (Haskell.ExLocalName e) = format e
+    format (Haskell.ExInteger n) = fromString (show n)
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""
