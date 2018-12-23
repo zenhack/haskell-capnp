@@ -16,6 +16,12 @@ import qualified IR.Haskell as H
 import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
 
+std_ :: Name.UnQ -> Name.GlobalQ
+std_ name = Name.GlobalQ
+    { globalNS = Name.NS ["Std_"]
+    , local = Name.mkLocal emptyNS name
+    }
+
 untypedStruct :: Name.GlobalQ
 untypedStruct = Name.GlobalQ
     { globalNS = Name.NS ["Untyped"]
@@ -160,10 +166,7 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = H.InstanceDecl
             , value = H.ExApp
                 (H.ExLocalName unknownCtor)
                 [ H.ExApp
-                    (H.ExGlobalName Name.GlobalQ
-                        { globalNS = Name.NS ["Std_"]
-                        , local = "fromIntegral"
-                        })
+                    (H.ExGlobalName $ std_ "fromIntegral")
                     [H.ExLocalName "tag"]
                 ]
             }
@@ -181,10 +184,7 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = H.InstanceDecl
                 [ H.PLocalCtor unknownCtor [H.PVar "tag"] ]
             , value =
                 H.ExApp
-                    (H.ExGlobalName Name.GlobalQ
-                        { globalNS = Name.NS ["Std_"]
-                        , local = "fromIntegral"
-                        })
+                    (H.ExGlobalName $ std_ "fromIntegral")
                     [H.ExLocalName "tag"]
             }
         ]
