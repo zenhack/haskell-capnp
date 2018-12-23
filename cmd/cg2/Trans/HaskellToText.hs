@@ -103,6 +103,14 @@ instance Format H.Exp where
     format (H.ExGlobalName e) = format e
     format (H.ExLocalName e) = format e
     format (H.ExInteger n) = fromString (show n)
+    format (H.ExDo ds ex) = vcat
+        [ "(do"
+        , indent $ vcat (map format ds ++ [format ex, ")"])
+        ]
+    format (H.ExTuple es) = PP.tupled (map format es)
+
+instance Format H.DoClause where
+    format (H.DoBind var ex) = format var <> " <- " <> format ex
 
 instance Format H.Pattern where
     format (H.PVar v) = PP.textStrict v

@@ -19,6 +19,7 @@ module IR.Haskell
     , Import(..)
     , Type(..)
     , Exp(..)
+    , DoClause(..)
     , Pattern(..)
     , Decl(..)
     , ValueDef(..)
@@ -114,6 +115,12 @@ data Exp
     | ExGlobalName Name.GlobalQ
     | ExLocalName Name.LocalQ
     | ExInteger Integer
+    | ExDo [DoClause] Exp
+    | ExTuple [Exp]
+    deriving(Show, Read, Eq)
+
+data DoClause
+    = DoBind Name.UnQ Exp
     deriving(Show, Read, Eq)
 
 data Pattern

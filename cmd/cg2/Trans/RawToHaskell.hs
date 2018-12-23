@@ -17,9 +17,12 @@ import qualified IR.Name    as Name
 import qualified IR.Raw     as Raw
 
 std_ :: Name.UnQ -> Name.GlobalQ
-std_ name = Name.GlobalQ
-    { globalNS = Name.NS ["Std_"]
-    , local = Name.mkLocal emptyNS name
+std_ name = globalName ["Std_"] (Name.mkLocal Name.emptyNS name)
+
+globalName :: [T.Text] -> Name.LocalQ -> Name.GlobalQ
+globalName parts local = Name.GlobalQ
+    { globalNS = Name.NS parts
+    , local
     }
 
 untypedStruct :: Name.GlobalQ
@@ -136,8 +139,29 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                         , H.ExInteger $ fromIntegral dataOff
                         , H.ExInteger $ fromIntegral dataDef
                         ]
-                _ ->
-                    H.ExLocalName "undefined"
+                C.PtrField idx _ -> H.ExDo
+                    [ H.DoBind "ptr" $ H.ExApp
+                        (H.ExGlobalName $ globalName ["Untyped"] "getPtr")
+                        [ H.ExInteger (fromIntegral idx)
+                        , H.ExLocalName "struct"
+                        ]
+                    ]
+                    (H.ExApp
+                        (H.ExGlobalName $ globalName ["Classes"] "fromPtr")
+                        [ H.ExApp
+                            (H.ExGlobalName $ globalName ["Untyped"] "message")
+                            [H.ExLocalName "struct"]
+                        , H.ExLocalName "ptr"
+                        ]
+                    )
+                C.HereField _ ->
+                    H.ExApp
+                        (H.ExGlobalName $ globalName ["Classes"] "fromStruct")
+                        [H.ExLocalName "struct"]
+                C.VoidField ->
+                    H.ExApp
+                        (H.ExGlobalName $ std_ "pure")
+                        [H.ExTuple []]
             }
         }
     ]
