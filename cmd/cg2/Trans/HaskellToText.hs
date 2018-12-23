@@ -48,24 +48,19 @@ instance Format H.Module where
         ]
 
 instance Format H.Decl where
-    format H.DcData{dataName, dataVariants, derives} = vcat
-        [ hcat [ "data ", format dataName ]
-        , indent $ vcat
-            [ case dataVariants of
-                (d:ds) -> vcat $ ("= " <> format d) : map (("| " <>) . format) ds
-                []     -> ""
-            , formatDerives derives
-            ]
-        ]
-    format H.DcNewtype{dataName, typeArgs, dataVariant, derives} = vcat
+    format H.DcData{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
         [ hcat
-            [ "newtype "
+            [ if dataNewtype
+                then "newtype "
+                else "data "
             , format dataName
             , " "
             , mconcat $ intersperse " " $ map PP.textStrict typeArgs
             ]
         , indent $ vcat
-            [ hcat [ "= ", format dataVariant ]
+            [ case dataVariants of
+                (d:ds) -> vcat $ ("= " <> format d) : map (("| " <>) . format) ds
+                []     -> ""
             , formatDerives derives
             ]
         ]

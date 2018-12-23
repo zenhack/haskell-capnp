@@ -66,6 +66,8 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     let unknownCtor = Name.mkSub typeCtor "unknown'" in
     [ H.DcData
         { H.dataName = Name.localToUnQ typeCtor
+        , H.dataNewtype = False
+        , H.typeArgs = []
         , H.dataVariants =
             map enumerantToVariant dataCtors
             ++
@@ -192,17 +194,20 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = H.DcInstance
 newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> H.Decl
 newtypeWrapper ctorName wrappedType =
     let name = Name.localToUnQ ctorName
-    in H.DcNewtype
+    in H.DcData
         { dataName = name
+        , dataNewtype = True
         , typeArgs = [ "msg" ]
-        , dataVariant = H.DataVariant
-            { dvCtorName = name
-            , dvArgs = H.APos
-                [ H.TApp
-                    (H.TGName wrappedType)
-                    [H.TVar "msg"]
-                ]
-            }
+        , dataVariants =
+            [ H.DataVariant
+                { dvCtorName = name
+                , dvArgs = H.APos
+                    [ H.TApp
+                        (H.TGName wrappedType)
+                        [H.TVar "msg"]
+                    ]
+                }
+            ]
         , derives = []
         }
 

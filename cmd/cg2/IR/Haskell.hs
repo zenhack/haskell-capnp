@@ -56,16 +56,13 @@ data Decl
     = DcData
         { dataName     :: Name.UnQ
         -- ^ The name of the declared type.
+        , typeArgs     :: [T.Text]
         , dataVariants :: [DataVariant]
         -- ^ The variants/data constructors for the type.
         , derives      :: [Name.UnQ]
         -- ^ A list of type classes to include in the deriving clause.
-        }
-    | DcNewtype
-        { dataName    :: Name.UnQ
-        , typeArgs    :: [T.Text]
-        , dataVariant :: DataVariant
-        , derives     :: [Name.UnQ]
+        , dataNewtype  :: !Bool
+        -- ^ Whether the declarationis a "newtype" or "data" declaration.
         }
     | DcValue
         { typ :: Type
