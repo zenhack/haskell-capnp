@@ -95,8 +95,11 @@ instance Format Haskell.ValueDef where
         ]
 
 instance Format Haskell.Exp where
-    format (Haskell.ExApp e es) =
-        mconcat $ intersperse " " $ map format (e:es)
+    format (Haskell.ExApp e es) = hcat
+        [ "("
+        , hcat $ intersperse " " $ map format (e:es)
+        , ")"
+        ]
     format (Haskell.ExGlobalName e) = format e
     format (Haskell.ExLocalName e) = format e
     format (Haskell.ExInteger n) = fromString (show n)
