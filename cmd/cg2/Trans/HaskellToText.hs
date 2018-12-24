@@ -49,22 +49,7 @@ instance Format Module where
         ]
 
 instance Format Decl where
-    format DcData{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
-        [ hcat
-            [ if dataNewtype
-                then "newtype "
-                else "data "
-            , format dataName
-            , " "
-            , mconcat $ intersperse " " $ map PP.textStrict typeArgs
-            ]
-        , indent $ vcat
-            [ case dataVariants of
-                (d:ds) -> vcat $ ("= " <> format d) : map (("| " <>) . format) ds
-                []     -> ""
-            , formatDerives derives
-            ]
-        ]
+    format (DcData d) = format d
     format DcValue{typ, def=def@DfValue{name}} = vcat
         [ hcat [ format name, " :: ", format typ ]
         , format def
@@ -79,6 +64,24 @@ instance Format Decl where
             ]
         , indent $ vcat $
             map format defs
+        ]
+
+instance Format DataDecl where
+    format Data{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
+        [ hcat
+            [ if dataNewtype
+                then "newtype "
+                else "data "
+            , format dataName
+            , " "
+            , mconcat $ intersperse " " $ map PP.textStrict typeArgs
+            ]
+        , indent $ vcat
+            [ case dataVariants of
+                (d:ds) -> vcat $ ("= " <> format d) : map (("| " <>) . format) ds
+                []     -> ""
+            , formatDerives derives
+            ]
         ]
 
 instance Format ValueDef where

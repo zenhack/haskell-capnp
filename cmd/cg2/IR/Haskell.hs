@@ -22,6 +22,7 @@ module IR.Haskell
     , Do(..)
     , Pattern(..)
     , Decl(..)
+    , DataDecl(..)
     , ValueDef(..)
     , DataVariant(..)
     , DataArgs(..)
@@ -53,17 +54,7 @@ data Import = Import
 
 -- | A declaration.
 data Decl
-    = DcData
-        { dataName     :: Name.UnQ
-        -- ^ The name of the declared type.
-        , typeArgs     :: [T.Text]
-        , dataVariants :: [DataVariant]
-        -- ^ The variants/data constructors for the type.
-        , derives      :: [Name.UnQ]
-        -- ^ A list of type classes to include in the deriving clause.
-        , dataNewtype  :: !Bool
-        -- ^ Whether the declarationis a "newtype" or "data" declaration.
-        }
+    = DcData DataDecl
     | DcValue
         { typ :: Type
         , def :: ValueDef
@@ -73,6 +64,19 @@ data Decl
         , typ  :: Type
         , defs :: [ValueDef]
         }
+    deriving(Show, Read, Eq)
+
+data DataDecl = Data
+    { dataName     :: Name.UnQ
+    -- ^ The name of the declared type.
+    , typeArgs     :: [T.Text]
+    , dataVariants :: [DataVariant]
+    -- ^ The variants/data constructors for the type.
+    , derives      :: [Name.UnQ]
+    -- ^ A list of type classes to include in the deriving clause.
+    , dataNewtype  :: !Bool
+    -- ^ Whether the declarationis a "newtype" or "data" declaration.
+    }
     deriving(Show, Read, Eq)
 
 data ValueDef = DfValue

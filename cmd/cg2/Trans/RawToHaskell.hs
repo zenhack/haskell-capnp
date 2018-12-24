@@ -61,7 +61,7 @@ fileToModule Raw.File{fileName, fileId, decls} =
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     let unknownCtor = Name.mkSub typeCtor "unknown'" in
-    [ DcData
+    [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
         , typeArgs = []
@@ -230,7 +230,7 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = DcInstance
 newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Decl
 newtypeWrapper ctorName wrappedType =
     let name = Name.localToUnQ ctorName
-    in DcData
+    in DcData Data
         { dataName = name
         , dataNewtype = True
         , typeArgs = [ "msg" ]
