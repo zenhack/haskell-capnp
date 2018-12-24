@@ -50,6 +50,7 @@ readCtx m msg = TApp
     , TVar msg
     ]
 
+instance_ :: [Type] -> [T.Text] -> Name.LocalQ -> [Type] -> [InstanceDef] -> Decl
 instance_ ctx classNS className tys defs = DcInstance
     { ctx
     , typ = TApp
@@ -479,6 +480,7 @@ newtypeWrapper ctorName typeArgs wrappedType =
         , derives = []
         }
 
+wrapperFromPtr :: Name.LocalQ -> Decl
 wrapperFromPtr ctorName =
     instance_ [] ["Classes"] "FromPtr"
         [ TVar "msg", TApp (TLName ctorName) [TVar "msg"] ]
