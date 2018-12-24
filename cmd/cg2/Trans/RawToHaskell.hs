@@ -42,6 +42,14 @@ readCtx m msg = TApp
     , TVar msg
     ]
 
+instance_ ctx classNS className tys defs = DcInstance
+    { ctx
+    , typ = TApp
+        (tgName classNS className)
+        tys
+    , defs
+    }
+
 fileToModule :: Raw.File -> Module
 fileToModule Raw.File{fileName, fileId, decls} =
     Module
@@ -222,66 +230,34 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
         [TVar "msg"]
 
     -- There are several type classes that are defined for all structs:
-    , DcInstance
-        { ctx = []
-        , typ = TApp
-            (tgName ["Classes"] "FromStruct")
-            [ TVar "msg"
-            , TApp
-                (TLName ctorName)
-                [TVar "msg"]
-            ]
-        , defs =
-            [ IdValue $ dfValue "fromStruct" [PVar "struct"] $ EApp
-                (EGName $ std_ "pure")
-                [EApp (ELName ctorName) [ELName "struct"]]
-            ]
-        }
-    , DcInstance
-        { ctx = []
-        , typ = TApp
-            (tgName ["Classes"] "ToStruct")
-            [ TVar "msg"
-            , TApp
-                (TLName ctorName)
-                [TVar "msg"]
-            ]
-        , defs =
-            [ IdValue $ dfValue "toStruct" [PLCtor ctorName [PVar "struct"]]
-                (ELName "struct")
-            ]
-        }
-    , DcInstance
-        { ctx = []
-        , typ = TApp
-            (tgName ["Untyped"] "HasMessage")
+    , instance_ [] ["Classes"] "FromStruct"
+        [ TVar "msg", TApp (TLName ctorName) [TVar "msg"]
+        ]
+        [ IdValue $ dfValue "fromStruct" [PVar "struct"] $ EApp
+            (EGName $ std_ "pure")
+            [EApp (ELName ctorName) [ELName "struct"]]
+        ]
+    , instance_ [] ["Classes"] "ToStruct"
+        [TVar "msg", TApp (TLName ctorName) [TVar "msg"]]
+        [ IdValue $ dfValue "toStruct" [PLCtor ctorName [PVar "struct"]]
+            (ELName "struct")
+        ]
+    , instance_ [] ["Untyped"] "HasMessage" [TApp (TLName ctorName) [TVar "msg"]]
+        [ IdType $ TypeAlias
+            "InMessage"
             [ TApp (TLName ctorName) [TVar "msg"] ]
-        , defs =
-            [ IdType $ TypeAlias
-                "InMessage"
-                [ TApp (TLName ctorName) [TVar "msg"] ]
-                (TVar "msg")
-            , IdValue $ dfValue "message" [PLCtor ctorName [PVar "struct"]]
-                (EApp (egName ["Untyped"] "message") [ELName "struct"])
+            (TVar "msg")
+        , IdValue $ dfValue "message" [PLCtor ctorName [PVar "struct"]]
+            (EApp (egName ["Untyped"] "message") [ELName "struct"])
+        ]
+    , instance_ [] ["Untyped"] "MessageDefault" [TApp (TLName ctorName) [TVar "msg"]]
+        [ IdValue $ dfValue "messageDefault" [PVar "msg"] $ EApp
+            (ELName ctorName)
+            [ EApp
+                (egName ["Untyped"] "messageDefault")
+                [ELName "msg"]
             ]
-        }
-    , DcInstance
-        { ctx = []
-        , typ = TApp
-            (tgName ["Untyped"] "MessageDefault")
-            [ TApp
-                (TLName ctorName)
-                [TVar "msg"]
-            ]
-        , defs =
-            [ IdValue $ dfValue "messageDefault" [PVar "msg"] $ EApp
-                (ELName ctorName)
-                [ EApp
-                    (egName ["Untyped"] "messageDefault")
-                    [ELName "msg"]
-                ]
-            ]
-        }
+        ]
     ]
 declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} =
     let listCtor = Name.mkSub ctorName "List_" in
