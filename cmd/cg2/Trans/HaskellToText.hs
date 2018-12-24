@@ -66,6 +66,10 @@ instance Format Decl where
             map format defs
         ]
 
+instance Format InstanceDef where
+    format (IdData d)  = format d
+    format (IdValue d) = format d
+
 instance Format DataDecl where
     format Data{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
         [ hcat
@@ -74,7 +78,7 @@ instance Format DataDecl where
                 else "data "
             , format dataName
             , " "
-            , mconcat $ intersperse " " $ map PP.textStrict typeArgs
+            , mconcat $ intersperse " " $ map format typeArgs
             ]
         , indent $ vcat
             [ case dataVariants of

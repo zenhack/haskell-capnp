@@ -22,6 +22,7 @@ module IR.Haskell
     , Do(..)
     , Exp(..)
     , Import(..)
+    , InstanceDef(..)
     , Module(..)
     , Pattern(..)
     , Type(..)
@@ -62,14 +63,14 @@ data Decl
     | DcInstance
         { ctx  :: [Type]
         , typ  :: Type
-        , defs :: [ValueDef]
+        , defs :: [InstanceDef]
         }
     deriving(Show, Read, Eq)
 
 data DataDecl = Data
     { dataName     :: Name.UnQ
     -- ^ The name of the declared type.
-    , typeArgs     :: [T.Text]
+    , typeArgs     :: [Type]
     , dataVariants :: [DataVariant]
     -- ^ The variants/data constructors for the type.
     , derives      :: [Name.UnQ]
@@ -77,6 +78,11 @@ data DataDecl = Data
     , dataNewtype  :: !Bool
     -- ^ Whether the declarationis a "newtype" or "data" declaration.
     }
+    deriving(Show, Read, Eq)
+
+data InstanceDef
+    = IdValue ValueDef
+    | IdData DataDecl
     deriving(Show, Read, Eq)
 
 data ValueDef = DfValue

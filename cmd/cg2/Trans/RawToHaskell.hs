@@ -101,20 +101,36 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
             ]
         , defs =
             let listCtor = Name.mkSub ctorName "List_" in
-            [ -- TODO: List newtype.
-              dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+            [ IdData Data
+                { dataName = "List"
+                , typeArgs =
+                    [ TApp
+                        (TLName ctorName)
+                        [TVar "msg"]
+                    ]
+                , dataVariants =
+                    [ DataVariant
+                        { dvCtorName = Name.localToUnQ listCtor
+                        , dvArgs = APos
+                            [ TApp (TLName ctorName) [TVar "msg"] ]
+                        }
+                    ]
+                , derives = []
+                , dataNewtype = True
+                }
+            , IdValue $ dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
                 (ELName listCtor)
                 [ EApp
                     (egName ["Classes"] "fromPtr")
                     [ELName "msg", ELName "ptr"]
                 ]
-            , dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
+            , IdValue $ dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
                 (egName ["Untyped"] "ListStruct")
                 [ELName "l"]
-            , dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
+            , IdValue $ dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
                 (egName ["Untyped"] "length")
                 [ELName "l"]
-            , dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EDo
+            , IdValue $ dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EDo
                 [ DoBind "elt" $ EApp
                     (egName ["Untyped"] "index")
                     [ ELName "i"
@@ -190,14 +206,14 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = DcInstance
         (tgName ["Classes"] "IsWord")
         [TLName typeCtor]
     , defs =
-        [ DfValue
+        [ IdValue $ DfValue
             { name = "fromWord"
             , params = [PInt i]
             , value = ELName ctor
             }
         | (i, ctor) <- zip [0..] dataCtors
         ] ++
-        [ DfValue
+        [ IdValue $ DfValue
             { name = "fromWord"
             , params = [PVar "tag"]
             , value = EApp
@@ -208,14 +224,14 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = DcInstance
                 ]
             }
         ] ++
-        [ DfValue
+        [ IdValue $ DfValue
             { name = "toWord"
             , params = [PLCtor ctor []]
             , value = EInt i
             }
         | (i, ctor) <- zip [0..] dataCtors
         ] ++
-        [ DfValue
+        [ IdValue $ DfValue
             { name = "toWord"
             , params =
                 [ PLCtor unknownCtor [PVar "tag"] ]
@@ -233,7 +249,7 @@ newtypeWrapper ctorName wrappedType =
     in DcData Data
         { dataName = name
         , dataNewtype = True
-        , typeArgs = [ "msg" ]
+        , typeArgs = [TVar "msg"]
         , dataVariants =
             [ DataVariant
                 { dvCtorName = name
