@@ -80,6 +80,7 @@ import System.Timeout           (timeout)
 
 import qualified Data.Vector       as V
 import qualified Focus
+import qualified ListT
 import qualified StmContainers.Map as M
 
 import Capnp.Classes        (cerialize, decerialize)
@@ -391,11 +392,16 @@ handleConn
                 throwIO e
             Right _ ->
                 pure ()
-    stopConn (_, Conn'{bootstrap=Nothing}) = pure ()
-    stopConn (_, Conn'{bootstrap=Just (Client Nothing)}) = pure ()
-    stopConn (conn, Conn'{bootstrap=Just (Client (Just client'))}) =
-        atomically $ dropConnExport conn client'
-        -- TODO: clear out the rest of the connection state.
+    stopConn (conn, conn') = do
+        atomically $ do
+            -- drop the bootstrap interface:
+            case bootstrap conn' of
+                Just (Client (Just client')) -> dropConnExport conn client'
+                _                            -> pure ()
+            -- cancel outstanding things:
+            flip ListT.traverse_ (M.listT (embargos conn')) $ \(_, fulfiller) ->
+                breakPromise fulfiller eDisconnected
+            -- TODO: clear out the rest of the connection state.
     useBootstrap conn conn' = case withBootstrap of
         Nothing ->
             forever $ threadDelay maxBound

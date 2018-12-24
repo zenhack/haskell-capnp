@@ -170,6 +170,7 @@ library
       , data-default-instances-vector     ^>= 0.0.1
       , stm                               ^>= 2.5.0
       , stm-containers                    ^>= 1.1.0
+      , list-t                            ^>= 1.0.2
       , focus                             ^>= 1.0.1
       , async                             ^>= 2.2.1
       , network-simple                    ^>= 0.4
