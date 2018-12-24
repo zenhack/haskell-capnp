@@ -38,7 +38,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
             , concatMap (fieldToDecls local) fields
             ]
     Flat.Union{} ->
-        [ -- TODO
+        [ Raw.StructWrapper { ctorName = local }
         ]
     Flat.Interface ->
         [ Raw.InterfaceWrapper
