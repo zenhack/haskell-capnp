@@ -79,6 +79,17 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                             ]
                         fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
+                        unionNode =
+                            Flat.Node
+                                { name = Name.mkSub name "union_"
+                                -- XXX: what to put here? This shouldn't break anything,
+                                -- since we never look this up, but this is gross:
+                                , nodeId = 0
+                                , union_ = Flat.Union
+                                    { variants
+                                    , tagOffset
+                                    }
+                                }
                     in
                     Flat.Node
                         { name
@@ -90,15 +101,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 else
                                     Flat.Field
                                         { fieldName = Name.mkSub name "union_"
-                                        , fieldLocType = C.HereField $ C.StructType
-                                            Flat.Node
-                                                { name = Name.mkSub name "union_"
-                                                , nodeId = 0 -- FIXME: what to put here?
-                                                , union_ = Flat.Union
-                                                    { variants
-                                                    , tagOffset
-                                                    }
-                                                }
+                                        , fieldLocType = C.HereField $ C.StructType unionNode
                                         }
                                     : commonFields
                             , isGroup
@@ -106,7 +109,9 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                             , pointerCount
                             }
                         }
-                    : fieldNodes
+                    : if null variants
+                        then fieldNodes
+                        else (unionNode : fieldNodes)
                 Stage1.NodeInterface ->
                     [ Flat.Node
                         { name
