@@ -50,6 +50,7 @@ fileToModule Raw.File{fileName, fileId, decls} =
             [ "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "TypeFamilies"
+            , "DeriveGeneric"
             ]
         , modImports =
             [ imp ["Capnp", "Message"] "Message"
@@ -57,6 +58,7 @@ fileToModule Raw.File{fileName, fileId, decls} =
             , imp ["Capnp", "Basics"] "Basics"
             , imp ["Capnp", "GenHelpers"] "GenHelpers"
             , imp ["Capnp", "Classes"] "Classes"
+            , imp ["GHC", "Generics"] "Generics"
             ]
         , modDecls = concatMap (declToDecls fileId) decls
         }
@@ -79,7 +81,12 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                     [ TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
                 }
             ]
-        , derives = [ "Std_.Show", "Std_.Eq" ]
+        , derives =
+            [ "Std_.Show"
+            , "Std_.Read"
+            , "Std_.Eq"
+            , "Generics.Generic"
+            ]
         }
     , mkIsWordInstance typeCtor dataCtors unknownCtor
     ]
