@@ -15,17 +15,17 @@
 module IR.Haskell
     ( modFilePath
 
-    , Module(..)
-    , Import(..)
-    , Type(..)
-    , Exp(..)
-    , Do(..)
-    , Pattern(..)
-    , Decl(..)
-    , DataDecl(..)
-    , ValueDef(..)
-    , DataVariant(..)
     , DataArgs(..)
+    , DataDecl(..)
+    , DataVariant(..)
+    , Decl(..)
+    , Do(..)
+    , Exp(..)
+    , Import(..)
+    , Module(..)
+    , Pattern(..)
+    , Type(..)
+    , ValueDef(..)
     ) where
 
 import Data.List (intercalate)
