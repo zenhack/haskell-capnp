@@ -214,6 +214,7 @@ declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
             (tgName ["Untyped"] "Cap")
             [TVar "msg"]
         ]
+    -- TODO: instances for FromPtr & ToPtr
     ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
     [ newtypeWrapper ctorName ["msg"] $ TApp
