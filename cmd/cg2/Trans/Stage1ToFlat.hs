@@ -1,12 +1,13 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE OverloadedStrings     #-}
 -- Translate from the 'Stage1' IR to the 'Flat' IR.
 --
 -- As the name of the latter suggests, this involves flattening the namepace.
 module Trans.Stage1ToFlat (filesToFiles) where
 
 import Data.Word
+
+import Data.Maybe (isNothing)
 
 import qualified Data.Map as M
 
@@ -55,7 +56,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                     let fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
                     in
-                    [ Flat.Node
+                    Flat.Node
                         { name
                         , nodeId
                         , union_ = Flat.Struct
@@ -67,11 +68,11 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                         locType
                                     }
                                 | Stage1.Field{name=fieldUnQ, locType, tag} <- fields
-                                , tag == Nothing
+                                , isNothing tag
                                 ]
                             }
                         }
-                    ] ++ fieldNodes
+                    : fieldNodes
                 Stage1.NodeInterface ->
                     [ Flat.Node
                         { name

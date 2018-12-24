@@ -64,7 +64,7 @@ mkLocal :: NS -> UnQ -> LocalQ
 mkLocal localNS localUnQ = LocalQ{localNS, localUnQ}
 
 instance MkSub LocalQ where
-    mkSub q unQ = mkLocal (localQToNS q) unQ
+    mkSub q = mkLocal (localQToNS q)
 
 instance MkSub GlobalQ where
     mkSub q@GlobalQ{local} unQ = q { local = mkSub local unQ }

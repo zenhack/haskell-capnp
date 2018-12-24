@@ -142,7 +142,7 @@ instance Format Type where
     format (TLName ty) = format ty
     format (TVar txt)  = PP.textStrict txt
     format (TApp f xs) =
-        "(" <> (mconcat $ intersperse " " $ map format (f:xs)) <> ")"
+        "(" <> mconcat (intersperse " " $ map format (f:xs)) <> ")"
     format (TFn types) =
         mconcat $ intersperse " -> " $ map format types
     format (TCtx[] ty) = format ty

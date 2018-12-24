@@ -91,7 +91,7 @@ data DataVariant = DataVariant
     deriving(Show, Read, Eq)
 
 -- | Arguments to a data constructor
-data DataArgs
+newtype DataArgs
     = APos [Type]
     -- we'll add records at some point.
     deriving(Show, Read, Eq)

@@ -31,8 +31,10 @@ main = do
 handleCGR :: CodeGeneratorRequest -> [(FilePath, PP.Doc)]
 handleCGR cgr =
     let modules =
-            map Trans.RawToHaskell.fileToModule $
-            map Trans.FlatToRaw.fileToFile $
+            map
+                ( Trans.RawToHaskell.fileToModule
+                . Trans.FlatToRaw.fileToFile
+                ) $
             Trans.Stage1ToFlat.filesToFiles $
             Trans.CgrToStage1.cgrToFiles cgr
     in
