@@ -15,7 +15,7 @@ main :: IO ()
 main = connect "localhost" "4000" $ \(sock, _addr) ->
     handleConn (socketTransport sock defaultLimit) def
         { debugMode = True
-        , withBootstrap = Just $ \_sup client -> do
+        , withBootstrap = Just $ \_sup client ->
             echo'echo (Echo client) ? def { query = "Hello, World!" }
                 >>= waitIO
                 >>= print
