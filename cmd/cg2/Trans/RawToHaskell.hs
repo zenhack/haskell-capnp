@@ -126,8 +126,27 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
             ]
         }
     -- TODO: HasMessage, MessageDefault
+    {-
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Untyped"] "MessageDefault")
+            [ TVar "msg"
+            , TApp
+                (TLName ctorName)
+                [TVar "msg"]
+            ]
+        , defs =
+            [ IdValue $ dfValue "messageDefault" [] $ ECompose
+                [ ELName ctorName
+                , egName ["Untyped"] "messageDefault"
+                ]
+            ]
+        }
+    -}
     ]
-declToDecls _thisMod Raw.StructListElem{ctorName} =
+declToDecls _thisMod Raw.StructInstances{ctorName} =
+    let listCtor = Name.mkSub ctorName "List_" in
     [ DcInstance
         { ctx = []
         , typ = TApp
@@ -138,7 +157,6 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
                 [TVar "msg"]
             ]
         , defs =
-            let listCtor = Name.mkSub ctorName "List_" in
             [ IdData Data
                 { dataName = "List"
                 , typeArgs =
@@ -187,6 +205,32 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
                     (egName ["Classes"] "fromStruct")
                     [ELName "elt"]
                 )
+            ]
+        }
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Basics"] "MutListElem")
+            [ TVar "s"
+            , TApp
+                (TLName ctorName)
+                [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
+            ]
+        , defs =
+            [ IdValue $ dfValue "setIndex"
+                [ PLCtor ctorName [PVar "elt"]
+                , PVar "i"
+                , PLCtor listCtor [PVar "l"]
+                ]
+                (EApp
+                    (egName ["Untyped"] "setIndex")
+                    [ ELName "elt"
+                    , ELName "i"
+                    , ELName "l"
+                    ]
+                )
+            -- TODO:
+            , IdValue $ dfValue "newList" [] (EGName $ std_ "undefined")
             ]
         }
     ]

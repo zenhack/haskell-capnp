@@ -19,10 +19,14 @@ data File = File
     deriving(Show, Read, Eq)
 
 data Decl
+    -- | Define a newtype wrapper around a struct. This also defines
+    -- some instances of type classes that exist for all such wrappers.
     = StructWrapper
         { ctorName :: Name.LocalQ
         }
-    | StructListElem
+    -- | Define instances of several type classes which should only
+    -- exist for "real" structs, i.e. not groups.
+    | StructInstances
         { ctorName :: Name.LocalQ
         }
     | InterfaceWrapper

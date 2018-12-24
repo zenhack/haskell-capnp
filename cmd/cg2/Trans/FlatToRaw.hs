@@ -27,7 +27,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
             [ [ Raw.StructWrapper { ctorName = local } ]
             , if isGroup
                 then []
-                else [ Raw.StructListElem { ctorName = local } ]
+                else [ Raw.StructInstances { ctorName = local } ]
             , concatMap (fieldToDecls local) fields
             ]
     Flat.Interface ->
