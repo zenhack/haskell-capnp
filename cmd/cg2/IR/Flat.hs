@@ -42,7 +42,8 @@ data Node = Node
 data Node'
     = Enum [Name.UnQ]
     | Struct
-        { fields :: [Field]
+        { fields  :: [Field]
+        , isGroup :: !Bool
         }
     | Interface
     deriving(Show, Read, Eq)

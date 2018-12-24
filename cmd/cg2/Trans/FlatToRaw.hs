@@ -22,11 +22,14 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
             , dataCtors = map (Name.mkSub local) variants
             }
         ]
-    Flat.Struct{fields} ->
-        Raw.StructWrapper
-            { ctorName = local
-            }
-        : concatMap (fieldToDecls local) fields
+    Flat.Struct{fields, isGroup} ->
+        concat
+            [ [ Raw.StructWrapper { ctorName = local } ]
+            , if isGroup
+                then []
+                else [ Raw.StructListElem { ctorName = local } ]
+            , concatMap (fieldToDecls local) fields
+            ]
     Flat.Interface ->
         [ Raw.InterfaceWrapper
             { ctorName = local

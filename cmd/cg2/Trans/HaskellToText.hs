@@ -30,8 +30,9 @@ class Format a where
     format :: a -> PP.Doc
 
 instance Format Module where
-    format Module{modName, modDecls, modImports} = vcat
-        [ hcat
+    format Module{modName, modLangPragmas, modDecls, modImports} = vcat
+        [ vcat [ "{-# LANGUAGE " <> PP.textStrict ext <> " #-}" | ext <- modLangPragmas ]
+        , hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
             , " where"

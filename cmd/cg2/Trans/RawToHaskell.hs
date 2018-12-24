@@ -46,6 +46,11 @@ fileToModule :: Raw.File -> Module
 fileToModule Raw.File{fileName, fileId, decls} =
     Module
         { modName = makeModName fileName
+        , modLangPragmas =
+            [ "FlexibleInstances"
+            , "MultiParamTypeClasses"
+            , "TypeFamilies"
+            ]
         , modImports =
             [ imp ["Capnp", "Message"] "Message"
             , imp ["Capnp", "Untyped"] "Untyped"
@@ -104,7 +109,8 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
             [ IdData Data
                 { dataName = "List"
                 , typeArgs =
-                    [ TApp
+                    [ TVar "msg"
+                    , TApp
                         (TLName ctorName)
                         [TVar "msg"]
                     ]
@@ -112,7 +118,14 @@ declToDecls _thisMod Raw.StructListElem{ctorName} =
                     [ DataVariant
                         { dvCtorName = Name.localToUnQ listCtor
                         , dvArgs = APos
-                            [ TApp (TLName ctorName) [TVar "msg"] ]
+                            [ TApp
+                                (tgName ["Untyped"] "ListOf")
+                                [ TVar "msg"
+                                , TApp
+                                    (tgName ["Untyped"] "Struct")
+                                    [TVar "msg"]
+                                ]
+                            ]
                         }
                     ]
                 , derives = []

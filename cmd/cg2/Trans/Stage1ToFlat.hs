@@ -52,7 +52,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         , union_ = Flat.Enum enumerants
                         }
                     ]
-                Stage1.NodeStruct Stage1.Struct{fields} ->
+                Stage1.NodeStruct Stage1.Struct{fields, isGroup} ->
                     let fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
                     in
@@ -70,6 +70,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 | Stage1.Field{name=fieldUnQ, locType, tag} <- fields
                                 , isNothing tag
                                 ]
+                            , isGroup
                             }
                         }
                     : fieldNodes

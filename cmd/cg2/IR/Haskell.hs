@@ -38,11 +38,13 @@ import qualified IR.Name   as Name
 
 -- | A Haskell module
 data Module = Module
-    { modName    :: [Name.UnQ]
+    { modName        :: [Name.UnQ]
     -- ^ The parts of the module path
-    , modDecls   :: [Decl]
+    , modLangPragmas :: [T.Text]
+    -- ^ The language extensions enabled in this module.
+    , modDecls       :: [Decl]
     -- ^ The declarations in the module.
-    , modImports :: [Import]
+    , modImports     :: [Import]
     -- ^ Modules to import.
     }
     deriving(Show, Read, Eq)
