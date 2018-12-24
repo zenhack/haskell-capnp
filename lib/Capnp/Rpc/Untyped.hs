@@ -41,11 +41,11 @@ module Capnp.Rpc.Untyped
 -- type types of objects it concerns.
 --
 -- As an example, consider how we handle embargos: The 'Conn' type's 'embargos'
--- table has values that are arbitrary 'STM' transactions. This allows the code
--- which triggers sending embargoes to have full control over what happens when
--- they return, while the code that routes incoming messages (in 'coordinator')
--- doesn't need to concern itself with the details of embargos -- it just needs
--- to route them to the right place.
+-- table has values that are just 'Fulfiller's. This allows the code which triggers
+-- sending embargoes to have full control over what happens when they return,
+-- while the code that routes incoming messages (in 'coordinator') doesn't need
+-- to concern itself with the details of embargos -- it just needs to route them
+-- to the right place.
 --
 -- This approach generally results in better separation of concerns.
 
@@ -162,7 +162,7 @@ data Conn = Conn
     , exports          :: M.Map IEId EntryE
     , imports          :: M.Map IEId EntryI
 
-    , embargos         :: M.Map EmbargoId (STM ())
+    , embargos         :: M.Map EmbargoId (Fulfiller ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and execute the STM we have registered.
@@ -1054,8 +1054,8 @@ handleDisembargoMsg
             Nothing ->
                 abortConn conn $ eFailed $
                     "No such embargo: " <> fromString (show $ embargoWord eid)
-            Just callback -> do
-                queueSTM conn callback
+            Just fulfiller -> do
+                queueSTM conn (fulfill fulfiller ())
                 M.delete eid embargos
                 freeEmbargo conn eid
 handleDisembargoMsg
@@ -1356,8 +1356,11 @@ resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
         ( Just LocalClient{}, AnswerDest{ conn, answer } ) -> do
             callBuffer <- newTQueue
-            disembargo conn (AnswerTgt answer) $
-                flushAndResolve callBuffer
+            disembargo conn (AnswerTgt answer) $ \case
+                Right () ->
+                    flushAndResolve callBuffer
+                Left e ->
+                    flushAndRaise callBuffer e
             resolve $ Embargo { callBuffer }
         ( _, LocalBuffer { callBuffer } ) ->
             flushAndResolve callBuffer
@@ -1378,12 +1381,19 @@ resolveClientClient tmpDest resolve (Client client) =
     flushAndResolve callBuffer = do
         flushTQueue callBuffer >>= traverse_ (`call` Client client)
         resolve $ Ready (Client client)
+    flushAndRaise callBuffer e =
+        flushTQueue callBuffer >>=
+            traverse_ (\Server.CallInfo{response} -> breakPromise response e)
 
 -- | Send a (senderLoopback) disembargo to the given message target, and
 -- register the transaction to run when the corresponding receiverLoopback
 -- message is received.
-disembargo :: Conn -> MsgTarget -> STM () -> STM ()
-disembargo conn@Conn{embargos} tgt callback = do
+--
+-- The callback may be handed a 'Left' with a disconnected exception if
+-- the connection is dropped before the disembargo is echoed.
+disembargo :: Conn -> MsgTarget -> (Either R.Exception () -> STM ()) -> STM ()
+disembargo conn@Conn{embargos} tgt onEcho = do
+    callback <- newCallback onEcho
     eid <- newEmbargo conn
     M.insert callback eid embargos
     sendPureMsg conn $ R.Message'disembargo R.Disembargo
