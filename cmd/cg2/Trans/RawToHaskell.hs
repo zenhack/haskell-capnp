@@ -125,25 +125,37 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
                 (ELName "struct")
             ]
         }
-    -- TODO: HasMessage, MessageDefault
-    {-
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Untyped"] "HasMessage")
+            [ TApp (TLName ctorName) [TVar "msg"] ]
+        , defs =
+            [ IdType $ TypeAlias
+                "InMessage"
+                [ TApp (TLName ctorName) [TVar "msg"] ]
+                (TVar "msg")
+            , IdValue $ dfValue "message" [PLCtor ctorName [PVar "struct"]]
+                (EApp (egName ["Untyped"] "message") [ELName "struct"])
+            ]
+        }
     , DcInstance
         { ctx = []
         , typ = TApp
             (tgName ["Untyped"] "MessageDefault")
-            [ TVar "msg"
-            , TApp
+            [ TApp
                 (TLName ctorName)
                 [TVar "msg"]
             ]
         , defs =
-            [ IdValue $ dfValue "messageDefault" [] $ ECompose
-                [ ELName ctorName
-                , egName ["Untyped"] "messageDefault"
+            [ IdValue $ dfValue "messageDefault" [PVar "msg"] $ EApp
+                (ELName ctorName)
+                [ EApp
+                    (egName ["Untyped"] "messageDefault")
+                    [ELName "msg"]
                 ]
             ]
         }
-    -}
     ]
 declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} =
     let listCtor = Name.mkSub ctorName "List_" in

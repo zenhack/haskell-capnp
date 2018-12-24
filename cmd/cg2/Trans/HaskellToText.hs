@@ -72,6 +72,17 @@ instance Format Decl where
 instance Format InstanceDef where
     format (IdData d)  = format d
     format (IdValue d) = format d
+    format (IdType d)  = format d
+
+instance Format TypeAlias where
+    format (TypeAlias name params value) = hcat
+        [ "type "
+        , format name
+        , " "
+        , mconcat $ intersperse " " (map format params)
+        , " = "
+        , format value
+        ]
 
 instance Format DataDecl where
     format Data{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat

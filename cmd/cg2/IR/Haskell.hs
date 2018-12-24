@@ -26,6 +26,7 @@ module IR.Haskell
     , Module(..)
     , Pattern(..)
     , Type(..)
+    , TypeAlias(..)
     , ValueDef(..)
     ) where
 
@@ -85,6 +86,10 @@ data DataDecl = Data
 data InstanceDef
     = IdValue ValueDef
     | IdData DataDecl
+    | IdType TypeAlias
+    deriving(Show, Read, Eq)
+
+data TypeAlias = TypeAlias Name.UnQ [Type] Type
     deriving(Show, Read, Eq)
 
 data ValueDef = DfValue
