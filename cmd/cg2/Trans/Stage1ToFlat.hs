@@ -81,10 +81,16 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                             concatMap (fieldToNodes kidsNS) fields
                         unionNode =
                             Flat.Node
-                                { name = Name.mkSub name "union_"
-                                -- XXX: what to put here? This shouldn't break anything,
-                                -- since we never look this up, but this is gross:
+                                { name = Name.mkSub name ""
+                                -- ^ Using the empty string gives us names like Node'
+                                -- (note the trailing quote). Think of an anonymous
+                                -- union as being a field with the empty string as its
+                                -- name.
+
                                 , nodeId = 0
+                                -- ^ XXX: what to put here? 0 shouldn't break anything,
+                                -- since we never look this up, but this is gross.
+
                                 , union_ = Flat.Union
                                     { variants
                                     , tagOffset
