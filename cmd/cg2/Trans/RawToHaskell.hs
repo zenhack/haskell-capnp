@@ -93,7 +93,40 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
 declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
     [ newtypeWrapper ctorName $ gName ["Message"] "Client" ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
-    [ newtypeWrapper ctorName $ gName ["Untyped"] "Struct" ]
+    [ newtypeWrapper ctorName $ gName ["Untyped"] "Struct"
+
+    -- There are several type classes that are defined for all structs:
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Classes"] "FromStruct")
+            [ TVar "msg"
+            , TApp
+                (TLName ctorName)
+                [TVar "msg"]
+            ]
+        , defs =
+            [ IdValue $ dfValue "fromStruct" [PVar "struct"] $ EApp
+                (EGName $ std_ "pure")
+                [EApp (ELName ctorName) [ELName "struct"]]
+            ]
+        }
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Classes"] "ToStruct")
+            [ TVar "msg"
+            , TApp
+                (TLName ctorName)
+                [TVar "msg"]
+            ]
+        , defs =
+            [ IdValue $ dfValue "toStruct" [PLCtor ctorName [PVar "struct"]]
+                (ELName "struct")
+            ]
+        }
+    -- TODO: HasMessage, MessageDefault
+    ]
 declToDecls _thisMod Raw.StructListElem{ctorName} =
     [ DcInstance
         { ctx = []
