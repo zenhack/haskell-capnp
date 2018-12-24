@@ -144,6 +144,11 @@ instance Format Pattern where
         , mconcat $ intersperse " " (format c : map format ps)
         , ")"
         ]
+    format (PGCtor c ps) = hcat
+        [ "("
+        , mconcat $ intersperse " " (format c : map format ps)
+        , ")"
+        ]
     format (PInt n) = fromString (show n)
 
 formatDerives :: [Name.UnQ] -> PP.Doc

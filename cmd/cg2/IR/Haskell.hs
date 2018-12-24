@@ -142,6 +142,7 @@ data Do
 data Pattern
     = PVar T.Text
     | PLCtor Name.LocalQ [Pattern]
+    | PGCtor Name.GlobalQ [Pattern]
     | PInt Integer
     deriving(Show, Read, Eq)
 

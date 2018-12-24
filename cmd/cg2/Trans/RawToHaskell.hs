@@ -202,7 +202,25 @@ declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
             (tgName ["Untyped"] "Cap")
             [TVar "msg"]
         ]
-    -- TODO: instances for FromPtr & ToPtr
+    , wrapperFromPtr ctorName
+    , instance_ [] ["Classes"] "ToPtr"
+        [ TVar "s"
+        , TApp (TLName ctorName) [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
+        ]
+        [ iValue "toPtr" [PVar "msg", PLCtor ctorName [PGCtor (std_ "Nothing") []]]
+            (EApp (EGName $ std_ "pure") [EGName $ std_ "Nothing"])
+        , iValue "toPtr" [PVar "msg", PLCtor ctorName [PGCtor (std_ "Just") [PVar "cap"]]]
+            (EApp
+                (EGName $ std_ "pure")
+                [ EApp
+                    (EGName $ std_ "Just")
+                    [ EApp
+                        (egName ["Untyped"] "PtrCap")
+                        [ELName "cap"]
+                    ]
+                ]
+            )
+        ]
     ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
     [ newtypeWrapper ctorName ["msg"] $ TApp
@@ -241,17 +259,7 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
     ]
 declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} =
     let listCtor = Name.mkSub ctorName "List_" in
-    [ instance_ [] ["Classes"] "FromPtr"
-        [ TVar "msg", TApp (TLName ctorName) [TVar "msg"] ]
-        [ iValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
-            (ELName ctorName)
-            [ EApp
-                (egName ["Classes"] "fromPtr")
-                [ ELName "msg"
-                , ELName "ptr"
-                ]
-            ]
-        ]
+    [ wrapperFromPtr ctorName
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
         , TApp
@@ -462,6 +470,19 @@ newtypeWrapper ctorName typeArgs wrappedType =
             ]
         , derives = []
         }
+
+wrapperFromPtr ctorName =
+    instance_ [] ["Classes"] "FromPtr"
+        [ TVar "msg", TApp (TLName ctorName) [TVar "msg"] ]
+        [ iValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+            (ELName ctorName)
+            [ EApp
+                (egName ["Classes"] "fromPtr")
+                [ ELName "msg"
+                , ELName "ptr"
+                ]
+            ]
+        ]
 
 nameToType :: Word64 -> Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId} =
