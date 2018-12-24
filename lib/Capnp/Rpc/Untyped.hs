@@ -139,13 +139,24 @@ instance Show IEId where
 
 -- | A connection to a remote vat
 data Conn = Conn
-    { stableName       :: StableName (MVar ())
+    { stableName :: StableName (MVar ())
     -- So we can use the connection as a map key. The MVar used to create
     -- this is just an arbitrary value; the only property we care about
     -- is that it is distinct for each 'Conn', so we use something with
     -- reference semantics to guarantee this.
 
-    , sendQ            :: TBQueue ConstMsg
+    , debugMode  :: !Bool
+    -- whether to include extra (possibly sensitive) info in error messages.
+
+    , liveState  :: TVar LiveState
+    }
+
+data LiveState
+    = Live Conn'
+    | Dead
+
+data Conn' = Conn'
+    { sendQ            :: TBQueue ConstMsg
     , recvQ            :: TBQueue ConstMsg
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
@@ -173,9 +184,6 @@ data Conn = Conn
     , bootstrap        :: Maybe Client
     -- The capability which should be served as this connection's bootstrap
     -- interface (if any).
-
-    , debugMode        :: !Bool
-    -- whether to include extra (possibly sensitive) info in error messages.
     }
 
 instance Eq Conn where
@@ -233,8 +241,8 @@ instance Default ConnConfig where
 
 -- | Queue an IO action to be run some time after this transaction commits.
 -- See Note [callbacks].
-queueIO :: Conn -> IO () -> STM ()
-queueIO Conn{pendingCallbacks} = writeTQueue pendingCallbacks
+queueIO :: Conn' -> IO () -> STM ()
+queueIO Conn'{pendingCallbacks} = writeTQueue pendingCallbacks
 
 -- | Queue another transaction to be run some time after this transaction
 -- commits, in a thread bound to the lifetime of the connection. If this is
@@ -242,12 +250,12 @@ queueIO Conn{pendingCallbacks} = writeTQueue pendingCallbacks
 -- transactions will be run separately, in the order they were queued.
 --
 -- See Note [callbacks]
-queueSTM :: Conn -> STM () -> STM ()
+queueSTM :: Conn' -> STM () -> STM ()
 queueSTM conn = queueIO conn . atomically
 
 -- | @'mapQueueSTM' conn fs val@ queues the list of transactions obtained
 -- by applying each element of @fs@ to @val@.
-mapQueueSTM :: Conn -> SnocList (a -> STM ()) -> a -> STM ()
+mapQueueSTM :: Conn' -> SnocList (a -> STM ()) -> a -> STM ()
 mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 
 -- Note [callbacks]
@@ -277,7 +285,7 @@ mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 -- But this means that the synchronization semantics are totally different from the
 -- case where the callback really does get run later!
 --
--- In addition, we sometimes want to register a finalizer, inside a transaction,
+-- In addition, we sometimes want to register a finalizer inside a transaction,
 -- but this can only be done in IO.
 --
 -- To solve these issues, the connection maintains a queue of all callback actions
@@ -287,27 +295,27 @@ mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 -- continually flushes the queue, running the actions in the queue.
 
 -- | Get a new question id. retries if we are out of available question ids.
-newQuestion :: Conn -> STM QAId
+newQuestion :: Conn' -> STM QAId
 newQuestion = fmap QAId . newId . questionIdPool
 
 -- | Return a question id to the pool of available ids.
-freeQuestion :: Conn -> QAId -> STM ()
+freeQuestion :: Conn' -> QAId -> STM ()
 freeQuestion conn = freeId (questionIdPool conn) . qaWord
 
 -- | Get a new export id. retries if we are out of available export ids.
-newExport :: Conn -> STM IEId
+newExport :: Conn' -> STM IEId
 newExport = fmap IEId . newId . exportIdPool
 
 -- | Return a export id to the pool of available ids.
-freeExport :: Conn -> IEId -> STM ()
+freeExport :: Conn' -> IEId -> STM ()
 freeExport conn = freeId (exportIdPool conn) . ieWord
 
 -- | Get a new embargo id. This shares the same pool as questions.
-newEmbargo :: Conn -> STM EmbargoId
+newEmbargo :: Conn' -> STM EmbargoId
 newEmbargo = fmap EmbargoId . newId . questionIdPool
 
 -- | Return an embargo id. to the available pool.
-freeEmbargo :: Conn -> EmbargoId -> STM ()
+freeEmbargo :: Conn' -> EmbargoId -> STM ()
 freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
@@ -344,30 +352,35 @@ handleConn
             embargos <- M.new
             pendingCallbacks <- newTQueue
 
-            pure Conn
-                { stableName
-                , supervisor = sup
-                , questionIdPool
-                , exportIdPool
-                , recvQ
-                , sendQ
-                , questions
-                , answers
-                , exports
-                , imports
-                , embargos
-                , pendingCallbacks
-                , bootstrap
-                , debugMode
-                }
-    runConn conn = do
+            let conn' = Conn'
+                    { supervisor = sup
+                    , questionIdPool
+                    , exportIdPool
+                    , recvQ
+                    , sendQ
+                    , questions
+                    , answers
+                    , exports
+                    , imports
+                    , embargos
+                    , pendingCallbacks
+                    , bootstrap
+                    }
+            liveState <- newTVar (Live conn')
+            let conn = Conn
+                    { stableName
+                    , debugMode
+                    , liveState
+                    }
+            pure (conn, conn')
+    runConn (conn, conn') = do
         result <- try $
             ( coordinator conn
-                `concurrently_` sendLoop transport conn
-                `concurrently_` recvLoop transport conn
-                `concurrently_` callbacksLoop conn
+                `concurrently_` sendLoop transport conn'
+                `concurrently_` recvLoop transport conn'
+                `concurrently_` callbacksLoop conn'
             ) `race_`
-                useBootstrap conn
+                useBootstrap conn conn'
         case result of
             Left (SentAbort e) -> do
                 -- We need to actually send it:
@@ -378,16 +391,16 @@ handleConn
                 throwIO e
             Right _ ->
                 pure ()
-    stopConn Conn{bootstrap=Nothing} = pure ()
-    stopConn Conn{bootstrap=Just (Client Nothing)} = pure ()
-    stopConn conn@Conn{bootstrap=Just (Client (Just client'))} =
+    stopConn (_, Conn'{bootstrap=Nothing}) = pure ()
+    stopConn (_, Conn'{bootstrap=Just (Client Nothing)}) = pure ()
+    stopConn (conn, Conn'{bootstrap=Just (Client (Just client'))}) =
         atomically $ dropConnExport conn client'
         -- TODO: clear out the rest of the connection state.
-    useBootstrap conn = case withBootstrap of
+    useBootstrap conn conn' = case withBootstrap of
         Nothing ->
             forever $ threadDelay maxBound
         Just f  ->
-            atomically (requestBootstrap conn) >>= f (supervisor conn)
+            atomically (requestBootstrap conn) >>= f (supervisor conn')
 
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
@@ -643,12 +656,13 @@ call info@Server.CallInfo { response } (Client (Just client')) = case client' of
 -- | Send a call to a remote capability.
 callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM ()
 callRemote
-        conn@Conn{ questions }
+        conn
         Server.CallInfo{ interfaceId, methodId, arguments, response }
         target = do
-    qid <- newQuestion conn
+    conn'@Conn'{questions} <- getLive conn
+    qid <- newQuestion conn'
     payload <- makeOutgoingPayload conn arguments
-    sendPureMsg conn $ R.Message'call def
+    sendPureMsg conn' $ R.Message'call def
         { R.questionId = qaWord qid
         , R.target = marshalMsgTarget target
         , R.params = payload
@@ -657,7 +671,7 @@ callRemote
         }
     M.insert
         NewQA
-            { onReturn = SnocList.singleton $ cbCallReturn conn response
+            { onReturn = SnocList.singleton $ cbCallReturn conn' response
             , onFinish = SnocList.empty
             }
         qid
@@ -665,8 +679,8 @@ callRemote
 
 -- | Callback to run when a return comes in that corresponds to a call
 -- we sent. Registered in callRemote.
-cbCallReturn :: Conn -> Fulfiller RawMPtr -> R.Return -> STM ()
-cbCallReturn conn@Conn{answers} response R.Return{ answerId, union' } = do
+cbCallReturn :: Conn' -> Fulfiller RawMPtr -> R.Return -> STM ()
+cbCallReturn conn@Conn'{answers} response R.Return{ answerId, union' } = do
     case union' of
         R.Return'exception exn ->
             breakPromise response exn
@@ -772,29 +786,30 @@ clientMethodHandler interfaceId methodId client =
         \arguments response -> atomically $ call Server.CallInfo{..} client
 
 -- | See Note [callbacks]
-callbacksLoop :: Conn -> IO ()
-callbacksLoop Conn{pendingCallbacks} = forever $
+callbacksLoop :: Conn' -> IO ()
+callbacksLoop Conn'{pendingCallbacks} = forever $
     atomically (flushTQueue pendingCallbacks)
     >>= sequence_
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
-sendLoop :: Transport -> Conn -> IO ()
-sendLoop transport Conn{sendQ} =
+sendLoop :: Transport -> Conn' -> IO ()
+sendLoop transport Conn'{sendQ} =
     forever $ atomically (readTBQueue sendQ) >>= sendMsg transport
 
 -- | 'recvLoop' shunts messages from the transport into the receive queue.
-recvLoop :: Transport -> Conn -> IO ()
-recvLoop transport Conn{recvQ} =
+recvLoop :: Transport -> Conn' -> IO ()
+recvLoop transport Conn'{recvQ} =
     forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
 
 -- | The coordinator processes incoming messages.
 coordinator :: Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator conn@Conn{recvQ,debugMode} = forever $ atomically $ do
+coordinator conn@Conn{debugMode} = forever $ atomically $ do
+    conn'@Conn'{recvQ} <- getLive conn
     msg <- (readTBQueue recvQ >>= parseWithCaps conn)
         `catchSTM`
-        (abortConn conn . wrapException debugMode)
+        (abortConn conn' . wrapException debugMode)
     case msg of
         R.Message'abort exn ->
             handleAbortMsg conn exn
@@ -813,7 +828,7 @@ coordinator conn@Conn{recvQ,debugMode} = forever $ atomically $ do
         R.Message'disembargo disembargo ->
             handleDisembargoMsg conn disembargo
         _ ->
-            sendPureMsg conn $ R.Message'unimplemented msg
+            sendPureMsg conn' $ R.Message'unimplemented msg
 
 -- | 'parseWithCaps' parses a message, making sure to interpret its capability
 -- table. The latter bit is the difference between this and just calling
@@ -841,23 +856,23 @@ handleAbortMsg _ exn =
     throwSTM (ReceivedAbort exn)
 
 handleUnimplementedMsg :: Conn -> R.Message -> STM ()
-handleUnimplementedMsg conn = \case
+handleUnimplementedMsg conn msg = getLive conn >>= \conn' -> case msg of
     R.Message'unimplemented _ ->
         -- If the client itself doesn't handle unimplemented messages, that's
         -- weird, but ultimately their problem.
         pure ()
     R.Message'abort _ ->
-        abortConn conn $ eFailed $
+        abortConn conn' $ eFailed $
             "Your vat sent an 'unimplemented' message for an abort message " <>
             "that its remote peer never sent. This is likely a bug in your " <>
             "capnproto library."
     _ ->
-        abortConn conn $
+        abortConn conn' $
             eFailed "Received unimplemented response for required message."
 
 handleBootstrapMsg :: Conn -> R.Bootstrap -> STM ()
-handleBootstrapMsg conn R.Bootstrap{ questionId } = do
-    ret <- case bootstrap conn of
+handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> do
+    ret <- case bootstrap conn' of
         Nothing ->
             pure $ R.Return
                 { R.answerId = questionId
@@ -881,22 +896,22 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = do
                         }
                 }
     M.focus
-        (Focus.alterM $ insertBootstrap ret)
+        (Focus.alterM $ insertBootstrap conn' ret)
         (QAId questionId)
-        (answers conn)
-    sendPureMsg conn $ R.Message'return ret
+        (answers conn')
+    sendPureMsg conn' $ R.Message'return ret
   where
-    insertBootstrap ret Nothing =
+    insertBootstrap _ ret Nothing =
         pure $ Just HaveReturn
             { returnMsg = ret
             , onFinish = SnocList.empty
             }
-    insertBootstrap _ (Just _) =
-        abortConn conn $ eFailed "Duplicate question ID"
+    insertBootstrap conn' _ (Just _) =
+        abortConn conn' $ eFailed "Duplicate question ID"
 
 handleCallMsg :: Conn -> R.Call -> STM ()
 handleCallMsg
-        conn@Conn{exports, answers}
+        conn
         R.Call
             { questionId
             , target
@@ -904,11 +919,11 @@ handleCallMsg
             , methodId
             , params=R.Payload{content}
             }
-        = do
+        = getLive conn >>= \conn'@Conn'{exports, answers} -> do
     -- First, add an entry in our answers table:
     insertNewAbort
         "answer"
-        conn
+        conn'
         (QAId questionId)
         NewQA
             { onReturn = SnocList.empty
@@ -925,7 +940,7 @@ handleCallMsg
     -- send the return message:
     fulfiller <- newCallback $ \case
         Left e ->
-            returnAnswer conn def
+            returnAnswer conn' def
                 { R.answerId = questionId
                 , R.releaseParamCaps = False
                 , R.union' = R.Return'exception e
@@ -933,7 +948,7 @@ handleCallMsg
         Right v -> do
             content <- evalLimitT defaultLimit (decerialize v)
             capTable <- genSendableCapTable conn content
-            returnAnswer conn def
+            returnAnswer conn' def
                 { R.answerId = questionId
                 , R.releaseParamCaps = False
                 , R.union'   = R.Return'results def
@@ -951,26 +966,26 @@ handleCallMsg
     -- Finally, figure out where to send it:
     case target of
         R.MessageTarget'importedCap exportId ->
-            lookupAbort "export" conn exports (IEId exportId) $
+            lookupAbort "export" conn' exports (IEId exportId) $
                 \EntryE{client} -> call callInfo $ Client $ Just client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
             let onReturn ret@R.Return{union'} =
                     case union' of
                         R.Return'exception _ ->
-                            returnAnswer conn ret { R.answerId = questionId }
+                            returnAnswer conn' ret { R.answerId = questionId }
                         R.Return'canceled ->
-                            returnAnswer conn ret { R.answerId = questionId }
+                            returnAnswer conn' ret { R.answerId = questionId }
                         R.Return'results R.Payload{content} ->
-                            transformClient transform content conn >>= call callInfo
+                            transformClient transform content conn' >>= call callInfo
                         R.Return'resultsSentElsewhere ->
                             -- our implementation should never actually do this, but
                             -- this way we don't have to change this if/when we
                             -- support the feature:
-                            abortConn conn $ eFailed $
+                            abortConn conn' $ eFailed $
                                 "Tried to call a method on a promised answer that " <>
                                 "returned resultsSentElsewhere"
                         R.Return'takeFromOtherQuestion otherQid ->
-                            subscribeReturn "answer" conn answers (QAId otherQid) onReturn
+                            subscribeReturn "answer" conn' answers (QAId otherQid) onReturn
                         R.Return'acceptFromThirdParty _ ->
                             -- LEVEL 3
                             error "BUG: our implementation unexpectedly used a level 3 feature"
@@ -979,12 +994,12 @@ handleCallMsg
                                 "BUG: our implemented unexpectedly returned unknown " ++
                                 "result variant #" ++ show tag
             in
-            subscribeReturn "answer" conn answers (QAId targetQid) onReturn
+            subscribeReturn "answer" conn' answers (QAId targetQid) onReturn
         R.MessageTarget'unknown' ordinal ->
-            abortConn conn $ eUnimplemented $
+            abortConn conn' $ eUnimplemented $
                 "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
 
-transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn -> STM Client
+transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
     case unmarshalOps (V.toList transform) >>= flip followPtrs ptr of
         Left e ->
@@ -1010,107 +1025,109 @@ followPtrs (_:_) (Just _) =
     Left (eFailed "Tried to access pointer field of non-struct.")
 
 handleReturnMsg :: Conn -> R.Return -> STM ()
-handleReturnMsg conn@Conn{questions} =
+handleReturnMsg conn ret = getLive conn >>= \conn'@Conn'{questions} ->
     -- TODO: handle releaseParamCaps
-    updateQAReturn conn questions "question"
+    updateQAReturn conn' questions "question" ret
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
-handleFinishMsg conn@Conn{answers} =
+handleFinishMsg conn finish = getLive conn >>= \conn'@Conn'{answers} ->
     -- TODO: handle releaseResultCaps
-    updateQAFinish conn answers "answer"
+    updateQAFinish conn' answers "answer" finish
 
 handleReleaseMsg :: Conn -> R.Release -> STM ()
 handleReleaseMsg
-        conn@Conn{exports}
+        conn
         R.Release
             { id=(IEId -> eid)
             , referenceCount=refCountDiff
             } =
-    lookupAbort "export" conn exports eid $
-        \EntryE{client, refCount=oldRefCount} ->
-            case compare oldRefCount refCountDiff of
-                LT ->
-                    abortConn conn $ eFailed $
-                        "Received release for export with referenceCount " <>
-                        "greater than our recorded total ref count."
-                EQ ->
-                    dropConnExport conn client
-                GT ->
-                    M.insert
-                        EntryE
-                            { client
-                            , refCount = oldRefCount - refCountDiff
-                            }
-                        eid
-                        exports
+    getLive conn >>= \conn'@Conn'{exports} ->
+        lookupAbort "export" conn' exports eid $
+            \EntryE{client, refCount=oldRefCount} ->
+                case compare oldRefCount refCountDiff of
+                    LT ->
+                        abortConn conn' $ eFailed $
+                            "Received release for export with referenceCount " <>
+                            "greater than our recorded total ref count."
+                    EQ ->
+                        dropConnExport conn client
+                    GT ->
+                        M.insert
+                            EntryE
+                                { client
+                                , refCount = oldRefCount - refCountDiff
+                                }
+                            eid
+                            exports
 
 handleDisembargoMsg :: Conn -> R.Disembargo -> STM ()
-handleDisembargoMsg
-        conn@Conn{embargos}
-        R.Disembargo { context=R.Disembargo'context'receiverLoopback (EmbargoId -> eid) }
-    = do
-        result <- M.lookup eid embargos
-        case result of
-            Nothing ->
-                abortConn conn $ eFailed $
-                    "No such embargo: " <> fromString (show $ embargoWord eid)
-            Just fulfiller -> do
-                queueSTM conn (fulfill fulfiller ())
-                M.delete eid embargos
-                freeEmbargo conn eid
-handleDisembargoMsg
-        conn@Conn{exports, answers}
-        R.Disembargo{ target, context=R.Disembargo'context'senderLoopback embargoId }
-    =
-    case target of
-        R.MessageTarget'importedCap exportId ->
-            lookupAbort "export" conn exports (IEId exportId) $ \EntryE{ client } ->
-                disembargoPromise client
-        R.MessageTarget'promisedAnswer R.PromisedAnswer{ questionId, transform } ->
-            lookupAbort "answer" conn answers (QAId questionId) $ \case
-                HaveReturn { returnMsg=R.Return{union'=R.Return'results R.Payload{content} } } ->
-                    transformClient transform content conn >>= \case
-                        Client (Just client') -> disembargoClient client'
-                        Client Nothing -> abortDisembargo "targets a null capability"
-                _ ->
-                    abortDisembargo $
-                        "does not target an answer which has resolved to a value hosted by"
-                        <> " the sender."
-        R.MessageTarget'unknown' ordinal ->
-            abortConn conn $ eUnimplemented $
-                "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
+handleDisembargoMsg conn d = getLive conn >>= go d
   where
-    disembargoPromise PromiseClient{ pState } = readTVar pState >>= \case
-        Ready (Client (Just client)) ->
-            disembargoClient client
-        Ready (Client Nothing) ->
-            abortDisembargo "targets a promise which resolved to null."
-        _ ->
-            abortDisembargo "targets a promise which has not resolved."
-    disembargoPromise _ =
-        abortDisembargo "targets something that is not a promise."
+    go
+        R.Disembargo { context=R.Disembargo'context'receiverLoopback (EmbargoId -> eid) }
+        conn'@Conn'{embargos}
+        = do
+            result <- M.lookup eid embargos
+            case result of
+                Nothing ->
+                    abortConn conn' $ eFailed $
+                        "No such embargo: " <> fromString (show $ embargoWord eid)
+                Just fulfiller -> do
+                    queueSTM conn' (fulfill fulfiller ())
+                    M.delete eid embargos
+                    freeEmbargo conn' eid
+    go
+        R.Disembargo{ target, context=R.Disembargo'context'senderLoopback embargoId }
+        conn'@Conn'{exports, answers}
+        = case target of
+            R.MessageTarget'importedCap exportId ->
+                lookupAbort "export" conn' exports (IEId exportId) $ \EntryE{ client } ->
+                    disembargoPromise client
+            R.MessageTarget'promisedAnswer R.PromisedAnswer{ questionId, transform } ->
+                lookupAbort "answer" conn' answers (QAId questionId) $ \case
+                    HaveReturn { returnMsg=R.Return{union'=R.Return'results R.Payload{content} } } ->
+                        transformClient transform content conn' >>= \case
+                            Client (Just client') -> disembargoClient client'
+                            Client Nothing -> abortDisembargo "targets a null capability"
+                    _ ->
+                        abortDisembargo $
+                            "does not target an answer which has resolved to a value hosted by"
+                            <> " the sender."
+            R.MessageTarget'unknown' ordinal ->
+                abortConn conn' $ eUnimplemented $
+                    "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
+      where
+        disembargoPromise PromiseClient{ pState } = readTVar pState >>= \case
+            Ready (Client (Just client)) ->
+                disembargoClient client
+            Ready (Client Nothing) ->
+                abortDisembargo "targets a promise which resolved to null."
+            _ ->
+                abortDisembargo "targets a promise which has not resolved."
+        disembargoPromise _ =
+            abortDisembargo "targets something that is not a promise."
 
-    disembargoClient (ImportClient ImportRef {conn=targetConn, importId})
-        | conn == targetConn =
-            sendPureMsg conn $ R.Message'disembargo R.Disembargo
-                { context = R.Disembargo'context'receiverLoopback embargoId
-                , target = R.MessageTarget'importedCap (ieWord importId)
-                }
-    disembargoClient _ =
-            abortDisembargo $
-                "targets a promise which has not resolved to a capability"
-                <> " hosted by the sender."
+        disembargoClient (ImportClient ImportRef {conn=targetConn, importId})
+            | conn == targetConn =
+                sendPureMsg conn' $ R.Message'disembargo R.Disembargo
+                    { context = R.Disembargo'context'receiverLoopback embargoId
+                    , target = R.MessageTarget'importedCap (ieWord importId)
+                    }
+        disembargoClient _ =
+                abortDisembargo $
+                    "targets a promise which has not resolved to a capability"
+                    <> " hosted by the sender."
 
-    abortDisembargo info =
-        abortConn conn $ eFailed $ mconcat
-            [ "Disembargo #"
-            , fromString (show embargoId)
-            , " with context = senderLoopback "
-            , info
-            ]
+        abortDisembargo info =
+            abortConn conn' $ eFailed $ mconcat
+                [ "Disembargo #"
+                , fromString (show embargoId)
+                , " with context = senderLoopback "
+                , info
+                ]
 -- LEVEL 3+
-handleDisembargoMsg conn d =
-    sendPureMsg conn $ R.Message'unimplemented $ R.Message'disembargo d
+    go d conn' =
+        sendPureMsg conn' $ R.Message'unimplemented $ R.Message'disembargo d
 
 
 
@@ -1123,7 +1140,7 @@ fixCapTable capDescs conn msg = do
 
 lookupAbort
     :: (Eq k, Hashable k, Show k)
-    => Text -> Conn -> M.Map k v -> k -> (v -> STM a) -> STM a
+    => Text -> Conn' -> M.Map k v -> k -> (v -> STM a) -> STM a
 lookupAbort keyTypeName conn m key f = do
     result <- M.lookup key m
     case result of
@@ -1140,7 +1157,7 @@ lookupAbort keyTypeName conn m key f = do
 -- | @'insertNewAbort' keyTypeName conn key value stmMap@ inserts a key into a
 -- map, aborting the connection if it is already present. @keyTypeName@ will be
 -- used in the error message sent to the remote vat.
-insertNewAbort :: (Eq k, Hashable k) => Text -> Conn -> k -> v -> M.Map k v -> STM ()
+insertNewAbort :: (Eq k, Hashable k) => Text -> Conn' -> k -> v -> M.Map k v -> STM ()
 insertNewAbort keyTypeName conn key value =
     M.focus
         (Focus.alterM $ \case
@@ -1185,14 +1202,14 @@ makeOutgoingPayload conn rawContent = do
     content <- evalLimitT defaultLimit (decerialize rawContent)
     pure R.Payload { content, capTable }
 
-sendPureMsg :: Conn -> R.Message -> STM ()
-sendPureMsg Conn{sendQ} msg =
+sendPureMsg :: Conn' -> R.Message -> STM ()
+sendPureMsg Conn'{sendQ} msg =
     createPure maxBound (valueToMsg msg) >>= writeTBQueue sendQ
 
 -- | Send a finish message, updating connection state and triggering
 -- callbacks as necessary.
-finishQuestion :: Conn -> R.Finish -> STM ()
-finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
+finishQuestion :: Conn' -> R.Finish -> STM ()
+finishQuestion conn@Conn'{questions} finish@R.Finish{questionId} = do
     -- arrange for the question ID to be returned to the pool once
     -- the return has also been received:
     subscribeReturn "question" conn questions (QAId questionId) $ \_ ->
@@ -1204,14 +1221,14 @@ finishQuestion conn@Conn{questions} finish@R.Finish{questionId} = do
 -- answers table, and queue any registered callbacks. Calls 'error'
 -- if the answerId is not in the table, or if we've already sent a
 -- return for this answer.
-returnAnswer :: Conn -> R.Return -> STM ()
-returnAnswer conn@Conn{answers} ret = do
+returnAnswer :: Conn' -> R.Return -> STM ()
+returnAnswer conn@Conn'{answers} ret = do
     sendPureMsg conn $ R.Message'return ret
     updateQAReturn conn answers "answer" ret
 
 -- TODO: updateQAReturn/Finish have a lot in common; can we refactor?
 
-updateQAReturn :: Conn -> M.Map QAId EntryQA -> Text -> R.Return -> STM ()
+updateQAReturn :: Conn' -> M.Map QAId EntryQA -> Text -> R.Return -> STM ()
 updateQAReturn conn table tableName ret@R.Return{answerId} =
     lookupAbort tableName conn table (QAId answerId) $ \case
         NewQA{onFinish, onReturn} -> do
@@ -1231,7 +1248,7 @@ updateQAReturn conn table tableName ret@R.Return{answerId} =
                 "Duplicate return message for " <> tableName <> " #"
                 <> fromString (show answerId)
 
-updateQAFinish :: Conn -> M.Map QAId EntryQA -> Text -> R.Finish -> STM ()
+updateQAFinish :: Conn' -> M.Map QAId EntryQA -> Text -> R.Finish -> STM ()
 updateQAFinish conn table tableName finish@R.Finish{questionId} =
     lookupAbort tableName conn table (QAId questionId) $ \case
         NewQA{onFinish, onReturn} -> do
@@ -1259,7 +1276,7 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
 -- run *after* the others (see Note [callbacks]). Note that this is an
 -- important property, as it is necessary to preserve E-order if the
 -- callbacks are successive method calls on the returned object.
-subscribeReturn :: Text -> Conn -> M.Map QAId EntryQA -> QAId -> (R.Return -> STM ()) -> STM ()
+subscribeReturn :: Text -> Conn' -> M.Map QAId EntryQA -> QAId -> (R.Return -> STM ()) -> STM ()
 subscribeReturn tableName conn table qaId onRet =
     lookupAbort tableName conn table qaId $ \qa -> do
         new <- go qa
@@ -1284,33 +1301,49 @@ subscribeReturn tableName conn table qaId onRet =
 
 -- | Abort the connection, sending an abort message. This is only safe to call
 -- from within either the thread running the coordinator or the callback loop.
-abortConn :: Conn -> R.Exception -> STM a
+abortConn :: Conn' -> R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
+
+-- | Gets the live connection state, or throws disconnected if it is not live.
+getLive :: Conn -> STM Conn'
+getLive Conn{liveState} = readTVar liveState >>= \case
+    Live conn' -> pure conn'
+    Dead -> throwSTM eDisconnected
+
+-- | Performs an action with the live connection state. Does nothing if the
+-- connection is dead.
+whenLive :: Conn -> (Conn' -> STM ()) -> STM ()
+whenLive Conn{liveState} f = readTVar liveState >>= \case
+    Live conn' -> f conn'
+    Dead -> pure ()
 
 -- | Request the remote vat's bootstrap interface.
 requestBootstrap :: Conn -> STM Client
-requestBootstrap conn@Conn{questions} = do
-    qid <- newQuestion conn
-    let tmpDest = AnswerDest
-            { conn
-            , answer = PromisedAnswer
-                { answerId = qid
-                , transform = SnocList.empty
+requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
+    Dead ->
+        pure nullClient
+    Live conn'@Conn'{questions} -> do
+        qid <- newQuestion conn'
+        let tmpDest = AnswerDest
+                { conn
+                , answer = PromisedAnswer
+                    { answerId = qid
+                    , transform = SnocList.empty
+                    }
                 }
-            }
-    pState <- newTVar Pending { tmpDest }
-    sendPureMsg conn $
-        R.Message'bootstrap def { R.questionId = qaWord qid }
-    M.insert
-        NewQA
-            { onReturn = SnocList.singleton $
-                resolveClientReturn tmpDest (writeTVar pState) conn []
-            , onFinish = SnocList.empty
-            }
-        qid
-        questions
-    exportMap <- ExportMap <$> M.new
-    pure $ Client $ Just PromiseClient { pState, exportMap }
+        pState <- newTVar Pending { tmpDest }
+        sendPureMsg conn' $
+            R.Message'bootstrap def { R.questionId = qaWord qid }
+        M.insert
+            NewQA
+                { onReturn = SnocList.singleton $
+                    resolveClientReturn tmpDest (writeTVar pState) conn' []
+                , onFinish = SnocList.empty
+                }
+            qid
+            questions
+        exportMap <- ExportMap <$> M.new
+        pure $ Client $ Just PromiseClient { pState, exportMap }
 
 -- Note [resolveClient]
 -- ====================
@@ -1354,14 +1387,18 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
 resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
-        ( Just LocalClient{}, AnswerDest{ conn, answer } ) -> do
-            callBuffer <- newTQueue
-            disembargo conn (AnswerTgt answer) $ \case
-                Right () ->
-                    flushAndResolve callBuffer
-                Left e ->
-                    flushAndRaise callBuffer e
-            resolve $ Embargo { callBuffer }
+        ( Just LocalClient{}, AnswerDest{ conn=Conn{liveState}, answer } ) -> do
+            readTVar liveState >>= \case
+                Live conn' -> do
+                    callBuffer <- newTQueue
+                    disembargo conn' (AnswerTgt answer) $ \case
+                        Right () ->
+                            flushAndResolve callBuffer
+                        Left e ->
+                            flushAndRaise callBuffer e
+                    resolve $ Embargo { callBuffer }
+                Dead ->
+                    resolveClientExn tmpDest resolve eDisconnected
         ( _, LocalBuffer { callBuffer } ) ->
             flushAndResolve callBuffer
         ( Just PromiseClient{}, _ ) ->
@@ -1391,8 +1428,8 @@ resolveClientClient tmpDest resolve (Client client) =
 --
 -- The callback may be handed a 'Left' with a disconnected exception if
 -- the connection is dropped before the disembargo is echoed.
-disembargo :: Conn -> MsgTarget -> (Either R.Exception () -> STM ()) -> STM ()
-disembargo conn@Conn{embargos} tgt onEcho = do
+disembargo :: Conn' -> MsgTarget -> (Either R.Exception () -> STM ()) -> STM ()
+disembargo conn@Conn'{embargos} tgt onEcho = do
     callback <- newCallback onEcho
     eid <- newEmbargo conn
     M.insert callback eid embargos
@@ -1406,17 +1443,18 @@ disembargo conn@Conn{embargos} tgt onEcho = do
 releaseTmpDest :: TmpDest -> STM ()
 releaseTmpDest LocalBuffer{} = pure ()
 releaseTmpDest AnswerDest { conn, answer=PromisedAnswer{ answerId } } =
-    finishQuestion conn def
-        { R.questionId = qaWord answerId
-        , R.releaseResultCaps = False
-        }
+    whenLive conn $ \conn' ->
+        finishQuestion conn' def
+            { R.questionId = qaWord answerId
+            , R.releaseResultCaps = False
+            }
 releaseTmpDest (ImportDest _) = pure ()
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
 -- The [Word16] is a list of pointer indexes to follow from the result.
-resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> Conn -> [Word16] -> R.Return -> STM ()
-resolveClientReturn tmpDest resolve conn@Conn{answers} transform R.Return { union' } = case union' of
+resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> Conn' -> [Word16] -> R.Return -> STM ()
+resolveClientReturn tmpDest resolve conn@Conn'{answers} transform R.Return { union' } = case union' of
     -- TODO(cleanup) there is a lot of redundency betwen this and cbCallReturn; can
     -- we refactor?
     R.Return'exception exn ->
@@ -1456,7 +1494,7 @@ resolveClientReturn tmpDest resolve conn@Conn{answers} transform R.Return { unio
 -- If this is the first time this client has been exported on this connection,
 -- bump the refcount.
 getConnExport :: Conn -> Client' -> STM IEId
-getConnExport conn@Conn{exports} client = do
+getConnExport conn client = getLive conn >>= \conn'@Conn'{exports} -> do
     let ExportMap m = clientExportMap client
     val <- M.lookup conn m
     case val of
@@ -1465,7 +1503,7 @@ getConnExport conn@Conn{exports} client = do
             pure eid
 
         Nothing -> do
-            eid <- newExport conn
+            eid <- newExport conn'
             addBumpExport eid client exports
             M.insert eid conn m
             pure eid
@@ -1474,14 +1512,15 @@ getConnExport conn@Conn{exports} client = do
 -- from the export id, removing the connection from the client's ExportMap,
 -- freeing the export id, and dropping the client's refcount.
 dropConnExport :: Conn -> Client' -> STM ()
-dropConnExport conn@Conn{exports} client' = do
+dropConnExport conn client' = do
     let ExportMap eMap = clientExportMap client'
     val <- M.lookup conn eMap
     case val of
         Just eid -> do
             M.delete conn eMap
-            M.delete eid exports
-            freeExport conn eid
+            whenLive conn $ \conn'@Conn'{exports} -> do
+                M.delete eid exports
+                freeExport conn' eid
         Nothing ->
             error "BUG: tried to drop an export that doesn't exist."
 
@@ -1526,56 +1565,58 @@ addBumpExport exportId client =
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
 acceptCap :: Conn -> R.CapDescriptor -> STM Client
-acceptCap _ R.CapDescriptor'none = pure (Client Nothing)
-acceptCap conn@Conn{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
-    entry <- M.lookup importId imports
-    finalizerKey <- FinalizerKey.newSTM
-    case entry of
-        Just EntryI{ localRc, remoteRc, proxies } -> do
-            Rc.incr localRc
-            M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies } importId imports
-            queueIO conn $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
-            pure $ Client $ Just $ ImportClient ImportRef
-                { conn
-                , importId
-                , proxies
-                , finalizerKey
-                }
+acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
+  where
+    go _ R.CapDescriptor'none = pure (Client Nothing)
+    go conn'@Conn'{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
+        entry <- M.lookup importId imports
+        finalizerKey <- FinalizerKey.newSTM
+        case entry of
+            Just EntryI{ localRc, remoteRc, proxies } -> do
+                Rc.incr localRc
+                M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies } importId imports
+                queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
+                pure $ Client $ Just $ ImportClient ImportRef
+                    { conn
+                    , importId
+                    , proxies
+                    , finalizerKey
+                    }
 
-        Nothing -> do
-            localRc <- Rc.new () $
-                lookupAbort "imports" conn imports importId $ \EntryI { remoteRc } -> do
-                    sendPureMsg conn $ R.Message'release
-                        R.Release
-                            { id = ieWord importId
-                            , referenceCount = remoteRc
-                            }
-                    M.delete importId imports
-            proxies <- ExportMap <$> M.new
-            M.insert EntryI { localRc, remoteRc = 1, proxies } importId imports
-            pure $ Client $ Just $ ImportClient ImportRef
-                { conn
-                , importId
-                , proxies
-                , finalizerKey
-                }
-acceptCap conn@Conn{exports} (R.CapDescriptor'receiverHosted exportId) =
-    lookupAbort "export" conn exports (IEId exportId) $
-        \EntryE{client} ->
-            pure $ Client $ Just client
-acceptCap conn (R.CapDescriptor'receiverAnswer pa) =
-    case unmarshalPromisedAnswer pa of
-        Left e ->
-            abortConn conn e
-        Right pa ->
-            newLocalAnswerClient conn pa
-acceptCap _ d = error $ "TODO: " ++ show d
+            Nothing -> do
+                localRc <- Rc.new () $
+                    lookupAbort "imports" conn' imports importId $ \EntryI { remoteRc } -> do
+                        sendPureMsg conn' $ R.Message'release
+                            R.Release
+                                { id = ieWord importId
+                                , referenceCount = remoteRc
+                                }
+                        M.delete importId imports
+                proxies <- ExportMap <$> M.new
+                M.insert EntryI { localRc, remoteRc = 1, proxies } importId imports
+                pure $ Client $ Just $ ImportClient ImportRef
+                    { conn
+                    , importId
+                    , proxies
+                    , finalizerKey
+                    }
+    go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
+        lookupAbort "export" conn' exports (IEId exportId) $
+            \EntryE{client} ->
+                pure $ Client $ Just client
+    go conn' (R.CapDescriptor'receiverAnswer pa) =
+        case unmarshalPromisedAnswer pa of
+            Left e ->
+                abortConn conn' e
+            Right pa ->
+                newLocalAnswerClient conn' pa
+    go _ d = error $ "TODO: " ++ show d
 
 -- | Create a new client targeting an object in our answers table.
 -- Important: in this case the 'PromisedAnswer' refers to a question we
 -- have recevied, not sent.
-newLocalAnswerClient :: Conn -> PromisedAnswer -> STM Client
-newLocalAnswerClient conn@Conn{answers} PromisedAnswer{ answerId, transform } = do
+newLocalAnswerClient :: Conn' -> PromisedAnswer -> STM Client
+newLocalAnswerClient conn@Conn'{answers} PromisedAnswer{ answerId, transform } = do
     callBuffer <- newTQueue
     let tmpDest = LocalBuffer { callBuffer }
     pState <- newTVar Pending { tmpDest }
