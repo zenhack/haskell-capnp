@@ -67,7 +67,9 @@ fileToModule Raw.File{fileName, fileId, decls} =
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
-    let unknownCtor = Name.mkSub typeCtor "unknown'" in
+    let listCtor = Name.mkSub typeCtor "List_"
+        unknownCtor = Name.mkSub typeCtor "unknown'"
+    in
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
@@ -89,6 +91,114 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
             ]
         }
     , mkIsWordInstance typeCtor dataCtors unknownCtor
+    -- An Enum instance that just wraps the IsWord instance:
+    , DcInstance
+        { ctx = []
+        , typ = TApp (TGName $ std_ "Enum") [TLName typeCtor]
+        , defs =
+            [ IdValue $ dfValue "fromEnum" [PVar "x"] $
+                EApp
+                    (EGName $ std_ "fromIntegral")
+                    [ EApp
+                        (egName ["Classes"] "toWord")
+                        [ELName "x"]
+                    ]
+            , IdValue $ dfValue "toEnum" [PVar "x"] $
+                EApp
+                    (egName ["Classes"] "fromWord")
+                    [ EApp
+                        (EGName $ std_ "fromIntegral")
+                        [ELName "x"]
+                    ]
+            ]
+        }
+    -- lists:
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Basics"] "ListElem")
+            [ TVar "msg"
+            , TLName typeCtor
+            ]
+        , defs =
+            [ IdData Data
+                { dataName = "List"
+                , typeArgs =
+                    [ TVar "msg"
+                    , TLName typeCtor
+                    ]
+                , dataVariants =
+                    [ DataVariant
+                        { dvCtorName = Name.localToUnQ listCtor
+                        , dvArgs = APos
+                            [ TApp
+                                (tgName ["Untyped"] "ListOf")
+                                [ TVar "msg"
+                                , TGName $ std_ "Word16"
+                                ]
+                            ]
+                        }
+                    ]
+                , derives = []
+                , dataNewtype = True
+                }
+            , IdValue $ dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EFApp
+                (egName ["Classes"] "fromWord")
+                [ EFApp
+                    (EGName $ std_ "fromIntegral")
+                    [ EApp
+                        (egName ["Untyped"] "index")
+                        [ ELName "i"
+                        , ELName "l"
+                        ]
+                    ]
+                ]
+            , IdValue $ dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+                (ELName listCtor)
+                [ EApp
+                    (egName ["Classes"] "fromPtr")
+                    [ ELName "msg"
+                    , ELName "ptr"
+                    ]
+                ]
+            , IdValue $ dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
+                (egName ["Untyped"] "List16")
+                [ELName "l"]
+            , IdValue $ dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
+                (egName ["Untyped"] "length")
+                [ELName "l"]
+            ]
+        }
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Classes"] "MutListElem")
+            [ TVar "s"
+            , TLName typeCtor
+            ]
+        , defs =
+            [ IdValue $ dfValue
+                "setIndex"
+                [PVar "elt", PVar "i", PLCtor listCtor [PVar "l"]] $
+                EApp
+                    (egName ["Untyped"] "setIndex")
+                    [ EApp
+                        (EGName $ std_ "fromIntegral")
+                        [ EApp (egName ["Classes"] "toWord") [ELName "elt"]
+                        ]
+                    , ELName "i"
+                    , ELName "l"
+                    ]
+            , IdValue $ dfValue "newList" [PVar "msg", PVar "size"] $ EFApp
+                (ELName listCtor)
+                [ EApp
+                    (egName ["Untyped"] "allocList16")
+                    [ ELName "msg"
+                    , ELName "size"
+                    ]
+                ]
+            ]
+        }
     ]
   where
     enumerantToVariant variantName =
