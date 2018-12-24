@@ -14,6 +14,7 @@ module IR.Flat
     , Node(..)
     , Node'(..)
     , Field(..)
+    , Variant(..)
     ) where
 
 -- Note to self: evolve this to generally making the tree the "right shape",
@@ -47,11 +48,21 @@ data Node'
         , dataWordCount :: !Word16
         , pointerCount  :: !Word16
         }
+    | Union
+        { tagOffset :: !Word32
+        , variants  :: [Variant]
+        }
     | Interface
     deriving(Show, Read, Eq)
 
 data Field = Field
     { fieldName    :: Name.CapnpQ
     , fieldLocType :: Common.FieldLocType Node
+    }
+    deriving(Show, Read, Eq)
+
+data Variant = Variant
+    { tagValue :: !Word16
+    , field    :: Field
     }
     deriving(Show, Read, Eq)

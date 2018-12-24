@@ -1,13 +1,12 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 -- Translate from the 'Stage1' IR to the 'Flat' IR.
 --
 -- As the name of the latter suggests, this involves flattening the namepace.
 module Trans.Stage1ToFlat (filesToFiles) where
 
 import Data.Word
-
-import Data.Maybe (isNothing)
 
 import qualified Data.Map as M
 
@@ -57,8 +56,28 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         , isGroup
                         , dataWordCount
                         , pointerCount
+                        , tagOffset
                         } ->
-                    let fieldNodes =
+                    let
+                        mkField fieldUnQ locType =
+                            Flat.Field
+                                { fieldName = Name.mkSub name fieldUnQ
+                                , fieldLocType = fmap
+                                    (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
+                                    locType
+                                }
+                        variants =
+                            [ Flat.Variant
+                                { field = mkField fieldUnQ locType
+                                , tagValue
+                                }
+                            | Stage1.Field{name=fieldUnQ, locType, tag=Just tagValue} <- fields
+                            ]
+                        commonFields =
+                            [ mkField fieldUnQ locType
+                            | Stage1.Field{name=fieldUnQ, locType, tag=Nothing} <- fields
+                            ]
+                        fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
                     in
                     Flat.Node
@@ -66,15 +85,22 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         , nodeId
                         , union_ = Flat.Struct
                             { fields =
-                                [ Flat.Field
-                                    { fieldName = Name.mkSub name fieldUnQ
-                                    , fieldLocType = fmap
-                                        (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
-                                        locType
-                                    }
-                                | Stage1.Field{name=fieldUnQ, locType, tag} <- fields
-                                , isNothing tag
-                                ]
+                                if null variants then
+                                    commonFields
+                                else
+                                    Flat.Field
+                                        { fieldName = Name.mkSub name "union_"
+                                        , fieldLocType = C.HereField $ C.StructType
+                                            Flat.Node
+                                                { name = Name.mkSub name "union_"
+                                                , nodeId = 0 -- FIXME: what to put here?
+                                                , union_ = Flat.Union
+                                                    { variants
+                                                    , tagOffset
+                                                    }
+                                                }
+                                        }
+                                    : commonFields
                             , isGroup
                             , dataWordCount
                             , pointerCount
