@@ -150,6 +150,45 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
     [ DcInstance
         { ctx = []
         , typ = TApp
+            (tgName ["Classes"] "FromPtr")
+            [ TVar "msg"
+            , TApp (TLName ctorName) [TVar "msg"]
+            ]
+        , defs =
+            [ IdValue $ dfValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+                (ELName ctorName)
+                [ EApp
+                    (egName ["Classes"] "fromPtr")
+                    [ ELName "msg"
+                    , ELName "ptr"
+                    ]
+                ]
+            ]
+        }
+    , DcInstance
+        { ctx = []
+        , typ = TApp
+            (tgName ["Classes"] "ToPtr")
+            [ TVar "s"
+            , TApp
+                (TLName ctorName)
+                [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
+            ]
+        , defs =
+            [ IdValue $ dfValue
+                "toPtr"
+                [PVar "msg", PLCtor ctorName [PVar "struct"]]
+                (EApp
+                    (egName ["Classes"] "toPtr")
+                    [ ELName "msg"
+                    , ELName "struct"
+                    ]
+                )
+            ]
+        }
+    , DcInstance
+        { ctx = []
+        , typ = TApp
             (tgName ["Basics"] "ListElem")
             [ TVar "msg"
             , TApp
