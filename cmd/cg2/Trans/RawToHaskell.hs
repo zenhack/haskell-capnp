@@ -32,8 +32,8 @@ egName parts local = EGName $ gName parts local
 tgName :: [T.Text] -> Name.LocalQ -> Type
 tgName parts local = TGName $ gName parts local
 
-dfValue :: Name.UnQ -> [Pattern] -> Exp -> ValueDef
-dfValue name params value = DfValue {name, params, value}
+iValue :: Name.UnQ -> [Pattern] -> Exp -> InstanceDef
+iValue name params value = IdValue DfValue {name, params, value}
 
 readCtx :: T.Text -> T.Text -> Type
 readCtx m msg = TApp
@@ -101,14 +101,14 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     , mkIsWordInstance typeCtor dataCtors unknownCtor
     -- An Enum instance that just wraps the IsWord instance:
     , instance_ [] ["Std_"] "Enum" [TLName typeCtor]
-        [ IdValue $ dfValue "fromEnum" [PVar "x"] $
+        [ iValue "fromEnum" [PVar "x"] $
             EApp
                 (EGName $ std_ "fromIntegral")
                 [ EApp
                     (egName ["Classes"] "toWord")
                     [ELName "x"]
                 ]
-        , IdValue $ dfValue "toEnum" [PVar "x"] $
+        , iValue "toEnum" [PVar "x"] $
             EApp
                 (egName ["Classes"] "fromWord")
                 [ EApp
@@ -139,7 +139,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
             , derives = []
             , dataNewtype = True
             }
-        , IdValue $ dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EFApp
+        , iValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EFApp
             (egName ["Classes"] "fromWord")
             [ EFApp
                 (EGName $ std_ "fromIntegral")
@@ -150,7 +150,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                     ]
                 ]
             ]
-        , IdValue $ dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+        , iValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
             (ELName listCtor)
             [ EApp
                 (egName ["Classes"] "fromPtr")
@@ -158,15 +158,15 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 , ELName "ptr"
                 ]
             ]
-        , IdValue $ dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
+        , iValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
             (egName ["Untyped"] "List16")
             [ELName "l"]
-        , IdValue $ dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
+        , iValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
             (egName ["Untyped"] "length")
             [ELName "l"]
         ]
     , instance_ [] ["Classes"] "MutListElem" [TVar "s", TLName typeCtor]
-        [ IdValue $ dfValue
+        [ iValue
             "setIndex"
             [PVar "elt", PVar "i", PLCtor listCtor [PVar "l"]] $
             EApp
@@ -178,7 +178,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 , ELName "i"
                 , ELName "l"
                 ]
-        , IdValue $ dfValue "newList" [PVar "msg", PVar "size"] $ EFApp
+        , iValue "newList" [PVar "msg", PVar "size"] $ EFApp
             (ELName listCtor)
             [ EApp
                 (egName ["Untyped"] "allocList16")
@@ -213,13 +213,13 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
     , instance_ [] ["Classes"] "FromStruct"
         [ TVar "msg", TApp (TLName ctorName) [TVar "msg"]
         ]
-        [ IdValue $ dfValue "fromStruct" [PVar "struct"] $ EApp
+        [ iValue "fromStruct" [PVar "struct"] $ EApp
             (EGName $ std_ "pure")
             [EApp (ELName ctorName) [ELName "struct"]]
         ]
     , instance_ [] ["Classes"] "ToStruct"
         [TVar "msg", TApp (TLName ctorName) [TVar "msg"]]
-        [ IdValue $ dfValue "toStruct" [PLCtor ctorName [PVar "struct"]]
+        [ iValue "toStruct" [PLCtor ctorName [PVar "struct"]]
             (ELName "struct")
         ]
     , instance_ [] ["Untyped"] "HasMessage" [TApp (TLName ctorName) [TVar "msg"]]
@@ -227,11 +227,11 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
             "InMessage"
             [ TApp (TLName ctorName) [TVar "msg"] ]
             (TVar "msg")
-        , IdValue $ dfValue "message" [PLCtor ctorName [PVar "struct"]]
+        , iValue "message" [PLCtor ctorName [PVar "struct"]]
             (EApp (egName ["Untyped"] "message") [ELName "struct"])
         ]
     , instance_ [] ["Untyped"] "MessageDefault" [TApp (TLName ctorName) [TVar "msg"]]
-        [ IdValue $ dfValue "messageDefault" [PVar "msg"] $ EApp
+        [ iValue "messageDefault" [PVar "msg"] $ EApp
             (ELName ctorName)
             [ EApp
                 (egName ["Untyped"] "messageDefault")
@@ -243,7 +243,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
     let listCtor = Name.mkSub ctorName "List_" in
     [ instance_ [] ["Classes"] "FromPtr"
         [ TVar "msg", TApp (TLName ctorName) [TVar "msg"] ]
-        [ IdValue $ dfValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+        [ iValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
             (ELName ctorName)
             [ EApp
                 (egName ["Classes"] "fromPtr")
@@ -258,7 +258,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
             (TLName ctorName)
             [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
         ]
-        [ IdValue $ dfValue
+        [ iValue
             "toPtr"
             [PVar "msg", PLCtor ctorName [PVar "struct"]]
             (EApp
@@ -299,19 +299,19 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
             , derives = []
             , dataNewtype = True
             }
-        , IdValue $ dfValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
+        , iValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
             (ELName listCtor)
             [ EApp
                 (egName ["Classes"] "fromPtr")
                 [ELName "msg", ELName "ptr"]
             ]
-        , IdValue $ dfValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
+        , iValue "toUntypedList" [PLCtor listCtor [PVar "l"]] $ EApp
             (egName ["Untyped"] "ListStruct")
             [ELName "l"]
-        , IdValue $ dfValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
+        , iValue "length" [PLCtor listCtor [PVar "l"]] $ EApp
             (egName ["Untyped"] "length")
             [ELName "l"]
-        , IdValue $ dfValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EDo
+        , iValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EDo
             [ DoBind "elt" $ EApp
                 (egName ["Untyped"] "index")
                 [ ELName "i"
@@ -329,7 +329,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
             (TLName ctorName)
             [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
         ]
-        [ IdValue $ dfValue "setIndex"
+        [ iValue "setIndex"
             [ PLCtor ctorName [PVar "elt"]
             , PVar "i"
             , PLCtor listCtor [PVar "l"]
@@ -341,7 +341,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
                 , ELName "l"
                 ]
             )
-        , IdValue $ dfValue "newList" [PVar "msg", PVar "len"] $ EFApp
+        , iValue "newList" [PVar "msg", PVar "len"] $ EFApp
             (ELName listCtor)
             [ EApp
                 (egName ["Untyped"] "allocCompositeList")
