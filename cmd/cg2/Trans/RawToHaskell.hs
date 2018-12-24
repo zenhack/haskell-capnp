@@ -17,8 +17,16 @@ import qualified IR.Common as C
 import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
 
+-- Misc shortcuts for common constructs:
+
 std_ :: Name.UnQ -> Name.GlobalQ
 std_ name = gName ["Std_"] (Name.mkLocal Name.emptyNS name)
+
+eStd_ :: Name.UnQ -> Exp
+eStd_ = EGName . std_
+
+tStd_ :: Name.UnQ -> Type
+tStd_ = TGName . std_
 
 gName :: [T.Text] -> Name.LocalQ -> Name.GlobalQ
 gName parts local = Name.GlobalQ
@@ -103,7 +111,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     , instance_ [] ["Std_"] "Enum" [TLName typeCtor]
         [ iValue "fromEnum" [PVar "x"] $
             EApp
-                (EGName $ std_ "fromIntegral")
+                (eStd_ "fromIntegral")
                 [ EApp
                     (egName ["Classes"] "toWord")
                     [ELName "x"]
@@ -112,7 +120,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
             EApp
                 (egName ["Classes"] "fromWord")
                 [ EApp
-                    (EGName $ std_ "fromIntegral")
+                    (eStd_ "fromIntegral")
                     [ELName "x"]
                 ]
         ]
@@ -131,7 +139,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                         [ TApp
                             (tgName ["Untyped"] "ListOf")
                             [ TVar "msg"
-                            , TGName $ std_ "Word16"
+                            , tStd_ "Word16"
                             ]
                         ]
                     }
@@ -142,7 +150,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
         , iValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EFApp
             (egName ["Classes"] "fromWord")
             [ EFApp
-                (EGName $ std_ "fromIntegral")
+                (eStd_ "fromIntegral")
                 [ EApp
                     (egName ["Untyped"] "index")
                     [ ELName "i"
@@ -172,7 +180,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
             EApp
                 (egName ["Untyped"] "setIndex")
                 [ EApp
-                    (EGName $ std_ "fromIntegral")
+                    (eStd_ "fromIntegral")
                     [ EApp (egName ["Classes"] "toWord") [ELName "elt"]
                     ]
                 , ELName "i"
@@ -197,7 +205,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
             }
 declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
     [ newtypeWrapper ctorName ["msg"] $ TApp
-        (TGName $ std_ "Maybe")
+        (tStd_ "Maybe")
         [ TApp
             (tgName ["Untyped"] "Cap")
             [TVar "msg"]
@@ -208,12 +216,12 @@ declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
         , TApp (TLName ctorName) [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
         ]
         [ iValue "toPtr" [PVar "msg", PLCtor ctorName [PGCtor (std_ "Nothing") []]]
-            (EApp (EGName $ std_ "pure") [EGName $ std_ "Nothing"])
+            (EApp (eStd_ "pure") [eStd_ "Nothing"])
         , iValue "toPtr" [PVar "msg", PLCtor ctorName [PGCtor (std_ "Just") [PVar "cap"]]]
             (EApp
-                (EGName $ std_ "pure")
+                (eStd_ "pure")
                 [ EApp
-                    (EGName $ std_ "Just")
+                    (eStd_ "Just")
                     [ EApp
                         (egName ["Untyped"] "PtrCap")
                         [ELName "cap"]
@@ -232,7 +240,7 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
         [ TVar "msg", TApp (TLName ctorName) [TVar "msg"]
         ]
         [ iValue "fromStruct" [PVar "struct"] $ EApp
-            (EGName $ std_ "pure")
+            (eStd_ "pure")
             [EApp (ELName ctorName) [ELName "struct"]]
         ]
     , instance_ [] ["Classes"] "ToStruct"
@@ -409,7 +417,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                         [ELName "struct"]
                 C.VoidField ->
                     EApp
-                        (EGName $ std_ "pure")
+                        (eStd_ "pure")
                         [ETup []]
             }
         }
@@ -432,7 +440,7 @@ mkIsWordInstance typeCtor dataCtors unknownCtor =
             , value = EApp
                 (ELName unknownCtor)
                 [ EApp
-                    (EGName $ std_ "fromIntegral")
+                    (eStd_ "fromIntegral")
                     [ELName "tag"]
                 ]
             }
@@ -450,7 +458,7 @@ mkIsWordInstance typeCtor dataCtors unknownCtor =
                 [ PLCtor unknownCtor [PVar "tag"] ]
             , value =
                 EApp
-                    (EGName $ std_ "fromIntegral")
+                    (eStd_ "fromIntegral")
                     [ELName "tag"]
             }
         ]
@@ -511,7 +519,7 @@ typeToType thisMod ty var = case ty of
     C.PtrType (C.PtrInterface typeId) ->
         nameToType thisMod typeId
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
-        TApp (TGName $ std_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
+        TApp (tStd_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
     C.CompositeType (C.StructType typeId) ->
         appV $ nameToType thisMod typeId
   where
