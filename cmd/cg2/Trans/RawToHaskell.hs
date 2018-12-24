@@ -208,9 +208,17 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
             , dvArgs = APos []
             }
 declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
-    [ newtypeWrapper ctorName $ gName ["Message"] "Client" ]
+    [ newtypeWrapper ctorName ["msg"] $ TApp
+        (TGName $ std_ "Maybe")
+        [ TApp
+            (tgName ["Untyped"] "Cap")
+            [TVar "msg"]
+        ]
+    ]
 declToDecls _thisMod Raw.StructWrapper{ctorName} =
-    [ newtypeWrapper ctorName $ gName ["Untyped"] "Struct"
+    [ newtypeWrapper ctorName ["msg"] $ TApp
+        (tgName ["Untyped"] "Struct")
+        [TVar "msg"]
 
     -- There are several type classes that are defined for all structs:
     , DcInstance
@@ -509,21 +517,17 @@ mkIsWordInstance typeCtor dataCtors unknownCtor = DcInstance
         ]
     }
 
-newtypeWrapper :: Name.LocalQ -> Name.GlobalQ -> Decl
-newtypeWrapper ctorName wrappedType =
+newtypeWrapper :: Name.LocalQ -> [T.Text] -> Type -> Decl
+newtypeWrapper ctorName typeArgs wrappedType =
     let name = Name.localToUnQ ctorName
     in DcData Data
         { dataName = name
         , dataNewtype = True
-        , typeArgs = [TVar "msg"]
+        , typeArgs = map TVar typeArgs
         , dataVariants =
             [ DataVariant
                 { dvCtorName = name
-                , dvArgs = APos
-                    [ TApp
-                        (TGName wrappedType)
-                        [TVar "msg"]
-                    ]
+                , dvArgs = APos [ wrappedType ]
                 }
             ]
         , derives = []
