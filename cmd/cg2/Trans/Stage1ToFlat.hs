@@ -117,7 +117,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         }
                     : if null variants
                         then fieldNodes
-                        else (unionNode : fieldNodes)
+                        else unionNode : fieldNodes
                 Stage1.NodeInterface ->
                     [ Flat.Node
                         { name
