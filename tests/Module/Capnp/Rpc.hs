@@ -394,7 +394,7 @@ expectException :: Show a => (cap -> IO (Promise a)) -> Exception -> cap -> IO (
 expectException callFn wantExn cap = do
     ret <- try $ callFn cap >>= waitIO
     case ret of
-        Left (e :: Exception) -> do
+        Left (e :: Exception) ->
             liftIO $ e `shouldBe` wantExn
         Right val ->
             error $ "Should have received exn, but got " ++ show val

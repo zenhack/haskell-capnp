@@ -392,7 +392,7 @@ handleConn
                 throwIO e
             Right _ ->
                 pure ()
-    stopConn (conn, conn') = do
+    stopConn (conn, conn') =
         atomically $ do
             -- drop the bootstrap interface:
             case bootstrap conn' of
@@ -1393,7 +1393,7 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
 resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
-        ( Just LocalClient{}, AnswerDest{ conn=Conn{liveState}, answer } ) -> do
+        ( Just LocalClient{}, AnswerDest{ conn=Conn{liveState}, answer } ) ->
             readTVar liveState >>= \case
                 Live conn' -> do
                     callBuffer <- newTQueue
