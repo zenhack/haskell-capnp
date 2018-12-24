@@ -46,6 +46,8 @@ instance Format Module where
             , Import { importAs = "Std_", parts = ["Data", "Word"] }
             , Import { importAs = "Std_", parts = ["Data", "Int"] }
             ]
+        -- ...but there are a couple operators we still want unqaulified:
+        , "import Prelude ((<$>), (<*>))"
         , vcat $ map format modDecls
         ]
 
