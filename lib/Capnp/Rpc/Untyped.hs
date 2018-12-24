@@ -32,8 +32,6 @@ module Capnp.Rpc.Untyped
     , R.Exception'Type(..)
 
     -- * Shutting down the connection
-    , stopVat
-
     ) where
 
 -- Note [Organization]
@@ -66,10 +64,10 @@ import Control.Concurrent.STM
 import Data.Word
 
 import Control.Concurrent       (threadDelay)
-import Control.Concurrent.Async (concurrently_)
+import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
-import Control.Exception.Safe   (Exception, bracket, handle, throwIO, try)
-import Control.Monad            (forever)
+import Control.Exception.Safe   (Exception, bracket, throwIO, try)
+import Control.Monad            (forever, void)
 import Data.Default             (Default(def))
 import Data.Foldable            (toList, traverse_)
 import Data.Hashable            (Hashable, hash, hashWithSalt)
@@ -78,6 +76,7 @@ import Data.Text                (Text)
 import GHC.Generics             (Generic)
 import Supervisors              (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.StableName    (StableName, hashStableName, makeStableName)
+import System.Timeout           (timeout)
 
 import qualified Data.Vector       as V
 import qualified Focus
@@ -125,20 +124,6 @@ data RpcError
     deriving(Show, Eq, Generic)
 
 instance Exception RpcError
-
--- | 'StopVat' is an exception used to terminate a capnproto connection; it is
--- raised by `stopVat`.
---
--- XXX TODO: this is not a good mechanism. For one thing, it only actually works
--- if thrown from the same thread as 'handleConn'. Come up with something better.
-data StopVat = StopVat deriving(Show)
-instance Exception StopVat
-
--- | Shut down the rpc connection, and all resources managed by the vat. This
--- does not return (it raises an exception used to actually signal termination
--- of the connection).
-stopVat :: IO ()
-stopVat = throwIO StopVat
 
 newtype EmbargoId = EmbargoId { embargoWord :: Word32 } deriving(Eq, Hashable)
 newtype QAId = QAId { qaWord :: Word32 } deriving(Eq, Hashable)
@@ -298,7 +283,7 @@ mapQueueSTM conn fs x = traverse_ (\f -> queueSTM conn (f x)) fs
 -- To solve these issues, the connection maintains a queue of all callback actions
 -- that are ready to run, and when the event a callback is waiting for occurs, we
 -- simply move the callback to the queue, using 'queueIO' or 'queueSTM'. When the
--- connection starts up, it creates a thread running 'callbackLoop', which just
+-- connection starts up, it creates a thread running 'callbacksLoop', which just
 -- continually flushes the queue, running the actions in the queue.
 
 -- | Get a new question id. retries if we are out of available question ids.
@@ -336,12 +321,10 @@ handleConn
         , debugMode
         }
     = withSupervisor $ \sup ->
-        handle
-            (\StopVat -> pure ())
-            $ bracket
-                (newConn sup)
-                stopConn
-                runConn
+        bracket
+            (newConn sup)
+            stopConn
+            runConn
   where
     newConn sup = do
         stableName <- makeStableName =<< newEmptyMVar
@@ -377,20 +360,34 @@ handleConn
                 , bootstrap
                 , debugMode
                 }
-    runConn conn =
-        coordinator conn
-            `concurrently_` sendLoop transport conn
-            `concurrently_` recvLoop transport conn
-            `concurrently_` callbacksLoop conn
-            `concurrently_` useBootstrap conn
+    runConn conn = do
+        result <- try $
+            ( coordinator conn
+                `concurrently_` sendLoop transport conn
+                `concurrently_` recvLoop transport conn
+                `concurrently_` callbacksLoop conn
+            ) `race_`
+                useBootstrap conn
+        case result of
+            Left (SentAbort e) -> do
+                -- We need to actually send it:
+                rawMsg <- createPure maxBound $ valueToMsg $ R.Message'abort e
+                void $ timeout 1000000 $ sendMsg transport rawMsg
+                throwIO $ SentAbort e
+            Left e ->
+                throwIO e
+            Right _ ->
+                pure ()
     stopConn Conn{bootstrap=Nothing} = pure ()
     stopConn Conn{bootstrap=Just (Client Nothing)} = pure ()
     stopConn conn@Conn{bootstrap=Just (Client (Just client'))} =
         atomically $ dropConnExport conn client'
         -- TODO: clear out the rest of the connection state.
     useBootstrap conn = case withBootstrap of
-        Nothing -> pure ()
-        Just f  -> atomically (requestBootstrap conn) >>= f (supervisor conn)
+        Nothing ->
+            forever $ threadDelay maxBound
+        Just f  ->
+            atomically (requestBootstrap conn) >>= f (supervisor conn)
 
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
@@ -794,41 +791,29 @@ recvLoop transport Conn{recvQ} =
 coordinator :: Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator conn@Conn{recvQ,debugMode} = go
-  where
-    go = try (atomically handleMsg) >>= \case
-        Right () ->
-            go
-        Left (SentAbort e) -> do
-            atomically $ sendPureMsg conn $ R.Message'abort e
-            -- Give the message a bit of time to reach the remote vat:
-            threadDelay 1000000
-            throwIO (SentAbort e)
-        Left e ->
-            throwIO e
-    handleMsg = do
-        msg <- (readTBQueue recvQ >>= parseWithCaps conn)
-            `catchSTM`
-            (abortConn conn . wrapException debugMode)
-        case msg of
-            R.Message'abort exn ->
-                handleAbortMsg conn exn
-            R.Message'unimplemented oldMsg ->
-                handleUnimplementedMsg conn oldMsg
-            R.Message'bootstrap bs ->
-                handleBootstrapMsg conn bs
-            R.Message'call call ->
-                handleCallMsg conn call
-            R.Message'return ret ->
-                handleReturnMsg conn ret
-            R.Message'finish finish ->
-                handleFinishMsg conn finish
-            R.Message'release release ->
-                handleReleaseMsg conn release
-            R.Message'disembargo disembargo ->
-                handleDisembargoMsg conn disembargo
-            _ ->
-                sendPureMsg conn $ R.Message'unimplemented msg
+coordinator conn@Conn{recvQ,debugMode} = forever $ atomically $ do
+    msg <- (readTBQueue recvQ >>= parseWithCaps conn)
+        `catchSTM`
+        (abortConn conn . wrapException debugMode)
+    case msg of
+        R.Message'abort exn ->
+            handleAbortMsg conn exn
+        R.Message'unimplemented oldMsg ->
+            handleUnimplementedMsg conn oldMsg
+        R.Message'bootstrap bs ->
+            handleBootstrapMsg conn bs
+        R.Message'call call ->
+            handleCallMsg conn call
+        R.Message'return ret ->
+            handleReturnMsg conn ret
+        R.Message'finish finish ->
+            handleFinishMsg conn finish
+        R.Message'release release ->
+            handleReleaseMsg conn release
+        R.Message'disembargo disembargo ->
+            handleDisembargoMsg conn disembargo
+        _ ->
+            sendPureMsg conn $ R.Message'unimplemented msg
 
 -- | 'parseWithCaps' parses a message, making sure to interpret its capability
 -- table. The latter bit is the difference between this and just calling
@@ -1297,6 +1282,8 @@ subscribeReturn tableName conn table qaId onRet =
             queueSTM conn (onRet returnMsg)
             pure val
 
+-- | Abort the connection, sending an abort message. This is only safe to call
+-- from within either the thread running the coordinator or the callback loop.
 abortConn :: Conn -> R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
 

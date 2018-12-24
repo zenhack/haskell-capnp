@@ -10,7 +10,7 @@ import Capnp               (def, defaultLimit)
 import Capnp.Promise       (waitIO)
 import Capnp.Rpc           ((?))
 import Capnp.Rpc.Transport (socketTransport)
-import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn, stopVat)
+import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn)
 import Control.Monad       (when)
 
 import Capnp.Gen.Calculator.Pure
@@ -54,7 +54,6 @@ main = connect "localhost" "4000" $ \(sock, _addr) ->
             assertEq value 101
 
             putStrLn "PASS"
-            stopVat
         }
 
 assertEq :: (Show a, Eq a) => a -> a -> IO ()

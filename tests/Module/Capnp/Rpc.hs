@@ -62,7 +62,6 @@ echoTests = describe "Echo server & client" $
                     [ def { E.reply = "Hello #1" }
                     , def { E.reply = "Hello #2" }
                     ]
-                stopVat
         )
 
 data TestEchoServer = TestEchoServer
@@ -129,7 +128,6 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 , def { n = 3 }
                 , def { n = 4 }
                 ]
-            stopVat
         )
     it "Methods returning interfaces work" $ runVatPair
         (\sup -> export_CounterFactory sup (TestCtrFactory sup))
@@ -168,8 +166,6 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
             r4 <- bumpN ctrC 1
             liftIO $ r4 `shouldBe` [ def { n = 31 } ]
-
-            stopVat
         )
     it "Methods with interface parameters work" $ do
         ctrA <- atomically $ newTestCtr 2
@@ -186,7 +182,6 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                     (\(TestCtrServer var) -> liftIO $ readTVarIO var)
                     [ctrA, ctrB, ctrC]
                 liftIO $ r `shouldBe` [7, 5, 35]
-                stopVat
             )
 
 data TestCtrAcceptor = TestCtrAcceptor
@@ -401,6 +396,5 @@ expectException callFn wantExn cap = do
     case ret of
         Left (e :: Exception) -> do
             liftIO $ e `shouldBe` wantExn
-            stopVat
         Right val ->
             error $ "Should have received exn, but got " ++ show val
