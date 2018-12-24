@@ -52,7 +52,12 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         , union_ = Flat.Enum enumerants
                         }
                     ]
-                Stage1.NodeStruct Stage1.Struct{fields, isGroup} ->
+                Stage1.NodeStruct Stage1.Struct
+                        { fields
+                        , isGroup
+                        , dataWordCount
+                        , pointerCount
+                        } ->
                     let fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
                     in
@@ -71,6 +76,8 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 , isNothing tag
                                 ]
                             , isGroup
+                            , dataWordCount
+                            , pointerCount
                             }
                         }
                     : fieldNodes

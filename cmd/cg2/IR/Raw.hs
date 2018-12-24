@@ -27,7 +27,13 @@ data Decl
     -- | Define instances of several type classes which should only
     -- exist for "real" structs, i.e. not groups.
     | StructInstances
-        { ctorName :: Name.LocalQ
+        { ctorName      :: Name.LocalQ
+        -- ^ The type & data constructor for the type to generate instances
+        -- for.
+
+        -- Needed for some instances:
+        , dataWordCount :: !Word16
+        , pointerCount  :: !Word16
         }
     | InterfaceWrapper
         { ctorName :: Name.LocalQ

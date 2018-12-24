@@ -145,7 +145,7 @@ declToDecls _thisMod Raw.StructWrapper{ctorName} =
         }
     -}
     ]
-declToDecls _thisMod Raw.StructInstances{ctorName} =
+declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} =
     let listCtor = Name.mkSub ctorName "List_" in
     [ DcInstance
         { ctx = []
@@ -229,8 +229,16 @@ declToDecls _thisMod Raw.StructInstances{ctorName} =
                     , ELName "l"
                     ]
                 )
-            -- TODO:
-            , IdValue $ dfValue "newList" [] (EGName $ std_ "undefined")
+            , IdValue $ dfValue "newList" [PVar "msg", PVar "len"] $ EFApp
+                (ELName listCtor)
+                [ EApp
+                    (egName ["Untyped"] "allocCompositeList")
+                    [ ELName "msg"
+                    , EInt $ fromIntegral dataWordCount
+                    , EInt $ fromIntegral pointerCount
+                    , ELName "len"
+                    ]
+                ]
             ]
         }
     ]
