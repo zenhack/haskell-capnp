@@ -106,7 +106,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                     commonFields
                                 else
                                     Flat.Field
-                                        { fieldName = Name.mkSub name "union_"
+                                        { fieldName = Name.mkSub name "union'"
                                         , fieldLocType = C.HereField $ C.StructType unionNode
                                         }
                                     : commonFields
