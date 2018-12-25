@@ -207,11 +207,14 @@ executable cg2
     , IR.Common
     , IR.Stage1
     , IR.Flat
+    , IR.Pure
     , IR.Raw
     , IR.Haskell
     , Trans.CgrToStage1
     , Trans.Stage1ToFlat
     , Trans.FlatToRaw
+    , Trans.FlatToPure
+    , Trans.PureToHaskell
     , Trans.RawToHaskell
     , Trans.HaskellToText
   build-depends:
