@@ -103,9 +103,15 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
         , derives = []
         }
     , instance_ [] ["Classes"] "FromStruct" [TVar "msg", TApp (TLName typeCtor) [TVar "msg"]]
-        [ iValue "fromStruct" [PVar "struct"]
-            -- TODO
-            (eStd_ "undefined")
+        [ iValue "fromStruct" [PVar "struct"] $ EDo
+            [ DoBind "tag" (eStd_ "undefined")
+            ]
+            (ECase (ELName "tag") $
+                [ (PInt i, eStd_ "undefined")
+                | (i, (_, _)) <- zip [0..] unionDataCtors
+                ] ++
+                [(PVar "_", eStd_ "undefined")]
+            )
         ]
     ]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =

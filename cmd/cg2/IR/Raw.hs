@@ -39,6 +39,7 @@ data Decl
         }
     | UnionVariant
         { typeCtor       :: Name.LocalQ
+        , tagOffset      :: !Word32
         , unionDataCtors :: [(Name.LocalQ, Common.FieldLocType Name.CapnpQ)]
         }
     | Enum

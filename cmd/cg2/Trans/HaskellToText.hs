@@ -133,9 +133,17 @@ instance Format Exp where
         , indent $ vcat (map format ds ++ [format ex, ")"])
         ]
     format (ETup es) = PP.tupled (map format es)
+    format (ECase ex arms) = vcat
+        [ hcat [ "case ", format ex, " of"]
+        , indent $ vcat
+            [ hcat [ format p, " -> ", format e]
+            | (p, e) <- arms
+            ]
+        ]
 
 instance Format Do where
     format (DoBind var ex) = format var <> " <- " <> format ex
+    format (DoE ex)        = format ex
 
 instance Format Pattern where
     format (PVar v) = PP.textStrict v

@@ -39,11 +39,12 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                     ]
             , concatMap (fieldToDecls local) fields
             ]
-    Flat.Union{variants} ->
+    Flat.Union{variants, tagOffset} ->
         let local' = Name.mkSub local "" in
         [ Raw.StructWrapper { typeCtor = local }
         , Raw.UnionVariant
             { typeCtor = local'
+            , tagOffset
             , unionDataCtors =
                 [ (local, fmap Flat.name fieldLocType)
                 | Flat.Variant

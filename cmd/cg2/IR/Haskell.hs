@@ -133,10 +133,12 @@ data Exp
     | EInt Integer
     | EDo [Do] Exp
     | ETup [Exp]
+    | ECase Exp [(Pattern, Exp)]
     deriving(Show, Read, Eq)
 
 data Do
     = DoBind Name.UnQ Exp
+    | DoE Exp
     deriving(Show, Read, Eq)
 
 data Pattern
