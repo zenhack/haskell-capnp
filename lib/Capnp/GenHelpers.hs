@@ -68,3 +68,9 @@ getPtrConst :: C.FromPtr M.ConstMsg a => BS.ByteString -> a
 getPtrConst bytes = fromJust $ do
     msg <- bsToMsg bytes
     evalLimitT maxBound $ U.rootPtr msg >>= U.getPtr 0 >>= C.fromPtr msg
+
+
+getTag :: U.ReadCtx m msg => U.Struct msg -> Int -> m Word16
+getTag struct offset = do
+    word <- U.getData (offset `div` 4) struct
+    pure $ fromIntegral $ word `shiftR` ((offset `mod` 4) * 16)

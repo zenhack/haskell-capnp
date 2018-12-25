@@ -83,7 +83,7 @@ fileToModule Raw.File{fileName, fileId, decls} =
     imp parts importAs = Import {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
-declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
+declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
@@ -104,11 +104,17 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
         }
     , instance_ [] ["Classes"] "FromStruct" [TVar "msg", TApp (TLName typeCtor) [TVar "msg"]]
         [ iValue "fromStruct" [PVar "struct"] $ EDo
-            [ DoBind "tag" (eStd_ "undefined")
+            [ DoBind "tag"
+                (EApp
+                    (egName ["GenHelpers"] "getTag")
+                    [ ELName "struct"
+                    , EInt (fromIntegral tagOffset)
+                    ]
+                )
             ]
             (ECase (ELName "tag") $
-                [ (PInt i, eStd_ "undefined")
-                | (i, Raw.Variant{}) <- zip [0..] unionDataCtors
+                [ (PInt $ fromIntegral tagValue, eStd_ "undefined")
+                | Raw.Variant{tagValue} <- unionDataCtors
                 ] ++
                 [(PVar "_", eStd_ "undefined")]
             )
