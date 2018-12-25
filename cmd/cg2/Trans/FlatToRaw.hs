@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Trans.FlatToRaw (fileToFile) where
 
 import qualified IR.Flat as Flat
@@ -37,8 +38,20 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
                     ]
             , concatMap (fieldToDecls local) fields
             ]
-    Flat.Union{} ->
+    Flat.Union{variants} ->
         [ Raw.StructWrapper { ctorName = local }
+        , Raw.UnionVariant
+            { ctorName = Name.mkSub local ""
+            , unionDataCtors =
+                [ (local, fmap Flat.name fieldLocType)
+                | Flat.Variant
+                    { field = Flat.Field
+                        { fieldName = Name.CapnpQ{local}
+                        , fieldLocType
+                        }
+                    } <- variants
+                ]
+            }
         ]
     Flat.Interface ->
         [ Raw.InterfaceWrapper

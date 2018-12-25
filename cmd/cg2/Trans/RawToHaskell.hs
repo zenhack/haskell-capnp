@@ -83,6 +83,26 @@ fileToModule Raw.File{fileName, fileId, decls} =
     imp parts importAs = Import {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
+declToDecls thisMod Raw.UnionVariant{ctorName, unionDataCtors} =
+    [ DcData Data
+        { dataName = Name.localToUnQ ctorName
+        , dataNewtype = False
+        , typeArgs = [TVar "msg"]
+        , dataVariants =
+            [ DataVariant
+                { dvCtorName = Name.localToUnQ ctorName
+                , dvArgs = APos $
+                    case locType of
+                        C.VoidField ->
+                            []
+                        _ ->
+                            [ typeToType thisMod (C.fieldType locType) "msg" ]
+                }
+            | (ctorName, locType) <- unionDataCtors
+            ]
+        , derives = []
+        }
+    ]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     let listCtor = Name.mkSub typeCtor "List_"
         unknownCtor = Name.mkSub typeCtor "unknown'"

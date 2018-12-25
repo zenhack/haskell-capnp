@@ -38,6 +38,10 @@ data Decl
     | InterfaceWrapper
         { ctorName :: Name.LocalQ
         }
+    | UnionVariant
+        { ctorName       :: Name.LocalQ
+        , unionDataCtors :: [(Name.LocalQ, Common.FieldLocType Name.CapnpQ)]
+        }
     | Enum
         { typeCtor  :: Name.LocalQ
         , dataCtors :: [Name.LocalQ]
