@@ -25,13 +25,13 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
         ]
     Flat.Struct{fields, isGroup, dataWordCount, pointerCount} ->
         concat
-            [ [ Raw.StructWrapper { ctorName = local } ]
+            [ [ Raw.StructWrapper { typeCtor = local } ]
             , if isGroup
                 then
                     []
                 else
                     [ Raw.StructInstances
-                        { ctorName = local
+                        { typeCtor = local
                         , dataWordCount
                         , pointerCount
                         }
@@ -39,9 +39,9 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
             , concatMap (fieldToDecls local) fields
             ]
     Flat.Union{variants} ->
-        [ Raw.StructWrapper { ctorName = local }
+        [ Raw.StructWrapper { typeCtor = local }
         , Raw.UnionVariant
-            { ctorName = Name.mkSub local ""
+            { typeCtor = Name.mkSub local ""
             , unionDataCtors =
                 [ (local, fmap Flat.name fieldLocType)
                 | Flat.Variant
@@ -55,7 +55,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
         ]
     Flat.Interface ->
         [ Raw.InterfaceWrapper
-            { ctorName = local
+            { typeCtor = local
             }
         ]
 

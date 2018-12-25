@@ -22,24 +22,23 @@ data Decl
     -- | Define a newtype wrapper around a struct. This also defines
     -- some instances of type classes that exist for all such wrappers.
     = StructWrapper
-        { ctorName :: Name.LocalQ
+        { typeCtor :: Name.LocalQ
         }
     -- | Define instances of several type classes which should only
     -- exist for "real" structs, i.e. not groups.
     | StructInstances
-        { ctorName      :: Name.LocalQ
-        -- ^ The type & data constructor for the type to generate instances
-        -- for.
+        { typeCtor      :: Name.LocalQ
+        -- ^ The type constructor for the type to generate instances for.
 
         -- Needed for some instances:
         , dataWordCount :: !Word16
         , pointerCount  :: !Word16
         }
     | InterfaceWrapper
-        { ctorName :: Name.LocalQ
+        { typeCtor :: Name.LocalQ
         }
     | UnionVariant
-        { ctorName       :: Name.LocalQ
+        { typeCtor       :: Name.LocalQ
         , unionDataCtors :: [(Name.LocalQ, Common.FieldLocType Name.CapnpQ)]
         }
     | Enum

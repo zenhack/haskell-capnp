@@ -83,14 +83,14 @@ fileToModule Raw.File{fileName, fileId, decls} =
     imp parts importAs = Import {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
-declToDecls thisMod Raw.UnionVariant{ctorName, unionDataCtors} =
+declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
     [ DcData Data
-        { dataName = Name.localToUnQ ctorName
+        { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
         , typeArgs = [TVar "msg"]
         , dataVariants =
             [ DataVariant
-                { dvCtorName = Name.localToUnQ ctorName
+                { dvCtorName = Name.localToUnQ dataCtor
                 , dvArgs = APos $
                     case locType of
                         C.VoidField ->
@@ -98,7 +98,7 @@ declToDecls thisMod Raw.UnionVariant{ctorName, unionDataCtors} =
                         _ ->
                             [ typeToType thisMod (C.fieldType locType) "msg" ]
                 }
-            | (ctorName, locType) <- unionDataCtors
+            | (dataCtor, locType) <- unionDataCtors
             ]
         , derives = []
         }
@@ -224,21 +224,22 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 Name.localToUnQ variantName
             , dvArgs = APos []
             }
-declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
-    [ newtypeWrapper ctorName ["msg"] $ TApp
+declToDecls _thisMod Raw.InterfaceWrapper{typeCtor} =
+    let dataCtor = Name.mkSub typeCtor "newtype_" in
+    [ newtypeWrapper typeCtor ["msg"] $ TApp
         (tStd_ "Maybe")
         [ TApp
             (tgName ["Untyped"] "Cap")
             [TVar "msg"]
         ]
-    , wrapperFromPtr ctorName
+    , wrapperFromPtr typeCtor dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
-        , TApp (TLName ctorName) [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
+        , TApp (TLName typeCtor) [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
         ]
-        [ iValue "toPtr" [PVar "msg", PLCtor ctorName [PGCtor (std_ "Nothing") []]]
+        [ iValue "toPtr" [PVar "msg", PLCtor dataCtor [PGCtor (std_ "Nothing") []]]
             (EApp (eStd_ "pure") [eStd_ "Nothing"])
-        , iValue "toPtr" [PVar "msg", PLCtor ctorName [PGCtor (std_ "Just") [PVar "cap"]]]
+        , iValue "toPtr" [PVar "msg", PLCtor dataCtor [PGCtor (std_ "Just") [PVar "cap"]]]
             (EApp
                 (eStd_ "pure")
                 [ EApp
@@ -251,53 +252,56 @@ declToDecls _thisMod Raw.InterfaceWrapper{ctorName} =
             )
         ]
     ]
-declToDecls _thisMod Raw.StructWrapper{ctorName} =
-    [ newtypeWrapper ctorName ["msg"] $ TApp
+declToDecls _thisMod Raw.StructWrapper{typeCtor} =
+    let dataCtor = Name.mkSub typeCtor "newtype_" in
+    [ newtypeWrapper typeCtor ["msg"] $ TApp
         (tgName ["Untyped"] "Struct")
         [TVar "msg"]
 
     -- There are several type classes that are defined for all structs:
     , instance_ [] ["Classes"] "FromStruct"
-        [ TVar "msg", TApp (TLName ctorName) [TVar "msg"]
+        [ TVar "msg", TApp (TLName typeCtor) [TVar "msg"]
         ]
         [ iValue "fromStruct" [PVar "struct"] $ EApp
             (eStd_ "pure")
-            [EApp (ELName ctorName) [ELName "struct"]]
+            [EApp (ELName dataCtor) [ELName "struct"]]
         ]
     , instance_ [] ["Classes"] "ToStruct"
-        [TVar "msg", TApp (TLName ctorName) [TVar "msg"]]
-        [ iValue "toStruct" [PLCtor ctorName [PVar "struct"]]
+        [TVar "msg", TApp (TLName typeCtor) [TVar "msg"]]
+        [ iValue "toStruct" [PLCtor dataCtor [PVar "struct"]]
             (ELName "struct")
         ]
-    , instance_ [] ["Untyped"] "HasMessage" [TApp (TLName ctorName) [TVar "msg"]]
+    , instance_ [] ["Untyped"] "HasMessage" [TApp (TLName typeCtor) [TVar "msg"]]
         [ IdType $ TypeAlias
             "InMessage"
-            [ TApp (TLName ctorName) [TVar "msg"] ]
+            [ TApp (TLName typeCtor) [TVar "msg"] ]
             (TVar "msg")
-        , iValue "message" [PLCtor ctorName [PVar "struct"]]
+        , iValue "message" [PLCtor dataCtor [PVar "struct"]]
             (EApp (egName ["Untyped"] "message") [ELName "struct"])
         ]
-    , instance_ [] ["Untyped"] "MessageDefault" [TApp (TLName ctorName) [TVar "msg"]]
+    , instance_ [] ["Untyped"] "MessageDefault" [TApp (TLName typeCtor) [TVar "msg"]]
         [ iValue "messageDefault" [PVar "msg"] $ EApp
-            (ELName ctorName)
+            (ELName dataCtor)
             [ EApp
                 (egName ["Untyped"] "messageDefault")
                 [ELName "msg"]
             ]
         ]
     ]
-declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} =
-    let listCtor = Name.mkSub ctorName "List_" in
-    [ wrapperFromPtr ctorName
+declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} =
+    let listCtor = Name.mkSub typeCtor "List_"
+        dataCtor = Name.mkSub typeCtor "newtype_"
+    in
+    [ wrapperFromPtr typeCtor dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
         , TApp
-            (TLName ctorName)
+            (TLName typeCtor)
             [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
         ]
         [ iValue
             "toPtr"
-            [PVar "msg", PLCtor ctorName [PVar "struct"]]
+            [PVar "msg", PLCtor dataCtor [PVar "struct"]]
             (EApp
                 (egName ["Classes"] "toPtr")
                 [ ELName "msg"
@@ -308,7 +312,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
     , instance_ [] ["Basics"] "ListElem"
         [ TVar "msg"
         , TApp
-            (TLName ctorName)
+            (TLName typeCtor)
             [TVar "msg"]
         ]
         [ IdData Data
@@ -316,7 +320,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
             , typeArgs =
                 [ TVar "msg"
                 , TApp
-                    (TLName ctorName)
+                    (TLName typeCtor)
                     [TVar "msg"]
                 ]
             , dataVariants =
@@ -363,11 +367,11 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
     , instance_ [] ["Basics"] "MutListElem"
         [ TVar "s"
         , TApp
-            (TLName ctorName)
+            (TLName typeCtor)
             [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
         ]
         [ iValue "setIndex"
-            [ PLCtor ctorName [PVar "elt"]
+            [ PLCtor dataCtor [PVar "elt"]
             , PVar "i"
             , PLCtor listCtor [PVar "l"]
             ]
@@ -391,6 +395,7 @@ declToDecls _thisMod Raw.StructInstances{ctorName, dataWordCount, pointerCount} 
         ]
     ]
 declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
+    let containerDataCtor = Name.mkSub containerType "newtype_" in
     [ DcValue
         { typ = TCtx
             [readCtx "m" "msg"]
@@ -407,7 +412,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
         , def = DfValue
             { name = Name.UnQ $
                 "get_" <> Name.renderLocalQ fieldName
-            , params = [PLCtor containerType [PVar "struct"]]
+            , params = [PLCtor containerDataCtor [PVar "struct"]]
             , value = case fieldLocType of
                 C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
                     EApp
@@ -485,27 +490,26 @@ mkIsWordInstance typeCtor dataCtors unknownCtor =
         ]
 
 newtypeWrapper :: Name.LocalQ -> [T.Text] -> Type -> Decl
-newtypeWrapper ctorName typeArgs wrappedType =
-    let name = Name.localToUnQ ctorName
-    in DcData Data
-        { dataName = name
+newtypeWrapper typeCtor typeArgs wrappedType =
+    DcData Data
+        { dataName = Name.localToUnQ typeCtor
         , dataNewtype = True
         , typeArgs = map TVar typeArgs
         , dataVariants =
             [ DataVariant
-                { dvCtorName = name
+                { dvCtorName = Name.localToUnQ $ Name.mkSub typeCtor "newtype_"
                 , dvArgs = APos [ wrappedType ]
                 }
             ]
         , derives = []
         }
 
-wrapperFromPtr :: Name.LocalQ -> Decl
-wrapperFromPtr ctorName =
+wrapperFromPtr :: Name.LocalQ -> Name.LocalQ -> Decl
+wrapperFromPtr typeCtor dataCtor =
     instance_ [] ["Classes"] "FromPtr"
-        [ TVar "msg", TApp (TLName ctorName) [TVar "msg"] ]
+        [ TVar "msg", TApp (TLName typeCtor) [TVar "msg"] ]
         [ iValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
-            (ELName ctorName)
+            (ELName dataCtor)
             [ EApp
                 (egName ["Classes"] "fromPtr")
                 [ ELName "msg"
