@@ -4,7 +4,7 @@
 -- etc. It's still not at the level of detail of actual Haskell, but encodes
 -- the constructs to be generated, as opposed to the declarative description
 -- of the schema.
-module IR.Raw (File(..), Decl(..)) where
+module IR.Raw (File(..), Decl(..), Variant(..)) where
 
 import Data.Word
 
@@ -40,7 +40,7 @@ data Decl
     | UnionVariant
         { typeCtor       :: Name.LocalQ
         , tagOffset      :: !Word32
-        , unionDataCtors :: [(Name.LocalQ, Common.FieldLocType Name.CapnpQ)]
+        , unionDataCtors :: [Variant]
         }
     | Enum
         { typeCtor  :: Name.LocalQ
@@ -51,4 +51,11 @@ data Decl
         , containerType :: Name.LocalQ
         , fieldLocType  :: Common.FieldLocType Name.CapnpQ
         }
+    deriving(Show, Read, Eq)
+
+data Variant = Variant
+    { name     :: Name.LocalQ
+    , tagValue :: !Word16
+    , locType  :: Common.FieldLocType Name.CapnpQ
+    }
     deriving(Show, Read, Eq)

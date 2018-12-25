@@ -46,12 +46,17 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
             { typeCtor = local'
             , tagOffset
             , unionDataCtors =
-                [ (local, fmap Flat.name fieldLocType)
+                [ Raw.Variant
+                    { name = local
+                    , tagValue
+                    , locType = fmap Flat.name fieldLocType
+                    }
                 | Flat.Variant
                     { field = Flat.Field
                         { fieldName = Name.CapnpQ{local}
                         , fieldLocType
                         }
+                    , tagValue
                     } <- variants
                 ]
             }

@@ -98,7 +98,7 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
                         _ ->
                             [ typeToType thisMod (C.fieldType locType) "msg" ]
                 }
-            | (dataCtor, locType) <- unionDataCtors
+            | Raw.Variant{name=dataCtor, locType} <- unionDataCtors
             ]
         , derives = []
         }
@@ -108,7 +108,7 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
             ]
             (ECase (ELName "tag") $
                 [ (PInt i, eStd_ "undefined")
-                | (i, (_, _)) <- zip [0..] unionDataCtors
+                | (i, Raw.Variant{}) <- zip [0..] unionDataCtors
                 ] ++
                 [(PVar "_", eStd_ "undefined")]
             )
