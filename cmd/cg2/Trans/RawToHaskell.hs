@@ -102,6 +102,11 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, unionDataCtors} =
             ]
         , derives = []
         }
+    , instance_ [] ["Classes"] "FromStruct" [TVar "msg", TApp (TLName typeCtor) [TVar "msg"]]
+        [ iValue "fromStruct" [PVar "struct"]
+            -- TODO
+            (eStd_ "undefined")
+        ]
     ]
 declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     let listCtor = Name.mkSub typeCtor "List_"
