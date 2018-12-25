@@ -3,9 +3,10 @@
 {-# LANGUAGE OverloadedStrings     #-}
 module Trans.FlatToRaw (fileToFile) where
 
-import qualified IR.Flat as Flat
-import qualified IR.Name as Name
-import qualified IR.Raw  as Raw
+import qualified IR.Common as C
+import qualified IR.Flat   as Flat
+import qualified IR.Name   as Name
+import qualified IR.Raw    as Raw
 
 fileToFile :: Flat.File -> Raw.File
 fileToFile Flat.File{nodes, fileId, fileName} =
@@ -16,7 +17,7 @@ fileToFile Flat.File{nodes, fileId, fileName} =
         }
 
 nodeToDecls :: Flat.Node -> [Raw.Decl]
-nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
+nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
     Flat.Enum variants ->
         [ Raw.Enum
             { typeCtor = local
@@ -39,9 +40,10 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
             , concatMap (fieldToDecls local) fields
             ]
     Flat.Union{variants} ->
+        let local' = Name.mkSub local "" in
         [ Raw.StructWrapper { typeCtor = local }
         , Raw.UnionVariant
-            { typeCtor = Name.mkSub local ""
+            { typeCtor = local'
             , unionDataCtors =
                 [ (local, fmap Flat.name fieldLocType)
                 | Flat.Variant
@@ -51,6 +53,14 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
                         }
                     } <- variants
                 ]
+            }
+        , Raw.Getter
+            { fieldName = local'
+            , containerType = local
+            , fieldLocType = C.HereField $ C.StructType Name.CapnpQ
+                { fileId
+                , local = local'
+                }
             }
         ]
     Flat.Interface ->
