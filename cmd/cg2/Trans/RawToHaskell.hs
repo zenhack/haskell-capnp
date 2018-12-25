@@ -50,6 +50,16 @@ readCtx m msg = TApp
     , TVar msg
     ]
 
+eGetWordField :: Exp -> C.DataLoc -> Exp
+eGetWordField struct C.DataLoc{dataIdx, dataOff, dataDef} =
+    EApp
+        (egName ["GenHelpers"] "getWordField")
+        [ struct
+        , EInt $ fromIntegral dataIdx
+        , EInt $ fromIntegral dataOff
+        , EInt $ fromIntegral dataDef
+        ]
+
 instance_ :: [Type] -> [T.Text] -> Name.LocalQ -> [Type] -> [InstanceDef] -> Decl
 instance_ ctx classNS className tys defs = DcInstance
     { ctx
@@ -113,8 +123,43 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
                 )
             ]
             (ECase (ELName "tag") $
-                [ (PInt $ fromIntegral tagValue, eStd_ "undefined")
-                | Raw.Variant{tagValue} <- unionDataCtors
+                [ ( PInt $ fromIntegral tagValue
+                  , case locType of
+                        C.VoidField ->
+                            (EApp (eStd_ "pure") [ELName name])
+                        C.HereField _ ->
+                            (EFApp
+                                (ELName name)
+                                [ EApp
+                                    (egName ["Classes"] "fromStruct")
+                                    [ELName "struct"]
+                                ]
+                            )
+                        C.DataField loc _ ->
+                            EFApp
+                                (ELName name)
+                                [eGetWordField (ELName "struct") loc]
+                        C.PtrField idx _ ->
+                            EFApp
+                                (ELName name)
+                                [ EDo
+                                    [DoBind "ptr" $ EApp
+                                        (egName ["Untyped"] "getPtr")
+                                        [ EInt $ fromIntegral idx
+                                        , ELName "struct"
+                                        ]
+                                    ]
+                                    (EApp
+                                        (egName ["Classes"] "fromPtr")
+                                        [ EApp
+                                            (egName ["Untyped"] "message")
+                                            [ELName "struct"]
+                                        , ELName "ptr"
+                                        ]
+                                    )
+                                ]
+                  )
+                | Raw.Variant{name, tagValue, locType} <- unionDataCtors
                 ] ++
                 [(PVar "_", eStd_ "undefined")]
             )
@@ -436,14 +481,8 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                 "get_" <> Name.renderLocalQ fieldName
             , params = [PLCtor containerDataCtor [PVar "struct"]]
             , value = case fieldLocType of
-                C.DataField C.DataLoc{dataIdx, dataOff, dataDef} _ ->
-                    EApp
-                        (egName ["GenHelpers"] "getWordField")
-                        [ ELName "struct"
-                        , EInt $ fromIntegral dataIdx
-                        , EInt $ fromIntegral dataOff
-                        , EInt $ fromIntegral dataDef
-                        ]
+                C.DataField dataLoc  _ ->
+                    (eGetWordField (ELName "struct") dataLoc)
                 C.PtrField idx _ -> EDo
                     [ DoBind "ptr" $ EApp
                         (egName ["Untyped"] "getPtr")
