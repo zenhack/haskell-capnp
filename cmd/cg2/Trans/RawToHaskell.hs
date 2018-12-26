@@ -126,15 +126,14 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
                 [ ( PInt $ fromIntegral tagValue
                   , case locType of
                         C.VoidField ->
-                            (EApp (eStd_ "pure") [ELName name])
+                            EApp (eStd_ "pure") [ELName name]
                         C.HereField _ ->
-                            (EFApp
+                            EFApp
                                 (ELName name)
                                 [ EApp
                                     (egName ["Classes"] "fromStruct")
                                     [ELName "struct"]
                                 ]
-                            )
                         C.DataField loc _ ->
                             EFApp
                                 (ELName name)
@@ -482,7 +481,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
             , params = [PLCtor containerDataCtor [PVar "struct"]]
             , value = case fieldLocType of
                 C.DataField dataLoc  _ ->
-                    (eGetWordField (ELName "struct") dataLoc)
+                    eGetWordField (ELName "struct") dataLoc
                 C.PtrField idx _ -> EDo
                     [ DoBind "ptr" $ EApp
                         (egName ["Untyped"] "getPtr")
