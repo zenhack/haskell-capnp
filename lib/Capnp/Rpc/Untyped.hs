@@ -1616,7 +1616,15 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                 abortConn conn' e
             Right pa ->
                 newLocalAnswerClient conn' pa
-    go _ d = error $ "TODO: " ++ show d
+    go _conn' (R.CapDescriptor'senderPromise _) =
+        error "TODO: senderHosted"
+    go conn' (R.CapDescriptor'thirdPartyHosted _) =
+        -- LEVEL 3
+        abortConn conn' $ eUnimplemented
+            "thirdPartyHosted unimplemented; level 3 is not supported."
+    go conn' (R.CapDescriptor'unknown' tag) =
+        abortConn conn' $ eUnimplemented $
+            "Unimplemented CapDescriptor variant #" <> fromString (show tag)
 
 -- | Create a new client targeting an object in our answers table.
 -- Important: in this case the 'PromisedAnswer' refers to a question we
