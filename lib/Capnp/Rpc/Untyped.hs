@@ -455,18 +455,19 @@ data EntryQA
 
 -- | An entry in our imports table.
 data EntryI = EntryI
-    { localRc   :: Rc ()
+    { localRc      :: Rc ()
     -- ^ A refcount cell with a finalizer attached to it; when the finalizer
     -- runs it will remove this entry from the table and send a release
     -- message to the remote vat.
-    , remoteRc  :: !Word32
+    , remoteRc     :: !Word32
     -- ^ The reference count for this object as understood by the remote
     -- vat. This tells us what to send in the release message's count field.
-    , proxies   :: ExportMap
+    , proxies      :: ExportMap
     -- ^ See Note [proxies]
-    , onResolve :: Maybe (Fulfiller Client)
-    -- ^ If this entry is a promise, this will contain a fulfiller to notify
-    -- when the promise is resolved. If not, this will be 'Nothing'.
+    , promiseState :: Maybe (TVar PromiseState)
+    -- ^ If this entry is a promise, this will contain the state of that
+    -- promise, so that it may be used to create PromiseClients and
+    -- update the promise when it resolves.
     }
 
 -- | An entry in our exports table.
@@ -1590,7 +1591,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
             Just EntryI{ localRc, remoteRc, proxies } -> do
                 finalizerKey <- FinalizerKey.newSTM
                 Rc.incr localRc
-                M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies, onResolve = Nothing } importId imports
+                M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies, promiseState = Nothing } importId imports
                 queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
                 pure $ Client $ Just $ ImportClient ImportRef
                     { conn
@@ -1600,7 +1601,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     }
 
             Nothing -> do
-                Client . Just . ImportClient <$> newImport importId conn Nothing
+                Client . Just . ImportClient <$> newImport importId conn False
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
             \EntryE{client} ->
@@ -1622,28 +1623,34 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
             "Unimplemented CapDescriptor variant #" <> fromString (show tag)
 
 -- | Create a new entry in the imports table, with the given import id and
--- 'onResolve', and return a corresponding ImportRef. When the ImportRef is
+-- 'promiseState', and return a corresponding ImportRef. When the ImportRef is
 -- garbage collected, the refcount in the table will be decremented.
-newImport :: IEId -> Conn -> Maybe (Fulfiller Client) -> STM ImportRef
-newImport importId conn onResolve = getLive conn >>= \conn'@Conn'{imports} -> do
+newImport :: IEId -> Conn -> Bool -> STM ImportRef
+newImport importId conn isPromise = getLive conn >>= \conn'@Conn'{imports} -> do
     finalizerKey <- FinalizerKey.newSTM
     localRc <- Rc.new () $ releaseImport importId conn'
     queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
     proxies <- ExportMap <$> M.new
+    let importRef = ImportRef
+                { conn
+                , importId
+                , proxies
+                , finalizerKey
+                }
+    promiseState <-
+        if isPromise then
+            Just <$> newTVar Pending { tmpDest = ImportDest importRef }
+        else
+            pure Nothing
     M.insert EntryI
         { localRc
         , remoteRc = 1
         , proxies
-        , onResolve
+        , promiseState
         }
         importId
         imports
-    pure ImportRef
-        { conn
-        , importId
-        , proxies
-        , finalizerKey
-        }
+    pure importRef
 
 -- | Release the identified import. Removes it from the table and sends a release
 -- message with the correct count.
