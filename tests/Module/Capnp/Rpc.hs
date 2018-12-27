@@ -12,10 +12,11 @@ import Test.Hspec
 
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Exception.Safe   (bracket, try)
-import Control.Monad            (replicateM, (>=>))
+import Control.Monad            (replicateM, void, (>=>))
 import Control.Monad.Catch      (throwM)
 import Control.Monad.IO.Class   (liftIO)
 import Data.Foldable            (for_)
+import Data.Mutable             (freeze)
 import Supervisors              (Supervisor)
 import System.Timeout           (timeout)
 
@@ -24,9 +25,17 @@ import qualified Data.Text               as T
 import qualified Network.Socket          as Socket
 
 import Capnp
-    (createPure, def, defaultLimit, lbsToMsg, msgToValue, valueToMsg)
+    ( createPure
+    , def
+    , defaultLimit
+    , evalLimitT
+    , lbsToMsg
+    , msgToValue
+    , valueToMsg
+    )
 import Capnp.Bits          (WordCount)
 import Capnp.Promise       (Promise, waitIO)
+import Capnp.Rpc.Errors    (eFailed)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
 
@@ -314,6 +323,37 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                     msg' <- recvMsg (probeTrans defaultLimit)
                     resp <- msgToValue msg'
                     resp `shouldBe` Message'abort wantAbortExn
+                )
+    it "Should respond with an abort if erroneously sent return = resultsSentElsewhere" $ do
+
+        withTransportPair $ \(vatTrans, probeTrans) ->
+            let wantExn = eFailed $
+                    "Received Return.resultsSentElswhere for a call "
+                    <> "with sendResultsTo = caller."
+            in concurrently_
+                (do
+                    Left (e :: RpcError) <- try $
+                        handleConn (vatTrans defaultLimit) def
+                            { debugMode = True
+                            , withBootstrap = Just $ \_sup client ->
+                                let ctr :: CallSequence = fromClient client
+                                in void $ (callSequence'getNumber ctr ? def) >>= waitIO
+                            }
+                    e `shouldBe` SentAbort wantExn
+                )
+                (do
+                    let send msg =
+                            evalLimitT maxBound (valueToMsg msg >>= freeze)
+                            >>= sendMsg (probeTrans defaultLimit)
+                        recv = recvMsg (probeTrans defaultLimit) >>= msgToValue
+                    Message'bootstrap Bootstrap{} <- recv
+                    Message'call Call{questionId} <- recv
+                    send $ Message'return def
+                        { answerId = questionId
+                        , union' = Return'resultsSentElsewhere
+                        }
+                    msg <- recv
+                    msg `shouldBe` Message'abort wantExn
                 )
     it "Should reply with unimplemented when sent a join (level 4 only)." $
         withTransportPair $ \(vatTrans, probeTrans) ->
