@@ -1547,8 +1547,15 @@ emitCap _targetConn (Client Nothing) =
 emitCap targetConn (Client (Just client')) = case client' of
     LocalClient{} ->
         R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
-    PromiseClient{} ->
-        R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
+    PromiseClient{ pState } -> readTVar pState >>= \case
+        Pending { tmpDest = AnswerDest { conn, answer } }
+            | conn == targetConn ->
+                pure $ R.CapDescriptor'receiverAnswer (marshalPromisedAnswer answer)
+        Pending { tmpDest = ImportDest ImportRef { conn, importId = IEId iid } }
+            | conn == targetConn ->
+                pure $ R.CapDescriptor'receiverHosted iid
+        _ ->
+            R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
     ImportClient ImportRef { conn=hostConn, importId }
         | hostConn == targetConn ->
             pure (R.CapDescriptor'receiverHosted (ieWord importId))
