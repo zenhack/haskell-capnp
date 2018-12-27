@@ -177,7 +177,7 @@ data Conn' = Conn'
     , embargos         :: M.Map EmbargoId (Fulfiller ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
     -- context field set to receiverLoopback, we look up the embargo id in
-    -- this table, and execute the STM we have registered.
+    -- this table, and fulfill the promise.
 
     , pendingCallbacks :: TQueue (IO ())
     -- See Note [callbacks]
