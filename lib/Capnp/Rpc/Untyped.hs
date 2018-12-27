@@ -1052,6 +1052,10 @@ handleReleaseMsg
             { id=(IEId -> eid)
             , referenceCount=refCountDiff
             } =
+    releaseExport conn eid refCountDiff
+
+releaseExport :: Conn -> IEId -> Word32 -> STM ()
+releaseExport conn eid refCountDiff =
     getLive conn >>= \conn'@Conn'{exports} ->
         lookupAbort "export" conn' exports eid $
             \EntryE{client, refCount=oldRefCount} ->
