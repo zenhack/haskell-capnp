@@ -68,10 +68,11 @@ import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
 import Control.Exception.Safe   (Exception, bracket, throwIO, try)
-import Control.Monad            (forever, void)
+import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (toList, traverse_)
 import Data.Hashable            (Hashable, hash, hashWithSalt)
+import Data.Maybe               (catMaybes)
 import Data.String              (fromString)
 import Data.Text                (Text)
 import GHC.Generics             (Generic)
@@ -672,7 +673,7 @@ callRemote
         target = do
     conn'@Conn'{questions} <- getLive conn
     qid <- newQuestion conn'
-    payload <- makeOutgoingPayload conn arguments
+    payload@R.Payload{capTable} <- makeOutgoingPayload conn arguments
     sendPureMsg conn' $ R.Message'call def
         { R.questionId = qaWord qid
         , R.target = marshalMsgTarget target
@@ -680,18 +681,32 @@ callRemote
         , R.interfaceId = interfaceId
         , R.methodId = methodId
         }
+    -- save these in case the callee sends back releaseParamCaps = True in the return
+    -- message:
+    let paramCaps = catMaybes $ flip map (V.toList capTable) $ \case
+            R.CapDescriptor'senderHosted  eid -> Just (IEId eid)
+            R.CapDescriptor'senderPromise eid -> Just (IEId eid)
+            _ -> Nothing
     M.insert
         NewQA
-            { onReturn = SnocList.singleton $ cbCallReturn conn' response
+            { onReturn = SnocList.singleton $ cbCallReturn paramCaps conn response
             , onFinish = SnocList.empty
             }
         qid
         questions
 
 -- | Callback to run when a return comes in that corresponds to a call
--- we sent. Registered in callRemote.
-cbCallReturn :: Conn' -> Fulfiller RawMPtr -> R.Return -> STM ()
-cbCallReturn conn@Conn'{answers} response R.Return{ answerId, union' } = do
+-- we sent. Registered in callRemote. The first argument is a list of
+-- export IDs to release if the return message has releaseParamCaps = true.
+cbCallReturn :: [IEId] -> Conn -> Fulfiller RawMPtr -> R.Return -> STM ()
+cbCallReturn
+        paramCaps
+        conn
+        response
+        R.Return{ answerId, union', releaseParamCaps } = do
+    conn'@Conn'{answers} <- getLive conn
+    when releaseParamCaps $
+        traverse_ (releaseExport conn 1) paramCaps
     case union' of
         R.Return'exception exn ->
             breakPromise response exn
@@ -706,7 +721,7 @@ cbCallReturn conn@Conn'{answers} response R.Return{ answerId, union' } = do
         R.Return'resultsSentElsewhere ->
             -- This should never happen, since we always set
             -- sendResultsTo = caller
-            abortConn conn $ eFailed $ mconcat
+            abortConn conn' $ eFailed $ mconcat
                 [ "Received Return.resultsSentElswhere for a call "
                 , "with sendResultsTo = caller."
                 ]
@@ -716,17 +731,17 @@ cbCallReturn conn@Conn'{answers} response R.Return{ answerId, union' } = do
             -- requires that (1) each answer is only used this way once, and
             -- (2) The question was sent with sendResultsTo set to 'yourself',
             -- but we don't enforce either of these requirements.
-            subscribeReturn "answer" conn answers qid $
-                cbCallReturn conn response
+            subscribeReturn "answer" conn' answers qid $
+                cbCallReturn [] conn response
 
         R.Return'acceptFromThirdParty _ ->
             -- LEVEL 3
-            abortConn conn $ eUnimplemented
+            abortConn conn' $ eUnimplemented
                 "This vat does not support level 3."
         R.Return'unknown' ordinal ->
-            abortConn conn $ eUnimplemented $
+            abortConn conn' $ eUnimplemented $
                 "Unknown return variant #" <> fromString (show ordinal)
-    finishQuestion conn def
+    finishQuestion conn' def
         { R.questionId = answerId
         , R.releaseResultCaps = False
         }
@@ -1037,7 +1052,6 @@ followPtrs (_:_) (Just _) =
 
 handleReturnMsg :: Conn -> R.Return -> STM ()
 handleReturnMsg conn ret = getLive conn >>= \conn'@Conn'{questions} ->
-    -- TODO: handle releaseParamCaps
     updateQAReturn conn' questions "question" ret
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
@@ -1052,10 +1066,10 @@ handleReleaseMsg
             { id=(IEId -> eid)
             , referenceCount=refCountDiff
             } =
-    releaseExport conn eid refCountDiff
+    releaseExport conn refCountDiff eid
 
-releaseExport :: Conn -> IEId -> Word32 -> STM ()
-releaseExport conn eid refCountDiff =
+releaseExport :: Conn -> Word32 -> IEId -> STM ()
+releaseExport conn refCountDiff eid =
     getLive conn >>= \conn'@Conn'{exports} ->
         lookupAbort "export" conn' exports eid $
             \EntryE{client, refCount=oldRefCount} ->
