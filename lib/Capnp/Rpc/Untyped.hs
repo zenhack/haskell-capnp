@@ -6,6 +6,7 @@
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE RecursiveDo                #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
@@ -1588,10 +1589,15 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
     go conn'@Conn'{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
         entry <- M.lookup importId imports
         case entry of
-            Just EntryI{ localRc, remoteRc, proxies } -> do
+            Just EntryI{ promiseState=Just _ } ->
+                let imp = fromString (show importId)
+                in abortConn conn' $ eFailed $
+                    "received senderHosted capability #" <> imp <>
+                    ", but the imports table says #" <> imp <> " is senderPromise."
+            Just ent@EntryI{ localRc, remoteRc, proxies } -> do
                 finalizerKey <- FinalizerKey.newSTM
                 Rc.incr localRc
-                M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies, promiseState = Nothing } importId imports
+                M.insert ent { localRc, remoteRc = remoteRc + 1 } importId imports
                 queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
                 pure $ Client $ Just $ ImportClient ImportRef
                     { conn
@@ -1601,7 +1607,22 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     }
 
             Nothing ->
-                Client . Just . ImportClient <$> newImport importId conn False
+                Client . Just . ImportClient <$> newImport importId conn Nothing
+    go conn'@Conn'{imports} (R.CapDescriptor'senderPromise (IEId -> importId)) = do
+        entry <- M.lookup importId imports
+        case entry of
+            Just EntryI { promiseState=Nothing } ->
+                let imp = fromString (show importId)
+                in abortConn conn' $ eFailed $
+                    "received senderPromise capability #" <> imp <>
+                    ", but the imports table says #" <> imp <> " is senderHosted."
+            Just ent@EntryI { remoteRc, proxies, promiseState=Just pState } -> do
+                M.insert ent { remoteRc = remoteRc + 1 } importId imports
+                pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
+            Nothing -> do
+                rec imp@ImportRef{proxies} <- newImport importId conn (Just pState)
+                    pState <- newTVar Pending { tmpDest = ImportDest imp }
+                pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
             \EntryE{client} ->
@@ -1612,8 +1633,6 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                 abortConn conn' e
             Right pa ->
                 newLocalAnswerClient conn' pa
-    go _conn' (R.CapDescriptor'senderPromise _) =
-        error "TODO: senderHosted"
     go conn' (R.CapDescriptor'thirdPartyHosted _) =
         -- LEVEL 3
         abortConn conn' $ eUnimplemented
@@ -1625,8 +1644,8 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
 -- | Create a new entry in the imports table, with the given import id and
 -- 'promiseState', and return a corresponding ImportRef. When the ImportRef is
 -- garbage collected, the refcount in the table will be decremented.
-newImport :: IEId -> Conn -> Bool -> STM ImportRef
-newImport importId conn isPromise = getLive conn >>= \conn'@Conn'{imports} -> do
+newImport :: IEId -> Conn -> Maybe (TVar PromiseState) -> STM ImportRef
+newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} -> do
     finalizerKey <- FinalizerKey.newSTM
     localRc <- Rc.new () $ releaseImport importId conn'
     queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
@@ -1637,11 +1656,6 @@ newImport importId conn isPromise = getLive conn >>= \conn'@Conn'{imports} -> do
                 , proxies
                 , finalizerKey
                 }
-    promiseState <-
-        if isPromise then
-            Just <$> newTVar Pending { tmpDest = ImportDest importRef }
-        else
-            pure Nothing
     M.insert EntryI
         { localRc
         , remoteRc = 1
