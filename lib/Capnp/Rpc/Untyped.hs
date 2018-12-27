@@ -1579,9 +1579,9 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
     go _ R.CapDescriptor'none = pure (Client Nothing)
     go conn'@Conn'{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
         entry <- M.lookup importId imports
-        finalizerKey <- FinalizerKey.newSTM
         case entry of
             Just EntryI{ localRc, remoteRc, proxies } -> do
+                finalizerKey <- FinalizerKey.newSTM
                 Rc.incr localRc
                 M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies, onResolve = Nothing } importId imports
                 queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
@@ -1593,22 +1593,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     }
 
             Nothing -> do
-                localRc <- Rc.new () $
-                    lookupAbort "imports" conn' imports importId $ \EntryI { remoteRc } -> do
-                        sendPureMsg conn' $ R.Message'release
-                            R.Release
-                                { id = ieWord importId
-                                , referenceCount = remoteRc
-                                }
-                        M.delete importId imports
-                proxies <- ExportMap <$> M.new
-                M.insert EntryI { localRc, remoteRc = 1, proxies, onResolve = Nothing } importId imports
-                pure $ Client $ Just $ ImportClient ImportRef
-                    { conn
-                    , importId
-                    , proxies
-                    , finalizerKey
-                    }
+                Client . Just . ImportClient <$> newImport importId conn Nothing
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
             \EntryE{client} ->
@@ -1628,6 +1613,42 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
     go conn' (R.CapDescriptor'unknown' tag) =
         abortConn conn' $ eUnimplemented $
             "Unimplemented CapDescriptor variant #" <> fromString (show tag)
+
+-- | Create a new entry in the imports table, with the given import id and
+-- 'onResolve', and return a corresponding ImportRef. When the ImportRef is
+-- garbage collected, the refcount in the table will be decremented.
+newImport :: IEId -> Conn -> Maybe (Fulfiller Client) -> STM ImportRef
+newImport importId conn onResolve = getLive conn >>= \conn'@Conn'{imports} -> do
+    finalizerKey <- FinalizerKey.newSTM
+    localRc <- Rc.new () $ releaseImport importId conn'
+    queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
+    proxies <- ExportMap <$> M.new
+    M.insert EntryI
+        { localRc
+        , remoteRc = 1
+        , proxies
+        , onResolve
+        }
+        importId
+        imports
+    pure ImportRef
+        { conn
+        , importId
+        , proxies
+        , finalizerKey
+        }
+
+-- | Release the identified import. Removes it from the table and sends a release
+-- message with the correct count.
+releaseImport :: IEId -> Conn' -> STM ()
+releaseImport importId conn'@Conn'{imports} = do
+    lookupAbort "imports" conn' imports importId $ \EntryI { remoteRc } -> do
+        sendPureMsg conn' $ R.Message'release
+            R.Release
+                { id = ieWord importId
+                , referenceCount = remoteRc
+                }
+    M.delete importId imports
 
 -- | Create a new client targeting an object in our answers table.
 -- Important: in this case the 'PromisedAnswer' refers to a question we
