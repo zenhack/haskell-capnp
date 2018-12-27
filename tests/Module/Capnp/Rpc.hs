@@ -324,7 +324,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                     resp <- msgToValue msg'
                     resp `shouldBe` Message'abort wantAbortExn
                 )
-    it "Should respond with an abort if erroneously sent return = resultsSentElsewhere" $ do
+    it "Should respond with an abort if erroneously sent return = resultsSentElsewhere" $
 
         withTransportPair $ \(vatTrans, probeTrans) ->
             let wantExn = eFailed $

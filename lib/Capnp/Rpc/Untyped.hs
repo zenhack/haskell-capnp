@@ -1600,7 +1600,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     , finalizerKey
                     }
 
-            Nothing -> do
+            Nothing ->
                 Client . Just . ImportClient <$> newImport importId conn False
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
@@ -1656,7 +1656,7 @@ newImport importId conn isPromise = getLive conn >>= \conn'@Conn'{imports} -> do
 -- message with the correct count.
 releaseImport :: IEId -> Conn' -> STM ()
 releaseImport importId conn'@Conn'{imports} = do
-    lookupAbort "imports" conn' imports importId $ \EntryI { remoteRc } -> do
+    lookupAbort "imports" conn' imports importId $ \EntryI { remoteRc } ->
         sendPureMsg conn' $ R.Message'release
             R.Release
                 { id = ieWord importId
