@@ -455,15 +455,18 @@ data EntryQA
 
 -- | An entry in our imports table.
 data EntryI = EntryI
-    { localRc  :: Rc ()
+    { localRc   :: Rc ()
     -- ^ A refcount cell with a finalizer attached to it; when the finalizer
     -- runs it will remove this entry from the table and send a release
     -- message to the remote vat.
-    , remoteRc :: !Word32
+    , remoteRc  :: !Word32
     -- ^ The reference count for this object as understood by the remote
     -- vat. This tells us what to send in the release message's count field.
-    , proxies  :: ExportMap
+    , proxies   :: ExportMap
     -- ^ See Note [proxies]
+    , onResolve :: Maybe (Fulfiller Client)
+    -- ^ If this entry is a promise, this will contain a fulfiller to notify
+    -- when the promise is resolved. If not, this will be 'Nothing'.
     }
 
 -- | An entry in our exports table.
@@ -1580,7 +1583,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
         case entry of
             Just EntryI{ localRc, remoteRc, proxies } -> do
                 Rc.incr localRc
-                M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies } importId imports
+                M.insert EntryI { localRc, remoteRc = remoteRc + 1, proxies, onResolve = Nothing } importId imports
                 queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
                 pure $ Client $ Just $ ImportClient ImportRef
                     { conn
@@ -1599,7 +1602,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                                 }
                         M.delete importId imports
                 proxies <- ExportMap <$> M.new
-                M.insert EntryI { localRc, remoteRc = 1, proxies } importId imports
+                M.insert EntryI { localRc, remoteRc = 1, proxies, onResolve = Nothing } importId imports
                 pure $ Client $ Just $ ImportClient ImportRef
                     { conn
                     , importId
