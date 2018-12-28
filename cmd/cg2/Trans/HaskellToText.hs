@@ -7,6 +7,7 @@ import Data.List                    (intersperse)
 import Data.String                  (fromString)
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
+import qualified Data.Text.Lazy               as LT
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
 import IR.Haskell
@@ -14,8 +15,8 @@ import IR.Haskell
 import qualified IR.Common as C
 import qualified IR.Name   as Name
 
-moduleToText :: Module -> PP.Doc
-moduleToText = format
+moduleToText :: Module -> LT.Text
+moduleToText mod = PP.displayT $ PP.renderPretty 0.4 80 (format mod)
 
 -- | Types which can be rendered as haskell source code.
 --
@@ -170,11 +171,11 @@ instance Format DataVariant where
 instance Format DataArgs where
     format (APos types) =
         mconcat $ intersperse " " (map format types)
-    format (ARec fields) =
-        indent $ PP.braces $ mconcat $
-            PP.punctuate
-                ","
-                [ format name <> " :: " <> format ty | (name, ty) <- fields ]
+    format (ARec fields) = PP.line <> indent
+        (PP.encloseSep
+            "{" "}" ","
+            [ format name <> " :: " <> format ty | (name, ty) <- fields ]
+        )
 
 instance Format Type where
     format (TGName ty) = format ty

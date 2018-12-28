@@ -2,12 +2,13 @@
 -- generator plugin.
 module Main (main) where
 
-import qualified Text.PrettyPrint.Leijen.Text as PP
-
 import Data.Foldable    (for_)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
 import System.IO        (IOMode(WriteMode), withFile)
+
+import qualified Data.Text.Lazy    as LT
+import qualified Data.Text.Lazy.IO as TIO
 
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
@@ -24,13 +25,13 @@ import qualified Trans.Stage1ToFlat
 main :: IO ()
 main = do
     cgr <- getValue defaultLimit
-    for_ (handleCGR cgr) $ \(path, doc) -> do
+    for_ (handleCGR cgr) $ \(path, contents) -> do
         createDirectoryIfMissing True (takeDirectory path)
         withFile path WriteMode $ \h ->
-            PP.hPutDoc h doc
+            TIO.hPutStr h contents
 
 -- | Convert a 'CodeGeneratorRequest' to a list of files to create.
-handleCGR :: CodeGeneratorRequest -> [(FilePath, PP.Doc)]
+handleCGR :: CodeGeneratorRequest -> [(FilePath, LT.Text)]
 handleCGR cgr =
     let flat =
             Trans.Stage1ToFlat.filesToFiles $
