@@ -70,7 +70,7 @@ import Control.Concurrent.MVar  (MVar, newEmptyMVar)
 import Control.Exception.Safe   (Exception, bracket, throwIO, try)
 import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
-import Data.Foldable            (toList, traverse_)
+import Data.Foldable            (for_, toList, traverse_)
 import Data.Hashable            (Hashable, hash, hashWithSalt)
 import Data.Maybe               (catMaybes)
 import Data.String              (fromString)
@@ -930,7 +930,20 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
     insertBootstrap _ ret Nothing =
         pure $ Just HaveReturn
             { returnMsg = ret
-            , onFinish = SnocList.empty
+            , onFinish = SnocList.fromList
+                [ \R.Finish{releaseResultCaps} ->
+                    case ret of
+                        R.Return
+                            { union' = R.Return'results R.Payload
+                                { capTable = (V.toList -> [ R.CapDescriptor'receiverHosted (IEId -> eid)])
+                                }
+                            } ->
+                                when releaseResultCaps $
+                                    releaseExport conn 1 eid
+                        _ ->
+                            pure ()
+                ]
+
             }
     insertBootstrap conn' _ (Just _) =
         abortConn conn' $ eFailed "Duplicate question ID"
@@ -943,7 +956,7 @@ handleCallMsg
             , target
             , interfaceId
             , methodId
-            , params=R.Payload{content}
+            , params=R.Payload{content, capTable}
             }
         = getLive conn >>= \conn'@Conn'{exports, answers} -> do
     -- First, add an entry in our answers table:
@@ -953,7 +966,15 @@ handleCallMsg
         (QAId questionId)
         NewQA
             { onReturn = SnocList.empty
-            , onFinish = SnocList.empty
+            , onFinish = SnocList.fromList
+                [ \R.Finish{releaseResultCaps} ->
+                    when releaseResultCaps $
+                        for_ capTable $ \case
+                            R.CapDescriptor'receiverHosted (IEId -> importId) ->
+                                releaseExport conn 1 importId
+                            _ ->
+                                pure ()
+                ]
             }
         answers
 
@@ -1056,7 +1077,6 @@ handleReturnMsg conn ret = getLive conn >>= \conn'@Conn'{questions} ->
 
 handleFinishMsg :: Conn -> R.Finish -> STM ()
 handleFinishMsg conn finish = getLive conn >>= \conn'@Conn'{answers} ->
-    -- TODO: handle releaseResultCaps
     updateQAFinish conn' answers "answer" finish
 
 handleReleaseMsg :: Conn -> R.Release -> STM ()
