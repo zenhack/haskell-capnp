@@ -9,6 +9,7 @@ import Data.Word
 import Data.List   (intersperse)
 import Data.String (IsString(fromString))
 
+import qualified Data.Set  as S
 import qualified Data.Text as T
 
 class HasUnQ a where
@@ -81,7 +82,16 @@ localToUnQ LocalQ{localUnQ, localNS}
     | otherwise = UnQ (renderLocalNS localNS <> "'" <> renderUnQ localUnQ)
 
 renderUnQ :: UnQ -> T.Text
-renderUnQ (UnQ name) = name
+renderUnQ (UnQ name)
+    | name `S.member` keywords = name <> "_"
+    | otherwise = name
+  where
+    keywords = S.fromList
+        [ "as", "case", "of", "class", "data", "family", "instance", "default"
+        , "deriving", "do", "forall", "foreign", "hiding", "if", "then", "else"
+        , "import", "infix", "infixl", "infixr", "let", "in", "mdo", "module"
+        , "newtype", "proc", "qualified", "rec", "type", "where"
+        ]
 
 renderLocalQ :: LocalQ -> T.Text
 renderLocalQ = renderUnQ . localToUnQ
