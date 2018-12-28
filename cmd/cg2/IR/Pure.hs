@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 module IR.Pure where
 
 import qualified IR.Name as Name
