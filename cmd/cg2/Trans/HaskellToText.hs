@@ -170,7 +170,11 @@ instance Format DataVariant where
 instance Format DataArgs where
     format (APos types) =
         mconcat $ intersperse " " (map format types)
-    format (ARec _fields) = error "TODO"
+    format (ARec fields) =
+        indent $ PP.braces $ mconcat $
+            PP.punctuate
+                ","
+                [ format name <> " :: " <> format ty | (name, ty) <- fields ]
 
 instance Format Type where
     format (TGName ty) = format ty

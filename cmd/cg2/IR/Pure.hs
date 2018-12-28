@@ -1,8 +1,16 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 module IR.Pure where
 
+import Data.Word
+
 import qualified IR.Common as C
 import qualified IR.Name   as Name
+
+data File = File
+    { fileId   :: !Word64
+    , fileName :: FilePath
+    , decls    :: [Decl]
+    }
 
 data Decl
     = DUnion

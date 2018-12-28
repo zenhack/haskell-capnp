@@ -1,8 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Trans.PureToHaskell where
 
 import IR.Haskell
+import Trans.ToHaskellCommon
 
 import qualified IR.Common as C
 import qualified IR.Name   as Name
@@ -20,6 +22,16 @@ cerialEq (C.WordType _)      = True
 cerialEq (C.CompositeType _) = False
 cerialEq (C.PtrType _)       = False
 
+fileToModule :: P.File -> Module
+fileToModule P.File{fileName, decls} = Module
+    { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
+    , modLangPragmas =
+        [ "DuplicateRecordFields"
+        ]
+    , modImports = []
+    , modDecls = concatMap declToDecls decls
+    }
+
 declToDecls :: P.Decl -> [Decl]
 declToDecls P.DStruct{typeName, fields} =
     let name = Name.localToUnQ typeName in
@@ -36,10 +48,12 @@ declToDecls P.DStruct{typeName, fields} =
             ]
         }
     ]
-declToDecls _ = error "TODO"
+declToDecls _ = [] -- TODO
 
 fieldToField :: P.Field -> (Name.UnQ, Type)
 fieldToField P.Field{name, type_} = (name, typeToType type_)
 
 typeToType :: C.Type Name.CapnpQ -> Type
-typeToType = error "TODO"
+typeToType C.VoidType                   = TUnit
+typeToType (C.WordType (C.PrimWord ty)) = TPrim ty
+typeToType _                            = TLName "TODO"

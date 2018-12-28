@@ -214,6 +214,7 @@ executable cg2
     , Trans.Stage1ToFlat
     , Trans.FlatToRaw
     , Trans.FlatToPure
+    , Trans.ToHaskellCommon
     , Trans.PureToHaskell
     , Trans.RawToHaskell
     , Trans.HaskellToText

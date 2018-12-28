@@ -14,8 +14,10 @@ import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
 
 import qualified IR.Haskell          as Haskell
 import qualified Trans.CgrToStage1
+import qualified Trans.FlatToPure
 import qualified Trans.FlatToRaw
 import qualified Trans.HaskellToText
+import qualified Trans.PureToHaskell
 import qualified Trans.RawToHaskell
 import qualified Trans.Stage1ToFlat
 
@@ -30,13 +32,20 @@ main = do
 -- | Convert a 'CodeGeneratorRequest' to a list of files to create.
 handleCGR :: CodeGeneratorRequest -> [(FilePath, PP.Doc)]
 handleCGR cgr =
-    let modules =
+    let flat =
+            Trans.Stage1ToFlat.filesToFiles $
+            Trans.CgrToStage1.cgrToFiles cgr
+        modules =
             map
                 ( Trans.RawToHaskell.fileToModule
                 . Trans.FlatToRaw.fileToFile
-                ) $
-            Trans.Stage1ToFlat.filesToFiles $
-            Trans.CgrToStage1.cgrToFiles cgr
+                )
+                flat
+            ++
+            map ( Trans.PureToHaskell.fileToModule
+                . Trans.FlatToPure.fileToFile
+                )
+                flat
     in
     map
         (\mod ->
