@@ -3,6 +3,12 @@
 {-# LANGUAGE OverloadedStrings     #-}
 module Trans.PureToHaskell where
 
+import Data.Word
+
+import Text.Printf (printf)
+
+import qualified Data.Text as T
+
 import IR.Haskell
 import Trans.ToHaskellCommon
 
@@ -23,17 +29,22 @@ cerialEq (C.CompositeType _) = False
 cerialEq (C.PtrType _)       = False
 
 fileToModule :: P.File -> Module
-fileToModule P.File{fileName, decls} = Module
+fileToModule P.File{fileName, fileId, decls} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DuplicateRecordFields"
         ]
-    , modImports = []
-    , modDecls = concatMap declToDecls decls
+    , modImports =
+        [ Import { importAs = "V", parts = ["Data", "Vector"] }
+        , Import { importAs = "T", parts = ["Data", "Text"] }
+        , Import { importAs = "BS", parts = ["Data", "ByteString"] }
+        , Import { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
+        ]
+    , modDecls = concatMap (declToDecls fileId) decls
     }
 
-declToDecls :: P.Decl -> [Decl]
-declToDecls P.DStruct{typeName, fields} =
+declToDecls :: Word64 -> P.Decl -> [Decl]
+declToDecls thisMod P.DStruct{typeName, fields} =
     let name = Name.localToUnQ typeName in
     [ DcData Data
         { dataName = name
@@ -43,17 +54,38 @@ declToDecls P.DStruct{typeName, fields} =
         , dataVariants =
             [ DataVariant
                 { dvCtorName = name
-                , dvArgs = ARec (map fieldToField fields)
+                , dvArgs = ARec (map (fieldToField thisMod) fields)
                 }
             ]
         }
     ]
-declToDecls _ = [] -- TODO
+declToDecls _thisMod _ = [] -- TODO
 
-fieldToField :: P.Field -> (Name.UnQ, Type)
-fieldToField P.Field{name, type_} = (name, typeToType type_)
+fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
+fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)
 
-typeToType :: C.Type Name.CapnpQ -> Type
-typeToType C.VoidType                   = TUnit
-typeToType (C.WordType (C.PrimWord ty)) = TPrim ty
-typeToType _                            = TLName "TODO"
+typeToType :: Word64 -> C.Type Name.CapnpQ -> Type
+typeToType _thisMod C.VoidType                        = TUnit
+typeToType _thisMod (C.WordType (C.PrimWord ty))      = TPrim ty
+typeToType thisMod (C.WordType (C.EnumType n))        = nameToType thisMod n
+typeToType thisMod (C.CompositeType (C.StructType n)) = nameToType thisMod n
+typeToType thisMod (C.PtrType (C.PtrComposite (C.StructType n))) =
+    nameToType thisMod n
+typeToType thisMod (C.PtrType (C.ListOf ty)) =
+    TApp (tgName ["V"] "Vector") [typeToType thisMod ty]
+typeToType _thisMod (C.PtrType (C.PrimPtr C.PrimText)) =
+    tgName ["T"] "Text"
+typeToType _thisMod (C.PtrType (C.PrimPtr C.PrimData)) =
+    tgName ["BS"] "ByteString"
+typeToType _thisMod (C.PtrType (C.PrimPtr (C.PrimAnyPtr _))) =
+    -- TODO: distinguish different pointer types.
+    TApp (tStd_ "Maybe") [tgName ["UntypedPure"] "Ptr"]
+typeToType thisMod (C.PtrType (C.PtrInterface n)) =
+    nameToType thisMod n
+
+nameToType :: Word64 -> Name.CapnpQ -> Type
+nameToType thisMod Name.CapnpQ{local, fileId}
+    | thisMod == fileId = TLName local
+    | otherwise = tgName
+        ["Capnp", "Gen", T.pack $ printf "X%x" fileId, "Pure"]
+        local
