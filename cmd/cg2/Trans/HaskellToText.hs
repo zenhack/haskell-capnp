@@ -170,6 +170,7 @@ instance Format DataVariant where
 instance Format DataArgs where
     format (APos types) =
         mconcat $ intersperse " " (map format types)
+    format (ARec _fields) = error "TODO"
 
 instance Format Type where
     format (TGName ty) = format ty

@@ -108,9 +108,9 @@ data DataVariant = DataVariant
     deriving(Show, Read, Eq)
 
 -- | Arguments to a data constructor
-newtype DataArgs
+data DataArgs
     = APos [Type]
-    -- we'll add records at some point.
+    | ARec [(Name.UnQ, Type)]
     deriving(Show, Read, Eq)
 
 data Type
