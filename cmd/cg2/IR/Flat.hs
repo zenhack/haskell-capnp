@@ -49,8 +49,11 @@ data Node'
         , pointerCount  :: !Word16
         }
     | Union
-        { tagOffset :: !Word32
-        , variants  :: [Variant]
+        { tagOffset   :: !Word32
+        , variants    :: [Variant]
+        , isOnlyField :: !Bool
+        -- ^ Whether the union is the only field in its parent
+        -- object.
         }
     | Interface
     deriving(Show, Read, Eq)

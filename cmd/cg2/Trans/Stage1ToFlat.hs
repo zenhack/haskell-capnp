@@ -94,6 +94,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 , union_ = Flat.Union
                                     { variants
                                     , tagOffset
+                                    , isOnlyField = null commonFields
                                     }
                                 }
                     in
