@@ -98,3 +98,6 @@ renderLocalQ = renderUnQ . localToUnQ
 
 renderLocalNS :: NS -> T.Text
 renderLocalNS (NS parts) = mconcat $ intersperse "'" $ reverse parts
+
+getterName :: LocalQ -> UnQ
+getterName = UnQ . ("get_" <>) . renderLocalQ

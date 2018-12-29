@@ -423,8 +423,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                 ]
             )
         , def = DfValue
-            { name = Name.UnQ $
-                "get_" <> Name.renderLocalQ fieldName
+            { name = Name.getterName fieldName
             , params = [PLCtor containerDataCtor [PVar "struct"]]
             , value = case fieldLocType of
                 C.DataField dataLoc  _ ->

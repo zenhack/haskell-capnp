@@ -60,19 +60,20 @@ declToDecls thisMod P.DStruct{typeName, fields} =
         }
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
         [ iValue "decerialize" [PVar "raw"] $
+            let fieldGetter name = egName
+                    (rawModule thisMod)
+                    (Name.mkLocal
+                        Name.emptyNS
+                        (Name.getterName $ Name.mkSub typeName name)
+                    )
+            in
             if null fields then
                 EApp (eStd_ "pure") [ELName typeName]
             else
                 EFApp
                     (ELName typeName)
                     [
-                        let getter =
-                                EApp
-                                    (egName
-                                        (rawModule thisMod)
-                                        (Name.mkSub typeName name))
-                                    [ELName "raw"]
-                        in
+                        let getter = EApp (fieldGetter name) [ELName "raw"] in
                         if cerialEq type_ then
                             getter
                         else
