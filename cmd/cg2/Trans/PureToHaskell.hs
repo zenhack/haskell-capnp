@@ -59,7 +59,10 @@ declToDecls thisMod P.DStruct{typeName, fields} =
             ]
         }
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
-        [ iValue "decerialize" [PVar "raw"] $
+        [ iType "Cerial" [TLName typeName] $ TApp
+            (tgName (rawModule thisMod) typeName)
+            [tgName ["Message"] "ConstMsg"]
+        , iValue "decerialize" [PVar "raw"] $
             let fieldGetter name = egName
                     (rawModule thisMod)
                     (Name.mkLocal

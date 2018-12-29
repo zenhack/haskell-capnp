@@ -40,6 +40,9 @@ tgName parts local = TGName $ gName parts local
 iValue :: Name.UnQ -> [Pattern] -> Exp -> InstanceDef
 iValue name params value = IdValue DfValue {name, params, value}
 
+iType :: Name.UnQ -> [Type] -> Type -> InstanceDef
+iType name params value = IdType $ TypeAlias name params value
+
 readCtx :: T.Text -> T.Text -> Type
 readCtx m msg = TApp
     (tgName ["Untyped"] "ReadCtx")
