@@ -122,9 +122,7 @@ instance Format Exp where
     format (EFApp e es) = hcat
         [ "("
         , format e
-        , " <$> "
-        , hcat $ intersperse " <*> " $ map format es
-        , ")"
+        , PP.encloseSep " <$> " ")" " <*> " $ map format es
         ]
     format (EGName e) = format e
     format (ELName e) = format e
