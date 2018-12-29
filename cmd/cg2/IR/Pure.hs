@@ -13,13 +13,10 @@ data File = File
     }
 
 data Decl
-    = DUnion
+    = Data
         { typeName :: Name.LocalQ
         , variants :: [Variant]
-        }
-    | DStruct
-        { typeName :: Name.LocalQ
-        , fields   :: [Field]
+        , isUnion  :: !Bool
         }
 
 data Field = Field

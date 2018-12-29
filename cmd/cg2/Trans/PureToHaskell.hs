@@ -44,48 +44,48 @@ fileToModule P.File{fileName, fileId, decls} = Module
     }
 
 declToDecls :: Word64 -> P.Decl -> [Decl]
-declToDecls thisMod P.DStruct{typeName, fields} =
-    let name = Name.localToUnQ typeName in
+declToDecls thisMod P.Data{typeName, variants} =
     [ DcData Data
-        { dataName = name
+        { dataName = Name.localToUnQ typeName
         , typeArgs = []
         , derives = [ {- TODO. should factor out some of the helpers from RawToHaskell. -} ]
         , dataNewtype = False
         , dataVariants =
             [ DataVariant
-                { dvCtorName = name
+                { dvCtorName = Name.localToUnQ name
                 , dvArgs = ARec (map (fieldToField thisMod) fields)
                 }
+            | P.Variant{name, fields} <- variants
             ]
         }
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
-        [ iType "Cerial" [TLName typeName] $ TApp
-            (tgName (rawModule thisMod) typeName)
-            [tgName ["Message"] "ConstMsg"]
-        , iValue "decerialize" [PVar "raw"] $
-            let fieldGetter name = egName
-                    (rawModule thisMod)
-                    (Name.mkLocal
-                        Name.emptyNS
-                        (Name.getterName $ Name.mkSub typeName name)
-                    )
-            in
-            if null fields then
-                EApp (eStd_ "pure") [ELName typeName]
-            else
-                EFApp
-                    (ELName typeName)
-                    [
-                        let getter = EApp (fieldGetter name) [ELName "raw"] in
-                        if cerialEq type_ then
-                            getter
-                        else
-                            EBind getter (egName ["Classes"] "decerialize")
-                    | P.Field{name, type_} <- fields
-                    ]
+        [ iValue "decerialize" [PVar "raw"] $
+            case variants of
+                [P.Variant{name, fields}] ->
+                    let fieldGetter name = egName
+                            (rawModule thisMod)
+                            (Name.mkLocal
+                                Name.emptyNS
+                                (Name.getterName $ Name.mkSub typeName name)
+                            )
+                    in
+                    if null fields then
+                        EApp (eStd_ "pure") [ELName name]
+                    else
+                        EFApp
+                            (ELName name)
+                            [
+                                let getter = EApp (fieldGetter name) [ELName "raw"] in
+                                if cerialEq type_ then
+                                    getter
+                                else
+                                    EBind getter (egName ["Classes"] "decerialize")
+                            | P.Field{name, type_} <- fields
+                            ]
+                _ ->
+                    error "TODO"
         ]
     ]
-declToDecls _thisMod _ = [] -- TODO
 
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)

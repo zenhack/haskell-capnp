@@ -21,9 +21,15 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
     Flat.Union{} -> [] -- TODO
     Flat.Interface{} -> [] -- TODO
     Flat.Struct{fields} ->
-        [ Pure.DStruct
+        [ Pure.Data
             { typeName = local
-            , fields = map fieldToField fields
+            , variants =
+                [ Pure.Variant
+                    { name = local
+                    , fields = map fieldToField fields
+                    }
+                ]
+            , isUnion = False
             }
         ]
 
