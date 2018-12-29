@@ -132,6 +132,8 @@ data Exp
     | ELName Name.LocalQ
     | EInt Integer
     | EDo [Do] Exp
+    | EBind Exp Exp
+    -- ^ A call to (>>=)
     | ETup [Exp]
     | ECase Exp [(Pattern, Exp)]
     deriving(Show, Read, Eq)

@@ -48,7 +48,7 @@ instance Format Module where
             , Import { importAs = "Std_", parts = ["Data", "Int"] }
             ]
         -- ...but there are a couple operators we still want unqaulified:
-        , "import Prelude ((<$>), (<*>))"
+        , "import Prelude ((<$>), (<*>), (>>=))"
         , vcat $ map format modDecls
         ]
 
@@ -133,6 +133,7 @@ instance Format Exp where
         [ "(do"
         , indent $ vcat (map format ds ++ [format ex, ")"])
         ]
+    format (EBind x f) = format x <> " >>= " <> format f
     format (ETup es) = PP.tupled (map format es)
     format (ECase ex arms) = vcat
         [ hcat [ "case ", format ex, " of"]

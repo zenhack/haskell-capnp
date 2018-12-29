@@ -58,6 +58,28 @@ declToDecls thisMod P.DStruct{typeName, fields} =
                 }
             ]
         }
+    , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
+        [ iValue "decerialize" [PVar "raw"] $
+            if null fields then
+                EApp (eStd_ "pure") [ELName typeName]
+            else
+                EFApp
+                    (ELName typeName)
+                    [
+                        let getter =
+                                EApp
+                                    (egName
+                                        (rawModule thisMod)
+                                        (Name.mkSub typeName name))
+                                    [ELName "raw"]
+                        in
+                        if cerialEq type_ then
+                            getter
+                        else
+                            EBind getter (egName ["Classes"] "decerialize")
+                    | P.Field{name, type_} <- fields
+                    ]
+        ]
     ]
 declToDecls _thisMod _ = [] -- TODO
 
@@ -86,6 +108,12 @@ typeToType thisMod (C.PtrType (C.PtrInterface n)) =
 nameToType :: Word64 -> Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId}
     | thisMod == fileId = TLName local
-    | otherwise = tgName
-        ["Capnp", "Gen", T.pack $ printf "X%x" fileId, "Pure"]
-        local
+    | otherwise = tgName (pureModule fileId) local
+
+rawModule :: Word64 -> [T.Text]
+rawModule modId =
+    ["Capnp", "Gen", "ById", T.pack $ printf "X%x" modId]
+
+pureModule :: Word64 -> [T.Text]
+pureModule modId =
+    rawModule modId ++ ["Pure"]
