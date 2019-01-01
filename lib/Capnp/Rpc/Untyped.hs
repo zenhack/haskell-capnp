@@ -394,16 +394,43 @@ handleConn
                 throwIO e
             Right _ ->
                 pure ()
-    stopConn (conn, conn') =
+    stopConn
+            ( conn@Conn{liveState}
+            , conn'@Conn'{questions, exports, embargos}
+            ) = do
         atomically $ do
+            let walk table = flip ListT.traverse_ (M.listT table)
             -- drop the bootstrap interface:
             case bootstrap conn' of
                 Just (Client (Just client')) -> dropConnExport conn client'
                 _                            -> pure ()
-            -- cancel outstanding things:
-            flip ListT.traverse_ (M.listT (embargos conn')) $ \(_, fulfiller) ->
+            -- Remove everything from the exports table:
+            walk exports $ \(_, EntryE{client}) ->
+                dropConnExport conn client
+            -- Outstanding questions should all throw disconnected:
+            walk questions $ \(QAId qid, entry) ->
+                let raiseDisconnected onReturn =
+                        mapQueueSTM conn' onReturn $ R.Return
+                            { answerId = qid
+                            , releaseParamCaps = False
+                            , union' = R.Return'exception eDisconnected
+                            }
+                in case entry of
+                    NewQA{onReturn}      -> raiseDisconnected onReturn
+                    HaveFinish{onReturn} -> raiseDisconnected onReturn
+                    _                    -> pure ()
+            -- same thing with embargos:
+            walk embargos $ \(_, fulfiller) ->
                 breakPromise fulfiller eDisconnected
-            -- TODO: clear out the rest of the connection state.
+            -- mark the connection as dead, making the live state inaccessible:
+            writeTVar liveState Dead
+        -- Make sure any pending callbacks get run. This is important, since
+        -- some of these do things like raise disconnected exceptions.
+        --
+        -- FIXME: there's a race condition that we're not dealing with:
+        -- if the callbacks loop is killed between dequeuing an action and
+        -- performing it that action will be lost.
+        processCallbacks conn'
     useBootstrap conn conn' = case withBootstrap of
         Nothing ->
             forever $ threadDelay maxBound
@@ -813,9 +840,11 @@ clientMethodHandler interfaceId methodId client =
 
 -- | See Note [callbacks]
 callbacksLoop :: Conn' -> IO ()
-callbacksLoop Conn'{pendingCallbacks} = forever $
-    atomically (flushTQueue pendingCallbacks)
-    >>= sequence_
+callbacksLoop = forever . processCallbacks
+
+processCallbacks :: Conn' -> IO ()
+processCallbacks Conn'{pendingCallbacks} =
+    atomically (flushTQueue pendingCallbacks) >>= sequence_
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn' -> IO ()
