@@ -580,11 +580,19 @@ data PromiseState
 
 -- | A temporary destination for calls on an unresolved promise.
 data TmpDest
-    -- | Queue the calls locally, rather than sending them elsewhere.
+    -- | A destination that is local to this vat.
+    = LocalDest LocalDest
+    -- | A destination in another vat.
+    | RemoteDest RemoteDest
+
+newtype LocalDest
+    -- | Queue the calls in a buffer.
     = LocalBuffer { callBuffer :: TQueue Server.CallInfo }
+
+data RemoteDest
     -- | Send call messages to a remote vat, targeting the results
     -- of an outstanding question.
-    | AnswerDest
+    = AnswerDest
         { conn   :: Conn
         -- ^ The connection to the remote vat.
         , answer :: PromisedAnswer
@@ -677,13 +685,13 @@ call info@Server.CallInfo { response } (Client (Just client')) = case client' of
             writeTQueue callBuffer info
 
         Pending { tmpDest } -> case tmpDest of
-            LocalBuffer { callBuffer } ->
+            LocalDest LocalBuffer { callBuffer } ->
                 writeTQueue callBuffer info
 
-            AnswerDest { conn, answer } ->
+            RemoteDest AnswerDest { conn, answer } ->
                 callRemote conn info $ AnswerTgt answer
 
-            ImportDest ImportRef { conn, importId } ->
+            RemoteDest (ImportDest ImportRef { conn, importId }) ->
                 callRemote conn info (ImportTgt importId)
 
         Error exn ->
@@ -1402,7 +1410,7 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
         pure nullClient
     Live conn'@Conn'{questions} -> do
         qid <- newQuestion conn'
-        let tmpDest = AnswerDest
+        let tmpDest = RemoteDest AnswerDest
                 { conn
                 , answer = PromisedAnswer
                     { answerId = qid
@@ -1437,15 +1445,15 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
 resolveClientExn :: TmpDest -> (PromiseState -> STM ()) -> R.Exception -> STM ()
 resolveClientExn tmpDest resolve exn = do
     case tmpDest of
-        LocalBuffer { callBuffer } -> do
+        LocalDest LocalBuffer { callBuffer } -> do
             calls <- flushTQueue callBuffer
             traverse_
                 (\Server.CallInfo{response} ->
                     breakPromise response exn)
                 calls
-        AnswerDest {} ->
+        RemoteDest AnswerDest {} ->
             pure ()
-        ImportDest _ ->
+        RemoteDest (ImportDest _) ->
             pure ()
     resolve $ Error exn
 
@@ -1465,7 +1473,7 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
 resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
-        ( Just LocalClient{}, AnswerDest{ conn=Conn{liveState}, answer } ) ->
+        ( Just LocalClient{}, RemoteDest AnswerDest{ conn=Conn{liveState}, answer } ) ->
             readTVar liveState >>= \case
                 Live conn' -> do
                     callBuffer <- newTQueue
@@ -1477,11 +1485,11 @@ resolveClientClient tmpDest resolve (Client client) =
                     resolve $ Embargo { callBuffer }
                 Dead ->
                     resolveClientExn tmpDest resolve eDisconnected
-        ( _, LocalBuffer { callBuffer } ) ->
+        ( _, LocalDest LocalBuffer { callBuffer } ) ->
             flushAndResolve callBuffer
         ( Just PromiseClient{}, _ ) ->
             error "TODO"
-        ( _, AnswerDest{ answer=PromisedAnswer{ transform } } )
+        ( _, RemoteDest AnswerDest{ answer=PromisedAnswer{ transform } } )
             | not (null transform) ->
                 resolveClientExn tmpDest resolve $ eFailed
                     "Tried to access pointer fields on a client"
@@ -1519,14 +1527,14 @@ disembargo conn@Conn'{embargos} tgt onEcho = do
 -- Do any cleanup of a TmpDest; this should be called after resolving a
 -- pending promise.
 releaseTmpDest :: TmpDest -> STM ()
-releaseTmpDest LocalBuffer{} = pure ()
-releaseTmpDest AnswerDest { conn, answer=PromisedAnswer{ answerId } } =
+releaseTmpDest (LocalDest LocalBuffer{}) = pure ()
+releaseTmpDest (RemoteDest AnswerDest { conn, answer=PromisedAnswer{ answerId } }) =
     whenLive conn $ \conn' ->
         finishQuestion conn' def
             { R.questionId = qaWord answerId
             , R.releaseResultCaps = False
             }
-releaseTmpDest (ImportDest _) = pure ()
+releaseTmpDest (RemoteDest (ImportDest _)) = pure ()
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
@@ -1633,10 +1641,10 @@ emitCap targetConn (Client (Just client')) = case client' of
     LocalClient{} ->
         R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
     PromiseClient{ pState } -> readTVar pState >>= \case
-        Pending { tmpDest = AnswerDest { conn, answer } }
+        Pending { tmpDest = RemoteDest AnswerDest { conn, answer } }
             | conn == targetConn ->
                 pure $ R.CapDescriptor'receiverAnswer (marshalPromisedAnswer answer)
-        Pending { tmpDest = ImportDest ImportRef { conn, importId = IEId iid } }
+        Pending { tmpDest = RemoteDest (ImportDest ImportRef { conn, importId = IEId iid }) }
             | conn == targetConn ->
                 pure $ R.CapDescriptor'receiverHosted iid
         _ ->
@@ -1688,7 +1696,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                 pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
             Nothing -> do
                 rec imp@ImportRef{proxies} <- newImport importId conn (Just pState)
-                    pState <- newTVar Pending { tmpDest = ImportDest imp }
+                    pState <- newTVar Pending { tmpDest = RemoteDest $ ImportDest imp }
                 pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
@@ -1751,7 +1759,7 @@ releaseImport importId conn'@Conn'{imports} = do
 newLocalAnswerClient :: Conn' -> PromisedAnswer -> STM Client
 newLocalAnswerClient conn@Conn'{answers} PromisedAnswer{ answerId, transform } = do
     callBuffer <- newTQueue
-    let tmpDest = LocalBuffer { callBuffer }
+    let tmpDest = LocalDest $ LocalBuffer { callBuffer }
     pState <- newTVar Pending { tmpDest }
     subscribeReturn "answer" conn answers answerId $
         resolveClientReturn
