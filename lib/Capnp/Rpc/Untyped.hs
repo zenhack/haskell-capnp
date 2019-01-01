@@ -1607,6 +1607,22 @@ clientExportMap LocalClient{exportMap}            = exportMap
 clientExportMap PromiseClient{exportMap}          = exportMap
 clientExportMap (ImportClient ImportRef{proxies}) = proxies
 
+-- | insert the client into the exports table, bumping the refcount if it is
+-- already there. If a different client is already in the table at the same
+-- id, call 'error'.
+addBumpExport :: IEId -> Client' -> M.Map IEId EntryE -> STM ()
+addBumpExport exportId client =
+    M.focus (Focus.alter go) exportId
+  where
+    go Nothing = Just EntryE { client, refCount = 1 }
+    go (Just EntryE{ client = oldClient, refCount } )
+        | client /= oldClient =
+            error $
+                "BUG: addExportRef called with a client that is different " ++
+                "from what is already in our exports table."
+        | otherwise =
+            Just EntryE { client, refCount = refCount + 1 }
+
 -- | Generate a CapDescriptor, which the connection's remote vat may use to
 -- refer to the client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
@@ -1630,22 +1646,6 @@ emitCap targetConn (Client (Just client')) = case client' of
             pure (R.CapDescriptor'receiverHosted (ieWord importId))
         | otherwise ->
             R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
-
--- | insert the client into the exports table, bumping the refcount if it is
--- already there. If a different client is already in the table at the same
--- id, call 'error'.
-addBumpExport :: IEId -> Client' -> M.Map IEId EntryE -> STM ()
-addBumpExport exportId client =
-    M.focus (Focus.alter go) exportId
-  where
-    go Nothing = Just EntryE { client, refCount = 1 }
-    go (Just EntryE{ client = oldClient, refCount } )
-        | client /= oldClient =
-            error $
-                "BUG: addExportRef called with a client that is different " ++
-                "from what is already in our exports table."
-        | otherwise =
-            Just EntryE { client, refCount = refCount + 1 }
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
