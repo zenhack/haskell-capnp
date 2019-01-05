@@ -107,7 +107,7 @@ import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
 import qualified Capnp.Untyped            as UntypedRaw
 import qualified Capnp.Untyped.Pure       as Untyped
-import qualified Internal.FinalizerKey    as FinalizerKey
+import qualified Internal.Finalizer       as Fin
 import qualified Internal.Rc              as Rc
 import qualified Internal.SnocList        as SnocList
 import qualified Internal.TCloseQ         as TCloseQ
@@ -541,7 +541,7 @@ data Client'
         , qCall        :: Rc (Server.CallInfo -> STM ())
         -- ^ Queue a call for the local capability to handle. This is wrapped
         -- in a reference counted cell, whose finalizer stops the server.
-        , finalizerKey :: FinalizerKey.Key
+        , finalizerKey :: Fin.Cell ()
         -- ^ Finalizer key; when this is collected, qCall will be released.
         }
     -- | A client which will resolve to some other capability at
@@ -612,7 +612,7 @@ data ImportRef = ImportRef
     , proxies      :: ExportMap
     -- ^ Export ids to use when this client is passed to a vat other than
     -- the one identified by 'conn'. See Note [proxies]
-    , finalizerKey :: FinalizerKey.Key
+    , finalizerKey :: Fin.Cell ()
     }
 
 -- Ideally we could just derive these, but stm-containers doesn't have Eq
@@ -830,14 +830,14 @@ export sup ops = do
     q <- TCloseQ.new
     qCall <- Rc.new (TCloseQ.write q) (TCloseQ.close q)
     exportMap <- ExportMap <$> M.new
-    finalizerKey <- FinalizerKey.newSTM
+    finalizerKey <- Fin.newCell ()
     let client' = LocalClient
             { qCall
             , exportMap
             , finalizerKey
             }
     superviseSTM sup $ do
-        FinalizerKey.set finalizerKey $ atomically $ Rc.release qCall
+        Fin.addFinalizer finalizerKey $ atomically $ Rc.release qCall
         Server.runServer q ops
     pure $ Client (Just client')
 
@@ -1670,10 +1670,10 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     "received senderHosted capability #" <> imp <>
                     ", but the imports table says #" <> imp <> " is senderPromise."
             Just ent@EntryI{ localRc, remoteRc, proxies } -> do
-                finalizerKey <- FinalizerKey.newSTM
+                finalizerKey <- Fin.newCell ()
                 Rc.incr localRc
                 M.insert ent { localRc, remoteRc = remoteRc + 1 } importId imports
-                queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
+                queueIO conn' $ Fin.addFinalizer finalizerKey $ atomically (Rc.decr localRc)
                 pure $ Client $ Just $ ImportClient ImportRef
                     { conn
                     , importId
@@ -1721,9 +1721,9 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
 -- garbage collected, the refcount in the table will be decremented.
 newImport :: IEId -> Conn -> Maybe (TVar PromiseState) -> STM ImportRef
 newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} -> do
-    finalizerKey <- FinalizerKey.newSTM
+    finalizerKey <- Fin.newCell ()
     localRc <- Rc.new () $ releaseImport importId conn'
-    queueIO conn' $ FinalizerKey.set finalizerKey $ atomically (Rc.decr localRc)
+    queueIO conn' $ Fin.addFinalizer finalizerKey $ atomically (Rc.decr localRc)
     proxies <- ExportMap <$> M.new
     let importRef = ImportRef
                 { conn
