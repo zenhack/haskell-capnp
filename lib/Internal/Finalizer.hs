@@ -46,6 +46,7 @@ data Cell a = Cell
     -- instead we create MVars for the finalizers, and store them this
     -- list so that we maintain a reference to them.
     }
+    deriving(Eq)
 
 -- | Get the value from a cell
 get :: Cell a -> a

@@ -553,7 +553,7 @@ data Client'
         , exportMap :: ExportMap
         }
     -- | A client which points to a (resolved) capability in a remote vat.
-    | ImportClient ImportRef
+    | ImportClient (Fin.Cell ImportRef)
 
 -- | The current state of a 'PromiseClient'.
 data PromiseState
@@ -600,19 +600,18 @@ data RemoteDest
         }
     -- | Send call messages to a remote vat, targeting an entry in our
     -- imports table.
-    | ImportDest ImportRef
+    | ImportDest (Fin.Cell ImportRef)
 
 -- | A reference to a capability in our import table/a remote vat's export
 -- table.
 data ImportRef = ImportRef
-    { conn         :: Conn
+    { conn     :: Conn
     -- ^ The connection to the remote vat.
-    , importId     :: !IEId
+    , importId :: !IEId
     -- ^ The import id for this capability.
-    , proxies      :: ExportMap
+    , proxies  :: ExportMap
     -- ^ Export ids to use when this client is passed to a vat other than
     -- the one identified by 'conn'. See Note [proxies]
-    , finalizerKey :: Fin.Cell ()
     }
 
 -- Ideally we could just derive these, but stm-containers doesn't have Eq
@@ -691,13 +690,13 @@ call info@Server.CallInfo { response } (Client (Just client')) = case client' of
             RemoteDest AnswerDest { conn, answer } ->
                 callRemote conn info $ AnswerTgt answer
 
-            RemoteDest (ImportDest ImportRef { conn, importId }) ->
+            RemoteDest (ImportDest (Fin.get -> ImportRef { conn, importId })) ->
                 callRemote conn info (ImportTgt importId)
 
         Error exn ->
             breakPromise response exn
 
-    ImportClient ImportRef { conn, importId } ->
+    ImportClient (Fin.get -> ImportRef { conn, importId }) ->
         callRemote conn info (ImportTgt importId)
 
 -- | Send a call to a remote capability.
@@ -1193,7 +1192,7 @@ handleDisembargoMsg conn d = getLive conn >>= go d
         disembargoPromise _ =
             abortDisembargo "targets something that is not a promise."
 
-        disembargoClient (ImportClient ImportRef {conn=targetConn, importId})
+        disembargoClient (ImportClient (Fin.get -> ImportRef {conn=targetConn, importId}))
             | conn == targetConn =
                 sendPureMsg conn' $ R.Message'disembargo R.Disembargo
                     { context = R.Disembargo'context'receiverLoopback embargoId
@@ -1611,9 +1610,9 @@ dropConnExport conn client' = do
             error "BUG: tried to drop an export that doesn't exist."
 
 clientExportMap :: Client' -> ExportMap
-clientExportMap LocalClient{exportMap}            = exportMap
-clientExportMap PromiseClient{exportMap}          = exportMap
-clientExportMap (ImportClient ImportRef{proxies}) = proxies
+clientExportMap LocalClient{exportMap}                         = exportMap
+clientExportMap PromiseClient{exportMap}                       = exportMap
+clientExportMap (ImportClient (Fin.get -> ImportRef{proxies})) = proxies
 
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
@@ -1644,12 +1643,12 @@ emitCap targetConn (Client (Just client')) = case client' of
         Pending { tmpDest = RemoteDest AnswerDest { conn, answer } }
             | conn == targetConn ->
                 pure $ R.CapDescriptor'receiverAnswer (marshalPromisedAnswer answer)
-        Pending { tmpDest = RemoteDest (ImportDest ImportRef { conn, importId = IEId iid }) }
+        Pending { tmpDest = RemoteDest (ImportDest (Fin.get -> ImportRef { conn, importId = IEId iid })) }
             | conn == targetConn ->
                 pure $ R.CapDescriptor'receiverHosted iid
         _ ->
             R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
-    ImportClient ImportRef { conn=hostConn, importId }
+    ImportClient (Fin.get -> ImportRef { conn=hostConn, importId })
         | hostConn == targetConn ->
             pure (R.CapDescriptor'receiverHosted (ieWord importId))
         | otherwise ->
@@ -1670,16 +1669,15 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     "received senderHosted capability #" <> imp <>
                     ", but the imports table says #" <> imp <> " is senderPromise."
             Just ent@EntryI{ localRc, remoteRc, proxies } -> do
-                finalizerKey <- Fin.newCell ()
                 Rc.incr localRc
                 M.insert ent { localRc, remoteRc = remoteRc + 1 } importId imports
-                queueIO conn' $ Fin.addFinalizer finalizerKey $ atomically (Rc.decr localRc)
-                pure $ Client $ Just $ ImportClient ImportRef
+                cell <- Fin.newCell ImportRef
                     { conn
                     , importId
                     , proxies
-                    , finalizerKey
                     }
+                queueIO conn' $ Fin.addFinalizer cell $ atomically (Rc.decr localRc)
+                pure $ Client $ Just $ ImportClient cell
 
             Nothing ->
                 Client . Just . ImportClient <$> newImport importId conn Nothing
@@ -1695,7 +1693,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                 M.insert ent { remoteRc = remoteRc + 1 } importId imports
                 pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
             Nothing -> do
-                rec imp@ImportRef{proxies} <- newImport importId conn (Just pState)
+                rec imp@(Fin.get -> ImportRef{proxies}) <- newImport importId conn (Just pState)
                     pState <- newTVar Pending { tmpDest = RemoteDest $ ImportDest imp }
                 pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
@@ -1719,17 +1717,14 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
 -- | Create a new entry in the imports table, with the given import id and
 -- 'promiseState', and return a corresponding ImportRef. When the ImportRef is
 -- garbage collected, the refcount in the table will be decremented.
-newImport :: IEId -> Conn -> Maybe (TVar PromiseState) -> STM ImportRef
+newImport :: IEId -> Conn -> Maybe (TVar PromiseState) -> STM (Fin.Cell ImportRef)
 newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} -> do
-    finalizerKey <- Fin.newCell ()
     localRc <- Rc.new () $ releaseImport importId conn'
-    queueIO conn' $ Fin.addFinalizer finalizerKey $ atomically (Rc.decr localRc)
     proxies <- ExportMap <$> M.new
     let importRef = ImportRef
                 { conn
                 , importId
                 , proxies
-                , finalizerKey
                 }
     M.insert EntryI
         { localRc
@@ -1739,7 +1734,9 @@ newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} ->
         }
         importId
         imports
-    pure importRef
+    cell <- Fin.newCell importRef
+    queueIO conn' $ Fin.addFinalizer cell $ atomically (Rc.decr localRc)
+    pure cell
 
 -- | Release the identified import. Removes it from the table and sends a release
 -- message with the correct count.
