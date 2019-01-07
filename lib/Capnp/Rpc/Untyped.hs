@@ -61,6 +61,21 @@ module Capnp.Rpc.Untyped
 -- * [ ] Handle decode errors
 -- * [ ] Resource limits (see Note [Limiting resource usage])
 
+-- Note [Level 3]
+--
+-- This is currently a level 1 implementation, so use of most level 3 features
+-- results in sending abort messages. However, to make adding this support
+-- easier later, we mark such places with a cross-reference back to this note.
+--
+-- In addition to filling in those spots, the following will need to be dealt
+-- with:
+--
+-- * The "Tribble 4-way Race Condition" as documented in rpc.capnp. This
+--   doesn't affect level 1 implementations, but right now we shorten N-hop
+--   paths of promises to 1-hop, (calls on Ready PromiseClients just
+--   immediately call the target), which is unsafe in a level 3
+--   implementation. See the protocol documentation for more info.
+
 import Control.Concurrent.STM
 import Data.Word
 
@@ -769,7 +784,7 @@ cbCallReturn
                 cbCallReturn [] conn response
 
         R.Return'acceptFromThirdParty _ ->
-            -- LEVEL 3
+            -- Note [Level 3]
             abortConn conn' $ eUnimplemented
                 "This vat does not support level 3."
         R.Return'unknown' ordinal ->
@@ -1070,7 +1085,7 @@ handleCallMsg
                         R.Return'takeFromOtherQuestion otherQid ->
                             subscribeReturn "answer" conn' answers (QAId otherQid) onReturn
                         R.Return'acceptFromThirdParty _ ->
-                            -- LEVEL 3
+                            -- Note [Level 3]
                             error "BUG: our implementation unexpectedly used a level 3 feature"
                         R.Return'unknown' tag ->
                             error $
@@ -1210,7 +1225,7 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                 , " with context = senderLoopback "
                 , info
                 ]
--- LEVEL 3+
+-- Note [Level 3]
     go d conn' =
         sendPureMsg conn' $ R.Message'unimplemented $ R.Message'disembargo d
 
@@ -1567,7 +1582,7 @@ resolveClientReturn tmpDest resolve conn@Conn'{answers} transform R.Return { uni
             resolveClientReturn tmpDest resolve conn transform
 
     R.Return'acceptFromThirdParty _ ->
-        -- LEVEL 3
+        -- Note [Level 3]
         abortConn conn $ eUnimplemented
             "This vat does not support level 3."
 
@@ -1707,7 +1722,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
             Right pa ->
                 newLocalAnswerClient conn' pa
     go conn' (R.CapDescriptor'thirdPartyHosted _) =
-        -- LEVEL 3
+        -- Note [Level 3]
         abortConn conn' $ eUnimplemented
             "thirdPartyHosted unimplemented; level 3 is not supported."
     go conn' (R.CapDescriptor'unknown' tag) =
