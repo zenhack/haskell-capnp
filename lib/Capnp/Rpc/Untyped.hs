@@ -500,7 +500,7 @@ data EntryI = EntryI
     --
     , promiseState :: Maybe
         ( TVar PromiseState
-        , TmpDest -- origTarget field. TODO: clean this up a bit.
+        , TmpDest -- origTarget field. TODO(cleanup): clean this up a bit.
         )
     -- ^ If this entry is a promise, this will contain the state of that
     -- promise, so that it may be used to create PromiseClients and
@@ -1327,7 +1327,7 @@ returnAnswer conn@Conn'{answers} ret = do
     sendPureMsg conn $ R.Message'return ret
     updateQAReturn conn answers "answer" ret
 
--- TODO: updateQAReturn/Finish have a lot in common; can we refactor?
+-- TODO(cleanup): updateQAReturn/Finish have a lot in common; can we refactor?
 
 updateQAReturn :: Conn' -> M.Map QAId EntryQA -> Text -> R.Return -> STM ()
 updateQAReturn conn table tableName ret@R.Return{answerId} =
