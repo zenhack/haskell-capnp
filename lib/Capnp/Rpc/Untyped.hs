@@ -1543,9 +1543,9 @@ resolveClientClient tmpDest resolve (Client client) =
         ( _, LocalDest LocalBuffer { callBuffer } ) ->
             flushAndResolve callBuffer
   where
-    destConn (AnswerDest { conn })                        = conn
+    destConn AnswerDest { conn }                          = conn
     destConn (ImportDest (Fin.get -> ImportRef { conn })) = conn
-    destTarget (AnswerDest { answer }) = AnswerTgt answer
+    destTarget AnswerDest { answer } = AnswerTgt answer
     destTarget (ImportDest (Fin.get -> ImportRef { importId })) = ImportTgt importId
 
     releaseAndResolve = do
@@ -1560,7 +1560,7 @@ resolveClientClient tmpDest resolve (Client client) =
     flushAndRaise callBuffer e =
         flushTQueue callBuffer >>=
             traverse_ (\Server.CallInfo{response} -> breakPromise response e)
-    disembargoAndResolve dest@(destConn -> Conn{liveState})  = do
+    disembargoAndResolve dest@(destConn -> Conn{liveState}) =
         readTVar liveState >>= \case
             Live conn' -> do
                 callBuffer <- newTQueue
