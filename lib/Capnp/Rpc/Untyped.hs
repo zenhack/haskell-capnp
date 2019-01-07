@@ -228,7 +228,7 @@ data ConnConfig = ConnConfig
     -- connection. If 'getBootstrap' returns 'Nothing', we will respond
     -- to bootstrap messages with an exception.
     --
-    -- The default always returns 'nullClient'.
+    -- The default always returns 'Nothing'.
 
     , withBootstrap :: Maybe (Supervisor -> Client -> IO ())
     -- ^ An action to perform with access to the remote vat's bootstrap
