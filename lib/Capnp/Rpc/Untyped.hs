@@ -497,7 +497,11 @@ data EntryI = EntryI
     -- vat. This tells us what to send in the release message's count field.
     , proxies      :: ExportMap
     -- ^ See Note [proxies]
-    , promiseState :: Maybe (TVar PromiseState)
+    --
+    , promiseState :: Maybe
+        ( TVar PromiseState
+        , TmpDest -- origTarget field. TODO: clean this up a bit.
+        )
     -- ^ If this entry is a promise, this will contain the state of that
     -- promise, so that it may be used to create PromiseClients and
     -- update the promise when it resolves.
@@ -551,10 +555,18 @@ data Client'
     -- | A client which will resolve to some other capability at
     -- some point.
     | PromiseClient
-        { pState    :: TVar PromiseState
+        { pState     :: TVar PromiseState
         -- ^ The current state of the promise; the indirection allows
         -- the promise to be updated.
-        , exportMap :: ExportMap
+        , exportMap  :: ExportMap
+
+        , origTarget :: TmpDest
+        -- ^ The original target of this promise, before it was resolved.
+        -- (if it is still in the pending state, it will match the TmpDest
+        -- stored there).
+        --
+        -- FIXME: if this is an ImportDest, by holding on to this we actually
+        -- leak the cap.
         }
     -- | A client which points to a (resolved) capability in a remote vat.
     | ImportClient (Fin.Cell ImportRef)
@@ -1432,7 +1444,11 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
             qid
             questions
         exportMap <- ExportMap <$> M.new
-        pure $ Client $ Just PromiseClient { pState, exportMap }
+        pure $ Client $ Just PromiseClient
+            { pState
+            , exportMap
+            , origTarget = tmpDest
+            }
 
 -- Note [resolveClient]
 -- ====================
@@ -1476,32 +1492,66 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
 resolveClientClient tmpDest resolve (Client client) =
     case (client, tmpDest) of
-        ( Just LocalClient{}, RemoteDest AnswerDest{ conn=Conn{liveState}, answer } ) ->
-            readTVar liveState >>= \case
-                Live conn' -> do
-                    callBuffer <- newTQueue
-                    disembargo conn' (AnswerTgt answer) $ \case
-                        Right () ->
-                            flushAndResolve callBuffer
-                        Left e ->
-                            flushAndRaise callBuffer e
-                    resolve $ Embargo { callBuffer }
-                Dead ->
-                    resolveClientExn tmpDest resolve eDisconnected
+        -- Remote resolved to local; we need to embargo:
+        ( Just LocalClient{}, RemoteDest dest ) ->
+            disembargoAndResolve dest
+        ( Just PromiseClient { origTarget=LocalDest _ }, RemoteDest dest) ->
+            disembargoAndResolve dest
+        ( Nothing, RemoteDest dest ) ->
+            -- It's not clear to me what we should actually do if the promise
+            -- resolves to nullClient, but this can be encoded at the protocol
+            -- level, so we have to deal with it. Possible options:
+            --
+            -- 1. Perhaps this is simply illegal, and we should send an abort?
+            -- 2. Treat it as resolving to a local promise, in which case we
+            --    need to send a disembargo as above.
+            -- 3. Treat is as resolving to a remote promise, in which case we
+            --    can't send an embargo.
+            --
+            -- (3) doesn't seem possible to implement quite correctly, since
+            -- if we just resolve to nullClient right away, further calls will
+            -- start returning exceptions before outstanding calls return -- we
+            -- really do want to send a disembargo, but we can't because the
+            -- protocol insists that we don't if the promise resolves to a
+            -- remote cap.
+            --
+            -- What we currently do is (2); I(zenhack) intend to ask for
+            -- clarification on the mailing list.
+            disembargoAndResolve dest
+
+        -- These cases are slightly subtle; despite resolving to a
+        -- client that points at a "remote" target, if it points into a
+        -- *different* connection, we must be proxying it, so we treat
+        -- it as local and do a disembargo like above. We may need to
+        -- change this when we implement level 3, since third-party
+        -- handoff is a possibility; see Note [Level 3].
+        --
+        -- If it's pointing into the same connection, we don't need to
+        -- do a disembargo.
+        ( Just PromiseClient { origTarget=RemoteDest newDest }, RemoteDest oldDest )
+            | destConn newDest /= destConn oldDest ->
+                disembargoAndResolve oldDest
+            | otherwise ->
+                releaseAndResolve
+        ( Just (ImportClient (Fin.get -> ImportRef { conn=newConn })), RemoteDest oldDest )
+            | newConn /= destConn oldDest ->
+                disembargoAndResolve oldDest
+            | otherwise ->
+                releaseAndResolve
+
+        -- Local promises never need embargos; we can just forward:
         ( _, LocalDest LocalBuffer { callBuffer } ) ->
             flushAndResolve callBuffer
-        ( Just PromiseClient{}, _ ) ->
-            error "TODO"
-        ( _, RemoteDest AnswerDest{ answer=PromisedAnswer{ transform } } )
-            | not (null transform) ->
-                resolveClientExn tmpDest resolve $ eFailed
-                    "Tried to access pointer fields on a client"
-            | otherwise -> do
-                releaseTmpDest tmpDest
-                resolve $ Ready (Client client)
-        _ ->
-            error "TODO"
   where
+    destConn (AnswerDest { conn })                        = conn
+    destConn (ImportDest (Fin.get -> ImportRef { conn })) = conn
+    destTarget (AnswerDest { answer }) = AnswerTgt answer
+    destTarget (ImportDest (Fin.get -> ImportRef { importId })) = ImportTgt importId
+
+    releaseAndResolve = do
+        releaseTmpDest tmpDest
+        resolve $ Ready (Client client)
+
     -- Flush the call buffer into the client's queue, and then pass the client
     -- to resolve.
     flushAndResolve callBuffer = do
@@ -1510,6 +1560,18 @@ resolveClientClient tmpDest resolve (Client client) =
     flushAndRaise callBuffer e =
         flushTQueue callBuffer >>=
             traverse_ (\Server.CallInfo{response} -> breakPromise response e)
+    disembargoAndResolve dest@(destConn -> Conn{liveState})  = do
+        readTVar liveState >>= \case
+            Live conn' -> do
+                callBuffer <- newTQueue
+                disembargo conn' (destTarget dest) $ \case
+                    Right () ->
+                        flushAndResolve callBuffer
+                    Left e ->
+                        flushAndRaise callBuffer e
+                resolve $ Embargo { callBuffer }
+            Dead ->
+                resolveClientExn tmpDest resolve eDisconnected
 
 -- | Send a (senderLoopback) disembargo to the given message target, and
 -- register the transaction to run when the corresponding receiverLoopback
@@ -1693,13 +1755,22 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                 in abortConn conn' $ eFailed $
                     "received senderPromise capability #" <> imp <>
                     ", but the imports table says #" <> imp <> " is senderHosted."
-            Just ent@EntryI { remoteRc, proxies, promiseState=Just pState } -> do
+            Just ent@EntryI { remoteRc, proxies, promiseState=Just (pState, origTarget) } -> do
                 M.insert ent { remoteRc = remoteRc + 1 } importId imports
-                pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
+                pure $ Client $ Just PromiseClient
+                    { pState
+                    , exportMap = proxies
+                    , origTarget
+                    }
             Nothing -> do
-                rec imp@(Fin.get -> ImportRef{proxies}) <- newImport importId conn (Just pState)
-                    pState <- newTVar Pending { tmpDest = RemoteDest $ ImportDest imp }
-                pure $ Client $ Just PromiseClient { pState, exportMap = proxies }
+                rec imp@(Fin.get -> ImportRef{proxies}) <- newImport importId conn (Just (pState, tmpDest))
+                    let tmpDest = RemoteDest (ImportDest imp)
+                    pState <- newTVar Pending { tmpDest }
+                pure $ Client $ Just PromiseClient
+                    { pState
+                    , exportMap = proxies
+                    , origTarget = tmpDest
+                    }
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
             \EntryE{client} ->
@@ -1721,7 +1792,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
 -- | Create a new entry in the imports table, with the given import id and
 -- 'promiseState', and return a corresponding ImportRef. When the ImportRef is
 -- garbage collected, the refcount in the table will be decremented.
-newImport :: IEId -> Conn -> Maybe (TVar PromiseState) -> STM (Fin.Cell ImportRef)
+newImport :: IEId -> Conn -> Maybe (TVar PromiseState, TmpDest) -> STM (Fin.Cell ImportRef)
 newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} -> do
     localRc <- Rc.new () $ releaseImport importId conn'
     proxies <- ExportMap <$> M.new
@@ -1769,7 +1840,11 @@ newLocalAnswerClient conn@Conn'{answers} PromisedAnswer{ answerId, transform } =
             conn
             (toList transform)
     exportMap <- ExportMap <$> M.new
-    pure $ Client $ Just PromiseClient { pState, exportMap }
+    pure $ Client $ Just PromiseClient
+        { pState
+        , exportMap
+        , origTarget = tmpDest
+        }
 
 
 -- Note [Limiting resource usage]
