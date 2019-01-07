@@ -39,6 +39,7 @@ fileToModule P.File{fileName, fileId, decls} = Module
         , Import { importAs = "T", parts = ["Data", "Text"] }
         , Import { importAs = "BS", parts = ["Data", "ByteString"] }
         , Import { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
+        , Import { importAs = "Classes", parts = ["Capnp", "Classes"] }
         ]
     , modDecls = concatMap (declToDecls fileId) decls
     }
