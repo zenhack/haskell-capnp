@@ -50,17 +50,6 @@ module Capnp.Rpc.Untyped
 --
 -- This approach generally results in better separation of concerns.
 
--- Note [Implementation checklist]
--- ===============================
---
--- While RPC support is still incomplete, we keep a checklist of some things
--- that still need is implemented. In many cases, it's more natural to put
--- error "TODO: ..." in the relevant spots in the source code, but there are
--- a few cross-cutting concerns that we keep track of here.
---
--- * [ ] Handle decode errors
--- * [ ] Resource limits (see Note [Limiting resource usage])
-
 -- Note [Level 3]
 --
 -- This is currently a level 1 implementation, so use of most level 3 features
