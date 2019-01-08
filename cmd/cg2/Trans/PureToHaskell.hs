@@ -41,9 +41,11 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
         [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }
         , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
+        , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
         , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
         , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
         , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
+        , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }
         , ImportQual { parts = idToModule fileId }
         ]
         :
@@ -73,6 +75,9 @@ declToDecls thisMod P.Data{typeName, variants} =
             | P.Variant{name, arg} <- variants
             ]
         }
+    , instance_ [] ["Default"] "Default" [TLName typeName]
+        [ iValue "def" [] (egName ["GenHelpersPure"] "defaultStruct")
+        ]
     , instance_ [] ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", TLName typeName]
         [ iValue "fromStruct" [PVar "struct"] $ EBind
             (EApp (egName ["Classes"] "fromStruct") [euName "struct"])
