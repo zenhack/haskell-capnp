@@ -43,6 +43,9 @@ euName = ELName . Name.mkLocal Name.emptyNS
 tgName :: [T.Text] -> Name.LocalQ -> Type
 tgName parts local = TGName $ gName parts local
 
+tuName :: Name.UnQ -> Type
+tuName = TLName . Name.mkLocal Name.emptyNS
+
 iValue :: Name.UnQ -> [Pattern] -> Exp -> InstanceDef
 iValue name params value = IdValue DfValue {name, params, value}
 

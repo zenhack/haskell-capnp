@@ -33,6 +33,7 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DuplicateRecordFields"
+        , "TypeFamilies"
         ]
     , modImports = concat $
         [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
@@ -70,7 +71,9 @@ declToDecls thisMod P.Data{typeName, variants} =
             ]
         }
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
-        [ iValue "decerialize" [PVar "raw"] $
+        [ iType "Cerial" [tuName "msg", TLName typeName] $
+            TApp (tgName (rawModule thisMod) typeName) [tuName "msg"]
+        , iValue "decerialize" [PVar "raw"] $
             let fieldGetter name = egName
                     (rawModule thisMod)
                     (Name.mkLocal
