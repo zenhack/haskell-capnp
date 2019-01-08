@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Trans.FlatToPure where
 
 import qualified IR.Common as C
@@ -17,22 +18,38 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
         }
 
 nodeToDecls :: Flat.Node -> [Pure.Decl]
-nodeToDecls Flat.Node{name=Name.CapnpQ{local}, union_} = case union_ of
+nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
     Flat.Enum _ -> [] -- TODO
     Flat.Union{} -> [] -- TODO
     Flat.Interface{} -> [] -- TODO
-    Flat.Struct{fields} ->
-        [ Pure.Data
+    Flat.Struct{fields, union} ->
+        Pure.Data
             { typeName = local
             , variants =
                 [ Pure.Variant
                     { name = local
-                    , fields = map fieldToField fields
+                    , fields =
+                        map fieldToField fields
+                        ++ case union of
+                            Nothing ->
+                                []
+                            Just Flat.Node{union_=Flat.Union{}} ->
+                                [ Pure.Field
+                                    { name = "union'"
+                                    , type_ = C.CompositeType $ C.StructType $ Name.mkSub name ""
+                                    }
+                                ]
+                            Just _ ->
+                                error "This should never happen!"
                     }
                 ]
             , isUnion = False
             }
-        ]
+        : case union of
+            Just u ->
+                nodeToDecls u { Flat.name = Name.mkSub name "" }
+            Nothing ->
+                []
 
 fieldToField :: Flat.Field -> Pure.Field
 fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field

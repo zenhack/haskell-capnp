@@ -80,46 +80,42 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                             ]
                         fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
+
+                        -- Only one of thse ends up as a top-level node; if there are
+                        -- both variants and common fields then unionNode ends up in
+                        -- commonNode's union field, but not part of the full list of
+                        -- nodes:
                         unionNode =
                             Flat.Node
-                                { name = Name.mkSub name ""
-                                -- ^ Using the empty string gives us names like Node'
-                                -- (note the trailing quote). Think of an anonymous
-                                -- union as being a field with the empty string as its
-                                -- name.
-
-                                , nodeId = 0
-                                -- ^ XXX: what to put here? 0 shouldn't break anything,
-                                -- since we never look this up, but this is gross.
-
+                                { name
+                                , nodeId
                                 , union_ = Flat.Union
                                     { variants
                                     , tagOffset
                                     , isOnlyField = null commonFields
                                     }
                                 }
+                        commonNode =
+                            Flat.Node
+                                { name
+                                , nodeId
+                                , union_ = Flat.Struct
+                                    { fields = commonFields
+                                    , union =
+                                        if null variants then
+                                            Nothing
+                                        else
+                                            Just unionNode
+                                    , isGroup
+                                    , dataWordCount
+                                    , pointerCount
+                                    }
+                                }
                     in
-                    Flat.Node
-                        { name
-                        , nodeId
-                        , union_ = Flat.Struct
-                            { fields =
-                                if null variants then
-                                    commonFields
-                                else
-                                    Flat.Field
-                                        { fieldName = Name.mkSub name "union'"
-                                        , fieldLocType = C.HereField $ C.StructType unionNode
-                                        }
-                                    : commonFields
-                            , isGroup
-                            , dataWordCount
-                            , pointerCount
-                            }
-                        }
-                    : if null variants
-                        then fieldNodes
-                        else unionNode : fieldNodes
+                    if null commonFields then
+                        unionNode : fieldNodes
+                    else
+                        commonNode : fieldNodes
                 Stage1.NodeInterface ->
                     [ Flat.Node
                         { name

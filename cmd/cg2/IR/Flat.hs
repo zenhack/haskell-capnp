@@ -45,9 +45,14 @@ data Node'
     = Enum [Name.UnQ]
     | Struct
         { fields        :: [Field]
+        -- ^ The struct's fields, excluding an anonymous union, if any.
         , isGroup       :: !Bool
         , dataWordCount :: !Word16
         , pointerCount  :: !Word16
+        , union         :: Maybe Node
+        -- ^ The struct's anonymous union, if any. Node that this will
+        -- always have union_ = Union ... TODO(cleanup): enforce said
+        -- property at the type level.
         }
     | Union
         { tagOffset   :: !Word32
