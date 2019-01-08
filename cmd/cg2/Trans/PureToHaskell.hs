@@ -39,9 +39,8 @@ fileToModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = Modul
         , "TypeFamilies"
         ]
     , modExports = Just $ concat $
-        [ [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
-        , [ExportLCtors typeName | P.Data{typeName} <- decls]
-        ]
+        [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
+        ++ [ExportLCtors typeName | P.Data{typeName} <- decls]
     , modImports = concat $
         [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }
