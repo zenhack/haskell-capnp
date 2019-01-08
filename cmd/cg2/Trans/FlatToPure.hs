@@ -26,10 +26,10 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
             , variants =
                 [ Pure.Variant
                     { name = variantName
-                    , fields = case fieldLocType of
+                    , arg = case fieldLocType of
                         C.VoidField ->
                             -- If the argument is void, just have no argument.
-                            []
+                            Pure.None
                         C.HereField
                             -- See Note [Collapsing Groups]
                             (C.StructType
@@ -40,9 +40,9 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
                                         , fields
                                         }
                                     }) ->
-                                    map fieldToField fields
+                                    Pure.Record (map fieldToField fields)
                         _ ->
-                            [fieldToField field]
+                            Pure.Positional (Pure.type_ (fieldToField field))
                     }
                 | Flat.Variant
                     { field=field@Flat.Field
@@ -62,7 +62,7 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
             , variants =
                 [ Pure.Variant
                     { name = local
-                    , fields =
+                    , arg = Pure.Record $
                         map fieldToField fields
                         ++ case union of
                             Nothing ->

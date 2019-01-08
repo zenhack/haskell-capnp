@@ -29,6 +29,11 @@ data Field = Field
     }
 
 data Variant = Variant
-    { name   :: Name.LocalQ
-    , fields :: [Field]
+    { name :: Name.LocalQ
+    , arg  :: Argument
     }
+
+data Argument
+    = None
+    | Positional (C.Type Name.CapnpQ)
+    | Record [Field]

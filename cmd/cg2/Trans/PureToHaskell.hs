@@ -61,9 +61,12 @@ declToDecls thisMod P.Data{typeName, variants} =
         , dataVariants =
             [ DataVariant
                 { dvCtorName = Name.localToUnQ name
-                , dvArgs = ARec (map (fieldToField thisMod) fields)
+                , dvArgs = case arg of
+                    P.None          -> APos []
+                    P.Positional ty -> APos [typeToType thisMod ty]
+                    P.Record fields -> ARec (map (fieldToField thisMod) fields)
                 }
-            | P.Variant{name, fields} <- variants
+            | P.Variant{name, arg} <- variants
             ]
         }
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
@@ -76,7 +79,7 @@ declToDecls thisMod P.Data{typeName, variants} =
                     )
             in
             case variants of
-                [P.Variant{name, fields}] ->
+                [P.Variant{name, arg=P.Record fields}] ->
                     if null fields then
                         EApp (eStd_ "pure") [ELName name]
                     else
