@@ -34,6 +34,7 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DuplicateRecordFields"
+        , "MultiParamTypeClasses"
         , "TypeFamilies"
         ]
     , modImports = concat $
@@ -41,6 +42,7 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }
         , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
         , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
+        , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
         , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
         , ImportQual { parts = idToModule fileId }
         ]
@@ -71,6 +73,11 @@ declToDecls thisMod P.Data{typeName, variants} =
             | P.Variant{name, arg} <- variants
             ]
         }
+    , instance_ [] ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", TLName typeName]
+        [ iValue "fromStruct" [PVar "struct"] $ EBind
+            (EApp (egName ["Classes"] "fromStruct") [euName "struct"])
+            (egName ["Classes"] "decerialize")
+        ]
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
         [ iType "Cerial" [tuName "msg", TLName typeName] $
             TApp (tgName (rawModule thisMod) typeName) [tuName "msg"]
