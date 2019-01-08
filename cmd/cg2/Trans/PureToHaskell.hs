@@ -33,7 +33,8 @@ fileToModule :: P.File -> Module
 fileToModule P.File{fileName, fileId, decls, fileImports} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
-        [ "DuplicateRecordFields"
+        [ "DeriveGeneric"
+        , "DuplicateRecordFields"
         , "MultiParamTypeClasses"
         , "TypeFamilies"
         ]
@@ -42,6 +43,7 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }
         , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
         , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
+        , ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
         , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
         , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
         , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
@@ -62,7 +64,8 @@ declToDecls thisMod P.Data{typeName, variants} =
     [ DcData Data
         { dataName = Name.localToUnQ typeName
         , typeArgs = []
-        , derives = [ {- TODO. should factor out some of the helpers from RawToHaskell. -} ]
+        , derives =
+            ["Std_.Show", "Std_.Eq", "Generics.Generic"]
         , dataNewtype = False
         , dataVariants =
             [ DataVariant
