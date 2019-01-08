@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 module Trans.PureToHaskell where
@@ -74,35 +75,57 @@ declToDecls thisMod P.Data{typeName, variants} =
         [ iType "Cerial" [tuName "msg", TLName typeName] $
             TApp (tgName (rawModule thisMod) typeName) [tuName "msg"]
         , iValue "decerialize" [PVar "raw"] $
-            let fieldGetter name = egName
+            let fieldGetter parentName name = egName
                     (rawModule thisMod)
                     (Name.mkLocal
                         Name.emptyNS
-                        (Name.getterName $ Name.mkSub typeName name)
+                        (Name.getterName $ Name.mkSub parentName name)
                     )
-            in
-            case variants of
-                [P.Variant{name, arg=P.Record fields}] ->
-                    if null fields then
-                        EApp (eStd_ "pure") [ELName name]
-                    else
+
+                decerializeArgs variantName = \case
+                    P.None ->
+                        EApp (eStd_ "pure") [ELName variantName]
+                    P.Positional type_ ->
+                        if cerialEq type_ then
+                            EApp (eStd_ "pure") [EApp (ELName variantName) [euName "raw"]]
+                        else
+                            EFApp
+                                (ELName variantName)
+                                [EApp (egName ["Classes"] "decerialize") [euName "raw"]]
+                    P.Record fields ->
                         EFApp
-                            (ELName name)
+                            (ELName variantName)
                             [
-                                let getter = EApp (fieldGetter name) [euName "raw"] in
+                                let getter = EApp (fieldGetter variantName name) [euName "raw"] in
                                 if cerialEq type_ then
                                     getter
                                 else
                                     EBind getter (egName ["Classes"] "decerialize")
                             | P.Field{name, type_} <- fields
                             ]
+            in
+            case variants of
+                [P.Variant{name, arg}] ->
+                    decerializeArgs name arg
                 _ ->
                     EDo
-                        [DoBind "raw" $ EApp (fieldGetter "") [euName "raw"]
+                        [DoBind "raw" $ EApp (fieldGetter typeName "") [euName "raw"]
                         ]
                         (ECase (ELName "raw")
-                            [ (PVar "todo", euName "TODO")
-                            | _ <- variants
+                            [ case arg of
+                                P.None ->
+                                    ( pgName (rawModule thisMod) name []
+                                    , decerializeArgs name arg
+                                    )
+                                P.Positional _ ->
+                                    ( pgName (rawModule thisMod) name [PVar "raw"]
+                                    , decerializeArgs name arg
+                                    )
+                                P.Record _ ->
+                                    ( pgName (rawModule thisMod) name [PVar "raw"]
+                                    , decerializeArgs name arg
+                                    )
+                            | P.Variant{name, arg} <- variants
                             ]
                         )
         ]
