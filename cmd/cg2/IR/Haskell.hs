@@ -56,8 +56,8 @@ data Module = Module
 
 data Export
     = ExportMod [Name.UnQ]
-    | ExportName Name.UnQ
-    | ExportCtorsAll Name.UnQ
+    | ExportGCtors Name.GlobalQ
+    | ExportLCtors Name.LocalQ
     deriving(Show, Read, Eq)
 
 data Import

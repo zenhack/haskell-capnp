@@ -15,7 +15,12 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
         , fileName
         , fileImports
         , decls = concatMap nodeToDecls nodes
+        , reExportEnums = concatMap nodeToReExports nodes
         }
+
+nodeToReExports :: Flat.Node -> [Name.LocalQ]
+nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
+nodeToReExports _ = []
 
 nodeToDecls :: Flat.Node -> [Pure.Decl]
 nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of

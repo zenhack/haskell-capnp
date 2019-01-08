@@ -7,10 +7,12 @@ import qualified IR.Common as C
 import qualified IR.Name   as Name
 
 data File = File
-    { fileId      :: !Word64
-    , fileName    :: FilePath
-    , fileImports :: [Word64]
-    , decls       :: [Decl]
+    { fileId        :: !Word64
+    , fileName      :: FilePath
+    , fileImports   :: [Word64]
+    , decls         :: [Decl]
+    , reExportEnums :: [Name.LocalQ]
+    -- ^ A list of enums that we should re-export from this module.
     }
 
 data Decl

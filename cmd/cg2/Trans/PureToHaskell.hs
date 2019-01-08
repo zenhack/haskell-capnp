@@ -30,7 +30,7 @@ cerialEq (C.CompositeType _) = False
 cerialEq (C.PtrType _)       = False
 
 fileToModule :: P.File -> Module
-fileToModule P.File{fileName, fileId, decls, fileImports} = Module
+fileToModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DeriveGeneric"
@@ -38,7 +38,10 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
         , "MultiParamTypeClasses"
         , "TypeFamilies"
         ]
-    , modExports = Nothing
+    , modExports = Just $ concat $
+        [ [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
+        , [ExportLCtors typeName | P.Data{typeName} <- decls]
+        ]
     , modImports = concat $
         [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }
