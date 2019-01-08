@@ -481,31 +481,53 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
         }
     ]
 declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
-    -- FIXME: this is broken for groups; we don't want to take the extra value
-    -- parameter, and we want to return the value instead.
+    -- XXX: the way this is organized is a little gross; conceptually we have
+    -- two kinds of setters:
+    --
+    -- * Those that actually take an argument, and return unit.
+    -- * Those that are groups, in which case they don't take an argument,
+    --   and return the value.
+    --
+    -- The latter are only actually useful if the group is a union member,
+    -- but we generate them regardless.
+    --
+    -- The below is a little ugly in that there's a bit to much conditional
+    -- logic strewn about because of the above.
     let containerDataCtor = Name.mkSub containerType "newtype_"
         tMutMsg = TApp (tgName ["Message"] "MutMsg" ) [TVar "s"]
+        fieldType = typeToType
+            thisMod
+            (C.fieldType fieldLocType)
+            tMutMsg
     in
     [ DcValue
         { typ = TCtx
             [rwCtx "m" "s"]
-            (TFn
-                [ TApp
-                    (TLName containerType)
-                    [tMutMsg]
-                , typeToType
-                        thisMod
-                        (C.fieldType fieldLocType)
-                        tMutMsg
-                , TApp (TVar "m") [TUnit]
-                ]
+            (case fieldLocType of
+                C.HereField _ -> TFn
+                    [ TApp
+                        (TLName containerType)
+                        [tMutMsg]
+                    , TApp (TVar "m") [fieldType]
+                    ]
+                _ -> TFn
+                    [ TApp
+                        (TLName containerType)
+                        [tMutMsg]
+                    , fieldType
+                    , TApp (TVar "m") [TUnit]
+                    ]
             )
         , def = DfValue
             { name = Name.setterName fieldName
             , params =
-                [ PLCtor containerDataCtor [PVar "struct"]
-                , PVar "value"
-                ]
+                case fieldLocType of
+                    C.HereField _ ->
+                        [ PLCtor containerDataCtor [PVar "struct"] ]
+                    _ ->
+                        [ PLCtor containerDataCtor [PVar "struct"]
+                        , PVar "value"
+                        ]
             , value =
                 case tag of
                     Just tagSetter ->
