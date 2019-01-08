@@ -38,7 +38,7 @@ fileToModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = Modul
         , "MultiParamTypeClasses"
         , "TypeFamilies"
         ]
-    , modExports = Just $ concat $
+    , modExports = Just $
         [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
         ++ [ExportLCtors typeName | P.Data{typeName} <- decls]
     , modImports = concat $
