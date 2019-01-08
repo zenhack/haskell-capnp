@@ -69,6 +69,23 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                             , local = local'
                             }
                         }
+                    ] ++
+                    [ Raw.Setter
+                        { fieldName
+                        , containerType = local
+                        , fieldLocType = fmap Flat.name fieldLocType
+                        , tag = Just Raw.TagSetter
+                            { tagOffset
+                            , tagValue
+                            }
+                        }
+                    | Flat.Variant
+                        { field = Flat.Field
+                            { fieldName = Name.CapnpQ { local = fieldName }
+                            , fieldLocType
+                            }
+                        , tagValue
+                        } <- variants
                     ]
         ]
     Flat.Interface ->
@@ -84,4 +101,13 @@ fieldToDecls containerType Flat.Field{fieldName, fieldLocType} =
         , containerType
         , fieldLocType = fmap Flat.name fieldLocType
         }
-    ]
+    ] ++ case fieldLocType of
+         C.HereField _ -> []
+         _ ->
+            [ Raw.Setter
+                { fieldName = Name.mkSub containerType (Name.getUnQ fieldName)
+                , containerType
+                , fieldLocType = fmap Flat.name fieldLocType
+                , tag = Nothing
+                }
+            ]

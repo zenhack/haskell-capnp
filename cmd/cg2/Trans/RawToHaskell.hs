@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 module Trans.RawToHaskell (fileToModules) where
@@ -36,7 +37,8 @@ fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
     Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName
         , modLangPragmas =
-            [ "FlexibleInstances"
+            [ "FlexibleContexts"
+            , "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "TypeFamilies"
             , "DeriveGeneric"
@@ -72,7 +74,7 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
                         C.VoidField ->
                             []
                         _ ->
-                            [ typeToType thisMod (C.fieldType locType) "msg" ]
+                            [ typeToType thisMod (C.fieldType locType) (TVar "msg") ]
                 }
             | Raw.Variant{name=dataCtor, locType} <- unionDataCtors
             ]
@@ -437,7 +439,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
                     [ TVar "msg" ]
                 , TApp
                     (TVar "m")
-                    [ typeToType thisMod (C.fieldType fieldLocType) "msg"
+                    [ typeToType thisMod (C.fieldType fieldLocType) (TVar "msg")
                     ]
                 ]
             )
@@ -473,6 +475,111 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
             }
         }
     ]
+declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
+    -- FIXME: this is broken for groups; we don't want to take the extra value
+    -- parameter, and we want to return the value instead.
+    let containerDataCtor = Name.mkSub containerType "newtype_"
+        tMutMsg = TApp (tgName ["Message"] "MutMsg" ) [TVar "s"]
+    in
+    [ DcValue
+        { typ = TCtx
+            [rwCtx "m" "s"]
+            (TFn
+                [ TApp
+                    (TLName containerType)
+                    [tMutMsg]
+                , typeToType
+                        thisMod
+                        (C.fieldType fieldLocType)
+                        tMutMsg
+                , TApp (TVar "m") [TUnit]
+                ]
+            )
+        , def = DfValue
+            { name = Name.setterName fieldName
+            , params =
+                [ PLCtor containerDataCtor [PVar "struct"]
+                , PVar "value"
+                ]
+            , value =
+                case tag of
+                    Just tagSetter ->
+                        EDo
+                            [DoE $ eSetTag tagSetter]
+                            (eSetValue fieldLocType)
+                    Nothing ->
+                        eSetValue fieldLocType
+            }
+        }
+    ]
+
+eSetValue :: C.FieldLocType Name.CapnpQ -> Exp
+eSetValue = \case
+    C.DataField dataLoc ty ->
+        eSetWordField
+            (ELName "struct")
+            (ETypeAnno
+                (EApp
+                    (eStd_ "fromIntegral")
+                    [EApp
+                        (egName ["Classes"] "toWord")
+                        [ELName "value"]
+                    ]
+                )
+                (TPrim (C.sizeOnly ty))
+            )
+            dataLoc
+    C.PtrField idx _ -> EDo
+        [ DoBind "ptr" $ EApp
+            (egName ["Classes"] "toPtr")
+            [ EApp
+                (egName ["Untyped"] "message")
+                [ELName "struct"]
+            , ELName "value"
+            ]
+        ]
+        (EApp
+            (egName ["Untyped"] "setPtr")
+            [ ELName "ptr"
+            , EInt (fromIntegral idx)
+            , ELName "struct"
+            ]
+        )
+    C.HereField _ ->
+        -- We actually just fetch the field in this case; this only happens for
+        -- groups (and unions, but the tag is handled separately in that case).
+        EApp
+            (egName ["Classes"] "fromStruct")
+            [ELName "struct"]
+    C.VoidField ->
+        EApp
+            (eStd_ "pure")
+            [ETup []]
+
+eSetTag :: Raw.TagSetter -> Exp
+eSetTag Raw.TagSetter{tagOffset, tagValue} =
+    eSetWordField
+        (ELName "struct")
+        (ETypeAnno
+            (EInt $ fromIntegral tagValue)
+            (TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16)
+        )
+        C.DataLoc
+            { dataIdx = fromIntegral tagOffset `div` 4
+            , dataOff = (fromIntegral tagOffset `mod` 4) * 16
+            , dataDef = 0
+            }
+
+eSetWordField :: Exp -> Exp -> C.DataLoc -> Exp
+eSetWordField struct value C.DataLoc{dataIdx, dataOff, dataDef} =
+    EApp
+        (egName ["GenHelpers"] "setWordField")
+        [ struct
+        , value
+        , EInt $ fromIntegral dataIdx
+        , EInt $ fromIntegral dataOff
+        , EInt $ fromIntegral dataDef
+        ]
 
 -- | Make an instance of the IsWord type class for an enum.
 mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> Decl
@@ -551,16 +658,15 @@ nameToType thisMod Name.CapnpQ{local, fileId} =
             (map Name.renderUnQ $ idToModule fileId)
             local
 
-typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> Type
-typeToType thisMod ty var = case ty of
+typeToType :: Word64 -> C.Type Name.CapnpQ -> Type -> Type
+typeToType thisMod ty msgTy = case ty of
     C.VoidType -> TUnit
     C.WordType (C.PrimWord ty) -> TPrim ty
-    C.WordType (C.EnumType typeId) ->
-        nameToType thisMod typeId
+    C.WordType (C.EnumType typeId) -> nameToType thisMod typeId
     C.PtrType (C.ListOf elt) ->
         TApp (tgName ["Basics"] "List")
-            [ TVar var
-            , typeToType thisMod elt var
+            [ msgTy
+            , typeToType thisMod elt msgTy
             ]
     C.PtrType (C.PrimPtr C.PrimText) ->
         appV $ tgName ["Basics"] "Text"
@@ -575,4 +681,4 @@ typeToType thisMod ty var = case ty of
     C.CompositeType (C.StructType typeId) ->
         appV $ nameToType thisMod typeId
   where
-    appV t = TApp t [TVar var]
+    appV t = TApp t [msgTy]

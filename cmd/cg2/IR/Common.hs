@@ -2,6 +2,7 @@
 -- See also IR.Name, which defines identifiers, which are also
 -- used in more than one IR.
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE LambdaCase    #-}
 module IR.Common where
 
 import Data.Word
@@ -30,9 +31,20 @@ sizeBits Sz16 = 16
 sizeBits Sz32 = 32
 sizeBits Sz64 = 64
 
+
+-- | Strip all information about a type except its size; this always returns either
+-- 'PrimBool' or 'PrimInt' with some unsigned type.
+sizeOnly :: WordType r -> PrimWord
+sizeOnly = \case
+    EnumType _ -> PrimInt (IntType Unsigned Sz16)
+    PrimWord (PrimInt (IntType _ size)) -> PrimInt (IntType Unsigned size)
+    PrimWord PrimFloat32 -> PrimInt (IntType Unsigned Sz32)
+    PrimWord PrimFloat64 -> PrimInt (IntType Unsigned Sz64)
+    PrimWord PrimBool -> PrimBool
+
 -- | Return the size in bits of a type that belongs in the data section of a struct.
 dataFieldSize :: WordType r -> Int
-dataFieldSize fieldType = case fieldType of
+dataFieldSize = \case
     EnumType _                          -> 16
     PrimWord (PrimInt (IntType _ size)) -> sizeBits size
     PrimWord PrimFloat32                -> 32

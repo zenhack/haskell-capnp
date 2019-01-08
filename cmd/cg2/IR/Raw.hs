@@ -4,7 +4,8 @@
 -- etc. It's still not at the level of detail of actual Haskell, but encodes
 -- the constructs to be generated, as opposed to the declarative description
 -- of the schema.
-module IR.Raw (File(..), Decl(..), Variant(..)) where
+{-# LANGUAGE DuplicateRecordFields #-}
+module IR.Raw (File(..), Decl(..), Variant(..), TagSetter(..)) where
 
 import Data.Word
 
@@ -52,6 +53,20 @@ data Decl
         , containerType :: Name.LocalQ
         , fieldLocType  :: Common.FieldLocType Name.CapnpQ
         }
+    | Setter
+        { fieldName     :: Name.LocalQ
+        , containerType :: Name.LocalQ
+        , fieldLocType  :: Common.FieldLocType Name.CapnpQ
+
+        , tag           :: Maybe TagSetter
+        -- ^ Info for setting the tag, if this is a union.
+        }
+    deriving(Show, Read, Eq)
+
+data TagSetter = TagSetter
+    { tagOffset :: !Word32
+    , tagValue  :: !Word16
+    }
     deriving(Show, Read, Eq)
 
 data Variant = Variant

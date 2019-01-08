@@ -150,6 +150,7 @@ data Exp
     -- ^ A call to (>>=)
     | ETup [Exp]
     | ECase Exp [(Pattern, Exp)]
+    | ETypeAnno Exp Type
     deriving(Show, Read, Eq)
 
 data Do

@@ -155,6 +155,11 @@ instance Format Exp where
             | (p, e) <- arms
             ]
         ]
+    format (ETypeAnno e ty) = PP.parens $ hcat
+        [ format e
+        , " :: "
+        , format ty
+        ]
 
 instance Format Do where
     format (DoBind var ex) = format var <> " <- " <> format ex

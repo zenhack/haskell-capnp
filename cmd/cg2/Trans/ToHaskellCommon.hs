@@ -62,6 +62,13 @@ readCtx m msg = TApp
     , TVar msg
     ]
 
+rwCtx :: T.Text -> T.Text -> Type
+rwCtx m s = TApp
+    (tgName ["Untyped"] "RWCtx")
+    [ TVar m
+    , TVar s
+    ]
+
 eGetWordField :: Exp -> C.DataLoc -> Exp
 eGetWordField struct C.DataLoc{dataIdx, dataOff, dataDef} =
     EApp
