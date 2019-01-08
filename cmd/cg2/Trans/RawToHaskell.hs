@@ -6,6 +6,8 @@ module Trans.RawToHaskell (fileToModules) where
 
 import Data.Word
 
+import Data.String (fromString)
+
 import qualified Data.Text as T
 
 import IR.Haskell
@@ -51,6 +53,9 @@ fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
             , imp ["Capnp", "GenHelpers"] "GenHelpers"
             , imp ["Capnp", "Classes"] "Classes"
             , imp ["GHC", "Generics"] "Generics"
+
+            -- So we can treat 'Word1' the same as 'Word16' etc.
+            , imp ["Capnp", "Bits"] "Std_"
             ] ++
             [ ImportQual { parts }
             | parts <- map idToModule fileImports
@@ -526,7 +531,7 @@ eSetValue = \case
                         [ELName "value"]
                     ]
                 )
-                (TPrim (C.sizeOnly ty))
+                (tStd_ $ fromString $ "Word" <> show (C.dataFieldSize ty))
             )
             dataLoc
     C.PtrField idx _ -> EDo
