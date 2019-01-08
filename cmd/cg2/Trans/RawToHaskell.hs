@@ -1,7 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Trans.RawToHaskell (fileToModule) where
+module Trans.RawToHaskell (fileToModules) where
 
 import Data.Word
 
@@ -14,8 +14,25 @@ import qualified IR.Common as C
 import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
 
-fileToModule :: Raw.File -> Module
-fileToModule Raw.File{fileName, fileId, fileImports, decls} =
+fileToModules :: Raw.File -> [Module]
+fileToModules file =
+    [ fileToMainModule file
+    , fileToModuleAlias file
+    ]
+
+fileToModuleAlias :: Raw.File -> Module
+fileToModuleAlias Raw.File{fileName, fileId} =
+    let reExport = ["Capnp", "Gen"] ++ makeModName fileName
+    in Module
+        { modName = idToModule fileId
+        , modLangPragmas = []
+        , modExports = Just [ExportMod reExport]
+        , modImports = [ ImportQual { parts = reExport } ]
+        , modDecls = []
+        }
+
+fileToMainModule :: Raw.File -> Module
+fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
     Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName
         , modLangPragmas =

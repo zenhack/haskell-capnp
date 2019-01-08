@@ -52,11 +52,13 @@ handleCGR cgr =
 handleFlatPure, handleFlatRaw :: [Flat.File] -> [Haskell.Module]
 
 handleFlatPure =
-    map ( Trans.PureToHaskell.fileToModule
+    concatMap
+        ( Trans.PureToHaskell.fileToModules
         . Trans.FlatToPure.fileToFile
         )
 
 handleFlatRaw =
-    map ( Trans.RawToHaskell.fileToModule
+    concatMap
+        ( Trans.RawToHaskell.fileToModules
         . Trans.FlatToRaw.fileToFile
         )

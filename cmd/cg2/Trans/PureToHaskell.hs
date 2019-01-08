@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Trans.PureToHaskell where
+module Trans.PureToHaskell (fileToModules) where
 
 import Data.Word
 
@@ -29,8 +29,25 @@ cerialEq (C.WordType _)      = True
 cerialEq (C.CompositeType _) = False
 cerialEq (C.PtrType _)       = False
 
-fileToModule :: P.File -> Module
-fileToModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = Module
+fileToModules :: P.File -> [Module]
+fileToModules file =
+    [ fileToMainModule file
+    , fileToModuleAlias file
+    ]
+
+fileToModuleAlias :: P.File -> Module
+fileToModuleAlias P.File{fileName, fileId} =
+    let reExport = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
+    in Module
+        { modName = idToModule fileId ++ ["Pure"]
+        , modLangPragmas = []
+        , modExports = Just [ExportMod reExport]
+        , modImports = [ ImportQual { parts = reExport } ]
+        , modDecls = []
+        }
+
+fileToMainModule :: P.File -> Module
+fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DeriveGeneric"
