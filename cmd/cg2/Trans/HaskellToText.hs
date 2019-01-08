@@ -136,7 +136,10 @@ instance Format Exp where
     format (ECase ex arms) = vcat
         [ hcat [ "case ", format ex, " of"]
         , indent $ vcat
-            [ hcat [ format p, " -> ", format e]
+            [ vcat
+                [ hcat [ format p, " ->" ]
+                , indent (format e)
+                ]
             | (p, e) <- arms
             ]
         ]
