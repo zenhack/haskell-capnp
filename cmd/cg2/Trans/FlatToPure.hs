@@ -28,10 +28,18 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
                     { name = variantName
                     , fields = case fieldLocType of
                         C.VoidField ->
+                            -- If the argument is void, just have no argument.
                             []
                         C.HereField
+                            -- See Note [Collapsing Groups]
                             (C.StructType
-                                Flat.Node{ union_=Flat.Struct{ isGroup=True, fields } }) ->
+                                Flat.Node
+                                    { union_=Flat.Struct
+                                        { isGroup=True
+                                        , union=Nothing
+                                        , fields
+                                        }
+                                    }) ->
                                     map fieldToField fields
                         _ ->
                             [fieldToField field]
@@ -47,6 +55,7 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
             }
         ]
     Flat.Interface{} -> [] -- TODO
+    Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
     Flat.Struct{fields, union} ->
         Pure.Data
             { typeName = local
@@ -83,3 +92,26 @@ fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field
         (\Flat.Node{name} -> name)
         (C.fieldType fieldLocType)
     }
+
+-- Note [Collapsing Groups]
+-- ========================
+--
+-- If the argument to a union data constructor is a group, then the fields
+-- never exist on their own, so it makes for a nicer API to just collapse
+-- the fields directly into the variant, rather than creating an auxiliary
+-- struct type.
+--
+-- However, this is only safe to do if the group does not itself have an
+-- anonymous union. The reason for this is that otherwise we could end up
+-- with two variants with a field "union'" but different types, which the
+-- compiler will reject.
+--
+-- So the rule is, if a Field.Struct node is a group, and it does not itself
+-- have an anonymous union:
+--
+-- 1. Don't generate a type for it.
+-- 2. Collapse its fields into the data constructor for the union.
+--
+-- Note that we actually depend on (1) to avoid name collisions, since
+-- otherwise both the data constructor for the anonymous union and the
+-- data constructor for the group will be the same.
