@@ -31,11 +31,15 @@ class Format a where
     format :: a -> PP.Doc
 
 instance Format Module where
-    format Module{modName, modLangPragmas, modDecls, modImports} = vcat
+    format Module{modName, modLangPragmas, modDecls, modExports, modImports} = vcat
         [ vcat [ "{-# LANGUAGE " <> PP.textStrict ext <> " #-}" | ext <- modLangPragmas ]
         , hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
+            , case modExports of
+                Nothing -> ""
+                Just exports ->
+                    PP.tupled (map format exports)
             , " where"
             ]
         , vcat $ map format modImports
@@ -51,6 +55,14 @@ instance Format Module where
         , "import Prelude ((<$>), (<*>), (>>=))"
         , vcat $ map format modDecls
         ]
+
+instance Format Export where
+    format (ExportMod parts) =
+        "module " <> PP.textStrict (mconcat $ intersperse "." $ map Name.renderUnQ parts)
+    format (ExportName name) =
+        PP.textStrict $ Name.renderUnQ name
+    format (ExportCtorsAll name) =
+        PP.textStrict (Name.renderUnQ name) <> "(..)"
 
 instance Format Decl where
     format (DcData d) = format d

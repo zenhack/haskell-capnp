@@ -38,6 +38,7 @@ fileToModule P.File{fileName, fileId, decls, fileImports} = Module
         , "MultiParamTypeClasses"
         , "TypeFamilies"
         ]
+    , modExports = Nothing
     , modImports = concat $
         [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }

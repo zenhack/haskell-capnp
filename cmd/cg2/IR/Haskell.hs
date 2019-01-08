@@ -21,6 +21,7 @@ module IR.Haskell
     , Decl(..)
     , Do(..)
     , Exp(..)
+    , Export(..)
     , Import(..)
     , InstanceDef(..)
     , Module(..)
@@ -43,11 +44,20 @@ data Module = Module
     -- ^ The parts of the module path
     , modLangPragmas :: [T.Text]
     -- ^ The language extensions enabled in this module.
+    , modExports     :: Maybe [Export]
+    -- ^ The export list. If it is 'Nothing' that means there is no export
+    -- list (and therefore everything is exported).
     , modDecls       :: [Decl]
     -- ^ The declarations in the module.
     , modImports     :: [Import]
     -- ^ Modules to import.
     }
+    deriving(Show, Read, Eq)
+
+data Export
+    = ExportMod [Name.UnQ]
+    | ExportName Name.UnQ
+    | ExportCtorsAll Name.UnQ
     deriving(Show, Read, Eq)
 
 data Import

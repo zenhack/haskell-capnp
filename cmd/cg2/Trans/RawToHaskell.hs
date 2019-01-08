@@ -24,6 +24,7 @@ fileToModule Raw.File{fileName, fileId, fileImports, decls} =
             , "TypeFamilies"
             , "DeriveGeneric"
             ]
+        , modExports = Nothing
         , modImports =
             [ imp ["Capnp", "Message"] "Message"
             , imp ["Capnp", "Untyped"] "Untyped"
