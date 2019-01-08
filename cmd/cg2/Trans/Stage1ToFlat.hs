@@ -80,20 +80,6 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         fieldNodes =
                             concatMap (fieldToNodes kidsNS) fields
 
-                        -- Only one of thse ends up as a top-level node; if there are
-                        -- both variants and common fields then unionNode ends up in
-                        -- commonNode's union field, but not part of the full list of
-                        -- nodes:
-                        unionNode =
-                            Flat.Node
-                                { name
-                                , nodeId
-                                , union_ = Flat.Union
-                                    { variants
-                                    , tagOffset
-                                    , isOnlyField = null commonFields
-                                    }
-                                }
                         commonNode =
                             Flat.Node
                                 { name
@@ -104,17 +90,17 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                         if null variants then
                                             Nothing
                                         else
-                                            Just unionNode
+                                            Just Flat.Union
+                                                { variants
+                                                , tagOffset
+                                                }
                                     , isGroup
                                     , dataWordCount
                                     , pointerCount
                                     }
                                 }
                     in
-                    if null commonFields then
-                        unionNode : fieldNodes
-                    else
-                        commonNode : fieldNodes
+                    commonNode : fieldNodes
                 Stage1.NodeInterface ->
                     [ Flat.Node
                         { name

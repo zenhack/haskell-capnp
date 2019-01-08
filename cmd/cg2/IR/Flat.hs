@@ -15,6 +15,7 @@ module IR.Flat
     , Node'(..)
     , Field(..)
     , Variant(..)
+    , Union(..)
     ) where
 
 -- Note to self: evolve this to generally making the tree the "right shape",
@@ -49,19 +50,17 @@ data Node'
         , isGroup       :: !Bool
         , dataWordCount :: !Word16
         , pointerCount  :: !Word16
-        , union         :: Maybe Node
-        -- ^ The struct's anonymous union, if any. Node that this will
-        -- always have union_ = Union ... TODO(cleanup): enforce said
-        -- property at the type level.
-        }
-    | Union
-        { tagOffset   :: !Word32
-        , variants    :: [Variant]
-        , isOnlyField :: !Bool
-        -- ^ Whether the union is the only field in its parent
-        -- object.
+        , union         :: Maybe Union
+        -- ^ The struct's anonymous union, if any.
         }
     | Interface
+    deriving(Show, Read, Eq)
+
+
+data Union = Union
+    { tagOffset :: !Word32
+    , variants  :: [Variant]
+    }
     deriving(Show, Read, Eq)
 
 data Field = Field

@@ -18,9 +18,12 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
         }
 
 nodeToDecls :: Flat.Node -> [Pure.Decl]
-nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
+nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of
     Flat.Enum _ -> [] -- TODO
-    Flat.Union{variants} ->
+    Flat.Interface{} -> [] -- TODO
+    Flat.Struct{fields=[], union=Just Flat.Union{variants}} ->
+        -- It's just one big union; skip the outer struct wrapper and make it
+        -- a top-level sum type.
         [ Pure.Data
             { typeName = local
             , variants =
@@ -54,9 +57,8 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
             , isUnion = True
             }
         ]
-    Flat.Interface{} -> [] -- TODO
     Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
-    Flat.Struct{fields, union} ->
+    Flat.Struct{ fields, union, dataWordCount, pointerCount } ->
         Pure.Data
             { typeName = local
             , variants =
@@ -67,21 +69,30 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
                         ++ case union of
                             Nothing ->
                                 []
-                            Just Flat.Node{union_=Flat.Union{}} ->
+                            Just _ ->
                                 [ Pure.Field
                                     { name = "union'"
                                     , type_ = C.CompositeType $ C.StructType $ Name.mkSub name ""
                                     }
                                 ]
-                            Just _ ->
-                                error "This should never happen!"
                     }
                 ]
             , isUnion = False
             }
         : case union of
-            Just u ->
-                nodeToDecls u { Flat.name = Name.mkSub name "" }
+            Just _ ->
+                -- Now make a version that's just the union.
+                nodeToDecls Flat.Node
+                    { name = Name.mkSub name ""
+                    , nodeId
+                    , union_ = Flat.Struct
+                        { fields = []
+                        , isGroup = True
+                        , dataWordCount
+                        , pointerCount
+                        , union = union
+                        }
+                    }
             Nothing ->
                 []
 

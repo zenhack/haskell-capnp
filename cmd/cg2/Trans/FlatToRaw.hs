@@ -25,7 +25,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
             , dataCtors = map (Name.mkSub local) variants
             }
         ]
-    Flat.Struct{fields, isGroup, dataWordCount, pointerCount} ->
+    Flat.Struct{fields, isGroup, dataWordCount, pointerCount, union} ->
         concat
             [ [ Raw.StructWrapper { typeCtor = local } ]
             , if isGroup
@@ -39,36 +39,37 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                         }
                     ]
             , concatMap (fieldToDecls local) fields
-            ]
-    Flat.Union{variants, tagOffset} ->
-        let local' = Name.mkSub local "" in
-        [ Raw.StructWrapper { typeCtor = local }
-        , Raw.UnionVariant
-            { typeCtor = local'
-            , tagOffset
-            , unionDataCtors =
-                [ Raw.Variant
-                    { name = local
-                    , tagValue
-                    , locType = fmap Flat.name fieldLocType
-                    }
-                | Flat.Variant
-                    { field = Flat.Field
-                        { fieldName = Name.CapnpQ{local}
-                        , fieldLocType
+            , case union of
+                Nothing -> []
+                Just Flat.Union{variants, tagOffset} ->
+                    let local' = Name.mkSub local "" in
+                    [ Raw.UnionVariant
+                        { typeCtor = local'
+                        , tagOffset
+                        , unionDataCtors =
+                            [ Raw.Variant
+                                { name = local
+                                , tagValue
+                                , locType = fmap Flat.name fieldLocType
+                                }
+                            | Flat.Variant
+                                { field = Flat.Field
+                                    { fieldName = Name.CapnpQ{local}
+                                    , fieldLocType
+                                    }
+                                , tagValue
+                                } <- variants
+                            ]
                         }
-                    , tagValue
-                    } <- variants
-                ]
-            }
-        , Raw.Getter
-            { fieldName = local'
-            , containerType = local
-            , fieldLocType = C.HereField $ C.StructType Name.CapnpQ
-                { fileId
-                , local = local'
-                }
-            }
+                    , Raw.Getter
+                        { fieldName = local'
+                        , containerType = local
+                        , fieldLocType = C.HereField $ C.StructType Name.CapnpQ
+                            { fileId
+                            , local = local'
+                            }
+                        }
+                    ]
         ]
     Flat.Interface ->
         [ Raw.InterfaceWrapper
