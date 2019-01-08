@@ -50,10 +50,14 @@ data Module = Module
     }
     deriving(Show, Read, Eq)
 
-data Import = Import
-    { importAs :: Name.UnQ
-    , parts    :: [Name.UnQ]
-    }
+data Import
+    = ImportAs
+        { importAs :: Name.UnQ
+        , parts    :: [Name.UnQ]
+        }
+    | ImportQual
+        { parts :: [Name.UnQ]
+        }
     deriving(Show, Read, Eq)
 
 -- | A declaration.

@@ -29,17 +29,24 @@ cerialEq (C.CompositeType _) = False
 cerialEq (C.PtrType _)       = False
 
 fileToModule :: P.File -> Module
-fileToModule P.File{fileName, fileId, decls} = Module
+fileToModule P.File{fileName, fileId, decls, fileImports} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DuplicateRecordFields"
         ]
-    , modImports =
-        [ Import { importAs = "V", parts = ["Data", "Vector"] }
-        , Import { importAs = "T", parts = ["Data", "Text"] }
-        , Import { importAs = "BS", parts = ["Data", "ByteString"] }
-        , Import { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
-        , Import { importAs = "Classes", parts = ["Capnp", "Classes"] }
+    , modImports = concat $
+        [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
+        , ImportAs { importAs = "T", parts = ["Data", "Text"] }
+        , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
+        , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
+        , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
+        , ImportQual { parts = idToModule fileId }
+        ]
+        :
+        [ [ ImportQual { parts = impId }
+          , ImportQual { parts = impId ++ ["Pure"] }
+          ]
+        | impId <- map idToModule fileImports
         ]
     , modDecls = concatMap (declToDecls fileId) decls
     }

@@ -5,8 +5,6 @@ module Trans.RawToHaskell (fileToModule) where
 
 import Data.Word
 
-import Text.Printf (printf)
-
 import qualified Data.Text as T
 
 import IR.Haskell
@@ -17,7 +15,7 @@ import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
 
 fileToModule :: Raw.File -> Module
-fileToModule Raw.File{fileName, fileId, decls} =
+fileToModule Raw.File{fileName, fileId, fileImports, decls} =
     Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName
         , modLangPragmas =
@@ -33,11 +31,14 @@ fileToModule Raw.File{fileName, fileId, decls} =
             , imp ["Capnp", "GenHelpers"] "GenHelpers"
             , imp ["Capnp", "Classes"] "Classes"
             , imp ["GHC", "Generics"] "Generics"
+            ] ++
+            [ ImportQual { parts }
+            | parts <- map idToModule fileImports
             ]
         , modDecls = concatMap (declToDecls fileId) decls
         }
   where
-    imp parts importAs = Import {parts, importAs}
+    imp parts importAs = ImportAs {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
 declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
@@ -529,8 +530,9 @@ nameToType thisMod Name.CapnpQ{local, fileId} =
     if fileId == thisMod
         then TLName local
         else tgName
-            ["Capnp", "Gen", T.pack $ printf "X%x" fileId]
+            (map Name.renderUnQ $ idToModule fileId)
             local
+
 typeToType :: Word64 -> C.Type Name.CapnpQ -> T.Text -> Type
 typeToType thisMod ty var = case ty of
     C.VoidType -> TUnit

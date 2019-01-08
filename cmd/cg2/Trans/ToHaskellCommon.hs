@@ -6,8 +6,11 @@ module Trans.ToHaskellCommon where
 
 import qualified Data.Text as T
 
+import Data.Word
+
 import Data.Char       (toUpper)
 import System.FilePath (splitDirectories)
+import Text.Printf     (printf)
 
 import qualified IR.Common as C
 import qualified IR.Name   as Name
@@ -59,6 +62,10 @@ eGetWordField struct C.DataLoc{dataIdx, dataOff, dataDef} =
         , EInt $ fromIntegral dataOff
         , EInt $ fromIntegral dataDef
         ]
+
+idToModule :: Word64 -> [Name.UnQ]
+idToModule fileId =
+    ["Capnp", "Gen", "ById", Name.UnQ $ T.pack $ printf "X%x" fileId]
 
 instance_ :: [Type] -> [T.Text] -> Name.LocalQ -> [Type] -> [InstanceDef] -> Decl
 instance_ ctx classNS className tys defs = DcInstance

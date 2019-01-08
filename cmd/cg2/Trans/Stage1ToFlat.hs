@@ -25,11 +25,12 @@ filesToFiles inFiles = outFiles
     nodeMap = M.fromList [(nodeId, node) | node@Flat.Node{nodeId} <- allNodes]
 
 fileToFile :: NodeMap -> Stage1.File -> Flat.File
-fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId} =
+fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
     Flat.File
         { nodes = nodesToNodes nodeMap fileId fileNodes
         , fileName
         , fileId
+        , fileImports
         }
 
 nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]

@@ -27,9 +27,10 @@ import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
 data File = File
-    { nodes    :: [Node]
-    , fileId   :: !Word64
-    , fileName :: FilePath
+    { nodes       :: [Node]
+    , fileId      :: !Word64
+    , fileName    :: FilePath
+    , fileImports :: [Word64]
     }
     deriving(Show, Read, Eq)
 

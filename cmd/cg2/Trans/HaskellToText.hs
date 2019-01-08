@@ -43,9 +43,9 @@ instance Format Module where
         -- "Std_" namespace, so that they don't collide with names in the
         -- generated code; see issue #58.
         , vcat $ map format
-            [ Import { importAs = "Std_", parts = ["Prelude"] }
-            , Import { importAs = "Std_", parts = ["Data", "Word"] }
-            , Import { importAs = "Std_", parts = ["Data", "Int"] }
+            [ ImportAs { importAs = "Std_", parts = ["Prelude"] }
+            , ImportAs { importAs = "Std_", parts = ["Data", "Word"] }
+            , ImportAs { importAs = "Std_", parts = ["Data", "Int"] }
             ]
         -- ...but there are a couple operators we still want unqaulified:
         , "import Prelude ((<$>), (<*>), (>>=))"
@@ -206,11 +206,15 @@ instance Format Name.UnQ where
 
 
 instance Format Import where
-    format Import{importAs, parts} = hcat
+    format ImportAs{importAs, parts} = hcat
         [ "import qualified "
         , mconcat $ intersperse "." (map format parts)
         , " as "
         , format importAs
+        ]
+    format ImportQual{ parts } = hcat
+        [ "import qualified "
+        , mconcat $ intersperse "." (map format parts)
         ]
 
 instance Format C.PrimWord where

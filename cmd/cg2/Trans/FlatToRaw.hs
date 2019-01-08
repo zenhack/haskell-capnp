@@ -9,10 +9,11 @@ import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
 
 fileToFile :: Flat.File -> Raw.File
-fileToFile Flat.File{nodes, fileId, fileName} =
+fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
     Raw.File
         { fileName
         , fileId
+        , fileImports
         , decls = concatMap nodeToDecls nodes
         }
 
