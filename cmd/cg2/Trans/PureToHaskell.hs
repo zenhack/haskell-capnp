@@ -109,10 +109,17 @@ fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)
 
 typeToType :: Word64 -> C.Type Name.CapnpQ -> Type
-typeToType _thisMod C.VoidType                        = TUnit
-typeToType _thisMod (C.WordType (C.PrimWord ty))      = TPrim ty
-typeToType thisMod (C.WordType (C.EnumType n))        = nameToType thisMod n
-typeToType thisMod (C.CompositeType (C.StructType n)) = nameToType thisMod n
+typeToType _thisMod C.VoidType =
+    TUnit
+typeToType _thisMod (C.WordType (C.PrimWord ty)) =
+    TPrim ty
+typeToType _thisMod (C.WordType (C.EnumType Name.CapnpQ{local, fileId})) =
+    -- Enums are just re-exported from the raw module, we should still
+    -- refer to them qualified even if they're in the file we're generated
+    -- from:
+    tgName (rawModule fileId) local
+typeToType thisMod (C.CompositeType (C.StructType n)) =
+    nameToType thisMod n
 typeToType thisMod (C.PtrType (C.PtrComposite (C.StructType n))) =
     nameToType thisMod n
 typeToType thisMod (C.PtrType (C.ListOf ty)) =
