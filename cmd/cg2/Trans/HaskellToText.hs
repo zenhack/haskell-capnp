@@ -131,7 +131,7 @@ instance Format Exp where
         [ "(do"
         , indent $ vcat (map format ds ++ [format ex, ")"])
         ]
-    format (EBind x f) = format x <> " >>= " <> format f
+    format (EBind x f) = PP.parens (format x <> " >>= " <> format f)
     format (ETup es) = PP.tupled (map format es)
     format (ECase ex arms) = vcat
         [ hcat [ "case ", format ex, " of"]
