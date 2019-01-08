@@ -27,8 +27,14 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
                 [ Pure.Variant
                     { name = variantName
                     , fields = case fieldLocType of
-                        C.VoidField -> []
-                        _           -> [fieldToField field]
+                        C.VoidField ->
+                            []
+                        C.HereField
+                            (C.StructType
+                                Flat.Node{ union_=Flat.Struct{ isGroup=True, fields } }) ->
+                                    map fieldToField fields
+                        _ ->
+                            [fieldToField field]
                     }
                 | Flat.Variant
                     { field=field@Flat.Field
