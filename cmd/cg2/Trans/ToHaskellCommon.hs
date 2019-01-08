@@ -44,7 +44,7 @@ tgName :: [T.Text] -> Name.LocalQ -> Type
 tgName parts local = TGName $ gName parts local
 
 pgName :: [T.Text] -> Name.LocalQ -> [Pattern] -> Pattern
-pgName parts local args = PGCtor (gName parts local) args
+pgName parts local = PGCtor (gName parts local)
 
 tuName :: Name.UnQ -> Type
 tuName = TLName . Name.mkLocal Name.emptyNS

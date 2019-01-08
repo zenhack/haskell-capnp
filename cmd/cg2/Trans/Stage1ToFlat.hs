@@ -1,6 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE OverloadedStrings     #-}
 -- Translate from the 'Stage1' IR to the 'Flat' IR.
 --
 -- As the name of the latter suggests, this involves flattening the namepace.
