@@ -20,7 +20,26 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
 nodeToDecls :: Flat.Node -> [Pure.Decl]
 nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
     Flat.Enum _ -> [] -- TODO
-    Flat.Union{} -> [] -- TODO
+    Flat.Union{variants} ->
+        [ Pure.Data
+            { typeName = local
+            , variants =
+                [ Pure.Variant
+                    { name = variantName
+                    , fields = case fieldLocType of
+                        C.VoidField -> []
+                        _           -> [fieldToField field]
+                    }
+                | Flat.Variant
+                    { field=field@Flat.Field
+                        { fieldName=Name.CapnpQ{local=variantName}
+                        , fieldLocType
+                        }
+                    } <- variants
+                ]
+            , isUnion = True
+            }
+        ]
     Flat.Interface{} -> [] -- TODO
     Flat.Struct{fields, union} ->
         Pure.Data

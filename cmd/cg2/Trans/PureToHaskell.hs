@@ -68,22 +68,22 @@ declToDecls thisMod P.Data{typeName, variants} =
         }
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
         [ iValue "decerialize" [PVar "raw"] $
+            let fieldGetter name = egName
+                    (rawModule thisMod)
+                    (Name.mkLocal
+                        Name.emptyNS
+                        (Name.getterName $ Name.mkSub typeName name)
+                    )
+            in
             case variants of
                 [P.Variant{name, fields}] ->
-                    let fieldGetter name = egName
-                            (rawModule thisMod)
-                            (Name.mkLocal
-                                Name.emptyNS
-                                (Name.getterName $ Name.mkSub typeName name)
-                            )
-                    in
                     if null fields then
                         EApp (eStd_ "pure") [ELName name]
                     else
                         EFApp
                             (ELName name)
                             [
-                                let getter = EApp (fieldGetter name) [ELName "raw"] in
+                                let getter = EApp (fieldGetter name) [euName "raw"] in
                                 if cerialEq type_ then
                                     getter
                                 else
@@ -91,7 +91,14 @@ declToDecls thisMod P.Data{typeName, variants} =
                             | P.Field{name, type_} <- fields
                             ]
                 _ ->
-                    error "TODO"
+                    EDo
+                        [DoBind "raw" $ EApp (fieldGetter "") [euName "raw"]
+                        ]
+                        (ECase (ELName "raw")
+                            [ (PVar "todo", euName "TODO")
+                            | _ <- variants
+                            ]
+                        )
         ]
     ]
 

@@ -73,5 +73,6 @@ data Field = Field
 data Variant = Variant
     { tagValue :: !Word16
     , field    :: Field
+    -- ^ The field's name is really the name of the variant.
     }
     deriving(Show, Read, Eq)

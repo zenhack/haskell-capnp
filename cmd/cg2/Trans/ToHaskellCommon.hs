@@ -37,6 +37,9 @@ gName parts local = Name.GlobalQ
 egName :: [T.Text] -> Name.LocalQ -> Exp
 egName parts local = EGName $ gName parts local
 
+euName :: Name.UnQ -> Exp
+euName = ELName . Name.mkLocal Name.emptyNS
+
 tgName :: [T.Text] -> Name.LocalQ -> Type
 tgName parts local = TGName $ gName parts local
 
