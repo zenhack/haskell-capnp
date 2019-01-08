@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy.IO as TIO
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
 
+import qualified IR.Flat             as Flat
 import qualified IR.Haskell          as Haskell
 import qualified Trans.CgrToStage1
 import qualified Trans.FlatToPure
@@ -37,16 +38,7 @@ handleCGR cgr =
             Trans.Stage1ToFlat.filesToFiles $
             Trans.CgrToStage1.cgrToFiles cgr
         modules =
-            map
-                ( Trans.RawToHaskell.fileToModule
-                . Trans.FlatToRaw.fileToFile
-                )
-                flat
-            ++
-            map ( Trans.PureToHaskell.fileToModule
-                . Trans.FlatToPure.fileToFile
-                )
-                flat
+            handleFlatRaw flat ++ handleFlatPure flat
     in
     map
         (\mod ->
@@ -56,3 +48,15 @@ handleCGR cgr =
         )
         modules
 
+
+handleFlatPure, handleFlatRaw :: [Flat.File] -> [Haskell.Module]
+
+handleFlatPure =
+    map ( Trans.PureToHaskell.fileToModule
+        . Trans.FlatToPure.fileToFile
+        )
+
+handleFlatRaw =
+    map ( Trans.RawToHaskell.fileToModule
+        . Trans.FlatToRaw.fileToFile
+        )
