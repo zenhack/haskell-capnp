@@ -338,7 +338,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} 
         [ TVar "s"
         , TApp
             (TLName typeCtor)
-            [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
+            [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
         ]
         [ iValue
             "toPtr"
@@ -349,6 +349,22 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} 
                 , ELName "struct"
                 ]
             )
+        ]
+    , instance_ [] ["Classes"] "Allocate"
+        [ TVar "s"
+        , TApp
+            (TLName typeCtor)
+            [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
+        ]
+        [ iValue "new" [PVar "msg"] $ EFApp
+            (ELName dataCtor)
+            [ EApp
+                (egName ["Untyped"] "allocStruct")
+                [ ELName "msg"
+                , EInt $ fromIntegral dataWordCount
+                , EInt $ fromIntegral pointerCount
+                ]
+            ]
         ]
     , instance_ [] ["Basics"] "ListElem"
         [ TVar "msg"
