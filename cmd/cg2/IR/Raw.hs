@@ -5,7 +5,7 @@
 -- the constructs to be generated, as opposed to the declarative description
 -- of the schema.
 {-# LANGUAGE DuplicateRecordFields #-}
-module IR.Raw (File(..), Decl(..), Variant(..), TagSetter(..)) where
+module IR.Raw (File(..), Decl(..), Variant(..), TagSetter(..), NewFnType(..)) where
 
 import Data.Word
 
@@ -48,12 +48,12 @@ data Decl
         { typeCtor  :: Name.LocalQ
         , dataCtors :: [Name.LocalQ]
         }
-    | Getter
+    | Getter -- get_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
         , fieldLocType  :: Common.FieldLocType Name.CapnpQ
         }
-    | Setter
+    | Setter -- set_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
         , fieldLocType  :: Common.FieldLocType Name.CapnpQ
@@ -66,6 +66,20 @@ data Decl
         , containerType :: Name.LocalQ
         , ptrIndex      :: !Word16
         }
+    | NewFn -- new_* function
+        { fieldName     :: Name.LocalQ
+        , containerType :: Name.LocalQ
+        , fieldLocType  :: Common.FieldLocType Name.CapnpQ
+
+        , newFnType     :: NewFnType
+        }
+    deriving(Show, Read, Eq)
+
+data NewFnType
+    = NewList
+    | NewText
+    | NewData
+    | NewStruct
     deriving(Show, Read, Eq)
 
 data TagSetter = TagSetter

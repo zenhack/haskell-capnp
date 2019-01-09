@@ -95,9 +95,9 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
         ]
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
-fieldToDecls containerType Flat.Field{fieldName=fieldName@Name.CapnpQ{local}, fieldLocType} =
+fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fieldLocType} =
     [ Raw.Getter
-        { fieldName = Name.mkSub containerType (Name.getUnQ fieldName)
+        { fieldName
         , containerType
         , fieldLocType = fmap Flat.name fieldLocType
         }
@@ -107,7 +107,7 @@ fieldToDecls containerType Flat.Field{fieldName=fieldName@Name.CapnpQ{local}, fi
          C.HereField _ -> []
          _ ->
             [ Raw.Setter
-                { fieldName = Name.mkSub containerType (Name.getUnQ fieldName)
+                { fieldName
                 , containerType
                 , fieldLocType = fmap Flat.name fieldLocType
                 , tag = Nothing
@@ -117,9 +117,45 @@ fieldToDecls containerType Flat.Field{fieldName=fieldName@Name.CapnpQ{local}, fi
     case fieldLocType of
         C.PtrField ptrIndex _ ->
             [ Raw.HasFn
-                { fieldName = local
+                { fieldName
                 , containerType
                 , ptrIndex
+                }
+            ]
+        _ ->
+            []
+    ++
+    case fieldLocType of
+        C.PtrField _ (C.ListOf _) ->
+            [ Raw.NewFn
+                { fieldName
+                , containerType
+                , fieldLocType = fmap Flat.name fieldLocType
+                , newFnType = Raw.NewList
+                }
+            ]
+        C.PtrField _ (C.PrimPtr C.PrimText) ->
+            [ Raw.NewFn
+                { fieldName
+                , containerType
+                , fieldLocType = fmap Flat.name fieldLocType
+                , newFnType = Raw.NewText
+                }
+            ]
+        C.PtrField _ (C.PrimPtr C.PrimData) ->
+            [ Raw.NewFn
+                { fieldName
+                , containerType
+                , fieldLocType = fmap Flat.name fieldLocType
+                , newFnType = Raw.NewText
+                }
+            ]
+        C.PtrField _ (C.PtrComposite _) ->
+            [ Raw.NewFn
+                { fieldName
+                , containerType
+                , fieldLocType = fmap Flat.name fieldLocType
+                , newFnType = Raw.NewStruct
                 }
             ]
         _ ->

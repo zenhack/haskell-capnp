@@ -17,6 +17,9 @@ import qualified IR.Common as C
 import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
 
+tMutMsg :: Type
+tMutMsg = TApp (tgName ["Message"] "MutMsg" ) [TVar "s"]
+
 fileToModules :: Raw.File -> [Module]
 fileToModules file =
     [ fileToMainModule file
@@ -512,7 +515,6 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
     -- The below is a little ugly in that there's a bit to much conditional
     -- logic strewn about because of the above.
     let containerDataCtor = Name.mkSub containerType "newtype_"
-        tMutMsg = TApp (tgName ["Message"] "MutMsg" ) [TVar "s"]
         fieldType = typeToType
             thisMod
             (C.fieldType fieldLocType)
@@ -577,6 +579,51 @@ declToDecls _thisMod Raw.HasFn{fieldName, containerType, ptrIndex} =
                     , ELName "struct"
                     ]
                 ]
+            }
+        }
+    ]
+declToDecls thisMod Raw.NewFn{fieldName, containerType, fieldLocType, newFnType} =
+    -- TODO(cleanup): I(zenhack) am a little unhappy with having several case
+    -- expressions to distinguish struct vs non-struct; we should refactor.
+    let fieldType = typeToType
+            thisMod
+            (C.fieldType fieldLocType)
+            tMutMsg
+    in
+    [ DcValue
+        { typ = TCtx
+            [rwCtx "m" "s"]
+            (TFn $ concat
+                [ [TApp (TLName containerType) [tMutMsg]]
+                , case newFnType of
+                    -- length
+                    Raw.NewStruct -> []
+                    _             -> [tStd_ "Int"]
+                , [TApp (TVar "m") [fieldType]]
+                ]
+            )
+        , def = DfValue
+            { name = Name.newFnName fieldName
+            , params =
+                [PVar "struct"] ++
+                case newFnType of
+                    Raw.NewStruct -> []
+                    _             -> [PVar "len"]
+            , value = EDo
+                [ DoBind "result" $
+                    let message = EApp (egName ["Untyped"] "message") [ELName "struct"]
+                    in case newFnType of
+                        Raw.NewStruct -> EApp (egName ["Classes"] "new") [message]
+                        Raw.NewList -> EApp (egName ["Classes"] "newList") [message, ELName "len"]
+                        Raw.NewText -> EApp (egName ["Basics"] "newText") [message, ELName "len"]
+                        Raw.NewData -> EApp (egName ["Basics"] "newData") [message, ELName "len"]
+                , DoE $ EApp
+                    (ELName $ Name.mkLocal Name.emptyNS (Name.setterName fieldName))
+                    [ ELName "struct"
+                    , ELName "result"
+                    ]
+                ]
+                (EApp (eStd_ "pure") [ELName "result"])
             }
         }
     ]
