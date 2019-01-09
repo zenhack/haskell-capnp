@@ -56,6 +56,8 @@ fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
 
             -- So we can treat 'Word1' the same as 'Word16' etc.
             , imp ["Capnp", "Bits"] "Std_"
+
+            , imp ["Data", "Maybe"] "Std_"
             ] ++
             [ ImportQual { parts }
             | parts <- map idToModule fileImports
@@ -536,6 +538,29 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
                             (eSetValue fieldLocType)
                     Nothing ->
                         eSetValue fieldLocType
+            }
+        }
+    ]
+declToDecls _thisMod Raw.HasFn{fieldName, containerType, ptrIndex} =
+    let containerDataCtor = Name.mkSub containerType "newtype_" in
+    [ DcValue
+        { typ = TCtx
+            [readCtx "m" "msg"]
+            (TFn
+                [ TApp (TLName containerType) [ TVar "msg" ]
+                , TApp (TVar "m") [tStd_ "Bool"]
+                ]
+            )
+        , def = DfValue
+            { name = Name.hasFnName fieldName
+            , params = [PLCtor containerDataCtor [PVar "struct"]]
+            , value = EFApp (eStd_ "isJust")
+                [ EApp
+                    (egName ["Untyped"] "getPtr")
+                    [ EInt $ fromIntegral ptrIndex
+                    , ELName "struct"
+                    ]
+                ]
             }
         }
     ]

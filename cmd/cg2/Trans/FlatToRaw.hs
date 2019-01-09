@@ -95,13 +95,15 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
         ]
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
-fieldToDecls containerType Flat.Field{fieldName, fieldLocType} =
+fieldToDecls containerType Flat.Field{fieldName=fieldName@Name.CapnpQ{local}, fieldLocType} =
     [ Raw.Getter
         { fieldName = Name.mkSub containerType (Name.getUnQ fieldName)
         , containerType
         , fieldLocType = fmap Flat.name fieldLocType
         }
-    ] ++ case fieldLocType of
+    ]
+    ++
+    case fieldLocType of
          C.HereField _ -> []
          _ ->
             [ Raw.Setter
@@ -111,3 +113,14 @@ fieldToDecls containerType Flat.Field{fieldName, fieldLocType} =
                 , tag = Nothing
                 }
             ]
+    ++
+    case fieldLocType of
+        C.PtrField ptrIndex _ ->
+            [ Raw.HasFn
+                { fieldName = local
+                , containerType
+                , ptrIndex
+                }
+            ]
+        _ ->
+            []

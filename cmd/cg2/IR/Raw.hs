@@ -61,6 +61,11 @@ data Decl
         , tag           :: Maybe TagSetter
         -- ^ Info for setting the tag, if this is a union.
         }
+    | HasFn -- has_* function
+        { fieldName     :: Name.LocalQ
+        , containerType :: Name.LocalQ
+        , ptrIndex      :: !Word16
+        }
     deriving(Show, Read, Eq)
 
 data TagSetter = TagSetter

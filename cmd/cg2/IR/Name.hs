@@ -99,11 +99,10 @@ renderLocalQ = renderUnQ . localToUnQ
 renderLocalNS :: NS -> T.Text
 renderLocalNS (NS parts) = mconcat $ intersperse "'" $ reverse parts
 
-getterName :: LocalQ -> UnQ
+getterName, setterName, hasFnName :: LocalQ -> UnQ
 getterName = accessorName "get_"
-
-setterName :: LocalQ -> UnQ
 setterName = accessorName "set_"
+hasFnName = accessorName "has_"
 
 accessorName :: T.Text -> LocalQ -> UnQ
 accessorName prefix = UnQ . (prefix <>) . renderLocalQ
