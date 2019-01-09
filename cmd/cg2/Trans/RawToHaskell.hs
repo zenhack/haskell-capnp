@@ -605,8 +605,8 @@ declToDecls thisMod Raw.NewFn{fieldName, containerType, fieldLocType, newFnType}
         , def = DfValue
             { name = Name.newFnName fieldName
             , params =
-                [PVar "struct"] ++
-                case newFnType of
+                PVar "struct"
+                : case newFnType of
                     Raw.NewStruct -> []
                     _             -> [PVar "len"]
             , value = EDo
