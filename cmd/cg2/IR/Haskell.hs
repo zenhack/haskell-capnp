@@ -163,6 +163,8 @@ data Pattern
     | PLCtor Name.LocalQ [Pattern]
     | PGCtor Name.GlobalQ [Pattern]
     | PInt Integer
+    -- | Name{..}
+    | PLRecordWildCard Name.LocalQ
     deriving(Show, Read, Eq)
 
 -- | Get the file path for a module. For example, the module @Foo.Bar.Baz@ will

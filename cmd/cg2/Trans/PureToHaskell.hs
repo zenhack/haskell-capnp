@@ -52,6 +52,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
     , modLangPragmas =
         [ "DeriveGeneric"
         , "DuplicateRecordFields"
+        , "RecordWildCards"
         , "MultiParamTypeClasses"
         , "TypeFamilies"
         ]
@@ -164,7 +165,46 @@ declToDecls thisMod P.Data{typeName, variants} =
                             ]
                         )
         ]
+    , instance_ [] ["Classes"] "Marshal" [TLName typeName]
+        [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
+            ECase (euName "value_")
+                [ case arg of
+                    P.None ->
+                        ( PLCtor variantName []
+                        , EApp (eStd_ "pure") [ETup []]
+                        )
+                    P.Positional type_ ->
+                        ( PLCtor variantName [PVar "field_"]
+                        , marshalField thisMod (euName "value_") variantName type_
+                        )
+                    P.Record fields ->
+                        ( PLRecordWildCard variantName
+                        , EDo
+                            [ DoE $ marshalField
+                                thisMod
+                                (euName "value_")
+                                (Name.mkSub variantName fieldName)
+                                type_
+                            | P.Field{name=fieldName, type_} <- fields
+                            ]
+                            (EApp (eStd_ "pure") [ETup []])
+                        )
+                | P.Variant{name=variantName, arg} <- variants
+                ]
+        ]
     ]
+
+marshalField :: Word64 -> Exp -> Name.LocalQ -> C.Type Name.CapnpQ -> Exp
+marshalField thisMod into name type_ = case type_ of
+    -- FIXME: this matches groups. This needs to be reworked.
+    C.CompositeType _ ->
+        let newFn = egName (rawModule thisMod) (Name.unQToLocal $ Name.newFnName name)
+        in EDo
+            [ DoBind "field_" $ EApp newFn [into]
+            ]
+            (EApp (egName ["Classes"] "marshalInto") [ELName "field_", into])
+    _ ->
+        eStd_ "undefined" -- TODO
 
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)

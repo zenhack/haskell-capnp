@@ -178,6 +178,7 @@ instance Format Pattern where
         , ")"
         ]
     format (PInt n) = fromString (show n)
+    format (PLRecordWildCard name) = format name <> "{..}"
 
 formatDerives :: [Name.UnQ] -> PP.Doc
 formatDerives [] = ""

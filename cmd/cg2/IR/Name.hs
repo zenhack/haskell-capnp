@@ -64,6 +64,9 @@ emptyNS = NS []
 mkLocal :: NS -> UnQ -> LocalQ
 mkLocal localNS localUnQ = LocalQ{localNS, localUnQ}
 
+unQToLocal :: UnQ -> LocalQ
+unQToLocal = mkLocal emptyNS
+
 instance MkSub LocalQ where
     mkSub q = mkLocal (localQToNS q)
 
