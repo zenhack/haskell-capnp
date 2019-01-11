@@ -160,6 +160,7 @@ instance Format Exp where
         , " :: "
         , format ty
         ]
+    format (EList es) = PP.list (map format es)
 
 instance Format Do where
     format (DoBind var ex) = format var <> " <- " <> format ex

@@ -6,12 +6,19 @@ module Trans.RawToHaskell (fileToModules) where
 
 import Data.Word
 
-import Data.String (fromString)
+import Data.Function ((&))
+import Data.Maybe    (fromJust)
+import Data.String   (fromString)
+import GHC.Exts      (fromList)
 
-import qualified Data.Text as T
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text            as T
 
 import IR.Haskell
 import Trans.ToHaskellCommon
+
+import qualified Capnp
+import qualified Capnp.Untyped.Pure as Untyped
 
 import qualified IR.Common as C
 import qualified IR.Name   as Name
@@ -64,6 +71,7 @@ fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
             , imp ["Capnp", "Bits"] "Std_"
 
             , imp ["Data", "Maybe"] "Std_"
+            , imp ["Data", "ByteString"] "BS"
             ] ++
             [ ImportQual { parts }
             | parts <- map idToModule fileImports
@@ -672,16 +680,35 @@ declToDecls thisMod Raw.Constant{ name, value=C.WordValue ty val } =
             }
         }
     ]
-declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty _val } =
+declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
     [ DcValue
         { typ = typeToType thisMod (C.PtrType ty) tConstMsg
         , def = DfValue
             { name = Name.localToUnQ name
             , params = []
-            , value = euName "TODO"
+            , value = EApp
+                (egName ["GenHelpers"] "getPtrConst")
+                [ EApp
+                    (egName ["BS"] "pack")
+                    [makePtrByteList val]
+                ]
             }
         }
     ]
+  where
+    makePtrByteList ptr =
+        let msg = fromJust $ Capnp.createPure Capnp.defaultLimit $ do
+                msg <- Capnp.newMessage Nothing
+                rootPtr <- Capnp.cerialize msg $ Untyped.Struct
+                    (fromList [])
+                    (fromList [ptr])
+                Capnp.setRoot rootPtr
+                pure msg
+        in
+        Capnp.msgToLBS msg &
+        LBS.unpack &
+        map (EInt . fromIntegral) &
+        EList
 
 
 eSetValue :: C.FieldLocType Name.CapnpQ -> Exp
