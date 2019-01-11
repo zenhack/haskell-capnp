@@ -186,9 +186,14 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                             then setExp
                             else ePureUnit
                         )
-                    P.Positional _type_ ->
-                        ( PLCtor variantName [PVar "value_"]
-                        , eStd_ "undefined"
+                    P.Positional type_ ->
+                        ( PLCtor variantName [PVar "arg_"]
+                        , marshalField
+                            thisMod
+                            (euName "raw_")
+                            variantName
+                            "arg_"
+                            type_
                         )
                     P.Record fields ->
                         ( PLRecordWildCard variantName
@@ -201,6 +206,7 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                                 thisMod
                                 (euName "raw_")
                                 (Name.mkSub variantName fieldName)
+                                fieldName
                                 type_
                             | P.Field{name=fieldName, type_} <- fields
                             ])
@@ -219,11 +225,10 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
         ]
     ]
 
-marshalField :: Word64 -> Exp -> Name.LocalQ -> C.Type Name.CapnpQ -> Exp
-marshalField thisMod into name type_ =
-    let newFn  = egName (rawModule thisMod) $ Name.unQToLocal (Name.newFnName name)
-        setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName name)
-        fieldName = Name.getUnQ name
+marshalField :: Word64 -> Exp -> Name.LocalQ -> Name.UnQ -> C.Type Name.CapnpQ -> Exp
+marshalField thisMod into fieldName varName type_ =
+    let newFn  = egName (rawModule thisMod) $ Name.unQToLocal (Name.newFnName fieldName)
+        setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName fieldName)
     in case type_ of
         C.PtrType (C.PtrComposite _) ->
             EDo
@@ -231,7 +236,7 @@ marshalField thisMod into name type_ =
                 ]
                 (EApp
                     (egName ["Classes"] "marshalInto")
-                    [ euName fieldName
+                    [ euName varName
                     , euName "field_"
                     ]
                 )
@@ -240,14 +245,14 @@ marshalField thisMod into name type_ =
                 [ DoBind "field_" $ EApp
                     (egName ["Classes"] "cerialize")
                     [ EApp (egName ["Untyped"] "message") [euName "raw_"]
-                    , euName fieldName
+                    , euName varName
                     ]
                 ]
                 (EApp setter [euName "raw_", euName "field_"])
         C.VoidType ->
             ePureUnit
         C.WordType _ ->
-            EApp setter [into, euName (Name.getUnQ name)]
+            EApp setter [into, euName varName]
         _ ->
             eStd_ "undefined" -- TODO
 
