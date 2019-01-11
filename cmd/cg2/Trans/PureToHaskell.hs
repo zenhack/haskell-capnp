@@ -172,7 +172,7 @@ declToDecls thisMod P.Data{typeName, variants} =
                 [ case arg of
                     P.None ->
                         ( PLCtor variantName []
-                        , EApp (eStd_ "pure") [ETup []]
+                        , ePureUnit
                         )
                     P.Positional type_ ->
                         ( PLCtor variantName [PVar "field_"]
@@ -188,7 +188,7 @@ declToDecls thisMod P.Data{typeName, variants} =
                                 type_
                             | P.Field{name=fieldName, type_} <- fields
                             ]
-                            (EApp (eStd_ "pure") [ETup []])
+                            ePureUnit
                         )
                 | P.Variant{name=variantName, arg} <- variants
                 ]
@@ -209,7 +209,7 @@ marshalField thisMod into name type_ = case type_ of
                 ]
             )
     C.VoidType ->
-        (EApp (eStd_ "pure") [ETup []])
+        ePureUnit
     C.WordType _ ->
         let setter = egName (rawModule thisMod) (Name.unQToLocal $ Name.setterName name)
         in EApp setter [into, euName (Name.getUnQ name)]

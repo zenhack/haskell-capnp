@@ -25,6 +25,9 @@ std_ name = gName ["Std_"] (Name.mkLocal Name.emptyNS name)
 eStd_ :: Name.UnQ -> Exp
 eStd_ = EGName . std_
 
+ePureUnit :: Exp
+ePureUnit = EApp (eStd_ "pure") [ETup []]
+
 tStd_ :: Name.UnQ -> Type
 tStd_ = TGName . std_
 
