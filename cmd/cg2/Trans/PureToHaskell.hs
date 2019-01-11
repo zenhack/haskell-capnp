@@ -198,10 +198,7 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                     P.Record fields ->
                         ( PLRecordWildCard variantName
                         , EDo
-                            ( (if isUnion
-                                then [DoBind "raw_" setExp]
-                                else [])
-                            ++
+                            ([ DoBind "raw_" setExp | isUnion ] ++
                             [ DoE $ marshalField
                                 thisMod
                                 (euName "raw_")
