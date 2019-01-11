@@ -81,7 +81,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
     }
 
 declToDecls :: Word64 -> P.Decl -> [Decl]
-declToDecls thisMod P.Data{typeName, variants} =
+declToDecls thisMod P.Data{typeName, variants, isUnion} =
     [ DcData Data
         { dataName = Name.localToUnQ typeName
         , typeArgs = []
@@ -169,25 +169,33 @@ declToDecls thisMod P.Data{typeName, variants} =
     , instance_ [] ["Classes"] "Marshal" [TLName typeName]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             ECase (euName "value_")
-                [ case arg of
+                [ let setter = Name.unQToLocal $ Name.setterName variantName
+                      setExp = EApp (egName (rawModule thisMod) setter) [euName "raw_"]
+                  in case arg of
                     P.None ->
                         ( PLCtor variantName []
-                        , ePureUnit
+                        , if isUnion
+                            then setExp
+                            else ePureUnit
                         )
-                    P.Positional type_ ->
-                        ( PLCtor variantName [PVar "field_"]
-                        , marshalField thisMod (euName "value_") variantName type_
+                    P.Positional _type_ ->
+                        ( PLCtor variantName [PVar "value_"]
+                        , eStd_ "undefined"
                         )
                     P.Record fields ->
                         ( PLRecordWildCard variantName
                         , EDo
+                            ( (if isUnion
+                                then [DoBind "raw_" setExp]
+                                else [])
+                            ++
                             [ DoE $ marshalField
                                 thisMod
-                                (euName "value_")
+                                (euName "raw_")
                                 (Name.mkSub variantName fieldName)
                                 type_
                             | P.Field{name=fieldName, type_} <- fields
-                            ]
+                            ])
                             ePureUnit
                         )
                 | P.Variant{name=variantName, arg} <- variants
