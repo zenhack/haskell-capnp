@@ -696,11 +696,7 @@ eSetTag Raw.TagSetter{tagOffset, tagValue} =
             (EInt $ fromIntegral tagValue)
             (TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16)
         )
-        C.DataLoc
-            { dataIdx = fromIntegral tagOffset `div` 4
-            , dataOff = (fromIntegral tagOffset `mod` 4) * 16
-            , dataDef = 0
-            }
+        (Raw.tagOffsetToDataLoc tagOffset)
 
 eSetWordField :: Exp -> Exp -> C.DataLoc -> Exp
 eSetWordField struct value C.DataLoc{dataIdx, dataOff, dataDef} =

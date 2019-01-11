@@ -5,7 +5,7 @@
 -- the constructs to be generated, as opposed to the declarative description
 -- of the schema.
 {-# LANGUAGE DuplicateRecordFields #-}
-module IR.Raw (File(..), Decl(..), Variant(..), TagSetter(..), NewFnType(..)) where
+module IR.Raw (File(..), Decl(..), Variant(..), TagSetter(..), NewFnType(..), tagOffsetToDataLoc) where
 
 import Data.Word
 
@@ -90,6 +90,16 @@ data TagSetter = TagSetter
     , tagValue  :: !Word16
     }
     deriving(Show, Read, Eq)
+
+-- | Convert a tag offset (as in the 'tagOffset' field of 'TagSetter') to a
+-- corresponding 'Common.DataLoc', with the default value set to zero.
+tagOffsetToDataLoc :: Word32 -> Common.DataLoc
+tagOffsetToDataLoc tagOffset =
+    Common.DataLoc
+        { dataIdx = fromIntegral tagOffset `div` 4
+        , dataOff = (fromIntegral tagOffset `mod` 4) * 16
+        , dataDef = 0
+        }
 
 data Variant = Variant
     { name     :: Name.LocalQ

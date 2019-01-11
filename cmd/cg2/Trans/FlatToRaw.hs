@@ -86,6 +86,20 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                             }
                         , tagValue
                         } <- variants
+                    ] ++
+                    -- This is kindof another tag setter, but it has to work a bit
+                    -- differently for the unknown' variant, because it takes an
+                    -- argument for what the tag should be, but also doesn't need to
+                    -- set any other values. We can treat is as just a setter for a
+                    -- uint16 field in the same spot:
+                    [ Raw.Setter
+                        { fieldName = Name.mkSub local "unknown'"
+                        , containerType = local
+                        , fieldLocType = C.DataField
+                            (Raw.tagOffsetToDataLoc tagOffset)
+                            (C.PrimWord $ C.PrimInt $ C.IntType C.Unsigned C.Sz16)
+                        , tag = Nothing
+                        }
                     ]
         ]
     Flat.Interface ->
