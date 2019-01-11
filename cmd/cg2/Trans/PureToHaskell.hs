@@ -215,13 +215,16 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                 | P.Variant{name=variantName, arg} <- variants
                 ]
                 ++
-                let unknownCtor = Name.mkSub typeName "unknown'"
-                    setter = Name.unQToLocal $ Name.setterName $ Name.mkSub typeName "unknown'"
-                in
-                [ ( PLCtor unknownCtor [PVar "tag"]
-                  , EApp (egName (rawModule thisMod) setter) [euName "raw_", euName "tag"]
-                  )
-                ]
+                if isUnion then
+                    let unknownCtor = Name.mkSub typeName "unknown'"
+                        setter = Name.unQToLocal $ Name.setterName $ Name.mkSub typeName "unknown'"
+                    in
+                    [ ( PLCtor unknownCtor [PVar "tag"]
+                      , EApp (egName (rawModule thisMod) setter) [euName "raw_", euName "tag"]
+                      )
+                    ]
+                else
+                    []
         ]
     ]
 
