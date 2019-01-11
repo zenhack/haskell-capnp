@@ -165,6 +165,7 @@ declToDecls thisMod P.Data{typeName, variants} =
                             ]
                         )
         ]
+    , instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
     , instance_ [] ["Classes"] "Marshal" [TLName typeName]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             ECase (euName "value_")
