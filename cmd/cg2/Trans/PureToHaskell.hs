@@ -129,7 +129,11 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                             (ELName variantName)
                             [
                                 let getter = EApp (fieldGetter variantName name) [euName "raw"] in
-                                if cerialEq type_ then
+                                if name == "union'" then
+                                    -- unions decerialize from the same type as their parents. Don't
+                                    -- do anything but pass it off.
+                                    EApp (egName ["Classes"] "decerialize") [euName "raw"]
+                                else if cerialEq type_ then
                                     getter
                                 else
                                     EBind getter (egName ["Classes"] "decerialize")
