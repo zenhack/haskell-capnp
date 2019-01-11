@@ -44,7 +44,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                 Just Flat.Union{variants, tagOffset} ->
                     let local' = Name.mkSub local "" in
                     [ Raw.UnionVariant
-                        { typeCtor = local'
+                        { parentTypeCtor = local
                         , tagOffset
                         , unionDataCtors =
                             [ Raw.Variant

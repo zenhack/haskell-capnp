@@ -71,7 +71,10 @@ fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
     imp parts importAs = ImportAs {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
-declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
+declToDecls thisMod Raw.UnionVariant{parentTypeCtor, tagOffset, unionDataCtors} =
+    let unknownCtor = Name.mkSub parentTypeCtor "unknown'"
+        typeCtor = Name.mkSub parentTypeCtor ""
+    in
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
@@ -87,6 +90,12 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
                             [ typeToType thisMod (C.fieldType locType) (TVar "msg") ]
                 }
             | Raw.Variant{name=dataCtor, locType} <- unionDataCtors
+            ]
+            ++
+            [ DataVariant
+                { dvCtorName = Name.localToUnQ unknownCtor
+                , dvArgs = APos [ TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16 ]
+                }
             ]
         , derives = []
         }
@@ -138,7 +147,15 @@ declToDecls thisMod Raw.UnionVariant{typeCtor, tagOffset, unionDataCtors} =
                   )
                 | Raw.Variant{name, tagValue, locType} <- unionDataCtors
                 ] ++
-                [(PVar "_", eStd_ "undefined")]
+                [ ( PVar "_"
+                  , EApp
+                        (ELName unknownCtor)
+                        [ EApp
+                            (eStd_ "fromIntegral")
+                            [ELName "tag"]
+                        ]
+                  )
+                ]
             )
         ]
     ]

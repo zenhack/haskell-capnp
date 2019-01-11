@@ -40,7 +40,10 @@ data Decl
         { typeCtor :: Name.LocalQ
         }
     | UnionVariant
-        { typeCtor       :: Name.LocalQ
+        { parentTypeCtor :: Name.LocalQ
+        -- ^ The type constructor of the parent, i.e. the enclosing struct.
+        -- we can derive the type constructor for the union proper from this,
+        -- and it is useful to have for other things (like unknown' variants).
         , tagOffset      :: !Word32
         , unionDataCtors :: [Variant]
         }
