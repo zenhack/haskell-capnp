@@ -147,7 +147,7 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                     EDo
                         [DoBind "raw" $ EApp (fieldGetter typeName "") [euName "raw"]
                         ]
-                        (ECase (ELName "raw")
+                        (ECase (ELName "raw") $
                             [ case arg of
                                 P.None ->
                                     ( pgName (rawModule thisMod) name []
@@ -163,12 +163,20 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                                     )
                             | P.Variant{name, arg} <- variants
                             ]
+                            ++
+                            let unknownCtor = Name.mkSub typeName "unknown'" in
+                            [ ( pgName (rawModule thisMod) unknownCtor [PVar "tag"]
+                              , EApp
+                                  (eStd_ "pure")
+                                  [EApp (ELName unknownCtor) [euName "tag"]]
+                              )
+                            ]
                         )
         ]
     , instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
     , instance_ [] ["Classes"] "Marshal" [TLName typeName]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
-            ECase (euName "value_")
+            ECase (euName "value_") $
                 [ let setter = Name.unQToLocal $ Name.setterName variantName
                       setExp = EApp (egName (rawModule thisMod) setter) [euName "raw_"]
                   in case arg of
@@ -199,6 +207,14 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                             ePureUnit
                         )
                 | P.Variant{name=variantName, arg} <- variants
+                ]
+                ++
+                let unknownCtor = Name.mkSub typeName "unknown'"
+                    setter = Name.unQToLocal $ Name.setterName $ Name.mkSub typeName "unknown'"
+                in
+                [ ( PLCtor unknownCtor [PVar "tag"]
+                  , EApp (egName (rawModule thisMod) setter) [euName "raw_", euName "tag"]
+                  )
                 ]
         ]
     ]
