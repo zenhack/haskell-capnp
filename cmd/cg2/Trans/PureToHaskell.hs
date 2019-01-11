@@ -233,14 +233,14 @@ marshalField thisMod into fieldName varName type_ =
     let setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName fieldName)
     in case type_ of
         C.PtrType _ ->
-            EDo
-                [ DoBind "field_" $ EApp
+            EBind
+                (EApp
                     (egName ["Classes"] "cerialize")
                     [ EApp (egName ["Untyped"] "message") [euName "raw_"]
                     , euName varName
                     ]
-                ]
-                (EApp setter [into, euName "field_"])
+                )
+                (EApp setter [into])
         C.VoidType ->
             ePureUnit
         C.WordType _ ->
