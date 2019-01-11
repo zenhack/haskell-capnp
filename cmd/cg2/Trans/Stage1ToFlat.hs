@@ -109,6 +109,20 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         }
                     ]
 
+                Stage1.NodeConstant value ->
+                    [ Flat.Node
+                        { name = Name.CapnpQ
+                            { local = Name.unQToLocal $ Name.valueName localName
+                            , fileId = thisMod
+                            }
+                        , nodeId
+                        , union_ = Flat.Constant
+                            { value = fmap
+                                (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
+                                value
+                            }
+                        }
+                    ]
                 Stage1.NodeOther ->
                     []
         in mine ++ kids

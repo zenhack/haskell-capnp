@@ -7,6 +7,8 @@ module IR.Common where
 
 import Data.Word
 
+import qualified Capnp.Untyped.Pure as U
+
 newtype TypeId = TypeId Word64
     deriving(Show, Read, Eq, Ord)
 
@@ -111,6 +113,12 @@ data DataLoc = DataLoc
     -- with the bits representing the value, not the whole word.
     }
     deriving(Show, Read, Eq)
+
+data Value r
+    = VoidValue
+    | WordValue (WordType r) !Word64
+    | PtrValue (PtrType r) (Maybe U.Ptr)
+    deriving(Show, Eq, Functor)
 
 -- | Extract the type from a 'FildLocType'.
 fieldType :: FieldLocType r -> Type r

@@ -8,7 +8,8 @@
 --
 -- The names in this flat namespace do have some internal structure
 -- to them; see 'IR.Name' for details.
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 module IR.Flat
     ( File(..)
     , Node(..)
@@ -33,14 +34,14 @@ data File = File
     , fileName    :: FilePath
     , fileImports :: [Word64]
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Node = Node
     { name   :: Name.CapnpQ
     , nodeId :: !Word64
     , union_ :: Node'
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Node'
     = Enum [Name.UnQ]
@@ -54,24 +55,27 @@ data Node'
         -- ^ The struct's anonymous union, if any.
         }
     | Interface
-    deriving(Show, Read, Eq)
+    | Constant
+        { value :: Common.Value Node
+        }
+    deriving(Show, Eq)
 
 
 data Union = Union
     { tagOffset :: !Word32
     , variants  :: [Variant]
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Field = Field
     { fieldName    :: Name.CapnpQ
     , fieldLocType :: Common.FieldLocType Node
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Variant = Variant
     { tagValue :: !Word16
     , field    :: Field
     -- ^ The field's name is really the name of the variant.
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)

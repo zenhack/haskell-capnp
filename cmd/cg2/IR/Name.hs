@@ -6,6 +6,7 @@ module IR.Name where
 
 import Data.Word
 
+import Data.Char   (toLower)
 import Data.List   (intersperse)
 import Data.String (IsString(fromString))
 
@@ -110,3 +111,11 @@ newFnName = accessorName "new_"
 
 accessorName :: T.Text -> LocalQ -> UnQ
 accessorName prefix = UnQ . (prefix <>) . renderLocalQ
+
+-- | Lower-case the first letter of a name, making it legal as the name of a
+-- variable (as opposed to a type or data constructor).
+valueName :: LocalQ -> UnQ
+valueName name =
+    case T.unpack (renderLocalQ name) of
+        []     -> ""
+        (c:cs) -> UnQ $ T.pack $ toLower c : cs

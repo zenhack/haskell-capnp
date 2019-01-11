@@ -58,7 +58,18 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
         ]
     , modExports = Just $
         [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
-        ++ [ExportLCtors typeName | P.Data{typeName} <- decls]
+        ++
+        [ case decl of
+            P.Data{typeName} ->
+                ExportLCtors typeName
+            P.Constant { name, value=C.WordValue _ _ } ->
+                ExportGName $ gName (rawModule fileId) name
+            P.Constant { name, value=C.VoidValue } ->
+                ExportGName $ gName (rawModule fileId) name
+            P.Constant { name, value=C.PtrValue _ _ } ->
+                ExportLName name
+        | decl <- decls
+        ]
     , modImports = concat $
         [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
         , ImportAs { importAs = "T", parts = ["Data", "Text"] }
@@ -224,6 +235,22 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                     []
         ]
     ]
+declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
+    [ DcValue
+        { typ = typeToType thisMod (C.PtrType ty)
+        , def = DfValue
+            { name = Name.localToUnQ name
+            , params = []
+            , value = EApp
+                (egName ["GenHelpersPure"] "toPurePtrConst")
+                [egName (rawModule thisMod) name]
+            }
+        }
+    ]
+-- For these two we just re-export the ones from the raw module, so no need
+-- to do anything here:
+declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
+declToDecls _thisMod P.Constant { value=C.VoidValue } = []
 
 marshalField :: Word64 -> Exp -> Name.LocalQ -> Name.UnQ -> C.Type Name.CapnpQ -> Exp
 marshalField thisMod into fieldName varName type_ =

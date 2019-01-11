@@ -26,6 +26,10 @@ data Decl
         -- that also has other fields; in this case our Cerial should be
         -- the same as our parent struct.
         }
+    | Constant
+        { name  :: Name.LocalQ
+        , value :: C.Value Name.CapnpQ
+        }
 
 data Field = Field
     { name  :: Name.UnQ

@@ -60,7 +60,10 @@ unionToDecl cerialName local variants =
 
 nodeToDecls :: Flat.Node -> [Pure.Decl]
 nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
-    Flat.Enum _ -> [] -- TODO
+    Flat.Enum _ ->
+        -- Don't need to do anything here, since we're just re-exporting the
+        -- stuff from the raw module.
+        []
     Flat.Interface{} -> [] -- TODO
     Flat.Struct{fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
@@ -96,6 +99,12 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
                 [ unionToDecl local (Name.mkSub local "") variants ]
             Nothing ->
                 []
+    Flat.Constant { value } ->
+        [ Pure.Constant
+            { name = local
+            , value = fmap (\Flat.Node{name} -> name) value
+            }
+        ]
 
 fieldToField :: Flat.Field -> Pure.Field
 fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field

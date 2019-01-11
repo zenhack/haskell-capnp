@@ -58,6 +58,8 @@ data Export
     = ExportMod [Name.UnQ]
     | ExportGCtors Name.GlobalQ
     | ExportLCtors Name.LocalQ
+    | ExportGName Name.GlobalQ
+    | ExportLName Name.LocalQ
     deriving(Show, Read, Eq)
 
 data Import

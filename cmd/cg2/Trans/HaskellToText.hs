@@ -59,10 +59,10 @@ instance Format Module where
 instance Format Export where
     format (ExportMod parts) =
         "module " <> PP.textStrict (mconcat $ intersperse "." $ map Name.renderUnQ parts)
-    format (ExportLCtors name) =
-        format name <> "(..)"
-    format (ExportGCtors name) =
-        format name <> "(..)"
+    format (ExportLCtors name) = format name <> "(..)"
+    format (ExportGCtors name) = format name <> "(..)"
+    format (ExportGName  name) = format name
+    format (ExportLName  name) = format name
 
 instance Format Decl where
     format (DcData d) = format d

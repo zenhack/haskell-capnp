@@ -7,13 +7,19 @@ module Trans.CgrToStage1 (cgrToFiles) where
 
 import Data.Word
 
+import Data.Function        ((&))
 import Data.ReinterpretCast (doubleToWord, floatToWord)
+import Data.Text.Encoding   (encodeUtf8)
 
+import qualified Data.ByteString as BS
 import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
+import Capnp.Classes (toWord)
+
 import qualified Capnp.Gen.Capnp.Schema.Pure as Schema
+import qualified Capnp.Untyped.Pure          as U
 import qualified IR.Common                   as C
 import qualified IR.Name                     as Name
 import qualified IR.Stage1                   as Stage1
@@ -55,6 +61,87 @@ nodesToNodes inMap = outMap
                     }
             Schema.Node'interface{} ->
                 Stage1.NodeInterface
+            Schema.Node'const{ type_, value } -> Stage1.NodeConstant $
+                let mismatch = error "ERROR: Constant's type and value do not agree"
+                in case value of
+                    Schema.Value'void ->
+                        C.VoidValue
+
+                    Schema.Value'bool v ->
+                        C.WordValue (C.PrimWord C.PrimBool) (toWord v)
+
+                    Schema.Value'int8 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Signed C.Sz8) (toWord v)
+                    Schema.Value'int16 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Signed C.Sz16) (toWord v)
+                    Schema.Value'int32 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Signed C.Sz32) (toWord v)
+                    Schema.Value'int64 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Signed C.Sz64) (toWord v)
+
+                    Schema.Value'uint8 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Unsigned C.Sz8) (toWord v)
+                    Schema.Value'uint16 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Unsigned C.Sz16) (toWord v)
+                    Schema.Value'uint32 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Unsigned C.Sz32) (toWord v)
+                    Schema.Value'uint64 v ->
+                        C.WordValue (C.PrimWord $ C.PrimInt $ C.IntType C.Unsigned C.Sz64) (toWord v)
+
+                    Schema.Value'float32 v ->
+                        C.WordValue (C.PrimWord C.PrimFloat32) (toWord v)
+                    Schema.Value'float64 v ->
+                        C.WordValue (C.PrimWord C.PrimFloat64) (toWord v)
+
+                    Schema.Value'text v ->
+                        C.PtrValue (C.PrimPtr C.PrimText) $ Just $ U.PtrList $ U.List8 $
+                            encodeUtf8 v
+                            & BS.unpack
+                            & (++ [0])
+                            & V.fromList
+                    Schema.Value'data_ v ->
+                        C.PtrValue (C.PrimPtr C.PrimText) $ Just $ U.PtrList $ U.List8 $
+                            BS.unpack v
+                            & V.fromList
+
+                    Schema.Value'list v ->
+                        case type_ of
+                            Schema.Type'list { elementType } ->
+                                C.PtrValue
+                                    (C.ListOf (typeToType outMap elementType))
+                                    v
+                            _ ->
+                                mismatch
+
+                    Schema.Value'enum v ->
+                        case type_ of
+                            -- TODO: brand
+                            Schema.Type'enum { typeId } ->
+                                C.WordValue (C.EnumType (outMap M.! typeId)) (toWord v)
+                            _ ->
+                                mismatch
+
+                    Schema.Value'struct v ->
+                        case type_ of
+                            -- TODO: brand
+                            Schema.Type'struct { typeId } -> C.PtrValue
+                                (C.PtrComposite (C.StructType (outMap M.! typeId)))
+                                v
+                            _ ->
+                                mismatch
+
+                    Schema.Value'interface ->
+                        case type_ of
+                            Schema.Type'interface{ typeId } ->
+                                C.PtrValue (C.PtrInterface (outMap M.! typeId)) Nothing
+                            _ ->
+                                mismatch
+
+                    Schema.Value'anyPointer v ->
+                        C.PtrValue (C.PrimPtr (C.PrimAnyPtr C.Ptr)) v
+
+                    Schema.Value'unknown' tag ->
+                        error $ "Unknown variant for Value #" ++ show tag
             _ ->
                 Stage1.NodeOther
         }
@@ -74,7 +161,7 @@ fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
         , locType = getFieldLocType nodeMap union'
         }
 
-getFieldLocType :: NodeMap  Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
+getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
 getFieldLocType nodeMap = \case
     Schema.Field'slot{type_, defaultValue, hadExplicitDefault, offset} ->
         case typeToType nodeMap type_ of

@@ -6,6 +6,7 @@
 --   references to the objects.
 -- * The details of some structures are tweaked to make them more ergonomic
 --   to use and/or more idiomatic Haskell.
+{-# LANGUAGE DuplicateRecordFields #-}
 module IR.Stage1
     ( File(..)
     , Node(..)
@@ -25,7 +26,7 @@ data File = File
     , fileId      :: !Word64
     , fileImports :: [Word64]
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Node = Node
     { nodeNested :: [(Name.UnQ, Node)]
@@ -33,14 +34,15 @@ data Node = Node
     , nodeParent :: Maybe Node
     , nodeId     :: !Word64
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Node'
     = NodeEnum [Name.UnQ]
     | NodeStruct Struct
     | NodeInterface
+    | NodeConstant (Common.Value Node)
     | NodeOther
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Struct = Struct
     { dataWordCount :: !Word16
@@ -49,11 +51,11 @@ data Struct = Struct
     , tagOffset     :: !Word32
     , fields        :: [Field]
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Field = Field
     { name    :: Name.UnQ
     , tag     :: Maybe Word16
     , locType :: Common.FieldLocType Node
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)

@@ -107,6 +107,12 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
             { typeCtor = local
             }
         ]
+    Flat.Constant{ value } ->
+        [ Raw.Constant
+            { name = local
+            , value = fmap Flat.name value
+            }
+        ]
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
 fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fieldLocType} =

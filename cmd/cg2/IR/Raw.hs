@@ -18,7 +18,7 @@ data File = File
     , fileImports :: [Word64]
     , decls       :: [Decl]
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data Decl
     -- | Define a newtype wrapper around a struct. This also defines
@@ -76,20 +76,24 @@ data Decl
 
         , newFnType     :: NewFnType
         }
-    deriving(Show, Read, Eq)
+    | Constant
+        { name  :: Name.LocalQ
+        , value :: Common.Value Name.CapnpQ
+        }
+    deriving(Show, Eq)
 
 data NewFnType
     = NewList
     | NewText
     | NewData
     | NewStruct
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 data TagSetter = TagSetter
     { tagOffset :: !Word32
     , tagValue  :: !Word16
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)
 
 -- | Convert a tag offset (as in the 'tagOffset' field of 'TagSetter') to a
 -- corresponding 'Common.DataLoc', with the default value set to zero.
@@ -106,4 +110,4 @@ data Variant = Variant
     , tagValue :: !Word16
     , locType  :: Common.FieldLocType Name.CapnpQ
     }
-    deriving(Show, Read, Eq)
+    deriving(Show, Eq)

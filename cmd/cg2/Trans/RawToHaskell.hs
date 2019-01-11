@@ -20,6 +20,9 @@ import qualified IR.Raw    as Raw
 tMutMsg :: Type
 tMutMsg = TApp (tgName ["Message"] "MutMsg" ) [TVar "s"]
 
+tConstMsg :: Type
+tConstMsg = tgName ["Message"] "ConstMsg"
+
 fileToModules :: Raw.File -> [Module]
 fileToModules file =
     [ fileToMainModule file
@@ -647,6 +650,39 @@ declToDecls thisMod Raw.NewFn{fieldName, containerType, fieldLocType, newFnType}
             }
         }
     ]
+declToDecls _thisMod Raw.Constant{ name, value=C.VoidValue } =
+    [ DcValue
+        { typ = TUnit
+        , def = DfValue
+            { name = Name.localToUnQ name
+            , params = []
+            , value = ETup []
+            }
+        }
+    ]
+declToDecls thisMod Raw.Constant{ name, value=C.WordValue ty val } =
+    [ DcValue
+        { typ = typeToType thisMod (C.WordType ty) tConstMsg
+        , def = DfValue
+            { name = Name.localToUnQ name
+            , params = []
+            , value = EApp
+                (egName ["Classes"] "fromWord")
+                [EInt $ fromIntegral val]
+            }
+        }
+    ]
+declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty _val } =
+    [ DcValue
+        { typ = typeToType thisMod (C.PtrType ty) tConstMsg
+        , def = DfValue
+            { name = Name.localToUnQ name
+            , params = []
+            , value = euName "TODO"
+            }
+        }
+    ]
+
 
 eSetValue :: C.FieldLocType Name.CapnpQ -> Exp
 eSetValue = \case
