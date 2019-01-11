@@ -207,6 +207,11 @@ marshalField thisMod into name type_ = case type_ of
                 , euName "field_"
                 ]
             )
+    C.VoidType ->
+        (EApp (eStd_ "pure") [ETup []])
+    C.WordType _ ->
+        let setter = egName (rawModule thisMod) (Name.unQToLocal $ Name.setterName name)
+        in EApp setter [into, euName (Name.getUnQ name)]
     _ ->
         eStd_ "undefined" -- TODO
 
