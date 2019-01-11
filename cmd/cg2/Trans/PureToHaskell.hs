@@ -240,13 +240,15 @@ marshalField thisMod into fieldName varName type_ =
                     , euName varName
                     ]
                 ]
-                (EApp setter [euName "raw_", euName "field_"])
+                (EApp setter [into, euName "field_"])
         C.VoidType ->
             ePureUnit
         C.WordType _ ->
             EApp setter [into, euName varName]
-        _ ->
-            eStd_ "undefined" -- TODO
+        C.CompositeType _ ->
+            -- Always a group or union, since a true struct would be a pointer.
+            -- delegate to the field type, which has the same Cerial as us.
+            EApp (egName ["Classes"] "marshalInto") [into, euName varName]
 
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)
