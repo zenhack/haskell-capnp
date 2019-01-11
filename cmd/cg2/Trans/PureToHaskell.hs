@@ -220,25 +220,36 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
     ]
 
 marshalField :: Word64 -> Exp -> Name.LocalQ -> C.Type Name.CapnpQ -> Exp
-marshalField thisMod into name type_ = case type_ of
-    C.PtrType (C.PtrComposite _) ->
-        let newFn = egName (rawModule thisMod) (Name.unQToLocal $ Name.newFnName name)
-        in EDo
-            [ DoBind "field_" $ EApp newFn [into]
-            ]
-            (EApp
-                (egName ["Classes"] "marshalInto")
-                [ euName (Name.getUnQ name)
-                , euName "field_"
+marshalField thisMod into name type_ =
+    let newFn  = egName (rawModule thisMod) $ Name.unQToLocal (Name.newFnName name)
+        setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName name)
+        fieldName = Name.getUnQ name
+    in case type_ of
+        C.PtrType (C.PtrComposite _) ->
+            EDo
+                [ DoBind "field_" $ EApp newFn [into]
                 ]
-            )
-    C.VoidType ->
-        ePureUnit
-    C.WordType _ ->
-        let setter = egName (rawModule thisMod) (Name.unQToLocal $ Name.setterName name)
-        in EApp setter [into, euName (Name.getUnQ name)]
-    _ ->
-        eStd_ "undefined" -- TODO
+                (EApp
+                    (egName ["Classes"] "marshalInto")
+                    [ euName fieldName
+                    , euName "field_"
+                    ]
+                )
+        C.PtrType (C.PrimPtr C.PrimText) ->
+            EDo
+                [ DoBind "field_" $ EApp
+                    (egName ["Classes"] "cerialize")
+                    [ EApp (egName ["Untyped"] "message") [euName "raw_"]
+                    , euName fieldName
+                    ]
+                ]
+                (EApp setter [euName "raw_", euName "field_"])
+        C.VoidType ->
+            ePureUnit
+        C.WordType _ ->
+            EApp setter [into, euName (Name.getUnQ name)]
+        _ ->
+            eStd_ "undefined" -- TODO
 
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)
