@@ -25,6 +25,8 @@
   user code should not care about this.
 * Generated high-level types no longer have Read instances; interfaces
   make this problematic.
+* Getters for anonymous unions are now `get_Foo'` instead of
+  `get_Foo'union'`.
 * `newMessage` now accepts an optional size hint.
 * The allocation strategy has changed to reduce unnecessary copying.
 * It is now possible to create messages with a size > 2GiB. Note that
