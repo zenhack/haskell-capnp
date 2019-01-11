@@ -160,7 +160,7 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                             | P.Variant{name, arg} <- variants
                             ]
                             ++
-                            let unknownCtor = Name.mkSub typeName "unknown'" in
+                            let unknownCtor = Name.mkSub cerialName "unknown'" in
                             [ ( pgName (rawModule thisMod) unknownCtor [PVar "tag"]
                               , EApp
                                   (eStd_ "pure")
