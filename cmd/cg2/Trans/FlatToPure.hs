@@ -16,6 +16,7 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
         , fileImports
         , decls = concatMap nodeToDecls nodes
         , reExportEnums = concatMap nodeToReExports nodes
+        , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface } <- nodes ]
         }
 
 nodeToReExports :: Flat.Node -> [Name.LocalQ]

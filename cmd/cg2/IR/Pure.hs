@@ -13,6 +13,10 @@ data File = File
     , decls         :: [Decl]
     , reExportEnums :: [Name.LocalQ]
     -- ^ A list of enums that we should re-export from this module.
+    , usesRpc       :: !Bool
+    -- ^ Whether or not the module uses rpc features. If not, we skip
+    -- the rpc related imports. This is mainly important to avoid a
+    -- cyclic dependency with rpc.capnp.
     }
 
 data Decl
