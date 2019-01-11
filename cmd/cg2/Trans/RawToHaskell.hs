@@ -149,10 +149,13 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, tagOffset, unionDataCtors} 
                 ] ++
                 [ ( PVar "_"
                   , EApp
-                        (ELName unknownCtor)
+                        (eStd_ "pure")
                         [ EApp
-                            (eStd_ "fromIntegral")
-                            [ELName "tag"]
+                            (ELName unknownCtor)
+                            [ EApp
+                                (eStd_ "fromIntegral")
+                                [ELName "tag"]
+                            ]
                         ]
                   )
                 ]
