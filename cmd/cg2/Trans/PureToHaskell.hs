@@ -227,20 +227,9 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
 
 marshalField :: Word64 -> Exp -> Name.LocalQ -> Name.UnQ -> C.Type Name.CapnpQ -> Exp
 marshalField thisMod into fieldName varName type_ =
-    let newFn  = egName (rawModule thisMod) $ Name.unQToLocal (Name.newFnName fieldName)
-        setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName fieldName)
+    let setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName fieldName)
     in case type_ of
-        C.PtrType (C.PtrComposite _) ->
-            EDo
-                [ DoBind "field_" $ EApp newFn [into]
-                ]
-                (EApp
-                    (egName ["Classes"] "marshalInto")
-                    [ euName varName
-                    , euName "field_"
-                    ]
-                )
-        C.PtrType (C.PrimPtr C.PrimText) ->
+        C.PtrType _ ->
             EDo
                 [ DoBind "field_" $ EApp
                     (egName ["Classes"] "cerialize")
