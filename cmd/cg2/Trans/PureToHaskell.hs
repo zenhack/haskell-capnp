@@ -81,7 +81,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
     }
 
 declToDecls :: Word64 -> P.Decl -> [Decl]
-declToDecls thisMod P.Data{typeName, variants, isUnion} =
+declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
     [ DcData Data
         { dataName = Name.localToUnQ typeName
         , typeArgs = []
@@ -109,15 +109,11 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
         ]
     , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
         [ iType "Cerial" [tuName "msg", TLName typeName] $
-            TApp (tgName (rawModule thisMod) typeName) [tuName "msg"]
+            TApp (tgName (rawModule thisMod) cerialName) [tuName "msg"]
         , iValue "decerialize" [PVar "raw"] $
             let fieldGetter parentName name = egName
                     (rawModule thisMod)
-                    (Name.mkLocal
-                        Name.emptyNS
-                        (Name.getterName $ Name.mkSub parentName name)
-                    )
-
+                    (Name.unQToLocal $ Name.getterName $ Name.mkSub parentName name)
                 decerializeArgs variantName = \case
                     P.None ->
                         EApp (eStd_ "pure") [ELName variantName]
@@ -145,7 +141,7 @@ declToDecls thisMod P.Data{typeName, variants, isUnion} =
                     decerializeArgs name arg
                 _ ->
                     EDo
-                        [DoBind "raw" $ EApp (fieldGetter typeName "") [euName "raw"]
+                        [DoBind "raw" $ EApp (fieldGetter cerialName "") [euName "raw"]
                         ]
                         (ECase (ELName "raw") $
                             [ case arg of

@@ -22,50 +22,55 @@ nodeToReExports :: Flat.Node -> [Name.LocalQ]
 nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
 nodeToReExports _ = []
 
+unionToDecl :: Name.LocalQ -> Name.LocalQ -> [Flat.Variant] -> Pure.Decl
+unionToDecl cerialName local variants =
+    Pure.Data
+        { typeName = local
+        , cerialName
+        , variants =
+            [ Pure.Variant
+                { name = variantName
+                , arg = case fieldLocType of
+                    C.VoidField ->
+                        -- If the argument is void, just have no argument.
+                        Pure.None
+                    C.HereField
+                        -- See Note [Collapsing Groups]
+                        (C.StructType
+                            Flat.Node
+                                { union_=Flat.Struct
+                                    { isGroup=True
+                                    , union=Nothing
+                                    , fields
+                                    }
+                                }) ->
+                                Pure.Record (map fieldToField fields)
+                    _ ->
+                        Pure.Positional (Pure.type_ (fieldToField field))
+                }
+            | Flat.Variant
+                { field=field@Flat.Field
+                    { fieldName=Name.CapnpQ{local=variantName}
+                    , fieldLocType
+                    }
+                } <- variants
+            ]
+        , isUnion = True
+        }
+
 nodeToDecls :: Flat.Node -> [Pure.Decl]
-nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of
+nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
     Flat.Enum _ -> [] -- TODO
     Flat.Interface{} -> [] -- TODO
     Flat.Struct{fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
         -- a top-level sum type.
-        [ Pure.Data
-            { typeName = local
-            , variants =
-                [ Pure.Variant
-                    { name = variantName
-                    , arg = case fieldLocType of
-                        C.VoidField ->
-                            -- If the argument is void, just have no argument.
-                            Pure.None
-                        C.HereField
-                            -- See Note [Collapsing Groups]
-                            (C.StructType
-                                Flat.Node
-                                    { union_=Flat.Struct
-                                        { isGroup=True
-                                        , union=Nothing
-                                        , fields
-                                        }
-                                    }) ->
-                                    Pure.Record (map fieldToField fields)
-                        _ ->
-                            Pure.Positional (Pure.type_ (fieldToField field))
-                    }
-                | Flat.Variant
-                    { field=field@Flat.Field
-                        { fieldName=Name.CapnpQ{local=variantName}
-                        , fieldLocType
-                        }
-                    } <- variants
-                ]
-            , isUnion = True
-            }
-        ]
+        [ unionToDecl local local variants ]
     Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
-    Flat.Struct{ fields, union, dataWordCount, pointerCount } ->
+    Flat.Struct{ fields, union } ->
         Pure.Data
             { typeName = local
+            , cerialName = local
             , variants =
                 [ Pure.Variant
                     { name = local
@@ -85,19 +90,10 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union
             , isUnion = False
             }
         : case union of
-            Just _ ->
-                -- Now make a version that's just the union.
-                nodeToDecls Flat.Node
-                    { name = Name.mkSub name ""
-                    , nodeId
-                    , union_ = Flat.Struct
-                        { fields = []
-                        , isGroup = True
-                        , dataWordCount
-                        , pointerCount
-                        , union = union
-                        }
-                    }
+            Just Flat.Union{variants} ->
+                -- Also make a type that's just the union, but give it the
+                -- same cerialName:
+                [ unionToDecl local (Name.mkSub local "") variants ]
             Nothing ->
                 []
 

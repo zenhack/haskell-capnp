@@ -17,9 +17,14 @@ data File = File
 
 data Decl
     = Data
-        { typeName :: Name.LocalQ
-        , variants :: [Variant]
-        , isUnion  :: !Bool
+        { typeName   :: Name.LocalQ
+        , variants   :: [Variant]
+        , isUnion    :: !Bool
+        , cerialName :: Name.LocalQ
+        -- ^ The name of the type our 'Cerial' should be. This will only be
+        -- different from typeName if we're an anonymous union in a struct
+        -- that also has other fields; in this case our Cerial should be
+        -- the same as our parent struct.
         }
 
 data Field = Field
