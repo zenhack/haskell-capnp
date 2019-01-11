@@ -196,13 +196,17 @@ declToDecls thisMod P.Data{typeName, variants} =
 
 marshalField :: Word64 -> Exp -> Name.LocalQ -> C.Type Name.CapnpQ -> Exp
 marshalField thisMod into name type_ = case type_ of
-    -- FIXME: this matches groups. This needs to be reworked.
-    C.CompositeType _ ->
+    C.PtrType (C.PtrComposite _) ->
         let newFn = egName (rawModule thisMod) (Name.unQToLocal $ Name.newFnName name)
         in EDo
             [ DoBind "field_" $ EApp newFn [into]
             ]
-            (EApp (egName ["Classes"] "marshalInto") [ELName "field_", into])
+            (EApp
+                (egName ["Classes"] "marshalInto")
+                [ euName (Name.getUnQ name)
+                , euName "field_"
+                ]
+            )
     _ ->
         eStd_ "undefined" -- TODO
 
