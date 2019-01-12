@@ -206,7 +206,7 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                     P.None ->
                         ( PLCtor variantName []
                         , if isUnion
-                            then setExp
+                            then EApp setExp [ETup []]
                             else ePureUnit
                         )
                     P.Positional type_ ->
