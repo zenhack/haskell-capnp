@@ -50,7 +50,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                             [ Raw.Variant
                                 { name = local
                                 , tagValue
-                                , locType = fmap Flat.name fieldLocType
+                                , locType = fmap (\Flat.Node{name} -> name) fieldLocType
                                 }
                             | Flat.Variant
                                 { field = Flat.Field
@@ -73,7 +73,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                     [ Raw.Setter
                         { fieldName
                         , containerType = local
-                        , fieldLocType = fmap Flat.name fieldLocType
+                        , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
                         , tag = Just Raw.TagSetter
                             { tagOffset
                             , tagValue
@@ -102,7 +102,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                         }
                     ]
         ]
-    Flat.Interface ->
+    Flat.Interface{} ->
         [ Raw.InterfaceWrapper
             { typeCtor = local
             }
@@ -110,7 +110,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
     Flat.Constant{ value } ->
         [ Raw.Constant
             { name = local
-            , value = fmap Flat.name value
+            , value = fmap (\Flat.Node{name} -> name) value
             }
         ]
 
@@ -119,7 +119,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
     [ Raw.Getter
         { fieldName
         , containerType
-        , fieldLocType = fmap Flat.name fieldLocType
+        , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
         }
     ]
     ++
@@ -129,7 +129,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             [ Raw.Setter
                 { fieldName
                 , containerType
-                , fieldLocType = fmap Flat.name fieldLocType
+                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
                 , tag = Nothing
                 }
             ]
@@ -150,7 +150,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             [ Raw.NewFn
                 { fieldName
                 , containerType
-                , fieldLocType = fmap Flat.name fieldLocType
+                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewList
                 }
             ]
@@ -158,7 +158,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             [ Raw.NewFn
                 { fieldName
                 , containerType
-                , fieldLocType = fmap Flat.name fieldLocType
+                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewText
                 }
             ]
@@ -166,7 +166,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             [ Raw.NewFn
                 { fieldName
                 , containerType
-                , fieldLocType = fmap Flat.name fieldLocType
+                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewText
                 }
             ]
@@ -174,7 +174,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             [ Raw.NewFn
                 { fieldName
                 , containerType
-                , fieldLocType = fmap Flat.name fieldLocType
+                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewStruct
                 }
             ]

@@ -48,7 +48,14 @@ data Decl
     | Interface
         { name        :: Name.LocalQ
         , interfaceId :: !Word64
+        , methods     :: [Method]
         }
+
+data Method = Method
+    { name       :: Name.UnQ
+    , paramType  :: Name.CapnpQ
+    , resultType :: Name.CapnpQ
+    }
 
 data Field = Field
     { name  :: Name.UnQ

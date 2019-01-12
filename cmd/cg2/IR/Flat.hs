@@ -15,6 +15,7 @@ module IR.Flat
     , Node(..)
     , Node'(..)
     , Field(..)
+    , Method(..)
     , Variant(..)
     , Union(..)
     ) where
@@ -55,9 +56,19 @@ data Node'
         -- ^ The struct's anonymous union, if any.
         }
     | Interface
+        { methods :: [Method]
+        }
     | Constant
         { value :: Common.Value Node
         }
+    deriving(Show, Eq)
+
+
+data Method = Method
+    { name       :: Name.UnQ
+    , paramType  :: Name.CapnpQ
+    , resultType :: Name.CapnpQ
+    }
     deriving(Show, Eq)
 
 

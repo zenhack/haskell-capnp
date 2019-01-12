@@ -9,6 +9,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 module IR.Stage1
     ( File(..)
+    , Method(..)
     , Node(..)
     , Node'(..)
     , Struct(..)
@@ -40,8 +41,17 @@ data Node'
     = NodeEnum [Name.UnQ]
     | NodeStruct Struct
     | NodeInterface
+        { methods :: [Method]
+        }
     | NodeConstant (Common.Value Node)
     | NodeOther
+    deriving(Show, Eq)
+
+data Method = Method
+    { name       :: Name.UnQ
+    , paramType  :: Node
+    , resultType :: Node
+    }
     deriving(Show, Eq)
 
 data Struct = Struct

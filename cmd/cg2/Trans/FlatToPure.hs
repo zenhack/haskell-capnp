@@ -16,7 +16,7 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
         , fileImports
         , decls = concatMap nodeToDecls nodes
         , reExportEnums = concatMap nodeToReExports nodes
-        , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface } <- nodes ]
+        , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
         }
 
 nodeToReExports :: Flat.Node -> [Name.LocalQ]
@@ -70,6 +70,7 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union
         [ Pure.Interface
             { name = local
             , interfaceId = nodeId
+            , methods = [] -- TODO
             }
         ]
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->

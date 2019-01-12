@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 -- Translate from the 'Stage1' IR to the 'Flat' IR.
 --
 -- As the name of the latter suggests, this involves flattening the namepace.
@@ -101,13 +102,29 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 }
                     in
                     commonNode : fieldNodes
-                Stage1.NodeInterface ->
-                    [ Flat.Node
+                Stage1.NodeInterface { methods } ->
+                    Flat.Node
                         { name
                         , nodeId
                         , union_ = Flat.Interface
+                            { methods =
+                                [ let Flat.Node{name=paramName} = nodeMap M.! paramId
+                                      Flat.Node{name=resultName} = nodeMap M.! resultId
+                                  in Flat.Method
+                                        { name
+                                        , paramType = paramName
+                                        , resultType = resultName
+                                        }
+                                | Stage1.Method
+                                    { name
+                                    , paramType=Stage1.Node{nodeId=paramId}
+                                    , resultType=Stage1.Node{nodeId=resultId}
+                                    }
+                                <- methods
+                                ]
+                            }
                         }
-                    ]
+                    : concatMap (methodToNodes kidsNS) methods
 
                 Stage1.NodeConstant value ->
                     [ Flat.Node
@@ -135,3 +152,17 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
             ) -> go ns (name, struct)
         _ ->
             []
+    methodToNodes ns Stage1.Method{ name, paramType, resultType } =
+        -- If the parameter and result types are anonymous, we need to generate
+        -- structs for them.
+        let maybeAnon ty suffix =
+                case ty of
+                    Stage1.Node{nodeParent=Nothing} ->
+                        let localName = Name.mkLocal ns name
+                            kidsNS = Name.localQToNS localName
+                        in
+                        go kidsNS (suffix, ty)
+                    _ ->
+                        []
+        in
+        maybeAnon paramType "params" ++ maybeAnon resultType "results"

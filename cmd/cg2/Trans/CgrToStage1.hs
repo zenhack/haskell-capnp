@@ -59,8 +59,10 @@ nodesToNodes inMap = outMap
                     , tagOffset = discriminantOffset
                     , fields = map (fieldToField outMap) (V.toList fields)
                     }
-            Schema.Node'interface{} ->
+            Schema.Node'interface { methods } ->
                 Stage1.NodeInterface
+                    { methods = map (methodToMethod outMap) (V.toList methods)
+                    }
             Schema.Node'const{ type_, value } -> Stage1.NodeConstant $
                 let mismatch = error "ERROR: Constant's type and value do not agree"
                 in case value of
@@ -144,6 +146,15 @@ nodesToNodes inMap = outMap
                         error $ "Unknown variant for Value #" ++ show tag
             _ ->
                 Stage1.NodeOther
+        }
+
+
+methodToMethod :: NodeMap Stage1.Node -> Schema.Method -> Stage1.Method
+methodToMethod nodeMap Schema.Method{ name, paramStructType, resultStructType } =
+    Stage1.Method
+        { name = Name.UnQ name
+        , paramType = nodeMap M.! paramStructType
+        , resultType = nodeMap M.! resultStructType
         }
 
 enumerantToName :: Schema.Enumerant -> Name.UnQ
