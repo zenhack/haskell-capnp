@@ -87,7 +87,13 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
         , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }
         , ImportQual { parts = idToModule fileId }
         ]
-        : [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] } | usesRpc ]
+        : (if usesRpc
+            then
+                [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] }
+                , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
+                ]
+            else
+                [])
         :
         [ [ ImportQual { parts = impId }
           , ImportQual { parts = impId ++ ["Pure"] }
@@ -301,6 +307,12 @@ declToDecls _thisMod P.Interface { name } =
     , instance_ [] ["Rpc"] "IsClient" [TLName name]
         [ iValue "fromClient" [] (ELName name)
         , iValue "toClient" [PLCtor name [PVar "client"]] (euName "client")
+        ]
+    , instance_ [] ["Classes"] "FromPtr" [tuName "msg", TLName name]
+        [ iValue "fromPtr" [] (egName ["RpcHelpers"] "isClientFromPtr")
+        ]
+    , instance_ [] ["Classes"] "ToPtr" [tuName "s", TLName name]
+        [ iValue "toPtr" [] (egName ["RpcHelpers"] "isClientToPtr")
         ]
     ]
 
