@@ -42,7 +42,7 @@ fileToModuleAlias P.File{fileName, fileId} =
         { modName = idToModule fileId ++ ["Pure"]
         , modLangPragmas = []
         , modExports = Just [ExportMod reExport]
-        , modImports = [ ImportQual { parts = reExport } ]
+        , modImports = [ ImportAll { parts = reExport } ]
         , modDecls = []
         }
 
@@ -79,6 +79,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
         , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
         , ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
         , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
+        , ImportAs { importAs = "Untyped", parts = ["Capnp", "Untyped"] }
         , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
         , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
         , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }

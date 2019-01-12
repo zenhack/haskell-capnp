@@ -55,19 +55,22 @@ data Module = Module
     deriving(Show, Read, Eq)
 
 data Export
-    = ExportMod [Name.UnQ]
-    | ExportGCtors Name.GlobalQ
-    | ExportLCtors Name.LocalQ
-    | ExportGName Name.GlobalQ
-    | ExportLName Name.LocalQ
+    = ExportMod [Name.UnQ] -- module Foo.Bar
+    | ExportGCtors Name.GlobalQ -- Foo.Bar.Baz(..)
+    | ExportLCtors Name.LocalQ -- Baz(..)
+    | ExportGName Name.GlobalQ -- Foo.Bar.Baz
+    | ExportLName Name.LocalQ -- Baz
     deriving(Show, Read, Eq)
 
 data Import
-    = ImportAs
+    = ImportAs -- import qualified Foo.Bar as Bar
         { importAs :: Name.UnQ
         , parts    :: [Name.UnQ]
         }
-    | ImportQual
+    | ImportQual -- import qualified Foo.Bar
+        { parts :: [Name.UnQ]
+        }
+    | ImportAll -- import Foo.Bar
         { parts :: [Name.UnQ]
         }
     deriving(Show, Read, Eq)

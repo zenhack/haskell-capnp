@@ -240,14 +240,15 @@ instance Format Name.UnQ where
 instance Format Import where
     format ImportAs{importAs, parts} = hcat
         [ "import qualified "
-        , mconcat $ intersperse "." (map format parts)
+        , implodeNS parts
         , " as "
         , format importAs
         ]
-    format ImportQual{ parts } = hcat
-        [ "import qualified "
-        , mconcat $ intersperse "." (map format parts)
-        ]
+    format ImportQual{ parts } = hcat [ "import qualified ", implodeNS parts ]
+    format ImportAll { parts } = hcat [ "import ", implodeNS parts ]
+
+implodeNS :: Format a => [a] -> PP.Doc
+implodeNS parts = mconcat $ intersperse "." (map format parts)
 
 instance Format C.PrimWord where
     format C.PrimBool = "Std_.Bool"

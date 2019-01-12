@@ -43,7 +43,7 @@ fileToModuleAlias Raw.File{fileName, fileId} =
         { modName = idToModule fileId
         , modLangPragmas = []
         , modExports = Just [ExportMod reExport]
-        , modImports = [ ImportQual { parts = reExport } ]
+        , modImports = [ ImportAll { parts = reExport } ]
         , modDecls = []
         }
 
