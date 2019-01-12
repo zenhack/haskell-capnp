@@ -47,7 +47,7 @@ fileToModuleAlias P.File{fileName, fileId} =
         }
 
 fileToMainModule :: P.File -> Module
-fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = Module
+fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, usesRpc} = Module
     { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
     , modLangPragmas =
         [ "DeriveGeneric"
@@ -87,6 +87,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
         , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }
         , ImportQual { parts = idToModule fileId }
         ]
+        : [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] } | usesRpc ]
         :
         [ [ ImportQual { parts = impId }
           , ImportQual { parts = impId ++ ["Pure"] }
@@ -291,8 +292,16 @@ declToDecls _thisMod P.Interface { name } =
                 }
             ]
         , typeArgs = []
-        , derives = [ "Std_.Show", "Std_.Eq", "Generics.Generic" ]
+        , derives =
+            [ "Std_.Show"
+            , "Std_.Eq"
+            , "Generics.Generic"
+            ]
         }
+    , instance_ [] ["Rpc"] "IsClient" [TLName name]
+        [ iValue "fromClient" [] (ELName name)
+        , iValue "toClient" [PLCtor name [PVar "client"]] (euName "client")
+        ]
     ]
 
 
