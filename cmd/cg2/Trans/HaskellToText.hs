@@ -80,17 +80,31 @@ instance Format Decl where
         [ hcat [ format name, " :: ", format typ ]
         , format def
         ]
-    format DcInstance{ctx, typ, defs} = vcat
-        [ hcat
-            [ "instance "
-            , format (TCtx ctx typ)
-            , case defs of
-                []  -> ""
-                _:_ -> " where"
-            ]
-        , indent $ vcat $
-            map format defs
+    format DcInstance{ctx, typ, defs} = hcat
+        [ "instance "
+        , format (TCtx ctx typ)
+        , whereBlock defs
         ]
+    format DcClass{ctx, name, params, decls} = hcat
+        [ "class"
+        , format $
+            TCtx ctx $
+                TApp
+                    (TLName name)
+                    [TLName (Name.unQToLocal p) | p <- params]
+        , whereBlock decls
+        ]
+
+whereBlock :: Format a => [a] -> PP.Doc
+whereBlock [] = ""
+whereBlock xs = vcat
+    [ " where"
+    , indent $ vcat $ map format xs
+    ]
+
+instance Format ClassDecl where
+    format (CdValueDecl name typ) = hcat [ format name, " :: ", format typ ]
+    format (CdValueDef def)       = format def
 
 instance Format InstanceDef where
     format (IdData d)  = format d

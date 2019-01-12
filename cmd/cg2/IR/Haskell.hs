@@ -18,6 +18,7 @@ module IR.Haskell
     , DataArgs(..)
     , DataDecl(..)
     , DataVariant(..)
+    , ClassDecl(..)
     , Decl(..)
     , Do(..)
     , Exp(..)
@@ -87,6 +88,12 @@ data Decl
         , typ  :: Type
         , defs :: [InstanceDef]
         }
+    | DcClass
+        { ctx    :: [Type]
+        , name   :: Name.LocalQ
+        , params :: [Name.UnQ]
+        , decls  :: [ClassDecl]
+        }
     deriving(Show, Read, Eq)
 
 data DataDecl = Data
@@ -100,6 +107,11 @@ data DataDecl = Data
     , dataNewtype  :: !Bool
     -- ^ Whether the declarationis a "newtype" or "data" declaration.
     }
+    deriving(Show, Read, Eq)
+
+data ClassDecl
+    = CdValueDecl Name.UnQ Type
+    | CdValueDef ValueDef
     deriving(Show, Read, Eq)
 
 data InstanceDef
