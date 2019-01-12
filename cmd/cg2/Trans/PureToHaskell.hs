@@ -311,6 +311,9 @@ marshalField thisMod into fieldName varName type_ =
         C.CompositeType _ ->
             -- Always a group or union, since a true struct would be a pointer.
             -- delegate to the field type, which has the same Cerial as us.
+            --
+            -- FIXME: this only works for anonymous unions; for named unions and
+            -- groups we need to 'get' the field first.
             EApp (egName ["Classes"] "marshalInto") [into, euName varName]
 
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
