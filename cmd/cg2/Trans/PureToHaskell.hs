@@ -52,6 +52,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
     , modLangPragmas =
         [ "DeriveGeneric"
         , "DuplicateRecordFields"
+        , "FlexibleInstances"
         , "RecordWildCards"
         , "MultiParamTypeClasses"
         , "TypeFamilies"
@@ -82,6 +83,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
         , ImportAs { importAs = "Untyped", parts = ["Capnp", "Untyped"] }
         , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
         , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
+        , ImportAs { importAs = "BasicsPure", parts = ["Capnp", "Basics", "Pure" ] }
         , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }
         , ImportQual { parts = idToModule fileId }
         ]
@@ -241,6 +243,9 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                     ]
                 else
                     []
+        ]
+    , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
+        [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
         ]
     ]
 declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
