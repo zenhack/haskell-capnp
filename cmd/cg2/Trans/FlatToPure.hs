@@ -61,13 +61,16 @@ unionToDecl firstClass cerialName local variants =
         }
 
 nodeToDecls :: Flat.Node -> [Pure.Decl]
-nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
+nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of
     Flat.Enum _ ->
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
         []
     Flat.Interface{} ->
-        [ Pure.Interface { name = local }
+        [ Pure.Interface
+            { name = local
+            , interfaceId = nodeId
+            }
         ]
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it

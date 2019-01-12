@@ -46,7 +46,8 @@ data Decl
         , value :: C.Value Name.CapnpQ
         }
     | Interface
-        { name :: Name.LocalQ
+        { name        :: Name.LocalQ
+        , interfaceId :: !Word64
         }
 
 data Field = Field
