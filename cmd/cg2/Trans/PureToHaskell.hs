@@ -96,6 +96,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
 
 declToDecls :: Word64 -> P.Decl -> [Decl]
 declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
+    let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
         { dataName = Name.localToUnQ typeName
         , typeArgs = []
@@ -111,6 +112,13 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                     P.Record fields -> ARec (map (fieldToField thisMod) fields)
                 }
             | P.Variant{name, arg} <- variants
+            ]
+            ++
+            [ DataVariant
+                { dvCtorName = Name.localToUnQ unknownCtor
+                , dvArgs = APos [TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16]
+                }
+            | isUnion
             ]
         }
     , instance_ [] ["Default"] "Default" [TLName typeName]
@@ -178,7 +186,6 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                             | P.Variant{name, arg} <- variants
                             ]
                             ++
-                            let unknownCtor = Name.mkSub cerialName "unknown'" in
                             [ ( pgName (rawModule thisMod) unknownCtor [PVar "tag"]
                               , EApp
                                   (eStd_ "pure")
@@ -227,9 +234,7 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                 ]
                 ++
                 if isUnion then
-                    let unknownCtor = Name.mkSub typeName "unknown'"
-                        setter = Name.unQToLocal $ Name.setterName $ Name.mkSub typeName "unknown'"
-                    in
+                    let setter = Name.unQToLocal $ Name.setterName unknownCtor in
                     [ ( PLCtor unknownCtor [PVar "tag"]
                       , EApp (egName (rawModule thisMod) setter) [euName "raw_", euName "tag"]
                       )
