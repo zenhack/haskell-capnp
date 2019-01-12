@@ -33,6 +33,16 @@ class Format a where
 instance Format Module where
     format Module{modName, modLangPragmas, modDecls, modExports, modImports} = vcat
         [ vcat [ "{-# LANGUAGE " <> PP.textStrict ext <> " #-}" | ext <- modLangPragmas ]
+        -- The generated code sometimes triggers these warnings, but they're nothing to
+        -- worry about.
+        --
+        -- Dodgy-exports comes up when we don't actaully generate any definitions to
+        -- export, in which case GHC complains in the machine readable module alias that
+        -- we're trying to re-export everything from a module with no-exports. This
+        -- happens with e.g. c++.capnp, which only defines annotations.
+        , "{-# OPTIONS_GHC -Wno-unused-imports #-}"
+        , "{-# OPTIONS_GHC -Wno-dodgy-exports #-}"
+        , "{-# OPTIONS_GHC -Wno-unused-matches #-}"
         , hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
