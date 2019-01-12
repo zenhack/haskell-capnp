@@ -50,7 +50,7 @@ pgName :: [T.Text] -> Name.LocalQ -> [Pattern] -> Pattern
 pgName parts local = PGCtor (gName parts local)
 
 tuName :: Name.UnQ -> Type
-tuName = TLName . Name.mkLocal Name.emptyNS
+tuName = TLName . Name.unQToLocal
 
 iValue :: Name.UnQ -> [Pattern] -> Exp -> InstanceDef
 iValue name params value = IdValue DfValue {name, params, value}
