@@ -287,7 +287,7 @@ declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
 declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
 declToDecls _thisMod P.Constant { value=C.VoidValue } = []
 
-declToDecls _thisMod P.Interface { name } =
+declToDecls thisMod P.Interface { name } =
     [ DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
@@ -313,6 +313,36 @@ declToDecls _thisMod P.Interface { name } =
         ]
     , instance_ [] ["Classes"] "ToPtr" [tuName "s", TLName name]
         [ iValue "toPtr" [] (egName ["RpcHelpers"] "isClientToPtr")
+        ]
+    , instance_ [] ["Classes"] "Decerialize" [TLName name]
+        [ iType "Cerial" [tuName "msg", TLName name] $
+            TApp (tgName (rawModule thisMod) name) [tuName "msg"]
+        , iValue "decerialize"
+            [ pgName (rawModule thisMod) (Name.mkSub name "newtype_") [PVar "maybeCap"]
+            ]
+            (ECase (euName "maybeCap")
+                [ (PGCtor (std_ "Nothing") []
+                  , EApp
+                        (eStd_ "pure")
+                        [ EApp (ELName name) [egName ["Message"] "nullClient"]
+                        ]
+                  )
+                , (PGCtor (std_ "Just") [PVar "cap"]
+                  , EFApp
+                        (ELName name)
+                        [ EApp (egName ["Untyped"] "getClient") [euName "cap"]]
+                  )
+                ]
+            )
+        ]
+    , instance_ [] ["Classes"] "Cerialize" [TLName name]
+        [ iValue "cerialize" [PVar "msg", PLCtor name [PVar "client"]] $
+            EFApp
+                (egName (rawModule thisMod) (Name.mkSub name "newtype_"))
+                [ EFApp
+                    (eStd_ "Just")
+                    [EApp (egName ["Untyped"] "appendCap") [euName "msg", euName "client"]]
+                ]
         ]
     ]
 
