@@ -23,8 +23,8 @@ nodeToReExports :: Flat.Node -> [Name.LocalQ]
 nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
 nodeToReExports _ = []
 
-unionToDecl :: Name.LocalQ -> Name.LocalQ -> [Flat.Variant] -> Pure.Decl
-unionToDecl cerialName local variants =
+unionToDecl :: Bool -> Name.LocalQ -> Name.LocalQ -> [Flat.Variant] -> Pure.Decl
+unionToDecl firstClass cerialName local variants =
     Pure.Data
         { typeName = local
         , cerialName
@@ -57,6 +57,7 @@ unionToDecl cerialName local variants =
                 } <- variants
             ]
         , isUnion = True
+        , firstClass
         }
 
 nodeToDecls :: Flat.Node -> [Pure.Decl]
@@ -68,12 +69,12 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
     Flat.Interface{} ->
         [ Pure.Interface { name = local }
         ]
-    Flat.Struct{fields=[], union=Just Flat.Union{variants}} ->
+    Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
         -- a top-level sum type.
-        [ unionToDecl local local variants ]
+        [ unionToDecl (not isGroup) local local variants ]
     Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
-    Flat.Struct{ fields, union } ->
+    Flat.Struct{ isGroup, fields, union } ->
         Pure.Data
             { typeName = local
             , cerialName = local
@@ -94,12 +95,13 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
                     }
                 ]
             , isUnion = False
+            , firstClass = not isGroup
             }
         : case union of
             Just Flat.Union{variants} ->
                 -- Also make a type that's just the union, but give it the
                 -- same cerialName:
-                [ unionToDecl local (Name.mkSub local "") variants ]
+                [ unionToDecl False local (Name.mkSub local "") variants ]
             Nothing ->
                 []
     Flat.Constant { value } ->

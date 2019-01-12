@@ -97,7 +97,13 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
     }
 
 declToDecls :: Word64 -> P.Decl -> [Decl]
-declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
+declToDecls thisMod P.Data
+        { typeName
+        , cerialName
+        , variants
+        , isUnion
+        , firstClass
+        } =
     let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
         { dataName = Name.localToUnQ typeName
@@ -196,7 +202,6 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                             ]
                         )
         ]
-    , instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
     , instance_ [] ["Classes"] "Marshal" [TLName typeName]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             ECase (euName "value_") $
@@ -244,10 +249,16 @@ declToDecls thisMod P.Data{typeName, cerialName, variants, isUnion} =
                 else
                     []
         ]
-    , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
-        [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
-        ]
     ]
+    ++
+    if firstClass then
+        [ instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
+        , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
+            [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
+            ]
+        ]
+    else
+        []
 declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
     [ DcValue
         { typ = typeToType thisMod (C.PtrType ty)
