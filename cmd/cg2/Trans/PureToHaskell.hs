@@ -218,10 +218,11 @@ declToDecls thisMod P.Data
                         ( PLCtor variantName [PVar "arg_"]
                         , marshalField MarshalField
                             { thisMod
-                            , into = euName "raw_"
+                            , into = "raw_"
                             , localQField = variantName
                             , from = "arg_"
                             , type_
+                            , inUnion = isUnion
                             }
                         )
                     P.Record fields ->
@@ -230,10 +231,11 @@ declToDecls thisMod P.Data
                             ([ DoBind "raw_" setExp | isUnion ] ++
                             [ DoE $ marshalField MarshalField
                                 { thisMod
-                                , into = euName "raw_"
+                                , into = "raw_"
                                 , localQField = Name.mkSub variantName fieldName
                                 , from = fieldName
                                 , type_
+                                , inUnion = isUnion
                                 }
                             | P.Field{name=fieldName, type_} <- fields
                             ])
@@ -298,19 +300,21 @@ declToDecls _thisMod P.Interface { name } =
 data MarshalField = MarshalField
     { thisMod     :: !Word64
     -- ^ The id for the module we're generating
-    , into        :: Exp
-    -- ^ An expression denoting the destination for the marshalled data.
+    , into        :: Name.UnQ
+    -- ^ An variable holding the destination for the marshalled data.
     , localQField :: Name.LocalQ
     -- ^ The name of the field to marshal, qualified within the current module.
     , from        :: Name.UnQ
     -- ^ A variable holding the value to marshal
     , type_       :: C.Type Name.CapnpQ
-    -- ^ The type of the field.
+    , inUnion     :: !Bool
+    -- ^ whether the parent of this field is a union
     }
 
 marshalField :: MarshalField -> Exp
-marshalField MarshalField{thisMod, into, localQField, from, type_} =
+marshalField MarshalField{thisMod, into, localQField, from, type_, inUnion} =
     let setter = egName (rawModule thisMod) $ Name.unQToLocal (Name.setterName localQField)
+        getter = egName (rawModule thisMod) $ Name.unQToLocal (Name.getterName localQField)
     in case type_ of
         C.PtrType _ ->
             EBind
@@ -320,18 +324,21 @@ marshalField MarshalField{thisMod, into, localQField, from, type_} =
                     , euName from
                     ]
                 )
-                (EApp setter [into])
+                (EApp setter [euName into])
         C.VoidType ->
             ePureUnit
         C.WordType _ ->
-            EApp setter [into, euName from]
-        C.CompositeType _ ->
-            -- Always a group or union, since a true struct would be a pointer.
-            -- delegate to the field type, which has the same Cerial as us.
-            --
-            -- FIXME: this only works for anonymous unions; for named unions and
-            -- groups we need to 'get' the field first.
-            EApp (egName ["Classes"] "marshalInto") [into, euName from]
+            EApp setter [euName into, euName from]
+        C.CompositeType _ -> EDo
+            (if Name.getUnQ localQField == "union'" then
+                -- Anonymous union; has the same Cerial as us. Just delegate.
+                []
+            else if inUnion then
+                [ DoBind into $ EApp setter [euName into] ]
+            else
+                [ DoBind into $ EApp getter [euName into] ]
+            )
+            (EApp (egName ["Classes"] "marshalInto") [euName into, euName from])
 
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)
