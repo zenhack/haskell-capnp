@@ -86,7 +86,7 @@ instance Format Decl where
         , whereBlock defs
         ]
     format DcClass{ctx, name, params, decls} = hcat
-        [ "class"
+        [ "class "
         , format $
             TCtx ctx $
                 TApp

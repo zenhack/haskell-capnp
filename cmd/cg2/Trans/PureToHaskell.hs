@@ -79,6 +79,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
         , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
         , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
         , ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
+        , ImportAs { importAs = "MonadIO", parts = ["Control", "Monad", "IO", "Class"] }
         , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
         , ImportAs { importAs = "Untyped", parts = ["Capnp", "Untyped"] }
         , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
@@ -344,6 +345,12 @@ declToDecls thisMod P.Interface { name } =
                     [EApp (egName ["Untyped"] "appendCap") [euName "msg", euName "client"]]
                 ]
         ]
+    , DcClass
+        { ctx = [TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]]
+        , name = Name.mkSub name "server_"
+        , params = ["m", "cap"]
+        , decls = [] -- TODO
+        }
     ]
 
 
