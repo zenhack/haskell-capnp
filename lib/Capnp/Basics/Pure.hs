@@ -55,6 +55,12 @@ instance Marshal Data where
         forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list
 
+instance Cerialize Data where
+    cerialize msg bytes = do
+        dest <- Basics.newData msg (BS.length bytes)
+        marshalInto dest bytes
+        pure dest
+
 instance Decerialize Text where
     type Cerial msg Text = Basics.Text msg
     decerialize text = do
