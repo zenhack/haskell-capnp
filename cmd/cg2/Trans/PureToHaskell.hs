@@ -68,6 +68,8 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums} = M
                 ExportGName $ gName (rawModule fileId) name
             P.Constant { name, value=C.PtrValue _ _ } ->
                 ExportLName name
+            P.Interface { name } ->
+                ExportLCtors name
         | decl <- decls
         ]
     , modImports = concat $
@@ -251,6 +253,21 @@ declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
 -- to do anything here:
 declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
 declToDecls _thisMod P.Constant { value=C.VoidValue } = []
+
+declToDecls _thisMod P.Interface { name } =
+    [ DcData Data
+        { dataName = Name.localToUnQ name
+        , dataNewtype = True
+        , dataVariants =
+            [ DataVariant
+                { dvCtorName = Name.localToUnQ name
+                , dvArgs = APos [tgName ["Message"] "Client"]
+                }
+            ]
+        , typeArgs = []
+        , derives = [ "Std_.Show", "Std_.Eq", "Generics.Generic" ]
+        }
+    ]
 
 marshalField :: Word64 -> Exp -> Name.LocalQ -> Name.UnQ -> C.Type Name.CapnpQ -> Exp
 marshalField thisMod into fieldName varName type_ =

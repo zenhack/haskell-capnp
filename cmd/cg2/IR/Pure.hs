@@ -34,6 +34,9 @@ data Decl
         { name  :: Name.LocalQ
         , value :: C.Value Name.CapnpQ
         }
+    | Interface
+        { name :: Name.LocalQ
+        }
 
 data Field = Field
     { name  :: Name.UnQ

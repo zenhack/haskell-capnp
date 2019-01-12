@@ -65,7 +65,9 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, union_} = case union_ of
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
         []
-    Flat.Interface{} -> [] -- TODO
+    Flat.Interface{} ->
+        [ Pure.Interface { name = local }
+        ]
     Flat.Struct{fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
         -- a top-level sum type.
