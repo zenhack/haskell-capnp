@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Capnp.Gen.ById.Xb312981b2552a250(module Capnp.Gen.Capnp.Rpc) where
 import Capnp.Gen.Capnp.Rpc
 import qualified Prelude as Std_

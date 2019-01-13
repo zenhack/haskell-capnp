@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Capnp.Gen.ById.X8ef99297a43a5e34(module Capnp.Gen.Capnp.Json) where
 import Capnp.Gen.Capnp.Json
 import qualified Prelude as Std_

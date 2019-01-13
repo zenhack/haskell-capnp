@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Capnp.Gen.ById.Xb8630836983feed7.Pure(module Capnp.Gen.Capnp.Persistent.Pure) where
 import Capnp.Gen.Capnp.Persistent.Pure
 import qualified Prelude as Std_

@@ -8,6 +8,7 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Capnp.Gen.Capnp.Json.Pure(JsonValue(..)
                                 ,JsonValue'Field(..)
                                 ,JsonValue'Call(..)) where

@@ -8,6 +8,7 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Capnp.Gen.Capnp.Rpc.Pure(Capnp.Gen.ById.Xb312981b2552a250.Exception'Type(..)
                                ,Message(..)
                                ,Bootstrap(..)

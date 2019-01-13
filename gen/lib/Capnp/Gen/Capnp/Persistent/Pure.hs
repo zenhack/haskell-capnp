@@ -8,6 +8,7 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Capnp.Gen.Capnp.Persistent.Pure(Persistent(..)
                                       ,Persistent'server_(..)
                                       ,export_Persistent
