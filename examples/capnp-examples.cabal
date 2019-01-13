@@ -25,6 +25,7 @@ library
     , network ^>= 2.8.0
     , network-simple ^>= 0.4
     , supervisors ^>= 0.2
+    , text ^>= 1.2.3
   hs-source-dirs:
     lib
     gen/lib
