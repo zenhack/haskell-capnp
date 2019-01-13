@@ -32,6 +32,8 @@
   * Getters for anonymous unions are now `get_Foo'` instead of
     `get_Foo'union'`.
   * `newMessage` now accepts an optional size hint.
+  * Instances of `Cerialize` now exist/are generated for
+    `(Vector (Vector (Vector ...)))` up to a reasonable depth.
 * Other improvements directly reflected in the API:
   * The allocation strategy has changed to reduce unnecessary copying.
   * It is now possible to create messages with a size > 2GiB. Note that
