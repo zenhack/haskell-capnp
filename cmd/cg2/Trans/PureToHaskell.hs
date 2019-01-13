@@ -108,8 +108,28 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
           ]
         | impId <- map idToModule fileImports
         ]
-    , modDecls = concatMap (declToDecls fileId) decls
+    , modDecls =
+        concatMap (declToDecls fileId) decls
+        ++ concatMap (enumInstances fileId) reExportEnums
     }
+
+enumInstances :: Word64 -> Name.LocalQ -> [Decl]
+enumInstances thisMod name =
+    let rawName = gName (rawModule thisMod) name in
+    instance_ [] ["Classes"] "Decerialize" [TGName rawName]
+        [ iType "Cerial" [tuName "msg", TGName rawName] (TGName rawName)
+        , iValue "decerialize" [] (eStd_ "pure")
+        ]
+    : instance_ [] ["Classes"] "Cerialize" [TGName rawName]
+        [ iValue "cerialize" [PVar "_"] (eStd_ "pure")
+        ]
+    : [ instance_ [] ["Classes"] "Cerialize" [t]
+        [ iValue "cerialize" [] (egName ["Classes"] "cerializeBasicVec")
+        ]
+      | t <- take 6 $ drop 1 $ iterate
+            (\t -> TApp (tgName ["V"] "Vector") [t])
+            (TGName rawName)
+      ]
 
 declToDecls :: Word64 -> P.Decl -> [Decl]
 declToDecls thisMod P.Data
