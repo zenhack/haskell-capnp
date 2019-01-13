@@ -167,7 +167,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
                 { fieldName
                 , containerType
                 , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
-                , newFnType = Raw.NewText
+                , newFnType = Raw.NewData
                 }
             ]
         C.PtrField _ (C.PtrComposite _) ->
