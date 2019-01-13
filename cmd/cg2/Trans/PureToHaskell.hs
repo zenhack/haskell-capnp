@@ -396,7 +396,7 @@ declToDecls thisMod P.Interface { name, interfaceId, methods } =
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
         , decls =
-            let mkName methodName = mkMethodName name methodName in
+            let mkName = mkMethodName name in
             CdMinimal [ mkName name | P.Method{name} <- methods ]
             : concat
                 [ [ CdValueDecl
@@ -457,7 +457,7 @@ declToDecls thisMod P.Interface { name, interfaceId, methods } =
                           ) -- TODO
                         , ( "handleCall"
                           , ELambda [PVar "interfaceId_", PVar "methodId_"] $
-                                ECase (euName "interfaceId_") $
+                                ECase (euName "interfaceId_")
                                     [ ( PInt (fromIntegral interfaceId)
                                       , ECase (euName "methodId_") $
                                             [ ( PInt i
