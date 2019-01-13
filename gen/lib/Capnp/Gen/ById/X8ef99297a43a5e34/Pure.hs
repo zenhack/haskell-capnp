@@ -1,8 +1,9 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
-{- |
-Module: Capnp.Gen.ById.X8ef99297a43a5e34.Pure
-Description: Machine-addressable alias for 'Capnp.Gen.Capnp.Json.Pure'.
--}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 module Capnp.Gen.ById.X8ef99297a43a5e34.Pure(module Capnp.Gen.Capnp.Json.Pure) where
 import Capnp.Gen.Capnp.Json.Pure
+import qualified Prelude as Std_
+import qualified Data.Word as Std_
+import qualified Data.Int as Std_
+import Prelude ((<$>), (<*>), (>>=))

@@ -35,8 +35,7 @@ schemaTests = describe "tests for typed setters" $ traverse_ testCase
             field <- newRoot msg
             set_Field'codeOrder field 4
             set_Field'discriminantValue field 6
-            union <- get_Field'union' field
-            group <- set_Field'group union
+            group <- set_Field'group field
             set_Field'group'typeId group 322
             ordinal <- get_Field'ordinal field
             set_Field'ordinal'explicit ordinal 22
