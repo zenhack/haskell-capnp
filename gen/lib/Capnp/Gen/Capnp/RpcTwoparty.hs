@@ -30,9 +30,13 @@ data Side
             ,Std_.Eq
             ,Generics.Generic)
 instance (Classes.IsWord Side) where
-    fromWord 0 = Side'server
-    fromWord 1 = Side'client
-    fromWord tag = (Side'unknown' (Std_.fromIntegral tag))
+    fromWord n = case ((Std_.fromIntegral n) :: Std_.Word16) of
+        0 ->
+            Side'server
+        1 ->
+            Side'client
+        tag ->
+            (Side'unknown' tag)
     toWord (Side'server) = 0
     toWord (Side'client) = 1
     toWord (Side'unknown' tag) = (Std_.fromIntegral tag)

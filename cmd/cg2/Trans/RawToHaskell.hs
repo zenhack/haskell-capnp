@@ -779,23 +779,15 @@ eSetWordField struct value C.DataLoc{dataIdx, dataOff, dataDef} =
 mkIsWordInstance :: Name.LocalQ -> [Name.LocalQ] -> Name.LocalQ -> Decl
 mkIsWordInstance typeCtor dataCtors unknownCtor =
     instance_ [] ["Classes"] "IsWord" [TLName typeCtor] $
-        [ IdValue $ DfValue
-            { name = "fromWord"
-            , params = [PInt i]
-            , value = ELName ctor
-            }
-        | (i, ctor) <- zip [0..] dataCtors
-        ] ++
-        [ IdValue $ DfValue
-            { name = "fromWord"
-            , params = [PVar "tag"]
-            , value = EApp
-                (ELName unknownCtor)
-                [ EApp
-                    (eStd_ "fromIntegral")
-                    [ELName "tag"]
-                ]
-            }
+        [ iValue "fromWord" [PVar "n"] $
+            ECase
+                (ETypeAnno
+                    (EApp (eStd_ "fromIntegral") [euName "n"])
+                    (TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16)
+                ) $
+                [ (PInt i, ELName ctor) | (i, ctor) <- zip [0..] dataCtors]
+                ++
+                [ (PVar "tag", EApp (ELName unknownCtor) [euName "tag"]) ]
         ] ++
         [ IdValue $ DfValue
             { name = "toWord"

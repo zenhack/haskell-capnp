@@ -1492,11 +1492,17 @@ data Exception'Type
             ,Std_.Eq
             ,Generics.Generic)
 instance (Classes.IsWord Exception'Type) where
-    fromWord 0 = Exception'Type'failed
-    fromWord 1 = Exception'Type'overloaded
-    fromWord 2 = Exception'Type'disconnected
-    fromWord 3 = Exception'Type'unimplemented
-    fromWord tag = (Exception'Type'unknown' (Std_.fromIntegral tag))
+    fromWord n = case ((Std_.fromIntegral n) :: Std_.Word16) of
+        0 ->
+            Exception'Type'failed
+        1 ->
+            Exception'Type'overloaded
+        2 ->
+            Exception'Type'disconnected
+        3 ->
+            Exception'Type'unimplemented
+        tag ->
+            (Exception'Type'unknown' tag)
     toWord (Exception'Type'failed) = 0
     toWord (Exception'Type'overloaded) = 1
     toWord (Exception'Type'disconnected) = 2

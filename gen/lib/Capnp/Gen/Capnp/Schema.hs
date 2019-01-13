@@ -2035,15 +2035,25 @@ data ElementSize
             ,Std_.Eq
             ,Generics.Generic)
 instance (Classes.IsWord ElementSize) where
-    fromWord 0 = ElementSize'empty
-    fromWord 1 = ElementSize'bit
-    fromWord 2 = ElementSize'byte
-    fromWord 3 = ElementSize'twoBytes
-    fromWord 4 = ElementSize'fourBytes
-    fromWord 5 = ElementSize'eightBytes
-    fromWord 6 = ElementSize'pointer
-    fromWord 7 = ElementSize'inlineComposite
-    fromWord tag = (ElementSize'unknown' (Std_.fromIntegral tag))
+    fromWord n = case ((Std_.fromIntegral n) :: Std_.Word16) of
+        0 ->
+            ElementSize'empty
+        1 ->
+            ElementSize'bit
+        2 ->
+            ElementSize'byte
+        3 ->
+            ElementSize'twoBytes
+        4 ->
+            ElementSize'fourBytes
+        5 ->
+            ElementSize'eightBytes
+        6 ->
+            ElementSize'pointer
+        7 ->
+            ElementSize'inlineComposite
+        tag ->
+            (ElementSize'unknown' tag)
     toWord (ElementSize'empty) = 0
     toWord (ElementSize'bit) = 1
     toWord (ElementSize'byte) = 2
