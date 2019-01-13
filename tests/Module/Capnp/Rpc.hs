@@ -39,7 +39,7 @@ import Capnp.Rpc.Errors    (eFailed)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
 
-import Capnp.Gen.Aircraft.Pure
+import Capnp.Gen.Aircraft.Pure  hiding (Left, Right)
 import Capnp.Gen.Capnp.Rpc.Pure
 import Capnp.Rpc
 import Capnp.Rpc.Untyped

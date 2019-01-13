@@ -335,23 +335,20 @@ interface CounterAcceptor {
 }
 
 # test inheritance
-#
-# The *I suffixes are to work around a bug where generated names can collide
-# with things defined int he prelude; Left and Right cause problems here.
 
-interface TopI {
+interface Top {
 	top @0 ();
 }
 
-interface LeftI extends(TopI) {
+interface Left extends(Top) {
 	left @0 ();
 }
 
-interface RightI extends(TopI) {
+interface Right extends(Top) {
 	right @0 ();
 }
 
-interface BottomI extends(LeftI, RightI) {
+interface Bottom extends(Left, Right) {
 	bottom @0 ();
 }
 
