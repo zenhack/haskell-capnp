@@ -13,9 +13,12 @@ import Capnp.Classes
     , MutListElem(..)
     , FromPtr(..)
     , Decerialize(..)
+    , Cerialize(..)
+    , cerializeBasicVec
     )
 
 import qualified Capnp.Untyped as U
+import qualified Data.Vector as V
 
 instance ListElem msg Int8 where
     newtype List msg Int8 = ListInt8 (U.ListOf msg Word8)
@@ -29,6 +32,20 @@ instance MutListElem s Int8 where
 instance Decerialize Int8 where
     type Cerial msg Int8 = Int8
     decerialize val = pure val
+instance Cerialize Int8 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Int8) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Int8)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Int8))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Int8)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int8))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int8)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Int16 where
     newtype List msg Int16 = ListInt16 (U.ListOf msg Word16)
     listFromPtr msg ptr = ListInt16 <$> fromPtr msg ptr
@@ -41,6 +58,20 @@ instance MutListElem s Int16 where
 instance Decerialize Int16 where
     type Cerial msg Int16 = Int16
     decerialize val = pure val
+instance Cerialize Int16 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Int16) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Int16)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Int16))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Int16)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int16))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int16)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Int32 where
     newtype List msg Int32 = ListInt32 (U.ListOf msg Word32)
     listFromPtr msg ptr = ListInt32 <$> fromPtr msg ptr
@@ -53,6 +84,20 @@ instance MutListElem s Int32 where
 instance Decerialize Int32 where
     type Cerial msg Int32 = Int32
     decerialize val = pure val
+instance Cerialize Int32 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Int32) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Int32)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Int32))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Int32)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int32))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int32)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Int64 where
     newtype List msg Int64 = ListInt64 (U.ListOf msg Word64)
     listFromPtr msg ptr = ListInt64 <$> fromPtr msg ptr
@@ -65,6 +110,20 @@ instance MutListElem s Int64 where
 instance Decerialize Int64 where
     type Cerial msg Int64 = Int64
     decerialize val = pure val
+instance Cerialize Int64 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Int64) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Int64)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Int64))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Int64)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int64))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Int64)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Word8 where
     newtype List msg Word8 = ListWord8 (U.ListOf msg Word8)
     listFromPtr msg ptr = ListWord8 <$> fromPtr msg ptr
@@ -77,6 +136,20 @@ instance MutListElem s Word8 where
 instance Decerialize Word8 where
     type Cerial msg Word8 = Word8
     decerialize val = pure val
+instance Cerialize Word8 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Word8) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Word8)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Word8))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Word8)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word8))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word8)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Word16 where
     newtype List msg Word16 = ListWord16 (U.ListOf msg Word16)
     listFromPtr msg ptr = ListWord16 <$> fromPtr msg ptr
@@ -89,6 +162,20 @@ instance MutListElem s Word16 where
 instance Decerialize Word16 where
     type Cerial msg Word16 = Word16
     decerialize val = pure val
+instance Cerialize Word16 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Word16) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Word16)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Word16))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Word16)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word16))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word16)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Word32 where
     newtype List msg Word32 = ListWord32 (U.ListOf msg Word32)
     listFromPtr msg ptr = ListWord32 <$> fromPtr msg ptr
@@ -101,6 +188,20 @@ instance MutListElem s Word32 where
 instance Decerialize Word32 where
     type Cerial msg Word32 = Word32
     decerialize val = pure val
+instance Cerialize Word32 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Word32) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Word32)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Word32))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Word32)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word32))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word32)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Word64 where
     newtype List msg Word64 = ListWord64 (U.ListOf msg Word64)
     listFromPtr msg ptr = ListWord64 <$> fromPtr msg ptr
@@ -113,6 +214,20 @@ instance MutListElem s Word64 where
 instance Decerialize Word64 where
     type Cerial msg Word64 = Word64
     decerialize val = pure val
+instance Cerialize Word64 where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Word64) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Word64)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Word64))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Word64)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word64))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Word64)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Float where
     newtype List msg Float = ListFloat (U.ListOf msg Word32)
     listFromPtr msg ptr = ListFloat <$> fromPtr msg ptr
@@ -125,6 +240,20 @@ instance MutListElem s Float where
 instance Decerialize Float where
     type Cerial msg Float = Float
     decerialize val = pure val
+instance Cerialize Float where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Float) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Float)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Float))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Float)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Float))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Float)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Double where
     newtype List msg Double = ListDouble (U.ListOf msg Word64)
     listFromPtr msg ptr = ListDouble <$> fromPtr msg ptr
@@ -137,6 +266,20 @@ instance MutListElem s Double where
 instance Decerialize Double where
     type Cerial msg Double = Double
     decerialize val = pure val
+instance Cerialize Double where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Double) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Double)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Double))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Double)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Double))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Double)))))) where
+    cerialize = cerializeBasicVec
 instance ListElem msg Bool where
     newtype List msg Bool = ListBool (U.ListOf msg Bool)
     listFromPtr msg ptr = ListBool <$> fromPtr msg ptr
@@ -149,3 +292,17 @@ instance MutListElem s Bool where
 instance Decerialize Bool where
     type Cerial msg Bool = Bool
     decerialize val = pure val
+instance Cerialize Bool where
+    cerialize _ val = pure val
+instance Cerialize (V.Vector Bool) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Bool)) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Bool))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Bool)))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Bool))))) where
+    cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Bool)))))) where
+    cerialize = cerializeBasicVec

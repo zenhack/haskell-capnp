@@ -20,9 +20,11 @@ header = unlines
     , "    , FromPtr(..)"
     , "    , Decerialize(..)"
     , "    , Cerialize(..)"
+    , "    , cerializeBasicVec"
     , "    )"
     , ""
     , "import qualified Capnp.Untyped as U"
+    , "import qualified Data.Vector as V"
     , ""
     ]
 
@@ -34,8 +36,7 @@ data InstanceParams = P
     , listSuffix :: String
     }
 
-
-genInstance P{..} = concat
+genInstance P{..} = concat $
     [ "instance ListElem msg ", typed, " where\n"
     , "    newtype List msg ", typed, " = List", typed, " (U.ListOf msg ", untyped, ")\n"
     , "    listFromPtr msg ptr = List", typed, " <$> fromPtr msg ptr\n"
@@ -50,6 +51,11 @@ genInstance P{..} = concat
     , "    decerialize val = pure val\n"
     , "instance Cerialize ", typed, " where\n"
     , "    cerialize _ val = pure val\n"
+    ]
+    ++
+    [ "instance Cerialize (V.Vector " ++  t ++ ") where\n" ++
+      "    cerialize = cerializeBasicVec\n"
+    | t <- take 6 $ iterate (\t -> "(V.Vector " ++ t ++ ")") typed
     ]
   where
     dataCon = "List" ++ typed

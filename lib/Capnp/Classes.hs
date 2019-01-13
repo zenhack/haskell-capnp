@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {- |
 Module: Capnp.Classes
 Description: Misc. type classes
@@ -33,6 +34,8 @@ module Capnp.Classes
     , cerializeBasicVec
     , cerializeCompositeVec
     ) where
+
+import Prelude hiding (length)
 
 import Data.Bits
 import Data.Int
@@ -357,3 +360,12 @@ cerializeCompositeVec msg vec = do
         targ <- index i list
         marshalInto targ (vec V.! i)
     pure list
+
+-- Generic decerialize instances for lists, given that the element type has an instance.
+instance
+    ( ListElem M.ConstMsg (Cerial M.ConstMsg a)
+    , Decerialize a
+    ) => Decerialize (V.Vector a)
+  where
+    type Cerial msg (V.Vector a) = List msg (Cerial msg a)
+    decerialize raw = V.generateM (length raw) (\i -> index i raw >>= decerialize)
