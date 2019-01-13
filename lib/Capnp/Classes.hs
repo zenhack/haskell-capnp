@@ -30,6 +30,8 @@ module Capnp.Classes
     , Marshal(..)
     , Cerialize(..)
     , Decerialize(..)
+    , cerializeBasicVec
+    , cerializeCompositeVec
     ) where
 
 import Data.Bits
@@ -38,6 +40,7 @@ import Data.ReinterpretCast
 import Data.Word
 
 import Control.Monad.Catch (MonadThrow(throwM))
+import Data.Foldable       (for_)
 
 import Capnp.Bits    (Word1(..))
 import Capnp.Errors  (Error(SchemaViolationError))
@@ -45,6 +48,8 @@ import Capnp.Untyped (Cap, ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
+
+import qualified Data.Vector as V
 
 -- | Types that can be converted to and from a 64-bit word.
 --
@@ -312,3 +317,43 @@ instance FromPtr msg (Maybe (Cap msg)) where
     fromPtr _ _                   = expected "pointer to capability"
 instance ToPtr s (Maybe (Cap (M.MutMsg s))) where
     toPtr _ = pure . fmap PtrCap
+
+-- | A valid implementation of 'cerialize', which just cerializes the
+-- elements of a list individually and puts them in the list.
+--
+-- Note that while this is *correct* for composite lists, it is inefficient,
+-- since it will separately allocate the elements and then copy them into
+-- the list, doing extra work and leaking space. See 'cerializeCompositeVec'.
+cerializeBasicVec ::
+    ( U.RWCtx m s
+    , MutListElem s (Cerial (M.MutMsg s) a)
+    , Cerialize a
+    )
+    => M.MutMsg s
+    -> V.Vector a
+    -> m (List (M.MutMsg s) (Cerial (M.MutMsg s) a))
+cerializeBasicVec msg vec = do
+    list <- newList msg (V.length vec)
+    for_ [0..V.length vec - 1] $ \i -> do
+        e <- cerialize msg (vec V.! i)
+        setIndex e i list
+    pure list
+
+-- | A valid implementation of 'cerialize', which allocates a list of the
+-- correct size and then marshals the elements of a vector into the elements
+-- of the list. This is more efficient for composite types than
+-- 'cerializeBasicVec', hence the name.
+cerializeCompositeVec ::
+    ( U.RWCtx m s
+    , MutListElem s (Cerial (M.MutMsg s) a)
+    , Marshal a
+    )
+    => M.MutMsg s
+    -> V.Vector a
+    -> m (List (M.MutMsg s) (Cerial (M.MutMsg s) a))
+cerializeCompositeVec msg vec = do
+    list <- newList msg (V.length vec)
+    for_ [0..V.length vec - 1] $ \i -> do
+        targ <- index i list
+        marshalInto targ (vec V.! i)
+    pure list

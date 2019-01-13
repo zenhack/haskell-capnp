@@ -79,6 +79,12 @@ instance Cerialize Text where
         marshalTextBytes bytes ret
         pure ret
 
+instance Cerialize (V.Vector Text) where
+    cerialize = cerializeBasicVec
+
+instance Cerialize (V.Vector Data) where
+    cerialize = cerializeBasicVec
+
 marshalTextBytes :: Untyped.RWCtx m s => BS.ByteString -> Basics.Text (M.MutMsg s) -> m ()
 marshalTextBytes bytes text = do
     buffer <- Basics.textBuffer text
