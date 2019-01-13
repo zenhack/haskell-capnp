@@ -1,31 +1,64 @@
-{-| This is the capnp compiler plugin.
--}
+-- This module is the main entry point for the capnpc-haskell code
+-- generator plugin.
 module Main (main) where
 
+import Data.Foldable    (for_)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath  (takeDirectory)
 import System.IO        (IOMode(WriteMode), withFile)
 
-import qualified Text.PrettyPrint.Leijen.Text as PP
+import qualified Data.Text.Lazy    as LT
+import qualified Data.Text.Lazy.IO as TIO
 
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
 
-import qualified Backends.Pure
-import qualified Backends.Raw
-import qualified FrontEnd
+import qualified IR.Flat             as Flat
+import qualified IR.Haskell          as Haskell
+import qualified Trans.CgrToStage1
+import qualified Trans.FlatToPure
+import qualified Trans.FlatToRaw
+import qualified Trans.HaskellToText
+import qualified Trans.PureToHaskell
+import qualified Trans.RawToHaskell
+import qualified Trans.Stage1ToFlat
 
 main :: IO ()
 main = do
     cgr <- getValue defaultLimit
-    mapM_ saveResult (handleCGR cgr)
-  where
-    saveResult (filename, contents) = do
-        createDirectoryIfMissing True (takeDirectory filename)
-        withFile filename WriteMode $ \h ->
-            PP.hPutDoc h contents
+    for_ (handleCGR cgr) $ \(path, contents) -> do
+        createDirectoryIfMissing True (takeDirectory path)
+        withFile path WriteMode $ \h ->
+            TIO.hPutStr h contents
 
-handleCGR :: CodeGeneratorRequest -> [(FilePath, PP.Doc)]
-handleCGR = concatMap genFiles . FrontEnd.cgrToIR where
-    genFiles mod =
-        Backends.Pure.fmtModule mod ++ Backends.Raw.fmtModule mod
+-- | Convert a 'CodeGeneratorRequest' to a list of files to create.
+handleCGR :: CodeGeneratorRequest -> [(FilePath, LT.Text)]
+handleCGR cgr =
+    let flat =
+            Trans.Stage1ToFlat.filesToFiles $
+            Trans.CgrToStage1.cgrToFiles cgr
+        modules =
+            handleFlatRaw flat ++ handleFlatPure flat
+    in
+    map
+        (\mod ->
+            ( Haskell.modFilePath mod
+            , Trans.HaskellToText.moduleToText mod
+            )
+        )
+        modules
+
+
+handleFlatPure, handleFlatRaw :: [Flat.File] -> [Haskell.Module]
+
+handleFlatPure =
+    concatMap
+        ( Trans.PureToHaskell.fileToModules
+        . Trans.FlatToPure.fileToFile
+        )
+
+handleFlatRaw =
+    concatMap
+        ( Trans.RawToHaskell.fileToModules
+        . Trans.FlatToRaw.fileToFile
+        )

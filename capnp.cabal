@@ -180,27 +180,9 @@ library
 --------------------------------------------------------------------------------
 
 -- code generator plugin
--- executable capnpc-haskell
---     import: shared-opts
---     main-is:              Main.hs
---     other-modules:
---         FrontEnd
---       , Fmt
---       , IR
---       , Backends.Common
---       , Backends.Pure
---       , Backends.Raw
---       , Util
---     hs-source-dirs:       cmd/capnpc-haskell
---     build-depends:
---         capnp
---       , directory                         ^>= 1.3.0
---       , filepath                          ^>= 1.4.1
---       , wl-pprint-text                    ^>= 1.2
-
 executable capnpc-haskell
   import: shared-opts
-  hs-source-dirs:       cmd/cg2
+  hs-source-dirs:       cmd/capnpc-haskell
   main-is: Main.hs
   other-modules:
       IR.Name
