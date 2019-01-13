@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 module Trans.FlatToPure where
 
 import qualified IR.Common as C
@@ -66,11 +67,11 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
         []
-    Flat.Interface{} ->
+    Flat.Interface{ methods } ->
         [ Pure.Interface
             { name = local
             , interfaceId = nodeId
-            , methods = [] -- TODO
+            , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
             }
         ]
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->

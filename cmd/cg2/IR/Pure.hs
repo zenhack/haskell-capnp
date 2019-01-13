@@ -51,6 +51,8 @@ data Decl
         , methods     :: [Method]
         }
 
+-- TODO(cleanup): this same type exists in IR.Flat; it doesn't make sense for
+-- IR.Common, but we should factor this out.
 data Method = Method
     { name       :: Name.UnQ
     , paramType  :: Name.CapnpQ

@@ -288,7 +288,7 @@ declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
 declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
 declToDecls _thisMod P.Constant { value=C.VoidValue } = []
 
-declToDecls thisMod P.Interface { name } =
+declToDecls thisMod P.Interface { name, methods } =
     [ DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
@@ -349,7 +349,33 @@ declToDecls thisMod P.Interface { name } =
         { ctx = [TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]]
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
-        , decls = [] -- TODO
+        , decls = concat
+            [ let newName = Name.localToUnQ $ Name.mkSub name methodName in
+              [ CdValueDecl
+                    newName
+                    (TFn
+                        [ tuName "cap"
+                        , TApp
+                            (tgName ["Server"] "MethodHandler")
+                            [ tuName "m"
+                            , typeToType thisMod $ C.CompositeType $ C.StructType paramType
+                            , typeToType thisMod $ C.CompositeType $ C.StructType resultType
+                            ]
+                        ]
+                    )
+                , CdValueDef DfValue
+                    { name = newName
+                    , params = [PVar "_"]
+                    , value = egName ["Server"] "methodUnimplemented"
+                    }
+                ]
+            | P.Method
+                { name=methodName
+                , paramType
+                , resultType
+                }
+            <- methods
+            ]
         }
     ]
 
