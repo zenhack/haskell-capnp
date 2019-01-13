@@ -166,6 +166,8 @@ declToDecls thisMod P.Data
                             EFApp
                                 (ELName variantName)
                                 [EApp (egName ["Classes"] "decerialize") [euName "raw"]]
+                    P.Record [] ->
+                        EApp (eStd_ "pure") [ELName variantName]
                     P.Record fields ->
                         EFApp
                             (ELName variantName)
@@ -236,6 +238,12 @@ declToDecls thisMod P.Data
                             , type_
                             , inUnion = isUnion
                             }
+                        )
+                    P.Record [] ->
+                        ( PLCtor variantName []
+                        , if isUnion
+                            then setExp
+                            else ePureUnit
                         )
                     P.Record fields ->
                         ( PLRecordWildCard variantName
