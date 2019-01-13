@@ -48,7 +48,7 @@ data Decl
     | Interface Interface
 
 data Interface = IFace
-    { name        :: Name.LocalQ
+    { name        :: Name.CapnpQ
     , interfaceId :: !Word64
     , methods     :: [Method]
     , supers      :: [Interface]

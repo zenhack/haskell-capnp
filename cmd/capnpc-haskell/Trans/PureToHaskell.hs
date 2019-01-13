@@ -70,10 +70,10 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
                 [ ExportGName $ gName (rawModule fileId) name ]
             P.Constant { name, value=C.PtrValue _ _ } ->
                 [ ExportLName name ]
-            P.Interface P.IFace{ name } ->
-                [ ExportLCtors name
-                , ExportLCtors (Name.mkSub name "server_")
-                , ExportLName (Name.unQToLocal $ Name.UnQ $ "export_" <> Name.renderLocalQ name)
+            P.Interface P.IFace{ name=Name.CapnpQ{local} } ->
+                [ ExportLCtors local
+                , ExportLCtors (Name.mkSub local "server_")
+                , ExportLName (Name.unQToLocal $ Name.UnQ $ "export_" <> Name.renderLocalQ local)
                 ]
         | decl <- decls
         ]
@@ -334,7 +334,7 @@ declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
 declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
 declToDecls _thisMod P.Constant { value=C.VoidValue } = []
 
-declToDecls thisMod (P.Interface P.IFace{ name, interfaceId, methods }) =
+declToDecls thisMod (P.Interface P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods }) =
     [ DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True

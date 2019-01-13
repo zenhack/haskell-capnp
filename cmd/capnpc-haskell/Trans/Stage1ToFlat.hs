@@ -102,7 +102,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 }
                     in
                     commonNode : fieldNodes
-                Stage1.NodeInterface { methods } ->
+                Stage1.NodeInterface { methods, supers } ->
                     Flat.Node
                         { name
                         , nodeId
@@ -122,6 +122,8 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                     }
                                 <- methods
                                 ]
+                            , supers =
+                                [ nodeMap M.! nodeId | Stage1.Node{nodeId} <- supers ]
                             }
                         }
                     : concatMap (methodToNodes kidsNS) methods

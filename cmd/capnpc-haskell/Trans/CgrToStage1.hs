@@ -59,9 +59,10 @@ nodesToNodes inMap = outMap
                     , tagOffset = discriminantOffset
                     , fields = map (fieldToField outMap) (V.toList fields)
                     }
-            Schema.Node'interface { methods } ->
+            Schema.Node'interface { methods, superclasses } ->
                 Stage1.NodeInterface
                     { methods = map (methodToMethod outMap) (V.toList methods)
+                    , supers = [ outMap M.! id | Schema.Superclass{id} <- V.toList superclasses ]
                     }
             Schema.Node'const{ type_, value } -> Stage1.NodeConstant $
                 let mismatch = error "ERROR: Constant's type and value do not agree"

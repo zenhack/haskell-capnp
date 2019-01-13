@@ -57,6 +57,7 @@ data Node'
         }
     | Interface
         { methods :: [Method]
+        , supers  :: [Node]
         }
     | Constant
         { value :: Common.Value Node

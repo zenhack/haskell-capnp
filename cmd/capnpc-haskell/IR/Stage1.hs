@@ -42,6 +42,7 @@ data Node'
     | NodeStruct Struct
     | NodeInterface
         { methods :: [Method]
+        , supers  :: [Node]
         }
     | NodeConstant (Common.Value Node)
     | NodeOther
