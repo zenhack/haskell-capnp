@@ -1,6 +1,8 @@
 # 0.4.0.0
 
-* Fix some bugs:
+* RPC support! This should be considered alpha quality for now. The API
+  will likely change substantially.
+* Bug fixes:
   * The value of `defaultLimit` was much larger (8x) than documented or
     intended.
   * Reads on `Handle`s at EOF would cause a call to error.
@@ -11,26 +13,29 @@
     values; this has been addressed.
   * Add some missing type class instances, which could have caused
     generated code not to compile.
-* Beginnings of RPC support; the API will likely change substantially.
-* Some changes to the module hierarchy:
+  * Name collisions with things in the standard library are no longer
+    possible (#58).
+* Reorganization of the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
   * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
-* `createPure` can now be used with any instance of `MonadThrow`, not
-  just `Either SomeException`.
-* `LimitT m` is now an instance of `MonadIO`, provided that `m` is an
-  instance.
-* More type class instances from elsewhere in the library are
-  re-exported via the `Capnp` module.
-* The `IsPtr` type class has been split into `FromPtr` and `ToPtr`. Most
-  user code should not care about this.
-* Generated high-level types no longer have Read instances; interfaces
-  make this problematic.
-* Getters for anonymous unions are now `get_Foo'` instead of
-  `get_Foo'union'`.
-* `newMessage` now accepts an optional size hint.
-* The allocation strategy has changed to reduce unnecessary copying.
-* It is now possible to create messages with a size > 2GiB. Note that
-  individual segments are still limited.
+* Other miscellaneous API Changes:
+  * `createPure` can now be used with any instance of `MonadThrow`, not
+    just `Either SomeException`.
+  * `LimitT m` is now an instance of `MonadIO`, provided that `m` is an
+    instance.
+  * More type class instances from elsewhere in the library are
+    re-exported via the `Capnp` module.
+  * The `IsPtr` type class has been split into `FromPtr` and `ToPtr`. Most
+    user code should not care about this.
+  * Generated high-level types no longer have Read instances; interfaces
+    make this problematic.
+  * Getters for anonymous unions are now `get_Foo'` instead of
+    `get_Foo'union'`.
+  * `newMessage` now accepts an optional size hint.
+* Other improvements directly reflected in the API:
+  * The allocation strategy has changed to reduce unnecessary copying.
+  * It is now possible to create messages with a size > 2GiB. Note that
+    individual segments are still limited.
 
 # 0.3.0.0
 
