@@ -60,18 +60,21 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
         ]
     , modExports = Just $
         [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
-        ++
+        ++ concat
         [ case decl of
             P.Data{typeName} ->
-                ExportLCtors typeName
+                [ ExportLCtors typeName ]
             P.Constant { name, value=C.WordValue _ _ } ->
-                ExportGName $ gName (rawModule fileId) name
+                [ ExportGName $ gName (rawModule fileId) name ]
             P.Constant { name, value=C.VoidValue } ->
-                ExportGName $ gName (rawModule fileId) name
+                [ ExportGName $ gName (rawModule fileId) name ]
             P.Constant { name, value=C.PtrValue _ _ } ->
-                ExportLName name
+                [ ExportLName name ]
             P.Interface { name } ->
-                ExportLCtors name
+                [ ExportLCtors name
+                , ExportLCtors (Name.mkSub name "server_")
+                , ExportLName (Name.unQToLocal $ Name.UnQ $ "export_" <> Name.renderLocalQ name)
+                ]
         | decl <- decls
         ]
     , modImports = concat $
