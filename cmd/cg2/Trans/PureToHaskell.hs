@@ -52,6 +52,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
     , modLangPragmas =
         [ "DeriveGeneric"
         , "DuplicateRecordFields"
+        , "FlexibleContexts"
         , "FlexibleInstances"
         , "RecordWildCards"
         , "MultiParamTypeClasses"
@@ -93,6 +94,8 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
                 [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] }
                 , ImportAs { importAs = "Server", parts = ["Capnp", "Rpc", "Server"] }
                 , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
+                , ImportAs { importAs = "STM", parts = ["Control", "Concurrent", "STM"] }
+                , ImportQual ["Supervisors"]
                 ]
             else
                 [])
@@ -391,6 +394,54 @@ declToDecls thisMod P.Interface { name, interfaceId, methods } =
                 ]
         | (i, P.Method{name=mname}) <- zip [0..] methods
         ]
+    , DcValue
+        { typ = TCtx
+            [TApp (TLName (Name.mkSub name "server_")) [tStd_ "IO", tuName "a"]]
+            (TFn
+                [ tgName ["Supervisors"] "Supervisor"
+                , tuName "a"
+                , TApp (tgName ["STM"] "STM") [TLName name]
+                ]
+            )
+        , def = DfValue
+            { name = Name.UnQ $ "export_" <> Name.renderLocalQ name
+            , params = [PVar "sup_", PVar "server_"]
+            , value = EFApp (ELName name)
+                [ EApp (egName ["Rpc"] "export")
+                    [ euName "sup_"
+                    , ERecord (egName ["Server"] "ServerOps")
+                        [ ( "handleStop"
+                          , ePureUnit
+                          ) -- TODO
+                        , ( "handleCall"
+                          , ELambda [PVar "interfaceId_", PVar "methodId_"] $
+                                ECase (euName "interfaceId_") $
+                                    [ ( PInt (fromIntegral interfaceId)
+                                      , ECase (euName "methodId_") $
+                                            [ ( PInt i
+                                              , EApp
+                                                    (egName ["Server"] "toUntypedHandler")
+                                                    [ EApp (euName (mkMethodName name mname)) [euName "server_"] ]
+                                              )
+                                            | (i, P.Method{name=mname}) <- zip [0..] methods
+                                            ]
+                                            ++
+                                            [ ( PVar "_"
+                                              , egName ["Server"] "methodUnimplemented"
+                                              )
+                                            ]
+                                      )
+                                    -- TODO: superclasses
+                                    , ( PVar "_"
+                                      , egName ["Server"] "methodUnimplemented"
+                                      )
+                                    ]
+                          )
+                        ]
+                    ]
+                ]
+            }
+        }
     ]
 
 

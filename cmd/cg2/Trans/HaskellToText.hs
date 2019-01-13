@@ -190,6 +190,17 @@ instance Format Exp where
         , format ty
         ]
     format (EList es) = PP.list (map format es)
+    format (ELambda params body) = PP.parens $ hcat
+        [ "\\"
+        , hcat (PP.punctuate " " (map format params))
+        , " -> "
+        , format body
+        ]
+    format (ERecord old updates) =
+        format old <> PP.encloseSep "{" "}" ","
+            [ hcat [ format name, " = ", format value ]
+            | (name, value) <- updates
+            ]
 
 instance Format Do where
     format (DoBind var ex) = format var <> " <- " <> format ex

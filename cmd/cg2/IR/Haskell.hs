@@ -171,6 +171,8 @@ data Exp
     | EList [Exp]
     | ECase Exp [(Pattern, Exp)]
     | ETypeAnno Exp Type
+    | ELambda [Pattern] Exp
+    | ERecord Exp [(Name.UnQ, Exp)]
     deriving(Show, Read, Eq)
 
 data Do
