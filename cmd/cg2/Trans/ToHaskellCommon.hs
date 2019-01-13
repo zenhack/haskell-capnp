@@ -87,11 +87,14 @@ idToModule fileId =
     ["Capnp", "Gen", "ById", Name.UnQ $ T.pack $ printf "X%x" fileId]
 
 instance_ :: [Type] -> [T.Text] -> Name.LocalQ -> [Type] -> [InstanceDef] -> Decl
+instance_ ctx [] className tys defs = DcInstance
+    { ctx
+    , typ = TApp (TLName className) tys
+    , defs
+    }
 instance_ ctx classNS className tys defs = DcInstance
     { ctx
-    , typ = TApp
-        (tgName classNS className)
-        tys
+    , typ = TApp (tgName classNS className) tys
     , defs
     }
 

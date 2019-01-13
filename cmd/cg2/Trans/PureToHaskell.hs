@@ -289,7 +289,7 @@ declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
 declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
 declToDecls _thisMod P.Constant { value=C.VoidValue } = []
 
-declToDecls thisMod P.Interface { name, methods } =
+declToDecls thisMod P.Interface { name, interfaceId, methods } =
     [ DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
@@ -351,7 +351,7 @@ declToDecls thisMod P.Interface { name, methods } =
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
         , decls =
-            let mkName methodName = Name.valueName $ Name.mkSub name methodName in
+            let mkName methodName = mkMethodName name methodName in
             CdMinimal [ mkName name | P.Method{name} <- methods ]
             : concat
                 [ [ CdValueDecl
@@ -380,7 +380,22 @@ declToDecls thisMod P.Interface { name, methods } =
                 <- methods
                 ]
         }
+    , instance_ [] [] (Name.mkSub name "server_") [tStd_ "IO", TLName name]
+        [ let methodName = mkMethodName name mname in
+          iValue methodName [PLCtor name [PVar "client"]] $
+            EApp
+                (egName ["Rpc"] "clientMethodHandler")
+                [ EInt $ fromIntegral interfaceId
+                , EInt i
+                , euName "client"
+                ]
+        | (i, P.Method{name=mname}) <- zip [0..] methods
+        ]
     ]
+
+
+mkMethodName :: Name.LocalQ -> Name.UnQ -> Name.UnQ
+mkMethodName typeName methodName = Name.valueName $ Name.mkSub typeName methodName
 
 
 -- | Arguments to 'marshalField'
