@@ -105,6 +105,11 @@ whereBlock xs = vcat
 instance Format ClassDecl where
     format (CdValueDecl name typ) = hcat [ format name, " :: ", format typ ]
     format (CdValueDef def)       = format def
+    format (CdMinimal names) = hcat
+        [ "{-# MINIMAL "
+        , hcat $ PP.punctuate PP.comma (map format names)
+        , " #-}"
+        ]
 
 instance Format InstanceDef where
     format (IdData d)  = format d

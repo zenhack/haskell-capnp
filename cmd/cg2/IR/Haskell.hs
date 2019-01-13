@@ -112,6 +112,8 @@ data DataDecl = Data
 data ClassDecl
     = CdValueDecl Name.UnQ Type
     | CdValueDef ValueDef
+    | CdMinimal [Name.UnQ]
+    -- ^ A MINIMAL pragma.
     deriving(Show, Read, Eq)
 
 data InstanceDef

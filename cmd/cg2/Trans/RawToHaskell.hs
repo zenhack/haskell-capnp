@@ -869,7 +869,7 @@ typeToType thisMod ty msgTy = case ty of
     C.PtrType (C.PtrComposite (C.StructType typeId)) ->
         appV $ nameToType thisMod typeId
     C.PtrType (C.PtrInterface typeId) ->
-        nameToType thisMod typeId
+        appV $ nameToType thisMod typeId
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
         TApp (tStd_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
     C.CompositeType (C.StructType typeId) ->

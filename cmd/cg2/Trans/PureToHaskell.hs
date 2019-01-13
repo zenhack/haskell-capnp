@@ -91,6 +91,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
         : (if usesRpc
             then
                 [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] }
+                , ImportAs { importAs = "Server", parts = ["Capnp", "Rpc", "Server"] }
                 , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
                 ]
             else
@@ -349,33 +350,35 @@ declToDecls thisMod P.Interface { name, methods } =
         { ctx = [TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]]
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
-        , decls = concat
-            [ let newName = Name.localToUnQ $ Name.mkSub name methodName in
-              [ CdValueDecl
-                    newName
-                    (TFn
-                        [ tuName "cap"
-                        , TApp
-                            (tgName ["Server"] "MethodHandler")
-                            [ tuName "m"
-                            , typeToType thisMod $ C.CompositeType $ C.StructType paramType
-                            , typeToType thisMod $ C.CompositeType $ C.StructType resultType
+        , decls =
+            let mkName methodName = Name.valueName $ Name.mkSub name methodName in
+            CdMinimal [ mkName name | P.Method{name} <- methods ]
+            : concat
+                [ [ CdValueDecl
+                        (mkName methodName)
+                        (TFn
+                            [ tuName "cap"
+                            , TApp
+                                (tgName ["Server"] "MethodHandler")
+                                [ tuName "m"
+                                , typeToType thisMod $ C.CompositeType $ C.StructType paramType
+                                , typeToType thisMod $ C.CompositeType $ C.StructType resultType
+                                ]
                             ]
-                        ]
-                    )
-                , CdValueDef DfValue
-                    { name = newName
-                    , params = [PVar "_"]
-                    , value = egName ["Server"] "methodUnimplemented"
+                        )
+                    , CdValueDef DfValue
+                        { name = mkName methodName
+                        , params = [PVar "_"]
+                        , value = egName ["Server"] "methodUnimplemented"
+                        }
+                    ]
+                | P.Method
+                    { name=methodName
+                    , paramType
+                    , resultType
                     }
+                <- methods
                 ]
-            | P.Method
-                { name=methodName
-                , paramType
-                , resultType
-                }
-            <- methods
-            ]
         }
     ]
 
