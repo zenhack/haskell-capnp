@@ -68,10 +68,11 @@ nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union
         -- stuff from the raw module.
         []
     Flat.Interface{ methods } ->
-        [ Pure.Interface
+        [ Pure.Interface Pure.IFace
             { name = local
             , interfaceId = nodeId
             , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
+            , supers = []
             }
         ]
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->

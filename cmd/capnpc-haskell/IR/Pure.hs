@@ -45,11 +45,14 @@ data Decl
         { name  :: Name.LocalQ
         , value :: C.Value Name.CapnpQ
         }
-    | Interface
-        { name        :: Name.LocalQ
-        , interfaceId :: !Word64
-        , methods     :: [Method]
-        }
+    | Interface Interface
+
+data Interface = IFace
+    { name        :: Name.LocalQ
+    , interfaceId :: !Word64
+    , methods     :: [Method]
+    , supers      :: [Interface]
+    }
 
 -- TODO(cleanup): this same type exists in IR.Flat; it doesn't make sense for
 -- IR.Common, but we should factor this out.
