@@ -283,6 +283,17 @@ declToDecls thisMod P.Data
         , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
             [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
             ]
+        ] ++
+        -- Generate instances of Cerialize (Vector (Vector ... t)) up to some reasonable
+        -- nesting level. I(zenhack) can't figure out how to get a general case
+        -- Cerialize (Vector a) => Cerialize (Vector (Vector a)) to type check, so this
+        -- will have to do for now.
+        [ instance_ [] ["Classes"] "Cerialize" [t]
+            [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeBasicVec")
+            ]
+        | t <- take 6 $ drop 2 $ iterate
+                (\t -> TApp (tgName ["V"] "Vector") [t])
+                (TLName typeName)
         ]
     else
         []

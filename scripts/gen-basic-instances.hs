@@ -19,6 +19,7 @@ header = unlines
     , "    , MutListElem(..)"
     , "    , FromPtr(..)"
     , "    , Decerialize(..)"
+    , "    , Cerialize(..)"
     , "    )"
     , ""
     , "import qualified Capnp.Untyped as U"
@@ -47,6 +48,8 @@ genInstance P{..} = concat
     , "instance Decerialize ", typed, " where\n"
     , "    type Cerial msg ", typed, " = ", typed, "\n"
     , "    decerialize val = pure val\n"
+    , "instance Cerialize ", typed, " where\n"
+    , "    cerialize _ val = pure val\n"
     ]
   where
     dataCon = "List" ++ typed

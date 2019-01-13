@@ -23,6 +23,9 @@ module Capnp.Basics.Pure
 
 import Prelude hiding (length)
 
+import Data.Int
+import Data.Word
+
 import Control.Monad       (forM_)
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Text.Encoding  (decodeUtf8', encodeUtf8)
@@ -79,16 +82,33 @@ instance Cerialize Text where
         marshalTextBytes bytes ret
         pure ret
 
-instance Cerialize (V.Vector Text) where
-    cerialize = cerializeBasicVec
-
-instance Cerialize (V.Vector Data) where
-    cerialize = cerializeBasicVec
-
 marshalTextBytes :: Untyped.RWCtx m s => BS.ByteString -> Basics.Text (M.MutMsg s) -> m ()
 marshalTextBytes bytes text = do
     buffer <- Basics.textBuffer text
     marshalInto (Basics.Data buffer) bytes
+
+instance Cerialize (V.Vector Text) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Data) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Text)) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector Data)) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Text))) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector Data))) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Text)))) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Data)))) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Text))))) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Data))))) where cerialize = cerializeBasicVec
+
+instance Cerialize (V.Vector Bool) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Word8) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Word16) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Word32) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Word64) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Int8) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Int16) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Int32) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Int64) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Float) where cerialize = cerializeBasicVec
+instance Cerialize (V.Vector Double) where cerialize = cerializeBasicVec
 
 -- Generic decerialize instances for lists, given that the element type has an instance.
 instance
