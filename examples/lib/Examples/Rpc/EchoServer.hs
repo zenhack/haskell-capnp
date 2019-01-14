@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Examples.EchoServer (main) where
+module Examples.Rpc.EchoServer (main) where
 
 import Network.Simple.TCP (serve)
 

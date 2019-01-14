@@ -6,6 +6,9 @@ This module provides a tutorial on the overall usage of the library. Note that
 it does not aim to provide a thorough introduction to capnproto itself; see
 <https://capnproto.org> for general information.
 
+Each of the example programs described here can also be found in the @examples/@
+subdirectory in the source repository.
+
 -}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 module Capnp.Tutorial (

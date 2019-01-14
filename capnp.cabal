@@ -225,8 +225,8 @@ test-suite tests
       , Instances
       , SchemaGeneration
 
-      , Examples.CalculatorClient
-      , Examples.CalculatorServer
+      , Examples.Rpc.CalculatorClient
+      , Examples.Rpc.CalculatorServer
 
       -- Generated code for examples/calculator.capnp
       , Capnp.Gen.ById.X85150b117366d14b

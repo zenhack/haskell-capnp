@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Examples.CalculatorClient (main) where
+module Examples.Rpc.CalculatorClient (main) where
 
 import Network.Simple.TCP (connect)
 

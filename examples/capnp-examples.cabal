@@ -22,6 +22,7 @@ library
     , data-default ^>=0.7
     , exceptions ^>=0.10
     , vector ^>=0.12
+    , mtl ^>=2.2.2
     , network ^>= 2.8.0
     , network-simple ^>= 0.4
     , supervisors ^>= 0.2
@@ -30,20 +31,28 @@ library
     lib
     gen/lib
   exposed-modules:
-      Examples.EchoClient
-    , Examples.EchoServer
-    , Examples.CalculatorClient
-    , Examples.CalculatorServer
+      Examples.Rpc.EchoClient
+    , Examples.Rpc.EchoServer
+    , Examples.Rpc.CalculatorClient
+    , Examples.Rpc.CalculatorServer
+    , Examples.Serialization.HighLevel.Read
+    , Examples.Serialization.HighLevel.Write
+    , Examples.Serialization.LowLevel.Read
+    , Examples.Serialization.LowLevel.Write
 
     -- Generated code
+    , Capnp.Gen.Addressbook
+    , Capnp.Gen.Addressbook.Pure
     , Capnp.Gen.ById.X85150b117366d14b
     , Capnp.Gen.ById.X85150b117366d14b.Pure
+    , Capnp.Gen.ById.Xcd6db6afb4a0cf5c
+    , Capnp.Gen.ById.Xcd6db6afb4a0cf5c.Pure
     , Capnp.Gen.ById.Xd0a87f36fa0182f5
     , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
     , Capnp.Gen.Calculator
     , Capnp.Gen.Calculator.Pure
-    , Capnp.Gen.Echo.Pure
     , Capnp.Gen.Echo
+    , Capnp.Gen.Echo.Pure
   ghc-options:
     -Wall
     -Wno-name-shadowing
