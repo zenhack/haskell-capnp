@@ -70,8 +70,8 @@ set_Node'displayName (Node'newtype_ struct) value = (do
     )
 has_Node'displayName :: ((Untyped.ReadCtx m msg)) => (Node msg) -> (m Std_.Bool)
 has_Node'displayName (Node'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Node'displayName :: ((Untyped.RWCtx m s)) => (Node (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Node'displayName struct len = (do
+new_Node'displayName :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Node'displayName len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Node'displayName struct result)
     (Std_.pure result)
@@ -96,8 +96,8 @@ set_Node'nestedNodes (Node'newtype_ struct) value = (do
     )
 has_Node'nestedNodes :: ((Untyped.ReadCtx m msg)) => (Node msg) -> (m Std_.Bool)
 has_Node'nestedNodes (Node'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_Node'nestedNodes :: ((Untyped.RWCtx m s)) => (Node (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Node'NestedNode (Message.MutMsg s))))
-new_Node'nestedNodes struct len = (do
+new_Node'nestedNodes :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Node'NestedNode (Message.MutMsg s))))
+new_Node'nestedNodes len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'nestedNodes struct result)
     (Std_.pure result)
@@ -114,8 +114,8 @@ set_Node'annotations (Node'newtype_ struct) value = (do
     )
 has_Node'annotations :: ((Untyped.ReadCtx m msg)) => (Node msg) -> (m Std_.Bool)
 has_Node'annotations (Node'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 2 struct))
-new_Node'annotations :: ((Untyped.RWCtx m s)) => (Node (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
-new_Node'annotations struct len = (do
+new_Node'annotations :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
+new_Node'annotations len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'annotations struct result)
     (Std_.pure result)
@@ -132,8 +132,8 @@ set_Node'parameters (Node'newtype_ struct) value = (do
     )
 has_Node'parameters :: ((Untyped.ReadCtx m msg)) => (Node msg) -> (m Std_.Bool)
 has_Node'parameters (Node'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 5 struct))
-new_Node'parameters :: ((Untyped.RWCtx m s)) => (Node (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Node'Parameter (Message.MutMsg s))))
-new_Node'parameters struct len = (do
+new_Node'parameters :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Node'Parameter (Message.MutMsg s))))
+new_Node'parameters len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'parameters struct result)
     (Std_.pure result)
@@ -252,8 +252,8 @@ set_Node'struct'fields (Node'struct'newtype_ struct) value = (do
     )
 has_Node'struct'fields :: ((Untyped.ReadCtx m msg)) => (Node'struct msg) -> (m Std_.Bool)
 has_Node'struct'fields (Node'struct'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 3 struct))
-new_Node'struct'fields :: ((Untyped.RWCtx m s)) => (Node'struct (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Field (Message.MutMsg s))))
-new_Node'struct'fields struct len = (do
+new_Node'struct'fields :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'struct (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Field (Message.MutMsg s))))
+new_Node'struct'fields len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'struct'fields struct result)
     (Std_.pure result)
@@ -283,8 +283,8 @@ set_Node'enum'enumerants (Node'enum'newtype_ struct) value = (do
     )
 has_Node'enum'enumerants :: ((Untyped.ReadCtx m msg)) => (Node'enum msg) -> (m Std_.Bool)
 has_Node'enum'enumerants (Node'enum'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 3 struct))
-new_Node'enum'enumerants :: ((Untyped.RWCtx m s)) => (Node'enum (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Enumerant (Message.MutMsg s))))
-new_Node'enum'enumerants struct len = (do
+new_Node'enum'enumerants :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'enum (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Enumerant (Message.MutMsg s))))
+new_Node'enum'enumerants len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'enum'enumerants struct result)
     (Std_.pure result)
@@ -314,8 +314,8 @@ set_Node'interface'methods (Node'interface'newtype_ struct) value = (do
     )
 has_Node'interface'methods :: ((Untyped.ReadCtx m msg)) => (Node'interface msg) -> (m Std_.Bool)
 has_Node'interface'methods (Node'interface'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 3 struct))
-new_Node'interface'methods :: ((Untyped.RWCtx m s)) => (Node'interface (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Method (Message.MutMsg s))))
-new_Node'interface'methods struct len = (do
+new_Node'interface'methods :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'interface (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Method (Message.MutMsg s))))
+new_Node'interface'methods len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'interface'methods struct result)
     (Std_.pure result)
@@ -332,8 +332,8 @@ set_Node'interface'superclasses (Node'interface'newtype_ struct) value = (do
     )
 has_Node'interface'superclasses :: ((Untyped.ReadCtx m msg)) => (Node'interface msg) -> (m Std_.Bool)
 has_Node'interface'superclasses (Node'interface'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 4 struct))
-new_Node'interface'superclasses :: ((Untyped.RWCtx m s)) => (Node'interface (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Superclass (Message.MutMsg s))))
-new_Node'interface'superclasses struct len = (do
+new_Node'interface'superclasses :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'interface (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Superclass (Message.MutMsg s))))
+new_Node'interface'superclasses len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Node'interface'superclasses struct result)
     (Std_.pure result)
@@ -510,8 +510,8 @@ set_Node'Parameter'name (Node'Parameter'newtype_ struct) value = (do
     )
 has_Node'Parameter'name :: ((Untyped.ReadCtx m msg)) => (Node'Parameter msg) -> (m Std_.Bool)
 has_Node'Parameter'name (Node'Parameter'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Node'Parameter'name :: ((Untyped.RWCtx m s)) => (Node'Parameter (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Node'Parameter'name struct len = (do
+new_Node'Parameter'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'Parameter (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Node'Parameter'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Node'Parameter'name struct result)
     (Std_.pure result)
@@ -560,8 +560,8 @@ set_Node'NestedNode'name (Node'NestedNode'newtype_ struct) value = (do
     )
 has_Node'NestedNode'name :: ((Untyped.ReadCtx m msg)) => (Node'NestedNode msg) -> (m Std_.Bool)
 has_Node'NestedNode'name (Node'NestedNode'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Node'NestedNode'name :: ((Untyped.RWCtx m s)) => (Node'NestedNode (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Node'NestedNode'name struct len = (do
+new_Node'NestedNode'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'NestedNode (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Node'NestedNode'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Node'NestedNode'name struct result)
     (Std_.pure result)
@@ -614,8 +614,8 @@ set_Field'name (Field'newtype_ struct) value = (do
     )
 has_Field'name :: ((Untyped.ReadCtx m msg)) => (Field msg) -> (m Std_.Bool)
 has_Field'name (Field'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Field'name :: ((Untyped.RWCtx m s)) => (Field (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Field'name struct len = (do
+new_Field'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (Field (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Field'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Field'name struct result)
     (Std_.pure result)
@@ -636,8 +636,8 @@ set_Field'annotations (Field'newtype_ struct) value = (do
     )
 has_Field'annotations :: ((Untyped.ReadCtx m msg)) => (Field msg) -> (m Std_.Bool)
 has_Field'annotations (Field'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_Field'annotations :: ((Untyped.RWCtx m s)) => (Field (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
-new_Field'annotations struct len = (do
+new_Field'annotations :: ((Untyped.RWCtx m s)) => Std_.Int -> (Field (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
+new_Field'annotations len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Field'annotations struct result)
     (Std_.pure result)
@@ -839,8 +839,8 @@ set_Enumerant'name (Enumerant'newtype_ struct) value = (do
     )
 has_Enumerant'name :: ((Untyped.ReadCtx m msg)) => (Enumerant msg) -> (m Std_.Bool)
 has_Enumerant'name (Enumerant'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Enumerant'name :: ((Untyped.RWCtx m s)) => (Enumerant (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Enumerant'name struct len = (do
+new_Enumerant'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (Enumerant (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Enumerant'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Enumerant'name struct result)
     (Std_.pure result)
@@ -861,8 +861,8 @@ set_Enumerant'annotations (Enumerant'newtype_ struct) value = (do
     )
 has_Enumerant'annotations :: ((Untyped.ReadCtx m msg)) => (Enumerant msg) -> (m Std_.Bool)
 has_Enumerant'annotations (Enumerant'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_Enumerant'annotations :: ((Untyped.RWCtx m s)) => (Enumerant (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
-new_Enumerant'annotations struct len = (do
+new_Enumerant'annotations :: ((Untyped.RWCtx m s)) => Std_.Int -> (Enumerant (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
+new_Enumerant'annotations len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Enumerant'annotations struct result)
     (Std_.pure result)
@@ -965,8 +965,8 @@ set_Method'name (Method'newtype_ struct) value = (do
     )
 has_Method'name :: ((Untyped.ReadCtx m msg)) => (Method msg) -> (m Std_.Bool)
 has_Method'name (Method'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Method'name :: ((Untyped.RWCtx m s)) => (Method (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Method'name struct len = (do
+new_Method'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (Method (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Method'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Method'name struct result)
     (Std_.pure result)
@@ -995,8 +995,8 @@ set_Method'annotations (Method'newtype_ struct) value = (do
     )
 has_Method'annotations :: ((Untyped.ReadCtx m msg)) => (Method msg) -> (m Std_.Bool)
 has_Method'annotations (Method'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_Method'annotations :: ((Untyped.RWCtx m s)) => (Method (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
-new_Method'annotations struct len = (do
+new_Method'annotations :: ((Untyped.RWCtx m s)) => Std_.Int -> (Method (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Annotation (Message.MutMsg s))))
+new_Method'annotations len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Method'annotations struct result)
     (Std_.pure result)
@@ -1049,8 +1049,8 @@ set_Method'implicitParameters (Method'newtype_ struct) value = (do
     )
 has_Method'implicitParameters :: ((Untyped.ReadCtx m msg)) => (Method msg) -> (m Std_.Bool)
 has_Method'implicitParameters (Method'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 4 struct))
-new_Method'implicitParameters :: ((Untyped.RWCtx m s)) => (Method (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Node'Parameter (Message.MutMsg s))))
-new_Method'implicitParameters struct len = (do
+new_Method'implicitParameters :: ((Untyped.RWCtx m s)) => Std_.Int -> (Method (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Node'Parameter (Message.MutMsg s))))
+new_Method'implicitParameters len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Method'implicitParameters struct result)
     (Std_.pure result)
@@ -1578,8 +1578,8 @@ set_Brand'scopes (Brand'newtype_ struct) value = (do
     )
 has_Brand'scopes :: ((Untyped.ReadCtx m msg)) => (Brand msg) -> (m Std_.Bool)
 has_Brand'scopes (Brand'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Brand'scopes :: ((Untyped.RWCtx m s)) => (Brand (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Brand'Scope (Message.MutMsg s))))
-new_Brand'scopes struct len = (do
+new_Brand'scopes :: ((Untyped.RWCtx m s)) => Std_.Int -> (Brand (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Brand'Scope (Message.MutMsg s))))
+new_Brand'scopes len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Brand'scopes struct result)
     (Std_.pure result)
@@ -2165,8 +2165,8 @@ set_CodeGeneratorRequest'nodes (CodeGeneratorRequest'newtype_ struct) value = (d
     )
 has_CodeGeneratorRequest'nodes :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest msg) -> (m Std_.Bool)
 has_CodeGeneratorRequest'nodes (CodeGeneratorRequest'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_CodeGeneratorRequest'nodes :: ((Untyped.RWCtx m s)) => (CodeGeneratorRequest (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (Node (Message.MutMsg s))))
-new_CodeGeneratorRequest'nodes struct len = (do
+new_CodeGeneratorRequest'nodes :: ((Untyped.RWCtx m s)) => Std_.Int -> (CodeGeneratorRequest (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Node (Message.MutMsg s))))
+new_CodeGeneratorRequest'nodes len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_CodeGeneratorRequest'nodes struct result)
     (Std_.pure result)
@@ -2183,8 +2183,8 @@ set_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest'newtype_ struct) v
     )
 has_CodeGeneratorRequest'requestedFiles :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest msg) -> (m Std_.Bool)
 has_CodeGeneratorRequest'requestedFiles (CodeGeneratorRequest'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_CodeGeneratorRequest'requestedFiles :: ((Untyped.RWCtx m s)) => (CodeGeneratorRequest (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (CodeGeneratorRequest'RequestedFile (Message.MutMsg s))))
-new_CodeGeneratorRequest'requestedFiles struct len = (do
+new_CodeGeneratorRequest'requestedFiles :: ((Untyped.RWCtx m s)) => Std_.Int -> (CodeGeneratorRequest (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (CodeGeneratorRequest'RequestedFile (Message.MutMsg s))))
+new_CodeGeneratorRequest'requestedFiles len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_CodeGeneratorRequest'requestedFiles struct result)
     (Std_.pure result)
@@ -2255,8 +2255,8 @@ set_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedF
     )
 has_CodeGeneratorRequest'RequestedFile'filename :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest'RequestedFile msg) -> (m Std_.Bool)
 has_CodeGeneratorRequest'RequestedFile'filename (CodeGeneratorRequest'RequestedFile'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_CodeGeneratorRequest'RequestedFile'filename :: ((Untyped.RWCtx m s)) => (CodeGeneratorRequest'RequestedFile (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_CodeGeneratorRequest'RequestedFile'filename struct len = (do
+new_CodeGeneratorRequest'RequestedFile'filename :: ((Untyped.RWCtx m s)) => Std_.Int -> (CodeGeneratorRequest'RequestedFile (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_CodeGeneratorRequest'RequestedFile'filename len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_CodeGeneratorRequest'RequestedFile'filename struct result)
     (Std_.pure result)
@@ -2273,8 +2273,8 @@ set_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFi
     )
 has_CodeGeneratorRequest'RequestedFile'imports :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest'RequestedFile msg) -> (m Std_.Bool)
 has_CodeGeneratorRequest'RequestedFile'imports (CodeGeneratorRequest'RequestedFile'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_CodeGeneratorRequest'RequestedFile'imports :: ((Untyped.RWCtx m s)) => (CodeGeneratorRequest'RequestedFile (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (Message.MutMsg s))))
-new_CodeGeneratorRequest'RequestedFile'imports struct len = (do
+new_CodeGeneratorRequest'RequestedFile'imports :: ((Untyped.RWCtx m s)) => Std_.Int -> (CodeGeneratorRequest'RequestedFile (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (CodeGeneratorRequest'RequestedFile'Import (Message.MutMsg s))))
+new_CodeGeneratorRequest'RequestedFile'imports len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_CodeGeneratorRequest'RequestedFile'imports struct result)
     (Std_.pure result)
@@ -2327,8 +2327,8 @@ set_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'Request
     )
 has_CodeGeneratorRequest'RequestedFile'Import'name :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest'RequestedFile'Import msg) -> (m Std_.Bool)
 has_CodeGeneratorRequest'RequestedFile'Import'name (CodeGeneratorRequest'RequestedFile'Import'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_CodeGeneratorRequest'RequestedFile'Import'name :: ((Untyped.RWCtx m s)) => (CodeGeneratorRequest'RequestedFile'Import (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_CodeGeneratorRequest'RequestedFile'Import'name struct len = (do
+new_CodeGeneratorRequest'RequestedFile'Import'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (CodeGeneratorRequest'RequestedFile'Import (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_CodeGeneratorRequest'RequestedFile'Import'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_CodeGeneratorRequest'RequestedFile'Import'name struct result)
     (Std_.pure result)

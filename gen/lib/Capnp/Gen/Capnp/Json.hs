@@ -191,8 +191,8 @@ set_JsonValue'Field'name (JsonValue'Field'newtype_ struct) value = (do
     )
 has_JsonValue'Field'name :: ((Untyped.ReadCtx m msg)) => (JsonValue'Field msg) -> (m Std_.Bool)
 has_JsonValue'Field'name (JsonValue'Field'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_JsonValue'Field'name :: ((Untyped.RWCtx m s)) => (JsonValue'Field (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_JsonValue'Field'name struct len = (do
+new_JsonValue'Field'name :: ((Untyped.RWCtx m s)) => Std_.Int -> (JsonValue'Field (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_JsonValue'Field'name len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_JsonValue'Field'name struct result)
     (Std_.pure result)
@@ -259,8 +259,8 @@ set_JsonValue'Call'function (JsonValue'Call'newtype_ struct) value = (do
     )
 has_JsonValue'Call'function :: ((Untyped.ReadCtx m msg)) => (JsonValue'Call msg) -> (m Std_.Bool)
 has_JsonValue'Call'function (JsonValue'Call'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_JsonValue'Call'function :: ((Untyped.RWCtx m s)) => (JsonValue'Call (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_JsonValue'Call'function struct len = (do
+new_JsonValue'Call'function :: ((Untyped.RWCtx m s)) => Std_.Int -> (JsonValue'Call (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_JsonValue'Call'function len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_JsonValue'Call'function struct result)
     (Std_.pure result)
@@ -277,8 +277,8 @@ set_JsonValue'Call'params (JsonValue'Call'newtype_ struct) value = (do
     )
 has_JsonValue'Call'params :: ((Untyped.ReadCtx m msg)) => (JsonValue'Call msg) -> (m Std_.Bool)
 has_JsonValue'Call'params (JsonValue'Call'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_JsonValue'Call'params :: ((Untyped.RWCtx m s)) => (JsonValue'Call (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (JsonValue (Message.MutMsg s))))
-new_JsonValue'Call'params struct len = (do
+new_JsonValue'Call'params :: ((Untyped.RWCtx m s)) => Std_.Int -> (JsonValue'Call (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (JsonValue (Message.MutMsg s))))
+new_JsonValue'Call'params len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_JsonValue'Call'params struct result)
     (Std_.pure result)

@@ -1146,8 +1146,8 @@ set_Payload'capTable (Payload'newtype_ struct) value = (do
     )
 has_Payload'capTable :: ((Untyped.ReadCtx m msg)) => (Payload msg) -> (m Std_.Bool)
 has_Payload'capTable (Payload'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
-new_Payload'capTable :: ((Untyped.RWCtx m s)) => (Payload (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (CapDescriptor (Message.MutMsg s))))
-new_Payload'capTable struct len = (do
+new_Payload'capTable :: ((Untyped.RWCtx m s)) => Std_.Int -> (Payload (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (CapDescriptor (Message.MutMsg s))))
+new_Payload'capTable len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_Payload'capTable struct result)
     (Std_.pure result)
@@ -1305,8 +1305,8 @@ set_PromisedAnswer'transform (PromisedAnswer'newtype_ struct) value = (do
     )
 has_PromisedAnswer'transform :: ((Untyped.ReadCtx m msg)) => (PromisedAnswer msg) -> (m Std_.Bool)
 has_PromisedAnswer'transform (PromisedAnswer'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_PromisedAnswer'transform :: ((Untyped.RWCtx m s)) => (PromisedAnswer (Message.MutMsg s)) -> Std_.Int -> (m (Basics.List (Message.MutMsg s) (PromisedAnswer'Op (Message.MutMsg s))))
-new_PromisedAnswer'transform struct len = (do
+new_PromisedAnswer'transform :: ((Untyped.RWCtx m s)) => Std_.Int -> (PromisedAnswer (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (PromisedAnswer'Op (Message.MutMsg s))))
+new_PromisedAnswer'transform len struct = (do
     result <- (Classes.newList (Untyped.message struct) len)
     (set_PromisedAnswer'transform struct result)
     (Std_.pure result)
@@ -1464,8 +1464,8 @@ set_Exception'reason (Exception'newtype_ struct) value = (do
     )
 has_Exception'reason :: ((Untyped.ReadCtx m msg)) => (Exception msg) -> (m Std_.Bool)
 has_Exception'reason (Exception'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
-new_Exception'reason :: ((Untyped.RWCtx m s)) => (Exception (Message.MutMsg s)) -> Std_.Int -> (m (Basics.Text (Message.MutMsg s)))
-new_Exception'reason struct len = (do
+new_Exception'reason :: ((Untyped.RWCtx m s)) => Std_.Int -> (Exception (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Exception'reason len struct = (do
     result <- (Basics.newText (Untyped.message struct) len)
     (set_Exception'reason struct result)
     (Std_.pure result)

@@ -625,21 +625,20 @@ declToDecls thisMod Raw.NewFn{fieldName, containerType, fieldLocType, newFnType}
         { typ = TCtx
             [rwCtx "m" "s"]
             (TFn $ concat
-                [ [TApp (TLName containerType) [tMutMsg]]
-                , case newFnType of
+                [ case newFnType of
                     -- length
                     Raw.NewStruct -> []
                     _             -> [tStd_ "Int"]
+                , [TApp (TLName containerType) [tMutMsg]]
                 , [TApp (TVar "m") [fieldType]]
                 ]
             )
         , def = DfValue
             { name = Name.newFnName fieldName
             , params =
-                PVar "struct"
-                : case newFnType of
-                    Raw.NewStruct -> []
-                    _             -> [PVar "len"]
+                case newFnType of
+                    Raw.NewStruct -> [PVar "struct"]
+                    _             -> [PVar "len", PVar "struct"]
             , value = EDo
                 [ DoBind "result" $
                     let message = EApp (egName ["Untyped"] "message") [ELName "struct"]
