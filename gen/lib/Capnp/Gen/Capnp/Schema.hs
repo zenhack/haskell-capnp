@@ -171,8 +171,8 @@ instance (Classes.FromStruct msg (Node' msg)) where
         )
 get_Node' :: ((Untyped.ReadCtx m msg)) => (Node msg) -> (m (Node' msg))
 get_Node' (Node'newtype_ struct) = (Classes.fromStruct struct)
-set_Node'file :: ((Untyped.RWCtx m s)) => (Node (Message.MutMsg s)) -> () -> (m ())
-set_Node'file (Node'newtype_ struct) value = (do
+set_Node'file :: ((Untyped.RWCtx m s)) => (Node (Message.MutMsg s)) -> (m ())
+set_Node'file (Node'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 1 32 0)
     (Std_.pure ())
     )
@@ -781,8 +781,8 @@ instance (Classes.FromStruct msg (Field'ordinal' msg)) where
         )
 get_Field'ordinal' :: ((Untyped.ReadCtx m msg)) => (Field'ordinal msg) -> (m (Field'ordinal' msg))
 get_Field'ordinal' (Field'ordinal'newtype_ struct) = (Classes.fromStruct struct)
-set_Field'ordinal'implicit :: ((Untyped.RWCtx m s)) => (Field'ordinal (Message.MutMsg s)) -> () -> (m ())
-set_Field'ordinal'implicit (Field'ordinal'newtype_ struct) value = (do
+set_Field'ordinal'implicit :: ((Untyped.RWCtx m s)) => (Field'ordinal (Message.MutMsg s)) -> (m ())
+set_Field'ordinal'implicit (Field'ordinal'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 1 16 0)
     (Std_.pure ())
     )
@@ -1155,73 +1155,73 @@ instance (Classes.FromStruct msg (Type' msg)) where
         )
 get_Type' :: ((Untyped.ReadCtx m msg)) => (Type msg) -> (m (Type' msg))
 get_Type' (Type'newtype_ struct) = (Classes.fromStruct struct)
-set_Type'void :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'void (Type'newtype_ struct) value = (do
+set_Type'void :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'void (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'bool :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'bool (Type'newtype_ struct) value = (do
+set_Type'bool :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'bool (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (1 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'int8 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'int8 (Type'newtype_ struct) value = (do
+set_Type'int8 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'int8 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (2 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'int16 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'int16 (Type'newtype_ struct) value = (do
+set_Type'int16 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'int16 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (3 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'int32 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'int32 (Type'newtype_ struct) value = (do
+set_Type'int32 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'int32 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (4 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'int64 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'int64 (Type'newtype_ struct) value = (do
+set_Type'int64 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'int64 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (5 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'uint8 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'uint8 (Type'newtype_ struct) value = (do
+set_Type'uint8 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'uint8 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (6 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'uint16 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'uint16 (Type'newtype_ struct) value = (do
+set_Type'uint16 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'uint16 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (7 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'uint32 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'uint32 (Type'newtype_ struct) value = (do
+set_Type'uint32 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'uint32 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (8 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'uint64 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'uint64 (Type'newtype_ struct) value = (do
+set_Type'uint64 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'uint64 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (9 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'float32 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'float32 (Type'newtype_ struct) value = (do
+set_Type'float32 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'float32 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (10 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'float64 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'float64 (Type'newtype_ struct) value = (do
+set_Type'float64 :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'float64 (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (11 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'text :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'text (Type'newtype_ struct) value = (do
+set_Type'text :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'text (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (12 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
-set_Type'data_ :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> () -> (m ())
-set_Type'data_ (Type'newtype_ struct) value = (do
+set_Type'data_ :: ((Untyped.RWCtx m s)) => (Type (Message.MutMsg s)) -> (m ())
+set_Type'data_ (Type'newtype_ struct) = (do
     (GenHelpers.setWordField struct (13 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
@@ -1474,23 +1474,23 @@ instance (Classes.FromStruct msg (Type'anyPointer'unconstrained' msg)) where
         )
 get_Type'anyPointer'unconstrained' :: ((Untyped.ReadCtx m msg)) => (Type'anyPointer'unconstrained msg) -> (m (Type'anyPointer'unconstrained' msg))
 get_Type'anyPointer'unconstrained' (Type'anyPointer'unconstrained'newtype_ struct) = (Classes.fromStruct struct)
-set_Type'anyPointer'unconstrained'anyKind :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> () -> (m ())
-set_Type'anyPointer'unconstrained'anyKind (Type'anyPointer'unconstrained'newtype_ struct) value = (do
+set_Type'anyPointer'unconstrained'anyKind :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> (m ())
+set_Type'anyPointer'unconstrained'anyKind (Type'anyPointer'unconstrained'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 1 16 0)
     (Std_.pure ())
     )
-set_Type'anyPointer'unconstrained'struct :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> () -> (m ())
-set_Type'anyPointer'unconstrained'struct (Type'anyPointer'unconstrained'newtype_ struct) value = (do
+set_Type'anyPointer'unconstrained'struct :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> (m ())
+set_Type'anyPointer'unconstrained'struct (Type'anyPointer'unconstrained'newtype_ struct) = (do
     (GenHelpers.setWordField struct (1 :: Std_.Word16) 1 16 0)
     (Std_.pure ())
     )
-set_Type'anyPointer'unconstrained'list :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> () -> (m ())
-set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained'newtype_ struct) value = (do
+set_Type'anyPointer'unconstrained'list :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> (m ())
+set_Type'anyPointer'unconstrained'list (Type'anyPointer'unconstrained'newtype_ struct) = (do
     (GenHelpers.setWordField struct (2 :: Std_.Word16) 1 16 0)
     (Std_.pure ())
     )
-set_Type'anyPointer'unconstrained'capability :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> () -> (m ())
-set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained'newtype_ struct) value = (do
+set_Type'anyPointer'unconstrained'capability :: ((Untyped.RWCtx m s)) => (Type'anyPointer'unconstrained (Message.MutMsg s)) -> (m ())
+set_Type'anyPointer'unconstrained'capability (Type'anyPointer'unconstrained'newtype_ struct) = (do
     (GenHelpers.setWordField struct (3 :: Std_.Word16) 1 16 0)
     (Std_.pure ())
     )
@@ -1648,8 +1648,8 @@ set_Brand'Scope'bind (Brand'Scope'newtype_ struct) value = (do
         (Untyped.setPtr ptr 0 struct)
         )
     )
-set_Brand'Scope'inherit :: ((Untyped.RWCtx m s)) => (Brand'Scope (Message.MutMsg s)) -> () -> (m ())
-set_Brand'Scope'inherit (Brand'Scope'newtype_ struct) value = (do
+set_Brand'Scope'inherit :: ((Untyped.RWCtx m s)) => (Brand'Scope (Message.MutMsg s)) -> (m ())
+set_Brand'Scope'inherit (Brand'Scope'newtype_ struct) = (do
     (GenHelpers.setWordField struct (1 :: Std_.Word16) 1 0 0)
     (Std_.pure ())
     )
@@ -1707,8 +1707,8 @@ instance (Classes.FromStruct msg (Brand'Binding' msg)) where
         )
 get_Brand'Binding' :: ((Untyped.ReadCtx m msg)) => (Brand'Binding msg) -> (m (Brand'Binding' msg))
 get_Brand'Binding' (Brand'Binding'newtype_ struct) = (Classes.fromStruct struct)
-set_Brand'Binding'unbound :: ((Untyped.RWCtx m s)) => (Brand'Binding (Message.MutMsg s)) -> () -> (m ())
-set_Brand'Binding'unbound (Brand'Binding'newtype_ struct) value = (do
+set_Brand'Binding'unbound :: ((Untyped.RWCtx m s)) => (Brand'Binding (Message.MutMsg s)) -> (m ())
+set_Brand'Binding'unbound (Brand'Binding'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
@@ -1837,8 +1837,8 @@ instance (Classes.FromStruct msg (Value' msg)) where
         )
 get_Value' :: ((Untyped.ReadCtx m msg)) => (Value msg) -> (m (Value' msg))
 get_Value' (Value'newtype_ struct) = (Classes.fromStruct struct)
-set_Value'void :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> () -> (m ())
-set_Value'void (Value'newtype_ struct) value = (do
+set_Value'void :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (m ())
+set_Value'void (Value'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
@@ -1934,8 +1934,8 @@ set_Value'struct (Value'newtype_ struct) value = (do
         (Untyped.setPtr ptr 0 struct)
         )
     )
-set_Value'interface :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> () -> (m ())
-set_Value'interface (Value'newtype_ struct) value = (do
+set_Value'interface :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (m ())
+set_Value'interface (Value'newtype_ struct) = (do
     (GenHelpers.setWordField struct (17 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )

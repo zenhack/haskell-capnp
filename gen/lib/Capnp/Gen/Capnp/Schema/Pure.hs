@@ -197,7 +197,7 @@ instance (Classes.Decerialize Node') where
 instance (Classes.Marshal Node') where
     marshalInto raw_ value_ = case value_ of
         (Node'file) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'file raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'file raw_)
         Node'struct{..} ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'struct raw_)
@@ -454,7 +454,7 @@ instance (Classes.Decerialize Field'ordinal) where
 instance (Classes.Marshal Field'ordinal) where
     marshalInto raw_ value_ = case value_ of
         (Field'ordinal'implicit) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw_)
         (Field'ordinal'explicit arg_) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'ordinal'explicit raw_ arg_)
         (Field'ordinal'unknown' tag) ->
@@ -681,33 +681,33 @@ instance (Classes.Decerialize Type) where
 instance (Classes.Marshal Type) where
     marshalInto raw_ value_ = case value_ of
         (Type'void) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'void raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'void raw_)
         (Type'bool) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'bool raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'bool raw_)
         (Type'int8) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int8 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int8 raw_)
         (Type'int16) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int16 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int16 raw_)
         (Type'int32) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int32 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int32 raw_)
         (Type'int64) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int64 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'int64 raw_)
         (Type'uint8) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint8 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint8 raw_)
         (Type'uint16) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint16 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint16 raw_)
         (Type'uint32) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint32 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint32 raw_)
         (Type'uint64) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint64 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'uint64 raw_)
         (Type'float32) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'float32 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'float32 raw_)
         (Type'float64) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'float64 raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'float64 raw_)
         (Type'text) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'text raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'text raw_)
         (Type'data_) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'data_ raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'data_ raw_)
         Type'list{..} ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'list raw_)
@@ -841,13 +841,13 @@ instance (Classes.Decerialize Type'anyPointer'unconstrained) where
 instance (Classes.Marshal Type'anyPointer'unconstrained) where
     marshalInto raw_ value_ = case value_ of
         (Type'anyPointer'unconstrained'anyKind) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'anyKind raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'anyKind raw_)
         (Type'anyPointer'unconstrained'struct) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'struct raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'struct raw_)
         (Type'anyPointer'unconstrained'list) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'list raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'list raw_)
         (Type'anyPointer'unconstrained'capability) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw_)
         (Type'anyPointer'unconstrained'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'unknown' raw_ tag)
 data Brand 
@@ -953,7 +953,7 @@ instance (Classes.Marshal Brand'Scope') where
         (Brand'Scope'bind arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Scope'bind raw_))
         (Brand'Scope'inherit) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Scope'inherit raw_)
         (Brand'Scope'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Scope'unknown' raw_ tag)
 data Brand'Binding 
@@ -982,7 +982,7 @@ instance (Classes.Decerialize Brand'Binding) where
 instance (Classes.Marshal Brand'Binding) where
     marshalInto raw_ value_ = case value_ of
         (Brand'Binding'unbound) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Binding'unbound raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Binding'unbound raw_)
         (Brand'Binding'type_ arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Binding'type_ raw_))
         (Brand'Binding'unknown' tag) ->
@@ -1079,7 +1079,7 @@ instance (Classes.Decerialize Value) where
 instance (Classes.Marshal Value) where
     marshalInto raw_ value_ = case value_ of
         (Value'void) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'void raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'void raw_)
         (Value'bool arg_) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'bool raw_ arg_)
         (Value'int8 arg_) ->
@@ -1113,7 +1113,7 @@ instance (Classes.Marshal Value) where
         (Value'struct arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'struct raw_))
         (Value'interface) ->
-            ((Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'interface raw_) ())
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'interface raw_)
         (Value'anyPointer arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'anyPointer raw_))
         (Value'unknown' tag) ->

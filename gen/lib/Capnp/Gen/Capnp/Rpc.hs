@@ -433,13 +433,13 @@ instance (Classes.FromStruct msg (Call'sendResultsTo' msg)) where
         )
 get_Call'sendResultsTo' :: ((Untyped.ReadCtx m msg)) => (Call'sendResultsTo msg) -> (m (Call'sendResultsTo' msg))
 get_Call'sendResultsTo' (Call'sendResultsTo'newtype_ struct) = (Classes.fromStruct struct)
-set_Call'sendResultsTo'caller :: ((Untyped.RWCtx m s)) => (Call'sendResultsTo (Message.MutMsg s)) -> () -> (m ())
-set_Call'sendResultsTo'caller (Call'sendResultsTo'newtype_ struct) value = (do
+set_Call'sendResultsTo'caller :: ((Untyped.RWCtx m s)) => (Call'sendResultsTo (Message.MutMsg s)) -> (m ())
+set_Call'sendResultsTo'caller (Call'sendResultsTo'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 48 0)
     (Std_.pure ())
     )
-set_Call'sendResultsTo'yourself :: ((Untyped.RWCtx m s)) => (Call'sendResultsTo (Message.MutMsg s)) -> () -> (m ())
-set_Call'sendResultsTo'yourself (Call'sendResultsTo'newtype_ struct) value = (do
+set_Call'sendResultsTo'yourself :: ((Untyped.RWCtx m s)) => (Call'sendResultsTo (Message.MutMsg s)) -> (m ())
+set_Call'sendResultsTo'yourself (Call'sendResultsTo'newtype_ struct) = (do
     (GenHelpers.setWordField struct (1 :: Std_.Word16) 0 48 0)
     (Std_.pure ())
     )
@@ -547,13 +547,13 @@ set_Return'exception (Return'newtype_ struct) value = (do
         (Untyped.setPtr ptr 0 struct)
         )
     )
-set_Return'canceled :: ((Untyped.RWCtx m s)) => (Return (Message.MutMsg s)) -> () -> (m ())
-set_Return'canceled (Return'newtype_ struct) value = (do
+set_Return'canceled :: ((Untyped.RWCtx m s)) => (Return (Message.MutMsg s)) -> (m ())
+set_Return'canceled (Return'newtype_ struct) = (do
     (GenHelpers.setWordField struct (2 :: Std_.Word16) 0 48 0)
     (Std_.pure ())
     )
-set_Return'resultsSentElsewhere :: ((Untyped.RWCtx m s)) => (Return (Message.MutMsg s)) -> () -> (m ())
-set_Return'resultsSentElsewhere (Return'newtype_ struct) value = (do
+set_Return'resultsSentElsewhere :: ((Untyped.RWCtx m s)) => (Return (Message.MutMsg s)) -> (m ())
+set_Return'resultsSentElsewhere (Return'newtype_ struct) = (do
     (GenHelpers.setWordField struct (3 :: Std_.Word16) 0 48 0)
     (Std_.pure ())
     )
@@ -827,8 +827,8 @@ set_Disembargo'context'receiverLoopback (Disembargo'context'newtype_ struct) val
     (GenHelpers.setWordField struct (1 :: Std_.Word16) 0 32 0)
     (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word32) 0 0 0)
     )
-set_Disembargo'context'accept :: ((Untyped.RWCtx m s)) => (Disembargo'context (Message.MutMsg s)) -> () -> (m ())
-set_Disembargo'context'accept (Disembargo'context'newtype_ struct) value = (do
+set_Disembargo'context'accept :: ((Untyped.RWCtx m s)) => (Disembargo'context (Message.MutMsg s)) -> (m ())
+set_Disembargo'context'accept (Disembargo'context'newtype_ struct) = (do
     (GenHelpers.setWordField struct (2 :: Std_.Word16) 0 32 0)
     (Std_.pure ())
     )
@@ -1219,8 +1219,8 @@ instance (Classes.FromStruct msg (CapDescriptor' msg)) where
         )
 get_CapDescriptor' :: ((Untyped.ReadCtx m msg)) => (CapDescriptor msg) -> (m (CapDescriptor' msg))
 get_CapDescriptor' (CapDescriptor'newtype_ struct) = (Classes.fromStruct struct)
-set_CapDescriptor'none :: ((Untyped.RWCtx m s)) => (CapDescriptor (Message.MutMsg s)) -> () -> (m ())
-set_CapDescriptor'none (CapDescriptor'newtype_ struct) value = (do
+set_CapDescriptor'none :: ((Untyped.RWCtx m s)) => (CapDescriptor (Message.MutMsg s)) -> (m ())
+set_CapDescriptor'none (CapDescriptor'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
@@ -1360,8 +1360,8 @@ instance (Classes.FromStruct msg (PromisedAnswer'Op' msg)) where
         )
 get_PromisedAnswer'Op' :: ((Untyped.ReadCtx m msg)) => (PromisedAnswer'Op msg) -> (m (PromisedAnswer'Op' msg))
 get_PromisedAnswer'Op' (PromisedAnswer'Op'newtype_ struct) = (Classes.fromStruct struct)
-set_PromisedAnswer'Op'noop :: ((Untyped.RWCtx m s)) => (PromisedAnswer'Op (Message.MutMsg s)) -> () -> (m ())
-set_PromisedAnswer'Op'noop (PromisedAnswer'Op'newtype_ struct) value = (do
+set_PromisedAnswer'Op'noop :: ((Untyped.RWCtx m s)) => (PromisedAnswer'Op (Message.MutMsg s)) -> (m ())
+set_PromisedAnswer'Op'noop (PromisedAnswer'Op'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )

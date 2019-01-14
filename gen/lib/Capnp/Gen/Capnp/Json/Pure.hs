@@ -72,7 +72,7 @@ instance (Classes.Decerialize JsonValue) where
 instance (Classes.Marshal JsonValue) where
     marshalInto raw_ value_ = case value_ of
         (JsonValue'null) ->
-            ((Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'null raw_) ())
+            (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'null raw_)
         (JsonValue'boolean arg_) ->
             (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'boolean raw_ arg_)
         (JsonValue'number arg_) ->

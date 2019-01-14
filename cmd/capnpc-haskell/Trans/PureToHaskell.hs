@@ -248,7 +248,7 @@ declToDecls thisMod P.Data
                     P.None ->
                         ( PLCtor variantName []
                         , if isUnion
-                            then EApp setExp [ETup []]
+                            then setExp
                             else ePureUnit
                         )
                     P.Positional type_ ->

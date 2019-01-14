@@ -561,6 +561,13 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
                         [tMutMsg]
                     , TApp (TVar "m") [fieldType]
                     ]
+                C.VoidField -> TFn
+                    -- We don't need to pass in the redundant () value.
+                    [ TApp
+                        (TLName containerType)
+                        [tMutMsg]
+                    , TApp (TVar "m") [fieldType]
+                    ]
                 _ -> TFn
                     [ TApp
                         (TLName containerType)
@@ -574,6 +581,8 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
             , params =
                 case fieldLocType of
                     C.HereField _ ->
+                        [ PLCtor containerDataCtor [PVar "struct"] ]
+                    C.VoidField ->
                         [ PLCtor containerDataCtor [PVar "struct"] ]
                     _ ->
                         [ PLCtor containerDataCtor [PVar "struct"]

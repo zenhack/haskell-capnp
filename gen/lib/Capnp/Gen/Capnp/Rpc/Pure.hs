@@ -280,9 +280,9 @@ instance (Classes.Decerialize Call'sendResultsTo) where
 instance (Classes.Marshal Call'sendResultsTo) where
     marshalInto raw_ value_ = case value_ of
         (Call'sendResultsTo'caller) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw_)
         (Call'sendResultsTo'yourself) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'yourself raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'yourself raw_)
         (Call'sendResultsTo'thirdParty arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'thirdParty raw_))
         (Call'sendResultsTo'unknown' tag) ->
@@ -372,9 +372,9 @@ instance (Classes.Marshal Return') where
         (Return'exception arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Return'exception raw_))
         (Return'canceled) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_Return'canceled raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_Return'canceled raw_)
         (Return'resultsSentElsewhere) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_Return'resultsSentElsewhere raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_Return'resultsSentElsewhere raw_)
         (Return'takeFromOtherQuestion arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Return'takeFromOtherQuestion raw_ arg_)
         (Return'acceptFromThirdParty arg_) ->
@@ -605,7 +605,7 @@ instance (Classes.Marshal Disembargo'context) where
         (Disembargo'context'receiverLoopback arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Disembargo'context'receiverLoopback raw_ arg_)
         (Disembargo'context'accept) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_Disembargo'context'accept raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_Disembargo'context'accept raw_)
         (Disembargo'context'provide arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Disembargo'context'provide raw_ arg_)
         (Disembargo'context'unknown' tag) ->
@@ -855,7 +855,7 @@ instance (Classes.Decerialize CapDescriptor) where
 instance (Classes.Marshal CapDescriptor) where
     marshalInto raw_ value_ = case value_ of
         (CapDescriptor'none) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_CapDescriptor'none raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_CapDescriptor'none raw_)
         (CapDescriptor'senderHosted arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_CapDescriptor'senderHosted raw_ arg_)
         (CapDescriptor'senderPromise arg_) ->
@@ -947,7 +947,7 @@ instance (Classes.Decerialize PromisedAnswer'Op) where
 instance (Classes.Marshal PromisedAnswer'Op) where
     marshalInto raw_ value_ = case value_ of
         (PromisedAnswer'Op'noop) ->
-            ((Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw_) ())
+            (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw_)
         (PromisedAnswer'Op'getPointerField arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw_ arg_)
         (PromisedAnswer'Op'unknown' tag) ->

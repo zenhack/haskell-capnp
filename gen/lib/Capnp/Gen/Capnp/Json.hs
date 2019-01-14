@@ -98,8 +98,8 @@ instance (Classes.FromStruct msg (JsonValue' msg)) where
         )
 get_JsonValue' :: ((Untyped.ReadCtx m msg)) => (JsonValue msg) -> (m (JsonValue' msg))
 get_JsonValue' (JsonValue'newtype_ struct) = (Classes.fromStruct struct)
-set_JsonValue'null :: ((Untyped.RWCtx m s)) => (JsonValue (Message.MutMsg s)) -> () -> (m ())
-set_JsonValue'null (JsonValue'newtype_ struct) value = (do
+set_JsonValue'null :: ((Untyped.RWCtx m s)) => (JsonValue (Message.MutMsg s)) -> (m ())
+set_JsonValue'null (JsonValue'newtype_ struct) = (do
     (GenHelpers.setWordField struct (0 :: Std_.Word16) 0 0 0)
     (Std_.pure ())
     )
