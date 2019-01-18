@@ -9,6 +9,7 @@ module Trans.Stage1ToFlat (filesToFiles) where
 import Data.Word
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import qualified IR.Common as C
 import qualified IR.Flat   as Flat
@@ -36,7 +37,7 @@ fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
 nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
 nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
   where
-    go ns (unQName, Stage1.Node{nodeId, nodeNested, nodeUnion}) =
+    go ns (unQName, node@Stage1.Node{nodeId, nodeNested, nodeUnion}) =
         let localName = Name.mkLocal ns unQName
             kidsNS = Name.localQToNS localName
             kids = concatMap (go kidsNS) nodeNested
@@ -124,6 +125,10 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 ]
                             , supers =
                                 [ nodeMap M.! nodeId | Stage1.Node{nodeId} <- supers ]
+                            , ancestors =
+                                [ nodeMap M.! supId
+                                | supId <- S.toList (collectAncestors node)
+                                ]
                             }
                         }
                     : concatMap (methodToNodes kidsNS) methods
@@ -168,3 +173,16 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                         []
         in
         maybeAnon paramType "params" ++ maybeAnon resultType "results"
+
+
+-- | Collect the ids of of the ancestors of a node, which must be an interface,
+-- not including itself.
+collectAncestors :: Stage1.Node -> S.Set Word64
+collectAncestors Stage1.Node{nodeUnion=Stage1.NodeInterface{supers}} =
+    -- This could be made faster, in that if there are shared ancestors
+    -- (diamonds) we'll traverse them twice, but this is more
+    -- straightforward, and with typical interface hierarchies it shouldn't
+    S.unions $
+        S.fromList [ nodeId | Stage1.Node{nodeId} <- supers ]
+        : map collectAncestors supers
+collectAncestors _ = error "Called collectAncestors on a non-interface."

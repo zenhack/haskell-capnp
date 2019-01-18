@@ -56,8 +56,11 @@ data Node'
         -- ^ The struct's anonymous union, if any.
         }
     | Interface
-        { methods :: [Method]
-        , supers  :: [Node]
+        { methods   :: [Method]
+        , supers    :: [Node]
+        -- ^ Immediate superclasses
+        , ancestors :: [Node]
+        -- ^ All ancestors, including 'supers'.
         }
     | Constant
         { value :: Common.Value Node
