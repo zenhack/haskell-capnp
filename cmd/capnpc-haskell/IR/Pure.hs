@@ -52,6 +52,7 @@ data Interface = IFace
     , interfaceId :: !Word64
     , methods     :: [Method]
     , supers      :: [Interface]
+    , ancestors   :: [Interface]
     }
 
 -- TODO(cleanup): this same type exists in IR.Flat; it doesn't make sense for

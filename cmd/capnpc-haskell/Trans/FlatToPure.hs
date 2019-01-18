@@ -2,22 +2,33 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecordWildCards       #-}
-module Trans.FlatToPure where
+module Trans.FlatToPure (fileToFile) where
 
 import Data.Word
+
+import qualified Data.Map.Strict as M
 
 import qualified IR.Common as C
 import qualified IR.Flat   as Flat
 import qualified IR.Name   as Name
 import qualified IR.Pure   as Pure
 
+type IFaceMap = M.Map Word64 Pure.Interface
+
 fileToFile :: Flat.File -> Pure.File
 fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
+    let decls = concatMap (nodeToDecls ifaceMap) nodes
+        ifaceMap = M.fromList
+                    [ (interfaceId, iface)
+                    | Pure.Interface iface@Pure.IFace{interfaceId}
+                    <- decls
+                    ]
+    in
     Pure.File
         { fileId
         , fileName
         , fileImports
-        , decls = concatMap nodeToDecls nodes
+        , decls
         , reExportEnums = concatMap nodeToReExports nodes
         , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
         }
@@ -63,27 +74,20 @@ unionToDecl firstClass cerialName local variants =
         , firstClass
         }
 
-mkInterface :: Name.CapnpQ -> Word64 -> [Flat.Method] -> [Flat.Node] -> Pure.Interface
-mkInterface name nodeId methods supers = Pure.IFace
-    { name
-    , interfaceId = nodeId
-    , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
-    , supers =
-        [ mkInterface name nodeId methods supers
-        | Flat.Node{name, nodeId, union_=Flat.Interface{ methods, supers }} <- supers
-        ]
-    }
-
-nodeToDecls :: Flat.Node -> [Pure.Decl]
-nodeToDecls Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of
+nodeToDecls :: IFaceMap -> Flat.Node -> [Pure.Decl]
+nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of
     Flat.Enum _ ->
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
         []
-    Flat.Interface{ methods, supers } ->
-        -- XXX: we're duplicating work here, as we'll traverse the whole dependency
-        -- graph for each interface. TODO: make this more efficient.
-        [ Pure.Interface (mkInterface name nodeId methods supers)
+    Flat.Interface{ methods, supers, ancestors } ->
+        [ Pure.Interface Pure.IFace
+            { name
+            , interfaceId = nodeId
+            , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
+            , supers = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- supers ]
+            , ancestors = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- ancestors ]
+            }
         ]
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
