@@ -343,7 +343,11 @@ declToDecls thisMod P.Data
         []
 declToDecls thisMod P.Constant { name, value } =
     constToDecls thisMod name value
-declToDecls thisMod (P.Interface P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods }) =
+declToDecls thisMod (P.Interface iface) =
+    ifaceToDecls thisMod iface
+
+ifaceToDecls :: Word64 -> P.Interface -> [Decl]
+ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods } =
     [ DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
