@@ -353,7 +353,8 @@ ifaceToDecls thisMod iface =
     , ifaceClassDecl thisMod iface
     , ifaceExportFn thisMod iface
     ]
-    ++ ifaceClientInstances thisMod iface
+    ++
+    ifaceInstances thisMod iface
 
 -- | Declare the newtype wrapper for clients of this interface.
 ifaceClientDecl :: Word64 -> P.Interface -> Decl
@@ -467,8 +468,8 @@ ifaceExportFn _thisMod P.IFace { name=Name.CapnpQ{ local=name }, interfaceId, me
         }
 
 -- | Declare instances for clients for this interface.
-ifaceClientInstances :: Word64 -> P.Interface -> [Decl]
-ifaceClientInstances thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods } =
+ifaceInstances :: Word64 -> P.Interface -> [Decl]
+ifaceInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name} } =
     [ instance_ [] ["Rpc"] "IsClient" [TLName name]
         [ iValue "fromClient" [] (ELName name)
         , iValue "toClient" [PLCtor name [PVar "client"]] (euName "client")
@@ -509,18 +510,40 @@ ifaceClientInstances thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId,
                     [EApp (egName ["Untyped"] "appendCap") [euName "msg", euName "client"]]
                 ]
         ]
-    , instance_ [] [] (Name.mkSub name "server_") [tStd_ "IO", TLName name]
-        [ let methodName = mkMethodName name mname in
-          iValue methodName [PLCtor name [PVar "client"]] $
-            EApp
-                (egName ["Rpc"] "clientMethodHandler")
-                [ EInt $ fromIntegral interfaceId
-                , EInt i
-                , euName "client"
-                ]
-        | (i, P.Method{name=mname}) <- zip [0..] methods
-        ]
     ]
+    ++
+    ifaceServerInstances thisMod iface
+
+-- | Instance declarations for this interface's client for its *'server_ class
+-- and those of its ancestors.
+ifaceServerInstances :: Word64 -> P.Interface -> [Decl]
+ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, ancestors } =
+    map go (iface:ancestors)
+  where
+    go P.IFace { name=Name.CapnpQ{local, fileId}, interfaceId, methods } =
+        let className = Name.mkSub local "server_"
+            classType = if thisMod == fileId
+                then TLName className
+                else tgName (pureModule fileId) className
+        in
+        -- Can't use 'instance_' here, because we don't know ahead of time what
+        -- module the class is in.
+        DcInstance
+            { ctx = []
+            , typ =
+                TApp classType [tStd_ "IO", TLName name]
+            , defs =
+                [ let methodName = mkMethodName local mname in
+                  iValue methodName [PLCtor name [PVar "client"]] $
+                    EApp
+                        (egName ["Rpc"] "clientMethodHandler")
+                        [ EInt $ fromIntegral interfaceId
+                        , EInt i
+                        , euName "client"
+                        ]
+                | (i, P.Method{name=mname}) <- zip [0..] methods
+                ]
+            }
 
 -- | Generate declarations for a constant.
 constToDecls :: Word64 -> P.Constant -> [Decl]
