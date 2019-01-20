@@ -105,7 +105,7 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
     , modExports = Just $
         [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
         ++ concatMap (declToExport fileId) decls
-    , modImports =  concat $
+    , modImports = concat
         [ commonImports
         , [rawImport fileId]
         , guard usesRpc >> rpcImports
