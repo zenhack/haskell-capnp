@@ -348,8 +348,17 @@ dataToDecls thisMod P.Data
         []
 
 ifaceToDecls :: Word64 -> P.Interface -> [Decl]
-ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods } =
-    [ DcData Data
+ifaceToDecls thisMod iface =
+    [ ifaceClientDecl thisMod iface
+    , ifaceClassDecl thisMod iface
+    , ifaceExportFn thisMod iface
+    ]
+    ++ ifaceClientInstances thisMod iface
+
+-- | Declare the newtype wrapper for clients of this interface.
+ifaceClientDecl :: Word64 -> P.Interface -> Decl
+ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name} } =
+    DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
         , dataVariants =
@@ -365,47 +374,11 @@ ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods
             , "Generics.Generic"
             ]
         }
-    , instance_ [] ["Rpc"] "IsClient" [TLName name]
-        [ iValue "fromClient" [] (ELName name)
-        , iValue "toClient" [PLCtor name [PVar "client"]] (euName "client")
-        ]
-    , instance_ [] ["Classes"] "FromPtr" [tuName "msg", TLName name]
-        [ iValue "fromPtr" [] (egName ["RpcHelpers"] "isClientFromPtr")
-        ]
-    , instance_ [] ["Classes"] "ToPtr" [tuName "s", TLName name]
-        [ iValue "toPtr" [] (egName ["RpcHelpers"] "isClientToPtr")
-        ]
-    , instance_ [] ["Classes"] "Decerialize" [TLName name]
-        [ iType "Cerial" [tuName "msg", TLName name] $
-            TApp (tgName (rawModule thisMod) name) [tuName "msg"]
-        , iValue "decerialize"
-            [ pgName (rawModule thisMod) (Name.mkSub name "newtype_") [PVar "maybeCap"]
-            ]
-            (ECase (euName "maybeCap")
-                [ (PGCtor (std_ "Nothing") []
-                  , EApp
-                        (eStd_ "pure")
-                        [ EApp (ELName name) [egName ["Message"] "nullClient"]
-                        ]
-                  )
-                , (PGCtor (std_ "Just") [PVar "cap"]
-                  , EFApp
-                        (ELName name)
-                        [ EApp (egName ["Untyped"] "getClient") [euName "cap"]]
-                  )
-                ]
-            )
-        ]
-    , instance_ [] ["Classes"] "Cerialize" [TLName name]
-        [ iValue "cerialize" [PVar "msg", PLCtor name [PVar "client"]] $
-            EFApp
-                (egName (rawModule thisMod) (Name.mkSub name "newtype_"))
-                [ EFApp
-                    (eStd_ "Just")
-                    [EApp (egName ["Untyped"] "appendCap") [euName "msg", euName "client"]]
-                ]
-        ]
-    , DcClass
+
+-- | define the *'server_ class for the interface.
+ifaceClassDecl :: Word64 -> P.Interface -> Decl
+ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods } =
+    DcClass
         { ctx = [TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]]
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
@@ -439,18 +412,12 @@ ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods
                 <- methods
                 ]
         }
-    , instance_ [] [] (Name.mkSub name "server_") [tStd_ "IO", TLName name]
-        [ let methodName = mkMethodName name mname in
-          iValue methodName [PLCtor name [PVar "client"]] $
-            EApp
-                (egName ["Rpc"] "clientMethodHandler")
-                [ EInt $ fromIntegral interfaceId
-                , EInt i
-                , euName "client"
-                ]
-        | (i, P.Method{name=mname}) <- zip [0..] methods
-        ]
-    , DcValue
+
+
+-- | Define the export_Foo function for the interface.
+ifaceExportFn :: Word64 -> P.Interface -> Decl
+ifaceExportFn _thisMod P.IFace { name=Name.CapnpQ{ local=name }, interfaceId, methods } =
+    DcValue
         { typ = TCtx
             [TApp (TLName (Name.mkSub name "server_")) [tStd_ "IO", tuName "a"]]
             (TFn
@@ -498,6 +465,61 @@ ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods
                 ]
             }
         }
+
+-- | Declare instances for clients for this interface.
+ifaceClientInstances :: Word64 -> P.Interface -> [Decl]
+ifaceClientInstances thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods } =
+    [ instance_ [] ["Rpc"] "IsClient" [TLName name]
+        [ iValue "fromClient" [] (ELName name)
+        , iValue "toClient" [PLCtor name [PVar "client"]] (euName "client")
+        ]
+    , instance_ [] ["Classes"] "FromPtr" [tuName "msg", TLName name]
+        [ iValue "fromPtr" [] (egName ["RpcHelpers"] "isClientFromPtr")
+        ]
+    , instance_ [] ["Classes"] "ToPtr" [tuName "s", TLName name]
+        [ iValue "toPtr" [] (egName ["RpcHelpers"] "isClientToPtr")
+        ]
+    , instance_ [] ["Classes"] "Decerialize" [TLName name]
+        [ iType "Cerial" [tuName "msg", TLName name] $
+            TApp (tgName (rawModule thisMod) name) [tuName "msg"]
+        , iValue "decerialize"
+            [ pgName (rawModule thisMod) (Name.mkSub name "newtype_") [PVar "maybeCap"]
+            ]
+            (ECase (euName "maybeCap")
+                [ (PGCtor (std_ "Nothing") []
+                  , EApp
+                        (eStd_ "pure")
+                        [ EApp (ELName name) [egName ["Message"] "nullClient"]
+                        ]
+                  )
+                , (PGCtor (std_ "Just") [PVar "cap"]
+                  , EFApp
+                        (ELName name)
+                        [ EApp (egName ["Untyped"] "getClient") [euName "cap"]]
+                  )
+                ]
+            )
+        ]
+    , instance_ [] ["Classes"] "Cerialize" [TLName name]
+        [ iValue "cerialize" [PVar "msg", PLCtor name [PVar "client"]] $
+            EFApp
+                (egName (rawModule thisMod) (Name.mkSub name "newtype_"))
+                [ EFApp
+                    (eStd_ "Just")
+                    [EApp (egName ["Untyped"] "appendCap") [euName "msg", euName "client"]]
+                ]
+        ]
+    , instance_ [] [] (Name.mkSub name "server_") [tStd_ "IO", TLName name]
+        [ let methodName = mkMethodName name mname in
+          iValue methodName [PLCtor name [PVar "client"]] $
+            EApp
+                (egName ["Rpc"] "clientMethodHandler")
+                [ EInt $ fromIntegral interfaceId
+                , EInt i
+                , euName "client"
+                ]
+        | (i, P.Method{name=mname}) <- zip [0..] methods
+        ]
     ]
 
 -- | Generate declarations for a constant.
