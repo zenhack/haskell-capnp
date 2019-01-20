@@ -182,6 +182,7 @@ collectAncestors Stage1.Node{nodeUnion=Stage1.NodeInterface{supers}} =
     -- This could be made faster, in that if there are shared ancestors
     -- (diamonds) we'll traverse them twice, but this is more
     -- straightforward, and with typical interface hierarchies it shouldn't
+    -- be a huge problem.
     S.unions $
         S.fromList [ nodeId | Stage1.Node{nodeId} <- supers ]
         : map collectAncestors supers
