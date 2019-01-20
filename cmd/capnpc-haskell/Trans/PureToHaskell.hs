@@ -424,20 +424,20 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers }
 
 -- | Define the export_Foo function for the interface.
 ifaceExportFn :: Word64 -> P.Interface -> Decl
-ifaceExportFn _thisMod P.IFace { name=Name.CapnpQ{ local=name }, interfaceId, methods } =
+ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
     DcValue
         { typ = TCtx
-            [TApp (TLName (Name.mkSub name "server_")) [tStd_ "IO", tuName "a"]]
+            [TApp (TLName (Name.mkSub local "server_")) [tStd_ "IO", tuName "a"]]
             (TFn
                 [ tgName ["Supervisors"] "Supervisor"
                 , tuName "a"
-                , TApp (tgName ["STM"] "STM") [TLName name]
+                , TApp (tgName ["STM"] "STM") [TLName local]
                 ]
             )
         , def = DfValue
-            { name = Name.UnQ $ "export_" <> Name.renderLocalQ name
+            { name = Name.UnQ $ "export_" <> Name.renderLocalQ local
             , params = [PVar "sup_", PVar "server_"]
-            , value = EFApp (ELName name)
+            , value = EFApp (ELName local)
                 [ EApp (egName ["Rpc"] "export")
                     [ euName "sup_"
                     , ERecord (egName ["Server"] "ServerOps")
@@ -446,13 +446,20 @@ ifaceExportFn _thisMod P.IFace { name=Name.CapnpQ{ local=name }, interfaceId, me
                           ) -- TODO
                         , ( "handleCall"
                           , ELambda [PVar "interfaceId_", PVar "methodId_"] $
-                                ECase (euName "interfaceId_")
+                                ECase (euName "interfaceId_") $
                                     [ ( PInt (fromIntegral interfaceId)
                                       , ECase (euName "methodId_") $
                                             [ ( PInt i
                                               , EApp
                                                     (egName ["Server"] "toUntypedHandler")
-                                                    [ EApp (euName (mkMethodName name mname)) [euName "server_"] ]
+                                                    [ let methodName = mkMethodName ifaceName mname in
+                                                      EApp
+                                                        (if thisMod == ifaceMod
+                                                            then euName methodName
+                                                            else egName (pureModule ifaceMod) (Name.unQToLocal methodName)
+                                                        )
+                                                        [euName "server_"]
+                                                    ]
                                               )
                                             | (i, P.Method{name=mname}) <- zip [0..] methods
                                             ]
@@ -462,8 +469,15 @@ ifaceExportFn _thisMod P.IFace { name=Name.CapnpQ{ local=name }, interfaceId, me
                                               )
                                             ]
                                       )
-                                    -- TODO: superclasses
-                                    , ( PVar "_"
+                                    | P.IFace
+                                        { name = Name.CapnpQ{local=ifaceName, fileId=ifaceMod}
+                                        , interfaceId
+                                        , methods
+                                        }
+                                    <- iface:ancestors
+                                    ]
+                                    ++
+                                    [ ( PVar "_"
                                       , egName ["Server"] "methodUnimplemented"
                                       )
                                     ]
