@@ -6,7 +6,8 @@ module Trans.PureToHaskell (fileToModules) where
 
 import Data.Word
 
-import Text.Printf (printf)
+import Control.Monad (guard)
+import Text.Printf   (printf)
 
 import qualified Data.Text as T
 
@@ -16,6 +17,49 @@ import Trans.ToHaskellCommon
 import qualified IR.Common as C
 import qualified IR.Name   as Name
 import qualified IR.Pure   as P
+
+
+-- | Modules imported by all generated modules.
+commonImports :: [Import]
+commonImports =
+    [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
+    , ImportAs { importAs = "T", parts = ["Data", "Text"] }
+    , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
+    , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
+    , ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
+    , ImportAs { importAs = "MonadIO", parts = ["Control", "Monad", "IO", "Class"] }
+    , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
+    , ImportAs { importAs = "Untyped", parts = ["Capnp", "Untyped"] }
+    , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
+    , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
+    , ImportAs { importAs = "BasicsPure", parts = ["Capnp", "Basics", "Pure" ] }
+    , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }
+    ]
+
+
+-- | Modules imported by generated modules that use rpc.
+rpcImports :: [Import]
+rpcImports =
+    [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] }
+    , ImportAs { importAs = "Server", parts = ["Capnp", "Rpc", "Server"] }
+    , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
+    , ImportAs { importAs = "STM", parts = ["Control", "Concurrent", "STM"] }
+    , ImportQual ["Supervisors"]
+    ]
+
+-- | Other generated modules imported by this module.
+generatedImports :: [Word64] -> [Import]
+generatedImports fileImports = concat
+    [ [ ImportQual { parts = impId }
+      , ImportQual { parts = impId ++ ["Pure"] }
+      ]
+    | impId <- map idToModule fileImports
+    ]
+
+-- | The import for the raw version of this module.
+rawImport :: Word64 -> Import
+rawImport fileId =
+    ImportQual { parts = idToModule fileId }
 
 -- | Whether the serialized and unserialized forms of this type
 -- are the same. If not, there is a marshalling step, if so, the
@@ -60,59 +104,38 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
         ]
     , modExports = Just $
         [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
-        ++ concat
-        [ case decl of
-            P.Data{typeName} ->
-                [ ExportLCtors typeName ]
-            P.Constant { name, value=C.WordValue _ _ } ->
-                [ ExportGName $ gName (rawModule fileId) name ]
-            P.Constant { name, value=C.VoidValue } ->
-                [ ExportGName $ gName (rawModule fileId) name ]
-            P.Constant { name, value=C.PtrValue _ _ } ->
-                [ ExportLName name ]
-            P.Interface P.IFace{ name=Name.CapnpQ{local} } ->
-                [ ExportLCtors local
-                , ExportLCtors (Name.mkSub local "server_")
-                , ExportLName (Name.unQToLocal $ Name.UnQ $ "export_" <> Name.renderLocalQ local)
-                ]
-        | decl <- decls
-        ]
-    , modImports = concat $
-        [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
-        , ImportAs { importAs = "T", parts = ["Data", "Text"] }
-        , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
-        , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
-        , ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
-        , ImportAs { importAs = "MonadIO", parts = ["Control", "Monad", "IO", "Class"] }
-        , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
-        , ImportAs { importAs = "Untyped", parts = ["Capnp", "Untyped"] }
-        , ImportAs { importAs = "Message", parts = ["Capnp", "Message"] }
-        , ImportAs { importAs = "Classes", parts = ["Capnp", "Classes"] }
-        , ImportAs { importAs = "BasicsPure", parts = ["Capnp", "Basics", "Pure" ] }
-        , ImportAs { importAs = "GenHelpersPure", parts = ["Capnp", "GenHelpers", "Pure"] }
-        , ImportQual { parts = idToModule fileId }
-        ]
-        : (if usesRpc
-            then
-                [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] }
-                , ImportAs { importAs = "Server", parts = ["Capnp", "Rpc", "Server"] }
-                , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
-                , ImportAs { importAs = "STM", parts = ["Control", "Concurrent", "STM"] }
-                , ImportQual ["Supervisors"]
-                ]
-            else
-                [])
-        :
-        [ [ ImportQual { parts = impId }
-          , ImportQual { parts = impId ++ ["Pure"] }
-          ]
-        | impId <- map idToModule fileImports
+        ++ concatMap (declToExport fileId) decls
+    , modImports =  concat $
+        [ commonImports
+        , [rawImport fileId]
+        , guard usesRpc >> rpcImports
+        , generatedImports fileImports
         ]
     , modDecls =
         concatMap (declToDecls fileId) decls
         ++ concatMap (enumInstances fileId) reExportEnums
     }
 
+
+-- | Convert a declaration into the list of related exports we need.
+-- The first argument is the id for this module.
+declToExport :: Word64 -> P.Decl -> [Export]
+declToExport fileId = \case
+    P.Data{typeName} ->
+        [ ExportLCtors typeName ]
+    P.Constant { name, value=C.WordValue _ _ } ->
+        [ ExportGName $ gName (rawModule fileId) name ]
+    P.Constant { name, value=C.VoidValue } ->
+        [ ExportGName $ gName (rawModule fileId) name ]
+    P.Constant { name, value=C.PtrValue _ _ } ->
+        [ ExportLName name ]
+    P.Interface P.IFace{ name=Name.CapnpQ{local} } ->
+        [ ExportLCtors local
+        , ExportLCtors (Name.mkSub local "server_")
+        , ExportLName (Name.unQToLocal $ Name.UnQ $ "export_" <> Name.renderLocalQ local)
+        ]
+
+-- | enumInstances' generates some type class instances an enum data type.
 enumInstances :: Word64 -> Name.LocalQ -> [Decl]
 enumInstances thisMod name =
     let rawName = gName (rawModule thisMod) name in
@@ -131,6 +154,7 @@ enumInstances thisMod name =
             (TGName rawName)
       ]
 
+-- | Convert an 'IR.Pure.Decl' into a series of Haskell declarations.
 declToDecls :: Word64 -> P.Decl -> [Decl]
 declToDecls thisMod P.Data
         { typeName
