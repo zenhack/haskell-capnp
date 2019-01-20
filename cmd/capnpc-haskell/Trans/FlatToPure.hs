@@ -20,7 +20,7 @@ fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
     let decls = concatMap (nodeToDecls ifaceMap) nodes
         ifaceMap = M.fromList
                     [ (interfaceId, iface)
-                    | Pure.Interface iface@Pure.IFace{interfaceId}
+                    | Pure.IFaceDecl iface@Pure.IFace{interfaceId}
                     <- decls
                     ]
     in
@@ -39,7 +39,7 @@ nodeToReExports _ = []
 
 unionToDecl :: Bool -> Name.LocalQ -> Name.LocalQ -> [Flat.Variant] -> Pure.Decl
 unionToDecl firstClass cerialName local variants =
-    Pure.Data
+    Pure.DataDecl Pure.Data
         { typeName = local
         , cerialName
         , variants =
@@ -81,7 +81,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
         -- stuff from the raw module.
         []
     Flat.Interface{ methods, supers, ancestors } ->
-        [ Pure.Interface Pure.IFace
+        [ Pure.IFaceDecl Pure.IFace
             { name
             , interfaceId = nodeId
             , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
@@ -95,7 +95,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
         [ unionToDecl (not isGroup) local local variants ]
     Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
     Flat.Struct{ isGroup, fields, union } ->
-        Pure.Data
+        Pure.DataDecl Pure.Data
             { typeName = local
             , cerialName = local
             , variants =
@@ -125,7 +125,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
             Nothing ->
                 []
     Flat.Constant { value } ->
-        [ Pure.Constant
+        [ Pure.ConstDecl Pure.Constant
             { name = local
             , value = fmap (\Flat.Node{name} -> name) value
             }

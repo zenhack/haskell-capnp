@@ -121,15 +121,15 @@ fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, use
 -- The first argument is the id for this module.
 declToExport :: Word64 -> P.Decl -> [Export]
 declToExport fileId = \case
-    P.Data{typeName} ->
+    P.DataDecl P.Data{typeName} ->
         [ ExportLCtors typeName ]
-    P.Constant { name, value=C.WordValue _ _ } ->
+    P.ConstDecl P.Constant { name, value=C.WordValue _ _ } ->
         [ ExportGName $ gName (rawModule fileId) name ]
-    P.Constant { name, value=C.VoidValue } ->
+    P.ConstDecl P.Constant { name, value=C.VoidValue } ->
         [ ExportGName $ gName (rawModule fileId) name ]
-    P.Constant { name, value=C.PtrValue _ _ } ->
+    P.ConstDecl P.Constant { name, value=C.PtrValue _ _ } ->
         [ ExportLName name ]
-    P.Interface P.IFace{ name=Name.CapnpQ{local} } ->
+    P.IFaceDecl P.IFace{ name=Name.CapnpQ{local} } ->
         [ ExportLCtors local
         , ExportLCtors (Name.mkSub local "server_")
         , ExportLName (Name.unQToLocal $ Name.UnQ $ "export_" <> Name.renderLocalQ local)
@@ -156,13 +156,13 @@ enumInstances thisMod name =
 
 -- | Convert an 'IR.Pure.Decl' into a series of Haskell declarations.
 declToDecls :: Word64 -> P.Decl -> [Decl]
-declToDecls thisMod P.Data
+declToDecls thisMod (P.DataDecl P.Data
         { typeName
         , cerialName
         , variants
         , isUnion
         , firstClass
-        } =
+        }) =
     let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
         { dataName = Name.localToUnQ typeName
@@ -341,9 +341,9 @@ declToDecls thisMod P.Data
         ]
     else
         []
-declToDecls thisMod P.Constant { name, value } =
+declToDecls thisMod (P.ConstDecl P.Constant { name, value }) =
     constToDecls thisMod name value
-declToDecls thisMod (P.Interface iface) =
+declToDecls thisMod (P.IFaceDecl iface) =
     ifaceToDecls thisMod iface
 
 ifaceToDecls :: Word64 -> P.Interface -> [Decl]
