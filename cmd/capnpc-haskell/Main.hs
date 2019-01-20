@@ -53,10 +53,8 @@ handleCGR cgr =
 handleFlatPure, handleFlatRaw :: [Flat.File] -> [Haskell.Module]
 
 handleFlatPure =
-    concatMap
-        ( Trans.PureToHaskell.fileToModules
-        . Trans.FlatToPure.fileToFile
-        )
+    concatMap Trans.PureToHaskell.fileToModules
+    . Trans.FlatToPure.filesToFiles
 
 handleFlatRaw =
     concatMap

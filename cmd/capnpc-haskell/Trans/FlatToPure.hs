@@ -2,7 +2,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecordWildCards       #-}
-module Trans.FlatToPure (fileToFile) where
+module Trans.FlatToPure (filesToFiles) where
 
 import Data.Word
 
@@ -15,23 +15,24 @@ import qualified IR.Pure   as Pure
 
 type IFaceMap = M.Map Word64 Pure.Interface
 
-fileToFile :: Flat.File -> Pure.File
-fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
-    let decls = concatMap (nodeToDecls ifaceMap) nodes
-        ifaceMap = M.fromList
-                    [ (interfaceId, iface)
-                    | Pure.IFaceDecl iface@Pure.IFace{interfaceId}
-                    <- decls
-                    ]
-    in
-    Pure.File
-        { fileId
-        , fileName
-        , fileImports
-        , decls
-        , reExportEnums = concatMap nodeToReExports nodes
-        , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
-        }
+filesToFiles :: [Flat.File] -> [Pure.File]
+filesToFiles flatFiles = pureFiles where
+    pureFiles = map oneFile flatFiles
+    allDecls = concat [ decls | Pure.File{decls} <- pureFiles ]
+    ifaceMap = M.fromList
+        [ (interfaceId, iface)
+        | Pure.IFaceDecl iface@Pure.IFace{interfaceId}
+        <- allDecls
+        ]
+    oneFile Flat.File{nodes, fileId, fileName, fileImports} =
+        Pure.File
+            { fileId
+            , fileName
+            , fileImports
+            , decls = concatMap (nodeToDecls ifaceMap) nodes
+            , reExportEnums = concatMap nodeToReExports nodes
+            , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
+            }
 
 nodeToReExports :: Flat.Node -> [Name.LocalQ]
 nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
