@@ -570,6 +570,128 @@ get_Node'NestedNode'id :: ((Untyped.ReadCtx m msg)) => (Node'NestedNode msg) -> 
 get_Node'NestedNode'id (Node'NestedNode'newtype_ struct) = (GenHelpers.getWordField struct 0 0 0)
 set_Node'NestedNode'id :: ((Untyped.RWCtx m s)) => (Node'NestedNode (Message.MutMsg s)) -> Std_.Word64 -> (m ())
 set_Node'NestedNode'id (Node'NestedNode'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word64) 0 0 0)
+newtype Node'SourceInfo msg
+    = Node'SourceInfo'newtype_ (Untyped.Struct msg)
+instance (Untyped.TraverseMsg Node'SourceInfo) where
+    tMsg f (Node'SourceInfo'newtype_ s) = (Node'SourceInfo'newtype_ <$> (Untyped.tMsg f s))
+instance (Classes.FromStruct msg (Node'SourceInfo msg)) where
+    fromStruct struct = (Std_.pure (Node'SourceInfo'newtype_ struct))
+instance (Classes.ToStruct msg (Node'SourceInfo msg)) where
+    toStruct (Node'SourceInfo'newtype_ struct) = struct
+instance (Untyped.HasMessage (Node'SourceInfo msg)) where
+    type InMessage (Node'SourceInfo msg) = msg
+    message (Node'SourceInfo'newtype_ struct) = (Untyped.message struct)
+instance (Untyped.MessageDefault (Node'SourceInfo msg)) where
+    messageDefault msg = (Node'SourceInfo'newtype_ (Untyped.messageDefault msg))
+instance (Classes.FromPtr msg (Node'SourceInfo msg)) where
+    fromPtr msg ptr = (Node'SourceInfo'newtype_ <$> (Classes.fromPtr msg ptr))
+instance (Classes.ToPtr s (Node'SourceInfo (Message.MutMsg s))) where
+    toPtr msg (Node'SourceInfo'newtype_ struct) = (Classes.toPtr msg struct)
+instance (Classes.Allocate s (Node'SourceInfo (Message.MutMsg s))) where
+    new msg = (Node'SourceInfo'newtype_ <$> (Untyped.allocStruct msg 1 2))
+instance (Basics.ListElem msg (Node'SourceInfo msg)) where
+    newtype List msg (Node'SourceInfo msg)
+        = Node'SourceInfo'List_ (Untyped.ListOf msg (Untyped.Struct msg))
+    listFromPtr msg ptr = (Node'SourceInfo'List_ <$> (Classes.fromPtr msg ptr))
+    toUntypedList (Node'SourceInfo'List_ l) = (Untyped.ListStruct l)
+    length (Node'SourceInfo'List_ l) = (Untyped.length l)
+    index i (Node'SourceInfo'List_ l) = (do
+        elt <- (Untyped.index i l)
+        (Classes.fromStruct elt)
+        )
+instance (Basics.MutListElem s (Node'SourceInfo (Message.MutMsg s))) where
+    setIndex (Node'SourceInfo'newtype_ elt) i (Node'SourceInfo'List_ l) = (Untyped.setIndex elt i l)
+    newList msg len = (Node'SourceInfo'List_ <$> (Untyped.allocCompositeList msg 1 2 len))
+get_Node'SourceInfo'id :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo msg) -> (m Std_.Word64)
+get_Node'SourceInfo'id (Node'SourceInfo'newtype_ struct) = (GenHelpers.getWordField struct 0 0 0)
+set_Node'SourceInfo'id :: ((Untyped.RWCtx m s)) => (Node'SourceInfo (Message.MutMsg s)) -> Std_.Word64 -> (m ())
+set_Node'SourceInfo'id (Node'SourceInfo'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word64) 0 0 0)
+get_Node'SourceInfo'docComment :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo msg) -> (m (Basics.Text msg))
+get_Node'SourceInfo'docComment (Node'SourceInfo'newtype_ struct) = (do
+    ptr <- (Untyped.getPtr 0 struct)
+    (Classes.fromPtr (Untyped.message struct) ptr)
+    )
+set_Node'SourceInfo'docComment :: ((Untyped.RWCtx m s)) => (Node'SourceInfo (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_Node'SourceInfo'docComment (Node'SourceInfo'newtype_ struct) value = (do
+    ptr <- (Classes.toPtr (Untyped.message struct) value)
+    (Untyped.setPtr ptr 0 struct)
+    )
+has_Node'SourceInfo'docComment :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo msg) -> (m Std_.Bool)
+has_Node'SourceInfo'docComment (Node'SourceInfo'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
+new_Node'SourceInfo'docComment :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'SourceInfo (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Node'SourceInfo'docComment len struct = (do
+    result <- (Basics.newText (Untyped.message struct) len)
+    (set_Node'SourceInfo'docComment struct result)
+    (Std_.pure result)
+    )
+get_Node'SourceInfo'members :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo msg) -> (m (Basics.List msg (Node'SourceInfo'Member msg)))
+get_Node'SourceInfo'members (Node'SourceInfo'newtype_ struct) = (do
+    ptr <- (Untyped.getPtr 1 struct)
+    (Classes.fromPtr (Untyped.message struct) ptr)
+    )
+set_Node'SourceInfo'members :: ((Untyped.RWCtx m s)) => (Node'SourceInfo (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Node'SourceInfo'Member (Message.MutMsg s))) -> (m ())
+set_Node'SourceInfo'members (Node'SourceInfo'newtype_ struct) value = (do
+    ptr <- (Classes.toPtr (Untyped.message struct) value)
+    (Untyped.setPtr ptr 1 struct)
+    )
+has_Node'SourceInfo'members :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo msg) -> (m Std_.Bool)
+has_Node'SourceInfo'members (Node'SourceInfo'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 1 struct))
+new_Node'SourceInfo'members :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'SourceInfo (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Node'SourceInfo'Member (Message.MutMsg s))))
+new_Node'SourceInfo'members len struct = (do
+    result <- (Classes.newList (Untyped.message struct) len)
+    (set_Node'SourceInfo'members struct result)
+    (Std_.pure result)
+    )
+newtype Node'SourceInfo'Member msg
+    = Node'SourceInfo'Member'newtype_ (Untyped.Struct msg)
+instance (Untyped.TraverseMsg Node'SourceInfo'Member) where
+    tMsg f (Node'SourceInfo'Member'newtype_ s) = (Node'SourceInfo'Member'newtype_ <$> (Untyped.tMsg f s))
+instance (Classes.FromStruct msg (Node'SourceInfo'Member msg)) where
+    fromStruct struct = (Std_.pure (Node'SourceInfo'Member'newtype_ struct))
+instance (Classes.ToStruct msg (Node'SourceInfo'Member msg)) where
+    toStruct (Node'SourceInfo'Member'newtype_ struct) = struct
+instance (Untyped.HasMessage (Node'SourceInfo'Member msg)) where
+    type InMessage (Node'SourceInfo'Member msg) = msg
+    message (Node'SourceInfo'Member'newtype_ struct) = (Untyped.message struct)
+instance (Untyped.MessageDefault (Node'SourceInfo'Member msg)) where
+    messageDefault msg = (Node'SourceInfo'Member'newtype_ (Untyped.messageDefault msg))
+instance (Classes.FromPtr msg (Node'SourceInfo'Member msg)) where
+    fromPtr msg ptr = (Node'SourceInfo'Member'newtype_ <$> (Classes.fromPtr msg ptr))
+instance (Classes.ToPtr s (Node'SourceInfo'Member (Message.MutMsg s))) where
+    toPtr msg (Node'SourceInfo'Member'newtype_ struct) = (Classes.toPtr msg struct)
+instance (Classes.Allocate s (Node'SourceInfo'Member (Message.MutMsg s))) where
+    new msg = (Node'SourceInfo'Member'newtype_ <$> (Untyped.allocStruct msg 0 1))
+instance (Basics.ListElem msg (Node'SourceInfo'Member msg)) where
+    newtype List msg (Node'SourceInfo'Member msg)
+        = Node'SourceInfo'Member'List_ (Untyped.ListOf msg (Untyped.Struct msg))
+    listFromPtr msg ptr = (Node'SourceInfo'Member'List_ <$> (Classes.fromPtr msg ptr))
+    toUntypedList (Node'SourceInfo'Member'List_ l) = (Untyped.ListStruct l)
+    length (Node'SourceInfo'Member'List_ l) = (Untyped.length l)
+    index i (Node'SourceInfo'Member'List_ l) = (do
+        elt <- (Untyped.index i l)
+        (Classes.fromStruct elt)
+        )
+instance (Basics.MutListElem s (Node'SourceInfo'Member (Message.MutMsg s))) where
+    setIndex (Node'SourceInfo'Member'newtype_ elt) i (Node'SourceInfo'Member'List_ l) = (Untyped.setIndex elt i l)
+    newList msg len = (Node'SourceInfo'Member'List_ <$> (Untyped.allocCompositeList msg 0 1 len))
+get_Node'SourceInfo'Member'docComment :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo'Member msg) -> (m (Basics.Text msg))
+get_Node'SourceInfo'Member'docComment (Node'SourceInfo'Member'newtype_ struct) = (do
+    ptr <- (Untyped.getPtr 0 struct)
+    (Classes.fromPtr (Untyped.message struct) ptr)
+    )
+set_Node'SourceInfo'Member'docComment :: ((Untyped.RWCtx m s)) => (Node'SourceInfo'Member (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_Node'SourceInfo'Member'docComment (Node'SourceInfo'Member'newtype_ struct) value = (do
+    ptr <- (Classes.toPtr (Untyped.message struct) value)
+    (Untyped.setPtr ptr 0 struct)
+    )
+has_Node'SourceInfo'Member'docComment :: ((Untyped.ReadCtx m msg)) => (Node'SourceInfo'Member msg) -> (m Std_.Bool)
+has_Node'SourceInfo'Member'docComment (Node'SourceInfo'Member'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 0 struct))
+new_Node'SourceInfo'Member'docComment :: ((Untyped.RWCtx m s)) => Std_.Int -> (Node'SourceInfo'Member (Message.MutMsg s)) -> (m (Basics.Text (Message.MutMsg s)))
+new_Node'SourceInfo'Member'docComment len struct = (do
+    result <- (Basics.newText (Untyped.message struct) len)
+    (set_Node'SourceInfo'Member'docComment struct result)
+    (Std_.pure result)
+    )
 newtype Field msg
     = Field'newtype_ (Untyped.Struct msg)
 instance (Untyped.TraverseMsg Field) where
@@ -2139,7 +2261,7 @@ instance (Classes.FromPtr msg (CodeGeneratorRequest msg)) where
 instance (Classes.ToPtr s (CodeGeneratorRequest (Message.MutMsg s))) where
     toPtr msg (CodeGeneratorRequest'newtype_ struct) = (Classes.toPtr msg struct)
 instance (Classes.Allocate s (CodeGeneratorRequest (Message.MutMsg s))) where
-    new msg = (CodeGeneratorRequest'newtype_ <$> (Untyped.allocStruct msg 0 3))
+    new msg = (CodeGeneratorRequest'newtype_ <$> (Untyped.allocStruct msg 0 4))
 instance (Basics.ListElem msg (CodeGeneratorRequest msg)) where
     newtype List msg (CodeGeneratorRequest msg)
         = CodeGeneratorRequest'List_ (Untyped.ListOf msg (Untyped.Struct msg))
@@ -2152,7 +2274,7 @@ instance (Basics.ListElem msg (CodeGeneratorRequest msg)) where
         )
 instance (Basics.MutListElem s (CodeGeneratorRequest (Message.MutMsg s))) where
     setIndex (CodeGeneratorRequest'newtype_ elt) i (CodeGeneratorRequest'List_ l) = (Untyped.setIndex elt i l)
-    newList msg len = (CodeGeneratorRequest'List_ <$> (Untyped.allocCompositeList msg 0 3 len))
+    newList msg len = (CodeGeneratorRequest'List_ <$> (Untyped.allocCompositeList msg 0 4 len))
 get_CodeGeneratorRequest'nodes :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest msg) -> (m (Basics.List msg (Node msg)))
 get_CodeGeneratorRequest'nodes (CodeGeneratorRequest'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 0 struct)
@@ -2205,6 +2327,24 @@ new_CodeGeneratorRequest'capnpVersion :: ((Untyped.RWCtx m s)) => (CodeGenerator
 new_CodeGeneratorRequest'capnpVersion struct = (do
     result <- (Classes.new (Untyped.message struct))
     (set_CodeGeneratorRequest'capnpVersion struct result)
+    (Std_.pure result)
+    )
+get_CodeGeneratorRequest'sourceInfo :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest msg) -> (m (Basics.List msg (Node'SourceInfo msg)))
+get_CodeGeneratorRequest'sourceInfo (CodeGeneratorRequest'newtype_ struct) = (do
+    ptr <- (Untyped.getPtr 3 struct)
+    (Classes.fromPtr (Untyped.message struct) ptr)
+    )
+set_CodeGeneratorRequest'sourceInfo :: ((Untyped.RWCtx m s)) => (CodeGeneratorRequest (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Node'SourceInfo (Message.MutMsg s))) -> (m ())
+set_CodeGeneratorRequest'sourceInfo (CodeGeneratorRequest'newtype_ struct) value = (do
+    ptr <- (Classes.toPtr (Untyped.message struct) value)
+    (Untyped.setPtr ptr 3 struct)
+    )
+has_CodeGeneratorRequest'sourceInfo :: ((Untyped.ReadCtx m msg)) => (CodeGeneratorRequest msg) -> (m Std_.Bool)
+has_CodeGeneratorRequest'sourceInfo (CodeGeneratorRequest'newtype_ struct) = (Std_.isJust <$> (Untyped.getPtr 3 struct))
+new_CodeGeneratorRequest'sourceInfo :: ((Untyped.RWCtx m s)) => Std_.Int -> (CodeGeneratorRequest (Message.MutMsg s)) -> (m (Basics.List (Message.MutMsg s) (Node'SourceInfo (Message.MutMsg s))))
+new_CodeGeneratorRequest'sourceInfo len struct = (do
+    result <- (Classes.newList (Untyped.message struct) len)
+    (set_CodeGeneratorRequest'sourceInfo struct result)
     (Std_.pure result)
     )
 newtype CodeGeneratorRequest'RequestedFile msg

@@ -41,6 +41,18 @@ instance Arbitrary Node where
         union' <- arbitrary
         pure Node{..}
 
+instance Arbitrary Node'SourceInfo where
+    shrink = genericShrink
+    arbitrary = do
+        id <- arbitrary
+        docComment <- arbitrary
+        members <- arbitrarySmallerVec
+        pure Node'SourceInfo{..}
+
+instance Arbitrary Node'SourceInfo'Member where
+    shrink = genericShrink
+    arbitrary = Node'SourceInfo'Member <$> arbitrary
+
 instance Arbitrary Node' where
     shrink = genericShrink
     arbitrary = oneof
@@ -267,6 +279,7 @@ instance Arbitrary CodeGeneratorRequest where
         capnpVersion <- arbitrary
         nodes <- arbitrarySmallerVec
         requestedFiles <- arbitrarySmallerVec
+        sourceInfo <- arbitrarySmallerVec
         pure CodeGeneratorRequest{..}
 
 instance Arbitrary CodeGeneratorRequest'RequestedFile where

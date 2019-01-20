@@ -14,6 +14,8 @@ module Capnp.Gen.Capnp.Schema.Pure(Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize(
                                   ,Node'(..)
                                   ,Node'Parameter(..)
                                   ,Node'NestedNode(..)
+                                  ,Node'SourceInfo(..)
+                                  ,Node'SourceInfo'Member(..)
                                   ,Field(..)
                                   ,Field'(..)
                                   ,Field'ordinal(..)
@@ -322,6 +324,82 @@ instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector No
 instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode)))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+data Node'SourceInfo 
+    = Node'SourceInfo 
+        {id :: Std_.Word64
+        ,docComment :: T.Text
+        ,members :: (V.Vector Node'SourceInfo'Member)}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'SourceInfo) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'SourceInfo) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'SourceInfo) where
+    type Cerial msg Node'SourceInfo = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'SourceInfo msg)
+    decerialize raw = (Node'SourceInfo <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'id raw)
+                                       <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'docComment raw) >>= Classes.decerialize)
+                                       <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'members raw) >>= Classes.decerialize))
+instance (Classes.Marshal Node'SourceInfo) where
+    marshalInto raw_ value_ = case value_ of
+        Node'SourceInfo{..} ->
+            (do
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'SourceInfo'id raw_ id)
+                ((Classes.cerialize (Untyped.message raw_) docComment) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'SourceInfo'docComment raw_))
+                ((Classes.cerialize (Untyped.message raw_) members) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'SourceInfo'members raw_))
+                (Std_.pure ())
+                )
+instance (Classes.Cerialize Node'SourceInfo)
+instance (Classes.Cerialize (V.Vector Node'SourceInfo)) where
+    cerialize  = GenHelpersPure.cerializeCompositeVec
+instance (Classes.Cerialize (V.Vector (V.Vector Node'SourceInfo))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node'SourceInfo)))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo)))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo)))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+data Node'SourceInfo'Member 
+    = Node'SourceInfo'Member 
+        {docComment :: T.Text}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'SourceInfo'Member) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'SourceInfo'Member) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'SourceInfo'Member) where
+    type Cerial msg Node'SourceInfo'Member = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'SourceInfo'Member msg)
+    decerialize raw = (Node'SourceInfo'Member <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'Member'docComment raw) >>= Classes.decerialize))
+instance (Classes.Marshal Node'SourceInfo'Member) where
+    marshalInto raw_ value_ = case value_ of
+        Node'SourceInfo'Member{..} ->
+            (do
+                ((Classes.cerialize (Untyped.message raw_) docComment) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'SourceInfo'Member'docComment raw_))
+                (Std_.pure ())
+                )
+instance (Classes.Cerialize Node'SourceInfo'Member)
+instance (Classes.Cerialize (V.Vector Node'SourceInfo'Member)) where
+    cerialize  = GenHelpersPure.cerializeCompositeVec
+instance (Classes.Cerialize (V.Vector (V.Vector Node'SourceInfo'Member))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Field 
     = Field 
@@ -1219,7 +1297,8 @@ data CodeGeneratorRequest
     = CodeGeneratorRequest 
         {nodes :: (V.Vector Node)
         ,requestedFiles :: (V.Vector CodeGeneratorRequest'RequestedFile)
-        ,capnpVersion :: CapnpVersion}
+        ,capnpVersion :: CapnpVersion
+        ,sourceInfo :: (V.Vector Node'SourceInfo)}
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
@@ -1231,7 +1310,8 @@ instance (Classes.Decerialize CodeGeneratorRequest) where
     type Cerial msg CodeGeneratorRequest = (Capnp.Gen.ById.Xa93fc509624c72d9.CodeGeneratorRequest msg)
     decerialize raw = (CodeGeneratorRequest <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'nodes raw) >>= Classes.decerialize)
                                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'requestedFiles raw) >>= Classes.decerialize)
-                                            <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'capnpVersion raw) >>= Classes.decerialize))
+                                            <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'capnpVersion raw) >>= Classes.decerialize)
+                                            <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'sourceInfo raw) >>= Classes.decerialize))
 instance (Classes.Marshal CodeGeneratorRequest) where
     marshalInto raw_ value_ = case value_ of
         CodeGeneratorRequest{..} ->
@@ -1239,6 +1319,7 @@ instance (Classes.Marshal CodeGeneratorRequest) where
                 ((Classes.cerialize (Untyped.message raw_) nodes) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'nodes raw_))
                 ((Classes.cerialize (Untyped.message raw_) requestedFiles) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'requestedFiles raw_))
                 ((Classes.cerialize (Untyped.message raw_) capnpVersion) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'capnpVersion raw_))
+                ((Classes.cerialize (Untyped.message raw_) sourceInfo) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'sourceInfo raw_))
                 (Std_.pure ())
                 )
 instance (Classes.Cerialize CodeGeneratorRequest)

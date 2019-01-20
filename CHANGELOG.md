@@ -18,6 +18,8 @@
 * Reorganization of the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
   * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
+* The included generated modules for the core schema have been updated
+  to those shipped with version 0.7 of the reference implementation.
 * Other miscellaneous API Changes:
   * `createPure` can now be used with any instance of `MonadThrow`, not
     just `Either SomeException`.

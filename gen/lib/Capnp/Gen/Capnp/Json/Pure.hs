@@ -9,9 +9,11 @@
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module Capnp.Gen.Capnp.Json.Pure(JsonValue(..)
-                                ,JsonValue'Field(..)
-                                ,JsonValue'Call(..)) where
+module Capnp.Gen.Capnp.Json.Pure(Value(..)
+                                ,Value'Field(..)
+                                ,Value'Call(..)
+                                ,FlattenOptions(..)
+                                ,DiscriminatorOptions(..)) where
 import qualified Data.Vector as V
 import qualified Data.Text as T
 import qualified Data.ByteString as BS
@@ -31,150 +33,223 @@ import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
-data JsonValue 
-    = JsonValue'null 
-    | JsonValue'boolean Std_.Bool
-    | JsonValue'number Std_.Double
-    | JsonValue'string T.Text
-    | JsonValue'array (V.Vector JsonValue)
-    | JsonValue'object (V.Vector JsonValue'Field)
-    | JsonValue'call JsonValue'Call
-    | JsonValue'unknown' Std_.Word16
+data Value 
+    = Value'null 
+    | Value'boolean Std_.Bool
+    | Value'number Std_.Double
+    | Value'string T.Text
+    | Value'array (V.Vector Value)
+    | Value'object (V.Vector Value'Field)
+    | Value'call Value'Call
+    | Value'unknown' Std_.Word16
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default JsonValue) where
+instance (Default.Default Value) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg JsonValue) where
+instance (Classes.FromStruct Message.ConstMsg Value) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize JsonValue) where
-    type Cerial msg JsonValue = (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue msg)
+instance (Classes.Decerialize Value) where
+    type Cerial msg Value = (Capnp.Gen.ById.X8ef99297a43a5e34.Value msg)
     decerialize raw = (do
-        raw <- (Capnp.Gen.ById.X8ef99297a43a5e34.get_JsonValue' raw)
+        raw <- (Capnp.Gen.ById.X8ef99297a43a5e34.get_Value' raw)
         case raw of
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'null) ->
-                (Std_.pure JsonValue'null)
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'boolean raw) ->
-                (Std_.pure (JsonValue'boolean raw))
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'number raw) ->
-                (Std_.pure (JsonValue'number raw))
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'string raw) ->
-                (JsonValue'string <$> (Classes.decerialize raw))
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'array raw) ->
-                (JsonValue'array <$> (Classes.decerialize raw))
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'object raw) ->
-                (JsonValue'object <$> (Classes.decerialize raw))
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'call raw) ->
-                (JsonValue'call <$> (Classes.decerialize raw))
-            (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'unknown' tag) ->
-                (Std_.pure (JsonValue'unknown' tag))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'null) ->
+                (Std_.pure Value'null)
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'boolean raw) ->
+                (Std_.pure (Value'boolean raw))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'number raw) ->
+                (Std_.pure (Value'number raw))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'string raw) ->
+                (Value'string <$> (Classes.decerialize raw))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'array raw) ->
+                (Value'array <$> (Classes.decerialize raw))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'object raw) ->
+                (Value'object <$> (Classes.decerialize raw))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'call raw) ->
+                (Value'call <$> (Classes.decerialize raw))
+            (Capnp.Gen.ById.X8ef99297a43a5e34.Value'unknown' tag) ->
+                (Std_.pure (Value'unknown' tag))
         )
-instance (Classes.Marshal JsonValue) where
+instance (Classes.Marshal Value) where
     marshalInto raw_ value_ = case value_ of
-        (JsonValue'null) ->
-            (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'null raw_)
-        (JsonValue'boolean arg_) ->
-            (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'boolean raw_ arg_)
-        (JsonValue'number arg_) ->
-            (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'number raw_ arg_)
-        (JsonValue'string arg_) ->
-            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'string raw_))
-        (JsonValue'array arg_) ->
-            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'array raw_))
-        (JsonValue'object arg_) ->
-            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'object raw_))
-        (JsonValue'call arg_) ->
-            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'call raw_))
-        (JsonValue'unknown' tag) ->
-            (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'unknown' raw_ tag)
-instance (Classes.Cerialize JsonValue)
-instance (Classes.Cerialize (V.Vector JsonValue)) where
+        (Value'null) ->
+            (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'null raw_)
+        (Value'boolean arg_) ->
+            (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'boolean raw_ arg_)
+        (Value'number arg_) ->
+            (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'number raw_ arg_)
+        (Value'string arg_) ->
+            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'string raw_))
+        (Value'array arg_) ->
+            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'array raw_))
+        (Value'object arg_) ->
+            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'object raw_))
+        (Value'call arg_) ->
+            ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'call raw_))
+        (Value'unknown' tag) ->
+            (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'unknown' raw_ tag)
+instance (Classes.Cerialize Value)
+instance (Classes.Cerialize (V.Vector Value)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector JsonValue))) where
+instance (Classes.Cerialize (V.Vector (V.Vector Value))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector JsonValue)))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Value)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector JsonValue))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Value))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue)))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue))))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue)))))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-data JsonValue'Field 
-    = JsonValue'Field 
+data Value'Field 
+    = Value'Field 
         {name :: T.Text
-        ,value :: JsonValue}
+        ,value :: Value}
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default JsonValue'Field) where
+instance (Default.Default Value'Field) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg JsonValue'Field) where
+instance (Classes.FromStruct Message.ConstMsg Value'Field) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize JsonValue'Field) where
-    type Cerial msg JsonValue'Field = (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'Field msg)
-    decerialize raw = (JsonValue'Field <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_JsonValue'Field'name raw) >>= Classes.decerialize)
-                                       <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_JsonValue'Field'value raw) >>= Classes.decerialize))
-instance (Classes.Marshal JsonValue'Field) where
+instance (Classes.Decerialize Value'Field) where
+    type Cerial msg Value'Field = (Capnp.Gen.ById.X8ef99297a43a5e34.Value'Field msg)
+    decerialize raw = (Value'Field <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Field'name raw) >>= Classes.decerialize)
+                                   <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Field'value raw) >>= Classes.decerialize))
+instance (Classes.Marshal Value'Field) where
     marshalInto raw_ value_ = case value_ of
-        JsonValue'Field{..} ->
+        Value'Field{..} ->
             (do
-                ((Classes.cerialize (Untyped.message raw_) name) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'Field'name raw_))
-                ((Classes.cerialize (Untyped.message raw_) value) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'Field'value raw_))
+                ((Classes.cerialize (Untyped.message raw_) name) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'Field'name raw_))
+                ((Classes.cerialize (Untyped.message raw_) value) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'Field'value raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize JsonValue'Field)
-instance (Classes.Cerialize (V.Vector JsonValue'Field)) where
+instance (Classes.Cerialize Value'Field)
+instance (Classes.Cerialize (V.Vector Value'Field)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector JsonValue'Field))) where
+instance (Classes.Cerialize (V.Vector (V.Vector Value'Field))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector JsonValue'Field)))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Value'Field)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Field))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Value'Field))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Field)))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value'Field)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Field))))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value'Field))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Field)))))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value'Field)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-data JsonValue'Call 
-    = JsonValue'Call 
+data Value'Call 
+    = Value'Call 
         {function :: T.Text
-        ,params :: (V.Vector JsonValue)}
+        ,params :: (V.Vector Value)}
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default JsonValue'Call) where
+instance (Default.Default Value'Call) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg JsonValue'Call) where
+instance (Classes.FromStruct Message.ConstMsg Value'Call) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize JsonValue'Call) where
-    type Cerial msg JsonValue'Call = (Capnp.Gen.ById.X8ef99297a43a5e34.JsonValue'Call msg)
-    decerialize raw = (JsonValue'Call <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_JsonValue'Call'function raw) >>= Classes.decerialize)
-                                      <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_JsonValue'Call'params raw) >>= Classes.decerialize))
-instance (Classes.Marshal JsonValue'Call) where
+instance (Classes.Decerialize Value'Call) where
+    type Cerial msg Value'Call = (Capnp.Gen.ById.X8ef99297a43a5e34.Value'Call msg)
+    decerialize raw = (Value'Call <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Call'function raw) >>= Classes.decerialize)
+                                  <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Call'params raw) >>= Classes.decerialize))
+instance (Classes.Marshal Value'Call) where
     marshalInto raw_ value_ = case value_ of
-        JsonValue'Call{..} ->
+        Value'Call{..} ->
             (do
-                ((Classes.cerialize (Untyped.message raw_) function) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'Call'function raw_))
-                ((Classes.cerialize (Untyped.message raw_) params) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_JsonValue'Call'params raw_))
+                ((Classes.cerialize (Untyped.message raw_) function) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'Call'function raw_))
+                ((Classes.cerialize (Untyped.message raw_) params) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'Call'params raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize JsonValue'Call)
-instance (Classes.Cerialize (V.Vector JsonValue'Call)) where
+instance (Classes.Cerialize Value'Call)
+instance (Classes.Cerialize (V.Vector Value'Call)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector JsonValue'Call))) where
+instance (Classes.Cerialize (V.Vector (V.Vector Value'Call))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector JsonValue'Call)))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Value'Call)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Call))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Value'Call))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Call)))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value'Call)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Call))))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value'Call))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector JsonValue'Call)))))))) where
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value'Call)))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+data FlattenOptions 
+    = FlattenOptions 
+        {prefix :: T.Text}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default FlattenOptions) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg FlattenOptions) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize FlattenOptions) where
+    type Cerial msg FlattenOptions = (Capnp.Gen.ById.X8ef99297a43a5e34.FlattenOptions msg)
+    decerialize raw = (FlattenOptions <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_FlattenOptions'prefix raw) >>= Classes.decerialize))
+instance (Classes.Marshal FlattenOptions) where
+    marshalInto raw_ value_ = case value_ of
+        FlattenOptions{..} ->
+            (do
+                ((Classes.cerialize (Untyped.message raw_) prefix) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_FlattenOptions'prefix raw_))
+                (Std_.pure ())
+                )
+instance (Classes.Cerialize FlattenOptions)
+instance (Classes.Cerialize (V.Vector FlattenOptions)) where
+    cerialize  = GenHelpersPure.cerializeCompositeVec
+instance (Classes.Cerialize (V.Vector (V.Vector FlattenOptions))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector FlattenOptions)))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector FlattenOptions))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector FlattenOptions)))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector FlattenOptions))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector FlattenOptions)))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+data DiscriminatorOptions 
+    = DiscriminatorOptions 
+        {name :: T.Text
+        ,valueName :: T.Text}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default DiscriminatorOptions) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg DiscriminatorOptions) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize DiscriminatorOptions) where
+    type Cerial msg DiscriminatorOptions = (Capnp.Gen.ById.X8ef99297a43a5e34.DiscriminatorOptions msg)
+    decerialize raw = (DiscriminatorOptions <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_DiscriminatorOptions'name raw) >>= Classes.decerialize)
+                                            <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_DiscriminatorOptions'valueName raw) >>= Classes.decerialize))
+instance (Classes.Marshal DiscriminatorOptions) where
+    marshalInto raw_ value_ = case value_ of
+        DiscriminatorOptions{..} ->
+            (do
+                ((Classes.cerialize (Untyped.message raw_) name) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_DiscriminatorOptions'name raw_))
+                ((Classes.cerialize (Untyped.message raw_) valueName) >>= (Capnp.Gen.ById.X8ef99297a43a5e34.set_DiscriminatorOptions'valueName raw_))
+                (Std_.pure ())
+                )
+instance (Classes.Cerialize DiscriminatorOptions)
+instance (Classes.Cerialize (V.Vector DiscriminatorOptions)) where
+    cerialize  = GenHelpersPure.cerializeCompositeVec
+instance (Classes.Cerialize (V.Vector (V.Vector DiscriminatorOptions))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector DiscriminatorOptions)))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector DiscriminatorOptions))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector DiscriminatorOptions)))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector DiscriminatorOptions))))))) where
+    cerialize  = GenHelpersPure.cerializeBasicVec
+instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector DiscriminatorOptions)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec

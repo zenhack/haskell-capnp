@@ -114,6 +114,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                         "hello.capnp"
                         [CodeGeneratorRequest'RequestedFile'Import 2 "std"]
                     ]
+                , sourceInfo = []
                 }
           )
         ]

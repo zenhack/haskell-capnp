@@ -233,11 +233,11 @@ struct Message {
 
     abort @1 :Exception;
     # Sent when a connection is being aborted due to an unrecoverable error.  This could be e.g.
-    # because the sender received an invalid or nonsensical message (`isCallersFault` is true) or
-    # because the sender had an internal error (`isCallersFault` is false).  The sender will shut
-    # down the outgoing half of the connection after `abort` and will completely close the
-    # connection shortly thereafter (it's up to the sender how much of a time buffer they want to
-    # offer for the client to receive the `abort` before the connection is reset).
+    # because the sender received an invalid or nonsensical message or because the sender had an
+    # internal error.  The sender will shut down the outgoing half of the connection after `abort`
+    # and will completely close the connection shortly thereafter (it's up to the sender how much
+    # of a time buffer they want to offer for the client to receive the `abort` before the
+    # connection is reset).
 
     # Level 0 features -----------------------------------------------
 
@@ -317,7 +317,7 @@ struct Bootstrap {
   # which one to return. If this pointer is null, then the default bootstrap interface is returned.
   #
   # As of verison 0.5, use of this field is deprecated. If a service wants to export multiple
-  # bootstrap interfaces, it should instead define a single bootstarp interface that has methods
+  # bootstrap interfaces, it should instead define a single bootstrap interface that has methods
   # that return each of the other interfaces.
   #
   # **History**
@@ -446,23 +446,22 @@ struct Call {
     # in the calls so that the results need not pass back through Vat B.
     #
     # For example:
-    # - Alice, in Vat A, call foo() on Bob in Vat B.
+    # - Alice, in Vat A, calls foo() on Bob in Vat B.
     # - Alice makes a pipelined call bar() on the promise returned by foo().
     # - Later on, Bob resolves the promise from foo() to point at Carol, who lives in Vat A (next
     #   to Alice).
     # - Vat B dutifully forwards the bar() call to Carol.  Let us call this forwarded call bar'().
     #   Notice that bar() and bar'() are travelling in opposite directions on the same network
     #   link.
-    # - The `Call` for bar'() has `sendResultsTo` set to `yourself`, with the value being the
-    #   question ID originally assigned to the bar() call.
+    # - The `Call` for bar'() has `sendResultsTo` set to `yourself`.
+    # - Vat B sends a `Return` for bar() with `takeFromOtherQuestion` set in place of the results,
+    #   with the value set to the question ID of bar'().  Vat B does not wait for bar'() to return,
+    #   as doing so would introduce unnecessary round trip latency.
     # - Vat A receives bar'() and delivers it to Carol.
-    # - When bar'() returns, Vat A immediately takes the results and returns them from bar().
-    # - Meanwhile, Vat A sends a `Return` for bar'() to Vat B, with `resultsSentElsewhere` set in
-    #   place of results.
-    # - Vat A sends a `Finish` for that call to Vat B.
-    # - Vat B receives the `Return` for bar'() and sends a `Return` for bar(), with
-    #   `receivedFromYourself` set in place of the results.
-    # - Vat B receives the `Finish` for bar() and sends a `Finish` to bar'().
+    # - When bar'() returns, Vat A sends a `Return` for bar'() to Vat B, with `resultsSentElsewhere`
+    #   set in place of results.
+    # - Vat A sends a `Finish` for the bar() call to Vat B.
+    # - Vat B receives the `Finish` for bar() and sends a `Finish` for bar'().
 
     thirdParty @7 :RecipientId;
     # **(level 3)**
@@ -493,6 +492,9 @@ struct Return {
   # should always set this true.  This defaults true because if level 0 implementations forget to
   # set it they'll never notice (just silently leak caps), but if level >=1 implementations forget
   # to set it to false they'll quickly get errors.
+  #
+  # The receiver should act as if the sender had sent a release message with count=1 for each
+  # CapDescriptor in the original Call message.
 
   union {
     results @2 :Payload;
@@ -500,9 +502,9 @@ struct Return {
     #
     # For regular method calls, `results.content` points to the result struct.
     #
-    # For a `Return` in response to an `Accept`, `results` contains a single capability (rather
-    # than a struct), and `results.content` is just a capability pointer with index 0.  A `Finish`
-    # is still required in this case.
+    # For a `Return` in response to an `Accept` or `Bootstrap`, `results` contains a single
+    # capability (rather than a struct), and `results.content` is just a capability pointer with
+    # index 0.  A `Finish` is still required in this case.
 
     exception @3 :Exception;
     # Indicates that the call failed and explains why.
@@ -514,11 +516,15 @@ struct Return {
     resultsSentElsewhere @5 :Void;
     # This is set when returning from a `Call` that had `sendResultsTo` set to something other
     # than `caller`.
+    #
+    # It doesn't matter too much when this is sent, as the receiver doesn't need to do anything
+    # with it, but the C++ implementation appears to wait for the call to finish before sending
+    # this.
 
     takeFromOtherQuestion @6 :QuestionId;
     # The sender has also sent (before this message) a `Call` with the given question ID and with
     # `sendResultsTo.yourself` set, and the results of that other call should be used as the
-    # results here.
+    # results here.  `takeFromOtherQuestion` can only used once per question.
 
     acceptFromThirdParty @7 :ThirdPartyCapId;
     # **(level 3)**
@@ -692,7 +698,7 @@ struct Disembargo {
   # Extending the embargo/disembargo protocol to be able to shorted multiple hops at once seems
   # difficult. Instead, we make a rule that prevents this case from coming up:
   #
-  # One a promise P has been resolved to a remove object reference R, then all further messages
+  # One a promise P has been resolved to a remote object reference R, then all further messages
   # received addressed to P will be forwarded strictly to R. Even if it turns out later that R is
   # itself a promise, and has resolved to some other object Q, messages sent to P will still be
   # forwarded to R, not directly to Q (R will of course further forward the messages to Q).
@@ -781,7 +787,7 @@ struct Accept {
   # Message type sent to pick up a capability hosted by the receiving vat and provided by a third
   # party.  The third party previously designated the capability using `Provide`.
   #
-  # This message is also used to pick up a redirected return -- see `Return.redirect`.
+  # This message is also used to pick up a redirected return -- see `Return.acceptFromThirdParty`.
 
   questionId @0 :QuestionId;
   # A new question ID identifying this accept message, which will eventually receive a Return
@@ -940,6 +946,11 @@ struct CapDescriptor {
   #
   # Keep in mind that `ExportIds` in a `CapDescriptor` are subject to reference counting.  See the
   # description of `ExportId`.
+  #
+  # Note that it is currently not possible to include a broken capability in the CapDescriptor
+  # table.  Instead, create a new export (`senderPromise`) for each broken capability and then
+  # immediately follow the payload-bearing Call or Return message with one Resolve message for each
+  # broken capability, resolving it to an exception.
 
   union {
     none @0 :Void;
@@ -951,8 +962,8 @@ struct CapDescriptor {
     # Hopefully this is unusual.
 
     senderHosted @1 :ExportId;
-    # A capability newly exported by the sender.  This is the ID of the new capability in the
-    # sender's export table (receiver's import table).
+    # The ID of a capability in the sender's export table (receiver's import table).  It may be a
+    # newly allocated table entry, or an existing entry (increments the reference count).
 
     senderPromise @2 :ExportId;
     # A promise that the sender will resolve later.  The sender will send exactly one Resolve
@@ -1041,7 +1052,7 @@ struct ThirdPartyCapDescriptor {
   #   simply send calls to the vine.  Such calls will be forwarded to the third-party by the
   #   sender.
   #
-  # * Level 3 implementations must release the vine once they have successfully picked up the
+  # * Level 3 implementations must release the vine only once they have successfully picked up the
   #   object from the third party.  This ensures that the capability is not released by the sender
   #   prematurely.
   #
@@ -1234,8 +1245,8 @@ using ProvisionId = AnyPointer;
 # The information that must be sent in an `Accept` message to identify the object being accepted.
 #
 # In a network where each vat has a public/private key pair, this could simply be the public key
-# fingerprint of the provider vat along with the question ID used in the `Provide` message sent from
-# that provider.
+# fingerprint of the provider vat along with a nonce matching the one in the `RecipientId` used
+# in the `Provide` message sent from that provider.
 
 using RecipientId = AnyPointer;
 # **(level 3)**
@@ -1244,8 +1255,7 @@ using RecipientId = AnyPointer;
 # capability.
 #
 # In a network where each vat has a public/private key pair, this could simply be the public key
-# fingerprint of the recipient.  (CapTP also calls for a nonce to identify the object.  In our
-# case, the `Provide` message's `questionId` can serve as the nonce.)
+# fingerprint of the recipient along with a nonce matching the one in the `ProvisionId`.
 
 using ThirdPartyCapId = AnyPointer;
 # **(level 3)**
@@ -1254,8 +1264,8 @@ using ThirdPartyCapId = AnyPointer;
 #
 # In a network where each vat has a public/private key pair, this could be a combination of the
 # third party's public key fingerprint, hints on how to connect to the third party (e.g. an IP
-# address), and the question ID used in the corresponding `Provide` message sent to that third party
-# (used to identify which capability to pick up).
+# address), and the nonce used in the corresponding `Provide` message's `RecipientId` as sent
+# to that third party (used to identify which capability to pick up).
 
 using JoinKeyPart = AnyPointer;
 # **(level 4)**
