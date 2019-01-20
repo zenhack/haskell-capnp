@@ -378,9 +378,16 @@ ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name} } =
 
 -- | define the *'server_ class for the interface.
 ifaceClassDecl :: Word64 -> P.Interface -> Decl
-ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods } =
+ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers } =
     DcClass
-        { ctx = [TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]]
+        { ctx =
+            TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]
+            :
+            -- Add class constraints for superclasses:
+            [ let superClass = pureTName thisMod fileId (Name.mkSub local "server_")
+              in TApp superClass [tuName "m", tuName "cap"]
+            | P.IFace{name=Name.CapnpQ{local, fileId}} <- supers
+            ]
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
         , decls =
@@ -514,6 +521,16 @@ ifaceInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name} } =
     ++
     ifaceServerInstances thisMod iface
 
+-- | Generate a reference to a type defined in a pure module given:
+--
+-- * The id of the module we're in (thisMod)
+-- * The id of the module in which the type is defined (targetMod)
+-- * The local name of the type.
+pureTName :: Word64 -> Word64 -> Name.LocalQ -> Type
+pureTName thisMod targetMod local
+    | thisMod == targetMod = TLName local
+    | otherwise = tgName (pureModule targetMod) local
+
 -- | Instance declarations for this interface's client for its *'server_ class
 -- and those of its ancestors.
 ifaceServerInstances :: Word64 -> P.Interface -> [Decl]
@@ -522,9 +539,7 @@ ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, ancest
   where
     go P.IFace { name=Name.CapnpQ{local, fileId}, interfaceId, methods } =
         let className = Name.mkSub local "server_"
-            classType = if thisMod == fileId
-                then TLName className
-                else tgName (pureModule fileId) className
+            classType = pureTName thisMod fileId className
         in
         -- Can't use 'instance_' here, because we don't know ahead of time what
         -- module the class is in.
