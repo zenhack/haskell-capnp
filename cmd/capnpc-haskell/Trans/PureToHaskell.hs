@@ -341,23 +341,8 @@ declToDecls thisMod P.Data
         ]
     else
         []
-declToDecls thisMod P.Constant { name, value=C.PtrValue ty _ } =
-    [ DcValue
-        { typ = typeToType thisMod (C.PtrType ty)
-        , def = DfValue
-            { name = Name.localToUnQ name
-            , params = []
-            , value = EApp
-                (egName ["GenHelpersPure"] "toPurePtrConst")
-                [egName (rawModule thisMod) name]
-            }
-        }
-    ]
--- For these two we just re-export the ones from the raw module, so no need
--- to do anything here:
-declToDecls _thisMod P.Constant { value=C.WordValue _ _ } = []
-declToDecls _thisMod P.Constant { value=C.VoidValue } = []
-
+declToDecls thisMod P.Constant { name, value } =
+    constToDecls thisMod name value
 declToDecls thisMod (P.Interface P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods }) =
     [ DcData Data
         { dataName = Name.localToUnQ name
@@ -510,10 +495,30 @@ declToDecls thisMod (P.Interface P.IFace{ name=Name.CapnpQ{local=name}, interfac
         }
     ]
 
+-- | Generate declarations for a constant with the given name and value.
+constToDecls :: Word64 -> Name.LocalQ -> C.Value Name.CapnpQ -> [Decl]
+constToDecls thisMod name value = case value of
+    C.PtrValue ty _ ->
+        -- Generated code parses the corresponding constant from the raw
+        -- module.
+        [ DcValue
+            { typ = typeToType thisMod (C.PtrType ty)
+            , def = DfValue
+                { name = Name.localToUnQ name
+                , params = []
+                , value = EApp
+                    (egName ["GenHelpersPure"] "toPurePtrConst")
+                    [egName (rawModule thisMod) name]
+                }
+            }
+        ]
+    -- For these two we just re-export the constant from the raw module, so no
+    -- need to do anything here:
+    C.WordValue _ _ -> []
+    C.VoidValue -> []
 
 mkMethodName :: Name.LocalQ -> Name.UnQ -> Name.UnQ
 mkMethodName typeName methodName = Name.valueName $ Name.mkSub typeName methodName
-
 
 -- | Arguments to 'marshalField'
 data MarshalField = MarshalField
