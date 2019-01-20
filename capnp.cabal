@@ -200,6 +200,7 @@ executable capnpc-haskell
     , Trans.PureToHaskell
     , Trans.RawToHaskell
     , Trans.HaskellToText
+    , Check
   build-depends:
       capnp
     , wl-pprint-text ^>= 1.2

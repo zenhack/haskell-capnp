@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy.IO as TIO
 import Capnp                       (defaultLimit, getValue)
 import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
 
+import qualified Check
 import qualified IR.Flat             as Flat
 import qualified IR.Haskell          as Haskell
 import qualified Trans.CgrToStage1
@@ -26,6 +27,7 @@ import qualified Trans.Stage1ToFlat
 main :: IO ()
 main = do
     cgr <- getValue defaultLimit
+    Check.reportIssues cgr
     for_ (handleCGR cgr) $ \(path, contents) -> do
         createDirectoryIfMissing True (takeDirectory path)
         withFile path WriteMode $ \h ->
@@ -47,7 +49,6 @@ handleCGR cgr =
             )
         )
         modules
-
 
 handleFlatPure, handleFlatRaw :: [Flat.File] -> [Haskell.Module]
 

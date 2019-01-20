@@ -175,18 +175,12 @@ fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
 
 getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
 getFieldLocType nodeMap = \case
-    Schema.Field'slot{type_, defaultValue, hadExplicitDefault, offset} ->
+    Schema.Field'slot{type_, defaultValue, offset} ->
         case typeToType nodeMap type_ of
             C.VoidType ->
                 C.VoidField
-            C.PtrType ty
-                | hadExplicitDefault -> error $
-                    "Error: capnpc-haskell does not support explicit default " ++
-                    "field values for pointer types. See:\n" ++
-                    "\n" ++
-                    "    https://github.com/zenhack/haskell-capnp/issues/28"
-                | otherwise ->
-                    C.PtrField (fromIntegral offset) ty
+            C.PtrType ty ->
+                C.PtrField (fromIntegral offset) ty
             C.WordType ty ->
                 case valueBits defaultValue of
                     Nothing -> error $
