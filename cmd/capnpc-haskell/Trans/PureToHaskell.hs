@@ -156,13 +156,18 @@ enumInstances thisMod name =
 
 -- | Convert an 'IR.Pure.Decl' into a series of Haskell declarations.
 declToDecls :: Word64 -> P.Decl -> [Decl]
-declToDecls thisMod (P.DataDecl P.Data
+declToDecls thisMod (P.DataDecl data_)     = dataToDecls thisMod data_
+declToDecls thisMod (P.ConstDecl constant) = constToDecls thisMod constant
+declToDecls thisMod (P.IFaceDecl iface)    = ifaceToDecls thisMod iface
+
+dataToDecls :: Word64 -> P.Data -> [Decl]
+dataToDecls thisMod P.Data
         { typeName
         , cerialName
         , variants
         , isUnion
         , firstClass
-        }) =
+        } =
     let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
         { dataName = Name.localToUnQ typeName
@@ -341,10 +346,6 @@ declToDecls thisMod (P.DataDecl P.Data
         ]
     else
         []
-declToDecls thisMod (P.ConstDecl P.Constant { name, value }) =
-    constToDecls thisMod name value
-declToDecls thisMod (P.IFaceDecl iface) =
-    ifaceToDecls thisMod iface
 
 ifaceToDecls :: Word64 -> P.Interface -> [Decl]
 ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods } =
@@ -499,9 +500,9 @@ ifaceToDecls thisMod P.IFace{ name=Name.CapnpQ{local=name}, interfaceId, methods
         }
     ]
 
--- | Generate declarations for a constant with the given name and value.
-constToDecls :: Word64 -> Name.LocalQ -> C.Value Name.CapnpQ -> [Decl]
-constToDecls thisMod name value = case value of
+-- | Generate declarations for a constant.
+constToDecls :: Word64 -> P.Constant -> [Decl]
+constToDecls thisMod P.Constant { name, value } = case value of
     C.PtrValue ty _ ->
         -- Generated code parses the corresponding constant from the raw
         -- module.
