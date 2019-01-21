@@ -40,70 +40,71 @@ nodesToNodes nodeMap thisMod =
 
 nestedToNodes :: NodeMap -> Word64 -> Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
 nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, nodeUnion}) =
-        let localName = Name.mkLocal ns unQName
-            kidsNS = Name.localQToNS localName
-            kids = concatMap (nestedToNodes nodeMap thisMod kidsNS) nodeNested
-            name = Name.CapnpQ
-                { local = localName
-                , fileId = thisMod
+    mine ++ kids
+  where
+    localName = Name.mkLocal ns unQName
+    kidsNS = Name.localQToNS localName
+    kids = concatMap (nestedToNodes nodeMap thisMod kidsNS) nodeNested
+    name = Name.CapnpQ
+        { local = localName
+        , fileId = thisMod
+        }
+    mine = case nodeUnion of
+        Stage1.NodeEnum enumerants ->
+            [ Flat.Node
+                { name
+                , nodeId
+                , union_ = Flat.Enum enumerants
                 }
-            mine = case nodeUnion of
-                Stage1.NodeEnum enumerants ->
-                    [ Flat.Node
-                        { name
-                        , nodeId
-                        , union_ = Flat.Enum enumerants
-                        }
-                    ]
-                Stage1.NodeStruct struct ->
-                    structToNodes nodeMap thisMod nodeId name kidsNS struct
-                Stage1.NodeInterface { methods, supers } ->
-                    Flat.Node
-                        { name
-                        , nodeId
-                        , union_ = Flat.Interface
-                            { methods =
-                                [ let Flat.Node{name=paramName} = nodeMap M.! paramId
-                                      Flat.Node{name=resultName} = nodeMap M.! resultId
-                                  in Flat.Method
-                                        { name
-                                        , paramType = paramName
-                                        , resultType = resultName
-                                        }
-                                | Stage1.Method
-                                    { name
-                                    , paramType=Stage1.Node{nodeId=paramId}
-                                    , resultType=Stage1.Node{nodeId=resultId}
-                                    }
-                                <- methods
-                                ]
-                            , supers =
-                                [ nodeMap M.! nodeId | Stage1.Node{nodeId} <- supers ]
-                            , ancestors =
-                                [ nodeMap M.! supId
-                                | supId <- S.toList (collectAncestors node)
-                                ]
+            ]
+        Stage1.NodeStruct struct ->
+            structToNodes nodeMap thisMod nodeId name kidsNS struct
+        Stage1.NodeInterface { methods, supers } ->
+            Flat.Node
+                { name
+                , nodeId
+                , union_ = Flat.Interface
+                    { methods =
+                        [ let Flat.Node{name=paramName} = nodeMap M.! paramId
+                              Flat.Node{name=resultName} = nodeMap M.! resultId
+                          in Flat.Method
+                                { name
+                                , paramType = paramName
+                                , resultType = resultName
+                                }
+                        | Stage1.Method
+                            { name
+                            , paramType=Stage1.Node{nodeId=paramId}
+                            , resultType=Stage1.Node{nodeId=resultId}
                             }
-                        }
-                    : concatMap (methodToNodes nodeMap thisMod kidsNS) methods
+                        <- methods
+                        ]
+                    , supers =
+                        [ nodeMap M.! nodeId | Stage1.Node{nodeId} <- supers ]
+                    , ancestors =
+                        [ nodeMap M.! supId
+                        | supId <- S.toList (collectAncestors node)
+                        ]
+                    }
+                }
+            : concatMap (methodToNodes nodeMap thisMod kidsNS) methods
 
-                Stage1.NodeConstant value ->
-                    [ Flat.Node
-                        { name = Name.CapnpQ
-                            { local = Name.unQToLocal $ Name.valueName localName
-                            , fileId = thisMod
-                            }
-                        , nodeId
-                        , union_ = Flat.Constant
-                            { value = fmap
-                                (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
-                                value
-                            }
-                        }
-                    ]
-                Stage1.NodeOther ->
-                    []
-        in mine ++ kids
+        Stage1.NodeConstant value ->
+            [ Flat.Node
+                { name = Name.CapnpQ
+                    { local = Name.unQToLocal $ Name.valueName localName
+                    , fileId = thisMod
+                    }
+                , nodeId
+                , union_ = Flat.Constant
+                    { value = fmap
+                        (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
+                        value
+                    }
+                }
+            ]
+        Stage1.NodeOther ->
+            []
 
 structToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Struct -> [Flat.Node]
 structToNodes
