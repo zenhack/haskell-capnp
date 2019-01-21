@@ -12,7 +12,8 @@ module IR.Stage1
     , Interface(..)
     , Method(..)
     , Node(..)
-    , Node'(..)
+    , NodeCommon(..)
+    , NodeUnion(..)
     , Struct(..)
     , Field(..)
     ) where
@@ -31,14 +32,19 @@ data File = File
     deriving(Show, Eq)
 
 data Node = Node
+    { nodeCommon :: NodeCommon
+    , nodeUnion  :: NodeUnion
+    }
+    deriving(Show, Eq)
+
+data NodeCommon = NodeCommon
     { nodeNested :: [(Name.UnQ, Node)]
-    , nodeUnion  :: Node'
     , nodeParent :: Maybe Node
     , nodeId     :: !Word64
     }
     deriving(Show, Eq)
 
-data Node'
+data NodeUnion
     = NodeEnum [Name.UnQ]
     | NodeStruct Struct
     | NodeInterface Interface

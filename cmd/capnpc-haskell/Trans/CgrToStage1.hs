@@ -32,16 +32,18 @@ nodesToNodes inMap = outMap
     outMap = M.map translate inMap
 
     translate Schema.Node{scopeId, id, nestedNodes, union'} = Stage1.Node
-        { nodeId = id
-        , nodeNested =
-            [ (Name.UnQ name, outMap M.! id)
-            | Schema.Node'NestedNode{name, id} <- V.toList nestedNodes
-            ]
-        , nodeParent =
-            if scopeId == 0 then
-                Nothing
-            else
-                Just (outMap M.! id)
+        { nodeCommon = Stage1.NodeCommon
+            { nodeId = id
+            , nodeNested =
+                [ (Name.UnQ name, outMap M.! id)
+                | Schema.Node'NestedNode{name, id} <- V.toList nestedNodes
+                ]
+            , nodeParent =
+                if scopeId == 0 then
+                    Nothing
+                else
+                    Just (outMap M.! id)
+            }
         , nodeUnion = case union' of
             Schema.Node'enum enumerants ->
                 Stage1.NodeEnum $ map enumerantToName $ V.toList enumerants
@@ -232,7 +234,7 @@ valueBits = \case
 
 reqFileToFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.File
 reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename, imports} =
-    let Stage1.Node{nodeNested} = nodeMap M.! id
+    let Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeNested}} = nodeMap M.! id
     in Stage1.File
         { fileNodes = nodeNested
         , fileName = T.unpack filename

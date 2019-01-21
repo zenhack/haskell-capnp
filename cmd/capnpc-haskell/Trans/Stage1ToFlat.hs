@@ -39,7 +39,17 @@ nodesToNodes nodeMap thisMod =
     concatMap (nestedToNodes nodeMap thisMod Name.emptyNS)
 
 nestedToNodes :: NodeMap -> Word64 -> Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
-nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, nodeUnion}) =
+nestedToNodes
+    nodeMap
+    thisMod
+    ns
+    ( unQName
+    , node@Stage1.Node
+        { nodeCommon = Stage1.NodeCommon{nodeId, nodeNested}
+        , nodeUnion
+        }
+    )
+    =
     mine ++ kids
   where
     localName = Name.mkLocal ns unQName
@@ -74,13 +84,13 @@ nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, 
                                 }
                         | Stage1.Method
                             { name
-                            , paramType=Stage1.Node{nodeId=paramId}
-                            , resultType=Stage1.Node{nodeId=resultId}
+                            , paramType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=paramId}}
+                            , resultType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=resultId}}
                             }
                         <- methods
                         ]
                     , supers =
-                        [ nodeMap M.! nodeId | Stage1.Node{nodeId} <- supers ]
+                        [ nodeMap M.! nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
                     , ancestors =
                         [ nodeMap M.! supId
                         | supId <- S.toList (collectAncestors node)
@@ -98,7 +108,7 @@ nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, 
                 , nodeId
                 , union_ = Flat.Constant
                     { value = fmap
-                        (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
+                        (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
                         value
                     }
                 }
@@ -125,7 +135,7 @@ structToNodes
                 Flat.Field
                     { fieldName = Name.mkSub name fieldUnQ
                     , fieldLocType = fmap
-                        (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
+                        (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
                         locType
                     }
             variants =
@@ -181,7 +191,7 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
     -- structs for them.
     let maybeAnon ty suffix =
             case ty of
-                Stage1.Node{nodeParent=Nothing} ->
+                Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeParent=Nothing}} ->
                     let localName = Name.mkLocal ns name
                         kidsNS = Name.localQToNS localName
                     in
@@ -201,6 +211,6 @@ collectAncestors Stage1.Node{nodeUnion=Stage1.NodeInterface Stage1.Interface{sup
     -- straightforward, and with typical interface hierarchies it shouldn't
     -- be a huge problem.
     S.unions $
-        S.fromList [ nodeId | Stage1.Node{nodeId} <- supers ]
+        S.fromList [ nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
         : map collectAncestors supers
 collectAncestors _ = error "Called collectAncestors on a non-interface."
