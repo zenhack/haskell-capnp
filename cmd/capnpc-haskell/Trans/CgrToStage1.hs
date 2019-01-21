@@ -60,7 +60,7 @@ nodesToNodes inMap = outMap
                     , fields = map (fieldToField outMap) (V.toList fields)
                     }
             Schema.Node'interface { methods, superclasses } ->
-                Stage1.NodeInterface
+                Stage1.NodeInterface Stage1.Interface
                     { methods = map (methodToMethod outMap) (V.toList methods)
                     , supers = [ outMap M.! id | Schema.Superclass{id} <- V.toList superclasses ]
                     }

@@ -59,7 +59,7 @@ nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, 
             ]
         Stage1.NodeStruct struct ->
             structToNodes nodeMap thisMod nodeId name kidsNS struct
-        Stage1.NodeInterface { methods, supers } ->
+        Stage1.NodeInterface Stage1.Interface{ methods, supers } ->
             Flat.Node
                 { name
                 , nodeId
@@ -195,7 +195,7 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
 -- | Collect the ids of of the ancestors of a node, which must be an interface,
 -- not including itself.
 collectAncestors :: Stage1.Node -> S.Set Word64
-collectAncestors Stage1.Node{nodeUnion=Stage1.NodeInterface{supers}} =
+collectAncestors Stage1.Node{nodeUnion=Stage1.NodeInterface Stage1.Interface{supers}} =
     -- This could be made faster, in that if there are shared ancestors
     -- (diamonds) we'll traverse them twice, but this is more
     -- straightforward, and with typical interface hierarchies it shouldn't
