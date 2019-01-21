@@ -28,15 +28,17 @@ filesToFiles inFiles = outFiles
 fileToFile :: NodeMap -> Stage1.File -> Flat.File
 fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
     Flat.File
-        { nodes = nodesToNodes nodeMap fileId fileNodes
+        { nodes
         , fileName
         , fileId
         , fileImports
         }
-
-nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
-nodesToNodes nodeMap thisMod = concatMap $ \(unQ, node) ->
-    nestedToNodes nodeMap thisMod (Name.unQToLocal unQ) node
+  where
+    nodes = concatMap
+        ( \(unQ, node) ->
+            nestedToNodes nodeMap fileId (Name.unQToLocal unQ) node
+        )
+        fileNodes
 
 -- | Generate @'Flat.Node'@s from a 'Stage1.Node' and its local name.
 nestedToNodes :: NodeMap -> Word64 -> Name.LocalQ -> Stage1.Node -> [Flat.Node]
