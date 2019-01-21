@@ -34,13 +34,11 @@ fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
         , fileImports
         }
 
-nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
-nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
-  where
-    go ns (unQName, node@Stage1.Node{nodeId, nodeNested, nodeUnion}) =
+nestedToNodes :: NodeMap -> Word64 -> Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
+nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, nodeUnion}) =
         let localName = Name.mkLocal ns unQName
             kidsNS = Name.localQToNS localName
-            kids = concatMap (go kidsNS) nodeNested
+            kids = concatMap (nestedToNodes nodeMap thisMod kidsNS) nodeNested
             name = Name.CapnpQ
                 { local = localName
                 , fileId = thisMod
@@ -80,7 +78,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                             | Stage1.Field{name=fieldUnQ, locType, tag=Nothing} <- fields
                             ]
                         fieldNodes =
-                            concatMap (fieldToNodes kidsNS) fields
+                            concatMap (fieldToNodes nodeMap thisMod kidsNS) fields
 
                         commonNode =
                             Flat.Node
@@ -131,7 +129,7 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                                 ]
                             }
                         }
-                    : concatMap (methodToNodes kidsNS) methods
+                    : concatMap (methodToNodes nodeMap thisMod kidsNS) methods
 
                 Stage1.NodeConstant value ->
                     [ Flat.Node
@@ -150,29 +148,37 @@ nodesToNodes nodeMap thisMod = concatMap (go Name.emptyNS)
                 Stage1.NodeOther ->
                     []
         in mine ++ kids
-    fieldToNodes ns Stage1.Field{name, locType} = case locType of
-        C.HereField
-            (C.StructType
-                struct@Stage1.Node
-                    { nodeUnion = Stage1.NodeStruct Stage1.Struct{isGroup=True}
-                    }
-            ) -> go ns (name, struct)
-        _ ->
-            []
-    methodToNodes ns Stage1.Method{ name, paramType, resultType } =
-        -- If the parameter and result types are anonymous, we need to generate
-        -- structs for them.
-        let maybeAnon ty suffix =
-                case ty of
-                    Stage1.Node{nodeParent=Nothing} ->
-                        let localName = Name.mkLocal ns name
-                            kidsNS = Name.localQToNS localName
-                        in
-                        go kidsNS (suffix, ty)
-                    _ ->
-                        []
-        in
-        maybeAnon paramType "params" ++ maybeAnon resultType "results"
+
+nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
+nodesToNodes nodeMap thisMod =
+    concatMap (nestedToNodes nodeMap thisMod Name.emptyNS)
+
+fieldToNodes :: NodeMap -> Word64 -> Name.NS -> Stage1.Field -> [Flat.Node]
+fieldToNodes nodeMap thisMod ns Stage1.Field{name, locType} = case locType of
+    C.HereField
+        (C.StructType
+            struct@Stage1.Node
+                { nodeUnion = Stage1.NodeStruct Stage1.Struct{isGroup=True}
+                }
+        ) -> nestedToNodes nodeMap thisMod ns (name, struct)
+    _ ->
+        []
+
+methodToNodes :: NodeMap -> Word64 -> Name.NS -> Stage1.Method -> [Flat.Node]
+methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
+    -- If the parameter and result types are anonymous, we need to generate
+    -- structs for them.
+    let maybeAnon ty suffix =
+            case ty of
+                Stage1.Node{nodeParent=Nothing} ->
+                    let localName = Name.mkLocal ns name
+                        kidsNS = Name.localQToNS localName
+                    in
+                    nestedToNodes nodeMap thisMod kidsNS (suffix, ty)
+                _ ->
+                    []
+    in
+    maybeAnon paramType "params" ++ maybeAnon resultType "results"
 
 
 -- | Collect the ids of of the ancestors of a node, which must be an interface,
