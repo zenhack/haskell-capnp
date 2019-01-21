@@ -35,26 +35,28 @@ fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
         }
 
 nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
-nodesToNodes nodeMap thisMod =
-    concatMap (nestedToNodes nodeMap thisMod Name.emptyNS)
+nodesToNodes nodeMap thisMod = concatMap $ \(unQ, node) ->
+    nestedToNodes nodeMap thisMod (Name.unQToLocal unQ) node
 
-nestedToNodes :: NodeMap -> Word64 -> Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
+-- | Generate @'Flat.Node'@s from a 'Stage1.Node' and its local name.
+nestedToNodes :: NodeMap -> Word64 -> Name.LocalQ -> Stage1.Node -> [Flat.Node]
 nestedToNodes
     nodeMap
     thisMod
-    ns
-    ( unQName
-    , Stage1.Node
+    localName
+    Stage1.Node
         { nodeCommon = Stage1.NodeCommon{nodeId, nodeNested}
         , nodeUnion
         }
-    )
     =
     mine ++ kids
   where
-    localName = Name.mkLocal ns unQName
     kidsNS = Name.localQToNS localName
-    kids = concatMap (nestedToNodes nodeMap thisMod kidsNS) nodeNested
+    kids = concatMap
+            (\(unQ, node) ->
+                nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS unQ) node
+            )
+            nodeNested
     name = Name.CapnpQ
         { local = localName
         , fileId = thisMod
@@ -184,7 +186,7 @@ fieldToNodes nodeMap thisMod ns Stage1.Field{name, locType} = case locType of
             struct@Stage1.Node
                 { nodeUnion = Stage1.NodeStruct Stage1.Struct{isGroup=True}
                 }
-        ) -> nestedToNodes nodeMap thisMod ns (name, struct)
+        ) -> nestedToNodes nodeMap thisMod (Name.mkLocal ns name) struct
     _ ->
         []
 
@@ -198,7 +200,7 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
                     let localName = Name.mkLocal ns name
                         kidsNS = Name.localQToNS localName
                     in
-                    nestedToNodes nodeMap thisMod kidsNS (suffix, ty)
+                    nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS suffix) ty
                 _ ->
                     []
     in
