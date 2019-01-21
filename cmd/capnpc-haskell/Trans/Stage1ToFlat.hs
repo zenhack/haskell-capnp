@@ -44,7 +44,7 @@ nestedToNodes
     thisMod
     ns
     ( unQName
-    , node@Stage1.Node
+    , Stage1.Node
         { nodeCommon = Stage1.NodeCommon{nodeId, nodeNested}
         , nodeUnion
         }
@@ -69,36 +69,8 @@ nestedToNodes
             ]
         Stage1.NodeStruct struct ->
             structToNodes nodeMap thisMod nodeId name kidsNS struct
-        Stage1.NodeInterface Stage1.Interface{ methods, supers } ->
-            Flat.Node
-                { name
-                , nodeId
-                , union_ = Flat.Interface
-                    { methods =
-                        [ let Flat.Node{name=paramName} = nodeMap M.! paramId
-                              Flat.Node{name=resultName} = nodeMap M.! resultId
-                          in Flat.Method
-                                { name
-                                , paramType = paramName
-                                , resultType = resultName
-                                }
-                        | Stage1.Method
-                            { name
-                            , paramType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=paramId}}
-                            , resultType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=resultId}}
-                            }
-                        <- methods
-                        ]
-                    , supers =
-                        [ nodeMap M.! nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
-                    , ancestors =
-                        [ nodeMap M.! supId
-                        | supId <- S.toList (collectAncestors node)
-                        ]
-                    }
-                }
-            : concatMap (methodToNodes nodeMap thisMod kidsNS) methods
-
+        Stage1.NodeInterface iface ->
+            interfaceToNodes nodeMap thisMod nodeId name kidsNS iface
         Stage1.NodeConstant value ->
             [ Flat.Node
                 { name = Name.CapnpQ
@@ -115,6 +87,37 @@ nestedToNodes
             ]
         Stage1.NodeOther ->
             []
+
+interfaceToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Interface -> [Flat.Node]
+interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ methods, supers } =
+    Flat.Node
+        { name
+        , nodeId
+        , union_ = Flat.Interface
+            { methods =
+                [ let Flat.Node{name=paramName} = nodeMap M.! paramId
+                      Flat.Node{name=resultName} = nodeMap M.! resultId
+                  in Flat.Method
+                        { name
+                        , paramType = paramName
+                        , resultType = resultName
+                        }
+                | Stage1.Method
+                    { name
+                    , paramType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=paramId}}
+                    , resultType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=resultId}}
+                    }
+                <- methods
+                ]
+            , supers =
+                [ nodeMap M.! nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
+            , ancestors =
+                [ nodeMap M.! supId
+                | supId <- S.toList (collectAncestors iface)
+                ]
+            }
+        }
+    : concatMap (methodToNodes nodeMap thisMod kidsNS) methods
 
 structToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Struct -> [Flat.Node]
 structToNodes
@@ -202,15 +205,14 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
     maybeAnon paramType "params" ++ maybeAnon resultType "results"
 
 
--- | Collect the ids of of the ancestors of a node, which must be an interface,
--- not including itself.
-collectAncestors :: Stage1.Node -> S.Set Word64
-collectAncestors Stage1.Node{nodeUnion=Stage1.NodeInterface Stage1.Interface{supers}} =
+-- | Collect the ids of of the ancestors of an interface, not including itself.
+collectAncestors :: Stage1.Interface -> S.Set Word64
+collectAncestors Stage1.Interface{supers} =
     -- This could be made faster, in that if there are shared ancestors
     -- (diamonds) we'll traverse them twice, but this is more
     -- straightforward, and with typical interface hierarchies it shouldn't
     -- be a huge problem.
     S.unions $
         S.fromList [ nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
-        : map collectAncestors supers
-collectAncestors _ = error "Called collectAncestors on a non-interface."
+        :
+        [ collectAncestors iface | Stage1.Node{nodeUnion=Stage1.NodeInterface iface} <- supers ]
