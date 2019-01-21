@@ -34,6 +34,10 @@ fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
         , fileImports
         }
 
+nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
+nodesToNodes nodeMap thisMod =
+    concatMap (nestedToNodes nodeMap thisMod Name.emptyNS)
+
 nestedToNodes :: NodeMap -> Word64 -> Name.NS -> (Name.UnQ, Stage1.Node) -> [Flat.Node]
 nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, nodeUnion}) =
         let localName = Name.mkLocal ns unQName
@@ -51,56 +55,8 @@ nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, 
                         , union_ = Flat.Enum enumerants
                         }
                     ]
-                Stage1.NodeStruct Stage1.Struct
-                        { fields
-                        , isGroup
-                        , dataWordCount
-                        , pointerCount
-                        , tagOffset
-                        } ->
-                    let
-                        mkField fieldUnQ locType =
-                            Flat.Field
-                                { fieldName = Name.mkSub name fieldUnQ
-                                , fieldLocType = fmap
-                                    (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
-                                    locType
-                                }
-                        variants =
-                            [ Flat.Variant
-                                { field = mkField fieldUnQ locType
-                                , tagValue
-                                }
-                            | Stage1.Field{name=fieldUnQ, locType, tag=Just tagValue} <- fields
-                            ]
-                        commonFields =
-                            [ mkField fieldUnQ locType
-                            | Stage1.Field{name=fieldUnQ, locType, tag=Nothing} <- fields
-                            ]
-                        fieldNodes =
-                            concatMap (fieldToNodes nodeMap thisMod kidsNS) fields
-
-                        commonNode =
-                            Flat.Node
-                                { name
-                                , nodeId
-                                , union_ = Flat.Struct
-                                    { fields = commonFields
-                                    , union =
-                                        if null variants then
-                                            Nothing
-                                        else
-                                            Just Flat.Union
-                                                { variants
-                                                , tagOffset
-                                                }
-                                    , isGroup
-                                    , dataWordCount
-                                    , pointerCount
-                                    }
-                                }
-                    in
-                    commonNode : fieldNodes
+                Stage1.NodeStruct struct ->
+                    structToNodes nodeMap thisMod nodeId name kidsNS struct
                 Stage1.NodeInterface { methods, supers } ->
                     Flat.Node
                         { name
@@ -149,9 +105,63 @@ nestedToNodes nodeMap thisMod ns (unQName, node@Stage1.Node{nodeId, nodeNested, 
                     []
         in mine ++ kids
 
-nodesToNodes :: NodeMap -> Word64 -> [(Name.UnQ, Stage1.Node)] -> [Flat.Node]
-nodesToNodes nodeMap thisMod =
-    concatMap (nestedToNodes nodeMap thisMod Name.emptyNS)
+structToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Struct -> [Flat.Node]
+structToNodes
+    nodeMap
+    thisMod
+    nodeId
+    name
+    kidsNS
+    Stage1.Struct
+            { fields
+            , isGroup
+            , dataWordCount
+            , pointerCount
+            , tagOffset
+            } =
+        let
+            mkField fieldUnQ locType =
+                Flat.Field
+                    { fieldName = Name.mkSub name fieldUnQ
+                    , fieldLocType = fmap
+                        (\Stage1.Node{nodeId} -> nodeMap M.! nodeId)
+                        locType
+                    }
+            variants =
+                [ Flat.Variant
+                    { field = mkField fieldUnQ locType
+                    , tagValue
+                    }
+                | Stage1.Field{name=fieldUnQ, locType, tag=Just tagValue} <- fields
+                ]
+            commonFields =
+                [ mkField fieldUnQ locType
+                | Stage1.Field{name=fieldUnQ, locType, tag=Nothing} <- fields
+                ]
+            fieldNodes =
+                concatMap (fieldToNodes nodeMap thisMod kidsNS) fields
+
+            commonNode =
+                Flat.Node
+                    { name
+                    , nodeId
+                    , union_ = Flat.Struct
+                        { fields = commonFields
+                        , union =
+                            if null variants then
+                                Nothing
+                            else
+                                Just Flat.Union
+                                    { variants
+                                    , tagOffset
+                                    }
+                        , isGroup
+                        , dataWordCount
+                        , pointerCount
+                        }
+                    }
+        in
+        commonNode : fieldNodes
 
 fieldToNodes :: NodeMap -> Word64 -> Name.NS -> Stage1.Field -> [Flat.Node]
 fieldToNodes nodeMap thisMod ns Stage1.Field{name, locType} = case locType of
