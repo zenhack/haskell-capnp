@@ -144,12 +144,21 @@ declToDecls thisMod (P.ConstDecl constant) = constToDecls thisMod constant
 declToDecls thisMod (P.IFaceDecl iface)    = ifaceToDecls thisMod iface
 
 dataToDecls :: Word64 -> P.Data -> [Decl]
-dataToDecls thisMod P.Data
+dataToDecls thisMod data_@P.Data{firstClass} = concat $
+    [ dataToDataDecl thisMod data_
+    , dataToSimpleInstances thisMod data_
+    , dataToDecerialize thisMod data_
+    , dataToMarshal thisMod data_
+    ]
+    ++
+    [ firstClassInstances thisMod data_ | firstClass ]
+
+dataToDataDecl :: Word64 -> P.Data -> [Decl]
+dataToDataDecl thisMod P.Data
         { typeName
         , cerialName
         , variants
         , isUnion
-        , firstClass
         } =
     let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
@@ -176,7 +185,11 @@ dataToDecls thisMod P.Data
             | isUnion
             ]
         }
-    , instance_ [] ["Default"] "Default" [TLName typeName]
+    ]
+
+dataToSimpleInstances :: Word64 -> P.Data -> [Decl]
+dataToSimpleInstances _thisMod P.Data{ typeName } =
+    [ instance_ [] ["Default"] "Default" [TLName typeName]
         [ iValue "def" [] (egName ["GenHelpersPure"] "defaultStruct")
         ]
     , instance_ [] ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", TLName typeName]
@@ -184,7 +197,16 @@ dataToDecls thisMod P.Data
             (EApp (egName ["Classes"] "fromStruct") [euName "struct"])
             (egName ["Classes"] "decerialize")
         ]
-    , instance_ [] ["Classes"] "Decerialize" [TLName typeName]
+    ]
+
+dataToDecerialize :: Word64 -> P.Data -> [Decl]
+dataToDecerialize thisMod P.Data
+        { typeName
+        , cerialName
+        , variants
+        } =
+    let unknownCtor = Name.mkSub cerialName "unknown'" in
+    [ instance_ [] ["Classes"] "Decerialize" [TLName typeName]
         [ iType "Cerial" [tuName "msg", TLName typeName] $
             TApp (tgName (rawModule thisMod) cerialName) [tuName "msg"]
         , iValue "decerialize" [PVar "raw"] $
@@ -251,7 +273,18 @@ dataToDecls thisMod P.Data
                             ]
                         )
         ]
-    , instance_ [] ["Classes"] "Marshal" [TLName typeName]
+    ]
+
+
+dataToMarshal :: Word64 -> P.Data -> [Decl]
+dataToMarshal thisMod P.Data
+        { typeName
+        , cerialName
+        , variants
+        , isUnion
+        } =
+    let unknownCtor = Name.mkSub cerialName "unknown'" in
+    [ instance_ [] ["Classes"] "Marshal" [TLName typeName]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             ECase (euName "value_") $
                 [ let setter = Name.unQToLocal $ Name.setterName variantName
@@ -309,26 +342,25 @@ dataToDecls thisMod P.Data
                     []
         ]
     ]
-    ++
-    if firstClass then
-        [ instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
-        , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
-            [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
-            ]
-        ] ++
-        -- Generate instances of Cerialize (Vector (Vector ... t)) up to some reasonable
-        -- nesting level. I(zenhack) can't figure out how to get a general case
-        -- Cerialize (Vector a) => Cerialize (Vector (Vector a)) to type check, so this
-        -- will have to do for now.
-        [ instance_ [] ["Classes"] "Cerialize" [t]
-            [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeBasicVec")
-            ]
-        | t <- take 6 $ drop 2 $ iterate
-                (\t -> TApp (tgName ["V"] "Vector") [t])
-                (TLName typeName)
+
+firstClassInstances :: Word64 -> P.Data -> [Decl]
+firstClassInstances _thisMod P.Data{ typeName } =
+    [ instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
+    , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
+        [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
         ]
-    else
-        []
+    ] ++
+    -- Generate instances of Cerialize (Vector (Vector ... t)) up to some reasonable
+    -- nesting level. I(zenhack) can't figure out how to get a general case
+    -- Cerialize (Vector a) => Cerialize (Vector (Vector a)) to type check, so this
+    -- will have to do for now.
+    [ instance_ [] ["Classes"] "Cerialize" [t]
+        [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeBasicVec")
+        ]
+    | t <- take 6 $ drop 2 $ iterate
+            (\t -> TApp (tgName ["V"] "Vector") [t])
+            (TLName typeName)
+    ]
 
 ifaceToDecls :: Word64 -> P.Interface -> [Decl]
 ifaceToDecls thisMod iface =
