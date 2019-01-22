@@ -12,6 +12,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 module IR.Flat
     ( File(..)
+    , CodeGenReq(..)
     , Node(..)
     , Node'(..)
     , Field(..)
@@ -28,6 +29,12 @@ import Data.Word
 
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
+
+data CodeGenReq = CodeGenReq
+    { allNodes :: [Node]
+    , reqFiles :: [File]
+    }
+    deriving(Show, Eq)
 
 data File = File
     { nodes       :: [Node]
@@ -65,6 +72,7 @@ data Node'
     | Constant
         { value :: Common.Value Node
         }
+    | Other
     deriving(Show, Eq)
 
 

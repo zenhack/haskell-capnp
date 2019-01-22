@@ -1,12 +1,15 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
-module Trans.FlatToRaw (fileToFile) where
+module Trans.FlatToRaw (cgrToFiles) where
 
 import qualified IR.Common as C
 import qualified IR.Flat   as Flat
 import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
+
+cgrToFiles :: Flat.CodeGenReq -> [Raw.File]
+cgrToFiles Flat.CodeGenReq{reqFiles} = map fileToFile reqFiles
 
 fileToFile :: Flat.File -> Raw.File
 fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
@@ -113,6 +116,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
             , value = fmap (\Flat.Node{name} -> name) value
             }
         ]
+    Flat.Other -> []
 
 fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
 fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fieldLocType} =

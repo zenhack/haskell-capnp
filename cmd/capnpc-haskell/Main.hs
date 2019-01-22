@@ -37,7 +37,7 @@ main = do
 handleCGR :: CodeGeneratorRequest -> [(FilePath, LT.Text)]
 handleCGR cgr =
     let flat =
-            Trans.Stage1ToFlat.filesToFiles $
+            Trans.Stage1ToFlat.cgrToCgr $
             Trans.CgrToStage1.cgrToCgr cgr
         modules =
             handleFlatRaw flat ++ handleFlatPure flat
@@ -50,14 +50,12 @@ handleCGR cgr =
         )
         modules
 
-handleFlatPure, handleFlatRaw :: [Flat.File] -> [Haskell.Module]
+handleFlatPure, handleFlatRaw :: Flat.CodeGenReq -> [Haskell.Module]
 
 handleFlatPure =
     concatMap Trans.PureToHaskell.fileToModules
-    . Trans.FlatToPure.filesToFiles
+    . Trans.FlatToPure.cgrToFiles
 
 handleFlatRaw =
-    concatMap
-        ( Trans.RawToHaskell.fileToModules
-        . Trans.FlatToRaw.fileToFile
-        )
+    concatMap Trans.RawToHaskell.fileToModules
+    . Trans.FlatToRaw.cgrToFiles

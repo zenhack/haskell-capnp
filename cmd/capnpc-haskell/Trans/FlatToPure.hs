@@ -2,7 +2,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecordWildCards       #-}
-module Trans.FlatToPure (filesToFiles) where
+module Trans.FlatToPure (cgrToFiles) where
 
 import Data.Word
 
@@ -15,14 +15,14 @@ import qualified IR.Pure   as Pure
 
 type IFaceMap = M.Map Word64 Pure.Interface
 
-filesToFiles :: [Flat.File] -> [Pure.File]
-filesToFiles flatFiles = pureFiles where
-    pureFiles = map oneFile flatFiles
-    allDecls = concat [ decls | Pure.File{decls} <- pureFiles ]
+cgrToFiles :: Flat.CodeGenReq -> [Pure.File]
+cgrToFiles Flat.CodeGenReq{allNodes, reqFiles} =
+    map oneFile reqFiles
+  where
+    allInterfaces = concatMap (convertInterface ifaceMap) allNodes
     ifaceMap = M.fromList
         [ (interfaceId, iface)
-        | Pure.IFaceDecl iface@Pure.IFace{interfaceId}
-        <- allDecls
+        | iface@Pure.IFace{interfaceId} <- allInterfaces
         ]
     oneFile Flat.File{nodes, fileId, fileName, fileImports} =
         Pure.File
@@ -33,6 +33,25 @@ filesToFiles flatFiles = pureFiles where
             , reExportEnums = concatMap nodeToReExports nodes
             , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
             }
+
+convertInterface :: IFaceMap -> Flat.Node -> [Pure.Interface]
+convertInterface
+    ifaceMap
+    Flat.Node
+        { name
+        , nodeId
+        , union_ = Flat.Interface{ methods, supers, ancestors }
+        }
+    =
+    [ Pure.IFace
+        { name
+        , interfaceId = nodeId
+        , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
+        , supers = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- supers ]
+        , ancestors = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- ancestors ]
+        }
+    ]
+convertInterface _ _ = []
 
 nodeToReExports :: Flat.Node -> [Name.LocalQ]
 nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
@@ -81,15 +100,8 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
         []
-    Flat.Interface{ methods, supers, ancestors } ->
-        [ Pure.IFaceDecl Pure.IFace
-            { name
-            , interfaceId = nodeId
-            , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
-            , supers = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- supers ]
-            , ancestors = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- ancestors ]
-            }
-        ]
+    Flat.Interface{} ->
+        [ Pure.IFaceDecl (ifaceMap M.! nodeId) ]
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
         -- a top-level sum type.
@@ -131,6 +143,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
             , value = fmap (\Flat.Node{name} -> name) value
             }
         ]
+    Flat.Other -> []
 
 fieldToField :: Flat.Field -> Pure.Field
 fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field

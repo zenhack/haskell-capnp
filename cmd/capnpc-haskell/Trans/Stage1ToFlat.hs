@@ -4,7 +4,7 @@
 -- Translate from the 'Stage1' IR to the 'Flat' IR.
 --
 -- As the name of the latter suggests, this involves flattening the namepace.
-module Trans.Stage1ToFlat (filesToFiles) where
+module Trans.Stage1ToFlat (cgrToCgr) where
 
 import Data.Word
 
@@ -18,27 +18,36 @@ import qualified IR.Stage1 as Stage1
 
 type NodeMap = M.Map Word64 Flat.Node
 
-filesToFiles :: Stage1.CodeGenReq -> [Flat.File]
-filesToFiles Stage1.CodeGenReq{reqFiles=inFiles} = outFiles
+cgrToCgr :: Stage1.CodeGenReq -> Flat.CodeGenReq
+cgrToCgr Stage1.CodeGenReq{allFiles, reqFiles=inFiles} = Flat.CodeGenReq
+    { reqFiles = outFiles
+    , allNodes
+    }
   where
-    outFiles = map (fileToFile nodeMap) inFiles
-    allNodes = concat [nodes | Flat.File{nodes} <- outFiles]
+    outFiles = map (reqFileToFile fileMap) inFiles
+    fileMap = M.fromList
+        [ (fileId, fileToNodes nodeMap file)
+        | file@Stage1.File{fileId} <- allFiles
+        ]
+    allNodes = concatMap snd (M.toList fileMap)
     nodeMap = M.fromList [(nodeId, node) | node@Flat.Node{nodeId} <- allNodes]
 
-fileToFile :: NodeMap -> Stage1.ReqFile -> Flat.File
-fileToFile nodeMap Stage1.ReqFile{fileName, fileImports, file=Stage1.File{fileNodes, fileId}} =
+fileToNodes :: NodeMap -> Stage1.File -> [Flat.Node]
+fileToNodes nodeMap Stage1.File{fileNodes, fileId} =
+    concatMap
+        (\(unQ, node) ->
+            nestedToNodes nodeMap fileId (Name.unQToLocal unQ) node
+        )
+        fileNodes
+
+reqFileToFile :: M.Map Word64 [Flat.Node] -> Stage1.ReqFile -> Flat.File
+reqFileToFile fileMap Stage1.ReqFile{fileName, fileImports, file=Stage1.File{fileId}} =
     Flat.File
-        { nodes
+        { nodes = fileMap M.! fileId
         , fileName
         , fileId
         , fileImports
         }
-  where
-    nodes = concatMap
-        ( \(unQ, node) ->
-            nestedToNodes nodeMap fileId (Name.unQToLocal unQ) node
-        )
-        fileNodes
 
 -- | Generate @'Flat.Node'@s from a 'Stage1.Node' and its local name.
 nestedToNodes :: NodeMap -> Word64 -> Name.LocalQ -> Stage1.Node -> [Flat.Node]
@@ -90,7 +99,12 @@ nestedToNodes
                 }
             ]
         Stage1.NodeOther ->
-            []
+            [ Flat.Node
+                { name
+                , nodeId
+                , union_ = Flat.Other
+                }
+            ]
 
 interfaceToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Interface -> [Flat.Node]
 interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ methods, supers } =
