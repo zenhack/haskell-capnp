@@ -3,7 +3,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Trans.CgrToStage1 (cgrToFiles) where
+module Trans.CgrToStage1 (cgrToCgr) where
 
 import Data.Word
 
@@ -232,23 +232,36 @@ valueBits = \case
     Schema.Value'enum n -> Just $ fromIntegral n
     _ -> Nothing -- some non-word type.
 
-reqFileToFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.File
-reqFileToFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename, imports} =
+reqFileToReqFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.ReqFile
+reqFileToReqFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename, imports} =
     let Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeNested}} = nodeMap M.! id
-    in Stage1.File
-        { fileNodes = nodeNested
-        , fileName = T.unpack filename
-        , fileId = id
+    in Stage1.ReqFile
+        { fileName = T.unpack filename
         , fileImports =
             [ id
             | Schema.CodeGeneratorRequest'RequestedFile'Import{id} <- V.toList imports
             ]
+        , file = Stage1.File
+            { fileNodes = nodeNested
+            , fileId = id
+            }
         }
 
-cgrToFiles :: Schema.CodeGeneratorRequest -> [Stage1.File]
-cgrToFiles Schema.CodeGeneratorRequest{nodes, requestedFiles} =
-    let nodeMap = nodesToNodes $ M.fromList [(id, node) | node@Schema.Node{id} <- V.toList nodes]
-    in map (reqFileToFile nodeMap) $ V.toList requestedFiles
+cgrToCgr :: Schema.CodeGeneratorRequest -> Stage1.CodeGenReq
+cgrToCgr Schema.CodeGeneratorRequest{nodes, requestedFiles} =
+    Stage1.CodeGenReq{allFiles, reqFiles}
+  where
+    nodeMap = nodesToNodes $ M.fromList [(id, node) | node@Schema.Node{id} <- V.toList nodes]
+    reqFiles = map (reqFileToReqFile nodeMap) $ V.toList requestedFiles
+    allFiles =
+        [ let fileNodes =
+                [ (Name.UnQ name, nodeMap M.! id)
+                | Schema.Node'NestedNode{name, id} <- V.toList nestedNodes
+                ]
+          in
+          Stage1.File{fileId, fileNodes}
+        | Schema.Node{union'=Schema.Node'file, id=fileId, nestedNodes} <- V.toList nodes
+        ]
 
 typeToType :: NodeMap Stage1.Node -> Schema.Type -> C.Type Stage1.Node
 typeToType nodeMap = \case

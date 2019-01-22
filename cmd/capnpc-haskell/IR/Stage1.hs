@@ -9,6 +9,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 module IR.Stage1
     ( File(..)
+    , ReqFile(..)
     , Interface(..)
     , Method(..)
     , Node(..)
@@ -16,6 +17,7 @@ module IR.Stage1
     , NodeUnion(..)
     , Struct(..)
     , Field(..)
+    , CodeGenReq(..)
     ) where
 
 import Data.Word
@@ -23,11 +25,20 @@ import Data.Word
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
-data File = File
-    { fileNodes   :: [(Name.UnQ, Node)]
+data CodeGenReq = CodeGenReq
+    { reqFiles :: [ReqFile]
+    , allFiles :: [File]
+    }
+
+data ReqFile = ReqFile
+    { file        :: File
     , fileName    :: FilePath
-    , fileId      :: !Word64
     , fileImports :: [Word64]
+    }
+
+data File = File
+    { fileNodes :: [(Name.UnQ, Node)]
+    , fileId    :: !Word64
     }
     deriving(Show, Eq)
 

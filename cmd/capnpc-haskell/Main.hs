@@ -38,7 +38,7 @@ handleCGR :: CodeGeneratorRequest -> [(FilePath, LT.Text)]
 handleCGR cgr =
     let flat =
             Trans.Stage1ToFlat.filesToFiles $
-            Trans.CgrToStage1.cgrToFiles cgr
+            Trans.CgrToStage1.cgrToCgr cgr
         modules =
             handleFlatRaw flat ++ handleFlatPure flat
     in

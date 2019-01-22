@@ -18,15 +18,15 @@ import qualified IR.Stage1 as Stage1
 
 type NodeMap = M.Map Word64 Flat.Node
 
-filesToFiles :: [Stage1.File] -> [Flat.File]
-filesToFiles inFiles = outFiles
+filesToFiles :: Stage1.CodeGenReq -> [Flat.File]
+filesToFiles Stage1.CodeGenReq{reqFiles=inFiles} = outFiles
   where
     outFiles = map (fileToFile nodeMap) inFiles
     allNodes = concat [nodes | Flat.File{nodes} <- outFiles]
     nodeMap = M.fromList [(nodeId, node) | node@Flat.Node{nodeId} <- allNodes]
 
-fileToFile :: NodeMap -> Stage1.File -> Flat.File
-fileToFile nodeMap Stage1.File{fileNodes, fileName, fileId, fileImports} =
+fileToFile :: NodeMap -> Stage1.ReqFile -> Flat.File
+fileToFile nodeMap Stage1.ReqFile{fileName, fileImports, file=Stage1.File{fileNodes, fileId}} =
     Flat.File
         { nodes
         , fileName
