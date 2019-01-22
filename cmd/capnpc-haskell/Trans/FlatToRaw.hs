@@ -12,11 +12,10 @@ cgrToFiles :: Flat.CodeGenReq -> [Raw.File]
 cgrToFiles Flat.CodeGenReq{reqFiles} = map fileToFile reqFiles
 
 fileToFile :: Flat.File -> Raw.File
-fileToFile Flat.File{nodes, fileId, fileName, fileImports} =
+fileToFile Flat.File{nodes, fileId, fileName} =
     Raw.File
         { fileName
         , fileId
-        , fileImports
         , decls = concatMap nodeToDecls nodes
         }
 

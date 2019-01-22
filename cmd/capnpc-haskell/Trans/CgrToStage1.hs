@@ -233,14 +233,10 @@ valueBits = \case
     _ -> Nothing -- some non-word type.
 
 reqFileToReqFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.ReqFile
-reqFileToReqFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename, imports} =
+reqFileToReqFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename} =
     let Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeNested}} = nodeMap M.! id
     in Stage1.ReqFile
         { fileName = T.unpack filename
-        , fileImports =
-            [ id
-            | Schema.CodeGeneratorRequest'RequestedFile'Import{id} <- V.toList imports
-            ]
         , file = Stage1.File
             { fileNodes = nodeNested
             , fileId = id

@@ -24,11 +24,10 @@ cgrToFiles Flat.CodeGenReq{allNodes, reqFiles} =
         [ (interfaceId, iface)
         | iface@Pure.IFace{interfaceId} <- allInterfaces
         ]
-    oneFile Flat.File{nodes, fileId, fileName, fileImports} =
+    oneFile Flat.File{nodes, fileId, fileName} =
         Pure.File
             { fileId
             , fileName
-            , fileImports
             , decls = concatMap (nodeToDecls ifaceMap) nodes
             , reExportEnums = concatMap nodeToReExports nodes
             , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]

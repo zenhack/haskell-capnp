@@ -31,9 +31,8 @@ data CodeGenReq = CodeGenReq
     }
 
 data ReqFile = ReqFile
-    { file        :: File
-    , fileName    :: FilePath
-    , fileImports :: [Word64]
+    { file     :: File
+    , fileName :: FilePath
     }
 
 data File = File

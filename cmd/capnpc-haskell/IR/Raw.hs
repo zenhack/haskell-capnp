@@ -13,10 +13,9 @@ import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
 data File = File
-    { fileId      :: !Word64
-    , fileName    :: FilePath
-    , fileImports :: [Word64]
-    , decls       :: [Decl]
+    { fileId   :: !Word64
+    , fileName :: FilePath
+    , decls    :: [Decl]
     }
     deriving(Show, Eq)
 

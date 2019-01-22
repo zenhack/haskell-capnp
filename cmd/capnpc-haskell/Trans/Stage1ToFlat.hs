@@ -41,12 +41,11 @@ fileToNodes nodeMap Stage1.File{fileNodes, fileId} =
         fileNodes
 
 reqFileToFile :: M.Map Word64 [Flat.Node] -> Stage1.ReqFile -> Flat.File
-reqFileToFile fileMap Stage1.ReqFile{fileName, fileImports, file=Stage1.File{fileId}} =
+reqFileToFile fileMap Stage1.ReqFile{fileName, file=Stage1.File{fileId}} =
     Flat.File
         { nodes = fileMap M.! fileId
         , fileName
         , fileId
-        , fileImports
         }
 
 -- | Generate @'Flat.Node'@s from a 'Stage1.Node' and its local name.

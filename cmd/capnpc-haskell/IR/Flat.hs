@@ -37,10 +37,9 @@ data CodeGenReq = CodeGenReq
     deriving(Show, Eq)
 
 data File = File
-    { nodes       :: [Node]
-    , fileId      :: !Word64
-    , fileName    :: FilePath
-    , fileImports :: [Word64]
+    { nodes    :: [Node]
+    , fileId   :: !Word64
+    , fileName :: FilePath
     }
     deriving(Show, Eq)
 
