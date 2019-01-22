@@ -257,6 +257,12 @@ cgrToCgr Schema.CodeGeneratorRequest{nodes, requestedFiles} =
         [ let fileNodes =
                 [ (Name.UnQ name, nodeMap M.! id)
                 | Schema.Node'NestedNode{name, id} <- V.toList nestedNodes
+
+                -- If the file is an import (i.e. not part of requestedFiles), then
+                -- the code generator will sometimes omit parts of it that are not
+                -- used. We need to check that the nestedNodes are actually included;
+                -- if not, we omit them from the otuput as well.
+                , M.member id nodeMap
                 ]
           in
           Stage1.File{fileId, fileNodes}
