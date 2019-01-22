@@ -17,7 +17,6 @@ import qualified GHC.Generics as Generics
 import qualified Capnp.Bits as Std_
 import qualified Data.Maybe as Std_
 import qualified Data.ByteString as BS
-import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

@@ -48,8 +48,8 @@ fileToModuleAlias Raw.File{fileName, fileId} =
         }
 
 fileToMainModule :: Raw.File -> Module
-fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
-    Module
+fileToMainModule Raw.File{fileName, fileId, decls} =
+    fixImports $ Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName
         , modLangPragmas =
             [ "FlexibleContexts"
@@ -72,9 +72,6 @@ fileToMainModule Raw.File{fileName, fileId, fileImports, decls} =
 
             , imp ["Data", "Maybe"] "Std_"
             , imp ["Data", "ByteString"] "BS"
-            ] ++
-            [ ImportQual { parts }
-            | parts <- map idToModule fileImports
             ]
         , modDecls = concatMap (declToDecls fileId) decls
         }
