@@ -1,5 +1,3 @@
 # Mark generated output as such for GitHub diffs:
-/examples/Capnp/Gen/ linguist-generated=true
-/lib/Capnp/Gen/ linguist-generated=true
-/lib/Internal/Gen/ linguist-generated=true
-/tests/main/Capnp/Gen/ linguist-generated=true
+/gen/ linguist-generated=true
+/examples/gen/ linguist-generated=true
