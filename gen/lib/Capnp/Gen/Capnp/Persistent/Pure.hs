@@ -31,14 +31,12 @@ import qualified Capnp.Message as Message
 import qualified Capnp.Classes as Classes
 import qualified Capnp.Basics.Pure as BasicsPure
 import qualified Capnp.GenHelpers.Pure as GenHelpersPure
-import qualified Capnp.Gen.ById.Xb8630836983feed7
 import qualified Capnp.Rpc.Untyped as Rpc
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.GenHelpers.Rpc as RpcHelpers
 import qualified Control.Concurrent.STM as STM
 import qualified Supervisors
-import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
-import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
+import qualified Capnp.Gen.ById.Xb8630836983feed7
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

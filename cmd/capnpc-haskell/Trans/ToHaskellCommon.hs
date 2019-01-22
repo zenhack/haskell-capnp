@@ -1,16 +1,18 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ViewPatterns          #-}
 -- Things used by both RawToHaskell and PureToHaskell.
 module Trans.ToHaskellCommon where
-
-import qualified Data.Text as T
 
 import Data.Word
 
 import Data.Char       (toUpper)
 import System.FilePath (splitDirectories)
 import Text.Printf     (printf)
+
+import qualified Data.Set  as S
+import qualified Data.Text as T
 
 import qualified IR.Common as C
 import qualified IR.Name   as Name
@@ -118,3 +120,118 @@ makeModName fileName =
         go ".capnp"   = ""
         go []         = ""
         go (c:cs)     = c : go cs
+
+
+-- | Fix the capnp imports of a module, so that they correspond to the
+-- imports actually used in the body of the module and/or export list.
+--
+-- Note that this only looks at imports of the form Capnp.Gen....; other
+-- imports are not touched.
+fixImports :: Module -> Module
+fixImports m@Module{modImports} =
+    let namespaces = S.toList $ S.fromList $ -- deduplicate
+            [ nsParts
+            | Name.GlobalQ
+                { globalNS = Name.NS nsParts@(map T.unpack -> "Capnp":"Gen":_)
+                }
+            <- S.toList (findGNames m)
+            ]
+        neededImports =
+            [ ImportQual { parts = map Name.UnQ nsParts }
+            | nsParts <- namespaces
+            ]
+    in
+    m { modImports = modImports ++ neededImports }
+
+class HasGNames a where
+    -- | Collect all of the 'Name.GlobalQ's used in the module.
+    --
+    -- This seems like it would be the perfect use case for something
+    -- like syb or similar libraries, but I(zenhack) haven't taken the
+    -- time to fully wrap my head around how to use those yet, so we do
+    -- it the boilerplate-heavy way.
+    findGNames :: a -> S.Set Name.GlobalQ
+
+instance HasGNames Module where
+    findGNames Module{modExports=Just exports, modDecls} =
+        S.unions $ map findGNames exports ++ map findGNames modDecls
+    findGNames Module{modExports=Nothing, modDecls} =
+        S.unions $ map findGNames modDecls
+
+instance HasGNames Export where
+    findGNames (ExportGCtors name) = S.singleton name
+    findGNames (ExportGName name)  = S.singleton name
+    findGNames _                   = S.empty
+
+instance HasGNames Decl where
+    findGNames (DcData d)        = findGNames d
+    findGNames DcValue{typ, def} = findGNames typ `S.union` findGNames def
+    findGNames DcInstance{ctx, typ, defs} = S.unions
+        [ S.unions $ map findGNames ctx
+        , findGNames typ
+        , S.unions $ map findGNames defs
+        ]
+    findGNames DcClass{ctx, decls} =
+        S.unions $ map findGNames ctx ++ map findGNames decls
+
+instance HasGNames DataDecl where
+    findGNames Data{typeArgs, dataVariants} =
+        S.unions $ map findGNames typeArgs ++ map findGNames dataVariants
+
+instance HasGNames ClassDecl where
+    findGNames (CdValueDecl _ ty) = findGNames ty
+    findGNames (CdValueDef d)     = findGNames d
+    findGNames (CdMinimal _)      = S.empty
+
+instance HasGNames InstanceDef where
+    findGNames (IdValue d) = findGNames d
+    findGNames (IdData d)  = findGNames d
+    findGNames (IdType t)  = findGNames t
+
+instance HasGNames TypeAlias where
+    findGNames (TypeAlias _ ts t) = S.unions $ map findGNames (t:ts)
+
+instance HasGNames ValueDef where
+    findGNames DfValue{value, params} =
+        S.unions $ findGNames value : map findGNames params
+
+instance HasGNames DataVariant where
+    findGNames DataVariant{dvArgs} = findGNames dvArgs
+
+instance HasGNames DataArgs where
+    findGNames (APos tys)    = S.unions $ map findGNames tys
+    findGNames (ARec fields) = S.unions $ map (findGNames . snd) fields
+
+instance HasGNames Type where
+    findGNames (TGName n)  = S.singleton n
+    findGNames (TApp t ts) = S.unions $ map findGNames (t:ts)
+    findGNames (TFn ts)    = S.unions $ map findGNames ts
+    findGNames (TCtx ts t) = S.unions $ map findGNames (t:ts)
+    findGNames _           = S.empty
+
+instance HasGNames Exp where
+    findGNames (EApp e es)  = S.unions $ map findGNames (e:es)
+    findGNames (EFApp e es) = S.unions $ map findGNames (e:es)
+    findGNames (EGName n)   = S.singleton n
+    findGNames (EDo ds e)   = S.unions $ findGNames e : map findGNames ds
+    findGNames (EBind x y)  = findGNames x `S.union` findGNames y
+    findGNames (ETup es)    = S.unions $ map findGNames es
+    findGNames (EList es)   = S.unions $ map findGNames es
+    findGNames (ECase e arms) = S.unions
+        [ findGNames e
+        , S.unions $ map (findGNames . fst) arms
+        , S.unions $ map (findGNames . snd) arms
+        ]
+    findGNames (ETypeAnno e t) = findGNames e `S.union` findGNames t
+    findGNames (ELambda ps e) = S.unions $ findGNames e : map findGNames ps
+    findGNames (ERecord e fields) = S.unions $ findGNames e : map (findGNames . snd) fields
+    findGNames _ = S.empty
+
+instance HasGNames Do where
+    findGNames (DoBind _ e) = findGNames e
+    findGNames (DoE e)      = findGNames e
+
+instance HasGNames Pattern where
+    findGNames (PLCtor _ ps) = S.unions $ map findGNames ps
+    findGNames (PGCtor n ps) = S.unions $ S.singleton n : map findGNames ps
+    findGNames _             = S.empty

@@ -45,8 +45,6 @@ import qualified Capnp.Classes as Classes
 import qualified Capnp.Basics.Pure as BasicsPure
 import qualified Capnp.GenHelpers.Pure as GenHelpersPure
 import qualified Capnp.Gen.ById.Xb312981b2552a250
-import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81
-import qualified Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

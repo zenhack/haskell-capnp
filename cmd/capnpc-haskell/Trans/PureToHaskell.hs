@@ -47,20 +47,6 @@ rpcImports =
     , ImportQual ["Supervisors"]
     ]
 
--- | Other generated modules imported by this module.
-generatedImports :: [Word64] -> [Import]
-generatedImports fileImports = concat
-    [ [ ImportQual { parts = impId }
-      , ImportQual { parts = impId ++ ["Pure"] }
-      ]
-    | impId <- map idToModule fileImports
-    ]
-
--- | The import for the raw version of this module.
-rawImport :: Word64 -> Import
-rawImport fileId =
-    ImportQual { parts = idToModule fileId }
-
 -- | Whether the serialized and unserialized forms of this type
 -- are the same. If not, there is a marshalling step, if so, the
 -- accessors work with the decerialized form directly.
@@ -91,30 +77,27 @@ fileToModuleAlias P.File{fileName, fileId} =
         }
 
 fileToMainModule :: P.File -> Module
-fileToMainModule P.File{fileName, fileId, decls, fileImports, reExportEnums, usesRpc} = Module
-    { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
-    , modLangPragmas =
-        [ "DeriveGeneric"
-        , "DuplicateRecordFields"
-        , "FlexibleContexts"
-        , "FlexibleInstances"
-        , "RecordWildCards"
-        , "MultiParamTypeClasses"
-        , "TypeFamilies"
-        ]
-    , modExports = Just $
-        [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
-        ++ concatMap (declToExport fileId) decls
-    , modImports = concat
-        [ commonImports
-        , [rawImport fileId]
-        , guard usesRpc >> rpcImports
-        , generatedImports fileImports
-        ]
-    , modDecls =
-        concatMap (declToDecls fileId) decls
-        ++ concatMap (enumInstances fileId) reExportEnums
-    }
+fileToMainModule P.File{fileName, fileId, decls, reExportEnums, usesRpc} =
+    fixImports $ Module
+        { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
+        , modLangPragmas =
+            [ "DeriveGeneric"
+            , "DuplicateRecordFields"
+            , "FlexibleContexts"
+            , "FlexibleInstances"
+            , "RecordWildCards"
+            , "MultiParamTypeClasses"
+            , "TypeFamilies"
+            ]
+        , modExports = Just $
+            [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
+            ++ concatMap (declToExport fileId) decls
+        , modImports =
+            commonImports ++ (guard usesRpc >> rpcImports)
+        , modDecls =
+            concatMap (declToDecls fileId) decls
+            ++ concatMap (enumInstances fileId) reExportEnums
+        }
 
 
 -- | Convert a declaration into the list of related exports we need.
