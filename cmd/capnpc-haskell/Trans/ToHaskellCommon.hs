@@ -129,7 +129,7 @@ makeModName fileName =
 -- imports are not touched.
 fixImports :: Module -> Module
 fixImports m@Module{modImports} =
-    let namespaces = S.toList $ S.fromList $ -- deduplicate
+    let namespaces = S.toList $ S.fromList -- deduplicate
             [ nsParts
             | Name.GlobalQ
                 { globalNS = Name.NS nsParts@(map T.unpack -> "Capnp":"Gen":_)
