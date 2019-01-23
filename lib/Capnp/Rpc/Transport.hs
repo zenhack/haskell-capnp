@@ -9,14 +9,19 @@ module Capnp.Rpc.Transport
     ( Transport(..)
     , handleTransport
     , socketTransport
+    , tracingTransport
     ) where
 
 import Network.Socket (Socket)
 import System.IO      (Handle)
 
-import Capnp.Bits    (WordCount)
-import Capnp.IO      (hGetMsg, hPutMsg, sGetMsg, sPutMsg)
-import Capnp.Message (ConstMsg)
+import Capnp.Bits       (WordCount)
+import Capnp.Convert    (msgToValue)
+import Capnp.IO         (hGetMsg, hPutMsg, sGetMsg, sPutMsg)
+import Capnp.Message    (ConstMsg)
+import Text.Show.Pretty (ppShow)
+
+import qualified Capnp.Gen.Capnp.Rpc.Pure as R
 
 -- | A @'Transport'@ handles transmitting RPC messages.
 data Transport = Transport
@@ -42,4 +47,20 @@ socketTransport :: Socket -> WordCount -> Transport
 socketTransport socket limit = Transport
     { sendMsg = sPutMsg socket
     , recvMsg = sGetMsg socket limit
+    }
+
+-- | @'tracingTransport' log trans@ wraps another transport @trans@, loging
+-- messages when they are sent or received (using the @log@ function). This
+-- can be useful for debugging.
+tracingTransport :: (String -> IO ()) -> Transport -> Transport
+tracingTransport log trans = Transport
+    { sendMsg = \msg -> do
+        rpcMsg <- msgToValue msg
+        log $ "sending message: " ++ ppShow (rpcMsg :: R.Message)
+        sendMsg trans msg
+    , recvMsg = do
+        msg <- recvMsg trans
+        rpcMsg <- msgToValue msg
+        log $ "received message: " ++ ppShow (rpcMsg :: R.Message)
+        pure msg
     }
