@@ -92,7 +92,8 @@ import qualified StmContainers.Map as M
 import Capnp.Classes        (cerialize, decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
-import Capnp.Promise        (Fulfiller, breakPromise, fulfill, newCallback)
+import Capnp.Promise
+    (Fulfiller, breakPromiseSTM, fulfillSTM, newCallbackSTM)
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -425,7 +426,7 @@ handleConn
                     _                    -> pure ()
             -- same thing with embargos:
             walk embargos $ \(_, fulfiller) ->
-                breakPromise fulfiller eDisconnected
+                breakPromiseSTM fulfiller eDisconnected
             -- mark the connection as dead, making the live state inaccessible:
             writeTVar liveState Dead
         -- Make sure any pending callbacks get run. This is important, since
@@ -684,13 +685,13 @@ data PromisedAnswer = PromisedAnswer
 -- | Queue a call on a client.
 call :: Server.CallInfo -> Client -> STM ()
 call Server.CallInfo { response } (Client Nothing) =
-    breakPromise response eMethodUnimplemented
+    breakPromiseSTM response eMethodUnimplemented
 call info@Server.CallInfo { response } (Client (Just client')) = case client' of
     LocalClient { qCall } -> Rc.get qCall >>= \case
         Just q ->
             q info
         Nothing ->
-            breakPromise response eDisconnected
+            breakPromiseSTM response eDisconnected
 
     PromiseClient { pState } -> readTVar pState >>= \case
         Ready { target }  ->
@@ -710,7 +711,7 @@ call info@Server.CallInfo { response } (Client (Just client')) = case client' of
                 callRemote conn info (ImportTgt importId)
 
         Error exn ->
-            breakPromise response exn
+            breakPromiseSTM response exn
 
     ImportClient (Fin.get -> ImportRef { conn, importId }) ->
         callRemote conn info (ImportTgt importId)
@@ -759,14 +760,14 @@ cbCallReturn
         traverse_ (releaseExport conn 1) paramCaps
     case union' of
         R.Return'exception exn ->
-            breakPromise response exn
+            breakPromiseSTM response exn
         R.Return'results R.Payload{ content } -> do
             rawPtr <- createPure defaultLimit $ do
                 msg <- Message.newMessage Nothing
                 cerialize msg content
-            fulfill response rawPtr
+            fulfillSTM response rawPtr
         R.Return'canceled ->
-            breakPromise response $ eFailed "Canceled"
+            breakPromiseSTM response $ eFailed "Canceled"
 
         R.Return'resultsSentElsewhere ->
             -- This should never happen, since we always set
@@ -1039,7 +1040,7 @@ handleCallMsg
 
     -- Set up a callback for when the call is finished, to
     -- send the return message:
-    fulfiller <- newCallback $ \case
+    fulfiller <- newCallbackSTM $ \case
         Left e ->
             returnAnswer conn' def
                 { R.answerId = questionId
@@ -1216,7 +1217,7 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                     abortConn conn' $ eFailed $
                         "No such embargo: " <> fromString (show $ embargoWord eid)
                 Just fulfiller -> do
-                    queueSTM conn' (fulfill fulfiller ())
+                    queueSTM conn' (fulfillSTM fulfiller ())
                     M.delete eid embargos
                     freeEmbargo conn' eid
     go
@@ -1510,7 +1511,7 @@ resolveClientExn tmpDest resolve exn = do
             calls <- flushTQueue callBuffer
             traverse_
                 (\Server.CallInfo{response} ->
-                    breakPromise response exn)
+                    breakPromiseSTM response exn)
                 calls
         RemoteDest AnswerDest {} ->
             pure ()
@@ -1601,7 +1602,7 @@ resolveClientClient tmpDest resolve (Client client) =
         resolve $ Ready (Client client)
     flushAndRaise callBuffer e =
         flushTQueue callBuffer >>=
-            traverse_ (\Server.CallInfo{response} -> breakPromise response e)
+            traverse_ (\Server.CallInfo{response} -> breakPromiseSTM response e)
     disembargoAndResolve dest@(destConn -> Conn{liveState}) =
         readTVar liveState >>= \case
             Live conn' -> do
@@ -1623,7 +1624,7 @@ resolveClientClient tmpDest resolve (Client client) =
 -- the connection is dropped before the disembargo is echoed.
 disembargo :: Conn' -> MsgTarget -> (Either R.Exception () -> STM ()) -> STM ()
 disembargo conn@Conn'{embargos} tgt onEcho = do
-    callback <- newCallback onEcho
+    callback <- newCallbackSTM onEcho
     eid <- newEmbargo conn
     M.insert callback eid embargos
     sendPureMsg conn $ R.Message'disembargo R.Disembargo

@@ -51,9 +51,9 @@ invokeRaw ::
     -> Promise.Fulfiller (Cerial M.ConstMsg r)
     -> m ()
 invokeRaw method params typedFulfiller = do
-    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallback $ \case
-        Left e -> Promise.breakPromise typedFulfiller e
-        Right v -> evalLimitT defaultLimit (fromPtr M.empty v) >>= Promise.fulfill typedFulfiller
+    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallbackSTM $ \case
+        Left e -> Promise.breakPromiseSTM typedFulfiller e
+        Right v -> evalLimitT defaultLimit (fromPtr M.empty v) >>= Promise.fulfillSTM typedFulfiller
     Server.invokeIO
         (Server.toUntypedHandler method)
         (Just (U.PtrStruct (toStruct params)))
@@ -83,11 +83,11 @@ invokePure method params pureFulfiller = do
     struct <- evalLimitT defaultLimit $ do
         msg <- M.newMessage Nothing
         (toStruct <$> cerialize msg params) >>= freeze
-    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallback $ \case
-        Left e -> Promise.breakPromise pureFulfiller e
+    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallbackSTM $ \case
+        Left e -> Promise.breakPromiseSTM pureFulfiller e
         Right v ->
             evalLimitT defaultLimit (fromPtr M.empty v >>= decerialize)
-            >>= Promise.fulfill pureFulfiller
+            >>= Promise.fulfillSTM pureFulfiller
     Server.invokeIO
         (Server.toUntypedHandler method)
         (Just (U.PtrStruct struct))
@@ -100,7 +100,7 @@ invokePurePromise
     -> p
     -> m (Promise.Promise r)
 invokePurePromise method params = do
-    (promise, fulfiller) <- Promise.newPromiseIO
+    (promise, fulfiller) <- Promise.newPromise
     invokePure method params fulfiller
     pure promise
 

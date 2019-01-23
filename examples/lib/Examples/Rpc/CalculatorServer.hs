@@ -17,7 +17,7 @@ import Supervisors            (Supervisor)
 import qualified Data.Vector as V
 
 import Capnp               (def, defaultLimit)
-import Capnp.Promise       (waitIO)
+import Capnp.Promise       (wait)
 import Capnp.Rpc           (throwFailed, (?))
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (socketTransport)
@@ -94,7 +94,7 @@ eval :: V.Vector Double -> Expression -> IO Double
 eval _ (Expression'literal lit) =
     pure lit
 eval _ (Expression'previousResult val) = do
-    Value'read'results{value} <- value'read val ? def >>= waitIO
+    Value'read'results{value} <- value'read val ? def >>= wait
     pure value
 eval args (Expression'parameter idx)
     | fromIntegral idx >= V.length args =
@@ -105,7 +105,7 @@ eval outerParams (Expression'call Expression'call'{function, params=innerParams}
     args' <- traverse (eval outerParams) innerParams
     Function'call'results{value} <-
         function'call function ? Function'call'params { params = args' }
-        >>= waitIO
+        >>= wait
     pure value
 eval _ (Expression'unknown' _) =
     throwFailed "Unknown expression type"

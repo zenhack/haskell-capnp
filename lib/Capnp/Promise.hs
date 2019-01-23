@@ -5,15 +5,15 @@ module Capnp.Promise
     , Fulfiller
     , ErrAlreadyResolved(..)
     , newPromise
-    , newPromiseIO
-    , newPromiseWithCallback
-    , newCallback
+    , newPromiseSTM
+    , newPromiseWithCallbackSTM
+    , newCallbackSTM
     , fulfill
-    , fulfillIO
+    , fulfillSTM
     , breakPromise
-    , breakPromiseIO
+    , breakPromiseSTM
     , wait
-    , waitIO
+    , waitSTM
     ) where
 
 import Control.Concurrent.STM
@@ -35,28 +35,27 @@ newtype Fulfiller a = Fulfiller
     { callback :: Either Exception a -> STM ()
     }
 
+-- | Like 'fulfill', but in 'STM'
+fulfillSTM :: Fulfiller a -> a -> STM ()
+fulfillSTM Fulfiller{callback} val = callback (Right val)
+
 -- | Fulfill a promise by supplying the specified value. It is an error to
 -- call 'fulfill' if the promise has already been fulfilled (or broken).
-fulfill :: Fulfiller a -> a -> STM ()
-fulfill Fulfiller{callback} val = callback (Right val)
+fulfill :: MonadIO m => Fulfiller a -> a -> m ()
+fulfill fulfiller = liftIO . atomically . fulfillSTM fulfiller
 
--- | Like 'fulfill', but in the IO monad.
-fulfillIO :: MonadIO m => Fulfiller a -> a -> m ()
-fulfillIO fulfiller = liftIO . atomically . fulfill fulfiller
+breakPromiseSTM :: Fulfiller a -> Exception -> STM ()
+breakPromiseSTM Fulfiller{callback} exn = callback (Left exn)
 
 -- | Break a promise. When the user of the promise executes 'wait', the
 -- specified exception will be raised. It is an error to call 'breakPromise'
 -- if the promise has already been fulfilled (or broken).
-breakPromise :: Fulfiller a -> Exception -> STM ()
-breakPromise Fulfiller{callback} exn = callback (Left exn)
+breakPromise :: MonadIO m => Fulfiller a -> Exception -> m ()
+breakPromise fulfiller = liftIO . atomically . breakPromiseSTM fulfiller
 
-breakPromiseIO :: MonadIO m => Fulfiller a -> Exception -> m ()
-breakPromiseIO fulfiller = liftIO . atomically . breakPromise fulfiller
-
--- | Wait for a promise to resolve, and return the result. If the promise
--- is broken, this raises an exception instead (see 'breakPromise').
-wait :: Promise a -> STM a
-wait Promise{var} = do
+-- | Like 'wait', but runs in 'STM'.
+waitSTM :: Promise a -> STM a
+waitSTM Promise{var} = do
     val <- readTVar var
     case val of
         Nothing ->
@@ -66,13 +65,14 @@ wait Promise{var} = do
         Just (Left exn) ->
             throwSTM exn
 
--- | Like 'wait', but in the 'IO' monad.
-waitIO :: MonadIO m => Promise a -> m a
-waitIO = liftIO . atomically . wait
+-- | Wait for a promise to resolve, and return the result. If the promise
+-- is broken, this raises an exception instead (see 'breakPromise').
+wait :: MonadIO m => Promise a -> m a
+wait = liftIO . atomically . waitSTM
 
--- | Create a new promise and an associated fulfiller.
-newPromise :: STM (Promise a, Fulfiller a)
-newPromise = do
+-- | Like 'newPromise', but in 'STM'.
+newPromiseSTM :: STM (Promise a, Fulfiller a)
+newPromiseSTM = do
     var <- newTVar Nothing
     pure
         ( Promise{var}
@@ -88,9 +88,9 @@ newPromise = do
         )
 
 -- | Create a new promise which also excecutes an STM action when it is resolved.
-newPromiseWithCallback :: (Either Exception a -> STM ()) -> STM (Promise a, Fulfiller a)
-newPromiseWithCallback callback = do
-    (promise, Fulfiller{callback=oldCallback}) <- newPromise
+newPromiseWithCallbackSTM :: (Either Exception a -> STM ()) -> STM (Promise a, Fulfiller a)
+newPromiseWithCallbackSTM callback = do
+    (promise, Fulfiller{callback=oldCallback}) <- newPromiseSTM
     pure
         ( promise
         , Fulfiller
@@ -98,12 +98,12 @@ newPromiseWithCallback callback = do
             }
         )
 
-newCallback :: (Either Exception a -> STM ()) -> STM (Fulfiller a)
-newCallback = fmap snd . newPromiseWithCallback
+newCallbackSTM :: (Either Exception a -> STM ()) -> STM (Fulfiller a)
+newCallbackSTM = fmap snd . newPromiseWithCallbackSTM
 
--- | Like 'newPromise', but in the IO monad.
-newPromiseIO :: MonadIO m => m (Promise a, Fulfiller a)
-newPromiseIO = liftIO $ atomically newPromise
+-- | Create a new promise and an associated fulfiller.
+newPromise :: MonadIO m => m (Promise a, Fulfiller a)
+newPromise = liftIO $ atomically newPromiseSTM
 
 -- | A promise is a value that may not be ready yet.
 newtype Promise a = Promise

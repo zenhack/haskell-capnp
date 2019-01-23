@@ -34,7 +34,7 @@ import Capnp
     , valueToMsg
     )
 import Capnp.Bits          (WordCount)
-import Capnp.Promise       (Promise, waitIO)
+import Capnp.Promise       (Promise, wait)
 import Capnp.Rpc.Errors    (eFailed)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
@@ -66,7 +66,7 @@ echoTests = describe "Echo server & client" $
                         [ def { E.query = "Hello #1" }
                         , def { E.query = "Hello #2" }
                         ]
-                rets <- traverse ((E.echo'echo echoSrv ?) >=> waitIO) msgs
+                rets <- traverse ((E.echo'echo echoSrv ?) >=> wait) msgs
                 liftIO $ rets `shouldBe`
                     [ def { E.reply = "Hello #1" }
                     , def { E.reply = "Hello #2" }
@@ -86,7 +86,7 @@ instance E.Echo'server_ IO TestEchoServer where
 
 -- | Bump a counter n times, returning a list of the results.
 bumpN :: CallSequence -> Int -> IO [CallSequence'getNumber'results]
-bumpN ctr n = replicateM n (callSequence'getNumber ctr ? def) >>= traverse waitIO
+bumpN ctr n = replicateM n (callSequence'getNumber ctr ? def) >>= traverse wait
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
@@ -130,7 +130,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         (\sup -> newTestCtr 0 >>= export_CallSequence sup)
         (\_sup ctr -> do
             results <- replicateM 4 (callSequence'getNumber ctr ? def)
-                >>= traverse waitIO
+                >>= traverse wait
             liftIO $ results `shouldBe`
                 [ def { n = 1 }
                 , def { n = 2 }
@@ -144,7 +144,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
             let newCounter start = do
                     CounterFactory'newCounter'results{counter} <-
                         counterFactory'newCounter factory ? def { start }
-                        >>= waitIO
+                        >>= wait
                     pure counter
 
             ctrA <- newCounter 2
@@ -186,7 +186,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
                     ctr <- atomically $ export_CallSequence sup ctrSrv
                     counterAcceptor'accept acceptor ? CounterAcceptor'accept'params { counter = ctr }
-                        >>= waitIO
+                        >>= wait
                 r <- traverse
                     (\(TestCtrServer var) -> liftIO $ readTVarIO var)
                     [ctrA, ctrB, ctrC]
@@ -337,7 +337,7 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                             { debugMode = True
                             , withBootstrap = Just $ \_sup client ->
                                 let ctr :: CallSequence = fromClient client
-                                in void $ (callSequence'getNumber ctr ? def) >>= waitIO
+                                in void $ (callSequence'getNumber ctr ? def) >>= wait
                             }
                     e `shouldBe` SentAbort wantExn
                 )
@@ -432,7 +432,7 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
 
 expectException :: Show a => (cap -> IO (Promise a)) -> Exception -> cap -> IO ()
 expectException callFn wantExn cap = do
-    ret <- try $ callFn cap >>= waitIO
+    ret <- try $ callFn cap >>= wait
     case ret of
         Left (e :: Exception) ->
             liftIO $ e `shouldBe` wantExn

@@ -41,7 +41,7 @@ import Capnp.Classes
     (Cerialize, Decerialize(Cerial, decerialize), FromPtr(fromPtr), ToStruct)
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
-import Capnp.Promise        (Fulfiller, breakPromiseIO, fulfillIO)
+import Capnp.Promise        (Fulfiller, breakPromise, fulfill)
 import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
@@ -106,11 +106,11 @@ pureHandler f cap = MethodHandler
             Right val -> do
                 struct <- evalLimitT defaultLimit $
                     valueToMsg val >>= freeze >>= Untyped.rootPtr
-                fulfillIO reply (Just (Untyped.PtrStruct struct))
+                fulfill reply (Just (Untyped.PtrStruct struct))
             Left e ->
                 -- TODO: find a way to get the connection config's debugMode
                 -- option to be accessible from here, so we can use it.
-                breakPromiseIO reply (wrapException False e)
+                breakPromise reply (wrapException False e)
     }
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
@@ -137,7 +137,7 @@ untypedHandler = MethodHandler
 -- | @'methodThrow' exn@ is a 'MethodHandler' which always throws @exn@.
 methodThrow :: MonadIO m => RpcGen.Exception -> MethodHandler m p r
 methodThrow exn = MethodHandler
-    { handleMethod = \_ fulfiller -> liftIO $ breakPromiseIO fulfiller exn
+    { handleMethod = \_ fulfiller -> liftIO $ breakPromise fulfiller exn
     }
 
 -- | A 'MethodHandler' which always throws an @unimplemented@ exception.

@@ -7,7 +7,7 @@ import Network.Simple.TCP (connect)
 import qualified Data.Vector as V
 
 import Capnp               (def, defaultLimit)
-import Capnp.Promise       (waitIO)
+import Capnp.Promise       (wait)
 import Capnp.Rpc           ((?))
 import Capnp.Rpc.Transport (socketTransport)
 import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn)
@@ -25,14 +25,14 @@ main = connect "localhost" "4000" $ \(sock, _addr) ->
             Calculator'evaluate'results{value} <-
                 calculator'evaluate calc ? def
                     { expression = Expression'literal 123 }
-                    >>= waitIO
-            Value'read'results{value} <- value'read value ? def >>= waitIO
+                    >>= wait
+            Value'read'results{value} <- value'read value ? def >>= wait
             assertEq value 123
 
             Calculator'getOperator'results{func=add} <-
-                calculator'getOperator calc ? def { op = Operator'add      } >>= waitIO
+                calculator'getOperator calc ? def { op = Operator'add      } >>= wait
             Calculator'getOperator'results{func=subtract} <-
-                calculator'getOperator calc ? def { op = Operator'subtract } >>= waitIO
+                calculator'getOperator calc ? def { op = Operator'subtract } >>= wait
             Calculator'evaluate'results{value} <- calculator'evaluate calc ? def
                 { expression =
                     Expression'call Expression'call'
@@ -49,8 +49,8 @@ main = connect "localhost" "4000" $ \(sock, _addr) ->
                             ]
                         }
                 }
-                >>= waitIO
-            Value'read'results{value} <- value'read value ? def >>= waitIO
+                >>= wait
+            Value'read'results{value} <- value'read value ? def >>= wait
             assertEq value 101
 
             putStrLn "PASS"
