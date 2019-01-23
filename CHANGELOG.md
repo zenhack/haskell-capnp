@@ -15,6 +15,8 @@
     generated code not to compile.
   * Name collisions with things in the standard library are no longer
     possible (#58).
+  * Some possible name collisions involving groups were fixed (#65).
+    Note that this is a backwards-incompatible change; see the issue.
 * Reorganization of the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
   * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
