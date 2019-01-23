@@ -16,6 +16,7 @@ module Capnp.Rpc.Errors
     , eUnimplemented
     , eDisconnected
     , eFailed
+    , throwFailed
     ) where
 
 import Data.Default (Default(def))
@@ -70,3 +71,8 @@ wrapException debugMode e = fromMaybe
                 "Unhandled exception"
         }
     (E.fromException e)
+
+-- | Throw an exception with a type field of 'Exception'Type'failed' and
+-- the argument as a reason.
+throwFailed :: E.MonadThrow m => Text -> m a
+throwFailed = E.throwM . eFailed
