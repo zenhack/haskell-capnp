@@ -149,8 +149,8 @@ methodUnimplemented = methodThrow eMethodUnimplemented
 -- in which methods are serviced.
 data ServerOps m = ServerOps
     { handleCall
-        :: Word64 -- ^ Interface Id
-        -> Word16 -- ^ Method Id
+        :: Word64
+        -> Word16
         -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
     -- ^ Handle a method call; takes the interface and method id and returns
     -- a handler for the specific method.

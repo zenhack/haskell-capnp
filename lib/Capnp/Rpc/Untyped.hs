@@ -1570,7 +1570,7 @@ resolveClientClient tmpDest resolve (Client client) =
 
         -- These cases are slightly subtle; despite resolving to a
         -- client that points at a "remote" target, if it points into a
-        -- *different* connection, we must be proxying it, so we treat
+        -- _different_ connection, we must be proxying it, so we treat
         -- it as local and do a disembargo like above. We may need to
         -- change this when we implement level 3, since third-party
         -- handoff is a possibility; see Note [Level 3].
