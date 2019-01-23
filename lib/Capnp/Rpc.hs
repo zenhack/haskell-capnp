@@ -1,19 +1,19 @@
 module Capnp.Rpc
     (
+    -- * Establishing connections
+      handleConn
+    , ConnConfig(..)
+
     -- * Calling methods
-    (?)
+    , (?)
+
+    -- * throwing errors
+    , throwFailed
 
     -- * Transmitting messages
     , Transport
     , socketTransport
     , handleTransport
-
-    -- * Establishing connections
-    , ConnConfig(..)
-    , handleConn
-
-    -- * throwing errors
-    , throwFailed
     ) where
 
 import Capnp.Rpc.Errors    (throwFailed)
