@@ -25,7 +25,6 @@ data Decl
 
 data Data = Data
     { typeName   :: Name.LocalQ
-    , variants   :: [Variant]
     , firstClass :: !Bool
     -- ^ Whether this is a "first class" type, i.e. it is a type in the
     -- capnproto sense, rather than an auxiliary type defined for a group
@@ -34,16 +33,17 @@ data Data = Data
     -- Note that this *can* be set for unions, if they subsume the whole
     -- struct, since in that case we collapse the two types in the
     -- high-level API.
-    , isUnion    :: !Bool
-    -- ^ Whether or not this is a union. This controls things like
-    -- whether generated code needs to set a tag, and deal with unknown'
-    -- variants.
     , cerialName :: Name.LocalQ
     -- ^ The name of the type our 'Cerial' should be. This will only be
     -- different from typeName if we're an anonymous union in a struct
     -- that also has other fields; in this case our Cerial should be
     -- the same as our parent struct.
+    , def        :: DataDef
     }
+
+data DataDef
+    = Sum [Variant]
+    | Product [Field]
 
 data Constant = Constant
     { name  :: Name.LocalQ
@@ -76,10 +76,5 @@ data Field = Field
 
 data Variant = Variant
     { name :: Name.LocalQ
-    , arg  :: Argument
+    , arg  :: Maybe (C.Type Name.CapnpQ)
     }
-
-data Argument
-    = None
-    | Positional (C.Type Name.CapnpQ)
-    | Record [Field]

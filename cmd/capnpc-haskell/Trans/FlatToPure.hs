@@ -61,26 +61,15 @@ unionToDecl firstClass cerialName local variants =
     Pure.DataDecl Pure.Data
         { typeName = local
         , cerialName
-        , variants =
+        , def = Pure.Sum
             [ Pure.Variant
                 { name = variantName
                 , arg = case fieldLocType of
                     C.VoidField ->
                         -- If the argument is void, just have no argument.
-                        Pure.None
-                    C.HereField
-                        -- See Note [Collapsing Groups]
-                        (C.StructType
-                            Flat.Node
-                                { union_=Flat.Struct
-                                    { isGroup=True
-                                    , union=Nothing
-                                    , fields
-                                    }
-                                }) ->
-                                Pure.Record (map fieldToField fields)
+                        Nothing
                     _ ->
-                        Pure.Positional (Pure.type_ (fieldToField field))
+                        Just (Pure.type_ (fieldToField field))
                 }
             | Flat.Variant
                 { field=field@Flat.Field
@@ -89,7 +78,6 @@ unionToDecl firstClass cerialName local variants =
                     }
                 } <- variants
             ]
-        , isUnion = True
         , firstClass
         }
 
@@ -105,28 +93,22 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
         -- It's just one big union; skip the outer struct wrapper and make it
         -- a top-level sum type.
         [ unionToDecl (not isGroup) local local variants ]
-    Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
+    -- Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
     Flat.Struct{ isGroup, fields, union } ->
         Pure.DataDecl Pure.Data
             { typeName = local
             , cerialName = local
-            , variants =
-                [ Pure.Variant
-                    { name = local
-                    , arg = Pure.Record $
-                        map fieldToField fields
-                        ++ case union of
-                            Nothing ->
-                                []
-                            Just _ ->
-                                [ Pure.Field
-                                    { name = "union'"
-                                    , type_ = C.CompositeType $ C.StructType $ Name.mkSub name ""
-                                    }
-                                ]
-                    }
-                ]
-            , isUnion = False
+            , def = Pure.Product $
+                map fieldToField fields
+                ++ case union of
+                    Nothing ->
+                        []
+                    Just _ ->
+                        [ Pure.Field
+                            { name = "union'"
+                            , type_ = C.CompositeType $ C.StructType $ Name.mkSub name ""
+                            }
+                        ]
             , firstClass = not isGroup
             }
         : case union of

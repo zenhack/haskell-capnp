@@ -153,12 +153,22 @@ dataToDecls thisMod data_@P.Data{firstClass} = concat $
     ++
     [ firstClassInstances thisMod data_ | firstClass ]
 
+-- | Get the name of a data constructor for a product type. Arguments are the
+-- name of the type constructor and whether or not the type is "first class".
+productVariantName :: Name.LocalQ -> Bool -> Name.LocalQ
+productVariantName typeName firstClass
+    | firstClass = typeName
+    | otherwise = Name.mkSub typeName ""
+    -- ^ This is a group. If it's part of a union, then the union
+    -- will have a data constructor that is the same as typeName,
+    -- so we appent a ' to avoid a colision.
+
 dataToDataDecl :: Word64 -> P.Data -> [Decl]
 dataToDataDecl thisMod P.Data
         { typeName
         , cerialName
-        , variants
-        , isUnion
+        , firstClass
+        , def
         } =
     let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
@@ -168,22 +178,28 @@ dataToDataDecl thisMod P.Data
             ["Std_.Show", "Std_.Eq", "Generics.Generic"]
         , dataNewtype = False
         , dataVariants =
-            [ DataVariant
-                { dvCtorName = Name.localToUnQ name
-                , dvArgs = case arg of
-                    P.None          -> APos []
-                    P.Positional ty -> APos [typeToType thisMod ty]
-                    P.Record fields -> ARec (map (fieldToField thisMod) fields)
-                }
-            | P.Variant{name, arg} <- variants
-            ]
-            ++
-            [ DataVariant
-                { dvCtorName = Name.localToUnQ unknownCtor
-                , dvArgs = APos [TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16]
-                }
-            | isUnion
-            ]
+            case def of
+                P.Product fields ->
+                    [ DataVariant
+                        { dvCtorName = Name.localToUnQ $ productVariantName typeName firstClass
+                        , dvArgs = ARec (map (fieldToField thisMod) fields)
+                        }
+                    ]
+                P.Sum variants ->
+                    [ DataVariant
+                        { dvCtorName = Name.localToUnQ name
+                        , dvArgs = case arg of
+                            Nothing -> APos []
+                            Just ty -> APos [typeToType thisMod ty]
+                        }
+                    | P.Variant{name, arg} <- variants
+                    ]
+                    ++
+                    [ DataVariant
+                        { dvCtorName = Name.localToUnQ unknownCtor
+                        , dvArgs = APos [TPrim $ C.PrimInt $ C.IntType C.Unsigned C.Sz16]
+                        }
+                    ]
         }
     ]
 
@@ -203,145 +219,156 @@ dataToDecerialize :: Word64 -> P.Data -> [Decl]
 dataToDecerialize thisMod P.Data
         { typeName
         , cerialName
-        , variants
+        , firstClass
+        , def
         } =
-    let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ instance_ [] ["Classes"] "Decerialize" [TLName typeName]
         [ iType "Cerial" [tuName "msg", TLName typeName] $
             TApp (tgName (rawModule thisMod) cerialName) [tuName "msg"]
         , iValue "decerialize" [PVar "raw"] $
-            let fieldGetter parentName name = egName
-                    (rawModule thisMod)
-                    (Name.unQToLocal $ Name.getterName $ Name.mkSub parentName name)
-                decerializeArgs variantName = \case
-                    P.None ->
-                        EApp (eStd_ "pure") [ELName variantName]
-                    P.Positional type_ ->
-                        if cerialEq type_ then
-                            EApp (eStd_ "pure") [EApp (ELName variantName) [euName "raw"]]
-                        else
-                            EFApp
-                                (ELName variantName)
-                                [EApp (egName ["Classes"] "decerialize") [euName "raw"]]
-                    P.Record [] ->
-                        EApp (eStd_ "pure") [ELName variantName]
-                    P.Record fields ->
-                        EFApp
-                            (ELName variantName)
-                            [
-                                let getter = EApp (fieldGetter variantName name) [euName "raw"] in
-                                if name == "union'" then
-                                    -- unions decerialize from the same type as their parents. Don't
-                                    -- do anything but pass it off.
-                                    EApp (egName ["Classes"] "decerialize") [euName "raw"]
-                                else if cerialEq type_ then
-                                    getter
-                                else
-                                    EBind getter (egName ["Classes"] "decerialize")
-                            | P.Field{name, type_} <- fields
-                            ]
-            in
-            case variants of
-                [P.Variant{name, arg}] ->
-                    decerializeArgs name arg
-                _ ->
-                    EDo
-                        [DoBind "raw" $ EApp (fieldGetter cerialName "") [euName "raw"]
-                        ]
-                        (ECase (ELName "raw") $
-                            [ case arg of
-                                P.None ->
-                                    ( pgName (rawModule thisMod) name []
-                                    , decerializeArgs name arg
-                                    )
-                                P.Positional _ ->
-                                    ( pgName (rawModule thisMod) name [PVar "raw"]
-                                    , decerializeArgs name arg
-                                    )
-                                P.Record _ ->
-                                    ( pgName (rawModule thisMod) name [PVar "raw"]
-                                    , decerializeArgs name arg
-                                    )
-                            | P.Variant{name, arg} <- variants
-                            ]
-                            ++
-                            [ ( pgName (rawModule thisMod) unknownCtor [PVar "tag"]
-                              , EApp
-                                  (eStd_ "pure")
-                                  [EApp (ELName unknownCtor) [euName "tag"]]
-                              )
-                            ]
-                        )
+            case def of
+                P.Sum variants ->
+                    variantsToDecerialize thisMod cerialName variants
+                P.Product fields ->
+                    fieldsToDecerialize thisMod typeName firstClass fields
         ]
     ]
+
+variantsToDecerialize :: Word64 -> Name.LocalQ -> [P.Variant] -> Exp
+variantsToDecerialize thisMod cerialName variants =
+    let unknownCtor = Name.mkSub cerialName "unknown'"
+        fieldGetter parentName name = egName
+            (rawModule thisMod)
+            (Name.unQToLocal $ Name.getterName $ Name.mkSub parentName name)
+    in
+    EDo
+        [DoBind "raw" $ EApp (fieldGetter cerialName "") [euName "raw"]
+        ]
+        (ECase (ELName "raw") $
+            [ case arg of
+                Nothing ->
+                    ( pgName (rawModule thisMod) name []
+                    , EApp (eStd_ "pure") [ELName name]
+                    )
+                Just type_ | cerialEq type_ ->
+                    ( pgName (rawModule thisMod) name [PVar "raw"]
+                    , EApp (eStd_ "pure") [EApp (ELName name) [euName "raw"]]
+                    )
+                Just _ ->
+                    ( pgName (rawModule thisMod) name [PVar "raw"]
+                    , EFApp
+                        (ELName name)
+                        [EApp (egName ["Classes"] "decerialize") [euName "raw"]]
+                    )
+            | P.Variant{name, arg} <- variants
+            ]
+            ++
+            [ ( pgName (rawModule thisMod) unknownCtor [PVar "tag"]
+              , EApp
+                  (eStd_ "pure")
+                  [EApp (ELName unknownCtor) [euName "tag"]]
+              )
+            ]
+        )
+
+fieldsToDecerialize :: Word64 -> Name.LocalQ -> Bool -> [P.Field] -> Exp
+fieldsToDecerialize thisMod typeName firstClass fields =
+    let fieldGetter parentName name = egName
+            (rawModule thisMod)
+            (Name.unQToLocal $ Name.getterName $ Name.mkSub parentName name)
+        variantName = productVariantName typeName firstClass
+    in
+    case fields of
+        [] ->
+            EApp (eStd_ "pure") [ELName variantName]
+        _ ->
+            EFApp
+                (ELName variantName)
+                [
+                    let getter = EApp (fieldGetter typeName name) [euName "raw"] in
+                    if name == "union'" then
+                        -- unions decerialize from the same type as their parents. Don't
+                        -- do anything but pass it off.
+                        EApp (egName ["Classes"] "decerialize") [euName "raw"]
+                    else if cerialEq type_ then
+                        getter
+                    else
+                        EBind getter (egName ["Classes"] "decerialize")
+                | P.Field{name, type_} <- fields
+                ]
 
 
 dataToMarshal :: Word64 -> P.Data -> [Decl]
 dataToMarshal thisMod P.Data
         { typeName
         , cerialName
-        , variants
-        , isUnion
+        , firstClass
+        , def
         } =
-    let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ instance_ [] ["Classes"] "Marshal" [TLName typeName]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
-            ECase (euName "value_") $
-                [ let setter = Name.unQToLocal $ Name.setterName variantName
-                      setExp = EApp (egName (rawModule thisMod) setter) [euName "raw_"]
-                  in case arg of
-                    P.None ->
-                        ( PLCtor variantName []
-                        , if isUnion
-                            then setExp
-                            else ePureUnit
-                        )
-                    P.Positional type_ ->
-                        ( PLCtor variantName [PVar "arg_"]
-                        , marshalField MarshalField
-                            { thisMod
-                            , into = "raw_"
-                            , localQField = variantName
-                            , from = "arg_"
-                            , type_
-                            , inUnion = isUnion
-                            }
-                        )
-                    P.Record [] ->
-                        ( PLCtor variantName []
-                        , if isUnion
-                            then setExp
-                            else ePureUnit
-                        )
-                    P.Record fields ->
-                        ( PLRecordWildCard variantName
-                        , EDo
-                            ([ DoBind "raw_" setExp | isUnion ] ++
-                            [ DoE $ marshalField MarshalField
-                                { thisMod
-                                , into = "raw_"
-                                , localQField = Name.mkSub variantName fieldName
-                                , from = fieldName
-                                , type_
-                                , inUnion = isUnion
-                                }
-                            | P.Field{name=fieldName, type_} <- fields
-                            ])
-                            ePureUnit
-                        )
-                | P.Variant{name=variantName, arg} <- variants
-                ]
-                ++
-                if isUnion then
-                    let setter = Name.unQToLocal $ Name.setterName unknownCtor in
-                    [ ( PLCtor unknownCtor [PVar "tag"]
-                      , EApp (egName (rawModule thisMod) setter) [euName "raw_", euName "tag"]
-                      )
-                    ]
-                else
-                    []
+            case def of
+                P.Sum variants ->
+                    variantsToMarshal thisMod cerialName variants
+                P.Product fields ->
+                    fieldsToMarshal thisMod typeName firstClass fields
         ]
     ]
+
+variantsToMarshal :: Word64 -> Name.LocalQ -> [P.Variant] -> Exp
+variantsToMarshal thisMod cerialName variants =
+    let unknownCtor = Name.mkSub cerialName "unknown'" in
+    ECase (euName "value_") $
+        [ let setter = Name.unQToLocal $ Name.setterName variantName
+              setExp = EApp (egName (rawModule thisMod) setter) [euName "raw_"]
+          in case arg of
+            Nothing ->
+                ( PLCtor variantName []
+                , setExp
+                )
+            Just type_ ->
+                ( PLCtor variantName [PVar "arg_"]
+                , marshalField MarshalField
+                    { thisMod
+                    , into = "raw_"
+                    , localQField = variantName
+                    , from = "arg_"
+                    , type_
+                    , inUnion = True
+                    }
+                )
+        | P.Variant{name=variantName, arg} <- variants
+        ]
+        ++
+        let setter = Name.unQToLocal $ Name.setterName unknownCtor in
+        [ ( PLCtor unknownCtor [PVar "tag"]
+          , EApp (egName (rawModule thisMod) setter) [euName "raw_", euName "tag"]
+          )
+        ]
+
+fieldsToMarshal :: Word64 -> Name.LocalQ -> Bool -> [P.Field] -> Exp
+fieldsToMarshal thisMod typeName firstClass fields =
+    let variantName = productVariantName typeName firstClass in
+    ECase (euName "value_")
+        [ ( case fields of
+              -- If there are no fields, use of RecordWildCards will
+              -- cause an error:
+              [] -> PLCtor variantName []
+              _  -> PLRecordWildCard variantName
+          , EDo
+              [ DoE $ marshalField MarshalField
+                  { thisMod
+                  , into = "raw_"
+                  , localQField = Name.mkSub typeName fieldName
+                  , from = fieldName
+                  , type_
+                  , inUnion = False
+                  }
+              | P.Field{name=fieldName, type_} <- fields
+              ]
+              ePureUnit
+          )
+        ]
 
 firstClassInstances :: Word64 -> P.Data -> [Decl]
 firstClassInstances _thisMod P.Data{ typeName } =
