@@ -901,6 +901,8 @@ coordinator conn@Conn{debugMode} = forever $ atomically $ do
             handleReturnMsg conn ret
         R.Message'finish finish ->
             handleFinishMsg conn finish
+        R.Message'resolve res ->
+            handleResolveMsg conn res
         R.Message'release release ->
             handleReleaseMsg conn release
         R.Message'disembargo disembargo ->
@@ -1130,6 +1132,46 @@ handleReturnMsg conn ret = getLive conn >>= \conn'@Conn'{questions} ->
 handleFinishMsg :: Conn -> R.Finish -> STM ()
 handleFinishMsg conn finish = getLive conn >>= \conn'@Conn'{answers} ->
     updateQAFinish conn' answers "answer" finish
+
+handleResolveMsg :: Conn -> R.Resolve -> STM ()
+handleResolveMsg conn R.Resolve{promiseId, union'} =
+    getLive conn >>= \conn'@Conn'{imports} -> do
+        entry <- M.lookup (IEId promiseId) imports
+        case entry of
+            Nothing ->
+                -- This can happen if we dropped the promise, but the release
+                -- message is still in flight when the resolve message is sent.
+                case union' of
+                    R.Resolve'cap (R.CapDescriptor'receiverHosted importId) ->
+                        -- Send a release message for the resolved cap, since
+                        -- we're not going to use it:
+                        sendPureMsg conn' $ R.Message'release def
+                            { R.id = importId
+                            , R.referenceCount = 1
+                            }
+                    -- Note [Level 3]: do we need to do something with
+                    -- thirdPartyHosted here?
+                    _ -> pure ()
+            Just EntryI{ promiseState = Nothing } ->
+                -- This wasn't a promise! The remote vat has done something wrong;
+                -- abort the connection.
+                abortConn conn' $ eFailed $ mconcat
+                    [ "Received a resolve message for export id #", fromString (show promiseId)
+                    , ", but that capability is not a promise!"
+                    ]
+            Just EntryI { promiseState = Just (tvar, tmpDest) } ->
+                case union' of
+                    R.Resolve'cap cap -> do
+                        client <- acceptCap conn cap
+                        resolveClientClient tmpDest (writeTVar tvar) client
+                    R.Resolve'exception exn ->
+                        resolveClientExn tmpDest (writeTVar tvar) exn
+                    R.Resolve'unknown' tag -> do
+                        abortConn conn' $ eUnimplemented $ mconcat
+                            [ "Resolve variant #"
+                            , fromString (show tag)
+                            , " not understood"
+                            ]
 
 handleReleaseMsg :: Conn -> R.Release -> STM ()
 handleReleaseMsg
