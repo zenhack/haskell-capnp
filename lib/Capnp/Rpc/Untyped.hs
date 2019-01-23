@@ -1166,7 +1166,7 @@ handleResolveMsg conn R.Resolve{promiseId, union'} =
                         resolveClientClient tmpDest (writeTVar tvar) client
                     R.Resolve'exception exn ->
                         resolveClientExn tmpDest (writeTVar tvar) exn
-                    R.Resolve'unknown' tag -> do
+                    R.Resolve'unknown' tag ->
                         abortConn conn' $ eUnimplemented $ mconcat
                             [ "Resolve variant #"
                             , fromString (show tag)
