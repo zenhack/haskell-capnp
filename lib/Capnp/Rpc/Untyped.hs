@@ -10,6 +10,12 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
+-- |
+-- Module: Capnp.Rpc.Untyped
+-- Description: Core of the RPC subsystem.
+--
+-- This module does not deal with schema-level concepts; all capabilities,
+-- methods etc. as used here are untyped.
 module Capnp.Rpc.Untyped
     (
     -- * Connections to other vats
