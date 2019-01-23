@@ -190,7 +190,7 @@ instance Format Exp where
         , " :: "
         , format ty
         ]
-    format (EList es) = PP.list (map format es)
+    format (EBytes bytes) = fromString (show bytes)
     format (ELambda params body) = PP.parens $ hcat
         [ "\\"
         , hcat (PP.punctuate " " (map format params))

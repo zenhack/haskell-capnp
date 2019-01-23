@@ -6,13 +6,11 @@ module Trans.RawToHaskell (fileToModules) where
 
 import Data.Word
 
-import Data.Function ((&))
-import Data.Maybe    (fromJust)
-import Data.String   (fromString)
-import GHC.Exts      (fromList)
+import Data.Maybe  (fromJust)
+import Data.String (fromString)
+import GHC.Exts    (fromList)
 
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Text            as T
+import qualified Data.Text as T
 
 import IR.Haskell
 import Trans.ToHaskellCommon
@@ -57,6 +55,7 @@ fileToMainModule Raw.File{fileName, fileId, decls} =
             , "MultiParamTypeClasses"
             , "TypeFamilies"
             , "DeriveGeneric"
+            , "OverloadedStrings"
             ]
         , modExports = Nothing
         , modImports =
@@ -693,27 +692,19 @@ declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
             , params = []
             , value = EApp
                 (egName ["GenHelpers"] "getPtrConst")
-                [ EApp
-                    (egName ["BS"] "pack")
-                    [makePtrByteList val]
-                ]
+                [ETypeAnno (EBytes (makePtrBytes val)) (tgName ["BS"] "ByteString")]
             }
         }
     ]
   where
-    makePtrByteList ptr =
-        let msg = fromJust $ Capnp.createPure Capnp.defaultLimit $ do
-                msg <- Capnp.newMessage Nothing
-                rootPtr <- Capnp.cerialize msg $ Untyped.Struct
-                    (fromList [])
-                    (fromList [ptr])
-                Capnp.setRoot rootPtr
-                pure msg
-        in
-        Capnp.msgToLBS msg &
-        LBS.unpack &
-        map (EInt . fromIntegral) &
-        EList
+    makePtrBytes ptr =
+        Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
+            msg <- Capnp.newMessage Nothing
+            rootPtr <- Capnp.cerialize msg $ Untyped.Struct
+                (fromList [])
+                (fromList [ptr])
+            Capnp.setRoot rootPtr
+            pure msg
 
 
 eSetValue :: C.FieldLocType Name.CapnpQ -> Exp

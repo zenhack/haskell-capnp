@@ -212,11 +212,9 @@ instance HasGNames Type where
 instance HasGNames Exp where
     findGNames (EApp e es)  = S.unions $ map findGNames (e:es)
     findGNames (EFApp e es) = S.unions $ map findGNames (e:es)
-    findGNames (EGName n)   = S.singleton n
     findGNames (EDo ds e)   = S.unions $ findGNames e : map findGNames ds
     findGNames (EBind x y)  = findGNames x `S.union` findGNames y
     findGNames (ETup es)    = S.unions $ map findGNames es
-    findGNames (EList es)   = S.unions $ map findGNames es
     findGNames (ECase e arms) = S.unions
         [ findGNames e
         , S.unions $ map (findGNames . fst) arms

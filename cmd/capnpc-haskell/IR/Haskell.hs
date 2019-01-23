@@ -34,7 +34,8 @@ module IR.Haskell
 
 import Data.List (intercalate)
 
-import qualified Data.Text as T
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text            as T
 
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
@@ -168,7 +169,7 @@ data Exp
     | EBind Exp Exp
     -- ^ A call to (>>=)
     | ETup [Exp]
-    | EList [Exp]
+    | EBytes LBS.ByteString
     | ECase Exp [(Pattern, Exp)]
     | ETypeAnno Exp Type
     | ELambda [Pattern] Exp
