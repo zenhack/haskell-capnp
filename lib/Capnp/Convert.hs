@@ -49,11 +49,11 @@ import qualified Capnp.Message as M
 
 -- | Compute a reasonable limit based on the size of a message. The limit
 -- is the total number of words in all of the message's segments, multiplied
--- by 4 to provide provide a little slack for decoding default values.
+-- by 10 to provide some slack for decoding default values.
 limitFromMsg :: (MonadThrow m, M.Message m msg) => msg -> m WordCount
 limitFromMsg msg = do
     messageWords <- countMessageWords
-    pure (messageWords * 4)
+    pure (messageWords * 10)
   where
     countMessageWords = do
         segCount <- M.numSegs msg
