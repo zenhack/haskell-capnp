@@ -35,10 +35,10 @@ main = connect "localhost" "4000" $ \(sock, _addr) ->
                 calculator'getOperator calc ? def { op = Operator'subtract } >>= waitIO
             Calculator'evaluate'results{value} <- calculator'evaluate calc ? def
                 { expression =
-                    Expression'call
+                    Expression'call Expression'call'
                         { function = subtract
                         , params = V.fromList
-                            [ Expression'call
+                            [ Expression'call Expression'call'
                                 { function = add
                                 , params = V.fromList
                                     [ Expression'literal 123

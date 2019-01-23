@@ -57,35 +57,55 @@ instance Arbitrary Node' where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Node'file
-        , do
-            dataWordCount <- arbitrary
-            pointerCount <- arbitrary
-            preferredListEncoding <- arbitrary
-            isGroup <- arbitrary
-            discriminantCount <- arbitrary
-            discriminantOffset <- arbitrary
-            fields <- arbitrarySmallerVec
-            pure Node'struct{..}
-        , Node'enum <$> arbitrarySmallerVec
-        , Node'interface <$> arbitrarySmallerVec <*> arbitrarySmallerVec
-        , Node'const <$> arbitrary <*> arbitrary
-        , do
-            type_ <- arbitrary
-            targetsFile <- arbitrary
-            targetsConst <- arbitrary
-            targetsEnum <- arbitrary
-            targetsEnumerant <- arbitrary
-            targetsStruct <- arbitrary
-            targetsField <- arbitrary
-            targetsUnion <- arbitrary
-            targetsGroup <- arbitrary
-            targetsInterface <- arbitrary
-            targetsMethod <- arbitrary
-            targetsParam <- arbitrary
-            targetsAnnotation <- arbitrary
-            pure Node'annotation{..}
+        , Node'struct <$> arbitrary
+        , Node'enum <$> arbitrary
+        , Node'interface <$> arbitrary
+        , Node'const <$> arbitrary
+        , Node'annotation <$> arbitrary
         , Node'unknown' <$> arbitraryTag 6
         ]
+
+instance Arbitrary Node'enum where
+    shrink = genericShrink
+    arbitrary = Node'enum' <$> arbitrarySmallerVec
+
+instance Arbitrary Node'struct where
+    shrink = genericShrink
+    arbitrary = do
+        dataWordCount <- arbitrary
+        pointerCount <- arbitrary
+        preferredListEncoding <- arbitrary
+        isGroup <- arbitrary
+        discriminantCount <- arbitrary
+        discriminantOffset <- arbitrary
+        fields <- arbitrarySmallerVec
+        pure Node'struct'{..}
+
+instance Arbitrary Node'interface where
+    shrink = genericShrink
+    arbitrary = Node'interface' <$> arbitrarySmallerVec <*> arbitrarySmallerVec
+
+instance Arbitrary Node'const where
+    shrink = genericShrink
+    arbitrary = Node'const' <$> arbitrary <*> arbitrary
+
+instance Arbitrary Node'annotation where
+    shrink = genericShrink
+    arbitrary = do
+        type_ <- arbitrary
+        targetsFile <- arbitrary
+        targetsConst <- arbitrary
+        targetsEnum <- arbitrary
+        targetsEnumerant <- arbitrary
+        targetsStruct <- arbitrary
+        targetsField <- arbitrary
+        targetsUnion <- arbitrary
+        targetsGroup <- arbitrary
+        targetsInterface <- arbitrary
+        targetsMethod <- arbitrary
+        targetsParam <- arbitrary
+        targetsAnnotation <- arbitrary
+        pure Node'annotation'{..}
 
 instance Arbitrary Node'NestedNode where
     shrink = genericShrink
@@ -107,14 +127,22 @@ instance Arbitrary Field where
 instance Arbitrary Field' where
     shrink = genericShrink
     arbitrary = oneof
-        [ do
-            offset <- arbitrary
-            type_ <- arbitrary
-            defaultValue <- arbitrary
-            hadExplicitDefault <- arbitrary
-            pure Field'slot{..}
+        [ Field'slot <$> arbitrary
         , Field'group <$> arbitrary
         ]
+
+instance Arbitrary Field'slot where
+    shrink = genericShrink
+    arbitrary = do
+        offset <- arbitrary
+        type_ <- arbitrary
+        defaultValue <- arbitrary
+        hadExplicitDefault <- arbitrary
+        pure Field'slot'{..}
+
+instance Arbitrary Field'group where
+    shrink = genericShrink
+    arbitrary = Field'group' <$> arbitrary
 
 instance Arbitrary Field'ordinal where
     shrink = genericShrink
@@ -236,7 +264,7 @@ instance Arbitrary Type'anyPointer where
     shrink = genericShrink
     arbitrary = oneof
         [ Type'anyPointer'unconstrained <$> arbitrary
-        , Type'anyPointer'parameter <$> arbitrary <*> arbitrary
+        , Type'anyPointer'parameter <$> arbitrary
         , Type'anyPointer'implicitMethodParameter <$> arbitrary
         ]
 
@@ -248,6 +276,16 @@ instance Arbitrary Type'anyPointer'unconstrained where
         , pure Type'anyPointer'unconstrained'list
         , pure Type'anyPointer'unconstrained'capability
         ]
+
+instance Arbitrary Type'anyPointer'parameter where
+    shrink = genericShrink
+    arbitrary =
+        Type'anyPointer'parameter' <$> arbitrary <*> arbitrary
+
+instance Arbitrary Type'anyPointer'implicitMethodParameter where
+    shrink = genericShrink
+    arbitrary =
+        Type'anyPointer'implicitMethodParameter' <$> arbitrary
 
 instance Arbitrary Type where
     shrink = genericShrink
@@ -267,11 +305,28 @@ instance Arbitrary Type where
         , pure Type'text
         , pure Type'data_
         , Type'list <$> arbitrary
-        , Type'enum <$> arbitrary <*> arbitrary
-        , Type'interface <$> arbitrary <*> arbitrary
+        , Type'enum <$> arbitrary
+        , Type'struct <$> arbitrary
+        , Type'interface <$> arbitrary
         , Type'anyPointer <$> arbitrary
         , Type'unknown' <$> arbitraryTag 21
         ]
+
+instance Arbitrary Type'list where
+    shrink = genericShrink
+    arbitrary = Type'list' <$> arbitrary
+
+instance Arbitrary Type'enum where
+    shrink = genericShrink
+    arbitrary = Type'enum' <$> arbitrary <*> arbitrary
+
+instance Arbitrary Type'struct where
+    shrink = genericShrink
+    arbitrary = Type'struct' <$> arbitrary <*> arbitrary
+
+instance Arbitrary Type'interface where
+    shrink = genericShrink
+    arbitrary = Type'interface' <$> arbitrary <*> arbitrary
 
 instance Arbitrary CodeGeneratorRequest where
     shrink = genericShrink

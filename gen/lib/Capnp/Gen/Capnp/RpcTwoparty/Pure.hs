@@ -119,7 +119,9 @@ instance (Classes.Decerialize RecipientId) where
 instance (Classes.Marshal RecipientId) where
     marshalInto raw_ value_ = case value_ of
         (RecipientId) ->
-            (Std_.pure ())
+            (do
+                (Std_.pure ())
+                )
 instance (Classes.Cerialize RecipientId)
 instance (Classes.Cerialize (V.Vector RecipientId)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
@@ -151,7 +153,9 @@ instance (Classes.Decerialize ThirdPartyCapId) where
 instance (Classes.Marshal ThirdPartyCapId) where
     marshalInto raw_ value_ = case value_ of
         (ThirdPartyCapId) ->
-            (Std_.pure ())
+            (do
+                (Std_.pure ())
+                )
 instance (Classes.Cerialize ThirdPartyCapId)
 instance (Classes.Cerialize (V.Vector ThirdPartyCapId)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec

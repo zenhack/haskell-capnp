@@ -101,7 +101,7 @@ eval args (Expression'parameter idx)
         throwFailed "Parameter index out of bounds"
     | otherwise =
         pure $ args V.! fromIntegral idx
-eval outerParams Expression'call{function, params=innerParams} = do
+eval outerParams (Expression'call Expression'call'{function, params=innerParams}) = do
     args' <- traverse (eval outerParams) innerParams
     Function'call'results{value} <-
         function'call function ? Function'call'params { params = args' }

@@ -45,9 +45,9 @@ nodesToNodes inMap = outMap
                     Just (outMap M.! id)
             }
         , nodeUnion = case union' of
-            Schema.Node'enum enumerants ->
+            Schema.Node'enum Schema.Node'enum'{enumerants} ->
                 Stage1.NodeEnum $ map enumerantToName $ V.toList enumerants
-            Schema.Node'struct
+            Schema.Node'struct Schema.Node'struct'
                     { dataWordCount
                     , pointerCount
                     , isGroup
@@ -61,12 +61,12 @@ nodesToNodes inMap = outMap
                     , tagOffset = discriminantOffset
                     , fields = map (fieldToField outMap) (V.toList fields)
                     }
-            Schema.Node'interface { methods, superclasses } ->
+            Schema.Node'interface Schema.Node'interface'{ methods, superclasses } ->
                 Stage1.NodeInterface Stage1.Interface
                     { methods = map (methodToMethod outMap) (V.toList methods)
                     , supers = [ outMap M.! id | Schema.Superclass{id} <- V.toList superclasses ]
                     }
-            Schema.Node'const{ type_, value } -> Stage1.NodeConstant $
+            Schema.Node'const Schema.Node'const'{ type_, value } -> Stage1.NodeConstant $
                 let mismatch = error "ERROR: Constant's type and value do not agree"
                 in case value of
                     Schema.Value'void ->
@@ -111,7 +111,7 @@ nodesToNodes inMap = outMap
 
                     Schema.Value'list v ->
                         case type_ of
-                            Schema.Type'list { elementType } ->
+                            Schema.Type'list Schema.Type'list'{ elementType } ->
                                 C.PtrValue
                                     (C.ListOf (typeToType outMap elementType))
                                     v
@@ -121,7 +121,7 @@ nodesToNodes inMap = outMap
                     Schema.Value'enum v ->
                         case type_ of
                             -- TODO: brand
-                            Schema.Type'enum { typeId } ->
+                            Schema.Type'enum Schema.Type'enum'{ typeId } ->
                                 C.WordValue (C.EnumType (outMap M.! typeId)) (toWord v)
                             _ ->
                                 mismatch
@@ -129,7 +129,7 @@ nodesToNodes inMap = outMap
                     Schema.Value'struct v ->
                         case type_ of
                             -- TODO: brand
-                            Schema.Type'struct { typeId } -> C.PtrValue
+                            Schema.Type'struct Schema.Type'struct'{ typeId } -> C.PtrValue
                                 (C.PtrComposite (C.StructType (outMap M.! typeId)))
                                 v
                             _ ->
@@ -137,7 +137,7 @@ nodesToNodes inMap = outMap
 
                     Schema.Value'interface ->
                         case type_ of
-                            Schema.Type'interface{ typeId } ->
+                            Schema.Type'interface Schema.Type'interface'{ typeId } ->
                                 C.PtrValue (C.PtrInterface (outMap M.! typeId)) Nothing
                             _ ->
                                 mismatch
@@ -177,7 +177,7 @@ fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
 
 getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
 getFieldLocType nodeMap = \case
-    Schema.Field'slot{type_, defaultValue, offset} ->
+    Schema.Field'slot Schema.Field'slot'{type_, defaultValue, offset} ->
         case typeToType nodeMap type_ of
             C.VoidType ->
                 C.VoidField
@@ -194,7 +194,7 @@ getFieldLocType nodeMap = \case
                             ty
             C.CompositeType ty ->
                 C.PtrField (fromIntegral offset) (C.PtrComposite ty)
-    Schema.Field'group{typeId} ->
+    Schema.Field'group Schema.Field'group'{typeId} ->
         C.HereField $ C.StructType $ nodeMap M.! typeId
     Schema.Field'unknown' _ ->
         -- Don't know how to interpret this; we'll have to leave the argument
@@ -281,11 +281,15 @@ typeToType nodeMap = \case
     Schema.Type'float64    -> C.WordType $ C.PrimWord C.PrimFloat64
     Schema.Type'text       -> C.PtrType $ C.PrimPtr C.PrimText
     Schema.Type'data_      -> C.PtrType $ C.PrimPtr C.PrimData
-    Schema.Type'list elt   -> C.PtrType $ C.ListOf (typeToType nodeMap elt)
+    Schema.Type'list Schema.Type'list'{elementType} ->
+        C.PtrType $ C.ListOf (typeToType nodeMap elementType)
     -- TODO: use 'brand' to generate type parameters.
-    Schema.Type'enum{typeId} -> C.WordType $ C.EnumType $ nodeMap M.! typeId
-    Schema.Type'struct{typeId} -> C.CompositeType $ C.StructType $ nodeMap M.! typeId
-    Schema.Type'interface{typeId} -> C.PtrType $ C.PtrInterface $ nodeMap M.! typeId
+    Schema.Type'enum Schema.Type'enum'{typeId} ->
+        C.WordType $ C.EnumType $ nodeMap M.! typeId
+    Schema.Type'struct Schema.Type'struct'{typeId} ->
+        C.CompositeType $ C.StructType $ nodeMap M.! typeId
+    Schema.Type'interface Schema.Type'interface'{typeId} ->
+        C.PtrType $ C.PtrInterface $ nodeMap M.! typeId
     Schema.Type'anyPointer anyPtr -> C.PtrType $ C.PrimPtr $ C.PrimAnyPtr $
         case anyPtr of
             Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'anyKind ->

@@ -162,7 +162,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                         ]
                     )
                 |]
-              , Node'struct
+              , Node'struct Node'struct'
                     { dataWordCount = 3
                     , pointerCount = 2
                     , preferredListEncoding = ElementSize'inlineComposite
@@ -180,18 +180,18 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                             ]
                             7
                             Field'ordinal'implicit
-                            (Field'group 4)
+                            (Field'group $ Field'group' 4)
                         ]
                     }
               )
             , ( "enum = (enumerants = [(name = \"blue\", codeOrder = 2, annotations = [])])"
-              , Node'enum [ Enumerant "blue" 2 [] ]
+              , Node'enum $ Node'enum' [ Enumerant "blue" 2 [] ]
               )
             , ( "interface = (methods = [], superclasses = [(id = 0, brand = (scopes = []))])"
-              , Node'interface [] [Superclass 0 (Brand [])]
+              , Node'interface $ Node'interface' [] [Superclass 0 (Brand [])]
               )
             , ( "const = (type = (bool = void), value = (bool = false))"
-              , Node'const Type'bool (Value'bool False)
+              , Node'const $ Node'const' Type'bool (Value'bool False)
               )
             , ( [here| annotation =
                     ( type = (bool = void)
@@ -209,7 +209,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                     , targetsAnnotation = false
                     )
                 |]
-              , Node'annotation
+              , Node'annotation $ Node'annotation'
                     Type'bool
                     True
                     False
@@ -282,7 +282,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                 [Annotation 2 (Value'bool True) (Brand [])]
                 3
                 Field'ordinal'implicit
-                (Field'group 4)
+                (Field'group $ Field'group' 4)
           )
         , ( [here|
                 ( name = "fieldName"
@@ -304,7 +304,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                 [Annotation 2 (Value'bool True) (Brand [])]
                 3
                 (Field'ordinal'explicit 7)
-                (Field'slot
+                (Field'slot $ Field'slot'
                     3
                     Type'bool
                     (Value'bool False)
@@ -341,16 +341,16 @@ decodeTests = describe "schema decode tests" $ sequence_ $
         , ("(text = void)", Type'text)
         , ("(data = void)", Type'data_)
         , ( "(list = (elementType = (list = (elementType = (text = void)))))"
-          , Type'list $ Type'list Type'text
+          , Type'list $ Type'list' $ Type'list $ Type'list' Type'text
           )
         , ( "(enum = (typeId = 4, brand = (scopes = [])))"
-          , Type'enum 4 (Brand [])
+          , Type'enum $ Type'enum' 4 (Brand [])
           )
         , ( "(struct = (typeId = 7, brand = (scopes = [])))"
-          , Type'struct 7 (Brand [])
+          , Type'struct $ Type'struct' 7 (Brand [])
           )
         , ( "(interface = (typeId = 1, brand = (scopes = [])))"
-          , Type'interface 1 (Brand [])
+          , Type'interface $ Type'interface' 1 (Brand [])
           )
         , ( "(anyPointer = (unconstrained = (anyKind = void)))"
           , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind
@@ -365,10 +365,11 @@ decodeTests = describe "schema decode tests" $ sequence_ $
           , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability
           )
         , ( "(anyPointer = (parameter = (scopeId = 4, parameterIndex = 2)))"
-          , Type'anyPointer $ Type'anyPointer'parameter 4 2
+          , Type'anyPointer $ Type'anyPointer'parameter $ Type'anyPointer'parameter' 4 2
           )
         , ( "(anyPointer = (implicitMethodParameter = (parameterIndex = 7)))"
-          , Type'anyPointer $ Type'anyPointer'implicitMethodParameter 7
+          , Type'anyPointer $ Type'anyPointer'implicitMethodParameter $
+                Type'anyPointer'implicitMethodParameter' 7
           )
         ]
     , decodeTests "Brand"

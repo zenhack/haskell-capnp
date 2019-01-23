@@ -12,20 +12,33 @@
 module Capnp.Gen.Capnp.Schema.Pure(Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize(..)
                                   ,Node(..)
                                   ,Node'(..)
+                                  ,Node'struct(..)
+                                  ,Node'enum(..)
+                                  ,Node'interface(..)
+                                  ,Node'const(..)
+                                  ,Node'annotation(..)
                                   ,Node'Parameter(..)
                                   ,Node'NestedNode(..)
                                   ,Node'SourceInfo(..)
                                   ,Node'SourceInfo'Member(..)
                                   ,Field(..)
                                   ,Field'(..)
+                                  ,Field'slot(..)
+                                  ,Field'group(..)
                                   ,Field'ordinal(..)
                                   ,Capnp.Gen.ById.Xa93fc509624c72d9.field'noDiscriminant
                                   ,Enumerant(..)
                                   ,Superclass(..)
                                   ,Method(..)
                                   ,Type(..)
+                                  ,Type'list(..)
+                                  ,Type'enum(..)
+                                  ,Type'struct(..)
+                                  ,Type'interface(..)
                                   ,Type'anyPointer(..)
                                   ,Type'anyPointer'unconstrained(..)
+                                  ,Type'anyPointer'parameter(..)
+                                  ,Type'anyPointer'implicitMethodParameter(..)
                                   ,Brand(..)
                                   ,Brand'Scope(..)
                                   ,Brand'Scope'(..)
@@ -116,36 +129,11 @@ instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Node' 
     = Node'file 
-    | Node'struct 
-        {dataWordCount :: Std_.Word16
-        ,pointerCount :: Std_.Word16
-        ,preferredListEncoding :: Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize
-        ,isGroup :: Std_.Bool
-        ,discriminantCount :: Std_.Word16
-        ,discriminantOffset :: Std_.Word32
-        ,fields :: (V.Vector Field)}
-    | Node'enum 
-        {enumerants :: (V.Vector Enumerant)}
-    | Node'interface 
-        {methods :: (V.Vector Method)
-        ,superclasses :: (V.Vector Superclass)}
-    | Node'const 
-        {type_ :: Type
-        ,value :: Value}
-    | Node'annotation 
-        {type_ :: Type
-        ,targetsFile :: Std_.Bool
-        ,targetsConst :: Std_.Bool
-        ,targetsEnum :: Std_.Bool
-        ,targetsEnumerant :: Std_.Bool
-        ,targetsStruct :: Std_.Bool
-        ,targetsField :: Std_.Bool
-        ,targetsUnion :: Std_.Bool
-        ,targetsGroup :: Std_.Bool
-        ,targetsInterface :: Std_.Bool
-        ,targetsMethod :: Std_.Bool
-        ,targetsParam :: Std_.Bool
-        ,targetsAnnotation :: Std_.Bool}
+    | Node'struct Node'struct
+    | Node'enum Node'enum
+    | Node'interface Node'interface
+    | Node'const Node'const
+    | Node'annotation Node'annotation
     | Node'unknown' Std_.Word16
     deriving(Std_.Show
             ,Std_.Eq
@@ -162,35 +150,15 @@ instance (Classes.Decerialize Node') where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'file) ->
                 (Std_.pure Node'file)
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'struct raw) ->
-                (Node'struct <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'dataWordCount raw)
-                             <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'pointerCount raw)
-                             <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'preferredListEncoding raw)
-                             <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'isGroup raw)
-                             <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'discriminantCount raw)
-                             <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'discriminantOffset raw)
-                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'fields raw) >>= Classes.decerialize))
+                (Node'struct <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'enum raw) ->
-                (Node'enum <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'enum'enumerants raw) >>= Classes.decerialize))
+                (Node'enum <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'interface raw) ->
-                (Node'interface <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'interface'methods raw) >>= Classes.decerialize)
-                                <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'interface'superclasses raw) >>= Classes.decerialize))
+                (Node'interface <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'const raw) ->
-                (Node'const <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'const'type_ raw) >>= Classes.decerialize)
-                            <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'const'value raw) >>= Classes.decerialize))
+                (Node'const <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'annotation raw) ->
-                (Node'annotation <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'type_ raw) >>= Classes.decerialize)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsFile raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsConst raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsEnum raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsEnumerant raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsStruct raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsField raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsUnion raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsGroup raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsInterface raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsMethod raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsParam raw)
-                                 <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsAnnotation raw))
+                (Node'annotation <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'unknown' tag) ->
                 (Std_.pure (Node'unknown' tag))
         )
@@ -198,9 +166,62 @@ instance (Classes.Marshal Node') where
     marshalInto raw_ value_ = case value_ of
         (Node'file) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'file raw_)
-        Node'struct{..} ->
+        (Node'struct arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'struct raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Node'enum arg_) ->
+            (do
+                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'enum raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Node'interface arg_) ->
+            (do
+                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'interface raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Node'const arg_) ->
+            (do
+                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'const raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Node'annotation arg_) ->
+            (do
+                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'annotation raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Node'unknown' tag) ->
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'unknown' raw_ tag)
+data Node'struct 
+    = Node'struct' 
+        {dataWordCount :: Std_.Word16
+        ,pointerCount :: Std_.Word16
+        ,preferredListEncoding :: Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize
+        ,isGroup :: Std_.Bool
+        ,discriminantCount :: Std_.Word16
+        ,discriminantOffset :: Std_.Word32
+        ,fields :: (V.Vector Field)}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'struct) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'struct) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'struct) where
+    type Cerial msg Node'struct = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'struct msg)
+    decerialize raw = (Node'struct' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'dataWordCount raw)
+                                    <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'pointerCount raw)
+                                    <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'preferredListEncoding raw)
+                                    <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'isGroup raw)
+                                    <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'discriminantCount raw)
+                                    <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'discriminantOffset raw)
+                                    <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'fields raw) >>= Classes.decerialize))
+instance (Classes.Marshal Node'struct) where
+    marshalInto raw_ value_ = case value_ of
+        Node'struct'{..} ->
+            (do
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'struct'dataWordCount raw_ dataWordCount)
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'struct'pointerCount raw_ pointerCount)
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'struct'preferredListEncoding raw_ preferredListEncoding)
@@ -210,29 +231,113 @@ instance (Classes.Marshal Node') where
                 ((Classes.cerialize (Untyped.message raw_) fields) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'struct'fields raw_))
                 (Std_.pure ())
                 )
-        Node'enum{..} ->
+data Node'enum 
+    = Node'enum' 
+        {enumerants :: (V.Vector Enumerant)}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'enum) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'enum) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'enum) where
+    type Cerial msg Node'enum = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'enum msg)
+    decerialize raw = (Node'enum' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'enum'enumerants raw) >>= Classes.decerialize))
+instance (Classes.Marshal Node'enum) where
+    marshalInto raw_ value_ = case value_ of
+        Node'enum'{..} ->
             (do
-                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'enum raw_)
                 ((Classes.cerialize (Untyped.message raw_) enumerants) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'enum'enumerants raw_))
                 (Std_.pure ())
                 )
-        Node'interface{..} ->
+data Node'interface 
+    = Node'interface' 
+        {methods :: (V.Vector Method)
+        ,superclasses :: (V.Vector Superclass)}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'interface) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'interface) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'interface) where
+    type Cerial msg Node'interface = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'interface msg)
+    decerialize raw = (Node'interface' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'interface'methods raw) >>= Classes.decerialize)
+                                       <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'interface'superclasses raw) >>= Classes.decerialize))
+instance (Classes.Marshal Node'interface) where
+    marshalInto raw_ value_ = case value_ of
+        Node'interface'{..} ->
             (do
-                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'interface raw_)
                 ((Classes.cerialize (Untyped.message raw_) methods) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'interface'methods raw_))
                 ((Classes.cerialize (Untyped.message raw_) superclasses) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'interface'superclasses raw_))
                 (Std_.pure ())
                 )
-        Node'const{..} ->
+data Node'const 
+    = Node'const' 
+        {type_ :: Type
+        ,value :: Value}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'const) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'const) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'const) where
+    type Cerial msg Node'const = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'const msg)
+    decerialize raw = (Node'const' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'const'type_ raw) >>= Classes.decerialize)
+                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'const'value raw) >>= Classes.decerialize))
+instance (Classes.Marshal Node'const) where
+    marshalInto raw_ value_ = case value_ of
+        Node'const'{..} ->
             (do
-                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'const raw_)
                 ((Classes.cerialize (Untyped.message raw_) type_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'const'type_ raw_))
                 ((Classes.cerialize (Untyped.message raw_) value) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'const'value raw_))
                 (Std_.pure ())
                 )
-        Node'annotation{..} ->
+data Node'annotation 
+    = Node'annotation' 
+        {type_ :: Type
+        ,targetsFile :: Std_.Bool
+        ,targetsConst :: Std_.Bool
+        ,targetsEnum :: Std_.Bool
+        ,targetsEnumerant :: Std_.Bool
+        ,targetsStruct :: Std_.Bool
+        ,targetsField :: Std_.Bool
+        ,targetsUnion :: Std_.Bool
+        ,targetsGroup :: Std_.Bool
+        ,targetsInterface :: Std_.Bool
+        ,targetsMethod :: Std_.Bool
+        ,targetsParam :: Std_.Bool
+        ,targetsAnnotation :: Std_.Bool}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Node'annotation) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Node'annotation) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Node'annotation) where
+    type Cerial msg Node'annotation = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'annotation msg)
+    decerialize raw = (Node'annotation' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'type_ raw) >>= Classes.decerialize)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsFile raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsConst raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsEnum raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsEnumerant raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsStruct raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsField raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsUnion raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsGroup raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsInterface raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsMethod raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsParam raw)
+                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsAnnotation raw))
+instance (Classes.Marshal Node'annotation) where
+    marshalInto raw_ value_ = case value_ of
+        Node'annotation'{..} ->
             (do
-                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'annotation raw_)
                 ((Classes.cerialize (Untyped.message raw_) type_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'annotation'type_ raw_))
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'annotation'targetsFile raw_ targetsFile)
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'annotation'targetsConst raw_ targetsConst)
@@ -248,8 +353,6 @@ instance (Classes.Marshal Node') where
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'annotation'targetsAnnotation raw_ targetsAnnotation)
                 (Std_.pure ())
                 )
-        (Node'unknown' tag) ->
-            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'unknown' raw_ tag)
 data Node'Parameter 
     = Node'Parameter 
         {name :: T.Text}
@@ -455,13 +558,8 @@ instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V
 instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Field' 
-    = Field'slot 
-        {offset :: Std_.Word32
-        ,type_ :: Type
-        ,defaultValue :: Value
-        ,hadExplicitDefault :: Std_.Bool}
-    | Field'group 
-        {typeId :: Std_.Word64}
+    = Field'slot Field'slot
+    | Field'group Field'group
     | Field'unknown' Std_.Word16
     deriving(Std_.Show
             ,Std_.Eq
@@ -476,34 +574,75 @@ instance (Classes.Decerialize Field') where
         raw <- (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field' raw)
         case raw of
             (Capnp.Gen.ById.Xa93fc509624c72d9.Field'slot raw) ->
-                (Field'slot <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'offset raw)
-                            <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'type_ raw) >>= Classes.decerialize)
-                            <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'defaultValue raw) >>= Classes.decerialize)
-                            <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'hadExplicitDefault raw))
+                (Field'slot <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Field'group raw) ->
-                (Field'group <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'group'typeId raw))
+                (Field'group <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Field'unknown' tag) ->
                 (Std_.pure (Field'unknown' tag))
         )
 instance (Classes.Marshal Field') where
     marshalInto raw_ value_ = case value_ of
-        Field'slot{..} ->
+        (Field'slot arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'slot raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Field'group arg_) ->
+            (do
+                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'group raw_)
+                (Classes.marshalInto raw_ arg_)
+                )
+        (Field'unknown' tag) ->
+            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'unknown' raw_ tag)
+data Field'slot 
+    = Field'slot' 
+        {offset :: Std_.Word32
+        ,type_ :: Type
+        ,defaultValue :: Value
+        ,hadExplicitDefault :: Std_.Bool}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Field'slot) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Field'slot) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Field'slot) where
+    type Cerial msg Field'slot = (Capnp.Gen.ById.Xa93fc509624c72d9.Field'slot msg)
+    decerialize raw = (Field'slot' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'offset raw)
+                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'type_ raw) >>= Classes.decerialize)
+                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'defaultValue raw) >>= Classes.decerialize)
+                                   <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'hadExplicitDefault raw))
+instance (Classes.Marshal Field'slot) where
+    marshalInto raw_ value_ = case value_ of
+        Field'slot'{..} ->
+            (do
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'slot'offset raw_ offset)
                 ((Classes.cerialize (Untyped.message raw_) type_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'slot'type_ raw_))
                 ((Classes.cerialize (Untyped.message raw_) defaultValue) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'slot'defaultValue raw_))
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'slot'hadExplicitDefault raw_ hadExplicitDefault)
                 (Std_.pure ())
                 )
-        Field'group{..} ->
+data Field'group 
+    = Field'group' 
+        {typeId :: Std_.Word64}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Field'group) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Field'group) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Field'group) where
+    type Cerial msg Field'group = (Capnp.Gen.ById.Xa93fc509624c72d9.Field'group msg)
+    decerialize raw = (Field'group' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'group'typeId raw))
+instance (Classes.Marshal Field'group) where
+    marshalInto raw_ value_ = case value_ of
+        Field'group'{..} ->
             (do
-                raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'group raw_)
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'group'typeId raw_ typeId)
                 (Std_.pure ())
                 )
-        (Field'unknown' tag) ->
-            (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'unknown' raw_ tag)
 data Field'ordinal 
     = Field'ordinal'implicit 
     | Field'ordinal'explicit Std_.Word16
@@ -685,17 +824,10 @@ data Type
     | Type'float64 
     | Type'text 
     | Type'data_ 
-    | Type'list 
-        {elementType :: Type}
-    | Type'enum 
-        {typeId :: Std_.Word64
-        ,brand :: Brand}
-    | Type'struct 
-        {typeId :: Std_.Word64
-        ,brand :: Brand}
-    | Type'interface 
-        {typeId :: Std_.Word64
-        ,brand :: Brand}
+    | Type'list Type'list
+    | Type'enum Type'enum
+    | Type'struct Type'struct
+    | Type'interface Type'interface
     | Type'anyPointer Type'anyPointer
     | Type'unknown' Std_.Word16
     deriving(Std_.Show
@@ -739,16 +871,13 @@ instance (Classes.Decerialize Type) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'data_) ->
                 (Std_.pure Type'data_)
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'list raw) ->
-                (Type'list <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'list'elementType raw) >>= Classes.decerialize))
+                (Type'list <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'enum raw) ->
-                (Type'enum <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'enum'typeId raw)
-                           <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'enum'brand raw) >>= Classes.decerialize))
+                (Type'enum <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'struct raw) ->
-                (Type'struct <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'struct'typeId raw)
-                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'struct'brand raw) >>= Classes.decerialize))
+                (Type'struct <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'interface raw) ->
-                (Type'interface <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'interface'typeId raw)
-                                <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'interface'brand raw) >>= Classes.decerialize))
+                (Type'interface <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer raw) ->
                 (Type'anyPointer <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'unknown' tag) ->
@@ -784,32 +913,25 @@ instance (Classes.Marshal Type) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'text raw_)
         (Type'data_) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'data_ raw_)
-        Type'list{..} ->
+        (Type'list arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'list raw_)
-                ((Classes.cerialize (Untyped.message raw_) elementType) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'list'elementType raw_))
-                (Std_.pure ())
+                (Classes.marshalInto raw_ arg_)
                 )
-        Type'enum{..} ->
+        (Type'enum arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'enum raw_)
-                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'enum'typeId raw_ typeId)
-                ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'enum'brand raw_))
-                (Std_.pure ())
+                (Classes.marshalInto raw_ arg_)
                 )
-        Type'struct{..} ->
+        (Type'struct arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'struct raw_)
-                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'struct'typeId raw_ typeId)
-                ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'struct'brand raw_))
-                (Std_.pure ())
+                (Classes.marshalInto raw_ arg_)
                 )
-        Type'interface{..} ->
+        (Type'interface arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'interface raw_)
-                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'interface'typeId raw_ typeId)
-                ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'interface'brand raw_))
-                (Std_.pure ())
+                (Classes.marshalInto raw_ arg_)
                 )
         (Type'anyPointer arg_) ->
             (do
@@ -833,13 +955,99 @@ instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V
     cerialize  = GenHelpersPure.cerializeBasicVec
 instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
+data Type'list 
+    = Type'list' 
+        {elementType :: Type}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Type'list) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Type'list) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Type'list) where
+    type Cerial msg Type'list = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'list msg)
+    decerialize raw = (Type'list' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'list'elementType raw) >>= Classes.decerialize))
+instance (Classes.Marshal Type'list) where
+    marshalInto raw_ value_ = case value_ of
+        Type'list'{..} ->
+            (do
+                ((Classes.cerialize (Untyped.message raw_) elementType) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'list'elementType raw_))
+                (Std_.pure ())
+                )
+data Type'enum 
+    = Type'enum' 
+        {typeId :: Std_.Word64
+        ,brand :: Brand}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Type'enum) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Type'enum) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Type'enum) where
+    type Cerial msg Type'enum = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'enum msg)
+    decerialize raw = (Type'enum' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'enum'typeId raw)
+                                  <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'enum'brand raw) >>= Classes.decerialize))
+instance (Classes.Marshal Type'enum) where
+    marshalInto raw_ value_ = case value_ of
+        Type'enum'{..} ->
+            (do
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'enum'typeId raw_ typeId)
+                ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'enum'brand raw_))
+                (Std_.pure ())
+                )
+data Type'struct 
+    = Type'struct' 
+        {typeId :: Std_.Word64
+        ,brand :: Brand}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Type'struct) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Type'struct) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Type'struct) where
+    type Cerial msg Type'struct = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'struct msg)
+    decerialize raw = (Type'struct' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'struct'typeId raw)
+                                    <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'struct'brand raw) >>= Classes.decerialize))
+instance (Classes.Marshal Type'struct) where
+    marshalInto raw_ value_ = case value_ of
+        Type'struct'{..} ->
+            (do
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'struct'typeId raw_ typeId)
+                ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'struct'brand raw_))
+                (Std_.pure ())
+                )
+data Type'interface 
+    = Type'interface' 
+        {typeId :: Std_.Word64
+        ,brand :: Brand}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Type'interface) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Type'interface) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Type'interface) where
+    type Cerial msg Type'interface = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'interface msg)
+    decerialize raw = (Type'interface' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'interface'typeId raw)
+                                       <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'interface'brand raw) >>= Classes.decerialize))
+instance (Classes.Marshal Type'interface) where
+    marshalInto raw_ value_ = case value_ of
+        Type'interface'{..} ->
+            (do
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'interface'typeId raw_ typeId)
+                ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'interface'brand raw_))
+                (Std_.pure ())
+                )
 data Type'anyPointer 
     = Type'anyPointer'unconstrained Type'anyPointer'unconstrained
-    | Type'anyPointer'parameter 
-        {scopeId :: Std_.Word64
-        ,parameterIndex :: Std_.Word16}
-    | Type'anyPointer'implicitMethodParameter 
-        {parameterIndex :: Std_.Word16}
+    | Type'anyPointer'parameter Type'anyPointer'parameter
+    | Type'anyPointer'implicitMethodParameter Type'anyPointer'implicitMethodParameter
     | Type'anyPointer'unknown' Std_.Word16
     deriving(Std_.Show
             ,Std_.Eq
@@ -856,10 +1064,9 @@ instance (Classes.Decerialize Type'anyPointer) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained raw) ->
                 (Type'anyPointer'unconstrained <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'parameter raw) ->
-                (Type'anyPointer'parameter <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'parameter'scopeId raw)
-                                           <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'parameter'parameterIndex raw))
+                (Type'anyPointer'parameter <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'implicitMethodParameter raw) ->
-                (Type'anyPointer'implicitMethodParameter <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'implicitMethodParameter'parameterIndex raw))
+                (Type'anyPointer'implicitMethodParameter <$> (Classes.decerialize raw))
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'unknown' tag) ->
                 (Std_.pure (Type'anyPointer'unknown' tag))
         )
@@ -870,18 +1077,15 @@ instance (Classes.Marshal Type'anyPointer) where
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained raw_)
                 (Classes.marshalInto raw_ arg_)
                 )
-        Type'anyPointer'parameter{..} ->
+        (Type'anyPointer'parameter arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter raw_)
-                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'scopeId raw_ scopeId)
-                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'parameterIndex raw_ parameterIndex)
-                (Std_.pure ())
+                (Classes.marshalInto raw_ arg_)
                 )
-        Type'anyPointer'implicitMethodParameter{..} ->
+        (Type'anyPointer'implicitMethodParameter arg_) ->
             (do
                 raw_ <- (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter raw_)
-                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter'parameterIndex raw_ parameterIndex)
-                (Std_.pure ())
+                (Classes.marshalInto raw_ arg_)
                 )
         (Type'anyPointer'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unknown' raw_ tag)
@@ -926,6 +1130,49 @@ instance (Classes.Marshal Type'anyPointer'unconstrained) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'capability raw_)
         (Type'anyPointer'unconstrained'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'unknown' raw_ tag)
+data Type'anyPointer'parameter 
+    = Type'anyPointer'parameter' 
+        {scopeId :: Std_.Word64
+        ,parameterIndex :: Std_.Word16}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Type'anyPointer'parameter) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Type'anyPointer'parameter) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Type'anyPointer'parameter) where
+    type Cerial msg Type'anyPointer'parameter = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'parameter msg)
+    decerialize raw = (Type'anyPointer'parameter' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'parameter'scopeId raw)
+                                                  <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'parameter'parameterIndex raw))
+instance (Classes.Marshal Type'anyPointer'parameter) where
+    marshalInto raw_ value_ = case value_ of
+        Type'anyPointer'parameter'{..} ->
+            (do
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'scopeId raw_ scopeId)
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'parameter'parameterIndex raw_ parameterIndex)
+                (Std_.pure ())
+                )
+data Type'anyPointer'implicitMethodParameter 
+    = Type'anyPointer'implicitMethodParameter' 
+        {parameterIndex :: Std_.Word16}
+    deriving(Std_.Show
+            ,Std_.Eq
+            ,Generics.Generic)
+instance (Default.Default Type'anyPointer'implicitMethodParameter) where
+    def  = GenHelpersPure.defaultStruct
+instance (Classes.FromStruct Message.ConstMsg Type'anyPointer'implicitMethodParameter) where
+    fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
+instance (Classes.Decerialize Type'anyPointer'implicitMethodParameter) where
+    type Cerial msg Type'anyPointer'implicitMethodParameter = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'implicitMethodParameter msg)
+    decerialize raw = (Type'anyPointer'implicitMethodParameter' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'implicitMethodParameter'parameterIndex raw))
+instance (Classes.Marshal Type'anyPointer'implicitMethodParameter) where
+    marshalInto raw_ value_ = case value_ of
+        Type'anyPointer'implicitMethodParameter'{..} ->
+            (do
+                (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'implicitMethodParameter'parameterIndex raw_ parameterIndex)
+                (Std_.pure ())
+                )
 data Brand 
     = Brand 
         {scopes :: (V.Vector Brand'Scope)}

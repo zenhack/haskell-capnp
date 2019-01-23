@@ -19,8 +19,11 @@ reportIssues :: CodeGeneratorRequest -> IO ()
 reportIssues CodeGeneratorRequest{nodes} =
     let problemFields =
             [ (displayName, name)
-            | Node{displayName, union'=Node'struct{fields}} <- V.toList nodes
-            , Field{name, union'=Field'slot{hadExplicitDefault, defaultValue}} <- V.toList fields
+            | Node{displayName, union'=Node'struct Node'struct'{fields}} <- V.toList nodes
+            , Field
+                { name
+                , union'=Field'slot Field'slot'{hadExplicitDefault, defaultValue}
+                } <- V.toList fields
             , hadExplicitDefault && isPtrValue defaultValue
             ]
     in
