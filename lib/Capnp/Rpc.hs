@@ -8,6 +8,11 @@ module Capnp.Rpc
     , invokePurePromise
     , (?)
     , throwFailed
+
+    -- re-exported:
+    , Transport
+    , socketTransport
+    , handleTransport
     ) where
 
 import Control.Concurrent.STM  (atomically)
@@ -31,6 +36,9 @@ import qualified Capnp.Message            as M
 import qualified Capnp.Promise            as Promise
 import qualified Capnp.Rpc.Server         as Server
 import qualified Capnp.Untyped            as U
+
+-- Just for re-exporting
+import Capnp.Rpc.Transport (Transport, handleTransport, socketTransport)
 
 
 invokeRaw ::
