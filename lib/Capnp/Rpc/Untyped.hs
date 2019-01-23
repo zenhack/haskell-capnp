@@ -41,36 +41,6 @@ module Capnp.Rpc.Untyped
     -- * Shutting down the connection
     ) where
 
--- Note [Organization]
--- ===================
---
--- As much as possible, the logic in this module is centralized according to
--- type types of objects it concerns.
---
--- As an example, consider how we handle embargos: The 'Conn' type's 'embargos'
--- table has values that are just 'Fulfiller's. This allows the code which triggers
--- sending embargoes to have full control over what happens when they return,
--- while the code that routes incoming messages (in 'coordinator') doesn't need
--- to concern itself with the details of embargos -- it just needs to route them
--- to the right place.
---
--- This approach generally results in better separation of concerns.
-
--- Note [Level 3]
---
--- This is currently a level 1 implementation, so use of most level 3 features
--- results in sending abort messages. However, to make adding this support
--- easier later, we mark such places with a cross-reference back to this note.
---
--- In addition to filling in those spots, the following will need to be dealt
--- with:
---
--- * The "Tribble 4-way Race Condition" as documented in rpc.capnp. This
---   doesn't affect level 1 implementations, but right now we shorten N-hop
---   paths of promises to 1-hop, (calls on Ready PromiseClients just
---   immediately call the target), which is unsafe in a level 3
---   implementation. See the protocol documentation for more info.
-
 import Control.Concurrent.STM
 import Data.Word
 
@@ -123,9 +93,39 @@ import qualified Internal.Rc              as Rc
 import qualified Internal.SnocList        as SnocList
 import qualified Internal.TCloseQ         as TCloseQ
 
--- We use this type often enough that the types get noisy without a shorthand:
+-- Note [Organization]
+-- ===================
+--
+-- As much as possible, the logic in this module is centralized according to
+-- type types of objects it concerns.
+--
+-- As an example, consider how we handle embargos: The 'Conn' type's 'embargos'
+-- table has values that are just 'Fulfiller's. This allows the code which triggers
+-- sending embargoes to have full control over what happens when they return,
+-- while the code that routes incoming messages (in 'coordinator') doesn't need
+-- to concern itself with the details of embargos -- it just needs to route them
+-- to the right place.
+--
+-- This approach generally results in better separation of concerns.
+
+-- Note [Level 3]
+--
+-- This is currently a level 1 implementation, so use of most level 3 features
+-- results in sending abort messages. However, to make adding this support
+-- easier later, we mark such places with a cross-reference back to this note.
+--
+-- In addition to filling in those spots, the following will need to be dealt
+-- with:
+--
+-- * The "Tribble 4-way Race Condition" as documented in rpc.capnp. This
+--   doesn't affect level 1 implementations, but right now we shorten N-hop
+--   paths of promises to 1-hop, (calls on Ready PromiseClients just
+--   immediately call the target), which is unsafe in a level 3
+--   implementation. See the protocol documentation for more info.
+
+-- | We use this type often enough that the types get noisy without a shorthand:
 type MPtr = Maybe Untyped.Ptr
--- Less often, but still helpful:
+-- | Less often, but still helpful:
 type RawMPtr = Maybe (UntypedRaw.Ptr ConstMsg)
 
 
