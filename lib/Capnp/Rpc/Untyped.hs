@@ -214,12 +214,12 @@ data ConnConfig = ConnConfig
     -- vat. Once this limit is reached, further questsions will block until
     -- some of the existing questions have been answered.
     --
-    -- Defaults to 32.
+    -- Defaults to 128.
 
     , maxExports    :: !Word32
     -- ^ The maximum number of objects which may be exported on this connection.
     --
-    -- Defaults to 32.
+    -- Defaults to 8192.
 
     , debugMode     :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
@@ -246,8 +246,8 @@ data ConnConfig = ConnConfig
 
 instance Default ConnConfig where
     def = ConnConfig
-        { maxQuestions   = 32
-        , maxExports     = 32
+        { maxQuestions   = 128
+        , maxExports     = 8192
         , debugMode      = False
         , getBootstrap   = \_ -> pure Nothing
         , withBootstrap  = Nothing
