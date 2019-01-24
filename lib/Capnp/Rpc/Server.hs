@@ -36,7 +36,7 @@ module Capnp.Rpc.Server
 import Control.Concurrent.STM
 import Data.Word
 
-import Control.Exception.Safe  (MonadCatch, try)
+import Control.Exception.Safe  (MonadCatch, finally, try)
 import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 
@@ -180,11 +180,11 @@ data CallInfo = CallInfo
 -- Accepts a queue of messages to handle, and 'ServerOps' used to handle them.
 -- returns when it receives a 'Stop' message.
 runServer :: TCloseQ.Q CallInfo -> ServerOps IO -> IO ()
-runServer q ops = go
+runServer q ops = go `finally` handleStop ops
   where
     go = atomically (TCloseQ.read q) >>= \case
         Nothing ->
-            handleStop ops
+            pure ()
         Just CallInfo{interfaceId, methodId, arguments, response} -> do
             handleMethod
                 (handleCall ops interfaceId methodId)
