@@ -1,7 +1,7 @@
 cabal-version:            2.2
 name:                     capnp
 version:                  0.4.0.0
-category:                 Data, Serialization
+category:                 Data, Serialization, Network, Rpc
 copyright:                2016-2018 haskell-capnp contributors (see CONTRIBUTORS file).
 author:                   Ian Denhardt
 maintainer:               ian@zenhack.net
