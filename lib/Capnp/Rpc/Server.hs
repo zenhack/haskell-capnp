@@ -19,12 +19,15 @@ module Capnp.Rpc.Server
 
     -- * Handling methods
     , MethodHandler
+    -- ** Using high-level representations
     , pureHandler
-    , toUntypedHandler
-    , fromUntypedHandler
-    , untypedHandler
+    -- ** Always throwing exceptions
     , methodThrow
     , methodUnimplemented
+    -- ** Working with untyped data
+    , untypedHandler
+    , toUntypedHandler
+    , fromUntypedHandler
 
     -- * Invoking methods
     , invokeIO
@@ -53,18 +56,19 @@ import qualified Capnp.Untyped            as Untyped
 import qualified Internal.TCloseQ         as TCloseQ
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
--- and return type @r@, in monad @m@. See Note [Method handling].
+-- and return type @r@, in monad @m@.
 --
--- We represent method handlers via an abstract type 'MethodHandler',
--- parametrized over parameter (@p@) and return (@r@) types, and the
--- monadic context in which it runs (@m@). This allows us to provide
--- different strategies for actually handling methods; there are various
--- helper functions which construct these handlers.
+-- The library represents method handlers via an abstract type
+-- 'MethodHandler', parametrized over parameter (@p@) and return (@r@)
+-- types, and the monadic context in which it runs (@m@). This allows us
+-- to provide different strategies for actually handling methods; there
+-- are various helper functions which construct these handlers.
 --
--- * We will likely additionally provide handlers affording:
---   * Working directly with the low-level data types.
---   * Replying to the method call asynchronously, allowing later method
---     calls to be serviced before the current one is finished.
+-- At some point we will likely additionally provide handlers affording:
+--
+-- * Working directly with the low-level data types.
+-- * Replying to the method call asynchronously, allowing later method
+--   calls to be serviced before the current one is finished.
 newtype MethodHandler m p r = MethodHandler
     { handleMethod
         :: Maybe (Ptr ConstMsg)

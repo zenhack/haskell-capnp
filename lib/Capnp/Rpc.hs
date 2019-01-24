@@ -1,3 +1,8 @@
+-- |
+-- Module: Capnp.Rpc
+-- Description: Cap'n Proto RPC system
+--
+-- This module exposes the most commonly used parts of the RPC subsystem.
 module Capnp.Rpc
     (
     -- * Establishing connections
@@ -7,6 +12,12 @@ module Capnp.Rpc
     -- * Calling methods
     , (?)
 
+    -- * Handling method calls
+    , MethodHandler
+    , pureHandler
+    , methodUnimplemented
+    , methodThrow
+
     -- * throwing errors
     , throwFailed
 
@@ -15,10 +26,25 @@ module Capnp.Rpc
     , socketTransport
     , handleTransport
     , tracingTransport
+
+    -- * Promises
+    , module Capnp.Promise
+
+    -- * Clients
+    , Client
+    , IsClient(..)
+
+    -- * Supervisors
+    , module Supervisors
     ) where
 
+import Supervisors
+
+import Capnp.Promise
 import Capnp.Rpc.Errors    (throwFailed)
 import Capnp.Rpc.Invoke    ((?))
+import Capnp.Rpc.Server
+    (MethodHandler, methodThrow, methodUnimplemented, pureHandler)
 import Capnp.Rpc.Transport
     (Transport(..), handleTransport, socketTransport, tracingTransport)
-import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn)
+import Capnp.Rpc.Untyped   (Client, ConnConfig(..), IsClient(..), handleConn)

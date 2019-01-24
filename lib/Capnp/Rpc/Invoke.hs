@@ -9,6 +9,7 @@ module Capnp.Rpc.Invoke
       invokePurePromise
     , (?)
     , invokePure
+    , InvokePureCtx
 
     -- * Using low level representations
     , invokeRaw
@@ -59,7 +60,8 @@ invokeRaw method params typedFulfiller = do
         (Just (U.PtrStruct (toStruct params)))
         untypedFulfiller
 
--- | Shorthand for class contstraints needed to invoke a method.
+-- | Shorthand for class contstraints needed to invoke a method using
+-- the high-level API.
 type InvokePureCtx m p r =
     ( MonadThrow m
     , MonadIO m
