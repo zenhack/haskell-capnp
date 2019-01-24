@@ -85,3 +85,17 @@ The flow is as follows:
       our purposes.
 * Finally, we translate the Haskell AST into text, and write it out
   to disk.
+
+# Misc notes
+
+* There are a couple modules that are shared between more than one phase
+  and/or IR:
+
+* `IR.Name` and `IR.Common` are used by multiple of the IRs.
+* `Trans.ToHaskellCommon` is used by both `Trans.RawToHaskell`
+  and `Trans.PureToHaskell`.
+
+* It would make sense to rename `IR.Flat` and `IR.Stage1`; the latter is
+  not terribly descriptive, and the former reflects an out of date
+  notion of what the flat IR's purpose is (it does more than just
+  flatten the namespace).
