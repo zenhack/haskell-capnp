@@ -15,23 +15,29 @@ module Capnp.Tutorial (
     -- * Overview
     -- $overview
 
-    -- * High Level API
+    -- * Serialization
+    -- $serialization
+
+    -- ** High Level API
     -- $highlevel
 
-    -- ** Example
+    -- *** Example
     -- $highlevel-example
 
-    -- ** Code Generation Rules
+    -- *** Code Generation Rules
     -- $highlevel-codegen-rules
 
-    -- * Low Level API
+    -- ** Low Level API
     -- $lowlevel
 
-    -- ** Example
+    -- *** Example
     -- $lowlevel-example
 
-    -- ** Write Support
+    -- *** Write Support
     -- $lowlevel-write
+
+    -- * RPC
+    -- $rpc
     ) where
 
 -- So haddock references work:
@@ -46,9 +52,14 @@ import Capnp.Classes (FromStruct)
 
 {- $overview
 
-The API is roughly divided into two parts: a low level API and a high
-level API. The high level API eschews some of the benefits of the wire
-format in favor of a more convenient interface.
+This module provides an overview of the capnp library.
+-}
+
+{- $serialization
+
+The serialization API is roughly divided into two parts: a low level API
+and a high level API. The high level API eschews some of the benefits of
+the wire format in favor of a more convenient interface.
 -}
 
 {- $highlevel
@@ -496,3 +507,6 @@ The below constructs the same message as in our high-level example above:
 >
 >     pure msg
 -}
+
+{- $rpc
+ -}
