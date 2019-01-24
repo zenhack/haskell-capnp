@@ -18,7 +18,7 @@ something to review.
 
 # Comments
 
-A couple points about comments:
+A couple guidelines re comments:
 
 * For implementation notes inside the code, we adopt GHC's [Note
   convention][2].
@@ -26,6 +26,8 @@ A couple points about comments:
   briefly describing what it does and how to use it. Most non-exported
   top level identifiers should have these as well, but this is more
   flexible.
+* Prefer end-of-line (`--`) comments over block comments; very large
+  block comments can confuse syntax highlighting in some editors.
 
 # Style Guide
 
