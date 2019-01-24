@@ -1,19 +1,31 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+-- |
+-- Module: Capnp.Rpc.Promise
+-- Description: Promises
+--
+-- This module defines a 'Promise' type, represents a value which is not yet
+-- available, and related utilities.
 module Capnp.Rpc.Promise
     ( Promise
     , Fulfiller
-    , ErrAlreadyResolved(..)
+
+    -- * Creating promises
     , newPromise
     , newPromiseSTM
     , newPromiseWithCallback
     , newPromiseWithCallbackSTM
     , newCallback
     , newCallbackSTM
+
+    -- * Fulfilling or breaking promises
     , fulfill
     , fulfillSTM
     , breakPromise
     , breakPromiseSTM
+    , ErrAlreadyResolved(..)
+
+    -- * Getting the value of a promise
     , wait
     , waitSTM
     ) where
@@ -46,6 +58,7 @@ fulfillSTM Fulfiller{callback} val = callback (Right val)
 fulfill :: MonadIO m => Fulfiller a -> a -> m ()
 fulfill fulfiller = liftIO . atomically . fulfillSTM fulfiller
 
+-- | Like 'breakPromise', but in 'STM'.
 breakPromiseSTM :: Fulfiller a -> Exception -> STM ()
 breakPromiseSTM Fulfiller{callback} exn = callback (Left exn)
 
@@ -89,7 +102,7 @@ newPromiseSTM = do
             }
         )
 
--- | Create a new promise which also excecutes an STM action when it is resolved.
+-- | Like 'newPromiseWithCallbackSTM', but runs in 'STM'.
 newPromiseWithCallbackSTM :: (Either Exception a -> STM ()) -> STM (Promise a, Fulfiller a)
 newPromiseWithCallbackSTM callback = do
     (promise, Fulfiller{callback=oldCallback}) <- newPromiseSTM
@@ -100,14 +113,15 @@ newPromiseWithCallbackSTM callback = do
             }
         )
 
+-- | Create a new promise which also excecutes an STM action when it is resolved.
 newPromiseWithCallback :: MonadIO m => (Either Exception a -> STM ()) -> m (Promise a, Fulfiller a)
 newPromiseWithCallback = liftIO . atomically . newPromiseWithCallbackSTM
 
--- | Like 'newPromiseWithCallbackSTM', but doesn't return the promise.
+-- | Like 'newCallback', but runs in 'STM'.
 newCallbackSTM :: (Either Exception a -> STM ()) -> STM (Fulfiller a)
 newCallbackSTM = fmap snd . newPromiseWithCallbackSTM
 
--- | Like 'newCallbackSTM', but runs in IO.
+-- | Like 'newPromiseWithCallback', but doesn't return the promise.
 newCallback :: MonadIO m => (Either Exception a -> STM ()) -> m (Fulfiller a)
 newCallback = liftIO . atomically . newCallbackSTM
 
