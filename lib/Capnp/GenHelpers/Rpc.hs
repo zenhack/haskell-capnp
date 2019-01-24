@@ -15,7 +15,7 @@ import Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Errors          as E
 import qualified Capnp.GenHelpers.Pure as PH
 import qualified Capnp.Message         as M
-import qualified Capnp.Promise         as Promise
+import qualified Capnp.Rpc.Promise     as Promise
 import qualified Capnp.Rpc.Untyped     as Rpc
 import qualified Capnp.Untyped         as U
 

@@ -68,8 +68,6 @@ import qualified StmContainers.Map as M
 import Capnp.Classes        (cerialize, decerialize)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
-import Capnp.Promise
-    (Fulfiller, breakPromiseSTM, fulfillSTM, newCallbackSTM)
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -77,6 +75,8 @@ import Capnp.Rpc.Errors
     , eUnimplemented
     , wrapException
     )
+import Capnp.Rpc.Promise
+    (Fulfiller, breakPromiseSTM, fulfillSTM, newCallbackSTM)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)

@@ -17,8 +17,8 @@ import Supervisors            (Supervisor)
 import qualified Data.Vector as V
 
 import Capnp               (def, defaultLimit)
-import Capnp.Promise       (wait)
 import Capnp.Rpc           (throwFailed, (?))
+import Capnp.Rpc.Promise   (wait)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (socketTransport)
 import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn, toClient)

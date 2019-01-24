@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-module Capnp.Promise
+module Capnp.Rpc.Promise
     ( Promise
     , Fulfiller
     , ErrAlreadyResolved(..)

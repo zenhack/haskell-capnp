@@ -34,8 +34,8 @@ import Capnp
     , valueToMsg
     )
 import Capnp.Bits          (WordCount)
-import Capnp.Promise       (Promise, wait)
 import Capnp.Rpc.Errors    (eFailed)
+import Capnp.Rpc.Promise   (Promise, wait)
 import Capnp.Rpc.Server    (pureHandler)
 import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
 

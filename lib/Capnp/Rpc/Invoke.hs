@@ -30,10 +30,10 @@ import Capnp.Classes
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Data.Mutable         (freeze)
 
-import qualified Capnp.Message    as M
-import qualified Capnp.Promise    as Promise
-import qualified Capnp.Rpc.Server as Server
-import qualified Capnp.Untyped    as U
+import qualified Capnp.Message     as M
+import qualified Capnp.Rpc.Promise as Promise
+import qualified Capnp.Rpc.Server  as Server
+import qualified Capnp.Untyped     as U
 
 -- | Invoke a method by passing it the low-level representation of its parameter,
 -- and a 'Fulfiller' that can be used to supply (the low-level representation of)

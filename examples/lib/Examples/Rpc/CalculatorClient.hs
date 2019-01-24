@@ -7,8 +7,8 @@ import Network.Simple.TCP (connect)
 import qualified Data.Vector as V
 
 import Capnp               (def, defaultLimit)
-import Capnp.Promise       (wait)
 import Capnp.Rpc           ((?))
+import Capnp.Rpc.Promise   (wait)
 import Capnp.Rpc.Transport (socketTransport)
 import Capnp.Rpc.Untyped   (ConnConfig(..), handleConn)
 import Control.Monad       (when)

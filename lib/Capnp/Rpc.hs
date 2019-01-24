@@ -28,7 +28,7 @@ module Capnp.Rpc
     , tracingTransport
 
     -- * Promises
-    , module Capnp.Promise
+    , module Capnp.Rpc.Promise
 
     -- * Clients
     , Client
@@ -40,9 +40,9 @@ module Capnp.Rpc
 
 import Supervisors
 
-import Capnp.Promise
 import Capnp.Rpc.Errors    (throwFailed)
 import Capnp.Rpc.Invoke    ((?))
+import Capnp.Rpc.Promise
 import Capnp.Rpc.Server
     (MethodHandler, methodThrow, methodUnimplemented, pureHandler)
 import Capnp.Rpc.Transport
