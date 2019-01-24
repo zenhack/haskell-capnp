@@ -3,6 +3,12 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
+-- |
+-- Module: Capnp.GenHelpers.Rpc
+-- Description: Rpc-system helpers for genrated code.
+--
+-- This module defines various helpers used by generated code. Users
+-- of the library are not expected to use this module directly.
 module Capnp.GenHelpers.Rpc where
 
 import Control.Exception.Safe (fromException, tryAny)
