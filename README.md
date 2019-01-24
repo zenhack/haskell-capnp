@@ -1,9 +1,10 @@
 [![build status][ci-img]][ci]
 [![hackage][hackage-img]][hackage]
 
-A Haskell library for the [Cap'N Proto][1] Cerialization protocol.
+A Haskell library for the [Cap'N Proto][1] Cerialization and RPC
+protocol.
 
-Serialization (read & write) support works, with some limitations:
+Serialization support works, with some limitations:
 
 * Generated schema currently ignore type parameters ([#29][issue29]).
 * Schema which define custom default values for fields of pointer type
@@ -14,8 +15,8 @@ Serialization (read & write) support works, with some limitations:
   type List(T) (where T is any non-struct type) to a list of a struct
   type.
 
-Level 1 RPC support is implemented. It should be considered alpha
-quality for now.
+Level 1 RPC support is implemented and usable, though there are a couple
+gaps in the API. It should be considered alpha quality for now.
 
 There is a module `Capnp.Tutorial` which contains an introduction
 to the library; users are *strongly* encouraged to read this first, as
