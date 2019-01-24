@@ -501,7 +501,11 @@ import Capnp.Classes (FromStruct)
 -- $rpc
 --
 -- This package supports level 1 Cap'n Proto RPC. The tuotrial will demonstrate the most
--- basic features of the RPC system with example: an echo server & client. Given the schema:
+-- basic features of the RPC system with example: an echo server & client. For a larger
+-- example which demos more of the protocol's capabilities, see the calculator example
+-- in the source repository's @examples/@ directory.
+--
+-- Given the schema:
 --
 -- > @0xd0a87f36fa0182f5;
 -- >
