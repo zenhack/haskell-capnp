@@ -11,14 +11,12 @@ homepage:                 https://github.com/zenhack/haskell-capnp
 bug-reports:              https://github.com/zenhack/haskell-capnp/issues
 synopsis:                 Cap'n Proto for Haskell
 description:
-  A native Haskell implementation of the Cap'N Proto cerialization format.
+  A native Haskell implementation of the Cap'N Proto cerialization format and
+  RPC protocol.
   .
-  This library is currently serialization-only. RPC support is planned but not
-  yet implemented. It works, but bear in mind that the API is considered
-  unstable, and is likely to change to accomodate RPC, facilitate improved
-  performance, etc.
+  The library implements serialization and level 1 RPC.
   .
-  The "Data.Capnp.Tutorial" module is the best place to start reading; the
+  The "Capnp.Tutorial" module is the best place to start reading; the
   reference documentation can seem bewildering without that context.
 build-type:               Simple
 extra-source-files:
