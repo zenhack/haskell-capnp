@@ -297,6 +297,9 @@ import Capnp.Classes (FromStruct)
 --   separator.
 -- * Structs map to record types. The name of the data constructor is the
 --   same as the name of the type constructor.
+-- * Groups are treated mostly like structs, except that the data constructor
+--   (but not the type constructor) has an extra trailing single-quote. This
+--   is to avoid name collisions that would otherwise be possible.
 -- * Field names map to record fields with the same names. Names that are
 --   Haskell keywords have an underscore appended to them, e.g. @type_@ in
 --   the above example. These names are not qualified; we use the
@@ -324,8 +327,8 @@ import Capnp.Classes (FromStruct)
 --   name is what the name of the struct type would be).
 -- * Fields of type `AnyPointer` map to the types defined in
 --   @Capnp.Untyped.Pure@.
--- * No code is currently generated for interfaces; this will change once
---   we implement RPC.
+-- * Interfaces generated associated type classes and client types; see
+--   the section on RPC.
 
 -- $lowlevel
 --
