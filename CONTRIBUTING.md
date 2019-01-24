@@ -16,6 +16,17 @@ on the issue saying you're planning on tacking a whack at it.  I'll
 probably reply before too long. Send a pull request when you've got
 something to review.
 
+# Comments
+
+A couple points about comments:
+
+* For implementation notes inside the code, we adopt GHC's [Note
+  convention][2].
+* Each thing that is exported from a module must have a haddock comment
+  briefly describing what it does and how to use it. Most non-exported
+  top level identifiers should have these as well, but this is more
+  flexible.
+
 # Style Guide
 
 Generally, do what the rest of the code does. Much of this section is
@@ -138,3 +149,4 @@ The formatter will take care of formatting the sections correctly, as
 long as you keep the line-breaks right.
 
 [1]: https://github.com/jaspervdj/stylish-haskell
+[2]: https://ghc.haskell.org/trac/ghc/wiki/Commentary/CodingStyle#Commentsinthesourcecode
