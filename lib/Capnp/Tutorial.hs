@@ -500,8 +500,8 @@ import Capnp.Classes (FromStruct)
 
 -- $rpc
 --
--- This package supports level 1 Cap'n Proto RPC. Let's start with a simple example: an
--- echo server & client. Given the schema:
+-- This package supports level 1 Cap'n Proto RPC. The tuotrial will demonstrate the most
+-- basic features of the RPC system with example: an echo server & client. Given the schema:
 --
 -- > @0xd0a87f36fa0182f5;
 -- >
@@ -521,6 +521,8 @@ import Capnp.Classes (FromStruct)
 -- > class MonadIO m => Echo'server_ m cap where
 -- >     echo'echo :: cap -> Server.MethodHandler m Echo'echo'params Echo'echo'results
 -- >
+-- > instance Echo'server_ IO Echo
+-- >
 -- > export_Echo :: Echo'server_ IO a => Supervisors -> a -> STM Echo
 --
 -- The type @Echo@ is a handle to an object (possibly remote), which can be used to
@@ -535,12 +537,12 @@ import Capnp.Classes (FromStruct)
 -- messages in sequence.
 --
 -- Note that capnproto does not have a notion of "clients" and "servers" in the
--- traditional networking sense; the two sides of a connection are symmetric. In the
--- library's terminology (and that of most other capnproto libraries), a "client" is
--- a handle for calling methods, and a "server" is an object that handles methods
--- -- but there may be many of either or both of these on each side of a connection.
+-- traditional networking sense; the two sides of a connection are symmetric. In
+-- capnproto terminology, a "client" is a handle for calling methods, and a "server"
+-- is an object that handles methods -- but there may be many of either or both of
+-- these on each side of a connection.
 --
--- We can write an echo (networking) server using this interface like:
+-- Here is an an echo (networking) server using this interface:
 --
 -- > {-# LANGUAGE MultiParamTypeClasses #-}
 -- > {-# LANGUAGE OverloadedStrings     #-}
@@ -560,11 +562,12 @@ import Capnp.Classes (FromStruct)
 -- > instance Echo'server_ IO MyEchoServer where
 -- >     -- Each method of an interface generates a corresponding
 -- >     -- method in its type class. The name of the method is prefixed
--- >     -- with the name of the interface; in this case this causes a bit
--- >     -- of an ...echo.
+-- >     -- with the name of the interface, so method bar on interface
+-- >     -- Foo will be called foo'bar.
 -- >     --
 -- >     -- The type of a method is left abstract, and functions like
--- >     -- 'pureHandler' are used to construct method handlers.
+-- >     -- 'pureHandler' are used to construct method handlers; see the
+-- >     -- "Handling method calls" section in the docs for 'Capnp.Rpc'.
 -- >     echo'echo = pureHandler $ \MyEchoServer params ->
 -- >         pure def { reply = query params }
 -- >
@@ -577,7 +580,7 @@ import Capnp.Classes (FromStruct)
 -- >         { getBootstrap = \sup ->
 -- >            -- The only setting we override in this example is our
 -- >            -- bootstrap interface. The bootstrap interface is a "default"
--- >            -- interface that clients can request on startup. By default
+-- >            -- object that clients can request on startup. By default
 -- >            -- there is none, here we provide a client for our echo server.
 -- >            Just . toClient <$> export_Echo sup MyEchoServer
 -- >         }
