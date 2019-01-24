@@ -2,7 +2,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE TypeFamilies     #-}
--- | Support for invoking 'Server.MethodHandler's
+-- |
+-- Module: Capnp.Rpc.Invoke
+-- Description: Invoke remote methods
+--
+-- Support for invoking 'Server.MethodHandler's
 module Capnp.Rpc.Invoke
     (
     -- * Using high-level representations
