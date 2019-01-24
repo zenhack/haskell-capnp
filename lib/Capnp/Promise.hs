@@ -6,7 +6,9 @@ module Capnp.Promise
     , ErrAlreadyResolved(..)
     , newPromise
     , newPromiseSTM
+    , newPromiseWithCallback
     , newPromiseWithCallbackSTM
+    , newCallback
     , newCallbackSTM
     , fulfill
     , fulfillSTM
@@ -98,8 +100,16 @@ newPromiseWithCallbackSTM callback = do
             }
         )
 
+newPromiseWithCallback :: MonadIO m => (Either Exception a -> STM ()) -> m (Promise a, Fulfiller a)
+newPromiseWithCallback = liftIO . atomically . newPromiseWithCallbackSTM
+
+-- | Like 'newPromiseWithCallbackSTM', but doesn't return the promise.
 newCallbackSTM :: (Either Exception a -> STM ()) -> STM (Fulfiller a)
 newCallbackSTM = fmap snd . newPromiseWithCallbackSTM
+
+-- | Like 'newCallbackSTM', but runs in IO.
+newCallback :: MonadIO m => (Either Exception a -> STM ()) -> m (Fulfiller a)
+newCallback = liftIO . atomically . newCallbackSTM
 
 -- | Create a new promise and an associated fulfiller.
 newPromise :: MonadIO m => m (Promise a, Fulfiller a)
