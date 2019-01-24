@@ -499,3 +499,119 @@ import Capnp.Classes (FromStruct)
 -- >     pure msg
 
 -- $rpc
+--
+-- This package supports level 1 Cap'n Proto RPC. Let's start with a simple example: an
+-- echo server & client. Given the schema:
+--
+-- > @0xd0a87f36fa0182f5;
+-- >
+-- > interface Echo {
+-- >   echo @0 (query :Text) -> (reply :Text);
+-- > }
+--
+-- In the low level module, the code generator generates a newtype wrapper called @Echo@
+-- around a capability.
+--
+-- Most of the interesting stuff is in the high-level module (but note that you can still
+-- do RPC using low-level serialization APIs). The code generator will create an API like
+-- (after a bit of cleanup):
+--
+-- > newtype Echo = Echo Client
+-- >
+-- > class MonadIO m => Echo'server_ m cap where
+-- >     echo'echo :: cap -> Server.MethodHandler m Echo'echo'params Echo'echo'results
+-- >
+-- > export_Echo :: Echo'server_ IO a => Supervisors -> a -> STM Echo
+--
+-- The type @Echo@ is a handle to an object (possibly remote), which can be used to
+-- make method calls. It is a newtype wrapper around a 'Client', which provides
+-- similar facilities, but doesn't know about the schema.
+--
+-- To provide an implementation of the @Echo@ interface, you need an instance of the
+-- @Echo'server_@ type class. The @export_Echo@ function is used to convert such an
+-- instance into a handle to the object that can be passed around.
+--
+-- Each time you call @export_Function@, it creates a thread that handles incoming
+-- messages in sequence.
+--
+-- Note that capnproto does not have a notion of "clients" and "servers" in the
+-- traditional networking sense; the two sides of a connection are symmetric. In the
+-- library's terminology (and that of most other capnproto libraries), a "client" is
+-- a handle for calling methods, and a "server" is an object that handles methods
+-- -- but there may be many of either or both of these on each side of a connection.
+--
+-- We can write an echo (networking) server using this interface like:
+--
+-- > {-# LANGUAGE MultiParamTypeClasses #-}
+-- > {-# LANGUAGE OverloadedStrings     #-}
+-- > import Network.Simple.TCP (serve)
+-- >
+-- > import Capnp     (def, defaultLimit)
+-- > -- 'Capnp.Rpc' exposes the most commonly used parts of the RPC system:
+-- > import Capnp.Rpc
+-- >     (ConnConfig(..), handleConn, pureHandler, socketTransport, toClient)
+-- >
+-- > import Capnp.Gen.Echo.Pure
+-- >
+-- > -- | A type to declare an instance on:
+-- > data MyEchoServer = MyEchoServer
+-- >
+-- > -- The main logic of an echo server:
+-- > instance Echo'server_ IO MyEchoServer where
+-- >     -- Each method of an interface generates a corresponding
+-- >     -- method in its type class. The name of the method is prefixed
+-- >     -- with the name of the interface; in this case this causes a bit
+-- >     -- of an ...echo.
+-- >     --
+-- >     -- The type of a method is left abstract, and functions like
+-- >     -- 'pureHandler' are used to construct method handlers.
+-- >     echo'echo = pureHandler $ \MyEchoServer params ->
+-- >         pure def { reply = query params }
+-- >
+-- > main :: IO ()
+-- > main = serve "localhost" "4000" $ \(sock, _addr) ->
+-- >     -- once we get a network connection, we use 'handleConn' to start
+-- >     -- the rpc subsystem on that connection. It takes a transport with
+-- >     -- which to send messages, and a config.
+-- >     handleConn (socketTransport sock defaultLimit) def
+-- >         { getBootstrap = \sup ->
+-- >            -- The only setting we override in this example is our
+-- >            -- bootstrap interface. The bootstrap interface is a "default"
+-- >            -- interface that clients can request on startup. By default
+-- >            -- there is none, here we provide a client for our echo server.
+-- >            Just . toClient <$> export_Echo sup MyEchoServer
+-- >         }
+--
+-- The echo client looks like:
+--
+-- > {-# LANGUAGE OverloadedStrings #-}
+-- > module Examples.Rpc.EchoClient (main) where
+-- >
+-- > import Network.Simple.TCP (connect)
+-- >
+-- > import Capnp     (def, defaultLimit)
+-- > import Capnp.Rpc (ConnConfig(..), handleConn, socketTransport, wait, (?))
+-- >
+-- > import Capnp.Gen.Echo.Pure
+-- >
+-- > main :: IO ()
+-- > main = connect "localhost" "4000" $ \(sock, _addr) ->
+-- >     handleConn (socketTransport sock defaultLimit) def
+-- >         -- In this case, we leave 'getBootstrap' empty and set
+-- >         -- 'withBootstrap', which will request the other side's
+-- >         -- bootstrap interface. If a non-Nothing value is supplied for
+-- >         -- 'withBootstrap', 'handleConn' will exit (and disconnect)
+-- >         -- when it completes.
+-- >         { withBootstrap = Just $ \_sup client ->
+-- >             -- Clients also have instances of their server_ classes, so
+-- >             -- can use these instances to call methods on the remote
+-- >             -- object. The '?' is the message send operator.
+-- >             --
+-- >             -- The method call _immediately_ returns, yielding a promise
+-- >             -- that will be fulfilled when the results of the call actually
+-- >             -- arive. We use 'wait' to wait for the promise to resolve,
+-- >             -- display the result to the user, and then exit.
+-- >             echo'echo (Echo client) ? def { query = "Hello, World!" }
+-- >                 >>= wait
+-- >                 >>= print
+-- >         }
