@@ -21,7 +21,6 @@ module Capnp.Rpc.Server
     , MethodHandler
     -- ** Using high-level representations
     , pureHandler
-    , pureAsyncHandler
     -- ** Using low-level representations
     , rawHandler
     , rawAsyncHandler
@@ -64,7 +63,6 @@ import Capnp.Rpc.Promise
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
 import Data.Mutable         (freeze)
-import Internal.BuildPure
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Message            as Message
@@ -133,25 +131,6 @@ pureHandler f cap = MethodHandler
                 breakPromise reply (wrapException False e)
     }
 
--- | Like 'pureHandler', except that it takes a fulfiller for the result,
--- instead of returning it. This allows the result to be supplied some time
--- after the method returns, making it possible to service other method
--- calls before the result is available.
-pureAsyncHandler ::
-    ( MonadCatch m
-    , MonadIO m
-    , PrimMonad m
-    , s ~ PrimState m
-    , Decerialize p
-    , FromPtr ConstMsg (Cerial ConstMsg p)
-    , Cerialize r
-    , ToStruct ConstMsg (Cerial ConstMsg r)
-    ) =>
-    (cap -> p -> Fulfiller r -> m ())
-    -> cap
-    -> MethodHandler m p r
-pureAsyncHandler f cap = error "TODO"
-
 -- | Like 'pureHandler', except that the parameter and return value use the
 -- low-level representation.
 rawHandler ::
@@ -176,7 +155,10 @@ rawHandler f cap = MethodHandler
             Left e -> breakPromise reply (wrapException False e)
     }
 
--- | Like 'pureAsyncHandler', but with low-level serialization.
+-- | Like 'rawHandler', except that it takes a fulfiller for the result,
+-- instead of returning it. This allows the result to be supplied some time
+-- after the method returns, making it possible to service other method
+-- calls before the result is available.
 rawAsyncHandler ::
     ( MonadCatch m
     , MonadIO m
