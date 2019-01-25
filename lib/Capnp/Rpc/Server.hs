@@ -143,7 +143,7 @@ rawHandler ::
     , Decerialize r
     , ToStruct ConstMsg (Cerial ConstMsg r)
     ) =>
-    (cap -> (Cerial ConstMsg p) -> m (Cerial ConstMsg r))
+    (cap -> Cerial ConstMsg p -> m (Cerial ConstMsg r))
     -> cap
     -> MethodHandler m p r
 rawHandler f cap = MethodHandler
@@ -169,7 +169,7 @@ rawAsyncHandler ::
     , Decerialize r
     , ToStruct ConstMsg (Cerial ConstMsg r)
     ) =>
-    (cap -> (Cerial ConstMsg p) -> Fulfiller (Cerial ConstMsg r) -> m ())
+    (cap -> Cerial ConstMsg p -> Fulfiller (Cerial ConstMsg r) -> m ())
     -> cap
     -> MethodHandler m p r
 rawAsyncHandler f cap = MethodHandler
