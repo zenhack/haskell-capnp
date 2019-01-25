@@ -21,8 +21,10 @@ module Capnp.Rpc.Server
     , MethodHandler
     -- ** Using high-level representations
     , pureHandler
+    , pureAsyncHandler
     -- ** Using low-level representations
     , rawHandler
+    , rawAsyncHandler
     -- ** Always throwing exceptions
     , methodThrow
     , methodUnimplemented
@@ -51,10 +53,18 @@ import Capnp.Classes
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
 import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
-import Capnp.Rpc.Promise    (Fulfiller, breakPromise, fulfill)
+import Capnp.Rpc.Promise
+    ( Fulfiller
+    , breakPromise
+    , breakPromiseSTM
+    , fulfill
+    , fulfillSTM
+    , newCallback
+    )
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
 import Data.Mutable         (freeze)
+import Internal.BuildPure
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
 import qualified Capnp.Message            as Message
@@ -123,6 +133,25 @@ pureHandler f cap = MethodHandler
                 breakPromise reply (wrapException False e)
     }
 
+-- | Like 'pureHandler', except that it takes a fulfiller for the result,
+-- instead of returning it. This allows the result to be supplied some time
+-- after the method returns, making it possible to service other method
+-- calls before the result is available.
+pureAsyncHandler ::
+    ( MonadCatch m
+    , MonadIO m
+    , PrimMonad m
+    , s ~ PrimState m
+    , Decerialize p
+    , FromPtr ConstMsg (Cerial ConstMsg p)
+    , Cerialize r
+    , ToStruct ConstMsg (Cerial ConstMsg r)
+    ) =>
+    (cap -> p -> Fulfiller r -> m ())
+    -> cap
+    -> MethodHandler m p r
+pureAsyncHandler f cap = error "TODO"
+
 -- | Like 'pureHandler', except that the parameter and return value use the
 -- low-level representation.
 rawHandler ::
@@ -145,6 +174,29 @@ rawHandler f cap = MethodHandler
         case result of
             Right val -> fulfill reply (Just (Untyped.PtrStruct (toStruct val)))
             Left e -> breakPromise reply (wrapException False e)
+    }
+
+-- | Like 'pureAsyncHandler', but with low-level serialization.
+rawAsyncHandler ::
+    ( MonadCatch m
+    , MonadIO m
+    , PrimMonad m
+    , s ~ PrimState m
+    , Decerialize p
+    , FromPtr ConstMsg (Cerial ConstMsg p)
+    , Decerialize r
+    , ToStruct ConstMsg (Cerial ConstMsg r)
+    ) =>
+    (cap -> (Cerial ConstMsg p) -> Fulfiller (Cerial ConstMsg r) -> m ())
+    -> cap
+    -> MethodHandler m p r
+rawAsyncHandler f cap = MethodHandler
+    { handleMethod = \ptr reply -> do
+        fulfiller <- newCallback $ \case
+            Left e -> breakPromiseSTM reply e
+            Right v -> fulfillSTM reply $ Just (Untyped.PtrStruct (toStruct v))
+        cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
+        f cap cerial fulfiller
     }
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
