@@ -21,6 +21,8 @@ module Capnp.Rpc.Server
     , MethodHandler
     -- ** Using high-level representations
     , pureHandler
+    -- ** Using low-level representations
+    , rawHandler
     -- ** Always throwing exceptions
     , methodThrow
     , methodUnimplemented
@@ -41,7 +43,11 @@ import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 
 import Capnp.Classes
-    (Cerialize, Decerialize(Cerial, decerialize), FromPtr(fromPtr), ToStruct)
+    ( Cerialize
+    , Decerialize(Cerial, decerialize)
+    , FromPtr(fromPtr)
+    , ToStruct(toStruct)
+    )
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
 import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
@@ -115,6 +121,30 @@ pureHandler f cap = MethodHandler
                 -- TODO: find a way to get the connection config's debugMode
                 -- option to be accessible from here, so we can use it.
                 breakPromise reply (wrapException False e)
+    }
+
+-- | Like 'pureHandler', except that the parameter and return value use the
+-- low-level representation.
+rawHandler ::
+    ( MonadCatch m
+    , MonadIO m
+    , PrimMonad m
+    , s ~ PrimState m
+    , Decerialize p
+    , FromPtr ConstMsg (Cerial ConstMsg p)
+    , Decerialize r
+    , ToStruct ConstMsg (Cerial ConstMsg r)
+    ) =>
+    (cap -> (Cerial ConstMsg p) -> m (Cerial ConstMsg r))
+    -> cap
+    -> MethodHandler m p r
+rawHandler f cap = MethodHandler
+    { handleMethod = \ptr reply -> do
+        cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
+        result <- try $ f cap cerial
+        case result of
+            Right val -> fulfill reply (Just (Untyped.PtrStruct (toStruct val)))
+            Left e -> breakPromise reply (wrapException False e)
     }
 
 -- | Convert a 'MethodHandler' for any parameter and return types into

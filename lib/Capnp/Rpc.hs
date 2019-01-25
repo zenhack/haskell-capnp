@@ -15,6 +15,7 @@ module Capnp.Rpc
     -- * Handling method calls
     , MethodHandler
     , pureHandler
+    , rawHandler
     , methodUnimplemented
     , methodThrow
 
@@ -44,7 +45,7 @@ import Capnp.Rpc.Errors    (throwFailed)
 import Capnp.Rpc.Invoke    ((?))
 import Capnp.Rpc.Promise
 import Capnp.Rpc.Server
-    (MethodHandler, methodThrow, methodUnimplemented, pureHandler)
+    (MethodHandler, methodThrow, methodUnimplemented, pureHandler, rawHandler)
 import Capnp.Rpc.Transport
     (Transport(..), handleTransport, socketTransport, tracingTransport)
 import Capnp.Rpc.Untyped   (Client, ConnConfig(..), IsClient(..), handleConn)
