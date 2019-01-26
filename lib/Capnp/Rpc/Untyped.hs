@@ -441,7 +441,7 @@ handleConn
         -- FIXME: there's a race condition that we're not dealing with:
         -- if the callbacks loop is killed between dequeuing an action and
         -- performing it that action will be lost.
-        processCallbacks conn'
+        flushCallbacks conn'
     useBootstrap conn conn' = case withBootstrap of
         Nothing ->
             forever $ threadDelay maxBound
@@ -870,16 +870,18 @@ clientMethodHandler interfaceId methodId client =
 
 -- | See Note [callbacks]
 callbacksLoop :: Conn' -> IO ()
-callbacksLoop = forever . processCallbacks
-
-processCallbacks :: Conn' -> IO ()
-processCallbacks Conn'{pendingCallbacks} = do
+callbacksLoop Conn'{pendingCallbacks} = forever $ do
     cbs <- atomically $ flushTQueue pendingCallbacks >>= \case
         -- We need to make sure to block if there weren't any jobs, since
         -- otherwise we'll busy loop, pegging the CPU.
         [] -> retry
         cbs -> pure cbs
     sequence_ cbs
+
+-- Run the one iteration of the callbacks loop, without blocking.
+flushCallbacks :: Conn' -> IO ()
+flushCallbacks Conn'{pendingCallbacks} =
+    atomically (flushTQueue pendingCallbacks) >>= sequence_
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn' -> IO ()
