@@ -873,8 +873,13 @@ callbacksLoop :: Conn' -> IO ()
 callbacksLoop = forever . processCallbacks
 
 processCallbacks :: Conn' -> IO ()
-processCallbacks Conn'{pendingCallbacks} =
-    atomically (flushTQueue pendingCallbacks) >>= sequence_
+processCallbacks Conn'{pendingCallbacks} = do
+    cbs <- atomically $ flushTQueue pendingCallbacks >>= \case
+        -- We need to make sure to block if there weren't any jobs, since
+        -- otherwise we'll busy loop, pegging the CPU.
+        [] -> retry
+        cbs -> pure cbs
+    sequence_ cbs
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn' -> IO ()
