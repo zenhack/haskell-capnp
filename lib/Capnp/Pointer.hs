@@ -10,7 +10,9 @@ module Capnp.Pointer
     , ElementSize(..)
     , EltSpec(..)
     , parsePtr
+    , parsePtr'
     , serializePtr
+    , serializePtr'
     , parseEltSpec
     , serializeEltSpec
     )
@@ -74,11 +76,17 @@ data EltSpec
     deriving(Show, Eq)
 
 
+
 -- | @'parsePtr' word@ parses word as a capnproto pointer. A null pointer is
 -- parsed as 'Nothing'.
 parsePtr :: Word64 -> Maybe Ptr
 parsePtr 0 = Nothing
-parsePtr word = Just $
+parsePtr p = Just (parsePtr' p)
+
+-- | @'parsePtr'' word@ parses @word@ as a capnproto pointer. It ignores
+-- nulls, returning them the same as @(StructPtr 0 0 0)@.
+parsePtr' :: Word64 -> Ptr
+parsePtr' word =
     case bitRange word 0 2 :: Word64 of
         0 -> StructPtr
             (i30 (lo word))
@@ -98,14 +106,19 @@ parsePtr word = Just $
 -- 'Nothing' to a null pointer.
 serializePtr :: Maybe Ptr -> Word64
 serializePtr Nothing  = 0
-serializePtr (Just p) = serializePtr' p
-
-serializePtr' :: Ptr -> Word64
-serializePtr' (StructPtr 0 0 0) =
+serializePtr (Just (StructPtr 0 0 0)) =
     -- We need to handle this specially, since the normal encoding
     -- would be interpreted as null. We can get around this by changing
     -- the offset.
     serializePtr' (StructPtr (-1) 0 0)
+serializePtr (Just p) =
+    serializePtr' p
+
+-- | @'serializePtr'' ptr@ serializes the pointer as a Word64.
+--
+-- Unlike 'serializePtr', this results in a null pointer on the input
+-- @(StructPtr 0 0 0)@, rather than adjusting the offset.
+serializePtr' :: Ptr -> Word64
 serializePtr' (StructPtr off dataSz ptrSz) =
     -- 0 .|.
     fromLo (fromI30 off) .|.

@@ -521,8 +521,8 @@ get msg addr = do
                 nlist = NormalList msg addr (fromIntegral len)
             P.EltComposite _ -> do
                 tagWord <- getWord msg addr
-                case P.parsePtr tagWord of
-                    Just (P.StructPtr numElts dataSz ptrSz) ->
+                case P.parsePtr' tagWord of
+                    P.StructPtr numElts dataSz ptrSz ->
                         pure $ ListStruct $ ListOfStruct
                             (Struct msg
                                     addr { wordIndex = wordIndex + 1 }
@@ -865,7 +865,7 @@ allocCompositeList
 allocCompositeList msg dataSz ptrSz len = do
     let eltSize = fromIntegral dataSz + fromIntegral ptrSz
     addr <- M.alloc msg (WordCount $ len * eltSize + 1) -- + 1 for the tag word.
-    M.setWord msg addr $ P.serializePtr $ Just $ P.StructPtr (fromIntegral len) dataSz ptrSz
+    M.setWord msg addr $ P.serializePtr' $ P.StructPtr (fromIntegral len) dataSz ptrSz
     let firstStruct = Struct
             msg
             addr { wordIndex = wordIndex addr + 1 }
