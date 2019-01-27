@@ -2,21 +2,7 @@
 
 * RPC support! This should be considered alpha quality for now. The API
   will likely change substantially.
-* Bug fixes:
-  * The value of `defaultLimit` was much larger (8x) than documented or
-    intended.
-  * Reads on `Handle`s at EOF would cause a call to error.
-  * Struct definitions with no fields were not generating type
-    definitions, in some cases resulting in output modules that do
-    not compile (#54).
-  * In some cases we were mis-handling the NUL terminator in text
-    values; this has been addressed.
-  * Add some missing type class instances, which could have caused
-    generated code not to compile.
-  * Name collisions with things in the standard library are no longer
-    possible (#58).
-  * Some possible name collisions involving groups were fixed (#65).
-    Note that this is a backwards-incompatible change; see the issue.
+* Many bug fixes; users are strongly encouraged to upgrade.
 * Reorganization of the module hierarchy:
   * Generated code is now placed under `Capnp.Gen`, rather than `Capnp`.
   * The `Data` prefix has been removed from the `Data.Capnp` hierarchy.
@@ -38,7 +24,7 @@
   * `newMessage` now accepts an optional size hint.
   * Instances of `Cerialize` now exist/are generated for
     `(Vector (Vector (Vector ...)))` up to a reasonable depth.
-* Other improvements directly reflected in the API:
+* Other improvements not directly reflected in the API:
   * The allocation strategy has changed to reduce unnecessary copying.
   * It is now possible to create messages with a size > 2GiB. Note that
     individual segments are still limited.
