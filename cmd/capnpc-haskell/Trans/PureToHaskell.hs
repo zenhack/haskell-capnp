@@ -22,10 +22,10 @@ import qualified IR.Pure   as P
 -- | Modules imported by all generated modules.
 commonImports :: [Import]
 commonImports =
-    [ ImportAs { importAs = "V", parts = ["Data", "Vector"] }
-    , ImportAs { importAs = "T", parts = ["Data", "Text"] }
-    , ImportAs { importAs = "BS", parts = ["Data", "ByteString"] }
-    , ImportAs { importAs = "Default", parts = ["Data", "Default"] }
+    [ ImportAs { importAs = "V", parts = reExp ["Data", "Vector"] }
+    , ImportAs { importAs = "T", parts = reExp ["Data", "Text"] }
+    , ImportAs { importAs = "BS", parts = reExp ["Data", "ByteString"] }
+    , ImportAs { importAs = "Default", parts = reExp ["Data", "Default"] }
     , ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
     , ImportAs { importAs = "MonadIO", parts = ["Control", "Monad", "IO", "Class"] }
     , ImportAs { importAs = "UntypedPure", parts = ["Capnp", "Untyped", "Pure"] }
@@ -43,9 +43,11 @@ rpcImports =
     [ ImportAs { importAs = "Rpc", parts = ["Capnp", "Rpc", "Untyped"] }
     , ImportAs { importAs = "Server", parts = ["Capnp", "Rpc", "Server"] }
     , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
-    , ImportAs { importAs = "STM", parts = ["Control", "Concurrent", "STM"] }
-    , ImportQual ["Supervisors"]
+    , ImportAs { importAs = "STM", parts = reExp ["Control", "Concurrent", "STM"] }
+    , ImportAs { importAs = "Supervisors", parts = reExp ["Supervisors"] }
     ]
+
+reExp parts = ["Capnp", "GenHelpers", "ReExports"] ++ parts
 
 -- | Whether the serialized and unserialized forms of this type
 -- are the same. If not, there is a marshalling step, if so, the

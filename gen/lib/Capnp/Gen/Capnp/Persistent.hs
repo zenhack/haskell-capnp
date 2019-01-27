@@ -17,7 +17,7 @@ import qualified Capnp.Classes as Classes
 import qualified GHC.Generics as Generics
 import qualified Capnp.Bits as Std_
 import qualified Data.Maybe as Std_
-import qualified Data.ByteString as BS
+import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

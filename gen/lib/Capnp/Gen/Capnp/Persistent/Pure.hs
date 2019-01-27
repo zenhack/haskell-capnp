@@ -19,10 +19,10 @@ module Capnp.Gen.Capnp.Persistent.Pure(Persistent(..)
                                       ,export_RealmGateway
                                       ,RealmGateway'import'params(..)
                                       ,RealmGateway'export'params(..)) where
-import qualified Data.Vector as V
-import qualified Data.Text as T
-import qualified Data.ByteString as BS
-import qualified Data.Default as Default
+import qualified Capnp.GenHelpers.ReExports.Data.Vector as V
+import qualified Capnp.GenHelpers.ReExports.Data.Text as T
+import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
+import qualified Capnp.GenHelpers.ReExports.Data.Default as Default
 import qualified GHC.Generics as Generics
 import qualified Control.Monad.IO.Class as MonadIO
 import qualified Capnp.Untyped.Pure as UntypedPure
@@ -34,8 +34,8 @@ import qualified Capnp.GenHelpers.Pure as GenHelpersPure
 import qualified Capnp.Rpc.Untyped as Rpc
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.GenHelpers.Rpc as RpcHelpers
-import qualified Control.Concurrent.STM as STM
-import qualified Supervisors
+import qualified Capnp.GenHelpers.ReExports.Control.Concurrent.STM as STM
+import qualified Capnp.GenHelpers.ReExports.Supervisors as Supervisors
 import qualified Capnp.Gen.ById.Xb8630836983feed7
 import qualified Prelude as Std_
 import qualified Data.Word as Std_

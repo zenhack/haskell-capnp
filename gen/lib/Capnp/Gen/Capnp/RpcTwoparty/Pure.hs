@@ -16,10 +16,10 @@ module Capnp.Gen.Capnp.RpcTwoparty.Pure(Capnp.Gen.ById.Xa184c7885cdaf2a1.Side(..
                                        ,ThirdPartyCapId(..)
                                        ,JoinKeyPart(..)
                                        ,JoinResult(..)) where
-import qualified Data.Vector as V
-import qualified Data.Text as T
-import qualified Data.ByteString as BS
-import qualified Data.Default as Default
+import qualified Capnp.GenHelpers.ReExports.Data.Vector as V
+import qualified Capnp.GenHelpers.ReExports.Data.Text as T
+import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
+import qualified Capnp.GenHelpers.ReExports.Data.Default as Default
 import qualified GHC.Generics as Generics
 import qualified Control.Monad.IO.Class as MonadIO
 import qualified Capnp.Untyped.Pure as UntypedPure

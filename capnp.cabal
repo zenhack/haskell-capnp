@@ -122,6 +122,14 @@ library
       , Capnp.Rpc.Server
       , Capnp.Tutorial
 
+      , Capnp.GenHelpers.ReExports
+      , Capnp.GenHelpers.ReExports.Supervisors
+      , Capnp.GenHelpers.ReExports.Data.Default
+      , Capnp.GenHelpers.ReExports.Data.Text
+      , Capnp.GenHelpers.ReExports.Data.ByteString
+      , Capnp.GenHelpers.ReExports.Data.Vector
+      , Capnp.GenHelpers.ReExports.Control.Concurrent.STM
+
       , Data.Mutable
 
       , Capnp.Gen

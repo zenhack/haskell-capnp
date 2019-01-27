@@ -70,7 +70,7 @@ fileToMainModule Raw.File{fileName, fileId, decls} =
             , imp ["Capnp", "Bits"] "Std_"
 
             , imp ["Data", "Maybe"] "Std_"
-            , imp ["Data", "ByteString"] "BS"
+            , imp ["Capnp", "GenHelpers", "ReExports", "Data", "ByteString"] "BS"
             ]
         , modDecls = concatMap (declToDecls fileId) decls
         }
