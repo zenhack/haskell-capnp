@@ -41,7 +41,7 @@ import GHC.Exts                      (IsList(..))
 import GHC.Generics                  (Generic)
 
 import Capnp.Classes
-    (Cerialize(..), Decerialize(..), Marshal(..), ToPtr(..))
+    (Cerialize(..), Decerialize(..), FromStruct(..), Marshal(..), ToPtr(..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Message as M
@@ -119,6 +119,9 @@ instance Decerialize Struct where
     decerialize struct = Struct
         <$> (Slice <$> decerializeListOfWord (U.dataSection struct))
         <*> (Slice <$> decerializeListOf     (U.ptrSection struct))
+
+instance FromStruct M.ConstMsg Struct where
+    fromStruct = decerialize
 
 instance Marshal Struct where
     marshalInto raw (Struct (Slice dataSec) (Slice ptrSec)) = do
