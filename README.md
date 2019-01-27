@@ -4,11 +4,19 @@
 A Haskell library for the [Cap'N Proto][1] Cerialization and RPC
 protocol.
 
+# Getting Started
+
+There is a module `Capnp.Tutorial` which contains an introduction
+to the library; users are *strongly* encouraged to read this first, as
+the reference documentation can be bewildering without that context.
+
+# Status
+
 Serialization support works, with some limitations:
 
 * Generated schema currently ignore type parameters ([#29][issue29]).
-* Schema which define custom default values for fields of pointer type
-  are rejected ([#28][issue28]).
+* We do not support define custom default values for fields of pointer
+  type; see ([#28][issue28]).
 * We currently do not correctly handle decoding lists of structs from
   non-composite lists ([#27][issue27]). This means that, contrary to the
   [protocol evolution rules][2], it is not safe to change a field from
@@ -16,11 +24,17 @@ Serialization support works, with some limitations:
   type.
 
 Level 1 RPC support is implemented and usable, though there are a couple
-gaps in the API. It should be considered alpha quality for now.
+gaps in the API. It should be considered alpha quality for now. Specific
+things to be aware of:
 
-There is a module `Capnp.Tutorial` which contains an introduction
-to the library; users are *strongly* encouraged to read this first, as
-the reference documentation can be bewildering without that context.
+* The implementation is *not* robust against resource exhaustion
+  attacks; for now users are strongly discouraged from using it to do
+  RPC with untrusted peers.
+* While most of the machinery for it is in place, the API does not
+  currently expose a way to do field projection on remote promises.
+  As a consequence, actually pipelining method calls is not currently
+  possible, so the library is currently best suited to environments
+  which are already low-latency.
 
 The API is considered unstable. It will likely see changes, for the
 sake of polish, consistency, etc. as well as to improve performance and
