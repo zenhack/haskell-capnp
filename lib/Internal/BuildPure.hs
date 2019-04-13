@@ -25,7 +25,7 @@ import Data.Mutable         (Thaw(..), createT)
 
 -- | 'PureBuilder' is a monad transformer stack with the instnaces needed
 -- manipulate mutable messages. @'PureBuilder' s a@ is morally equivalent
--- to @'LimitT ('CatchT' ('ST' s)) a@
+-- to @'LimitT' ('CatchT' ('ST' s)) a@
 newtype PureBuilder s a = PureBuilder (LimitT (PrimCatchT (ST s)) a)
     deriving(Functor, Applicative, Monad, MonadThrow, MonadLimit)
 

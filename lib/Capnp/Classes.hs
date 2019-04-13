@@ -89,7 +89,7 @@ class ListElem msg e where
 
 -- | Types which may be stored as an element of a *mutable* capnproto list.
 class (ListElem (M.MutMsg s) e) => MutListElem s e where
-    -- | @'setIndex' value i list@ sets the @i@th index in @list@ to @value
+    -- | @'setIndex' value i list@ sets the @i@th index in @list@ to @value@
     setIndex :: U.RWCtx m s => e -> Int -> List (M.MutMsg s) e -> m ()
 
     -- | @'newList' msg size@ allocates and returns a new list of length
