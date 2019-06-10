@@ -1,6 +1,6 @@
 cabal-version:            2.2
 name:                     capnp
-version:                  0.4.0.0
+version:                  0.4.0.1
 category:                 Data, Serialization, Network, Rpc
 copyright:                2016-2018 haskell-capnp contributors (see CONTRIBUTORS file).
 author:                   Ian Denhardt
@@ -58,7 +58,7 @@ source-repository head
 
 common shared-opts
   build-depends:
-        base                              >= 4.11  && < 4.13
+        base                               >= 4.11 && < 5
       , bytes                             ^>= 0.15.4
       , bytestring                        ^>= 0.10
       , containers                        ^>= 0.5.9
@@ -68,7 +68,7 @@ common shared-opts
       , primitive                         ^>= 0.6.3
       , reinterpret-cast                  ^>= 0.1.0
       , safe-exceptions                   ^>= 0.1.7
-      , text                              >= 1.2 && < 2.0
+      , text                               >= 1.2 && < 2.0
       , transformers                      ^>= 0.5.2
       , vector                            ^>= 0.12.0
   ghc-options:
