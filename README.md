@@ -15,7 +15,7 @@ the reference documentation can be bewildering without that context.
 Serialization support works, with some limitations:
 
 * Generated schema currently ignore type parameters ([#29][issue29]).
-* We do not support define custom default values for fields of pointer
+* We do not support defining custom default values for fields of pointer
   type; see ([#28][issue28]).
 * We currently do not correctly handle decoding lists of structs from
   non-composite lists ([#27][issue27]). This means that, contrary to the
