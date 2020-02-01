@@ -59,13 +59,13 @@ source-repository head
 common shared-opts
   build-depends:
         base                              >= 4.11  && < 4.13
-      , bytes                             ^>= 0.15.4
+      , bytes                             >= 0.15.4 && <0.17
       , bytestring                        ^>= 0.10
-      , containers                        ^>= 0.5.9
+      , containers                        >= 0.5.9 && <0.7
       , data-default                      ^>= 0.7.1
       , exceptions                        ^>= 0.10.0
       , mtl                               ^>= 2.2.2
-      , primitive                         ^>= 0.6.3
+      , primitive                         >= 0.6.3 && <0.8
       , reinterpret-cast                  ^>= 0.1.0
       , safe-exceptions                   ^>= 0.1.7
       , text                              >= 1.2 && < 2.0
@@ -173,7 +173,7 @@ library
     -- other-extensions:
     build-depends:
         cpu                               ^>= 0.1.2
-      , hashable                          ^>= 1.2.7
+      , hashable                          >= 1.2.7 && <1.4
       , data-default-instances-vector     ^>= 0.0.1
       , stm                               ^>= 2.5.0
       , stm-containers                    ^>= 1.1.0
