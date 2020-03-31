@@ -1,3 +1,10 @@
+# 0.5.0.0
+
+* Improvements to the RPC API:
+  * Add `newPromiseClient` for creating a promise-based client that can
+    be fulfilled later.
+  * Make `Client` an instance of `IsClient`.
+
 # 0.4.0.0
 
 * RPC support! This should be considered alpha quality for now. The API
