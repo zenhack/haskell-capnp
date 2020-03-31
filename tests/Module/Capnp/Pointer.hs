@@ -71,4 +71,4 @@ ptrProps = describe "Pointer Properties" $ do
 parsePtrExamples :: Spec
 parsePtrExamples = describe "parsePtr (examples)" $
     it "Should parse this example correctly" $
-        parsePtr 0x0000000200000000 `shouldBe` (Just $ StructPtr 0 2 0)
+        parsePtr 0x0000000200000000 `shouldBe` Just (StructPtr 0 2 0)
