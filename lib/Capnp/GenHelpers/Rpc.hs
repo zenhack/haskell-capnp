@@ -59,5 +59,5 @@ isClientFromPtr _ (Just _) = throwM $ E.SchemaViolationError "Expected capabilit
 -- See the notes for 'isClientFromPtr'.
 isClientToPtr :: (Rpc.IsClient a, M.WriteCtx m s) => M.MutMsg s -> a -> m (Maybe (U.Ptr (M.MutMsg s)))
 isClientToPtr msg client = do
-        cap <- U.appendCap msg (Rpc.toClient client)
-        pure $ Just $ U.PtrCap cap
+    cap <- U.appendCap msg (Rpc.toClient client)
+    pure $ Just $ U.PtrCap cap
