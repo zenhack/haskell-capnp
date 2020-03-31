@@ -26,6 +26,8 @@ module Capnp.Rpc.Untyped
     , Client
     , call
     , nullClient
+    , newPromiseClient
+    , newPromiseClientSTM
 
     , IsClient(..)
 
@@ -533,6 +535,10 @@ class IsClient a where
     -- | Convert a client to a value.
     fromClient :: Client -> a
 
+instance IsClient Client where
+    toClient = id
+    fromClient = id
+
 instance Show Client where
     show (Client Nothing) = "nullClient"
     show _                = "({- capability; not statically representable -})"
@@ -843,6 +849,29 @@ unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
 -- statically. Throws exceptions in response to all method calls.
 nullClient :: Client
 nullClient = Client Nothing
+
+-- | Create a new client based on a promise. The fulfiller can be used to
+-- supply the final client.
+newPromiseClient :: IsClient c => IO (c, Fulfiller c)
+newPromiseClient = atomically newPromiseClientSTM
+
+-- | Like 'newPromiseClient', but in 'STM'.
+newPromiseClientSTM :: IsClient c => STM (c, Fulfiller c)
+newPromiseClientSTM = do
+    callBuffer <- newTQueue
+    let tmpDest = LocalDest LocalBuffer { callBuffer }
+    pState <- newTVar Pending { tmpDest }
+    exportMap <- ExportMap <$> M.new
+    f <- newCallbackSTM $ \case
+        Left e -> writeTVar pState (Error e)
+        Right v -> writeTVar pState Ready { target = toClient v }
+    let p = Client $ Just $ PromiseClient
+            { pState
+            , exportMap
+            , origTarget = tmpDest
+            }
+    pure (fromClient p, f)
+
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,

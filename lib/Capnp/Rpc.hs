@@ -35,6 +35,8 @@ module Capnp.Rpc
     -- * Clients
     , Client
     , IsClient(..)
+    , newPromiseClient
+    , newPromiseClientSTM
 
     -- * Supervisors
     , module Supervisors
@@ -55,4 +57,11 @@ import Capnp.Rpc.Server
     )
 import Capnp.Rpc.Transport
     (Transport(..), handleTransport, socketTransport, tracingTransport)
-import Capnp.Rpc.Untyped   (Client, ConnConfig(..), IsClient(..), handleConn)
+import Capnp.Rpc.Untyped
+    ( Client
+    , ConnConfig(..)
+    , IsClient(..)
+    , handleConn
+    , newPromiseClient
+    , newPromiseClientSTM
+    )
