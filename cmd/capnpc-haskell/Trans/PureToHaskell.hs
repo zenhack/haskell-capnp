@@ -44,6 +44,7 @@ rpcImports =
     , ImportAs { importAs = "Server", parts = ["Capnp", "Rpc", "Server"] }
     , ImportAs { importAs = "RpcHelpers", parts = ["Capnp", "GenHelpers", "Rpc"] }
     , ImportAs { importAs = "STM", parts = reExp ["Control", "Concurrent", "STM"] }
+    , ImportAs { importAs = "STM", parts = reExp [ "Control", "Monad", "STM", "Class"] }
     , ImportAs { importAs = "Supervisors", parts = reExp ["Supervisors"] }
     ]
 
@@ -471,17 +472,19 @@ ifaceExportFn :: Word64 -> P.Interface -> Decl
 ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
     DcValue
         { typ = TCtx
-            [TApp (TLName (Name.mkSub local "server_")) [tStd_ "IO", tuName "a"]]
+            [ TApp (TLName (Name.mkSub local "server_")) [tStd_ "IO", tuName "a"]
+            , TApp (tgName ["STM"] "MonadSTM") [tuName "m"]
+            ]
             (TFn
                 [ tgName ["Supervisors"] "Supervisor"
                 , tuName "a"
-                , TApp (tgName ["STM"] "STM") [TLName local]
+                , TApp (tuName "m") [TLName local]
                 ]
             )
         , def = DfValue
             { name = Name.UnQ $ "export_" <> Name.renderLocalQ local
             , params = [PVar "sup_", PVar "server_"]
-            , value = EFApp (ELName local)
+            , value = EApp (egName ["STM"] "liftSTM") $ pure $ EFApp (ELName local)
                 [ EApp (egName ["Rpc"] "export")
                     [ euName "sup_"
                     , ERecord (egName ["Server"] "ServerOps")

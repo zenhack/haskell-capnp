@@ -19,10 +19,9 @@ module Capnp.Rpc.Invoke
     , invokeRaw
     ) where
 
+import Control.Monad.STM.Class
 
-import Control.Concurrent.STM  (atomically)
 import Control.Monad.Catch     (MonadThrow)
-import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 
 import Capnp.Classes
@@ -44,7 +43,7 @@ import qualified Capnp.Untyped     as U
 -- its return value.
 invokeRaw ::
     ( MonadThrow m
-    , MonadIO m
+    , MonadSTM m
     , PrimMonad m
     , Decerialize r
     , Decerialize p
@@ -56,10 +55,10 @@ invokeRaw ::
     -> Promise.Fulfiller (Cerial M.ConstMsg r)
     -> m ()
 invokeRaw method params typedFulfiller = do
-    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallbackSTM $ \case
-        Left e -> Promise.breakPromiseSTM typedFulfiller e
-        Right v -> evalLimitT defaultLimit (fromPtr M.empty v) >>= Promise.fulfillSTM typedFulfiller
-    Server.invokeIO
+    (_, untypedFulfiller) <- liftSTM $ Promise.newPromiseWithCallback $ \case
+        Left e -> Promise.breakPromise typedFulfiller e
+        Right v -> evalLimitT defaultLimit (fromPtr M.empty v) >>= Promise.fulfill typedFulfiller
+    Server.invoke
         (Server.toUntypedHandler method)
         (Just (U.PtrStruct (toStruct params)))
         untypedFulfiller
@@ -68,7 +67,7 @@ invokeRaw method params typedFulfiller = do
 -- the high-level API.
 type InvokePureCtx m p r =
     ( MonadThrow m
-    , MonadIO m
+    , MonadSTM m
     , PrimMonad m
     , Decerialize r
     , ToStruct M.ConstMsg (Cerial M.ConstMsg p)
@@ -89,12 +88,12 @@ invokePure method params pureFulfiller = do
     struct <- evalLimitT defaultLimit $ do
         msg <- M.newMessage Nothing
         (toStruct <$> cerialize msg params) >>= freeze
-    (_, untypedFulfiller) <- liftIO $ atomically $ Promise.newPromiseWithCallbackSTM $ \case
-        Left e -> Promise.breakPromiseSTM pureFulfiller e
+    (_, untypedFulfiller) <- liftSTM $ Promise.newPromiseWithCallback $ \case
+        Left e -> Promise.breakPromise pureFulfiller e
         Right v ->
             evalLimitT defaultLimit (fromPtr M.empty v >>= decerialize)
-            >>= Promise.fulfillSTM pureFulfiller
-    Server.invokeIO
+            >>= Promise.fulfill pureFulfiller
+    Server.invoke
         (Server.toUntypedHandler method)
         (Just (U.PtrStruct struct))
         untypedFulfiller

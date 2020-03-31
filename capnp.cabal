@@ -71,6 +71,7 @@ common shared-opts
       , text                              >= 1.2 && < 2.0
       , transformers                      ^>= 0.5.2
       , vector                            ^>= 0.12.0
+      , monad-stm                         ^>= 0.1
   ghc-options:
     -Wall
 
@@ -129,6 +130,7 @@ library
       , Capnp.GenHelpers.ReExports.Data.ByteString
       , Capnp.GenHelpers.ReExports.Data.Vector
       , Capnp.GenHelpers.ReExports.Control.Concurrent.STM
+      , Capnp.GenHelpers.ReExports.Control.Monad.STM.Class
 
       , Data.Mutable
 

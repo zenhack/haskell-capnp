@@ -35,6 +35,7 @@ import qualified Capnp.Rpc.Untyped as Rpc
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.GenHelpers.Rpc as RpcHelpers
 import qualified Capnp.GenHelpers.ReExports.Control.Concurrent.STM as STM
+import qualified Capnp.GenHelpers.ReExports.Control.Monad.STM.Class as STM
 import qualified Capnp.GenHelpers.ReExports.Supervisors as Supervisors
 import qualified Capnp.Gen.ById.Xb8630836983feed7
 import qualified Prelude as Std_
@@ -50,17 +51,18 @@ class ((MonadIO.MonadIO m)) => (Persistent'server_ m cap) where
     {-# MINIMAL persistent'save #-}
     persistent'save :: cap -> (Server.MethodHandler m Persistent'SaveParams Persistent'SaveResults)
     persistent'save _ = Server.methodUnimplemented
-export_Persistent :: ((Persistent'server_ Std_.IO a)) => Supervisors.Supervisor -> a -> (STM.STM Persistent)
-export_Persistent sup_ server_ = (Persistent <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Std_.pure ())
-                                                                                  ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
-                                                                                      14468694717054801553 ->
-                                                                                          case methodId_ of
-                                                                                              0 ->
-                                                                                                  (Server.toUntypedHandler (persistent'save server_))
-                                                                                              _ ->
-                                                                                                  Server.methodUnimplemented
-                                                                                      _ ->
-                                                                                          Server.methodUnimplemented)}))
+export_Persistent :: ((Persistent'server_ Std_.IO a)
+                     ,(STM.MonadSTM m)) => Supervisors.Supervisor -> a -> (m Persistent)
+export_Persistent sup_ server_ = (STM.liftSTM (Persistent <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Std_.pure ())
+                                                                                               ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
+                                                                                                   14468694717054801553 ->
+                                                                                                       case methodId_ of
+                                                                                                           0 ->
+                                                                                                               (Server.toUntypedHandler (persistent'save server_))
+                                                                                                           _ ->
+                                                                                                               Server.methodUnimplemented
+                                                                                                   _ ->
+                                                                                                       Server.methodUnimplemented)})))
 instance (Rpc.IsClient Persistent) where
     fromClient  = Persistent
     toClient (Persistent client) = client
@@ -160,19 +162,20 @@ class ((MonadIO.MonadIO m)) => (RealmGateway'server_ m cap) where
     realmGateway'import_ _ = Server.methodUnimplemented
     realmGateway'export :: cap -> (Server.MethodHandler m RealmGateway'export'params Persistent'SaveResults)
     realmGateway'export _ = Server.methodUnimplemented
-export_RealmGateway :: ((RealmGateway'server_ Std_.IO a)) => Supervisors.Supervisor -> a -> (STM.STM RealmGateway)
-export_RealmGateway sup_ server_ = (RealmGateway <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Std_.pure ())
-                                                                                      ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
-                                                                                          9583422979879616212 ->
-                                                                                              case methodId_ of
-                                                                                                  0 ->
-                                                                                                      (Server.toUntypedHandler (realmGateway'import_ server_))
-                                                                                                  1 ->
-                                                                                                      (Server.toUntypedHandler (realmGateway'export server_))
-                                                                                                  _ ->
-                                                                                                      Server.methodUnimplemented
-                                                                                          _ ->
-                                                                                              Server.methodUnimplemented)}))
+export_RealmGateway :: ((RealmGateway'server_ Std_.IO a)
+                       ,(STM.MonadSTM m)) => Supervisors.Supervisor -> a -> (m RealmGateway)
+export_RealmGateway sup_ server_ = (STM.liftSTM (RealmGateway <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Std_.pure ())
+                                                                                                   ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
+                                                                                                       9583422979879616212 ->
+                                                                                                           case methodId_ of
+                                                                                                               0 ->
+                                                                                                                   (Server.toUntypedHandler (realmGateway'import_ server_))
+                                                                                                               1 ->
+                                                                                                                   (Server.toUntypedHandler (realmGateway'export server_))
+                                                                                                               _ ->
+                                                                                                                   Server.methodUnimplemented
+                                                                                                       _ ->
+                                                                                                           Server.methodUnimplemented)})))
 instance (Rpc.IsClient RealmGateway) where
     fromClient  = RealmGateway
     toClient (RealmGateway client) = client

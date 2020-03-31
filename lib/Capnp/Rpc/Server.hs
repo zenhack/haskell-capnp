@@ -33,10 +33,11 @@ module Capnp.Rpc.Server
     , fromUntypedHandler
 
     -- * Invoking methods
-    , invokeIO
+    , invoke
     ) where
 
 import Control.Concurrent.STM
+import Control.Monad.STM.Class
 import Data.Word
 
 import Control.Exception.Safe  (MonadCatch, finally, try)
@@ -52,14 +53,7 @@ import Capnp.Classes
 import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg, MutMsg)
 import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
-import Capnp.Rpc.Promise
-    ( Fulfiller
-    , breakPromise
-    , breakPromiseSTM
-    , fulfill
-    , fulfillSTM
-    , newCallback
-    )
+import Capnp.Rpc.Promise    (Fulfiller, breakPromise, fulfill, newCallback)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
 import Data.Mutable         (freeze)
@@ -90,13 +84,13 @@ newtype MethodHandler m p r = MethodHandler
         -> m ()
     }
 
-invokeIO
-    :: MonadIO m
+invoke
+    :: MonadSTM m
     => MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
     -> Maybe (Ptr ConstMsg)
     -> Fulfiller (Maybe (Ptr ConstMsg))
     -> m ()
-invokeIO = handleMethod
+invoke = handleMethod
 
 -- | @'pureHandler' f cap@ is a 'MethodHandler' which calls a function @f@
 -- that accepts the receiver and the parameter type as exposed by the
@@ -104,7 +98,7 @@ invokeIO = handleMethod
 -- return type.
 pureHandler ::
     ( MonadCatch m
-    , MonadIO m
+    , MonadSTM m
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p
@@ -124,18 +118,18 @@ pureHandler f cap = MethodHandler
             Right val -> do
                 struct <- evalLimitT defaultLimit $
                     valueToMsg val >>= freeze >>= Untyped.rootPtr
-                fulfill reply (Just (Untyped.PtrStruct struct))
+                liftSTM $ fulfill reply (Just (Untyped.PtrStruct struct))
             Left e ->
                 -- TODO: find a way to get the connection config's debugMode
                 -- option to be accessible from here, so we can use it.
-                breakPromise reply (wrapException False e)
+                liftSTM $ breakPromise reply (wrapException False e)
     }
 
 -- | Like 'pureHandler', except that the parameter and return value use the
 -- low-level representation.
 rawHandler ::
     ( MonadCatch m
-    , MonadIO m
+    , MonadSTM m
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p
@@ -151,8 +145,8 @@ rawHandler f cap = MethodHandler
         cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
         result <- try $ f cap cerial
         case result of
-            Right val -> fulfill reply (Just (Untyped.PtrStruct (toStruct val)))
-            Left e -> breakPromise reply (wrapException False e)
+            Right val -> liftSTM $ fulfill reply (Just (Untyped.PtrStruct (toStruct val)))
+            Left e -> liftSTM $ breakPromise reply (wrapException False e)
     }
 
 -- | Like 'rawHandler', except that it takes a fulfiller for the result,
@@ -161,7 +155,7 @@ rawHandler f cap = MethodHandler
 -- calls before the result is available.
 rawAsyncHandler ::
     ( MonadCatch m
-    , MonadIO m
+    , MonadSTM m
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p
@@ -175,8 +169,8 @@ rawAsyncHandler ::
 rawAsyncHandler f cap = MethodHandler
     { handleMethod = \ptr reply -> do
         fulfiller <- newCallback $ \case
-            Left e -> breakPromiseSTM reply e
-            Right v -> fulfillSTM reply $ Just (Untyped.PtrStruct (toStruct v))
+            Left e -> breakPromise reply e
+            Right v -> fulfill reply $ Just (Untyped.PtrStruct (toStruct v))
         cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
         f cap cerial fulfiller
     }

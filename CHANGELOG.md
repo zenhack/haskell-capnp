@@ -1,9 +1,29 @@
 # 0.5.0.0
 
-* Improvements to the RPC API:
-  * Add `newPromiseClient` for creating a promise-based client that can
-    be fulfilled later.
-  * Make `Client` an instance of `IsClient`.
+This release brings some improvements to the RPC API:
+
+* Add `newPromiseClient` for creating a promise-based client that can
+  be fulfilled later.
+* Make `Client` an instance of `IsClient`.
+* Previously, there were a number of functions that had two variants:
+  * `foo`, which ran in `IO`
+  * `fooSTM`, which ran in `STM`.
+  Now there is just one variant, `foo`, which is polymorphic over
+  `MonadSTM`, defined by the `monad-stm` package. There are instances of
+  this class for `IO`, `STM`, and any monad transformer applied to an
+  instance.
+
+  Note that previously some of the `foo` variants were polymorphic over
+  `MonadIO`. Unfortunately it is not possible to define a general instance
+  `MonadIO m => MonadSTM m`, but for a particular mtl stack that
+  has an instance of `MonadIO`, you can fix the problem by defining:
+
+  ```haskell
+  instance MonadSTM MyStack where
+      liftSTM = liftIO . liftSTM
+  ```
+
+  Or, you can add `liftSTM` to the appropriate call sites.
 
 # 0.4.0.0
 
