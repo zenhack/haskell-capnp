@@ -17,7 +17,6 @@ import Control.Monad.Catch      (throwM)
 import Control.Monad.IO.Class   (liftIO)
 import Data.Foldable            (for_)
 import Data.Mutable             (freeze)
-import Supervisors              (Supervisor)
 import System.Timeout           (timeout)
 
 import qualified Data.ByteString.Builder as BB
@@ -33,11 +32,8 @@ import Capnp
     , msgToValue
     , valueToMsg
     )
-import Capnp.Bits          (WordCount)
-import Capnp.Rpc.Errors    (eFailed)
-import Capnp.Rpc.Promise   (Promise, wait)
-import Capnp.Rpc.Server    (pureHandler)
-import Capnp.Rpc.Transport (Transport(recvMsg, sendMsg), socketTransport)
+import Capnp.Bits       (WordCount)
+import Capnp.Rpc.Errors (eFailed)
 
 import Capnp.Gen.Aircraft.Pure  hiding (Left, Right)
 import Capnp.Gen.Capnp.Rpc.Pure

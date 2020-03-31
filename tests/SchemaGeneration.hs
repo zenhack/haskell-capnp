@@ -6,7 +6,6 @@ module SchemaGeneration
 
 import Control.Monad.State.Strict
 
-import Control.Monad      (replicateM)
 import Data.List.NonEmpty (NonEmpty((:|)))
 
 import qualified Data.List.NonEmpty as NE

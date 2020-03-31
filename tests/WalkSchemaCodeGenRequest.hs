@@ -12,7 +12,7 @@ import Prelude hiding (length)
 
 import Test.Hspec
 
-import Control.Monad             (mapM_, when)
+import Control.Monad             (when)
 import Control.Monad.Trans.Class (lift)
 
 import qualified Data.ByteString as BS
