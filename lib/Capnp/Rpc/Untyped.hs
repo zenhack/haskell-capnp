@@ -238,6 +238,10 @@ data ConnConfig = ConnConfig
     -- to bootstrap messages with an exception.
     --
     -- The default always returns 'Nothing'.
+    --
+    -- 'getBootstrap' MUST NOT block; the connection will not be serviced
+    -- and 'withBootstrap' will not be run until this returns. If you need
+    -- to supply the bootstrap interface later, use 'newPromiseClient'.
 
     , withBootstrap :: Maybe (Supervisor -> Client -> IO ())
     -- ^ An action to perform with access to the remote vat's bootstrap
