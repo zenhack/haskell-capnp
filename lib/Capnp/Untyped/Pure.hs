@@ -122,7 +122,7 @@ instance Decerialize Struct where
       where
         decerializeWords =
             let nwords = fromIntegral $ U.structWordCount struct in
-            V.generateM nwords (\i -> U.getData i struct)
+            V.generateM nwords (`U.getData` struct)
         decerializePtrs =
             let nptrs = fromIntegral $ U.structPtrCount struct in
             V.generateM nptrs (\i -> U.getPtr i struct >>= decerialize)
