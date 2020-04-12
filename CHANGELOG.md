@@ -8,7 +8,7 @@ This release brings some improvements to the RPC API:
 * Previously, there were a number of functions that had two variants:
   * `foo`, which ran in `IO`
   * `fooSTM`, which ran in `STM`.
-  
+
   Now there is just one variant, `foo`, which is polymorphic over
   `MonadSTM`, defined by the `monad-stm` package. There are instances of
   this class for `IO`, `STM`, and any monad transformer applied to an
