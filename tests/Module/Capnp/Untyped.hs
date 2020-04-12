@@ -4,6 +4,13 @@
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+-- The tests have a number of cases where we do stuff like:
+--
+-- let 4 = ...
+--
+-- Letting pattern-match failure fail the test. GHC warns about this,
+-- let's shut off that warning:
+{-# OPTIONS_GHC -Wno-unused-pattern-binds #-}
 module Module.Capnp.Untyped (untypedTests) where
 
 import Prelude hiding (length)
@@ -61,20 +68,21 @@ readTests = describe "read tests" $
                     )))|]
         endQuota <- execLimitT 128 $ do
             root <- rootPtr msg
-            let aircraftWords = dataSection root
             -- Aircraft just has the union tag, nothing else in it's data
             -- section.
-            let 1 = length aircraftWords
-            3 <- index 0 aircraftWords -- tag for F16
-            let 1 = length (ptrSection root)
+            let 1 = structWordCount root
+            3 <- getData 0 root -- tag for F16
+            let 1 = structPtrCount root
             Just (PtrStruct f16) <- getPtr 0 root
-            let 0 = length (dataSection f16)
-            let 1 = length (ptrSection f16)
+            let 0 = structWordCount f16
+            let 0 = structByteCount f16
+            let 1 = structPtrCount f16
             Just (PtrStruct base) <- getPtr 0 f16
-            let 4 = length (dataSection base) -- Except canFly, each field is 1 word, and
-                                              -- canFly is aligned such that it ends up
-                                              -- consuming a whole word.
-            let 2 = length (ptrSection base) -- name, homes
+            let 4 = structWordCount base -- Except canFly, each field is 1 word, and
+                                         -- canFly is aligned such that it ends up
+                                         -- consuming a whole word.
+            let 32 = structByteCount base -- 32 = 4 * 8
+            let 2 = structPtrCount base -- name, homes
 
             -- Walk the data section:
             7 <- getData 0 base -- rating
@@ -114,14 +122,14 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         { testIn = "(year = 2018, month = 6, day = 20)\n"
         , testType = "Zdate"
         , testOut = "(year = 0, month = 0, day = 0)\n"
-        , testMod = setIndex 0 0 . dataSection
+        , testMod = setData 0 0
         }
     , ModTest
         { testIn = "(text = \"Hello, World!\")\n"
         , testType = "Z"
         , testOut = "(text = \"hEllo, world!\")\n"
         , testMod = \struct -> do
-            Just (PtrList (List8 list)) <- index 0 (ptrSection struct)
+            Just (PtrList (List8 list)) <- getPtr 0 struct
             setIndex (fromIntegral (fromEnum 'h')) 0 list
             setIndex (fromIntegral (fromEnum 'E')) 1 list
             setIndex (fromIntegral (fromEnum 'w')) 7 list
@@ -131,7 +139,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         , testType = "Z"
         , testOut = "( boolvec = [false, true, true, false] )\n"
         , testMod = \struct -> do
-            Just (PtrList (List1 list)) <- index 0 (ptrSection struct)
+            Just (PtrList (List1 list)) <- getPtr 0 struct
             setIndex False 0 list
             setIndex True 2 list
             setIndex False 3 list
@@ -140,7 +148,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         { testIn = "(f64 = 2.0)\n"
         , testType = "Z"
         , testOut = "(f64 = 7.2)\n"
-        , testMod = setIndex (doubleToWord 7.2) 1 . dataSection
+        , testMod = setData (doubleToWord 7.2) 1
         }
     , ModTest
         { testIn = unlines
@@ -155,10 +163,10 @@ modifyTests = describe "modification tests" $ traverse_ testCase
             , "  wordlist = [\"apples\", \"Hello, World!\"] )"
             ]
         , testMod = \struct -> do
-            Just (PtrList (ListPtr list)) <- index 1 (ptrSection struct)
-            helloWorld <- index 0 (ptrSection struct)
+            Just (PtrList (ListPtr list)) <- getPtr 1 struct
+            helloWorld <- getPtr 0 struct
             oranges <- index 1 list
-            setIndex oranges 0 (ptrSection struct)
+            setPtr oranges 0 struct
             setIndex helloWorld 1 list
         }
     , ModTest
@@ -213,7 +221,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         , testOut = "( aWithDefault = (num = 6400),\n  a = (num = 65, b = (num = 90000)) )\n"
 
         , testMod = \struct -> do
-            when (length (ptrSection struct) /= 2) $
+            when (structPtrCount struct /= 2) $
                 error "struct's pointer section is unexpedly small"
 
             let msg = message struct

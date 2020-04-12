@@ -1,5 +1,13 @@
 # 0.5.0.0
 
+## Serialization
+
+In `Capnp.Untyped`, The `dataSection` and `ptrSection` APIs have been
+removed. `structDataSize` has been replaced with `structWordCount`,
+and new functions `structByteCount and `structPtrCount` have been added.
+
+## RPC
+
 This release brings some improvements to the RPC API:
 
 * Add `newPromiseClient` for creating a promise-based client that can

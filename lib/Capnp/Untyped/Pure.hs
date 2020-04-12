@@ -117,8 +117,15 @@ instance Decerialize Struct where
     type Cerial msg Struct = U.Struct msg
 
     decerialize struct = Struct
-        <$> (Slice <$> decerializeListOfWord (U.dataSection struct))
-        <*> (Slice <$> decerializeListOf     (U.ptrSection struct))
+        <$> (Slice <$> decerializeWords)
+        <*> (Slice <$> decerializePtrs)
+      where
+        decerializeWords =
+            let nwords = fromIntegral $ U.structWordCount struct in
+            V.generateM nwords (\i -> U.getData i struct)
+        decerializePtrs =
+            let nptrs = fromIntegral $ U.structPtrCount struct in
+            V.generateM nptrs (\i -> U.getPtr i struct >>= decerialize)
 
 instance FromStruct M.ConstMsg Struct where
     fromStruct = decerialize

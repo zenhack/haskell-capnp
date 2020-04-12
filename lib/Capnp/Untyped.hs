@@ -21,7 +21,12 @@ type (see "Capnp.Message"), used as the underlying storage.
 -}
 module Capnp.Untyped
     ( Ptr(..), List(..), Struct, ListOf, Cap
-    , dataSection, ptrSection
+    , structByteCount
+    , structWordCount
+    , structPtrCount
+    , structListByteCount
+    , structListWordCount
+    , structListPtrCount
     , getData, getPtr
     , setData, setPtr
     , copyStruct
@@ -640,8 +645,8 @@ copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
 copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
     destStruct <- allocStruct
             dest
-            (fromIntegral $ length (dataSection src))
-            (fromIntegral $ length (ptrSection src))
+            (fromIntegral $ structWordCount src)
+            (fromIntegral $ structPtrCount src)
     copyStruct destStruct src
     pure destStruct
 
@@ -657,7 +662,7 @@ copyList dest src = case src of
     ListStruct src -> ListStruct <$> do
         destList <- allocCompositeList
             dest
-            (structListDataCount src)
+            (fromIntegral $ structListWordCount src)
             (structListPtrCount  src)
             (length src)
         copyListOf destList src
@@ -782,18 +787,26 @@ ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
         (fromIntegral ptrSz)
 
 -- | Get the size (in words) of a struct's data section.
-structDataCount :: Struct msg -> Word16
-structDataCount = fromIntegral . length . dataSection
+structWordCount :: Struct msg -> WordCount
+structWordCount (Struct _msg _addr dataSz _ptrSz) = fromIntegral dataSz
+
+-- | Get the size (in bytes) of a struct's data section.
+structByteCount :: Struct msg -> ByteCount
+structByteCount = wordsToBytes . structWordCount
 
 -- | Get the size of a struct's pointer section.
 structPtrCount  :: Struct msg -> Word16
-structPtrCount  = fromIntegral . length . ptrSection
+structPtrCount (Struct _msg _addr _dataSz ptrSz) = ptrSz
 
--- | Get the size (in words) of the data sections in a composite list.
-structListDataCount :: ListOf msg (Struct msg) -> Word16
-structListDataCount (ListOfStruct s _) = structDataCount s
+-- | Get the size (in words) of the data sections in a struct list.
+structListWordCount :: ListOf msg (Struct msg) -> WordCount
+structListWordCount (ListOfStruct s _) = structWordCount s
 
--- | Get the size of the pointer sections in a composite list.
+-- | Get the size (in words) of the data sections in a struct list.
+structListByteCount :: ListOf msg (Struct msg) -> ByteCount
+structListByteCount (ListOfStruct s _) = structByteCount s
+
+-- | Get the size of the pointer sections in a struct list.
 structListPtrCount  :: ListOf msg (Struct msg) -> Word16
 structListPtrCount  (ListOfStruct s _) = structPtrCount s
 
@@ -801,14 +814,14 @@ structListPtrCount  (ListOfStruct s _) = structPtrCount s
 -- returning 0 if it is absent.
 getData :: ReadCtx m msg => Int -> Struct msg -> m Word64
 getData i struct
-    | length (dataSection struct) <= i = 0 <$ invoice 1
+    | fromIntegral (structWordCount struct) <= i = 0 <$ invoice 1
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
 getPtr :: ReadCtx m msg => Int -> Struct msg -> m (Maybe (Ptr msg))
 getPtr i struct
-    | length (ptrSection struct) <= i = Nothing <$ invoice 1
+    | fromIntegral (structPtrCount struct) <= i = Nothing <$ invoice 1
     | otherwise = index i (ptrSection struct)
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
