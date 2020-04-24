@@ -11,6 +11,7 @@ import Module.Capnp.Rpc                   (rpcTests)
 import Module.Capnp.Untyped               (untypedTests)
 import Module.Capnp.Untyped.Pure          (pureUntypedTests)
 import Regression                         (regressionTests)
+import Rpc.Unwrap                         (unwrapTests)
 import SchemaQuickCheck                   (schemaCGRQuickCheck)
 import WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 
@@ -33,3 +34,4 @@ main = hspec $ parallel $ do
         describe "property tests for schema" schemaCGRQuickCheck
     describe "Regression tests" regressionTests
     CalculatorExample.tests
+    describe "Tests for client unwrapping" unwrapTests

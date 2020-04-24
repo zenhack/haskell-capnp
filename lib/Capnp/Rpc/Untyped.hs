@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE RecursiveDo                #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
@@ -34,6 +35,9 @@ module Capnp.Rpc.Untyped
     , export
     , clientMethodHandler
 
+    -- * Unwrapping local clients
+    , unwrapServer
+
     -- * Errors
     , RpcError(..)
     , R.Exception(..)
@@ -57,6 +61,7 @@ import Data.Hashable            (Hashable, hash, hashWithSalt)
 import Data.Maybe               (catMaybes)
 import Data.String              (fromString)
 import Data.Text                (Text)
+import Data.Typeable            (Typeable)
 import GHC.Generics             (Generic)
 import Supervisors              (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.StableName    (StableName, hashStableName, makeStableName)
@@ -567,6 +572,7 @@ data Client'
         -- in a reference counted cell, whose finalizer stops the server.
         , finalizerKey :: Fin.Cell ()
         -- ^ Finalizer key; when this is collected, qCall will be released.
+        , unwrapper    :: forall a. Typeable a => Maybe a
         }
     -- | A client which will resolve to some other capability at
     -- some point.
@@ -872,6 +878,21 @@ newPromiseClient = liftSTM $ do
     pure (fromClient p, f)
 
 
+-- | Attempt to unwrap a client, to get at an underlying value from the
+-- server. Returns 'Nothing' on failure.
+--
+-- This shells out to the underlying server's implementation of
+-- 'Server.unwrap'. It will fail with 'Nothing' if any of these are true:
+--
+-- * The client is a promise.
+-- * The client points to an object in a remote vat.
+-- * The underlying Server's 'unwrap' method returns 'Nothing' for type 'a'.
+unwrapServer :: (IsClient c, Typeable a) => c -> Maybe a
+unwrapServer c = case toClient c of
+    Client (Just LocalClient { unwrapper }) -> unwrapper
+    _                                       -> Nothing
+
+
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
 -- the server will be stopped (if it is still running).
@@ -885,6 +906,7 @@ export sup ops = liftSTM $ do
             { qCall
             , exportMap
             , finalizerKey
+            , unwrapper = Server.handleCast ops
             }
     superviseSTM sup $ do
         Fin.addFinalizer finalizerKey $ atomically $ Rc.release qCall

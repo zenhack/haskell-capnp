@@ -13,7 +13,7 @@ module Capnp.Rpc
     , (?)
 
     -- * Handling method calls
-    , Server
+    , Server(..)
     , MethodHandler
     , pureHandler
     , rawHandler
@@ -37,6 +37,8 @@ module Capnp.Rpc
     , Client
     , IsClient(..)
     , newPromiseClient
+    -- ** Reflection
+    , Untyped.unwrapServer
 
     -- * Supervisors
     , module Supervisors
@@ -62,3 +64,5 @@ import Capnp.Rpc.Transport
     (Transport(..), handleTransport, socketTransport, tracingTransport)
 import Capnp.Rpc.Untyped
     (Client, ConnConfig(..), IsClient(..), handleConn, newPromiseClient)
+
+import qualified Capnp.Rpc.Untyped as Untyped

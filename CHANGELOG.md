@@ -1,8 +1,15 @@
 # 0.6.0.0 (Upcoming)
 
-* There is now a `Server` class, which all RPC servers must implement,
-  which has an optional `shutdown` method which will be called when all
-  references to the server have been dropped.
+## RPC
+
+* There is now a `Server` class, which all RPC servers must implement.
+  All of its methods have default implementations, so adding an instance
+  to existing servers is straightforward.
+* It is now possible to "unwrap" clients that point to a local server
+  using the new 'Capnp.Rpc.unwrapServer' function, if the server
+  implements support for it with the new 'Server' type class.
+* Servers can now specify a hook to be run when the server is shut down,
+  using the server class's 'shutdown' method.
 
 # 0.5.0.0
 

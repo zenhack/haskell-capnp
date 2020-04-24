@@ -270,6 +270,7 @@ test-suite tests
       , WalkSchemaCodeGenRequest
       , SchemaQuickCheck
       , CalculatorExample
+      , Rpc.Unwrap
     build-depends:
         capnp
       , network
