@@ -22,6 +22,7 @@ import System.Timeout           (timeout)
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
 import qualified Network.Socket          as Socket
+import qualified Supervisors
 
 import Capnp
     ( createPure
@@ -83,10 +84,32 @@ instance E.Echo'server_ IO TestEchoServer where
 
 -- | Bump a counter n times, returning a list of the results.
 bumpN :: CallSequence -> Int -> IO [CallSequence'getNumber'results]
-bumpN ctr n = replicateM n (callSequence'getNumber ctr ? def) >>= traverse wait
+bumpN ctr n = bumpNPromise ctr n >>= traverse wait
+
+-- | Like 'bumpN', but doesn't wait for the results -- returns a list of promises.
+bumpNPromise :: CallSequence -> Int -> IO [Promise CallSequence'getNumber'results]
+bumpNPromise ctr n = replicateM n (callSequence'getNumber ctr ? def)
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
+    describe "newPromiseClient" $ do
+        it "Should preserve E-order" $ do
+            Supervisors.withSupervisor $ \sup -> do
+                (pc, f) <- newPromiseClient
+                firsts <- bumpNPromise pc 2
+                atomically (newTestCtr 0)
+                    >>= export_CallSequence sup
+                    >>= fulfill f
+                nexts <- bumpN pc 2
+                firstsResolved <- traverse wait firsts
+                firstsResolved `shouldBe`
+                    [ def { n = 1 }
+                    , def { n = 2 }
+                    ]
+                nexts `shouldBe`
+                    [ def { n = 3 }
+                    , def { n = 4 }
+                    ]
     it "Should propogate server-side exceptions to client method calls" $ runVatPair
         (`export_CallSequence` ExnCtrServer)
         (\_sup -> expectException
@@ -126,8 +149,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
     it "A counter should maintain state" $ runVatPair
         (\sup -> newTestCtr 0 >>= export_CallSequence sup)
         (\_sup ctr -> do
-            results <- replicateM 4 (callSequence'getNumber ctr ? def)
-                >>= traverse wait
+            results <- bumpN ctr 4
             liftIO $ results `shouldBe`
                 [ def { n = 1 }
                 , def { n = 2 }

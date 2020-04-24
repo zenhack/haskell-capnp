@@ -868,8 +868,8 @@ newPromiseClient = liftSTM $ do
     pState <- newTVar Pending { tmpDest }
     exportMap <- ExportMap <$> M.new
     f <- newCallback $ \case
-        Left e -> writeTVar pState (Error e)
-        Right v -> writeTVar pState Ready { target = toClient v }
+        Left e -> resolveClientExn tmpDest (writeTVar pState) e
+        Right v -> resolveClientClient tmpDest (writeTVar pState) (toClient v)
     let p = Client $ Just $ PromiseClient
             { pState
             , exportMap
