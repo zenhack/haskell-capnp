@@ -1,11 +1,12 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE LambdaCase             #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE NamedFieldPuns         #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE RecordWildCards        #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeFamilies           #-}
 {-|
 Module: Capnp.Rpc.Server
 Description: handlers for incoming method calls.
@@ -211,10 +212,21 @@ methodUnimplemented :: MonadIO m => MethodHandler m p r
 methodUnimplemented = methodThrow eMethodUnimplemented
 
 -- | Base class for things that can act as capnproto servers.
-class Monad m => Server m a where
+class Monad m => Server m a | a -> m where
     -- | Called when the last live reference to a server is dropped.
     shutdown :: a -> m ()
     shutdown _ = pure ()
+
+    -- | Try to extract a value of a given type. The default implementation
+    -- always fails (returns 'Nothing'). If an instance chooses to implement
+    -- this, it will be possible to use "reflection" on clients that point
+    -- at local servers to dynamically unwrap the server value. A typical
+    -- implementation will just call Typeable's @cast@ method, but this
+    -- needn't be the case -- a server may wish to allow local peers to
+    -- unwrap some value that is not exactly the data the server has access
+    -- to.
+    unwrap :: Typeable b => a -> Maybe b
+    unwrap _ = Nothing
 
 -- | The operations necessary to receive and handle method calls, i.e.
 -- to implement an object. It is parametrized over the monadic context
