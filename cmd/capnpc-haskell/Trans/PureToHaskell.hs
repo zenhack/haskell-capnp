@@ -495,7 +495,10 @@ ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
                 [ EApp (egName ["Rpc"] "export")
                     [ euName "sup_"
                     , ERecord (egName ["Server"] "ServerOps")
-                        [ ( "handleStop"
+                        [ ( "handleCast"
+                          , eStd_ "Nothing" -- TODO: use 'Typeable.cast server_'
+                          )
+                        , ( "handleStop"
                           , EApp (egName ["Server"] "shutdown") [ELName "server_"]
                           )
                         , ( "handleCall"

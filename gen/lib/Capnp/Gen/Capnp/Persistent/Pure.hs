@@ -54,7 +54,8 @@ class ((MonadIO.MonadIO m)
     persistent'save _ = Server.methodUnimplemented
 export_Persistent :: ((Persistent'server_ Std_.IO a)
                      ,(STM.MonadSTM m)) => Supervisors.Supervisor -> a -> (m Persistent)
-export_Persistent sup_ server_ = (STM.liftSTM (Persistent <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Server.shutdown server_)
+export_Persistent sup_ server_ = (STM.liftSTM (Persistent <$> (Rpc.export sup_ Server.ServerOps{handleCast = Std_.Nothing
+                                                                                               ,handleStop = (Server.shutdown server_)
                                                                                                ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
                                                                                                    14468694717054801553 ->
                                                                                                        case methodId_ of
@@ -167,7 +168,8 @@ class ((MonadIO.MonadIO m)
     realmGateway'export _ = Server.methodUnimplemented
 export_RealmGateway :: ((RealmGateway'server_ Std_.IO a)
                        ,(STM.MonadSTM m)) => Supervisors.Supervisor -> a -> (m RealmGateway)
-export_RealmGateway sup_ server_ = (STM.liftSTM (RealmGateway <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Server.shutdown server_)
+export_RealmGateway sup_ server_ = (STM.liftSTM (RealmGateway <$> (Rpc.export sup_ Server.ServerOps{handleCast = Std_.Nothing
+                                                                                                   ,handleStop = (Server.shutdown server_)
                                                                                                    ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
                                                                                                        9583422979879616212 ->
                                                                                                            case methodId_ of

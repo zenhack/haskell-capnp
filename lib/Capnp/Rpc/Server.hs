@@ -2,6 +2,7 @@
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -45,6 +46,7 @@ import Data.Word
 import Control.Exception.Safe  (MonadCatch, finally, try)
 import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
+import Data.Typeable           (Typeable)
 
 import Capnp.Classes
     ( Cerialize
@@ -227,6 +229,8 @@ data ServerOps m = ServerOps
     , handleStop :: m ()
     -- ^ Handle shutting-down the receiver; this is called when the last
     -- reference to the capability is dropped.
+    , handleCast :: forall a. Typeable a => Maybe a
+    -- ^ used to unwrap the server when reflecting on a local client.
     }
 
 -- | A 'CallInfo' contains information about a method call.
