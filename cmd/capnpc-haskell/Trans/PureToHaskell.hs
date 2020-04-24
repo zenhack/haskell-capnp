@@ -48,6 +48,7 @@ rpcImports =
     , ImportAs { importAs = "Supervisors", parts = reExp ["Supervisors"] }
     ]
 
+reExp :: [Name.UnQ] -> [Name.UnQ]
 reExp parts = ["Capnp", "GenHelpers", "ReExports"] ++ parts
 
 -- | Whether the serialized and unserialized forms of this type
