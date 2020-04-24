@@ -2,6 +2,8 @@
 
 ## RPC
 
+* Fix a serious bug in `newPromiseClient`, resulting in dropped calls
+  made on the promise before it is resolved.
 * There is now a `Server` class, which all RPC servers must implement.
   All of its methods have default implementations, so adding an instance
   to existing servers is straightforward.
