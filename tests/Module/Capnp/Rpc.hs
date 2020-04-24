@@ -260,7 +260,7 @@ instance CallSequence'server_ IO NonRpcExnServer where
 -- Tests for unusual patterns of messages .
 --
 -- Some of these will never come up when talking to a correct implementation of
--- capnproto, and others just won't come up when talking to Haskell
+-- capnproto, and others just won't come up when talking to the Haskell
 -- implementation. Accordingly, these tests start a vat in one thread and
 -- directly manipulate the transport in the other.
 -------------------------------------------------------------------------------
