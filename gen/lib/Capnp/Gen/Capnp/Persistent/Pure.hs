@@ -47,13 +47,14 @@ newtype Persistent
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-class ((MonadIO.MonadIO m)) => (Persistent'server_ m cap) where
+class ((MonadIO.MonadIO m)
+      ,(Server.Server m cap)) => (Persistent'server_ m cap) where
     {-# MINIMAL persistent'save #-}
     persistent'save :: cap -> (Server.MethodHandler m Persistent'SaveParams Persistent'SaveResults)
     persistent'save _ = Server.methodUnimplemented
 export_Persistent :: ((Persistent'server_ Std_.IO a)
                      ,(STM.MonadSTM m)) => Supervisors.Supervisor -> a -> (m Persistent)
-export_Persistent sup_ server_ = (STM.liftSTM (Persistent <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Std_.pure ())
+export_Persistent sup_ server_ = (STM.liftSTM (Persistent <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Server.shutdown server_)
                                                                                                ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
                                                                                                    14468694717054801553 ->
                                                                                                        case methodId_ of
@@ -79,6 +80,7 @@ instance (Classes.Decerialize Persistent) where
             (Persistent <$> (Untyped.getClient cap))
 instance (Classes.Cerialize Persistent) where
     cerialize msg (Persistent client) = (Capnp.Gen.ById.Xb8630836983feed7.Persistent'newtype_ <$> (Std_.Just <$> (Untyped.appendCap msg client)))
+instance (Server.Server Std_.IO Persistent)
 instance (Persistent'server_ Std_.IO Persistent) where
     persistent'save (Persistent client) = (Rpc.clientMethodHandler 14468694717054801553 0 client)
 data Persistent'SaveParams 
@@ -156,7 +158,8 @@ newtype RealmGateway
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-class ((MonadIO.MonadIO m)) => (RealmGateway'server_ m cap) where
+class ((MonadIO.MonadIO m)
+      ,(Server.Server m cap)) => (RealmGateway'server_ m cap) where
     {-# MINIMAL realmGateway'import_,realmGateway'export #-}
     realmGateway'import_ :: cap -> (Server.MethodHandler m RealmGateway'import'params Persistent'SaveResults)
     realmGateway'import_ _ = Server.methodUnimplemented
@@ -164,7 +167,7 @@ class ((MonadIO.MonadIO m)) => (RealmGateway'server_ m cap) where
     realmGateway'export _ = Server.methodUnimplemented
 export_RealmGateway :: ((RealmGateway'server_ Std_.IO a)
                        ,(STM.MonadSTM m)) => Supervisors.Supervisor -> a -> (m RealmGateway)
-export_RealmGateway sup_ server_ = (STM.liftSTM (RealmGateway <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Std_.pure ())
+export_RealmGateway sup_ server_ = (STM.liftSTM (RealmGateway <$> (Rpc.export sup_ Server.ServerOps{handleStop = (Server.shutdown server_)
                                                                                                    ,handleCall = (\interfaceId_ methodId_ -> case interfaceId_ of
                                                                                                        9583422979879616212 ->
                                                                                                            case methodId_ of
@@ -192,6 +195,7 @@ instance (Classes.Decerialize RealmGateway) where
             (RealmGateway <$> (Untyped.getClient cap))
 instance (Classes.Cerialize RealmGateway) where
     cerialize msg (RealmGateway client) = (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway'newtype_ <$> (Std_.Just <$> (Untyped.appendCap msg client)))
+instance (Server.Server Std_.IO RealmGateway)
 instance (RealmGateway'server_ Std_.IO RealmGateway) where
     realmGateway'import_ (RealmGateway client) = (Rpc.clientMethodHandler 9583422979879616212 0 client)
     realmGateway'export (RealmGateway client) = (Rpc.clientMethodHandler 9583422979879616212 1 client)

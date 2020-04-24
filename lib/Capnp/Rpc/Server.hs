@@ -1,9 +1,10 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE NamedFieldPuns      #-}
-{-# LANGUAGE RecordWildCards     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-|
 Module: Capnp.Rpc.Server
 Description: handlers for incoming method calls.
@@ -13,7 +14,8 @@ a particular capability (The capnproto rpc protocol itself has no concept of
 clients and servers).
 -}
 module Capnp.Rpc.Server
-    ( ServerOps(..)
+    ( Server(..)
+    , ServerOps(..)
     , CallInfo(..)
     , runServer
 
@@ -205,6 +207,12 @@ methodThrow exn = MethodHandler
 -- | A 'MethodHandler' which always throws an @unimplemented@ exception.
 methodUnimplemented :: MonadIO m => MethodHandler m p r
 methodUnimplemented = methodThrow eMethodUnimplemented
+
+-- | Base class for things that can act as capnproto servers.
+class Monad m => Server m a where
+    -- | Called when the last live reference to a server is dropped.
+    shutdown :: a -> m ()
+    shutdown _ = pure ()
 
 -- | The operations necessary to receive and handle method calls, i.e.
 -- to implement an object. It is parametrized over the monadic context

@@ -6,12 +6,19 @@ import Network.Simple.TCP (serve)
 
 import Capnp     (def, defaultLimit)
 import Capnp.Rpc
-    (ConnConfig(..), handleConn, pureHandler, socketTransport, toClient)
+    ( ConnConfig(..)
+    , Server
+    , handleConn
+    , pureHandler
+    , socketTransport
+    , toClient
+    )
 
 import Capnp.Gen.Echo.Pure
 
 data MyEchoServer = MyEchoServer
 
+instance Server IO MyEchoServer
 instance Echo'server_ IO MyEchoServer where
     echo'echo = pureHandler $ \MyEchoServer params ->
         pure def { reply = query params }

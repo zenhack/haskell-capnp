@@ -19,6 +19,7 @@ import qualified Data.Vector as V
 import Capnp     (def, defaultLimit)
 import Capnp.Rpc
     ( ConnConfig(..)
+    , Server
     , handleConn
     , pureHandler
     , socketTransport
@@ -32,11 +33,15 @@ import Capnp.Gen.Calculator.Pure
 
 newtype LitValue = LitValue Double
 
+instance Server IO LitValue
+
 instance Value'server_ IO LitValue where
     value'read = pureHandler $ \(LitValue val) _ ->
         pure Value'read'results { value = val }
 
 newtype OpFunc = OpFunc (Double -> Double -> Double)
+
+instance Server IO OpFunc
 
 instance Function'server_ IO OpFunc where
     function'call = pureHandler $ \(OpFunc op) Function'call'params{params} -> do
@@ -49,6 +54,8 @@ data ExprFunc = ExprFunc
     { paramCount :: !Int32
     , body       :: Expression
     }
+
+instance Server IO ExprFunc
 
 instance Function'server_ IO ExprFunc where
     function'call =
@@ -64,6 +71,8 @@ data MyCalc = MyCalc
     , divide   :: Function
     , sup      :: Supervisor
     }
+
+instance Server IO MyCalc
 
 instance Calculator'server_ IO MyCalc where
     calculator'evaluate =

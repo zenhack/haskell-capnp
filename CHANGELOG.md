@@ -1,3 +1,9 @@
+# 0.6.0.0 (Upcoming)
+
+* There is now a `Server` class, which all RPC servers must implement,
+  which has an optional `shutdown` method which will be called when all
+  references to the server have been dropped.
+
 # 0.5.0.0
 
 ## Serialization

@@ -71,6 +71,7 @@ echoTests = describe "Echo server & client" $
 
 data TestEchoServer = TestEchoServer
 
+instance Server IO TestEchoServer
 instance E.Echo'server_ IO TestEchoServer where
     echo'echo = pureHandler $ \_ params -> pure def { E.reply = E.query params }
 
@@ -191,6 +192,7 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
 data TestCtrAcceptor = TestCtrAcceptor
 
+instance Server IO TestCtrAcceptor
 instance CounterAcceptor'server_ IO TestCtrAcceptor where
     counterAcceptor'accept =
         pureHandler $ \_ CounterAcceptor'accept'params{counter} -> do
@@ -210,6 +212,7 @@ instance CounterAcceptor'server_ IO TestCtrAcceptor where
 
 newtype TestCtrFactory = TestCtrFactory { sup :: Supervisor }
 
+instance Server IO TestCtrFactory
 instance CounterFactory'server_ IO TestCtrFactory where
     counterFactory'newCounter =
         pureHandler $ \TestCtrFactory{sup} CounterFactory'newCounter'params{start} -> do
@@ -221,6 +224,7 @@ newTestCtr n = TestCtrServer <$> newTVar n
 
 newtype TestCtrServer = TestCtrServer (TVar Word32)
 
+instance Server IO TestCtrServer
 instance CallSequence'server_ IO TestCtrServer  where
     callSequence'getNumber = pureHandler $ \(TestCtrServer tvar) _ -> do
         ret <- liftIO $ atomically $ do
@@ -231,6 +235,7 @@ instance CallSequence'server_ IO TestCtrServer  where
 -- a 'CallSequence' which always throws an exception.
 data ExnCtrServer = ExnCtrServer
 
+instance Server IO ExnCtrServer
 instance CallSequence'server_ IO ExnCtrServer where
     callSequence'getNumber = pureHandler $ \_ _ ->
         throwM def
@@ -241,11 +246,13 @@ instance CallSequence'server_ IO ExnCtrServer where
 -- a 'CallSequence' which doesn't implement its methods.
 data NoImplServer = NoImplServer
 
+instance Server IO NoImplServer
 instance CallSequence'server_ IO NoImplServer -- TODO: can we silence the warning somehow?
 
 -- Server that throws some non-rpc exception.
 data NonRpcExnServer = NonRpcExnServer
 
+instance Server IO NonRpcExnServer
 instance CallSequence'server_ IO NonRpcExnServer where
     callSequence'getNumber = pureHandler $ \_ _ -> error "OOPS"
 

@@ -13,6 +13,7 @@ module Capnp.Rpc
     , (?)
 
     -- * Handling method calls
+    , Server
     , MethodHandler
     , pureHandler
     , rawHandler
@@ -50,6 +51,7 @@ import Capnp.Rpc.Invoke    ((?))
 import Capnp.Rpc.Promise
 import Capnp.Rpc.Server
     ( MethodHandler
+    , Server(..)
     , methodThrow
     , methodUnimplemented
     , pureHandler

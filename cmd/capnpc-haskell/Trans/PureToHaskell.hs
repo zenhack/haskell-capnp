@@ -426,13 +426,20 @@ ifaceClassDecl :: Word64 -> P.Interface -> Decl
 ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers } =
     DcClass
         { ctx =
+            let superConstraints =
+                    -- Add class constraints for superclasses:
+                    [ let superClass = pureTName thisMod fileId (Name.mkSub local "server_")
+                      in TApp superClass [tuName "m", tuName "cap"]
+                    | P.IFace{name=Name.CapnpQ{local, fileId}} <- supers
+                    ]
+            in
             TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]
-            :
-            -- Add class constraints for superclasses:
-            [ let superClass = pureTName thisMod fileId (Name.mkSub local "server_")
-              in TApp superClass [tuName "m", tuName "cap"]
-            | P.IFace{name=Name.CapnpQ{local, fileId}} <- supers
-            ]
+            : case superConstraints of
+                -- If this interface doesn't have any superclasses, then we need to
+                -- specify a constraint for the 'Server' class. Otherwise, it's
+                -- implied by the supers.
+                [] -> [ TApp (tgName ["Server"] "Server") [tuName "m", tuName "cap"] ]
+                _ -> superConstraints
         , name = Name.mkSub name "server_"
         , params = ["m", "cap"]
         , decls =
@@ -489,8 +496,8 @@ ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
                     [ euName "sup_"
                     , ERecord (egName ["Server"] "ServerOps")
                         [ ( "handleStop"
-                          , ePureUnit
-                          ) -- TODO
+                          , EApp (egName ["Server"] "shutdown") [ELName "server_"]
+                          )
                         , ( "handleCall"
                           , ELambda [PVar "interfaceId_", PVar "methodId_"] $
                                 ECase (euName "interfaceId_") $
@@ -596,7 +603,12 @@ pureTName thisMod targetMod local
 -- and those of its ancestors.
 ifaceServerInstances :: Word64 -> P.Interface -> [Decl]
 ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, ancestors } =
-    map go (iface:ancestors)
+    DcInstance
+        { ctx = []
+        , typ = TApp (tgName ["Server"] "Server") [tStd_ "IO", TLName name]
+        , defs = []
+        }
+    : map go (iface:ancestors)
   where
     go P.IFace { name=Name.CapnpQ{local, fileId}, interfaceId, methods } =
         let className = Name.mkSub local "server_"
