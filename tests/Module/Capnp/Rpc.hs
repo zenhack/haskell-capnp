@@ -92,8 +92,8 @@ bumpNPromise ctr n = replicateM n (callSequence'getNumber ctr ? def)
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
-    describe "newPromiseClient" $ do
-        it "Should preserve E-order" $ do
+    describe "newPromiseClient" $
+        it "Should preserve E-order" $
             Supervisors.withSupervisor $ \sup -> do
                 (pc, f) <- newPromiseClient
                 firsts <- bumpNPromise pc 2
