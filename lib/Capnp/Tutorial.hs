@@ -327,7 +327,7 @@ import Capnp.Classes (FromStruct)
 --   name is what the name of the struct type would be).
 -- * Fields of type `AnyPointer` map to the types defined in
 --   @Capnp.Untyped.Pure@.
--- * Interfaces generated associated type classes and client types; see
+-- * Interfaces generate associated type classes and client types; see
 --   the section on RPC.
 
 -- $lowlevel
