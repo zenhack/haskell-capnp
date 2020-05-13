@@ -13,6 +13,9 @@ module Capnp.Tutorial (
     -- * Overview
     -- $overview
 
+    -- * Setup
+    -- $setup
+
     -- * Serialization
     -- $serialization
 
@@ -51,6 +54,19 @@ import Capnp.Classes (FromStruct)
 -- $overview
 --
 -- This module provides an overview of the capnp library.
+
+-- $setup
+--
+-- In order to generate code from schema files, you will first need to make
+-- sure the @capnp@ and @capnpc-haskell@ binaries are in your @$PATH@. The
+-- former ships with the capnproto reference implementation; see
+-- <https://capnproto.org/install.html>. The latter is included with this
+-- library; to install it you can run the command:
+--
+-- > cabal v2-install capnp --installdir=$DIR
+--
+-- which will compile the package and create the @capnpc-haskell@ executable
+-- at @$DIR/capnpc-haskell@.
 
 -- $serialization
 --
@@ -121,7 +137,8 @@ import Capnp.Classes (FromStruct)
 -- > }
 --
 -- Once the @capnp@ and @capnpc-haskell@ executables are installed and in
--- your @$PATH@, you can generate code for this schema by running:
+-- your @$PATH@ (see the Setup section above), you can generate code for
+-- this schema by running:
 --
 -- > capnp compile -ohaskell addressbook.capnp
 --
