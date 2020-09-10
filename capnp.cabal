@@ -58,7 +58,7 @@ source-repository head
 
 common shared-opts
   build-depends:
-        base                              >= 4.11  && < 4.14
+        base                              >= 4.11  && < 5
       , bytes                             >= 0.15.4 && <0.18
       , bytestring                        ^>= 0.10
       , containers                        >= 0.5.9 && <0.7
