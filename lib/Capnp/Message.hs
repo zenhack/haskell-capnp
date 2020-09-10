@@ -312,7 +312,7 @@ readMessage read32 readSegment = do
     let numSegs = numSegs' + 1
     invoice (fromIntegral numSegs `div` 2)
     segSizes <- V.replicateM (fromIntegral numSegs) read32
-    when (numSegs `mod` 2 == 0) $ void read32
+    when (even numSegs) $ void read32
     V.mapM_ (invoice . fromIntegral) segSizes
     constSegs <- V.mapM (readSegment . fromIntegral) segSizes
     pure ConstMsg{constSegs, constCaps = V.empty}
@@ -324,8 +324,8 @@ writeMessage :: MonadThrow m => ConstMsg -> (Word32 -> m ()) -> (Segment ConstMs
 writeMessage ConstMsg{constSegs} write32 writeSegment = do
     let numSegs = V.length constSegs
     write32 (fromIntegral numSegs - 1)
-    V.forM_ constSegs $ \seg -> write32 =<< fromIntegral <$> numWords seg
-    when (numSegs `mod` 2 == 0) $ write32 0
+    V.forM_ constSegs $ \seg -> write32 . fromIntegral =<< numWords seg
+    when (even numSegs) $ write32 0
     V.forM_ constSegs writeSegment
 
 
