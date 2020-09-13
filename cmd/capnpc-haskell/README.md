@@ -50,7 +50,7 @@ The flow is as follows:
     impedence mismatch. The hierarchical structure is recoverable, as
     the names themselves encode the structure; see `IR.Name`.
   * Unions are now represented more cleanly as sums, rather than being
-    mixied in with other fields.
+    mixed in with other fields.
   * Interfaces now contain a full list of their ancestors, not just
     immediate superclasses. This is useful when genrating instance
     declarations later on.
@@ -72,7 +72,7 @@ The flow is as follows:
   library for a couple reasons:
   * We want to eventually insert comments from the schema into the
     code as Haddock comments, and the libraries I(zenhack) was able
-    to find to not support comments.
+    to find do not support comments.
   * The full Haskell syntax is quite complicated, and we don't need
     most of it; our AST has just the parts we need, and so is simpler
     to work with.
