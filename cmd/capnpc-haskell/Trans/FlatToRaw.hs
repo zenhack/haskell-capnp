@@ -138,48 +138,52 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             ]
     ++
     case fieldLocType of
-        C.PtrField ptrIndex _ ->
+        C.PtrField{ptrFieldIndex} ->
             [ Raw.HasFn
                 { fieldName
                 , containerType
-                , ptrIndex
+                , ptrIndex = ptrFieldIndex
                 }
             ]
         _ ->
             []
     ++
     case fieldLocType of
-        C.PtrField _ (C.ListOf _) ->
-            [ Raw.NewFn
-                { fieldName
-                , containerType
-                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
-                , newFnType = Raw.NewList
-                }
-            ]
-        C.PtrField _ (C.PrimPtr C.PrimText) ->
-            [ Raw.NewFn
-                { fieldName
-                , containerType
-                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
-                , newFnType = Raw.NewText
-                }
-            ]
-        C.PtrField _ (C.PrimPtr C.PrimData) ->
-            [ Raw.NewFn
-                { fieldName
-                , containerType
-                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
-                , newFnType = Raw.NewData
-                }
-            ]
-        C.PtrField _ (C.PtrComposite _) ->
-            [ Raw.NewFn
-                { fieldName
-                , containerType
-                , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
-                , newFnType = Raw.NewStruct
-                }
-            ]
+        C.PtrField{ptrFieldType} ->
+            case ptrFieldType of
+                C.ListOf _ ->
+                    [ Raw.NewFn
+                        { fieldName
+                        , containerType
+                        , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
+                        , newFnType = Raw.NewList
+                        }
+                    ]
+                C.PrimPtr C.PrimText ->
+                    [ Raw.NewFn
+                        { fieldName
+                        , containerType
+                        , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
+                        , newFnType = Raw.NewText
+                        }
+                    ]
+                C.PrimPtr C.PrimData ->
+                    [ Raw.NewFn
+                        { fieldName
+                        , containerType
+                        , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
+                        , newFnType = Raw.NewData
+                        }
+                    ]
+                C.PtrComposite _ ->
+                    [ Raw.NewFn
+                        { fieldName
+                        , containerType
+                        , fieldLocType = fmap (\Flat.Node{name} -> name) fieldLocType
+                        , newFnType = Raw.NewStruct
+                        }
+                    ]
+                _ -> -- AnyPointer, Interface.
+                    []
         _ ->
             []

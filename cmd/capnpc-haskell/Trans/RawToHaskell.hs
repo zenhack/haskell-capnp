@@ -132,7 +132,7 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, tagOffset, unionDataCtors} 
                             EFApp
                                 (ELName name)
                                 [eGetWordField (ELName "struct") loc]
-                        C.PtrField idx _ ->
+                        C.PtrField{ptrFieldIndex = idx} ->
                             EFApp
                                 (ELName name)
                                 [ EDo
@@ -502,7 +502,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
             , value = case fieldLocType of
                 C.DataField dataLoc  _ ->
                     eGetWordField (ELName "struct") dataLoc
-                C.PtrField idx _ -> EDo
+                C.PtrField{ptrFieldIndex = idx} -> EDo
                     [ DoBind "ptr" $ EApp
                         (egName ["Untyped"] "getPtr")
                         [ EInt (fromIntegral idx)
@@ -723,7 +723,7 @@ eSetValue = \case
                 (tStd_ $ fromString $ "Word" <> show (C.dataFieldSize ty))
             )
             dataLoc
-    C.PtrField idx _ -> EDo
+    C.PtrField{ptrFieldIndex = idx} -> EDo
         [ DoBind "ptr" $ EApp
             (egName ["Classes"] "toPtr")
             [ EApp

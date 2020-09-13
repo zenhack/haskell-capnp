@@ -92,9 +92,12 @@ data AnyPtr
 data FieldLocType r
     -- | The field is in the struct's data section.
     = DataField DataLoc (WordType r)
-    -- | The field is in the struct's pointer section (the argument is the
-    -- index).
-    | PtrField !Word16 (PtrType r)
+    -- | The field is in the struct's pointer section.
+    | PtrField
+        { ptrFieldIndex    :: !Word16 -- ^ Index into the pointer section
+        , ptrFieldType     :: PtrType r -- ^ Type of the pointer
+        , ptrFieldNullable :: !Bool -- ^ Whether null is meaningful
+        }
     -- | The field is a group or union; it's "location" is the whole struct.
     | HereField (CompositeType r)
     -- | The field is of type void (and thus is zero-size).
@@ -122,7 +125,7 @@ data Value r
 
 -- | Extract the type from a 'FildLocType'.
 fieldType :: FieldLocType r -> Type r
-fieldType (DataField _ ty) = WordType ty
-fieldType (PtrField _ ty)  = PtrType ty
-fieldType (HereField ty)   = CompositeType ty
-fieldType VoidField        = VoidType
+fieldType (DataField _ ty)            = WordType ty
+fieldType PtrField{ptrFieldType = ty} = PtrType ty
+fieldType (HereField ty)              = CompositeType ty
+fieldType VoidField                   = VoidType

@@ -24,6 +24,12 @@ import qualified IR.Common                   as C
 import qualified IR.Name                     as Name
 import qualified IR.Stage1                   as Stage1
 
+-- ID for the 'nullable' annotation's node (found by running capnp decode
+-- on the cgr). TODO: actually generate code for annotations, so we don't
+-- have to hard-code this ourselves.
+nullableAnnotationID :: Word64
+nullableAnnotationID = 13247283921496574800
+
 type NodeMap v = M.Map Word64 v
 
 nodesToNodes :: NodeMap Schema.Node -> NodeMap Stage1.Node
@@ -164,7 +170,12 @@ enumerantToName :: Schema.Enumerant -> Name.UnQ
 enumerantToName Schema.Enumerant{name} = Name.UnQ name
 
 fieldToField :: NodeMap Stage1.Node -> Schema.Field -> Stage1.Field
-fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
+fieldToField nodeMap Schema.Field{name, discriminantValue, union', annotations} =
+    let nullable = or
+            [ id == nullableAnnotationID
+            | Schema.Annotation{id, value = Schema.Value'bool True} <- V.toList annotations
+            ]
+    in
     Stage1.Field
         { name = Name.UnQ name
         , tag =
@@ -172,17 +183,21 @@ fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
                 Nothing
             else
                 Just discriminantValue
-        , locType = getFieldLocType nodeMap union'
+        , locType = getFieldLocType nodeMap nullable union'
         }
 
-getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
-getFieldLocType nodeMap = \case
+getFieldLocType :: NodeMap Stage1.Node -> Bool -> Schema.Field' -> C.FieldLocType Stage1.Node
+getFieldLocType nodeMap nullable = \case
     Schema.Field'slot Schema.Field'slot'{type_, defaultValue, offset} ->
         case typeToType nodeMap type_ of
             C.VoidType ->
                 C.VoidField
             C.PtrType ty ->
-                C.PtrField (fromIntegral offset) ty
+                C.PtrField
+                    { ptrFieldIndex = fromIntegral offset
+                    , ptrFieldType = ty
+                    , ptrFieldNullable = nullable
+                    }
             C.WordType ty ->
                 case valueBits defaultValue of
                     Nothing -> error $
@@ -193,7 +208,11 @@ getFieldLocType nodeMap = \case
                             (dataLoc offset ty defaultVal)
                             ty
             C.CompositeType ty ->
-                C.PtrField (fromIntegral offset) (C.PtrComposite ty)
+                C.PtrField
+                    { ptrFieldIndex = fromIntegral offset
+                    , ptrFieldType = C.PtrComposite ty
+                    , ptrFieldNullable = nullable
+                    }
     Schema.Field'group Schema.Field'group'{typeId} ->
         C.HereField $ C.StructType $ nodeMap M.! typeId
     Schema.Field'unknown' _ ->
