@@ -82,7 +82,7 @@ fileToModuleAlias P.File{fileName, fileId} =
 
 fileToMainModule :: P.File -> Module
 fileToMainModule P.File{fileName, fileId, decls, reExportEnums, usesRpc} =
-    fixImports $ Module
+    fixImports (Just fileId) $ Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
         , modLangPragmas =
             [ "DeriveGeneric"

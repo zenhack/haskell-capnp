@@ -127,18 +127,36 @@ makeModName fileName =
 --
 -- Note that this only looks at imports of the form Capnp.Gen....; other
 -- imports are not touched.
-fixImports :: Module -> Module
-fixImports m@Module{modImports} =
-    let namespaces = S.toList $ S.fromList -- deduplicate
+--
+-- The first argument should be Nothing or (Just fileId).
+-- If fileId is provided, pure imports will be added in addition to all raw
+-- ones, in order to get the class instances imported.
+fixImports :: Maybe Word64 -> Module -> Module
+fixImports fileIdOfPure m@Module{modImports} =
+    let namespaces =
             [ nsParts
             | Name.GlobalQ
                 { globalNS = Name.NS nsParts@(map T.unpack -> "Capnp":"Gen":_)
                 }
             <- S.toList (findGNames m)
             ]
+
+        pureEnrichedNamespaces = case fileIdOfPure of
+            Nothing -> namespaces
+            Just fileId ->
+                let
+                  textRawAlias = [x | Name.UnQ x <- idToModule fileId]
+
+                  addPureToRaw nsParts
+                      | last nsParts == "Pure" = [nsParts]
+                      | nsParts == textRawAlias = [nsParts]
+                      | otherwise = [nsParts, nsParts ++ ["Pure"]]
+                in
+                concatMap addPureToRaw namespaces
+
         neededImports =
             [ ImportQual { parts = map Name.UnQ nsParts }
-            | nsParts <- namespaces
+            | nsParts <- S.toList $ S.fromList pureEnrichedNamespaces
             ]
     in
     m { modImports = modImports ++ neededImports }

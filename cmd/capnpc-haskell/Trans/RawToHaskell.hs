@@ -47,7 +47,7 @@ fileToModuleAlias Raw.File{fileName, fileId} =
 
 fileToMainModule :: Raw.File -> Module
 fileToMainModule Raw.File{fileName, fileId, decls} =
-    fixImports $ Module
+    fixImports Nothing $ Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName
         , modLangPragmas =
             [ "FlexibleContexts"
