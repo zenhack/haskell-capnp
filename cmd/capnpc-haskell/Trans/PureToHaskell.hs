@@ -714,11 +714,17 @@ typeToType _thisMod C.VoidType =
     TUnit
 typeToType _thisMod (C.WordType (C.PrimWord ty)) =
     TPrim ty
-typeToType _thisMod (C.WordType (C.EnumType Name.CapnpQ{local, fileId})) =
-    -- Enums are just re-exported from the raw module, we should still
-    -- refer to them qualified even if they're in the file we're generated
-    -- from:
-    tgName (rawModule fileId) local
+typeToType thisMod (C.WordType (C.EnumType Name.CapnpQ{local, fileId})) =
+    -- Enums are just re-exported from the raw module, so we have a choice as to
+    -- how to refer to them. Using their 'Pure' module makes sure we pull in any
+    -- type class instances in those modules, but we have to make an exception
+    -- if the enum is defined in the file we're generating code for, since otherwise
+    -- we'd introduce a cyclic dependency. In that case we use the raw name; the
+    -- instnaces are defined in this same module so we don't need to worry about those.
+    if thisMod == fileId then
+        tgName (rawModule fileId) local
+    else
+        tgName (pureModule fileId) local
 typeToType thisMod (C.CompositeType (C.StructType n)) =
     nameToType thisMod n
 typeToType thisMod (C.PtrType (C.PtrComposite (C.StructType n))) =
