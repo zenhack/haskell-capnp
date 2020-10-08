@@ -1,3 +1,8 @@
+# 0.6.0.2
+
+* Fix a bug [(#71)][issue71] which sometimes caused the code generator
+  to crash.
+
 # 0.6.0.1
 
 * Fix a bug in the code generator [(#72)][issue72] which sometimes
@@ -119,4 +124,5 @@ This release brings some improvements to the RPC API:
 
 [issue34]: https://github.com/zenhack/haskell-capnp/issues/34
 [issue41]: https://github.com/zenhack/haskell-capnp/issues/41
+[issue71]: https://github.com/zenhack/haskell-capnp/issues/71
 [issue72]: https://github.com/zenhack/haskell-capnp/issues/72
