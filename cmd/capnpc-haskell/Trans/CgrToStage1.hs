@@ -35,8 +35,9 @@ nodesToNodes inMap = outMap
         { nodeCommon = Stage1.NodeCommon
             { nodeId = id
             , nodeNested =
-                [ (Name.UnQ name, outMap M.! id)
+                [ (Name.UnQ name, node)
                 | Schema.Node'NestedNode{name, id} <- V.toList nestedNodes
+                , Just node <- [M.lookup id outMap]
                 ]
             , nodeParent =
                 if scopeId == 0 then
