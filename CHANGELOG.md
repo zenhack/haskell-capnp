@@ -1,3 +1,8 @@
+# 0.6.0.1
+
+* Fix a bug in the code generator [(#72)][issue72] which sometimes
+  resulted in build failures of the generated code.
+
 # 0.6.0.0
 
 ## RPC
@@ -112,5 +117,6 @@ This release brings some improvements to the RPC API:
 
 * First release; basic read & write support, serialization only.
 
-[issue41]: https://github.com/zenhack/haskell-capnp/issues/41
 [issue34]: https://github.com/zenhack/haskell-capnp/issues/34
+[issue41]: https://github.com/zenhack/haskell-capnp/issues/41
+[issue72]: https://github.com/zenhack/haskell-capnp/issues/72
