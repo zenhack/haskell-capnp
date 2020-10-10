@@ -683,7 +683,7 @@ newtype ExportMap = ExportMap (M.Map Conn IEId)
 -- * They don't have unknown variants
 -- * PromisedAnswer's transform field is just a list of pointer offsets,
 --   rather than a union with no other actually-useful variants.
--- * PromisedAnswer's transform field is a SnocList, efficient appending.
+-- * PromisedAnswer's transform field is a SnocList, for efficient appending.
 data MsgTarget
     = ImportTgt !IEId
     | AnswerTgt PromisedAnswer
