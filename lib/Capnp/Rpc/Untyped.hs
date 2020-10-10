@@ -87,7 +87,8 @@ import Capnp.Rpc.Errors
     , eUnimplemented
     , wrapException
     )
-import Capnp.Rpc.Promise    (Fulfiller, breakPromise, fulfill, newCallback)
+import Capnp.Rpc.Promise
+    (Fulfiller, breakOrFulfill, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
@@ -599,46 +600,58 @@ data Client'
     | ImportClient (Fin.Cell ImportRef)
 
 -- | A 'Pipeline' is a reference to a value within a message that has not yet arrived.
-data Pipeline
-    = LocalPipeline (TVar LocalPipeline) (SnocList Word16)
-    | RemotePipeline Conn PromisedAnswer
+data Pipeline = Pipeline
+    { state :: TVar PipelineState
+    , steps :: SnocList Word16
+    }
 
-data LocalPipeline
-    = PendingLocalPipeline (SnocList (Fulfiller MPtr))
-    | ReadyLocalPipeline (Either R.Exception MPtr)
+data PipelineState
+    = PendingRemotePipeline
+        { answerId  :: !QAId
+        , clientMap :: M.Map (SnocList Word16) Client
+        , conn      :: Conn
+        }
+    | PendingLocalPipeline (SnocList (Fulfiller MPtr))
+    | ReadyPipeline (Either R.Exception MPtr)
 
 -- | 'walkPipleinePtrs' follows a path of pointers starting from the object referred
 -- to by the 'Pipeline'. The 'Pipeline' must refer to a struct, as must all intermediate
 -- pointers on the path (except for the final destination). Each item in the path is
 -- an offset into the struct's pointer section.
 walkPipelinePtrs :: Pipeline -> [Word16] -> Pipeline
-walkPipelinePtrs p steps = case p of
-    LocalPipeline lp steps' ->
-        LocalPipeline lp (steps' <> SnocList.fromList steps)
-    RemotePipeline conn answer ->
-        RemotePipeline conn answer { transform = transform answer <> SnocList.fromList steps }
+walkPipelinePtrs p@Pipeline{steps} steps' =
+    p { steps = steps <> SnocList.fromList steps' }
 
 -- | Convert a 'Pipeline' into a 'Client', which can be used to send messages to the
 -- referant of the 'Pipeline', using promise pipelining.
 pipelineClient :: MonadSTM m => Pipeline -> m Client
-pipelineClient (RemotePipeline conn pa) =
-    liftSTM $ promisedAnswerClient conn pa
-pipelineClient (LocalPipeline lp steps) = liftSTM $ do
-    (ret, retFulfiller) <- newPromiseClient
-    ptrFulfiller <- newCallback $ \r -> do
-        writeTVar lp (ReadyLocalPipeline r)
-        case r >>= followPtrs (toList steps) >>= ptrClient of
-            Left e       -> breakPromise retFulfiller e
-            Right client -> fulfill retFulfiller client
-    pipelineState <- readTVar lp
-    case pipelineState of
-        ReadyLocalPipeline (Left e) ->
-            breakPromise ptrFulfiller e
-        ReadyLocalPipeline (Right ptr) ->
-            fulfill ptrFulfiller ptr
-        PendingLocalPipeline subscribers ->
-            writeTVar lp $ PendingLocalPipeline $ SnocList.snoc subscribers ptrFulfiller
-    pure ret
+pipelineClient (Pipeline{state, steps}) = liftSTM $ do
+    readTVar state >>= \case
+        PendingRemotePipeline{answerId, clientMap, conn} -> do
+            maybeClient <- M.lookup steps clientMap
+            case maybeClient of
+                Nothing -> do
+                    client <- promisedAnswerClient
+                        conn
+                        PromisedAnswer { answerId, transform = steps }
+                    M.insert client steps clientMap
+                    pure client
+                Just client ->
+                    pure client
+        PendingLocalPipeline subscribers -> do
+            (ret, retFulfiller) <- newPromiseClient
+            ptrFulfiller <- newCallback $ \r -> do
+                writeTVar state (ReadyPipeline r)
+                breakOrFulfill retFulfiller (r >>= followPtrs (toList steps) >>= ptrClient)
+            writeTVar state $ PendingLocalPipeline $ SnocList.snoc subscribers ptrFulfiller
+            pure ret
+        ReadyPipeline r ->
+            case r >>= followPtrs (toList steps) >>= ptrClient of
+                Right v -> pure v
+                Left e -> do
+                    (p, f) <- newPromiseClient
+                    breakPromise f e
+                    pure p
 
 promisedAnswerClient :: Conn -> PromisedAnswer -> STM Client
 promisedAnswerClient conn answer@PromisedAnswer{answerId, transform} = do
@@ -769,41 +782,69 @@ data PromisedAnswer = PromisedAnswer
 -- connection.
 
 -- | Queue a call on a client.
-call :: MonadSTM m => Server.CallInfo -> Client -> m ()
-call Server.CallInfo { response } (Client Nothing) =
-    liftSTM $ breakPromise response eMethodUnimplemented
-call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ case client' of
-    LocalClient { qCall } -> Rc.get qCall >>= \case
-        Just q ->
-            q info
-        Nothing ->
-            breakPromise response eDisconnected
+call :: MonadSTM m => Server.CallInfo -> Client -> m Pipeline
+call Server.CallInfo { response } (Client Nothing) = liftSTM $ do
+    breakPromise response eMethodUnimplemented
+    state <- newTVar $ ReadyPipeline (Left eMethodUnimplemented)
+    pure Pipeline{state, steps = mempty}
+call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
+    (localPipeline, response') <- makeLocalPipeline response
+    let info' = info { Server.response = response' }
+    case client' of
+        LocalClient { qCall } -> do
+            Rc.get qCall >>= \case
+                Just q -> do
+                    q info'
+                Nothing ->
+                    breakPromise response' eDisconnected
+            pure localPipeline
 
-    PromiseClient { pState } -> readTVar pState >>= \case
-        Ready { target }  ->
-            call info target
+        PromiseClient { pState } -> readTVar pState >>= \case
+            Ready { target }  ->
+                call info target
 
-        Embargo { callBuffer } ->
-            writeTQueue callBuffer info
+            Embargo { callBuffer } -> do
+                writeTQueue callBuffer info'
+                pure localPipeline
 
-        Pending { tmpDest } -> case tmpDest of
-            LocalDest LocalBuffer { callBuffer } ->
-                writeTQueue callBuffer info
+            Pending { tmpDest } -> case tmpDest of
+                LocalDest LocalBuffer { callBuffer } -> do
+                    writeTQueue callBuffer info'
+                    pure localPipeline
 
-            RemoteDest AnswerDest { conn, answer } ->
-                callRemote conn info $ AnswerTgt answer
+                RemoteDest AnswerDest { conn, answer } ->
+                    callRemote conn info $ AnswerTgt answer
 
-            RemoteDest (ImportDest (Fin.get -> ImportRef { conn, importId })) ->
-                callRemote conn info (ImportTgt importId)
+                RemoteDest (ImportDest (Fin.get -> ImportRef { conn, importId })) ->
+                    callRemote conn info (ImportTgt importId)
 
-        Error exn ->
-            breakPromise response exn
+            Error exn -> do
+                breakPromise response' exn
+                pure localPipeline
 
-    ImportClient (Fin.get -> ImportRef { conn, importId }) ->
-        callRemote conn info (ImportTgt importId)
+        ImportClient (Fin.get -> ImportRef { conn, importId }) ->
+            callRemote conn info (ImportTgt importId)
+
+makeLocalPipeline :: Fulfiller RawMPtr -> STM (Pipeline, Fulfiller RawMPtr)
+makeLocalPipeline f = do
+    state <- newTVar $ PendingLocalPipeline mempty
+    f' <- newCallback $ \r -> do
+        s <- readTVar state
+        case s of
+            PendingLocalPipeline fs -> do
+                pr <- case r of
+                    Left e  -> pure (Left e)
+                    Right v -> Right <$> evalLimitT defaultLimit (decerialize v)
+                writeTVar state (ReadyPipeline pr)
+                breakOrFulfill f r
+                traverse_ (flip breakOrFulfill pr) fs
+            _ ->
+                -- TODO(cleanup): refactor so we don't need this case.
+                error "impossible"
+    pure (Pipeline{state, steps = mempty}, f')
 
 -- | Send a call to a remote capability.
-callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM ()
+callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM Pipeline
 callRemote
         conn
         Server.CallInfo{ interfaceId, methodId, arguments, response }
@@ -824,13 +865,30 @@ callRemote
             R.CapDescriptor'senderHosted  eid -> Just (IEId eid)
             R.CapDescriptor'senderPromise eid -> Just (IEId eid)
             _ -> Nothing
+
+    clientMap <- M.new
+    rp <- newTVar PendingRemotePipeline
+        { answerId = qid
+        , clientMap
+        , conn
+        }
+
+    response' <- newCallback $ \r -> do
+        breakOrFulfill response r
+        case r of
+            Left e -> writeTVar rp $ ReadyPipeline (Left e)
+            Right v -> do
+                content <- evalLimitT defaultLimit (decerialize v)
+                writeTVar rp $ ReadyPipeline (Right content)
+
     M.insert
         NewQA
-            { onReturn = SnocList.singleton $ cbCallReturn paramCaps conn response
+            { onReturn = SnocList.singleton $ cbCallReturn paramCaps conn response'
             , onFinish = SnocList.empty
             }
         qid
         questions
+    pure Pipeline { state = rp, steps = mempty }
 
 -- | Callback to run when a return comes in that corresponds to a call
 -- we sent. Registered in callRemote. The first argument is a list of
@@ -878,7 +936,9 @@ cbCallReturn
         R.Return'unknown' ordinal ->
             abortConn conn' $ eUnimplemented $
                 "Unknown return variant #" <> fromString (show ordinal)
-    finishQuestion conn' def
+    -- Defer this until after any other callbacks run, in case disembargos
+    -- need to be send due to promise resolutions that we triggered:
+    queueSTM conn' $ finishQuestion conn' def
         { R.questionId = answerId
         , R.releaseResultCaps = False
         }
@@ -981,7 +1041,7 @@ export sup ops = liftSTM $ do
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =
     Server.fromUntypedHandler $ Server.untypedHandler $
-        \arguments response -> atomically $ call Server.CallInfo{..} client
+        \arguments response -> atomically $ void $ call Server.CallInfo{..} client
 
 -- | See Note [callbacks]
 callbacksLoop :: Conn' -> IO ()
@@ -1197,7 +1257,7 @@ handleCallMsg
     case target of
         R.MessageTarget'importedCap exportId ->
             lookupAbort "export" conn' exports (IEId exportId) $
-                \EntryE{client} -> call callInfo $ Client $ Just client
+                \EntryE{client} -> void $ call callInfo $ Client $ Just client
         R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
             let onReturn ret@R.Return{union'} =
                     case union' of
@@ -1206,7 +1266,7 @@ handleCallMsg
                         R.Return'canceled ->
                             returnAnswer conn' ret { R.answerId = questionId }
                         R.Return'results R.Payload{content} ->
-                            transformClient transform content conn' >>= call callInfo
+                            void $ transformClient transform content conn' >>= call callInfo
                         R.Return'resultsSentElsewhere ->
                             -- our implementation should never actually do this, but
                             -- this way we don't have to change this if/when we

@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Internal.SnocList
     ( SnocList
     , fromList
@@ -7,6 +8,7 @@ module Internal.SnocList
     ) where
 
 import Data.Foldable
+import Data.Hashable (Hashable)
 
 -- | A 'SnocList' is just a list, but with efficient appending instead of
 -- prepending. The indended use case is when you want to append a bunch of
@@ -16,6 +18,7 @@ import Data.Foldable
 -- the list, and then reverse the list before processing. A SnocList
 -- just packages up this trick so you can't forget to do the reverse.
 newtype SnocList a = SnocList [a]
+    deriving(Eq, Hashable)
 
 -- | Convert a list to a 'SnocList'. O(n)
 fromList :: [a] -> SnocList a
