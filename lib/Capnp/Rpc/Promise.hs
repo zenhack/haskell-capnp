@@ -18,6 +18,7 @@ module Capnp.Rpc.Promise
     -- * Fulfilling or breaking promises
     , fulfill
     , breakPromise
+    , breakOrFulfill
     , ErrAlreadyResolved(..)
 
     -- * Getting the value of a promise
@@ -46,13 +47,18 @@ newtype Fulfiller a = Fulfiller
 -- | Fulfill a promise by supplying the specified value. It is an error to
 -- call 'fulfill' if the promise has already been fulfilled (or broken).
 fulfill :: MonadSTM m => Fulfiller a -> a -> m ()
-fulfill Fulfiller{callback} val = liftSTM $ callback (Right val)
+fulfill f val = breakOrFulfill f (Right val)
 
 -- | Break a promise. When the user of the promise executes 'wait', the
 -- specified exception will be raised. It is an error to call 'breakPromise'
 -- if the promise has already been fulfilled (or broken).
 breakPromise :: MonadSTM m => Fulfiller a -> Exception -> m ()
-breakPromise Fulfiller{callback} exn = liftSTM $ callback (Left exn)
+breakPromise f exn = breakOrFulfill f (Left exn)
+
+-- | 'breakOrFulfill' calls either 'breakPromise' or 'fulfill', depending
+-- on the argument.
+breakOrFulfill :: MonadSTM m => Fulfiller a -> Either Exception a -> m ()
+breakOrFulfill Fulfiller{callback} result = liftSTM $ callback result
 
 -- | Wait for a promise to resolve, and return the result. If the promise
 -- is broken, this raises an exception instead (see 'breakPromise').
