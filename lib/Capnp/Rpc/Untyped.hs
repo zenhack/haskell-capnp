@@ -31,6 +31,11 @@ module Capnp.Rpc.Untyped
 
     , IsClient(..)
 
+    -- * Promise pipelining
+    , Pipeline
+    , walkPipelinePtrs
+    , pipelineClient
+
     -- * Exporting local objects
     , export
     , clientMethodHandler
@@ -592,6 +597,66 @@ data Client'
         }
     -- | A client which points to a (resolved) capability in a remote vat.
     | ImportClient (Fin.Cell ImportRef)
+
+-- | A 'Pipeline' is a reference to a value within a message that has not yet arrived.
+data Pipeline
+    = LocalPipeline (TVar LocalPipeline) (SnocList Word16)
+    | RemotePipeline Conn PromisedAnswer
+
+data LocalPipeline
+    = PendingLocalPipeline (SnocList (Fulfiller MPtr))
+    | ReadyLocalPipeline (Either R.Exception MPtr)
+
+-- | 'walkPipleinePtrs' follows a path of pointers starting from the object referred
+-- to by the 'Pipeline'. The 'Pipeline' must refer to a struct, as must all intermediate
+-- pointers on the path (except for the final destination). Each item in the path is
+-- an offset into the struct's pointer section.
+walkPipelinePtrs :: Pipeline -> [Word16] -> Pipeline
+walkPipelinePtrs p steps = case p of
+    LocalPipeline lp steps' ->
+        LocalPipeline lp (steps' <> SnocList.fromList steps)
+    RemotePipeline conn answer ->
+        RemotePipeline conn answer { transform = transform answer <> SnocList.fromList steps }
+
+-- | Convert a 'Pipeline' into a 'Client', which can be used to send messages to the
+-- referant of the 'Pipeline', using promise pipelining.
+pipelineClient :: MonadSTM m => Pipeline -> m Client
+pipelineClient (RemotePipeline conn pa) =
+    liftSTM $ promisedAnswerClient conn pa
+pipelineClient (LocalPipeline lp steps) = liftSTM $ do
+    (ret, retFulfiller) <- newPromiseClient
+    ptrFulfiller <- newCallback $ \r -> do
+        writeTVar lp (ReadyLocalPipeline r)
+        case r >>= followPtrs (toList steps) >>= ptrClient of
+            Left e       -> breakPromise retFulfiller e
+            Right client -> fulfill retFulfiller client
+    pipelineState <- readTVar lp
+    case pipelineState of
+        ReadyLocalPipeline (Left e) ->
+            breakPromise ptrFulfiller e
+        ReadyLocalPipeline (Right ptr) ->
+            fulfill ptrFulfiller ptr
+        PendingLocalPipeline subscribers ->
+            writeTVar lp $ PendingLocalPipeline $ SnocList.snoc subscribers ptrFulfiller
+    pure ret
+
+promisedAnswerClient :: Conn -> PromisedAnswer -> STM Client
+promisedAnswerClient conn answer@PromisedAnswer{answerId, transform} = do
+    let tmpDest = RemoteDest AnswerDest { conn, answer }
+    pState <- newTVar Pending { tmpDest }
+    exportMap <- ExportMap <$> M.new
+    let client = Client $ Just PromiseClient
+            { pState
+            , exportMap
+            , origTarget = tmpDest
+            }
+    readTVar (liveState conn) >>= \case
+        Dead ->
+            resolveClientExn tmpDest (writeTVar pState) eDisconnected
+        Live conn'@Conn'{questions} ->
+            subscribeReturn "questions" conn' questions answerId $
+                resolveClientReturn tmpDest (writeTVar pState) conn' (toList transform)
+    pure client
 
 -- | The current state of a 'PromiseClient'.
 data PromiseState
@@ -1166,15 +1231,16 @@ handleCallMsg
 
 transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
-    case unmarshalOps (V.toList transform) >>= flip followPtrs ptr of
+    case unmarshalOps (V.toList transform) >>= flip followPtrs ptr >>= ptrClient of
         Left e ->
             abortConn conn e
-        Right Nothing ->
-            pure nullClient
-        Right (Just (Untyped.PtrCap client)) ->
+        Right client ->
             pure client
-        Right (Just _) ->
-            abortConn conn $ eFailed "Tried to call method on non-capability."
+
+ptrClient :: MPtr -> Either R.Exception Client
+ptrClient Nothing = Right nullClient
+ptrClient (Just (Untyped.PtrCap client)) = Right client
+ptrClient (Just _) = Left $ eFailed "Tried to call method on non-capability."
 
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
 -- with an error if any of the pointers in the chain (except the last one) is

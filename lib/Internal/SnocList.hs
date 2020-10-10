@@ -37,3 +37,9 @@ snoc (SnocList xs) x = SnocList (x:xs)
 instance Foldable SnocList where
     foldMap f = foldMap f . toList
     toList (SnocList xs) = reverse xs
+
+instance Semigroup (SnocList a) where
+    (SnocList l) <> (SnocList r) = SnocList (r <> l)
+
+instance Monoid (SnocList a) where
+    mempty = empty
