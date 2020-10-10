@@ -625,7 +625,7 @@ walkPipelinePtrs p@Pipeline{steps} steps' =
 -- | Convert a 'Pipeline' into a 'Client', which can be used to send messages to the
 -- referant of the 'Pipeline', using promise pipelining.
 pipelineClient :: MonadSTM m => Pipeline -> m Client
-pipelineClient (Pipeline{state, steps}) = liftSTM $ do
+pipelineClient Pipeline{state, steps} = liftSTM $ do
     readTVar state >>= \case
         PendingRemotePipeline{answerId, clientMap, conn} -> do
             maybeClient <- M.lookup steps clientMap
@@ -837,7 +837,7 @@ makeLocalPipeline f = do
                     Right v -> Right <$> evalLimitT defaultLimit (decerialize v)
                 writeTVar state (ReadyPipeline pr)
                 breakOrFulfill f r
-                traverse_ (flip breakOrFulfill pr) fs
+                traverse_ (`breakOrFulfill` pr) fs
             _ ->
                 -- TODO(cleanup): refactor so we don't need this case.
                 error "impossible"
