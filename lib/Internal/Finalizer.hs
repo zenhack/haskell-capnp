@@ -32,10 +32,12 @@ add finalizers.
 
 -}
 {-# LANGUAGE NamedFieldPuns #-}
-module Internal.Finalizer (Cell, get, newCell, addFinalizer) where
+module Internal.Finalizer (Cell, with, newCell, addFinalizer) where
 
 import Control.Concurrent.MVar (MVar, mkWeakMVar, newEmptyMVar)
 import Control.Concurrent.STM  (STM, TVar, atomically, modifyTVar', newTVar)
+import Control.Monad.Primitive (touch)
+import GHC.Conc (unsafeIOToSTM)
 
 -- | A cell, containing a value and possibly finalizers.
 data Cell a = Cell
@@ -48,9 +50,12 @@ data Cell a = Cell
     }
     deriving(Eq)
 
--- | Get the value from a cell
-get :: Cell a -> a
-get = value
+-- | Use the cell's value, suppressing the cell's garbage collection
+with :: Cell a -> (a -> STM b) -> STM b
+with cell action = do
+    result <- action $ value cell
+    unsafeIOToSTM (touch cell)
+    return result
 
 -- Create  a new cell, initially with no finalizers.
 newCell :: a -> STM (Cell a)
