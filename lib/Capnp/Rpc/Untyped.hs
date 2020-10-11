@@ -33,7 +33,7 @@ module Capnp.Rpc.Untyped
 
     -- * Promise pipelining
     , Pipeline
-    , walkPipelinePtrs
+    , walkPipelinePtr
     , pipelineClient
 
     -- * Exporting local objects
@@ -614,13 +614,12 @@ data PipelineState
     | PendingLocalPipeline (SnocList (Fulfiller MPtr))
     | ReadyPipeline (Either R.Exception MPtr)
 
--- | 'walkPipleinePtrs' follows a path of pointers starting from the object referred
--- to by the 'Pipeline'. The 'Pipeline' must refer to a struct, as must all intermediate
--- pointers on the path (except for the final destination). Each item in the path is
--- an offset into the struct's pointer section.
-walkPipelinePtrs :: Pipeline -> [Word16] -> Pipeline
-walkPipelinePtrs p@Pipeline{steps} steps' =
-    p { steps = steps <> SnocList.fromList steps' }
+-- | 'walkPipleinePtr' follows a pointer starting from the object referred to by the
+-- 'Pipeline'. The 'Pipeline' must refer to a struct, and the pointer is referred to
+-- by its index into the struct's pointer section.
+walkPipelinePtr :: Pipeline -> Word16 -> Pipeline
+walkPipelinePtr p@Pipeline{steps} step =
+    p { steps = SnocList.snoc steps step }
 
 -- | Convert a 'Pipeline' into a 'Client', which can be used to send messages to the
 -- referant of the 'Pipeline', using promise pipelining.
