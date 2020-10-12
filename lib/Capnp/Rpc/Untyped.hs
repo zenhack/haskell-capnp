@@ -814,14 +814,16 @@ call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
                 RemoteDest AnswerDest { conn, answer } ->
                     callRemote conn info $ AnswerTgt answer
 
-                RemoteDest (ImportDest (Fin.get -> ImportRef { conn, importId })) ->
+                RemoteDest (ImportDest cell) -> do
+                    ImportRef { conn, importId } <- Fin.get cell
                     callRemote conn info (ImportTgt importId)
 
             Error exn -> do
                 breakPromise response' exn
                 pure localPipeline
 
-        ImportClient (Fin.get -> ImportRef { conn, importId }) ->
+        ImportClient cell -> do
+            ImportRef { conn, importId } <- Fin.get cell
             callRemote conn info (ImportTgt importId)
 
 makeLocalPipeline :: Fulfiller RawMPtr -> STM (Pipeline, Fulfiller RawMPtr)
@@ -1033,7 +1035,7 @@ export sup ops = liftSTM $ do
             , unwrapper = Server.handleCast ops
             }
     superviseSTM sup $ do
-        Fin.addFinalizer finalizerKey $ atomically $ Rc.release qCall
+        Fin.addFinalizer finalizerKey $ Rc.release qCall
         Server.runServer q ops
     pure $ Client (Just client')
 
@@ -1439,13 +1441,20 @@ handleDisembargoMsg conn d = getLive conn >>= go d
         disembargoPromise _ =
             abortDisembargo "targets something that is not a promise."
 
-        disembargoClient (ImportClient (Fin.get -> ImportRef {conn=targetConn, importId}))
-            | conn == targetConn =
-                sendPureMsg conn' $ R.Message'disembargo R.Disembargo
-                    { context = R.Disembargo'context'receiverLoopback embargoId
-                    , target = R.MessageTarget'importedCap (ieWord importId)
-                    }
-        disembargoClient _ =
+        disembargoClient (ImportClient cell) = do
+            client <- Fin.get cell
+            case client of
+                ImportRef {conn=targetConn, importId}
+                    | conn == targetConn ->
+                        sendPureMsg conn' $ R.Message'disembargo R.Disembargo
+                            { context = R.Disembargo'context'receiverLoopback embargoId
+                            , target = R.MessageTarget'importedCap (ieWord importId)
+                            }
+                _ ->
+                    abortDisembargoClient
+        disembargoClient _ = abortDisembargoClient
+
+        abortDisembargoClient =
                 abortDisembargo $
                     "targets a promise which has not resolved to a capability"
                     <> " hosted by the sender."
@@ -1750,6 +1759,10 @@ resolveClientClient tmpDest resolve (Client client) =
             -- clarification on the mailing list.
             disembargoAndResolve dest
 
+        -- Local promises never need embargos; we can just forward:
+        ( _, LocalDest LocalBuffer { callBuffer } ) ->
+            flushAndResolve callBuffer
+
         -- These cases are slightly subtle; despite resolving to a
         -- client that points at a "remote" target, if it points into a
         -- _different_ connection, we must be proxying it, so we treat
@@ -1759,25 +1772,27 @@ resolveClientClient tmpDest resolve (Client client) =
         --
         -- If it's pointing into the same connection, we don't need to
         -- do a disembargo.
-        ( Just PromiseClient { origTarget=RemoteDest newDest }, RemoteDest oldDest )
-            | destConn newDest /= destConn oldDest ->
-                disembargoAndResolve oldDest
-            | otherwise ->
-                releaseAndResolve
-        ( Just (ImportClient (Fin.get -> ImportRef { conn=newConn })), RemoteDest oldDest )
-            | newConn /= destConn oldDest ->
-                disembargoAndResolve oldDest
-            | otherwise ->
-                releaseAndResolve
-
-        -- Local promises never need embargos; we can just forward:
-        ( _, LocalDest LocalBuffer { callBuffer } ) ->
-            flushAndResolve callBuffer
+        ( Just PromiseClient { origTarget=RemoteDest newDest }, RemoteDest oldDest ) -> do
+            newConn <- destConn newDest
+            oldConn <- destConn oldDest
+            if newConn == oldConn
+                then releaseAndResolve
+                else disembargoAndResolve oldDest
+        ( Just (ImportClient cell), RemoteDest oldDest ) -> do
+            ImportRef { conn=newConn } <- Fin.get cell
+            oldConn <- destConn oldDest
+            if newConn == oldConn
+                then releaseAndResolve
+                else disembargoAndResolve oldDest
   where
-    destConn AnswerDest { conn }                          = conn
-    destConn (ImportDest (Fin.get -> ImportRef { conn })) = conn
-    destTarget AnswerDest { answer } = AnswerTgt answer
-    destTarget (ImportDest (Fin.get -> ImportRef { importId })) = ImportTgt importId
+    destConn AnswerDest { conn } = pure conn
+    destConn (ImportDest cell) = do
+        ImportRef { conn } <- Fin.get cell
+        pure conn
+    destTarget AnswerDest { answer } = pure $ AnswerTgt answer
+    destTarget (ImportDest cell) = do
+        ImportRef { importId } <- Fin.get cell
+        pure $ ImportTgt importId
 
     releaseAndResolve = do
         releaseTmpDest tmpDest
@@ -1791,11 +1806,13 @@ resolveClientClient tmpDest resolve (Client client) =
     flushAndRaise callBuffer e =
         flushTQueue callBuffer >>=
             traverse_ (\Server.CallInfo{response} -> breakPromise response e)
-    disembargoAndResolve dest@(destConn -> Conn{liveState}) =
+    disembargoAndResolve dest = do
+        Conn{liveState} <- destConn dest
         readTVar liveState >>= \case
             Live conn' -> do
                 callBuffer <- newTQueue
-                disembargo conn' (destTarget dest) $ \case
+                target <- destTarget dest
+                disembargo conn' target $ \case
                     Right () ->
                         flushAndResolve callBuffer
                     Left e ->
@@ -1877,7 +1894,7 @@ resolveClientReturn tmpDest resolve conn@Conn'{answers} transform R.Return { uni
 -- bump the refcount.
 getConnExport :: Conn -> Client' -> STM IEId
 getConnExport conn client = getLive conn >>= \conn'@Conn'{exports} -> do
-    let ExportMap m = clientExportMap client
+    ExportMap m <- clientExportMap client
     val <- M.lookup conn m
     case val of
         Just eid -> do
@@ -1895,7 +1912,7 @@ getConnExport conn client = getLive conn >>= \conn'@Conn'{exports} -> do
 -- freeing the export id, and dropping the client's refcount.
 dropConnExport :: Conn -> Client' -> STM ()
 dropConnExport conn client' = do
-    let ExportMap eMap = clientExportMap client'
+    ExportMap eMap <- clientExportMap client'
     val <- M.lookup conn eMap
     case val of
         Just eid -> do
@@ -1906,10 +1923,12 @@ dropConnExport conn client' = do
         Nothing ->
             error "BUG: tried to drop an export that doesn't exist."
 
-clientExportMap :: Client' -> ExportMap
-clientExportMap LocalClient{exportMap}                         = exportMap
-clientExportMap PromiseClient{exportMap}                       = exportMap
-clientExportMap (ImportClient (Fin.get -> ImportRef{proxies})) = proxies
+clientExportMap :: Client' -> STM ExportMap
+clientExportMap LocalClient{exportMap}   = pure exportMap
+clientExportMap PromiseClient{exportMap} = pure exportMap
+clientExportMap (ImportClient cell) = do
+    ImportRef{proxies} <- Fin.get cell
+    pure proxies
 
 -- | insert the client into the exports table, bumping the refcount if it is
 -- already there. If a different client is already in the table at the same
@@ -1940,16 +1959,20 @@ emitCap targetConn (Client (Just client')) = case client' of
         Pending { tmpDest = RemoteDest AnswerDest { conn, answer } }
             | conn == targetConn ->
                 pure $ R.CapDescriptor'receiverAnswer (marshalPromisedAnswer answer)
-        Pending { tmpDest = RemoteDest (ImportDest (Fin.get -> ImportRef { conn, importId = IEId iid })) }
-            | conn == targetConn ->
-                pure $ R.CapDescriptor'receiverHosted iid
+        Pending { tmpDest = RemoteDest (ImportDest cell) } -> do
+            ImportRef { conn, importId = IEId iid } <- Fin.get cell
+            if conn == targetConn
+                then pure (R.CapDescriptor'receiverHosted iid)
+                else newSenderPromise
         _ ->
-            R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
-    ImportClient (Fin.get -> ImportRef { conn=hostConn, importId })
-        | hostConn == targetConn ->
-            pure (R.CapDescriptor'receiverHosted (ieWord importId))
-        | otherwise ->
-            R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
+            newSenderPromise
+    ImportClient cell -> do
+        ImportRef { conn=hostConn, importId } <- Fin.get cell
+        if hostConn == targetConn
+            then pure (R.CapDescriptor'receiverHosted (ieWord importId))
+            else R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
+  where
+    newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
 -- received via the connection. May update connection state as necessary.
@@ -1973,7 +1996,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     , importId
                     , proxies
                     }
-                queueIO conn' $ Fin.addFinalizer cell $ atomically (Rc.decr localRc)
+                queueIO conn' $ Fin.addFinalizer cell $ Rc.decr localRc
                 pure $ Client $ Just $ ImportClient cell
 
             Nothing ->
@@ -1994,7 +2017,8 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     , origTarget
                     }
             Nothing -> do
-                rec imp@(Fin.get -> ImportRef{proxies}) <- newImport importId conn (Just (pState, tmpDest))
+                rec imp <- newImport importId conn (Just (pState, tmpDest))
+                    ImportRef{proxies} <- Fin.get imp
                     let tmpDest = RemoteDest (ImportDest imp)
                     pState <- newTVar Pending { tmpDest }
                 pure $ Client $ Just PromiseClient
@@ -2041,7 +2065,7 @@ newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} ->
         importId
         imports
     cell <- Fin.newCell importRef
-    queueIO conn' $ Fin.addFinalizer cell $ atomically (Rc.decr localRc)
+    queueIO conn' $ Fin.addFinalizer cell $ Rc.decr localRc
     pure cell
 
 -- | Release the identified import. Removes it from the table and sends a release
