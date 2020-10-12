@@ -1,3 +1,8 @@
+# 0.6.0.3
+
+* Fix a race condition [(#74)][issue74] causing remote objects to very
+  occasionally be released too early.
+
 # 0.6.0.2
 
 * Fix a bug [(#71)][issue71] which sometimes caused the code generator
