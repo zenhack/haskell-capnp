@@ -47,10 +47,10 @@ implsAgreeOn struct = do
         error $ concat
             [ "Our implementation disagrees with the reference implementation on " ++ show struct
             , ".\n\nWe produce:\n\n"
-            , show $ msgToLBS ourMsg
+            , show $ LBS.unpack $ msgToLBS ourMsg
             , "\n\n"
             , "But the reference implementation generates:\n\n"
-            , show $ msgToLBS refMsg
+            , show $ LBS.unpack $ msgToLBS refMsg
             ]
 
 ourImplCanonicalize :: PU.Struct -> Maybe M.ConstMsg
