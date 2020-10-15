@@ -44,7 +44,14 @@ implsAgreeOn struct = do
     let Just ourMsg = ourImplCanonicalize struct
     refMsg <- refImplCanonicalize struct
     unless (ourMsg == refMsg) $
-        error $ "Our implementation disagrees with the reference implementation on " ++ show struct
+        error $ concat
+            [ "Our implementation disagrees with the reference implementation on " ++ show struct
+            , ".\n\nWe produce:\n\n"
+            , show $ msgToLBS ourMsg
+            , "\n\n"
+            , "But the reference implementation generates:\n\n"
+            , show $ msgToLBS refMsg
+            ]
 
 ourImplCanonicalize :: PU.Struct -> Maybe M.ConstMsg
 ourImplCanonicalize struct = createPure maxBound $ do
