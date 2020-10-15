@@ -119,15 +119,12 @@ data NormalList msg = NormalList
 
 -- | A list of values of type 'a' in a message.
 data ListOf msg a where
-    ListOfVoid
-        :: msg
-        -> !Int -- number of elements
-        -> ListOf msg ()
     ListOfStruct
         :: Struct msg -- First element. data/ptr sizes are the same for
                       -- all elements.
         -> !Int       -- Number of elements
         -> ListOf msg (Struct msg)
+    ListOfVoid   :: !(NormalList msg) -> ListOf msg ()
     ListOfBool   :: !(NormalList msg) -> ListOf msg Bool
     ListOfWord8  :: !(NormalList msg) -> ListOf msg Word8
     ListOfWord16 :: !(NormalList msg) -> ListOf msg Word16
@@ -217,7 +214,7 @@ newtype FlipListP   msg = FlipListP { unflipP :: ListOf msg (Maybe (Ptr msg)) }
 -------------------------------------------------------------------------------
 
 instance TraverseMsg (FlipList ()) where
-    tMsg f (FlipList (ListOfVoid msg len)) = FlipList <$> (ListOfVoid <$> f msg <*> pure len)
+    tMsg f (FlipList (ListOfVoid   nlist)) = FlipList . ListOfVoid <$> tMsg f nlist
 
 instance TraverseMsg (FlipList Bool) where
     tMsg f (FlipList (ListOfBool   nlist)) = FlipList . ListOfBool   <$> tMsg f nlist
@@ -418,8 +415,8 @@ instance HasMessage (List msg) where
 instance HasMessage (ListOf msg a) where
     type InMessage (ListOf msg a) = msg
 
-    message (ListOfVoid msg _)   = msg
     message (ListOfStruct tag _) = message tag
+    message (ListOfVoid list)    = message list
     message (ListOfBool list)    = message list
     message (ListOfWord8 list)   = message list
     message (ListOfWord16 list)  = message list
@@ -428,7 +425,7 @@ instance HasMessage (ListOf msg a) where
     message (ListOfPtr list)     = message list
 
 instance MessageDefault (ListOf msg ()) where
-    messageDefault msg = ListOfVoid msg 0
+    messageDefault msg = ListOfVoid (messageDefault msg)
 instance MessageDefault (ListOf msg (Struct msg)) where
     messageDefault msg = ListOfStruct (messageDefault msg) 0
 instance MessageDefault (ListOf msg Bool) where
@@ -515,7 +512,7 @@ get msg addr = do
     getList addr@WordAt{..} eltSpec = PtrList <$>
         case eltSpec of
             P.EltNormal sz len -> pure $ case sz of
-                Sz0   -> List0  (ListOfVoid    msg (fromIntegral len))
+                Sz0   -> List0  (ListOfVoid    nlist)
                 Sz1   -> List1  (ListOfBool    nlist)
                 Sz8   -> List8  (ListOfWord8   nlist)
                 Sz16  -> List16 (ListOfWord16  nlist)
@@ -556,7 +553,7 @@ listAddr (ListStruct (ListOfStruct (Struct _ addr _ _) _)) =
     -- addr is the address of the first element of the list, but
     -- composite lists start with a tag word:
     addr { wordIndex = wordIndex addr - 1 }
-listAddr (List0 _) = WordAt { segIndex = 0, wordIndex = 1 }
+listAddr (List0 (ListOfVoid NormalList{nAddr})) = nAddr
 listAddr (List1 (ListOfBool NormalList{nAddr})) = nAddr
 listAddr (List8 (ListOfWord8 NormalList{nAddr})) = nAddr
 listAddr (List16 (ListOfWord16 NormalList{nAddr})) = nAddr
@@ -576,7 +573,7 @@ setIndex :: RWCtx m s => a -> Int -> ListOf (M.MutMsg s) a -> m ()
 setIndex _ i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
-    ListOfVoid _ _     -> pure ()
+    ListOfVoid _       -> pure ()
     ListOfBool nlist   -> setNIndex nlist 64 (Word1 value)
     ListOfWord8 nlist  -> setNIndex nlist 8 value
     ListOfWord16 nlist -> setNIndex nlist 4 value
@@ -713,9 +710,9 @@ index :: ReadCtx m msg => Int -> ListOf msg a -> m a
 index i list = invoice 1 >> index' list
   where
     index' :: ReadCtx m msg => ListOf msg a -> m a
-    index' (ListOfVoid _ len)
-        | i < len = pure ()
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+    index' (ListOfVoid nlist)
+        | i < nLen nlist = pure ()
+        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = nLen nlist - 1 }
     index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
         | i < len = do
             let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
@@ -745,8 +742,8 @@ index i list = invoice 1 >> index' list
 
 -- | Returns the length of a list
 length :: ListOf msg a -> Int
-length (ListOfVoid _ len)   = len
 length (ListOfStruct _ len) = len
+length (ListOfVoid   nlist) = nLen nlist
 length (ListOfBool   nlist) = nLen nlist
 length (ListOfWord8  nlist) = nLen nlist
 length (ListOfWord16 nlist) = nLen nlist
@@ -761,8 +758,8 @@ take count list
         throwM E.BoundsError { E.index = count, E.maxIndex = length list - 1 }
     | otherwise = pure $ go list
   where
-    go (ListOfVoid msg _)   = ListOfVoid msg count
     go (ListOfStruct tag _) = ListOfStruct tag count
+    go (ListOfVoid nlist)   = ListOfVoid $ nTake nlist
     go (ListOfBool nlist)   = ListOfBool $ nTake nlist
     go (ListOfWord8 nlist)  = ListOfWord8 $ nTake nlist
     go (ListOfWord16 nlist) = ListOfWord16 $ nTake nlist
@@ -907,7 +904,7 @@ allocList64  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Wo
 -- | Allocate a list of pointers.
 allocListPtr :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) (Maybe (Ptr (M.MutMsg s))))
 
-allocList0   msg len = pure $ ListOfVoid msg len
+allocList0   msg len = ListOfVoid   <$> allocNormalList 0  msg len
 allocList1   msg len = ListOfBool   <$> allocNormalList 1  msg len
 allocList8   msg len = ListOfWord8  <$> allocNormalList 8  msg len
 allocList16  msg len = ListOfWord16 <$> allocNormalList 16 msg len
