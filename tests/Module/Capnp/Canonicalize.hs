@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase   #-}
+{-# LANGUAGE ViewPatterns #-}
 module Module.Capnp.Canonicalize
     ( canonicalizeTests
     ) where
@@ -7,6 +9,7 @@ import Test.QuickCheck    (property)
 import Test.QuickCheck.IO (propertyIO)
 
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Vector          as V
 
 import Control.Monad (unless)
 
@@ -25,7 +28,16 @@ canonicalizeTests :: Spec
 canonicalizeTests =
     describe "canonicalization tests" $ do
         it "agrees with reference implementation" $
-            property $ propertyIO . implsAgreeOn
+            property $ \case
+                PU.Struct (PU.Slice (V.toList -> [])) (PU.Slice (V.toList -> [])) ->
+                    -- skip this; it fails due to a bug in the reference implementation:
+                    --
+                    -- https://github.com/capnproto/capnproto/issues/1084
+                    --
+                    -- TODO: when that issue is fixed, stop skipping this case.
+                    propertyIO $ pure ()
+                struct ->
+                    propertyIO $ implsAgreeOn struct
 
 implsAgreeOn :: PU.Struct -> IO ()
 implsAgreeOn struct = do
