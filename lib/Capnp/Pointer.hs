@@ -104,12 +104,24 @@ parsePtr' word =
 
 -- | @'serializePtr' ptr@ serializes the pointer as a 'Word64', translating
 -- 'Nothing' to a null pointer.
+--
+-- This also changes the offset of zero-sized struct pointers to -1, to avoid
+-- them being interpreted as null.
 serializePtr :: Maybe Ptr -> Word64
 serializePtr Nothing  = 0
-serializePtr (Just (StructPtr 0 0 0)) =
-    -- We need to handle this specially, since the normal encoding
-    -- would be interpreted as null. We can get around this by changing
-    -- the offset.
+serializePtr (Just p@(StructPtr (-1) 0 0)) =
+    serializePtr' p
+serializePtr (Just (StructPtr _ 0 0)) =
+    -- We need to handle this specially, for two reasons.
+    --
+    -- First, if the offset is zero, the the normal encoding would be interpreted
+    -- as null. We can get around this by changing the offset to -1, which will
+    -- point immediately before the pointer, which is always a valid position --
+    -- and since the size is zero, we can stick it at any valid position.
+    --
+    -- Second, the canonicalization algorithm requires that *all* zero size structs
+    -- are encoded this way, and doing this for all offsets, rather than only zero
+    -- offsets, avoids needing extra logic elsewhere.
     serializePtr' (StructPtr (-1) 0 0)
 serializePtr (Just p) =
     serializePtr' p

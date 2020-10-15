@@ -18,6 +18,12 @@ module Capnp.Canonicalize
 -- If we ever make the allocator plugable, we will have to revisit this and
 -- ensure that our assumptions still hold.
 
+-- Note [Other assumptions]
+--
+-- This code relies on the fact that Capnp.Pointer.serializePointer does the
+-- canonicalization of zero-sized struct pointers for us; see the comments there
+-- for more details.
+
 import Data.Word
 
 import Data.Foldable    (for_)
