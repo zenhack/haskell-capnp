@@ -10,7 +10,7 @@ import Capnp.Gen.Capnp.Schema
 
 import Capnp                (newRoot)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
-import Data.Mutable         (Thaw(..))
+import Data.Mutable         (Thaw (..))
 import Util                 (decodeValue, schemaSchemaSrc)
 
 import qualified Capnp.Message as M

@@ -19,7 +19,7 @@ import System.IO.Error          (isDoesNotExistError)
 import System.Process           (callProcess, readProcessWithExitCode)
 
 import Capnp.Rpc.Transport  (socketTransport)
-import Capnp.Rpc.Untyped    (ConnConfig(..), handleConn)
+import Capnp.Rpc.Untyped    (ConnConfig (..), handleConn)
 import Capnp.TraversalLimit (defaultLimit)
 
 import qualified Examples.Rpc.CalculatorClient

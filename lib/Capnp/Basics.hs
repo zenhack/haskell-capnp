@@ -35,8 +35,7 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Capnp.Classes
-    (FromPtr(..), ListElem(..), MutListElem(..), ToPtr(..))
+import Capnp.Classes (FromPtr (..), ListElem (..), MutListElem (..), ToPtr (..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Errors  as E

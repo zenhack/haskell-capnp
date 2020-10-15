@@ -13,15 +13,15 @@ module Internal.BuildPure
     , createPure
     ) where
 
-import Control.Monad.Catch      (Exception, MonadThrow(..), SomeException)
+import Control.Monad.Catch      (Exception, MonadThrow (..), SomeException)
 import Control.Monad.Catch.Pure (CatchT, runCatchT)
-import Control.Monad.Primitive  (PrimMonad(..))
+import Control.Monad.Primitive  (PrimMonad (..))
 import Control.Monad.ST         (ST)
-import Control.Monad.Trans      (MonadTrans(..))
+import Control.Monad.Trans      (MonadTrans (..))
 
 import Capnp.Bits           (WordCount)
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
-import Data.Mutable         (Thaw(..), createT)
+import Data.Mutable         (Thaw (..), createT)
 
 -- | 'PureBuilder' is a monad transformer stack with the instnaces needed
 -- manipulate mutable messages. @'PureBuilder' s a@ is morally equivalent

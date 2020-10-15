@@ -34,11 +34,11 @@ import Util
 
 import Capnp                (cerialize, createPure, def, getRoot, newRoot)
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
-import Data.Mutable         (Thaw(..))
+import Data.Mutable         (Thaw (..))
 
 import Instances ()
 
-import Capnp.Gen.Capnp.Schema.Pure (Brand, Method(..), Node'Parameter)
+import Capnp.Gen.Capnp.Schema.Pure (Brand, Method (..), Node'Parameter)
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Message as M

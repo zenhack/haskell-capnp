@@ -77,9 +77,9 @@ import qualified Focus
 import qualified ListT
 import qualified StmContainers.Map as M
 
-import Capnp.Classes        (cerialize, decerialize)
-import Capnp.Convert        (msgToValue, valueToMsg)
-import Capnp.Message        (ConstMsg)
+import Capnp.Classes    (cerialize, decerialize)
+import Capnp.Convert    (msgToValue, valueToMsg)
+import Capnp.Message    (ConstMsg)
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -865,7 +865,7 @@ callRemote
     let paramCaps = catMaybes $ flip map (V.toList capTable) $ \case
             R.CapDescriptor'senderHosted  eid -> Just (IEId eid)
             R.CapDescriptor'senderPromise eid -> Just (IEId eid)
-            _ -> Nothing
+            _                                 -> Nothing
 
     clientMap <- M.new
     rp <- newTVar PendingRemotePipeline
@@ -994,7 +994,7 @@ newPromiseClient = liftSTM $ do
     pState <- newTVar Pending { tmpDest }
     exportMap <- ExportMap <$> M.new
     f <- newCallback $ \case
-        Left e -> resolveClientExn tmpDest (writeTVar pState) e
+        Left e  -> resolveClientExn tmpDest (writeTVar pState) e
         Right v -> resolveClientClient tmpDest (writeTVar pState) (toClient v)
     let p = Client $ Just $ PromiseClient
             { pState
@@ -1050,7 +1050,7 @@ callbacksLoop Conn'{pendingCallbacks} = forever $ do
     cbs <- atomically $ flushTQueue pendingCallbacks >>= \case
         -- We need to make sure to block if there weren't any jobs, since
         -- otherwise we'll busy loop, pegging the CPU.
-        [] -> retry
+        []  -> retry
         cbs -> pure cbs
     sequence_ cbs
 
@@ -1649,14 +1649,14 @@ abortConn _ e = throwSTM (SentAbort e)
 getLive :: Conn -> STM Conn'
 getLive Conn{liveState} = readTVar liveState >>= \case
     Live conn' -> pure conn'
-    Dead -> throwSTM eDisconnected
+    Dead       -> throwSTM eDisconnected
 
 -- | Performs an action with the live connection state. Does nothing if the
 -- connection is dead.
 whenLive :: Conn -> (Conn' -> STM ()) -> STM ()
 whenLive Conn{liveState} f = readTVar liveState >>= \case
     Live conn' -> f conn'
-    Dead -> pure ()
+    Dead       -> pure ()
 
 -- | Request the remote vat's bootstrap interface.
 requestBootstrap :: Conn -> STM Client

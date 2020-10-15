@@ -45,9 +45,9 @@ import Data.Word
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Foldable       (for_)
 
-import Capnp.Bits    (Word1(..))
+import Capnp.Bits    (Word1 (..))
 import Capnp.Errors  (Error(SchemaViolationError))
-import Capnp.Untyped (Cap, ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
+import Capnp.Untyped (Cap, ListOf, Ptr (..), ReadCtx, Struct, messageDefault)
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U

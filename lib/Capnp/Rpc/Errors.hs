@@ -26,7 +26,7 @@ import Data.Text    (Text)
 
 import qualified Control.Exception.Safe as E
 
-import Capnp.Gen.Capnp.Rpc.Pure (Exception(..), Exception'Type(..))
+import Capnp.Gen.Capnp.Rpc.Pure (Exception (..), Exception'Type (..))
 
 -- | Construct an exception with a type field of failed and the
 -- given text as its reason.

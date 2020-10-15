@@ -41,17 +41,17 @@ reportIssues CodeGeneratorRequest{nodes} =
 
 isPtrValue :: Value -> Bool
 isPtrValue = \case
-    Value'void -> False
-    Value'bool _ -> False
-    Value'int8 _ -> False
-    Value'int16 _ -> False
-    Value'int32 _ -> False
-    Value'int64 _ -> False
-    Value'uint8 _ -> False
-    Value'uint16 _ -> False
-    Value'uint32 _ -> False
-    Value'uint64 _ -> False
+    Value'void      -> False
+    Value'bool _    -> False
+    Value'int8 _    -> False
+    Value'int16 _   -> False
+    Value'int32 _   -> False
+    Value'int64 _   -> False
+    Value'uint8 _   -> False
+    Value'uint16 _  -> False
+    Value'uint32 _  -> False
+    Value'uint64 _  -> False
     Value'float32 _ -> False
     Value'float64 _ -> False
-    Value'enum _ -> False
-    _ -> True
+    Value'enum _    -> False
+    _               -> True

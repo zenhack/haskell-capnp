@@ -10,17 +10,17 @@ module Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 import Data.Proxy
 import Test.Hspec
 
-import Control.Exception.Safe    (bracket)
-import Control.Monad             (when)
-import Control.Monad.Primitive   (RealWorld)
-import Data.Default              (Default(..))
-import Data.Foldable             (traverse_)
-import System.Directory          (removeFile)
+import Control.Exception.Safe  (bracket)
+import Control.Monad           (when)
+import Control.Monad.Primitive (RealWorld)
+import Data.Default            (Default (..))
+import Data.Foldable           (traverse_)
+import System.Directory        (removeFile)
 import System.IO
     (IOMode(ReadMode, WriteMode), hClose, openBinaryTempFile, withBinaryFile)
 import Test.QuickCheck           (Property, property)
-import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO        (propertyIO)
+import Test.QuickCheck.Instances ()
 import Text.Heredoc              (here)
 import Text.Show.Pretty          (ppShow)
 
@@ -32,16 +32,16 @@ import Util
 
 import Instances ()
 
-import Capnp                (getRoot, hGetValue, hPutValue, setRoot)
+import Capnp         (getRoot, hGetValue, hPutValue, setRoot)
 import Capnp.Classes
-    ( Allocate(..)
-    , Cerialize(..)
-    , Decerialize(..)
-    , FromStruct(..)
-    , ToStruct(..)
+    ( Allocate (..)
+    , Cerialize (..)
+    , Decerialize (..)
+    , FromStruct (..)
+    , ToStruct (..)
     )
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
-import Data.Mutable         (Thaw(..))
+import Data.Mutable         (Thaw (..))
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U

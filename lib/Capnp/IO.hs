@@ -33,13 +33,13 @@ import System.IO.Error           (eofErrorType, mkIOError)
 
 import qualified Data.ByteString as BS
 
-import Capnp.Bits           (WordCount, wordsToBytes)
+import Capnp.Bits    (WordCount, wordsToBytes)
 import Capnp.Classes
-    (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
+    (Cerialize (..), Decerialize (..), FromStruct (..), ToStruct (..))
 import Capnp.Convert        (msgToLBS, valueToLBS)
 import Capnp.TraversalLimit (evalLimitT)
 import Codec.Capnp          (getRoot, setRoot)
-import Data.Mutable         (Thaw(..))
+import Data.Mutable         (Thaw (..))
 
 import qualified Capnp.Message as M
 

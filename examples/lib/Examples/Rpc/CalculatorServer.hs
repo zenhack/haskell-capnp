@@ -18,7 +18,7 @@ import qualified Data.Vector as V
 
 import Capnp     (def, defaultLimit)
 import Capnp.Rpc
-    ( ConnConfig(..)
+    ( ConnConfig (..)
     , Server
     , handleConn
     , pureHandler

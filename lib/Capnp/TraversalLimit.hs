@@ -36,16 +36,16 @@ import Prelude hiding (fail)
 
 import Control.Monad              (when)
 import Control.Monad.Catch        (MonadThrow(throwM))
-import Control.Monad.Fail         (MonadFail(..))
-import Control.Monad.IO.Class     (MonadIO(..))
+import Control.Monad.Fail         (MonadFail (..))
+import Control.Monad.IO.Class     (MonadIO (..))
 import Control.Monad.Primitive    (PrimMonad(primitive), PrimState)
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
-import Control.Monad.Trans.Class  (MonadTrans(lift))
+import Control.Monad.Trans.Class (MonadTrans(lift))
 
 -- Just to define 'MonadLimit' instances:
-import Control.Monad.Reader (ReaderT)
 import Control.Monad.RWS    (RWST)
+import Control.Monad.Reader (ReaderT)
 import Control.Monad.Writer (WriterT)
 
 import qualified Control.Monad.State.Lazy as LazyState

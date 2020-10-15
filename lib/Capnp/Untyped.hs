@@ -65,20 +65,20 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
+import Capnp.Address (OffsetError (..), WordAddr (..), pointerFrom)
 import Capnp.Bits
-    ( BitCount(..)
-    , ByteCount(..)
-    , Word1(..)
-    , WordCount(..)
+    ( BitCount (..)
+    , ByteCount (..)
+    , Word1 (..)
+    , WordCount (..)
     , bitsToBytesCeil
     , bytesToWordsCeil
     , replaceBits
     , wordsToBytes
     )
-import Capnp.Pointer        (ElementSize(..))
+import Capnp.Pointer        (ElementSize (..))
 import Capnp.TraversalLimit (MonadLimit(invoice))
-import Data.Mutable         (Thaw(..))
+import Data.Mutable         (Thaw (..))
 
 import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M

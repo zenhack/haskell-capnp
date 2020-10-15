@@ -173,7 +173,7 @@ rawAsyncHandler ::
 rawAsyncHandler f cap = MethodHandler
     { handleMethod = \ptr reply -> do
         fulfiller <- newCallback $ \case
-            Left e -> breakPromise reply e
+            Left e  -> breakPromise reply e
             Right v -> fulfill reply $ Just (Untyped.PtrStruct (toStruct v))
         cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
         f cap cerial fulfiller

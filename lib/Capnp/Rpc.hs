@@ -48,12 +48,12 @@ module Capnp.Rpc
 
 import Supervisors
 
-import Capnp.Rpc.Errors    (throwFailed)
-import Capnp.Rpc.Invoke    ((?))
+import Capnp.Rpc.Errors  (throwFailed)
+import Capnp.Rpc.Invoke  ((?))
 import Capnp.Rpc.Promise
 import Capnp.Rpc.Server
     ( MethodHandler
-    , Server(..)
+    , Server (..)
     , methodThrow
     , methodUnimplemented
     , pureHandler
@@ -61,8 +61,8 @@ import Capnp.Rpc.Server
     , rawHandler
     )
 import Capnp.Rpc.Transport
-    (Transport(..), handleTransport, socketTransport, tracingTransport)
+    (Transport (..), handleTransport, socketTransport, tracingTransport)
 import Capnp.Rpc.Untyped
-    (Client, ConnConfig(..), IsClient(..), handleConn, newPromiseClient)
+    (Client, ConnConfig (..), IsClient (..), handleConn, newPromiseClient)
 
 import qualified Capnp.Rpc.Untyped as Untyped

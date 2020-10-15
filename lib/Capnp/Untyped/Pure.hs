@@ -37,11 +37,16 @@ import Data.Word
 import Control.Monad                 (forM_)
 import Data.Default                  (Default(def))
 import Data.Default.Instances.Vector ()
-import GHC.Exts                      (IsList(..))
+import GHC.Exts                      (IsList (..))
 import GHC.Generics                  (Generic)
 
 import Capnp.Classes
-    (Cerialize(..), Decerialize(..), FromStruct(..), Marshal(..), ToPtr(..))
+    ( Cerialize (..)
+    , Decerialize (..)
+    , FromStruct (..)
+    , Marshal (..)
+    , ToPtr (..)
+    )
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Message as M

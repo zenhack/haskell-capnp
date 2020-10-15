@@ -18,7 +18,7 @@ import System.IO
 import Control.Monad.Trans            (lift)
 import Control.Monad.Trans.Resource   (ResourceT, allocate, runResourceT)
 import System.Directory               (removeFile)
-import System.Exit                    (ExitCode(..))
+import System.Exit                    (ExitCode (..))
 import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
 import Text.Heredoc                   (there)
 

@@ -4,7 +4,7 @@ module Examples.Rpc.EchoClient (main) where
 import Network.Simple.TCP (connect)
 
 import Capnp     (def, defaultLimit)
-import Capnp.Rpc (ConnConfig(..), handleConn, socketTransport, wait, (?))
+import Capnp.Rpc (ConnConfig (..), handleConn, socketTransport, wait, (?))
 
 import Capnp.Gen.Echo.Pure
 

@@ -5,8 +5,8 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad.IO.Class    (liftIO)
-import Test.QuickCheck.Instances ()
 import Test.QuickCheck.IO        (propertyIO)
+import Test.QuickCheck.Instances ()
 
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T

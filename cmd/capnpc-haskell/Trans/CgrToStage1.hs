@@ -219,19 +219,19 @@ dataLoc offset ty defaultVal =
 -- returns Nothing if the value is a non-word type.
 valueBits :: Schema.Value -> Maybe Word64
 valueBits = \case
-    Schema.Value'bool b -> Just $ fromIntegral $ fromEnum b
-    Schema.Value'int8 n -> Just $ fromIntegral n
-    Schema.Value'int16 n -> Just $ fromIntegral n
-    Schema.Value'int32 n -> Just $ fromIntegral n
-    Schema.Value'int64 n -> Just $ fromIntegral n
-    Schema.Value'uint8 n -> Just $ fromIntegral n
-    Schema.Value'uint16 n -> Just $ fromIntegral n
-    Schema.Value'uint32 n -> Just $ fromIntegral n
-    Schema.Value'uint64 n -> Just n
+    Schema.Value'bool b    -> Just $ fromIntegral $ fromEnum b
+    Schema.Value'int8 n    -> Just $ fromIntegral n
+    Schema.Value'int16 n   -> Just $ fromIntegral n
+    Schema.Value'int32 n   -> Just $ fromIntegral n
+    Schema.Value'int64 n   -> Just $ fromIntegral n
+    Schema.Value'uint8 n   -> Just $ fromIntegral n
+    Schema.Value'uint16 n  -> Just $ fromIntegral n
+    Schema.Value'uint32 n  -> Just $ fromIntegral n
+    Schema.Value'uint64 n  -> Just n
     Schema.Value'float32 n -> Just $ fromIntegral $ floatToWord n
     Schema.Value'float64 n -> Just $ doubleToWord n
-    Schema.Value'enum n -> Just $ fromIntegral n
-    _ -> Nothing -- some non-word type.
+    Schema.Value'enum n    -> Just $ fromIntegral n
+    _                      -> Nothing -- some non-word type.
 
 reqFileToReqFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.ReqFile
 reqFileToReqFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename} =

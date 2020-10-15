@@ -6,7 +6,7 @@ import Network.Simple.TCP (serve)
 
 import Capnp     (def, defaultLimit)
 import Capnp.Rpc
-    ( ConnConfig(..)
+    ( ConnConfig (..)
     , Server
     , handleConn
     , pureHandler
