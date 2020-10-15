@@ -1,3 +1,16 @@
+# 0.7.0.0
+
+## Serialization
+
+* The library now supports canonicalization via Capnp.canonicalize
+* There is a new function Capnp.Message.singleSegment for construction
+  a `ConstMsg` from an (unframed) `Segment ConstMsg`.
+
+## RPC
+
+* Some signatures in Capnp.Rpc.Untyped have changed to facilitate a
+  future release supporting promise pipelining.
+
 # 0.6.0.2
 
 * Fix a bug [(#71)][issue71] which sometimes caused the code generator
