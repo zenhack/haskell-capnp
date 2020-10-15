@@ -4,6 +4,7 @@
 module Util
     ( MsgMetaData(..)
     , capnpEncode, capnpDecode, capnpCompile
+    , capnpCanonicalize
     , decodeValue
     , encodeValue
     , aircraftSchemaSrc
@@ -39,6 +40,21 @@ data MsgMetaData = MsgMetaData
     { msgSchema :: String -- ^ The source of the schema
     , msgType   :: String -- ^ The name of the root struct's type
     } deriving(Show)
+
+capnpCanonicalize :: LBS.ByteString -> IO LBS.ByteString
+capnpCanonicalize stdInBytes = do
+    (exitStatus, stdOut, stdErr) <-
+        readCreateProcessWithExitCode
+            (proc "capnp" ["convert", "binary:canonical"])
+            stdInBytes
+    case exitStatus of
+        ExitSuccess -> pure stdOut
+        ExitFailure code -> fail $ concat
+            [ "capnp convert binary:canonical failed with exit code "
+            , show code
+            , ":\n"
+            , show stdErr
+            ]
 
 -- | @capnpEncode msg meta@ runs @capnp encode@ on the message, providing
 -- the needed metadata and returning the output

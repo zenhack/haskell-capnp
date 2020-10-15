@@ -26,6 +26,9 @@ module Capnp
     , Message.MutMsg
     , Message.newMessage
 
+    -- * Canonicalizing messages
+    , canonicalize
+
     -- * Manipulating the root object of a message
     , Codec.getRoot
     , Codec.newRoot
@@ -67,6 +70,7 @@ import Capnp.IO
 import Capnp.TraversalLimit
 import Data.Mutable
 
+import Capnp.Canonicalize (canonicalize)
 import Internal.BuildPure (PureBuilder, createPure)
 
 import qualified Capnp.Basics  as Basics

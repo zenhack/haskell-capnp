@@ -35,6 +35,7 @@ module Capnp.Message (
     -- * Immutable messages
     , ConstMsg
     , empty
+    , singleSegment
 
     -- * Reading data from messages
     , getSegment
@@ -491,6 +492,13 @@ newMessage (Just (WordCount sizeHint)) = do
     _ <- newSegment msg sizeHint
     _ <- alloc msg 1
     pure msg
+
+-- | Create a message from a single segment.
+singleSegment :: Segment ConstMsg -> ConstMsg
+singleSegment seg = ConstMsg
+    { constSegs = V.singleton seg
+    , constCaps = V.empty
+    }
 
 
 instance Thaw (Segment ConstMsg) where

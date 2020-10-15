@@ -102,6 +102,7 @@ library
       , Capnp.Basics
       , Capnp.Basics.Pure
       , Capnp.Bits
+      , Capnp.Canonicalize
       , Capnp.Classes
       , Capnp.Convert
       , Capnp.Errors
@@ -266,6 +267,7 @@ test-suite tests
       , Module.Capnp.Pointer
       , Module.Capnp.Bits
       , Module.Capnp.Basics
+      , Module.Capnp.Canonicalize
       , Regression
       , WalkSchemaCodeGenRequest
       , SchemaQuickCheck

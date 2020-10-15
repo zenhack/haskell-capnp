@@ -4,6 +4,7 @@ import Test.Hspec
 
 import Module.Capnp.Basics                (basicsTests)
 import Module.Capnp.Bits                  (bitsTests)
+import Module.Capnp.Canonicalize          (canonicalizeTests)
 import Module.Capnp.Gen.Capnp.Schema      (schemaTests)
 import Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests)
 import Module.Capnp.Pointer               (ptrTests)
@@ -26,6 +27,7 @@ main = hspec $ parallel $ do
         describe "Capnp.Rpc" rpcTests
         describe "Capnp.Untyped" untypedTests
         describe "Capnp.Untyped.Pure" pureUntypedTests
+        describe "Capnp.Canonicalize" canonicalizeTests
     describe "Tests for generated output" $ do
         describe "low-level output" schemaTests
         describe "high-level output" pureSchemaTests
