@@ -1184,6 +1184,10 @@ instance (Basics.ListElem msg (CapDescriptor msg)) where
 instance (Basics.MutListElem s (CapDescriptor (Message.MutMsg s))) where
     setIndex (CapDescriptor'newtype_ elt) i (CapDescriptor'List_ l) = (Untyped.setIndex elt i l)
     newList msg len = (CapDescriptor'List_ <$> (Untyped.allocCompositeList msg 1 1 len))
+get_CapDescriptor'attachedFd :: ((Untyped.ReadCtx m msg)) => (CapDescriptor msg) -> (m Std_.Word8)
+get_CapDescriptor'attachedFd (CapDescriptor'newtype_ struct) = (GenHelpers.getWordField struct 0 16 255)
+set_CapDescriptor'attachedFd :: ((Untyped.RWCtx m s)) => (CapDescriptor (Message.MutMsg s)) -> Std_.Word8 -> (m ())
+set_CapDescriptor'attachedFd (CapDescriptor'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word8) 0 16 255)
 data CapDescriptor' msg
     = CapDescriptor'none 
     | CapDescriptor'senderHosted Std_.Word32

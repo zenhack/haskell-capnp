@@ -862,7 +862,7 @@ callRemote
         }
     -- save these in case the callee sends back releaseParamCaps = True in the return
     -- message:
-    let paramCaps = catMaybes $ flip map (V.toList capTable) $ \case
+    let paramCaps = catMaybes $ flip map (V.toList capTable) $ \R.CapDescriptor{union'} -> case union' of
             R.CapDescriptor'senderHosted  eid -> Just (IEId eid)
             R.CapDescriptor'senderPromise eid -> Just (IEId eid)
             _                                 -> Nothing
@@ -1162,7 +1162,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
                             -- the encode step to pick the right index for
                             -- our capability.
                         { content = Just (Untyped.PtrCap client)
-                        , capTable = V.singleton capDesc
+                        , capTable = V.singleton (def :: R.CapDescriptor) { R.union' = capDesc }
                         }
                 }
     M.focus
@@ -1179,7 +1179,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
                     case ret of
                         R.Return
                             { union' = R.Return'results R.Payload
-                                { capTable = (V.toList -> [ R.CapDescriptor'receiverHosted (IEId -> eid)])
+                                { capTable = (V.toList -> [ R.CapDescriptor { union' = R.CapDescriptor'receiverHosted (IEId -> eid) } ])
                                 }
                             } ->
                                 when releaseResultCaps $
@@ -1213,7 +1213,7 @@ handleCallMsg
             , onFinish = SnocList.fromList
                 [ \R.Finish{releaseResultCaps} ->
                     when releaseResultCaps $
-                        for_ capTable $ \case
+                        for_ capTable $ \R.CapDescriptor{union'} -> case union' of
                             R.CapDescriptor'receiverHosted (IEId -> importId) ->
                                 releaseExport conn 1 importId
                             _ ->
@@ -1333,7 +1333,7 @@ handleResolveMsg conn R.Resolve{promiseId, union'} =
                 -- This can happen if we dropped the promise, but the release
                 -- message is still in flight when the resolve message is sent.
                 case union' of
-                    R.Resolve'cap (R.CapDescriptor'receiverHosted importId) ->
+                    R.Resolve'cap R.CapDescriptor{union' = R.CapDescriptor'receiverHosted importId} ->
                         -- Send a release message for the resolved cap, since
                         -- we're not going to use it:
                         sendPureMsg conn' $ R.Message'release def
@@ -1352,7 +1352,7 @@ handleResolveMsg conn R.Resolve{promiseId, union'} =
                     ]
             Just EntryI { promiseState = Just (tvar, tmpDest) } ->
                 case union' of
-                    R.Resolve'cap cap -> do
+                    R.Resolve'cap R.CapDescriptor{union' = cap} -> do
                         client <- acceptCap conn cap
                         resolveClientClient tmpDest (writeTVar tvar) client
                     R.Resolve'exception exn ->
@@ -1476,7 +1476,7 @@ handleDisembargoMsg conn d = getLive conn >>= go d
 -- table with the result.
 fixCapTable :: V.Vector R.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
 fixCapTable capDescs conn msg = do
-    clients <- traverse (acceptCap conn) capDescs
+    clients <- traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capDescs
     pure $ Message.withCapTable clients msg
 
 lookupAbort
@@ -1532,7 +1532,10 @@ genSendableCapTableRaw
 genSendableCapTableRaw _ Nothing = pure V.empty
 genSendableCapTableRaw conn (Just ptr) =
     traverse
-        (emitCap conn)
+        (\c -> do
+            union' <- emitCap conn c
+            pure (def :: R.CapDescriptor) { R.union' = union' }
+        )
         (Message.getCapTable (UntypedRaw.message ptr))
 
 -- | Convert the pointer into a Payload, including a capability table for
@@ -1946,10 +1949,10 @@ addBumpExport exportId client =
         | otherwise =
             Just EntryE { client, refCount = refCount + 1 }
 
--- | Generate a CapDescriptor, which we can sent to the connection's remote
+-- | Generate a CapDescriptor', which we can sent to the connection's remote
 -- vat to identify client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
-emitCap :: Conn -> Client -> STM R.CapDescriptor
+emitCap :: Conn -> Client -> STM R.CapDescriptor'
 emitCap _targetConn (Client Nothing) =
     pure R.CapDescriptor'none
 emitCap targetConn (Client (Just client')) = case client' of
@@ -1974,9 +1977,9 @@ emitCap targetConn (Client (Just client')) = case client' of
   where
     newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
 
--- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor
+-- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor'
 -- received via the connection. May update connection state as necessary.
-acceptCap :: Conn -> R.CapDescriptor -> STM Client
+acceptCap :: Conn -> R.CapDescriptor' -> STM Client
 acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
   where
     go _ R.CapDescriptor'none = pure (Client Nothing)

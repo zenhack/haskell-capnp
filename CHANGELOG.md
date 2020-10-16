@@ -11,6 +11,11 @@
 * Some signatures in Capnp.Rpc.Untyped have changed to facilitate a
   future release supporting promise pipelining.
 
+## Misc
+
+* The included schema now match those in version 0.8 of the reference
+  implementation
+
 # 0.6.0.2
 
 * Fix a bug [(#71)][issue71] which sometimes caused the code generator
