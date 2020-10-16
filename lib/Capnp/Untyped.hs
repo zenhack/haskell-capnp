@@ -868,8 +868,8 @@ allocStruct msg dataSz ptrSz = do
 allocCompositeList
     :: M.WriteCtx m s
     => M.MutMsg s -- ^ The message to allocate in.
-    -> Word16     -- ^ The size of the data sections
-    -> Word16     -- ^ The size of the pointer sections
+    -> Word16     -- ^ The size of the data section
+    -> Word16     -- ^ The size of the pointer section
     -> Int        -- ^ The length of the list in elements.
     -> m (ListOf (M.MutMsg s) (Struct (M.MutMsg s)))
 allocCompositeList msg dataSz ptrSz len = do
