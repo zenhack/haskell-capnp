@@ -164,8 +164,8 @@ findCanonicalListSectionCounts :: U.ReadCtx m msg => U.ListOf msg (U.Struct msg)
 findCanonicalListSectionCounts list = go 0 0 0 where
     go i !nWords !nPtrs
         | i >= U.length list =
-            pure (nPtrs, nWords)
+            pure (nWords, nPtrs)
         | otherwise = do
             struct <- U.index i list
             (nWords', nPtrs') <- findCanonicalSectionCounts struct
-            go (i+1) (max nPtrs nPtrs') (max nWords nWords')
+            go (i+1) (max nWords nWords') (max nPtrs nPtrs')
