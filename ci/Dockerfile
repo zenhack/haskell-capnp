@@ -1,15 +1,12 @@
-FROM alpine:3.8
+FROM alpine:3.12
 WORKDIR /usr/src/
 
 # Cabal does not like busybox's wget:
-RUN apk add \
-	wget
+RUN apk add wget
 
-# Install the Haskell tooling.
-RUN apk add \
-	build-base \
-	ghc \
-	cabal
+RUN apk add curl
+RUN apk add build-base
+RUN apk add ghc cabal
 
 # Install the linters up front; this saves a lot of build time during the actual
 # CI run.
@@ -30,10 +27,10 @@ RUN apk add \
 	libtool \
 	linux-headers
 
-# Build and install a recent version of capnproto; it isn't in the alpine
-# repos. Furthermore, we use the calculator-client & server examples as
+# Build and install a recent version of capnproto; the distro version is
+# outdated. Furthermore, we use the calculator-client & server examples as
 # part of our test suite, so we need to build that anyway:
-RUN wget "https://github.com/capnproto/capnproto/archive/v0.6.1.tar.gz"
+RUN wget "https://github.com/capnproto/capnproto/archive/v0.8.0.tar.gz"
 RUN tar -xvf *.tar.gz
 RUN cd capnproto-*/c++ && \
 	autoreconf -i && \
