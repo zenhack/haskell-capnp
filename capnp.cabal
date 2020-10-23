@@ -26,12 +26,13 @@ extra-source-files:
   , ci/README.md
   , ci/Dockerfile
   , core-schema/README.md
-  , core-schema/capnp/c++.capnp
-  , core-schema/capnp/json.capnp
+  , core-schema/capnp/schema.capnp
+  , core-schema/capnp/stream.capnp
+  , core-schema/capnp/rpc-twoparty.capnp
   , core-schema/capnp/persistent.capnp
   , core-schema/capnp/rpc.capnp
-  , core-schema/capnp/rpc-twoparty.capnp
-  , core-schema/capnp/schema.capnp
+  , core-schema/capnp/compat/json.capnp
+  , core-schema/capnp/c++.capnp
   , scripts/format.sh
   , scripts/gen-basic-instances.hs
   , scripts/hlint.sh
