@@ -101,7 +101,7 @@ class (ListElem (M.MutMsg s) e) => MutListElem s e where
 --
 -- This applies to typed structs, but not e.g. lists, because the length
 -- must be known to allocate a list.
-class Allocate s e where
+class Allocate s e | e -> s where
     -- @'new' msg@ allocates a new value of type @e@ inside @msg@.
     new :: M.WriteCtx m s => M.MutMsg s -> m e
 
