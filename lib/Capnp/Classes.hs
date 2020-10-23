@@ -1,9 +1,10 @@
-{-# LANGUAGE DefaultSignatures     #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE DefaultSignatures      #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 {- |
 Module: Capnp.Classes
 Description: Misc. type classes
@@ -155,12 +156,12 @@ class ToPtr s a where
     toPtr :: M.WriteCtx m s => M.MutMsg s -> a -> m (Maybe (Ptr (M.MutMsg s)))
 
 -- | Types that can be extracted from a struct.
-class FromStruct msg a where
+class FromStruct msg a | a -> msg where
     -- | Extract a value from a struct.
     fromStruct :: ReadCtx m msg => Struct msg -> m a
 
 -- | Types that can be converted to a struct.
-class ToStruct msg a where
+class ToStruct msg a | a -> msg where
     -- | Convert a value to a struct.
     toStruct :: a -> Struct msg
 

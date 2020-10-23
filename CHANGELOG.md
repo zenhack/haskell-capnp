@@ -1,3 +1,11 @@
+# 0.8.0.0
+
+## Misc
+
+* Some of the multi-parameter type classes in Capnp.Classes now have
+  functional dependencies between their parameters. This should
+  generally improve type inference.
+
 # 0.7.0.0
 
 ## Serialization
