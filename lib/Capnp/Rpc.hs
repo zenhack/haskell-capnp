@@ -37,6 +37,8 @@ module Capnp.Rpc
     , Client
     , IsClient(..)
     , newPromiseClient
+    , waitClient
+
     -- ** Reflection
     , Untyped.unwrapServer
 
@@ -63,6 +65,12 @@ import Capnp.Rpc.Server
 import Capnp.Rpc.Transport
     (Transport (..), handleTransport, socketTransport, tracingTransport)
 import Capnp.Rpc.Untyped
-    (Client, ConnConfig (..), IsClient (..), handleConn, newPromiseClient)
+    ( Client
+    , ConnConfig (..)
+    , IsClient (..)
+    , handleConn
+    , newPromiseClient
+    , waitClient
+    )
 
 import qualified Capnp.Rpc.Untyped as Untyped

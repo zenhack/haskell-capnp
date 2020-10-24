@@ -43,6 +43,9 @@ module Capnp.Rpc.Untyped
     -- * Unwrapping local clients
     , unwrapServer
 
+    -- * Waiting for resolution
+    , waitClient
+
     -- * Errors
     , RpcError(..)
     , R.Exception(..)
@@ -1017,6 +1020,30 @@ unwrapServer :: (IsClient c, Typeable a) => c -> Maybe a
 unwrapServer c = case toClient c of
     Client (Just LocalClient { unwrapper }) -> unwrapper
     _                                       -> Nothing
+
+
+-- | Wait for the client to be fully resolved, and then return a client
+-- pointing directly to the destination.
+--
+-- If the argument is null, a local client, or a (permanent) remote client,
+-- this returns the argument immediately. If the argument is a promise client,
+-- then this waits for the promise to resolve and returns the result of
+-- the resolution. If the promise resolves to *another* promise, then this waits
+-- for that promise to also resolve.
+--
+-- If the promise is rejected, then this throws the corresponding exception.
+waitClient :: (IsClient c, MonadSTM m) => c -> m c
+waitClient client = liftSTM $ case toClient client of
+    Client Nothing -> pure client
+    Client (Just LocalClient{}) -> pure client
+    Client (Just ImportClient{}) -> pure client
+    Client (Just PromiseClient{pState}) -> do
+        state <- readTVar pState
+        case state of
+            Ready{target} -> fromClient <$> waitClient target
+            Error e       -> throwSTM e
+            Pending{}     -> retry
+            Embargo{}     -> retry
 
 
 -- | Spawn a local server with its lifetime bound to the supervisor,
