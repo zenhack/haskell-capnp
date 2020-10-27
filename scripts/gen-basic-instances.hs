@@ -49,11 +49,11 @@ genInstance P{..} = concat $
     , "instance Decerialize ", typed, " where\n"
     , "    type Cerial msg ", typed, " = ", typed, "\n"
     , "    decerialize val = pure val\n"
-    , "instance Cerialize ", typed, " where\n"
+    , "instance Cerialize s ", typed, " where\n"
     , "    cerialize _ val = pure val\n"
     ]
     ++
-    [ "instance Cerialize (V.Vector " ++  t ++ ") where\n" ++
+    [ "instance Cerialize s (V.Vector " ++  t ++ ") where\n" ++
       "    cerialize = cerializeBasicVec\n"
     | t <- take 6 $ iterate (\t -> "(V.Vector " ++ t ++ ")") typed
     ]

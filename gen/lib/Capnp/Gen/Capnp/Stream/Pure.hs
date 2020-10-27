@@ -46,18 +46,18 @@ instance (Classes.Marshal StreamResult) where
             (do
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize StreamResult)
-instance (Classes.Cerialize (V.Vector StreamResult)) where
+instance (Classes.Cerialize s StreamResult)
+instance (Classes.Cerialize s (V.Vector StreamResult)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector StreamResult))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector StreamResult))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector StreamResult)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector StreamResult)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector StreamResult))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector StreamResult))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector StreamResult)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector StreamResult)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector StreamResult))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector StreamResult))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector StreamResult)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector StreamResult)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec

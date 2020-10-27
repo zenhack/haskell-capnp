@@ -130,10 +130,10 @@ enumInstances thisMod name =
         [ iType "Cerial" [tuName "msg", TGName rawName] (TGName rawName)
         , iValue "decerialize" [] (eStd_ "pure")
         ]
-    : instance_ [] ["Classes"] "Cerialize" [TGName rawName]
+    : instance_ [] ["Classes"] "Cerialize" [tuName "s", TGName rawName]
         [ iValue "cerialize" [PVar "_"] (eStd_ "pure")
         ]
-    : [ instance_ [] ["Classes"] "Cerialize" [t]
+    : [ instance_ [] ["Classes"] "Cerialize" [tuName "s", t]
         [ iValue "cerialize" [] (egName ["Classes"] "cerializeBasicVec")
         ]
       | t <- take 6 $ drop 1 $ iterate
@@ -376,16 +376,16 @@ fieldsToMarshal thisMod typeName firstClass fields =
 
 firstClassInstances :: Word64 -> P.Data -> [Decl]
 firstClassInstances _thisMod P.Data{ typeName } =
-    [ instance_ [] ["Classes"] "Cerialize" [TLName typeName] []
-    , instance_ [] ["Classes"] "Cerialize" [TApp (tgName ["V"] "Vector") [TLName typeName]]
+    [ instance_ [] ["Classes"] "Cerialize" [tuName "s", TLName typeName] []
+    , instance_ [] ["Classes"] "Cerialize" [tuName "s", TApp (tgName ["V"] "Vector") [TLName typeName]]
         [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
         ]
     ] ++
-    -- Generate instances of Cerialize (Vector (Vector ... t)) up to some reasonable
+    -- Generate instances of Cerialize s (Vector (Vector ... t)) up to some reasonable
     -- nesting level. I(zenhack) can't figure out how to get a general case
-    -- Cerialize (Vector a) => Cerialize (Vector (Vector a)) to type check, so this
+    -- Cerialize s (Vector a) => Cerialize s (Vector (Vector a)) to type check, so this
     -- will have to do for now.
-    [ instance_ [] ["Classes"] "Cerialize" [t]
+    [ instance_ [] ["Classes"] "Cerialize" [tuName "s", t]
         [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeBasicVec")
         ]
     | t <- take 6 $ drop 2 $ iterate
@@ -580,7 +580,7 @@ ifaceInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name} } =
                 ]
             )
         ]
-    , instance_ [] ["Classes"] "Cerialize" [TLName name]
+    , instance_ [] ["Classes"] "Cerialize" [tuName "s", TLName name]
         [ iValue "cerialize" [PVar "msg", PLCtor name [PVar "client"]] $
             EFApp
                 (egName (rawModule thisMod) (Name.mkSub name "newtype_"))

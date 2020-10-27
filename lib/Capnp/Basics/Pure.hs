@@ -54,7 +54,7 @@ instance Marshal Data where
         forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list
 
-instance Cerialize Data where
+instance Cerialize s Data where
     cerialize msg bytes = do
         dest <- Basics.newData msg (BS.length bytes)
         marshalInto dest bytes
@@ -71,7 +71,7 @@ instance Decerialize Text where
 instance Marshal Text where
     marshalInto dest text = marshalTextBytes (encodeUtf8 text) dest
 
-instance Cerialize Text where
+instance Cerialize s Text where
     cerialize msg text = do
         let bytes = encodeUtf8 text
         ret <- Basics.newText msg (BS.length bytes)
@@ -83,13 +83,13 @@ marshalTextBytes bytes text = do
     buffer <- Basics.textBuffer text
     marshalInto (Basics.Data buffer) bytes
 
-instance Cerialize (V.Vector Text) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector Data) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector Text)) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector Data)) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector (V.Vector Text))) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector (V.Vector Data))) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Text)))) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Data)))) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Text))))) where cerialize = cerializeBasicVec
-instance Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Data))))) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector Text) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector Data) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector Text)) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector Data)) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector (V.Vector Text))) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector (V.Vector Data))) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Text)))) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Data)))) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Text))))) where cerialize = cerializeBasicVec
+instance Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Data))))) where cerialize = cerializeBasicVec

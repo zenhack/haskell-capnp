@@ -79,7 +79,7 @@ instance (Classes.Decerialize Persistent) where
             (Std_.pure (Persistent Message.nullClient))
         (Std_.Just cap) ->
             (Persistent <$> (Untyped.getClient cap))
-instance (Classes.Cerialize Persistent) where
+instance (Classes.Cerialize s Persistent) where
     cerialize msg (Persistent client) = (Capnp.Gen.ById.Xb8630836983feed7.Persistent'newtype_ <$> (Std_.Just <$> (Untyped.appendCap msg client)))
 instance (Server.Server Std_.IO Persistent)
 instance (Persistent'server_ Std_.IO Persistent) where
@@ -104,20 +104,20 @@ instance (Classes.Marshal Persistent'SaveParams) where
                 ((Classes.cerialize (Untyped.message raw_) sealFor) >>= (Capnp.Gen.ById.Xb8630836983feed7.set_Persistent'SaveParams'sealFor raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Persistent'SaveParams)
-instance (Classes.Cerialize (V.Vector Persistent'SaveParams)) where
+instance (Classes.Cerialize s Persistent'SaveParams)
+instance (Classes.Cerialize s (V.Vector Persistent'SaveParams)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Persistent'SaveParams))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Persistent'SaveParams))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Persistent'SaveParams)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Persistent'SaveParams)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveParams)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Persistent'SaveResults 
     = Persistent'SaveResults 
@@ -139,20 +139,20 @@ instance (Classes.Marshal Persistent'SaveResults) where
                 ((Classes.cerialize (Untyped.message raw_) sturdyRef) >>= (Capnp.Gen.ById.Xb8630836983feed7.set_Persistent'SaveResults'sturdyRef raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Persistent'SaveResults)
-instance (Classes.Cerialize (V.Vector Persistent'SaveResults)) where
+instance (Classes.Cerialize s Persistent'SaveResults)
+instance (Classes.Cerialize s (V.Vector Persistent'SaveResults)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Persistent'SaveResults))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Persistent'SaveResults))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Persistent'SaveResults)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Persistent'SaveResults)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Persistent'SaveResults)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 newtype RealmGateway 
     = RealmGateway Message.Client
@@ -195,7 +195,7 @@ instance (Classes.Decerialize RealmGateway) where
             (Std_.pure (RealmGateway Message.nullClient))
         (Std_.Just cap) ->
             (RealmGateway <$> (Untyped.getClient cap))
-instance (Classes.Cerialize RealmGateway) where
+instance (Classes.Cerialize s RealmGateway) where
     cerialize msg (RealmGateway client) = (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway'newtype_ <$> (Std_.Just <$> (Untyped.appendCap msg client)))
 instance (Server.Server Std_.IO RealmGateway)
 instance (RealmGateway'server_ Std_.IO RealmGateway) where
@@ -224,20 +224,20 @@ instance (Classes.Marshal RealmGateway'import'params) where
                 ((Classes.cerialize (Untyped.message raw_) params) >>= (Capnp.Gen.ById.Xb8630836983feed7.set_RealmGateway'import'params'params raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize RealmGateway'import'params)
-instance (Classes.Cerialize (V.Vector RealmGateway'import'params)) where
+instance (Classes.Cerialize s RealmGateway'import'params)
+instance (Classes.Cerialize s (V.Vector RealmGateway'import'params)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector RealmGateway'import'params))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector RealmGateway'import'params))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector RealmGateway'import'params)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector RealmGateway'import'params)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'import'params)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data RealmGateway'export'params 
     = RealmGateway'export'params 
@@ -262,18 +262,18 @@ instance (Classes.Marshal RealmGateway'export'params) where
                 ((Classes.cerialize (Untyped.message raw_) params) >>= (Capnp.Gen.ById.Xb8630836983feed7.set_RealmGateway'export'params'params raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize RealmGateway'export'params)
-instance (Classes.Cerialize (V.Vector RealmGateway'export'params)) where
+instance (Classes.Cerialize s RealmGateway'export'params)
+instance (Classes.Cerialize s (V.Vector RealmGateway'export'params)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector RealmGateway'export'params))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector RealmGateway'export'params))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector RealmGateway'export'params)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector RealmGateway'export'params)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector RealmGateway'export'params)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec

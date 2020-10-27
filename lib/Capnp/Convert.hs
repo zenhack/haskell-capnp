@@ -103,19 +103,19 @@ lbsToValue :: (MonadThrow m, FromStruct M.ConstMsg a) => LBS.ByteString -> m a
 lbsToValue = bsToValue . LBS.toStrict
 
 -- | Convert a value to a 'BS.Builder'.
-valueToBuilder :: (MonadLimit m, M.WriteCtx m s, Cerialize a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m BB.Builder
+valueToBuilder :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m BB.Builder
 valueToBuilder val = msgToBuilder <$> (valueToMsg val >>= freeze)
 
 -- | Convert a value to a strict 'BS.ByteString'.
-valueToBS :: (MonadLimit m, M.WriteCtx m s, Cerialize a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m BS.ByteString
+valueToBS :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m BS.ByteString
 valueToBS = fmap LBS.toStrict . valueToLBS
 
 -- | Convert a value to a lazy 'LBS.ByteString'.
-valueToLBS :: (MonadLimit m, M.WriteCtx m s, Cerialize a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m LBS.ByteString
+valueToLBS :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m LBS.ByteString
 valueToLBS = fmap BB.toLazyByteString . valueToBuilder
 
 -- | Convert a value to a message.
-valueToMsg :: (MonadLimit m, M.WriteCtx m s, Cerialize a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m (M.MutMsg s)
+valueToMsg :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct (M.MutMsg s) (Cerial (M.MutMsg s) a)) => a -> m (M.MutMsg s)
 valueToMsg val = do
     msg <- M.newMessage Nothing
     ret <- cerialize msg val

@@ -107,7 +107,7 @@ pureHandler ::
     , s ~ PrimState m
     , Decerialize p
     , FromPtr ConstMsg (Cerial ConstMsg p)
-    , Cerialize r
+    , Cerialize s r
     , ToStruct (MutMsg s) (Cerial (MutMsg s) r)
     ) =>
     (cap -> p -> m r)

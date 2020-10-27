@@ -129,7 +129,7 @@ class Decerialize a => Marshal a where
     marshalInto :: U.RWCtx m s => Cerial (M.MutMsg s) a -> a -> m ()
 
 -- | Types which may be inserted into a message.
-class Decerialize a => Cerialize a where
+class Decerialize a => Cerialize s a where
 
     -- | Cerialize a value into the supplied message, returning the result.
     cerialize :: U.RWCtx m s => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
@@ -330,7 +330,7 @@ instance ToPtr s (Maybe (Cap (M.MutMsg s))) where
 cerializeBasicVec ::
     ( U.RWCtx m s
     , MutListElem s (Cerial (M.MutMsg s) a)
-    , Cerialize a
+    , Cerialize s a
     )
     => M.MutMsg s
     -> V.Vector a

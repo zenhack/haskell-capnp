@@ -112,20 +112,20 @@ instance (Classes.Marshal Node) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Node)
-instance (Classes.Cerialize (V.Vector Node)) where
+instance (Classes.Cerialize s Node)
+instance (Classes.Cerialize s (V.Vector Node)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Node))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Node))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Node)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Node))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Node' 
     = Node'file 
@@ -373,20 +373,20 @@ instance (Classes.Marshal Node'Parameter) where
                 ((Classes.cerialize (Untyped.message raw_) name) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'Parameter'name raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Node'Parameter)
-instance (Classes.Cerialize (V.Vector Node'Parameter)) where
+instance (Classes.Cerialize s Node'Parameter)
+instance (Classes.Cerialize s (V.Vector Node'Parameter)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Node'Parameter))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Node'Parameter))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node'Parameter)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Node'Parameter)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'Parameter)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Node'NestedNode 
     = Node'NestedNode 
@@ -411,20 +411,20 @@ instance (Classes.Marshal Node'NestedNode) where
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'NestedNode'id raw_ id)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Node'NestedNode)
-instance (Classes.Cerialize (V.Vector Node'NestedNode)) where
+instance (Classes.Cerialize s Node'NestedNode)
+instance (Classes.Cerialize s (V.Vector Node'NestedNode)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Node'NestedNode))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Node'NestedNode))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node'NestedNode)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Node'NestedNode)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'NestedNode)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Node'SourceInfo 
     = Node'SourceInfo 
@@ -452,20 +452,20 @@ instance (Classes.Marshal Node'SourceInfo) where
                 ((Classes.cerialize (Untyped.message raw_) members) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'SourceInfo'members raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Node'SourceInfo)
-instance (Classes.Cerialize (V.Vector Node'SourceInfo)) where
+instance (Classes.Cerialize s Node'SourceInfo)
+instance (Classes.Cerialize s (V.Vector Node'SourceInfo)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Node'SourceInfo))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Node'SourceInfo))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node'SourceInfo)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Node'SourceInfo)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Node'SourceInfo'Member 
     = Node'SourceInfo'Member 
@@ -487,20 +487,20 @@ instance (Classes.Marshal Node'SourceInfo'Member) where
                 ((Classes.cerialize (Untyped.message raw_) docComment) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'SourceInfo'Member'docComment raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Node'SourceInfo'Member)
-instance (Classes.Cerialize (V.Vector Node'SourceInfo'Member)) where
+instance (Classes.Cerialize s Node'SourceInfo'Member)
+instance (Classes.Cerialize s (V.Vector Node'SourceInfo'Member)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Node'SourceInfo'Member))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Node'SourceInfo'Member))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Node'SourceInfo'Member)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Field 
     = Field 
@@ -542,20 +542,20 @@ instance (Classes.Marshal Field) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Field)
-instance (Classes.Cerialize (V.Vector Field)) where
+instance (Classes.Cerialize s Field)
+instance (Classes.Cerialize s (V.Vector Field)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Field))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Field))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Field)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Field)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Field))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Field))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Field)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Field' 
     = Field'slot Field'slot
@@ -700,20 +700,20 @@ instance (Classes.Marshal Enumerant) where
                 ((Classes.cerialize (Untyped.message raw_) annotations) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Enumerant'annotations raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Enumerant)
-instance (Classes.Cerialize (V.Vector Enumerant)) where
+instance (Classes.Cerialize s Enumerant)
+instance (Classes.Cerialize s (V.Vector Enumerant)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Enumerant))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Enumerant))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Enumerant)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Enumerant)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Enumerant))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Enumerant))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Enumerant)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Enumerant)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Enumerant))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Enumerant))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Enumerant)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Enumerant)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Superclass 
     = Superclass 
@@ -738,20 +738,20 @@ instance (Classes.Marshal Superclass) where
                 ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Superclass'brand raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Superclass)
-instance (Classes.Cerialize (V.Vector Superclass)) where
+instance (Classes.Cerialize s Superclass)
+instance (Classes.Cerialize s (V.Vector Superclass)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Superclass))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Superclass))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Superclass)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Superclass)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Superclass))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Superclass))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Superclass)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Superclass)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Superclass))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Superclass))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Superclass)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Superclass)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Method 
     = Method 
@@ -794,20 +794,20 @@ instance (Classes.Marshal Method) where
                 ((Classes.cerialize (Untyped.message raw_) implicitParameters) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Method'implicitParameters raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Method)
-instance (Classes.Cerialize (V.Vector Method)) where
+instance (Classes.Cerialize s Method)
+instance (Classes.Cerialize s (V.Vector Method)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Method))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Method))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Method)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Method)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Method))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Method))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Method)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Method)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Method))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Method))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Method)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Method)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Type 
     = Type'void 
@@ -940,20 +940,20 @@ instance (Classes.Marshal Type) where
                 )
         (Type'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'unknown' raw_ tag)
-instance (Classes.Cerialize Type)
-instance (Classes.Cerialize (V.Vector Type)) where
+instance (Classes.Cerialize s Type)
+instance (Classes.Cerialize s (V.Vector Type)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Type))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Type))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Type)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Type)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Type))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Type))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Type)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Type'list 
     = Type'list' 
@@ -1193,20 +1193,20 @@ instance (Classes.Marshal Brand) where
                 ((Classes.cerialize (Untyped.message raw_) scopes) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'scopes raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Brand)
-instance (Classes.Cerialize (V.Vector Brand)) where
+instance (Classes.Cerialize s Brand)
+instance (Classes.Cerialize s (V.Vector Brand)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Brand))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Brand))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Brand)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Brand)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Brand))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Brand))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Brand'Scope 
     = Brand'Scope 
@@ -1233,20 +1233,20 @@ instance (Classes.Marshal Brand'Scope) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Brand'Scope)
-instance (Classes.Cerialize (V.Vector Brand'Scope)) where
+instance (Classes.Cerialize s Brand'Scope)
+instance (Classes.Cerialize s (V.Vector Brand'Scope)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Brand'Scope))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Brand'Scope))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Brand'Scope)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Brand'Scope)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Scope)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Brand'Scope' 
     = Brand'Scope'bind (V.Vector Brand'Binding)
@@ -1310,20 +1310,20 @@ instance (Classes.Marshal Brand'Binding) where
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Binding'type_ raw_))
         (Brand'Binding'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Binding'unknown' raw_ tag)
-instance (Classes.Cerialize Brand'Binding)
-instance (Classes.Cerialize (V.Vector Brand'Binding)) where
+instance (Classes.Cerialize s Brand'Binding)
+instance (Classes.Cerialize s (V.Vector Brand'Binding)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Brand'Binding))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Brand'Binding))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Brand'Binding)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Brand'Binding)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Brand'Binding)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Value 
     = Value'void 
@@ -1441,20 +1441,20 @@ instance (Classes.Marshal Value) where
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'anyPointer raw_))
         (Value'unknown' tag) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'unknown' raw_ tag)
-instance (Classes.Cerialize Value)
-instance (Classes.Cerialize (V.Vector Value)) where
+instance (Classes.Cerialize s Value)
+instance (Classes.Cerialize s (V.Vector Value)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Value))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Value))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Value)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Value)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Value))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Value))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Value)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Annotation 
     = Annotation 
@@ -1482,20 +1482,20 @@ instance (Classes.Marshal Annotation) where
                 ((Classes.cerialize (Untyped.message raw_) brand) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Annotation'brand raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize Annotation)
-instance (Classes.Cerialize (V.Vector Annotation)) where
+instance (Classes.Cerialize s Annotation)
+instance (Classes.Cerialize s (V.Vector Annotation)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector Annotation))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Annotation))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Annotation)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Annotation)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Annotation))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Annotation))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Annotation)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Annotation)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Annotation))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Annotation))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Annotation)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Annotation)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data CapnpVersion 
     = CapnpVersion 
@@ -1523,20 +1523,20 @@ instance (Classes.Marshal CapnpVersion) where
                 (Capnp.Gen.ById.Xa93fc509624c72d9.set_CapnpVersion'micro raw_ micro)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize CapnpVersion)
-instance (Classes.Cerialize (V.Vector CapnpVersion)) where
+instance (Classes.Cerialize s CapnpVersion)
+instance (Classes.Cerialize s (V.Vector CapnpVersion)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector CapnpVersion))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector CapnpVersion))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector CapnpVersion)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector CapnpVersion)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapnpVersion)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data CodeGeneratorRequest 
     = CodeGeneratorRequest 
@@ -1567,20 +1567,20 @@ instance (Classes.Marshal CodeGeneratorRequest) where
                 ((Classes.cerialize (Untyped.message raw_) sourceInfo) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'sourceInfo raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize CodeGeneratorRequest)
-instance (Classes.Cerialize (V.Vector CodeGeneratorRequest)) where
+instance (Classes.Cerialize s CodeGeneratorRequest)
+instance (Classes.Cerialize s (V.Vector CodeGeneratorRequest)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector CodeGeneratorRequest))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector CodeGeneratorRequest))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector CodeGeneratorRequest)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector CodeGeneratorRequest)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data CodeGeneratorRequest'RequestedFile 
     = CodeGeneratorRequest'RequestedFile 
@@ -1608,20 +1608,20 @@ instance (Classes.Marshal CodeGeneratorRequest'RequestedFile) where
                 ((Classes.cerialize (Untyped.message raw_) imports) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'imports raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize CodeGeneratorRequest'RequestedFile)
-instance (Classes.Cerialize (V.Vector CodeGeneratorRequest'RequestedFile)) where
+instance (Classes.Cerialize s CodeGeneratorRequest'RequestedFile)
+instance (Classes.Cerialize s (V.Vector CodeGeneratorRequest'RequestedFile)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data CodeGeneratorRequest'RequestedFile'Import 
     = CodeGeneratorRequest'RequestedFile'Import 
@@ -1646,35 +1646,35 @@ instance (Classes.Marshal CodeGeneratorRequest'RequestedFile'Import) where
                 ((Classes.cerialize (Untyped.message raw_) name) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_CodeGeneratorRequest'RequestedFile'Import'name raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize CodeGeneratorRequest'RequestedFile'Import)
-instance (Classes.Cerialize (V.Vector CodeGeneratorRequest'RequestedFile'Import)) where
+instance (Classes.Cerialize s CodeGeneratorRequest'RequestedFile'Import)
+instance (Classes.Cerialize s (V.Vector CodeGeneratorRequest'RequestedFile'Import)) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CodeGeneratorRequest'RequestedFile'Import)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 instance (Classes.Decerialize Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize) where
     type Cerial msg Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize = Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize
     decerialize  = Std_.pure
-instance (Classes.Cerialize Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize) where
+instance (Classes.Cerialize s Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize) where
     cerialize _ = Std_.pure
-instance (Classes.Cerialize (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize)) where
+instance (Classes.Cerialize s (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize)) where
     cerialize  = Classes.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize))) where
     cerialize  = Classes.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize)))) where
     cerialize  = Classes.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize))))) where
     cerialize  = Classes.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize)))))) where
     cerialize  = Classes.cerializeBasicVec
-instance (Classes.Cerialize (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize))))))) where
     cerialize  = Classes.cerializeBasicVec

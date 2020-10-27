@@ -72,7 +72,7 @@ type InvokePureCtx m p r =
     , Decerialize r
     , ToStruct M.ConstMsg (Cerial M.ConstMsg p)
     , ToStruct (M.MutMsg (PrimState m)) (Cerial (M.MutMsg (PrimState m)) p)
-    , Cerialize p
+    , Cerialize (PrimState m) p
     , FromPtr M.ConstMsg (Cerial M.ConstMsg r)
     )
 
