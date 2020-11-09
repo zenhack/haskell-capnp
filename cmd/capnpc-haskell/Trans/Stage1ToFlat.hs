@@ -8,8 +8,9 @@ module Trans.Stage1ToFlat (cgrToCgr) where
 
 import Data.Word
 
-import qualified Data.Map as M
-import qualified Data.Set as S
+import qualified Data.Map    as M
+import qualified Data.Set    as S
+import qualified Data.Vector as V
 
 import qualified IR.Common as C
 import qualified IR.Flat   as Flat
@@ -36,7 +37,7 @@ fileToNodes :: NodeMap -> Stage1.File -> [Flat.Node]
 fileToNodes nodeMap Stage1.File{fileNodes, fileId} =
     concatMap
         (\(unQ, node) ->
-            nestedToNodes nodeMap fileId (Name.unQToLocal unQ) node
+            nestedToNodes nodeMap fileId (Name.unQToLocal unQ) node []
         )
         fileNodes
 
@@ -72,7 +73,7 @@ nestedToNodes
     =
     mine ++ kids
   where
-    myParams = typeParams ++ paramsToParams nodeId nodeParams
+    myParams = typeParams ++ paramsToParams nodeMap nodeId (V.toList nodeParams)
     kidsNS = Name.localQToNS localName
     kids = concatMap
             (\(unQ, node) ->
@@ -150,7 +151,7 @@ interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ meth
             }
         , typeParams
         }
-    : concatMap (methodToNodes nodeMap thisMod kidsNS typeParams) methods
+    : concatMap (\method -> methodToNodes nodeMap thisMod kidsNS method typeParams) methods
 
 structToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Struct -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
 structToNodes
@@ -223,8 +224,8 @@ fieldToNodes nodeMap thisMod ns Stage1.Field{name, locType} = case locType of
     _ ->
         []
 
-methodToNodes :: NodeMap -> Word64 -> Name.NS -> Stage1.Method -> [Flat.Node]
-methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
+methodToNodes :: NodeMap -> Word64 -> Name.NS -> Stage1.Method -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
+methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } typeParams =
     -- If the parameter and result types are anonymous, we need to generate
     -- structs for them.
     let maybeAnon ty suffix =
@@ -233,7 +234,7 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } =
                     let localName = Name.mkLocal ns name
                         kidsNS = Name.localQToNS localName
                     in
-                    nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS suffix) ty
+                    nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS suffix) ty typeParams
                 _ ->
                     []
     in
