@@ -82,7 +82,7 @@ unionToDecl firstClass cerialName local variants =
         }
 
 nodeToDecls :: IFaceMap -> Flat.Node -> [Pure.Decl]
-nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = case union_ of
+nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typeParams} = case union_ of
     Flat.Enum _ ->
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
@@ -106,7 +106,13 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
                     Just _ ->
                         [ Pure.Field
                             { name = "union'"
-                            , type_ = C.CompositeType $ C.StructType $ Name.mkSub name ""
+                            , type_ = C.CompositeType $ C.StructType
+                                (Name.mkSub name "")
+                                (C.ListBrand $
+                                    map
+                                        (C.PtrParam . fmap (\Flat.Node{name} -> name))
+                                        typeParams
+                                )
                             }
                         ]
             , firstClass = not isGroup
@@ -121,7 +127,9 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
     Flat.Constant { value } ->
         [ Pure.ConstDecl Pure.Constant
             { name = local
-            , value = fmap (\Flat.Node{name} -> name) value
+            , value =
+                let f Flat.Node{name} = name in
+                C.bothMap f value
             }
         ]
     Flat.Other -> []
@@ -129,7 +137,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_} = c
 fieldToField :: Flat.Field -> Pure.Field
 fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field
     { name = Name.getUnQ fieldName
-    , type_ = fmap
+    , type_ = C.bothMap
         (\Flat.Node{name} -> name)
         (C.fieldType fieldLocType)
     }

@@ -48,23 +48,35 @@ reqFileToFile fileMap Stage1.ReqFile{fileName, file=Stage1.File{fileId}} =
         , fileId
         }
 
+paramsToParams :: NodeMap -> Word64 -> [Name.UnQ] -> [C.TypeParamRef Flat.Node]
+paramsToParams nodeMap nodeId names =
+    [ C.TypeParamRef
+        { paramName = name
+        , paramIndex = i
+        , paramScope = nodeMap M.! nodeId
+        }
+    | (i, name) <- zip [0..] names
+    ]
+
 -- | Generate @'Flat.Node'@s from a 'Stage1.Node' and its local name.
-nestedToNodes :: NodeMap -> Word64 -> Name.LocalQ -> Stage1.Node -> [Flat.Node]
+nestedToNodes :: NodeMap -> Word64 -> Name.LocalQ -> Stage1.Node -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
 nestedToNodes
     nodeMap
     thisMod
     localName
     Stage1.Node
-        { nodeCommon = Stage1.NodeCommon{nodeId, nodeNested}
+        { nodeCommon = Stage1.NodeCommon{nodeId, nodeNested, nodeParams}
         , nodeUnion
         }
+    typeParams
     =
     mine ++ kids
   where
+    myParams = typeParams ++ paramsToParams nodeId nodeParams
     kidsNS = Name.localQToNS localName
     kids = concatMap
             (\(unQ, node) ->
-                nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS unQ) node
+                nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS unQ) node myParams
             )
             nodeNested
     name = Name.CapnpQ
@@ -76,13 +88,14 @@ nestedToNodes
             [ Flat.Node
                 { name
                 , nodeId
+                , typeParams = myParams
                 , union_ = Flat.Enum enumerants
                 }
             ]
         Stage1.NodeStruct struct ->
-            structToNodes nodeMap thisMod nodeId name kidsNS struct
+            structToNodes nodeMap thisMod nodeId name kidsNS struct myParams
         Stage1.NodeInterface iface ->
-            interfaceToNodes nodeMap thisMod nodeId name kidsNS iface
+            interfaceToNodes nodeMap thisMod nodeId name kidsNS iface myParams
         Stage1.NodeConstant value ->
             [ Flat.Node
                 { name = Name.CapnpQ
@@ -95,6 +108,7 @@ nestedToNodes
                         (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
                         value
                     }
+                , typeParams = myParams
                 }
             ]
         Stage1.NodeOther ->
@@ -102,11 +116,12 @@ nestedToNodes
                 { name
                 , nodeId
                 , union_ = Flat.Other
+                , typeParams = myParams
                 }
             ]
 
-interfaceToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Interface -> [Flat.Node]
-interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ methods, supers } =
+interfaceToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Interface -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
+interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ methods, supers } typeParams =
     Flat.Node
         { name
         , nodeId
@@ -133,10 +148,11 @@ interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ meth
                 | supId <- S.toList (collectAncestors iface)
                 ]
             }
+        , typeParams
         }
-    : concatMap (methodToNodes nodeMap thisMod kidsNS) methods
+    : concatMap (methodToNodes nodeMap thisMod kidsNS typeParams) methods
 
-structToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Struct -> [Flat.Node]
+structToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Struct -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
 structToNodes
     nodeMap
     thisMod
@@ -149,7 +165,8 @@ structToNodes
             , dataWordCount
             , pointerCount
             , tagOffset
-            } =
+            }
+    typeParams =
         let
             mkField fieldUnQ locType =
                 Flat.Field
@@ -190,6 +207,7 @@ structToNodes
                         , dataWordCount
                         , pointerCount
                         }
+                    , typeParams
                     }
         in
         commonNode : fieldNodes

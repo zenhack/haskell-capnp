@@ -12,6 +12,8 @@ import Data.Word
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
+type Brand = Common.ListBrand Name.CapnpQ
+
 data File = File
     { fileId   :: !Word64
     , fileName :: FilePath
@@ -53,12 +55,12 @@ data Decl
     | Getter -- get_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
-        , fieldLocType  :: Common.FieldLocType Name.CapnpQ
+        , fieldLocType  :: Common.FieldLocType Brand Name.CapnpQ
         }
     | Setter -- set_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
-        , fieldLocType  :: Common.FieldLocType Name.CapnpQ
+        , fieldLocType  :: Common.FieldLocType Brand Name.CapnpQ
 
         , tag           :: Maybe TagSetter
         -- ^ Info for setting the tag, if this is a union.
@@ -71,13 +73,13 @@ data Decl
     | NewFn -- new_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
-        , fieldLocType  :: Common.FieldLocType Name.CapnpQ
+        , fieldLocType  :: Common.FieldLocType Brand Name.CapnpQ
 
         , newFnType     :: NewFnType
         }
     | Constant
         { name  :: Name.LocalQ
-        , value :: Common.Value Name.CapnpQ
+        , value :: Common.Value Brand Name.CapnpQ
         }
     deriving(Show, Eq)
 
@@ -107,6 +109,6 @@ tagOffsetToDataLoc tagOffset =
 data Variant = Variant
     { name     :: Name.LocalQ
     , tagValue :: !Word16
-    , locType  :: Common.FieldLocType Name.CapnpQ
+    , locType  :: Common.FieldLocType Brand Name.CapnpQ
     }
     deriving(Show, Eq)

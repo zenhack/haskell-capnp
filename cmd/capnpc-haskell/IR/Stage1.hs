@@ -18,12 +18,25 @@ module IR.Stage1
     , Struct(..)
     , Field(..)
     , CodeGenReq(..)
+    , Brand
+    , BrandScope(..)
+    , Binding(..)
     ) where
 
 import Data.Word
 
-import qualified IR.Common as Common
-import qualified IR.Name   as Name
+import qualified Data.Map.Strict as M
+import qualified Data.Vector     as V
+import qualified IR.Common       as Common
+import qualified IR.Name         as Name
+
+type Brand = M.Map Word64 BrandScope
+
+data BrandScope = Bind (V.Vector Binding)
+    deriving(Show, Eq)
+
+data Binding = Unbound | BoundType (Common.Type Brand Node)
+    deriving(Show, Eq)
 
 data CodeGenReq = CodeGenReq
     { reqFiles :: [ReqFile]
@@ -51,6 +64,7 @@ data NodeCommon = NodeCommon
     { nodeNested :: [(Name.UnQ, Node)]
     , nodeParent :: Maybe Node
     , nodeId     :: !Word64
+    , nodeParams :: V.Vector Name.UnQ
     }
     deriving(Show, Eq)
 
@@ -58,7 +72,7 @@ data NodeUnion
     = NodeEnum [Name.UnQ]
     | NodeStruct Struct
     | NodeInterface Interface
-    | NodeConstant (Common.Value Node)
+    | NodeConstant (Common.Value Brand Node)
     | NodeOther
     deriving(Show, Eq)
 
@@ -87,6 +101,6 @@ data Struct = Struct
 data Field = Field
     { name    :: Name.UnQ
     , tag     :: Maybe Word16
-    , locType :: Common.FieldLocType Node
+    , locType :: Common.FieldLocType Brand Node
     }
     deriving(Show, Eq)

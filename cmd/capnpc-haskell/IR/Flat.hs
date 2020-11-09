@@ -15,6 +15,8 @@ import Data.Word
 import qualified IR.Common as Common
 import qualified IR.Name   as Name
 
+type Brand = Common.ListBrand Node
+
 data CodeGenReq = CodeGenReq
     { allNodes :: [Node]
     , reqFiles :: [File]
@@ -29,9 +31,10 @@ data File = File
     deriving(Show, Eq)
 
 data Node = Node
-    { name   :: Name.CapnpQ
-    , nodeId :: !Word64
-    , union_ :: Node'
+    { name       :: Name.CapnpQ
+    , nodeId     :: !Word64
+    , union_     :: Node'
+    , typeParams :: [Common.TypeParamRef Node]
     }
     deriving(Show, Eq)
 
@@ -54,7 +57,7 @@ data Node'
         -- ^ All ancestors, including 'supers'.
         }
     | Constant
-        { value :: Common.Value Node
+        { value :: Common.Value Brand Node
         }
     | Other
     deriving(Show, Eq)
@@ -76,7 +79,7 @@ data Union = Union
 
 data Field = Field
     { fieldName    :: Name.CapnpQ
-    , fieldLocType :: Common.FieldLocType Node
+    , fieldLocType :: Common.FieldLocType Brand Node
     }
     deriving(Show, Eq)
 

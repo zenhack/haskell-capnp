@@ -840,7 +840,7 @@ nameToType thisMod Name.CapnpQ{local, fileId} =
             (map Name.renderUnQ $ idToModule fileId)
             local
 
-typeToType :: Word64 -> C.Type Name.CapnpQ -> Type -> Type
+typeToType :: Word64 -> C.Type (C.ListBrand Name.CapnpQ) Name.CapnpQ -> Type -> Type
 typeToType thisMod ty msgTy = case ty of
     C.VoidType -> TUnit
     C.WordType (C.PrimWord ty) -> TPrim ty

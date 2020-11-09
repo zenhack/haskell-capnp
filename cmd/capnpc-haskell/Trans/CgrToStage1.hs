@@ -31,7 +31,7 @@ nodesToNodes inMap = outMap
   where
     outMap = M.map translate inMap
 
-    translate Schema.Node{scopeId, id, nestedNodes, union'} = Stage1.Node
+    translate Schema.Node{scopeId, id, nestedNodes, union', parameters} = Stage1.Node
         { nodeCommon = Stage1.NodeCommon
             { nodeId = id
             , nodeNested =
@@ -44,6 +44,10 @@ nodesToNodes inMap = outMap
                     Nothing
                 else
                     Just (outMap M.! id)
+            , nodeParams = V.fromList
+                [ Name.UnQ name
+                | Schema.Node'Parameter{name} <- V.toList parameters
+                ]
             }
         , nodeUnion = case union' of
             Schema.Node'enum Schema.Node'enum'{enumerants} ->
@@ -130,16 +134,21 @@ nodesToNodes inMap = outMap
                     Schema.Value'struct v ->
                         case type_ of
                             -- TODO: brand
-                            Schema.Type'struct Schema.Type'struct'{ typeId } -> C.PtrValue
-                                (C.PtrComposite (C.StructType (outMap M.! typeId)))
+                            Schema.Type'struct Schema.Type'struct'{ typeId, brand } -> C.PtrValue
+                                (C.PtrComposite $ C.StructType
+                                    (outMap M.! typeId)
+                                    (brandToBrand outMap brand)
+                                )
                                 v
                             _ ->
                                 mismatch
 
                     Schema.Value'interface ->
                         case type_ of
-                            Schema.Type'interface Schema.Type'interface'{ typeId } ->
-                                C.PtrValue (C.PtrInterface (outMap M.! typeId)) Nothing
+                            Schema.Type'interface Schema.Type'interface'{ typeId, brand } ->
+                                C.PtrValue
+                                    (C.PtrInterface (outMap M.! typeId) (brandToBrand outMap brand))
+                                    Nothing
                             _ ->
                                 mismatch
 
@@ -152,6 +161,22 @@ nodesToNodes inMap = outMap
                 Stage1.NodeOther
         }
 
+brandToBrand :: NodeMap Stage1.Node -> Schema.Brand -> Stage1.Brand
+brandToBrand nodeMap Schema.Brand{scopes} =
+    M.fromList [ s | Just s <- map scopeToScope (V.toList scopes) ]
+  where
+    scopeToScope Schema.Brand'Scope{scopeId, union'} = case union' of
+        Schema.Brand'Scope'unknown' _ -> Nothing
+        Schema.Brand'Scope'inherit -> Nothing
+        Schema.Brand'Scope'bind bindings -> Just
+            ( scopeId
+            , Stage1.Bind $ bindings
+                & V.map (\case
+                    Schema.Brand'Binding'type_ typ -> Stage1.BoundType (typeToType nodeMap typ)
+                    Schema.Brand'Binding'unbound -> Stage1.Unbound
+                    Schema.Brand'Binding'unknown' _ -> Stage1.Unbound
+                )
+            )
 
 methodToMethod :: NodeMap Stage1.Node -> Schema.Method -> Stage1.Method
 methodToMethod nodeMap Schema.Method{ name, paramStructType, resultStructType } =
@@ -176,7 +201,7 @@ fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
         , locType = getFieldLocType nodeMap union'
         }
 
-getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Node
+getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Brand Stage1.Node
 getFieldLocType nodeMap = \case
     Schema.Field'slot Schema.Field'slot'{type_, defaultValue, offset} ->
         case typeToType nodeMap type_ of
@@ -196,7 +221,9 @@ getFieldLocType nodeMap = \case
             C.CompositeType ty ->
                 C.PtrField (fromIntegral offset) (C.PtrComposite ty)
     Schema.Field'group Schema.Field'group'{typeId} ->
-        C.HereField $ C.StructType $ nodeMap M.! typeId
+        C.HereField $ C.StructType
+            (nodeMap M.! typeId)
+            M.empty -- groups are always monomorphic
     Schema.Field'unknown' _ ->
         -- Don't know how to interpret this; we'll have to leave the argument
         -- opaque.
@@ -266,7 +293,7 @@ cgrToCgr Schema.CodeGeneratorRequest{nodes, requestedFiles} =
         | Schema.Node{union'=Schema.Node'file, id=fileId, nestedNodes} <- V.toList nodes
         ]
 
-typeToType :: NodeMap Stage1.Node -> Schema.Type -> C.Type Stage1.Node
+typeToType :: NodeMap Stage1.Node -> Schema.Type -> C.Type Stage1.Brand Stage1.Node
 typeToType nodeMap = \case
     Schema.Type'void       -> C.VoidType
     Schema.Type'bool       -> C.WordType $ C.PrimWord C.PrimBool
@@ -284,24 +311,32 @@ typeToType nodeMap = \case
     Schema.Type'data_      -> C.PtrType $ C.PrimPtr C.PrimData
     Schema.Type'list Schema.Type'list'{elementType} ->
         C.PtrType $ C.ListOf (typeToType nodeMap elementType)
-    -- TODO: use 'brand' to generate type parameters.
-    Schema.Type'enum Schema.Type'enum'{typeId} ->
+    -- nb. enum has a brand field, but it's not actually use for anything.
+    Schema.Type'enum Schema.Type'enum'{typeId, brand = _ } ->
         C.WordType $ C.EnumType $ nodeMap M.! typeId
-    Schema.Type'struct Schema.Type'struct'{typeId} ->
-        C.CompositeType $ C.StructType $ nodeMap M.! typeId
-    Schema.Type'interface Schema.Type'interface'{typeId} ->
-        C.PtrType $ C.PtrInterface $ nodeMap M.! typeId
-    Schema.Type'anyPointer anyPtr -> C.PtrType $ C.PrimPtr $ C.PrimAnyPtr $
-        case anyPtr of
-            Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'anyKind ->
-                C.Ptr
-            Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'struct ->
-                C.Struct
-            Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'list ->
-                C.List
-            Schema.Type'anyPointer'unconstrained Schema.Type'anyPointer'unconstrained'capability ->
-                C.Cap
-            _ ->
-                -- Something we don't know about; assume it could be anything.
-                C.Ptr
+    -- TODO: use 'brand' to generate type parameters.
+    Schema.Type'struct Schema.Type'struct'{typeId, brand} ->
+        C.CompositeType $ C.StructType
+            (nodeMap M.! typeId)
+            (brandToBrand nodeMap brand)
+    Schema.Type'interface Schema.Type'interface'{typeId, brand} ->
+        C.PtrType $ C.PtrInterface (nodeMap M.! typeId) (brandToBrand nodeMap brand)
+    Schema.Type'anyPointer p ->
+        case p of
+            Schema.Type'anyPointer'parameter Schema.Type'anyPointer'parameter'{scopeId, parameterIndex} ->
+                let paramScope = nodeMap M.! scopeId in
+                C.PtrType $ C.PtrParam C.TypeParamRef
+                    { paramScope
+                    , paramIndex = fromIntegral parameterIndex
+                    , paramName = Stage1.nodeParams (Stage1.nodeCommon paramScope) V.! fromIntegral parameterIndex
+                    }
+            Schema.Type'anyPointer'unconstrained unconstrained  ->
+                C.PtrType $ C.PrimPtr $ C.PrimAnyPtr $ case unconstrained of
+                    Schema.Type'anyPointer'unconstrained'anyKind    -> C.Ptr
+                    Schema.Type'anyPointer'unconstrained'struct     -> C.Struct
+                    Schema.Type'anyPointer'unconstrained'list       -> C.List
+                    Schema.Type'anyPointer'unconstrained'capability -> C.Cap
+                    Schema.Type'anyPointer'unconstrained'unknown' _ -> C.Ptr
+                    -- ^ Something we don't know about; assume it could be anything.
+            _ -> C.VoidType -- TODO: implicitMethodParameter
     _ -> C.VoidType -- TODO: constrained anyPointers

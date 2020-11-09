@@ -6,6 +6,8 @@ import Data.Word
 import qualified IR.Common as C
 import qualified IR.Name   as Name
 
+type Brand = C.ListBrand Name.CapnpQ
+
 data File = File
     { fileId        :: !Word64
     , fileName      :: FilePath
@@ -47,7 +49,7 @@ data DataDef
 
 data Constant = Constant
     { name  :: Name.LocalQ
-    , value :: C.Value Name.CapnpQ
+    , value :: C.Value Brand Name.CapnpQ
     }
 
 data Interface = IFace
@@ -70,11 +72,11 @@ data Field = Field
     { name  :: Name.UnQ
     -- ^ The name of the field.
 
-    , type_ :: C.Type Name.CapnpQ
+    , type_ :: C.Type Brand Name.CapnpQ
     -- ^ The type of the field.
     }
 
 data Variant = Variant
     { name :: Name.LocalQ
-    , arg  :: Maybe (C.Type Name.CapnpQ)
+    , arg  :: Maybe (C.Type Brand Name.CapnpQ)
     }

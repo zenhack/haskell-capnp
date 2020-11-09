@@ -672,7 +672,7 @@ data MarshalField = MarshalField
     -- ^ The name of the field to marshal, qualified within the current module.
     , from        :: Name.UnQ
     -- ^ A variable holding the value to marshal
-    , type_       :: C.Type Name.CapnpQ
+    , type_       :: C.Type (C.ListBrand Name.CapnpQ) Name.CapnpQ
     , inUnion     :: !Bool
     -- ^ whether the parent of this field is a union
     }
