@@ -172,7 +172,12 @@ brandToBrand nodeMap Schema.Brand{scopes} =
             ( scopeId
             , C.Bind $ bindings
                 & V.map (\case
-                    Schema.Brand'Binding'type_ typ -> C.BoundType (typeToType nodeMap typ)
+                    Schema.Brand'Binding'type_ typ -> case typeToType nodeMap typ of
+                        C.PtrType t ->
+                            C.BoundType t
+                        _ -> error
+                            "Invalid schema: a type parameter was set to a non-pointer type."
+
                     Schema.Brand'Binding'unbound -> C.Unbound
                     Schema.Brand'Binding'unknown' _ -> C.Unbound
                 )
