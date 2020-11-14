@@ -328,11 +328,6 @@ declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
         [TVar "msg"]
 
     -- There are several type classes that are defined for all structs:
-    , instance_ [] ["Untyped"] "TraverseMsg" [TLName typeCtor]
-        [ iValue "tMsg" [PVar "f", PLCtor dataCtor [PVar "s"]] $ EFApp
-            (ELName dataCtor)
-            [EApp (egName ["Untyped"] "tMsg") [ELName "f", ELName "s"]]
-        ]
     , instance_ [] ["Classes"] "FromStruct" [TVar "msg", containerTypeType (TVar "msg")]
         [ iValue "fromStruct" [PVar "struct"] $ EApp
             (eStd_ "pure")
