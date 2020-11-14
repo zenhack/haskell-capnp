@@ -707,7 +707,7 @@ declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
             pure msg
 
 
-eSetValue :: C.FieldLocType Name.CapnpQ -> Exp
+eSetValue :: C.FieldLocType (C.ListBrand Name.CapnpQ) Name.CapnpQ -> Exp
 eSetValue = \case
     C.DataField dataLoc ty ->
         eSetWordField
@@ -854,13 +854,17 @@ typeToType thisMod ty msgTy = case ty of
         appV $ tgName ["Basics"] "Text"
     C.PtrType (C.PrimPtr C.PrimData) ->
         appV $ tgName ["Basics"] "Data"
-    C.PtrType (C.PtrComposite (C.StructType typeId)) ->
-        appV $ nameToType thisMod typeId
-    C.PtrType (C.PtrInterface typeId) ->
-        appV $ nameToType thisMod typeId
+    C.PtrType (C.PtrComposite (C.StructType typeId typeParams)) ->
+        namedType typeId typeParams
+    C.PtrType (C.PtrInterface typeId typeParams) ->
+        namedType typeId typeParams
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
         TApp (tStd_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
-    C.CompositeType (C.StructType typeId) ->
-        appV $ nameToType thisMod typeId
+    C.PtrType (C.PtrParam _) -> error "FIXME: handle type parameters"
+    C.CompositeType (C.StructType typeId typeParams) ->
+        namedType typeId typeParams
   where
     appV t = TApp t [msgTy]
+    namedType :: Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Type
+    namedType name (C.ListBrand [])     = appV $ nameToType thisMod name
+    namedType _name (C.ListBrand (_:_)) = error "FIXME: handle type parameters"
