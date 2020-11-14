@@ -38,12 +38,14 @@ convertInterface
     ifaceMap
     Flat.Node
         { name
+        , typeParams
         , nodeId
         , union_ = Flat.Interface{ methods, supers, ancestors }
         }
     =
     [ Pure.IFace
         { name
+        , typeParams = map C.paramName typeParams
         , interfaceId = nodeId
         , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
         , supers = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- supers ]
@@ -56,10 +58,11 @@ nodeToReExports :: Flat.Node -> [Name.LocalQ]
 nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
 nodeToReExports _ = []
 
-unionToDecl :: Bool -> Name.LocalQ -> Name.LocalQ -> [Flat.Variant] -> Pure.Decl
-unionToDecl firstClass cerialName local variants =
+unionToDecl :: Bool -> Name.LocalQ -> Name.LocalQ -> [Name.UnQ] -> [Flat.Variant] -> Pure.Decl
+unionToDecl firstClass cerialName local typeParams variants =
     Pure.DataDecl Pure.Data
         { typeName = local
+        , typeParams
         , cerialName
         , def = Pure.Sum
             [ Pure.Variant
@@ -82,7 +85,9 @@ unionToDecl firstClass cerialName local variants =
         }
 
 nodeToDecls :: IFaceMap -> Flat.Node -> [Pure.Decl]
-nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typeParams} = case union_ of
+nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typeParams} =
+  let typeParams' = map C.paramName typeParams in
+  case union_ of
     Flat.Enum _ ->
         -- Don't need to do anything here, since we're just re-exporting the
         -- stuff from the raw module.
@@ -92,11 +97,12 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typ
     Flat.Struct{ isGroup, fields=[], union=Just Flat.Union{variants}} ->
         -- It's just one big union; skip the outer struct wrapper and make it
         -- a top-level sum type.
-        [ unionToDecl (not isGroup) local local variants ]
+        [ unionToDecl (not isGroup) local local typeParams' variants ]
     -- Flat.Struct{ isGroup=True, union=Nothing } -> [] -- See Note [Collapsing Groups]
     Flat.Struct{ isGroup, fields, union } ->
         Pure.DataDecl Pure.Data
             { typeName = local
+            , typeParams = typeParams'
             , cerialName = local
             , def = Pure.Product $
                 map fieldToField fields
@@ -121,7 +127,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typ
             Just Flat.Union{variants} ->
                 -- Also make a type that's just the union, but give it the
                 -- same cerialName:
-                [ unionToDecl False local (Name.mkSub local "") variants ]
+                [ unionToDecl False local (Name.mkSub local "") typeParams' variants ]
             Nothing ->
                 []
     Flat.Constant { value } ->

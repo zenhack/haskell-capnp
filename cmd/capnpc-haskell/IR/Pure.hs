@@ -27,6 +27,7 @@ data Decl
 
 data Data = Data
     { typeName   :: Name.LocalQ
+    , typeParams :: [Name.UnQ]
     , firstClass :: !Bool
     -- ^ Whether this is a "first class" type, i.e. it is a type in the
     -- capnproto sense, rather than an auxiliary type defined for a group
@@ -54,6 +55,7 @@ data Constant = Constant
 
 data Interface = IFace
     { name        :: Name.CapnpQ
+    , typeParams  :: [Name.UnQ]
     , interfaceId :: !Word64
     , methods     :: [Method]
     , supers      :: [Interface]

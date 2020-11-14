@@ -20,7 +20,9 @@ fileToFile Flat.File{nodes, fileId, fileName} =
         }
 
 nodeToDecls :: Flat.Node -> [Raw.Decl]
-nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
+nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_, typeParams} =
+  let typeParams' = map C.paramName typeParams in
+  case union_ of
     Flat.Enum variants ->
         [ Raw.Enum
             { typeCtor = local
@@ -29,24 +31,26 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
         ]
     Flat.Struct{fields, isGroup, dataWordCount, pointerCount, union} ->
         concat
-            [ [ Raw.StructWrapper { typeCtor = local } ]
+            [ [ Raw.StructWrapper { typeCtor = local, typeParams = typeParams' } ]
             , if isGroup
                 then
                     []
                 else
                     [ Raw.StructInstances
                         { typeCtor = local
+                        , typeParams = typeParams'
                         , dataWordCount
                         , pointerCount
                         }
                     ]
-            , concatMap (fieldToDecls local) fields
+            , concatMap (fieldToDecls local typeParams') fields
             , case union of
                 Nothing -> []
                 Just Flat.Union{variants, tagOffset} ->
                     let local' = Name.mkSub local "" in
                     [ Raw.UnionVariant
                         { parentTypeCtor = local
+                        , typeParams = typeParams'
                         , tagOffset
                         , unionDataCtors =
                             [ Raw.Variant
@@ -65,6 +69,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                         }
                     , Raw.Getter
                         { fieldName = local'
+                        , typeParams = typeParams'
                         , containerType = local
                         , fieldLocType = C.HereField $ C.StructType Name.CapnpQ
                             { fileId
@@ -75,6 +80,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                     ] ++
                     [ Raw.Setter
                         { fieldName
+                        , typeParams = typeParams'
                         , containerType = local
                         , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
                         , tag = Just Raw.TagSetter
@@ -97,6 +103,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
                     -- uint16 field in the same spot:
                     [ Raw.Setter
                         { fieldName = Name.mkSub local "unknown'"
+                        , typeParams = typeParams'
                         , containerType = local
                         , fieldLocType = C.DataField
                             (Raw.tagOffsetToDataLoc tagOffset)
@@ -108,6 +115,7 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
     Flat.Interface{} ->
         [ Raw.InterfaceWrapper
             { typeCtor = local
+            , typeParams = typeParams'
             }
         ]
     Flat.Constant{ value } ->
@@ -118,10 +126,15 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_} = case union_ of
         ]
     Flat.Other -> []
 
-fieldToDecls :: Name.LocalQ -> Flat.Field -> [Raw.Decl]
-fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fieldLocType} =
+fieldToDecls :: Name.LocalQ -> [Name.UnQ] -> Flat.Field -> [Raw.Decl]
+fieldToDecls
+    containerType
+    typeParams
+    Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fieldLocType}
+    =
     [ Raw.Getter
         { fieldName
+        , typeParams
         , containerType
         , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
         }
@@ -133,6 +146,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
             [ Raw.Setter
                 { fieldName
                 , containerType
+                , typeParams
                 , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
                 , tag = Nothing
                 }
@@ -142,6 +156,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
         C.PtrField ptrIndex _ ->
             [ Raw.HasFn
                 { fieldName
+                , typeParams
                 , containerType
                 , ptrIndex
                 }
@@ -153,6 +168,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
         C.PtrField _ (C.ListOf _) ->
             [ Raw.NewFn
                 { fieldName
+                , typeParams
                 , containerType
                 , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewList
@@ -161,6 +177,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
         C.PtrField _ (C.PrimPtr C.PrimText) ->
             [ Raw.NewFn
                 { fieldName
+                , typeParams
                 , containerType
                 , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewText
@@ -169,6 +186,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
         C.PtrField _ (C.PrimPtr C.PrimData) ->
             [ Raw.NewFn
                 { fieldName
+                , typeParams
                 , containerType
                 , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewData
@@ -177,6 +195,7 @@ fieldToDecls containerType Flat.Field{fieldName=Name.CapnpQ{local=fieldName}, fi
         C.PtrField _ (C.PtrComposite _) ->
             [ Raw.NewFn
                 { fieldName
+                , typeParams
                 , containerType
                 , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
                 , newFnType = Raw.NewStruct

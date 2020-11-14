@@ -25,20 +25,23 @@ data Decl
     -- | Define a newtype wrapper around a struct. This also defines
     -- some instances of type classes that exist for all such wrappers.
     = StructWrapper
-        { typeCtor :: Name.LocalQ
+        { typeCtor   :: Name.LocalQ
+        , typeParams :: [Name.UnQ]
         }
     -- | Define instances of several type classes which should only
     -- exist for "real" structs, i.e. not groups.
     | StructInstances
         { typeCtor      :: Name.LocalQ
         -- ^ The type constructor for the type to generate instances for.
+        , typeParams    :: [Name.UnQ]
 
         -- Needed for some instances:
         , dataWordCount :: !Word16
         , pointerCount  :: !Word16
         }
     | InterfaceWrapper
-        { typeCtor :: Name.LocalQ
+        { typeCtor   :: Name.LocalQ
+        , typeParams :: [Name.UnQ]
         }
     | UnionVariant
         { parentTypeCtor :: Name.LocalQ
@@ -46,6 +49,7 @@ data Decl
         -- we can derive the type constructor for the union proper from this,
         -- and it is useful to have for other things (like unknown' variants).
         , tagOffset      :: !Word32
+        , typeParams     :: [Name.UnQ]
         , unionDataCtors :: [Variant]
         }
     | Enum
@@ -55,11 +59,13 @@ data Decl
     | Getter -- get_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
         , fieldLocType  :: Common.FieldLocType Brand Name.CapnpQ
         }
     | Setter -- set_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
         , fieldLocType  :: Common.FieldLocType Brand Name.CapnpQ
 
         , tag           :: Maybe TagSetter
@@ -68,11 +74,13 @@ data Decl
     | HasFn -- has_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
         , ptrIndex      :: !Word16
         }
     | NewFn -- new_* function
         { fieldName     :: Name.LocalQ
         , containerType :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
         , fieldLocType  :: Common.FieldLocType Brand Name.CapnpQ
 
         , newFnType     :: NewFnType
