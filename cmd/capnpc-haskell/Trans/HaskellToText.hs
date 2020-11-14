@@ -7,6 +7,7 @@ import Data.List                    (intersperse)
 import Data.String                  (fromString)
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
 
+import qualified Data.Text                    as T
 import qualified Data.Text.Lazy               as LT
 import qualified Text.PrettyPrint.Leijen.Text as PP
 
@@ -86,15 +87,26 @@ instance Format Decl where
         , format (TCtx ctx typ)
         , whereBlock defs
         ]
-    format DcClass{ctx, name, params, decls} = hcat
+    format DcClass{ctx, name, params, funDeps, decls} = hcat
         [ "class "
         , format $
             TCtx ctx $
                 TApp
                     (TLName name)
                     [TLName (Name.unQToLocal p) | p <- params]
+        , formatFunDeps funDeps
         , whereBlock decls
         ]
+
+formatFunDeps :: [(T.Text, T.Text)] -> PP.Doc
+formatFunDeps [] = ""
+formatFunDeps deps = mconcat
+    [ " | "
+    , mconcat $ intersperse ", "
+        [ PP.textStrict a <> " -> " <> PP.textStrict b
+        | (a, b) <- deps
+        ]
+    ]
 
 whereBlock :: Format a => [a] -> PP.Doc
 whereBlock [] = ""

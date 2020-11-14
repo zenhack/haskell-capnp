@@ -424,7 +424,8 @@ ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name} } =
 
 -- | define the *'server_ class for the interface.
 ifaceClassDecl :: Word64 -> P.Interface -> Decl
-ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers } =
+ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, typeParams } =
+    let typeParams' = map Name.typeVarName typeParams in
     DcClass
         { ctx =
             let superConstraints =
@@ -442,7 +443,8 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers }
                 [] -> [ TApp (tgName ["Server"] "Server") [tuName "m", tuName "cap"] ]
                 _ -> superConstraints
         , name = Name.mkSub name "server_"
-        , params = ["m", "cap"]
+        , params = ["m", "cap"] ++ typeParams
+        , funDeps = [ ("cap", v) | v <- typeParams' ]
         , decls =
             let mkName = mkMethodName name in
             CdMinimal [ mkName name | P.Method{name} <- methods ]

@@ -90,10 +90,11 @@ data Decl
         , defs :: [InstanceDef]
         }
     | DcClass
-        { ctx    :: [Type]
-        , name   :: Name.LocalQ
-        , params :: [Name.UnQ]
-        , decls  :: [ClassDecl]
+        { ctx     :: [Type]
+        , name    :: Name.LocalQ
+        , params  :: [Name.UnQ]
+        , funDeps :: [(T.Text, T.Text)]
+        , decls   :: [ClassDecl]
         }
     deriving(Show, Read, Eq)
 

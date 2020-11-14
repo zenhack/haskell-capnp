@@ -861,7 +861,7 @@ typeToType thisMod ty msgTy = case ty of
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
         TApp (tStd_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
     C.PtrType (C.PtrParam C.TypeParamRef{paramName}) ->
-        appV $ tuName (Name.typeVarName $ Name.mkLocal Name.emptyNS paramName)
+        appV $ TVar (Name.typeVarName paramName)
     C.CompositeType (C.StructType typeId typeParams) ->
         namedType typeId typeParams
   where

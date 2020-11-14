@@ -117,8 +117,8 @@ accessorName prefix = UnQ . (prefix <>) . renderLocalQ
 valueName :: LocalQ -> UnQ
 valueName = lowerFstName
 
-typeVarName :: LocalQ -> UnQ
-typeVarName = lowerFstName
+typeVarName :: UnQ -> T.Text
+typeVarName (UnQ txt) = lowerFst txt
 
 -- | Lower-case the first letter of a name
 lowerFstName :: LocalQ -> UnQ
