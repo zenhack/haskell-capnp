@@ -747,7 +747,7 @@ typeToType _thisMod (C.PtrType (C.PrimPtr (C.PrimAnyPtr _))) =
 typeToType thisMod (C.PtrType (C.PtrInterface n b)) =
     nameToType thisMod n b
 typeToType _thisMod (C.PtrType (C.PtrParam C.TypeParamRef{paramName})) =
-    tuName paramName
+    TVar (Name.typeVarName paramName)
 
 nameToType :: Word64 -> Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId} (C.ListBrand args) =
