@@ -290,9 +290,9 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 Name.localToUnQ variantName
             , dvArgs = APos []
             }
-declToDecls _thisMod Raw.InterfaceWrapper{typeCtor} =
+declToDecls _thisMod Raw.InterfaceWrapper{typeCtor, typeParams} =
     let dataCtor = Name.mkSub typeCtor "newtype_" in
-    [ newtypeWrapper typeCtor ["msg"] $ TApp
+    [ newtypeWrapper typeCtor (map Name.typeVarName typeParams ++ ["msg"]) $ TApp
         (tStd_ "Maybe")
         [ TApp
             (tgName ["Untyped"] "Cap")
@@ -318,9 +318,9 @@ declToDecls _thisMod Raw.InterfaceWrapper{typeCtor} =
             )
         ]
     ]
-declToDecls _thisMod Raw.StructWrapper{typeCtor} =
+declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
     let dataCtor = Name.mkSub typeCtor "newtype_" in
-    [ newtypeWrapper typeCtor ["msg"] $ TApp
+    [ newtypeWrapper typeCtor (map Name.typeVarName typeParams ++ ["msg"]) $ TApp
         (tgName ["Untyped"] "Struct")
         [TVar "msg"]
 
@@ -481,15 +481,13 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} 
             ]
         ]
     ]
-declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
+declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType, typeParams} =
     let containerDataCtor = Name.mkSub containerType "newtype_" in
     [ DcValue
         { typ = TCtx
             [readCtx "m" "msg"]
             (TFn
-                [ TApp
-                    (TLName containerType)
-                    [ TVar "msg" ]
+                [ containerTypeToType containerType typeParams (TVar "msg")
                 , TApp
                     (TVar "m")
                     [ typeToType thisMod (C.fieldType fieldLocType) (TVar "msg")
@@ -528,7 +526,7 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType} =
             }
         }
     ]
-declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
+declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, typeParams, tag} =
     -- XXX: the way this is organized is a little gross; conceptually we have
     -- two kinds of setters:
     --
@@ -546,28 +544,23 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
             thisMod
             (C.fieldType fieldLocType)
             tMutMsg
+        containerTypeType = containerTypeToType containerType typeParams tMutMsg
     in
     [ DcValue
         { typ = TCtx
             [rwCtx "m" "s"]
             (case fieldLocType of
                 C.HereField _ -> TFn
-                    [ TApp
-                        (TLName containerType)
-                        [tMutMsg]
+                    [ containerTypeType
                     , TApp (TVar "m") [fieldType]
                     ]
                 C.VoidField -> TFn
                     -- We don't need to pass in the redundant () value.
-                    [ TApp
-                        (TLName containerType)
-                        [tMutMsg]
+                    [ containerTypeType
                     , TApp (TVar "m") [fieldType]
                     ]
                 _ -> TFn
-                    [ TApp
-                        (TLName containerType)
-                        [tMutMsg]
+                    [ containerTypeType
                     , fieldType
                     , TApp (TVar "m") [TUnit]
                     ]
@@ -595,13 +588,15 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, tag} =
             }
         }
     ]
-declToDecls _thisMod Raw.HasFn{fieldName, containerType, ptrIndex} =
-    let containerDataCtor = Name.mkSub containerType "newtype_" in
+declToDecls _thisMod Raw.HasFn{fieldName, containerType, typeParams, ptrIndex} =
+    let containerDataCtor = Name.mkSub containerType "newtype_"
+        containerTypeType = containerTypeToType containerType typeParams (TVar "msg")
+    in
     [ DcValue
         { typ = TCtx
             [readCtx "m" "msg"]
             (TFn
-                [ TApp (TLName containerType) [ TVar "msg" ]
+                [ containerTypeType
                 , TApp (TVar "m") [tStd_ "Bool"]
                 ]
             )
@@ -618,13 +613,14 @@ declToDecls _thisMod Raw.HasFn{fieldName, containerType, ptrIndex} =
             }
         }
     ]
-declToDecls thisMod Raw.NewFn{fieldName, containerType, fieldLocType, newFnType} =
+declToDecls thisMod Raw.NewFn{fieldName, containerType, typeParams, fieldLocType, newFnType} =
     -- TODO(cleanup): I(zenhack) am a little unhappy with having several case
     -- expressions to distinguish struct vs non-struct; we should refactor.
     let fieldType = typeToType
             thisMod
             (C.fieldType fieldLocType)
             tMutMsg
+        containerTypeType = containerTypeToType containerType typeParams tMutMsg
     in
     [ DcValue
         { typ = TCtx
@@ -634,7 +630,7 @@ declToDecls thisMod Raw.NewFn{fieldName, containerType, fieldLocType, newFnType}
                     -- length
                     Raw.NewStruct -> []
                     _             -> [tStd_ "Int"]
-                , [TApp (TLName containerType) [tMutMsg]]
+                , [containerTypeType]
                 , [TApp (TVar "m") [fieldType]]
                 ]
             )
@@ -705,6 +701,10 @@ declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
                 (fromList [ptr])
             Capnp.setRoot rootPtr
             pure msg
+
+containerTypeToType :: Name.LocalQ -> [Name.UnQ] -> Type -> Type
+containerTypeToType name params msgTy =
+    TApp (TLName name) $ [ TApp (TVar (Name.typeVarName p)) [msgTy] | p <- params ] ++ [msgTy]
 
 
 eSetValue :: C.FieldLocType (C.ListBrand Name.CapnpQ) Name.CapnpQ -> Exp
