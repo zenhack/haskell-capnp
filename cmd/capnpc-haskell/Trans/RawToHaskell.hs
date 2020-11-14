@@ -78,9 +78,10 @@ fileToMainModule Raw.File{fileName, fileId, decls} =
     imp parts importAs = ImportAs {parts, importAs}
 
 declToDecls :: Word64 -> Raw.Decl -> [Decl]
-declToDecls thisMod Raw.UnionVariant{parentTypeCtor, tagOffset, unionDataCtors} =
+declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unionDataCtors} =
     let unknownCtor = Name.mkSub parentTypeCtor "unknown'"
         typeCtor = Name.mkSub parentTypeCtor ""
+        containerTypeType = containerTypeToType typeCtor typeParams
     in
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
@@ -106,7 +107,7 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, tagOffset, unionDataCtors} 
             ]
         , derives = []
         }
-    , instance_ [] ["Classes"] "FromStruct" [TVar "msg", TApp (TLName typeCtor) [TVar "msg"]]
+    , instance_ [] ["Classes"] "FromStruct" [TVar "msg", containerTypeType (TVar "msg")]
         [ iValue "fromStruct" [PVar "struct"] $ EDo
             [ DoBind "tag"
                 (EApp
@@ -359,16 +360,15 @@ declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
             ]
         ]
     ]
-declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} =
+declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, pointerCount} =
     let listCtor = Name.mkSub typeCtor "List_"
         dataCtor = Name.mkSub typeCtor "newtype_"
+        containerTypeType = containerTypeToType typeCtor typeParams
     in
     [ wrapperFromPtr typeCtor dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
-        , TApp
-            (TLName typeCtor)
-            [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
+        , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
         ]
         [ iValue
             "toPtr"
@@ -382,9 +382,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} 
         ]
     , instance_ [] ["Classes"] "Allocate"
         [ TVar "s"
-        , TApp
-            (TLName typeCtor)
-            [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
+        , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
         ]
         [ iValue "new" [PVar "msg"] $ EFApp
             (ELName dataCtor)
@@ -398,9 +396,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} 
         ]
     , instance_ [] ["Basics"] "ListElem"
         [ TVar "msg"
-        , TApp
-            (TLName typeCtor)
-            [TVar "msg"]
+        , containerTypeType $ TVar "msg"
         ]
         [ IdData Data
             { dataName = "List"
@@ -453,9 +449,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, dataWordCount, pointerCount} 
         ]
     , instance_ [] ["Basics"] "MutListElem"
         [ TVar "s"
-        , TApp
-            (TLName typeCtor)
-            [ TApp (tgName ["Message"] "MutMsg") [TVar "s"] ]
+        , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
         ]
         [ iValue "setIndex"
             [ PLCtor dataCtor [PVar "elt"]
