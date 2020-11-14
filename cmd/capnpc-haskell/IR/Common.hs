@@ -65,7 +65,7 @@ newtype MapBrand r = MapBrand (M.Map Word64 (BrandScope r))
 instance Functor MapBrand where
     fmap f (MapBrand m) = MapBrand $ fmap (fmap f) m
 
-data BrandScope r = Bind (V.Vector (Binding r))
+newtype BrandScope r = Bind (V.Vector (Binding r))
     deriving(Show, Eq)
 
 instance Functor BrandScope where
