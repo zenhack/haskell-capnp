@@ -8,6 +8,7 @@ module Trans.CgrToStage1 (cgrToCgr) where
 import Data.Word
 
 import Data.Function        ((&))
+import Data.Maybe           (mapMaybe)
 import Data.ReinterpretCast (doubleToWord, floatToWord)
 import Data.Text.Encoding   (encodeUtf8)
 
@@ -163,7 +164,7 @@ nodesToNodes inMap = outMap
 
 brandToBrand :: NodeMap Stage1.Node -> Schema.Brand -> Stage1.Brand
 brandToBrand nodeMap Schema.Brand{scopes} =
-    C.MapBrand $ M.fromList [ s | Just s <- map scopeToScope (V.toList scopes) ]
+    C.MapBrand $ M.fromList $ mapMaybe scopeToScope (V.toList scopes)
   where
     scopeToScope Schema.Brand'Scope{scopeId, union'} = case union' of
         Schema.Brand'Scope'unknown' _ -> Nothing

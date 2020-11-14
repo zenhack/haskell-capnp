@@ -106,7 +106,7 @@ data CompositeType b r
 
 instance Bifunctor CompositeType where
     second = fmap
-    first f (StructType r b) = (StructType r (f b))
+    first f (StructType r b) = StructType r (f b)
 
 data WordType r
     = EnumType r
