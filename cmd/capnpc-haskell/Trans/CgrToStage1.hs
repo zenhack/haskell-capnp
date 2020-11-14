@@ -163,18 +163,18 @@ nodesToNodes inMap = outMap
 
 brandToBrand :: NodeMap Stage1.Node -> Schema.Brand -> Stage1.Brand
 brandToBrand nodeMap Schema.Brand{scopes} =
-    M.fromList [ s | Just s <- map scopeToScope (V.toList scopes) ]
+    C.MapBrand $ M.fromList [ s | Just s <- map scopeToScope (V.toList scopes) ]
   where
     scopeToScope Schema.Brand'Scope{scopeId, union'} = case union' of
         Schema.Brand'Scope'unknown' _ -> Nothing
         Schema.Brand'Scope'inherit -> Nothing
         Schema.Brand'Scope'bind bindings -> Just
             ( scopeId
-            , Stage1.Bind $ bindings
+            , C.Bind $ bindings
                 & V.map (\case
-                    Schema.Brand'Binding'type_ typ -> Stage1.BoundType (typeToType nodeMap typ)
-                    Schema.Brand'Binding'unbound -> Stage1.Unbound
-                    Schema.Brand'Binding'unknown' _ -> Stage1.Unbound
+                    Schema.Brand'Binding'type_ typ -> C.BoundType (typeToType nodeMap typ)
+                    Schema.Brand'Binding'unbound -> C.Unbound
+                    Schema.Brand'Binding'unknown' _ -> C.Unbound
                 )
             )
 
@@ -223,7 +223,7 @@ getFieldLocType nodeMap = \case
     Schema.Field'group Schema.Field'group'{typeId} ->
         C.HereField $ C.StructType
             (nodeMap M.! typeId)
-            M.empty -- groups are always monomorphic
+            (C.MapBrand M.empty) -- groups are always monomorphic
     Schema.Field'unknown' _ ->
         -- Don't know how to interpret this; we'll have to leave the argument
         -- opaque.

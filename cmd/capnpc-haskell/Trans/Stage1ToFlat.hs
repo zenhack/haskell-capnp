@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 -- Translate from the 'Stage1' IR to the 'Flat' IR.
@@ -59,6 +60,61 @@ paramsToParams nodeMap nodeId names =
     | (i, name) <- zip [0..] names
     ]
 
+applyBrandNode :: C.MapBrand Flat.Node -> Flat.Node -> C.ListBrand Flat.Node
+applyBrandNode m Flat.Node{typeParams} = applyBrandParams typeParams m
+
+applyBrandParams :: [C.TypeParamRef Flat.Node] -> C.MapBrand Flat.Node -> C.ListBrand Flat.Node
+applyBrandParams params m = C.ListBrand $ map (`applyBrandParam` m) params
+
+applyBrandParam
+    :: C.TypeParamRef Flat.Node
+    -> C.MapBrand Flat.Node
+    -> C.PtrType (C.ListBrand Flat.Node) Flat.Node
+applyBrandParam param@C.TypeParamRef{paramIndex, paramScope=Flat.Node{nodeId}} (C.MapBrand m) =
+    case M.lookup nodeId m of
+        Nothing -> C.PtrParam param
+        Just (C.Bind bindings) ->
+            let binding = bindings V.! paramIndex in
+            case binding of
+                C.Unbound      -> C.PtrParam param
+                C.BoundType ty -> applyBrandPtrType ty
+
+type ApplyBrandFn f
+    = f (C.MapBrand Flat.Node) Flat.Node
+    -> f (C.ListBrand Flat.Node) Flat.Node
+
+applyBrandCompositeType :: ApplyBrandFn C.CompositeType
+applyBrandCompositeType (C.StructType n b) = C.StructType n (applyBrandNode b n)
+
+
+applyBrandValue :: ApplyBrandFn C.Value
+applyBrandValue = \case
+    C.VoidValue     -> C.VoidValue
+    C.WordValue v t -> C.WordValue v t
+    C.PtrValue t p  -> C.PtrValue (applyBrandPtrType t) p
+
+applyBrandPtrType :: ApplyBrandFn C.PtrType
+applyBrandPtrType = \case
+    C.ListOf t         -> C.ListOf $ applyBrandType t
+    C.PrimPtr p        -> C.PrimPtr p
+    C.PtrInterface n b -> C.PtrInterface n (applyBrandNode b n)
+    C.PtrComposite t   -> C.PtrComposite (applyBrandCompositeType t)
+    C.PtrParam p       -> C.PtrParam p
+
+applyBrandType :: ApplyBrandFn C.Type
+applyBrandType = \case
+    C.CompositeType t -> C.CompositeType $ applyBrandCompositeType t
+    C.VoidType        -> C.VoidType
+    C.WordType t      -> C.WordType t
+    C.PtrType t       -> C.PtrType $ applyBrandPtrType t
+
+applyBrandFieldLocType :: ApplyBrandFn C.FieldLocType
+applyBrandFieldLocType = \case
+    C.DataField l t -> C.DataField l t
+    C.PtrField i t  -> C.PtrField i $ applyBrandPtrType t
+    C.HereField t   -> C.HereField $ applyBrandCompositeType t
+    C.VoidField     -> C.VoidField
+
 -- | Generate @'Flat.Node'@s from a 'Stage1.Node' and its local name.
 nestedToNodes :: NodeMap -> Word64 -> Name.LocalQ -> Stage1.Node -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
 nestedToNodes
@@ -105,7 +161,7 @@ nestedToNodes
                     }
                 , nodeId
                 , union_ = Flat.Constant
-                    { value = fmap
+                    { value = applyBrandValue $ C.bothMap
                         (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
                         value
                     }
@@ -172,7 +228,7 @@ structToNodes
             mkField fieldUnQ locType =
                 Flat.Field
                     { fieldName = Name.mkSub name fieldUnQ
-                    , fieldLocType = fmap
+                    , fieldLocType = applyBrandFieldLocType $ C.bothMap
                         (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
                         locType
                     }
@@ -188,7 +244,7 @@ structToNodes
                 | Stage1.Field{name=fieldUnQ, locType, tag=Nothing} <- fields
                 ]
             fieldNodes =
-                concatMap (fieldToNodes nodeMap thisMod kidsNS) fields
+                concatMap (fieldToNodes nodeMap thisMod kidsNS typeParams) fields
 
             commonNode =
                 Flat.Node
@@ -213,14 +269,15 @@ structToNodes
         in
         commonNode : fieldNodes
 
-fieldToNodes :: NodeMap -> Word64 -> Name.NS -> Stage1.Field -> [Flat.Node]
-fieldToNodes nodeMap thisMod ns Stage1.Field{name, locType} = case locType of
+fieldToNodes :: NodeMap -> Word64 -> Name.NS -> [C.TypeParamRef Flat.Node] -> Stage1.Field -> [Flat.Node]
+fieldToNodes nodeMap thisMod ns typeParams Stage1.Field{name, locType} = case locType of
     C.HereField
         (C.StructType
             struct@Stage1.Node
                 { nodeUnion = Stage1.NodeStruct Stage1.Struct{isGroup=True}
                 }
-        ) -> nestedToNodes nodeMap thisMod (Name.mkLocal ns name) struct
+            _ -- Type parameters will be the same as the enclosing scope.
+        ) -> nestedToNodes nodeMap thisMod (Name.mkLocal ns name) struct typeParams
     _ ->
         []
 

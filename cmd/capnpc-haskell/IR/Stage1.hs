@@ -19,24 +19,15 @@ module IR.Stage1
     , Field(..)
     , CodeGenReq(..)
     , Brand
-    , BrandScope(..)
-    , Binding(..)
     ) where
 
 import Data.Word
 
-import qualified Data.Map.Strict as M
-import qualified Data.Vector     as V
-import qualified IR.Common       as Common
-import qualified IR.Name         as Name
+import qualified Data.Vector as V
+import qualified IR.Common   as Common
+import qualified IR.Name     as Name
 
-type Brand = M.Map Word64 BrandScope
-
-data BrandScope = Bind (V.Vector Binding)
-    deriving(Show, Eq)
-
-data Binding = Unbound | BoundType (Common.Type Brand Node)
-    deriving(Show, Eq)
+type Brand = Common.MapBrand Node
 
 data CodeGenReq = CodeGenReq
     { reqFiles :: [ReqFile]

@@ -9,6 +9,8 @@ import Data.Word
 
 import qualified Capnp.Untyped.Pure as U
 import           Data.Bifunctor     (Bifunctor (..))
+import qualified Data.Map.Strict    as M
+import qualified Data.Vector        as V
 import qualified IR.Name            as Name
 
 newtype TypeId = TypeId Word64
@@ -56,6 +58,25 @@ newtype ListBrand r = ListBrand [PtrType (ListBrand r) r]
 
 instance Functor ListBrand where
     fmap f (ListBrand ps) = ListBrand (fmap (bothMap f) ps)
+
+newtype MapBrand r = MapBrand (M.Map Word64 (BrandScope r))
+    deriving(Show, Eq)
+
+instance Functor MapBrand where
+    fmap f (MapBrand m) = MapBrand $ fmap (fmap f) m
+
+data BrandScope r = Bind (V.Vector (Binding r))
+    deriving(Show, Eq)
+
+instance Functor BrandScope where
+    fmap f (Bind bs) = Bind $ fmap (fmap f) bs
+
+data Binding r = Unbound | BoundType (PtrType (MapBrand r) r)
+    deriving(Show, Eq)
+
+instance Functor Binding where
+    fmap _ Unbound        = Unbound
+    fmap f (BoundType ty) = BoundType $ bothMap f ty
 
 data TypeParamRef r = TypeParamRef
     { paramScope :: r
