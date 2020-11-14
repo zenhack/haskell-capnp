@@ -55,7 +55,7 @@ data Constant = Constant
 
 data Interface = IFace
     { name        :: Name.CapnpQ
-    , typeParams  :: [Name.UnQ]
+    , typeParams  :: [C.TypeParamRef Name.CapnpQ]
     , interfaceId :: !Word64
     , methods     :: [Method]
     , supers      :: [Interface]

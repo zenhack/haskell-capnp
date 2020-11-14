@@ -425,7 +425,7 @@ ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name} } =
 -- | define the *'server_ class for the interface.
 ifaceClassDecl :: Word64 -> P.Interface -> Decl
 ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, typeParams } =
-    let typeParams' = map Name.typeVarName typeParams in
+    let typeParamNames = map (Name.typeVarName . C.paramName) typeParams in
     DcClass
         { ctx =
             let superConstraints =
@@ -443,10 +443,12 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, 
                 [] -> [ TApp (tgName ["Server"] "Server") [tuName "m", tuName "cap"] ]
                 _ -> superConstraints
         , name = Name.mkSub name "server_"
-        , params = ["m", "cap"] ++ typeParams
-        , funDeps = [ ("cap", v) | v <- typeParams' ]
+        , params = map Name.UnQ $ ["m", "cap"] ++ typeParamNames
+        , funDeps = [ ("cap", v) | v <- typeParamNames ]
         , decls =
-            let mkName = mkMethodName name in
+            let mkName = mkMethodName name
+                typeArgs = C.ListBrand $ map C.PtrParam typeParams
+            in
             CdMinimal [ mkName name | P.Method{name} <- methods ]
             : concat
                 [ [ CdValueDecl
@@ -456,8 +458,10 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, 
                             , TApp
                                 (tgName ["Server"] "MethodHandler")
                                 [ tuName "m"
-                                , typeToType thisMod $ C.CompositeType $ C.StructType paramType
-                                , typeToType thisMod $ C.CompositeType $ C.StructType resultType
+                                , typeToType thisMod $ C.CompositeType $
+                                    C.StructType paramType typeArgs
+                                , typeToType thisMod $ C.CompositeType $
+                                    C.StructType resultType typeArgs
                                 ]
                             ]
                         )
@@ -727,10 +731,10 @@ typeToType thisMod (C.WordType (C.EnumType Name.CapnpQ{local, fileId})) =
         tgName (rawModule fileId) local
     else
         tgName (pureModule fileId) local
-typeToType thisMod (C.CompositeType (C.StructType n)) =
-    nameToType thisMod n
-typeToType thisMod (C.PtrType (C.PtrComposite (C.StructType n))) =
-    nameToType thisMod n
+typeToType thisMod (C.CompositeType (C.StructType n b)) =
+    nameToType thisMod n b
+typeToType thisMod (C.PtrType (C.PtrComposite (C.StructType n b))) =
+    nameToType thisMod n b
 typeToType thisMod (C.PtrType (C.ListOf ty)) =
     TApp (tgName ["V"] "Vector") [typeToType thisMod ty]
 typeToType _thisMod (C.PtrType (C.PrimPtr C.PrimText)) =
@@ -740,13 +744,20 @@ typeToType _thisMod (C.PtrType (C.PrimPtr C.PrimData)) =
 typeToType _thisMod (C.PtrType (C.PrimPtr (C.PrimAnyPtr _))) =
     -- TODO: distinguish different pointer types.
     TApp (tStd_ "Maybe") [tgName ["UntypedPure"] "Ptr"]
-typeToType thisMod (C.PtrType (C.PtrInterface n)) =
-    nameToType thisMod n
+typeToType thisMod (C.PtrType (C.PtrInterface n b)) =
+    nameToType thisMod n b
+typeToType _thisMod (C.PtrType (C.PtrParam C.TypeParamRef{paramName})) =
+    tuName paramName
 
-nameToType :: Word64 -> Name.CapnpQ -> Type
-nameToType thisMod Name.CapnpQ{local, fileId}
-    | thisMod == fileId = TLName local
-    | otherwise = tgName (pureModule fileId) local
+nameToType :: Word64 -> Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Type
+nameToType thisMod Name.CapnpQ{local, fileId} (C.ListBrand args) =
+    let head
+            | thisMod == fileId = TLName local
+            | otherwise = tgName (pureModule fileId) local
+    in
+    case args of
+        [] -> head
+        _  -> TApp head (map (typeToType thisMod . C.PtrType) args)
 
 rawModule :: Word64 -> [T.Text]
 rawModule modId =

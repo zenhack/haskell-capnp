@@ -45,7 +45,7 @@ convertInterface
     =
     [ Pure.IFace
         { name
-        , typeParams = map C.paramName typeParams
+        , typeParams = [ param { C.paramScope = name } | param <- typeParams ]
         , interfaceId = nodeId
         , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
         , supers = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- supers ]
