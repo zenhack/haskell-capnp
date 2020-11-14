@@ -115,7 +115,16 @@ accessorName prefix = UnQ . (prefix <>) . renderLocalQ
 -- | Lower-case the first letter of a name, making it legal as the name of a
 -- variable (as opposed to a type or data constructor).
 valueName :: LocalQ -> UnQ
-valueName name =
-    case T.unpack (renderLocalQ name) of
-        []     -> ""
-        (c:cs) -> UnQ $ T.pack $ toLower c : cs
+valueName = lowerFstName
+
+typeVarName :: LocalQ -> UnQ
+typeVarName = lowerFstName
+
+-- | Lower-case the first letter of a name
+lowerFstName :: LocalQ -> UnQ
+lowerFstName name = UnQ $ lowerFst $ renderLocalQ name
+
+lowerFst :: T.Text -> T.Text
+lowerFst txt = case T.unpack txt of
+    []     -> ""
+    (c:cs) -> T.pack $ toLower c : cs

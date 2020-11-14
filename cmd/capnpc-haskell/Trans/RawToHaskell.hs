@@ -860,11 +860,15 @@ typeToType thisMod ty msgTy = case ty of
         namedType typeId typeParams
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
         TApp (tStd_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
-    C.PtrType (C.PtrParam _) -> error "FIXME: handle type parameters"
+    C.PtrType (C.PtrParam C.TypeParamRef{paramName}) ->
+        appV $ tuName (Name.typeVarName $ Name.mkLocal Name.emptyNS paramName)
     C.CompositeType (C.StructType typeId typeParams) ->
         namedType typeId typeParams
   where
     appV t = TApp t [msgTy]
     namedType :: Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Type
     namedType name (C.ListBrand [])     = appV $ nameToType thisMod name
-    namedType _name (C.ListBrand (_:_)) = error "FIXME: handle type parameters"
+    namedType name (C.ListBrand args) =
+        TApp
+            (nameToType thisMod name)
+            (map (\t -> typeToType thisMod (C.PtrType t) msgTy) args ++ [msgTy])
