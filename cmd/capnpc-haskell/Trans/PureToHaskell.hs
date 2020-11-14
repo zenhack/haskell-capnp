@@ -89,6 +89,7 @@ fileToMainModule P.File{fileName, fileId, decls, reExportEnums, usesRpc} =
             , "DuplicateRecordFields"
             , "FlexibleContexts"
             , "FlexibleInstances"
+            , "FunctionalDependencies"
             , "RecordWildCards"
             , "MultiParamTypeClasses"
             , "TypeFamilies"
@@ -405,7 +406,7 @@ ifaceToDecls thisMod iface =
 
 -- | Declare the newtype wrapper for clients of this interface.
 ifaceClientDecl :: Word64 -> P.Interface -> Decl
-ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name} } =
+ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name}, typeParams } =
     DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
@@ -415,7 +416,7 @@ ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name} } =
                 , dvArgs = APos [tgName ["Message"] "Client"]
                 }
             ]
-        , typeArgs = []
+        , typeArgs = map (TVar . Name.typeVarName . C.paramName) typeParams
         , derives =
             [ "Std_.Show"
             , "Std_.Eq"
