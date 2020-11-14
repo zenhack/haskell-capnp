@@ -170,6 +170,7 @@ productVariantName typeName firstClass
 dataToDataDecl :: Word64 -> P.Data -> [Decl]
 dataToDataDecl thisMod P.Data
         { typeName
+        , typeParams
         , cerialName
         , firstClass
         , def
@@ -177,7 +178,7 @@ dataToDataDecl thisMod P.Data
     let unknownCtor = Name.mkSub cerialName "unknown'" in
     [ DcData Data
         { dataName = Name.localToUnQ typeName
-        , typeArgs = []
+        , typeArgs = map (TVar . Name.typeVarName) typeParams
         , derives =
             ["Std_.Show", "Std_.Eq", "Generics.Generic"]
         , dataNewtype = False
