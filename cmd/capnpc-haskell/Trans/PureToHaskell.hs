@@ -57,7 +57,7 @@ reExp parts = ["Capnp", "GenHelpers", "ReExports"] ++ parts
 --
 -- For example, this is True for Enums, basic integers, etc. but
 -- False for structs, interfaces, etc.
-cerialEq :: C.Type r -> Bool
+cerialEq :: C.Type b r -> Bool
 cerialEq C.VoidType          = True
 cerialEq (C.WordType _)      = True
 cerialEq (C.CompositeType _) = False
@@ -709,7 +709,7 @@ marshalField MarshalField{thisMod, into, localQField, from, type_, inUnion} =
 fieldToField :: Word64 -> P.Field -> (Name.UnQ, Type)
 fieldToField thisMod P.Field{name, type_} = (name, typeToType thisMod type_)
 
-typeToType :: Word64 -> C.Type Name.CapnpQ -> Type
+typeToType :: Word64 -> C.Type (C.ListBrand Name.CapnpQ) Name.CapnpQ -> Type
 typeToType _thisMod C.VoidType =
     TUnit
 typeToType _thisMod (C.WordType (C.PrimWord ty)) =
