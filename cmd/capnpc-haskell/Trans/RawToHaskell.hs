@@ -299,10 +299,10 @@ declToDecls _thisMod Raw.InterfaceWrapper{typeCtor, typeParams} =
             (tgName ["Untyped"] "Cap")
             [TVar "msg"]
         ]
-    , wrapperFromPtr typeCtor dataCtor
+    , wrapperFromPtr typeCtor typeParams dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
-        , TApp (TLName typeCtor) [TApp (tgName ["Message"] "MutMsg") [TVar "s"]]
+        , containerTypeToType typeCtor typeParams (TApp (tgName ["Message"] "MutMsg") [TVar "s"])
         ]
         [ iValue "toPtr" [PVar "msg", PLCtor dataCtor [PGCtor (std_ "Nothing") []]]
             (EApp (eStd_ "pure") [eStd_ "Nothing"])
@@ -320,7 +320,9 @@ declToDecls _thisMod Raw.InterfaceWrapper{typeCtor, typeParams} =
         ]
     ]
 declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
-    let dataCtor = Name.mkSub typeCtor "newtype_" in
+    let dataCtor = Name.mkSub typeCtor "newtype_"
+        containerTypeType = containerTypeToType typeCtor typeParams
+    in
     [ newtypeWrapper typeCtor (map Name.typeVarName typeParams ++ ["msg"]) $ TApp
         (tgName ["Untyped"] "Struct")
         [TVar "msg"]
@@ -331,27 +333,24 @@ declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
             (ELName dataCtor)
             [EApp (egName ["Untyped"] "tMsg") [ELName "f", ELName "s"]]
         ]
-    , instance_ [] ["Classes"] "FromStruct"
-        [ TVar "msg", TApp (TLName typeCtor) [TVar "msg"]
-        ]
+    , instance_ [] ["Classes"] "FromStruct" [TVar "msg", containerTypeType (TVar "msg")]
         [ iValue "fromStruct" [PVar "struct"] $ EApp
             (eStd_ "pure")
             [EApp (ELName dataCtor) [ELName "struct"]]
         ]
-    , instance_ [] ["Classes"] "ToStruct"
-        [TVar "msg", TApp (TLName typeCtor) [TVar "msg"]]
+    , instance_ [] ["Classes"] "ToStruct" [TVar "msg", containerTypeType (TVar "msg")]
         [ iValue "toStruct" [PLCtor dataCtor [PVar "struct"]]
             (ELName "struct")
         ]
-    , instance_ [] ["Untyped"] "HasMessage" [TApp (TLName typeCtor) [TVar "msg"]]
+    , instance_ [] ["Untyped"] "HasMessage" [containerTypeType (TVar "msg")]
         [ IdType $ TypeAlias
             "InMessage"
-            [ TApp (TLName typeCtor) [TVar "msg"] ]
+            [ containerTypeType (TVar "msg") ]
             (TVar "msg")
         , iValue "message" [PLCtor dataCtor [PVar "struct"]]
             (EApp (egName ["Untyped"] "message") [ELName "struct"])
         ]
-    , instance_ [] ["Untyped"] "MessageDefault" [TApp (TLName typeCtor) [TVar "msg"]]
+    , instance_ [] ["Untyped"] "MessageDefault" [containerTypeType (TVar "msg")]
         [ iValue "messageDefault" [PVar "msg"] $ EApp
             (ELName dataCtor)
             [ EApp
@@ -365,7 +364,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
         dataCtor = Name.mkSub typeCtor "newtype_"
         containerTypeType = containerTypeToType typeCtor typeParams
     in
-    [ wrapperFromPtr typeCtor dataCtor
+    [ wrapperFromPtr typeCtor typeParams dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
         , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
@@ -402,9 +401,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
             { dataName = "List"
             , typeArgs =
                 [ TVar "msg"
-                , TApp
-                    (TLName typeCtor)
-                    [TVar "msg"]
+                , containerTypeType (TVar "msg")
                 ]
             , dataVariants =
                 [ DataVariant
@@ -812,10 +809,10 @@ newtypeWrapper typeCtor typeArgs wrappedType =
         , derives = []
         }
 
-wrapperFromPtr :: Name.LocalQ -> Name.LocalQ -> Decl
-wrapperFromPtr typeCtor dataCtor =
+wrapperFromPtr :: Name.LocalQ -> [Name.UnQ] -> Name.LocalQ -> Decl
+wrapperFromPtr typeCtor typeParams dataCtor =
     instance_ [] ["Classes"] "FromPtr"
-        [ TVar "msg", TApp (TLName typeCtor) [TVar "msg"] ]
+        [ TVar "msg", containerTypeToType typeCtor typeParams (TVar "msg") ]
         [ iValue "fromPtr" [PVar "msg", PVar "ptr"] $ EFApp
             (ELName dataCtor)
             [ EApp
