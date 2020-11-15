@@ -210,11 +210,12 @@ dataToDataDecl thisMod P.Data
     ]
 
 dataToSimpleInstances :: Word64 -> P.Data -> [Decl]
-dataToSimpleInstances _thisMod P.Data{ typeName } =
-    [ instance_ [] ["Default"] "Default" [TLName typeName]
+dataToSimpleInstances _thisMod P.Data{ typeName, typeParams } =
+    let typ = typeWithParams typeName typeParams in
+    [ instance_ [] ["Default"] "Default" [typ]
         [ iValue "def" [] (egName ["GenHelpersPure"] "defaultStruct")
         ]
-    , instance_ [] ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", TLName typeName]
+    , instance_ [] ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", typ]
         [ iValue "fromStruct" [PVar "struct"] $ EBind
             (EApp (egName ["Classes"] "fromStruct") [euName "struct"])
             (egName ["Classes"] "decerialize")
@@ -224,13 +225,19 @@ dataToSimpleInstances _thisMod P.Data{ typeName } =
 dataToDecerialize :: Word64 -> P.Data -> [Decl]
 dataToDecerialize thisMod P.Data
         { typeName
+        , typeParams
         , cerialName
         , firstClass
         , def
         } =
-    [ instance_ [] ["Classes"] "Decerialize" [TLName typeName]
-        [ iType "Cerial" [tuName "msg", TLName typeName] $
-            TApp (tgName (rawModule thisMod) cerialName) [tuName "msg"]
+    let typ = typeWithParams typeName typeParams in
+    [ instance_ [] ["Classes"] "Decerialize" [typ]
+        [ iType "Cerial" [tuName "msg", typ] $
+            TApp (tgName (rawModule thisMod) cerialName) $
+                [ TApp (tgName ["Classes"] "Cerial") [tuName "msg", TVar (Name.typeVarName t)]
+                | t <- typeParams
+                ]
+                ++ [tuName "msg"]
         , iValue "decerialize" [PVar "raw"] $
             case def of
                 P.Sum variants ->
@@ -307,11 +314,13 @@ fieldsToDecerialize thisMod typeName firstClass fields =
 dataToMarshal :: Word64 -> P.Data -> [Decl]
 dataToMarshal thisMod P.Data
         { typeName
+        , typeParams
         , cerialName
         , firstClass
         , def
         } =
-    [ instance_ [] ["Classes"] "Marshal" [TLName typeName]
+    let typ = typeWithParams typeName typeParams in
+    [ instance_ [] ["Classes"] "Marshal" [typ]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             case def of
                 P.Sum variants ->
@@ -377,9 +386,10 @@ fieldsToMarshal thisMod typeName firstClass fields =
         ]
 
 firstClassInstances :: Word64 -> P.Data -> [Decl]
-firstClassInstances _thisMod P.Data{ typeName } =
-    [ instance_ [] ["Classes"] "Cerialize" [tuName "s", TLName typeName] []
-    , instance_ [] ["Classes"] "Cerialize" [tuName "s", TApp (tgName ["V"] "Vector") [TLName typeName]]
+firstClassInstances _thisMod P.Data{ typeName, typeParams } =
+    let typ = typeWithParams typeName typeParams in
+    [ instance_ [] ["Classes"] "Cerialize" [tuName "s", typ] []
+    , instance_ [] ["Classes"] "Cerialize" [tuName "s", TApp (tgName ["V"] "Vector") [typ]]
         [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
         ]
     ] ++
@@ -392,7 +402,7 @@ firstClassInstances _thisMod P.Data{ typeName } =
         ]
     | t <- take 6 $ drop 2 $ iterate
             (\t -> TApp (tgName ["V"] "Vector") [t])
-            (TLName typeName)
+            typ
     ]
 
 ifaceToDecls :: Word64 -> P.Interface -> [Decl]
@@ -556,20 +566,28 @@ ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
 
 -- | Declare instances for clients for this interface.
 ifaceInstances :: Word64 -> P.Interface -> [Decl]
-ifaceInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name} } =
-    [ instance_ [] ["Rpc"] "IsClient" [TLName name]
+ifaceInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, typeParams } =
+    let typ = typeWithParams name (map C.paramName typeParams) in
+    [ instance_ [] ["Rpc"] "IsClient" [typ]
         [ iValue "fromClient" [] (ELName name)
         , iValue "toClient" [PLCtor name [PVar "client"]] (euName "client")
         ]
-    , instance_ [] ["Classes"] "FromPtr" [tuName "msg", TLName name]
+    , instance_ [] ["Classes"] "FromPtr" [tuName "msg", typ]
         [ iValue "fromPtr" [] (egName ["RpcHelpers"] "isClientFromPtr")
         ]
-    , instance_ [] ["Classes"] "ToPtr" [tuName "s", TLName name]
+    , instance_ [] ["Classes"] "ToPtr" [tuName "s", typ]
         [ iValue "toPtr" [] (egName ["RpcHelpers"] "isClientToPtr")
         ]
-    , instance_ [] ["Classes"] "Decerialize" [TLName name]
-        [ iType "Cerial" [tuName "msg", TLName name] $
-            TApp (tgName (rawModule thisMod) name) [tuName "msg"]
+    , instance_ [] ["Classes"] "Decerialize" [typ]
+        [ iType "Cerial" [tuName "msg", typ] $
+            TApp (tgName (rawModule thisMod) name) $
+                [ TApp (tgName ["Classes"] "Cerial")
+                    [ tuName "msg"
+                    , TVar (Name.typeVarName (C.paramName t))
+                    ]
+                | t <- typeParams
+                ]
+                ++ [tuName "msg"]
         , iValue "decerialize"
             [ pgName (rawModule thisMod) (Name.mkSub name "newtype_") [PVar "maybeCap"]
             ]
@@ -588,7 +606,7 @@ ifaceInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name} } =
                 ]
             )
         ]
-    , instance_ [] ["Classes"] "Cerialize" [tuName "s", TLName name]
+    , instance_ [] ["Classes"] "Cerialize" [tuName "s", typ]
         [ iValue "cerialize" [PVar "msg", PLCtor name [PVar "client"]] $
             EFApp
                 (egName (rawModule thisMod) (Name.mkSub name "newtype_"))
@@ -614,14 +632,15 @@ pureTName thisMod targetMod local
 -- | Instance declarations for this interface's client for its *'server_ class
 -- and those of its ancestors.
 ifaceServerInstances :: Word64 -> P.Interface -> [Decl]
-ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, ancestors } =
+ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, typeParams, ancestors } =
     DcInstance
         { ctx = []
-        , typ = TApp (tgName ["Server"] "Server") [tStd_ "IO", TLName name]
+        , typ = TApp (tgName ["Server"] "Server") [tStd_ "IO", typ]
         , defs = []
         }
     : map go (iface:ancestors)
   where
+    typ = typeWithParams name (map C.paramName typeParams)
     go P.IFace { name=Name.CapnpQ{local, fileId}, interfaceId, methods } =
         let className = Name.mkSub local "server_"
             classType = pureTName thisMod fileId className
@@ -631,7 +650,8 @@ ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, ancest
         DcInstance
             { ctx = []
             , typ =
-                TApp classType [tStd_ "IO", TLName name]
+                -- FIXME: need to add parameters for superclasses.
+                TApp classType [tStd_ "IO", typ]
             , defs =
                 [ let methodName = mkMethodName local mname in
                   iValue methodName [PLCtor name [PVar "client"]] $
@@ -750,6 +770,10 @@ typeToType thisMod (C.PtrType (C.PtrInterface n b)) =
     nameToType thisMod n b
 typeToType _thisMod (C.PtrType (C.PtrParam C.TypeParamRef{paramName})) =
     TVar (Name.typeVarName paramName)
+
+typeWithParams :: Name.LocalQ -> [Name.UnQ] -> Type
+typeWithParams f xs =
+    TApp (TLName f) $ map (TVar . Name.typeVarName) xs
 
 nameToType :: Word64 -> Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId} (C.ListBrand args) =
