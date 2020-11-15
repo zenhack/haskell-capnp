@@ -468,16 +468,29 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
         ]
     ]
 declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType, typeParams} =
-    let containerDataCtor = Name.mkSub containerType "newtype_" in
+    let containerDataCtor = Name.mkSub containerType "newtype_"
+        fieldType = typeToType thisMod (C.fieldType fieldLocType) (TVar "msg")
+        isPtrType = case C.fieldType fieldLocType of
+            C.PtrType _       -> True
+            C.CompositeType _ -> True
+            _                 -> False
+    in
     [ DcValue
         { typ = TCtx
-            [readCtx "m" "msg"]
+            ([readCtx "m" "msg"]
+                ++ if isPtrType
+                    then
+                        [ case fieldLocType of
+                            C.HereField _ ->
+                                TApp (tgName ["Classes"] "FromStruct") [TVar "msg", fieldType]
+                            _ ->
+                                TApp (tgName ["Classes"] "FromPtr") [TVar "msg", fieldType]
+                        ]
+                    else []
+            )
             (TFn
                 [ containerTypeToType containerType typeParams (TVar "msg")
-                , TApp
-                    (TVar "m")
-                    [ typeToType thisMod (C.fieldType fieldLocType) (TVar "msg")
-                    ]
+                , TApp (TVar "m") [fieldType]
                 ]
             )
         , def = DfValue
@@ -530,11 +543,26 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, typeParam
             thisMod
             (C.fieldType fieldLocType)
             tMutMsg
+        isPtrType = case C.fieldType fieldLocType of
+            C.PtrType _       -> True
+            C.CompositeType _ -> True
+            _                 -> False
         containerTypeType = containerTypeToType containerType typeParams tMutMsg
     in
     [ DcValue
         { typ = TCtx
-            [rwCtx "m" "s"]
+            ([rwCtx "m" "s"] ++
+                if isPtrType
+                    then
+                        [ case fieldLocType of
+                            C.HereField _ ->
+                                TApp (tgName ["Classes"] "FromStruct") [tMutMsg, fieldType]
+                            _ ->
+                                TApp (tgName ["Classes"] "ToPtr") [TVar "s", fieldType]
+                        ]
+                    else
+                        []
+            )
             (case fieldLocType of
                 C.HereField _ -> TFn
                     [ containerTypeType
