@@ -477,8 +477,8 @@ declToDecls thisMod Raw.Getter{fieldName, fieldLocType, containerType, typeParam
     in
     [ DcValue
         { typ = TCtx
-            ([readCtx "m" "msg"]
-                ++ if isPtrType
+            (readCtx "m" "msg"
+                : if isPtrType
                     then
                         [ case fieldLocType of
                             C.HereField _ ->
@@ -551,8 +551,8 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, typeParam
     in
     [ DcValue
         { typ = TCtx
-            ([rwCtx "m" "s"] ++
-                if isPtrType
+            (rwCtx "m" "s"
+                : if isPtrType
                     then
                         [ case fieldLocType of
                             C.HereField _ ->
