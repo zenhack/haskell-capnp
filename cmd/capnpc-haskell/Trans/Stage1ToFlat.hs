@@ -10,7 +10,6 @@ module Trans.Stage1ToFlat (cgrToCgr) where
 import Data.Word
 
 import qualified Data.Map    as M
-import qualified Data.Set    as S
 import qualified Data.Vector as V
 
 import qualified IR.Common as C
@@ -86,6 +85,8 @@ type ApplyBrandFn f
 applyBrandCompositeType :: ApplyBrandFn C.CompositeType
 applyBrandCompositeType (C.StructType n b) = C.StructType n (applyBrandNode b n)
 
+applyBrandInterfaceType :: ApplyBrandFn C.InterfaceType
+applyBrandInterfaceType (C.InterfaceType n b) = C.InterfaceType n (applyBrandNode b n)
 
 applyBrandValue :: ApplyBrandFn C.Value
 applyBrandValue = \case
@@ -95,11 +96,11 @@ applyBrandValue = \case
 
 applyBrandPtrType :: ApplyBrandFn C.PtrType
 applyBrandPtrType = \case
-    C.ListOf t         -> C.ListOf $ applyBrandType t
-    C.PrimPtr p        -> C.PrimPtr p
-    C.PtrInterface n b -> C.PtrInterface n (applyBrandNode b n)
-    C.PtrComposite t   -> C.PtrComposite (applyBrandCompositeType t)
-    C.PtrParam p       -> C.PtrParam p
+    C.ListOf t       -> C.ListOf $ applyBrandType t
+    C.PrimPtr p      -> C.PrimPtr p
+    C.PtrInterface t -> C.PtrInterface (applyBrandInterfaceType t)
+    C.PtrComposite t -> C.PtrComposite (applyBrandCompositeType t)
+    C.PtrParam p     -> C.PtrParam p
 
 applyBrandType :: ApplyBrandFn C.Type
 applyBrandType = \case
@@ -178,7 +179,11 @@ nestedToNodes
             ]
 
 interfaceToNodes :: NodeMap -> Word64 -> Word64 -> Name.CapnpQ -> Name.NS -> Stage1.Interface -> [C.TypeParamRef Flat.Node] -> [Flat.Node]
-interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ methods, supers } typeParams =
+interfaceToNodes nodeMap thisMod nodeId name kidsNS Stage1.Interface{ methods, supers } typeParams =
+    let translateSuper =
+            applyBrandInterfaceType
+            . C.bothMap (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
+    in
     Flat.Node
         { name
         , nodeId
@@ -198,12 +203,7 @@ interfaceToNodes nodeMap thisMod nodeId name kidsNS iface@Stage1.Interface{ meth
                     }
                 <- methods
                 ]
-            , supers =
-                [ nodeMap M.! nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
-            , ancestors =
-                [ nodeMap M.! supId
-                | supId <- S.toList (collectAncestors iface)
-                ]
+            , supers = map translateSuper supers
             }
         , typeParams
         }
@@ -296,16 +296,3 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } ty
                     []
     in
     maybeAnon paramType "params" ++ maybeAnon resultType "results"
-
-
--- | Collect the ids of of the ancestors of an interface, not including itself.
-collectAncestors :: Stage1.Interface -> S.Set Word64
-collectAncestors Stage1.Interface{supers} =
-    -- This could be made faster, in that if there are shared ancestors
-    -- (diamonds) we'll traverse them twice, but this is more
-    -- straightforward, and with typical interface hierarchies it shouldn't
-    -- be a huge problem.
-    S.unions $
-        S.fromList [ nodeId | Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} <- supers ]
-        :
-        [ collectAncestors iface | Stage1.Node{nodeUnion=Stage1.NodeInterface iface} <- supers ]

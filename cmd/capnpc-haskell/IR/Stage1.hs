@@ -69,7 +69,7 @@ data NodeUnion
 
 data Interface = Interface
     { methods :: [Method]
-    , supers  :: [Node]
+    , supers  :: [Common.InterfaceType Brand Node]
     }
     deriving(Show, Eq)
 

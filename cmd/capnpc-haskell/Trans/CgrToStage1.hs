@@ -70,7 +70,10 @@ nodesToNodes inMap = outMap
             Schema.Node'interface Schema.Node'interface'{ methods, superclasses } ->
                 Stage1.NodeInterface Stage1.Interface
                     { methods = map (methodToMethod outMap) (V.toList methods)
-                    , supers = [ outMap M.! id | Schema.Superclass{id} <- V.toList superclasses ]
+                    , supers =
+                        [ C.InterfaceType (outMap M.! id) (brandToBrand outMap brand)
+                        | Schema.Superclass{id, brand} <- V.toList superclasses
+                        ]
                     }
             Schema.Node'const Schema.Node'const'{ type_, value } -> Stage1.NodeConstant $
                 let mismatch = error "ERROR: Constant's type and value do not agree"
@@ -148,7 +151,7 @@ nodesToNodes inMap = outMap
                         case type_ of
                             Schema.Type'interface Schema.Type'interface'{ typeId, brand } ->
                                 C.PtrValue
-                                    (C.PtrInterface (outMap M.! typeId) (brandToBrand outMap brand))
+                                    (C.PtrInterface (C.InterfaceType (outMap M.! typeId) (brandToBrand outMap brand)))
                                     Nothing
                             _ ->
                                 mismatch
@@ -326,7 +329,7 @@ typeToType nodeMap = \case
             (nodeMap M.! typeId)
             (brandToBrand nodeMap brand)
     Schema.Type'interface Schema.Type'interface'{typeId, brand} ->
-        C.PtrType $ C.PtrInterface (nodeMap M.! typeId) (brandToBrand nodeMap brand)
+        C.PtrType $ C.PtrInterface (C.InterfaceType (nodeMap M.! typeId) (brandToBrand nodeMap brand))
     Schema.Type'anyPointer p ->
         case p of
             Schema.Type'anyPointer'parameter Schema.Type'anyPointer'parameter'{scopeId, parameterIndex} ->

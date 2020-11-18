@@ -58,8 +58,10 @@ data Interface = IFace
     , typeParams  :: [C.TypeParamRef Name.CapnpQ]
     , interfaceId :: !Word64
     , methods     :: [Method]
-    , supers      :: [Interface]
-    , ancestors   :: [Interface]
+    , supers      :: [(Interface, Brand)]
+    -- ^ Immediate superclasses
+    , ancestors   :: [(Interface, Brand)]
+    -- ^ All ancestors, including 'supers'.
     }
 
 -- TODO(cleanup): this same type exists in IR.Flat; it doesn't make sense for

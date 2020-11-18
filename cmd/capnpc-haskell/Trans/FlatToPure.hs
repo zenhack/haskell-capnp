@@ -7,11 +7,14 @@ module Trans.FlatToPure (cgrToFiles) where
 import Data.Word
 
 import qualified Data.Map.Strict as M
+import qualified Data.Set        as S
 
 import qualified IR.Common as C
 import qualified IR.Flat   as Flat
 import qualified IR.Name   as Name
 import qualified IR.Pure   as Pure
+
+import Control.Monad.State (State, evalState, get, put)
 
 type IFaceMap = M.Map Word64 Pure.Interface
 
@@ -20,10 +23,13 @@ cgrToFiles Flat.CodeGenReq{allNodes, reqFiles} =
     map oneFile reqFiles
   where
     allInterfaces = concatMap (convertInterface ifaceMap) allNodes
-    ifaceMap = M.fromList
-        [ (interfaceId, iface)
-        | iface@Pure.IFace{interfaceId} <- allInterfaces
-        ]
+    ifaceMap =
+        M.map
+            (\iface -> iface { Pure.ancestors = collectAncestors iface })
+            $ M.fromList
+                [ (interfaceId, iface)
+                | iface@Pure.IFace{interfaceId} <- allInterfaces
+                ]
     oneFile Flat.File{nodes, fileId, fileName} =
         Pure.File
             { fileId
@@ -40,19 +46,46 @@ convertInterface
         { name
         , typeParams
         , nodeId
-        , union_ = Flat.Interface{ methods, supers, ancestors }
+        , union_ = Flat.Interface{ methods, supers }
         }
     =
-    [ Pure.IFace
-        { name
-        , typeParams = [ param { C.paramScope = name } | param <- typeParams ]
-        , interfaceId = nodeId
-        , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
-        , supers = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- supers ]
-        , ancestors = [ ifaceMap M.! nodeId | Flat.Node{nodeId} <- ancestors ]
-        }
-    ]
+    let result =
+            Pure.IFace
+                { name
+                , typeParams = [ param { C.paramScope = name } | param <- typeParams ]
+                , interfaceId = nodeId
+                , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
+                , supers =
+                    map
+                        (\(C.InterfaceType Flat.Node{nodeId} brand) ->
+                            ( ifaceMap M.! nodeId
+                            , fmap (\Flat.Node{name} -> name) brand
+                            )
+                        )
+                        supers
+                , ancestors = collectAncestors result -- See Note [Ancestors]
+                }
+    in
+    [result]
 convertInterface _ _ = []
+
+-- | Collect the of the ancestors of an interface, not including itself. Avoids using
+-- the 'ancestors' field, as this is used to compute that field in the first place.
+-- See Note [Ancestors]
+collectAncestors :: Pure.Interface -> [(Pure.Interface, Pure.Brand)]
+collectAncestors Pure.IFace{supers} =
+    concat $ evalState (traverse go supers) S.empty
+  where
+    go :: (Pure.Interface, Pure.Brand) -> State (S.Set Word64) [(Pure.Interface, Pure.Brand)]
+    go (iface@Pure.IFace{interfaceId, supers}, brand) = do
+        seen <- get
+        if interfaceId `S.member` seen then
+            pure []
+            else (do
+                put (S.insert interfaceId seen)
+                xs <- concat <$> traverse go supers
+                pure $ (iface, brand) : xs
+            )
 
 nodeToReExports :: Flat.Node -> [Name.LocalQ]
 nodeToReExports Flat.Node{name=Name.CapnpQ{local}, union_=Flat.Enum _} = [ local ]
@@ -170,3 +203,18 @@ fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field
 -- Note that we actually depend on (1) to avoid name collisions, since
 -- otherwise both the data constructor for the anonymous union and the
 -- data constructor for the group will be the same.
+
+
+-- Note [Ancestors]
+-- ================
+--
+-- When constructing a Pure.Interface, we need to fill in both the immediate
+-- superclasses and the full transitive list of ancestors. Strictly speaking
+-- the latter is redundant and can be computed from the former -- which is
+-- what we do, but we store it so that the PureToHaskell phase doesn't need to
+-- worry about it.
+--
+-- The way we compute this is a bit subtle, in that it involves tying the knot;
+-- The 'collectAncestors' function expects the interface as an argument, and
+-- computes the correct value of ancestors field without reading it. We then
+-- use this function when creating the interface value in the first place.

@@ -766,7 +766,7 @@ typeToType _thisMod (C.PtrType (C.PrimPtr C.PrimData)) =
 typeToType _thisMod (C.PtrType (C.PrimPtr (C.PrimAnyPtr _))) =
     -- TODO: distinguish different pointer types.
     TApp (tStd_ "Maybe") [tgName ["UntypedPure"] "Ptr"]
-typeToType thisMod (C.PtrType (C.PtrInterface n b)) =
+typeToType thisMod (C.PtrType (C.PtrInterface (C.InterfaceType n b))) =
     nameToType thisMod n b
 typeToType _thisMod (C.PtrType (C.PtrParam C.TypeParamRef{paramName})) =
     TVar (Name.typeVarName paramName)

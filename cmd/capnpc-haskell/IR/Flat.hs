@@ -50,11 +50,8 @@ data Node'
         -- ^ The struct's anonymous union, if any.
         }
     | Interface
-        { methods   :: [Method]
-        , supers    :: [Node]
-        -- ^ Immediate superclasses
-        , ancestors :: [Node]
-        -- ^ All ancestors, including 'supers'.
+        { methods :: [Method]
+        , supers  :: [Common.InterfaceType Brand Node]
         }
     | Constant
         { value :: Common.Value Brand Node

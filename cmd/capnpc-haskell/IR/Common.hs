@@ -108,6 +108,14 @@ instance Bifunctor CompositeType where
     second = fmap
     first f (StructType r b) = StructType r (f b)
 
+data InterfaceType b r
+    = InterfaceType r b
+    deriving(Show, Read, Eq, Functor)
+
+instance Bifunctor InterfaceType where
+    second = fmap
+    first f (InterfaceType r b) = InterfaceType r (f b)
+
 data WordType r
     = EnumType r
     | PrimWord PrimWord
@@ -117,18 +125,18 @@ data PtrType b r
     = ListOf (Type b r)
     | PrimPtr PrimPtr
     | PtrComposite (CompositeType b r)
-    | PtrInterface r b
+    | PtrInterface (InterfaceType b r)
     | PtrParam (TypeParamRef r)
     deriving(Show, Read, Eq, Functor)
 
 instance Bifunctor PtrType where
     second = fmap
     first f = \case
-        ListOf x         -> ListOf (first f x)
-        PrimPtr x        -> PrimPtr x
-        PtrComposite x   -> PtrComposite (first f x)
-        PtrInterface r b -> PtrInterface r (f b)
-        PtrParam p       -> PtrParam p
+        ListOf x       -> ListOf (first f x)
+        PrimPtr x      -> PrimPtr x
+        PtrComposite x -> PtrComposite (first f x)
+        PtrInterface x -> PtrInterface (first f x)
+        PtrParam p     -> PtrParam p
 
 data PrimWord
     = PrimInt IntType
