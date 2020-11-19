@@ -75,8 +75,8 @@ data Interface = Interface
 
 data Method = Method
     { name       :: Name.UnQ
-    , paramType  :: Node
-    , resultType :: Node
+    , paramType  :: Common.CompositeType Brand Node
+    , resultType :: Common.CompositeType Brand Node
     }
     deriving(Show, Eq)
 

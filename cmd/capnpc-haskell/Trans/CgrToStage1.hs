@@ -188,11 +188,15 @@ brandToBrand nodeMap Schema.Brand{scopes} =
             )
 
 methodToMethod :: NodeMap Stage1.Node -> Schema.Method -> Stage1.Method
-methodToMethod nodeMap Schema.Method{ name, paramStructType, resultStructType } =
+methodToMethod nodeMap Schema.Method
+    { name
+    , paramStructType, paramBrand
+    , resultStructType, resultBrand
+    } =
     Stage1.Method
         { name = Name.UnQ name
-        , paramType = nodeMap M.! paramStructType
-        , resultType = nodeMap M.! resultStructType
+        , paramType = structTypeToType nodeMap paramStructType paramBrand
+        , resultType = structTypeToType nodeMap resultStructType resultBrand
         }
 
 enumerantToName :: Schema.Enumerant -> Name.UnQ
@@ -302,6 +306,14 @@ cgrToCgr Schema.CodeGeneratorRequest{nodes, requestedFiles} =
         | Schema.Node{union'=Schema.Node'file, id=fileId, nestedNodes} <- V.toList nodes
         ]
 
+structTypeToType
+    :: NodeMap Stage1.Node
+    -> Word64
+    -> Schema.Brand
+    -> C.CompositeType Stage1.Brand Stage1.Node
+structTypeToType nodeMap typeId brand =
+    C.StructType (nodeMap M.! typeId) (brandToBrand nodeMap brand)
+
 typeToType :: NodeMap Stage1.Node -> Schema.Type -> C.Type Stage1.Brand Stage1.Node
 typeToType nodeMap = \case
     Schema.Type'void       -> C.VoidType
@@ -325,9 +337,7 @@ typeToType nodeMap = \case
         C.WordType $ C.EnumType $ nodeMap M.! typeId
     -- TODO: use 'brand' to generate type parameters.
     Schema.Type'struct Schema.Type'struct'{typeId, brand} ->
-        C.CompositeType $ C.StructType
-            (nodeMap M.! typeId)
-            (brandToBrand nodeMap brand)
+        C.CompositeType $ structTypeToType nodeMap typeId brand
     Schema.Type'interface Schema.Type'interface'{typeId, brand} ->
         C.PtrType $ C.PtrInterface (C.InterfaceType (nodeMap M.! typeId) (brandToBrand nodeMap brand))
     Schema.Type'anyPointer p ->

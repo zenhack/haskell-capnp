@@ -18,6 +18,12 @@ import Control.Monad.State (State, evalState, get, put)
 
 type IFaceMap = M.Map Word64 Pure.Interface
 
+-- | Because of pervasive use of DuplicateRecordFields, we can't easily
+-- just use the auto-generated `name` accessor function... so we define
+-- this wrapper.
+nodeName :: Flat.Node -> Name.CapnpQ
+nodeName Flat.Node{name} = name
+
 cgrToFiles :: Flat.CodeGenReq -> [Pure.File]
 cgrToFiles Flat.CodeGenReq{allNodes, reqFiles} =
     map oneFile reqFiles
@@ -54,12 +60,18 @@ convertInterface
                 { name
                 , typeParams = [ param { C.paramScope = name } | param <- typeParams ]
                 , interfaceId = nodeId
-                , methods = [ Pure.Method{..} | Flat.Method{..} <- methods ]
+                , methods =
+                    [ Pure.Method
+                        { name
+                        , paramType = C.bothMap nodeName paramType
+                        , resultType = C.bothMap nodeName resultType
+                        }
+                    | Flat.Method{name, paramType, resultType} <- methods ]
                 , supers =
                     map
                         (\(C.InterfaceType Flat.Node{nodeId} brand) ->
                             ( ifaceMap M.! nodeId
-                            , fmap (\Flat.Node{name} -> name) brand
+                            , fmap nodeName brand
                             )
                         )
                         supers
@@ -149,7 +161,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typ
                                 (Name.mkSub name "")
                                 (C.ListBrand $
                                     map
-                                        (C.PtrParam . fmap (\Flat.Node{name} -> name))
+                                        (C.PtrParam . fmap nodeName)
                                         typeParams
                                 )
                             }
@@ -166,9 +178,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typ
     Flat.Constant { value } ->
         [ Pure.ConstDecl Pure.Constant
             { name = local
-            , value =
-                let f Flat.Node{name} = name in
-                C.bothMap f value
+            , value = C.bothMap nodeName value
             }
         ]
     Flat.Other -> []
@@ -176,9 +186,7 @@ nodeToDecls ifaceMap Flat.Node{name=name@Name.CapnpQ{local}, nodeId, union_, typ
 fieldToField :: Flat.Field -> Pure.Field
 fieldToField Flat.Field{fieldName, fieldLocType} = Pure.Field
     { name = Name.getUnQ fieldName
-    , type_ = C.bothMap
-        (\Flat.Node{name} -> name)
-        (C.fieldType fieldLocType)
+    , type_ = C.bothMap nodeName (C.fieldType fieldLocType)
     }
 
 -- Note [Collapsing Groups]

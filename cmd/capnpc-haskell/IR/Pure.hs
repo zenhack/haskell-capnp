@@ -68,8 +68,8 @@ data Interface = IFace
 -- IR.Common, but we should factor this out.
 data Method = Method
     { name       :: Name.UnQ
-    , paramType  :: Name.CapnpQ
-    , resultType :: Name.CapnpQ
+    , paramType  :: C.CompositeType Brand Name.CapnpQ
+    , resultType :: C.CompositeType Brand Name.CapnpQ
     }
 
 data Field = Field

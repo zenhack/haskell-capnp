@@ -62,8 +62,8 @@ data Node'
 
 data Method = Method
     { name       :: Name.UnQ
-    , paramType  :: Name.CapnpQ
-    , resultType :: Name.CapnpQ
+    , paramType  :: Common.CompositeType Brand Node
+    , resultType :: Common.CompositeType Brand Node
     }
     deriving(Show, Eq)
 

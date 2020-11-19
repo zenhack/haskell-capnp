@@ -183,25 +183,22 @@ interfaceToNodes nodeMap thisMod nodeId name kidsNS Stage1.Interface{ methods, s
     let translateSuper =
             applyBrandInterfaceType
             . C.bothMap (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} -> nodeMap M.! nodeId)
+        prType = applyBrandCompositeType . C.bothMap
+            (\Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId}} ->
+                nodeMap M.! nodeId
+            )
     in
     Flat.Node
         { name
         , nodeId
         , union_ = Flat.Interface
             { methods =
-                [ let Flat.Node{name=paramName} = nodeMap M.! paramId
-                      Flat.Node{name=resultName} = nodeMap M.! resultId
-                  in Flat.Method
-                        { name
-                        , paramType = paramName
-                        , resultType = resultName
-                        }
-                | Stage1.Method
+                [ Flat.Method
                     { name
-                    , paramType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=paramId}}
-                    , resultType=Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeId=resultId}}
+                    , paramType = prType paramType
+                    , resultType = prType resultType
                     }
-                <- methods
+                | Stage1.Method { name, paramType, resultType } <- methods
                 ]
             , supers = map translateSuper supers
             }
@@ -287,11 +284,11 @@ methodToNodes nodeMap thisMod ns Stage1.Method{ name, paramType, resultType } ty
     -- structs for them.
     let maybeAnon ty suffix =
             case ty of
-                Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeParent=Nothing}} ->
+                C.StructType node@Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeParent=Nothing}} _ ->
                     let localName = Name.mkLocal ns name
                         kidsNS = Name.localQToNS localName
                     in
-                    nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS suffix) ty typeParams
+                    nestedToNodes nodeMap thisMod (Name.mkLocal kidsNS suffix) node typeParams
                 _ ->
                     []
     in

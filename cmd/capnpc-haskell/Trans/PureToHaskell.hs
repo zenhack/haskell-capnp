@@ -443,8 +443,10 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, 
             let superConstraints =
                     -- Add class constraints for superclasses:
                     [ let superClass = pureTName thisMod fileId (Name.mkSub local "server_")
-                      in TApp superClass [tuName "m", tuName "cap"]
-                    | P.IFace{name=Name.CapnpQ{local, fileId}} <- supers
+                      in TApp superClass $
+                            [tuName "m", tuName "cap"]
+                            ++ map (typeToType thisMod . C.PtrType) types
+                    | (P.IFace{name=Name.CapnpQ{local, fileId}}, C.ListBrand types) <- supers
                     ]
             in
             TApp (tgName ["MonadIO"] "MonadIO") [tuName "m"]
@@ -458,9 +460,7 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, 
         , params = map Name.UnQ $ ["m", "cap"] ++ typeParamNames
         , funDeps = [ ("cap", v) | v <- typeParamNames ]
         , decls =
-            let mkName = mkMethodName name
-                typeArgs = C.ListBrand $ map C.PtrParam typeParams
-            in
+            let mkName = mkMethodName name in
             CdMinimal [ mkName name | P.Method{name} <- methods ]
             : concat
                 [ [ CdValueDecl
@@ -470,10 +470,8 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, 
                             , TApp
                                 (tgName ["Server"] "MethodHandler")
                                 [ tuName "m"
-                                , typeToType thisMod $ C.CompositeType $
-                                    C.StructType paramType typeArgs
-                                , typeToType thisMod $ C.CompositeType $
-                                    C.StructType resultType typeArgs
+                                , typeToType thisMod $ C.CompositeType paramType
+                                , typeToType thisMod $ C.CompositeType resultType
                                 ]
                             ]
                         )
@@ -550,7 +548,7 @@ ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
                                         , interfaceId
                                         , methods
                                         }
-                                    <- iface:ancestors
+                                    <- iface : map fst ancestors
                                     ]
                                     ++
                                     [ ( PVar "_"
@@ -638,20 +636,19 @@ ifaceServerInstances thisMod iface@P.IFace{ name=Name.CapnpQ{local=name}, typePa
         , typ = TApp (tgName ["Server"] "Server") [tStd_ "IO", typ]
         , defs = []
         }
-    : map go (iface:ancestors)
+    : map go ((iface, C.ListBrand (map C.PtrParam typeParams)):ancestors)
   where
     typ = typeWithParams name (map C.paramName typeParams)
-    go P.IFace { name=Name.CapnpQ{local, fileId}, interfaceId, methods } =
+    go (P.IFace { name=Name.CapnpQ{local, fileId}, interfaceId, methods }, C.ListBrand types) =
         let className = Name.mkSub local "server_"
             classType = pureTName thisMod fileId className
+            classArgs = map (typeToType thisMod . C.PtrType) types
         in
         -- Can't use 'instance_' here, because we don't know ahead of time what
         -- module the class is in.
         DcInstance
             { ctx = []
-            , typ =
-                -- FIXME: need to add parameters for superclasses.
-                TApp classType [tStd_ "IO", typ]
+            , typ = TApp classType $ [tStd_ "IO", typ] ++ classArgs
             , defs =
                 [ let methodName = mkMethodName local mname in
                   iValue methodName [PLCtor name [PVar "client"]] $
