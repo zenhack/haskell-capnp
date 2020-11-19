@@ -493,16 +493,19 @@ ifaceClassDecl thisMod P.IFace { name=Name.CapnpQ{local=name}, methods, supers, 
 
 -- | Define the export_Foo function for the interface.
 ifaceExportFn :: Word64 -> P.Interface -> Decl
-ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, ancestors } =
+ifaceExportFn thisMod iface@P.IFace { name=Name.CapnpQ{ local }, typeParams, ancestors } =
+    let typeParamVars = map (TVar . Name.typeVarName . C.paramName) typeParams in
     DcValue
         { typ = TCtx
-            [ TApp (TLName (Name.mkSub local "server_")) [tStd_ "IO", tuName "a"]
-            , TApp (tgName ["STM"] "MonadSTM") [tuName "m"]
+            [ TApp (tgName ["STM"] "MonadSTM") [tuName "m"]
+            , TApp
+                (TLName (Name.mkSub local "server_"))
+                $ [tStd_ "IO", tuName "cap"] ++ typeParamVars
             ]
             (TFn
                 [ tgName ["Supervisors"] "Supervisor"
-                , tuName "a"
-                , TApp (tuName "m") [TLName local]
+                , tuName "cap"
+                , TApp (tuName "m") [TApp (TLName local) typeParamVars]
                 ]
             )
         , def = DfValue
