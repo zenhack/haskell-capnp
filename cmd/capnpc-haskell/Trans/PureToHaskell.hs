@@ -93,6 +93,7 @@ fileToMainModule P.File{fileName, fileId, decls, reExportEnums, usesRpc} =
             , "RecordWildCards"
             , "MultiParamTypeClasses"
             , "TypeFamilies"
+            , "UndecidableInstances"
             ]
         , modExports = Just $
             [ExportGCtors (gName (rawModule fileId) name) | name <- reExportEnums]
@@ -209,13 +210,33 @@ dataToDataDecl thisMod P.Data
         }
     ]
 
+typeParamsDecerializeCtx :: [Name.UnQ] -> [Type]
+typeParamsDecerializeCtx typeParams =
+    let
+        vars = typeParamVars typeParams
+        constMsg = tgName ["Message"] "ConstMsg"
+        cerial msg v = TApp (tgName ["Classes"] "Cerial") [msg, v]
+    in
+    concat
+        [ [ TApp (tgName ["Classes"] "Decerialize") [v]
+          , TApp
+            (tgName ["Classes"] "FromPtr")
+            [ constMsg
+            , cerial constMsg v
+            ]
+          ]
+        | v <- vars
+        ]
+
 dataToSimpleInstances :: Word64 -> P.Data -> [Decl]
 dataToSimpleInstances _thisMod P.Data{ typeName, typeParams } =
-    let typ = typeWithParams typeName typeParams in
-    [ instance_ [] ["Default"] "Default" [typ]
+    let typ = typeWithParams typeName typeParams
+        ctx = typeParamsDecerializeCtx typeParams
+    in
+    [ instance_ ctx ["Default"] "Default" [typ]
         [ iValue "def" [] (egName ["GenHelpersPure"] "defaultStruct")
         ]
-    , instance_ [] ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", typ]
+    , instance_ ctx ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", typ]
         [ iValue "fromStruct" [PVar "struct"] $ EBind
             (EApp (egName ["Classes"] "fromStruct") [euName "struct"])
             (egName ["Classes"] "decerialize")
@@ -230,12 +251,14 @@ dataToDecerialize thisMod P.Data
         , firstClass
         , def
         } =
-    let typ = typeWithParams typeName typeParams in
-    [ instance_ [] ["Classes"] "Decerialize" [typ]
+    let typ = typeWithParams typeName typeParams
+        ctx = typeParamsDecerializeCtx typeParams
+    in
+    [ instance_ ctx ["Classes"] "Decerialize" [typ]
         [ iType "Cerial" [tuName "msg", typ] $
             TApp (tgName (rawModule thisMod) cerialName) $
-                [ TApp (tgName ["Classes"] "Cerial") [tuName "msg", TVar (Name.typeVarName t)]
-                | t <- typeParams
+                [ TApp (tgName ["Classes"] "Cerial") [tuName "msg", v]
+                | v <- typeParamVars typeParams
                 ]
                 ++ [tuName "msg"]
         , iValue "decerialize" [PVar "raw"] $
@@ -771,9 +794,12 @@ typeToType thisMod (C.PtrType (C.PtrInterface (C.InterfaceType n b))) =
 typeToType _thisMod (C.PtrType (C.PtrParam C.TypeParamRef{paramName})) =
     TVar (Name.typeVarName paramName)
 
+typeParamVars :: [Name.UnQ] -> [Type]
+typeParamVars = map (TVar . Name.typeVarName)
+
 typeWithParams :: Name.LocalQ -> [Name.UnQ] -> Type
 typeWithParams f xs =
-    TApp (TLName f) $ map (TVar . Name.typeVarName) xs
+    TApp (TLName f) $ typeParamVars xs
 
 nameToType :: Word64 -> Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Type
 nameToType thisMod Name.CapnpQ{local, fileId} (C.ListBrand args) =
