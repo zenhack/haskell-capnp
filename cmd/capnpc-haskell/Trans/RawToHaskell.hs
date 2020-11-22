@@ -82,11 +82,12 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
     let unknownCtor = Name.mkSub parentTypeCtor "unknown'"
         typeCtor = Name.mkSub parentTypeCtor ""
         containerTypeType = containerTypeToType typeCtor typeParams
+        typeParamNames = map (TVar . Name.typeVarName) typeParams
     in
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
-        , typeArgs = [TVar "msg"]
+        , typeArgs = typeParamNames ++ [TVar "msg"]
         , dataVariants =
             [ DataVariant
                 { dvCtorName = Name.localToUnQ dataCtor
