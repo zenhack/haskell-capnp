@@ -108,7 +108,12 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
             ]
         , derives = []
         }
-    , instance_ [] ["Classes"] "FromStruct" [TVar "msg", containerTypeType (TVar "msg")]
+    , let ctx =
+            [ TApp (tgName ["Classes"] "FromPtr") [TVar "msg", v]
+            | v <- typeParamNames
+            ]
+      in
+      instance_ ctx ["Classes"] "FromStruct" [TVar "msg", containerTypeType (TVar "msg")]
         [ iValue "fromStruct" [PVar "struct"] $ EDo
             [ DoBind "tag"
                 (EApp
