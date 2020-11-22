@@ -228,6 +228,21 @@ typeParamsDecerializeCtx typeParams =
         | v <- vars
         ]
 
+typeParamsCerializeCtx :: [Name.UnQ] -> [Type]
+typeParamsCerializeCtx typeParams =
+    typeParamsDecerializeCtx typeParams ++ concat
+        [ [ TApp (tgName ["Classes"] "Cerialize") [tuName "s", v]
+          , TApp (tgName ["Classes"] "ToPtr")
+               [ tuName "s"
+               , TApp (tgName ["Classes"] "Cerial")
+                   [ TApp (tgName ["Message"] "MutMsg") [tuName "s"]
+                   , v
+                   ]
+               ]
+           ]
+        | v <- typeParamVars typeParams
+        ]
+
 dataToSimpleInstances :: Word64 -> P.Data -> [Decl]
 dataToSimpleInstances _thisMod P.Data{ typeName, typeParams } =
     let typ = typeWithParams typeName typeParams
@@ -343,7 +358,7 @@ dataToMarshal thisMod P.Data
         , def
         } =
     let typ = typeWithParams typeName typeParams in
-    [ instance_ [] ["Classes"] "Marshal" [TVar "s", typ]
+    [ instance_ (typeParamsCerializeCtx typeParams) ["Classes"] "Marshal" [TVar "s", typ]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             case def of
                 P.Sum variants ->
@@ -410,9 +425,11 @@ fieldsToMarshal thisMod typeName firstClass fields =
 
 firstClassInstances :: Word64 -> P.Data -> [Decl]
 firstClassInstances _thisMod P.Data{ typeName, typeParams } =
-    let typ = typeWithParams typeName typeParams in
-    [ instance_ [] ["Classes"] "Cerialize" [tuName "s", typ] []
-    , instance_ [] ["Classes"] "Cerialize" [tuName "s", TApp (tgName ["V"] "Vector") [typ]]
+    let typ = typeWithParams typeName typeParams
+        ctx = typeParamsCerializeCtx typeParams
+    in
+    [ instance_ ctx ["Classes"] "Cerialize" [tuName "s", typ] []
+    , instance_ ctx ["Classes"] "Cerialize" [tuName "s", TApp (tgName ["V"] "Vector") [typ]]
         [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeCompositeVec")
         ]
     ] ++
@@ -420,7 +437,7 @@ firstClassInstances _thisMod P.Data{ typeName, typeParams } =
     -- nesting level. I(zenhack) can't figure out how to get a general case
     -- Cerialize s (Vector a) => Cerialize s (Vector (Vector a)) to type check, so this
     -- will have to do for now.
-    [ instance_ [] ["Classes"] "Cerialize" [tuName "s", t]
+    [ instance_ ctx ["Classes"] "Cerialize" [tuName "s", t]
         [ iValue "cerialize" [] (egName ["GenHelpersPure"] "cerializeBasicVec")
         ]
     | t <- take 6 $ drop 2 $ iterate

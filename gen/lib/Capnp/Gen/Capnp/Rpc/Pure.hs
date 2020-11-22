@@ -2,9 +2,11 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -69,12 +71,12 @@ data Message
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Message) where
+instance (Default.Default (Message)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Message) where
+instance (Classes.FromStruct Message.ConstMsg (Message)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Message) where
-    type Cerial msg Message = (Capnp.Gen.ById.Xb312981b2552a250.Message msg)
+instance (Classes.Decerialize (Message)) where
+    type Cerial msg (Message) = (Capnp.Gen.ById.Xb312981b2552a250.Message msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_Message' raw)
         case raw of
@@ -109,7 +111,7 @@ instance (Classes.Decerialize Message) where
             (Capnp.Gen.ById.Xb312981b2552a250.Message'unknown' tag) ->
                 (Std_.pure (Message'unknown' tag))
         )
-instance (Classes.Marshal s Message) where
+instance (Classes.Marshal s (Message)) where
     marshalInto raw_ value_ = case value_ of
         (Message'unimplemented arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Message'unimplemented raw_))
@@ -141,20 +143,20 @@ instance (Classes.Marshal s Message) where
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Message'disembargo raw_))
         (Message'unknown' tag) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Message'unknown' raw_ tag)
-instance (Classes.Cerialize s Message)
-instance (Classes.Cerialize s (V.Vector Message)) where
+instance (Classes.Cerialize s (Message))
+instance (Classes.Cerialize s (V.Vector (Message))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Message))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Message)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Message)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Message))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Message))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Message)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Message)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Message))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Message))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Message)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Message)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Message))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Bootstrap 
     = Bootstrap 
@@ -163,15 +165,15 @@ data Bootstrap
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Bootstrap) where
+instance (Default.Default (Bootstrap)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Bootstrap) where
+instance (Classes.FromStruct Message.ConstMsg (Bootstrap)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Bootstrap) where
-    type Cerial msg Bootstrap = (Capnp.Gen.ById.Xb312981b2552a250.Bootstrap msg)
+instance (Classes.Decerialize (Bootstrap)) where
+    type Cerial msg (Bootstrap) = (Capnp.Gen.ById.Xb312981b2552a250.Bootstrap msg)
     decerialize raw = (Bootstrap <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Bootstrap'questionId raw)
                                  <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Bootstrap'deprecatedObjectId raw) >>= Classes.decerialize))
-instance (Classes.Marshal s Bootstrap) where
+instance (Classes.Marshal s (Bootstrap)) where
     marshalInto raw_ value_ = case value_ of
         Bootstrap{..} ->
             (do
@@ -179,20 +181,20 @@ instance (Classes.Marshal s Bootstrap) where
                 ((Classes.cerialize (Untyped.message raw_) deprecatedObjectId) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Bootstrap'deprecatedObjectId raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Bootstrap)
-instance (Classes.Cerialize s (V.Vector Bootstrap)) where
+instance (Classes.Cerialize s (Bootstrap))
+instance (Classes.Cerialize s (V.Vector (Bootstrap))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Bootstrap))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Bootstrap)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Bootstrap)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Bootstrap))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Bootstrap))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Bootstrap)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Bootstrap)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Bootstrap))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Bootstrap))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Bootstrap)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Bootstrap)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Bootstrap))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Call 
     = Call 
@@ -206,12 +208,12 @@ data Call
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Call) where
+instance (Default.Default (Call)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Call) where
+instance (Classes.FromStruct Message.ConstMsg (Call)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Call) where
-    type Cerial msg Call = (Capnp.Gen.ById.Xb312981b2552a250.Call msg)
+instance (Classes.Decerialize (Call)) where
+    type Cerial msg (Call) = (Capnp.Gen.ById.Xb312981b2552a250.Call msg)
     decerialize raw = (Call <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Call'questionId raw)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Call'target raw) >>= Classes.decerialize)
                             <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Call'interfaceId raw)
@@ -219,7 +221,7 @@ instance (Classes.Decerialize Call) where
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Call'params raw) >>= Classes.decerialize)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Call'sendResultsTo raw) >>= Classes.decerialize)
                             <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Call'allowThirdPartyTailCall raw))
-instance (Classes.Marshal s Call) where
+instance (Classes.Marshal s (Call)) where
     marshalInto raw_ value_ = case value_ of
         Call{..} ->
             (do
@@ -235,20 +237,20 @@ instance (Classes.Marshal s Call) where
                 (Capnp.Gen.ById.Xb312981b2552a250.set_Call'allowThirdPartyTailCall raw_ allowThirdPartyTailCall)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Call)
-instance (Classes.Cerialize s (V.Vector Call)) where
+instance (Classes.Cerialize s (Call))
+instance (Classes.Cerialize s (V.Vector (Call))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Call))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Call)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Call)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Call))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Call))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Call)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Call)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Call))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Call))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Call)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Call)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Call))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Call'sendResultsTo 
     = Call'sendResultsTo'caller 
@@ -258,12 +260,12 @@ data Call'sendResultsTo
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Call'sendResultsTo) where
+instance (Default.Default (Call'sendResultsTo)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Call'sendResultsTo) where
+instance (Classes.FromStruct Message.ConstMsg (Call'sendResultsTo)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Call'sendResultsTo) where
-    type Cerial msg Call'sendResultsTo = (Capnp.Gen.ById.Xb312981b2552a250.Call'sendResultsTo msg)
+instance (Classes.Decerialize (Call'sendResultsTo)) where
+    type Cerial msg (Call'sendResultsTo) = (Capnp.Gen.ById.Xb312981b2552a250.Call'sendResultsTo msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_Call'sendResultsTo' raw)
         case raw of
@@ -276,7 +278,7 @@ instance (Classes.Decerialize Call'sendResultsTo) where
             (Capnp.Gen.ById.Xb312981b2552a250.Call'sendResultsTo'unknown' tag) ->
                 (Std_.pure (Call'sendResultsTo'unknown' tag))
         )
-instance (Classes.Marshal s Call'sendResultsTo) where
+instance (Classes.Marshal s (Call'sendResultsTo)) where
     marshalInto raw_ value_ = case value_ of
         (Call'sendResultsTo'caller) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw_)
@@ -294,16 +296,16 @@ data Return
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Return) where
+instance (Default.Default (Return)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Return) where
+instance (Classes.FromStruct Message.ConstMsg (Return)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Return) where
-    type Cerial msg Return = (Capnp.Gen.ById.Xb312981b2552a250.Return msg)
+instance (Classes.Decerialize (Return)) where
+    type Cerial msg (Return) = (Capnp.Gen.ById.Xb312981b2552a250.Return msg)
     decerialize raw = (Return <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Return'answerId raw)
                               <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Return'releaseParamCaps raw)
                               <*> (Classes.decerialize raw))
-instance (Classes.Marshal s Return) where
+instance (Classes.Marshal s (Return)) where
     marshalInto raw_ value_ = case value_ of
         Return{..} ->
             (do
@@ -314,20 +316,20 @@ instance (Classes.Marshal s Return) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Return)
-instance (Classes.Cerialize s (V.Vector Return)) where
+instance (Classes.Cerialize s (Return))
+instance (Classes.Cerialize s (V.Vector (Return))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Return))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Return)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Return)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Return))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Return))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Return)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Return)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Return))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Return))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Return)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Return)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Return))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Return' 
     = Return'results Payload
@@ -340,12 +342,12 @@ data Return'
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Return') where
+instance (Default.Default (Return')) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Return') where
+instance (Classes.FromStruct Message.ConstMsg (Return')) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Return') where
-    type Cerial msg Return' = (Capnp.Gen.ById.Xb312981b2552a250.Return msg)
+instance (Classes.Decerialize (Return')) where
+    type Cerial msg (Return') = (Capnp.Gen.ById.Xb312981b2552a250.Return msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_Return' raw)
         case raw of
@@ -364,7 +366,7 @@ instance (Classes.Decerialize Return') where
             (Capnp.Gen.ById.Xb312981b2552a250.Return'unknown' tag) ->
                 (Std_.pure (Return'unknown' tag))
         )
-instance (Classes.Marshal s Return') where
+instance (Classes.Marshal s (Return')) where
     marshalInto raw_ value_ = case value_ of
         (Return'results arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Return'results raw_))
@@ -387,15 +389,15 @@ data Finish
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Finish) where
+instance (Default.Default (Finish)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Finish) where
+instance (Classes.FromStruct Message.ConstMsg (Finish)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Finish) where
-    type Cerial msg Finish = (Capnp.Gen.ById.Xb312981b2552a250.Finish msg)
+instance (Classes.Decerialize (Finish)) where
+    type Cerial msg (Finish) = (Capnp.Gen.ById.Xb312981b2552a250.Finish msg)
     decerialize raw = (Finish <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Finish'questionId raw)
                               <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Finish'releaseResultCaps raw))
-instance (Classes.Marshal s Finish) where
+instance (Classes.Marshal s (Finish)) where
     marshalInto raw_ value_ = case value_ of
         Finish{..} ->
             (do
@@ -403,20 +405,20 @@ instance (Classes.Marshal s Finish) where
                 (Capnp.Gen.ById.Xb312981b2552a250.set_Finish'releaseResultCaps raw_ releaseResultCaps)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Finish)
-instance (Classes.Cerialize s (V.Vector Finish)) where
+instance (Classes.Cerialize s (Finish))
+instance (Classes.Cerialize s (V.Vector (Finish))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Finish))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Finish)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Finish)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Finish))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Finish))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Finish)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Finish)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Finish))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Finish))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Finish)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Finish)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Finish))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Resolve 
     = Resolve 
@@ -425,15 +427,15 @@ data Resolve
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Resolve) where
+instance (Default.Default (Resolve)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Resolve) where
+instance (Classes.FromStruct Message.ConstMsg (Resolve)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Resolve) where
-    type Cerial msg Resolve = (Capnp.Gen.ById.Xb312981b2552a250.Resolve msg)
+instance (Classes.Decerialize (Resolve)) where
+    type Cerial msg (Resolve) = (Capnp.Gen.ById.Xb312981b2552a250.Resolve msg)
     decerialize raw = (Resolve <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Resolve'promiseId raw)
                                <*> (Classes.decerialize raw))
-instance (Classes.Marshal s Resolve) where
+instance (Classes.Marshal s (Resolve)) where
     marshalInto raw_ value_ = case value_ of
         Resolve{..} ->
             (do
@@ -443,20 +445,20 @@ instance (Classes.Marshal s Resolve) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Resolve)
-instance (Classes.Cerialize s (V.Vector Resolve)) where
+instance (Classes.Cerialize s (Resolve))
+instance (Classes.Cerialize s (V.Vector (Resolve))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Resolve))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Resolve)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Resolve)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Resolve))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Resolve))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Resolve)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Resolve)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Resolve))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Resolve))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Resolve)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Resolve)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Resolve))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Resolve' 
     = Resolve'cap CapDescriptor
@@ -465,12 +467,12 @@ data Resolve'
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Resolve') where
+instance (Default.Default (Resolve')) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Resolve') where
+instance (Classes.FromStruct Message.ConstMsg (Resolve')) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Resolve') where
-    type Cerial msg Resolve' = (Capnp.Gen.ById.Xb312981b2552a250.Resolve msg)
+instance (Classes.Decerialize (Resolve')) where
+    type Cerial msg (Resolve') = (Capnp.Gen.ById.Xb312981b2552a250.Resolve msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_Resolve' raw)
         case raw of
@@ -481,7 +483,7 @@ instance (Classes.Decerialize Resolve') where
             (Capnp.Gen.ById.Xb312981b2552a250.Resolve'unknown' tag) ->
                 (Std_.pure (Resolve'unknown' tag))
         )
-instance (Classes.Marshal s Resolve') where
+instance (Classes.Marshal s (Resolve')) where
     marshalInto raw_ value_ = case value_ of
         (Resolve'cap arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Resolve'cap raw_))
@@ -496,15 +498,15 @@ data Release
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Release) where
+instance (Default.Default (Release)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Release) where
+instance (Classes.FromStruct Message.ConstMsg (Release)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Release) where
-    type Cerial msg Release = (Capnp.Gen.ById.Xb312981b2552a250.Release msg)
+instance (Classes.Decerialize (Release)) where
+    type Cerial msg (Release) = (Capnp.Gen.ById.Xb312981b2552a250.Release msg)
     decerialize raw = (Release <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Release'id raw)
                                <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Release'referenceCount raw))
-instance (Classes.Marshal s Release) where
+instance (Classes.Marshal s (Release)) where
     marshalInto raw_ value_ = case value_ of
         Release{..} ->
             (do
@@ -512,20 +514,20 @@ instance (Classes.Marshal s Release) where
                 (Capnp.Gen.ById.Xb312981b2552a250.set_Release'referenceCount raw_ referenceCount)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Release)
-instance (Classes.Cerialize s (V.Vector Release)) where
+instance (Classes.Cerialize s (Release))
+instance (Classes.Cerialize s (V.Vector (Release))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Release))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Release)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Release)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Release))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Release))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Release)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Release)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Release))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Release))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Release)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Release)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Release))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Disembargo 
     = Disembargo 
@@ -534,15 +536,15 @@ data Disembargo
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Disembargo) where
+instance (Default.Default (Disembargo)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Disembargo) where
+instance (Classes.FromStruct Message.ConstMsg (Disembargo)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Disembargo) where
-    type Cerial msg Disembargo = (Capnp.Gen.ById.Xb312981b2552a250.Disembargo msg)
+instance (Classes.Decerialize (Disembargo)) where
+    type Cerial msg (Disembargo) = (Capnp.Gen.ById.Xb312981b2552a250.Disembargo msg)
     decerialize raw = (Disembargo <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_Disembargo'target raw) >>= Classes.decerialize)
                                   <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Disembargo'context raw) >>= Classes.decerialize))
-instance (Classes.Marshal s Disembargo) where
+instance (Classes.Marshal s (Disembargo)) where
     marshalInto raw_ value_ = case value_ of
         Disembargo{..} ->
             (do
@@ -553,20 +555,20 @@ instance (Classes.Marshal s Disembargo) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Disembargo)
-instance (Classes.Cerialize s (V.Vector Disembargo)) where
+instance (Classes.Cerialize s (Disembargo))
+instance (Classes.Cerialize s (V.Vector (Disembargo))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Disembargo))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Disembargo)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Disembargo)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Disembargo))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Disembargo))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Disembargo)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Disembargo)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Disembargo))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Disembargo))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Disembargo)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Disembargo)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Disembargo))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Disembargo'context 
     = Disembargo'context'senderLoopback Std_.Word32
@@ -577,12 +579,12 @@ data Disembargo'context
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Disembargo'context) where
+instance (Default.Default (Disembargo'context)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Disembargo'context) where
+instance (Classes.FromStruct Message.ConstMsg (Disembargo'context)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Disembargo'context) where
-    type Cerial msg Disembargo'context = (Capnp.Gen.ById.Xb312981b2552a250.Disembargo'context msg)
+instance (Classes.Decerialize (Disembargo'context)) where
+    type Cerial msg (Disembargo'context) = (Capnp.Gen.ById.Xb312981b2552a250.Disembargo'context msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_Disembargo'context' raw)
         case raw of
@@ -597,7 +599,7 @@ instance (Classes.Decerialize Disembargo'context) where
             (Capnp.Gen.ById.Xb312981b2552a250.Disembargo'context'unknown' tag) ->
                 (Std_.pure (Disembargo'context'unknown' tag))
         )
-instance (Classes.Marshal s Disembargo'context) where
+instance (Classes.Marshal s (Disembargo'context)) where
     marshalInto raw_ value_ = case value_ of
         (Disembargo'context'senderLoopback arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Disembargo'context'senderLoopback raw_ arg_)
@@ -617,16 +619,16 @@ data Provide
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Provide) where
+instance (Default.Default (Provide)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Provide) where
+instance (Classes.FromStruct Message.ConstMsg (Provide)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Provide) where
-    type Cerial msg Provide = (Capnp.Gen.ById.Xb312981b2552a250.Provide msg)
+instance (Classes.Decerialize (Provide)) where
+    type Cerial msg (Provide) = (Capnp.Gen.ById.Xb312981b2552a250.Provide msg)
     decerialize raw = (Provide <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Provide'questionId raw)
                                <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Provide'target raw) >>= Classes.decerialize)
                                <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Provide'recipient raw) >>= Classes.decerialize))
-instance (Classes.Marshal s Provide) where
+instance (Classes.Marshal s (Provide)) where
     marshalInto raw_ value_ = case value_ of
         Provide{..} ->
             (do
@@ -635,20 +637,20 @@ instance (Classes.Marshal s Provide) where
                 ((Classes.cerialize (Untyped.message raw_) recipient) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Provide'recipient raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Provide)
-instance (Classes.Cerialize s (V.Vector Provide)) where
+instance (Classes.Cerialize s (Provide))
+instance (Classes.Cerialize s (V.Vector (Provide))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Provide))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Provide)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Provide)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Provide))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Provide))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Provide)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Provide)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Provide))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Provide))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Provide)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Provide)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Provide))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Accept 
     = Accept 
@@ -658,16 +660,16 @@ data Accept
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Accept) where
+instance (Default.Default (Accept)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Accept) where
+instance (Classes.FromStruct Message.ConstMsg (Accept)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Accept) where
-    type Cerial msg Accept = (Capnp.Gen.ById.Xb312981b2552a250.Accept msg)
+instance (Classes.Decerialize (Accept)) where
+    type Cerial msg (Accept) = (Capnp.Gen.ById.Xb312981b2552a250.Accept msg)
     decerialize raw = (Accept <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Accept'questionId raw)
                               <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Accept'provision raw) >>= Classes.decerialize)
                               <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Accept'embargo raw))
-instance (Classes.Marshal s Accept) where
+instance (Classes.Marshal s (Accept)) where
     marshalInto raw_ value_ = case value_ of
         Accept{..} ->
             (do
@@ -676,20 +678,20 @@ instance (Classes.Marshal s Accept) where
                 (Capnp.Gen.ById.Xb312981b2552a250.set_Accept'embargo raw_ embargo)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Accept)
-instance (Classes.Cerialize s (V.Vector Accept)) where
+instance (Classes.Cerialize s (Accept))
+instance (Classes.Cerialize s (V.Vector (Accept))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Accept))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Accept)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Accept)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Accept))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Accept))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Accept)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Accept)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Accept))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Accept))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Accept)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Accept)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Accept))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Join 
     = Join 
@@ -699,16 +701,16 @@ data Join
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Join) where
+instance (Default.Default (Join)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Join) where
+instance (Classes.FromStruct Message.ConstMsg (Join)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Join) where
-    type Cerial msg Join = (Capnp.Gen.ById.Xb312981b2552a250.Join msg)
+instance (Classes.Decerialize (Join)) where
+    type Cerial msg (Join) = (Capnp.Gen.ById.Xb312981b2552a250.Join msg)
     decerialize raw = (Join <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Join'questionId raw)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Join'target raw) >>= Classes.decerialize)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Join'keyPart raw) >>= Classes.decerialize))
-instance (Classes.Marshal s Join) where
+instance (Classes.Marshal s (Join)) where
     marshalInto raw_ value_ = case value_ of
         Join{..} ->
             (do
@@ -717,20 +719,20 @@ instance (Classes.Marshal s Join) where
                 ((Classes.cerialize (Untyped.message raw_) keyPart) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Join'keyPart raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Join)
-instance (Classes.Cerialize s (V.Vector Join)) where
+instance (Classes.Cerialize s (Join))
+instance (Classes.Cerialize s (V.Vector (Join))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Join))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Join)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Join)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Join))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Join))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Join)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Join)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Join))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Join))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Join)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Join)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Join))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data MessageTarget 
     = MessageTarget'importedCap Std_.Word32
@@ -739,12 +741,12 @@ data MessageTarget
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default MessageTarget) where
+instance (Default.Default (MessageTarget)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg MessageTarget) where
+instance (Classes.FromStruct Message.ConstMsg (MessageTarget)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize MessageTarget) where
-    type Cerial msg MessageTarget = (Capnp.Gen.ById.Xb312981b2552a250.MessageTarget msg)
+instance (Classes.Decerialize (MessageTarget)) where
+    type Cerial msg (MessageTarget) = (Capnp.Gen.ById.Xb312981b2552a250.MessageTarget msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_MessageTarget' raw)
         case raw of
@@ -755,7 +757,7 @@ instance (Classes.Decerialize MessageTarget) where
             (Capnp.Gen.ById.Xb312981b2552a250.MessageTarget'unknown' tag) ->
                 (Std_.pure (MessageTarget'unknown' tag))
         )
-instance (Classes.Marshal s MessageTarget) where
+instance (Classes.Marshal s (MessageTarget)) where
     marshalInto raw_ value_ = case value_ of
         (MessageTarget'importedCap arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_MessageTarget'importedCap raw_ arg_)
@@ -763,20 +765,20 @@ instance (Classes.Marshal s MessageTarget) where
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_MessageTarget'promisedAnswer raw_))
         (MessageTarget'unknown' tag) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_MessageTarget'unknown' raw_ tag)
-instance (Classes.Cerialize s MessageTarget)
-instance (Classes.Cerialize s (V.Vector MessageTarget)) where
+instance (Classes.Cerialize s (MessageTarget))
+instance (Classes.Cerialize s (V.Vector (MessageTarget))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector MessageTarget))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (MessageTarget)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector MessageTarget)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (MessageTarget))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector MessageTarget))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (MessageTarget)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector MessageTarget)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (MessageTarget))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector MessageTarget))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (MessageTarget)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector MessageTarget)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (MessageTarget))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Payload 
     = Payload 
@@ -785,15 +787,15 @@ data Payload
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Payload) where
+instance (Default.Default (Payload)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Payload) where
+instance (Classes.FromStruct Message.ConstMsg (Payload)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Payload) where
-    type Cerial msg Payload = (Capnp.Gen.ById.Xb312981b2552a250.Payload msg)
+instance (Classes.Decerialize (Payload)) where
+    type Cerial msg (Payload) = (Capnp.Gen.ById.Xb312981b2552a250.Payload msg)
     decerialize raw = (Payload <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_Payload'content raw) >>= Classes.decerialize)
                                <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Payload'capTable raw) >>= Classes.decerialize))
-instance (Classes.Marshal s Payload) where
+instance (Classes.Marshal s (Payload)) where
     marshalInto raw_ value_ = case value_ of
         Payload{..} ->
             (do
@@ -801,20 +803,20 @@ instance (Classes.Marshal s Payload) where
                 ((Classes.cerialize (Untyped.message raw_) capTable) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Payload'capTable raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Payload)
-instance (Classes.Cerialize s (V.Vector Payload)) where
+instance (Classes.Cerialize s (Payload))
+instance (Classes.Cerialize s (V.Vector (Payload))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Payload))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Payload)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Payload)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Payload))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Payload))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Payload)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Payload)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Payload))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Payload))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Payload)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Payload)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Payload))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data CapDescriptor 
     = CapDescriptor 
@@ -823,15 +825,15 @@ data CapDescriptor
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default CapDescriptor) where
+instance (Default.Default (CapDescriptor)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg CapDescriptor) where
+instance (Classes.FromStruct Message.ConstMsg (CapDescriptor)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize CapDescriptor) where
-    type Cerial msg CapDescriptor = (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor msg)
+instance (Classes.Decerialize (CapDescriptor)) where
+    type Cerial msg (CapDescriptor) = (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor msg)
     decerialize raw = (CapDescriptor <$> (Capnp.Gen.ById.Xb312981b2552a250.get_CapDescriptor'attachedFd raw)
                                      <*> (Classes.decerialize raw))
-instance (Classes.Marshal s CapDescriptor) where
+instance (Classes.Marshal s (CapDescriptor)) where
     marshalInto raw_ value_ = case value_ of
         CapDescriptor{..} ->
             (do
@@ -841,20 +843,20 @@ instance (Classes.Marshal s CapDescriptor) where
                     )
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s CapDescriptor)
-instance (Classes.Cerialize s (V.Vector CapDescriptor)) where
+instance (Classes.Cerialize s (CapDescriptor))
+instance (Classes.Cerialize s (V.Vector (CapDescriptor))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector CapDescriptor))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (CapDescriptor)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector CapDescriptor)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (CapDescriptor))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector CapDescriptor))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (CapDescriptor)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapDescriptor)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (CapDescriptor))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapDescriptor))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (CapDescriptor)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector CapDescriptor)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (CapDescriptor))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data CapDescriptor' 
     = CapDescriptor'none 
@@ -867,12 +869,12 @@ data CapDescriptor'
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default CapDescriptor') where
+instance (Default.Default (CapDescriptor')) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg CapDescriptor') where
+instance (Classes.FromStruct Message.ConstMsg (CapDescriptor')) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize CapDescriptor') where
-    type Cerial msg CapDescriptor' = (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor msg)
+instance (Classes.Decerialize (CapDescriptor')) where
+    type Cerial msg (CapDescriptor') = (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_CapDescriptor' raw)
         case raw of
@@ -891,7 +893,7 @@ instance (Classes.Decerialize CapDescriptor') where
             (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor'unknown' tag) ->
                 (Std_.pure (CapDescriptor'unknown' tag))
         )
-instance (Classes.Marshal s CapDescriptor') where
+instance (Classes.Marshal s (CapDescriptor')) where
     marshalInto raw_ value_ = case value_ of
         (CapDescriptor'none) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_CapDescriptor'none raw_)
@@ -914,15 +916,15 @@ data PromisedAnswer
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default PromisedAnswer) where
+instance (Default.Default (PromisedAnswer)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg PromisedAnswer) where
+instance (Classes.FromStruct Message.ConstMsg (PromisedAnswer)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize PromisedAnswer) where
-    type Cerial msg PromisedAnswer = (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer msg)
+instance (Classes.Decerialize (PromisedAnswer)) where
+    type Cerial msg (PromisedAnswer) = (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer msg)
     decerialize raw = (PromisedAnswer <$> (Capnp.Gen.ById.Xb312981b2552a250.get_PromisedAnswer'questionId raw)
                                       <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_PromisedAnswer'transform raw) >>= Classes.decerialize))
-instance (Classes.Marshal s PromisedAnswer) where
+instance (Classes.Marshal s (PromisedAnswer)) where
     marshalInto raw_ value_ = case value_ of
         PromisedAnswer{..} ->
             (do
@@ -930,20 +932,20 @@ instance (Classes.Marshal s PromisedAnswer) where
                 ((Classes.cerialize (Untyped.message raw_) transform) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'transform raw_))
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s PromisedAnswer)
-instance (Classes.Cerialize s (V.Vector PromisedAnswer)) where
+instance (Classes.Cerialize s (PromisedAnswer))
+instance (Classes.Cerialize s (V.Vector (PromisedAnswer))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector PromisedAnswer))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (PromisedAnswer)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector PromisedAnswer)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (PromisedAnswer))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data PromisedAnswer'Op 
     = PromisedAnswer'Op'noop 
@@ -952,12 +954,12 @@ data PromisedAnswer'Op
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default PromisedAnswer'Op) where
+instance (Default.Default (PromisedAnswer'Op)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg PromisedAnswer'Op) where
+instance (Classes.FromStruct Message.ConstMsg (PromisedAnswer'Op)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize PromisedAnswer'Op) where
-    type Cerial msg PromisedAnswer'Op = (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer'Op msg)
+instance (Classes.Decerialize (PromisedAnswer'Op)) where
+    type Cerial msg (PromisedAnswer'Op) = (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer'Op msg)
     decerialize raw = (do
         raw <- (Capnp.Gen.ById.Xb312981b2552a250.get_PromisedAnswer'Op' raw)
         case raw of
@@ -968,7 +970,7 @@ instance (Classes.Decerialize PromisedAnswer'Op) where
             (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer'Op'unknown' tag) ->
                 (Std_.pure (PromisedAnswer'Op'unknown' tag))
         )
-instance (Classes.Marshal s PromisedAnswer'Op) where
+instance (Classes.Marshal s (PromisedAnswer'Op)) where
     marshalInto raw_ value_ = case value_ of
         (PromisedAnswer'Op'noop) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw_)
@@ -976,20 +978,20 @@ instance (Classes.Marshal s PromisedAnswer'Op) where
             (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'getPointerField raw_ arg_)
         (PromisedAnswer'Op'unknown' tag) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'unknown' raw_ tag)
-instance (Classes.Cerialize s PromisedAnswer'Op)
-instance (Classes.Cerialize s (V.Vector PromisedAnswer'Op)) where
+instance (Classes.Cerialize s (PromisedAnswer'Op))
+instance (Classes.Cerialize s (V.Vector (PromisedAnswer'Op))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector PromisedAnswer'Op))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (PromisedAnswer'Op)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector PromisedAnswer'Op)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (PromisedAnswer'Op))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer'Op))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer'Op)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer'Op)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer'Op))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer'Op))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer'Op)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector PromisedAnswer'Op)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (PromisedAnswer'Op))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data ThirdPartyCapDescriptor 
     = ThirdPartyCapDescriptor 
@@ -998,15 +1000,15 @@ data ThirdPartyCapDescriptor
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default ThirdPartyCapDescriptor) where
+instance (Default.Default (ThirdPartyCapDescriptor)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg ThirdPartyCapDescriptor) where
+instance (Classes.FromStruct Message.ConstMsg (ThirdPartyCapDescriptor)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize ThirdPartyCapDescriptor) where
-    type Cerial msg ThirdPartyCapDescriptor = (Capnp.Gen.ById.Xb312981b2552a250.ThirdPartyCapDescriptor msg)
+instance (Classes.Decerialize (ThirdPartyCapDescriptor)) where
+    type Cerial msg (ThirdPartyCapDescriptor) = (Capnp.Gen.ById.Xb312981b2552a250.ThirdPartyCapDescriptor msg)
     decerialize raw = (ThirdPartyCapDescriptor <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'id raw) >>= Classes.decerialize)
                                                <*> (Capnp.Gen.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'vineId raw))
-instance (Classes.Marshal s ThirdPartyCapDescriptor) where
+instance (Classes.Marshal s (ThirdPartyCapDescriptor)) where
     marshalInto raw_ value_ = case value_ of
         ThirdPartyCapDescriptor{..} ->
             (do
@@ -1014,20 +1016,20 @@ instance (Classes.Marshal s ThirdPartyCapDescriptor) where
                 (Capnp.Gen.ById.Xb312981b2552a250.set_ThirdPartyCapDescriptor'vineId raw_ vineId)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s ThirdPartyCapDescriptor)
-instance (Classes.Cerialize s (V.Vector ThirdPartyCapDescriptor)) where
+instance (Classes.Cerialize s (ThirdPartyCapDescriptor))
+instance (Classes.Cerialize s (V.Vector (ThirdPartyCapDescriptor))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector ThirdPartyCapDescriptor))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (ThirdPartyCapDescriptor)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector ThirdPartyCapDescriptor)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (ThirdPartyCapDescriptor))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector ThirdPartyCapDescriptor))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (ThirdPartyCapDescriptor)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector ThirdPartyCapDescriptor)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (ThirdPartyCapDescriptor))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector ThirdPartyCapDescriptor))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (ThirdPartyCapDescriptor)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector ThirdPartyCapDescriptor)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (ThirdPartyCapDescriptor))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 data Exception 
     = Exception 
@@ -1038,17 +1040,17 @@ data Exception
     deriving(Std_.Show
             ,Std_.Eq
             ,Generics.Generic)
-instance (Default.Default Exception) where
+instance (Default.Default (Exception)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg Exception) where
+instance (Classes.FromStruct Message.ConstMsg (Exception)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
-instance (Classes.Decerialize Exception) where
-    type Cerial msg Exception = (Capnp.Gen.ById.Xb312981b2552a250.Exception msg)
+instance (Classes.Decerialize (Exception)) where
+    type Cerial msg (Exception) = (Capnp.Gen.ById.Xb312981b2552a250.Exception msg)
     decerialize raw = (Exception <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_Exception'reason raw) >>= Classes.decerialize)
                                  <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Exception'obsoleteIsCallersFault raw)
                                  <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Exception'obsoleteDurability raw)
                                  <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Exception'type_ raw))
-instance (Classes.Marshal s Exception) where
+instance (Classes.Marshal s (Exception)) where
     marshalInto raw_ value_ = case value_ of
         Exception{..} ->
             (do
@@ -1058,20 +1060,20 @@ instance (Classes.Marshal s Exception) where
                 (Capnp.Gen.ById.Xb312981b2552a250.set_Exception'type_ raw_ type_)
                 (Std_.pure ())
                 )
-instance (Classes.Cerialize s Exception)
-instance (Classes.Cerialize s (V.Vector Exception)) where
+instance (Classes.Cerialize s (Exception))
+instance (Classes.Cerialize s (V.Vector (Exception))) where
     cerialize  = GenHelpersPure.cerializeCompositeVec
-instance (Classes.Cerialize s (V.Vector (V.Vector Exception))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (Exception)))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector Exception)))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (Exception))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector Exception))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (Exception)))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Exception)))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Exception))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Exception))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Exception)))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
-instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector Exception)))))))) where
+instance (Classes.Cerialize s (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (V.Vector (Exception))))))))) where
     cerialize  = GenHelpersPure.cerializeBasicVec
 instance (Classes.Decerialize Capnp.Gen.ById.Xb312981b2552a250.Exception'Type) where
     type Cerial msg Capnp.Gen.ById.Xb312981b2552a250.Exception'Type = Capnp.Gen.ById.Xb312981b2552a250.Exception'Type

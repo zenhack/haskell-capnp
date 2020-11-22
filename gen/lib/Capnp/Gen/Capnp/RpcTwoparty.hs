@@ -56,8 +56,6 @@ instance (Classes.MutListElem s Side) where
     newList msg size = (Side'List_ <$> (Untyped.allocList16 msg size))
 newtype VatId msg
     = VatId'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg VatId) where
-    tMsg f (VatId'newtype_ s) = (VatId'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (VatId msg)) where
     fromStruct struct = (Std_.pure (VatId'newtype_ struct))
 instance (Classes.ToStruct msg (VatId msg)) where
@@ -92,8 +90,6 @@ set_VatId'side :: ((Untyped.RWCtx m s)) => (VatId (Message.MutMsg s)) -> Side ->
 set_VatId'side (VatId'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word16) 0 0 0)
 newtype ProvisionId msg
     = ProvisionId'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg ProvisionId) where
-    tMsg f (ProvisionId'newtype_ s) = (ProvisionId'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (ProvisionId msg)) where
     fromStruct struct = (Std_.pure (ProvisionId'newtype_ struct))
 instance (Classes.ToStruct msg (ProvisionId msg)) where
@@ -128,8 +124,6 @@ set_ProvisionId'joinId :: ((Untyped.RWCtx m s)) => (ProvisionId (Message.MutMsg 
 set_ProvisionId'joinId (ProvisionId'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word32) 0 0 0)
 newtype RecipientId msg
     = RecipientId'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg RecipientId) where
-    tMsg f (RecipientId'newtype_ s) = (RecipientId'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (RecipientId msg)) where
     fromStruct struct = (Std_.pure (RecipientId'newtype_ struct))
 instance (Classes.ToStruct msg (RecipientId msg)) where
@@ -160,8 +154,6 @@ instance (Basics.MutListElem s (RecipientId (Message.MutMsg s))) where
     newList msg len = (RecipientId'List_ <$> (Untyped.allocCompositeList msg 0 0 len))
 newtype ThirdPartyCapId msg
     = ThirdPartyCapId'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg ThirdPartyCapId) where
-    tMsg f (ThirdPartyCapId'newtype_ s) = (ThirdPartyCapId'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (ThirdPartyCapId msg)) where
     fromStruct struct = (Std_.pure (ThirdPartyCapId'newtype_ struct))
 instance (Classes.ToStruct msg (ThirdPartyCapId msg)) where
@@ -192,8 +184,6 @@ instance (Basics.MutListElem s (ThirdPartyCapId (Message.MutMsg s))) where
     newList msg len = (ThirdPartyCapId'List_ <$> (Untyped.allocCompositeList msg 0 0 len))
 newtype JoinKeyPart msg
     = JoinKeyPart'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg JoinKeyPart) where
-    tMsg f (JoinKeyPart'newtype_ s) = (JoinKeyPart'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (JoinKeyPart msg)) where
     fromStruct struct = (Std_.pure (JoinKeyPart'newtype_ struct))
 instance (Classes.ToStruct msg (JoinKeyPart msg)) where
@@ -236,8 +226,6 @@ set_JoinKeyPart'partNum :: ((Untyped.RWCtx m s)) => (JoinKeyPart (Message.MutMsg
 set_JoinKeyPart'partNum (JoinKeyPart'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word16) 0 48 0)
 newtype JoinResult msg
     = JoinResult'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg JoinResult) where
-    tMsg f (JoinResult'newtype_ s) = (JoinResult'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (JoinResult msg)) where
     fromStruct struct = (Std_.pure (JoinResult'newtype_ struct))
 instance (Classes.ToStruct msg (JoinResult msg)) where
@@ -274,12 +262,14 @@ get_JoinResult'succeeded :: ((Untyped.ReadCtx m msg)) => (JoinResult msg) -> (m 
 get_JoinResult'succeeded (JoinResult'newtype_ struct) = (GenHelpers.getWordField struct 0 32 0)
 set_JoinResult'succeeded :: ((Untyped.RWCtx m s)) => (JoinResult (Message.MutMsg s)) -> Std_.Bool -> (m ())
 set_JoinResult'succeeded (JoinResult'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word1) 0 32 0)
-get_JoinResult'cap :: ((Untyped.ReadCtx m msg)) => (JoinResult msg) -> (m (Std_.Maybe (Untyped.Ptr msg)))
+get_JoinResult'cap :: ((Untyped.ReadCtx m msg)
+                      ,(Classes.FromPtr msg (Std_.Maybe (Untyped.Ptr msg)))) => (JoinResult msg) -> (m (Std_.Maybe (Untyped.Ptr msg)))
 get_JoinResult'cap (JoinResult'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 0 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_JoinResult'cap :: ((Untyped.RWCtx m s)) => (JoinResult (Message.MutMsg s)) -> (Std_.Maybe (Untyped.Ptr (Message.MutMsg s))) -> (m ())
+set_JoinResult'cap :: ((Untyped.RWCtx m s)
+                      ,(Classes.ToPtr s (Std_.Maybe (Untyped.Ptr (Message.MutMsg s))))) => (JoinResult (Message.MutMsg s)) -> (Std_.Maybe (Untyped.Ptr (Message.MutMsg s))) -> (m ())
 set_JoinResult'cap (JoinResult'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 0 struct)

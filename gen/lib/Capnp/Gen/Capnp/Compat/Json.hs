@@ -24,8 +24,6 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 newtype Value msg
     = Value'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg Value) where
-    tMsg f (Value'newtype_ s) = (Value'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (Value msg)) where
     fromStruct struct = (Std_.pure (Value'newtype_ struct))
 instance (Classes.ToStruct msg (Value msg)) where
@@ -96,7 +94,8 @@ instance (Classes.FromStruct msg (Value' msg)) where
             _ ->
                 (Std_.pure (Value'unknown' (Std_.fromIntegral tag)))
         )
-get_Value' :: ((Untyped.ReadCtx m msg)) => (Value msg) -> (m (Value' msg))
+get_Value' :: ((Untyped.ReadCtx m msg)
+              ,(Classes.FromStruct msg (Value' msg))) => (Value msg) -> (m (Value' msg))
 get_Value' (Value'newtype_ struct) = (Classes.fromStruct struct)
 set_Value'null :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (m ())
 set_Value'null (Value'newtype_ struct) = (do
@@ -113,7 +112,8 @@ set_Value'number (Value'newtype_ struct) value = (do
     (GenHelpers.setWordField struct (2 :: Std_.Word16) 0 0 0)
     (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word64) 1 0 0)
     )
-set_Value'string :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_Value'string :: ((Untyped.RWCtx m s)
+                    ,(Classes.ToPtr s (Basics.Text (Message.MutMsg s)))) => (Value (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
 set_Value'string (Value'newtype_ struct) value = (do
     (GenHelpers.setWordField struct (3 :: Std_.Word16) 0 0 0)
     (do
@@ -121,7 +121,8 @@ set_Value'string (Value'newtype_ struct) value = (do
         (Untyped.setPtr ptr 0 struct)
         )
     )
-set_Value'array :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Value (Message.MutMsg s))) -> (m ())
+set_Value'array :: ((Untyped.RWCtx m s)
+                   ,(Classes.ToPtr s (Basics.List (Message.MutMsg s) (Value (Message.MutMsg s))))) => (Value (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Value (Message.MutMsg s))) -> (m ())
 set_Value'array (Value'newtype_ struct) value = (do
     (GenHelpers.setWordField struct (4 :: Std_.Word16) 0 0 0)
     (do
@@ -129,7 +130,8 @@ set_Value'array (Value'newtype_ struct) value = (do
         (Untyped.setPtr ptr 0 struct)
         )
     )
-set_Value'object :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Value'Field (Message.MutMsg s))) -> (m ())
+set_Value'object :: ((Untyped.RWCtx m s)
+                    ,(Classes.ToPtr s (Basics.List (Message.MutMsg s) (Value'Field (Message.MutMsg s))))) => (Value (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Value'Field (Message.MutMsg s))) -> (m ())
 set_Value'object (Value'newtype_ struct) value = (do
     (GenHelpers.setWordField struct (5 :: Std_.Word16) 0 0 0)
     (do
@@ -137,7 +139,8 @@ set_Value'object (Value'newtype_ struct) value = (do
         (Untyped.setPtr ptr 0 struct)
         )
     )
-set_Value'call :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> (Value'Call (Message.MutMsg s)) -> (m ())
+set_Value'call :: ((Untyped.RWCtx m s)
+                  ,(Classes.ToPtr s (Value'Call (Message.MutMsg s)))) => (Value (Message.MutMsg s)) -> (Value'Call (Message.MutMsg s)) -> (m ())
 set_Value'call (Value'newtype_ struct) value = (do
     (GenHelpers.setWordField struct (6 :: Std_.Word16) 0 0 0)
     (do
@@ -149,8 +152,6 @@ set_Value'unknown' :: ((Untyped.RWCtx m s)) => (Value (Message.MutMsg s)) -> Std
 set_Value'unknown' (Value'newtype_ struct) value = (GenHelpers.setWordField struct ((Std_.fromIntegral (Classes.toWord value)) :: Std_.Word16) 0 0 0)
 newtype Value'Field msg
     = Value'Field'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg Value'Field) where
-    tMsg f (Value'Field'newtype_ s) = (Value'Field'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (Value'Field msg)) where
     fromStruct struct = (Std_.pure (Value'Field'newtype_ struct))
 instance (Classes.ToStruct msg (Value'Field msg)) where
@@ -179,12 +180,14 @@ instance (Basics.ListElem msg (Value'Field msg)) where
 instance (Basics.MutListElem s (Value'Field (Message.MutMsg s))) where
     setIndex (Value'Field'newtype_ elt) i (Value'Field'List_ l) = (Untyped.setIndex elt i l)
     newList msg len = (Value'Field'List_ <$> (Untyped.allocCompositeList msg 0 2 len))
-get_Value'Field'name :: ((Untyped.ReadCtx m msg)) => (Value'Field msg) -> (m (Basics.Text msg))
+get_Value'Field'name :: ((Untyped.ReadCtx m msg)
+                        ,(Classes.FromPtr msg (Basics.Text msg))) => (Value'Field msg) -> (m (Basics.Text msg))
 get_Value'Field'name (Value'Field'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 0 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_Value'Field'name :: ((Untyped.RWCtx m s)) => (Value'Field (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_Value'Field'name :: ((Untyped.RWCtx m s)
+                        ,(Classes.ToPtr s (Basics.Text (Message.MutMsg s)))) => (Value'Field (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
 set_Value'Field'name (Value'Field'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 0 struct)
@@ -197,12 +200,14 @@ new_Value'Field'name len struct = (do
     (set_Value'Field'name struct result)
     (Std_.pure result)
     )
-get_Value'Field'value :: ((Untyped.ReadCtx m msg)) => (Value'Field msg) -> (m (Value msg))
+get_Value'Field'value :: ((Untyped.ReadCtx m msg)
+                         ,(Classes.FromPtr msg (Value msg))) => (Value'Field msg) -> (m (Value msg))
 get_Value'Field'value (Value'Field'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 1 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_Value'Field'value :: ((Untyped.RWCtx m s)) => (Value'Field (Message.MutMsg s)) -> (Value (Message.MutMsg s)) -> (m ())
+set_Value'Field'value :: ((Untyped.RWCtx m s)
+                         ,(Classes.ToPtr s (Value (Message.MutMsg s)))) => (Value'Field (Message.MutMsg s)) -> (Value (Message.MutMsg s)) -> (m ())
 set_Value'Field'value (Value'Field'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 1 struct)
@@ -217,8 +222,6 @@ new_Value'Field'value struct = (do
     )
 newtype Value'Call msg
     = Value'Call'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg Value'Call) where
-    tMsg f (Value'Call'newtype_ s) = (Value'Call'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (Value'Call msg)) where
     fromStruct struct = (Std_.pure (Value'Call'newtype_ struct))
 instance (Classes.ToStruct msg (Value'Call msg)) where
@@ -247,12 +250,14 @@ instance (Basics.ListElem msg (Value'Call msg)) where
 instance (Basics.MutListElem s (Value'Call (Message.MutMsg s))) where
     setIndex (Value'Call'newtype_ elt) i (Value'Call'List_ l) = (Untyped.setIndex elt i l)
     newList msg len = (Value'Call'List_ <$> (Untyped.allocCompositeList msg 0 2 len))
-get_Value'Call'function :: ((Untyped.ReadCtx m msg)) => (Value'Call msg) -> (m (Basics.Text msg))
+get_Value'Call'function :: ((Untyped.ReadCtx m msg)
+                           ,(Classes.FromPtr msg (Basics.Text msg))) => (Value'Call msg) -> (m (Basics.Text msg))
 get_Value'Call'function (Value'Call'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 0 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_Value'Call'function :: ((Untyped.RWCtx m s)) => (Value'Call (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_Value'Call'function :: ((Untyped.RWCtx m s)
+                           ,(Classes.ToPtr s (Basics.Text (Message.MutMsg s)))) => (Value'Call (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
 set_Value'Call'function (Value'Call'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 0 struct)
@@ -265,12 +270,14 @@ new_Value'Call'function len struct = (do
     (set_Value'Call'function struct result)
     (Std_.pure result)
     )
-get_Value'Call'params :: ((Untyped.ReadCtx m msg)) => (Value'Call msg) -> (m (Basics.List msg (Value msg)))
+get_Value'Call'params :: ((Untyped.ReadCtx m msg)
+                         ,(Classes.FromPtr msg (Basics.List msg (Value msg)))) => (Value'Call msg) -> (m (Basics.List msg (Value msg)))
 get_Value'Call'params (Value'Call'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 1 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_Value'Call'params :: ((Untyped.RWCtx m s)) => (Value'Call (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Value (Message.MutMsg s))) -> (m ())
+set_Value'Call'params :: ((Untyped.RWCtx m s)
+                         ,(Classes.ToPtr s (Basics.List (Message.MutMsg s) (Value (Message.MutMsg s))))) => (Value'Call (Message.MutMsg s)) -> (Basics.List (Message.MutMsg s) (Value (Message.MutMsg s))) -> (m ())
 set_Value'Call'params (Value'Call'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 1 struct)
@@ -285,8 +292,6 @@ new_Value'Call'params len struct = (do
     )
 newtype FlattenOptions msg
     = FlattenOptions'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg FlattenOptions) where
-    tMsg f (FlattenOptions'newtype_ s) = (FlattenOptions'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (FlattenOptions msg)) where
     fromStruct struct = (Std_.pure (FlattenOptions'newtype_ struct))
 instance (Classes.ToStruct msg (FlattenOptions msg)) where
@@ -315,12 +320,14 @@ instance (Basics.ListElem msg (FlattenOptions msg)) where
 instance (Basics.MutListElem s (FlattenOptions (Message.MutMsg s))) where
     setIndex (FlattenOptions'newtype_ elt) i (FlattenOptions'List_ l) = (Untyped.setIndex elt i l)
     newList msg len = (FlattenOptions'List_ <$> (Untyped.allocCompositeList msg 0 1 len))
-get_FlattenOptions'prefix :: ((Untyped.ReadCtx m msg)) => (FlattenOptions msg) -> (m (Basics.Text msg))
+get_FlattenOptions'prefix :: ((Untyped.ReadCtx m msg)
+                             ,(Classes.FromPtr msg (Basics.Text msg))) => (FlattenOptions msg) -> (m (Basics.Text msg))
 get_FlattenOptions'prefix (FlattenOptions'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 0 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_FlattenOptions'prefix :: ((Untyped.RWCtx m s)) => (FlattenOptions (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_FlattenOptions'prefix :: ((Untyped.RWCtx m s)
+                             ,(Classes.ToPtr s (Basics.Text (Message.MutMsg s)))) => (FlattenOptions (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
 set_FlattenOptions'prefix (FlattenOptions'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 0 struct)
@@ -335,8 +342,6 @@ new_FlattenOptions'prefix len struct = (do
     )
 newtype DiscriminatorOptions msg
     = DiscriminatorOptions'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg DiscriminatorOptions) where
-    tMsg f (DiscriminatorOptions'newtype_ s) = (DiscriminatorOptions'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (DiscriminatorOptions msg)) where
     fromStruct struct = (Std_.pure (DiscriminatorOptions'newtype_ struct))
 instance (Classes.ToStruct msg (DiscriminatorOptions msg)) where
@@ -365,12 +370,14 @@ instance (Basics.ListElem msg (DiscriminatorOptions msg)) where
 instance (Basics.MutListElem s (DiscriminatorOptions (Message.MutMsg s))) where
     setIndex (DiscriminatorOptions'newtype_ elt) i (DiscriminatorOptions'List_ l) = (Untyped.setIndex elt i l)
     newList msg len = (DiscriminatorOptions'List_ <$> (Untyped.allocCompositeList msg 0 2 len))
-get_DiscriminatorOptions'name :: ((Untyped.ReadCtx m msg)) => (DiscriminatorOptions msg) -> (m (Basics.Text msg))
+get_DiscriminatorOptions'name :: ((Untyped.ReadCtx m msg)
+                                 ,(Classes.FromPtr msg (Basics.Text msg))) => (DiscriminatorOptions msg) -> (m (Basics.Text msg))
 get_DiscriminatorOptions'name (DiscriminatorOptions'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 0 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_DiscriminatorOptions'name :: ((Untyped.RWCtx m s)) => (DiscriminatorOptions (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_DiscriminatorOptions'name :: ((Untyped.RWCtx m s)
+                                 ,(Classes.ToPtr s (Basics.Text (Message.MutMsg s)))) => (DiscriminatorOptions (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
 set_DiscriminatorOptions'name (DiscriminatorOptions'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 0 struct)
@@ -383,12 +390,14 @@ new_DiscriminatorOptions'name len struct = (do
     (set_DiscriminatorOptions'name struct result)
     (Std_.pure result)
     )
-get_DiscriminatorOptions'valueName :: ((Untyped.ReadCtx m msg)) => (DiscriminatorOptions msg) -> (m (Basics.Text msg))
+get_DiscriminatorOptions'valueName :: ((Untyped.ReadCtx m msg)
+                                      ,(Classes.FromPtr msg (Basics.Text msg))) => (DiscriminatorOptions msg) -> (m (Basics.Text msg))
 get_DiscriminatorOptions'valueName (DiscriminatorOptions'newtype_ struct) = (do
     ptr <- (Untyped.getPtr 1 struct)
     (Classes.fromPtr (Untyped.message struct) ptr)
     )
-set_DiscriminatorOptions'valueName :: ((Untyped.RWCtx m s)) => (DiscriminatorOptions (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
+set_DiscriminatorOptions'valueName :: ((Untyped.RWCtx m s)
+                                      ,(Classes.ToPtr s (Basics.Text (Message.MutMsg s)))) => (DiscriminatorOptions (Message.MutMsg s)) -> (Basics.Text (Message.MutMsg s)) -> (m ())
 set_DiscriminatorOptions'valueName (DiscriminatorOptions'newtype_ struct) value = (do
     ptr <- (Classes.toPtr (Untyped.message struct) value)
     (Untyped.setPtr ptr 1 struct)

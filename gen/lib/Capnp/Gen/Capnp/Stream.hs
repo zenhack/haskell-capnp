@@ -24,8 +24,6 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 newtype StreamResult msg
     = StreamResult'newtype_ (Untyped.Struct msg)
-instance (Untyped.TraverseMsg StreamResult) where
-    tMsg f (StreamResult'newtype_ s) = (StreamResult'newtype_ <$> (Untyped.tMsg f s))
 instance (Classes.FromStruct msg (StreamResult msg)) where
     fromStruct struct = (Std_.pure (StreamResult'newtype_ struct))
 instance (Classes.ToStruct msg (StreamResult msg)) where
