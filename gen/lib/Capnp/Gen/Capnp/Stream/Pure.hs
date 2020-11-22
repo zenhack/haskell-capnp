@@ -40,7 +40,7 @@ instance (Classes.FromStruct Message.ConstMsg StreamResult) where
 instance (Classes.Decerialize StreamResult) where
     type Cerial msg StreamResult = (Capnp.Gen.ById.X86c366a91393f3f8.StreamResult msg)
     decerialize raw = (Std_.pure StreamResult)
-instance (Classes.Marshal StreamResult) where
+instance (Classes.Marshal s StreamResult) where
     marshalInto raw_ value_ = case value_ of
         (StreamResult) ->
             (do

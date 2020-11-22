@@ -109,7 +109,7 @@ instance (Classes.Decerialize Message) where
             (Capnp.Gen.ById.Xb312981b2552a250.Message'unknown' tag) ->
                 (Std_.pure (Message'unknown' tag))
         )
-instance (Classes.Marshal Message) where
+instance (Classes.Marshal s Message) where
     marshalInto raw_ value_ = case value_ of
         (Message'unimplemented arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Message'unimplemented raw_))
@@ -171,7 +171,7 @@ instance (Classes.Decerialize Bootstrap) where
     type Cerial msg Bootstrap = (Capnp.Gen.ById.Xb312981b2552a250.Bootstrap msg)
     decerialize raw = (Bootstrap <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Bootstrap'questionId raw)
                                  <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Bootstrap'deprecatedObjectId raw) >>= Classes.decerialize))
-instance (Classes.Marshal Bootstrap) where
+instance (Classes.Marshal s Bootstrap) where
     marshalInto raw_ value_ = case value_ of
         Bootstrap{..} ->
             (do
@@ -219,7 +219,7 @@ instance (Classes.Decerialize Call) where
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Call'params raw) >>= Classes.decerialize)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Call'sendResultsTo raw) >>= Classes.decerialize)
                             <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Call'allowThirdPartyTailCall raw))
-instance (Classes.Marshal Call) where
+instance (Classes.Marshal s Call) where
     marshalInto raw_ value_ = case value_ of
         Call{..} ->
             (do
@@ -276,7 +276,7 @@ instance (Classes.Decerialize Call'sendResultsTo) where
             (Capnp.Gen.ById.Xb312981b2552a250.Call'sendResultsTo'unknown' tag) ->
                 (Std_.pure (Call'sendResultsTo'unknown' tag))
         )
-instance (Classes.Marshal Call'sendResultsTo) where
+instance (Classes.Marshal s Call'sendResultsTo) where
     marshalInto raw_ value_ = case value_ of
         (Call'sendResultsTo'caller) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Call'sendResultsTo'caller raw_)
@@ -303,7 +303,7 @@ instance (Classes.Decerialize Return) where
     decerialize raw = (Return <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Return'answerId raw)
                               <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Return'releaseParamCaps raw)
                               <*> (Classes.decerialize raw))
-instance (Classes.Marshal Return) where
+instance (Classes.Marshal s Return) where
     marshalInto raw_ value_ = case value_ of
         Return{..} ->
             (do
@@ -364,7 +364,7 @@ instance (Classes.Decerialize Return') where
             (Capnp.Gen.ById.Xb312981b2552a250.Return'unknown' tag) ->
                 (Std_.pure (Return'unknown' tag))
         )
-instance (Classes.Marshal Return') where
+instance (Classes.Marshal s Return') where
     marshalInto raw_ value_ = case value_ of
         (Return'results arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Return'results raw_))
@@ -395,7 +395,7 @@ instance (Classes.Decerialize Finish) where
     type Cerial msg Finish = (Capnp.Gen.ById.Xb312981b2552a250.Finish msg)
     decerialize raw = (Finish <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Finish'questionId raw)
                               <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Finish'releaseResultCaps raw))
-instance (Classes.Marshal Finish) where
+instance (Classes.Marshal s Finish) where
     marshalInto raw_ value_ = case value_ of
         Finish{..} ->
             (do
@@ -433,7 +433,7 @@ instance (Classes.Decerialize Resolve) where
     type Cerial msg Resolve = (Capnp.Gen.ById.Xb312981b2552a250.Resolve msg)
     decerialize raw = (Resolve <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Resolve'promiseId raw)
                                <*> (Classes.decerialize raw))
-instance (Classes.Marshal Resolve) where
+instance (Classes.Marshal s Resolve) where
     marshalInto raw_ value_ = case value_ of
         Resolve{..} ->
             (do
@@ -481,7 +481,7 @@ instance (Classes.Decerialize Resolve') where
             (Capnp.Gen.ById.Xb312981b2552a250.Resolve'unknown' tag) ->
                 (Std_.pure (Resolve'unknown' tag))
         )
-instance (Classes.Marshal Resolve') where
+instance (Classes.Marshal s Resolve') where
     marshalInto raw_ value_ = case value_ of
         (Resolve'cap arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xb312981b2552a250.set_Resolve'cap raw_))
@@ -504,7 +504,7 @@ instance (Classes.Decerialize Release) where
     type Cerial msg Release = (Capnp.Gen.ById.Xb312981b2552a250.Release msg)
     decerialize raw = (Release <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Release'id raw)
                                <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Release'referenceCount raw))
-instance (Classes.Marshal Release) where
+instance (Classes.Marshal s Release) where
     marshalInto raw_ value_ = case value_ of
         Release{..} ->
             (do
@@ -542,7 +542,7 @@ instance (Classes.Decerialize Disembargo) where
     type Cerial msg Disembargo = (Capnp.Gen.ById.Xb312981b2552a250.Disembargo msg)
     decerialize raw = (Disembargo <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_Disembargo'target raw) >>= Classes.decerialize)
                                   <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Disembargo'context raw) >>= Classes.decerialize))
-instance (Classes.Marshal Disembargo) where
+instance (Classes.Marshal s Disembargo) where
     marshalInto raw_ value_ = case value_ of
         Disembargo{..} ->
             (do
@@ -597,7 +597,7 @@ instance (Classes.Decerialize Disembargo'context) where
             (Capnp.Gen.ById.Xb312981b2552a250.Disembargo'context'unknown' tag) ->
                 (Std_.pure (Disembargo'context'unknown' tag))
         )
-instance (Classes.Marshal Disembargo'context) where
+instance (Classes.Marshal s Disembargo'context) where
     marshalInto raw_ value_ = case value_ of
         (Disembargo'context'senderLoopback arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_Disembargo'context'senderLoopback raw_ arg_)
@@ -626,7 +626,7 @@ instance (Classes.Decerialize Provide) where
     decerialize raw = (Provide <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Provide'questionId raw)
                                <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Provide'target raw) >>= Classes.decerialize)
                                <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Provide'recipient raw) >>= Classes.decerialize))
-instance (Classes.Marshal Provide) where
+instance (Classes.Marshal s Provide) where
     marshalInto raw_ value_ = case value_ of
         Provide{..} ->
             (do
@@ -667,7 +667,7 @@ instance (Classes.Decerialize Accept) where
     decerialize raw = (Accept <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Accept'questionId raw)
                               <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Accept'provision raw) >>= Classes.decerialize)
                               <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Accept'embargo raw))
-instance (Classes.Marshal Accept) where
+instance (Classes.Marshal s Accept) where
     marshalInto raw_ value_ = case value_ of
         Accept{..} ->
             (do
@@ -708,7 +708,7 @@ instance (Classes.Decerialize Join) where
     decerialize raw = (Join <$> (Capnp.Gen.ById.Xb312981b2552a250.get_Join'questionId raw)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Join'target raw) >>= Classes.decerialize)
                             <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Join'keyPart raw) >>= Classes.decerialize))
-instance (Classes.Marshal Join) where
+instance (Classes.Marshal s Join) where
     marshalInto raw_ value_ = case value_ of
         Join{..} ->
             (do
@@ -755,7 +755,7 @@ instance (Classes.Decerialize MessageTarget) where
             (Capnp.Gen.ById.Xb312981b2552a250.MessageTarget'unknown' tag) ->
                 (Std_.pure (MessageTarget'unknown' tag))
         )
-instance (Classes.Marshal MessageTarget) where
+instance (Classes.Marshal s MessageTarget) where
     marshalInto raw_ value_ = case value_ of
         (MessageTarget'importedCap arg_) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_MessageTarget'importedCap raw_ arg_)
@@ -793,7 +793,7 @@ instance (Classes.Decerialize Payload) where
     type Cerial msg Payload = (Capnp.Gen.ById.Xb312981b2552a250.Payload msg)
     decerialize raw = (Payload <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_Payload'content raw) >>= Classes.decerialize)
                                <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_Payload'capTable raw) >>= Classes.decerialize))
-instance (Classes.Marshal Payload) where
+instance (Classes.Marshal s Payload) where
     marshalInto raw_ value_ = case value_ of
         Payload{..} ->
             (do
@@ -831,7 +831,7 @@ instance (Classes.Decerialize CapDescriptor) where
     type Cerial msg CapDescriptor = (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor msg)
     decerialize raw = (CapDescriptor <$> (Capnp.Gen.ById.Xb312981b2552a250.get_CapDescriptor'attachedFd raw)
                                      <*> (Classes.decerialize raw))
-instance (Classes.Marshal CapDescriptor) where
+instance (Classes.Marshal s CapDescriptor) where
     marshalInto raw_ value_ = case value_ of
         CapDescriptor{..} ->
             (do
@@ -891,7 +891,7 @@ instance (Classes.Decerialize CapDescriptor') where
             (Capnp.Gen.ById.Xb312981b2552a250.CapDescriptor'unknown' tag) ->
                 (Std_.pure (CapDescriptor'unknown' tag))
         )
-instance (Classes.Marshal CapDescriptor') where
+instance (Classes.Marshal s CapDescriptor') where
     marshalInto raw_ value_ = case value_ of
         (CapDescriptor'none) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_CapDescriptor'none raw_)
@@ -922,7 +922,7 @@ instance (Classes.Decerialize PromisedAnswer) where
     type Cerial msg PromisedAnswer = (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer msg)
     decerialize raw = (PromisedAnswer <$> (Capnp.Gen.ById.Xb312981b2552a250.get_PromisedAnswer'questionId raw)
                                       <*> ((Capnp.Gen.ById.Xb312981b2552a250.get_PromisedAnswer'transform raw) >>= Classes.decerialize))
-instance (Classes.Marshal PromisedAnswer) where
+instance (Classes.Marshal s PromisedAnswer) where
     marshalInto raw_ value_ = case value_ of
         PromisedAnswer{..} ->
             (do
@@ -968,7 +968,7 @@ instance (Classes.Decerialize PromisedAnswer'Op) where
             (Capnp.Gen.ById.Xb312981b2552a250.PromisedAnswer'Op'unknown' tag) ->
                 (Std_.pure (PromisedAnswer'Op'unknown' tag))
         )
-instance (Classes.Marshal PromisedAnswer'Op) where
+instance (Classes.Marshal s PromisedAnswer'Op) where
     marshalInto raw_ value_ = case value_ of
         (PromisedAnswer'Op'noop) ->
             (Capnp.Gen.ById.Xb312981b2552a250.set_PromisedAnswer'Op'noop raw_)
@@ -1006,7 +1006,7 @@ instance (Classes.Decerialize ThirdPartyCapDescriptor) where
     type Cerial msg ThirdPartyCapDescriptor = (Capnp.Gen.ById.Xb312981b2552a250.ThirdPartyCapDescriptor msg)
     decerialize raw = (ThirdPartyCapDescriptor <$> ((Capnp.Gen.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'id raw) >>= Classes.decerialize)
                                                <*> (Capnp.Gen.ById.Xb312981b2552a250.get_ThirdPartyCapDescriptor'vineId raw))
-instance (Classes.Marshal ThirdPartyCapDescriptor) where
+instance (Classes.Marshal s ThirdPartyCapDescriptor) where
     marshalInto raw_ value_ = case value_ of
         ThirdPartyCapDescriptor{..} ->
             (do
@@ -1048,7 +1048,7 @@ instance (Classes.Decerialize Exception) where
                                  <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Exception'obsoleteIsCallersFault raw)
                                  <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Exception'obsoleteDurability raw)
                                  <*> (Capnp.Gen.ById.Xb312981b2552a250.get_Exception'type_ raw))
-instance (Classes.Marshal Exception) where
+instance (Classes.Marshal s Exception) where
     marshalInto raw_ value_ = case value_ of
         Exception{..} ->
             (do

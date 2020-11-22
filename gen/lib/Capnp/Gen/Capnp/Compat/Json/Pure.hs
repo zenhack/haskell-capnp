@@ -69,7 +69,7 @@ instance (Classes.Decerialize Value) where
             (Capnp.Gen.ById.X8ef99297a43a5e34.Value'unknown' tag) ->
                 (Std_.pure (Value'unknown' tag))
         )
-instance (Classes.Marshal Value) where
+instance (Classes.Marshal s Value) where
     marshalInto raw_ value_ = case value_ of
         (Value'null) ->
             (Capnp.Gen.ById.X8ef99297a43a5e34.set_Value'null raw_)
@@ -117,7 +117,7 @@ instance (Classes.Decerialize Value'Field) where
     type Cerial msg Value'Field = (Capnp.Gen.ById.X8ef99297a43a5e34.Value'Field msg)
     decerialize raw = (Value'Field <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Field'name raw) >>= Classes.decerialize)
                                    <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Field'value raw) >>= Classes.decerialize))
-instance (Classes.Marshal Value'Field) where
+instance (Classes.Marshal s Value'Field) where
     marshalInto raw_ value_ = case value_ of
         Value'Field{..} ->
             (do
@@ -155,7 +155,7 @@ instance (Classes.Decerialize Value'Call) where
     type Cerial msg Value'Call = (Capnp.Gen.ById.X8ef99297a43a5e34.Value'Call msg)
     decerialize raw = (Value'Call <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Call'function raw) >>= Classes.decerialize)
                                   <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_Value'Call'params raw) >>= Classes.decerialize))
-instance (Classes.Marshal Value'Call) where
+instance (Classes.Marshal s Value'Call) where
     marshalInto raw_ value_ = case value_ of
         Value'Call{..} ->
             (do
@@ -191,7 +191,7 @@ instance (Classes.FromStruct Message.ConstMsg FlattenOptions) where
 instance (Classes.Decerialize FlattenOptions) where
     type Cerial msg FlattenOptions = (Capnp.Gen.ById.X8ef99297a43a5e34.FlattenOptions msg)
     decerialize raw = (FlattenOptions <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_FlattenOptions'prefix raw) >>= Classes.decerialize))
-instance (Classes.Marshal FlattenOptions) where
+instance (Classes.Marshal s FlattenOptions) where
     marshalInto raw_ value_ = case value_ of
         FlattenOptions{..} ->
             (do
@@ -228,7 +228,7 @@ instance (Classes.Decerialize DiscriminatorOptions) where
     type Cerial msg DiscriminatorOptions = (Capnp.Gen.ById.X8ef99297a43a5e34.DiscriminatorOptions msg)
     decerialize raw = (DiscriminatorOptions <$> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_DiscriminatorOptions'name raw) >>= Classes.decerialize)
                                             <*> ((Capnp.Gen.ById.X8ef99297a43a5e34.get_DiscriminatorOptions'valueName raw) >>= Classes.decerialize))
-instance (Classes.Marshal DiscriminatorOptions) where
+instance (Classes.Marshal s DiscriminatorOptions) where
     marshalInto raw_ value_ = case value_ of
         DiscriminatorOptions{..} ->
             (do

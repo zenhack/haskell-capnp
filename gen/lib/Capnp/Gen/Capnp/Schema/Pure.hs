@@ -95,7 +95,7 @@ instance (Classes.Decerialize Node) where
                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'parameters raw) >>= Classes.decerialize)
                             <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'isGeneric raw)
                             <*> (Classes.decerialize raw))
-instance (Classes.Marshal Node) where
+instance (Classes.Marshal s Node) where
     marshalInto raw_ value_ = case value_ of
         Node{..} ->
             (do
@@ -162,7 +162,7 @@ instance (Classes.Decerialize Node') where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Node'unknown' tag) ->
                 (Std_.pure (Node'unknown' tag))
         )
-instance (Classes.Marshal Node') where
+instance (Classes.Marshal s Node') where
     marshalInto raw_ value_ = case value_ of
         (Node'file) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Node'file raw_)
@@ -218,7 +218,7 @@ instance (Classes.Decerialize Node'struct) where
                                     <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'discriminantCount raw)
                                     <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'discriminantOffset raw)
                                     <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'struct'fields raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'struct) where
+instance (Classes.Marshal s Node'struct) where
     marshalInto raw_ value_ = case value_ of
         Node'struct'{..} ->
             (do
@@ -244,7 +244,7 @@ instance (Classes.FromStruct Message.ConstMsg Node'enum) where
 instance (Classes.Decerialize Node'enum) where
     type Cerial msg Node'enum = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'enum msg)
     decerialize raw = (Node'enum' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'enum'enumerants raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'enum) where
+instance (Classes.Marshal s Node'enum) where
     marshalInto raw_ value_ = case value_ of
         Node'enum'{..} ->
             (do
@@ -266,7 +266,7 @@ instance (Classes.Decerialize Node'interface) where
     type Cerial msg Node'interface = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'interface msg)
     decerialize raw = (Node'interface' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'interface'methods raw) >>= Classes.decerialize)
                                        <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'interface'superclasses raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'interface) where
+instance (Classes.Marshal s Node'interface) where
     marshalInto raw_ value_ = case value_ of
         Node'interface'{..} ->
             (do
@@ -289,7 +289,7 @@ instance (Classes.Decerialize Node'const) where
     type Cerial msg Node'const = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'const msg)
     decerialize raw = (Node'const' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'const'type_ raw) >>= Classes.decerialize)
                                    <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'const'value raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'const) where
+instance (Classes.Marshal s Node'const) where
     marshalInto raw_ value_ = case value_ of
         Node'const'{..} ->
             (do
@@ -334,7 +334,7 @@ instance (Classes.Decerialize Node'annotation) where
                                         <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsMethod raw)
                                         <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsParam raw)
                                         <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'annotation'targetsAnnotation raw))
-instance (Classes.Marshal Node'annotation) where
+instance (Classes.Marshal s Node'annotation) where
     marshalInto raw_ value_ = case value_ of
         Node'annotation'{..} ->
             (do
@@ -366,7 +366,7 @@ instance (Classes.FromStruct Message.ConstMsg Node'Parameter) where
 instance (Classes.Decerialize Node'Parameter) where
     type Cerial msg Node'Parameter = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'Parameter msg)
     decerialize raw = (Node'Parameter <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'Parameter'name raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'Parameter) where
+instance (Classes.Marshal s Node'Parameter) where
     marshalInto raw_ value_ = case value_ of
         Node'Parameter{..} ->
             (do
@@ -403,7 +403,7 @@ instance (Classes.Decerialize Node'NestedNode) where
     type Cerial msg Node'NestedNode = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'NestedNode msg)
     decerialize raw = (Node'NestedNode <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'NestedNode'name raw) >>= Classes.decerialize)
                                        <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'NestedNode'id raw))
-instance (Classes.Marshal Node'NestedNode) where
+instance (Classes.Marshal s Node'NestedNode) where
     marshalInto raw_ value_ = case value_ of
         Node'NestedNode{..} ->
             (do
@@ -443,7 +443,7 @@ instance (Classes.Decerialize Node'SourceInfo) where
     decerialize raw = (Node'SourceInfo <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'id raw)
                                        <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'docComment raw) >>= Classes.decerialize)
                                        <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'members raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'SourceInfo) where
+instance (Classes.Marshal s Node'SourceInfo) where
     marshalInto raw_ value_ = case value_ of
         Node'SourceInfo{..} ->
             (do
@@ -480,7 +480,7 @@ instance (Classes.FromStruct Message.ConstMsg Node'SourceInfo'Member) where
 instance (Classes.Decerialize Node'SourceInfo'Member) where
     type Cerial msg Node'SourceInfo'Member = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'SourceInfo'Member msg)
     decerialize raw = (Node'SourceInfo'Member <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Node'SourceInfo'Member'docComment raw) >>= Classes.decerialize))
-instance (Classes.Marshal Node'SourceInfo'Member) where
+instance (Classes.Marshal s Node'SourceInfo'Member) where
     marshalInto raw_ value_ = case value_ of
         Node'SourceInfo'Member{..} ->
             (do
@@ -525,7 +525,7 @@ instance (Classes.Decerialize Field) where
                              <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'discriminantValue raw)
                              <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'ordinal raw) >>= Classes.decerialize)
                              <*> (Classes.decerialize raw))
-instance (Classes.Marshal Field) where
+instance (Classes.Marshal s Field) where
     marshalInto raw_ value_ = case value_ of
         Field{..} ->
             (do
@@ -580,7 +580,7 @@ instance (Classes.Decerialize Field') where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Field'unknown' tag) ->
                 (Std_.pure (Field'unknown' tag))
         )
-instance (Classes.Marshal Field') where
+instance (Classes.Marshal s Field') where
     marshalInto raw_ value_ = case value_ of
         (Field'slot arg_) ->
             (do
@@ -613,7 +613,7 @@ instance (Classes.Decerialize Field'slot) where
                                    <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'type_ raw) >>= Classes.decerialize)
                                    <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'defaultValue raw) >>= Classes.decerialize)
                                    <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'slot'hadExplicitDefault raw))
-instance (Classes.Marshal Field'slot) where
+instance (Classes.Marshal s Field'slot) where
     marshalInto raw_ value_ = case value_ of
         Field'slot'{..} ->
             (do
@@ -636,7 +636,7 @@ instance (Classes.FromStruct Message.ConstMsg Field'group) where
 instance (Classes.Decerialize Field'group) where
     type Cerial msg Field'group = (Capnp.Gen.ById.Xa93fc509624c72d9.Field'group msg)
     decerialize raw = (Field'group' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Field'group'typeId raw))
-instance (Classes.Marshal Field'group) where
+instance (Classes.Marshal s Field'group) where
     marshalInto raw_ value_ = case value_ of
         Field'group'{..} ->
             (do
@@ -666,7 +666,7 @@ instance (Classes.Decerialize Field'ordinal) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Field'ordinal'unknown' tag) ->
                 (Std_.pure (Field'ordinal'unknown' tag))
         )
-instance (Classes.Marshal Field'ordinal) where
+instance (Classes.Marshal s Field'ordinal) where
     marshalInto raw_ value_ = case value_ of
         (Field'ordinal'implicit) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Field'ordinal'implicit raw_)
@@ -691,7 +691,7 @@ instance (Classes.Decerialize Enumerant) where
     decerialize raw = (Enumerant <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Enumerant'name raw) >>= Classes.decerialize)
                                  <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Enumerant'codeOrder raw)
                                  <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Enumerant'annotations raw) >>= Classes.decerialize))
-instance (Classes.Marshal Enumerant) where
+instance (Classes.Marshal s Enumerant) where
     marshalInto raw_ value_ = case value_ of
         Enumerant{..} ->
             (do
@@ -730,7 +730,7 @@ instance (Classes.Decerialize Superclass) where
     type Cerial msg Superclass = (Capnp.Gen.ById.Xa93fc509624c72d9.Superclass msg)
     decerialize raw = (Superclass <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Superclass'id raw)
                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Superclass'brand raw) >>= Classes.decerialize))
-instance (Classes.Marshal Superclass) where
+instance (Classes.Marshal s Superclass) where
     marshalInto raw_ value_ = case value_ of
         Superclass{..} ->
             (do
@@ -780,7 +780,7 @@ instance (Classes.Decerialize Method) where
                               <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Method'paramBrand raw) >>= Classes.decerialize)
                               <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Method'resultBrand raw) >>= Classes.decerialize)
                               <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Method'implicitParameters raw) >>= Classes.decerialize))
-instance (Classes.Marshal Method) where
+instance (Classes.Marshal s Method) where
     marshalInto raw_ value_ = case value_ of
         Method{..} ->
             (do
@@ -883,7 +883,7 @@ instance (Classes.Decerialize Type) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'unknown' tag) ->
                 (Std_.pure (Type'unknown' tag))
         )
-instance (Classes.Marshal Type) where
+instance (Classes.Marshal s Type) where
     marshalInto raw_ value_ = case value_ of
         (Type'void) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'void raw_)
@@ -968,7 +968,7 @@ instance (Classes.FromStruct Message.ConstMsg Type'list) where
 instance (Classes.Decerialize Type'list) where
     type Cerial msg Type'list = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'list msg)
     decerialize raw = (Type'list' <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'list'elementType raw) >>= Classes.decerialize))
-instance (Classes.Marshal Type'list) where
+instance (Classes.Marshal s Type'list) where
     marshalInto raw_ value_ = case value_ of
         Type'list'{..} ->
             (do
@@ -990,7 +990,7 @@ instance (Classes.Decerialize Type'enum) where
     type Cerial msg Type'enum = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'enum msg)
     decerialize raw = (Type'enum' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'enum'typeId raw)
                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'enum'brand raw) >>= Classes.decerialize))
-instance (Classes.Marshal Type'enum) where
+instance (Classes.Marshal s Type'enum) where
     marshalInto raw_ value_ = case value_ of
         Type'enum'{..} ->
             (do
@@ -1013,7 +1013,7 @@ instance (Classes.Decerialize Type'struct) where
     type Cerial msg Type'struct = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'struct msg)
     decerialize raw = (Type'struct' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'struct'typeId raw)
                                     <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'struct'brand raw) >>= Classes.decerialize))
-instance (Classes.Marshal Type'struct) where
+instance (Classes.Marshal s Type'struct) where
     marshalInto raw_ value_ = case value_ of
         Type'struct'{..} ->
             (do
@@ -1036,7 +1036,7 @@ instance (Classes.Decerialize Type'interface) where
     type Cerial msg Type'interface = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'interface msg)
     decerialize raw = (Type'interface' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'interface'typeId raw)
                                        <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'interface'brand raw) >>= Classes.decerialize))
-instance (Classes.Marshal Type'interface) where
+instance (Classes.Marshal s Type'interface) where
     marshalInto raw_ value_ = case value_ of
         Type'interface'{..} ->
             (do
@@ -1070,7 +1070,7 @@ instance (Classes.Decerialize Type'anyPointer) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'unknown' tag) ->
                 (Std_.pure (Type'anyPointer'unknown' tag))
         )
-instance (Classes.Marshal Type'anyPointer) where
+instance (Classes.Marshal s Type'anyPointer) where
     marshalInto raw_ value_ = case value_ of
         (Type'anyPointer'unconstrained arg_) ->
             (do
@@ -1118,7 +1118,7 @@ instance (Classes.Decerialize Type'anyPointer'unconstrained) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained'unknown' tag) ->
                 (Std_.pure (Type'anyPointer'unconstrained'unknown' tag))
         )
-instance (Classes.Marshal Type'anyPointer'unconstrained) where
+instance (Classes.Marshal s Type'anyPointer'unconstrained) where
     marshalInto raw_ value_ = case value_ of
         (Type'anyPointer'unconstrained'anyKind) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Type'anyPointer'unconstrained'anyKind raw_)
@@ -1145,7 +1145,7 @@ instance (Classes.Decerialize Type'anyPointer'parameter) where
     type Cerial msg Type'anyPointer'parameter = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'parameter msg)
     decerialize raw = (Type'anyPointer'parameter' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'parameter'scopeId raw)
                                                   <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'parameter'parameterIndex raw))
-instance (Classes.Marshal Type'anyPointer'parameter) where
+instance (Classes.Marshal s Type'anyPointer'parameter) where
     marshalInto raw_ value_ = case value_ of
         Type'anyPointer'parameter'{..} ->
             (do
@@ -1166,7 +1166,7 @@ instance (Classes.FromStruct Message.ConstMsg Type'anyPointer'implicitMethodPara
 instance (Classes.Decerialize Type'anyPointer'implicitMethodParameter) where
     type Cerial msg Type'anyPointer'implicitMethodParameter = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'implicitMethodParameter msg)
     decerialize raw = (Type'anyPointer'implicitMethodParameter' <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Type'anyPointer'implicitMethodParameter'parameterIndex raw))
-instance (Classes.Marshal Type'anyPointer'implicitMethodParameter) where
+instance (Classes.Marshal s Type'anyPointer'implicitMethodParameter) where
     marshalInto raw_ value_ = case value_ of
         Type'anyPointer'implicitMethodParameter'{..} ->
             (do
@@ -1186,7 +1186,7 @@ instance (Classes.FromStruct Message.ConstMsg Brand) where
 instance (Classes.Decerialize Brand) where
     type Cerial msg Brand = (Capnp.Gen.ById.Xa93fc509624c72d9.Brand msg)
     decerialize raw = (Brand <$> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Brand'scopes raw) >>= Classes.decerialize))
-instance (Classes.Marshal Brand) where
+instance (Classes.Marshal s Brand) where
     marshalInto raw_ value_ = case value_ of
         Brand{..} ->
             (do
@@ -1223,7 +1223,7 @@ instance (Classes.Decerialize Brand'Scope) where
     type Cerial msg Brand'Scope = (Capnp.Gen.ById.Xa93fc509624c72d9.Brand'Scope msg)
     decerialize raw = (Brand'Scope <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Brand'Scope'scopeId raw)
                                    <*> (Classes.decerialize raw))
-instance (Classes.Marshal Brand'Scope) where
+instance (Classes.Marshal s Brand'Scope) where
     marshalInto raw_ value_ = case value_ of
         Brand'Scope{..} ->
             (do
@@ -1271,7 +1271,7 @@ instance (Classes.Decerialize Brand'Scope') where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Brand'Scope'unknown' tag) ->
                 (Std_.pure (Brand'Scope'unknown' tag))
         )
-instance (Classes.Marshal Brand'Scope') where
+instance (Classes.Marshal s Brand'Scope') where
     marshalInto raw_ value_ = case value_ of
         (Brand'Scope'bind arg_) ->
             ((Classes.cerialize (Untyped.message raw_) arg_) >>= (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Scope'bind raw_))
@@ -1302,7 +1302,7 @@ instance (Classes.Decerialize Brand'Binding) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Brand'Binding'unknown' tag) ->
                 (Std_.pure (Brand'Binding'unknown' tag))
         )
-instance (Classes.Marshal Brand'Binding) where
+instance (Classes.Marshal s Brand'Binding) where
     marshalInto raw_ value_ = case value_ of
         (Brand'Binding'unbound) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Brand'Binding'unbound raw_)
@@ -1399,7 +1399,7 @@ instance (Classes.Decerialize Value) where
             (Capnp.Gen.ById.Xa93fc509624c72d9.Value'unknown' tag) ->
                 (Std_.pure (Value'unknown' tag))
         )
-instance (Classes.Marshal Value) where
+instance (Classes.Marshal s Value) where
     marshalInto raw_ value_ = case value_ of
         (Value'void) ->
             (Capnp.Gen.ById.Xa93fc509624c72d9.set_Value'void raw_)
@@ -1473,7 +1473,7 @@ instance (Classes.Decerialize Annotation) where
     decerialize raw = (Annotation <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_Annotation'id raw)
                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Annotation'value raw) >>= Classes.decerialize)
                                   <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_Annotation'brand raw) >>= Classes.decerialize))
-instance (Classes.Marshal Annotation) where
+instance (Classes.Marshal s Annotation) where
     marshalInto raw_ value_ = case value_ of
         Annotation{..} ->
             (do
@@ -1514,7 +1514,7 @@ instance (Classes.Decerialize CapnpVersion) where
     decerialize raw = (CapnpVersion <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_CapnpVersion'major raw)
                                     <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_CapnpVersion'minor raw)
                                     <*> (Capnp.Gen.ById.Xa93fc509624c72d9.get_CapnpVersion'micro raw))
-instance (Classes.Marshal CapnpVersion) where
+instance (Classes.Marshal s CapnpVersion) where
     marshalInto raw_ value_ = case value_ of
         CapnpVersion{..} ->
             (do
@@ -1557,7 +1557,7 @@ instance (Classes.Decerialize CodeGeneratorRequest) where
                                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'requestedFiles raw) >>= Classes.decerialize)
                                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'capnpVersion raw) >>= Classes.decerialize)
                                             <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'sourceInfo raw) >>= Classes.decerialize))
-instance (Classes.Marshal CodeGeneratorRequest) where
+instance (Classes.Marshal s CodeGeneratorRequest) where
     marshalInto raw_ value_ = case value_ of
         CodeGeneratorRequest{..} ->
             (do
@@ -1599,7 +1599,7 @@ instance (Classes.Decerialize CodeGeneratorRequest'RequestedFile) where
     decerialize raw = (CodeGeneratorRequest'RequestedFile <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'id raw)
                                                           <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'filename raw) >>= Classes.decerialize)
                                                           <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'imports raw) >>= Classes.decerialize))
-instance (Classes.Marshal CodeGeneratorRequest'RequestedFile) where
+instance (Classes.Marshal s CodeGeneratorRequest'RequestedFile) where
     marshalInto raw_ value_ = case value_ of
         CodeGeneratorRequest'RequestedFile{..} ->
             (do
@@ -1638,7 +1638,7 @@ instance (Classes.Decerialize CodeGeneratorRequest'RequestedFile'Import) where
     type Cerial msg CodeGeneratorRequest'RequestedFile'Import = (Capnp.Gen.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import msg)
     decerialize raw = (CodeGeneratorRequest'RequestedFile'Import <$> (Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'id raw)
                                                                  <*> ((Capnp.Gen.ById.Xa93fc509624c72d9.get_CodeGeneratorRequest'RequestedFile'Import'name raw) >>= Classes.decerialize))
-instance (Classes.Marshal CodeGeneratorRequest'RequestedFile'Import) where
+instance (Classes.Marshal s CodeGeneratorRequest'RequestedFile'Import) where
     marshalInto raw_ value_ = case value_ of
         CodeGeneratorRequest'RequestedFile'Import{..} ->
             (do

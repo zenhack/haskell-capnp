@@ -135,7 +135,7 @@ instance Decerialize Struct where
 instance FromStruct M.ConstMsg Struct where
     fromStruct = decerialize
 
-instance Marshal Struct where
+instance Marshal s Struct where
     marshalInto raw (Struct (Slice dataSec) (Slice ptrSec)) = do
         forM_ [0..V.length dataSec - 1] $ \i ->
             U.setData (dataSec V.! i) i raw

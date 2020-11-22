@@ -119,7 +119,7 @@ class Decerialize a where
     decerialize :: U.ReadCtx m M.ConstMsg => Cerial M.ConstMsg a -> m a
 
 -- | Types which may be marshaled into a pre-allocated object in a message.
-class Decerialize a => Marshal a where
+class Decerialize a => Marshal s a where
 
     -- | Marshal a value into the pre-allocated object inside the message.
     --
@@ -134,7 +134,7 @@ class Decerialize a => Cerialize s a where
     -- | Cerialize a value into the supplied message, returning the result.
     cerialize :: U.RWCtx m s => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
 
-    default cerialize :: (U.RWCtx m s, Marshal a, Allocate s (Cerial (M.MutMsg s) a))
+    default cerialize :: (U.RWCtx m s, Marshal s a, Allocate s (Cerial (M.MutMsg s) a))
         => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
     cerialize msg value = do
         raw <- new msg
@@ -349,7 +349,7 @@ cerializeBasicVec msg vec = do
 cerializeCompositeVec ::
     ( U.RWCtx m s
     , MutListElem s (Cerial (M.MutMsg s) a)
-    , Marshal a
+    , Marshal s a
     )
     => M.MutMsg s
     -> V.Vector a

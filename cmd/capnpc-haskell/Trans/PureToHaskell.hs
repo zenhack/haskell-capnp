@@ -343,7 +343,7 @@ dataToMarshal thisMod P.Data
         , def
         } =
     let typ = typeWithParams typeName typeParams in
-    [ instance_ [] ["Classes"] "Marshal" [typ]
+    [ instance_ [] ["Classes"] "Marshal" [TVar "s", typ]
         [ iValue "marshalInto" [PVar "raw_", PVar "value_"] $
             case def of
                 P.Sum variants ->

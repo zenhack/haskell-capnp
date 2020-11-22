@@ -97,7 +97,7 @@ instance (Classes.FromStruct Message.ConstMsg Persistent'SaveParams) where
 instance (Classes.Decerialize Persistent'SaveParams) where
     type Cerial msg Persistent'SaveParams = (Capnp.Gen.ById.Xb8630836983feed7.Persistent'SaveParams msg)
     decerialize raw = (Persistent'SaveParams <$> ((Capnp.Gen.ById.Xb8630836983feed7.get_Persistent'SaveParams'sealFor raw) >>= Classes.decerialize))
-instance (Classes.Marshal Persistent'SaveParams) where
+instance (Classes.Marshal s Persistent'SaveParams) where
     marshalInto raw_ value_ = case value_ of
         Persistent'SaveParams{..} ->
             (do
@@ -132,7 +132,7 @@ instance (Classes.FromStruct Message.ConstMsg Persistent'SaveResults) where
 instance (Classes.Decerialize Persistent'SaveResults) where
     type Cerial msg Persistent'SaveResults = (Capnp.Gen.ById.Xb8630836983feed7.Persistent'SaveResults msg)
     decerialize raw = (Persistent'SaveResults <$> ((Capnp.Gen.ById.Xb8630836983feed7.get_Persistent'SaveResults'sturdyRef raw) >>= Classes.decerialize))
-instance (Classes.Marshal Persistent'SaveResults) where
+instance (Classes.Marshal s Persistent'SaveResults) where
     marshalInto raw_ value_ = case value_ of
         Persistent'SaveResults{..} ->
             (do
@@ -216,7 +216,7 @@ instance (Classes.Decerialize RealmGateway'import'params) where
     type Cerial msg RealmGateway'import'params = (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway'import'params msg)
     decerialize raw = (RealmGateway'import'params <$> ((Capnp.Gen.ById.Xb8630836983feed7.get_RealmGateway'import'params'cap raw) >>= Classes.decerialize)
                                                   <*> ((Capnp.Gen.ById.Xb8630836983feed7.get_RealmGateway'import'params'params raw) >>= Classes.decerialize))
-instance (Classes.Marshal RealmGateway'import'params) where
+instance (Classes.Marshal s RealmGateway'import'params) where
     marshalInto raw_ value_ = case value_ of
         RealmGateway'import'params{..} ->
             (do
@@ -254,7 +254,7 @@ instance (Classes.Decerialize RealmGateway'export'params) where
     type Cerial msg RealmGateway'export'params = (Capnp.Gen.ById.Xb8630836983feed7.RealmGateway'export'params msg)
     decerialize raw = (RealmGateway'export'params <$> ((Capnp.Gen.ById.Xb8630836983feed7.get_RealmGateway'export'params'cap raw) >>= Classes.decerialize)
                                                   <*> ((Capnp.Gen.ById.Xb8630836983feed7.get_RealmGateway'export'params'params raw) >>= Classes.decerialize))
-instance (Classes.Marshal RealmGateway'export'params) where
+instance (Classes.Marshal s RealmGateway'export'params) where
     marshalInto raw_ value_ = case value_ of
         RealmGateway'export'params{..} ->
             (do

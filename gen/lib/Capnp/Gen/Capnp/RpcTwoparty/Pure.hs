@@ -46,7 +46,7 @@ instance (Classes.FromStruct Message.ConstMsg VatId) where
 instance (Classes.Decerialize VatId) where
     type Cerial msg VatId = (Capnp.Gen.ById.Xa184c7885cdaf2a1.VatId msg)
     decerialize raw = (VatId <$> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_VatId'side raw))
-instance (Classes.Marshal VatId) where
+instance (Classes.Marshal s VatId) where
     marshalInto raw_ value_ = case value_ of
         VatId{..} ->
             (do
@@ -81,7 +81,7 @@ instance (Classes.FromStruct Message.ConstMsg ProvisionId) where
 instance (Classes.Decerialize ProvisionId) where
     type Cerial msg ProvisionId = (Capnp.Gen.ById.Xa184c7885cdaf2a1.ProvisionId msg)
     decerialize raw = (ProvisionId <$> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_ProvisionId'joinId raw))
-instance (Classes.Marshal ProvisionId) where
+instance (Classes.Marshal s ProvisionId) where
     marshalInto raw_ value_ = case value_ of
         ProvisionId{..} ->
             (do
@@ -116,7 +116,7 @@ instance (Classes.FromStruct Message.ConstMsg RecipientId) where
 instance (Classes.Decerialize RecipientId) where
     type Cerial msg RecipientId = (Capnp.Gen.ById.Xa184c7885cdaf2a1.RecipientId msg)
     decerialize raw = (Std_.pure RecipientId)
-instance (Classes.Marshal RecipientId) where
+instance (Classes.Marshal s RecipientId) where
     marshalInto raw_ value_ = case value_ of
         (RecipientId) ->
             (do
@@ -150,7 +150,7 @@ instance (Classes.FromStruct Message.ConstMsg ThirdPartyCapId) where
 instance (Classes.Decerialize ThirdPartyCapId) where
     type Cerial msg ThirdPartyCapId = (Capnp.Gen.ById.Xa184c7885cdaf2a1.ThirdPartyCapId msg)
     decerialize raw = (Std_.pure ThirdPartyCapId)
-instance (Classes.Marshal ThirdPartyCapId) where
+instance (Classes.Marshal s ThirdPartyCapId) where
     marshalInto raw_ value_ = case value_ of
         (ThirdPartyCapId) ->
             (do
@@ -188,7 +188,7 @@ instance (Classes.Decerialize JoinKeyPart) where
     decerialize raw = (JoinKeyPart <$> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'joinId raw)
                                    <*> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partCount raw)
                                    <*> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_JoinKeyPart'partNum raw))
-instance (Classes.Marshal JoinKeyPart) where
+instance (Classes.Marshal s JoinKeyPart) where
     marshalInto raw_ value_ = case value_ of
         JoinKeyPart{..} ->
             (do
@@ -229,7 +229,7 @@ instance (Classes.Decerialize JoinResult) where
     decerialize raw = (JoinResult <$> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_JoinResult'joinId raw)
                                   <*> (Capnp.Gen.ById.Xa184c7885cdaf2a1.get_JoinResult'succeeded raw)
                                   <*> ((Capnp.Gen.ById.Xa184c7885cdaf2a1.get_JoinResult'cap raw) >>= Classes.decerialize))
-instance (Classes.Marshal JoinResult) where
+instance (Classes.Marshal s JoinResult) where
     marshalInto raw_ value_ = case value_ of
         JoinResult{..} ->
             (do

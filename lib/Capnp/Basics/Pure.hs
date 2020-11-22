@@ -49,7 +49,7 @@ instance Decerialize Data where
     type Cerial msg Data = Basics.Data msg
     decerialize (Basics.Data list) = rawBytes list
 
-instance Marshal Data where
+instance Marshal s Data where
     marshalInto (Basics.Data list) bytes =
         forM_ [0..BS.length bytes - 1] $ \i ->
             Untyped.setIndex (BS.index bytes i) i list
@@ -68,7 +68,7 @@ instance Decerialize Text where
                 Left e    -> throwM $ InvalidUtf8Error e
                 Right txt -> pure txt
 
-instance Marshal Text where
+instance Marshal s Text where
     marshalInto dest text = marshalTextBytes (encodeUtf8 text) dest
 
 instance Cerialize s Text where
