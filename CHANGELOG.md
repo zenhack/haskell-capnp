@@ -5,8 +5,8 @@
 * Some of the multi-parameter type classes in Capnp.Classes now have
   functional dependencies between their parameters. This should
   generally improve type inference.
-* The `Cerialize` type class now takes the state token `s` as a
-  parameter, which will be necessary to support generics.
+* The `Cerialize` and `Marshal` type classes now takes the state token
+  `s` as a parameter, which will be necessary to support generics.
 
 # 0.7.0.0
 
