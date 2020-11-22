@@ -75,7 +75,19 @@ nodeToDecls Flat.Node{name=Name.CapnpQ{fileId, local}, union_, typeParams} =
                             { fileId
                             , local = local'
                             }
-                            (C.ListBrand []) -- TODO: fill in type parameters
+                            (C.ListBrand
+                                [ C.PtrParam C.TypeParamRef
+                                    { paramName
+                                    , paramIndex
+                                    , paramScope = scopeName
+                                    }
+                                | C.TypeParamRef
+                                    { paramName
+                                    , paramIndex
+                                    , paramScope=Flat.Node{name=scopeName}
+                                    } <- typeParams
+                                ]
+                            )
                         }
                     ] ++
                     [ Raw.Setter
