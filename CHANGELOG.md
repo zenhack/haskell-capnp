@@ -1,12 +1,18 @@
 # 0.8.0.0
 
+## Serialization
+
+* The code generator now supports type parameters in schema; previously
+  the code generator would treat these the same as AnyPointer, but now
+  the generated Haskell has corresponding type parameters.
+* The `Cerialize` and `Marshal` type classes now take the state token
+  `s` as a parameter, which was necessary to support type parameters.
+
 ## Misc
 
 * Some of the multi-parameter type classes in Capnp.Classes now have
   functional dependencies between their parameters. This should
   generally improve type inference.
-* The `Cerialize` and `Marshal` type classes now takes the state token
-  `s` as a parameter, which will be necessary to support generics.
 
 # 0.7.0.0
 
