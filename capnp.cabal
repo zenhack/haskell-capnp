@@ -264,6 +264,12 @@ test-suite tests
       , Capnp.Gen.ById.X832bcc6686a26d56
       , Capnp.Gen.ById.X832bcc6686a26d56.Pure
 
+      -- generated from tests/data/generics.capnp
+      , Capnp.Gen.Generics
+      , Capnp.Gen.Generics.Pure
+      , Capnp.Gen.ById.Xb6421fb8e478d144
+      , Capnp.Gen.ById.Xb6421fb8e478d144.Pure
+
       -- Actual tests:
       , Module.Capnp.Gen.Capnp.Schema
       , Module.Capnp.Gen.Capnp.Schema.Pure

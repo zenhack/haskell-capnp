@@ -56,15 +56,16 @@ capnp compile \
 		$core_inc/capnp/*.capnp \
 		$core_inc/capnp/compat/*.capnp
 
-log "Generating schema modules for aircraft.capnp (test suite)..."
+log "Generating schema modules for test suite..."
 cd "$repo_root/gen/tests"
 capnp compile \
 		-I $core_inc \
 		--src-prefix=../../tests/data/ \
 		-ohaskell \
-		../../tests/data/aircraft.capnp
+		../../tests/data/aircraft.capnp \
+		../../tests/data/generics.capnp
 
-log "Generating schema modules for echo.capnp (examples)..."
+log "Generating schema modules for examples..."
 cd "$repo_root/examples/gen/lib"
 capnp compile \
 		-I $core_inc \
