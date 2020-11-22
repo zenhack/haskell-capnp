@@ -34,3 +34,9 @@ struct Specialized(T) {
   either @0 :Either(Text, T);
   nestedStruct @1 :Nested(Data).SomeStruct;
 }
+
+struct HasGroup(T) {
+  theGroup :group {
+    value @0 :T;
+  }
+}
