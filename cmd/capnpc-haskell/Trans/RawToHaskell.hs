@@ -718,7 +718,7 @@ declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
 
 containerTypeToType :: Name.LocalQ -> [Name.UnQ] -> Type -> Type
 containerTypeToType name params msgTy =
-    TApp (TLName name) $ [ TApp (TVar (Name.typeVarName p)) [msgTy] | p <- params ] ++ [msgTy]
+    TApp (TLName name) $ [ TVar (Name.typeVarName p) | p <- params ] ++ [msgTy]
 
 
 eSetValue :: C.FieldLocType (C.ListBrand Name.CapnpQ) Name.CapnpQ -> Exp
@@ -875,7 +875,7 @@ typeToType thisMod ty msgTy = case ty of
     C.PtrType (C.PrimPtr (C.PrimAnyPtr _)) ->
         TApp (tStd_ "Maybe") [appV $ tgName ["Untyped"] "Ptr"]
     C.PtrType (C.PtrParam C.TypeParamRef{paramName}) ->
-        appV $ TVar (Name.typeVarName paramName)
+        TVar (Name.typeVarName paramName)
     C.CompositeType (C.StructType typeId typeParams) ->
         namedType typeId typeParams
   where
