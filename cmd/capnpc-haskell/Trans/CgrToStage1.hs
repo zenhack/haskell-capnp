@@ -179,6 +179,8 @@ brandToBrand nodeMap Schema.Brand{scopes} =
                     Schema.Brand'Binding'type_ typ -> case typeToType nodeMap typ of
                         C.PtrType t ->
                             C.BoundType t
+                        C.CompositeType t ->
+                            C.BoundType (C.PtrComposite t)
                         _ -> error
                             "Invalid schema: a type parameter was set to a non-pointer type."
 
