@@ -45,6 +45,8 @@ module Capnp
     , Message.WriteCtx
     , Untyped.ReadCtx
     , Untyped.RWCtx
+    , Classes.ReadParam
+    , Classes.WriteParam
 
     -- * Converting between messages, Cap'N Proto values, and raw bytes
     , module Capnp.Convert

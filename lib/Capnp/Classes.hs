@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
@@ -33,6 +34,8 @@ module Capnp.Classes
     , Decerialize(..)
     , cerializeBasicVec
     , cerializeCompositeVec
+    , ReadParam
+    , WriteParam
     ) where
 
 import Prelude hiding (length)
@@ -53,6 +56,20 @@ import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 
 import qualified Data.Vector as V
+
+-- | Type alias for the constraints needed for 'a' to be used as a capnp
+-- type parameter for pure modules, when reading.
+type ReadParam a =
+    ( Decerialize a
+    , FromPtr M.ConstMsg (Cerial M.ConstMsg a)
+    )
+-- | Type alias for the constraints needed for 'a' to be used as a capnp
+-- type parameter for pure modules, when writing with state token 's'.
+type WriteParam s a =
+    ( Cerialize s a
+    , ToPtr s (Cerial (M.MutMsg s) a)
+    , FromPtr (M.MutMsg s) (Cerial (M.MutMsg s) a)
+    )
 
 -- | Types that can be converted to and from a 64-bit word.
 --
