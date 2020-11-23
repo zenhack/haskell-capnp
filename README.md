@@ -14,7 +14,6 @@ the reference documentation can be bewildering without that context.
 
 Serialization support works, with some limitations:
 
-* Generated schema currently ignore type parameters ([#29][issue29]).
 * We do not support defining custom default values for fields of pointer
   type; see ([#28][issue28]).
 * We currently do not correctly handle decoding lists of structs from
@@ -45,7 +44,6 @@ accommodate more features as we add them.
 
 [issue27]: https://github.com/zenhack/haskell-capnp/issues/27
 [issue28]: https://github.com/zenhack/haskell-capnp/issues/28
-[issue29]: https://github.com/zenhack/haskell-capnp/issues/29
 
 [ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
 [ci]: https://gitlab.com/isd/haskell-capnp/pipelines
