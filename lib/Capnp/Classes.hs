@@ -42,11 +42,16 @@ import Prelude hiding (length)
 
 import Data.Bits
 import Data.Int
-import Data.ReinterpretCast
 import Data.Word
 
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Foldable       (for_)
+import GHC.Float
+    ( castDoubleToWord64
+    , castFloatToWord32
+    , castWord32ToFloat
+    , castWord64ToDouble
+    )
 
 import Capnp.Bits    (Word1 (..))
 import Capnp.Errors  (Error(SchemaViolationError))
@@ -219,11 +224,11 @@ instance IsWord Word64 where
     toWord = fromIntegral
 
 instance IsWord Float where
-    fromWord = wordToFloat . fromIntegral
-    toWord = fromIntegral . floatToWord
+    fromWord = castWord32ToFloat . fromIntegral
+    toWord = fromIntegral . castFloatToWord32
 instance IsWord Double where
-    fromWord = wordToDouble
-    toWord = doubleToWord
+    fromWord = castWord64ToDouble
+    toWord = castDoubleToWord64
 
 -- helper function for throwing SchemaViolationError "expected ..."
 expected :: MonadThrow m => String -> m a

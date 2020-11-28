@@ -7,10 +7,10 @@ module Trans.CgrToStage1 (cgrToCgr) where
 
 import Data.Word
 
-import Data.Function        ((&))
-import Data.Maybe           (mapMaybe)
-import Data.ReinterpretCast (doubleToWord, floatToWord)
-import Data.Text.Encoding   (encodeUtf8)
+import Data.Function      ((&))
+import Data.Maybe         (mapMaybe)
+import Data.Text.Encoding (encodeUtf8)
+import GHC.Float          (castDoubleToWord64, castFloatToWord32)
 
 import qualified Data.ByteString as BS
 import qualified Data.Map.Strict as M
@@ -270,8 +270,8 @@ valueBits = \case
     Schema.Value'uint16 n  -> Just $ fromIntegral n
     Schema.Value'uint32 n  -> Just $ fromIntegral n
     Schema.Value'uint64 n  -> Just n
-    Schema.Value'float32 n -> Just $ fromIntegral $ floatToWord n
-    Schema.Value'float64 n -> Just $ doubleToWord n
+    Schema.Value'float32 n -> Just $ fromIntegral $ castFloatToWord32 n
+    Schema.Value'float64 n -> Just $ castDoubleToWord64 n
     Schema.Value'enum n    -> Just $ fromIntegral n
     _                      -> Nothing -- some non-word type.
 

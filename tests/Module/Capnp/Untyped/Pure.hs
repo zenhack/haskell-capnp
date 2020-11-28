@@ -5,8 +5,8 @@ module Module.Capnp.Untyped.Pure (pureUntypedTests) where
 
 import Test.Hspec
 
-import Data.ReinterpretCast (doubleToWord)
-import Text.Heredoc         (here)
+import GHC.Float    (castDoubleToWord64)
+import Text.Heredoc (here)
 
 import qualified Data.Vector as V
 
@@ -45,7 +45,7 @@ pureUntypedTests =
                         [ 7
                         , 1
                         , 5173
-                        , doubleToWord 12.0
+                        , castDoubleToWord64 12.0
                         ]
                         [ Just $ PtrList $ List8 $ V.fromList $ map (fromIntegral . fromEnum) "bob\0"
                         , Just $ PtrList $ List16 []

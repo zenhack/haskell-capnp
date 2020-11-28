@@ -20,8 +20,8 @@ import Test.Hspec
 import Control.Monad           (forM_, when)
 import Control.Monad.Primitive (RealWorld)
 import Data.Foldable           (traverse_)
-import Data.ReinterpretCast    (doubleToWord, wordToDouble)
 import Data.Text               (Text)
+import GHC.Float               (castDoubleToWord64, castWord64ToDouble)
 import Test.QuickCheck         (property)
 import Test.QuickCheck.IO      (propertyIO)
 import Text.Heredoc            (here)
@@ -88,7 +88,7 @@ readTests = describe "read tests" $
             7 <- getData 0 base -- rating
             1 <- getData 1 base -- canFly
             5173 <- getData 2 base -- capacity
-            12.0 <- wordToDouble <$> getData 3 base
+            12.0 <- castWord64ToDouble <$> getData 3 base
 
             -- ...and the pointer section:
             Just (PtrList (List8 name)) <- getPtr 0 base
@@ -148,7 +148,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         { testIn = "(f64 = 2.0)\n"
         , testType = "Z"
         , testOut = "(f64 = 7.2)\n"
-        , testMod = setData (doubleToWord 7.2) 1
+        , testMod = setData (castDoubleToWord64 7.2) 1
         }
     , ModTest
         { testIn = unlines
