@@ -160,7 +160,7 @@ newtype IEId = IEId { ieWord :: Word32 } deriving(Eq, Hashable)
 
 -- We define these to just show the number; the derived instances would include
 -- data constructors, which is a bit weird since these show up in output that
--- is sometimes show to users.
+-- is sometimes shown to users.
 instance Show QAId where
     show = show . qaWord
 instance Show IEId where
