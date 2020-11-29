@@ -80,9 +80,9 @@ import qualified Focus
 import qualified ListT
 import qualified StmContainers.Map as M
 
-import Capnp.Classes    (cerialize, decerialize)
-import Capnp.Convert    (msgToValue, valueToMsg)
-import Capnp.Message    (ConstMsg)
+import Capnp.Classes        (cerialize, decerialize)
+import Capnp.Convert        (msgToValue, valueToMsg)
+import Capnp.Message        (ConstMsg)
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -819,7 +819,7 @@ call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
 
                 RemoteDest (ImportDest cell) -> do
                     ImportRef { conn, importId } <- Fin.get cell
-                    callRemote conn info (ImportTgt importId)
+                    callRemote conn info $ ImportTgt importId
 
             Error exn -> do
                 breakPromise response' exn
