@@ -56,12 +56,13 @@ module Capnp.Rpc.Untyped
 
 import Control.Concurrent.STM
 import Control.Monad.STM.Class
+import Control.Monad.Trans.Class
 import Data.Word
 
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
-import Control.Exception.Safe   (Exception, bracket, throwIO, try)
+import Control.Exception.Safe   (Exception, bracket, throwIO, throwM, try)
 import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (for_, toList, traverse_)
@@ -80,7 +81,7 @@ import qualified Focus
 import qualified ListT
 import qualified StmContainers.Map as M
 
-import Capnp.Classes        (cerialize, decerialize)
+import Capnp.Classes        (cerialize, decerialize, fromStruct)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
 import Capnp.Rpc.Errors
@@ -93,11 +94,12 @@ import Capnp.Rpc.Errors
 import Capnp.Rpc.Promise
     (Fulfiller, breakOrFulfill, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
-import Capnp.TraversalLimit (defaultLimit, evalLimitT)
+import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
 
+import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as R
 import qualified Capnp.Message            as Message
 import qualified Capnp.Rpc.Server         as Server
@@ -438,12 +440,12 @@ handleConn
             walk exports $ \(_, EntryE{client}) ->
                 dropConnExport conn client
             -- Outstanding questions should all throw disconnected:
-            walk questions $ \(QAId qid, entry) ->
+            walk questions $ \(qid, entry) ->
                 let raiseDisconnected onReturn =
-                        mapQueueSTM conn' onReturn $ R.Return
+                        mapQueueSTM conn' onReturn $ Return
                             { answerId = qid
                             , releaseParamCaps = False
-                            , union' = R.Return'exception eDisconnected
+                            , union' = Return'exception eDisconnected
                             }
                 in case entry of
                     NewQA{onReturn}      -> raiseDisconnected onReturn
@@ -494,7 +496,7 @@ data EntryQA
     -- of message.
     = NewQA
         { onFinish :: SnocList (R.Finish -> STM ())
-        , onReturn :: SnocList (R.Return -> STM ())
+        , onReturn :: SnocList (Return -> STM ())
         }
     -- | An entry for which we've sent/received a return, but not a finish.
     -- Contains the return message, and a set of callbacks to invoke on the
@@ -508,7 +510,7 @@ data EntryQA
     -- return.
     | HaveFinish
         { finishMsg :: R.Finish
-        , onReturn  :: SnocList (R.Return -> STM ())
+        , onReturn  :: SnocList (Return -> STM ())
         }
 
 
@@ -614,8 +616,8 @@ data PipelineState
         , clientMap :: M.Map (SnocList Word16) Client
         , conn      :: Conn
         }
-    | PendingLocalPipeline (SnocList (Fulfiller MPtr))
-    | ReadyPipeline (Either R.Exception MPtr)
+    | PendingLocalPipeline (SnocList (Fulfiller RawMPtr))
+    | ReadyPipeline (Either R.Exception RawMPtr)
 
 -- | 'walkPipleinePtr' follows a pointer starting from the object referred to by the
 -- 'Pipeline'. The 'Pipeline' must refer to a struct, and the pointer is referred to
@@ -756,11 +758,12 @@ instance Eq Client' where
 -- by proxied imports (see Note [proxies]).
 newtype ExportMap = ExportMap (M.Map Conn IEId)
 
--- MsgTarget and PromisedAnswer correspond to the similarly named types in
+-- The below correspond to the similarly named types in
 -- rpc.capnp, except:
 --
 -- * They use our newtype wrappers for ids
 -- * They don't have unknown variants
+-- * AnyPointers are left un-parsed
 -- * PromisedAnswer's transform field is just a list of pointer offsets,
 --   rather than a union with no other actually-useful variants.
 -- * PromisedAnswer's transform field is a SnocList, for efficient appending.
@@ -770,6 +773,22 @@ data MsgTarget
 data PromisedAnswer = PromisedAnswer
     { answerId  :: !QAId
     , transform :: SnocList Word16
+    }
+data Return = Return
+    { answerId         :: !QAId
+    , releaseParamCaps :: !Bool
+    , union'           :: Return'
+    }
+data Return'
+    = Return'results Payload
+    | Return'exception R.Exception
+    | Return'canceled
+    | Return'resultsSentElsewhere
+    | Return'takeFromOtherQuestion QAId
+    | Return'acceptFromThirdParty RawMPtr
+data Payload = Payload
+    { content  :: RawMPtr
+    , capTable :: V.Vector R.CapDescriptor
     }
 
 -- Note [proxies]
@@ -897,27 +916,24 @@ callRemote
 -- | Callback to run when a return comes in that corresponds to a call
 -- we sent. Registered in callRemote. The first argument is a list of
 -- export IDs to release if the return message has releaseParamCaps = true.
-cbCallReturn :: [IEId] -> Conn -> Fulfiller RawMPtr -> R.Return -> STM ()
+cbCallReturn :: [IEId] -> Conn -> Fulfiller RawMPtr -> Return -> STM ()
 cbCallReturn
         paramCaps
         conn
         response
-        R.Return{ answerId, union', releaseParamCaps } = do
+        Return{ answerId, union', releaseParamCaps } = do
     conn'@Conn'{answers} <- getLive conn
     when releaseParamCaps $
         traverse_ (releaseExport conn 1) paramCaps
     case union' of
-        R.Return'exception exn ->
+        Return'exception exn ->
             breakPromise response exn
-        R.Return'results R.Payload{ content } -> do
-            rawPtr <- createPure defaultLimit $ do
-                msg <- Message.newMessage Nothing
-                cerialize msg content
-            fulfill response rawPtr
-        R.Return'canceled ->
+        Return'results Payload{ content } ->
+            fulfill response content
+        Return'canceled ->
             breakPromise response $ eFailed "Canceled"
 
-        R.Return'resultsSentElsewhere ->
+        Return'resultsSentElsewhere ->
             -- This should never happen, since we always set
             -- sendResultsTo = caller
             abortConn conn' $ eFailed $ mconcat
@@ -925,7 +941,7 @@ cbCallReturn
                 , "with sendResultsTo = caller."
                 ]
 
-        R.Return'takeFromOtherQuestion (QAId -> qid) ->
+        Return'takeFromOtherQuestion qid ->
             -- TODO(cleanup): we should be a little stricter; the protocol
             -- requires that (1) each answer is only used this way once, and
             -- (2) The question was sent with sendResultsTo set to 'yourself',
@@ -933,17 +949,14 @@ cbCallReturn
             subscribeReturn "answer" conn' answers qid $
                 cbCallReturn [] conn response
 
-        R.Return'acceptFromThirdParty _ ->
+        Return'acceptFromThirdParty _ ->
             -- Note [Level 3]
             abortConn conn' $ eUnimplemented
                 "This vat does not support level 3."
-        R.Return'unknown' ordinal ->
-            abortConn conn' $ eUnimplemented $
-                "Unknown return variant #" <> fromString (show ordinal)
     -- Defer this until after any other callbacks run, in case disembargos
     -- need to be send due to promise resolutions that we triggered:
     queueSTM conn' $ finishQuestion conn' def
-        { R.questionId = answerId
+        { R.questionId = qaWord answerId
         , R.releaseResultCaps = False
         }
 
@@ -1102,30 +1115,34 @@ coordinator :: Conn -> IO ()
 -- more about the objects in question; See Note [Organization] for more info.
 coordinator conn@Conn{debugMode} = forever $ atomically $ do
     conn'@Conn'{recvQ} <- getLive conn
-    msg <- (readTBQueue recvQ >>= parseWithCaps conn)
-        `catchSTM`
-        (abortConn conn' . wrapException debugMode)
-    case msg of
-        R.Message'abort exn ->
-            handleAbortMsg conn exn
-        R.Message'unimplemented oldMsg ->
-            handleUnimplementedMsg conn oldMsg
-        R.Message'bootstrap bs ->
-            handleBootstrapMsg conn bs
-        R.Message'call call ->
-            handleCallMsg conn call
-        R.Message'return ret ->
-            handleReturnMsg conn ret
-        R.Message'finish finish ->
-            handleFinishMsg conn finish
-        R.Message'resolve res ->
-            handleResolveMsg conn res
-        R.Message'release release ->
-            handleReleaseMsg conn release
-        R.Message'disembargo disembargo ->
-            handleDisembargoMsg conn disembargo
-        _ ->
-            sendPureMsg conn' $ R.Message'unimplemented msg
+    flip catchSTM (abortConn conn' . wrapException debugMode) $ do
+        capnpMsg <- readTBQueue recvQ
+        evalLimitT defaultLimit $ do
+            root <- UntypedRaw.rootPtr capnpMsg >>= fromStruct
+            msg' <- RawRpc.get_Message' root
+            case msg' of
+                RawRpc.Message'abort exn ->
+                    decerialize exn >>= lift . handleAbortMsg conn
+                RawRpc.Message'unimplemented oldMsg ->
+                    decerialize oldMsg >>= lift . handleUnimplementedMsg conn
+                RawRpc.Message'bootstrap bs ->
+                    decerialize bs >>= lift . handleBootstrapMsg conn
+                RawRpc.Message'call call ->
+                    handleCallMsg conn call
+                RawRpc.Message'return ret -> do
+                    ret' <- acceptReturn conn ret
+                    lift $ handleReturnMsg conn ret'
+                RawRpc.Message'finish finish ->
+                    decerialize finish >>= lift . handleFinishMsg conn
+                RawRpc.Message'resolve res ->
+                    decerialize res >>= lift . handleResolveMsg conn
+                RawRpc.Message'release release ->
+                    decerialize release >>= lift . handleReleaseMsg conn
+                RawRpc.Message'disembargo disembargo ->
+                    decerialize disembargo >>= lift . handleDisembargoMsg conn
+                _ -> do
+                    msg <- decerialize root
+                    lift $ sendPureMsg conn' $ R.Message'unimplemented msg
 
 -- | 'parseWithCaps' parses a message, making sure to interpret its capability
 -- table. The latter bit is the difference between this and just calling
@@ -1219,105 +1236,96 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
     insertBootstrap conn' _ (Just _) =
         abortConn conn' $ eFailed "Duplicate question ID"
 
-handleCallMsg :: Conn -> R.Call -> STM ()
-handleCallMsg
-        conn
-        R.Call
-            { questionId
-            , target
-            , interfaceId
-            , methodId
-            , params=R.Payload{content, capTable}
-            }
-        = getLive conn >>= \conn'@Conn'{exports, answers} -> do
-    -- First, add an entry in our answers table:
-    insertNewAbort
-        "answer"
-        conn'
-        (QAId questionId)
-        NewQA
-            { onReturn = SnocList.empty
-            , onFinish = SnocList.fromList
-                [ \R.Finish{releaseResultCaps} ->
-                    when releaseResultCaps $
-                        for_ capTable $ \R.CapDescriptor{union'} -> case union' of
-                            R.CapDescriptor'receiverHosted (IEId -> importId) ->
-                                releaseExport conn 1 importId
-                            _ ->
-                                pure ()
-                ]
-            }
-        answers
+handleCallMsg :: Conn -> RawRpc.Call ConstMsg -> LimitT STM ()
+handleCallMsg conn callMsg = do
+    conn'@Conn'{exports, answers} <- lift $ getLive conn
+    questionId <- RawRpc.get_Call'questionId callMsg
+    target <- RawRpc.get_Call'target callMsg >>= decerialize
+    interfaceId <- RawRpc.get_Call'interfaceId callMsg
+    methodId <- RawRpc.get_Call'methodId callMsg
+    payload <- RawRpc.get_Call'params callMsg
 
-    -- Marshal the parameters to the call back into the low-level form:
-    callParams <- createPure defaultLimit $ do
-        msg <- Message.newMessage Nothing
-        cerialize msg content
+    Payload{content = callParams, capTable} <- acceptPayload conn payload
 
-    -- Set up a callback for when the call is finished, to
-    -- send the return message:
-    fulfiller <- newCallback $ \case
-        Left e ->
-            returnAnswer conn' def
-                { R.answerId = questionId
-                , R.releaseParamCaps = False
-                , R.union' = R.Return'exception e
+    lift $ do
+        -- First, add an entry in our answers table:
+        insertNewAbort
+            "answer"
+            conn'
+            (QAId questionId)
+            NewQA
+                { onReturn = SnocList.empty
+                , onFinish = SnocList.fromList
+                    [ \R.Finish{releaseResultCaps} ->
+                        when releaseResultCaps $
+                            for_ capTable $ \R.CapDescriptor{union'} -> case union' of
+                                R.CapDescriptor'receiverHosted (IEId -> importId) ->
+                                    releaseExport conn 1 importId
+                                _ ->
+                                    pure ()
+                    ]
                 }
-        Right v -> do
-            content <- evalLimitT defaultLimit (decerialize v)
-            capTable <- genSendableCapTable conn content
-            returnAnswer conn' def
-                { R.answerId = questionId
-                , R.releaseParamCaps = False
-                , R.union'   = R.Return'results def
-                    { R.content  = content
-                    , R.capTable = capTable
+            answers
+
+        -- Set up a callback for when the call is finished, to
+        -- send the return message:
+        fulfiller <- newCallback $ \case
+            Left e ->
+                returnAnswer conn' Return
+                    { answerId = QAId questionId
+                    , releaseParamCaps = False
+                    , union' = Return'exception e
                     }
+            Right content -> do
+                capTable <- genSendableCapTableRaw conn content
+                returnAnswer conn' Return
+                    { answerId = QAId questionId
+                    , releaseParamCaps = False
+                    , union'   = Return'results Payload
+                        { content  = content
+                        , capTable = capTable
+                        }
+                    }
+        -- Package up the info for the call:
+        let callInfo = Server.CallInfo
+                { interfaceId
+                , methodId
+                , arguments = callParams
+                , response = fulfiller
                 }
-    -- Package up the info for the call:
-    let callInfo = Server.CallInfo
-            { interfaceId
-            , methodId
-            , arguments = callParams
-            , response = fulfiller
-            }
-    -- Finally, figure out where to send it:
-    case target of
-        R.MessageTarget'importedCap exportId ->
-            lookupAbort "export" conn' exports (IEId exportId) $
-                \EntryE{client} -> void $ call callInfo $ Client $ Just client
-        R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
-            let onReturn ret@R.Return{union'} =
-                    case union' of
-                        R.Return'exception _ ->
-                            returnAnswer conn' ret { R.answerId = questionId }
-                        R.Return'canceled ->
-                            returnAnswer conn' ret { R.answerId = questionId }
-                        R.Return'results R.Payload{content} ->
-                            void $ transformClient transform content conn' >>= call callInfo
-                        R.Return'resultsSentElsewhere ->
-                            -- our implementation should never actually do this, but
-                            -- this way we don't have to change this if/when we
-                            -- support the feature:
-                            abortConn conn' $ eFailed $
-                                "Tried to call a method on a promised answer that " <>
-                                "returned resultsSentElsewhere"
-                        R.Return'takeFromOtherQuestion otherQid ->
-                            subscribeReturn "answer" conn' answers (QAId otherQid) onReturn
-                        R.Return'acceptFromThirdParty _ ->
-                            -- Note [Level 3]
-                            error "BUG: our implementation unexpectedly used a level 3 feature"
-                        R.Return'unknown' tag ->
-                            error $
-                                "BUG: our implemented unexpectedly returned unknown " ++
-                                "result variant #" ++ show tag
-            in
-            subscribeReturn "answer" conn' answers (QAId targetQid) onReturn
-        R.MessageTarget'unknown' ordinal ->
-            abortConn conn' $ eUnimplemented $
-                "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
+        -- Finally, figure out where to send it:
+        case target of
+            R.MessageTarget'importedCap exportId ->
+                lookupAbort "export" conn' exports (IEId exportId) $
+                    \EntryE{client} -> void $ call callInfo $ Client $ Just client
+            R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
+                let onReturn ret@Return{union'} =
+                        case union' of
+                            Return'exception _ ->
+                                returnAnswer conn' ret { answerId = QAId questionId }
+                            Return'canceled ->
+                                returnAnswer conn' ret { answerId = QAId questionId }
+                            Return'results Payload{content} ->
+                                void $ transformClient transform content conn' >>= call callInfo
+                            Return'resultsSentElsewhere ->
+                                -- our implementation should never actually do this, but
+                                -- this way we don't have to change this if/when we
+                                -- support the feature:
+                                abortConn conn' $ eFailed $
+                                    "Tried to call a method on a promised answer that " <>
+                                    "returned resultsSentElsewhere"
+                            Return'takeFromOtherQuestion otherQid ->
+                                subscribeReturn "answer" conn' answers otherQid onReturn
+                            Return'acceptFromThirdParty _ ->
+                                -- Note [Level 3]
+                                error "BUG: our implementation unexpectedly used a level 3 feature"
+                in
+                subscribeReturn "answer" conn' answers (QAId targetQid) onReturn
+            R.MessageTarget'unknown' ordinal ->
+                abortConn conn' $ eUnimplemented $
+                    "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
 
-transformClient :: V.Vector R.PromisedAnswer'Op -> MPtr -> Conn' -> STM Client
+transformClient :: V.Vector R.PromisedAnswer'Op -> RawMPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
     case unmarshalOps (V.toList transform) >>= flip followPtrs ptr >>= ptrClient of
         Left e ->
@@ -1325,25 +1333,47 @@ transformClient transform ptr conn =
         Right client ->
             pure client
 
-ptrClient :: MPtr -> Either R.Exception Client
+ptrClient :: RawMPtr -> Either R.Exception Client
 ptrClient Nothing = Right nullClient
-ptrClient (Just (Untyped.PtrCap client)) = Right client
+ptrClient (Just (UntypedRaw.PtrCap cap)) = UntypedRaw.getClient cap
 ptrClient (Just _) = Left $ eFailed "Tried to call method on non-capability."
 
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
 -- with an error if any of the pointers in the chain (except the last one) is
 -- a non-null non struct.
-followPtrs :: [Word16] -> MPtr -> Either R.Exception MPtr
+followPtrs :: [Word16] -> RawMPtr -> Either R.Exception RawMPtr
 followPtrs [] ptr =
-    Right ptr
+    pure ptr
 followPtrs (_:_) Nothing =
-    Right Nothing
-followPtrs (i:is) (Just (Untyped.PtrStruct (Untyped.Struct _ ptrs))) =
-    followPtrs is (Untyped.sliceIndex (fromIntegral i) ptrs)
+    pure Nothing
+followPtrs (i:is) (Just (UntypedRaw.PtrStruct struct)) =
+    UntypedRaw.getPtr (fromIntegral i) struct >>= followPtrs is
 followPtrs (_:_) (Just _) =
-    Left (eFailed "Tried to access pointer field of non-struct.")
+    throwM $ eFailed "Tried to access pointer field of non-struct."
 
-handleReturnMsg :: Conn -> R.Return -> STM ()
+acceptReturn :: Conn -> RawRpc.Return ConstMsg -> LimitT STM Return
+acceptReturn conn ret = do
+    answerId <- QAId <$> RawRpc.get_Return'answerId ret
+    releaseParamCaps <- RawRpc.get_Return'releaseParamCaps ret
+    ret' <- RawRpc.get_Return' ret
+    union' <- case ret' of
+        RawRpc.Return'results payload ->
+            Return'results <$> acceptPayload conn payload
+        RawRpc.Return'exception exn ->
+            Return'exception <$> decerialize exn
+        RawRpc.Return'canceled ->
+            pure Return'canceled
+        RawRpc.Return'resultsSentElsewhere ->
+            pure Return'resultsSentElsewhere
+        RawRpc.Return'takeFromOtherQuestion id ->
+            pure $ Return'takeFromOtherQuestion (QAId id)
+        RawRpc.Return'acceptFromThirdParty ptr ->
+            pure $ Return'acceptFromThirdParty ptr
+        RawRpc.Return'unknown' ordinal ->
+            lift $ throwSTM $ "Unknown return variant #" <> fromString (show ordinal)
+    pure Return { answerId, releaseParamCaps, union' }
+
+handleReturnMsg :: Conn -> Return -> STM ()
 handleReturnMsg conn ret = getLive conn >>= \conn'@Conn'{questions} ->
     updateQAReturn conn' questions "question" ret
 
@@ -1540,18 +1570,6 @@ insertNewAbort keyTypeName conn key value =
 -- | Generate a cap table describing the capabilities reachable from the given
 -- pointer. The capability table will be correct for any message where all of
 -- the capabilities are within the subtree under the pointer.
---
--- XXX: it's kinda gross that we're serializing the pointer just to collect
--- this, then decerializing to put it in the larger adt, then reserializing
--- again... at some point we'll probably want to overhaul much of this module
--- for performance. This kind of thing is the motivation for #52.
-genSendableCapTable :: Conn -> MPtr -> STM (V.Vector R.CapDescriptor)
-genSendableCapTable conn ptr = do
-    rawPtr <- createPure defaultLimit $ do
-        msg <- Message.newMessage Nothing
-        cerialize msg ptr
-    genSendableCapTableRaw conn rawPtr
-
 genSendableCapTableRaw
     :: Conn
     -> Maybe (UntypedRaw.Ptr ConstMsg)
@@ -1592,16 +1610,16 @@ finishQuestion conn@Conn'{questions} finish@R.Finish{questionId} = do
 -- answers table, and queue any registered callbacks. Calls 'error'
 -- if the answerId is not in the table, or if we've already sent a
 -- return for this answer.
-returnAnswer :: Conn' -> R.Return -> STM ()
+returnAnswer :: Conn' -> Return -> STM ()
 returnAnswer conn@Conn'{answers} ret = do
     sendPureMsg conn $ R.Message'return ret
     updateQAReturn conn answers "answer" ret
 
 -- TODO(cleanup): updateQAReturn/Finish have a lot in common; can we refactor?
 
-updateQAReturn :: Conn' -> M.Map QAId EntryQA -> Text -> R.Return -> STM ()
-updateQAReturn conn table tableName ret@R.Return{answerId} =
-    lookupAbort tableName conn table (QAId answerId) $ \case
+updateQAReturn :: Conn' -> M.Map QAId EntryQA -> Text -> Return -> STM ()
+updateQAReturn conn table tableName ret@Return{answerId} =
+    lookupAbort tableName conn table answerId $ \case
         NewQA{onFinish, onReturn} -> do
             mapQueueSTM conn onReturn ret
             M.insert
@@ -1613,7 +1631,7 @@ updateQAReturn conn table tableName ret@R.Return{answerId} =
                 table
         HaveFinish{onReturn} -> do
             mapQueueSTM conn onReturn ret
-            M.delete (QAId answerId) table
+            M.delete answerId table
         HaveReturn{} ->
             abortConn conn $ eFailed $
                 "Duplicate return message for " <> tableName <> " #"
@@ -1647,7 +1665,7 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
 -- run *after* the others (see Note [callbacks]). Note that this is an
 -- important property, as it is necessary to preserve E-order if the
 -- callbacks are successive method calls on the returned object.
-subscribeReturn :: Text -> Conn' -> M.Map QAId EntryQA -> QAId -> (R.Return -> STM ()) -> STM ()
+subscribeReturn :: Text -> Conn' -> M.Map QAId EntryQA -> QAId -> (Return -> STM ()) -> STM ()
 subscribeReturn tableName conn table qaId onRet =
     lookupAbort tableName conn table qaId $ \qa -> do
         new <- go qa
@@ -1882,13 +1900,13 @@ releaseTmpDest (RemoteDest (ImportDest _)) = pure ()
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
 -- The [Word16] is a list of pointer indexes to follow from the result.
-resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> Conn' -> [Word16] -> R.Return -> STM ()
-resolveClientReturn tmpDest resolve conn@Conn'{answers} transform R.Return { union' } = case union' of
+resolveClientReturn :: TmpDest -> (PromiseState -> STM ()) -> Conn' -> [Word16] -> Return -> STM ()
+resolveClientReturn tmpDest resolve conn@Conn'{answers} transform Return { union' } = case union' of
     -- TODO(cleanup) there is a lot of redundency betwen this and cbCallReturn; can
     -- we refactor?
-    R.Return'exception exn ->
+    Return'exception exn ->
         resolveClientExn tmpDest resolve exn
-    R.Return'results R.Payload{ content } ->
+    Return'results Payload{ content } ->
         case followPtrs transform content of
             Right v ->
                 resolveClientPtr tmpDest resolve v
@@ -2003,6 +2021,14 @@ emitCap targetConn (Client (Just client')) = case client' of
             else R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
   where
     newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
+
+acceptPayload :: Conn -> RawRpc.Payload ConstMsg -> LimitT STM Payload
+acceptPayload conn payload = do
+    capTable <- RawRpc.get_Payload'capTable payload >>= decerialize
+    clients <- lift $ traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capTable
+    content <- RawRpc.get_Payload'content payload >>=
+        traverse (UntypedRaw.tMsg (pure . Message.withCapTable clients))
+    pure Payload {content, capTable}
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor'
 -- received via the connection. May update connection state as necessary.
