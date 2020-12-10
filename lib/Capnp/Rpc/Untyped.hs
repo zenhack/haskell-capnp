@@ -63,7 +63,7 @@ import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
 import Control.Exception.Safe
-    (Exception, MonadThrow, SomeException, bracket, throwIO, throwM, try)
+    (Exception, MonadThrow, bracket, throwIO, throwM, try)
 import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (for_, toList, traverse_)
@@ -83,7 +83,7 @@ import qualified ListT
 import qualified StmContainers.Map as M
 
 import Capnp.Classes        (cerialize, decerialize, fromStruct, new, toStruct)
-import Capnp.Convert        (msgToValue, valueToMsg)
+import Capnp.Convert        (valueToMsg)
 import Capnp.Message        (ConstMsg)
 import Capnp.Rpc.Errors
     ( eDisconnected
@@ -143,8 +143,6 @@ import qualified Internal.TCloseQ         as TCloseQ
 --   implementation. See the protocol documentation for more info.
 
 -- | We use this type often enough that the types get noisy without a shorthand:
-type MPtr = Maybe Untyped.Ptr
--- | Less often, but still helpful:
 type RawMPtr = Maybe (UntypedRaw.Ptr ConstMsg)
 
 
@@ -648,16 +646,25 @@ pipelineClient Pipeline{state, steps} = liftSTM $ do
             (ret, retFulfiller) <- newPromiseClient
             ptrFulfiller <- newCallback $ \r -> do
                 writeTVar state (ReadyPipeline r)
-                breakOrFulfill retFulfiller (r >>= followPtrs (toList steps) >>= ptrClient)
+                case r of
+                    Left e ->
+                        breakPromise retFulfiller e
+                    Right v ->
+                        (ptrPathClient (toList steps) v  >>= fulfill retFulfiller)
+                            `catchSTM`
+                            (breakPromise retFulfiller . wrapException False)
             writeTVar state $ PendingLocalPipeline $ SnocList.snoc subscribers ptrFulfiller
             pure ret
-        ReadyPipeline r ->
-            case r >>= followPtrs (toList steps) >>= ptrClient of
-                Right v -> pure v
-                Left e -> do
-                    (p, f) <- newPromiseClient
-                    breakPromise f e
-                    pure p
+        ReadyPipeline r -> do
+            -- TODO(cleanup): factor out the commonalities between this and the above case.
+            (p, f) <- newPromiseClient
+            case r of
+                Left e -> breakPromise f e >> pure p
+                Right v ->
+                    (ptrPathClient (toList steps) v)
+                    `catchSTM` (\e -> do
+                        breakPromise f (wrapException False e)
+                        pure p)
 
 promisedAnswerClient :: Conn -> PromisedAnswer -> STM Client
 promisedAnswerClient conn answer@PromisedAnswer{answerId, transform} = do
@@ -1142,24 +1149,6 @@ coordinator conn@Conn{debugMode} = forever $ atomically $ do
                     msg <- decerialize root
                     lift $ sendPureMsg conn' $ R.Message'unimplemented msg
 
--- | 'parseWithCaps' parses a message, making sure to interpret its capability
--- table. The latter bit is the difference between this and just calling
--- 'msgToValue'; 'msgToValue' will leave all of the clients in the message
--- null.
-parseWithCaps :: Conn -> ConstMsg -> STM R.Message
-parseWithCaps conn msg = do
-    pureMsg <- msgToValue msg
-    case pureMsg of
-        -- capabilities only appear in call and return messages, and in the
-        -- latter only in the 'results' variant. In the other cases we can
-        -- just leave the result alone.
-        R.Message'call R.Call{params=R.Payload{capTable}} ->
-            fixCapTable capTable conn msg >>= msgToValue
-        R.Message'return R.Return{union'=R.Return'results R.Payload{capTable}} ->
-            fixCapTable capTable conn msg >>= msgToValue
-        _ ->
-            pure pureMsg
-
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
 
@@ -1323,9 +1312,13 @@ handleCallMsg conn callMsg = do
                 abortConn conn' $ eUnimplemented $
                     "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
 
+ptrPathClient :: MonadThrow m => [Word16] -> RawMPtr -> m Client
+ptrPathClient is ptr =
+    evalLimitT defaultLimit $ followPtrs is ptr >>= ptrClient
+
 transformClient :: V.Vector R.PromisedAnswer'Op -> RawMPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
-    (unmarshalOps (V.toList transform) >>= flip followPtrs ptr >>= ptrClient)
+    (unmarshalOps (V.toList transform) >>= flip ptrPathClient ptr)
         `catchSTM` abortConn conn
 
 ptrClient :: UntypedRaw.ReadCtx m ConstMsg => RawMPtr -> m Client
@@ -1426,7 +1419,7 @@ acceptReturn conn ret = do
         RawRpc.Return'acceptFromThirdParty ptr ->
             pure $ Return'acceptFromThirdParty ptr
         RawRpc.Return'unknown' ordinal ->
-            lift $ throwSTM $ "Unknown return variant #" <> fromString (show ordinal)
+            lift $ throwSTM $ eFailed $ "Unknown return variant #" <> fromString (show ordinal)
     pure Return { answerId, releaseParamCaps, union' }
 
 handleReturnMsg :: Conn -> Return -> STM ()
@@ -1582,15 +1575,6 @@ handleDisembargoMsg conn d = getLive conn >>= go d
 -- Note [Level 3]
     go d conn' =
         sendPureMsg conn' $ R.Message'unimplemented $ R.Message'disembargo d
-
-
-
--- | Interpret the list of cap descriptors, and replace the message's capability
--- table with the result.
-fixCapTable :: V.Vector R.CapDescriptor -> Conn -> ConstMsg -> STM ConstMsg
-fixCapTable capDescs conn msg = do
-    clients <- traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capDescs
-    pure $ Message.withCapTable clients msg
 
 lookupAbort
     :: (Eq k, Hashable k, Show k)
@@ -1827,7 +1811,7 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
     Nothing ->
         resolveClientClient tmpDest resolve nullClient
     Just (UntypedRaw.PtrCap c) -> do
-        c' <- UntypedRaw.getClient c
+        c' <- evalLimitT defaultLimit $ UntypedRaw.getClient c
         resolveClientClient tmpDest resolve c'
     Just _ ->
         resolveClientExn tmpDest resolve $
@@ -1964,7 +1948,7 @@ resolveClientReturn tmpDest resolve conn@Conn'{answers} transform Return { union
     Return'exception exn ->
         resolveClientExn tmpDest resolve exn
     Return'results Payload{ content } -> do
-        res <- try $ followPtrs transform content
+        res <- try $ evalLimitT defaultLimit $ followPtrs transform content
         case res of
             Right v ->
                 resolveClientPtr tmpDest resolve v
