@@ -1351,7 +1351,9 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
     Return'results Payload{content, capTable} -> do
         msg <- createPure defaultLimit $ do
             mcontent <- thaw content
-            let msg = UntypedRaw.message mcontent
+            msg <- case mcontent of
+                Just v  -> pure $ UntypedRaw.message v
+                Nothing -> Message.newMessage Nothing
             mcapTable <- cerialize msg capTable
             payload <- new msg
             RawRpc.set_Payload'content payload mcontent
@@ -1392,14 +1394,17 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
     Return'acceptFromThirdParty ptr -> do
         msg <- createPure defaultLimit $ do
             mptr <- thaw ptr
-            let msg = UntypedRaw.message mptr
+            msg <- case mptr of
+                Just v  -> pure $ UntypedRaw.message v
+                Nothing -> Message.newMessage Nothing
             ret <- new msg
             RawRpc.set_Return'answerId ret (qaWord answerId)
             RawRpc.set_Return'releaseParamCaps ret releaseParamCaps
             RawRpc.set_Return'acceptFromThirdParty ret mptr
             rpcMsg <- new msg
             RawRpc.set_Message'return rpcMsg ret
-            pure rpcMsg
+            UntypedRaw.setRoot (toStruct rpcMsg)
+            pure msg
         writeTBQueue (sendQ conn') msg
 
 acceptReturn :: Conn -> RawRpc.Return ConstMsg -> LimitT STM Return
