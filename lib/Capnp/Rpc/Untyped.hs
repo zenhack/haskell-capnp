@@ -62,7 +62,8 @@ import Data.Word
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
-import Control.Exception.Safe   (Exception, bracket, throwIO, throwM, try)
+import Control.Exception.Safe
+    (Exception, MonadThrow, SomeException, bracket, throwIO, throwM, try)
 import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (for_, toList, traverse_)
@@ -81,7 +82,7 @@ import qualified Focus
 import qualified ListT
 import qualified StmContainers.Map as M
 
-import Capnp.Classes        (cerialize, decerialize, fromStruct)
+import Capnp.Classes        (cerialize, decerialize, fromStruct, new, toStruct)
 import Capnp.Convert        (msgToValue, valueToMsg)
 import Capnp.Message        (ConstMsg)
 import Capnp.Rpc.Errors
@@ -95,6 +96,7 @@ import Capnp.Rpc.Promise
     (Fulfiller, breakOrFulfill, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
+import Data.Mutable         (thaw)
 import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
@@ -502,7 +504,7 @@ data EntryQA
     -- Contains the return message, and a set of callbacks to invoke on the
     -- finish.
     | HaveReturn
-        { returnMsg :: R.Return
+        { returnMsg :: Return
         , onFinish  :: SnocList (R.Finish -> STM ())
         }
     -- | An entry for which we've sent/received a finish, but not a return.
@@ -855,12 +857,9 @@ makeLocalPipeline f = do
         s <- readTVar state
         case s of
             PendingLocalPipeline fs -> do
-                pr <- case r of
-                    Left e  -> pure (Left e)
-                    Right v -> Right <$> evalLimitT defaultLimit (decerialize v)
-                writeTVar state (ReadyPipeline pr)
+                writeTVar state (ReadyPipeline r)
                 breakOrFulfill f r
-                traverse_ (`breakOrFulfill` pr) fs
+                traverse_ (`breakOrFulfill` r) fs
             _ ->
                 -- TODO(cleanup): refactor so we don't need this case.
                 error "impossible"
@@ -900,9 +899,8 @@ callRemote
         breakOrFulfill response r
         case r of
             Left e -> writeTVar rp $ ReadyPipeline (Left e)
-            Right v -> do
-                content <- evalLimitT defaultLimit (decerialize v)
-                writeTVar rp $ ReadyPipeline (Right content)
+            Right v ->
+                writeTVar rp $ ReadyPipeline (Right v)
 
     M.insert
         NewQA
@@ -978,7 +976,7 @@ marshalPromisedAnswer PromisedAnswer{ answerId, transform } =
                     toList transform
         }
 
-unmarshalPromisedAnswer :: R.PromisedAnswer -> Either R.Exception PromisedAnswer
+unmarshalPromisedAnswer :: MonadThrow m => R.PromisedAnswer -> m PromisedAnswer
 unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
     idxes <- unmarshalOps (toList transform)
     pure PromisedAnswer
@@ -986,14 +984,14 @@ unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
         , transform = SnocList.fromList idxes
         }
 
-unmarshalOps :: [R.PromisedAnswer'Op] -> Either R.Exception [Word16]
-unmarshalOps [] = Right []
+unmarshalOps :: MonadThrow m => [R.PromisedAnswer'Op] -> m [Word16]
+unmarshalOps [] = pure []
 unmarshalOps (R.PromisedAnswer'Op'noop:ops) =
     unmarshalOps ops
 unmarshalOps (R.PromisedAnswer'Op'getPointerField i:ops) =
     (i:) <$> unmarshalOps ops
 unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
-    Left $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
+    throwM $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
 
 
 -- | A null client. This is the only client value that can be represented
@@ -1188,24 +1186,24 @@ handleBootstrapMsg :: Conn -> R.Bootstrap -> STM ()
 handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> do
     ret <- case bootstrap conn' of
         Nothing ->
-            pure $ R.Return
-                { R.answerId = questionId
-                , R.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
-                , R.union' =
-                    R.Return'exception $
+            pure Return
+                { answerId = QAId questionId
+                , releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+                , union' =
+                    Return'exception $
                         eFailed "No bootstrap interface for this connection."
                 }
         Just client -> do
             capDesc <- emitCap conn client
-            pure $ R.Return
-                { R.answerId = questionId
-                , R.releaseParamCaps = True -- Not really meaningful for bootstrap, but...
-                , R.union' =
-                    R.Return'results R.Payload
-                            -- XXX: this is a bit fragile; we're relying on
-                            -- the encode step to pick the right index for
-                            -- our capability.
-                        { content = Just (Untyped.PtrCap client)
+            content <- createPure defaultLimit $ do
+                msg <- Message.newMessage Nothing
+                cerialize msg $ Just (Untyped.PtrCap client)
+            pure Return
+                { answerId = QAId questionId
+                , releaseParamCaps = True -- Not really meaningful for bootstrap, but...
+                , union' =
+                    Return'results Payload
+                        { content
                         , capTable = V.singleton (def :: R.CapDescriptor) { R.union' = capDesc }
                         }
                 }
@@ -1213,7 +1211,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
         (Focus.alterM $ insertBootstrap conn' ret)
         (QAId questionId)
         (answers conn')
-    sendPureMsg conn' $ R.Message'return ret
+    sendReturn conn' ret
   where
     insertBootstrap _ ret Nothing =
         pure $ Just HaveReturn
@@ -1221,8 +1219,8 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
             , onFinish = SnocList.fromList
                 [ \R.Finish{releaseResultCaps} ->
                     case ret of
-                        R.Return
-                            { union' = R.Return'results R.Payload
+                        Return
+                            { union' = Return'results Payload
                                 { capTable = (V.toList -> [ R.CapDescriptor { union' = R.CapDescriptor'receiverHosted (IEId -> eid) } ])
                                 }
                             } ->
@@ -1327,21 +1325,18 @@ handleCallMsg conn callMsg = do
 
 transformClient :: V.Vector R.PromisedAnswer'Op -> RawMPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
-    case unmarshalOps (V.toList transform) >>= flip followPtrs ptr >>= ptrClient of
-        Left e ->
-            abortConn conn e
-        Right client ->
-            pure client
+    (unmarshalOps (V.toList transform) >>= flip followPtrs ptr >>= ptrClient)
+        `catchSTM` abortConn conn
 
-ptrClient :: RawMPtr -> Either R.Exception Client
-ptrClient Nothing = Right nullClient
+ptrClient :: UntypedRaw.ReadCtx m ConstMsg => RawMPtr -> m Client
+ptrClient Nothing = pure nullClient
 ptrClient (Just (UntypedRaw.PtrCap cap)) = UntypedRaw.getClient cap
-ptrClient (Just _) = Left $ eFailed "Tried to call method on non-capability."
+ptrClient (Just _) = throwM $ eFailed "Tried to call method on non-capability."
 
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
 -- with an error if any of the pointers in the chain (except the last one) is
 -- a non-null non struct.
-followPtrs :: [Word16] -> RawMPtr -> Either R.Exception RawMPtr
+followPtrs :: UntypedRaw.ReadCtx m ConstMsg => [Word16] -> RawMPtr -> m RawMPtr
 followPtrs [] ptr =
     pure ptr
 followPtrs (_:_) Nothing =
@@ -1350,6 +1345,62 @@ followPtrs (i:is) (Just (UntypedRaw.PtrStruct struct)) =
     UntypedRaw.getPtr (fromIntegral i) struct >>= followPtrs is
 followPtrs (_:_) (Just _) =
     throwM $ eFailed "Tried to access pointer field of non-struct."
+
+sendReturn :: Conn' -> Return -> STM ()
+sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
+    Return'results Payload{content, capTable} -> do
+        msg <- createPure defaultLimit $ do
+            mcontent <- thaw content
+            let msg = UntypedRaw.message mcontent
+            mcapTable <- cerialize msg capTable
+            payload <- new msg
+            RawRpc.set_Payload'content payload mcontent
+            RawRpc.set_Payload'capTable payload mcapTable
+            ret <- new msg
+            RawRpc.set_Return'results ret payload
+            RawRpc.set_Return'answerId ret (qaWord answerId)
+            RawRpc.set_Return'releaseParamCaps ret releaseParamCaps
+            rpcMsg <- new msg
+            RawRpc.set_Message'return rpcMsg ret
+            UntypedRaw.setRoot (toStruct rpcMsg)
+            pure msg
+        writeTBQueue (sendQ conn') msg
+    Return'exception exn ->
+        sendPureMsg conn' $ R.Message'return R.Return
+            { answerId = qaWord answerId
+            , releaseParamCaps
+            , union' = R.Return'exception exn
+            }
+    Return'canceled ->
+        sendPureMsg conn' $ R.Message'return R.Return
+            { answerId = qaWord answerId
+            , releaseParamCaps
+            , union' = R.Return'canceled
+            }
+    Return'resultsSentElsewhere ->
+        sendPureMsg conn' $ R.Message'return R.Return
+            { answerId = qaWord answerId
+            , releaseParamCaps
+            , union' = R.Return'resultsSentElsewhere
+            }
+    Return'takeFromOtherQuestion (QAId qid) ->
+        sendPureMsg conn' $ R.Message'return R.Return
+            { answerId = qaWord answerId
+            , releaseParamCaps
+            , union' = R.Return'takeFromOtherQuestion qid
+            }
+    Return'acceptFromThirdParty ptr -> do
+        msg <- createPure defaultLimit $ do
+            mptr <- thaw ptr
+            let msg = UntypedRaw.message mptr
+            ret <- new msg
+            RawRpc.set_Return'answerId ret (qaWord answerId)
+            RawRpc.set_Return'releaseParamCaps ret releaseParamCaps
+            RawRpc.set_Return'acceptFromThirdParty ret mptr
+            rpcMsg <- new msg
+            RawRpc.set_Message'return rpcMsg ret
+            pure rpcMsg
+        writeTBQueue (sendQ conn') msg
 
 acceptReturn :: Conn -> RawRpc.Return ConstMsg -> LimitT STM Return
 acceptReturn conn ret = do
@@ -1476,7 +1527,7 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                     disembargoPromise client
             R.MessageTarget'promisedAnswer R.PromisedAnswer{ questionId, transform } ->
                 lookupAbort "answer" conn' answers (QAId questionId) $ \case
-                    HaveReturn { returnMsg=R.Return{union'=R.Return'results R.Payload{content} } } ->
+                    HaveReturn { returnMsg=Return{union'=Return'results Payload{content} } } ->
                         transformClient transform content conn' >>= \case
                             Client (Just client') -> disembargoClient client'
                             Client Nothing -> abortDisembargo "targets a null capability"
@@ -1612,7 +1663,7 @@ finishQuestion conn@Conn'{questions} finish@R.Finish{questionId} = do
 -- return for this answer.
 returnAnswer :: Conn' -> Return -> STM ()
 returnAnswer conn@Conn'{answers} ret = do
-    sendPureMsg conn $ R.Message'return ret
+    sendReturn conn ret
     updateQAReturn conn answers "answer" ret
 
 -- TODO(cleanup): updateQAReturn/Finish have a lot in common; can we refactor?
@@ -1627,7 +1678,7 @@ updateQAReturn conn table tableName ret@Return{answerId} =
                     { returnMsg = ret
                     , onFinish
                     }
-                (QAId answerId)
+                answerId
                 table
         HaveFinish{onReturn} -> do
             mapQueueSTM conn onReturn ret
@@ -1766,12 +1817,13 @@ resolveClientExn tmpDest resolve exn = do
 
 -- Resolve a promised client to a pointer. If it is a non-null non-capability
 -- pointer, it resolves to an exception. See Note [resolveClient]
-resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> MPtr -> STM ()
+resolveClientPtr :: TmpDest -> (PromiseState -> STM ()) -> RawMPtr -> STM ()
 resolveClientPtr tmpDest resolve ptr = case ptr of
     Nothing ->
         resolveClientClient tmpDest resolve nullClient
-    Just (Untyped.PtrCap c) ->
-        resolveClientClient tmpDest resolve c
+    Just (UntypedRaw.PtrCap c) -> do
+        c' <- UntypedRaw.getClient c
+        resolveClientClient tmpDest resolve c'
     Just _ ->
         resolveClientExn tmpDest resolve $
             eFailed "Promise resolved to non-capability pointer"
@@ -1906,17 +1958,18 @@ resolveClientReturn tmpDest resolve conn@Conn'{answers} transform Return { union
     -- we refactor?
     Return'exception exn ->
         resolveClientExn tmpDest resolve exn
-    Return'results Payload{ content } ->
-        case followPtrs transform content of
+    Return'results Payload{ content } -> do
+        res <- try $ followPtrs transform content
+        case res of
             Right v ->
                 resolveClientPtr tmpDest resolve v
             Left e ->
                 resolveClientExn tmpDest resolve e
 
-    R.Return'canceled ->
+    Return'canceled ->
         resolveClientExn tmpDest resolve $ eFailed "Canceled"
 
-    R.Return'resultsSentElsewhere ->
+    Return'resultsSentElsewhere ->
         -- Should never happen; we don't set sendResultsTo to anything other than
         -- caller.
         abortConn conn $ eFailed $ mconcat
@@ -1924,18 +1977,14 @@ resolveClientReturn tmpDest resolve conn@Conn'{answers} transform Return { union
             , "with sendResultsTo = caller."
             ]
 
-    R.Return'takeFromOtherQuestion (QAId -> qid) ->
+    Return'takeFromOtherQuestion qid ->
         subscribeReturn "answer" conn answers qid $
             resolveClientReturn tmpDest resolve conn transform
 
-    R.Return'acceptFromThirdParty _ ->
+    Return'acceptFromThirdParty _ ->
         -- Note [Level 3]
         abortConn conn $ eUnimplemented
             "This vat does not support level 3."
-
-    R.Return'unknown' ordinal ->
-        abortConn conn $ eUnimplemented $
-            "Unknown return variant #" <> fromString (show ordinal)
 
 -- | Get the client's export ID for this connection, or allocate a new one if needed.
 -- If this is the first time this client has been exported on this connection,
@@ -2086,12 +2135,9 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
         lookupAbort "export" conn' exports (IEId exportId) $
             \EntryE{client} ->
                 pure $ Client $ Just client
-    go conn' (R.CapDescriptor'receiverAnswer pa) =
-        case unmarshalPromisedAnswer pa of
-            Left e ->
-                abortConn conn' e
-            Right pa ->
-                newLocalAnswerClient conn' pa
+    go conn' (R.CapDescriptor'receiverAnswer pa) = do
+        pa <- unmarshalPromisedAnswer pa `catchSTM` abortConn conn'
+        newLocalAnswerClient conn' pa
     go conn' (R.CapDescriptor'thirdPartyHosted _) =
         -- Note [Level 3]
         abortConn conn' $ eUnimplemented
