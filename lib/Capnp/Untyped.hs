@@ -9,6 +9,7 @@
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-|
 Module: Capnp.Untyped
@@ -68,7 +69,8 @@ import Control.Monad.Catch.Pure  (CatchT(runCatchT))
 import Control.Monad.Primitive   (PrimMonad (..))
 import Control.Monad.Trans.Class (MonadTrans(lift))
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString     as BS
+import qualified Language.Haskell.TH as TH
 
 import Capnp.Address        (OffsetError (..), WordAddr (..), pointerFrom)
 import Capnp.Bits
@@ -269,7 +271,7 @@ instance TraverseMsg FlipListS where
 tFlip  :: (TraverseMsg (FlipList a), TraverseMsgCtx m msgA msg)
     => (msgA -> m msg) -> ListOf msgA a -> m (ListOf msg a)
 tFlipS :: TraverseMsgCtx m msgA msg => (msgA -> m msg) -> ListOf msgA (Struct msgA) -> m (ListOf msg (Struct msg))
-tFlipP :: Applicative m => (msgA -> m msg) -> ListOf msgA (Maybe (Ptr msgA)) -> m (ListOf msg (Maybe (Ptr msg)))
+tFlipP :: TraverseMsgCtx m msgA msg => (msgA -> m msg) -> ListOf msgA (Maybe (Ptr msgA)) -> m (ListOf msg (Maybe (Ptr msg)))
 tFlip  f list  = unflip  <$> tMsg f (FlipList  list)
 tFlipS f list  = unflipS <$> tMsg f (FlipListS list)
 tFlipP f list  = unflipP <$> tMsg f (FlipListP list)
@@ -288,102 +290,59 @@ instance Thaw a => Thaw (Maybe a) where
     unsafeThaw   = traverse unsafeThaw
     unsafeFreeze = traverse unsafeFreeze
 
-instance Thaw msg => Thaw (Ptr msg) where
-    type Mutable s (Ptr msg) = Ptr (Mutable s msg)
+do
+    let mkWrappedInstance name =
+            let f = pure $ TH.ConT name in
+            [d|instance Thaw ($f M.ConstMsg) where
+                type Mutable s ($f M.ConstMsg) = $f (Mutable s M.ConstMsg)
 
-    thaw         = tMsg thaw
-    freeze       = tMsg freeze
-    unsafeThaw   = tMsg unsafeThaw
-    unsafeFreeze = tMsg unsafeFreeze
+                thaw         = runCatchImpure . tMsg thaw
+                freeze       = runCatchImpure . tMsg freeze
+                unsafeThaw   = runCatchImpure . tMsg unsafeThaw
+                unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
+            |]
+        mkListOfInstance t =
+            [d|instance Thaw (ListOf M.ConstMsg $t) where
+                type Mutable s (ListOf M.ConstMsg $t) = ListOf (Mutable s M.ConstMsg) $t
 
-instance Thaw msg => Thaw (List msg) where
-    type Mutable s (List msg) = List (Mutable s msg)
+                thaw         = runCatchImpure . tFlip thaw
+                freeze       = runCatchImpure . tFlip freeze
+                unsafeThaw   = runCatchImpure . tFlip unsafeThaw
+                unsafeFreeze = runCatchImpure . tFlip unsafeFreeze
+            |]
+    xs <- traverse mkWrappedInstance
+        [ ''Ptr
+        , ''List
+        , ''NormalList
+        , ''Struct
+        ]
+    ys <- traverse mkListOfInstance
+        [ [t|()|]
+        , [t|Bool|]
+        , [t|Word8|]
+        , [t|Word16|]
+        , [t|Word32|]
+        , [t|Word64|]
+        ]
+    pure $ concat $ xs ++ ys
 
-    thaw         = tMsg thaw
-    freeze       = tMsg freeze
-    unsafeThaw   = tMsg unsafeThaw
-    unsafeFreeze = tMsg unsafeFreeze
+instance Thaw (ListOf M.ConstMsg (Struct M.ConstMsg)) where
+    type Mutable s (ListOf M.ConstMsg (Struct M.ConstMsg)) =
+        ListOf (Mutable s M.ConstMsg) (Struct (Mutable s M.ConstMsg))
 
-instance Thaw msg => Thaw (NormalList msg) where
-    type Mutable s (NormalList msg) = NormalList (Mutable s msg)
+    thaw         = runCatchImpure . tFlipS thaw
+    freeze       = runCatchImpure . tFlipS freeze
+    unsafeThaw   = runCatchImpure . tFlipS unsafeThaw
+    unsafeFreeze = runCatchImpure . tFlipS unsafeFreeze
 
-    thaw         = tMsg thaw
-    freeze       = tMsg freeze
-    unsafeThaw   = tMsg unsafeThaw
-    unsafeFreeze = tMsg unsafeFreeze
+instance Thaw (ListOf M.ConstMsg (Maybe (Ptr M.ConstMsg))) where
+    type Mutable s (ListOf M.ConstMsg (Maybe (Ptr M.ConstMsg))) =
+        ListOf (Mutable s M.ConstMsg) (Maybe (Ptr (Mutable s M.ConstMsg)))
 
-instance Thaw msg => Thaw (ListOf msg ()) where
-    type Mutable s (ListOf msg ()) = ListOf (Mutable s msg) ()
-
-    thaw         = tFlip thaw
-    freeze       = tFlip freeze
-    unsafeThaw   = tFlip unsafeThaw
-    unsafeFreeze = tFlip unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg Bool) where
-    type Mutable s (ListOf msg Bool) = ListOf (Mutable s msg) Bool
-
-    thaw         = tFlip thaw
-    freeze       = tFlip freeze
-    unsafeThaw   = tFlip unsafeThaw
-    unsafeFreeze = tFlip unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg Word8) where
-    type Mutable s (ListOf msg Word8) = ListOf (Mutable s msg) Word8
-
-    thaw         = tFlip thaw
-    freeze       = tFlip freeze
-    unsafeThaw   = tFlip unsafeThaw
-    unsafeFreeze = tFlip unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg Word16) where
-    type Mutable s (ListOf msg Word16) = ListOf (Mutable s msg) Word16
-
-    thaw         = tFlip thaw
-    freeze       = tFlip freeze
-    unsafeThaw   = tFlip unsafeThaw
-    unsafeFreeze = tFlip unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg Word32) where
-    type Mutable s (ListOf msg Word32) = ListOf (Mutable s msg) Word32
-
-    thaw         = tFlip thaw
-    freeze       = tFlip freeze
-    unsafeThaw   = tFlip unsafeThaw
-    unsafeFreeze = tFlip unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg Word64) where
-    type Mutable s (ListOf msg Word64) = ListOf (Mutable s msg) Word64
-
-    thaw         = tFlip thaw
-    freeze       = tFlip freeze
-    unsafeThaw   = tFlip unsafeThaw
-    unsafeFreeze = tFlip unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg (Struct msg)) where
-    type Mutable s (ListOf msg (Struct msg)) = ListOf (Mutable s msg) (Struct (Mutable s msg))
-
-    thaw         = tFlipS thaw
-    freeze       = tFlipS freeze
-    unsafeThaw   = tFlipS unsafeThaw
-    unsafeFreeze = tFlipS unsafeFreeze
-
-instance Thaw msg => Thaw (ListOf msg (Maybe (Ptr msg))) where
-    type Mutable s (ListOf msg (Maybe (Ptr msg))) =
-        ListOf (Mutable s msg) (Maybe (Ptr (Mutable s msg)))
-
-    thaw         = tFlipP thaw
-    freeze       = tFlipP freeze
-    unsafeThaw   = tFlipP unsafeThaw
-    unsafeFreeze = tFlipP unsafeFreeze
-
-instance Thaw (Struct M.ConstMsg) where
-    type Mutable s (Struct M.ConstMsg) = Struct (Mutable s M.ConstMsg)
-
-    thaw         = runCatchImpure . tMsg thaw
-    freeze       = runCatchImpure . tMsg freeze
-    unsafeThaw   = runCatchImpure . tMsg unsafeThaw
-    unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
+    thaw         = runCatchImpure . tFlipP thaw
+    freeze       = runCatchImpure . tFlipP freeze
+    unsafeThaw   = runCatchImpure . tFlipP unsafeThaw
+    unsafeFreeze = runCatchImpure . tFlipP unsafeFreeze
 
 -------------------------------------------------------------------------------
 -- Helpers for the above boilerplate Thaw instances
@@ -663,11 +622,11 @@ setIndex value i list = case list of
     setNIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMsg s) -> Int -> a -> m ()
     setNIndex NormalList{nPtr=M.WordPtr{pSegment, pAddr=WordAt{wordIndex}}} eltsPerWord value = do
         let eltWordIndex = wordIndex + WordCount (i `div` eltsPerWord)
-        word <- M.read pSegment wordIndex
+        word <- M.read pSegment eltWordIndex
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         M.write pSegment wordIndex $ replaceBits value word shift
     setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
-    setPtrIndex NormalList{nPtr=nPtr@M.WordPtr{pAddr=addr@WordAt{wordIndex}}, nLen} absPtr relPtr =
+    setPtrIndex NormalList{nPtr=nPtr@M.WordPtr{pAddr=addr@WordAt{wordIndex}}} absPtr relPtr =
         let srcPtr = nPtr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
         in setPointerTo srcPtr (ptrAddr absPtr) relPtr
 
@@ -677,9 +636,10 @@ setIndex value i list = case list of
 -- @dstAddr@ will contain a far pointer.
 setPointerTo :: M.WriteCtx m s => M.WordPtr (M.MutMsg s) -> WordAddr -> P.Ptr -> m ()
 setPointerTo
-        srcPtr@M.WordPtr
+        M.WordPtr
             { pMessage = msg
-            , pSegment=srcSegment, pAddr=srcAddr@WordAt{wordIndex=srcWordIndex}
+            , pSegment=srcSegment
+            , pAddr=srcAddr@WordAt{wordIndex=srcWordIndex}
             }
         dstAddr
         relPtr
@@ -807,7 +767,7 @@ index i list = invoice 1 >> index' list
         | i < len = get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     indexNList :: (ReadCtx m msg, Integral a) => NormalList msg -> Int -> m a
-    indexNList (NormalList M.WordPtr{pSegment, pAddr=addr@WordAt{..}} len) eltsPerWord
+    indexNList (NormalList M.WordPtr{pSegment, pAddr=WordAt{..}} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
             word <- M.read pSegment wordIndex'
