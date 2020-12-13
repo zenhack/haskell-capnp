@@ -962,9 +962,9 @@ allocListPtr msg len = ListOfPtr    <$> allocNormalList 64 msg len
 -- | Allocate a NormalList
 allocNormalList
     :: M.WriteCtx m s
-    => Int        -- ^ The number of elements per 64-bit word
+    => Int        -- ^ The number bits per element
     -> M.MutMsg s -- ^ The message to allocate in
-    -> Int        -- ^ The number of bits per element
+    -> Int        -- ^ The number of elements in the list.
     -> m (NormalList (M.MutMsg s))
 allocNormalList bitsPerElt msg len = do
     -- round 'len' up to the nearest word boundary.
