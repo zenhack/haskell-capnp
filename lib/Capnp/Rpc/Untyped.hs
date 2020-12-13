@@ -675,7 +675,7 @@ pipelineClient Pipeline{state, steps} = liftSTM $ do
             case r of
                 Left e -> breakPromise f e >> pure p
                 Right v ->
-                    (ptrPathClient (toList steps) v)
+                    ptrPathClient (toList steps) v
                     `catchSTM` (\e -> do
                         breakPromise f (wrapException False e)
                         pure p)
