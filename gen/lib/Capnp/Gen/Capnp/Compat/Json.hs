@@ -32,7 +32,7 @@ instance (Untyped.HasMessage (Value msg)) where
     type InMessage (Value msg) = msg
     message (Value'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Value msg)) where
-    messageDefault msg = (Value'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Value'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Value msg)) where
     fromPtr msg ptr = (Value'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Value (Message.MutMsg s))) where
@@ -160,7 +160,7 @@ instance (Untyped.HasMessage (Value'Field msg)) where
     type InMessage (Value'Field msg) = msg
     message (Value'Field'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Value'Field msg)) where
-    messageDefault msg = (Value'Field'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Value'Field'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Value'Field msg)) where
     fromPtr msg ptr = (Value'Field'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Value'Field (Message.MutMsg s))) where
@@ -230,7 +230,7 @@ instance (Untyped.HasMessage (Value'Call msg)) where
     type InMessage (Value'Call msg) = msg
     message (Value'Call'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Value'Call msg)) where
-    messageDefault msg = (Value'Call'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Value'Call'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Value'Call msg)) where
     fromPtr msg ptr = (Value'Call'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Value'Call (Message.MutMsg s))) where
@@ -300,7 +300,7 @@ instance (Untyped.HasMessage (FlattenOptions msg)) where
     type InMessage (FlattenOptions msg) = msg
     message (FlattenOptions'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (FlattenOptions msg)) where
-    messageDefault msg = (FlattenOptions'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (FlattenOptions'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (FlattenOptions msg)) where
     fromPtr msg ptr = (FlattenOptions'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (FlattenOptions (Message.MutMsg s))) where
@@ -350,7 +350,7 @@ instance (Untyped.HasMessage (DiscriminatorOptions msg)) where
     type InMessage (DiscriminatorOptions msg) = msg
     message (DiscriminatorOptions'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (DiscriminatorOptions msg)) where
-    messageDefault msg = (DiscriminatorOptions'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (DiscriminatorOptions'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (DiscriminatorOptions msg)) where
     fromPtr msg ptr = (DiscriminatorOptions'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (DiscriminatorOptions (Message.MutMsg s))) where

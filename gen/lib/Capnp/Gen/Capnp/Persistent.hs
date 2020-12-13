@@ -39,7 +39,7 @@ instance (Untyped.HasMessage (Persistent'SaveParams sturdyRef owner msg)) where
     type InMessage (Persistent'SaveParams sturdyRef owner msg) = msg
     message (Persistent'SaveParams'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Persistent'SaveParams sturdyRef owner msg)) where
-    messageDefault msg = (Persistent'SaveParams'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Persistent'SaveParams'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Persistent'SaveParams sturdyRef owner msg)) where
     fromPtr msg ptr = (Persistent'SaveParams'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Persistent'SaveParams sturdyRef owner (Message.MutMsg s))) where
@@ -83,7 +83,7 @@ instance (Untyped.HasMessage (Persistent'SaveResults sturdyRef owner msg)) where
     type InMessage (Persistent'SaveResults sturdyRef owner msg) = msg
     message (Persistent'SaveResults'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Persistent'SaveResults sturdyRef owner msg)) where
-    messageDefault msg = (Persistent'SaveResults'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Persistent'SaveResults'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Persistent'SaveResults sturdyRef owner msg)) where
     fromPtr msg ptr = (Persistent'SaveResults'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Persistent'SaveResults sturdyRef owner (Message.MutMsg s))) where
@@ -134,7 +134,7 @@ instance (Untyped.HasMessage (RealmGateway'import'params internalRef externalRef
     type InMessage (RealmGateway'import'params internalRef externalRef internalOwner externalOwner msg) = msg
     message (RealmGateway'import'params'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (RealmGateway'import'params internalRef externalRef internalOwner externalOwner msg)) where
-    messageDefault msg = (RealmGateway'import'params'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (RealmGateway'import'params'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (RealmGateway'import'params internalRef externalRef internalOwner externalOwner msg)) where
     fromPtr msg ptr = (RealmGateway'import'params'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (RealmGateway'import'params internalRef externalRef internalOwner externalOwner (Message.MutMsg s))) where
@@ -198,7 +198,7 @@ instance (Untyped.HasMessage (RealmGateway'export'params internalRef externalRef
     type InMessage (RealmGateway'export'params internalRef externalRef internalOwner externalOwner msg) = msg
     message (RealmGateway'export'params'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (RealmGateway'export'params internalRef externalRef internalOwner externalOwner msg)) where
-    messageDefault msg = (RealmGateway'export'params'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (RealmGateway'export'params'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (RealmGateway'export'params internalRef externalRef internalOwner externalOwner msg)) where
     fromPtr msg ptr = (RealmGateway'export'params'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (RealmGateway'export'params internalRef externalRef internalOwner externalOwner (Message.MutMsg s))) where

@@ -352,7 +352,7 @@ declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
             (EApp (egName ["Untyped"] "message") [ELName "struct"])
         ]
     , instance_ [] ["Untyped"] "MessageDefault" [containerTypeType (TVar "msg")]
-        [ iValue "messageDefault" [PVar "msg"] $ EApp
+        [ iValue "messageDefault" [PVar "msg"] $ EFApp
             (ELName dataCtor)
             [ EApp
                 (egName ["Untyped"] "messageDefault")

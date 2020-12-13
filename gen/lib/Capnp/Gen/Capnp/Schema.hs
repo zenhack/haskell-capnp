@@ -32,7 +32,7 @@ instance (Untyped.HasMessage (Node msg)) where
     type InMessage (Node msg) = msg
     message (Node'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node msg)) where
-    messageDefault msg = (Node'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Node msg)) where
     fromPtr msg ptr = (Node'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Node (Message.MutMsg s))) where
@@ -225,7 +225,7 @@ instance (Untyped.HasMessage (Node'struct msg)) where
     type InMessage (Node'struct msg) = msg
     message (Node'struct'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'struct msg)) where
-    messageDefault msg = (Node'struct'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'struct'newtype_ <$> (Untyped.messageDefault msg))
 get_Node'struct'dataWordCount :: ((Untyped.ReadCtx m msg)) => (Node'struct msg) -> (m Std_.Word16)
 get_Node'struct'dataWordCount (Node'struct'newtype_ struct) = (GenHelpers.getWordField struct 1 48 0)
 set_Node'struct'dataWordCount :: ((Untyped.RWCtx m s)) => (Node'struct (Message.MutMsg s)) -> Std_.Word16 -> (m ())
@@ -280,7 +280,7 @@ instance (Untyped.HasMessage (Node'enum msg)) where
     type InMessage (Node'enum msg) = msg
     message (Node'enum'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'enum msg)) where
-    messageDefault msg = (Node'enum'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'enum'newtype_ <$> (Untyped.messageDefault msg))
 get_Node'enum'enumerants :: ((Untyped.ReadCtx m msg)
                             ,(Classes.FromPtr msg (Basics.List msg (Enumerant msg)))) => (Node'enum msg) -> (m (Basics.List msg (Enumerant msg)))
 get_Node'enum'enumerants (Node'enum'newtype_ struct) = (do
@@ -311,7 +311,7 @@ instance (Untyped.HasMessage (Node'interface msg)) where
     type InMessage (Node'interface msg) = msg
     message (Node'interface'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'interface msg)) where
-    messageDefault msg = (Node'interface'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'interface'newtype_ <$> (Untyped.messageDefault msg))
 get_Node'interface'methods :: ((Untyped.ReadCtx m msg)
                               ,(Classes.FromPtr msg (Basics.List msg (Method msg)))) => (Node'interface msg) -> (m (Basics.List msg (Method msg)))
 get_Node'interface'methods (Node'interface'newtype_ struct) = (do
@@ -362,7 +362,7 @@ instance (Untyped.HasMessage (Node'const msg)) where
     type InMessage (Node'const msg) = msg
     message (Node'const'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'const msg)) where
-    messageDefault msg = (Node'const'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'const'newtype_ <$> (Untyped.messageDefault msg))
 get_Node'const'type_ :: ((Untyped.ReadCtx m msg)
                         ,(Classes.FromPtr msg (Type msg))) => (Node'const msg) -> (m (Type msg))
 get_Node'const'type_ (Node'const'newtype_ struct) = (do
@@ -413,7 +413,7 @@ instance (Untyped.HasMessage (Node'annotation msg)) where
     type InMessage (Node'annotation msg) = msg
     message (Node'annotation'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'annotation msg)) where
-    messageDefault msg = (Node'annotation'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'annotation'newtype_ <$> (Untyped.messageDefault msg))
 get_Node'annotation'type_ :: ((Untyped.ReadCtx m msg)
                              ,(Classes.FromPtr msg (Type msg))) => (Node'annotation msg) -> (m (Type msg))
 get_Node'annotation'type_ (Node'annotation'newtype_ struct) = (do
@@ -492,7 +492,7 @@ instance (Untyped.HasMessage (Node'Parameter msg)) where
     type InMessage (Node'Parameter msg) = msg
     message (Node'Parameter'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'Parameter msg)) where
-    messageDefault msg = (Node'Parameter'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'Parameter'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Node'Parameter msg)) where
     fromPtr msg ptr = (Node'Parameter'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Node'Parameter (Message.MutMsg s))) where
@@ -542,7 +542,7 @@ instance (Untyped.HasMessage (Node'NestedNode msg)) where
     type InMessage (Node'NestedNode msg) = msg
     message (Node'NestedNode'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'NestedNode msg)) where
-    messageDefault msg = (Node'NestedNode'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'NestedNode'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Node'NestedNode msg)) where
     fromPtr msg ptr = (Node'NestedNode'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Node'NestedNode (Message.MutMsg s))) where
@@ -596,7 +596,7 @@ instance (Untyped.HasMessage (Node'SourceInfo msg)) where
     type InMessage (Node'SourceInfo msg) = msg
     message (Node'SourceInfo'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'SourceInfo msg)) where
-    messageDefault msg = (Node'SourceInfo'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'SourceInfo'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Node'SourceInfo msg)) where
     fromPtr msg ptr = (Node'SourceInfo'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Node'SourceInfo (Message.MutMsg s))) where
@@ -670,7 +670,7 @@ instance (Untyped.HasMessage (Node'SourceInfo'Member msg)) where
     type InMessage (Node'SourceInfo'Member msg) = msg
     message (Node'SourceInfo'Member'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Node'SourceInfo'Member msg)) where
-    messageDefault msg = (Node'SourceInfo'Member'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Node'SourceInfo'Member'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Node'SourceInfo'Member msg)) where
     fromPtr msg ptr = (Node'SourceInfo'Member'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Node'SourceInfo'Member (Message.MutMsg s))) where
@@ -720,7 +720,7 @@ instance (Untyped.HasMessage (Field msg)) where
     type InMessage (Field msg) = msg
     message (Field'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Field msg)) where
-    messageDefault msg = (Field'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Field'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Field msg)) where
     fromPtr msg ptr = (Field'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Field (Message.MutMsg s))) where
@@ -833,7 +833,7 @@ instance (Untyped.HasMessage (Field'slot msg)) where
     type InMessage (Field'slot msg) = msg
     message (Field'slot'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Field'slot msg)) where
-    messageDefault msg = (Field'slot'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Field'slot'newtype_ <$> (Untyped.messageDefault msg))
 get_Field'slot'offset :: ((Untyped.ReadCtx m msg)) => (Field'slot msg) -> (m Std_.Word32)
 get_Field'slot'offset (Field'slot'newtype_ struct) = (GenHelpers.getWordField struct 0 32 0)
 set_Field'slot'offset :: ((Untyped.RWCtx m s)) => (Field'slot (Message.MutMsg s)) -> Std_.Word32 -> (m ())
@@ -892,7 +892,7 @@ instance (Untyped.HasMessage (Field'group msg)) where
     type InMessage (Field'group msg) = msg
     message (Field'group'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Field'group msg)) where
-    messageDefault msg = (Field'group'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Field'group'newtype_ <$> (Untyped.messageDefault msg))
 get_Field'group'typeId :: ((Untyped.ReadCtx m msg)) => (Field'group msg) -> (m Std_.Word64)
 get_Field'group'typeId (Field'group'newtype_ struct) = (GenHelpers.getWordField struct 2 0 0)
 set_Field'group'typeId :: ((Untyped.RWCtx m s)) => (Field'group (Message.MutMsg s)) -> Std_.Word64 -> (m ())
@@ -907,7 +907,7 @@ instance (Untyped.HasMessage (Field'ordinal msg)) where
     type InMessage (Field'ordinal msg) = msg
     message (Field'ordinal'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Field'ordinal msg)) where
-    messageDefault msg = (Field'ordinal'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Field'ordinal'newtype_ <$> (Untyped.messageDefault msg))
 data Field'ordinal' msg
     = Field'ordinal'implicit 
     | Field'ordinal'explicit Std_.Word16
@@ -950,7 +950,7 @@ instance (Untyped.HasMessage (Enumerant msg)) where
     type InMessage (Enumerant msg) = msg
     message (Enumerant'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Enumerant msg)) where
-    messageDefault msg = (Enumerant'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Enumerant'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Enumerant msg)) where
     fromPtr msg ptr = (Enumerant'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Enumerant (Message.MutMsg s))) where
@@ -1024,7 +1024,7 @@ instance (Untyped.HasMessage (Superclass msg)) where
     type InMessage (Superclass msg) = msg
     message (Superclass'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Superclass msg)) where
-    messageDefault msg = (Superclass'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Superclass'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Superclass msg)) where
     fromPtr msg ptr = (Superclass'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Superclass (Message.MutMsg s))) where
@@ -1078,7 +1078,7 @@ instance (Untyped.HasMessage (Method msg)) where
     type InMessage (Method msg) = msg
     message (Method'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Method msg)) where
-    messageDefault msg = (Method'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Method'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Method msg)) where
     fromPtr msg ptr = (Method'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Method (Message.MutMsg s))) where
@@ -1220,7 +1220,7 @@ instance (Untyped.HasMessage (Type msg)) where
     type InMessage (Type msg) = msg
     message (Type'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type msg)) where
-    messageDefault msg = (Type'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Type msg)) where
     fromPtr msg ptr = (Type'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Type (Message.MutMsg s))) where
@@ -1421,7 +1421,7 @@ instance (Untyped.HasMessage (Type'list msg)) where
     type InMessage (Type'list msg) = msg
     message (Type'list'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'list msg)) where
-    messageDefault msg = (Type'list'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'list'newtype_ <$> (Untyped.messageDefault msg))
 get_Type'list'elementType :: ((Untyped.ReadCtx m msg)
                              ,(Classes.FromPtr msg (Type msg))) => (Type'list msg) -> (m (Type msg))
 get_Type'list'elementType (Type'list'newtype_ struct) = (do
@@ -1452,7 +1452,7 @@ instance (Untyped.HasMessage (Type'enum msg)) where
     type InMessage (Type'enum msg) = msg
     message (Type'enum'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'enum msg)) where
-    messageDefault msg = (Type'enum'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'enum'newtype_ <$> (Untyped.messageDefault msg))
 get_Type'enum'typeId :: ((Untyped.ReadCtx m msg)) => (Type'enum msg) -> (m Std_.Word64)
 get_Type'enum'typeId (Type'enum'newtype_ struct) = (GenHelpers.getWordField struct 1 0 0)
 set_Type'enum'typeId :: ((Untyped.RWCtx m s)) => (Type'enum (Message.MutMsg s)) -> Std_.Word64 -> (m ())
@@ -1487,7 +1487,7 @@ instance (Untyped.HasMessage (Type'struct msg)) where
     type InMessage (Type'struct msg) = msg
     message (Type'struct'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'struct msg)) where
-    messageDefault msg = (Type'struct'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'struct'newtype_ <$> (Untyped.messageDefault msg))
 get_Type'struct'typeId :: ((Untyped.ReadCtx m msg)) => (Type'struct msg) -> (m Std_.Word64)
 get_Type'struct'typeId (Type'struct'newtype_ struct) = (GenHelpers.getWordField struct 1 0 0)
 set_Type'struct'typeId :: ((Untyped.RWCtx m s)) => (Type'struct (Message.MutMsg s)) -> Std_.Word64 -> (m ())
@@ -1522,7 +1522,7 @@ instance (Untyped.HasMessage (Type'interface msg)) where
     type InMessage (Type'interface msg) = msg
     message (Type'interface'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'interface msg)) where
-    messageDefault msg = (Type'interface'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'interface'newtype_ <$> (Untyped.messageDefault msg))
 get_Type'interface'typeId :: ((Untyped.ReadCtx m msg)) => (Type'interface msg) -> (m Std_.Word64)
 get_Type'interface'typeId (Type'interface'newtype_ struct) = (GenHelpers.getWordField struct 1 0 0)
 set_Type'interface'typeId :: ((Untyped.RWCtx m s)) => (Type'interface (Message.MutMsg s)) -> Std_.Word64 -> (m ())
@@ -1557,7 +1557,7 @@ instance (Untyped.HasMessage (Type'anyPointer msg)) where
     type InMessage (Type'anyPointer msg) = msg
     message (Type'anyPointer'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'anyPointer msg)) where
-    messageDefault msg = (Type'anyPointer'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'anyPointer'newtype_ <$> (Untyped.messageDefault msg))
 data Type'anyPointer' msg
     = Type'anyPointer'unconstrained (Type'anyPointer'unconstrained msg)
     | Type'anyPointer'parameter (Type'anyPointer'parameter msg)
@@ -1609,7 +1609,7 @@ instance (Untyped.HasMessage (Type'anyPointer'unconstrained msg)) where
     type InMessage (Type'anyPointer'unconstrained msg) = msg
     message (Type'anyPointer'unconstrained'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'anyPointer'unconstrained msg)) where
-    messageDefault msg = (Type'anyPointer'unconstrained'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'anyPointer'unconstrained'newtype_ <$> (Untyped.messageDefault msg))
 data Type'anyPointer'unconstrained' msg
     = Type'anyPointer'unconstrained'anyKind 
     | Type'anyPointer'unconstrained'struct 
@@ -1666,7 +1666,7 @@ instance (Untyped.HasMessage (Type'anyPointer'parameter msg)) where
     type InMessage (Type'anyPointer'parameter msg) = msg
     message (Type'anyPointer'parameter'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'anyPointer'parameter msg)) where
-    messageDefault msg = (Type'anyPointer'parameter'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'anyPointer'parameter'newtype_ <$> (Untyped.messageDefault msg))
 get_Type'anyPointer'parameter'scopeId :: ((Untyped.ReadCtx m msg)) => (Type'anyPointer'parameter msg) -> (m Std_.Word64)
 get_Type'anyPointer'parameter'scopeId (Type'anyPointer'parameter'newtype_ struct) = (GenHelpers.getWordField struct 2 0 0)
 set_Type'anyPointer'parameter'scopeId :: ((Untyped.RWCtx m s)) => (Type'anyPointer'parameter (Message.MutMsg s)) -> Std_.Word64 -> (m ())
@@ -1685,7 +1685,7 @@ instance (Untyped.HasMessage (Type'anyPointer'implicitMethodParameter msg)) wher
     type InMessage (Type'anyPointer'implicitMethodParameter msg) = msg
     message (Type'anyPointer'implicitMethodParameter'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Type'anyPointer'implicitMethodParameter msg)) where
-    messageDefault msg = (Type'anyPointer'implicitMethodParameter'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Type'anyPointer'implicitMethodParameter'newtype_ <$> (Untyped.messageDefault msg))
 get_Type'anyPointer'implicitMethodParameter'parameterIndex :: ((Untyped.ReadCtx m msg)) => (Type'anyPointer'implicitMethodParameter msg) -> (m Std_.Word16)
 get_Type'anyPointer'implicitMethodParameter'parameterIndex (Type'anyPointer'implicitMethodParameter'newtype_ struct) = (GenHelpers.getWordField struct 1 16 0)
 set_Type'anyPointer'implicitMethodParameter'parameterIndex :: ((Untyped.RWCtx m s)) => (Type'anyPointer'implicitMethodParameter (Message.MutMsg s)) -> Std_.Word16 -> (m ())
@@ -1700,7 +1700,7 @@ instance (Untyped.HasMessage (Brand msg)) where
     type InMessage (Brand msg) = msg
     message (Brand'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Brand msg)) where
-    messageDefault msg = (Brand'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Brand'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Brand msg)) where
     fromPtr msg ptr = (Brand'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Brand (Message.MutMsg s))) where
@@ -1750,7 +1750,7 @@ instance (Untyped.HasMessage (Brand'Scope msg)) where
     type InMessage (Brand'Scope msg) = msg
     message (Brand'Scope'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Brand'Scope msg)) where
-    messageDefault msg = (Brand'Scope'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Brand'Scope'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Brand'Scope msg)) where
     fromPtr msg ptr = (Brand'Scope'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Brand'Scope (Message.MutMsg s))) where
@@ -1821,7 +1821,7 @@ instance (Untyped.HasMessage (Brand'Binding msg)) where
     type InMessage (Brand'Binding msg) = msg
     message (Brand'Binding'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Brand'Binding msg)) where
-    messageDefault msg = (Brand'Binding'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Brand'Binding'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Brand'Binding msg)) where
     fromPtr msg ptr = (Brand'Binding'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Brand'Binding (Message.MutMsg s))) where
@@ -1888,7 +1888,7 @@ instance (Untyped.HasMessage (Value msg)) where
     type InMessage (Value msg) = msg
     message (Value'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Value msg)) where
-    messageDefault msg = (Value'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Value'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Value msg)) where
     fromPtr msg ptr = (Value'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Value (Message.MutMsg s))) where
@@ -2119,7 +2119,7 @@ instance (Untyped.HasMessage (Annotation msg)) where
     type InMessage (Annotation msg) = msg
     message (Annotation'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Annotation msg)) where
-    messageDefault msg = (Annotation'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Annotation'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Annotation msg)) where
     fromPtr msg ptr = (Annotation'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Annotation (Message.MutMsg s))) where
@@ -2249,7 +2249,7 @@ instance (Untyped.HasMessage (CapnpVersion msg)) where
     type InMessage (CapnpVersion msg) = msg
     message (CapnpVersion'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (CapnpVersion msg)) where
-    messageDefault msg = (CapnpVersion'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (CapnpVersion'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (CapnpVersion msg)) where
     fromPtr msg ptr = (CapnpVersion'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (CapnpVersion (Message.MutMsg s))) where
@@ -2291,7 +2291,7 @@ instance (Untyped.HasMessage (CodeGeneratorRequest msg)) where
     type InMessage (CodeGeneratorRequest msg) = msg
     message (CodeGeneratorRequest'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (CodeGeneratorRequest msg)) where
-    messageDefault msg = (CodeGeneratorRequest'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (CodeGeneratorRequest'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (CodeGeneratorRequest msg)) where
     fromPtr msg ptr = (CodeGeneratorRequest'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (CodeGeneratorRequest (Message.MutMsg s))) where
@@ -2401,7 +2401,7 @@ instance (Untyped.HasMessage (CodeGeneratorRequest'RequestedFile msg)) where
     type InMessage (CodeGeneratorRequest'RequestedFile msg) = msg
     message (CodeGeneratorRequest'RequestedFile'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (CodeGeneratorRequest'RequestedFile msg)) where
-    messageDefault msg = (CodeGeneratorRequest'RequestedFile'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (CodeGeneratorRequest'RequestedFile'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (CodeGeneratorRequest'RequestedFile msg)) where
     fromPtr msg ptr = (CodeGeneratorRequest'RequestedFile'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (CodeGeneratorRequest'RequestedFile (Message.MutMsg s))) where
@@ -2475,7 +2475,7 @@ instance (Untyped.HasMessage (CodeGeneratorRequest'RequestedFile'Import msg)) wh
     type InMessage (CodeGeneratorRequest'RequestedFile'Import msg) = msg
     message (CodeGeneratorRequest'RequestedFile'Import'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (CodeGeneratorRequest'RequestedFile'Import msg)) where
-    messageDefault msg = (CodeGeneratorRequest'RequestedFile'Import'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (CodeGeneratorRequest'RequestedFile'Import'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (CodeGeneratorRequest'RequestedFile'Import msg)) where
     fromPtr msg ptr = (CodeGeneratorRequest'RequestedFile'Import'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (CodeGeneratorRequest'RequestedFile'Import (Message.MutMsg s))) where

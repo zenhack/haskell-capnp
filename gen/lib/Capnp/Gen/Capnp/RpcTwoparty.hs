@@ -64,7 +64,7 @@ instance (Untyped.HasMessage (VatId msg)) where
     type InMessage (VatId msg) = msg
     message (VatId'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (VatId msg)) where
-    messageDefault msg = (VatId'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (VatId'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (VatId msg)) where
     fromPtr msg ptr = (VatId'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (VatId (Message.MutMsg s))) where
@@ -98,7 +98,7 @@ instance (Untyped.HasMessage (ProvisionId msg)) where
     type InMessage (ProvisionId msg) = msg
     message (ProvisionId'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (ProvisionId msg)) where
-    messageDefault msg = (ProvisionId'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (ProvisionId'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (ProvisionId msg)) where
     fromPtr msg ptr = (ProvisionId'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (ProvisionId (Message.MutMsg s))) where
@@ -132,7 +132,7 @@ instance (Untyped.HasMessage (RecipientId msg)) where
     type InMessage (RecipientId msg) = msg
     message (RecipientId'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (RecipientId msg)) where
-    messageDefault msg = (RecipientId'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (RecipientId'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (RecipientId msg)) where
     fromPtr msg ptr = (RecipientId'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (RecipientId (Message.MutMsg s))) where
@@ -162,7 +162,7 @@ instance (Untyped.HasMessage (ThirdPartyCapId msg)) where
     type InMessage (ThirdPartyCapId msg) = msg
     message (ThirdPartyCapId'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (ThirdPartyCapId msg)) where
-    messageDefault msg = (ThirdPartyCapId'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (ThirdPartyCapId'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (ThirdPartyCapId msg)) where
     fromPtr msg ptr = (ThirdPartyCapId'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (ThirdPartyCapId (Message.MutMsg s))) where
@@ -192,7 +192,7 @@ instance (Untyped.HasMessage (JoinKeyPart msg)) where
     type InMessage (JoinKeyPart msg) = msg
     message (JoinKeyPart'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (JoinKeyPart msg)) where
-    messageDefault msg = (JoinKeyPart'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (JoinKeyPart'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (JoinKeyPart msg)) where
     fromPtr msg ptr = (JoinKeyPart'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (JoinKeyPart (Message.MutMsg s))) where
@@ -234,7 +234,7 @@ instance (Untyped.HasMessage (JoinResult msg)) where
     type InMessage (JoinResult msg) = msg
     message (JoinResult'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (JoinResult msg)) where
-    messageDefault msg = (JoinResult'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (JoinResult'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (JoinResult msg)) where
     fromPtr msg ptr = (JoinResult'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (JoinResult (Message.MutMsg s))) where

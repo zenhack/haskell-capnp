@@ -32,7 +32,7 @@ instance (Untyped.HasMessage (Message msg)) where
     type InMessage (Message msg) = msg
     message (Message'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Message msg)) where
-    messageDefault msg = (Message'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Message'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Message msg)) where
     fromPtr msg ptr = (Message'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Message (Message.MutMsg s))) where
@@ -286,7 +286,7 @@ instance (Untyped.HasMessage (Bootstrap msg)) where
     type InMessage (Bootstrap msg) = msg
     message (Bootstrap'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Bootstrap msg)) where
-    messageDefault msg = (Bootstrap'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Bootstrap'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Bootstrap msg)) where
     fromPtr msg ptr = (Bootstrap'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Bootstrap (Message.MutMsg s))) where
@@ -334,7 +334,7 @@ instance (Untyped.HasMessage (Call msg)) where
     type InMessage (Call msg) = msg
     message (Call'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Call msg)) where
-    messageDefault msg = (Call'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Call'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Call msg)) where
     fromPtr msg ptr = (Call'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Call (Message.MutMsg s))) where
@@ -423,7 +423,7 @@ instance (Untyped.HasMessage (Call'sendResultsTo msg)) where
     type InMessage (Call'sendResultsTo msg) = msg
     message (Call'sendResultsTo'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Call'sendResultsTo msg)) where
-    messageDefault msg = (Call'sendResultsTo'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Call'sendResultsTo'newtype_ <$> (Untyped.messageDefault msg))
 data Call'sendResultsTo' msg
     = Call'sendResultsTo'caller 
     | Call'sendResultsTo'yourself 
@@ -479,7 +479,7 @@ instance (Untyped.HasMessage (Return msg)) where
     type InMessage (Return msg) = msg
     message (Return'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Return msg)) where
-    messageDefault msg = (Return'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Return'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Return msg)) where
     fromPtr msg ptr = (Return'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Return (Message.MutMsg s))) where
@@ -600,7 +600,7 @@ instance (Untyped.HasMessage (Finish msg)) where
     type InMessage (Finish msg) = msg
     message (Finish'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Finish msg)) where
-    messageDefault msg = (Finish'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Finish'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Finish msg)) where
     fromPtr msg ptr = (Finish'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Finish (Message.MutMsg s))) where
@@ -638,7 +638,7 @@ instance (Untyped.HasMessage (Resolve msg)) where
     type InMessage (Resolve msg) = msg
     message (Resolve'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Resolve msg)) where
-    messageDefault msg = (Resolve'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Resolve'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Resolve msg)) where
     fromPtr msg ptr = (Resolve'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Resolve (Message.MutMsg s))) where
@@ -716,7 +716,7 @@ instance (Untyped.HasMessage (Release msg)) where
     type InMessage (Release msg) = msg
     message (Release'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Release msg)) where
-    messageDefault msg = (Release'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Release'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Release msg)) where
     fromPtr msg ptr = (Release'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Release (Message.MutMsg s))) where
@@ -754,7 +754,7 @@ instance (Untyped.HasMessage (Disembargo msg)) where
     type InMessage (Disembargo msg) = msg
     message (Disembargo'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Disembargo msg)) where
-    messageDefault msg = (Disembargo'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Disembargo'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Disembargo msg)) where
     fromPtr msg ptr = (Disembargo'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Disembargo (Message.MutMsg s))) where
@@ -807,7 +807,7 @@ instance (Untyped.HasMessage (Disembargo'context msg)) where
     type InMessage (Disembargo'context msg) = msg
     message (Disembargo'context'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Disembargo'context msg)) where
-    messageDefault msg = (Disembargo'context'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Disembargo'context'newtype_ <$> (Untyped.messageDefault msg))
 data Disembargo'context' msg
     = Disembargo'context'senderLoopback Std_.Word32
     | Disembargo'context'receiverLoopback Std_.Word32
@@ -864,7 +864,7 @@ instance (Untyped.HasMessage (Provide msg)) where
     type InMessage (Provide msg) = msg
     message (Provide'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Provide msg)) where
-    messageDefault msg = (Provide'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Provide'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Provide msg)) where
     fromPtr msg ptr = (Provide'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Provide (Message.MutMsg s))) where
@@ -932,7 +932,7 @@ instance (Untyped.HasMessage (Accept msg)) where
     type InMessage (Accept msg) = msg
     message (Accept'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Accept msg)) where
-    messageDefault msg = (Accept'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Accept'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Accept msg)) where
     fromPtr msg ptr = (Accept'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Accept (Message.MutMsg s))) where
@@ -984,7 +984,7 @@ instance (Untyped.HasMessage (Join msg)) where
     type InMessage (Join msg) = msg
     message (Join'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Join msg)) where
-    messageDefault msg = (Join'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Join'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Join msg)) where
     fromPtr msg ptr = (Join'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Join (Message.MutMsg s))) where
@@ -1052,7 +1052,7 @@ instance (Untyped.HasMessage (MessageTarget msg)) where
     type InMessage (MessageTarget msg) = msg
     message (MessageTarget'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (MessageTarget msg)) where
-    messageDefault msg = (MessageTarget'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (MessageTarget'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (MessageTarget msg)) where
     fromPtr msg ptr = (MessageTarget'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (MessageTarget (Message.MutMsg s))) where
@@ -1119,7 +1119,7 @@ instance (Untyped.HasMessage (Payload msg)) where
     type InMessage (Payload msg) = msg
     message (Payload'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Payload msg)) where
-    messageDefault msg = (Payload'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Payload'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Payload msg)) where
     fromPtr msg ptr = (Payload'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Payload (Message.MutMsg s))) where
@@ -1183,7 +1183,7 @@ instance (Untyped.HasMessage (CapDescriptor msg)) where
     type InMessage (CapDescriptor msg) = msg
     message (CapDescriptor'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (CapDescriptor msg)) where
-    messageDefault msg = (CapDescriptor'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (CapDescriptor'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (CapDescriptor msg)) where
     fromPtr msg ptr = (CapDescriptor'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (CapDescriptor (Message.MutMsg s))) where
@@ -1293,7 +1293,7 @@ instance (Untyped.HasMessage (PromisedAnswer msg)) where
     type InMessage (PromisedAnswer msg) = msg
     message (PromisedAnswer'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (PromisedAnswer msg)) where
-    messageDefault msg = (PromisedAnswer'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (PromisedAnswer'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (PromisedAnswer msg)) where
     fromPtr msg ptr = (PromisedAnswer'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (PromisedAnswer (Message.MutMsg s))) where
@@ -1347,7 +1347,7 @@ instance (Untyped.HasMessage (PromisedAnswer'Op msg)) where
     type InMessage (PromisedAnswer'Op msg) = msg
     message (PromisedAnswer'Op'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (PromisedAnswer'Op msg)) where
-    messageDefault msg = (PromisedAnswer'Op'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (PromisedAnswer'Op'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (PromisedAnswer'Op msg)) where
     fromPtr msg ptr = (PromisedAnswer'Op'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (PromisedAnswer'Op (Message.MutMsg s))) where
@@ -1407,7 +1407,7 @@ instance (Untyped.HasMessage (ThirdPartyCapDescriptor msg)) where
     type InMessage (ThirdPartyCapDescriptor msg) = msg
     message (ThirdPartyCapDescriptor'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (ThirdPartyCapDescriptor msg)) where
-    messageDefault msg = (ThirdPartyCapDescriptor'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (ThirdPartyCapDescriptor'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (ThirdPartyCapDescriptor msg)) where
     fromPtr msg ptr = (ThirdPartyCapDescriptor'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (ThirdPartyCapDescriptor (Message.MutMsg s))) where
@@ -1455,7 +1455,7 @@ instance (Untyped.HasMessage (Exception msg)) where
     type InMessage (Exception msg) = msg
     message (Exception'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (Exception msg)) where
-    messageDefault msg = (Exception'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (Exception'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (Exception msg)) where
     fromPtr msg ptr = (Exception'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (Exception (Message.MutMsg s))) where

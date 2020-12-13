@@ -32,7 +32,7 @@ instance (Untyped.HasMessage (StreamResult msg)) where
     type InMessage (StreamResult msg) = msg
     message (StreamResult'newtype_ struct) = (Untyped.message struct)
 instance (Untyped.MessageDefault (StreamResult msg)) where
-    messageDefault msg = (StreamResult'newtype_ (Untyped.messageDefault msg))
+    messageDefault msg = (StreamResult'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (StreamResult msg)) where
     fromPtr msg ptr = (StreamResult'newtype_ <$> (Classes.fromPtr msg ptr))
 instance (Classes.ToPtr s (StreamResult (Message.MutMsg s))) where
