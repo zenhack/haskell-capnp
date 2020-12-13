@@ -385,7 +385,7 @@ class HasMessage a where
 -- for generated code, so that it can use standard decoding techniques
 -- on default values.
 class HasMessage a => MessageDefault a where
-    messageDefault :: InMessage a -> a
+    messageDefault :: ReadCtx m (InMessage a) => InMessage a -> m a
 
 instance HasMessage (M.WordPtr msg) where
     type InMessage (M.WordPtr msg) = msg
@@ -409,7 +409,9 @@ instance HasMessage (Struct msg) where
     message (Struct ptr _ _) = message ptr
 
 instance MessageDefault (Struct msg) where
-    messageDefault msg = Struct msg (WordAt 0 0) 0 0
+    messageDefault msg = do
+        pSegment <- M.getSegment msg 0
+        pure $ Struct M.WordPtr{pMessage = msg, pSegment, pAddr = WordAt 0 0} 0 0
 
 instance HasMessage (List msg) where
     type InMessage (List msg) = msg
@@ -436,21 +438,21 @@ instance HasMessage (ListOf msg a) where
     message (ListOfPtr list)     = message list
 
 instance MessageDefault (ListOf msg ()) where
-    messageDefault msg = ListOfVoid (messageDefault msg)
+    messageDefault msg = ListOfVoid <$> messageDefault msg
 instance MessageDefault (ListOf msg (Struct msg)) where
-    messageDefault msg = ListOfStruct (messageDefault msg) 0
+    messageDefault msg = flip ListOfStruct 0 <$> messageDefault msg
 instance MessageDefault (ListOf msg Bool) where
-    messageDefault msg = ListOfBool (messageDefault msg)
+    messageDefault msg = ListOfBool <$> messageDefault msg
 instance MessageDefault (ListOf msg Word8) where
-    messageDefault msg = ListOfWord8 (messageDefault msg)
+    messageDefault msg = ListOfWord8 <$> messageDefault msg
 instance MessageDefault (ListOf msg Word16) where
-    messageDefault msg = ListOfWord16 (messageDefault msg)
+    messageDefault msg = ListOfWord16 <$> messageDefault msg
 instance MessageDefault (ListOf msg Word32) where
-    messageDefault msg = ListOfWord32 (messageDefault msg)
+    messageDefault msg = ListOfWord32 <$> messageDefault msg
 instance MessageDefault (ListOf msg Word64) where
-    messageDefault msg = ListOfWord64 (messageDefault msg)
+    messageDefault msg = ListOfWord64 <$> messageDefault msg
 instance MessageDefault (ListOf msg (Maybe (Ptr msg))) where
-    messageDefault msg = ListOfPtr (messageDefault msg)
+    messageDefault msg = ListOfPtr <$> messageDefault msg
 
 instance HasMessage (NormalList msg) where
     type InMessage (NormalList msg) = msg
@@ -458,7 +460,12 @@ instance HasMessage (NormalList msg) where
     message = M.pMessage . nPtr
 
 instance MessageDefault (NormalList msg) where
-    messageDefault msg = NormalList msg (WordAt 0 0) 0
+    messageDefault msg = do
+        pSegment <- M.getSegment msg 0
+        pure NormalList
+            { nPtr = M.WordPtr { pMessage = msg, pSegment, pAddr = WordAt 0 0 }
+            , nLen = 0
+            }
 
 getClient :: ReadCtx m msg => Cap msg -> m M.Client
 getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
@@ -882,7 +889,7 @@ rootPtr msg = do
         }
     case root of
         Just (PtrStruct struct) -> pure struct
-        Nothing -> pure (messageDefault msg)
+        Nothing -> messageDefault msg
         _ -> throwM $ E.SchemaViolationError
                 "Unexpected root type; expected struct."
 
