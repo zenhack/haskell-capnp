@@ -1,3 +1,7 @@
+# 0.9.0.0
+
+* Significant performance improvements in the RPC layer
+
 # 0.8.0.0
 
 ## Serialization
