@@ -638,7 +638,7 @@ setIndex value i list = case list of
 -- | @'setPointerTo' msg srcLoc dstAddr relPtr@ sets the word at @srcLoc@ in @msg@ to a
 -- pointer like @relPtr@, but pointing to @dstAddr@. @relPtr@ should not be a far pointer.
 -- If the two addresses are in different segments, a landing pad will be allocated and
--- @dstAddr@ will contain a far pointer.
+-- @srcLoc@ will contain a far pointer.
 setPointerTo :: M.WriteCtx m s => M.WordPtr (M.MutMsg s) -> WordAddr -> P.Ptr -> m ()
 setPointerTo
         M.WordPtr
