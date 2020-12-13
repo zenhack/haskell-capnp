@@ -48,6 +48,7 @@ module Capnp.Message (
     , newMessage
 
     -- ** Allocating space in messages
+    , WordPtr(..)
     , alloc
     , allocInSeg
     , newSegment
@@ -55,6 +56,7 @@ module Capnp.Message (
     -- ** Modifying messages
     , setSegment
     , setWord
+    , write
     , setCap
     , appendCap
 
@@ -114,6 +116,19 @@ maxSegments = 1024
 -- | The maximum number of capabilities allowed in a message by this library.
 maxCaps :: Int
 maxCaps = 512
+
+-- | A pointer to a location in a message. This encodes the same
+-- information as a 'WordAddr', but also includes direct references
+-- to the segment and message, which can improve performance in very
+-- low-level code.
+data WordPtr msg = WordPtr
+    -- invariants:
+    -- * pAddr's segment index refers to pSegment.
+    -- * pSegment is in pMessage.
+    { pMessage :: !msg
+    , pSegment :: !(Segment msg)
+    , pAddr    :: !WordAddr
+    }
 
 -- | A 'Message' is a (possibly read-only) capnproto message. It is
 -- parameterized over a monad in which operations are performed.
@@ -441,20 +456,26 @@ newSegment msg@MutMsg{mutSegs} sizeHint = do
 
 -- | Like 'alloc', but the second argument allows the caller to specify the
 -- index of the segment in which to allocate the data.
-allocInSeg :: WriteCtx m s => MutMsg s -> Int -> WordCount -> m WordAddr
+allocInSeg :: WriteCtx m s => MutMsg s -> Int -> WordCount -> m (WordPtr (MutMsg s))
 allocInSeg msg segIndex (WordCount size) = do
     oldSeg@(MutSegment vec) <- getSegment msg segIndex
-    let ret = WordAt
+    let addr = WordAt
             { segIndex
             , wordIndex = WordCount $ GMV.length $ AppendVec.getVector vec
             }
     newSeg <- grow oldSeg size
     setSegment msg segIndex newSeg
-    pure ret
+    pure WordPtr
+        { pAddr = addr
+        , pSegment = newSeg
+        , pMessage = msg
+        }
 
 -- | @'alloc' size@ allocates 'size' words within a message. it returns the
--- starting address of the allocated memory.
-alloc :: WriteCtx m s => MutMsg s -> WordCount -> m WordAddr
+-- starting address of the allocated memory, as well as a direct reference
+-- to the segment. The latter is redundant information, but this is used
+-- in low-level code where this can improve performance.
+alloc :: WriteCtx m s => MutMsg s -> WordCount -> m (WordPtr (MutMsg s))
 alloc msg size@(WordCount sizeInt) = do
     segIndex <- pred <$> numSegs msg
     MutSegment vec <- getSegment msg segIndex

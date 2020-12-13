@@ -65,7 +65,7 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Capnp.Address (OffsetError (..), WordAddr (..), pointerFrom)
+import Capnp.Address        (OffsetError (..), WordAddr (..), pointerFrom)
 import Capnp.Bits
     ( BitCount (..)
     , ByteCount (..)
@@ -112,9 +112,8 @@ data List msg
 
 -- | A "normal" (non-composite) list.
 data NormalList msg = NormalList
-    { nMsg  :: msg
-    , nAddr :: WordAddr
-    , nLen  :: Int
+    { nPtr :: !(M.WordPtr msg)
+    , nLen :: !Int
     }
 
 -- | A list of values of type 'a' in a message.
@@ -138,8 +137,7 @@ data Cap msg = Cap msg !Word32
 -- | A struct value in a message.
 data Struct msg
     = Struct
-        msg
-        !WordAddr -- Start of struct
+        !(M.WordPtr msg) -- Start of struct
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
@@ -156,6 +154,16 @@ data Struct msg
 class TraverseMsg f where
     tMsg :: Applicative m => (msgA -> m msgB) -> f msgA -> m (f msgB)
 
+instance TraverseMsg M.WordPtr where
+    tMsg f M.WordPtr{pMessage, pAddr=pAddr@WordAt{segIndex}} = do
+        msg' <- f pMessage
+        seg' <- M.getSegment msg' segIndex
+        pure M.WordPtr
+            { pMessage = msg'
+            , pSegment = seg'
+            , pAddr
+            }
+
 instance TraverseMsg Ptr where
     tMsg f = \case
         PtrCap cap ->
@@ -169,9 +177,8 @@ instance TraverseMsg Cap where
     tMsg f (Cap msg n) = Cap <$> f msg <*> pure n
 
 instance TraverseMsg Struct where
-    tMsg f (Struct msg addr dataSz ptrSz) = Struct
-        <$> f msg
-        <*> pure addr
+    tMsg f (Struct ptr dataSz ptrSz) = Struct
+        <$> tMsg f ptr
         <*> pure dataSz
         <*> pure ptrSz
 
@@ -188,8 +195,8 @@ instance TraverseMsg List where
 
 instance TraverseMsg NormalList where
     tMsg f NormalList{..} = do
-        msg <- f nMsg
-        pure NormalList { nMsg = msg, .. }
+        ptr <- tMsg f nPtr
+        pure NormalList { nPtr = ptr, .. }
 
 -------------------------------------------------------------------------------
 -- newtype wrappers for the purpose of implementing 'TraverseMsg'; these adjust
@@ -380,6 +387,10 @@ class HasMessage a where
 class HasMessage a => MessageDefault a where
     messageDefault :: InMessage a -> a
 
+instance HasMessage (M.WordPtr msg) where
+    type InMessage (M.WordPtr msg) = msg
+    message M.WordPtr{pMessage} = pMessage
+
 instance HasMessage (Ptr msg) where
     type InMessage (Ptr msg) = msg
 
@@ -395,7 +406,7 @@ instance HasMessage (Cap msg) where
 instance HasMessage (Struct msg) where
     type InMessage (Struct msg) = msg
 
-    message (Struct msg _ _ _) = msg
+    message (Struct ptr _ _) = message ptr
 
 instance MessageDefault (Struct msg) where
     messageDefault msg = Struct msg (WordAt 0 0) 0 0
@@ -444,7 +455,7 @@ instance MessageDefault (ListOf msg (Maybe (Ptr msg))) where
 instance HasMessage (NormalList msg) where
     type InMessage (NormalList msg) = msg
 
-    message = nMsg
+    message = M.pMessage . nPtr
 
 instance MessageDefault (NormalList msg) where
     messageDefault msg = NormalList msg (WordAt 0 0) 0
@@ -452,48 +463,59 @@ instance MessageDefault (NormalList msg) where
 getClient :: ReadCtx m msg => Cap msg -> m M.Client
 getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
 
--- | @get msg addr@ returns the Ptr stored at @addr@ in @msg@.
+-- | @get ptr@ returns the Ptr stored at @ptr@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
-get :: ReadCtx m msg => msg -> WordAddr -> m (Maybe (Ptr msg))
-get msg addr = do
-    word <- getWord msg addr
+get :: ReadCtx m msg => M.WordPtr msg -> m (Maybe (Ptr msg))
+get ptr@M.WordPtr{pMessage, pAddr} = do
+    word <- getWord ptr
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
-            P.CapPtr cap -> return $ Just $ PtrCap (Cap msg cap)
+            P.CapPtr cap -> return $ Just $ PtrCap (Cap pMessage cap)
             P.StructPtr off dataSz ptrSz -> return $ Just $ PtrStruct $
-                Struct msg (resolveOffset addr off) dataSz ptrSz
-            P.ListPtr off eltSpec -> Just <$> getList (resolveOffset addr off) eltSpec
+                Struct ptr { M.pAddr = resolveOffset pAddr off } dataSz ptrSz
+            P.ListPtr off eltSpec -> Just <$>
+                getList ptr { M.pAddr = resolveOffset pAddr off } eltSpec
             P.FarPtr twoWords offset segment -> do
+                pSegment <- M.getSegment pMessage (fromIntegral segment)
                 let addr' = WordAt { wordIndex = fromIntegral offset
                                    , segIndex = fromIntegral segment
                                    }
                 if not twoWords
-                    then get msg addr'
+                    then get M.WordPtr{pMessage, pSegment, pAddr = addr' }
                     else do
-                        landingPad <- getWord msg addr'
+                        landingPad <- getWord M.WordPtr { pMessage, pSegment, M.pAddr = addr' }
                         case P.parsePtr landingPad of
                             Just (P.FarPtr False off seg) -> do
-                                tagWord <- getWord
-                                            msg
-                                            addr' { wordIndex = wordIndex addr' + 1 }
-                                let finalAddr = WordAt { wordIndex = fromIntegral off
-                                                       , segIndex = fromIntegral seg
-                                                       }
+                                let segIndex = fromIntegral seg
+                                pSegment <- M.getSegment pMessage segIndex
+                                tagWord <- getWord M.WordPtr
+                                    { pMessage
+                                    , pSegment
+                                    , M.pAddr = addr' { wordIndex = wordIndex addr' + 1 }
+                                    }
+                                let finalPtr = M.WordPtr
+                                        { pMessage
+                                        , pSegment
+                                        , pAddr = WordAt
+                                            { wordIndex = fromIntegral off
+                                            , segIndex
+                                            }
+                                        }
                                 case P.parsePtr tagWord of
                                     Just (P.StructPtr 0 dataSz ptrSz) ->
                                         return $ Just $ PtrStruct $
-                                            Struct msg finalAddr dataSz ptrSz
+                                            Struct finalPtr dataSz ptrSz
                                     Just (P.ListPtr 0 eltSpec) ->
-                                        Just <$> getList finalAddr eltSpec
+                                        Just <$> getList finalPtr eltSpec
                                     -- TODO: I'm not sure whether far pointers to caps are
                                     -- legal; it's clear how they would work, but I don't
                                     -- see a use, and the spec is unclear. Should check
                                     -- how the reference implementation does this, copy
                                     -- that, and submit a patch to the spec.
                                     Just (P.CapPtr cap) ->
-                                        return $ Just $ PtrCap (Cap msg cap)
+                                        return $ Just $ PtrCap (Cap pMessage cap)
                                     ptr -> throwM $ E.InvalidDataError $
                                         "The tag word of a far pointer's " ++
                                         "2-word landing pad should be an intra " ++
@@ -506,10 +528,11 @@ get msg addr = do
                                 show ptr
 
   where
-    getWord msg addr = invoice 1 *> M.getWord msg addr
+    getWord M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} =
+        invoice 1 *> M.read pSegment wordIndex
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
-    getList addr@WordAt{..} eltSpec = PtrList <$>
+    getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
         case eltSpec of
             P.EltNormal sz len -> pure $ case sz of
                 Sz0   -> List0  (ListOfVoid    nlist)
@@ -520,14 +543,13 @@ get msg addr = do
                 Sz64  -> List64 (ListOfWord64  nlist)
                 SzPtr -> ListPtr (ListOfPtr nlist)
               where
-                nlist = NormalList msg addr (fromIntegral len)
+                nlist = NormalList ptr (fromIntegral len)
             P.EltComposite _ -> do
-                tagWord <- getWord msg addr
+                tagWord <- getWord ptr
                 case P.parsePtr' tagWord of
                     P.StructPtr numElts dataSz ptrSz ->
                         pure $ ListStruct $ ListOfStruct
-                            (Struct msg
-                                    addr { wordIndex = wordIndex + 1 }
+                            (Struct ptr { M.pAddr = addr { wordIndex = wordIndex + 1 } }
                                     dataSz
                                     ptrSz)
                             (fromIntegral numElts)
@@ -537,7 +559,7 @@ get msg addr = do
 
 -- | Return the EltSpec needed for a pointer to the given list.
 listEltSpec :: List msg -> P.EltSpec
-listEltSpec (ListStruct list@(ListOfStruct (Struct _ _ dataSz ptrSz) _)) =
+listEltSpec (ListStruct list@(ListOfStruct (Struct _ dataSz ptrSz) _)) =
     P.EltComposite $ fromIntegral (length list) * (fromIntegral dataSz + fromIntegral ptrSz)
 listEltSpec (List0 list)   = P.EltNormal Sz0 $ fromIntegral (length list)
 listEltSpec (List1 list)   = P.EltNormal Sz1 $ fromIntegral (length list)
@@ -549,23 +571,23 @@ listEltSpec (ListPtr list) = P.EltNormal SzPtr $ fromIntegral (length list)
 
 -- | Return the starting address of the list.
 listAddr :: List msg -> WordAddr
-listAddr (ListStruct (ListOfStruct (Struct _ addr _ _) _)) =
-    -- addr is the address of the first element of the list, but
+listAddr (ListStruct (ListOfStruct (Struct M.WordPtr{pAddr} _ _) _)) =
+    -- pAddr is the address of the first element of the list, but
     -- composite lists start with a tag word:
-    addr { wordIndex = wordIndex addr - 1 }
-listAddr (List0 (ListOfVoid NormalList{nAddr})) = nAddr
-listAddr (List1 (ListOfBool NormalList{nAddr})) = nAddr
-listAddr (List8 (ListOfWord8 NormalList{nAddr})) = nAddr
-listAddr (List16 (ListOfWord16 NormalList{nAddr})) = nAddr
-listAddr (List32 (ListOfWord32 NormalList{nAddr})) = nAddr
-listAddr (List64 (ListOfWord64 NormalList{nAddr})) = nAddr
-listAddr (ListPtr (ListOfPtr NormalList{nAddr})) = nAddr
+    pAddr { wordIndex = wordIndex pAddr - 1 }
+listAddr (List0 (ListOfVoid NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
+listAddr (List1 (ListOfBool NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
+listAddr (List8 (ListOfWord8 NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
+listAddr (List16 (ListOfWord16 NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
+listAddr (List32 (ListOfWord32 NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
+listAddr (List64 (ListOfWord64 NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
+listAddr (ListPtr (ListOfPtr NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
 
 -- | Return the address of the pointer's target. It is illegal to call this on
 -- a pointer which targets a capability.
 ptrAddr :: Ptr msg -> WordAddr
 ptrAddr (PtrCap _) = error "ptrAddr called on a capability pointer."
-ptrAddr (PtrStruct (Struct _ addr _ _)) = addr
+ptrAddr (PtrStruct (Struct M.WordPtr{pAddr}_ _)) = pAddr
 ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
@@ -587,32 +609,39 @@ setIndex value i list = case list of
         Just (PtrCap (Cap _ cap))    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
         Just p@(PtrList ptrList)     ->
             setPtrIndex nlist p $ P.ListPtr 0 (listEltSpec ptrList)
-        Just p@(PtrStruct (Struct _ _ dataSz ptrSz)) ->
+        Just p@(PtrStruct (Struct _ dataSz ptrSz)) ->
             setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
     list@(ListOfStruct _ _) -> do
         dest <- index i list
         copyStruct dest value
   where
     setNIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMsg s) -> Int -> a -> m ()
-    setNIndex NormalList{nAddr=nAddr@WordAt{..},..} eltsPerWord value = do
-        let wordAddr = nAddr { wordIndex = wordIndex + WordCount (i `div` eltsPerWord) }
-        word <- M.getWord nMsg wordAddr
+    setNIndex NormalList{nPtr=M.WordPtr{pSegment, pAddr=WordAt{wordIndex}}} eltsPerWord value = do
+        let eltWordIndex = wordIndex + WordCount (i `div` eltsPerWord)
+        word <- M.read pSegment wordIndex
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
-        M.setWord nMsg wordAddr $ replaceBits value word shift
+        M.write pSegment wordIndex $ replaceBits value word shift
     setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
-    setPtrIndex NormalList{..} absPtr relPtr =
-        let srcAddr = nAddr { wordIndex = wordIndex nAddr + WordCount i }
-        in setPointerTo nMsg srcAddr (ptrAddr absPtr) relPtr
+    setPtrIndex NormalList{nPtr=nPtr@M.WordPtr{pAddr=addr@WordAt{wordIndex}}, nLen} absPtr relPtr =
+        let srcPtr = nPtr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
+        in setPointerTo srcPtr (ptrAddr absPtr) relPtr
 
--- | @'setPointerTo' msg srcAddr dstAddr relPtr@ sets the word at @srcAddr@ in @msg@ to a
+-- | @'setPointerTo' msg srcLoc dstAddr relPtr@ sets the word at @srcLoc@ in @msg@ to a
 -- pointer like @relPtr@, but pointing to @dstAddr@. @relPtr@ should not be a far pointer.
 -- If the two addresses are in different segments, a landing pad will be allocated and
 -- @dstAddr@ will contain a far pointer.
-setPointerTo :: M.WriteCtx m s => M.MutMsg s -> WordAddr -> WordAddr -> P.Ptr -> m ()
-setPointerTo msg srcAddr dstAddr relPtr =
+setPointerTo :: M.WriteCtx m s => M.WordPtr (M.MutMsg s) -> WordAddr -> P.Ptr -> m ()
+setPointerTo
+        srcPtr@M.WordPtr
+            { pMessage = msg
+            , pSegment=srcSegment, pAddr=srcAddr@WordAt{wordIndex=srcWordIndex}
+            }
+        dstAddr
+        relPtr
+    =
     case pointerFrom srcAddr dstAddr relPtr of
         Right absPtr ->
-            M.setWord msg srcAddr (P.serializePtr $ Just absPtr)
+            M.write srcSegment srcWordIndex $ P.serializePtr $ Just absPtr
         Left OutOfRange ->
             error "BUG: segment is too large to set the pointer."
         Left DifferentSegments -> do
@@ -620,12 +649,13 @@ setPointerTo msg srcAddr dstAddr relPtr =
             -- set it to point to the final destination, an then set the source pointer
             -- pointer to point to the landing pad.
             let WordAt{segIndex} = dstAddr
-            landingPadAddr <- M.allocInSeg msg segIndex 1
+            M.WordPtr{pSegment=landingPadSegment, pAddr=landingPadAddr}
+                <- M.allocInSeg msg segIndex 1
             case pointerFrom landingPadAddr dstAddr relPtr of
                 Right landingPad -> do
-                    M.setWord msg landingPadAddr (P.serializePtr $ Just landingPad)
                     let WordAt{segIndex,wordIndex} = landingPadAddr
-                    M.setWord msg srcAddr $
+                    M.write landingPadSegment wordIndex (P.serializePtr $ Just landingPad)
+                    M.write srcSegment srcWordIndex $
                         P.serializePtr $ Just $ P.FarPtr False (fromIntegral wordIndex) (fromIntegral segIndex)
                 Left DifferentSegments ->
                     error "BUG: allocated a landing pad in the wrong segment!"
@@ -713,11 +743,11 @@ index i list = invoice 1 >> index' list
     index' (ListOfVoid nlist)
         | i < nLen nlist = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = nLen nlist - 1 }
-    index' (ListOfStruct (Struct msg addr@WordAt{..} dataSz ptrSz) len)
+    index' (ListOfStruct (Struct ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) len)
         | i < len = do
             let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
             let addr' = addr { wordIndex = wordIndex + offset }
-            return $ Struct msg addr' dataSz ptrSz
+            return $ Struct ptr { M.pAddr = addr' } dataSz ptrSz
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
@@ -725,17 +755,17 @@ index i list = invoice 1 >> index' list
     index' (ListOfWord8  nlist) = indexNList nlist 8
     index' (ListOfWord16 nlist) = indexNList nlist 4
     index' (ListOfWord32 nlist) = indexNList nlist 2
-    index' (ListOfWord64 (NormalList msg addr@WordAt{..} len))
-        | i < len = M.getWord msg addr { wordIndex = wordIndex + WordCount i }
+    index' (ListOfWord64 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len))
+        | i < len = M.read pSegment $ wordIndex + WordCount i
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' (ListOfPtr (NormalList msg addr@WordAt{..} len))
-        | i < len = get msg addr { wordIndex = wordIndex + WordCount i }
+    index' (ListOfPtr (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} len))
+        | i < len = get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
     indexNList :: (ReadCtx m msg, Integral a) => NormalList msg -> Int -> m a
-    indexNList (NormalList msg addr@WordAt{..} len) eltsPerWord
+    indexNList (NormalList M.WordPtr{pSegment, pAddr=addr@WordAt{..}} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
-            word <- M.getWord msg addr { wordIndex = wordIndex' }
+            word <- M.read pSegment wordIndex'
             let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
             pure $ fromIntegral $ word `shiftR` shift
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
@@ -772,20 +802,20 @@ take count list
 
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct msg -> ListOf msg Word64
-dataSection (Struct msg addr dataSz _) =
-    ListOfWord64 $ NormalList msg addr (fromIntegral dataSz)
+dataSection (Struct ptr dataSz _) =
+    ListOfWord64 $ NormalList ptr (fromIntegral dataSz)
 
 -- | The pointer section of a struct, as a list of Ptr
 ptrSection :: Struct msg -> ListOf msg (Maybe (Ptr msg))
-ptrSection (Struct msg addr@WordAt{..} dataSz ptrSz) =
+ptrSection (Struct ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} dataSz ptrSz) =
     ListOfPtr $ NormalList
-        msg
-        addr { wordIndex = wordIndex + fromIntegral dataSz }
-        (fromIntegral ptrSz)
+        { nPtr = ptr { M.pAddr = addr { wordIndex = wordIndex + fromIntegral dataSz } }
+        , nLen = fromIntegral ptrSz
+        }
 
 -- | Get the size (in words) of a struct's data section.
 structWordCount :: Struct msg -> WordCount
-structWordCount (Struct _msg _addr dataSz _ptrSz) = fromIntegral dataSz
+structWordCount (Struct _ptr dataSz _ptrSz) = fromIntegral dataSz
 
 -- | Get the size (in bytes) of a struct's data section.
 structByteCount :: Struct msg -> ByteCount
@@ -793,7 +823,7 @@ structByteCount = wordsToBytes . structWordCount
 
 -- | Get the size of a struct's pointer section.
 structPtrCount  :: Struct msg -> Word16
-structPtrCount (Struct _msg _addr _dataSz ptrSz) = ptrSz
+structPtrCount (Struct _ptr _dataSz ptrSz) = ptrSz
 
 -- | Get the size (in words) of the data sections in a struct list.
 structListWordCount :: ListOf msg (Struct msg) -> WordCount
@@ -834,9 +864,9 @@ setPtr value i = setIndex value i . ptrSection
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
 rawBytes :: ReadCtx m msg => ListOf msg Word8 -> m BS.ByteString
-rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
+rawBytes (ListOfWord8 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len)) = do
     invoice $ fromIntegral $ bytesToWordsCeil (ByteCount len)
-    bytes <- M.getSegment msg segIndex >>= M.toByteString
+    bytes <- M.toByteString pSegment
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
 
@@ -844,7 +874,12 @@ rawBytes (ListOfWord8 (NormalList msg WordAt{..} len)) = do
 -- | Returns the root pointer of a message.
 rootPtr :: ReadCtx m msg => msg -> m (Struct msg)
 rootPtr msg = do
-    root <- get msg (WordAt 0 0)
+    seg <- M.getSegment msg 0
+    root <- get M.WordPtr
+        { pMessage = msg
+        , pSegment = seg
+        , pAddr = WordAt 0 0
+        }
     case root of
         Just (PtrStruct struct) -> pure struct
         Nothing -> pure (messageDefault msg)
@@ -854,15 +889,17 @@ rootPtr msg = do
 
 -- | Make the given struct the root object of its message.
 setRoot :: M.WriteCtx m s => Struct (M.MutMsg s) -> m ()
-setRoot (Struct msg addr dataSz ptrSz) =
-    setPointerTo msg (WordAt 0 0) addr (P.StructPtr 0 dataSz ptrSz)
+setRoot (Struct M.WordPtr{pMessage, pAddr=addr} dataSz ptrSz) = do
+    pSegment <- M.getSegment pMessage 0
+    let rootPtr = M.WordPtr{pMessage, pSegment, pAddr = WordAt 0 0}
+    setPointerTo rootPtr addr (P.StructPtr 0 dataSz ptrSz)
 
 -- | Allocate a struct in the message.
 allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))
 allocStruct msg dataSz ptrSz = do
     let totalSz = fromIntegral dataSz + fromIntegral ptrSz
-    addr <- M.alloc msg totalSz
-    pure $ Struct msg addr dataSz ptrSz
+    ptr <- M.alloc msg totalSz
+    pure $ Struct ptr dataSz ptrSz
 
 -- | Allocate a composite list.
 allocCompositeList
@@ -874,11 +911,11 @@ allocCompositeList
     -> m (ListOf (M.MutMsg s) (Struct (M.MutMsg s)))
 allocCompositeList msg dataSz ptrSz len = do
     let eltSize = fromIntegral dataSz + fromIntegral ptrSz
-    addr <- M.alloc msg (WordCount $ len * eltSize + 1) -- + 1 for the tag word.
-    M.setWord msg addr $ P.serializePtr' $ P.StructPtr (fromIntegral len) dataSz ptrSz
+    ptr@M.WordPtr{pSegment, pAddr=addr@WordAt{wordIndex}}
+        <- M.alloc msg (WordCount $ len * eltSize + 1) -- + 1 for the tag word.
+    M.write pSegment wordIndex $ P.serializePtr' $ P.StructPtr (fromIntegral len) dataSz ptrSz
     let firstStruct = Struct
-            msg
-            addr { wordIndex = wordIndex addr + 1 }
+            ptr { M.pAddr = addr { wordIndex = wordIndex + 1 } }
             dataSz
             ptrSz
     pure $ ListOfStruct firstStruct len
@@ -923,12 +960,8 @@ allocNormalList bitsPerElt msg len = do
     -- round 'len' up to the nearest word boundary.
     let totalBits = BitCount (len * bitsPerElt)
         totalWords = bytesToWordsCeil $ bitsToBytesCeil totalBits
-    addr <- M.alloc msg totalWords
-    pure NormalList
-        { nMsg = msg
-        , nAddr = addr
-        , nLen = len
-        }
+    ptr <- M.alloc msg totalWords
+    pure NormalList { nPtr = ptr, nLen = len }
 
 appendCap :: M.WriteCtx m s => M.MutMsg s -> M.Client -> m (Cap (M.MutMsg s))
 appendCap msg client = do
