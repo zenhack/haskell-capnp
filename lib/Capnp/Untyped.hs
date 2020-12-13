@@ -482,26 +482,31 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
             P.ListPtr off eltSpec -> Just <$>
                 getList ptr { M.pAddr = resolveOffset pAddr off } eltSpec
             P.FarPtr twoWords offset segment -> do
-                pSegment <- M.getSegment pMessage (fromIntegral segment)
+                landingSegment <- M.getSegment pMessage (fromIntegral segment)
                 let addr' = WordAt { wordIndex = fromIntegral offset
                                    , segIndex = fromIntegral segment
                                    }
+                let landingPtr = M.WordPtr
+                        { pMessage
+                        , pSegment = landingSegment
+                        , pAddr = addr'
+                        }
                 if not twoWords
-                    then get M.WordPtr{pMessage, pSegment, pAddr = addr' }
+                    then get landingPtr
                     else do
-                        landingPad <- getWord M.WordPtr { pMessage, pSegment, M.pAddr = addr' }
+                        landingPad <- getWord landingPtr
                         case P.parsePtr landingPad of
                             Just (P.FarPtr False off seg) -> do
                                 let segIndex = fromIntegral seg
-                                pSegment <- M.getSegment pMessage segIndex
+                                finalSegment <- M.getSegment pMessage segIndex
                                 tagWord <- getWord M.WordPtr
                                     { pMessage
-                                    , pSegment
+                                    , pSegment = landingSegment
                                     , M.pAddr = addr' { wordIndex = wordIndex addr' + 1 }
                                     }
                                 let finalPtr = M.WordPtr
                                         { pMessage
-                                        , pSegment
+                                        , pSegment = finalSegment
                                         , pAddr = WordAt
                                             { wordIndex = fromIntegral off
                                             , segIndex
