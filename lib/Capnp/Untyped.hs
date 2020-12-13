@@ -1,14 +1,15 @@
-{-# LANGUAGE ApplicativeDo         #-}
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ApplicativeDo              #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-|
 Module: Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.
@@ -60,8 +61,12 @@ import Prelude hiding (length, take)
 import Data.Bits
 import Data.Word
 
-import Control.Monad       (forM_)
-import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Exception.Safe    (impureThrow)
+import Control.Monad             (forM_)
+import Control.Monad.Catch       (MonadCatch, MonadThrow(throwM))
+import Control.Monad.Catch.Pure  (CatchT(runCatchT))
+import Control.Monad.Primitive   (PrimMonad (..))
+import Control.Monad.Trans.Class (MonadTrans(lift))
 
 import qualified Data.ByteString as BS
 
@@ -141,18 +146,29 @@ data Struct msg
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
--- | 'TraverseMsg' is basically 'Traversable' from the prelude, but
+-- | N.B. this should mostly be considered an implementation detail, but
+-- it is exposed because it is used by generated code.
+--
+-- 'TraverseMsg' is similar to 'Traversable' from the prelude, but
 -- the intent is that rather than conceptually being a "container",
 -- the instance is a value backed by a message, and the point of the
 -- type class is to be able to apply transformations to the underlying
 -- message.
 --
--- We don't just use 'Traversable' for this because while algebraically
--- it makes sense, it would be very unintuitive to e.g. have the
--- 'Traversable' instance for 'List' not traverse over the *elements*
--- of the list.
+-- We don't just use 'Traversable' for this for two reasons:
+--
+-- 1. While algebraically it makes sense, it would be very unintuitive to
+--    e.g. have the 'Traversable' instance for 'List' not traverse over the
+--    *elements* of the list.
+-- 2. For the instance for WordPtr, we actually need a stronger constraint than
+--    Applicative in order for the implementation to type check. A previous
+--    version of the library *did* have @tMsg :: Applicative m => ...@, but
+--    performance considerations eventually forced us to open up the hood a
+--    bit.
 class TraverseMsg f where
-    tMsg :: Applicative m => (msgA -> m msgB) -> f msgA -> m (f msgB)
+    tMsg :: TraverseMsgCtx m msgA msgB => (msgA -> m msgB) -> f msgA -> m (f msgB)
+
+type TraverseMsgCtx m msgA msgB = (MonadThrow m, M.Message m msgA, M.Message m msgB)
 
 instance TraverseMsg M.WordPtr where
     tMsg f M.WordPtr{pMessage, pAddr=pAddr@WordAt{segIndex}} = do
@@ -250,8 +266,9 @@ instance TraverseMsg FlipListS where
         FlipListS <$> (ListOfStruct <$> tMsg f tag <*> pure size)
 
 -- helpers for applying tMsg to a @ListOf@.
-tFlip  :: (TraverseMsg (FlipList a), Applicative m) => (msgA -> m msg) -> ListOf msgA a -> m (ListOf msg a)
-tFlipS :: Applicative m => (msgA -> m msg) -> ListOf msgA (Struct msgA) -> m (ListOf msg (Struct msg))
+tFlip  :: (TraverseMsg (FlipList a), TraverseMsgCtx m msgA msg)
+    => (msgA -> m msg) -> ListOf msgA a -> m (ListOf msg a)
+tFlipS :: TraverseMsgCtx m msgA msg => (msgA -> m msg) -> ListOf msgA (Struct msgA) -> m (ListOf msg (Struct msg))
 tFlipP :: Applicative m => (msgA -> m msg) -> ListOf msgA (Maybe (Ptr msgA)) -> m (ListOf msg (Maybe (Ptr msg)))
 tFlip  f list  = unflip  <$> tMsg f (FlipList  list)
 tFlipS f list  = unflipS <$> tMsg f (FlipListS list)
@@ -360,13 +377,34 @@ instance Thaw msg => Thaw (ListOf msg (Maybe (Ptr msg))) where
     unsafeThaw   = tFlipP unsafeThaw
     unsafeFreeze = tFlipP unsafeFreeze
 
-instance Thaw msg => Thaw (Struct msg) where
-    type Mutable s (Struct msg) = Struct (Mutable s msg)
+instance Thaw (Struct M.ConstMsg) where
+    type Mutable s (Struct M.ConstMsg) = Struct (Mutable s M.ConstMsg)
 
-    thaw         = tMsg thaw
-    freeze       = tMsg freeze
-    unsafeThaw   = tMsg unsafeThaw
-    unsafeFreeze = tMsg unsafeFreeze
+    thaw         = runCatchImpure . tMsg thaw
+    freeze       = runCatchImpure . tMsg freeze
+    unsafeThaw   = runCatchImpure . tMsg unsafeThaw
+    unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
+
+-------------------------------------------------------------------------------
+-- Helpers for the above boilerplate Thaw instances
+-------------------------------------------------------------------------------
+
+-- trivial wrapaper around CatchT, so we can add a PrimMonad instance.
+newtype CatchTWrap m a = CatchTWrap { runCatchTWrap :: CatchT m a }
+    deriving(Functor, Applicative, Monad, MonadTrans, MonadThrow, MonadCatch)
+
+instance PrimMonad m => PrimMonad (CatchTWrap m) where
+    type PrimState (CatchTWrap m) = PrimState m
+    primitive = lift . primitive
+
+-- | @runCatchImpure m@ runs @m@, and if it throws, raises the
+-- exception with 'impureThrow'.
+runCatchImpure :: Monad m => CatchTWrap m a -> m a
+runCatchImpure m = do
+    res <- runCatchT $ runCatchTWrap m
+    pure $ case res of
+        Left e  -> impureThrow e
+        Right v -> v
 
 -------------------------------------------------------------------------------
 
