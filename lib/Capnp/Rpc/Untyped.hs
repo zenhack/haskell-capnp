@@ -63,12 +63,20 @@ import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
 import Control.Exception.Safe
-    (Exception, MonadThrow, bracket, throwIO, throwM, try)
+    ( Exception
+    , MonadThrow
+    , SomeException
+    , bracket
+    , fromException
+    , throwIO
+    , throwM
+    , try
+    )
 import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (for_, toList, traverse_)
 import Data.Hashable            (Hashable, hash, hashWithSalt)
-import Data.Maybe               (catMaybes)
+import Data.Maybe               (catMaybes, fromMaybe)
 import Data.String              (fromString)
 import Data.Text                (Text)
 import Data.Typeable            (Typeable)
@@ -153,6 +161,12 @@ data RpcError
     | SentAbort R.Exception
     -- ^ We sent an abort to the remote vat.
     deriving(Show, Eq, Generic)
+
+makeAbortExn :: Bool -> SomeException -> RpcError
+makeAbortExn debugMode e =
+    fromMaybe
+        (SentAbort (wrapException debugMode e))
+        (fromException e)
 
 instance Exception RpcError
 
@@ -1120,7 +1134,7 @@ coordinator :: Conn -> IO ()
 -- more about the objects in question; See Note [Organization] for more info.
 coordinator conn@Conn{debugMode} = forever $ atomically $ do
     conn'@Conn'{recvQ} <- getLive conn
-    flip catchSTM (abortConn conn' . wrapException debugMode) $ do
+    flip catchSTM (throwSTM . makeAbortExn debugMode) $ do
         capnpMsg <- readTBQueue recvQ
         evalLimitT defaultLimit $ do
             root <- UntypedRaw.rootPtr capnpMsg >>= fromStruct
