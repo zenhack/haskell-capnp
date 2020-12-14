@@ -327,7 +327,7 @@ instance ToStruct msg (Struct msg) where
     toStruct = id
 
 instance FromPtr msg (Struct msg) where
-    fromPtr msg Nothing            = messageDefault msg >>= fromStruct where
+    fromPtr msg Nothing            = messageDefault msg >>= fromStruct
     fromPtr _ (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                    = expected "pointer to struct"
 instance ToPtr s (Struct (M.MutMsg s)) where
