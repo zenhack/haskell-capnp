@@ -629,7 +629,7 @@ setIndex value i list = case list of
         let eltWordIndex = wordIndex + WordCount (i `div` eltsPerWord)
         word <- M.read pSegment eltWordIndex
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
-        M.write pSegment wordIndex $ replaceBits value word shift
+        M.write pSegment eltWordIndex $ replaceBits value word shift
     setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
     setPtrIndex NormalList{nPtr=nPtr@M.WordPtr{pAddr=addr@WordAt{wordIndex}}} absPtr relPtr =
         let srcPtr = nPtr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
