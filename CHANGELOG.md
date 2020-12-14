@@ -1,6 +1,7 @@
 # 0.9.0.0
 
-* Significant performance improvements in the RPC layer
+* Significant performance improvements. A few low level APIs have been
+  changed to support this work.
 
 # 0.8.0.0
 

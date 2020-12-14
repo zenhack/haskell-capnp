@@ -75,8 +75,6 @@ data EltSpec
     -- length of the list in words.
     deriving(Show, Eq)
 
-
-
 -- | @'parsePtr' word@ parses word as a capnproto pointer. A null pointer is
 -- parsed as 'Nothing'.
 parsePtr :: Word64 -> Maybe Ptr
