@@ -75,7 +75,7 @@ import Data.Bits (shiftL)
 
 import Control.Monad             (void, when, (>=>))
 import Control.Monad.Catch       (MonadThrow (..))
-import Control.Monad.Primitive   (PrimMonad, PrimState)
+import Control.Monad.Primitive   (PrimMonad, PrimState, stToPrim)
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
@@ -255,7 +255,7 @@ instance Monad m => Message m ConstMsg where
     numWords (ConstSegment vec) = pure $ WordCount $ SV.length vec
     slice (WordCount start) (WordCount len) (ConstSegment vec) =
         pure $ ConstSegment (SV.slice start len vec)
-    read (ConstSegment vec) i = fromLE64 <$> vec `SV.indexM` fromIntegral i
+    read (ConstSegment vec) i = pure $! fromLE64 $! vec SV.! fromIntegral i
 
     -- FIXME: Verify that the pointer is actually 64-bit aligned before casting.
     fromByteString (PS fptr offset len) =
@@ -396,8 +396,8 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
         , used :: MutVar s WordCount
         }
 
-    numWords MutSegment{used} = readMutVar used
-    slice (WordCount start) (WordCount len) (MutSegment{vec, used}) = do
+    numWords MutSegment{used} = stToPrim $ readMutVar used
+    slice (WordCount start) (WordCount len) (MutSegment{vec, used}) = stToPrim $ do
         WordCount end <- readMutVar used
         let len' = min (end - start) len
         used' <- newMutVar $ WordCount len'
@@ -405,9 +405,9 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
             { vec = SMV.slice start len' vec
             , used = used'
             }
-    read MutSegment{vec} i = do
+    read MutSegment{vec} i = stToPrim $
         fromLE64 <$> SMV.read vec (fromIntegral i)
-    fromByteString bytes = do
+    fromByteString bytes = stToPrim $ do
         vec <- constSegToVec <$> fromByteString bytes
         mvec <- SV.thaw vec
         used <- newMutVar (WordCount $ SV.length vec)
@@ -419,12 +419,12 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
         seg <- freeze mseg
         toByteString (seg :: Segment ConstMsg)
 
-    numSegs MutMsg{mutSegs} = GMV.length . AppendVec.getVector <$> readMutVar mutSegs
-    numCaps MutMsg{mutCaps} = GMV.length . AppendVec.getVector <$> readMutVar mutCaps
-    internalGetSeg MutMsg{mutSegs} i = do
+    numSegs MutMsg{mutSegs} = stToPrim $ GMV.length . AppendVec.getVector <$> readMutVar mutSegs
+    numCaps MutMsg{mutCaps} = stToPrim $ GMV.length . AppendVec.getVector <$> readMutVar mutCaps
+    internalGetSeg MutMsg{mutSegs} i = stToPrim $ do
         segs <- AppendVec.getVector <$> readMutVar mutSegs
         MV.read segs i
-    internalGetCap MutMsg{mutCaps} i = do
+    internalGetCap MutMsg{mutCaps} i = stToPrim $ do
         caps <- AppendVec.getVector <$> readMutVar mutCaps
         MV.read caps i
 
