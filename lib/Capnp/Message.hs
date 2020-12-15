@@ -397,7 +397,7 @@ instance (PrimMonad m, s ~ PrimState m) => Message m (MutMsg s) where
         }
 
     numWords MutSegment{used} = stToPrim $ readMutVar used
-    slice (WordCount start) (WordCount len) (MutSegment{vec, used}) = stToPrim $ do
+    slice (WordCount start) (WordCount len) MutSegment{vec, used} = stToPrim $ do
         WordCount end <- readMutVar used
         let len' = min (end - start) len
         used' <- newMutVar $ WordCount len'
@@ -441,7 +441,7 @@ internalSetSeg MutMsg{mutSegs} segIndex seg = do
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
 write :: WriteCtx m s => Segment (MutMsg s) -> WordCount -> Word64 -> m ()
-write (MutSegment{vec}) (WordCount i) val = do
+write MutSegment{vec} (WordCount i) val = do
     SMV.write vec i (toLE64 val)
 
 -- | @'newSegment' msg sizeHint@ allocates a new, initially empty segment in
@@ -470,9 +470,9 @@ newSegment msg@MutMsg{mutSegs} sizeHint = do
 -- insufficient space in that segment..
 allocInSeg :: WriteCtx m s => MutMsg s -> Int -> WordCount -> m (Maybe (WordPtr (MutMsg s)))
 allocInSeg msg segIndex size = do
-    seg@(MutSegment{vec, used}) <- getSegment msg segIndex
+    seg@MutSegment{vec, used} <- getSegment msg segIndex
     nextAlloc <- readMutVar used
-    if (WordCount (SMV.length vec) - nextAlloc < size)
+    if WordCount (SMV.length vec) - nextAlloc < size
         then pure Nothing
         else (do
             writeMutVar used $! nextAlloc + size
@@ -563,7 +563,7 @@ freezeSeg
     => (SMV.MVector s Word64 -> m (SV.Vector Word64))
     -> Segment (MutMsg s)
     -> m (Segment ConstMsg)
-freezeSeg freeze (MutSegment{vec, used}) = do
+freezeSeg freeze MutSegment{vec, used} = do
     WordCount len <- readMutVar used
     ConstSegment <$> freeze (SMV.take len vec)
 
