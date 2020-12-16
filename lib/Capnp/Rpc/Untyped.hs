@@ -1361,7 +1361,7 @@ followPtrs (_:_) (Just _) =
     throwM $ eFailed "Tried to access pointer field of non-struct."
 
 sendRawMsg :: Conn' -> ConstMsg -> STM ()
-sendRawMsg conn' msg = writeTBQueue (sendQ conn') msg
+sendRawMsg conn' = writeTBQueue (sendQ conn')
 
 sendCall :: Conn' -> Call -> STM ()
 sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{content, capTable}} =
