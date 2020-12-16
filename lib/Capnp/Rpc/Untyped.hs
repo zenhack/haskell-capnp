@@ -797,6 +797,13 @@ data PromisedAnswer = PromisedAnswer
     { answerId  :: !QAId
     , transform :: SnocList Word16
     }
+data Call = Call
+    { questionId  :: !QAId
+    , target      :: !MsgTarget
+    , interfaceId :: !Word64
+    , methodId    :: !Word16
+    , params      :: !Payload
+    }
 data Return = Return
     { answerId         :: !QAId
     , releaseParamCaps :: !Bool
@@ -894,13 +901,13 @@ callRemote
         target = do
     conn'@Conn'{questions} <- getLive conn
     qid <- newQuestion conn'
-    payload@R.Payload{capTable} <- makeOutgoingPayload conn arguments
-    sendPureMsg conn' $ R.Message'call def
-        { R.questionId = qaWord qid
-        , R.target = marshalMsgTarget target
-        , R.params = payload
-        , R.interfaceId = interfaceId
-        , R.methodId = methodId
+    payload@Payload{capTable} <- makeOutgoingPayload conn arguments
+    sendCall conn' Call
+        { questionId = qid
+        , target = target
+        , params = payload
+        , interfaceId
+        , methodId
         }
     -- save these in case the callee sends back releaseParamCaps = True in the return
     -- message:
@@ -1353,10 +1360,37 @@ followPtrs (i:is) (Just (UntypedRaw.PtrStruct struct)) =
 followPtrs (_:_) (Just _) =
     throwM $ eFailed "Tried to access pointer field of non-struct."
 
+sendRawMsg :: Conn' -> ConstMsg -> STM ()
+sendRawMsg conn' msg = writeTBQueue (sendQ conn') msg
+
+sendCall :: Conn' -> Call -> STM ()
+sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{content, capTable}} =
+    sendRawMsg conn' =<< createPure defaultLimit (do
+        mcontent <- thaw content
+        msg <- case mcontent of
+            Just v  -> pure $ UntypedRaw.message v
+            Nothing -> Message.newMessage Nothing
+        mcapTable <- cerialize msg capTable
+        payload <- new msg
+        RawRpc.set_Payload'content payload mcontent
+        RawRpc.set_Payload'capTable payload mcapTable
+        call <- new msg
+        RawRpc.set_Call'params call payload
+        RawRpc.set_Call'questionId call (qaWord questionId)
+        RawRpc.set_Call'interfaceId call interfaceId
+        RawRpc.set_Call'methodId call methodId
+        tgt <- cerialize msg $ marshalMsgTarget target
+        RawRpc.set_Call'target call tgt
+        rpcMsg <- new msg
+        RawRpc.set_Message'call rpcMsg call
+        UntypedRaw.setRoot (toStruct rpcMsg)
+        pure msg
+    )
+
 sendReturn :: Conn' -> Return -> STM ()
 sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
-    Return'results Payload{content, capTable} -> do
-        msg <- createPure defaultLimit $ do
+    Return'results Payload{content, capTable} ->
+        sendRawMsg conn' =<< createPure defaultLimit (do
             mcontent <- thaw content
             msg <- case mcontent of
                 Just v  -> pure $ UntypedRaw.message v
@@ -1373,7 +1407,7 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             RawRpc.set_Message'return rpcMsg ret
             UntypedRaw.setRoot (toStruct rpcMsg)
             pure msg
-        writeTBQueue (sendQ conn') msg
+        )
     Return'exception exn ->
         sendPureMsg conn' $ R.Message'return R.Return
             { answerId = qaWord answerId
@@ -1398,8 +1432,8 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             , releaseParamCaps
             , union' = R.Return'takeFromOtherQuestion qid
             }
-    Return'acceptFromThirdParty ptr -> do
-        msg <- createPure defaultLimit $ do
+    Return'acceptFromThirdParty ptr ->
+        sendRawMsg conn' =<< createPure defaultLimit (do
             mptr <- thaw ptr
             msg <- case mptr of
                 Just v  -> pure $ UntypedRaw.message v
@@ -1412,7 +1446,7 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             RawRpc.set_Message'return rpcMsg ret
             UntypedRaw.setRoot (toStruct rpcMsg)
             pure msg
-        writeTBQueue (sendQ conn') msg
+        )
 
 acceptReturn :: Conn -> RawRpc.Return ConstMsg -> LimitT STM Return
 acceptReturn conn ret = do
@@ -1639,11 +1673,10 @@ genSendableCapTableRaw conn (Just ptr) =
 
 -- | Convert the pointer into a Payload, including a capability table for
 -- the clients in the pointer's cap table.
-makeOutgoingPayload :: Conn -> RawMPtr -> STM R.Payload
-makeOutgoingPayload conn rawContent = do
-    capTable <- genSendableCapTableRaw conn rawContent
-    content <- evalLimitT defaultLimit (decerialize rawContent)
-    pure R.Payload { content, capTable }
+makeOutgoingPayload :: Conn -> RawMPtr -> STM Payload
+makeOutgoingPayload conn content = do
+    capTable <- genSendableCapTableRaw conn content
+    pure Payload { content, capTable }
 
 sendPureMsg :: Conn' -> R.Message -> STM ()
 sendPureMsg Conn'{sendQ} msg =
