@@ -1,6 +1,6 @@
 # 0.10.0.0
 
-* The parameterization of messages has been reworked. Most things that
+* The parametrization of messages has been reworked. Most things that
   per parametrized over a message type are now parametrized over a
   type parameter of kind `Mutability` (defined in `Capnp.Message`).
   * The Message type class has been replaced with a type `Message` of
