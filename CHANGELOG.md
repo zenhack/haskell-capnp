@@ -6,9 +6,14 @@
   * The Message type class has been replaced with a type `Message` of
     kind `Mutability -> *`, and a type class `MonadReadMessage` for
     operations that can work on any Message.
-* Message.fromByteString/toByteString are now stand-alone functions,
-  rather than methods on the class, and they only operate on immutable
-  segments.
+* Message.fromByteString/toByteString:
+  * are now stand-alone functions, rather than methods on the class
+  * only operate on immutable segments.
+  * are pure functions, rather than monadic ones.
+* Some functions that were derivative of
+  `toByteString`/`fromByteString`, e.g. `Untyped.rawBytes`, also only
+  work on immutable messages now, and may be pure functions where before
+  they were monadic.
 
 # 0.9.0.0
 

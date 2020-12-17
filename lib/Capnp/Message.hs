@@ -143,20 +143,25 @@ data Message (mut :: Mutability) where
     MsgConst :: !(ConstMsg) -> Message 'Const
     MsgMut :: !(MutMsg s) -> Message ('Mut s)
 
-instance Eq (Message 'Const) where
+instance Eq (Message mut) where
     (MsgConst x) == (MsgConst y) = x == y
+    (MsgMut x) == (MsgMut y)     = x == y
 
 data Segment (mut :: Mutability) where
     SegConst :: !ConstSegment -> Segment 'Const
     SegMut :: !(MutSegment s) -> Segment ('Mut s)
 
-instance Eq (Segment 'Const) where
+instance Eq (Segment mut)  where
     (SegConst x) == (SegConst y) = x == y
+    (SegMut x) == (SegMut y)     = x == y
 
 data MutSegment s = MutSegment
     { vec  :: SMV.MVector s Word64
     , used :: MutVar s WordCount
     }
+
+instance Eq (MutSegment s) where
+    MutSegment{used=x} == MutSegment{used=y} = x == y
 
 newtype ConstSegment = ConstSegment (SV.Vector Word64)
     deriving(Eq)

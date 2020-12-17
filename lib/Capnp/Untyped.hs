@@ -1,7 +1,9 @@
 {-# LANGUAGE ApplicativeDo              #-}
 {-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
@@ -83,6 +85,7 @@ import Capnp.Bits
     , replaceBits
     , wordsToBytes
     )
+import Capnp.Message        (Mutability (..))
 import Capnp.Pointer        (ElementSize (..))
 import Capnp.TraversalLimit (MonadLimit(invoice))
 import Data.Mutable         (Thaw (..))
@@ -93,58 +96,58 @@ import qualified Capnp.Pointer as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
-type ReadCtx m msg = (M.Message m msg, MonadThrow m, MonadLimit m)
+type ReadCtx m mut = (M.MonadReadMessage mut m, MonadThrow m, MonadLimit m)
 
 -- | Synonym for ReadCtx + WriteCtx
-type RWCtx m s = (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
+type RWCtx m s = (ReadCtx m ('Mut s), M.WriteCtx m s)
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
 -- with absolute addressing.
-data Ptr msg
-    = PtrCap (Cap msg)
-    | PtrList (List msg)
-    | PtrStruct (Struct msg)
+data Ptr mut
+    = PtrCap (Cap mut)
+    | PtrList (List mut)
+    | PtrStruct (Struct mut)
 
 -- | A list of values (of arbitrary type) in a message.
-data List msg
-    = List0 (ListOf msg ())
-    | List1 (ListOf msg Bool)
-    | List8 (ListOf msg Word8)
-    | List16 (ListOf msg Word16)
-    | List32 (ListOf msg Word32)
-    | List64 (ListOf msg Word64)
-    | ListPtr (ListOf msg (Maybe (Ptr msg)))
-    | ListStruct (ListOf msg (Struct msg))
+data List mut
+    = List0 (ListOf mut ())
+    | List1 (ListOf mut Bool)
+    | List8 (ListOf mut Word8)
+    | List16 (ListOf mut Word16)
+    | List32 (ListOf mut Word32)
+    | List64 (ListOf mut Word64)
+    | ListPtr (ListOf mut (Maybe (Ptr mut)))
+    | ListStruct (ListOf mut (Struct mut))
 
 -- | A "normal" (non-composite) list.
-data NormalList msg = NormalList
-    { nPtr :: !(M.WordPtr msg)
+data NormalList mut = NormalList
+    { nPtr :: !(M.WordPtr mut)
     , nLen :: !Int
     }
 
 -- | A list of values of type 'a' in a message.
-data ListOf msg a where
+data ListOf mut a where
     ListOfStruct
-        :: Struct msg -- First element. data/ptr sizes are the same for
+        :: Struct mut -- First element. data/ptr sizes are the same for
                       -- all elements.
         -> !Int       -- Number of elements
-        -> ListOf msg (Struct msg)
-    ListOfVoid   :: !(NormalList msg) -> ListOf msg ()
-    ListOfBool   :: !(NormalList msg) -> ListOf msg Bool
-    ListOfWord8  :: !(NormalList msg) -> ListOf msg Word8
-    ListOfWord16 :: !(NormalList msg) -> ListOf msg Word16
-    ListOfWord32 :: !(NormalList msg) -> ListOf msg Word32
-    ListOfWord64 :: !(NormalList msg) -> ListOf msg Word64
-    ListOfPtr    :: !(NormalList msg) -> ListOf msg (Maybe (Ptr msg))
+        -> ListOf mut (Struct mut)
+    ListOfVoid   :: !(NormalList mut) -> ListOf mut ()
+    ListOfBool   :: !(NormalList mut) -> ListOf mut Bool
+    ListOfWord8  :: !(NormalList mut) -> ListOf mut Word8
+    ListOfWord16 :: !(NormalList mut) -> ListOf mut Word16
+    ListOfWord32 :: !(NormalList mut) -> ListOf mut Word32
+    ListOfWord64 :: !(NormalList mut) -> ListOf mut Word64
+    ListOfPtr    :: !(NormalList mut) -> ListOf mut (Maybe (Ptr mut))
 
 -- | A Capability in a message.
-data Cap msg = Cap msg !Word32
+data Cap mut = Cap (M.Message mut) !Word32
 
 -- | A struct value in a message.
-data Struct msg
+data Struct mut
     = Struct
-        !(M.WordPtr msg) -- Start of struct
+        !(M.WordPtr mut) -- Start of struct
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
@@ -168,9 +171,13 @@ data Struct msg
 --    performance considerations eventually forced us to open up the hood a
 --    bit.
 class TraverseMsg f where
-    tMsg :: TraverseMsgCtx m msgA msgB => (msgA -> m msgB) -> f msgA -> m (f msgB)
+    tMsg :: TraverseMsgCtx m mutA mutB => (M.Message mutA -> m (M.Message mutB)) -> f mutA -> m (f mutB)
 
-type TraverseMsgCtx m msgA msgB = (MonadThrow m, M.Message m msgA, M.Message m msgB)
+type TraverseMsgCtx m mutA mutB =
+    ( MonadThrow m
+    , M.MonadReadMessage mutA m
+    , M.MonadReadMessage mutB m
+    )
 
 instance TraverseMsg M.WordPtr where
     tMsg f M.WordPtr{pMessage, pAddr=pAddr@WordAt{segIndex}} = do
@@ -268,10 +275,10 @@ instance TraverseMsg FlipListS where
         FlipListS <$> (ListOfStruct <$> tMsg f tag <*> pure size)
 
 -- helpers for applying tMsg to a @ListOf@.
-tFlip  :: (TraverseMsg (FlipList a), TraverseMsgCtx m msgA msg)
-    => (msgA -> m msg) -> ListOf msgA a -> m (ListOf msg a)
-tFlipS :: TraverseMsgCtx m msgA msg => (msgA -> m msg) -> ListOf msgA (Struct msgA) -> m (ListOf msg (Struct msg))
-tFlipP :: TraverseMsgCtx m msgA msg => (msgA -> m msg) -> ListOf msgA (Maybe (Ptr msgA)) -> m (ListOf msg (Maybe (Ptr msg)))
+tFlip  :: (TraverseMsg (FlipList a), TraverseMsgCtx m mutA mutB)
+    => (M.Message mutA -> m (M.Message mutB)) -> ListOf mutA a -> m (ListOf mutB a)
+tFlipS :: TraverseMsgCtx m mutA mutB => (M.Message mutA -> m (M.Message mutB)) -> ListOf mutA (Struct mutA) -> m (ListOf mutB (Struct mutB ))
+tFlipP :: TraverseMsgCtx m mutA mutB => (M.Message mutA -> m (M.Message mutB)) -> ListOf mutA (Maybe (Ptr mutA)) -> m (ListOf mutB (Maybe (Ptr mutB)))
 tFlip  f list  = unflip  <$> tMsg f (FlipList  list)
 tFlipS f list  = unflipS <$> tMsg f (FlipListS list)
 tFlipP f list  = unflipP <$> tMsg f (FlipListP list)
@@ -293,8 +300,8 @@ instance Thaw a => Thaw (Maybe a) where
 do
     let mkWrappedInstance name =
             let f = pure $ TH.ConT name in
-            [d|instance Thaw ($f M.ConstMsg) where
-                type Mutable s ($f M.ConstMsg) = $f (Mutable s M.ConstMsg)
+            [d|instance Thaw ($f 'Const) where
+                type Mutable s ($f 'Const) = $f ('Mut s)
 
                 thaw         = runCatchImpure . tMsg thaw
                 freeze       = runCatchImpure . tMsg freeze
@@ -302,8 +309,8 @@ do
                 unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
             |]
         mkListOfInstance t =
-            [d|instance Thaw (ListOf M.ConstMsg $t) where
-                type Mutable s (ListOf M.ConstMsg $t) = ListOf (Mutable s M.ConstMsg) $t
+            [d|instance Thaw (ListOf 'Const $t) where
+                type Mutable s (ListOf 'Const $t) = ListOf ('Mut s) $t
 
                 thaw         = runCatchImpure . tFlip thaw
                 freeze       = runCatchImpure . tFlip freeze
@@ -326,18 +333,18 @@ do
         ]
     pure $ concat $ xs ++ ys
 
-instance Thaw (ListOf M.ConstMsg (Struct M.ConstMsg)) where
-    type Mutable s (ListOf M.ConstMsg (Struct M.ConstMsg)) =
-        ListOf (Mutable s M.ConstMsg) (Struct (Mutable s M.ConstMsg))
+instance Thaw (ListOf 'Const (Struct 'Const)) where
+    type Mutable s (ListOf 'Const (Struct 'Const)) =
+        ListOf ('Mut s) (Struct ('Mut s))
 
     thaw         = runCatchImpure . tFlipS thaw
     freeze       = runCatchImpure . tFlipS freeze
     unsafeThaw   = runCatchImpure . tFlipS unsafeThaw
     unsafeFreeze = runCatchImpure . tFlipS unsafeFreeze
 
-instance Thaw (ListOf M.ConstMsg (Maybe (Ptr M.ConstMsg))) where
-    type Mutable s (ListOf M.ConstMsg (Maybe (Ptr M.ConstMsg))) =
-        ListOf (Mutable s M.ConstMsg) (Maybe (Ptr (Mutable s M.ConstMsg)))
+instance Thaw (ListOf 'Const (Maybe (Ptr 'Const))) where
+    type Mutable s (ListOf 'Const (Maybe (Ptr 'Const))) =
+        ListOf ('Mut s) (Maybe (Ptr ('Mut s)))
 
     thaw         = runCatchImpure . tFlipP thaw
     freeze       = runCatchImpure . tFlipP freeze
@@ -368,12 +375,9 @@ runCatchImpure m = do
 -------------------------------------------------------------------------------
 
 -- | Types @a@ whose storage is owned by a message..
-class HasMessage a where
-    -- | The type of the messages containing @a@s.
-    type InMessage a
-
+class HasMessage a mut | a -> mut where
     -- | Get the message in which the @a@ is stored.
-    message :: a -> InMessage a
+    message :: a -> M.Message mut
 
 -- | Types which have a "default" value, but require a message
 -- to construct it.
@@ -381,38 +385,29 @@ class HasMessage a where
 -- The default is usually conceptually zero-size. This is mostly useful
 -- for generated code, so that it can use standard decoding techniques
 -- on default values.
-class HasMessage a => MessageDefault a where
-    messageDefault :: ReadCtx m (InMessage a) => InMessage a -> m a
+class HasMessage a mut => MessageDefault a mut where
+    messageDefault :: ReadCtx m mut => M.Message mut -> m a
 
-instance HasMessage (M.WordPtr msg) where
-    type InMessage (M.WordPtr msg) = msg
+instance HasMessage (M.WordPtr mut) mut where
     message M.WordPtr{pMessage} = pMessage
 
-instance HasMessage (Ptr msg) where
-    type InMessage (Ptr msg) = msg
-
+instance HasMessage (Ptr mut) mut where
     message (PtrCap cap)       = message cap
     message (PtrList list)     = message list
     message (PtrStruct struct) = message struct
 
-instance HasMessage (Cap msg) where
-    type InMessage (Cap msg) = msg
-
+instance HasMessage (Cap mut) mut where
     message (Cap msg _) = msg
 
-instance HasMessage (Struct msg) where
-    type InMessage (Struct msg) = msg
-
+instance HasMessage (Struct mut) mut where
     message (Struct ptr _ _) = message ptr
 
-instance MessageDefault (Struct msg) where
+instance MessageDefault (Struct mut) mut where
     messageDefault msg = do
         pSegment <- M.getSegment msg 0
         pure $ Struct M.WordPtr{pMessage = msg, pSegment, pAddr = WordAt 0 0} 0 0
 
-instance HasMessage (List msg) where
-    type InMessage (List msg) = msg
-
+instance HasMessage (List mut) mut where
     message (List0 list)      = message list
     message (List1 list)      = message list
     message (List8 list)      = message list
@@ -422,9 +417,7 @@ instance HasMessage (List msg) where
     message (ListPtr list)    = message list
     message (ListStruct list) = message list
 
-instance HasMessage (ListOf msg a) where
-    type InMessage (ListOf msg a) = msg
-
+instance HasMessage (ListOf mut a) mut where
     message (ListOfStruct tag _) = message tag
     message (ListOfVoid list)    = message list
     message (ListOfBool list)    = message list
@@ -434,29 +427,27 @@ instance HasMessage (ListOf msg a) where
     message (ListOfWord64 list)  = message list
     message (ListOfPtr list)     = message list
 
-instance MessageDefault (ListOf msg ()) where
+instance MessageDefault (ListOf mut ()) mut where
     messageDefault msg = ListOfVoid <$> messageDefault msg
-instance MessageDefault (ListOf msg (Struct msg)) where
+instance MessageDefault (ListOf mut (Struct mut)) mut where
     messageDefault msg = flip ListOfStruct 0 <$> messageDefault msg
-instance MessageDefault (ListOf msg Bool) where
+instance MessageDefault (ListOf mut Bool) mut where
     messageDefault msg = ListOfBool <$> messageDefault msg
-instance MessageDefault (ListOf msg Word8) where
+instance MessageDefault (ListOf mut Word8) mut where
     messageDefault msg = ListOfWord8 <$> messageDefault msg
-instance MessageDefault (ListOf msg Word16) where
+instance MessageDefault (ListOf mut Word16) mut where
     messageDefault msg = ListOfWord16 <$> messageDefault msg
-instance MessageDefault (ListOf msg Word32) where
+instance MessageDefault (ListOf mut Word32) mut where
     messageDefault msg = ListOfWord32 <$> messageDefault msg
-instance MessageDefault (ListOf msg Word64) where
+instance MessageDefault (ListOf mut Word64) mut where
     messageDefault msg = ListOfWord64 <$> messageDefault msg
-instance MessageDefault (ListOf msg (Maybe (Ptr msg))) where
+instance MessageDefault (ListOf mut (Maybe (Ptr mut))) mut where
     messageDefault msg = ListOfPtr <$> messageDefault msg
 
-instance HasMessage (NormalList msg) where
-    type InMessage (NormalList msg) = msg
-
+instance HasMessage (NormalList mut) mut where
     message = M.pMessage . nPtr
 
-instance MessageDefault (NormalList msg) where
+instance MessageDefault (NormalList mut) mut where
     messageDefault msg = do
         pSegment <- M.getSegment msg 0
         pure NormalList
@@ -464,13 +455,13 @@ instance MessageDefault (NormalList msg) where
             , nLen = 0
             }
 
-getClient :: ReadCtx m msg => Cap msg -> m M.Client
+getClient :: ReadCtx m mut => Cap mut -> m M.Client
 getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
 
 -- | @get ptr@ returns the Ptr stored at @ptr@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
-get :: ReadCtx m msg => M.WordPtr msg -> m (Maybe (Ptr msg))
+get :: ReadCtx m mut => M.WordPtr mut -> m (Maybe (Ptr mut))
 get ptr@M.WordPtr{pMessage, pAddr} = do
     word <- getWord ptr
     case P.parsePtr word of
@@ -600,7 +591,7 @@ ptrAddr (PtrStruct (Struct M.WordPtr{pAddr}_ _)) = pAddr
 ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
-setIndex :: RWCtx m s => a -> Int -> ListOf (M.MutMsg s) a -> m ()
+setIndex :: RWCtx m s => a -> Int -> ListOf ('Mut s) a -> m ()
 setIndex _ i list | length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -624,13 +615,13 @@ setIndex value i list = case list of
         dest <- index i list
         copyStruct dest value
   where
-    setNIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s, Bounded a, Integral a) => NormalList (M.MutMsg s) -> Int -> a -> m ()
+    setNIndex :: (ReadCtx m ('Mut s), M.WriteCtx m s, Bounded a, Integral a) => NormalList ('Mut s) -> Int -> a -> m ()
     setNIndex NormalList{nPtr=M.WordPtr{pSegment, pAddr=WordAt{wordIndex}}} eltsPerWord value = do
         let eltWordIndex = wordIndex + WordCount (i `div` eltsPerWord)
         word <- M.read pSegment eltWordIndex
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         M.write pSegment eltWordIndex $ replaceBits value word shift
-    setPtrIndex :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => NormalList (M.MutMsg s) -> Ptr (M.MutMsg s) -> P.Ptr -> m ()
+    setPtrIndex :: (ReadCtx m ('Mut s), M.WriteCtx m s) => NormalList ('Mut s) -> Ptr ('Mut s) -> P.Ptr -> m ()
     setPtrIndex NormalList{nPtr=nPtr@M.WordPtr{pAddr=addr@WordAt{wordIndex}}} absPtr relPtr =
         let srcPtr = nPtr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
         in setPointerTo srcPtr (ptrAddr absPtr) relPtr
@@ -639,7 +630,7 @@ setIndex value i list = case list of
 -- pointer like @relPtr@, but pointing to @dstAddr@. @relPtr@ should not be a far pointer.
 -- If the two addresses are in different segments, a landing pad will be allocated and
 -- @srcLoc@ will contain a far pointer.
-setPointerTo :: M.WriteCtx m s => M.WordPtr (M.MutMsg s) -> WordAddr -> P.Ptr -> m ()
+setPointerTo :: M.WriteCtx m s => M.WordPtr ('Mut s) -> WordAddr -> P.Ptr -> m ()
 setPointerTo
         M.WordPtr
             { pMessage = msg
@@ -711,10 +702,10 @@ setPointerTo
                             P.ListPtr _ eltSpec -> P.ListPtr 0 eltSpec
                             _ -> relPtr
 
-copyCap :: RWCtx m s => M.MutMsg s -> Cap (M.MutMsg s) -> m (Cap (M.MutMsg s))
+copyCap :: RWCtx m s => M.Message ('Mut s) -> Cap ('Mut s) -> m (Cap ('Mut s))
 copyCap dest cap = getClient cap >>= appendCap dest
 
-copyPtr :: RWCtx m s => M.MutMsg s -> Maybe (Ptr (M.MutMsg s)) -> m (Maybe (Ptr (M.MutMsg s)))
+copyPtr :: RWCtx m s => M.Message ('Mut s) -> Maybe (Ptr ('Mut s)) -> m (Maybe (Ptr ('Mut s)))
 copyPtr _ Nothing                = pure Nothing
 copyPtr dest (Just (PtrCap cap))    = Just . PtrCap <$> copyCap dest cap
 copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
@@ -726,7 +717,7 @@ copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
     copyStruct destStruct src
     pure destStruct
 
-copyList :: RWCtx m s => M.MutMsg s -> List (M.MutMsg s) -> m (List (M.MutMsg s))
+copyList :: RWCtx m s => M.Message ('Mut s) -> List ('Mut s) -> m (List ('Mut s))
 copyList dest src = case src of
     List0 src      -> List0 <$> allocList0 dest (length src)
     List1 src      -> List1 <$> copyNewListOf dest src allocList1
@@ -739,31 +730,31 @@ copyList dest src = case src of
         destList <- allocCompositeList
             dest
             (fromIntegral $ structListWordCount src)
-            (structListPtrCount  src)
+            (structListPtrCount src)
             (length src)
         copyListOf destList src
         pure destList
 
 copyNewListOf
     :: RWCtx m s
-    => M.MutMsg s
-    -> ListOf (M.MutMsg s) a
-    -> (M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) a))
-    -> m (ListOf (M.MutMsg s) a)
+    => M.Message ('Mut s)
+    -> ListOf ('Mut s) a
+    -> (M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) a))
+    -> m (ListOf ('Mut s) a)
 copyNewListOf destMsg src new = do
     dest <- new destMsg (length src)
     copyListOf dest src
     pure dest
 
 
-copyListOf :: RWCtx m s => ListOf (M.MutMsg s) a -> ListOf (M.MutMsg s) a -> m ()
+copyListOf :: RWCtx m s => ListOf ('Mut s) a -> ListOf ('Mut s) a -> m ()
 copyListOf dest src =
     forM_ [0..length src - 1] $ \i -> do
         value <- index i src
         setIndex value i dest
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.
-copyStruct :: RWCtx m s => Struct (M.MutMsg s) -> Struct (M.MutMsg s) -> m ()
+copyStruct :: RWCtx m s => Struct ('Mut s) -> Struct ('Mut s) -> m ()
 copyStruct dest src = do
     -- We copy both the data and pointer sections from src to dest,
     -- padding the tail of the destination section with zeros/null
@@ -785,10 +776,10 @@ copyStruct dest src = do
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
-index :: ReadCtx m msg => Int -> ListOf msg a -> m a
+index :: ReadCtx m mut => Int -> ListOf mut a -> m a
 index i list = invoice 1 >> index' list
   where
-    index' :: ReadCtx m msg => ListOf msg a -> m a
+    index' :: ReadCtx m mut => ListOf mut a -> m a
     index' (ListOfVoid nlist)
         | i < nLen nlist = pure ()
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = nLen nlist - 1 }
@@ -810,7 +801,7 @@ index i list = invoice 1 >> index' list
     index' (ListOfPtr (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} len))
         | i < len = get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
         | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    indexNList :: (ReadCtx m msg, Integral a) => NormalList msg -> Int -> m a
+    indexNList :: (ReadCtx m mut, Integral a) => NormalList mut -> Int -> m a
     indexNList (NormalList M.WordPtr{pSegment, pAddr=WordAt{..}} len) eltsPerWord
         | i < len = do
             let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
@@ -902,26 +893,28 @@ getPtr i struct
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
 -- to @value@.
-setData :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s)
-    => Word64 -> Int -> Struct (M.MutMsg s) -> m ()
+setData :: (ReadCtx m ('Mut s), M.WriteCtx m s)
+    => Word64 -> Int -> Struct ('Mut s) -> m ()
 setData value i = setIndex value i . dataSection
 
 -- | @'setData' value i struct@ sets the @i@th pointer in the struct's pointer
 -- section to @value@.
-setPtr :: (ReadCtx m (M.MutMsg s), M.WriteCtx m s) => Maybe (Ptr (M.MutMsg s)) -> Int -> Struct (M.MutMsg s) -> m ()
+setPtr :: (ReadCtx m ('Mut s), M.WriteCtx m s) => Maybe (Ptr ('Mut s)) -> Int -> Struct ('Mut s) -> m ()
 setPtr value i = setIndex value i . ptrSection
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
-rawBytes :: ReadCtx m msg => ListOf msg Word8 -> m BS.ByteString
+rawBytes :: ReadCtx m 'Const => ListOf 'Const Word8 -> m BS.ByteString
+-- TODO: we can get away with a more lax context than ReadCtx, maybe even make
+-- this non-monadic.
 rawBytes (ListOfWord8 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len)) = do
     invoice $ fromIntegral $ bytesToWordsCeil (ByteCount len)
-    bytes <- M.toByteString pSegment
+    let bytes = M.toByteString pSegment
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
 
 
 -- | Returns the root pointer of a message.
-rootPtr :: ReadCtx m msg => msg -> m (Struct msg)
+rootPtr :: ReadCtx m mut => M.Message mut -> m (Struct mut)
 rootPtr msg = do
     seg <- M.getSegment msg 0
     root <- get M.WordPtr
@@ -937,14 +930,14 @@ rootPtr msg = do
 
 
 -- | Make the given struct the root object of its message.
-setRoot :: M.WriteCtx m s => Struct (M.MutMsg s) -> m ()
+setRoot :: M.WriteCtx m s => Struct ('Mut s) -> m ()
 setRoot (Struct M.WordPtr{pMessage, pAddr=addr} dataSz ptrSz) = do
     pSegment <- M.getSegment pMessage 0
     let rootPtr = M.WordPtr{pMessage, pSegment, pAddr = WordAt 0 0}
     setPointerTo rootPtr addr (P.StructPtr 0 dataSz ptrSz)
 
 -- | Allocate a struct in the message.
-allocStruct :: M.WriteCtx m s => M.MutMsg s -> Word16 -> Word16 -> m (Struct (M.MutMsg s))
+allocStruct :: M.WriteCtx m s => M.Message ('Mut s) -> Word16 -> Word16 -> m (Struct ('Mut s))
 allocStruct msg dataSz ptrSz = do
     let totalSz = fromIntegral dataSz + fromIntegral ptrSz
     ptr <- M.alloc msg totalSz
@@ -953,11 +946,11 @@ allocStruct msg dataSz ptrSz = do
 -- | Allocate a composite list.
 allocCompositeList
     :: M.WriteCtx m s
-    => M.MutMsg s -- ^ The message to allocate in.
+    => M.Message ('Mut s) -- ^ The message to allocate in.
     -> Word16     -- ^ The size of the data section
     -> Word16     -- ^ The size of the pointer section
     -> Int        -- ^ The length of the list in elements.
-    -> m (ListOf (M.MutMsg s) (Struct (M.MutMsg s)))
+    -> m (ListOf ('Mut s) (Struct ('Mut s)))
 allocCompositeList msg dataSz ptrSz len = do
     let eltSize = fromIntegral dataSz + fromIntegral ptrSz
     ptr@M.WordPtr{pSegment, pAddr=addr@WordAt{wordIndex}}
@@ -970,25 +963,25 @@ allocCompositeList msg dataSz ptrSz len = do
     pure $ ListOfStruct firstStruct len
 
 -- | Allocate a list of capnproto @Void@ values.
-allocList0   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) ())
+allocList0   :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) ())
 
 -- | Allocate a list of booleans
-allocList1   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Bool)
+allocList1   :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) Bool)
 
 -- | Allocate a list of 8-bit values.
-allocList8   :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word8)
+allocList8   :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) Word8)
 
 -- | Allocate a list of 16-bit values.
-allocList16  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word16)
+allocList16  :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) Word16)
 
 -- | Allocate a list of 32-bit values.
-allocList32  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word32)
+allocList32  :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) Word32)
 
 -- | Allocate a list of 64-bit words.
-allocList64  :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) Word64)
+allocList64  :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) Word64)
 
 -- | Allocate a list of pointers.
-allocListPtr :: M.WriteCtx m s => M.MutMsg s -> Int -> m (ListOf (M.MutMsg s) (Maybe (Ptr (M.MutMsg s))))
+allocListPtr :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) (Maybe (Ptr ('Mut s))))
 
 allocList0   msg len = ListOfVoid   <$> allocNormalList 0  msg len
 allocList1   msg len = ListOfBool   <$> allocNormalList 1  msg len
@@ -1001,10 +994,10 @@ allocListPtr msg len = ListOfPtr    <$> allocNormalList 64 msg len
 -- | Allocate a NormalList
 allocNormalList
     :: M.WriteCtx m s
-    => Int        -- ^ The number bits per element
-    -> M.MutMsg s -- ^ The message to allocate in
-    -> Int        -- ^ The number of elements in the list.
-    -> m (NormalList (M.MutMsg s))
+    => Int                  -- ^ The number bits per element
+    -> M.Message ('Mut s) -- ^ The message to allocate in
+    -> Int                  -- ^ The number of elements in the list.
+    -> m (NormalList ('Mut s))
 allocNormalList bitsPerElt msg len = do
     -- round 'len' up to the nearest word boundary.
     let totalBits = BitCount (len * bitsPerElt)
@@ -1012,7 +1005,7 @@ allocNormalList bitsPerElt msg len = do
     ptr <- M.alloc msg totalWords
     pure NormalList { nPtr = ptr, nLen = len }
 
-appendCap :: M.WriteCtx m s => M.MutMsg s -> M.Client -> m (Cap (M.MutMsg s))
+appendCap :: M.WriteCtx m s => M.Message ('Mut s) -> M.Client -> m (Cap ('Mut s))
 appendCap msg client = do
     i <- M.appendCap msg client
     pure $ Cap msg (fromIntegral i)
