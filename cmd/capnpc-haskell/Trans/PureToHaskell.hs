@@ -788,7 +788,7 @@ typeToType thisMod (C.WordType (C.EnumType Name.CapnpQ{local, fileId})) =
     -- type class instances in those modules, but we have to make an exception
     -- if the enum is defined in the file we're generating code for, since otherwise
     -- we'd introduce a cyclic dependency. In that case we use the raw name; the
-    -- instnaces are defined in this same module so we don't need to worry about those.
+    -- instances are defined in this same module so we don't need to worry about those.
     if thisMod == fileId then
         tgName (rawModule fileId) local
     else
