@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds        #-}
+{-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
@@ -55,6 +56,7 @@ import GHC.Float
 
 import Capnp.Bits    (Word1 (..))
 import Capnp.Errors  (Error(SchemaViolationError))
+import Capnp.Message (Mutability (..))
 import Capnp.Untyped (Cap, ListOf, Ptr (..), ReadCtx, Struct, messageDefault)
 
 import qualified Capnp.Message as M
@@ -66,14 +68,14 @@ import qualified Data.Vector as V
 -- type parameter for pure modules, when reading.
 type ReadParam a =
     ( Decerialize a
-    , FromPtr M.ConstMsg (Cerial M.ConstMsg a)
+    , FromPtr 'Const  (Cerial 'Const a)
     )
 -- | Type alias for the constraints needed for 'a' to be used as a capnp
 -- type parameter for pure modules, when writing with state token 's'.
 type WriteParam s a =
     ( Cerialize s a
-    , ToPtr s (Cerial (M.MutMsg s) a)
-    , FromPtr (M.MutMsg s) (Cerial (M.MutMsg s) a)
+    , ToPtr s (Cerial ('Mut s) a)
+    , FromPtr ('Mut s) (Cerial ('Mut s) a)
     )
 
 -- | Types that can be converted to and from a 64-bit word.
@@ -89,9 +91,9 @@ class IsWord a where
     toWord :: a -> Word64
 
 -- | Types which may be stored as an element of a capnproto list.
-class ListElem msg e where
+class ListElem mut e where
     -- | The type of lists of @e@ stored in messages of type @msg@
-    data List msg e
+    data List mut e
 
     -- | Convert an untyped list to a list of this type. May fail
     -- with a 'SchemaViolationError' if the list does not have the
@@ -99,24 +101,24 @@ class ListElem msg e where
     --
     -- TODO: this is basically just fromPtr; refactor so this is less
     -- redundant.
-    listFromPtr :: U.ReadCtx m msg => msg -> Maybe (U.Ptr msg) -> m (List msg e)
+    listFromPtr :: U.ReadCtx m mut => M.Message mut -> Maybe (U.Ptr mut) -> m (List mut e)
 
-    toUntypedList :: List msg e -> U.List msg
+    toUntypedList :: List mut e -> U.List mut
 
     -- | Get the length of a list.
-    length :: List msg e -> Int
+    length :: List mut e -> Int
 
     -- | @'index' i list@ gets the @i@th element of a list.
-    index :: U.ReadCtx m msg => Int -> List msg e -> m e
+    index :: U.ReadCtx m mut => Int -> List mut e -> m e
 
 -- | Types which may be stored as an element of a *mutable* capnproto list.
-class (ListElem (M.MutMsg s) e) => MutListElem s e where
+class (ListElem ('Mut s) e) => MutListElem s e where
     -- | @'setIndex' value i list@ sets the @i@th index in @list@ to @value@
-    setIndex :: U.RWCtx m s => e -> Int -> List (M.MutMsg s) e -> m ()
+    setIndex :: U.RWCtx m s => e -> Int -> List ('Mut s) e -> m ()
 
     -- | @'newList' msg size@ allocates and returns a new list of length
     -- @size@ inside @msg@.
-    newList :: M.WriteCtx m s => M.MutMsg s -> Int -> m (List (M.MutMsg s) e)
+    newList :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (List ('Mut s) e)
 
 -- | Types which may be stored in a capnproto message, and have a fixed size.
 --
@@ -124,7 +126,7 @@ class (ListElem (M.MutMsg s) e) => MutListElem s e where
 -- must be known to allocate a list.
 class Allocate s e | e -> s where
     -- @'new' msg@ allocates a new value of type @e@ inside @msg@.
-    new :: M.WriteCtx m s => M.MutMsg s -> m e
+    new :: M.WriteCtx m s => M.Message ('Mut s) -> m e
 
 -- | Types which may be extracted from a message.
 --
@@ -135,10 +137,10 @@ class Decerialize a where
     --
     -- For the case of instances in generated high-level API code, this will
     -- be the low-level API analouge of the type.
-    type Cerial msg a
+    type Cerial (mut :: Mutability) a
 
     -- | Extract the value from the message.
-    decerialize :: U.ReadCtx m M.ConstMsg => Cerial M.ConstMsg a -> m a
+    decerialize :: U.ReadCtx m 'Const => Cerial 'Const a -> m a
 
 -- | Types which may be marshaled into a pre-allocated object in a message.
 class Decerialize a => Marshal s a where
@@ -148,16 +150,16 @@ class Decerialize a => Marshal s a where
     -- Note that caller must arrange for the object to be of the correct size.
     -- This is is not necessarily guaranteed; for example, list types must
     -- coordinate the length of the list.
-    marshalInto :: U.RWCtx m s => Cerial (M.MutMsg s) a -> a -> m ()
+    marshalInto :: U.RWCtx m s => Cerial ('Mut s) a -> a -> m ()
 
 -- | Types which may be inserted into a message.
 class Decerialize a => Cerialize s a where
 
     -- | Cerialize a value into the supplied message, returning the result.
-    cerialize :: U.RWCtx m s => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
+    cerialize :: U.RWCtx m s => M.Message ('Mut s) -> a -> m (Cerial ('Mut s) a)
 
-    default cerialize :: (U.RWCtx m s, Marshal s a, Allocate s (Cerial (M.MutMsg s) a))
-        => M.MutMsg s -> a -> m (Cerial (M.MutMsg s) a)
+    default cerialize :: (U.RWCtx m s, Marshal s a, Allocate s (Cerial ('Mut s) a))
+        => M.Message ('Mut s) -> a -> m (Cerial ('Mut s) a)
     cerialize msg value = do
         raw <- new msg
         marshalInto raw value
@@ -165,26 +167,26 @@ class Decerialize a => Cerialize s a where
 
 -- | Types that can be converted from an untyped pointer.
 --
--- Note that decoding do not have to succeed, if the pointer is
+-- Note that decoding does not have to succeed, if the pointer is
 -- the wrong type.
-class FromPtr msg a where
+class FromPtr mut a where
     -- | Convert an untyped pointer to an @a@.
-    fromPtr :: ReadCtx m msg => msg -> Maybe (Ptr msg) -> m a
+    fromPtr :: ReadCtx m mut => M.Message mut -> Maybe (Ptr mut) -> m a
 
 -- | Types that can be converted to an untyped pointer.
 class ToPtr s a where
     -- | Convert an @a@ to an untyped pointer.
-    toPtr :: M.WriteCtx m s => M.MutMsg s -> a -> m (Maybe (Ptr (M.MutMsg s)))
+    toPtr :: M.WriteCtx m s => M.Message ('Mut s) -> a -> m (Maybe (Ptr ('Mut s)))
 
 -- | Types that can be extracted from a struct.
-class FromStruct msg a | a -> msg where
+class FromStruct mut a | a -> mut where
     -- | Extract a value from a struct.
-    fromStruct :: ReadCtx m msg => Struct msg -> m a
+    fromStruct :: ReadCtx m mut => Struct mut -> m a
 
 -- | Types that can be converted to a struct.
-class ToStruct msg a | a -> msg where
+class ToStruct mut a | a -> mut where
     -- | Convert a value to a struct.
-    toStruct :: a -> Struct msg
+    toStruct :: a -> Struct mut
 
 ------- instances -------
 
@@ -235,77 +237,77 @@ expected :: MonadThrow m => String -> m a
 expected msg = throwM $ SchemaViolationError $ "expected " ++ msg
 
 -- To/FromPtr instance for lists of Void/().
-instance FromPtr msg (ListOf msg ()) where
-    fromPtr msg Nothing                         = messageDefault msg
+instance FromPtr mut (ListOf mut ()) where
+    fromPtr msg Nothing                       = messageDefault msg
     fromPtr _ (Just (PtrList (U.List0 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 0"
-instance ToPtr s (ListOf (M.MutMsg s) ()) where
+instance ToPtr s (ListOf ('Mut s) ()) where
     toPtr _ = pure . Just . PtrList . U.List0
 
 -- To/FromPtr instances for lists of unsigned integers.
-instance FromPtr msg (ListOf msg Word8) where
+instance FromPtr mut (ListOf mut Word8) where
     fromPtr msg Nothing                       = messageDefault msg
     fromPtr _ (Just (PtrList (U.List8 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 8"
-instance ToPtr s (ListOf (M.MutMsg s) Word8) where
+instance ToPtr s (ListOf ('Mut s) Word8) where
     toPtr _ = pure . Just . PtrList . U.List8
-instance FromPtr msg (ListOf msg Word16) where
+instance FromPtr mut (ListOf mut Word16) where
     fromPtr msg Nothing                       = messageDefault msg
     fromPtr _ (Just (PtrList (U.List16 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 16"
-instance ToPtr s (ListOf (M.MutMsg s) Word16) where
+instance ToPtr s (ListOf ('Mut s) Word16) where
     toPtr _ = pure . Just . PtrList . U.List16
-instance FromPtr msg (ListOf msg Word32) where
+instance FromPtr mut (ListOf mut Word32) where
     fromPtr msg Nothing                       = messageDefault msg
     fromPtr _ (Just (PtrList (U.List32 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 32"
-instance ToPtr s (ListOf (M.MutMsg s) Word32) where
+instance ToPtr s (ListOf ('Mut s) Word32) where
     toPtr _ = pure . Just . PtrList . U.List32
-instance FromPtr msg (ListOf msg Word64) where
-    fromPtr msg Nothing                       = messageDefault msg
+instance FromPtr mut (ListOf mut Word64) where
+    fromPtr msg Nothing                        = messageDefault msg
     fromPtr _ (Just (PtrList (U.List64 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 64"
-instance ToPtr s (ListOf (M.MutMsg s) Word64) where
+instance ToPtr s (ListOf ('Mut s) Word64) where
     toPtr _ = pure . Just . PtrList . U.List64
 
-instance FromPtr msg (ListOf msg Bool) where
+instance FromPtr mut (ListOf mut Bool) where
     fromPtr msg Nothing = messageDefault msg
     fromPtr _ (Just (PtrList (U.List1 list))) = pure list
     fromPtr _ _ = expected "pointer to list with element size 1."
-instance ToPtr s (ListOf (M.MutMsg s) Bool) where
+instance ToPtr s (ListOf ('Mut s) Bool) where
     toPtr _ = pure . Just . PtrList . U.List1
 
 -- To/FromPtr instance for pointers -- this is just the identity.
-instance FromPtr msg (Maybe (Ptr msg)) where
+instance FromPtr mut (Maybe (Ptr mut)) where
     fromPtr _ = pure
-instance ToPtr s (Maybe (Ptr (M.MutMsg s))) where
+instance ToPtr s (Maybe (Ptr ('Mut s))) where
     toPtr _ = pure
 
 -- To/FromPtr instance for composite lists.
-instance FromPtr msg (ListOf msg (Struct msg)) where
+instance FromPtr mut (ListOf mut (Struct mut)) where
     fromPtr msg Nothing                            = messageDefault msg
     fromPtr _ (Just (PtrList (U.ListStruct list))) = pure list
     fromPtr _ _ = expected "pointer to list of structs"
-instance ToPtr s (ListOf (M.MutMsg s) (Struct (M.MutMsg s))) where
+instance ToPtr s (ListOf ('Mut s) (Struct ('Mut s))) where
     toPtr _ = pure . Just . PtrList . U.ListStruct
 
 -- To/FromPtr instance for lists of pointers.
-instance FromPtr msg (ListOf msg (Maybe (Ptr msg))) where
+instance FromPtr mut (ListOf mut (Maybe (Ptr mut))) where
     fromPtr msg Nothing                         = messageDefault msg
     fromPtr _ (Just (PtrList (U.ListPtr list))) = pure list
     fromPtr _ _ = expected "pointer to list of pointers"
-instance ToPtr s (ListOf (M.MutMsg s) (Maybe (Ptr (M.MutMsg s)))) where
+instance ToPtr s (ListOf ('Mut s) (Maybe (Ptr ('Mut s)))) where
     toPtr _ = pure . Just . PtrList . U.ListPtr
 
 -- To/FromPtr instance for *typed* lists.
-instance ListElem msg e => FromPtr msg (List msg e) where
+instance ListElem mut e => FromPtr mut (List mut e) where
     fromPtr = listFromPtr
-instance ListElem (M.MutMsg s) e => ToPtr s (List (M.MutMsg s) e) where
+instance ListElem ('Mut s) e => ToPtr s (List ('Mut s) e) where
     toPtr _ = pure . Just . PtrList . toUntypedList
 
 -- ListElem instance for (typed) nested lists.
-instance ListElem msg e => ListElem msg (List msg e) where
-    newtype List msg (List msg e) = NestedList (U.ListOf msg (Maybe (U.Ptr msg)))
+instance ListElem mut e => ListElem mut (List mut e) where
+    newtype List mut (List mut e) = NestedList (U.ListOf mut (Maybe (U.Ptr mut)))
 
     listFromPtr msg ptr = NestedList <$> fromPtr msg ptr
     toUntypedList (NestedList l) = U.ListPtr l
@@ -315,29 +317,29 @@ instance ListElem msg e => ListElem msg (List msg e) where
         ptr <- U.index i l
         fromPtr (U.message l) ptr
 
-instance MutListElem s e => MutListElem s (List (M.MutMsg s) e) where
+instance MutListElem s e => MutListElem s (List ('Mut s) e) where
     setIndex e i (NestedList l) = U.setIndex (Just (U.PtrList (toUntypedList e))) i l
     newList msg len = NestedList <$> U.allocListPtr msg len
 
 -- FromStruct instance for Struct; just the identity.
-instance FromStruct msg (Struct msg) where
+instance FromStruct mut (Struct mut) where
     fromStruct = pure
 
-instance ToStruct msg (Struct msg) where
+instance ToStruct mut (Struct mut) where
     toStruct = id
 
-instance FromPtr msg (Struct msg) where
+instance FromPtr mut (Struct mut) where
     fromPtr msg Nothing            = messageDefault msg >>= fromStruct
     fromPtr _ (Just (PtrStruct s)) = fromStruct s
     fromPtr _ _                    = expected "pointer to struct"
-instance ToPtr s (Struct (M.MutMsg s)) where
+instance ToPtr s (Struct ('Mut s)) where
     toPtr _ = pure . Just . PtrStruct
 
-instance FromPtr msg (Maybe (Cap msg)) where
+instance FromPtr mut (Maybe (Cap mut)) where
     fromPtr _ Nothing             = pure Nothing
     fromPtr _ (Just (PtrCap cap)) = pure (Just cap)
     fromPtr _ _                   = expected "pointer to capability"
-instance ToPtr s (Maybe (Cap (M.MutMsg s))) where
+instance ToPtr s (Maybe (Cap ('Mut s))) where
     toPtr _ = pure . fmap PtrCap
 
 -- | A valid implementation of 'cerialize', which just cerializes the
@@ -348,12 +350,12 @@ instance ToPtr s (Maybe (Cap (M.MutMsg s))) where
 -- the list, doing extra work and leaking space. See 'cerializeCompositeVec'.
 cerializeBasicVec ::
     ( U.RWCtx m s
-    , MutListElem s (Cerial (M.MutMsg s) a)
+    , MutListElem s (Cerial ('Mut s) a)
     , Cerialize s a
     )
-    => M.MutMsg s
+    => M.Message ('Mut s)
     -> V.Vector a
-    -> m (List (M.MutMsg s) (Cerial (M.MutMsg s) a))
+    -> m (List ('Mut s) (Cerial ('Mut s) a))
 cerializeBasicVec msg vec = do
     list <- newList msg (V.length vec)
     for_ [0..V.length vec - 1] $ \i -> do
@@ -367,12 +369,12 @@ cerializeBasicVec msg vec = do
 -- 'cerializeBasicVec', hence the name.
 cerializeCompositeVec ::
     ( U.RWCtx m s
-    , MutListElem s (Cerial (M.MutMsg s) a)
+    , MutListElem s (Cerial ('Mut s) a)
     , Marshal s a
     )
-    => M.MutMsg s
+    => M.Message ('Mut s)
     -> V.Vector a
-    -> m (List (M.MutMsg s) (Cerial (M.MutMsg s) a))
+    -> m (List ('Mut s) (Cerial ('Mut s) a))
 cerializeCompositeVec msg vec = do
     list <- newList msg (V.length vec)
     for_ [0..V.length vec - 1] $ \i -> do
@@ -382,9 +384,9 @@ cerializeCompositeVec msg vec = do
 
 -- Generic decerialize instances for lists, given that the element type has an instance.
 instance
-    ( ListElem M.ConstMsg (Cerial M.ConstMsg a)
+    ( ListElem 'Const (Cerial 'Const a)
     , Decerialize a
     ) => Decerialize (V.Vector a)
   where
-    type Cerial msg (V.Vector a) = List msg (Cerial msg a)
+    type Cerial mut (V.Vector a) = List mut (Cerial mut a)
     decerialize raw = V.generateM (length raw) (\i -> index i raw >>= decerialize)
