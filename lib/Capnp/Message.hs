@@ -139,7 +139,7 @@ data WordPtr mut = WordPtr
     }
 
 data Message (mut :: Mutability) where
-    MsgConst :: !(ConstMsg) -> Message 'Const
+    MsgConst :: !ConstMsg -> Message 'Const
     MsgMut :: !(MutMsg s) -> Message ('Mut s)
 
 instance Eq (Message mut) where
@@ -396,7 +396,7 @@ hGetMsg handle size =
             Right result ->
                 pure result
     readSegment n =
-        lift $ fmap fromByteString $ BS.hGet handle (fromIntegral n * 8)
+        lift (fromByteString <$> BS.hGet handle (fromIntegral n * 8))
 
 -- | Equivalent to @'hGetMsg' 'stdin'@
 getMsg :: WordCount -> IO (Message 'Const)
