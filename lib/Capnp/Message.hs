@@ -198,7 +198,7 @@ getWord msg WordAt{wordIndex=i, segIndex} = do
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
 -- in the message. It throws a 'E.BoundsError' if the address is out of bounds.
-setSegment :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
+setSegment :: WriteCtx m s => MutMsg s -> Int -> Segment (MutMsg s) -> m ()
 setSegment msg i seg = do
     checkIndex i =<< numSegs msg
     internalSetSeg msg i seg
@@ -206,7 +206,7 @@ setSegment msg i seg = do
 -- | @'setWord' message address value@ sets the word at @address@ in the
 -- message to @value@. If the address is not valid in the message, a
 -- 'E.BoundsError' will be thrown.
-setWord :: (WriteCtx m s, MonadThrow m) => MutMsg s -> WordAddr -> Word64 -> m ()
+setWord :: WriteCtx m s => MutMsg s -> WordAddr -> Word64 -> m ()
 setWord msg WordAt{wordIndex=i, segIndex} val = do
     seg <- getSegment msg segIndex
     checkIndex i =<< numWords seg
@@ -215,7 +215,7 @@ setWord msg WordAt{wordIndex=i, segIndex} val = do
 -- | @'setCap' message index cap@ sets the sets the capability at @index@ in
 -- the message's capability table to @cap@. If the index is out of bounds, a
 -- 'E.BoundsError' will be thrown.
-setCap :: (WriteCtx m s, MonadThrow m) => MutMsg s -> Int -> Client -> m ()
+setCap :: WriteCtx m s => MutMsg s -> Int -> Client -> m ()
 setCap msg@MutMsg{mutCaps} i cap = do
     checkIndex i =<< numCaps msg
     capTable <- AppendVec.getVector <$> readMutVar mutCaps
