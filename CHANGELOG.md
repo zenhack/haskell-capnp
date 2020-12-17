@@ -41,8 +41,8 @@
 ## Serialization
 
 * The library now supports canonicalization via Capnp.canonicalize
-* There is a new function Capnp.Message.singleSegment for construction
-  a `ConstMsg` from an (unframed) `Segment ConstMsg`.
+* There is a new function Capnp.Message.singleSegment for constructing a
+  `ConstMsg` from an (unframed) `Segment ConstMsg`.
 
 ## RPC
 
@@ -53,6 +53,11 @@
 
 * The included schema now match those in version 0.8 of the reference
   implementation
+
+# 0.6.0.3
+
+* Fix a race condition [(#74)][issue74] causing remote objects to very
+  occasionally be released too early.
 
 # 0.6.0.2
 
