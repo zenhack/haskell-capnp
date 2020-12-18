@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -26,6 +27,7 @@ module Capnp.GenHelpers.Pure
 import Data.Maybe (fromJust)
 
 import Capnp.Classes        (cerializeBasicVec, cerializeCompositeVec)
+import Capnp.Message        (Mutability (..))
 import Capnp.TraversalLimit (evalLimitT)
 import Codec.Capnp          (getRoot)
 
@@ -39,7 +41,7 @@ import qualified Capnp.Untyped as U
 
 -- | A valid implementation for 'Data.Default.Default' for any type that meets
 -- the given constraints.
-defaultStruct :: (C.Decerialize a, C.FromStruct M.ConstMsg (C.Cerial M.ConstMsg a)) => a
+defaultStruct :: (C.Decerialize a, C.FromStruct 'Const (C.Cerial 'Const a)) => a
 defaultStruct =
     fromJust $
     evalLimitT maxBound $
@@ -47,17 +49,17 @@ defaultStruct =
 
 convertValue ::
     ( U.RWCtx m s
-    , M.Message m M.ConstMsg
+    , M.MonadReadMessage 'Const m
     , C.Cerialize s a
-    , C.ToStruct (M.MutMsg s) (C.Cerial (M.MutMsg s) a)
+    , C.ToStruct ('Mut s) (C.Cerial ('Mut s) a)
     , C.Decerialize b
-    , C.FromStruct M.ConstMsg (C.Cerial M.ConstMsg b)
+    , C.FromStruct 'Const (C.Cerial 'Const b)
     ) => a -> m b
 convertValue from = do
-    constMsg :: M.ConstMsg <- Convert.valueToMsg from >>= freeze
+    constMsg :: M.Message 'Const <- Convert.valueToMsg from >>= freeze
     Convert.msgToValue constMsg >>= C.decerialize
 
 -- | convert a low-level value to a high-level one. This is not safe against
 -- malicious or invalid input; it is used for declaring top-level constants.
-toPurePtrConst :: C.Decerialize a => C.Cerial M.ConstMsg a -> a
+toPurePtrConst :: C.Decerialize a => C.Cerial 'Const a -> a
 toPurePtrConst = fromJust . evalLimitT maxBound . C.decerialize
