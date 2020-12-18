@@ -10,6 +10,8 @@ In particular
   Whereas 'U.ListOf' only deals with low-level encodings of lists,
   this module's 'List' type can represent typed lists.
 -}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -35,7 +37,9 @@ import Control.Monad.Catch (MonadThrow(throwM))
 
 import qualified Data.ByteString as BS
 
-import Capnp.Classes (FromPtr (..), ListElem (..), MutListElem (..), ToPtr (..))
+import Capnp.Classes
+    (FromPtr (..), ListElem (..), MutListElem (..), ToPtr (..))
+import Capnp.Message          (Mutability (..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Errors  as E
@@ -50,27 +54,27 @@ import qualified Capnp.Untyped as U
 --
 -- Rationale: validation would require doing an up-front pass over the data,
 -- which runs counter to the overall design of capnproto.
-newtype Text msg = Text (U.ListOf msg Word8)
+newtype Text mut = Text (U.ListOf mut Word8)
 -- The argument to the data constructor is the slice of the original message
 -- containing the text, including the NUL terminator.
 
 -- | A blob of bytes (@Data@ in capnproto's schema language). The argument
 -- to the data constructor is a slice into the message, containing the raw
 -- bytes.
-newtype Data msg = Data (U.ListOf msg Word8)
+newtype Data mut = Data (U.ListOf mut Word8)
 
 -- | @'newData' msg len@ allocates a new data blob of length @len@ bytes
 -- inside the message.
-newData :: M.WriteCtx m s => M.MutMsg s -> Int -> m (Data (M.MutMsg s))
+newData :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (Data ('Mut s))
 newData msg len = Data <$> U.allocList8 msg len
 
 -- | Interpret a list of 'Word8' as a capnproto 'Data' value.
-getData :: U.ReadCtx m msg => U.ListOf msg Word8 -> m (Data msg)
+getData :: U.ReadCtx m mut => U.ListOf mut Word8 -> m (Data mut)
 getData = pure . Data
 
 -- | @'newText' msg len@ Allocates a new 'Text' inside the message. The
 -- value has space for @len@ *bytes* (not characters).
-newText :: M.WriteCtx m s => M.MutMsg s -> Int -> m (Text (M.MutMsg s))
+newText :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (Text ('Mut s))
 newText msg len =
     Text <$> U.allocList8 msg (len+1)
 
@@ -78,7 +82,7 @@ newText msg len =
 --
 -- This vaildates that the list is NUL-terminated, but not that it is valid
 -- UTF-8. If it is not NUL-terminaed, a 'SchemaViolationError' is thrown.
-getText :: U.ReadCtx m msg => U.ListOf msg Word8 -> m (Text msg)
+getText :: U.ReadCtx m mut => U.ListOf mut Word8 -> m (Text mut)
 getText list = do
     let len = U.length list
     when (len == 0) $ throwM $ E.SchemaViolationError
@@ -89,22 +93,23 @@ getText list = do
     pure $ Text list
 
 -- | Convert a 'Data' to a 'BS.ByteString'.
-dataBytes :: U.ReadCtx m msg => Data msg -> m BS.ByteString
+dataBytes :: U.ReadCtx m 'Const => Data 'Const -> m BS.ByteString
 dataBytes (Data list) = U.rawBytes list
 
 -- | Return the underlying buffer containing the text. This does not include the
 -- null terminator.
-textBuffer :: U.ReadCtx m msg => Text msg -> m (U.ListOf msg Word8)
+textBuffer :: U.ReadCtx m mut => Text mut -> m (U.ListOf mut Word8)
 textBuffer (Text list) = U.take (U.length list - 1) list
 
 -- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
 -- (not counting the NUL terminator).
-textBytes :: U.ReadCtx m msg => Text msg -> m BS.ByteString
+textBytes :: U.ReadCtx m 'Const => Text 'Const -> m BS.ByteString
 textBytes = textBuffer >=> U.rawBytes
 
 ------------------- (Mut)ListElem instances for text and data ------------------
-instance ListElem msg (Data msg) where
-    newtype List msg (Data msg) = DataList (U.ListOf msg (Maybe (U.Ptr msg)))
+
+instance ListElem mut (Data mut) where
+    newtype List mut (Data mut) = DataList (U.ListOf mut (Maybe (U.Ptr mut)))
 
     listFromPtr msg ptr = DataList <$> fromPtr msg ptr
     toUntypedList (DataList l) = U.ListPtr l
@@ -112,13 +117,13 @@ instance ListElem msg (Data msg) where
     length (DataList l) = U.length l
     index i (DataList l) = ptrListIndex i l
 
-instance MutListElem s (Data (M.MutMsg s)) where
+instance MutListElem s (Data ('Mut s)) where
     setIndex (Data e) i (DataList l) =
         U.setIndex (Just (U.PtrList (U.List8 e))) i l
     newList msg len = DataList <$> U.allocListPtr msg len
 
-instance ListElem msg (Text msg) where
-    newtype List msg (Text msg) = TextList (U.ListOf msg (Maybe (U.Ptr msg)))
+instance ListElem mut (Text mut) where
+    newtype List mut (Text mut) = TextList (U.ListOf mut (Maybe (U.Ptr mut)))
 
     listFromPtr msg ptr = TextList <$> fromPtr msg ptr
     toUntypedList (TextList l) = U.ListPtr l
@@ -126,25 +131,27 @@ instance ListElem msg (Text msg) where
     length (TextList l) = U.length l
     index i (TextList l) = ptrListIndex i l
 
-instance MutListElem s (Text (M.MutMsg s)) where
+instance MutListElem s (Text ('Mut s)) where
     setIndex (Text e) i (TextList l) =
         U.setIndex (Just (U.PtrList (U.List8 e))) i l
     newList msg len = TextList <$> U.allocListPtr msg len
 
 -- helper for the above instances.
-ptrListIndex :: (U.ReadCtx m msg, FromPtr msg a) => Int -> U.ListOf msg (Maybe (U.Ptr msg)) -> m a
+ptrListIndex
+    :: (U.ReadCtx m mut, FromPtr mut a)
+    => Int -> U.ListOf mut (Maybe (U.Ptr mut)) -> m a
 ptrListIndex i list = do
     ptr <- U.index i list
     fromPtr (U.message list) ptr
 
 --------- To/FromPtr instances for Text and Data. These wrap lists of bytes. --------
 
-instance FromPtr msg (Data msg) where
+instance FromPtr mut (Data mut) where
     fromPtr msg ptr = fromPtr msg ptr >>= getData
-instance ToPtr s (Data (M.MutMsg s)) where
+instance ToPtr s (Data ('Mut s)) where
     toPtr msg (Data l) = toPtr msg l
 
-instance FromPtr msg (Text msg) where
+instance FromPtr mut (Text mut) where
     fromPtr msg ptr = case ptr of
         Just _ ->
             fromPtr msg ptr >>= getText
@@ -154,5 +161,5 @@ instance FromPtr msg (Text msg) where
             -- the empty string, so we bypass it here.
             Data bytes <- fromPtr msg ptr
             pure $ Text bytes
-instance ToPtr s (Text (M.MutMsg s)) where
+instance ToPtr s (Text ('Mut s)) where
     toPtr msg (Text l) = toPtr msg l
