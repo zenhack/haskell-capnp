@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -47,6 +48,7 @@ import Capnp.Classes
     , Marshal (..)
     , ToPtr (..)
     )
+import Capnp.Message          (Mutability (..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Message as M
@@ -132,7 +134,7 @@ instance Decerialize Struct where
             let nptrs = fromIntegral $ U.structPtrCount struct in
             V.generateM nptrs (\i -> U.getPtr i struct >>= decerialize)
 
-instance FromStruct M.ConstMsg Struct where
+instance FromStruct 'Const Struct where
     fromStruct = decerialize
 
 instance Marshal s Struct where
@@ -170,14 +172,14 @@ instance Cerialize s (Maybe Ptr) where
 -- | Decerialize an untyped list, whose elements are instances of Decerialize. This isn't
 -- an instance, since it would have to be an instance of (List a), which conflicts with
 -- the above.
-decerializeListOf :: (U.ReadCtx m M.ConstMsg, Decerialize a)
-    => U.ListOf M.ConstMsg (Cerial M.ConstMsg a) -> m (ListOf a)
+decerializeListOf :: (U.ReadCtx m 'Const, Decerialize a)
+    => U.ListOf 'Const (Cerial 'Const a) -> m (ListOf a)
 decerializeListOf raw = V.generateM (U.length raw) (\i -> U.index i raw >>= decerialize)
 
 -- | Decerialize an untyped list, leaving the elements of the list as-is. The is most
 -- interesting for types that go in the data section of a struct, hence the name.
-decerializeListOfWord :: (U.ReadCtx m M.ConstMsg)
-    => U.ListOf M.ConstMsg a -> m (ListOf a)
+decerializeListOfWord :: (U.ReadCtx m 'Const)
+    => U.ListOf 'Const a -> m (ListOf a)
 decerializeListOfWord raw = V.generateM (U.length raw) (`U.index` raw)
 
 instance Decerialize List where
@@ -225,13 +227,15 @@ instance Cerialize s List where
             (0, 0)
 
 
-cerializeListOfWord :: U.RWCtx m s => (Int -> m (U.ListOf (M.MutMsg s) a)) -> ListOf a -> m (U.ListOf (M.MutMsg s) a)
+cerializeListOfWord
+    :: U.RWCtx m s
+    => (Int -> m (U.ListOf ('Mut s) a)) -> ListOf a -> m (U.ListOf ('Mut s) a)
 cerializeListOfWord alloc list = do
     ret <- alloc (length list)
     marshalListOfWord ret list
     pure ret
 
-marshalListOfWord :: U.RWCtx m s => U.ListOf (M.MutMsg s) a -> ListOf a -> m ()
+marshalListOfWord :: U.RWCtx m s => U.ListOf ('Mut s) a -> ListOf a -> m ()
 marshalListOfWord raw l =
     forM_ [0..length l - 1] $ \i ->
         U.setIndex (l V.! i) i raw
