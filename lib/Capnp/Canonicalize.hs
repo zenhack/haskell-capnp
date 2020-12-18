@@ -2,6 +2,7 @@
 --
 -- https://capnproto.org/encoding.html#canonicalization
 {-# LANGUAGE BangPatterns     #-}
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 module Capnp.Canonicalize
@@ -31,6 +32,7 @@ import Data.Maybe       (isNothing)
 import Data.Traversable (for)
 
 import           Capnp.Bits    (WordCount)
+import           Capnp.Message (Mutability (..))
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 
@@ -41,7 +43,9 @@ import qualified Capnp.Untyped as U
 -- In addition to the usual reasons for failure when reading a message (traversal limit,
 -- malformed messages), this can fail if the message does not fit in a single segment,
 -- as the canonical form requires single-segment messages.
-canonicalize :: (U.RWCtx m s, M.Message m msgIn) => U.Struct msgIn -> m (M.MutMsg s, M.Segment (M.MutMsg s))
+canonicalize
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.Struct mutIn -> m (M.Message ('Mut s), M.Segment ('Mut s))
 canonicalize rootStructIn = do
     let msgIn = U.message rootStructIn
     -- Note [Allocation strategy]
@@ -52,7 +56,7 @@ canonicalize rootStructIn = do
     segOut <- M.getSegment msgOut 0
     pure (msgOut, segOut)
 
-totalWords :: U.ReadCtx m msg => msg -> m WordCount
+totalWords :: U.ReadCtx m mut => M.Message mut -> m WordCount
 totalWords msg = do
     -- Note [Allocation strategy]
     segCount <- M.numSegs msg
@@ -61,14 +65,18 @@ totalWords msg = do
         M.numWords seg
     pure $ sum sizes
 
-cloneCanonicalStruct :: (U.RWCtx m s, M.Message m msgIn) => U.Struct msgIn -> M.MutMsg s -> m (U.Struct (M.MutMsg s))
+cloneCanonicalStruct
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.Struct mutIn -> M.Message ('Mut s) -> m (U.Struct ('Mut s))
 cloneCanonicalStruct structIn msgOut = do
     (nWords, nPtrs) <- findCanonicalSectionCounts structIn
     structOut <- U.allocStruct msgOut (fromIntegral nWords) (fromIntegral nPtrs)
     copyCanonicalStruct structIn structOut
     pure structOut
 
-copyCanonicalStruct :: (U.RWCtx m s, M.Message m msgIn) => U.Struct msgIn -> U.Struct (M.MutMsg s) -> m ()
+copyCanonicalStruct
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.Struct mutIn -> U.Struct ('Mut s) -> m ()
 copyCanonicalStruct structIn structOut = do
     let nWords = fromIntegral $ U.structWordCount structOut
         nPtrs = fromIntegral $ U.structPtrCount structOut
@@ -94,7 +102,9 @@ canonicalSectionCount isDefault getIndex total = do
         then canonicalSectionCount isDefault getIndex (total - 1)
         else pure $ fromIntegral total
 
-cloneCanonicalPtr :: (U.RWCtx m s, M.Message m msgIn) => Maybe (U.Ptr msgIn) -> M.MutMsg s -> m (Maybe (U.Ptr (M.MutMsg s)))
+cloneCanonicalPtr
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => Maybe (U.Ptr mutIn) -> M.Message ('Mut s) -> m (Maybe (U.Ptr ('Mut s)))
 cloneCanonicalPtr ptrIn msgOut =
     case ptrIn of
         Nothing ->
@@ -107,7 +117,9 @@ cloneCanonicalPtr ptrIn msgOut =
         Just (U.PtrList list) ->
             Just . U.PtrList <$> cloneCanonicalList list msgOut
 
-cloneCanonicalList :: (U.RWCtx m s, M.Message m msgIn) => U.List msgIn -> M.MutMsg s -> m (U.List (M.MutMsg s))
+cloneCanonicalList
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.List mutIn -> M.Message ('Mut s) -> m (U.List ('Mut s))
 cloneCanonicalList listIn msgOut =
     case listIn of
         U.List0 l -> U.List0 <$> U.allocList0 msgOut (U.length l)
@@ -119,7 +131,9 @@ cloneCanonicalList listIn msgOut =
         U.ListPtr l -> U.ListPtr <$> (U.allocListPtr msgOut (U.length l) >>= copyCanonicalPtrList l)
         U.ListStruct l -> U.ListStruct <$> cloneCanonicalStructList l msgOut
 
-copyCanonicalDataList :: (U.RWCtx m s, M.Message m msgIn) => U.ListOf msgIn a -> U.ListOf (M.MutMsg s) a -> m (U.ListOf (M.MutMsg s) a)
+copyCanonicalDataList
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.ListOf mutIn a -> U.ListOf ('Mut s) a -> m (U.ListOf ('Mut s) a)
 copyCanonicalDataList listIn listOut = do
     for_ [0..U.length listIn - 1] $ \i -> do
         value <- U.index i listIn
@@ -127,10 +141,10 @@ copyCanonicalDataList listIn listOut = do
     pure listOut
 
 copyCanonicalPtrList
-    :: (U.RWCtx m s, M.Message m msgIn)
-    => U.ListOf msgIn (Maybe (U.Ptr msgIn))
-    -> U.ListOf (M.MutMsg s) (Maybe (U.Ptr (M.MutMsg s)))
-    -> m (U.ListOf (M.MutMsg s) (Maybe (U.Ptr (M.MutMsg s))))
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.ListOf mutIn (Maybe (U.Ptr mutIn))
+    -> U.ListOf ('Mut s) (Maybe (U.Ptr ('Mut s)))
+    -> m (U.ListOf ('Mut s) (Maybe (U.Ptr ('Mut s))))
 copyCanonicalPtrList listIn listOut = do
     for_ [0..U.length listIn - 1] $ \i -> do
         ptrIn <- U.index i listIn
@@ -139,10 +153,10 @@ copyCanonicalPtrList listIn listOut = do
     pure listOut
 
 cloneCanonicalStructList
-    :: (U.RWCtx m s, M.Message m msgIn)
-    => U.ListOf msgIn (U.Struct msgIn)
-    -> M.MutMsg s
-    -> m (U.ListOf (M.MutMsg s) (U.Struct (M.MutMsg s)))
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.ListOf mutIn (U.Struct mutIn)
+    -> M.Message ('Mut s)
+    -> m (U.ListOf ('Mut s) (U.Struct ('Mut s)))
 cloneCanonicalStructList listIn msgOut = do
     (nWords, nPtrs) <- findCanonicalListSectionCounts listIn
     listOut <- U.allocCompositeList msgOut nWords nPtrs (U.length listIn)
@@ -150,9 +164,9 @@ cloneCanonicalStructList listIn msgOut = do
     pure listOut
 
 copyCanonicalStructList
-    :: (U.RWCtx m s, M.Message m msgIn)
-    => U.ListOf msgIn (U.Struct msgIn)
-    -> U.ListOf (M.MutMsg s) (U.Struct (M.MutMsg s))
+    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
+    => U.ListOf mutIn (U.Struct mutIn)
+    -> U.ListOf ('Mut s) (U.Struct ('Mut s))
     -> m ()
 copyCanonicalStructList listIn listOut =
     for_ [0..U.length listIn - 1] $ \i -> do
@@ -160,7 +174,9 @@ copyCanonicalStructList listIn listOut =
         structOut <- U.index i listOut
         copyCanonicalStruct structIn structOut
 
-findCanonicalListSectionCounts :: U.ReadCtx m msg => U.ListOf msg (U.Struct msg) -> m (Word16, Word16)
+findCanonicalListSectionCounts
+    :: U.ReadCtx m mut
+    => U.ListOf mut (U.Struct mut) -> m (Word16, Word16)
 findCanonicalListSectionCounts list = go 0 0 0 where
     go i !nWords !nPtrs
         | i >= U.length list =
