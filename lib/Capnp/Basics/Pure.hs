@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -33,10 +34,10 @@ import qualified Data.Vector     as V
 import Capnp.Classes
 
 import Capnp.Errors  (Error(InvalidUtf8Error))
+import Capnp.Message (Mutability (..))
 import Capnp.Untyped (rawBytes)
 
 import qualified Capnp.Basics  as Basics
-import qualified Capnp.Message as M
 import qualified Capnp.Untyped as Untyped
 
 -- | A capnproto @Data@ value. This is just an alias for 'BS.ByteString'.
@@ -78,7 +79,7 @@ instance Cerialize s Text where
         marshalTextBytes bytes ret
         pure ret
 
-marshalTextBytes :: Untyped.RWCtx m s => BS.ByteString -> Basics.Text (M.MutMsg s) -> m ()
+marshalTextBytes :: Untyped.RWCtx m s => BS.ByteString -> Basics.Text ('Mut s) -> m ()
 marshalTextBytes bytes text = do
     buffer <- Basics.textBuffer text
     marshalInto (Basics.Data buffer) bytes
