@@ -21,9 +21,9 @@ module Capnp
     , Basics.textBytes
 
     -- * Working with messages
-    , Message.ConstMsg
-    , Message.Message(..)
-    , Message.MutMsg
+    , Message.Message
+    , Message.Mutability(..)
+    , Message.MonadReadMessage(..)
     , Message.newMessage
 
     -- * Canonicalizing messages
