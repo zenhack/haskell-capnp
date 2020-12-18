@@ -8,6 +8,7 @@ are not expected to invoke them directly.
 These helpers are used by the low-level api. "Capnp.GenHelpers.Pure"
 defines helpers used by high-level api.
 -}
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 module Capnp.GenHelpers where
@@ -21,7 +22,7 @@ import qualified Data.ByteString as BS
 
 import Capnp.Bits
 
-import Capnp (bsToMsg, evalLimitT)
+import Capnp (Mutability (..), bsToMsg, evalLimitT)
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
@@ -31,7 +32,7 @@ import qualified Capnp.Untyped as U
 -- struct's data section. @index@ is the index of the 64-bit word in the data
 -- section in which the field resides. @offset@ is the offset in bits from the
 -- start of that word to the field. @def@ is the default value for this field.
-getWordField :: (U.ReadCtx m msg, C.IsWord a) => U.Struct msg -> Int -> Int -> Word64 -> m a
+getWordField :: (U.ReadCtx m mut, C.IsWord a) => U.Struct mut -> Int -> Int -> Word64 -> m a
 getWordField struct idx offset def = fmap
     ( C.fromWord
     . xor def
@@ -47,13 +48,13 @@ setWordField ::
     ( U.RWCtx m s
     , Bounded a, Integral a, C.IsWord a, Bits a
     )
-    => U.Struct (M.MutMsg s) -> a -> Int -> Int -> Word64 -> m ()
+    => U.Struct ('Mut s) -> a -> Int -> Int -> Word64 -> m ()
 setWordField struct value idx offset def = do
     old <- U.getData idx struct
     let new = replaceBits (value `xor` C.fromWord def) old offset
     U.setData new idx struct
 
-embedCapPtr :: M.WriteCtx m s => M.MutMsg s -> M.Client -> m (Maybe (U.Ptr (M.MutMsg s)))
+embedCapPtr :: M.WriteCtx m s => M.Message ('Mut s) -> M.Client -> m (Maybe (U.Ptr ('Mut s)))
 embedCapPtr msg client =
     Just . U.PtrCap <$> U.appendCap msg client
 
@@ -64,13 +65,13 @@ embedCapPtr msg client =
 -- if decoding is not successful.
 --
 -- The purpose of this is for defining constants of pointer type from a schema.
-getPtrConst :: C.FromPtr M.ConstMsg a => BS.ByteString -> a
+getPtrConst :: C.FromPtr 'Const a => BS.ByteString -> a
 getPtrConst bytes = fromJust $ do
     msg <- bsToMsg bytes
     evalLimitT maxBound $ U.rootPtr msg >>= U.getPtr 0 >>= C.fromPtr msg
 
 
-getTag :: U.ReadCtx m msg => U.Struct msg -> Int -> m Word16
+getTag :: U.ReadCtx m mut => U.Struct mut -> Int -> m Word16
 getTag struct offset = do
     word <- U.getData (offset `div` 4) struct
     pure $ fromIntegral $ word `shiftR` ((offset `mod` 4) * 16)
