@@ -6,6 +6,7 @@ This module provides utilities for reading and writing values to and
 from file 'Handle's.
 -}
 {-# LANGUAGE BangPatterns     #-}
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Capnp.IO
     ( hGetValue
@@ -33,10 +34,11 @@ import System.IO.Error           (eofErrorType, mkIOError)
 
 import qualified Data.ByteString as BS
 
-import Capnp.Bits    (WordCount, wordsToBytes)
+import Capnp.Bits           (WordCount, wordsToBytes)
 import Capnp.Classes
     (Cerialize (..), Decerialize (..), FromStruct (..), ToStruct (..))
 import Capnp.Convert        (msgToLBS, valueToLBS)
+import Capnp.Message        (Mutability (..))
 import Capnp.TraversalLimit (evalLimitT)
 import Codec.Capnp          (getRoot, setRoot)
 import Data.Mutable         (Thaw (..))
@@ -49,23 +51,23 @@ import qualified Capnp.Message as M
 --
 -- It may throw a 'Capnp.Errors.Error' if there is a problem decoding the message,
 -- or an 'IOError' raised by the underlying IO libraries.
-hGetValue :: FromStruct M.ConstMsg a => Handle -> WordCount -> IO a
+hGetValue :: FromStruct 'Const a => Handle -> WordCount -> IO a
 hGetValue handle limit = do
     msg <- M.hGetMsg handle limit
     evalLimitT limit (getRoot msg)
 
 -- | @'getValue'@ is equivalent to @'hGetValue' 'stdin'@.
-getValue :: FromStruct M.ConstMsg a => WordCount -> IO a
+getValue :: FromStruct 'Const a => WordCount -> IO a
 getValue = hGetValue stdin
 
 -- | Like 'hGetValue', except that it takes a socket instead of a 'Handle'.
-sGetValue :: FromStruct M.ConstMsg a => Socket -> WordCount -> IO a
+sGetValue :: FromStruct 'Const a => Socket -> WordCount -> IO a
 sGetValue socket limit = do
     msg <- sGetMsg socket limit
     evalLimitT limit (getRoot msg)
 
 -- | Like 'hGetMsg', except that it takes a socket instead of a 'Handle'.
-sGetMsg :: Socket -> WordCount -> IO M.ConstMsg
+sGetMsg :: Socket -> WordCount -> IO (M.Message 'Const)
 sGetMsg socket limit =
     evalLimitT limit $ M.readMessage (lift read32) (lift . readSegment)
   where
@@ -76,9 +78,8 @@ sGetMsg socket limit =
             (fromIntegral (bytes `BS.index` 1) `shiftL`  8) .|.
             (fromIntegral (bytes `BS.index` 2) `shiftL` 16) .|.
             (fromIntegral (bytes `BS.index` 3) `shiftL` 24)
-    readSegment !words = do
-        bytes <- recvFull (fromIntegral $ wordsToBytes words)
-        M.fromByteString bytes
+    readSegment !words =
+        M.fromByteString <$> recvFull (fromIntegral $ wordsToBytes words)
 
     -- | Like recv, but (1) never returns less than `count` bytes, (2)
     -- uses `socket`, rather than taking the socket as an argument, and (3)
@@ -98,7 +99,7 @@ sGetMsg socket limit =
 -- | @'hPutValue' handle value@ writes @value@ to handle, as the root object of
 -- a message. If it throws an exception, it will be an 'IOError' raised by the
 -- underlying IO libraries.
-hPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+hPutValue :: (Cerialize RealWorld a, ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a))
     => Handle -> a -> IO ()
 hPutValue handle value = do
     msg <- M.newMessage Nothing
@@ -108,16 +109,16 @@ hPutValue handle value = do
     M.hPutMsg handle constMsg
 
 -- | 'putValue' is equivalent to @'hPutValue' 'stdin'@
-putValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+putValue :: (Cerialize RealWorld a, ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a))
     => a -> IO ()
 putValue = hPutValue stdout
 
 -- | Like 'hPutMsg', except that it takes a 'Socket' instead of a 'Handle'.
-sPutMsg :: Socket -> M.ConstMsg -> IO ()
+sPutMsg :: Socket -> M.Message 'Const -> IO ()
 sPutMsg socket = sendLazy socket . msgToLBS
 
 -- | Like 'hPutValue', except that it takes a 'Socket' instead of a 'Handle'.
-sPutValue :: (Cerialize RealWorld a, ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a))
+sPutValue :: (Cerialize RealWorld a, ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a))
     => Socket -> a -> IO ()
 sPutValue socket value = do
     lbs <- evalLimitT maxBound $ valueToLBS value
