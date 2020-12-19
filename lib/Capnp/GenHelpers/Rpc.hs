@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -15,6 +16,7 @@ import Control.Monad.Catch    (MonadThrow (..))
 import Data.Default           (def)
 
 import Capnp.Classes        (Decerialize (..), FromPtr (..))
+import Capnp.Message        (Mutability (..))
 import Capnp.TraversalLimit (evalLimitT)
 
 import qualified Capnp.Errors          as E
@@ -48,7 +50,7 @@ handleMethod server method paramContent fulfiller = do
 -- GHC gets very confused if we try to just define a single instance
 -- @IsClient a => FromPtr msg a@, so instead we define this helper function and
 -- emit a trivial instance for each type from the code generator.
-isClientFromPtr :: (Rpc.IsClient a, U.ReadCtx m msg) => msg -> Maybe (U.Ptr msg) -> m a
+isClientFromPtr :: (Rpc.IsClient a, U.ReadCtx m mut) => M.Message mut -> Maybe (U.Ptr mut) -> m a
 isClientFromPtr _ Nothing                     = pure $ Rpc.fromClient Rpc.nullClient
 isClientFromPtr _ (Just (U.PtrCap cap)) = Rpc.fromClient <$> U.getClient cap
 isClientFromPtr _ (Just _) = throwM $ E.SchemaViolationError "Expected capability pointer"
@@ -56,7 +58,7 @@ isClientFromPtr _ (Just _) = throwM $ E.SchemaViolationError "Expected capabilit
 -- | A valid implementation of 'toPtr' for any type that implements 'IsClient'.
 --
 -- See the notes for 'isClientFromPtr'.
-isClientToPtr :: (Rpc.IsClient a, M.WriteCtx m s) => M.MutMsg s -> a -> m (Maybe (U.Ptr (M.MutMsg s)))
+isClientToPtr :: (Rpc.IsClient a, M.WriteCtx m s) => M.Message ('Mut s) -> a -> m (Maybe (U.Ptr ('Mut s)))
 isClientToPtr msg client = do
     cap <- U.appendCap msg (Rpc.toClient client)
     pure $ Just $ U.PtrCap cap

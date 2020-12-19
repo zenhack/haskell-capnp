@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE LambdaCase             #-}
@@ -55,7 +56,7 @@ import Capnp.Classes
     , ToStruct(toStruct)
     )
 import Capnp.Convert        (valueToMsg)
-import Capnp.Message        (ConstMsg, MutMsg)
+import Capnp.Message        (Mutability (..))
 import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
 import Capnp.Rpc.Promise    (Fulfiller, breakPromise, fulfill, newCallback)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
@@ -83,16 +84,16 @@ import qualified Internal.TCloseQ         as TCloseQ
 --   calls to be serviced before the current one is finished.
 newtype MethodHandler m p r = MethodHandler
     { handleMethod
-        :: Maybe (Ptr ConstMsg)
-        -> Fulfiller (Maybe (Ptr ConstMsg))
+        :: Maybe (Ptr 'Const)
+        -> Fulfiller (Maybe (Ptr 'Const))
         -> m ()
     }
 
 invoke
     :: MonadSTM m
-    => MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
-    -> Maybe (Ptr ConstMsg)
-    -> Fulfiller (Maybe (Ptr ConstMsg))
+    => MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
+    -> Maybe (Ptr 'Const)
+    -> Fulfiller (Maybe (Ptr 'Const))
     -> m ()
 invoke = handleMethod
 
@@ -106,9 +107,9 @@ pureHandler ::
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p
-    , FromPtr ConstMsg (Cerial ConstMsg p)
+    , FromPtr 'Const (Cerial 'Const p)
     , Cerialize s r
-    , ToStruct (MutMsg s) (Cerial (MutMsg s) r)
+    , ToStruct ('Mut s) (Cerial ('Mut s) r)
     ) =>
     (cap -> p -> m r)
     -> cap
@@ -137,11 +138,11 @@ rawHandler ::
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p
-    , FromPtr ConstMsg (Cerial ConstMsg p)
+    , FromPtr 'Const (Cerial 'Const p)
     , Decerialize r
-    , ToStruct ConstMsg (Cerial ConstMsg r)
+    , ToStruct 'Const (Cerial 'Const r)
     ) =>
-    (cap -> Cerial ConstMsg p -> m (Cerial ConstMsg r))
+    (cap -> Cerial 'Const p -> m (Cerial 'Const r))
     -> cap
     -> MethodHandler m p r
 rawHandler f cap = MethodHandler
@@ -163,11 +164,11 @@ rawAsyncHandler ::
     , PrimMonad m
     , s ~ PrimState m
     , Decerialize p
-    , FromPtr ConstMsg (Cerial ConstMsg p)
+    , FromPtr 'Const (Cerial 'Const p)
     , Decerialize r
-    , ToStruct ConstMsg (Cerial ConstMsg r)
+    , ToStruct 'Const (Cerial 'Const r)
     ) =>
-    (cap -> Cerial ConstMsg p -> Fulfiller (Cerial ConstMsg r) -> m ())
+    (cap -> Cerial 'Const p -> Fulfiller (Cerial 'Const r) -> m ())
     -> cap
     -> MethodHandler m p r
 rawAsyncHandler f cap = MethodHandler
@@ -183,12 +184,12 @@ rawAsyncHandler f cap = MethodHandler
 -- one that deals with untyped pointers.
 toUntypedHandler
     :: MethodHandler m p r
-    -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+    -> MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
 toUntypedHandler MethodHandler{..} = MethodHandler{..}
 
 -- | Inverse of 'toUntypedHandler'
 fromUntypedHandler
-    :: MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+    :: MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
     -> MethodHandler m p r
 fromUntypedHandler MethodHandler{..} = MethodHandler{..}
 
@@ -196,8 +197,8 @@ fromUntypedHandler MethodHandler{..} = MethodHandler{..}
 -- pointer for the method's parameter, and a 'Fulfiller' which accepts
 -- an untyped pointer for the method's return value.
 untypedHandler
-    :: (Maybe (Ptr ConstMsg) -> Fulfiller (Maybe (Ptr ConstMsg)) -> m ())
-    -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+    :: (Maybe (Ptr 'Const) -> Fulfiller (Maybe (Ptr 'Const)) -> m ())
+    -> MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
 untypedHandler = MethodHandler
 
 -- | @'methodThrow' exn@ is a 'MethodHandler' which always throws @exn@.
@@ -234,7 +235,7 @@ data ServerOps m = ServerOps
     { handleCall
         :: Word64
         -> Word16
-        -> MethodHandler m (Maybe (Ptr ConstMsg)) (Maybe (Ptr ConstMsg))
+        -> MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
     -- ^ Handle a method call; takes the interface and method id and returns
     -- a handler for the specific method.
     , handleStop :: m ()
@@ -250,9 +251,9 @@ data CallInfo = CallInfo
     -- ^ The id of the interface whose method is being called.
     , methodId    :: !Word16
     -- ^ The method id of the method being called.
-    , arguments   :: Maybe (Ptr ConstMsg)
+    , arguments   :: Maybe (Ptr 'Const)
     -- ^ The arguments to the method call.
-    , response    :: Fulfiller (Maybe (Ptr ConstMsg))
+    , response    :: Fulfiller (Maybe (Ptr 'Const))
     -- ^ A 'Fulfiller' which accepts the method's return value.
     }
 

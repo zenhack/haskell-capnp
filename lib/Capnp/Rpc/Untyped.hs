@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DuplicateRecordFields      #-}
 {-# LANGUAGE FlexibleContexts           #-}
@@ -92,7 +93,7 @@ import qualified StmContainers.Map as M
 
 import Capnp.Classes        (cerialize, decerialize, fromStruct, new, toStruct)
 import Capnp.Convert        (valueToMsg)
-import Capnp.Message        (ConstMsg)
+import Capnp.Message        (Message, Mutability (..))
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -151,7 +152,7 @@ import qualified Internal.TCloseQ         as TCloseQ
 --   implementation. See the protocol documentation for more info.
 
 -- | We use this type often enough that the types get noisy without a shorthand:
-type RawMPtr = Maybe (UntypedRaw.Ptr ConstMsg)
+type RawMPtr = Maybe (UntypedRaw.Ptr 'Const)
 
 
 -- | Errors which can be thrown by the rpc system.
@@ -201,8 +202,8 @@ data LiveState
     | Dead
 
 data Conn' = Conn'
-    { sendQ            :: TBQueue ConstMsg
-    , recvQ            :: TBQueue ConstMsg
+    { sendQ            :: TBQueue (Message 'Const)
+    , recvQ            :: TBQueue (Message 'Const)
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
 
@@ -1244,7 +1245,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
     insertBootstrap conn' _ (Just _) =
         abortConn conn' $ eFailed "Duplicate question ID"
 
-handleCallMsg :: Conn -> RawRpc.Call ConstMsg -> LimitT STM ()
+handleCallMsg :: Conn -> RawRpc.Call 'Const -> LimitT STM ()
 handleCallMsg conn callMsg = do
     conn'@Conn'{exports, answers} <- lift $ getLive conn
     questionId <- RawRpc.get_Call'questionId callMsg
@@ -1342,7 +1343,7 @@ transformClient transform ptr conn =
     (unmarshalOps (V.toList transform) >>= flip ptrPathClient ptr)
         `catchSTM` abortConn conn
 
-ptrClient :: UntypedRaw.ReadCtx m ConstMsg => RawMPtr -> m Client
+ptrClient :: UntypedRaw.ReadCtx m 'Const => RawMPtr -> m Client
 ptrClient Nothing = pure nullClient
 ptrClient (Just (UntypedRaw.PtrCap cap)) = UntypedRaw.getClient cap
 ptrClient (Just _) = throwM $ eFailed "Tried to call method on non-capability."
@@ -1350,7 +1351,7 @@ ptrClient (Just _) = throwM $ eFailed "Tried to call method on non-capability."
 -- | Follow a series of pointer indicies, returning the final value, or 'Left'
 -- with an error if any of the pointers in the chain (except the last one) is
 -- a non-null non struct.
-followPtrs :: UntypedRaw.ReadCtx m ConstMsg => [Word16] -> RawMPtr -> m RawMPtr
+followPtrs :: UntypedRaw.ReadCtx m 'Const => [Word16] -> RawMPtr -> m RawMPtr
 followPtrs [] ptr =
     pure ptr
 followPtrs (_:_) Nothing =
@@ -1360,7 +1361,7 @@ followPtrs (i:is) (Just (UntypedRaw.PtrStruct struct)) =
 followPtrs (_:_) (Just _) =
     throwM $ eFailed "Tried to access pointer field of non-struct."
 
-sendRawMsg :: Conn' -> ConstMsg -> STM ()
+sendRawMsg :: Conn' -> Message 'Const -> STM ()
 sendRawMsg conn' = writeTBQueue (sendQ conn')
 
 sendCall :: Conn' -> Call -> STM ()
@@ -1448,7 +1449,7 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             pure msg
         )
 
-acceptReturn :: Conn -> RawRpc.Return ConstMsg -> LimitT STM Return
+acceptReturn :: Conn -> RawRpc.Return 'Const -> LimitT STM Return
 acceptReturn conn ret = do
     answerId <- QAId <$> RawRpc.get_Return'answerId ret
     releaseParamCaps <- RawRpc.get_Return'releaseParamCaps ret
@@ -1660,7 +1661,7 @@ insertNewAbort keyTypeName conn key value =
 -- the capabilities are within the subtree under the pointer.
 genSendableCapTableRaw
     :: Conn
-    -> Maybe (UntypedRaw.Ptr ConstMsg)
+    -> Maybe (UntypedRaw.Ptr 'Const)
     -> STM (V.Vector R.CapDescriptor)
 genSendableCapTableRaw _ Nothing = pure V.empty
 genSendableCapTableRaw conn (Just ptr) =
@@ -2107,7 +2108,7 @@ emitCap targetConn (Client (Just client')) = case client' of
   where
     newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
 
-acceptPayload :: Conn -> RawRpc.Payload ConstMsg -> LimitT STM Payload
+acceptPayload :: Conn -> RawRpc.Payload 'Const -> LimitT STM Payload
 acceptPayload conn payload = do
     capTable <- RawRpc.get_Payload'capTable payload >>= decerialize
     clients <- lift $ traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capTable
