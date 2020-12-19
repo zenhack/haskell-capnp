@@ -22,9 +22,12 @@ module Capnp
 
     -- * Working with messages
     , Message.Message
+    , Message.Segment
     , Message.Mutability(..)
     , Message.MonadReadMessage(..)
     , Message.newMessage
+    , Message.fromByteString
+    , Message.toByteString
 
     -- * Canonicalizing messages
     , canonicalize
