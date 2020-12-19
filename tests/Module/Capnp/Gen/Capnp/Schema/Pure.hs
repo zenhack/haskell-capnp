@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE NegativeLiterals      #-}
@@ -10,12 +11,12 @@ module Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 import Data.Proxy
 import Test.Hspec
 
-import Control.Exception.Safe  (bracket)
-import Control.Monad           (when)
-import Control.Monad.Primitive (RealWorld)
-import Data.Default            (Default (..))
-import Data.Foldable           (traverse_)
-import System.Directory        (removeFile)
+import Control.Exception.Safe    (bracket)
+import Control.Monad             (when)
+import Control.Monad.Primitive   (RealWorld)
+import Data.Default              (Default (..))
+import Data.Foldable             (traverse_)
+import System.Directory          (removeFile)
 import System.IO
     (IOMode(ReadMode, WriteMode), hClose, openBinaryTempFile, withBinaryFile)
 import Test.QuickCheck           (Property, property)
@@ -32,7 +33,8 @@ import Util
 
 import Instances ()
 
-import Capnp         (getRoot, hGetValue, hPutValue, setRoot)
+import Capnp
+    (Mutability (..), getRoot, hGetValue, hPutValue, setRoot)
 import Capnp.Classes
     ( Allocate (..)
     , Cerialize (..)
@@ -66,9 +68,9 @@ encodeTests = describe "schema encode tests" $
         ( Show a
         , Eq a
         , Cerialize RealWorld a
-        , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
-        , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
-        , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
+        , FromStruct 'Const (Cerial 'Const a)
+        , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
+        , Allocate RealWorld (Cerial ('Mut RealWorld) a)
         ) => (String, a, String) -> Spec
     testCase (name, expectedValue, expectedText) = describe "cerialize" $
         it ("Should agree with capnp decode (with name = " ++ name ++ ")") $ do
@@ -78,7 +80,7 @@ encodeTests = describe "schema encode tests" $
                 cerialOut <- cerialize msg expectedValue
                 setRoot cerialOut
                 freeze msg
-            builder <- M.encode msg
+            let builder = M.encode msg
             actualText <- capnpDecode
                 (LBS.toStrict $ BB.toLazyByteString builder)
                 (MsgMetaData schemaSchemaSrc name)
@@ -402,7 +404,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
         ( Eq a
         , Show a
         , Decerialize a
-        , FromStruct M.ConstMsg a
+        , FromStruct 'Const a
         ) => String -> [(String, a)] -> Spec
     decodeTests typename cases =
         describe ("Decode " ++ typename) $ traverse_ (testCase typename) cases
@@ -423,9 +425,9 @@ decodeDefault ::
     ( Show a
     , Eq a
     , Default a
-    , FromStruct M.ConstMsg a
+    , FromStruct 'Const a
     , Cerialize RealWorld a
-    , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
+    , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
     ) => String -> Proxy a -> Spec
 decodeDefault typename proxy =
     specify ("The empty struct decodes to the default value for " ++ typename) $ do
@@ -468,9 +470,9 @@ propCase name proxy = describe ("...for " ++ name) $ do
 prop_hGetPutInverses ::
     ( Show a
     , Eq a
-    , FromStruct M.ConstMsg a
+    , FromStruct 'Const a
     , Cerialize RealWorld a
-    , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
+    , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
     ) => Proxy a -> a -> Property
 prop_hGetPutInverses _proxy expected = propertyIO $ do
     -- This is a little more complicated than I'd like due to resource
@@ -495,9 +497,9 @@ prop_cerializeDecerializeInverses ::
     ( Show a
     , Eq a
     , Cerialize RealWorld a
-    , FromStruct M.ConstMsg (Cerial M.ConstMsg a)
-    , ToStruct (M.MutMsg RealWorld) (Cerial (M.MutMsg RealWorld) a)
-    , Allocate RealWorld (Cerial (M.MutMsg RealWorld) a)
+    , FromStruct 'Const (Cerial 'Const a)
+    , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
+    , Allocate RealWorld (Cerial ('M.Mut RealWorld) a)
     ) => Proxy a -> a -> Property
 prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
     actual <- evalLimitT maxBound $ do
@@ -505,7 +507,7 @@ prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
         msg <- M.newMessage Nothing
         cerialOut <- cerialize msg expected
         setRoot cerialOut
-        constMsg :: M.ConstMsg <- freeze msg
+        constMsg :: M.Message 'Const <- freeze msg
         root <- U.rootPtr constMsg
         cerialIn <- fromStruct root
         decerialize cerialIn

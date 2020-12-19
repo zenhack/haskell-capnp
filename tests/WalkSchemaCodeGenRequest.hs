@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -59,9 +60,9 @@ walkSchemaCodeGenRequestTest =
             endQuota <- execLimitT 4096 (rootPtr msg >>= reader)
             endQuota `shouldBe` 3452
   where
-    reader :: Struct M.ConstMsg -> LimitT IO ()
+    reader :: Struct 'M.Const -> LimitT IO ()
     reader root = do
-        req :: Schema.CodeGeneratorRequest M.ConstMsg <- fromStruct root
+        req :: Schema.CodeGeneratorRequest 'M.Const <- fromStruct root
         nodes <- Schema.get_CodeGeneratorRequest'nodes req
         requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
         lift $ length nodes `shouldBe` 37

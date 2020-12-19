@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds    #-}
 {-# LANGUAGE LambdaCase   #-}
 {-# LANGUAGE ViewPatterns #-}
 module Module.Capnp.Canonicalize
@@ -53,14 +54,14 @@ implsAgreeOn struct = do
             , show $ LBS.unpack $ msgToLBS refMsg
             ]
 
-ourImplCanonicalize :: PU.Struct -> Maybe M.ConstMsg
+ourImplCanonicalize :: PU.Struct -> Maybe (M.Message 'M.Const)
 ourImplCanonicalize struct = createPure maxBound $ do
     msg <- M.newMessage Nothing
     rawStruct <- cerialize msg struct
     (msg, _) <- canonicalize rawStruct
     pure msg
 
-refImplCanonicalize :: PU.Struct -> IO M.ConstMsg
+refImplCanonicalize :: PU.Struct -> IO (M.Message 'M.Const)
 refImplCanonicalize struct = do
     msg <- createPure maxBound $ do
         msg <- M.newMessage Nothing
@@ -68,5 +69,5 @@ refImplCanonicalize struct = do
         U.setRoot rawStruct
         pure msg
     lbs <- capnpCanonicalize (msgToLBS msg)
-    segment <- M.fromByteString $ LBS.toStrict lbs
+    let segment = M.fromByteString $ LBS.toStrict lbs
     pure $ M.singleSegment segment

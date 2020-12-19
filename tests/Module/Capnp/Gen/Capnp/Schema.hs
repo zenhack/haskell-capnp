@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds       #-}
 {-# LANGUAGE RecordWildCards #-}
 module Module.Capnp.Gen.Capnp.Schema (schemaTests) where
 
@@ -18,7 +19,7 @@ import qualified Capnp.Message as M
 data BuildTest = BuildTest
     { typeName :: String
     , expected :: String
-    , builder  :: M.MutMsg RealWorld -> LimitT IO ()
+    , builder  :: M.Message ('M.Mut RealWorld) -> LimitT IO ()
     }
 
 schemaTests :: Spec
