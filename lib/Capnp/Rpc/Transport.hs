@@ -5,6 +5,7 @@ Description: Support for exchanging messages with remote vats.
 This module provides a 'Transport' type, which provides operations
 used to transmit messages between vats in the RPC protocol.
 -}
+{-# LANGUAGE DataKinds #-}
 module Capnp.Rpc.Transport
     ( Transport(..)
     , handleTransport
@@ -18,16 +19,16 @@ import System.IO      (Handle)
 import Capnp.Bits       (WordCount)
 import Capnp.Convert    (msgToValue)
 import Capnp.IO         (hGetMsg, hPutMsg, sGetMsg, sPutMsg)
-import Capnp.Message    (ConstMsg)
+import Capnp.Message    (Message, Mutability(Const))
 import Text.Show.Pretty (ppShow)
 
 import qualified Capnp.Gen.Capnp.Rpc.Pure as R
 
 -- | A @'Transport'@ handles transmitting RPC messages.
 data Transport = Transport
-    { sendMsg :: ConstMsg -> IO ()
+    { sendMsg :: Message 'Const -> IO ()
     -- ^ Send a message
-    , recvMsg :: IO ConstMsg
+    , recvMsg :: IO (Message 'Const)
     -- ^ Receive a message
     }
 
