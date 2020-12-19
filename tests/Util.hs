@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TypeFamilies      #-}
@@ -105,16 +106,16 @@ interactCapnpWithSchema subCommand msgSchema stdInBytes args = do
 -- | @'decodeValue' schema typename message@ decodes the value at the root of
 -- the message and converts it to text. This is a thin wrapper around
 -- 'capnpDecode'.
-decodeValue :: String -> String -> M.ConstMsg -> IO String
-decodeValue schema typename msg = do
-    bytes <- M.encode msg
+decodeValue :: String -> String -> M.Message 'M.Const -> IO String
+decodeValue schema typename msg =
+    let bytes = M.encode msg in
     capnpDecode
         (LBS.toStrict $ BB.toLazyByteString bytes)
         (MsgMetaData schema typename)
 
 -- | @'encodeValue' schema typename value@ encodes the textual value @value@
 -- as a capnp message. This is a thin wrapper around 'capnpEncode'.
-encodeValue :: String -> String -> String -> IO M.ConstMsg
+encodeValue :: String -> String -> String -> IO (M.Message 'M.Const)
 encodeValue schema typename value =
     let meta = MsgMetaData schema typename
     in capnpEncode value meta >>= M.decode

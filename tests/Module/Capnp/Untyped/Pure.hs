@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
@@ -53,5 +54,5 @@ pureUntypedTests =
                     ]
                 ]
   where
-    readStruct :: U.Struct M.ConstMsg -> LimitT IO Struct
+    readStruct :: U.Struct 'M.Const -> LimitT IO Struct
     readStruct = decerialize

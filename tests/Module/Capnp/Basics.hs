@@ -13,7 +13,8 @@ import qualified Data.Text       as T
 
 import Capnp.Basics
 
-import Capnp (cerialize, evalLimitT, newMessage)
+import Capnp        (cerialize, evalLimitT, newMessage)
+import Data.Mutable (Thaw(freeze))
 
 import qualified Capnp.Untyped as U
 
@@ -25,5 +26,5 @@ basicsTests =
                 msg <- newMessage Nothing
                 cerial <- cerialize msg text
                 buf <- textBuffer cerial
-                bytes <- textBytes cerial
+                bytes <- freeze cerial >>= textBytes
                 liftIO $ BS.length bytes `shouldBe` U.length buf

@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -110,7 +111,7 @@ readTests = describe "read tests" $
 
 data ModTest s = ModTest
     { testIn   :: String
-    , testMod  :: Struct (M.MutMsg RealWorld) -> LimitT IO ()
+    , testMod  :: Struct ('M.Mut RealWorld) -> LimitT IO ()
     , testOut  :: String
     , testType :: String
     }
@@ -323,7 +324,7 @@ otherMessageTest = describe "Setting pointers in other messages" $
                         , implicitParameters = params
                         , paramBrand = brand
                         }
-                msg :: M.ConstMsg <- createPure maxBound $ do
+                msg :: M.Message 'M.Const <- createPure maxBound $ do
                         methodMsg <- M.newMessage Nothing
                         nameMsg <- M.newMessage Nothing
                         paramsMsg <- M.newMessage Nothing

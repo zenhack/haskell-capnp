@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module SchemaQuickCheck
     (schemaCGRQuickCheck)
@@ -35,9 +36,9 @@ generateCGR schema = capnpCompile (show schema) "-"
 
 decodeCGR :: BS.ByteString -> IO (WordCount, Int)
 decodeCGR bytes = do
-    let reader :: Untyped.Struct M.ConstMsg -> LimitT IO Int
+    let reader :: Untyped.Struct 'M.Const -> LimitT IO Int
         reader struct = do
-            req :: Schema.CodeGeneratorRequest M.ConstMsg <- fromStruct struct
+            req :: Schema.CodeGeneratorRequest 'M.Const <- fromStruct struct
             nodes <- Schema.get_CodeGeneratorRequest'nodes req
             _ <- Schema.get_CodeGeneratorRequest'requestedFiles req
             return (Basics.length nodes)
