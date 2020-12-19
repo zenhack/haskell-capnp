@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE TypeFamilies     #-}
@@ -30,6 +31,7 @@ import Capnp.Classes
     , FromPtr(fromPtr)
     , ToStruct(toStruct)
     )
+import Capnp.Message        (Mutability (..))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Data.Mutable         (freeze)
 
@@ -47,12 +49,12 @@ invokeRaw ::
     , PrimMonad m
     , Decerialize r
     , Decerialize p
-    , ToStruct M.ConstMsg (Cerial M.ConstMsg p)
-    , FromPtr M.ConstMsg (Cerial M.ConstMsg r)
+    , ToStruct 'Const (Cerial 'Const p)
+    , FromPtr 'Const (Cerial 'Const r)
     ) =>
     Server.MethodHandler m p r
-    -> Cerial M.ConstMsg p
-    -> Promise.Fulfiller (Cerial M.ConstMsg r)
+    -> Cerial 'Const p
+    -> Promise.Fulfiller (Cerial 'Const r)
     -> m ()
 invokeRaw method params typedFulfiller = do
     (_, untypedFulfiller) <- liftSTM $ Promise.newPromiseWithCallback $ \case
@@ -70,10 +72,10 @@ type InvokePureCtx m p r =
     , MonadSTM m
     , PrimMonad m
     , Decerialize r
-    , ToStruct M.ConstMsg (Cerial M.ConstMsg p)
-    , ToStruct (M.MutMsg (PrimState m)) (Cerial (M.MutMsg (PrimState m)) p)
+    , ToStruct 'Const (Cerial 'Const p)
+    , ToStruct ('Mut (PrimState m)) (Cerial ('Mut (PrimState m)) p)
     , Cerialize (PrimState m) p
-    , FromPtr M.ConstMsg (Cerial M.ConstMsg r)
+    , FromPtr 'Const (Cerial 'Const r)
     )
 
 -- | Like 'invokeRaw', but uses the high-level representations of the data
