@@ -40,6 +40,7 @@ import qualified Data.ByteString as BS
 import Capnp.Classes
     (FromPtr (..), ListElem (..), MutListElem (..), ToPtr (..))
 import Capnp.Message          (Mutability (..))
+import Data.Mutable           (Thaw (..))
 import Internal.Gen.Instances ()
 
 import qualified Capnp.Errors  as E
@@ -58,10 +59,24 @@ newtype Text mut = Text (U.ListOf mut Word8)
 -- The argument to the data constructor is the slice of the original message
 -- containing the text, including the NUL terminator.
 
+instance Thaw (Text 'Const) where
+    type Mutable s (Text 'Const) = Text ('Mut s)
+    thaw (Text l) = Text <$> thaw l
+    unsafeThaw (Text l) = Text <$> unsafeThaw l
+    freeze (Text l) = Text <$> freeze l
+    unsafeFreeze (Text l) = Text <$> unsafeFreeze l
+
 -- | A blob of bytes (@Data@ in capnproto's schema language). The argument
 -- to the data constructor is a slice into the message, containing the raw
 -- bytes.
 newtype Data mut = Data (U.ListOf mut Word8)
+
+instance Thaw (Data 'Const) where
+    type Mutable s (Data 'Const) = Data ('Mut s)
+    thaw (Data l) = Data <$> thaw l
+    unsafeThaw (Data l) = Data <$> unsafeThaw l
+    freeze (Data l) = Data <$> freeze l
+    unsafeFreeze (Data l) = Data <$> unsafeFreeze l
 
 -- | @'newData' msg len@ allocates a new data blob of length @len@ bytes
 -- inside the message.

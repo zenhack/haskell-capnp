@@ -14,6 +14,7 @@
   `toByteString`/`fromByteString`, e.g. `Untyped.rawBytes`, also only
   work on immutable messages now, and may be pure functions where before
   they were monadic.
+* The types defined in `Capnp.Basics` now have `Thaw` instances.
 
 # 0.9.0.0
 
