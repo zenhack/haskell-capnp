@@ -157,6 +157,7 @@ data Type
     | TCtx [Type] Type
     | TPrim Common.PrimWord
     | TUnit
+    | TKindAnnotated Type Type
     deriving(Show, Read, Eq)
 
 data Exp

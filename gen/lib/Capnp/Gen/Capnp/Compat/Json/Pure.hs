@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,6 +12,7 @@
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module Capnp.Gen.Capnp.Compat.Json.Pure(Value(..)
                                        ,Value'Field(..)
                                        ,Value'Call(..)
@@ -47,7 +49,7 @@ data Value
             ,Generics.Generic)
 instance (Default.Default (Value)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Value)) where
+instance (Classes.FromStruct Message.Const (Value)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Value)) where
     type Cerial msg (Value) = (Capnp.Gen.ById.X8ef99297a43a5e34.Value msg)
@@ -113,7 +115,7 @@ data Value'Field
             ,Generics.Generic)
 instance (Default.Default (Value'Field)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Value'Field)) where
+instance (Classes.FromStruct Message.Const (Value'Field)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Value'Field)) where
     type Cerial msg (Value'Field) = (Capnp.Gen.ById.X8ef99297a43a5e34.Value'Field msg)
@@ -151,7 +153,7 @@ data Value'Call
             ,Generics.Generic)
 instance (Default.Default (Value'Call)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Value'Call)) where
+instance (Classes.FromStruct Message.Const (Value'Call)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Value'Call)) where
     type Cerial msg (Value'Call) = (Capnp.Gen.ById.X8ef99297a43a5e34.Value'Call msg)
@@ -188,7 +190,7 @@ data FlattenOptions
             ,Generics.Generic)
 instance (Default.Default (FlattenOptions)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (FlattenOptions)) where
+instance (Classes.FromStruct Message.Const (FlattenOptions)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (FlattenOptions)) where
     type Cerial msg (FlattenOptions) = (Capnp.Gen.ById.X8ef99297a43a5e34.FlattenOptions msg)
@@ -224,7 +226,7 @@ data DiscriminatorOptions
             ,Generics.Generic)
 instance (Default.Default (DiscriminatorOptions)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (DiscriminatorOptions)) where
+instance (Classes.FromStruct Message.Const (DiscriminatorOptions)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (DiscriminatorOptions)) where
     type Cerial msg (DiscriminatorOptions) = (Capnp.Gen.ById.X8ef99297a43a5e34.DiscriminatorOptions msg)

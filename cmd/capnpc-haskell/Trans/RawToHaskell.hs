@@ -22,11 +22,11 @@ import qualified IR.Common as C
 import qualified IR.Name   as Name
 import qualified IR.Raw    as Raw
 
-tMutMsg :: Type
-tMutMsg = TApp (tgName ["Message"] "MutMsg" ) [TVar "s"]
+tMut :: Type
+tMut = TApp (tgName ["Message"] "Mut") [TVar "s"]
 
-tConstMsg :: Type
-tConstMsg = tgName ["Message"] "ConstMsg"
+tConst :: Type
+tConst = tgName ["Message"] "Const"
 
 fileToModules :: Raw.File -> [Module]
 fileToModules file =
@@ -55,6 +55,7 @@ fileToMainModule Raw.File{fileName, fileId, decls} =
             , "MultiParamTypeClasses"
             , "TypeFamilies"
             , "DeriveGeneric"
+            , "DataKinds"
             , "OverloadedStrings"
             ]
         , modExports = Nothing
@@ -87,7 +88,7 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
-        , typeArgs = typeParamNames ++ [TVar "msg"]
+        , typeArgs = typeParamNames ++ [TKindAnnotated (TVar "mut") (tgName ["Message"] "Mutability")]
         , dataVariants =
             [ DataVariant
                 { dvCtorName = Name.localToUnQ dataCtor
@@ -96,7 +97,7 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
                         C.VoidField ->
                             []
                         _ ->
-                            [ typeToType thisMod (C.fieldType locType) (TVar "msg") ]
+                            [ typeToType thisMod (C.fieldType locType) (TVar "mut") ]
                 }
             | Raw.Variant{name=dataCtor, locType} <- unionDataCtors
             ]
@@ -109,11 +110,11 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
         , derives = []
         }
     , let ctx =
-            [ TApp (tgName ["Classes"] "FromPtr") [TVar "msg", v]
+            [ TApp (tgName ["Classes"] "FromPtr") [TVar "mut", v]
             | v <- typeParamNames
             ]
       in
-      instance_ ctx ["Classes"] "FromStruct" [TVar "msg", containerTypeType (TVar "msg")]
+      instance_ ctx ["Classes"] "FromStruct" [TVar "mut", containerTypeType (TVar "mut")]
         [ iValue "fromStruct" [PVar "struct"] $ EDo
             [ DoBind "tag"
                 (EApp
@@ -219,11 +220,11 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 ]
         ]
     -- lists:
-    , instance_ [] ["Basics"] "ListElem" [TVar "msg", TLName typeCtor]
+    , instance_ [] ["Basics"] "ListElem" [TVar "mut", TLName typeCtor]
         [ IdData Data
             { dataName = "List"
             , typeArgs =
-                [ TVar "msg"
+                [ TVar "mut"
                 , TLName typeCtor
                 ]
             , dataVariants =
@@ -232,7 +233,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                     , dvArgs = APos
                         [ TApp
                             (tgName ["Untyped"] "ListOf")
-                            [ TVar "msg"
+                            [ TVar "mut"
                             , tStd_ "Word16"
                             ]
                         ]
@@ -308,7 +309,7 @@ declToDecls _thisMod Raw.InterfaceWrapper{typeCtor, typeParams} =
     , wrapperFromPtr typeCtor typeParams dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
-        , containerTypeToType typeCtor typeParams (TApp (tgName ["Message"] "MutMsg") [TVar "s"])
+        , containerTypeToType typeCtor typeParams tMut
         ]
         [ iValue "toPtr" [PVar "msg", PLCtor dataCtor [PGCtor (std_ "Nothing") []]]
             (EApp (eStd_ "pure") [eStd_ "Nothing"])
@@ -343,15 +344,11 @@ declToDecls _thisMod Raw.StructWrapper{typeCtor, typeParams} =
         [ iValue "toStruct" [PLCtor dataCtor [PVar "struct"]]
             (ELName "struct")
         ]
-    , instance_ [] ["Untyped"] "HasMessage" [containerTypeType (TVar "msg")]
-        [ IdType $ TypeAlias
-            "InMessage"
-            [ containerTypeType (TVar "msg") ]
-            (TVar "msg")
-        , iValue "message" [PLCtor dataCtor [PVar "struct"]]
+    , instance_ [] ["Untyped"] "HasMessage" [containerTypeType (TVar "mut"), TVar "mut"]
+        [ iValue "message" [PLCtor dataCtor [PVar "struct"]]
             (EApp (egName ["Untyped"] "message") [ELName "struct"])
         ]
-    , instance_ [] ["Untyped"] "MessageDefault" [containerTypeType (TVar "msg")]
+    , instance_ [] ["Untyped"] "MessageDefault" [containerTypeType (TVar "mut"), TVar "mut"]
         [ iValue "messageDefault" [PVar "msg"] $ EFApp
             (ELName dataCtor)
             [ EApp
@@ -368,7 +365,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
     [ wrapperFromPtr typeCtor typeParams dataCtor
     , instance_ [] ["Classes"] "ToPtr"
         [ TVar "s"
-        , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
+        , containerTypeType tMut
         ]
         [ iValue
             "toPtr"
@@ -382,7 +379,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
         ]
     , instance_ [] ["Classes"] "Allocate"
         [ TVar "s"
-        , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
+        , containerTypeType tMut
         ]
         [ iValue "new" [PVar "msg"] $ EFApp
             (ELName dataCtor)
@@ -395,14 +392,14 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
             ]
         ]
     , instance_ [] ["Basics"] "ListElem"
-        [ TVar "msg"
-        , containerTypeType $ TVar "msg"
+        [ TVar "mut"
+        , containerTypeType $ TVar "mut"
         ]
         [ IdData Data
             { dataName = "List"
             , typeArgs =
-                [ TVar "msg"
-                , containerTypeType (TVar "msg")
+                [ TVar "mut"
+                , containerTypeType (TVar "mut")
                 ]
             , dataVariants =
                 [ DataVariant
@@ -410,10 +407,10 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
                     , dvArgs = APos
                         [ TApp
                             (tgName ["Untyped"] "ListOf")
-                            [ TVar "msg"
+                            [ TVar "mut"
                             , TApp
                                 (tgName ["Untyped"] "Struct")
-                                [TVar "msg"]
+                                [TVar "mut"]
                             ]
                         ]
                     }
@@ -447,7 +444,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
         ]
     , instance_ [] ["Basics"] "MutListElem"
         [ TVar "s"
-        , containerTypeType $ TApp (tgName ["Message"] "MutMsg") [TVar "s"]
+        , containerTypeType tMut
         ]
         [ iValue "setIndex"
             [ PLCtor dataCtor [PVar "elt"]
@@ -548,12 +545,12 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, typeParam
         fieldType = typeToType
             thisMod
             (C.fieldType fieldLocType)
-            tMutMsg
+            tMut
         isPtrType = case C.fieldType fieldLocType of
             C.PtrType _       -> True
             C.CompositeType _ -> True
             _                 -> False
-        containerTypeType = containerTypeToType containerType typeParams tMutMsg
+        containerTypeType = containerTypeToType containerType typeParams tMut
     in
     [ DcValue
         { typ = TCtx
@@ -562,7 +559,7 @@ declToDecls thisMod Raw.Setter{fieldName, fieldLocType, containerType, typeParam
                     then
                         [ case fieldLocType of
                             C.HereField _ ->
-                                TApp (tgName ["Classes"] "FromStruct") [tMutMsg, fieldType]
+                                TApp (tgName ["Classes"] "FromStruct") [tMut, fieldType]
                             _ ->
                                 TApp (tgName ["Classes"] "ToPtr") [TVar "s", fieldType]
                         ]
@@ -639,8 +636,8 @@ declToDecls thisMod Raw.NewFn{fieldName, containerType, typeParams, fieldLocType
     let fieldType = typeToType
             thisMod
             (C.fieldType fieldLocType)
-            tMutMsg
-        containerTypeType = containerTypeToType containerType typeParams tMutMsg
+            tMut
+        containerTypeType = containerTypeToType containerType typeParams tMut
     in
     [ DcValue
         { typ = TCtx
@@ -690,7 +687,7 @@ declToDecls _thisMod Raw.Constant{ name, value=C.VoidValue } =
     ]
 declToDecls thisMod Raw.Constant{ name, value=C.WordValue ty val } =
     [ DcValue
-        { typ = typeToType thisMod (C.WordType ty) tConstMsg
+        { typ = typeToType thisMod (C.WordType ty) tConst
         , def = DfValue
             { name = Name.localToUnQ name
             , params = []
@@ -702,7 +699,7 @@ declToDecls thisMod Raw.Constant{ name, value=C.WordValue ty val } =
     ]
 declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
     [ DcValue
-        { typ = typeToType thisMod (C.PtrType ty) tConstMsg
+        { typ = typeToType thisMod (C.PtrType ty) tConst
         , def = DfValue
             { name = Name.localToUnQ name
             , params = []

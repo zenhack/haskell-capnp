@@ -45,6 +45,7 @@ instance Format Module where
         , "{-# OPTIONS_GHC -Wno-dodgy-exports #-}"
         , "{-# OPTIONS_GHC -Wno-unused-matches #-}"
         , "{-# OPTIONS_GHC -Wno-orphans #-}"
+        , "{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}"
         , hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName
@@ -264,6 +265,8 @@ instance Format Type where
         PP.tupled (map format constraints) <> " => " <> format ty
     format (TPrim ty) = format ty
     format TUnit = "()"
+    format (TKindAnnotated ty kind) =
+        "(" <> format ty <> " :: " <> format kind <> ")"
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =

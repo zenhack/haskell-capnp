@@ -3,11 +3,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module Capnp.Gen.Capnp.Stream where
 import qualified Capnp.Message as Message
 import qualified Capnp.Untyped as Untyped
@@ -28,20 +30,19 @@ instance (Classes.FromStruct msg (StreamResult msg)) where
     fromStruct struct = (Std_.pure (StreamResult'newtype_ struct))
 instance (Classes.ToStruct msg (StreamResult msg)) where
     toStruct (StreamResult'newtype_ struct) = struct
-instance (Untyped.HasMessage (StreamResult msg)) where
-    type InMessage (StreamResult msg) = msg
+instance (Untyped.HasMessage (StreamResult mut) mut) where
     message (StreamResult'newtype_ struct) = (Untyped.message struct)
-instance (Untyped.MessageDefault (StreamResult msg)) where
+instance (Untyped.MessageDefault (StreamResult mut) mut) where
     messageDefault msg = (StreamResult'newtype_ <$> (Untyped.messageDefault msg))
 instance (Classes.FromPtr msg (StreamResult msg)) where
     fromPtr msg ptr = (StreamResult'newtype_ <$> (Classes.fromPtr msg ptr))
-instance (Classes.ToPtr s (StreamResult (Message.MutMsg s))) where
+instance (Classes.ToPtr s (StreamResult (Message.Mut s))) where
     toPtr msg (StreamResult'newtype_ struct) = (Classes.toPtr msg struct)
-instance (Classes.Allocate s (StreamResult (Message.MutMsg s))) where
+instance (Classes.Allocate s (StreamResult (Message.Mut s))) where
     new msg = (StreamResult'newtype_ <$> (Untyped.allocStruct msg 0 0))
-instance (Basics.ListElem msg (StreamResult msg)) where
-    newtype List msg (StreamResult msg)
-        = StreamResult'List_ (Untyped.ListOf msg (Untyped.Struct msg))
+instance (Basics.ListElem mut (StreamResult mut)) where
+    newtype List mut (StreamResult mut)
+        = StreamResult'List_ (Untyped.ListOf mut (Untyped.Struct mut))
     listFromPtr msg ptr = (StreamResult'List_ <$> (Classes.fromPtr msg ptr))
     toUntypedList (StreamResult'List_ l) = (Untyped.ListStruct l)
     length (StreamResult'List_ l) = (Untyped.length l)
@@ -49,6 +50,6 @@ instance (Basics.ListElem msg (StreamResult msg)) where
         elt <- (Untyped.index i l)
         (Classes.fromStruct elt)
         )
-instance (Basics.MutListElem s (StreamResult (Message.MutMsg s))) where
+instance (Basics.MutListElem s (StreamResult (Message.Mut s))) where
     setIndex (StreamResult'newtype_ elt) i (StreamResult'List_ l) = (Untyped.setIndex elt i l)
     newList msg len = (StreamResult'List_ <$> (Untyped.allocCompositeList msg 0 0 len))

@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,6 +12,7 @@
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module Capnp.Gen.Capnp.RpcTwoparty.Pure(Capnp.Gen.ById.Xa184c7885cdaf2a1.Side(..)
                                        ,VatId(..)
                                        ,ProvisionId(..)
@@ -43,7 +45,7 @@ data VatId
             ,Generics.Generic)
 instance (Default.Default (VatId)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (VatId)) where
+instance (Classes.FromStruct Message.Const (VatId)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (VatId)) where
     type Cerial msg (VatId) = (Capnp.Gen.ById.Xa184c7885cdaf2a1.VatId msg)
@@ -78,7 +80,7 @@ data ProvisionId
             ,Generics.Generic)
 instance (Default.Default (ProvisionId)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (ProvisionId)) where
+instance (Classes.FromStruct Message.Const (ProvisionId)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (ProvisionId)) where
     type Cerial msg (ProvisionId) = (Capnp.Gen.ById.Xa184c7885cdaf2a1.ProvisionId msg)
@@ -113,7 +115,7 @@ data RecipientId
             ,Generics.Generic)
 instance (Default.Default (RecipientId)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (RecipientId)) where
+instance (Classes.FromStruct Message.Const (RecipientId)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (RecipientId)) where
     type Cerial msg (RecipientId) = (Capnp.Gen.ById.Xa184c7885cdaf2a1.RecipientId msg)
@@ -147,7 +149,7 @@ data ThirdPartyCapId
             ,Generics.Generic)
 instance (Default.Default (ThirdPartyCapId)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (ThirdPartyCapId)) where
+instance (Classes.FromStruct Message.Const (ThirdPartyCapId)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (ThirdPartyCapId)) where
     type Cerial msg (ThirdPartyCapId) = (Capnp.Gen.ById.Xa184c7885cdaf2a1.ThirdPartyCapId msg)
@@ -183,7 +185,7 @@ data JoinKeyPart
             ,Generics.Generic)
 instance (Default.Default (JoinKeyPart)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (JoinKeyPart)) where
+instance (Classes.FromStruct Message.Const (JoinKeyPart)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (JoinKeyPart)) where
     type Cerial msg (JoinKeyPart) = (Capnp.Gen.ById.Xa184c7885cdaf2a1.JoinKeyPart msg)
@@ -224,7 +226,7 @@ data JoinResult
             ,Generics.Generic)
 instance (Default.Default (JoinResult)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (JoinResult)) where
+instance (Classes.FromStruct Message.Const (JoinResult)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (JoinResult)) where
     type Cerial msg (JoinResult) = (Capnp.Gen.ById.Xa184c7885cdaf2a1.JoinResult msg)

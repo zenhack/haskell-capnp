@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,6 +12,7 @@
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module Capnp.Gen.Capnp.Schema.Pure(Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize(..)
                                   ,Node(..)
                                   ,Node'(..)
@@ -84,7 +86,7 @@ data Node
             ,Generics.Generic)
 instance (Default.Default (Node)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node)) where
+instance (Classes.FromStruct Message.Const (Node)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node)) where
     type Cerial msg (Node) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node msg)
@@ -142,7 +144,7 @@ data Node'
             ,Generics.Generic)
 instance (Default.Default (Node')) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node')) where
+instance (Classes.FromStruct Message.Const (Node')) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node')) where
     type Cerial msg (Node') = (Capnp.Gen.ById.Xa93fc509624c72d9.Node msg)
@@ -209,7 +211,7 @@ data Node'struct
             ,Generics.Generic)
 instance (Default.Default (Node'struct)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'struct)) where
+instance (Classes.FromStruct Message.Const (Node'struct)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'struct)) where
     type Cerial msg (Node'struct) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'struct msg)
@@ -241,7 +243,7 @@ data Node'enum
             ,Generics.Generic)
 instance (Default.Default (Node'enum)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'enum)) where
+instance (Classes.FromStruct Message.Const (Node'enum)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'enum)) where
     type Cerial msg (Node'enum) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'enum msg)
@@ -262,7 +264,7 @@ data Node'interface
             ,Generics.Generic)
 instance (Default.Default (Node'interface)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'interface)) where
+instance (Classes.FromStruct Message.Const (Node'interface)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'interface)) where
     type Cerial msg (Node'interface) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'interface msg)
@@ -285,7 +287,7 @@ data Node'const
             ,Generics.Generic)
 instance (Default.Default (Node'const)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'const)) where
+instance (Classes.FromStruct Message.Const (Node'const)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'const)) where
     type Cerial msg (Node'const) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'const msg)
@@ -319,7 +321,7 @@ data Node'annotation
             ,Generics.Generic)
 instance (Default.Default (Node'annotation)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'annotation)) where
+instance (Classes.FromStruct Message.Const (Node'annotation)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'annotation)) where
     type Cerial msg (Node'annotation) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'annotation msg)
@@ -363,7 +365,7 @@ data Node'Parameter
             ,Generics.Generic)
 instance (Default.Default (Node'Parameter)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'Parameter)) where
+instance (Classes.FromStruct Message.Const (Node'Parameter)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'Parameter)) where
     type Cerial msg (Node'Parameter) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'Parameter msg)
@@ -399,7 +401,7 @@ data Node'NestedNode
             ,Generics.Generic)
 instance (Default.Default (Node'NestedNode)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'NestedNode)) where
+instance (Classes.FromStruct Message.Const (Node'NestedNode)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'NestedNode)) where
     type Cerial msg (Node'NestedNode) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'NestedNode msg)
@@ -438,7 +440,7 @@ data Node'SourceInfo
             ,Generics.Generic)
 instance (Default.Default (Node'SourceInfo)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'SourceInfo)) where
+instance (Classes.FromStruct Message.Const (Node'SourceInfo)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'SourceInfo)) where
     type Cerial msg (Node'SourceInfo) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'SourceInfo msg)
@@ -477,7 +479,7 @@ data Node'SourceInfo'Member
             ,Generics.Generic)
 instance (Default.Default (Node'SourceInfo'Member)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Node'SourceInfo'Member)) where
+instance (Classes.FromStruct Message.Const (Node'SourceInfo'Member)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Node'SourceInfo'Member)) where
     type Cerial msg (Node'SourceInfo'Member) = (Capnp.Gen.ById.Xa93fc509624c72d9.Node'SourceInfo'Member msg)
@@ -517,7 +519,7 @@ data Field
             ,Generics.Generic)
 instance (Default.Default (Field)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Field)) where
+instance (Classes.FromStruct Message.Const (Field)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Field)) where
     type Cerial msg (Field) = (Capnp.Gen.ById.Xa93fc509624c72d9.Field msg)
@@ -568,7 +570,7 @@ data Field'
             ,Generics.Generic)
 instance (Default.Default (Field')) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Field')) where
+instance (Classes.FromStruct Message.Const (Field')) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Field')) where
     type Cerial msg (Field') = (Capnp.Gen.ById.Xa93fc509624c72d9.Field msg)
@@ -607,7 +609,7 @@ data Field'slot
             ,Generics.Generic)
 instance (Default.Default (Field'slot)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Field'slot)) where
+instance (Classes.FromStruct Message.Const (Field'slot)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Field'slot)) where
     type Cerial msg (Field'slot) = (Capnp.Gen.ById.Xa93fc509624c72d9.Field'slot msg)
@@ -633,7 +635,7 @@ data Field'group
             ,Generics.Generic)
 instance (Default.Default (Field'group)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Field'group)) where
+instance (Classes.FromStruct Message.Const (Field'group)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Field'group)) where
     type Cerial msg (Field'group) = (Capnp.Gen.ById.Xa93fc509624c72d9.Field'group msg)
@@ -654,7 +656,7 @@ data Field'ordinal
             ,Generics.Generic)
 instance (Default.Default (Field'ordinal)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Field'ordinal)) where
+instance (Classes.FromStruct Message.Const (Field'ordinal)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Field'ordinal)) where
     type Cerial msg (Field'ordinal) = (Capnp.Gen.ById.Xa93fc509624c72d9.Field'ordinal msg)
@@ -686,7 +688,7 @@ data Enumerant
             ,Generics.Generic)
 instance (Default.Default (Enumerant)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Enumerant)) where
+instance (Classes.FromStruct Message.Const (Enumerant)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Enumerant)) where
     type Cerial msg (Enumerant) = (Capnp.Gen.ById.Xa93fc509624c72d9.Enumerant msg)
@@ -726,7 +728,7 @@ data Superclass
             ,Generics.Generic)
 instance (Default.Default (Superclass)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Superclass)) where
+instance (Classes.FromStruct Message.Const (Superclass)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Superclass)) where
     type Cerial msg (Superclass) = (Capnp.Gen.ById.Xa93fc509624c72d9.Superclass msg)
@@ -770,7 +772,7 @@ data Method
             ,Generics.Generic)
 instance (Default.Default (Method)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Method)) where
+instance (Classes.FromStruct Message.Const (Method)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Method)) where
     type Cerial msg (Method) = (Capnp.Gen.ById.Xa93fc509624c72d9.Method msg)
@@ -837,7 +839,7 @@ data Type
             ,Generics.Generic)
 instance (Default.Default (Type)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type)) where
+instance (Classes.FromStruct Message.Const (Type)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type)) where
     type Cerial msg (Type) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type msg)
@@ -965,7 +967,7 @@ data Type'list
             ,Generics.Generic)
 instance (Default.Default (Type'list)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'list)) where
+instance (Classes.FromStruct Message.Const (Type'list)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'list)) where
     type Cerial msg (Type'list) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'list msg)
@@ -986,7 +988,7 @@ data Type'enum
             ,Generics.Generic)
 instance (Default.Default (Type'enum)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'enum)) where
+instance (Classes.FromStruct Message.Const (Type'enum)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'enum)) where
     type Cerial msg (Type'enum) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'enum msg)
@@ -1009,7 +1011,7 @@ data Type'struct
             ,Generics.Generic)
 instance (Default.Default (Type'struct)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'struct)) where
+instance (Classes.FromStruct Message.Const (Type'struct)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'struct)) where
     type Cerial msg (Type'struct) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'struct msg)
@@ -1032,7 +1034,7 @@ data Type'interface
             ,Generics.Generic)
 instance (Default.Default (Type'interface)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'interface)) where
+instance (Classes.FromStruct Message.Const (Type'interface)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'interface)) where
     type Cerial msg (Type'interface) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'interface msg)
@@ -1056,7 +1058,7 @@ data Type'anyPointer
             ,Generics.Generic)
 instance (Default.Default (Type'anyPointer)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'anyPointer)) where
+instance (Classes.FromStruct Message.Const (Type'anyPointer)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'anyPointer)) where
     type Cerial msg (Type'anyPointer) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer msg)
@@ -1102,7 +1104,7 @@ data Type'anyPointer'unconstrained
             ,Generics.Generic)
 instance (Default.Default (Type'anyPointer'unconstrained)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'anyPointer'unconstrained)) where
+instance (Classes.FromStruct Message.Const (Type'anyPointer'unconstrained)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'anyPointer'unconstrained)) where
     type Cerial msg (Type'anyPointer'unconstrained) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'unconstrained msg)
@@ -1141,7 +1143,7 @@ data Type'anyPointer'parameter
             ,Generics.Generic)
 instance (Default.Default (Type'anyPointer'parameter)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'anyPointer'parameter)) where
+instance (Classes.FromStruct Message.Const (Type'anyPointer'parameter)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'anyPointer'parameter)) where
     type Cerial msg (Type'anyPointer'parameter) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'parameter msg)
@@ -1163,7 +1165,7 @@ data Type'anyPointer'implicitMethodParameter
             ,Generics.Generic)
 instance (Default.Default (Type'anyPointer'implicitMethodParameter)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Type'anyPointer'implicitMethodParameter)) where
+instance (Classes.FromStruct Message.Const (Type'anyPointer'implicitMethodParameter)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Type'anyPointer'implicitMethodParameter)) where
     type Cerial msg (Type'anyPointer'implicitMethodParameter) = (Capnp.Gen.ById.Xa93fc509624c72d9.Type'anyPointer'implicitMethodParameter msg)
@@ -1183,7 +1185,7 @@ data Brand
             ,Generics.Generic)
 instance (Default.Default (Brand)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Brand)) where
+instance (Classes.FromStruct Message.Const (Brand)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Brand)) where
     type Cerial msg (Brand) = (Capnp.Gen.ById.Xa93fc509624c72d9.Brand msg)
@@ -1219,7 +1221,7 @@ data Brand'Scope
             ,Generics.Generic)
 instance (Default.Default (Brand'Scope)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Brand'Scope)) where
+instance (Classes.FromStruct Message.Const (Brand'Scope)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Brand'Scope)) where
     type Cerial msg (Brand'Scope) = (Capnp.Gen.ById.Xa93fc509624c72d9.Brand'Scope msg)
@@ -1259,7 +1261,7 @@ data Brand'Scope'
             ,Generics.Generic)
 instance (Default.Default (Brand'Scope')) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Brand'Scope')) where
+instance (Classes.FromStruct Message.Const (Brand'Scope')) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Brand'Scope')) where
     type Cerial msg (Brand'Scope') = (Capnp.Gen.ById.Xa93fc509624c72d9.Brand'Scope msg)
@@ -1290,7 +1292,7 @@ data Brand'Binding
             ,Generics.Generic)
 instance (Default.Default (Brand'Binding)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Brand'Binding)) where
+instance (Classes.FromStruct Message.Const (Brand'Binding)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Brand'Binding)) where
     type Cerial msg (Brand'Binding) = (Capnp.Gen.ById.Xa93fc509624c72d9.Brand'Binding msg)
@@ -1353,7 +1355,7 @@ data Value
             ,Generics.Generic)
 instance (Default.Default (Value)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Value)) where
+instance (Classes.FromStruct Message.Const (Value)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Value)) where
     type Cerial msg (Value) = (Capnp.Gen.ById.Xa93fc509624c72d9.Value msg)
@@ -1468,7 +1470,7 @@ data Annotation
             ,Generics.Generic)
 instance (Default.Default (Annotation)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (Annotation)) where
+instance (Classes.FromStruct Message.Const (Annotation)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (Annotation)) where
     type Cerial msg (Annotation) = (Capnp.Gen.ById.Xa93fc509624c72d9.Annotation msg)
@@ -1509,7 +1511,7 @@ data CapnpVersion
             ,Generics.Generic)
 instance (Default.Default (CapnpVersion)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (CapnpVersion)) where
+instance (Classes.FromStruct Message.Const (CapnpVersion)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (CapnpVersion)) where
     type Cerial msg (CapnpVersion) = (Capnp.Gen.ById.Xa93fc509624c72d9.CapnpVersion msg)
@@ -1551,7 +1553,7 @@ data CodeGeneratorRequest
             ,Generics.Generic)
 instance (Default.Default (CodeGeneratorRequest)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (CodeGeneratorRequest)) where
+instance (Classes.FromStruct Message.Const (CodeGeneratorRequest)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (CodeGeneratorRequest)) where
     type Cerial msg (CodeGeneratorRequest) = (Capnp.Gen.ById.Xa93fc509624c72d9.CodeGeneratorRequest msg)
@@ -1594,7 +1596,7 @@ data CodeGeneratorRequest'RequestedFile
             ,Generics.Generic)
 instance (Default.Default (CodeGeneratorRequest'RequestedFile)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (CodeGeneratorRequest'RequestedFile)) where
+instance (Classes.FromStruct Message.Const (CodeGeneratorRequest'RequestedFile)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (CodeGeneratorRequest'RequestedFile)) where
     type Cerial msg (CodeGeneratorRequest'RequestedFile) = (Capnp.Gen.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile msg)
@@ -1634,7 +1636,7 @@ data CodeGeneratorRequest'RequestedFile'Import
             ,Generics.Generic)
 instance (Default.Default (CodeGeneratorRequest'RequestedFile'Import)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (CodeGeneratorRequest'RequestedFile'Import)) where
+instance (Classes.FromStruct Message.Const (CodeGeneratorRequest'RequestedFile'Import)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (CodeGeneratorRequest'RequestedFile'Import)) where
     type Cerial msg (CodeGeneratorRequest'RequestedFile'Import) = (Capnp.Gen.ById.Xa93fc509624c72d9.CodeGeneratorRequest'RequestedFile'Import msg)

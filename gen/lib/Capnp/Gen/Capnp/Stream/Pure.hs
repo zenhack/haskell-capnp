@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,6 +12,7 @@
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 module Capnp.Gen.Capnp.Stream.Pure(StreamResult(..)) where
 import qualified Capnp.GenHelpers.ReExports.Data.Vector as V
 import qualified Capnp.GenHelpers.ReExports.Data.Text as T
@@ -37,7 +39,7 @@ data StreamResult
             ,Generics.Generic)
 instance (Default.Default (StreamResult)) where
     def  = GenHelpersPure.defaultStruct
-instance (Classes.FromStruct Message.ConstMsg (StreamResult)) where
+instance (Classes.FromStruct Message.Const (StreamResult)) where
     fromStruct struct = ((Classes.fromStruct struct) >>= Classes.decerialize)
 instance (Classes.Decerialize (StreamResult)) where
     type Cerial msg (StreamResult) = (Capnp.Gen.ById.X86c366a91393f3f8.StreamResult msg)

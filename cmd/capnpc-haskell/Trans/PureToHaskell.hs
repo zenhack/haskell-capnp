@@ -85,7 +85,8 @@ fileToMainModule P.File{fileName, fileId, decls, reExportEnums, usesRpc} =
     fixImports $ Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["Pure"]
         , modLangPragmas =
-            [ "DeriveGeneric"
+            [ "DataKinds"
+            , "DeriveGeneric"
             , "DuplicateRecordFields"
             , "FlexibleContexts"
             , "FlexibleInstances"
@@ -214,15 +215,15 @@ typeParamsDecerializeCtx :: [Name.UnQ] -> [Type]
 typeParamsDecerializeCtx typeParams =
     let
         vars = typeParamVars typeParams
-        constMsg = tgName ["Message"] "ConstMsg"
+        tConst = tgName ["Message"] "Const"
         cerial msg v = TApp (tgName ["Classes"] "Cerial") [msg, v]
     in
     concat
         [ [ TApp (tgName ["Classes"] "Decerialize") [v]
           , TApp
             (tgName ["Classes"] "FromPtr")
-            [ constMsg
-            , cerial constMsg v
+            [ tConst
+            , cerial tConst v
             ]
           ]
         | v <- vars
@@ -235,7 +236,7 @@ typeParamsCerializeCtx typeParams =
           , TApp (tgName ["Classes"] "ToPtr")
                [ tuName "s"
                , TApp (tgName ["Classes"] "Cerial")
-                   [ TApp (tgName ["Message"] "MutMsg") [tuName "s"]
+                   [ TApp (tgName ["Message"] "Mut") [tuName "s"]
                    , v
                    ]
                ]
@@ -251,7 +252,7 @@ dataToSimpleInstances _thisMod P.Data{ typeName, typeParams } =
     [ instance_ ctx ["Default"] "Default" [typ]
         [ iValue "def" [] (egName ["GenHelpersPure"] "defaultStruct")
         ]
-    , instance_ ctx ["Classes"] "FromStruct" [tgName ["Message"] "ConstMsg", typ]
+    , instance_ ctx ["Classes"] "FromStruct" [tgName ["Message"] "Const", typ]
         [ iValue "fromStruct" [PVar "struct"] $ EBind
             (EApp (egName ["Classes"] "fromStruct") [euName "struct"])
             (egName ["Classes"] "decerialize")
