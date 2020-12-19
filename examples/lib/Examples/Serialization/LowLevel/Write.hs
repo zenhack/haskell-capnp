@@ -1,8 +1,10 @@
+{-# LANGUAGE DataKinds #-}
 module Examples.Serialization.LowLevel.Write (main) where
 import Capnp.Gen.Addressbook
 
 import Capnp
-    ( MutMsg
+    ( Message
+    , Mutability(Mut)
     , PureBuilder
     , cerialize
     , createPure
@@ -20,7 +22,7 @@ main =
     let Right msg = createPure defaultLimit buildMsg
     in putMsg msg
 
-buildMsg :: PureBuilder s (MutMsg s)
+buildMsg :: PureBuilder s (Message ('Mut s))
 buildMsg = do
     -- newMessage allocates a new, initially empty, mutable message. It
     -- takes an optional size hint:
