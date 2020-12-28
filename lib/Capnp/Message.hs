@@ -36,6 +36,10 @@ module Capnp.Message (
     , ConstMsg
     , empty
     , singleSegment
+    , constSegs
+    , constMsgFromSegments
+    , constSegToVec
+    , constSegFromVec
 
     -- * Reading data from messages
     , getSegment
@@ -538,6 +542,14 @@ singleSegment seg = ConstMsg
     , constCaps = V.empty
     }
 
+constMsgFromSegments :: V.Vector (Segment ConstMsg) -> ConstMsg
+constMsgFromSegments segments = ConstMsg
+    { constSegs = segments
+    , constCaps = V.empty
+    }
+
+constSegFromVec :: SV.Vector Word64 -> Segment ConstMsg
+constSegFromVec = ConstSegment
 
 instance Thaw (Segment ConstMsg) where
     type Mutable s (Segment ConstMsg) = Segment (MutMsg s)
