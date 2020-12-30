@@ -776,38 +776,33 @@ copyStruct dest src = do
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m mut => Int -> ListOf mut a -> m a
-index i list = index' list
+index i list
+    | i < 0 || i >= length list =
+        throwM E.BoundsError { E.index = i, E.maxIndex = length list - 1 }
+    | otherwise = index' list
   where
     index' :: ReadCtx m mut => ListOf mut a -> m a
-    index' (ListOfVoid nlist)
-        | i < nLen nlist = pure ()
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = nLen nlist - 1 }
-    index' (ListOfStruct (Struct ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) len)
-        | i < len = do
-            let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
-            let addr' = addr { wordIndex = wordIndex + offset }
-            return $ Struct ptr { M.pAddr = addr' } dataSz ptrSz
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' (ListOfVoid _) = pure ()
+    index' (ListOfStruct (Struct ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) _) = do
+        let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
+        let addr' = addr { wordIndex = wordIndex + offset }
+        return $ Struct ptr { M.pAddr = addr' } dataSz ptrSz
     index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
         pure val
     index' (ListOfWord8  nlist) = indexNList nlist 8
     index' (ListOfWord16 nlist) = indexNList nlist 4
     index' (ListOfWord32 nlist) = indexNList nlist 2
-    index' (ListOfWord64 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len))
-        | i < len = M.read pSegment $ wordIndex + WordCount i
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' (ListOfPtr (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} len))
-        | i < len = get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' (ListOfWord64 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} _)) =
+        M.read pSegment $ wordIndex + WordCount i
+    index' (ListOfPtr (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} _)) =
+        get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
     indexNList :: (ReadCtx m mut, Integral a) => NormalList mut -> Int -> m a
-    indexNList (NormalList M.WordPtr{pSegment, pAddr=WordAt{..}} len) eltsPerWord
-        | i < len = do
-            let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
-            word <- M.read pSegment wordIndex'
-            let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
-            pure $ fromIntegral $ word `shiftR` shift
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+    indexNList (NormalList M.WordPtr{pSegment, pAddr=WordAt{..}} _) eltsPerWord = do
+        let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
+        word <- M.read pSegment wordIndex'
+        let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
+        pure $ fromIntegral $ word `shiftR` shift
 
 -- | Returns the length of a list
 length :: ListOf msg a -> Int
