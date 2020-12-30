@@ -131,8 +131,9 @@ data Mutability = Const | Mut Type
 -- low-level code.
 data WordPtr mut = WordPtr
     -- invariants:
-    -- * pAddr's segment index refers to pSegment.
-    -- * pSegment is in pMessage.
+    --
+    -- - pAddr's segment index refers to pSegment.
+    -- - pSegment is in pMessage.
     { pMessage :: !(Message mut)
     , pSegment :: !(Segment mut)
     , pAddr    :: !WordAddr
