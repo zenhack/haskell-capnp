@@ -114,6 +114,7 @@ library
       , Capnp.Pointer
       , Capnp.Untyped
       , Capnp.Untyped.Pure
+      , Capnp.Repr
       , Capnp.TraversalLimit
       , Capnp.Rpc
       , Capnp.Rpc.Promise
