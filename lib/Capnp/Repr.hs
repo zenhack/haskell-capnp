@@ -117,8 +117,8 @@ type family UntypedNormalList (mut :: Mutability) (r :: NormalListRepr) :: Type 
     UntypedNormalList mut 'ListPtr = U.ListOf mut (U.Ptr mut)
     UntypedNormalList mut ('ListData sz) = U.ListOf mut (UntypedData sz)
 
-data Raw (mut :: Mutability) (a :: Type) where
-    Raw :: Untyped mut (ReprFor a) -> Raw mut a
+newtype Raw (mut :: Mutability) (a :: Type)
+    = Raw (Untyped mut (ReprFor a))
 
 data List a
 
