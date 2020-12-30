@@ -1,3 +1,11 @@
+
+# 0.11.0.0
+
+* The traversal limit is tracked at a coarser granularity. This results
+  in a modest performance improvement, and may result in slightly
+  different (but similar) amounts of the limit being used for a given
+  computation than with the old implementation.
+
 # 0.10.0.0
 
 * The parametrization of messages has been reworked. Most things that

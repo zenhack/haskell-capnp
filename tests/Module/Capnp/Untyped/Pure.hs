@@ -37,7 +37,7 @@ pureUntypedTests =
                            capacity = 5173,
                            maxSpeed = 12.0
                         )))|]
-            (actual, 110) <- runLimitT 128 $ U.rootPtr msg >>= readStruct
+            (actual, 117) <- runLimitT 128 $ U.rootPtr msg >>= readStruct
             actual `shouldBe` Struct
                 [3]
                 [ Just $ PtrStruct $ Struct

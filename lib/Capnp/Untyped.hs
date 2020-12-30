@@ -528,7 +528,7 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
 
   where
     getWord M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} =
-        invoice 1 *> M.read pSegment wordIndex
+        M.read pSegment wordIndex
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
@@ -776,7 +776,7 @@ copyStruct dest src = do
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m mut => Int -> ListOf mut a -> m a
-index i list = invoice 1 >> index' list
+index i list = index' list
   where
     index' :: ReadCtx m mut => ListOf mut a -> m a
     index' (ListOfVoid nlist)
@@ -880,15 +880,49 @@ structListPtrCount  (ListOfStruct s _) = structPtrCount s
 -- returning 0 if it is absent.
 getData :: ReadCtx m msg => Int -> Struct msg -> m Word64
 getData i struct
-    | fromIntegral (structWordCount struct) <= i = 0 <$ invoice 1
+    | fromIntegral (structWordCount struct) <= i = pure 0
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
 getPtr :: ReadCtx m msg => Int -> Struct msg -> m (Maybe (Ptr msg))
 getPtr i struct
-    | fromIntegral (structPtrCount struct) <= i = Nothing <$ invoice 1
-    | otherwise = index i (ptrSection struct)
+    | fromIntegral (structPtrCount struct) <= i = do
+        invoice 1
+        pure Nothing
+    | otherwise = do
+        ptr <- index i (ptrSection struct)
+        invoicePtr ptr
+        pure ptr
+
+-- | Invoice the traversal limit for all data reachable via the pointer
+-- directly, i.e. without following further pointers.
+--
+-- The minimum possible cost is 1, and for lists will always be proportional
+-- to the length of the list, even if the size of the elements is zero.
+invoicePtr :: MonadLimit m => Maybe (Ptr mut) -> m ()
+invoicePtr p = invoice $! ptrInvoiceSize p
+
+ptrInvoiceSize :: Maybe (Ptr mut) -> WordCount
+ptrInvoiceSize = \case
+    Nothing            -> 1
+    Just (PtrCap _)    -> 1
+    Just (PtrStruct s) -> structInvoiceSize s
+    Just (PtrList l)   -> listInvoiceSize l
+listInvoiceSize :: List mut -> WordCount
+listInvoiceSize l = max 1 $! case l of
+    List0 l   -> fromIntegral $! length l
+    List1 l   -> fromIntegral $! length l `div` 64
+    List8 l   -> fromIntegral $! length l `div`  8
+    List16 l  -> fromIntegral $! length l `div`  4
+    List32 l  -> fromIntegral $! length l `div`  2
+    List64 l  -> fromIntegral $! length l
+    ListPtr l -> fromIntegral $! length l
+    ListStruct (ListOfStruct s len) ->
+        structInvoiceSize s * fromIntegral len
+structInvoiceSize :: Struct mut -> WordCount
+structInvoiceSize (Struct _ dataSz ptrSz) =
+    max 1 (fromIntegral dataSz + fromIntegral ptrSz)
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
 -- to @value@.
@@ -906,7 +940,6 @@ rawBytes :: ReadCtx m 'Const => ListOf 'Const Word8 -> m BS.ByteString
 -- TODO: we can get away with a more lax context than ReadCtx, maybe even make
 -- this non-monadic.
 rawBytes (ListOfWord8 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len)) = do
-    invoice $ fromIntegral $ bytesToWordsCeil (ByteCount len)
     let bytes = M.toByteString pSegment
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
@@ -921,6 +954,7 @@ rootPtr msg = do
         , pSegment = seg
         , pAddr = WordAt 0 0
         }
+    invoicePtr root
     case root of
         Just (PtrStruct struct) -> pure struct
         Nothing -> messageDefault msg

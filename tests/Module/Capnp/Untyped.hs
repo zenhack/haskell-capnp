@@ -107,7 +107,7 @@ readTests = describe "read tests" $
             Just (PtrList (List16 homes)) <- getPtr 1 base
             let 0 = length homes
             return ()
-        endQuota `shouldBe` 110
+        endQuota `shouldBe` 117
 
 data ModTest s = ModTest
     { testIn   :: String
