@@ -128,3 +128,8 @@ instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.ToStruct mut (Raw mut a) where
     toStruct (Raw s) = s
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.FromStruct mut (Raw mut a) where
     fromStruct = pure . Raw
+
+instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw mut a) mut where
+    message (Raw r) = U.message r
+instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw mut a) mut where
+    messageDefault msg = Raw <$> U.messageDefault msg
