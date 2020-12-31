@@ -92,6 +92,12 @@ type instance ReprFor Int64 = 'Data 'Sz64
 type instance ReprFor Float = 'Data 'Sz32
 type instance ReprFor Double = 'Data 'Sz64
 
+type instance ReprFor (U.ListOf mut a) = ReprFor (List a)
+type instance ReprFor (U.Struct mut) = 'Ptr ('Just 'Struct)
+type instance ReprFor (U.Cap mut) = 'Ptr ('Just 'Cap)
+type instance ReprFor (U.Ptr mut) = 'Ptr 'Nothing
+type instance ReprFor (U.List mut) = 'Ptr ('Just ('List 'Nothing))
+
 -- | @Untyped mut r@ is an untyped value with representation @r@ stored in
 -- a message with mutability @mut@.
 type family Untyped (mut :: Mutability) (r :: Repr) :: Type where
