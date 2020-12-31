@@ -3,6 +3,8 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 module Capnp.Repr
@@ -18,14 +20,22 @@ module Capnp.Repr
     , Raw(..)
 
     , List
+    , length
+    , index
     ) where
 
+import Prelude hiding (length)
+
+import Control.Monad.Catch (MonadThrow (..))
 import Data.Int
-import Data.Kind (Type)
+import Data.Kind           (Type)
+import Data.Proxy          (Proxy (..))
 import Data.Word
 
 import qualified Capnp.Classes as C
+import qualified Capnp.Errors  as E
 import           Capnp.Message (Mutability (..))
+import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 
 -- | A 'Repr' describes a wire representation for a value. This is
@@ -124,6 +134,15 @@ data List a
 
 type instance ReprFor (List a) = 'Ptr ('Just ('List ('Just (ListReprFor (ReprFor a)))))
 
+length :: (Untyped mut (ReprFor (List a)) ~ U.ListOf mut b) => Raw mut (List a) -> Int
+length (Raw l) = U.length l
+
+index ::
+    ( U.ReadCtx m mut
+    , Untyped mut (ReprFor (List a)) ~ U.ListOf mut (Untyped mut (ReprFor a))
+    ) => Int -> Raw mut (List a) -> m (Raw mut a)
+index i (Raw l) = Raw <$> U.index i l
+
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.ToStruct mut (Raw mut a) where
     toStruct (Raw s) = s
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.FromStruct mut (Raw mut a) where
@@ -133,3 +152,26 @@ instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw mut a) 
     message (Raw r) = U.message r
 instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw mut a) mut where
     messageDefault msg = Raw <$> U.messageDefault msg
+
+class IsPtrRepr (r :: Maybe PtrRepr) where
+    rToPtr :: Proxy r -> M.Message mut -> (Untyped mut ('Ptr r)) -> Maybe (U.Ptr mut)
+    rFromPtr :: U.ReadCtx m mut => Proxy r -> M.Message mut -> Maybe (U.Ptr mut) -> m (Untyped mut ('Ptr r))
+
+instance IsPtrRepr 'Nothing where
+    rToPtr _ _ p = p
+    rFromPtr _ _ p = pure p
+
+instance IsPtrRepr ('Just 'Struct) where
+    rToPtr _ _ s = Just (U.PtrStruct s)
+    rFromPtr _ msg Nothing              = U.messageDefault msg
+    rFromPtr _ _ (Just (U.PtrStruct s)) = pure s
+    rFromPtr _ _ _                      = expected "pointer to struct"
+
+instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
+    toPtr msg (Raw p) = pure $ rToPtr (Proxy @r) msg p
+instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
+    fromPtr msg p = Raw <$> rFromPtr (Proxy @r) msg p
+
+-- helper function for throwing SchemaViolationError "expected ..."
+expected :: MonadThrow m => String -> m a
+expected msg = throwM $ E.SchemaViolationError $ "expected " ++ msg
