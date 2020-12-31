@@ -528,7 +528,7 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
 
   where
     getWord M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} =
-        invoice 1 *> M.read pSegment wordIndex
+        M.read pSegment wordIndex
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
@@ -591,7 +591,7 @@ ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
 setIndex :: RWCtx m s => a -> Int -> ListOf ('Mut s) a -> m ()
-setIndex _ i list | length list <= i =
+setIndex _ i list | i < 0 || length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
     ListOfVoid _       -> pure ()
@@ -776,38 +776,33 @@ copyStruct dest src = do
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m mut => Int -> ListOf mut a -> m a
-index i list = invoice 1 >> index' list
+index i list
+    | i < 0 || i >= length list =
+        throwM E.BoundsError { E.index = i, E.maxIndex = length list - 1 }
+    | otherwise = index' list
   where
     index' :: ReadCtx m mut => ListOf mut a -> m a
-    index' (ListOfVoid nlist)
-        | i < nLen nlist = pure ()
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = nLen nlist - 1 }
-    index' (ListOfStruct (Struct ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) len)
-        | i < len = do
-            let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
-            let addr' = addr { wordIndex = wordIndex + offset }
-            return $ Struct ptr { M.pAddr = addr' } dataSz ptrSz
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' (ListOfVoid _) = pure ()
+    index' (ListOfStruct (Struct ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) _) = do
+        let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
+        let addr' = addr { wordIndex = wordIndex + offset }
+        return $ Struct ptr { M.pAddr = addr' } dataSz ptrSz
     index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
         pure val
     index' (ListOfWord8  nlist) = indexNList nlist 8
     index' (ListOfWord16 nlist) = indexNList nlist 4
     index' (ListOfWord32 nlist) = indexNList nlist 2
-    index' (ListOfWord64 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len))
-        | i < len = M.read pSegment $ wordIndex + WordCount i
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
-    index' (ListOfPtr (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} len))
-        | i < len = get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1}
+    index' (ListOfWord64 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} _)) =
+        M.read pSegment $ wordIndex + WordCount i
+    index' (ListOfPtr (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} _)) =
+        get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
     indexNList :: (ReadCtx m mut, Integral a) => NormalList mut -> Int -> m a
-    indexNList (NormalList M.WordPtr{pSegment, pAddr=WordAt{..}} len) eltsPerWord
-        | i < len = do
-            let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
-            word <- M.read pSegment wordIndex'
-            let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
-            pure $ fromIntegral $ word `shiftR` shift
-        | otherwise = throwM E.BoundsError { E.index = i, E.maxIndex = len - 1 }
+    indexNList (NormalList M.WordPtr{pSegment, pAddr=WordAt{..}} _) eltsPerWord = do
+        let wordIndex' = wordIndex + WordCount (i `div` eltsPerWord)
+        word <- M.read pSegment wordIndex'
+        let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
+        pure $ fromIntegral $ word `shiftR` shift
 
 -- | Returns the length of a list
 length :: ListOf msg a -> Int
@@ -880,15 +875,49 @@ structListPtrCount  (ListOfStruct s _) = structPtrCount s
 -- returning 0 if it is absent.
 getData :: ReadCtx m msg => Int -> Struct msg -> m Word64
 getData i struct
-    | fromIntegral (structWordCount struct) <= i = 0 <$ invoice 1
+    | fromIntegral (structWordCount struct) <= i = pure 0
     | otherwise = index i (dataSection struct)
 
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
 getPtr :: ReadCtx m msg => Int -> Struct msg -> m (Maybe (Ptr msg))
 getPtr i struct
-    | fromIntegral (structPtrCount struct) <= i = Nothing <$ invoice 1
-    | otherwise = index i (ptrSection struct)
+    | fromIntegral (structPtrCount struct) <= i = do
+        invoice 1
+        pure Nothing
+    | otherwise = do
+        ptr <- index i (ptrSection struct)
+        invoicePtr ptr
+        pure ptr
+
+-- | Invoice the traversal limit for all data reachable via the pointer
+-- directly, i.e. without following further pointers.
+--
+-- The minimum possible cost is 1, and for lists will always be proportional
+-- to the length of the list, even if the size of the elements is zero.
+invoicePtr :: MonadLimit m => Maybe (Ptr mut) -> m ()
+invoicePtr p = invoice $! ptrInvoiceSize p
+
+ptrInvoiceSize :: Maybe (Ptr mut) -> WordCount
+ptrInvoiceSize = \case
+    Nothing            -> 1
+    Just (PtrCap _)    -> 1
+    Just (PtrStruct s) -> structInvoiceSize s
+    Just (PtrList l)   -> listInvoiceSize l
+listInvoiceSize :: List mut -> WordCount
+listInvoiceSize l = max 1 $! case l of
+    List0 l   -> fromIntegral $! length l
+    List1 l   -> fromIntegral $! length l `div` 64
+    List8 l   -> fromIntegral $! length l `div`  8
+    List16 l  -> fromIntegral $! length l `div`  4
+    List32 l  -> fromIntegral $! length l `div`  2
+    List64 l  -> fromIntegral $! length l
+    ListPtr l -> fromIntegral $! length l
+    ListStruct (ListOfStruct s len) ->
+        structInvoiceSize s * fromIntegral len
+structInvoiceSize :: Struct mut -> WordCount
+structInvoiceSize (Struct _ dataSz ptrSz) =
+    max 1 (fromIntegral dataSz + fromIntegral ptrSz)
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
 -- to @value@.
@@ -906,7 +935,6 @@ rawBytes :: ReadCtx m 'Const => ListOf 'Const Word8 -> m BS.ByteString
 -- TODO: we can get away with a more lax context than ReadCtx, maybe even make
 -- this non-monadic.
 rawBytes (ListOfWord8 (NormalList M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} len)) = do
-    invoice $ fromIntegral $ bytesToWordsCeil (ByteCount len)
     let bytes = M.toByteString pSegment
     let ByteCount byteOffset = wordsToBytes wordIndex
     pure $ BS.take len $ BS.drop byteOffset bytes
@@ -921,6 +949,7 @@ rootPtr msg = do
         , pSegment = seg
         , pAddr = WordAt 0 0
         }
+    invoicePtr root
     case root of
         Just (PtrStruct struct) -> pure struct
         Nothing -> messageDefault msg
