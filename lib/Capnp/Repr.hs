@@ -172,6 +172,21 @@ instance IsPtrRepr ('Just 'Struct) where
     rFromPtr _ msg Nothing              = U.messageDefault msg
     rFromPtr _ _ (Just (U.PtrStruct s)) = pure s
     rFromPtr _ _ _                      = expected "pointer to struct"
+instance IsPtrRepr ('Just 'Cap) where
+    rToPtr _ _ c = Just (U.PtrCap c)
+    rFromPtr _ _ Nothing             = expected "pointer to capability"
+    rFromPtr _ _ (Just (U.PtrCap c)) = pure c
+    rFromPtr _ _ _                   = expected "pointer to capability"
+instance IsPtrRepr ('Just ('List 'Nothing)) where
+    rToPtr _ _ l = Just (U.PtrList l)
+    rFromPtr _ _ Nothing              = expected "pointer to list"
+    rFromPtr _ _ (Just (U.PtrList l)) = pure l
+    rFromPtr _ _ (Just _)             = expected "pointer to list"
+instance IsPtrRepr ('Just ('List ('Just ('ListNormal ('ListData 'Sz0))))) where
+    rToPtr _ _ l = Just (U.PtrList (U.List0 l))
+    rFromPtr _ msg Nothing                      = U.messageDefault msg
+    rFromPtr _ _ (Just (U.PtrList (U.List0 l))) = pure l
+    rFromPtr _ _ (Just _) = expected "pointer to List(Void)"
 
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
     toPtr msg (Raw p) = pure $ rToPtr (Proxy @r) msg p
