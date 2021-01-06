@@ -17,7 +17,7 @@ import Control.Monad             (when)
 import Control.Monad.Trans.Class (lift)
 
 import qualified Data.ByteString as BS
-import qualified Prelude
+import qualified Data.Vector     as V
 
 import Capnp.Untyped hiding (index, length)
 
@@ -28,13 +28,8 @@ import Capnp.TraversalLimit (LimitT, execLimitT)
 import qualified Capnp.Gen.Capnp.Schema as Schema
 import qualified Capnp.Message          as M
 
-
--- | TODO: make this an array; we're doing random access to it below.
--- I(@zenhack) am waiting on this, since at the time of writing @taktoa
--- is working on some array utilities that will get merged soonish, so
--- it probably makes sense to just wait for that.
-nodeNames :: [BS.ByteString]
-nodeNames =
+nodeNames :: V.Vector BS.ByteString
+nodeNames = V.fromList
     [ "Import"
     , "annotation"
     , "Value"
@@ -80,7 +75,7 @@ walkSchemaCodeGenRequestTest =
         prefixLen <- Schema.get_Node'displayNamePrefixLength node
         let baseName = BS.drop (fromIntegral prefixLen) name
 
-        when (i < Prelude.length nodeNames && baseName /= (nodeNames !! i)) $
+        when (i < V.length nodeNames && baseName /= (nodeNames V.! i)) $
             error "Incorrect name."
 
         has <- Schema.has_Node'annotations node

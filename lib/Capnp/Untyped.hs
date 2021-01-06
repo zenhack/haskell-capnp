@@ -64,7 +64,7 @@ import Data.Bits
 import Data.Word
 
 import Control.Exception.Safe    (impureThrow)
-import Control.Monad             (forM_)
+import Control.Monad             (forM_, unless)
 import Control.Monad.Catch       (MonadCatch, MonadThrow(throwM))
 import Control.Monad.Catch.Pure  (CatchT(runCatchT))
 import Control.Monad.Primitive   (PrimMonad (..))
@@ -887,8 +887,67 @@ getPtr i struct
         pure Nothing
     | otherwise = do
         ptr <- index i (ptrSection struct)
+        checkPtr ptr
         invoicePtr ptr
         pure ptr
+
+checkPtr :: ReadCtx m mut => Maybe (Ptr mut) -> m ()
+checkPtr Nothing              = pure ()
+checkPtr (Just (PtrCap c))    = checkCap c
+checkPtr (Just (PtrList l))   = checkList l
+checkPtr (Just (PtrStruct s)) = checkStruct s
+
+checkCap :: ReadCtx m mut => Cap mut -> m ()
+checkCap (Cap _ _ ) = pure ()
+    -- No need to do anything here; an out of bounds index is just treated
+    -- as null.
+
+checkList :: ReadCtx m mut => List mut -> m ()
+checkList (List0 l)      = checkListOf l
+checkList (List1 l)      = checkListOf l
+checkList (List8 l)      = checkListOf l
+checkList (List16 l)     = checkListOf l
+checkList (List32 l)     = checkListOf l
+checkList (List64 l)     = checkListOf l
+checkList (ListPtr l)    = checkListOf l
+checkList (ListStruct l) = checkListOf l
+
+checkListOf :: ReadCtx m mut => ListOf mut a -> m ()
+checkListOf (ListOfStruct s@(Struct ptr _ _) len) =
+    checkPtrOffset ptr (fromIntegral len * structSize s)
+checkListOf (ListOfVoid _) = pure ()
+checkListOf (ListOfBool l) = checkNormalList l 1
+checkListOf (ListOfWord8 l) = checkNormalList l 8
+checkListOf (ListOfWord16 l) = checkNormalList l 16
+checkListOf (ListOfWord32 l) = checkNormalList l 32
+checkListOf (ListOfWord64 l) = checkNormalList l 64
+checkListOf (ListOfPtr l) = checkNormalList l 64
+
+checkNormalList :: ReadCtx m mut => NormalList mut -> BitCount -> m ()
+checkNormalList NormalList{nPtr, nLen} eltSize =
+    let nBits = fromIntegral nLen * eltSize
+        nWords = bytesToWordsCeil $ bitsToBytesCeil nBits
+    in
+    checkPtrOffset nPtr nWords
+
+checkStruct :: ReadCtx m mut => Struct mut -> m ()
+checkStruct s@(Struct ptr _ _) =
+    checkPtrOffset ptr (structSize s)
+
+checkPtrOffset :: ReadCtx m mut => M.WordPtr mut -> WordCount -> m ()
+checkPtrOffset M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} size = do
+    segWords <- M.numWords pSegment
+    let maxIndex = fromIntegral segWords - 1
+    unless (wordIndex >= 0) $
+        throwM E.BoundsError { index = fromIntegral wordIndex, maxIndex }
+    unless (wordIndex + size <= segWords) $
+        throwM E.BoundsError
+            { index = fromIntegral (wordIndex + size) - 1
+            , maxIndex
+            }
+
+structSize :: Struct mut -> WordCount
+structSize s = structWordCount s + fromIntegral (structPtrCount s)
 
 -- | Invoice the traversal limit for all data reachable via the pointer
 -- directly, i.e. without following further pointers.
@@ -949,6 +1008,7 @@ rootPtr msg = do
         , pSegment = seg
         , pAddr = WordAt 0 0
         }
+    checkPtr root
     invoicePtr root
     case root of
         Just (PtrStruct struct) -> pure struct

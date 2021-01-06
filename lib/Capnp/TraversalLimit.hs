@@ -35,13 +35,13 @@ module Capnp.TraversalLimit
 import Prelude hiding (fail)
 
 import Control.Monad              (when)
-import Control.Monad.Catch        (MonadThrow(throwM))
+import Control.Monad.Catch        (MonadCatch(catch), MonadThrow(throwM))
 import Control.Monad.Fail         (MonadFail (..))
 import Control.Monad.IO.Class     (MonadIO (..))
 import Control.Monad.Primitive    (PrimMonad(primitive), PrimState)
 import Control.Monad.State.Strict
     (MonadState, StateT, evalStateT, execStateT, get, put, runStateT)
-import Control.Monad.Trans.Class (MonadTrans(lift))
+import Control.Monad.Trans.Class  (MonadTrans(lift))
 
 -- Just to define 'MonadLimit' instances:
 import Control.Monad.RWS    (RWST)
@@ -87,6 +87,12 @@ defaultLimit = (64 * 1024 * 1024) `div` 8
 
 instance MonadThrow m => MonadThrow (LimitT m) where
     throwM = lift . throwM
+
+instance MonadCatch m => MonadCatch (LimitT m) where
+    catch (LimitT m) f = LimitT $ do
+        catch m $ \e ->
+            let LimitT m' = f e in
+            m'
 
 instance MonadThrow m => MonadLimit (LimitT m) where
     invoice deduct = LimitT $ do

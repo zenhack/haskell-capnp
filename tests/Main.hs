@@ -17,6 +17,7 @@ import SchemaQuickCheck                   (schemaCGRQuickCheck)
 import WalkSchemaCodeGenRequest           (walkSchemaCodeGenRequestTest)
 
 import qualified CalculatorExample
+import qualified PointerOOB
 
 main :: IO ()
 main = hspec $ parallel $ do
@@ -36,4 +37,5 @@ main = hspec $ parallel $ do
         describe "property tests for schema" schemaCGRQuickCheck
     describe "Regression tests" regressionTests
     CalculatorExample.tests
+    PointerOOB.tests
     describe "Tests for client unwrapping" unwrapTests
