@@ -33,6 +33,15 @@ errPtrs =
     , ( P.ListPtr (-4) (P.EltNormal P.Sz1 1)
       , E.BoundsError { E.index = -2, E.maxIndex = 1 }
       )
+    , ( P.StructPtr 0 1 0
+      , E.BoundsError { E.index = 2, E.maxIndex = 1 }
+      )
+    , ( P.StructPtr 0 0 1
+      , E.BoundsError { E.index = 2, E.maxIndex = 1 }
+      )
+    , ( P.StructPtr 0 1 1
+      , E.BoundsError { E.index = 3, E.maxIndex = 1 }
+      )
     ]
 
 wrapPtr :: P.Ptr -> BS.ByteString
