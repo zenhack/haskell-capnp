@@ -280,6 +280,7 @@ test-suite tests
       , Module.Capnp.Bits
       , Module.Capnp.Basics
       , Module.Capnp.Canonicalize
+      , PointerOOB
       , Regression
       , WalkSchemaCodeGenRequest
       , SchemaQuickCheck

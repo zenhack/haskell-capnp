@@ -937,10 +937,13 @@ checkStruct s@(Struct ptr _ _) =
 checkPtrOffset :: ReadCtx m mut => M.WordPtr mut -> WordCount -> m ()
 checkPtrOffset M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} size = do
     segWords <- M.numWords pSegment
+    let maxIndex = fromIntegral segWords - 1
+    unless (wordIndex >= 0) $
+        throwM E.BoundsError { index = fromIntegral wordIndex, maxIndex }
     unless (wordIndex + size <= segWords) $
         throwM E.BoundsError
-            { index = fromIntegral (wordIndex + size)
-            , maxIndex = fromIntegral segWords
+            { index = fromIntegral (wordIndex + size) - 1
+            , maxIndex
             }
 
 structSize :: Struct mut -> WordCount
