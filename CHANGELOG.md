@@ -5,6 +5,11 @@
   in a modest performance improvement, and may result in slightly
   different (but similar) amounts of the limit being used for a given
   computation than with the old implementation.
+* Bounds on pointers are checked a bit earlier (when the pointer is
+  read, rather than when its referent is accessed). As a result, some
+  malformed messages may trigger bounds check errors which did not
+  previously, because the offending portion of the message was not
+  read.
 
 # 0.10.0.0
 
