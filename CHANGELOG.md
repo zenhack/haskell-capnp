@@ -10,6 +10,7 @@
   malformed messages may trigger bounds check errors which did not
   previously, because the offending portion of the message was not
   read.
+* `LimitT m` now has an instance of `MonadCatch` if `m` has an instance.
 
 # 0.10.0.0
 
