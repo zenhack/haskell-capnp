@@ -69,13 +69,15 @@ module Capnp.Message (
     , Client
     , nullClient
     , withCapTable
+
+
+    -- ** Unsafe
+    , unsafeWithRawWordPtr
     ) where
 
 import {-# SOURCE #-} Capnp.Rpc.Untyped (Client, nullClient)
 
 import Prelude hiding (read)
-
-import Data.Bits (shiftL)
 
 import Control.Monad             (void, when, (>=>))
 import Control.Monad.Catch       (MonadThrow (..))
@@ -83,8 +85,10 @@ import Control.Monad.Primitive   (PrimMonad, PrimState, stToPrim)
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
+import Data.Bits                 (shiftL)
 import Data.ByteString.Internal  (ByteString (..))
 import Data.Bytes.Get            (getWord32le, runGetS)
+import Data.Function             ((&))
 import Data.Kind                 (Type)
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
@@ -99,6 +103,8 @@ import qualified Data.Vector.Generic.Mutable  as GMV
 import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
+import qualified Foreign.ForeignPtr           as FP
+import qualified Foreign.Ptr                  as F
 
 import Capnp.Address        (WordAddr (..))
 import Capnp.Bits           (WordCount (..), hi, lo)
@@ -138,6 +144,27 @@ data WordPtr mut = WordPtr
     , pSegment :: !(Segment mut)
     , pAddr    :: !WordAddr
     }
+
+-- | Do something with the raw memory address referred to by the WordPtr.
+--
+-- Most users will not need this.
+--
+-- This is unsafe. In particular:
+--
+-- * The pointer is not guaranteed to live past the execution of the IO action,
+--   so callers must make sure not to retain references to it.
+-- * This allows modifying constant messages in place, as well as retaining
+--   references to mutable messages which may become frozen later.
+unsafeWithRawWordPtr :: WordPtr mut -> (F.Ptr Word64 -> IO a) -> IO a
+unsafeWithRawWordPtr WordPtr{pSegment, pAddr=WordAt{wordIndex}} f =
+    case pSegment of
+        SegConst (ConstSegment sv) ->
+            SV.unsafeWith (SV.drop (fromIntegral wordIndex) sv) f
+        SegMut MutSegment{vec}     ->
+            SMV.take (fromIntegral wordIndex) vec
+            & SMV.unsafeToForeignPtr0
+            & \(fptr, _) ->
+                FP.withForeignPtr fptr f
 
 data Message (mut :: Mutability) where
     MsgConst :: !ConstMsg -> Message 'Const
