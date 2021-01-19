@@ -11,6 +11,8 @@
   previously, because the offending portion of the message was not
   read.
 * `LimitT m` now has an instance of `MonadCatch` if `m` has an instance.
+* Some harmless warnings triggered by the generated code are now
+  silenced.
 
 # 0.10.0.0
 
