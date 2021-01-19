@@ -3,6 +3,7 @@
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.ById.X86c366a91393f3f8(module Capnp.Gen.Capnp.Stream) where
 import Capnp.Gen.Capnp.Stream
 import qualified Prelude as Std_
