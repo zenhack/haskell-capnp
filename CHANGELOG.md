@@ -13,6 +13,8 @@
 * `LimitT m` now has an instance of `MonadCatch` if `m` has an instance.
 * Some harmless warnings triggered by the generated code are now
   silenced.
+* `Capnp.Rpc.Promise` exposes a new function `newReadyPromise`, which
+  can be used to create an already-fulfilled promise.
 
 # 0.10.0.0
 
