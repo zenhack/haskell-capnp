@@ -26,7 +26,7 @@
 # 0.10.0.0
 
 * The parametrization of messages has been reworked. Most things that
-  per parametrized over a message type are now parametrized over a
+  were parametrized over a message type are now parametrized over a
   type parameter of kind `Mutability` (defined in `Capnp.Message`).
   * The Message type class has been replaced with a type `Message` of
     kind `Mutability -> *`, and a type class `MonadReadMessage` for
