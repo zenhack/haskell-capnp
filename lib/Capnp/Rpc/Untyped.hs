@@ -68,6 +68,7 @@ import Control.Exception.Safe
     , MonadThrow
     , SomeException
     , bracket
+    , finally
     , fromException
     , throwIO
     , throwM
@@ -93,7 +94,7 @@ import qualified StmContainers.Map as M
 
 import Capnp.Classes        (cerialize, decerialize, fromStruct, new, toStruct)
 import Capnp.Convert        (valueToMsg)
-import Capnp.Message        (Message, Mutability (..))
+import Capnp.Message        (Message, Mutability(..))
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -1101,9 +1102,10 @@ export sup ops = liftSTM $ do
             , finalizerKey
             , unwrapper = Server.handleCast ops
             }
-    superviseSTM sup $ do
+    superviseSTM sup ((do
         Fin.addFinalizer finalizerKey $ Rc.release qCall
-        Server.runServer q ops
+        Server.runServer q ops)
+      `finally` Server.handleStop ops)
     pure $ Client (Just client')
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r

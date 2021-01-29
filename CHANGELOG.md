@@ -15,6 +15,13 @@
   silenced.
 * `Capnp.Rpc.Promise` exposes a new function `newReadyPromise`, which
   can be used to create an already-fulfilled promise.
+* Fixed a race condition where if the supervisor for a client is killed
+  before the server has finished spawning, the shutdown method might
+  not be run.
+* `Capnp.Rpc.Server.runServer` no longer calls handleStop on exit.
+  Most users of the library will not be affected, as this function is
+  mostly a low-level implementation detail that is called by higher
+  level functionality.
 
 # 0.10.0.0
 
