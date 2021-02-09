@@ -10,6 +10,7 @@
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Rpc where
 import qualified Capnp.Message as Message
 import qualified Capnp.Untyped as Untyped

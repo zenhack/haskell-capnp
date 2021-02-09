@@ -13,6 +13,7 @@
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Schema.Pure(Capnp.Gen.ById.Xa93fc509624c72d9.ElementSize(..)
                                   ,Node(..)
                                   ,Node'(..)

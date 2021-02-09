@@ -31,7 +31,7 @@ import Capnp.Classes
     , FromPtr(fromPtr)
     , ToStruct(toStruct)
     )
-import Capnp.Message        (Mutability (..))
+import Capnp.Message        (Mutability(..))
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Data.Mutable         (freeze)
 
@@ -89,7 +89,7 @@ invokePure
 invokePure method params pureFulfiller = do
     struct <- evalLimitT defaultLimit $ do
         msg <- M.newMessage Nothing
-        (toStruct <$> cerialize msg params) >>= freeze
+        cerialize msg params >>= freeze . toStruct
     (_, untypedFulfiller) <- liftSTM $ Promise.newPromiseWithCallback $ \case
         Left e -> Promise.breakPromise pureFulfiller e
         Right v ->

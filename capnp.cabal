@@ -170,7 +170,6 @@ library
       -- END GENERATED SCHEMA MODULES
     other-modules:
         Internal.AppendVec
-      , Internal.Finalizer
       , Internal.SnocList
       , Internal.Rc
       , Internal.TCloseQ
@@ -189,7 +188,8 @@ library
       , async                             ^>= 2.2.1
       , network-simple                    ^>= 0.4
       , network                           >= 3 && <3.2
-      , supervisors                       ^>= 0.2.0
+      , supervisors                       ^>= 0.2.1
+      , lifetimes                         ^>= 0.1
       , pretty-show                       >= 1.9.5 && <1.11
       , template-haskell                  ^>=2.16.0
 

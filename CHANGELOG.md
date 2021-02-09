@@ -11,11 +11,22 @@
   previously, because the offending portion of the message was not
   read.
 * `LimitT m` now has an instance of `MonadCatch` if `m` has an instance.
+* Some harmless warnings triggered by the generated code are now
+  silenced.
+* `Capnp.Rpc.Promise` exposes a new function `newReadyPromise`, which
+  can be used to create an already-fulfilled promise.
+* Fixed a race condition where if the supervisor for a client is killed
+  before the server has finished spawning, the shutdown method might
+  not be run.
+* `Capnp.Rpc.Server.runServer` no longer calls handleStop on exit.
+  Most users of the library will not be affected, as this function is
+  mostly a low-level implementation detail that is called by higher
+  level functionality.
 
 # 0.10.0.0
 
 * The parametrization of messages has been reworked. Most things that
-  per parametrized over a message type are now parametrized over a
+  were parametrized over a message type are now parametrized over a
   type parameter of kind `Mutability` (defined in `Capnp.Message`).
   * The Message type class has been replaced with a type `Message` of
     kind `Mutability -> *`, and a type class `MonadReadMessage` for
