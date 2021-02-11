@@ -107,6 +107,7 @@ library
       , Capnp.New.Classes
       , Capnp.Convert
       , Capnp.Errors
+      , Capnp.Fields
       , Capnp.GenHelpers
       , Capnp.GenHelpers.Pure
       , Capnp.GenHelpers.Rpc
