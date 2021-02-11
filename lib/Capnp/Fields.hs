@@ -28,8 +28,7 @@ data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
     , defaultValue :: !Word64
     }
 
-data Field a b where
-    Field :: FieldLoc (R.ReprFor b) -> Field a b
+newtype Field a b = Field (FieldLoc (R.ReprFor b))
 
 class
     ( R.ReprFor a ~ ('R.Ptr ('Just 'R.Struct))
