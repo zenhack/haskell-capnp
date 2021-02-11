@@ -181,7 +181,7 @@ instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw
     messageDefault msg = Raw <$> U.messageDefault msg
 
 class IsPtrRepr (r :: Maybe PtrRepr) where
-    rToPtr :: M.Message mut -> (Untyped mut ('Ptr r)) -> Maybe (U.Ptr mut)
+    rToPtr :: M.Message mut -> Untyped mut ('Ptr r) -> Maybe (U.Ptr mut)
     rFromPtr :: U.ReadCtx m mut => M.Message mut -> Maybe (U.Ptr mut) -> m (Untyped mut ('Ptr r))
 
 instance IsPtrRepr 'Nothing where
