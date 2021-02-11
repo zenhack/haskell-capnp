@@ -10,7 +10,7 @@ module Capnp.Fields
     , DataFieldLoc(..)
     ) where
 
-import Data.Proxy           (Proxy)
+import Capnp.Bits
 import Data.Word
 import GHC.OverloadedLabels (IsLabel)
 
@@ -23,9 +23,9 @@ data FieldLoc (r :: R.Repr) where
     DataField :: DataFieldLoc a -> FieldLoc ('R.Data a)
 
 data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
-    { offset       :: Int
-    , size         :: Proxy sz
-    , defaultValue :: Word64
+    { offset       :: !BitCount
+    , mask         :: !Word64
+    , defaultValue :: !Word64
     }
 
 data Field a b where
