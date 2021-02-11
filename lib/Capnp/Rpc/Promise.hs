@@ -12,6 +12,7 @@ module Capnp.Rpc.Promise
 
     -- * Creating promises
     , newPromise
+    , newReadyPromise
     , newPromiseWithCallback
     , newCallback
 
@@ -72,6 +73,10 @@ wait Promise{var} = liftSTM $ do
             pure result
         Just (Left exn) ->
             throwSTM exn
+
+-- | Create a promise that is already fulfilled, with the given value.
+newReadyPromise :: MonadSTM m => a -> m (Promise a)
+newReadyPromise value = liftSTM $ Promise <$> newTVar (Just (Right value))
 
 -- | Create a new promise and an associated fulfiller.
 newPromise :: MonadSTM m => m (Promise a, Fulfiller a)

@@ -44,7 +44,7 @@ import Control.Concurrent.STM
 import Control.Monad.STM.Class
 import Data.Word
 
-import Control.Exception.Safe  (MonadCatch, finally, try)
+import Control.Exception.Safe  (MonadCatch, try)
 import Control.Monad.IO.Class  (MonadIO, liftIO)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Data.Typeable           (Typeable)
@@ -56,7 +56,7 @@ import Capnp.Classes
     , ToStruct(toStruct)
     )
 import Capnp.Convert        (valueToMsg)
-import Capnp.Message        (Mutability (..))
+import Capnp.Message        (Mutability(..))
 import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
 import Capnp.Rpc.Promise    (Fulfiller, breakPromise, fulfill, newCallback)
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
@@ -262,7 +262,7 @@ data CallInfo = CallInfo
 -- Accepts a queue of messages to handle, and 'ServerOps' used to handle them.
 -- returns when it receives a 'Stop' message.
 runServer :: TCloseQ.Q CallInfo -> ServerOps IO -> IO ()
-runServer q ops = go `finally` handleStop ops
+runServer q ops = go
   where
     go = atomically (TCloseQ.read q) >>= \case
         Nothing ->
