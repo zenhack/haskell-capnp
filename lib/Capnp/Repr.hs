@@ -5,6 +5,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TemplateHaskell        #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
@@ -27,16 +28,16 @@ module Capnp.Repr
 
 import Prelude hiding (length)
 
-import Control.Monad.Catch (MonadThrow(..))
-import Data.Int
-import Data.Kind           (Type)
-import Data.Word
-
-import qualified Capnp.Classes as C
-import qualified Capnp.Errors  as E
-import           Capnp.Message (Mutability(..))
-import qualified Capnp.Message as M
-import qualified Capnp.Untyped as U
+import qualified Capnp.Classes       as C
+import qualified Capnp.Errors        as E
+import           Capnp.Message       (Mutability(..))
+import qualified Capnp.Message       as M
+import qualified Capnp.Untyped       as U
+import           Control.Monad.Catch (MonadThrow(..))
+import           Data.Int
+import           Data.Kind           (Type)
+import           Data.Word
+import qualified Language.Haskell.TH as TH
 
 -- | A 'Repr' describes a wire representation for a value. This is
 -- mostly used at the type level (using DataKinds); types are
@@ -202,17 +203,65 @@ instance IsPtrRepr ('Just ('List 'Nothing)) where
     rFromPtr _ Nothing              = expected "pointer to list"
     rFromPtr _ (Just (U.PtrList l)) = pure l
     rFromPtr _ (Just _)             = expected "pointer to list"
-instance IsPtrRepr ('Just ('List ('Just ('ListNormal ('ListData 'Sz0))))) where
-    rToPtr _ l = Just (U.PtrList (U.List0 l))
-    rFromPtr msg Nothing                      = U.messageDefault msg
-    rFromPtr _ (Just (U.PtrList (U.List0 l))) = pure l
-    rFromPtr _ (Just _)                       = expected "pointer to List(Void)"
+instance IsListPtrRepr r => IsPtrRepr ('Just ('List ('Just r))) where
+    rToPtr _ l = Just (U.PtrList (rToList @r l))
+    rFromPtr msg Nothing            = rFromListMsg @r msg
+    rFromPtr _ (Just (U.PtrList l)) = rFromList @r l
+    rFromPtr _ (Just _)             = expected "pointer to list"
+
+class IsListPtrRepr (r :: ListRepr) where
+    rToList :: UntypedSomeList mut r -> U.List mut
+    rFromList :: U.ReadCtx m mut => U.List mut -> m (UntypedSomeList mut r)
+    rFromListMsg :: U.ReadCtx m mut => M.Message mut -> m (UntypedSomeList mut r)
+
+-- helper function for throwing SchemaViolationError "expected ..."
+expected :: MonadThrow m => String -> m a
+expected msg = throwM $ E.SchemaViolationError $ "expected " ++ msg
+
+do
+    let mkIsListPtrRepr (r, listC, str) =
+            [d| instance IsListPtrRepr $r where
+                    rToList = $(pure $ TH.ConE listC)
+                    rFromList $(pure $ TH.ConP listC [TH.VarP (TH.mkName "l")]) = pure l
+                    rFromList _ = expected $(pure $ TH.LitE $ TH.StringL $ "pointer to " ++ str)
+                    rFromListMsg = U.messageDefault
+            |]
+    concat <$> traverse mkIsListPtrRepr
+        [ ( [t| 'ListNormal ('ListData 'Sz0) |]
+          , 'U.List0
+          , "List(Void)"
+          )
+        , ( [t| 'ListNormal ('ListData 'Sz1) |]
+          , 'U.List1
+          , "List(Bool)"
+          )
+        , ( [t| 'ListNormal ('ListData 'Sz8) |]
+          , 'U.List8
+          , "List(UInt8)"
+          )
+        , ( [t| 'ListNormal ('ListData 'Sz16) |]
+          , 'U.List16
+          , "List(UInt16)"
+          )
+        , ( [t| 'ListNormal ('ListData 'Sz32) |]
+          , 'U.List32
+          , "List(UInt32)"
+          )
+        , ( [t| 'ListNormal ('ListData 'Sz64) |]
+          , 'U.List64
+          , "List(UInt64)"
+          )
+        , ( [t| 'ListNormal 'ListPtr |]
+          , 'U.ListPtr
+          , "List(AnyPointer)"
+          )
+        , ( [t| 'ListComposite |]
+          , 'U.ListStruct
+          , "composite list"
+          )
+        ]
 
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
     toPtr msg (Raw p) = pure $ rToPtr @r msg p
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
     fromPtr msg p = Raw <$> rFromPtr @r msg p
-
--- helper function for throwing SchemaViolationError "expected ..."
-expected :: MonadThrow m => String -> m a
-expected msg = throwM $ E.SchemaViolationError $ "expected " ++ msg
