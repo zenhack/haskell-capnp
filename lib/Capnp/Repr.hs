@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
@@ -16,9 +17,9 @@ module Capnp.Repr
     , ElemRepr
     , ListReprFor
     , ReprFor
-
+    , FromElement(..)
+    , Untyped
     , Raw(..)
-
     , List
     , length
     , index
@@ -26,15 +27,14 @@ module Capnp.Repr
 
 import Prelude hiding (length)
 
-import Control.Monad.Catch (MonadThrow (..))
+import Control.Monad.Catch (MonadThrow(..))
 import Data.Int
 import Data.Kind           (Type)
-import Data.Proxy          (Proxy (..))
 import Data.Word
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Errors  as E
-import           Capnp.Message (Mutability (..))
+import           Capnp.Message (Mutability(..))
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 
@@ -126,31 +126,51 @@ type family UntypedList (mut :: Mutability) (r :: Maybe ListRepr) :: Type where
     UntypedList mut ('Just r) = UntypedSomeList mut r
 
 type family UntypedSomeList (mut :: Mutability) (r :: ListRepr) :: Type where
-    UntypedSomeList mut ('ListNormal r) = UntypedNormalList mut r
-    UntypedSomeList mut 'ListComposite = U.ListOf mut (U.Struct mut)
-
-type family UntypedNormalList (mut :: Mutability) (r :: NormalListRepr) :: Type where
-    UntypedNormalList mut 'ListPtr = U.ListOf mut (U.Ptr mut)
-    UntypedNormalList mut ('ListData sz) = U.ListOf mut (UntypedData sz)
+    UntypedSomeList mut r = U.ListOf mut (Untyped mut (ElemRepr r))
 
 newtype Raw (mut :: Mutability) (a :: Type)
-    = Raw (Untyped mut (ReprFor a))
+    = Raw { fromRaw :: Untyped mut (ReprFor a) }
 
 data List a
 
 type instance ReprFor (List a) = 'Ptr ('Just ('List ('Just (ListReprFor (ReprFor a)))))
 
-length :: (Untyped mut (ReprFor (List a)) ~ U.ListOf mut b) => Raw mut (List a) -> Int
+length :: Raw mut (List a) -> Int
 length (Raw l) = U.length l
 
-index ::
+index :: forall a m mut.
     ( U.ReadCtx m mut
-    , Untyped mut (ReprFor (List a)) ~ U.ListOf mut (Untyped mut (ReprFor a))
+    , FromElement (ReprFor a)
     ) => Int -> Raw mut (List a) -> m (Raw mut a)
-index i (Raw l) = Raw <$> U.index i l
+index i (Raw l) =
+    Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
+
+-- | 'FromElement' supports converting a value of representation
+-- @'ElemRepr' ('ListReprFor' r)@ into a value of representation @r@.
+--
+-- At a glance, you might expect this to just be a no-op, but it is actually
+-- *not* always the case that @'ElemRepr' ('ListReprFor' r) ~ r@; in the
+-- case of pointer type, @'ListReprFor' r@ can contain arbitrary pointers,
+-- so information is lost, and it is possible for the list to contain pointers
+-- of the incorrect type. In this case, 'fromElement' will throw an error.
+class FromElement (r :: Repr) where
+    fromElement
+        :: forall m mut. U.ReadCtx m mut
+        => M.Message mut
+        -> Untyped mut (ElemRepr (ListReprFor r))
+        -> m (Untyped mut r)
+
+instance FromElement ('Data sz) where
+    fromElement _ = pure
+instance FromElement ('Ptr ('Just 'Struct)) where
+    fromElement _ = pure
+instance FromElement ('Ptr 'Nothing) where
+    fromElement _ = pure
+instance FromElement ('Ptr ('Just 'Cap)) where
+    fromElement = rFromPtr @('Just 'Cap)
 
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.ToStruct mut (Raw mut a) where
-    toStruct (Raw s) = s
+    toStruct = fromRaw
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.FromStruct mut (Raw mut a) where
     fromStruct = pure . Raw
 
@@ -160,38 +180,38 @@ instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw
     messageDefault msg = Raw <$> U.messageDefault msg
 
 class IsPtrRepr (r :: Maybe PtrRepr) where
-    rToPtr :: Proxy r -> M.Message mut -> (Untyped mut ('Ptr r)) -> Maybe (U.Ptr mut)
-    rFromPtr :: U.ReadCtx m mut => Proxy r -> M.Message mut -> Maybe (U.Ptr mut) -> m (Untyped mut ('Ptr r))
+    rToPtr :: M.Message mut -> (Untyped mut ('Ptr r)) -> Maybe (U.Ptr mut)
+    rFromPtr :: U.ReadCtx m mut => M.Message mut -> Maybe (U.Ptr mut) -> m (Untyped mut ('Ptr r))
 
 instance IsPtrRepr 'Nothing where
-    rToPtr _ _ p = p
-    rFromPtr _ _ p = pure p
+    rToPtr _ p = p
+    rFromPtr _ p = pure p
 
 instance IsPtrRepr ('Just 'Struct) where
-    rToPtr _ _ s = Just (U.PtrStruct s)
-    rFromPtr _ msg Nothing              = U.messageDefault msg
-    rFromPtr _ _ (Just (U.PtrStruct s)) = pure s
-    rFromPtr _ _ _                      = expected "pointer to struct"
+    rToPtr _ s = Just (U.PtrStruct s)
+    rFromPtr msg Nothing              = U.messageDefault msg
+    rFromPtr _ (Just (U.PtrStruct s)) = pure s
+    rFromPtr _ _                      = expected "pointer to struct"
 instance IsPtrRepr ('Just 'Cap) where
-    rToPtr _ _ c = Just (U.PtrCap c)
-    rFromPtr _ _ Nothing             = expected "pointer to capability"
-    rFromPtr _ _ (Just (U.PtrCap c)) = pure c
-    rFromPtr _ _ _                   = expected "pointer to capability"
+    rToPtr _ c = Just (U.PtrCap c)
+    rFromPtr _ Nothing             = expected "pointer to capability"
+    rFromPtr _ (Just (U.PtrCap c)) = pure c
+    rFromPtr _ _                   = expected "pointer to capability"
 instance IsPtrRepr ('Just ('List 'Nothing)) where
-    rToPtr _ _ l = Just (U.PtrList l)
-    rFromPtr _ _ Nothing              = expected "pointer to list"
-    rFromPtr _ _ (Just (U.PtrList l)) = pure l
-    rFromPtr _ _ (Just _)             = expected "pointer to list"
+    rToPtr _ l = Just (U.PtrList l)
+    rFromPtr _ Nothing              = expected "pointer to list"
+    rFromPtr _ (Just (U.PtrList l)) = pure l
+    rFromPtr _ (Just _)             = expected "pointer to list"
 instance IsPtrRepr ('Just ('List ('Just ('ListNormal ('ListData 'Sz0))))) where
-    rToPtr _ _ l = Just (U.PtrList (U.List0 l))
-    rFromPtr _ msg Nothing                      = U.messageDefault msg
-    rFromPtr _ _ (Just (U.PtrList (U.List0 l))) = pure l
-    rFromPtr _ _ (Just _) = expected "pointer to List(Void)"
+    rToPtr _ l = Just (U.PtrList (U.List0 l))
+    rFromPtr msg Nothing                      = U.messageDefault msg
+    rFromPtr _ (Just (U.PtrList (U.List0 l))) = pure l
+    rFromPtr _ (Just _)                       = expected "pointer to List(Void)"
 
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
-    toPtr msg (Raw p) = pure $ rToPtr (Proxy @r) msg p
+    toPtr msg (Raw p) = pure $ rToPtr @r msg p
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
-    fromPtr msg p = Raw <$> rFromPtr (Proxy @r) msg p
+    fromPtr msg p = Raw <$> rFromPtr @r msg p
 
 -- helper function for throwing SchemaViolationError "expected ..."
 expected :: MonadThrow m => String -> m a
