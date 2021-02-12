@@ -9,8 +9,9 @@ import qualified IR.Name    as Name
 
 data File
     = File
-        { fileId :: !Word64
-        , decls  :: [Decl]
+        { fileId   :: !Word64
+        , decls    :: [Decl]
+        , fileName :: FilePath
         }
 
 data Decl
