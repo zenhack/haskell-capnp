@@ -205,6 +205,7 @@ executable capnpc-haskell
   main-is: Main.hs
   other-modules:
       IR.Name
+      IR.New
     , IR.Common
     , IR.Stage1
     , IR.Flat
@@ -215,6 +216,7 @@ executable capnpc-haskell
     , Trans.Stage1ToFlat
     , Trans.FlatToRaw
     , Trans.FlatToPure
+    , Trans.FlatToNew
     , Trans.ToHaskellCommon
     , Trans.PureToHaskell
     , Trans.RawToHaskell
