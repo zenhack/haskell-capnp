@@ -143,6 +143,9 @@ fixImports m@Module{modImports} =
     in
     m { modImports = modImports ++ neededImports }
 
+toTVars :: [Name.UnQ] -> [Type]
+toTVars = map (TVar . Name.typeVarName)
+
 class HasGNames a where
     -- | Collect all of the 'Name.GlobalQ's used in the module.
     --

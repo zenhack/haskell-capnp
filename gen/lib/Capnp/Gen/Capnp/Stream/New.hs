@@ -8,6 +8,8 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Stream.New where
 import qualified Capnp.Repr as R
+import qualified Capnp.Fields as F
+import qualified GHC.OverloadedLabels as OL
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

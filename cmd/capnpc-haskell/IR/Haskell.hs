@@ -159,6 +159,7 @@ data Type
     | TPrim Common.PrimWord
     | TUnit
     | TKindAnnotated Type Type
+    | TString T.Text -- type-level string literal
     deriving(Show, Read, Eq)
 
 data Exp

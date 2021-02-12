@@ -274,6 +274,7 @@ instance Format Type where
     format TUnit = "()"
     format (TKindAnnotated ty kind) =
         "(" <> format ty <> " :: " <> format kind <> ")"
+    format (TString str) = fromString $ "'" ++ show str
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
