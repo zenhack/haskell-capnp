@@ -89,6 +89,12 @@ instance Format Decl where
         , format (TCtx ctx typ)
         , whereBlock defs
         ]
+    format (DcTypeInstance alias orig) = hcat
+        [ "type instance "
+        , format alias
+        , " = "
+        , format orig
+        ]
     format DcClass{ctx, name, params, funDeps, decls} = hcat
         [ "class "
         , format $

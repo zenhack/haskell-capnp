@@ -156,6 +156,15 @@ library
       , Capnp.Gen.Capnp.RpcTwoparty
       , Capnp.Gen.Capnp.Schema
       , Capnp.Gen.Capnp.Stream
+
+      , Capnp.Gen.Capnp.Cxx.New
+      , Capnp.Gen.Capnp.Compat.Json.New
+      , Capnp.Gen.Capnp.Persistent.New
+      , Capnp.Gen.Capnp.Rpc.New
+      , Capnp.Gen.Capnp.RpcTwoparty.New
+      , Capnp.Gen.Capnp.Schema.New
+      , Capnp.Gen.Capnp.Stream.New
+
       , Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
       , Capnp.Gen.ById.X8ef99297a43a5e34.Pure
       , Capnp.Gen.ById.Xb8630836983feed7.Pure

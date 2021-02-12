@@ -89,6 +89,7 @@ data Decl
         , typ  :: Type
         , defs :: [InstanceDef]
         }
+    | DcTypeInstance Type Type
     | DcClass
         { ctx     :: [Type]
         , name    :: Name.LocalQ

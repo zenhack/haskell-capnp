@@ -47,19 +47,27 @@ data Repr
     -- ^ Pointer type
     | Data DataSz
     -- ^ Non-pointer type.
+    deriving(Show)
 
 data PtrRepr
     = Cap
     | List (Maybe ListRepr)
     | Struct
+    deriving(Show)
 
 data ListRepr where
     ListNormal :: NormalListRepr -> ListRepr
     ListComposite :: ListRepr
+    deriving(Show)
 
 data NormalListRepr where
     ListData :: DataSz -> NormalListRepr
     ListPtr :: NormalListRepr
+    deriving(Show)
+
+-- | The size of a non-pointer type.
+data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
+    deriving(Show)
 
 -- | @ElemRepr r@ is the representation of elements of lists with
 -- representation @r@.
@@ -74,9 +82,6 @@ type family ListReprFor (e :: Repr) :: ListRepr where
     ListReprFor ('Data sz) = 'ListNormal ('ListData sz)
     ListReprFor ('Ptr ('Just 'Struct)) = 'ListComposite
     ListReprFor ('Ptr a) = 'ListNormal 'ListPtr
-
--- | The size of a non-pointer type.
-data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
 
 type family ReprFor (a :: Type) :: Repr
 

@@ -171,6 +171,7 @@ instance HasGNames Decl where
         , findGNames typ
         , S.unions $ map findGNames defs
         ]
+    findGNames (DcTypeInstance alias orig) = findGNames alias `S.union` findGNames orig
     findGNames DcClass{ctx, decls} =
         S.unions $ map findGNames ctx ++ map findGNames decls
 
