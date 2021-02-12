@@ -220,6 +220,7 @@ executable capnpc-haskell
     , Trans.ToHaskellCommon
     , Trans.PureToHaskell
     , Trans.RawToHaskell
+    , Trans.NewToHaskell
     , Trans.HaskellToText
     , Check
   build-depends:
