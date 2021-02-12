@@ -31,7 +31,7 @@ data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
 newtype Field a b = Field (FieldLoc (R.ReprFor b))
 
 class
-    ( R.ReprFor a ~ ('R.Ptr ('Just 'R.Struct))
+    ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
     , IsLabel name (Field a b)
     ) => HasField name a b | a name -> b
 
