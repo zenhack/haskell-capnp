@@ -19,6 +19,7 @@ imports :: [Hs.Import]
 imports =
     [ Hs.ImportAs { importAs = "R", parts = ["Capnp", "Repr"] }
     , Hs.ImportAs { importAs = "F", parts = ["Capnp", "Fields"] }
+    , Hs.ImportAs { importAs = "Basics", parts = ["Capnp", "New", "Basics"] }
     , Hs.ImportAs { importAs = "OL", parts = ["GHC", "OverloadedLabels"] }
     ]
 
@@ -128,7 +129,18 @@ typeToType thisMod = \case
     C.WordType t      -> wordTypeToType thisMod t
     C.PtrType t       -> ptrTypeToType thisMod t
 
-primPtrToType _ = error "TODO"
+primPtrToType = \case
+    C.PrimText     -> tgName ["Basics"] "Text"
+    C.PrimData     -> tgName ["Basics"] "Data"
+    C.PrimAnyPtr t -> anyPtrToType t
+
+anyPtrToType :: C.AnyPtr -> Hs.Type
+anyPtrToType t = tgName ["Basics"] $ case t of
+    C.Struct -> "AnyStruct"
+    C.List   -> "AnyList"
+    C.Cap    -> "Capability"
+    C.Ptr    -> "AnyPointer"
+
 compositeTypeToType thisMod (C.StructType    name brand) = namedType thisMod name brand
 interfaceTypeToType thisMod (C.InterfaceType name brand) = namedType thisMod name brand
 
