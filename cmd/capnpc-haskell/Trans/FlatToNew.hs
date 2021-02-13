@@ -46,5 +46,5 @@ fieldToDecl containerType typeParams Flat.Field{fieldName, fieldLocType} =
         { containerType
         , typeParams = map C.paramName typeParams
         , fieldName = Name.getUnQ fieldName
-        , fieldLocType = error "TODO" fieldLocType
+        , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
         }
