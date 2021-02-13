@@ -22,17 +22,29 @@ fileToFile Flat.File{fileId, fileName, nodes} =
 nodeToDecls :: Flat.Node -> [New.Decl]
 nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
     let mkType repr =
-            [ New.TypeDecl
+            New.TypeDecl
                 { name = local
                 , nodeId
                 , params = map C.paramName typeParams
                 , repr
                 }
-            ]
+        mkField field =
+            fieldToDecl local typeParams field
     in
     case union_ of
         Flat.Other       -> []
         Flat.Constant _  -> []
-        Flat.Enum _      -> mkType (R.Data R.Sz16)
-        Flat.Struct{}    -> mkType (R.Ptr (Just R.Struct))
-        Flat.Interface{} -> mkType (R.Ptr (Just R.Cap))
+        Flat.Enum _      -> [ mkType (R.Data R.Sz16) ]
+        Flat.Interface{} -> [ mkType (R.Ptr (Just R.Cap)) ]
+        Flat.Struct{fields} ->
+            mkType (R.Ptr (Just R.Struct))
+            : map mkField fields
+
+fieldToDecl :: Name.LocalQ -> [C.TypeParamRef Flat.Node]-> Flat.Field -> New.Decl
+fieldToDecl containerType typeParams Flat.Field{fieldName, fieldLocType} =
+    New.FieldDecl
+        { containerType
+        , typeParams = map C.paramName typeParams
+        , fieldName = Name.getUnQ fieldName
+        , fieldLocType = error "TODO" fieldLocType
+        }

@@ -5,7 +5,6 @@ module IR.New
     ) where
 
 import qualified Capnp.Repr as R
-import qualified Data.Text  as T
 import           Data.Word
 import qualified IR.Common  as C
 import qualified IR.Name    as Name
@@ -29,6 +28,6 @@ data Decl
     | FieldDecl
         { containerType :: Name.LocalQ
         , typeParams    :: [Name.UnQ]
-        , fieldName     :: T.Text
-        , fieldType     :: C.Type Brand Name.CapnpQ
+        , fieldName     :: Name.UnQ
+        , fieldLocType  :: C.FieldLocType Brand Name.CapnpQ
         }

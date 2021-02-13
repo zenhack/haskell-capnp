@@ -65,11 +65,11 @@ declToDecls thisMod decl =
                 )
                 (toType repr)
             ]
-        New.FieldDecl{containerType, typeParams, fieldName, fieldType} ->
+        New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let ctx = []
-                labelType = Hs.TString fieldName
+                labelType = Hs.TString (Name.renderUnQ fieldName)
                 parentType = Hs.TApp (Hs.TLName containerType) (toTVars typeParams)
-                childType = typeToType thisMod fieldType
+                childType = fieldLocTypeToType thisMod fieldLocType
             in
             [ Hs.DcInstance
                 { ctx
@@ -91,12 +91,55 @@ tCapnp thisMod Name.CapnpQ{local, fileId}
     | thisMod == fileId = Hs.TLName local
     | otherwise = tgName (map Name.renderUnQ $ idToModule fileId ++ ["New"]) local
 
-typeToType :: Word64 -> C.Type New.Brand Name.CapnpQ -> Hs.Type
-typeToType thisMod = \case
-    C.VoidType                 -> Hs.TUnit
-    C.WordType (C.EnumType nm) -> tCapnp thisMod nm
-    _                          -> error "TODO"
+fieldLocTypeToType :: Word64 -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Type
+fieldLocTypeToType thisMod = \case
+    C.VoidField     -> Hs.TUnit
+    C.DataField _ t -> wordTypeToType thisMod t
+    C.PtrField _ t  -> ptrTypeToType thisMod t
+    C.HereField t   -> compositeTypeToType thisMod t
 
+wordTypeToType thisMod = \case
+    C.EnumType t -> tCapnp thisMod t
+    C.PrimWord t -> primWordToType t
+
+primWordToType = \case
+    C.PrimInt t   -> intTypeToType t
+    C.PrimFloat32 -> tStd_ "Float"
+    C.PrimFloat64 -> tStd_ "Double"
+    C.PrimBool    -> tStd_ "Bool"
+
+intTypeToType (C.IntType sign size) =
+    let prefix = case sign of
+            C.Signed   -> "Int"
+            C.Unsigned -> "Word"
+    in
+    tStd_ $ fromString $ prefix ++ show (C.sizeBits size)
+
+ptrTypeToType thisMod = \case
+    C.ListOf t       -> Hs.TApp (tgName ["R"] "List") [typeToType thisMod t]
+    C.PrimPtr t      -> primPtrToType t
+    C.PtrComposite t -> compositeTypeToType thisMod t
+    C.PtrInterface t -> interfaceTypeToType thisMod t
+    C.PtrParam t     -> typeParamToType t
+
+typeToType thisMod = \case
+    C.CompositeType t -> compositeTypeToType thisMod t
+    C.VoidType        -> Hs.TUnit
+    C.WordType t      -> wordTypeToType thisMod t
+    C.PtrType t       -> ptrTypeToType thisMod t
+
+primPtrToType _ = error "TODO"
+compositeTypeToType thisMod (C.StructType    name brand) = namedType thisMod name brand
+interfaceTypeToType thisMod (C.InterfaceType name brand) = namedType thisMod name brand
+
+typeParamToType = Hs.TVar . Name.typeVarName . C.paramName
+
+namedType :: Word64 -> Name.CapnpQ -> C.ListBrand Name.CapnpQ -> Hs.Type
+namedType thisMod name (C.ListBrand [])   = tCapnp thisMod name
+namedType thisMod name (C.ListBrand args) =
+    Hs.TApp
+        (tCapnp thisMod name)
+        [ typeToType thisMod (C.PtrType t) | t <- args ]
 
 class ToType a where
     toType :: a -> Hs.Type
