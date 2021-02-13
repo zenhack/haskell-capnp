@@ -30,6 +30,8 @@ fileToModules file@New.File{fileName} =
         , modLangPragmas =
             [ "TypeFamilies"
             , "DataKinds"
+            , "FlexibleInstances"
+            , "MultiParamTypeClasses"
             ]
         , modExports = Nothing
         , modImports = imports
