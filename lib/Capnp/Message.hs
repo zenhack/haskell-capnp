@@ -504,9 +504,10 @@ alloc msg size@(WordCount sizeInt) = do
         Nothing -> do
             -- Not enough space in the current segment; allocate a new one.
             -- the new segment's size should match the total size of existing segments
+            -- but `maxSegmentSize` bounds how large it can get.
             WordCount totalAllocation <- sum <$>
                 traverse (getSegment msg >=> numWords) [0..segIndex]
-            ( newSegIndex, _ ) <- newSegment msg (max totalAllocation sizeInt)
+            ( newSegIndex, _ ) <- newSegment msg (min (max totalAllocation sizeInt) maxSegmentSize)
             -- This is guaranteed to succeed, since we just made a segment with
             -- at least size available space:
             fromJust <$> allocInSeg msg newSegIndex size
