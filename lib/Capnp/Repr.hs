@@ -18,6 +18,7 @@ module Capnp.Repr
     , ElemRepr
     , ListReprFor
     , ReprFor
+    , IsPtrRepr
     , FromElement(..)
     , Untyped
     , Raw(..)

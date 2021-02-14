@@ -23,7 +23,8 @@ data FieldLoc (r :: R.Repr) where
     DataField :: DataFieldLoc a -> FieldLoc ('R.Data a)
 
 data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
-    { offset       :: !BitCount
+    { shift        :: !BitCount
+    , index        :: !Word16
     , mask         :: !Word64
     , defaultValue :: !Word64
     }

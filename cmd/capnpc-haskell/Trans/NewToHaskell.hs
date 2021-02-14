@@ -21,6 +21,7 @@ imports =
     , Hs.ImportAs { importAs = "F", parts = ["Capnp", "Fields"] }
     , Hs.ImportAs { importAs = "Basics", parts = ["Capnp", "New", "Basics"] }
     , Hs.ImportAs { importAs = "OL", parts = ["GHC", "OverloadedLabels"] }
+    , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
     ]
 
 fileToModules :: New.File -> [Hs.Module]
@@ -32,6 +33,7 @@ fileToModules file@New.File{fileName} =
             , "DataKinds"
             , "FlexibleInstances"
             , "MultiParamTypeClasses"
+            , "UndecidableInstances"
             ]
         , modExports = Nothing
         , modImports = imports
@@ -69,9 +71,10 @@ declToDecls thisMod decl =
                 (toType repr)
             ]
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
-            let ctx = []
+            let tVars = toTVars typeParams
+                ctx = map paramConstraints tVars
                 labelType = Hs.TString (Name.renderUnQ fieldName)
-                parentType = Hs.TApp (Hs.TLName containerType) (toTVars typeParams)
+                parentType = Hs.TApp (Hs.TLName containerType) tVars
                 childType = fieldLocTypeToType thisMod fieldLocType
             in
             [ Hs.DcInstance
@@ -80,7 +83,13 @@ declToDecls thisMod decl =
                     [ labelType
                     , Hs.TApp (tgName ["F"] "Field") [parentType, childType]
                     ]
-                , defs = []
+                , defs =
+                    [ Hs.IdValue Hs.DfValue
+                        { name = "fromLabel"
+                        , value = fieldLocTypeToFromLabel fieldLocType
+                        , params = []
+                        }
+                    ]
                 }
             , Hs.DcInstance
                 { ctx
@@ -88,6 +97,14 @@ declToDecls thisMod decl =
                 , defs = []
                 }
             ]
+
+-- | Constraints required for a capnproto type parameter. The returned
+-- expression has kind 'Constraint'.
+paramConstraints :: Hs.Type -> Hs.Type
+paramConstraints t =
+    -- FIXME: make pr variable unique. Otherwise, this will
+    -- require all type parameters to have the *same* representation.
+    Hs.TApp (tgName ["GH"] "TypeParam") [t, Hs.TVar "pr"]
 
 tCapnp :: Word64 -> Name.CapnpQ -> Hs.Type
 tCapnp thisMod Name.CapnpQ{local, fileId}
@@ -117,6 +134,13 @@ intTypeToType (C.IntType sign size) =
             C.Unsigned -> "Word"
     in
     tStd_ $ fromString $ prefix ++ show (C.sizeBits size)
+
+wordTypeBits = \case
+    C.EnumType _                              -> 16
+    C.PrimWord (C.PrimInt (C.IntType _ size)) -> C.sizeBits size
+    C.PrimWord C.PrimFloat32                  -> 32
+    C.PrimWord C.PrimFloat64                  -> 64
+    C.PrimWord C.PrimBool                     -> 1
 
 ptrTypeToType thisMod = \case
     C.ListOf t       -> Hs.TApp (tgName ["R"] "List") [typeToType thisMod t]
@@ -154,6 +178,29 @@ namedType thisMod name (C.ListBrand args) =
     Hs.TApp
         (tCapnp thisMod name)
         [ typeToType thisMod (C.PtrType t) | t <- args ]
+
+fieldLocTypeToFromLabel = \case
+    C.DataField loc wt ->
+        let shift = C.dataOff loc
+            index = C.dataIdx loc
+            nbits = wordTypeBits wt
+            defaultValue = C.dataDef loc
+        in
+        Hs.EApp
+            (egName ["GH"] "dataField")
+            [ Hs.EInt $ fromIntegral shift
+            , Hs.EInt $ fromIntegral index
+            , Hs.EInt $ fromIntegral nbits
+            , Hs.EInt $ fromIntegral defaultValue
+            ]
+    C.PtrField idx _ ->
+        Hs.EApp (egName ["GH"] "ptrField") [Hs.EInt $ fromIntegral idx]
+    C.VoidField ->
+        egName ["GH"] "voidField"
+    C.HereField _ ->
+        -- TODO
+        eStd_ "undefined"
+
 
 class ToType a where
     toType :: a -> Hs.Type

@@ -112,6 +112,7 @@ library
       , Capnp.GenHelpers
       , Capnp.GenHelpers.Pure
       , Capnp.GenHelpers.Rpc
+      , Capnp.GenHelpers.New
       , Capnp.IO
       , Capnp.Message
       , Capnp.Pointer
