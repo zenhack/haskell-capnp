@@ -23,6 +23,11 @@
   mostly a low-level implementation detail that is called by higher
   level functionality.
 
+# 0.10.0.1
+
+* Fix a bug causing spurious exceptions when creating very large
+  messages.
+
 # 0.10.0.0
 
 * The parametrization of messages has been reworked. Most things that
