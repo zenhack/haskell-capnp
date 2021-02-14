@@ -72,7 +72,7 @@ declToDecls thisMod decl =
             ]
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
-                ctx = map paramConstraints tVars
+                ctx = zipWith paramConstraints tVars (map (("pr_" ++) . show) [1..])
                 labelType = Hs.TString (Name.renderUnQ fieldName)
                 parentType = Hs.TApp (Hs.TLName containerType) tVars
                 childType = fieldLocTypeToType thisMod fieldLocType
@@ -100,11 +100,11 @@ declToDecls thisMod decl =
 
 -- | Constraints required for a capnproto type parameter. The returned
 -- expression has kind 'Constraint'.
-paramConstraints :: Hs.Type -> Hs.Type
-paramConstraints t =
-    -- FIXME: make pr variable unique. Otherwise, this will
-    -- require all type parameters to have the *same* representation.
-    Hs.TApp (tgName ["GH"] "TypeParam") [t, Hs.TVar "pr"]
+--
+-- The second argument is a unique type variable name within this scope.
+paramConstraints :: Hs.Type -> String -> Hs.Type
+paramConstraints t s =
+    Hs.TApp (tgName ["GH"] "TypeParam") [t, Hs.TVar $ fromString s]
 
 tCapnp :: Word64 -> Name.CapnpQ -> Hs.Type
 tCapnp thisMod Name.CapnpQ{local, fileId}
