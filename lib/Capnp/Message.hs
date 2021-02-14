@@ -453,7 +453,7 @@ write MutSegment{vec} (WordCount i) val = do
 -- number and the segment itself. Amortized O(1).
 newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
 newSegment msg@MutMsg{mutSegs} sizeHint = do
-    when (sizeHint > maxSegmentSize) $ throwM E.SizeError
+    when (sizeHint > maxSegmentSize) $ throwM $ E.SizeError $ "newSegment: sizeHint > maxSegmentSize (" ++ show sizeHint ++ " > " ++ show maxSegmentSize ++ ")"
     -- the next segment number will be equal to the *current* number of
     -- segments:
     segIndex <- numSegs msg
@@ -496,7 +496,7 @@ allocInSeg msg segIndex size = do
 alloc :: WriteCtx m s => MutMsg s -> WordCount -> m (WordPtr (MutMsg s))
 alloc msg size@(WordCount sizeInt) = do
     when (sizeInt > maxSegmentSize) $
-        throwM E.SizeError
+        throwM $ E.SizeError $ "alloc: sizeInt > maxSegmentSize (" ++ show sizeInt ++ " > " ++ show maxSegmentSize ++ ")"
     segIndex <- pred <$> numSegs msg
     existing <- allocInSeg msg segIndex size
     case existing of

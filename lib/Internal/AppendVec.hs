@@ -84,7 +84,7 @@ grow :: (MonadThrow m, PrimMonad m, s ~ PrimState m, GMV.MVector v a)
     => AppendVec v s a -> Int -> Int -> m (AppendVec v s a)
 grow vec@AppendVec{mutVec,mutVecLen} amount maxSize = do
     when (maxSize - amount < mutVecLen) $
-        throwM SizeError
+        throwM $ SizeError $ "grow: maxSize - amount < mutVecLen (" ++ show maxSize ++ " - " ++ show amount ++ " < " ++ show mutVecLen ++ ")"
     mutVec <-
         if canGrowWithoutCopy vec amount then
             -- we have enough un-allocated space already; leave the vector
