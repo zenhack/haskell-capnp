@@ -449,7 +449,7 @@ write MutSegment{vec} (WordCount i) val = do
     SMV.write vec i (toLE64 val)
 
 -- | @'newSegment' msg sizeHint@ allocates a new, initially empty segment in
--- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
+-- @msg@ with a capacity of @sizeHint@ words. It returns the a pair of the segment
 -- number and the segment itself. Amortized O(1).
 newSegment :: WriteCtx m s => MutMsg s -> Int -> m (Int, Segment (MutMsg s))
 newSegment msg@MutMsg{mutSegs} sizeHint = do
