@@ -174,7 +174,7 @@ instance (OL.IsLabel "discriminantValue" (F.Field (Field) Std_.Word16)) where
     fromLabel  = (GH.dataField 16 0 16 65535)
 instance (F.HasField "discriminantValue" (Field) Std_.Word16)
 instance (OL.IsLabel "ordinal" (F.Field (Field) Field'ordinal)) where
-    fromLabel  = Std_.undefined
+    fromLabel  = GH.groupField
 instance (F.HasField "ordinal" (Field) Field'ordinal)
 data Field'slot 
 type instance (R.ReprFor Field'slot) = (R.Ptr (Std_.Just R.Struct))

@@ -198,8 +198,7 @@ fieldLocTypeToFromLabel = \case
     C.VoidField ->
         egName ["GH"] "voidField"
     C.HereField _ ->
-        -- TODO
-        eStd_ "undefined"
+        egName ["GH"] "groupField"
 
 
 class ToType a where

@@ -47,7 +47,7 @@ instance (OL.IsLabel "params" (F.Field (Call) Payload)) where
     fromLabel  = (GH.ptrField 1)
 instance (F.HasField "params" (Call) Payload)
 instance (OL.IsLabel "sendResultsTo" (F.Field (Call) Call'sendResultsTo)) where
-    fromLabel  = Std_.undefined
+    fromLabel  = GH.groupField
 instance (F.HasField "sendResultsTo" (Call) Call'sendResultsTo)
 instance (OL.IsLabel "allowThirdPartyTailCall" (F.Field (Call) Std_.Bool)) where
     fromLabel  = (GH.dataField 0 2 1 0)
@@ -89,7 +89,7 @@ instance (OL.IsLabel "target" (F.Field (Disembargo) MessageTarget)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "target" (Disembargo) MessageTarget)
 instance (OL.IsLabel "context" (F.Field (Disembargo) Disembargo'context)) where
-    fromLabel  = Std_.undefined
+    fromLabel  = GH.groupField
 instance (F.HasField "context" (Disembargo) Disembargo'context)
 data Disembargo'context 
 type instance (R.ReprFor Disembargo'context) = (R.Ptr (Std_.Just R.Struct))
