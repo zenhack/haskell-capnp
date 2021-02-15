@@ -14,6 +14,7 @@ module Capnp.New
 import qualified Capnp.Classes        as C
 import qualified Capnp.Fields         as F
 import           Capnp.Message        (Mutability(..))
+import qualified Capnp.New.Classes    as C
 import qualified Capnp.Repr           as R
 import           Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped        as U
@@ -55,9 +56,11 @@ readField (F.Field field) (R.Raw struct) =
 getField
     ::  ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
         , R.ReprFor b ~ 'R.Data sz
+        , C.Parse b
         )
     => F.Field a b
     -> R.Raw 'Const a
-    -> R.Raw 'Const b
+    -> C.Parsed b
 getField field struct =
-    fromJust $ evalLimitT maxBound $ readField field struct
+    fromJust $ evalLimitT maxBound $
+        readField field struct >>= C.parseConst
