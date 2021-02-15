@@ -14,13 +14,14 @@ import Capnp.Bits
 import Data.Word
 import GHC.OverloadedLabels (IsLabel)
 
-import qualified Capnp.Repr as R
+import qualified Capnp.Classes as C
+import qualified Capnp.Repr    as R
 
 data FieldLoc (r :: R.Repr) where
     GroupField :: FieldLoc ('R.Ptr ('Just 'R.Struct))
-    UnionField :: Word16 -> FieldLoc ('R.Ptr ('Just 'R.Struct))
-    PtrField :: Word16 -> FieldLoc ('R.Ptr a)
-    DataField :: DataFieldLoc a -> FieldLoc ('R.Data a)
+    PtrField :: R.IsPtrRepr a => Word16 -> FieldLoc ('R.Ptr a)
+    DataField :: C.IsWord (R.UntypedData a) => DataFieldLoc a -> FieldLoc ('R.Data a)
+    VoidField :: FieldLoc ('R.Data 'R.Sz0)
 
 data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
     { shift        :: !BitCount
@@ -35,4 +36,3 @@ class
     ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
     , IsLabel name (Field a b)
     ) => HasField name a b | a name -> b
-

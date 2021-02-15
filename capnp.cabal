@@ -104,6 +104,7 @@ library
       , Capnp.Bits
       , Capnp.Canonicalize
       , Capnp.Classes
+      , Capnp.New
       , Capnp.New.Basics
       , Capnp.New.Classes
       , Capnp.Convert

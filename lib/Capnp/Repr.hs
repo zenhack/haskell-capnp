@@ -18,9 +18,10 @@ module Capnp.Repr
     , ElemRepr
     , ListReprFor
     , ReprFor
-    , IsPtrRepr
+    , IsPtrRepr(..)
     , FromElement(..)
     , Untyped
+    , UntypedData
     , Raw(..)
     , List
     , length
