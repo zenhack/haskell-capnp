@@ -9,23 +9,48 @@
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
+-- | Module: Capnp.Repr
+-- Description: Type-level plumbing for wire-representations.
+--
+-- This module provides facilities for working with the wire
+-- representations of capnproto objects at the type level. The most
+-- central part of this module is the 'Repr' type.
 module Capnp.Repr
-    ( Repr(..)
+    (
+    -- * Type-level descriptions of wire representations.
+      Repr(..)
     , PtrRepr(..)
     , ListRepr(..)
     , NormalListRepr(..)
     , DataSz(..)
-    , ElemRepr
-    , ListReprFor
-    , ReprFor
-    , IsPtrRepr(..)
-    , FromElement(..)
+
+    -- * Mapping representations to value types from "Capnp.Untyped"
     , Untyped
     , UntypedData
+    , UntypedPtr
+    , UntypedSomePtr
+    , UntypedList
+    , UntypedSomeList
+
+    -- * Mapping types to their wire representations.
+    , ReprFor
+
+    -- * Relating the representations of lists & their elements.
+    , ElemRepr
+    , ListReprFor
+    , FromElement(..)
+
+    -- * Working with wire-encoded values
     , Raw(..)
+
+    -- * Working with lists
     , List
     , length
     , index
+
+    -- * Working with pointers
+    , IsPtrRepr(..)
+    , IsListPtrRepr(..)
     ) where
 
 import Prelude hiding (length)
@@ -46,15 +71,20 @@ import qualified Language.Haskell.TH as TH
 -- parametrized over representations.
 data Repr
     = Ptr (Maybe PtrRepr)
-    -- ^ Pointer type
+    -- ^ Pointer type. 'Nothing' indicates an AnyPointer, 'Just' describes
+    -- a more specific pointer type.
     | Data DataSz
     -- ^ Non-pointer type.
     deriving(Show)
 
 data PtrRepr
     = Cap
+    -- ^ Capability pointer.
     | List (Maybe ListRepr)
+    -- ^ List pointer. 'Nothing' describes an AnyList, 'Just' describes
+    -- more specific list types.
     | Struct
+    -- ^ A struct (or group).
     deriving(Show)
 
 data ListRepr where
@@ -67,44 +97,9 @@ data NormalListRepr where
     ListPtr :: NormalListRepr
     deriving(Show)
 
--- | The size of a non-pointer type.
+-- | The size of a non-pointer type. @SzN@ represents an @N@-bit value.
 data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
     deriving(Show)
-
--- | @ElemRepr r@ is the representation of elements of lists with
--- representation @r@.
-type family ElemRepr (rl :: ListRepr) :: Repr where
-    ElemRepr 'ListComposite = 'Ptr ('Just 'Struct)
-    ElemRepr ('ListNormal 'ListPtr) = 'Ptr 'Nothing
-    ElemRepr ('ListNormal ('ListData sz)) = 'Data sz
-
--- | @ListReprFor e@ is the representation of lists with elements
--- whose representation is @e@.
-type family ListReprFor (e :: Repr) :: ListRepr where
-    ListReprFor ('Data sz) = 'ListNormal ('ListData sz)
-    ListReprFor ('Ptr ('Just 'Struct)) = 'ListComposite
-    ListReprFor ('Ptr a) = 'ListNormal 'ListPtr
-
-type family ReprFor (a :: Type) :: Repr
-
-type instance ReprFor () = 'Data 'Sz0
-type instance ReprFor Bool = 'Data 'Sz1
-type instance ReprFor Word8 = 'Data 'Sz8
-type instance ReprFor Word16 = 'Data 'Sz16
-type instance ReprFor Word32 = 'Data 'Sz32
-type instance ReprFor Word64 = 'Data 'Sz64
-type instance ReprFor Int8 = 'Data 'Sz8
-type instance ReprFor Int16 = 'Data 'Sz16
-type instance ReprFor Int32 = 'Data 'Sz32
-type instance ReprFor Int64 = 'Data 'Sz64
-type instance ReprFor Float = 'Data 'Sz32
-type instance ReprFor Double = 'Data 'Sz64
-
-type instance ReprFor (U.ListOf mut a) = ReprFor (List a)
-type instance ReprFor (U.Struct mut) = 'Ptr ('Just 'Struct)
-type instance ReprFor (U.Cap mut) = 'Ptr ('Just 'Cap)
-type instance ReprFor (U.Ptr mut) = 'Ptr 'Nothing
-type instance ReprFor (U.List mut) = 'Ptr ('Just ('List 'Nothing))
 
 -- | @Untyped mut r@ is an untyped value with representation @r@ stored in
 -- a message with mutability @mut@.
@@ -136,29 +131,49 @@ type family UntypedList (mut :: Mutability) (r :: Maybe ListRepr) :: Type where
 type family UntypedSomeList (mut :: Mutability) (r :: ListRepr) :: Type where
     UntypedSomeList mut r = U.ListOf mut (Untyped mut (ElemRepr r))
 
-newtype Raw (mut :: Mutability) (a :: Type)
-    = Raw { fromRaw :: Untyped mut (ReprFor a) }
+type family ReprFor (a :: Type) :: Repr
 
-data List a
+type instance ReprFor () = 'Data 'Sz0
+type instance ReprFor Bool = 'Data 'Sz1
+type instance ReprFor Word8 = 'Data 'Sz8
+type instance ReprFor Word16 = 'Data 'Sz16
+type instance ReprFor Word32 = 'Data 'Sz32
+type instance ReprFor Word64 = 'Data 'Sz64
+type instance ReprFor Int8 = 'Data 'Sz8
+type instance ReprFor Int16 = 'Data 'Sz16
+type instance ReprFor Int32 = 'Data 'Sz32
+type instance ReprFor Int64 = 'Data 'Sz64
+type instance ReprFor Float = 'Data 'Sz32
+type instance ReprFor Double = 'Data 'Sz64
+
+type instance ReprFor (U.ListOf mut a) = ReprFor (List a)
+type instance ReprFor (U.Struct mut) = 'Ptr ('Just 'Struct)
+type instance ReprFor (U.Cap mut) = 'Ptr ('Just 'Cap)
+type instance ReprFor (U.Ptr mut) = 'Ptr 'Nothing
+type instance ReprFor (U.List mut) = 'Ptr ('Just ('List 'Nothing))
 
 type instance ReprFor (List a) = 'Ptr ('Just ('List ('Just (ListReprFor (ReprFor a)))))
 
-length :: Raw mut (List a) -> Int
-length (Raw l) = U.length l
+-- | @ElemRepr r@ is the representation of elements of lists with
+-- representation @r@.
+type family ElemRepr (rl :: ListRepr) :: Repr where
+    ElemRepr 'ListComposite = 'Ptr ('Just 'Struct)
+    ElemRepr ('ListNormal 'ListPtr) = 'Ptr 'Nothing
+    ElemRepr ('ListNormal ('ListData sz)) = 'Data sz
 
-index :: forall a m mut.
-    ( U.ReadCtx m mut
-    , FromElement (ReprFor a)
-    ) => Int -> Raw mut (List a) -> m (Raw mut a)
-index i (Raw l) =
-    Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
+-- | @ListReprFor e@ is the representation of lists with elements
+-- whose representation is @e@.
+type family ListReprFor (e :: Repr) :: ListRepr where
+    ListReprFor ('Data sz) = 'ListNormal ('ListData sz)
+    ListReprFor ('Ptr ('Just 'Struct)) = 'ListComposite
+    ListReprFor ('Ptr a) = 'ListNormal 'ListPtr
 
 -- | 'FromElement' supports converting a value of representation
 -- @'ElemRepr' ('ListReprFor' r)@ into a value of representation @r@.
 --
 -- At a glance, you might expect this to just be a no-op, but it is actually
 -- *not* always the case that @'ElemRepr' ('ListReprFor' r) ~ r@; in the
--- case of pointer type, @'ListReprFor' r@ can contain arbitrary pointers,
+-- case of pointer types, @'ListReprFor' r@ can contain arbitrary pointers,
 -- so information is lost, and it is possible for the list to contain pointers
 -- of the incorrect type. In this case, 'fromElement' will throw an error.
 class FromElement (r :: Repr) where
@@ -177,6 +192,26 @@ instance FromElement ('Ptr 'Nothing) where
 instance FromElement ('Ptr ('Just 'Cap)) where
     fromElement = rFromPtr @('Just 'Cap)
 
+-- | A @'Raw' mut a@ is an @a@ embedded in a capnproto message with mutability
+-- @mut@.
+newtype Raw (mut :: Mutability) (a :: Type)
+    = Raw { fromRaw :: Untyped mut (ReprFor a) }
+
+-- | A phantom type denoting capnproto lists of type @a@.
+data List a
+
+-- | Get the length of a capnproto list.
+length :: Raw mut (List a) -> Int
+length (Raw l) = U.length l
+
+-- | @'index' i list@ gets the @i@th element of the list.
+index :: forall a m mut.
+    ( U.ReadCtx m mut
+    , FromElement (ReprFor a)
+    ) => Int -> Raw mut (List a) -> m (Raw mut a)
+index i (Raw l) =
+    Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
+
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.ToStruct mut (Raw mut a) where
     toStruct = fromRaw
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.FromStruct mut (Raw mut a) where
@@ -187,9 +222,13 @@ instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw mut a) 
 instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw mut a) mut where
     messageDefault msg = Raw <$> U.messageDefault msg
 
+-- | Operations on types with pointer representations.
 class IsPtrRepr (r :: Maybe PtrRepr) where
     rToPtr :: M.Message mut -> Untyped mut ('Ptr r) -> Maybe (U.Ptr mut)
+    -- ^ Convert an untyped value of this representation to an AnyPointer.
     rFromPtr :: U.ReadCtx m mut => M.Message mut -> Maybe (U.Ptr mut) -> m (Untyped mut ('Ptr r))
+    -- ^ Extract a value with this representation from an AnyPointer, failing
+    -- if the pointer is the wrong type for this representation.
 
 instance IsPtrRepr 'Nothing where
     rToPtr _ p = p
@@ -216,10 +255,16 @@ instance IsListPtrRepr r => IsPtrRepr ('Just ('List ('Just r))) where
     rFromPtr _ (Just (U.PtrList l)) = rFromList @r l
     rFromPtr _ (Just _)             = expected "pointer to list"
 
+-- | Operations on types with list representations.
 class IsListPtrRepr (r :: ListRepr) where
     rToList :: UntypedSomeList mut r -> U.List mut
+    -- ^ Convert an untyped value of this representation to an AnyList.
     rFromList :: U.ReadCtx m mut => U.List mut -> m (UntypedSomeList mut r)
+    -- ^ Extract a value with this representation from an AnyList, failing
+    -- if the list is the wrong type for this representation.
     rFromListMsg :: U.ReadCtx m mut => M.Message mut -> m (UntypedSomeList mut r)
+    -- ^ Create a zero-length value with this representation, living in the
+    -- provided message.
 
 -- helper function for throwing SchemaViolationError "expected ..."
 expected :: MonadThrow m => String -> m a
