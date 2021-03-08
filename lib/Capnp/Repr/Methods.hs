@@ -1,6 +1,8 @@
 {-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DuplicateRecordFields  #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE NamedFieldPuns         #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Module: Capnp.Repr.Methods
 -- Description: Support for working with methods
@@ -12,11 +14,20 @@ module Capnp.Repr.Methods
     , Client(..)
     , pipe
     , pipelineClient
+
+    , AsClient(..)
+
+    , callR
     ) where
 
 import qualified Capnp.Fields            as F
+import           Capnp.Message           (Mutability(..))
 import qualified Capnp.Repr              as R
+import           Capnp.Rpc.Promise       (newPromise)
+import qualified Capnp.Rpc.Server        as Server
 import qualified Capnp.Rpc.Untyped       as Rpc
+import qualified Capnp.Untyped           as U
+import           Control.Concurrent.STM
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
 import           GHC.OverloadedLabels    (IsLabel)
@@ -40,6 +51,33 @@ class
 newtype Pipeline a = Pipeline Rpc.Pipeline
 
 newtype Client a = Client Rpc.Client
+
+class AsClient f where
+    asClient :: R.ReprFor c ~ 'R.Ptr ('Just 'R.Cap) => f c -> STM (Client c)
+
+instance AsClient Pipeline where
+    asClient = pipelineClient
+
+instance AsClient Client where
+    asClient = pure
+
+callR ::
+    ( AsClient f
+    , R.ReprFor c ~ 'R.Ptr ('Just 'R.Cap)
+    , R.ReprFor p ~ 'R.Ptr ('Just 'R.Struct)
+    , MonadSTM m
+    ) => Method c p r -> R.Raw 'Const p -> f c -> m (Pipeline r)
+callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
+    Client client <- asClient c
+    (_, f) <- newPromise
+    Pipeline <$> Rpc.call
+        Server.CallInfo
+            { interfaceId
+            , methodId
+            , arguments = Just (U.PtrStruct arg)
+            , response = f
+            }
+            client
 
 pipe :: ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
         , R.ReprFor b ~ 'R.Ptr pr

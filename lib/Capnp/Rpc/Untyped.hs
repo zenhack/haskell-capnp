@@ -36,6 +36,7 @@ module Capnp.Rpc.Untyped
     , Pipeline
     , walkPipelinePtr
     , pipelineClient
+    , waitPipeline
 
     -- * Exporting local objects
     , export
@@ -681,6 +682,19 @@ pipelineClient Pipeline{state, steps} = liftSTM $ do
                     `catchSTM` (\e -> do
                         breakPromise f (wrapException False e)
                         pure p)
+
+-- | Wait for the pipeline's target to resolve, and return the corresponding
+-- pointer.
+waitPipeline :: MonadSTM m => Pipeline -> m RawMPtr
+waitPipeline Pipeline{state, steps} = liftSTM $ do
+    s <- readTVar state
+    case s of
+        ReadyPipeline (Left e) ->
+            throwM e
+        ReadyPipeline (Right v) ->
+            evalLimitT defaultLimit $ followPtrs (toList steps) v
+        _ ->
+            retry
 
 promisedAnswerClient :: Conn -> PromisedAnswer -> STM Client
 promisedAnswerClient conn answer@PromisedAnswer{answerId, transform} = do
