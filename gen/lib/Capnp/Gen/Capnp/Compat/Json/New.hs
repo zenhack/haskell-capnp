@@ -23,30 +23,30 @@ data Value
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
-instance (OL.IsLabel "name" (F.Field (Value'Field) Basics.Text)) where
+instance (OL.IsLabel "name" (F.Field F.Slot (Value'Field) Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
-instance (F.HasField "name" (Value'Field) Basics.Text)
-instance (OL.IsLabel "value" (F.Field (Value'Field) Value)) where
+instance (F.HasField "name" F.Slot (Value'Field) Basics.Text)
+instance (OL.IsLabel "value" (F.Field F.Slot (Value'Field) Value)) where
     fromLabel  = (GH.ptrField 1)
-instance (F.HasField "value" (Value'Field) Value)
+instance (F.HasField "value" F.Slot (Value'Field) Value)
 data Value'Call 
 type instance (R.ReprFor Value'Call) = (R.Ptr (Std_.Just R.Struct))
-instance (OL.IsLabel "function" (F.Field (Value'Call) Basics.Text)) where
+instance (OL.IsLabel "function" (F.Field F.Slot (Value'Call) Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
-instance (F.HasField "function" (Value'Call) Basics.Text)
-instance (OL.IsLabel "params" (F.Field (Value'Call) (R.List Value))) where
+instance (F.HasField "function" F.Slot (Value'Call) Basics.Text)
+instance (OL.IsLabel "params" (F.Field F.Slot (Value'Call) (R.List Value))) where
     fromLabel  = (GH.ptrField 1)
-instance (F.HasField "params" (Value'Call) (R.List Value))
+instance (F.HasField "params" F.Slot (Value'Call) (R.List Value))
 data FlattenOptions 
 type instance (R.ReprFor FlattenOptions) = (R.Ptr (Std_.Just R.Struct))
-instance (OL.IsLabel "prefix" (F.Field (FlattenOptions) Basics.Text)) where
+instance (OL.IsLabel "prefix" (F.Field F.Slot (FlattenOptions) Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
-instance (F.HasField "prefix" (FlattenOptions) Basics.Text)
+instance (F.HasField "prefix" F.Slot (FlattenOptions) Basics.Text)
 data DiscriminatorOptions 
 type instance (R.ReprFor DiscriminatorOptions) = (R.Ptr (Std_.Just R.Struct))
-instance (OL.IsLabel "name" (F.Field (DiscriminatorOptions) Basics.Text)) where
+instance (OL.IsLabel "name" (F.Field F.Slot (DiscriminatorOptions) Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
-instance (F.HasField "name" (DiscriminatorOptions) Basics.Text)
-instance (OL.IsLabel "valueName" (F.Field (DiscriminatorOptions) Basics.Text)) where
+instance (F.HasField "name" F.Slot (DiscriminatorOptions) Basics.Text)
+instance (OL.IsLabel "valueName" (F.Field F.Slot (DiscriminatorOptions) Basics.Text)) where
     fromLabel  = (GH.ptrField 1)
-instance (F.HasField "valueName" (DiscriminatorOptions) Basics.Text)
+instance (F.HasField "valueName" F.Slot (DiscriminatorOptions) Basics.Text)

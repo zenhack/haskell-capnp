@@ -26,7 +26,7 @@ dataField
     ( R.ReprFor b ~ 'R.Data sz
     , C.IsWord (R.UntypedData sz)
     )
-    => BitCount -> Word16 -> BitCount -> Word64 -> F.Field a b
+    => BitCount -> Word16 -> BitCount -> Word64 -> F.Field 'F.Slot a b
 dataField shift index nbits defaultValue = F.Field $ F.DataField @sz F.DataFieldLoc
     { shift
     , index
@@ -34,13 +34,13 @@ dataField shift index nbits defaultValue = F.Field $ F.DataField @sz F.DataField
     , defaultValue
     }
 
-ptrField :: (R.IsPtrRepr p, R.ReprFor b ~ 'R.Ptr p) => Word16 -> F.Field a b
+ptrField :: (R.IsPtrRepr p, R.ReprFor b ~ 'R.Ptr p) => Word16 -> F.Field 'F.Slot a b
 ptrField = F.Field . F.PtrField
 
-groupField :: (R.ReprFor b ~ 'R.Ptr ('Just 'R.Struct)) => F.Field a b
+groupField :: (R.ReprFor b ~ 'R.Ptr ('Just 'R.Struct)) => F.Field 'F.Group a b
 groupField = F.Field F.GroupField
 
-voidField :: (R.ReprFor b ~ 'R.Data 'R.Sz0) => F.Field a b
+voidField :: (R.ReprFor b ~ 'R.Data 'R.Sz0) => F.Field 'F.Slot a b
 voidField = F.Field F.VoidField
 
 type TypeParam a pr =

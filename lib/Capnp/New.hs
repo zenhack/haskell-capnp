@@ -23,11 +23,11 @@ import           Data.Maybe           (fromJust)
 
 {-# INLINE readField #-}
 readField
-    ::  forall a b mut m.
+    ::  forall a b mut m k.
         ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
         , U.ReadCtx m mut
         )
-    => F.Field a b
+    => F.Field k a b
     -> R.Raw mut a
     -> m (R.Raw mut b)
 readField (F.Field field) (R.Raw struct) =
@@ -58,7 +58,7 @@ getField
         , R.ReprFor b ~ 'R.Data sz
         , C.Parse b
         )
-    => F.Field a b
+    => F.Field 'F.Slot a b
     -> R.Raw 'Const a
     -> C.Parsed b
 getField field struct =

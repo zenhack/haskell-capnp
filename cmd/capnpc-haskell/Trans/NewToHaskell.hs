@@ -76,12 +76,13 @@ declToDecls thisMod decl =
                 labelType = Hs.TString (Name.renderUnQ fieldName)
                 parentType = Hs.TApp (Hs.TLName containerType) tVars
                 childType = fieldLocTypeToType thisMod fieldLocType
+                fieldKind = Hs.TGName $ fieldLocTypeToFieldKind fieldLocType
             in
             [ Hs.DcInstance
                 { ctx
                 , typ = Hs.TApp (tgName ["OL"] "IsLabel")
                     [ labelType
-                    , Hs.TApp (tgName ["F"] "Field") [parentType, childType]
+                    , Hs.TApp (tgName ["F"] "Field") [fieldKind, parentType, childType]
                     ]
                 , defs =
                     [ Hs.IdValue Hs.DfValue
@@ -93,7 +94,9 @@ declToDecls thisMod decl =
                 }
             , Hs.DcInstance
                 { ctx
-                , typ = Hs.TApp (tgName ["F"] "HasField") [labelType, parentType, childType]
+                , typ = Hs.TApp
+                    (tgName ["F"] "HasField")
+                    [labelType, fieldKind, parentType, childType]
                 , defs = []
                 }
             ]
@@ -117,6 +120,11 @@ fieldLocTypeToType thisMod = \case
     C.DataField _ t -> wordTypeToType thisMod t
     C.PtrField _ t  -> ptrTypeToType thisMod t
     C.HereField t   -> compositeTypeToType thisMod t
+
+fieldLocTypeToFieldKind :: C.FieldLocType b n -> Name.GlobalQ
+fieldLocTypeToFieldKind = \case
+    C.HereField _ -> gName ["F"] "Group"
+    _             -> gName ["F"] "Slot"
 
 wordTypeToType thisMod = \case
     C.EnumType t -> tCapnp thisMod t

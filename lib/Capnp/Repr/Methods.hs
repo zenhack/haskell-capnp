@@ -43,7 +43,7 @@ newtype Client a = Client Rpc.Client
 
 pipe :: ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
         , R.ReprFor b ~ 'R.Ptr pr
-        ) => F.Field a b -> Pipeline a -> Pipeline b
+        ) => F.Field k a b -> Pipeline a -> Pipeline b
 pipe (F.Field field) (Pipeline p) =
     case field of
         F.GroupField   -> Pipeline p
