@@ -21,6 +21,29 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Value)) where
+    unionField  = (GH.dataField 0 0 16 0)
+instance (OL.IsLabel "null" (F.Variant F.Slot (Value) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "null" F.Slot (Value) ())
+instance (OL.IsLabel "boolean" (F.Variant F.Slot (Value) Std_.Bool)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 1 0) 1)
+instance (F.HasVariant "boolean" F.Slot (Value) Std_.Bool)
+instance (OL.IsLabel "number" (F.Variant F.Slot (Value) Std_.Double)) where
+    fromLabel  = (F.Variant (GH.dataField 0 1 64 0) 2)
+instance (F.HasVariant "number" F.Slot (Value) Std_.Double)
+instance (OL.IsLabel "string" (F.Variant F.Slot (Value) Basics.Text)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 3)
+instance (F.HasVariant "string" F.Slot (Value) Basics.Text)
+instance (OL.IsLabel "array" (F.Variant F.Slot (Value) (R.List Value))) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 4)
+instance (F.HasVariant "array" F.Slot (Value) (R.List Value))
+instance (OL.IsLabel "object" (F.Variant F.Slot (Value) (R.List Value'Field))) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 5)
+instance (F.HasVariant "object" F.Slot (Value) (R.List Value'Field))
+instance (OL.IsLabel "call" (F.Variant F.Slot (Value) Value'Call)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 6)
+instance (F.HasVariant "call" F.Slot (Value) Value'Call)
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
 instance (OL.IsLabel "name" (F.Field F.Slot (Value'Field) Basics.Text)) where

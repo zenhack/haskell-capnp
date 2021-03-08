@@ -13,6 +13,7 @@ module Capnp.Fields
     , FieldKind(..)
     , HasUnion(..)
     , Variant(..)
+    , HasVariant
     ) where
 
 import Capnp.Bits
@@ -59,3 +60,9 @@ class
     ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
     , IsLabel name (Field k a b)
     ) => HasField name k a b | a name -> k b
+
+
+class
+    ( HasUnion a
+    , IsLabel name (Variant k a b)
+    ) => HasVariant name k a b | a name -> k b

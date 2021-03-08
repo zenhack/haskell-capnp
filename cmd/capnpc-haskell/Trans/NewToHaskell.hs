@@ -72,7 +72,7 @@ declToDecls thisMod decl =
             ]
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
-                ctx = zipWith paramConstraints tVars (map (("pr_" ++) . show) [1..])
+                ctx = paramsContext tVars
                 labelType = Hs.TString (Name.renderUnQ fieldName)
                 parentType = Hs.TApp (Hs.TLName containerType) tVars
                 childType = fieldLocTypeToType thisMod fieldLocType
@@ -87,7 +87,7 @@ declToDecls thisMod decl =
                 , defs =
                     [ Hs.IdValue Hs.DfValue
                         { name = "fromLabel"
-                        , value = fieldLocTypeToFromLabel fieldLocType
+                        , value = fieldLocTypeToField fieldLocType
                         , params = []
                         }
                     ]
@@ -100,6 +100,63 @@ declToDecls thisMod decl =
                 , defs = []
                 }
             ]
+        New.UnionDecl{name, typeParams, tagLoc} ->
+            let tVars = toTVars typeParams in
+            [ Hs.DcInstance
+                { ctx = paramsContext tVars
+                , typ = Hs.TApp
+                    (tgName ["F"] "HasUnion")
+                    [Hs.TApp (Hs.TLName name) tVars]
+                , defs =
+                    [ Hs.IdValue Hs.DfValue
+                        { name = "unionField"
+                        , params = []
+                        , value = fieldLocTypeToField $ C.DataField
+                            tagLoc
+                            (C.PrimWord (C.PrimInt (C.IntType C.Unsigned C.Sz16)))
+                        }
+                    ]
+                }
+            ]
+        New.VariantDecl{containerType, typeParams, tagValue, variantName, fieldLocType} ->
+            let tVars = toTVars typeParams
+                ctx = paramsContext tVars
+                labelType = Hs.TString (Name.renderUnQ variantName)
+                parentType = Hs.TApp (Hs.TLName containerType) tVars
+                childType = fieldLocTypeToType thisMod fieldLocType
+                fieldKind = Hs.TGName $ fieldLocTypeToFieldKind fieldLocType
+            in
+            [ Hs.DcInstance
+                { ctx
+                , typ = Hs.TApp (tgName ["OL"] "IsLabel")
+                    [ labelType
+                    , Hs.TApp (tgName ["F"] "Variant")
+                        [fieldKind, parentType, childType]
+                    ]
+                , defs =
+                    [ Hs.IdValue Hs.DfValue
+                        { name = "fromLabel"
+                        , params = []
+                        , value = Hs.EApp
+                            (egName ["F"] "Variant")
+                            [ fieldLocTypeToField fieldLocType
+                            , Hs.EInt (fromIntegral tagValue)
+                            ]
+                        }
+                    ]
+                }
+            , Hs.DcInstance
+                { ctx
+                , typ = Hs.TApp
+                    (tgName ["F"] "HasVariant")
+                    [labelType, fieldKind, parentType, childType]
+                , defs = []
+                }
+            ]
+
+paramsContext :: [Hs.Type] -> [Hs.Type]
+paramsContext tVars =
+    zipWith paramConstraints tVars (map (("pr_" ++) . show) [1..])
 
 -- | Constraints required for a capnproto type parameter. The returned
 -- expression has kind 'Constraint'.
@@ -187,7 +244,7 @@ namedType thisMod name (C.ListBrand args) =
         (tCapnp thisMod name)
         [ typeToType thisMod (C.PtrType t) | t <- args ]
 
-fieldLocTypeToFromLabel = \case
+fieldLocTypeToField = \case
     C.DataField loc wt ->
         let shift = C.dataOff loc
             index = C.dataIdx loc

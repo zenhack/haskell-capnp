@@ -21,6 +21,26 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Node 
 type instance (R.ReprFor Node) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Node)) where
+    unionField  = (GH.dataField 2 1 16 0)
+instance (OL.IsLabel "file" (F.Variant F.Slot (Node) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "file" F.Slot (Node) ())
+instance (OL.IsLabel "struct" (F.Variant F.Group (Node) Node'struct)) where
+    fromLabel  = (F.Variant GH.groupField 1)
+instance (F.HasVariant "struct" F.Group (Node) Node'struct)
+instance (OL.IsLabel "enum" (F.Variant F.Group (Node) Node'enum)) where
+    fromLabel  = (F.Variant GH.groupField 2)
+instance (F.HasVariant "enum" F.Group (Node) Node'enum)
+instance (OL.IsLabel "interface" (F.Variant F.Group (Node) Node'interface)) where
+    fromLabel  = (F.Variant GH.groupField 3)
+instance (F.HasVariant "interface" F.Group (Node) Node'interface)
+instance (OL.IsLabel "const" (F.Variant F.Group (Node) Node'const)) where
+    fromLabel  = (F.Variant GH.groupField 4)
+instance (F.HasVariant "const" F.Group (Node) Node'const)
+instance (OL.IsLabel "annotation" (F.Variant F.Group (Node) Node'annotation)) where
+    fromLabel  = (F.Variant GH.groupField 5)
+instance (F.HasVariant "annotation" F.Group (Node) Node'annotation)
 instance (OL.IsLabel "id" (F.Field F.Slot (Node) Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "id" F.Slot (Node) Std_.Word64)
@@ -161,6 +181,14 @@ instance (OL.IsLabel "docComment" (F.Field F.Slot (Node'SourceInfo'Member) Basic
 instance (F.HasField "docComment" F.Slot (Node'SourceInfo'Member) Basics.Text)
 data Field 
 type instance (R.ReprFor Field) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Field)) where
+    unionField  = (GH.dataField 0 1 16 0)
+instance (OL.IsLabel "slot" (F.Variant F.Group (Field) Field'slot)) where
+    fromLabel  = (F.Variant GH.groupField 0)
+instance (F.HasVariant "slot" F.Group (Field) Field'slot)
+instance (OL.IsLabel "group" (F.Variant F.Group (Field) Field'group)) where
+    fromLabel  = (F.Variant GH.groupField 1)
+instance (F.HasVariant "group" F.Group (Field) Field'group)
 instance (OL.IsLabel "name" (F.Field F.Slot (Field) Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot (Field) Basics.Text)
@@ -197,6 +225,14 @@ instance (OL.IsLabel "typeId" (F.Field F.Slot (Field'group) Std_.Word64)) where
 instance (F.HasField "typeId" F.Slot (Field'group) Std_.Word64)
 data Field'ordinal 
 type instance (R.ReprFor Field'ordinal) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Field'ordinal)) where
+    unionField  = (GH.dataField 1 1 16 0)
+instance (OL.IsLabel "implicit" (F.Variant F.Slot (Field'ordinal) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "implicit" F.Slot (Field'ordinal) ())
+instance (OL.IsLabel "explicit" (F.Variant F.Slot (Field'ordinal) Std_.Word16)) where
+    fromLabel  = (F.Variant (GH.dataField 32 1 16 0) 1)
+instance (F.HasVariant "explicit" F.Slot (Field'ordinal) Std_.Word16)
 data Enumerant 
 type instance (R.ReprFor Enumerant) = (R.Ptr (Std_.Just R.Struct))
 instance (OL.IsLabel "name" (F.Field F.Slot (Enumerant) Basics.Text)) where
@@ -244,6 +280,65 @@ instance (OL.IsLabel "implicitParameters" (F.Field F.Slot (Method) (R.List Node'
 instance (F.HasField "implicitParameters" F.Slot (Method) (R.List Node'Parameter))
 data Type 
 type instance (R.ReprFor Type) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Type)) where
+    unionField  = (GH.dataField 0 0 16 0)
+instance (OL.IsLabel "void" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "void" F.Slot (Type) ())
+instance (OL.IsLabel "bool" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 1)
+instance (F.HasVariant "bool" F.Slot (Type) ())
+instance (OL.IsLabel "int8" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 2)
+instance (F.HasVariant "int8" F.Slot (Type) ())
+instance (OL.IsLabel "int16" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 3)
+instance (F.HasVariant "int16" F.Slot (Type) ())
+instance (OL.IsLabel "int32" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 4)
+instance (F.HasVariant "int32" F.Slot (Type) ())
+instance (OL.IsLabel "int64" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 5)
+instance (F.HasVariant "int64" F.Slot (Type) ())
+instance (OL.IsLabel "uint8" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 6)
+instance (F.HasVariant "uint8" F.Slot (Type) ())
+instance (OL.IsLabel "uint16" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 7)
+instance (F.HasVariant "uint16" F.Slot (Type) ())
+instance (OL.IsLabel "uint32" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 8)
+instance (F.HasVariant "uint32" F.Slot (Type) ())
+instance (OL.IsLabel "uint64" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 9)
+instance (F.HasVariant "uint64" F.Slot (Type) ())
+instance (OL.IsLabel "float32" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 10)
+instance (F.HasVariant "float32" F.Slot (Type) ())
+instance (OL.IsLabel "float64" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 11)
+instance (F.HasVariant "float64" F.Slot (Type) ())
+instance (OL.IsLabel "text" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 12)
+instance (F.HasVariant "text" F.Slot (Type) ())
+instance (OL.IsLabel "data_" (F.Variant F.Slot (Type) ())) where
+    fromLabel  = (F.Variant GH.voidField 13)
+instance (F.HasVariant "data_" F.Slot (Type) ())
+instance (OL.IsLabel "list" (F.Variant F.Group (Type) Type'list)) where
+    fromLabel  = (F.Variant GH.groupField 14)
+instance (F.HasVariant "list" F.Group (Type) Type'list)
+instance (OL.IsLabel "enum" (F.Variant F.Group (Type) Type'enum)) where
+    fromLabel  = (F.Variant GH.groupField 15)
+instance (F.HasVariant "enum" F.Group (Type) Type'enum)
+instance (OL.IsLabel "struct" (F.Variant F.Group (Type) Type'struct)) where
+    fromLabel  = (F.Variant GH.groupField 16)
+instance (F.HasVariant "struct" F.Group (Type) Type'struct)
+instance (OL.IsLabel "interface" (F.Variant F.Group (Type) Type'interface)) where
+    fromLabel  = (F.Variant GH.groupField 17)
+instance (F.HasVariant "interface" F.Group (Type) Type'interface)
+instance (OL.IsLabel "anyPointer" (F.Variant F.Group (Type) Type'anyPointer)) where
+    fromLabel  = (F.Variant GH.groupField 18)
+instance (F.HasVariant "anyPointer" F.Group (Type) Type'anyPointer)
 data Type'list 
 type instance (R.ReprFor Type'list) = (R.Ptr (Std_.Just R.Struct))
 instance (OL.IsLabel "elementType" (F.Field F.Slot (Type'list) Type)) where
@@ -275,8 +370,33 @@ instance (OL.IsLabel "brand" (F.Field F.Slot (Type'interface) Brand)) where
 instance (F.HasField "brand" F.Slot (Type'interface) Brand)
 data Type'anyPointer 
 type instance (R.ReprFor Type'anyPointer) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Type'anyPointer)) where
+    unionField  = (GH.dataField 0 1 16 0)
+instance (OL.IsLabel "unconstrained" (F.Variant F.Group (Type'anyPointer) Type'anyPointer'unconstrained)) where
+    fromLabel  = (F.Variant GH.groupField 0)
+instance (F.HasVariant "unconstrained" F.Group (Type'anyPointer) Type'anyPointer'unconstrained)
+instance (OL.IsLabel "parameter" (F.Variant F.Group (Type'anyPointer) Type'anyPointer'parameter)) where
+    fromLabel  = (F.Variant GH.groupField 1)
+instance (F.HasVariant "parameter" F.Group (Type'anyPointer) Type'anyPointer'parameter)
+instance (OL.IsLabel "implicitMethodParameter" (F.Variant F.Group (Type'anyPointer) Type'anyPointer'implicitMethodParameter)) where
+    fromLabel  = (F.Variant GH.groupField 2)
+instance (F.HasVariant "implicitMethodParameter" F.Group (Type'anyPointer) Type'anyPointer'implicitMethodParameter)
 data Type'anyPointer'unconstrained 
 type instance (R.ReprFor Type'anyPointer'unconstrained) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Type'anyPointer'unconstrained)) where
+    unionField  = (GH.dataField 1 1 16 0)
+instance (OL.IsLabel "anyKind" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "anyKind" F.Slot (Type'anyPointer'unconstrained) ())
+instance (OL.IsLabel "struct" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
+    fromLabel  = (F.Variant GH.voidField 1)
+instance (F.HasVariant "struct" F.Slot (Type'anyPointer'unconstrained) ())
+instance (OL.IsLabel "list" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
+    fromLabel  = (F.Variant GH.voidField 2)
+instance (F.HasVariant "list" F.Slot (Type'anyPointer'unconstrained) ())
+instance (OL.IsLabel "capability" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
+    fromLabel  = (F.Variant GH.voidField 3)
+instance (F.HasVariant "capability" F.Slot (Type'anyPointer'unconstrained) ())
 data Type'anyPointer'parameter 
 type instance (R.ReprFor Type'anyPointer'parameter) = (R.Ptr (Std_.Just R.Struct))
 instance (OL.IsLabel "scopeId" (F.Field F.Slot (Type'anyPointer'parameter) Std_.Word64)) where
@@ -297,13 +417,88 @@ instance (OL.IsLabel "scopes" (F.Field F.Slot (Brand) (R.List Brand'Scope))) whe
 instance (F.HasField "scopes" F.Slot (Brand) (R.List Brand'Scope))
 data Brand'Scope 
 type instance (R.ReprFor Brand'Scope) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Brand'Scope)) where
+    unionField  = (GH.dataField 0 1 16 0)
+instance (OL.IsLabel "bind" (F.Variant F.Slot (Brand'Scope) (R.List Brand'Binding))) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 0)
+instance (F.HasVariant "bind" F.Slot (Brand'Scope) (R.List Brand'Binding))
+instance (OL.IsLabel "inherit" (F.Variant F.Slot (Brand'Scope) ())) where
+    fromLabel  = (F.Variant GH.voidField 1)
+instance (F.HasVariant "inherit" F.Slot (Brand'Scope) ())
 instance (OL.IsLabel "scopeId" (F.Field F.Slot (Brand'Scope) Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "scopeId" F.Slot (Brand'Scope) Std_.Word64)
 data Brand'Binding 
 type instance (R.ReprFor Brand'Binding) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Brand'Binding)) where
+    unionField  = (GH.dataField 0 0 16 0)
+instance (OL.IsLabel "unbound" (F.Variant F.Slot (Brand'Binding) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "unbound" F.Slot (Brand'Binding) ())
+instance (OL.IsLabel "type_" (F.Variant F.Slot (Brand'Binding) Type)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 1)
+instance (F.HasVariant "type_" F.Slot (Brand'Binding) Type)
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (F.HasUnion (Value)) where
+    unionField  = (GH.dataField 0 0 16 0)
+instance (OL.IsLabel "void" (F.Variant F.Slot (Value) ())) where
+    fromLabel  = (F.Variant GH.voidField 0)
+instance (F.HasVariant "void" F.Slot (Value) ())
+instance (OL.IsLabel "bool" (F.Variant F.Slot (Value) Std_.Bool)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 1 0) 1)
+instance (F.HasVariant "bool" F.Slot (Value) Std_.Bool)
+instance (OL.IsLabel "int8" (F.Variant F.Slot (Value) Std_.Int8)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 8 0) 2)
+instance (F.HasVariant "int8" F.Slot (Value) Std_.Int8)
+instance (OL.IsLabel "int16" (F.Variant F.Slot (Value) Std_.Int16)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 16 0) 3)
+instance (F.HasVariant "int16" F.Slot (Value) Std_.Int16)
+instance (OL.IsLabel "int32" (F.Variant F.Slot (Value) Std_.Int32)) where
+    fromLabel  = (F.Variant (GH.dataField 32 0 32 0) 4)
+instance (F.HasVariant "int32" F.Slot (Value) Std_.Int32)
+instance (OL.IsLabel "int64" (F.Variant F.Slot (Value) Std_.Int64)) where
+    fromLabel  = (F.Variant (GH.dataField 0 1 64 0) 5)
+instance (F.HasVariant "int64" F.Slot (Value) Std_.Int64)
+instance (OL.IsLabel "uint8" (F.Variant F.Slot (Value) Std_.Word8)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 8 0) 6)
+instance (F.HasVariant "uint8" F.Slot (Value) Std_.Word8)
+instance (OL.IsLabel "uint16" (F.Variant F.Slot (Value) Std_.Word16)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 16 0) 7)
+instance (F.HasVariant "uint16" F.Slot (Value) Std_.Word16)
+instance (OL.IsLabel "uint32" (F.Variant F.Slot (Value) Std_.Word32)) where
+    fromLabel  = (F.Variant (GH.dataField 32 0 32 0) 8)
+instance (F.HasVariant "uint32" F.Slot (Value) Std_.Word32)
+instance (OL.IsLabel "uint64" (F.Variant F.Slot (Value) Std_.Word64)) where
+    fromLabel  = (F.Variant (GH.dataField 0 1 64 0) 9)
+instance (F.HasVariant "uint64" F.Slot (Value) Std_.Word64)
+instance (OL.IsLabel "float32" (F.Variant F.Slot (Value) Std_.Float)) where
+    fromLabel  = (F.Variant (GH.dataField 32 0 32 0) 10)
+instance (F.HasVariant "float32" F.Slot (Value) Std_.Float)
+instance (OL.IsLabel "float64" (F.Variant F.Slot (Value) Std_.Double)) where
+    fromLabel  = (F.Variant (GH.dataField 0 1 64 0) 11)
+instance (F.HasVariant "float64" F.Slot (Value) Std_.Double)
+instance (OL.IsLabel "text" (F.Variant F.Slot (Value) Basics.Text)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 12)
+instance (F.HasVariant "text" F.Slot (Value) Basics.Text)
+instance (OL.IsLabel "data_" (F.Variant F.Slot (Value) Basics.Data)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 13)
+instance (F.HasVariant "data_" F.Slot (Value) Basics.Data)
+instance (OL.IsLabel "list" (F.Variant F.Slot (Value) Basics.AnyPointer)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 14)
+instance (F.HasVariant "list" F.Slot (Value) Basics.AnyPointer)
+instance (OL.IsLabel "enum" (F.Variant F.Slot (Value) Std_.Word16)) where
+    fromLabel  = (F.Variant (GH.dataField 16 0 16 0) 15)
+instance (F.HasVariant "enum" F.Slot (Value) Std_.Word16)
+instance (OL.IsLabel "struct" (F.Variant F.Slot (Value) Basics.AnyPointer)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 16)
+instance (F.HasVariant "struct" F.Slot (Value) Basics.AnyPointer)
+instance (OL.IsLabel "interface" (F.Variant F.Slot (Value) ())) where
+    fromLabel  = (F.Variant GH.voidField 17)
+instance (F.HasVariant "interface" F.Slot (Value) ())
+instance (OL.IsLabel "anyPointer" (F.Variant F.Slot (Value) Basics.AnyPointer)) where
+    fromLabel  = (F.Variant (GH.ptrField 0) 18)
+instance (F.HasVariant "anyPointer" F.Slot (Value) Basics.AnyPointer)
 data Annotation 
 type instance (R.ReprFor Annotation) = (R.Ptr (Std_.Just R.Struct))
 instance (OL.IsLabel "id" (F.Field F.Slot (Annotation) Std_.Word64)) where

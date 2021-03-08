@@ -31,3 +31,15 @@ data Decl
         , fieldName     :: Name.UnQ
         , fieldLocType  :: C.FieldLocType Brand Name.CapnpQ
         }
+    | UnionDecl
+        { name       :: Name.LocalQ
+        , typeParams :: [Name.UnQ]
+        , tagLoc     :: C.DataLoc
+        }
+    | VariantDecl
+        { containerType :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
+        , variantName   :: Name.UnQ
+        , tagValue      :: !Word16
+        , fieldLocType  :: C.FieldLocType Brand Name.CapnpQ
+        }
