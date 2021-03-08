@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -8,6 +9,7 @@
 module Capnp.New
     ( readField
     , getField
+    , setField
     ) where
 
 
@@ -20,6 +22,7 @@ import           Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped        as U
 import           Data.Bits
 import           Data.Maybe           (fromJust)
+import           Data.Word
 
 {-# INLINE readField #-}
 readField
@@ -64,3 +67,30 @@ getField
 getField field struct =
     fromJust $ evalLimitT maxBound $
         readField field struct >>= C.parseConst
+
+{-# INLINE setField #-}
+setField ::
+    forall a b m s.
+    ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    , U.RWCtx m s
+    ) => F.Field 'F.Slot a b -> R.Raw ('Mut s) b -> R.Raw ('Mut s) a -> m ()
+setField (F.Field field) (R.Raw value) (R.Raw struct) =
+    case field of
+        F.DataField F.DataFieldLoc{ shift, index, mask, defaultValue } -> do
+            oldWord <- U.getData (fromIntegral index) struct
+            let valueWord = (C.toWord value `xor` defaultValue) `shiftL` fromIntegral shift
+            let newWord = (oldWord .&. complement mask) .|. valueWord
+            U.setData newWord (fromIntegral index) struct
+        F.PtrField index ->
+            setPtrField index value struct
+        F.VoidField ->
+            pure ()
+  where
+    -- This is broken out because the type checker needs some extra help:
+    setPtrField
+        :: forall pr.
+        ( R.ReprFor b ~ 'R.Ptr pr
+        , R.IsPtrRepr pr
+        ) => Word16 -> R.UntypedPtr ('Mut s) pr -> U.Struct ('Mut s) -> m ()
+    setPtrField index value struct =
+        U.setPtr (R.rToPtr @pr (U.message struct) value) (fromIntegral index) struct
