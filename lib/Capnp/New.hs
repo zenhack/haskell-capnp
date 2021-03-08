@@ -10,6 +10,7 @@ module Capnp.New
     ( readField
     , getField
     , setField
+    , encodeField
     , setVariant
     , initVariant
     ) where
@@ -96,6 +97,16 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         ) => Word16 -> R.UntypedPtr ('Mut s) pr -> U.Struct ('Mut s) -> m ()
     setPtrField index value struct =
         U.setPtr (R.rToPtr @pr (U.message struct) value) (fromIntegral index) struct
+
+encodeField ::
+    forall a b m s.
+    ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    , C.Parse b
+    , U.RWCtx m s
+    ) => F.Field 'F.Slot a b -> C.Parsed b -> R.Raw ('Mut s) a -> m ()
+encodeField field parsed struct = do
+    encoded <- C.encode (U.message struct) parsed
+    setField field encoded struct
 
 setVariant
     :: forall a b m s.
