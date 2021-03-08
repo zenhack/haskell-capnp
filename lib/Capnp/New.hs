@@ -13,6 +13,7 @@ module Capnp.New
     , encodeField
     , setVariant
     , initVariant
+    , encodeVariant
     ) where
 
 
@@ -116,6 +117,17 @@ setVariant
 setVariant F.Variant{field, tagValue} struct value = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     setField field value struct
+
+encodeVariant
+    :: forall a b m s.
+    ( F.HasUnion a
+    , R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    , C.Parse b
+    , U.RWCtx m s
+    ) => F.Variant 'F.Slot a b -> C.Parsed b -> R.Raw ('Mut s) a -> m ()
+encodeVariant F.Variant{field, tagValue} value struct = do
+    setField (F.unionField @a) (R.Raw tagValue) struct
+    encodeField field value struct
 
 initVariant
     :: forall a b m s. (F.HasUnion a, U.RWCtx m s)
