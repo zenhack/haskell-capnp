@@ -11,6 +11,8 @@ module Capnp.Fields
     , FieldLoc(..)
     , DataFieldLoc(..)
     , FieldKind(..)
+    , HasUnion(..)
+    , Variant(..)
     ) where
 
 import Capnp.Bits
@@ -39,6 +41,14 @@ data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
     , index        :: !Word16
     , mask         :: !Word64
     , defaultValue :: !Word64
+    }
+
+class R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct) => HasUnion a where
+    unionField :: Field 'Slot a Word16
+
+data Variant (k :: FieldKind) a b = Variant
+    { field    :: !(Field k a b)
+    , tagValue :: !Word16
     }
 
 -- | An instance @'HasField' name k a b@ indicates that the struct type @a@
