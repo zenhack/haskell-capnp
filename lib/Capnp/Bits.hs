@@ -101,6 +101,7 @@ replaceBits new orig shift =
     (orig .&. mask) .|. (fromIntegral new `shiftL` shift)
   where
     mask = complement $ fromIntegral (maxBound `asTypeOf` new) `shiftL` shift
+{-# INLINE replaceBits #-}
 
 -- | 1 bit datatype, in the tradition of Word8, Word16 et al.
 newtype Word1 = Word1 { word1ToBool :: Bool }
