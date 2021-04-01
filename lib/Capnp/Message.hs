@@ -120,7 +120,7 @@ maxSegments = 1024
 
 -- | The maximum number of capabilities allowed in a message by this library.
 maxCaps :: Int
-maxCaps = 512
+maxCaps = 16 * 1024
 
 
 data Mutability = Const | Mut Type

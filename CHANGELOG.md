@@ -10,6 +10,8 @@
   malformed messages may trigger bounds check errors which did not
   previously, because the offending portion of the message was not
   read.
+* The limit on how many capabilities can be attached to a single message
+  has been increased.
 * `LimitT m` now has an instance of `MonadCatch` if `m` has an instance.
 * Some harmless warnings triggered by the generated code are now
   silenced.
