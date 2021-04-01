@@ -11,6 +11,7 @@ module Capnp.New
     , getField
     , setField
     , encodeField
+    , parseField
     , setVariant
     , initVariant
     , encodeVariant
@@ -108,6 +109,14 @@ encodeField ::
 encodeField field parsed struct = do
     encoded <- C.encode (U.message struct) parsed
     setField field encoded struct
+
+parseField ::
+    ( R.IsStruct a
+    , C.Parse b
+    , U.ReadCtx m 'Const
+    ) => F.Field k a b -> R.Raw 'Const a -> m (C.Parsed b)
+parseField field raw =
+    readField field raw >>= C.parseConst
 
 setVariant
     :: forall a b m s.
