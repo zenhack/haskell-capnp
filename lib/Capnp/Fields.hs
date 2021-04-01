@@ -44,7 +44,7 @@ data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
     , defaultValue :: !Word64
     }
 
-class R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct) => HasUnion a where
+class R.IsStruct a => HasUnion a where
     unionField :: Field 'Slot a Word16
 
 data Variant (k :: FieldKind) a b = Variant
@@ -57,7 +57,7 @@ data Variant (k :: FieldKind) a b = Variant
 -- the field). The generated code includes instances of this for each field
 -- in the schema.
 class
-    ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    ( R.IsStruct a
     , IsLabel name (Field k a b)
     ) => HasField name k a b | a name -> k b
 

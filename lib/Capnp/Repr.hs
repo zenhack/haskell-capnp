@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes    #-}
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
@@ -51,6 +52,9 @@ module Capnp.Repr
     -- * Working with pointers
     , IsPtrRepr(..)
     , IsListPtrRepr(..)
+
+    -- * Shorthands for types
+    , IsStruct
     ) where
 
 import Prelude hiding (length)
@@ -317,3 +321,7 @@ instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
     toPtr msg (Raw p) = pure $ rToPtr @r msg p
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
     fromPtr msg p = Raw <$> rFromPtr @r msg p
+
+
+-- | Constraint that a is a struct type.
+type IsStruct a = ReprFor a ~ 'Ptr ('Just 'Struct)

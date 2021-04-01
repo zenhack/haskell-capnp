@@ -31,7 +31,7 @@ import           Data.Word
 {-# INLINE readField #-}
 readField
     ::  forall a b mut m k.
-        ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+        ( R.IsStruct a
         , U.ReadCtx m mut
         )
     => F.Field k a b
@@ -61,7 +61,7 @@ readField (F.Field field) (R.Raw struct) =
 
 {-# INLINE getField #-}
 getField
-    ::  ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    ::  ( R.IsStruct a
         , R.ReprFor b ~ 'R.Data sz
         , C.Parse b
         )
@@ -75,7 +75,7 @@ getField field struct =
 {-# INLINE setField #-}
 setField ::
     forall a b m s.
-    ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    ( R.IsStruct a
     , U.RWCtx m s
     ) => F.Field 'F.Slot a b -> R.Raw ('Mut s) b -> R.Raw ('Mut s) a -> m ()
 setField (F.Field field) (R.Raw value) (R.Raw struct) =
@@ -101,7 +101,7 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
 
 encodeField ::
     forall a b m s.
-    ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+    ( R.IsStruct a
     , C.Parse b
     , U.RWCtx m s
     ) => F.Field 'F.Slot a b -> C.Parsed b -> R.Raw ('Mut s) a -> m ()
@@ -121,7 +121,6 @@ setVariant F.Variant{field, tagValue} struct value = do
 encodeVariant
     :: forall a b m s.
     ( F.HasUnion a
-    , R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
     , C.Parse b
     , U.RWCtx m s
     ) => F.Variant 'F.Slot a b -> C.Parsed b -> R.Raw ('Mut s) a -> m ()
