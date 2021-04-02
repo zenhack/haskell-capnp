@@ -3,6 +3,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE KindSignatures         #-}
+{-# LANGUAGE TypeFamilies           #-}
 -- | Module: Capnp.Fields
 -- Description: Support for working with struct fields
 module Capnp.Fields
@@ -21,7 +22,9 @@ import Data.Word
 import GHC.OverloadedLabels (IsLabel)
 
 import qualified Capnp.Classes as C
+import qualified Capnp.Message as M
 import qualified Capnp.Repr    as R
+import qualified Capnp.Untyped as U
 
 data FieldKind = Slot | Group
 
@@ -46,6 +49,8 @@ data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
 
 class R.IsStruct a => HasUnion a where
     unionField :: Field 'Slot a Word16
+    data RawWhich (mut :: M.Mutability) a
+    internalWhich :: U.ReadCtx m mut => Word16 -> R.Raw mut a -> m (RawWhich mut a)
 
 data Variant (k :: FieldKind) a b = Variant
     { field    :: !(Field k a b)

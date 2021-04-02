@@ -23,6 +23,7 @@ data Node
 type instance (R.ReprFor Node) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Node)) where
     unionField  = (GH.dataField 2 1 16 0)
+    data RawWhich mut_ (Node)
 instance (OL.IsLabel "file" (F.Variant F.Slot (Node) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "file" F.Slot (Node) ())
@@ -183,6 +184,7 @@ data Field
 type instance (R.ReprFor Field) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Field)) where
     unionField  = (GH.dataField 0 1 16 0)
+    data RawWhich mut_ (Field)
 instance (OL.IsLabel "slot" (F.Variant F.Group (Field) Field'slot)) where
     fromLabel  = (F.Variant GH.groupField 0)
 instance (F.HasVariant "slot" F.Group (Field) Field'slot)
@@ -227,6 +229,7 @@ data Field'ordinal
 type instance (R.ReprFor Field'ordinal) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Field'ordinal)) where
     unionField  = (GH.dataField 1 1 16 0)
+    data RawWhich mut_ (Field'ordinal)
 instance (OL.IsLabel "implicit" (F.Variant F.Slot (Field'ordinal) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "implicit" F.Slot (Field'ordinal) ())
@@ -282,6 +285,7 @@ data Type
 type instance (R.ReprFor Type) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Type)) where
     unionField  = (GH.dataField 0 0 16 0)
+    data RawWhich mut_ (Type)
 instance (OL.IsLabel "void" (F.Variant F.Slot (Type) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "void" F.Slot (Type) ())
@@ -372,6 +376,7 @@ data Type'anyPointer
 type instance (R.ReprFor Type'anyPointer) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Type'anyPointer)) where
     unionField  = (GH.dataField 0 1 16 0)
+    data RawWhich mut_ (Type'anyPointer)
 instance (OL.IsLabel "unconstrained" (F.Variant F.Group (Type'anyPointer) Type'anyPointer'unconstrained)) where
     fromLabel  = (F.Variant GH.groupField 0)
 instance (F.HasVariant "unconstrained" F.Group (Type'anyPointer) Type'anyPointer'unconstrained)
@@ -385,6 +390,7 @@ data Type'anyPointer'unconstrained
 type instance (R.ReprFor Type'anyPointer'unconstrained) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Type'anyPointer'unconstrained)) where
     unionField  = (GH.dataField 1 1 16 0)
+    data RawWhich mut_ (Type'anyPointer'unconstrained)
 instance (OL.IsLabel "anyKind" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "anyKind" F.Slot (Type'anyPointer'unconstrained) ())
@@ -419,6 +425,7 @@ data Brand'Scope
 type instance (R.ReprFor Brand'Scope) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Brand'Scope)) where
     unionField  = (GH.dataField 0 1 16 0)
+    data RawWhich mut_ (Brand'Scope)
 instance (OL.IsLabel "bind" (F.Variant F.Slot (Brand'Scope) (R.List Brand'Binding))) where
     fromLabel  = (F.Variant (GH.ptrField 0) 0)
 instance (F.HasVariant "bind" F.Slot (Brand'Scope) (R.List Brand'Binding))
@@ -432,6 +439,7 @@ data Brand'Binding
 type instance (R.ReprFor Brand'Binding) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Brand'Binding)) where
     unionField  = (GH.dataField 0 0 16 0)
+    data RawWhich mut_ (Brand'Binding)
 instance (OL.IsLabel "unbound" (F.Variant F.Slot (Brand'Binding) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "unbound" F.Slot (Brand'Binding) ())
@@ -442,6 +450,7 @@ data Value
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Value)) where
     unionField  = (GH.dataField 0 0 16 0)
+    data RawWhich mut_ (Value)
 instance (OL.IsLabel "void" (F.Variant F.Slot (Value) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "void" F.Slot (Value) ())

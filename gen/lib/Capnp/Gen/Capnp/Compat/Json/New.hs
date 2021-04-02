@@ -23,6 +23,7 @@ data Value
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Value)) where
     unionField  = (GH.dataField 0 0 16 0)
+    data RawWhich mut_ (Value)
 instance (OL.IsLabel "null" (F.Variant F.Slot (Value) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "null" F.Slot (Value) ())

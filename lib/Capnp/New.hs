@@ -15,6 +15,7 @@ module Capnp.New
     , setVariant
     , initVariant
     , encodeVariant
+    , which
     ) where
 
 
@@ -143,3 +144,8 @@ initVariant
 initVariant F.Variant{field, tagValue} struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     readField field struct
+
+which :: forall a mut m. U.ReadCtx m mut => F.HasUnion a => R.Raw mut a -> m (F.RawWhich mut a)
+which struct = do
+    R.Raw tagValue <- readField (F.unionField @a) struct
+    F.internalWhich tagValue struct

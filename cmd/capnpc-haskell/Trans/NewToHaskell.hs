@@ -115,9 +115,26 @@ declToDecls thisMod decl =
                             tagLoc
                             (C.PrimWord (C.PrimInt (C.IntType C.Unsigned C.Sz16)))
                         }
+                    , defineRawData thisMod name tVars variants
+                    -- , defineInternalWhich thisMod name typeParams variants
                     ]
                 }
             : concatMap (variantToDecls thisMod name typeParams) variants
+
+
+defineRawData _thisMod name tVars _variants =
+    Hs.IdData Hs.Data
+        { dataName = "RawWhich"
+        , typeArgs =
+            [ Hs.TVar "mut_"
+            , Hs.TApp (Hs.TVar $ Name.renderUnQ $ Name.localToUnQ name) tVars
+            ]
+
+        , dataNewtype = False
+        -- TODO:
+        , dataVariants = []
+        , derives = []
+        }
 
 variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, variantName, fieldLocType} =
     let tVars = toTVars typeParams
