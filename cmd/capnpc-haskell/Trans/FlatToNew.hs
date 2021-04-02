@@ -31,12 +31,9 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         mkField field =
             fieldToDecl local typeParams field
 
-        mkVariant variant =
-            variantToDecl local typeParams variant
-
         structUnionNodes Nothing = []
         structUnionNodes (Just Flat.Union{tagOffset, variants}) =
-            New.UnionDecl
+            [ New.UnionDecl
                 { name = local
                 , typeParams = map C.paramName typeParams
                 , tagLoc = C.DataLoc
@@ -44,8 +41,9 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                     , dataOff = fromIntegral $ tagOffset `mod` 4
                     , dataDef = 0
                     }
+                , variants = map variantToVariant variants
                 }
-            : map mkVariant variants
+            ]
     in
     case union_ of
         Flat.Other       -> []
@@ -65,12 +63,10 @@ fieldToDecl containerType typeParams Flat.Field{fieldName, fieldLocType} =
         , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
         }
 
-variantToDecl :: Name.LocalQ -> [C.TypeParamRef Flat.Node] -> Flat.Variant -> New.Decl
-variantToDecl containerType typeParams Flat.Variant{tagValue, field = Flat.Field{fieldName, fieldLocType}} =
-    New.VariantDecl
-        { containerType
-        , typeParams = map C.paramName typeParams
-        , variantName = Name.getUnQ fieldName
+variantToVariant :: Flat.Variant -> New.UnionVariant
+variantToVariant Flat.Variant{tagValue, field = Flat.Field{fieldName, fieldLocType}} =
+    New.UnionVariant
+        { variantName = Name.getUnQ fieldName
         , tagValue
         , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
         }

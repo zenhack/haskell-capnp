@@ -100,9 +100,9 @@ declToDecls thisMod decl =
                 , defs = []
                 }
             ]
-        New.UnionDecl{name, typeParams, tagLoc} ->
+        New.UnionDecl{name, typeParams, tagLoc, variants} ->
             let tVars = toTVars typeParams in
-            [ Hs.DcInstance
+            Hs.DcInstance
                 { ctx = paramsContext tVars
                 , typ = Hs.TApp
                     (tgName ["F"] "HasUnion")
@@ -117,42 +117,43 @@ declToDecls thisMod decl =
                         }
                     ]
                 }
+            : concatMap (variantToDecls thisMod name typeParams) variants
+
+variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, variantName, fieldLocType} =
+    let tVars = toTVars typeParams
+        ctx = paramsContext tVars
+        labelType = Hs.TString (Name.renderUnQ variantName)
+        parentType = Hs.TApp (Hs.TLName containerType) tVars
+        childType = fieldLocTypeToType thisMod fieldLocType
+        fieldKind = Hs.TGName $ fieldLocTypeToFieldKind fieldLocType
+    in
+    [ Hs.DcInstance
+        { ctx
+        , typ = Hs.TApp (tgName ["OL"] "IsLabel")
+            [ labelType
+            , Hs.TApp (tgName ["F"] "Variant")
+                [fieldKind, parentType, childType]
             ]
-        New.VariantDecl{containerType, typeParams, tagValue, variantName, fieldLocType} ->
-            let tVars = toTVars typeParams
-                ctx = paramsContext tVars
-                labelType = Hs.TString (Name.renderUnQ variantName)
-                parentType = Hs.TApp (Hs.TLName containerType) tVars
-                childType = fieldLocTypeToType thisMod fieldLocType
-                fieldKind = Hs.TGName $ fieldLocTypeToFieldKind fieldLocType
-            in
-            [ Hs.DcInstance
-                { ctx
-                , typ = Hs.TApp (tgName ["OL"] "IsLabel")
-                    [ labelType
-                    , Hs.TApp (tgName ["F"] "Variant")
-                        [fieldKind, parentType, childType]
-                    ]
-                , defs =
-                    [ Hs.IdValue Hs.DfValue
-                        { name = "fromLabel"
-                        , params = []
-                        , value = Hs.EApp
-                            (egName ["F"] "Variant")
-                            [ fieldLocTypeToField fieldLocType
-                            , Hs.EInt (fromIntegral tagValue)
-                            ]
-                        }
+        , defs =
+            [ Hs.IdValue Hs.DfValue
+                { name = "fromLabel"
+                , params = []
+                , value = Hs.EApp
+                    (egName ["F"] "Variant")
+                    [ fieldLocTypeToField fieldLocType
+                    , Hs.EInt (fromIntegral tagValue)
                     ]
                 }
-            , Hs.DcInstance
-                { ctx
-                , typ = Hs.TApp
-                    (tgName ["F"] "HasVariant")
-                    [labelType, fieldKind, parentType, childType]
-                , defs = []
-                }
             ]
+        }
+    , Hs.DcInstance
+        { ctx
+        , typ = Hs.TApp
+            (tgName ["F"] "HasVariant")
+            [labelType, fieldKind, parentType, childType]
+        , defs = []
+        }
+    ]
 
 paramsContext :: [Hs.Type] -> [Hs.Type]
 paramsContext tVars =

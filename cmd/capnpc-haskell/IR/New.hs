@@ -1,6 +1,8 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 module IR.New
     ( File(..)
     , Decl(..)
+    , UnionVariant(..)
     , Brand
     ) where
 
@@ -35,11 +37,11 @@ data Decl
         { name       :: Name.LocalQ
         , typeParams :: [Name.UnQ]
         , tagLoc     :: C.DataLoc
+        , variants   :: [UnionVariant]
         }
-    | VariantDecl
-        { containerType :: Name.LocalQ
-        , typeParams    :: [Name.UnQ]
-        , variantName   :: Name.UnQ
-        , tagValue      :: !Word16
-        , fieldLocType  :: C.FieldLocType Brand Name.CapnpQ
-        }
+
+data UnionVariant = UnionVariant
+    { variantName  :: Name.UnQ
+    , tagValue     :: !Word16
+    , fieldLocType :: C.FieldLocType Brand Name.CapnpQ
+    }
