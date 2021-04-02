@@ -24,6 +24,13 @@ type instance (R.ReprFor Node) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Node)) where
     unionField  = (GH.dataField 2 1 16 0)
     data RawWhich mut_ (Node)
+        = Node'file (R.Raw mut_ ())
+        | Node'struct (R.Raw mut_ Node'struct)
+        | Node'enum (R.Raw mut_ Node'enum)
+        | Node'interface (R.Raw mut_ Node'interface)
+        | Node'const (R.Raw mut_ Node'const)
+        | Node'annotation (R.Raw mut_ Node'annotation)
+        | Node'unknown' Std_.Word16
 instance (OL.IsLabel "file" (F.Variant F.Slot (Node) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "file" F.Slot (Node) ())
@@ -185,6 +192,9 @@ type instance (R.ReprFor Field) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Field)) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ (Field)
+        = Field'slot (R.Raw mut_ Field'slot)
+        | Field'group (R.Raw mut_ Field'group)
+        | Field'unknown' Std_.Word16
 instance (OL.IsLabel "slot" (F.Variant F.Group (Field) Field'slot)) where
     fromLabel  = (F.Variant GH.groupField 0)
 instance (F.HasVariant "slot" F.Group (Field) Field'slot)
@@ -230,6 +240,9 @@ type instance (R.ReprFor Field'ordinal) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Field'ordinal)) where
     unionField  = (GH.dataField 1 1 16 0)
     data RawWhich mut_ (Field'ordinal)
+        = Field'ordinal'implicit (R.Raw mut_ ())
+        | Field'ordinal'explicit (R.Raw mut_ Std_.Word16)
+        | Field'ordinal'unknown' Std_.Word16
 instance (OL.IsLabel "implicit" (F.Variant F.Slot (Field'ordinal) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "implicit" F.Slot (Field'ordinal) ())
@@ -286,6 +299,26 @@ type instance (R.ReprFor Type) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Type)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (Type)
+        = Type'void (R.Raw mut_ ())
+        | Type'bool (R.Raw mut_ ())
+        | Type'int8 (R.Raw mut_ ())
+        | Type'int16 (R.Raw mut_ ())
+        | Type'int32 (R.Raw mut_ ())
+        | Type'int64 (R.Raw mut_ ())
+        | Type'uint8 (R.Raw mut_ ())
+        | Type'uint16 (R.Raw mut_ ())
+        | Type'uint32 (R.Raw mut_ ())
+        | Type'uint64 (R.Raw mut_ ())
+        | Type'float32 (R.Raw mut_ ())
+        | Type'float64 (R.Raw mut_ ())
+        | Type'text (R.Raw mut_ ())
+        | Type'data_ (R.Raw mut_ ())
+        | Type'list (R.Raw mut_ Type'list)
+        | Type'enum (R.Raw mut_ Type'enum)
+        | Type'struct (R.Raw mut_ Type'struct)
+        | Type'interface (R.Raw mut_ Type'interface)
+        | Type'anyPointer (R.Raw mut_ Type'anyPointer)
+        | Type'unknown' Std_.Word16
 instance (OL.IsLabel "void" (F.Variant F.Slot (Type) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "void" F.Slot (Type) ())
@@ -377,6 +410,10 @@ type instance (R.ReprFor Type'anyPointer) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Type'anyPointer)) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ (Type'anyPointer)
+        = Type'anyPointer'unconstrained (R.Raw mut_ Type'anyPointer'unconstrained)
+        | Type'anyPointer'parameter (R.Raw mut_ Type'anyPointer'parameter)
+        | Type'anyPointer'implicitMethodParameter (R.Raw mut_ Type'anyPointer'implicitMethodParameter)
+        | Type'anyPointer'unknown' Std_.Word16
 instance (OL.IsLabel "unconstrained" (F.Variant F.Group (Type'anyPointer) Type'anyPointer'unconstrained)) where
     fromLabel  = (F.Variant GH.groupField 0)
 instance (F.HasVariant "unconstrained" F.Group (Type'anyPointer) Type'anyPointer'unconstrained)
@@ -391,6 +428,11 @@ type instance (R.ReprFor Type'anyPointer'unconstrained) = (R.Ptr (Std_.Just R.St
 instance (F.HasUnion (Type'anyPointer'unconstrained)) where
     unionField  = (GH.dataField 1 1 16 0)
     data RawWhich mut_ (Type'anyPointer'unconstrained)
+        = Type'anyPointer'unconstrained'anyKind (R.Raw mut_ ())
+        | Type'anyPointer'unconstrained'struct (R.Raw mut_ ())
+        | Type'anyPointer'unconstrained'list (R.Raw mut_ ())
+        | Type'anyPointer'unconstrained'capability (R.Raw mut_ ())
+        | Type'anyPointer'unconstrained'unknown' Std_.Word16
 instance (OL.IsLabel "anyKind" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "anyKind" F.Slot (Type'anyPointer'unconstrained) ())
@@ -426,6 +468,9 @@ type instance (R.ReprFor Brand'Scope) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Brand'Scope)) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ (Brand'Scope)
+        = Brand'Scope'bind (R.Raw mut_ (R.List Brand'Binding))
+        | Brand'Scope'inherit (R.Raw mut_ ())
+        | Brand'Scope'unknown' Std_.Word16
 instance (OL.IsLabel "bind" (F.Variant F.Slot (Brand'Scope) (R.List Brand'Binding))) where
     fromLabel  = (F.Variant (GH.ptrField 0) 0)
 instance (F.HasVariant "bind" F.Slot (Brand'Scope) (R.List Brand'Binding))
@@ -440,6 +485,9 @@ type instance (R.ReprFor Brand'Binding) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Brand'Binding)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (Brand'Binding)
+        = Brand'Binding'unbound (R.Raw mut_ ())
+        | Brand'Binding'type_ (R.Raw mut_ Type)
+        | Brand'Binding'unknown' Std_.Word16
 instance (OL.IsLabel "unbound" (F.Variant F.Slot (Brand'Binding) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "unbound" F.Slot (Brand'Binding) ())
@@ -451,6 +499,26 @@ type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Value)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (Value)
+        = Value'void (R.Raw mut_ ())
+        | Value'bool (R.Raw mut_ Std_.Bool)
+        | Value'int8 (R.Raw mut_ Std_.Int8)
+        | Value'int16 (R.Raw mut_ Std_.Int16)
+        | Value'int32 (R.Raw mut_ Std_.Int32)
+        | Value'int64 (R.Raw mut_ Std_.Int64)
+        | Value'uint8 (R.Raw mut_ Std_.Word8)
+        | Value'uint16 (R.Raw mut_ Std_.Word16)
+        | Value'uint32 (R.Raw mut_ Std_.Word32)
+        | Value'uint64 (R.Raw mut_ Std_.Word64)
+        | Value'float32 (R.Raw mut_ Std_.Float)
+        | Value'float64 (R.Raw mut_ Std_.Double)
+        | Value'text (R.Raw mut_ Basics.Text)
+        | Value'data_ (R.Raw mut_ Basics.Data)
+        | Value'list (R.Raw mut_ Basics.AnyPointer)
+        | Value'enum (R.Raw mut_ Std_.Word16)
+        | Value'struct (R.Raw mut_ Basics.AnyPointer)
+        | Value'interface (R.Raw mut_ ())
+        | Value'anyPointer (R.Raw mut_ Basics.AnyPointer)
+        | Value'unknown' Std_.Word16
 instance (OL.IsLabel "void" (F.Variant F.Slot (Value) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "void" F.Slot (Value) ())

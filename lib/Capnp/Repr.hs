@@ -1,11 +1,13 @@
 {-# LANGUAGE AllowAmbiguousTypes    #-}
 {-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DeriveGeneric          #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TemplateHaskell        #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -68,6 +70,7 @@ import           Control.Monad.Catch (MonadThrow(..))
 import           Data.Int
 import           Data.Kind           (Type)
 import           Data.Word
+import           GHC.Generics        (Generic)
 import qualified Language.Haskell.TH as TH
 
 -- | A 'Repr' describes a wire representation for a value. This is
@@ -200,6 +203,11 @@ instance FromElement ('Ptr ('Just 'Cap)) where
 -- @mut@.
 newtype Raw (mut :: Mutability) (a :: Type)
     = Raw { fromRaw :: Untyped mut (ReprFor a) }
+
+deriving instance Show (Untyped mut (ReprFor a)) => Show (Raw mut a)
+deriving instance Read (Untyped mut (ReprFor a)) => Read (Raw mut a)
+deriving instance Eq (Untyped mut (ReprFor a)) => Eq (Raw mut a)
+deriving instance Generic (Untyped mut (ReprFor a)) => Generic (Raw mut a)
 
 -- | A phantom type denoting capnproto lists of type @a@.
 data List a

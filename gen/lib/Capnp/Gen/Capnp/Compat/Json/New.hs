@@ -24,6 +24,14 @@ type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Value)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (Value)
+        = Value'null (R.Raw mut_ ())
+        | Value'boolean (R.Raw mut_ Std_.Bool)
+        | Value'number (R.Raw mut_ Std_.Double)
+        | Value'string (R.Raw mut_ Basics.Text)
+        | Value'array (R.Raw mut_ (R.List Value))
+        | Value'object (R.Raw mut_ (R.List Value'Field))
+        | Value'call (R.Raw mut_ Value'Call)
+        | Value'unknown' Std_.Word16
 instance (OL.IsLabel "null" (F.Variant F.Slot (Value) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "null" F.Slot (Value) ())

@@ -24,6 +24,21 @@ type instance (R.ReprFor Message) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Message)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (Message)
+        = Message'unimplemented (R.Raw mut_ Message)
+        | Message'abort (R.Raw mut_ Exception)
+        | Message'call (R.Raw mut_ Call)
+        | Message'return (R.Raw mut_ Return)
+        | Message'finish (R.Raw mut_ Finish)
+        | Message'resolve (R.Raw mut_ Resolve)
+        | Message'release (R.Raw mut_ Release)
+        | Message'obsoleteSave (R.Raw mut_ Basics.AnyPointer)
+        | Message'bootstrap (R.Raw mut_ Bootstrap)
+        | Message'obsoleteDelete (R.Raw mut_ Basics.AnyPointer)
+        | Message'provide (R.Raw mut_ Provide)
+        | Message'accept (R.Raw mut_ Accept)
+        | Message'join (R.Raw mut_ Join)
+        | Message'disembargo (R.Raw mut_ Disembargo)
+        | Message'unknown' Std_.Word16
 instance (OL.IsLabel "unimplemented" (F.Variant F.Slot (Message) Message)) where
     fromLabel  = (F.Variant (GH.ptrField 0) 0)
 instance (F.HasVariant "unimplemented" F.Slot (Message) Message)
@@ -102,6 +117,10 @@ type instance (R.ReprFor Call'sendResultsTo) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Call'sendResultsTo)) where
     unionField  = (GH.dataField 3 0 16 0)
     data RawWhich mut_ (Call'sendResultsTo)
+        = Call'sendResultsTo'caller (R.Raw mut_ ())
+        | Call'sendResultsTo'yourself (R.Raw mut_ ())
+        | Call'sendResultsTo'thirdParty (R.Raw mut_ Basics.AnyPointer)
+        | Call'sendResultsTo'unknown' Std_.Word16
 instance (OL.IsLabel "caller" (F.Variant F.Slot (Call'sendResultsTo) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "caller" F.Slot (Call'sendResultsTo) ())
@@ -116,6 +135,13 @@ type instance (R.ReprFor Return) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Return)) where
     unionField  = (GH.dataField 3 0 16 0)
     data RawWhich mut_ (Return)
+        = Return'results (R.Raw mut_ Payload)
+        | Return'exception (R.Raw mut_ Exception)
+        | Return'canceled (R.Raw mut_ ())
+        | Return'resultsSentElsewhere (R.Raw mut_ ())
+        | Return'takeFromOtherQuestion (R.Raw mut_ Std_.Word32)
+        | Return'acceptFromThirdParty (R.Raw mut_ Basics.AnyPointer)
+        | Return'unknown' Std_.Word16
 instance (OL.IsLabel "results" (F.Variant F.Slot (Return) Payload)) where
     fromLabel  = (F.Variant (GH.ptrField 0) 0)
 instance (F.HasVariant "results" F.Slot (Return) Payload)
@@ -153,6 +179,9 @@ type instance (R.ReprFor Resolve) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Resolve)) where
     unionField  = (GH.dataField 2 0 16 0)
     data RawWhich mut_ (Resolve)
+        = Resolve'cap (R.Raw mut_ CapDescriptor)
+        | Resolve'exception (R.Raw mut_ Exception)
+        | Resolve'unknown' Std_.Word16
 instance (OL.IsLabel "cap" (F.Variant F.Slot (Resolve) CapDescriptor)) where
     fromLabel  = (F.Variant (GH.ptrField 0) 0)
 instance (F.HasVariant "cap" F.Slot (Resolve) CapDescriptor)
@@ -183,6 +212,11 @@ type instance (R.ReprFor Disembargo'context) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (Disembargo'context)) where
     unionField  = (GH.dataField 2 0 16 0)
     data RawWhich mut_ (Disembargo'context)
+        = Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
+        | Disembargo'context'receiverLoopback (R.Raw mut_ Std_.Word32)
+        | Disembargo'context'accept (R.Raw mut_ ())
+        | Disembargo'context'provide (R.Raw mut_ Std_.Word32)
+        | Disembargo'context'unknown' Std_.Word16
 instance (OL.IsLabel "senderLoopback" (F.Variant F.Slot (Disembargo'context) Std_.Word32)) where
     fromLabel  = (F.Variant (GH.dataField 0 0 32 0) 0)
 instance (F.HasVariant "senderLoopback" F.Slot (Disembargo'context) Std_.Word32)
@@ -233,6 +267,9 @@ type instance (R.ReprFor MessageTarget) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (MessageTarget)) where
     unionField  = (GH.dataField 2 0 16 0)
     data RawWhich mut_ (MessageTarget)
+        = MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
+        | MessageTarget'promisedAnswer (R.Raw mut_ PromisedAnswer)
+        | MessageTarget'unknown' Std_.Word16
 instance (OL.IsLabel "importedCap" (F.Variant F.Slot (MessageTarget) Std_.Word32)) where
     fromLabel  = (F.Variant (GH.dataField 0 0 32 0) 0)
 instance (F.HasVariant "importedCap" F.Slot (MessageTarget) Std_.Word32)
@@ -252,6 +289,13 @@ type instance (R.ReprFor CapDescriptor) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (CapDescriptor)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (CapDescriptor)
+        = CapDescriptor'none (R.Raw mut_ ())
+        | CapDescriptor'senderHosted (R.Raw mut_ Std_.Word32)
+        | CapDescriptor'senderPromise (R.Raw mut_ Std_.Word32)
+        | CapDescriptor'receiverHosted (R.Raw mut_ Std_.Word32)
+        | CapDescriptor'receiverAnswer (R.Raw mut_ PromisedAnswer)
+        | CapDescriptor'thirdPartyHosted (R.Raw mut_ ThirdPartyCapDescriptor)
+        | CapDescriptor'unknown' Std_.Word16
 instance (OL.IsLabel "none" (F.Variant F.Slot (CapDescriptor) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "none" F.Slot (CapDescriptor) ())
@@ -286,6 +330,9 @@ type instance (R.ReprFor PromisedAnswer'Op) = (R.Ptr (Std_.Just R.Struct))
 instance (F.HasUnion (PromisedAnswer'Op)) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ (PromisedAnswer'Op)
+        = PromisedAnswer'Op'noop (R.Raw mut_ ())
+        | PromisedAnswer'Op'getPointerField (R.Raw mut_ Std_.Word16)
+        | PromisedAnswer'Op'unknown' Std_.Word16
 instance (OL.IsLabel "noop" (F.Variant F.Slot (PromisedAnswer'Op) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "noop" F.Slot (PromisedAnswer'Op) ())
