@@ -222,6 +222,7 @@ instance Format Exp where
             [ hcat [ format name, " = ", format value ]
             | (name, value) <- updates
             ]
+    format (ELabel name) = "#" <> format name
 
 instance Format Do where
     format (DoBind var ex) = format var <> " <- " <> format ex

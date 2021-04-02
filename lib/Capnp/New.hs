@@ -32,7 +32,7 @@ import           Data.Word
 
 {-# INLINE readField #-}
 readField
-    ::  forall a b mut m k.
+    ::  forall k a b mut m.
         ( R.IsStruct a
         , U.ReadCtx m mut
         )

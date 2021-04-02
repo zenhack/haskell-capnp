@@ -11,13 +11,16 @@ module Capnp.GenHelpers.New
     , ptrField
     , groupField
     , voidField
+    , readVariant
     , TypeParam
     ) where
 
 import           Capnp.Bits
 import qualified Capnp.Classes as C
 import qualified Capnp.Fields  as F
+import           Capnp.New     (readField)
 import qualified Capnp.Repr    as R
+import qualified Capnp.Untyped as U
 import           Data.Bits
 import           Data.Word
 
@@ -47,3 +50,13 @@ type TypeParam a pr =
     ( R.ReprFor a ~ 'R.Ptr pr
     , R.IsPtrRepr pr
     )
+
+-- | Like 'readField', but accepts a variant. Warning: *DOES NOT CHECK* that the
+-- variant is the one that is set. This should only be used by generated code.
+readVariant
+    ::  forall k a b mut m.
+        ( R.IsStruct a
+        , U.ReadCtx m mut
+        )
+    => F.Variant k a b -> R.Raw mut a -> m (R.Raw mut b)
+readVariant F.Variant{field} = readField field
