@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE KindSignatures         #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Module: Capnp.Fields
 -- Description: Support for working with struct fields
