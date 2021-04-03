@@ -3,12 +3,15 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.Capnp.Schema.New where
 import qualified Capnp.Repr as R
 import qualified Capnp.Fields as F
@@ -31,6 +34,21 @@ instance (F.HasUnion (Node)) where
         | Node'const (R.Raw mut_ Node'const)
         | Node'annotation (R.Raw mut_ Node'annotation)
         | Node'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Node'file <$> (GH.readVariant (#file :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Node'struct <$> (GH.readVariant (#struct :: (F.Variant F.Group _ _)) struct_))
+        2 ->
+            (Node'enum <$> (GH.readVariant (#enum :: (F.Variant F.Group _ _)) struct_))
+        3 ->
+            (Node'interface <$> (GH.readVariant (#interface :: (F.Variant F.Group _ _)) struct_))
+        4 ->
+            (Node'const <$> (GH.readVariant (#const :: (F.Variant F.Group _ _)) struct_))
+        5 ->
+            (Node'annotation <$> (GH.readVariant (#annotation :: (F.Variant F.Group _ _)) struct_))
+        _ ->
+            (Std_.pure (Node'unknown' tag_))
 instance (OL.IsLabel "file" (F.Variant F.Slot (Node) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "file" F.Slot (Node) ())
@@ -195,6 +213,13 @@ instance (F.HasUnion (Field)) where
         = Field'slot (R.Raw mut_ Field'slot)
         | Field'group (R.Raw mut_ Field'group)
         | Field'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Field'slot <$> (GH.readVariant (#slot :: (F.Variant F.Group _ _)) struct_))
+        1 ->
+            (Field'group <$> (GH.readVariant (#group :: (F.Variant F.Group _ _)) struct_))
+        _ ->
+            (Std_.pure (Field'unknown' tag_))
 instance (OL.IsLabel "slot" (F.Variant F.Group (Field) Field'slot)) where
     fromLabel  = (F.Variant GH.groupField 0)
 instance (F.HasVariant "slot" F.Group (Field) Field'slot)
@@ -243,6 +268,13 @@ instance (F.HasUnion (Field'ordinal)) where
         = Field'ordinal'implicit (R.Raw mut_ ())
         | Field'ordinal'explicit (R.Raw mut_ Std_.Word16)
         | Field'ordinal'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Field'ordinal'implicit <$> (GH.readVariant (#implicit :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Field'ordinal'explicit <$> (GH.readVariant (#explicit :: (F.Variant F.Slot _ _)) struct_))
+        _ ->
+            (Std_.pure (Field'ordinal'unknown' tag_))
 instance (OL.IsLabel "implicit" (F.Variant F.Slot (Field'ordinal) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "implicit" F.Slot (Field'ordinal) ())
@@ -319,6 +351,47 @@ instance (F.HasUnion (Type)) where
         | Type'interface (R.Raw mut_ Type'interface)
         | Type'anyPointer (R.Raw mut_ Type'anyPointer)
         | Type'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Type'void <$> (GH.readVariant (#void :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Type'bool <$> (GH.readVariant (#bool :: (F.Variant F.Slot _ _)) struct_))
+        2 ->
+            (Type'int8 <$> (GH.readVariant (#int8 :: (F.Variant F.Slot _ _)) struct_))
+        3 ->
+            (Type'int16 <$> (GH.readVariant (#int16 :: (F.Variant F.Slot _ _)) struct_))
+        4 ->
+            (Type'int32 <$> (GH.readVariant (#int32 :: (F.Variant F.Slot _ _)) struct_))
+        5 ->
+            (Type'int64 <$> (GH.readVariant (#int64 :: (F.Variant F.Slot _ _)) struct_))
+        6 ->
+            (Type'uint8 <$> (GH.readVariant (#uint8 :: (F.Variant F.Slot _ _)) struct_))
+        7 ->
+            (Type'uint16 <$> (GH.readVariant (#uint16 :: (F.Variant F.Slot _ _)) struct_))
+        8 ->
+            (Type'uint32 <$> (GH.readVariant (#uint32 :: (F.Variant F.Slot _ _)) struct_))
+        9 ->
+            (Type'uint64 <$> (GH.readVariant (#uint64 :: (F.Variant F.Slot _ _)) struct_))
+        10 ->
+            (Type'float32 <$> (GH.readVariant (#float32 :: (F.Variant F.Slot _ _)) struct_))
+        11 ->
+            (Type'float64 <$> (GH.readVariant (#float64 :: (F.Variant F.Slot _ _)) struct_))
+        12 ->
+            (Type'text <$> (GH.readVariant (#text :: (F.Variant F.Slot _ _)) struct_))
+        13 ->
+            (Type'data_ <$> (GH.readVariant (#data_ :: (F.Variant F.Slot _ _)) struct_))
+        14 ->
+            (Type'list <$> (GH.readVariant (#list :: (F.Variant F.Group _ _)) struct_))
+        15 ->
+            (Type'enum <$> (GH.readVariant (#enum :: (F.Variant F.Group _ _)) struct_))
+        16 ->
+            (Type'struct <$> (GH.readVariant (#struct :: (F.Variant F.Group _ _)) struct_))
+        17 ->
+            (Type'interface <$> (GH.readVariant (#interface :: (F.Variant F.Group _ _)) struct_))
+        18 ->
+            (Type'anyPointer <$> (GH.readVariant (#anyPointer :: (F.Variant F.Group _ _)) struct_))
+        _ ->
+            (Std_.pure (Type'unknown' tag_))
 instance (OL.IsLabel "void" (F.Variant F.Slot (Type) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "void" F.Slot (Type) ())
@@ -414,6 +487,15 @@ instance (F.HasUnion (Type'anyPointer)) where
         | Type'anyPointer'parameter (R.Raw mut_ Type'anyPointer'parameter)
         | Type'anyPointer'implicitMethodParameter (R.Raw mut_ Type'anyPointer'implicitMethodParameter)
         | Type'anyPointer'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Type'anyPointer'unconstrained <$> (GH.readVariant (#unconstrained :: (F.Variant F.Group _ _)) struct_))
+        1 ->
+            (Type'anyPointer'parameter <$> (GH.readVariant (#parameter :: (F.Variant F.Group _ _)) struct_))
+        2 ->
+            (Type'anyPointer'implicitMethodParameter <$> (GH.readVariant (#implicitMethodParameter :: (F.Variant F.Group _ _)) struct_))
+        _ ->
+            (Std_.pure (Type'anyPointer'unknown' tag_))
 instance (OL.IsLabel "unconstrained" (F.Variant F.Group (Type'anyPointer) Type'anyPointer'unconstrained)) where
     fromLabel  = (F.Variant GH.groupField 0)
 instance (F.HasVariant "unconstrained" F.Group (Type'anyPointer) Type'anyPointer'unconstrained)
@@ -433,6 +515,17 @@ instance (F.HasUnion (Type'anyPointer'unconstrained)) where
         | Type'anyPointer'unconstrained'list (R.Raw mut_ ())
         | Type'anyPointer'unconstrained'capability (R.Raw mut_ ())
         | Type'anyPointer'unconstrained'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Type'anyPointer'unconstrained'anyKind <$> (GH.readVariant (#anyKind :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Type'anyPointer'unconstrained'struct <$> (GH.readVariant (#struct :: (F.Variant F.Slot _ _)) struct_))
+        2 ->
+            (Type'anyPointer'unconstrained'list <$> (GH.readVariant (#list :: (F.Variant F.Slot _ _)) struct_))
+        3 ->
+            (Type'anyPointer'unconstrained'capability <$> (GH.readVariant (#capability :: (F.Variant F.Slot _ _)) struct_))
+        _ ->
+            (Std_.pure (Type'anyPointer'unconstrained'unknown' tag_))
 instance (OL.IsLabel "anyKind" (F.Variant F.Slot (Type'anyPointer'unconstrained) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "anyKind" F.Slot (Type'anyPointer'unconstrained) ())
@@ -471,6 +564,13 @@ instance (F.HasUnion (Brand'Scope)) where
         = Brand'Scope'bind (R.Raw mut_ (R.List Brand'Binding))
         | Brand'Scope'inherit (R.Raw mut_ ())
         | Brand'Scope'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Brand'Scope'bind <$> (GH.readVariant (#bind :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Brand'Scope'inherit <$> (GH.readVariant (#inherit :: (F.Variant F.Slot _ _)) struct_))
+        _ ->
+            (Std_.pure (Brand'Scope'unknown' tag_))
 instance (OL.IsLabel "bind" (F.Variant F.Slot (Brand'Scope) (R.List Brand'Binding))) where
     fromLabel  = (F.Variant (GH.ptrField 0) 0)
 instance (F.HasVariant "bind" F.Slot (Brand'Scope) (R.List Brand'Binding))
@@ -488,6 +588,13 @@ instance (F.HasUnion (Brand'Binding)) where
         = Brand'Binding'unbound (R.Raw mut_ ())
         | Brand'Binding'type_ (R.Raw mut_ Type)
         | Brand'Binding'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Brand'Binding'unbound <$> (GH.readVariant (#unbound :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Brand'Binding'type_ <$> (GH.readVariant (#type_ :: (F.Variant F.Slot _ _)) struct_))
+        _ ->
+            (Std_.pure (Brand'Binding'unknown' tag_))
 instance (OL.IsLabel "unbound" (F.Variant F.Slot (Brand'Binding) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "unbound" F.Slot (Brand'Binding) ())
@@ -519,6 +626,47 @@ instance (F.HasUnion (Value)) where
         | Value'interface (R.Raw mut_ ())
         | Value'anyPointer (R.Raw mut_ Basics.AnyPointer)
         | Value'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Value'void <$> (GH.readVariant (#void :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Value'bool <$> (GH.readVariant (#bool :: (F.Variant F.Slot _ _)) struct_))
+        2 ->
+            (Value'int8 <$> (GH.readVariant (#int8 :: (F.Variant F.Slot _ _)) struct_))
+        3 ->
+            (Value'int16 <$> (GH.readVariant (#int16 :: (F.Variant F.Slot _ _)) struct_))
+        4 ->
+            (Value'int32 <$> (GH.readVariant (#int32 :: (F.Variant F.Slot _ _)) struct_))
+        5 ->
+            (Value'int64 <$> (GH.readVariant (#int64 :: (F.Variant F.Slot _ _)) struct_))
+        6 ->
+            (Value'uint8 <$> (GH.readVariant (#uint8 :: (F.Variant F.Slot _ _)) struct_))
+        7 ->
+            (Value'uint16 <$> (GH.readVariant (#uint16 :: (F.Variant F.Slot _ _)) struct_))
+        8 ->
+            (Value'uint32 <$> (GH.readVariant (#uint32 :: (F.Variant F.Slot _ _)) struct_))
+        9 ->
+            (Value'uint64 <$> (GH.readVariant (#uint64 :: (F.Variant F.Slot _ _)) struct_))
+        10 ->
+            (Value'float32 <$> (GH.readVariant (#float32 :: (F.Variant F.Slot _ _)) struct_))
+        11 ->
+            (Value'float64 <$> (GH.readVariant (#float64 :: (F.Variant F.Slot _ _)) struct_))
+        12 ->
+            (Value'text <$> (GH.readVariant (#text :: (F.Variant F.Slot _ _)) struct_))
+        13 ->
+            (Value'data_ <$> (GH.readVariant (#data_ :: (F.Variant F.Slot _ _)) struct_))
+        14 ->
+            (Value'list <$> (GH.readVariant (#list :: (F.Variant F.Slot _ _)) struct_))
+        15 ->
+            (Value'enum <$> (GH.readVariant (#enum :: (F.Variant F.Slot _ _)) struct_))
+        16 ->
+            (Value'struct <$> (GH.readVariant (#struct :: (F.Variant F.Slot _ _)) struct_))
+        17 ->
+            (Value'interface <$> (GH.readVariant (#interface :: (F.Variant F.Slot _ _)) struct_))
+        18 ->
+            (Value'anyPointer <$> (GH.readVariant (#anyPointer :: (F.Variant F.Slot _ _)) struct_))
+        _ ->
+            (Std_.pure (Value'unknown' tag_))
 instance (OL.IsLabel "void" (F.Variant F.Slot (Value) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "void" F.Slot (Value) ())

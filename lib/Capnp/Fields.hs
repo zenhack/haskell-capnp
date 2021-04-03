@@ -26,6 +26,7 @@ import qualified Capnp.Repr    as R
 import qualified Capnp.Untyped as U
 
 data FieldKind = Slot | Group
+    deriving(Show, Read, Eq)
 
 -- | @'Field' a b@ is a first-class representation of a field of type @b@ within
 -- an @a@, where @a@ must be a struct type.

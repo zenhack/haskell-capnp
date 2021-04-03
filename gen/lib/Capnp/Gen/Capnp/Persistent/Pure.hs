@@ -14,6 +14,7 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.Capnp.Persistent.Pure(Persistent(..)
                                       ,Persistent'server_(..)
                                       ,export_Persistent

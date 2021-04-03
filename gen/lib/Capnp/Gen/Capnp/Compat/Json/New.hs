@@ -3,12 +3,15 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.Capnp.Compat.Json.New where
 import qualified Capnp.Repr as R
 import qualified Capnp.Fields as F
@@ -32,6 +35,23 @@ instance (F.HasUnion (Value)) where
         | Value'object (R.Raw mut_ (R.List Value'Field))
         | Value'call (R.Raw mut_ Value'Call)
         | Value'unknown' Std_.Word16
+    internalWhich tag_ struct_ = case tag_ of
+        0 ->
+            (Value'null <$> (GH.readVariant (#null :: (F.Variant F.Slot _ _)) struct_))
+        1 ->
+            (Value'boolean <$> (GH.readVariant (#boolean :: (F.Variant F.Slot _ _)) struct_))
+        2 ->
+            (Value'number <$> (GH.readVariant (#number :: (F.Variant F.Slot _ _)) struct_))
+        3 ->
+            (Value'string <$> (GH.readVariant (#string :: (F.Variant F.Slot _ _)) struct_))
+        4 ->
+            (Value'array <$> (GH.readVariant (#array :: (F.Variant F.Slot _ _)) struct_))
+        5 ->
+            (Value'object <$> (GH.readVariant (#object :: (F.Variant F.Slot _ _)) struct_))
+        6 ->
+            (Value'call <$> (GH.readVariant (#call :: (F.Variant F.Slot _ _)) struct_))
+        _ ->
+            (Std_.pure (Value'unknown' tag_))
 instance (OL.IsLabel "null" (F.Variant F.Slot (Value) ())) where
     fromLabel  = (F.Variant GH.voidField 0)
 instance (F.HasVariant "null" F.Slot (Value) ())
