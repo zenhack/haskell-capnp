@@ -176,6 +176,7 @@ instance Format ValueDef where
         ]
 
 instance Format Exp where
+    format (EApp e []) = format e
     format (EApp e es) = hcat
         [ "("
         , hcat $ intersperse " " $ map format (e:es)
@@ -265,6 +266,7 @@ instance Format Type where
     format (TGName ty) = format ty
     format (TLName ty) = format ty
     format (TVar txt)  = PP.textStrict txt
+    format (TApp t []) = format t
     format (TApp f xs) =
         "(" <> mconcat (intersperse " " $ map format (f:xs)) <> ")"
     format (TFn types) =
