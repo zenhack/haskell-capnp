@@ -53,7 +53,7 @@ newtype Pipeline a = Pipeline Rpc.Pipeline
 newtype Client a = Client Rpc.Client
 
 class AsClient f where
-    asClient :: R.ReprFor c ~ 'R.Ptr ('Just 'R.Cap) => f c -> STM (Client c)
+    asClient :: R.IsCap c => f c -> STM (Client c)
 
 instance AsClient Pipeline where
     asClient = pipelineClient
@@ -61,12 +61,9 @@ instance AsClient Pipeline where
 instance AsClient Client where
     asClient = pure
 
-callR ::
-    ( AsClient f
-    , R.ReprFor c ~ 'R.Ptr ('Just 'R.Cap)
-    , R.ReprFor p ~ 'R.Ptr ('Just 'R.Struct)
-    , MonadSTM m
-    ) => Method c p r -> R.Raw 'Const p -> f c -> m (Pipeline r)
+callR
+    :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
+    => Method c p r -> R.Raw 'Const p -> f c -> m (Pipeline r)
 callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
     Client client <- asClient c
     (_, f) <- newPromise
@@ -79,7 +76,7 @@ callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
             }
             client
 
-pipe :: ( R.ReprFor a ~ 'R.Ptr ('Just 'R.Struct)
+pipe :: ( R.IsStruct a
         , R.ReprFor b ~ 'R.Ptr pr
         ) => F.Field k a b -> Pipeline a -> Pipeline b
 pipe (F.Field field) (Pipeline p) =
@@ -87,7 +84,7 @@ pipe (F.Field field) (Pipeline p) =
         F.GroupField   -> Pipeline p
         F.PtrField idx -> Pipeline (Rpc.walkPipelinePtr p idx)
 
-pipelineClient :: (R.ReprFor a ~ 'R.Ptr ('Just 'R.Cap), MonadSTM m) => Pipeline a -> m (Client a)
+pipelineClient :: (R.IsCap a, MonadSTM m) => Pipeline a -> m (Client a)
 pipelineClient (Pipeline p) =
     liftSTM $ Client <$> Rpc.pipelineClient p
 

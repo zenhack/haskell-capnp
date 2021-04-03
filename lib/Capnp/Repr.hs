@@ -57,6 +57,7 @@ module Capnp.Repr
 
     -- * Shorthands for types
     , IsStruct
+    , IsCap
     ) where
 
 import Prelude hiding (length)
@@ -333,3 +334,6 @@ instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
 
 -- | Constraint that a is a struct type.
 type IsStruct a = ReprFor a ~ 'Ptr ('Just 'Struct)
+
+-- | Constraint that a is a capability type.
+type IsCap a = ReprFor a ~ 'Ptr ('Just 'Cap)
