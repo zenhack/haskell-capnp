@@ -15,6 +15,7 @@ import qualified Capnp.New.Classes as C
 import qualified Capnp.Repr        as R
 import qualified Capnp.Untyped     as U
 import qualified Data.ByteString   as BS
+import           Data.Foldable     (for_)
 import           Data.Word
 
 data Text
@@ -33,4 +34,16 @@ type instance R.ReprFor Capability = 'R.Ptr ('Just 'R.Cap)
 
 instance C.Parse Data BS.ByteString where
     parse = U.rawBytes . R.fromRaw
-    encode _msg _bytes = error "TODO"
+    encode msg value = do
+        raw <- C.new (BS.length value) msg
+        C.marshalInto raw value
+        pure raw
+
+instance C.Allocate Data where
+    type AllocHint Data = Int
+    new len msg = R.Raw <$> U.allocList8 msg len
+
+instance C.Marshal Data BS.ByteString where
+    marshalInto (R.Raw list) bytes =
+        for_ [0..BS.length bytes - 1] $ \i ->
+            U.setIndex (BS.index bytes i) i list
