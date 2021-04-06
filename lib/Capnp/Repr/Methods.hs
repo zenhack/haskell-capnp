@@ -3,6 +3,8 @@
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE NamedFieldPuns         #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Module: Capnp.Repr.Methods
 -- Description: Support for working with methods
@@ -18,19 +20,23 @@ module Capnp.Repr.Methods
     , AsClient(..)
 
     , callR
+    , callP
     ) where
 
 import qualified Capnp.Fields            as F
-import           Capnp.Message           (Mutability(..))
+import           Capnp.Message           (Mutability(..), newMessage)
+import qualified Capnp.New.Classes       as NC
 import qualified Capnp.Repr              as R
 import           Capnp.Rpc.Promise       (newPromise)
 import qualified Capnp.Rpc.Server        as Server
 import qualified Capnp.Rpc.Untyped       as Rpc
 import qualified Capnp.Untyped           as U
 import           Control.Concurrent.STM
+import           Control.Monad.Catch     (MonadThrow)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
 import           GHC.OverloadedLabels    (IsLabel)
+import           Internal.BuildPure      (createPure)
 
 -- | Represents a method on the interface type @c@ with parameter
 -- type @p@ and return type @r@.
@@ -75,6 +81,23 @@ callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
             , response = f
             }
             client
+
+callP
+    :: forall c p r f m.
+        ( AsClient f
+        , R.IsCap c
+        , R.IsStruct p
+        , NC.Parse p
+        , MonadSTM m
+        , MonadThrow m
+        )
+    => Method c p r -> NC.Parsed p -> f c -> m (Pipeline r)
+callP method parsed client = do
+    struct <- createPure maxBound $ do
+        msg <- newMessage Nothing
+        R.Raw r <- NC.encode @p msg parsed
+        pure r
+    callR method (R.Raw struct) client
 
 pipe :: ( R.IsStruct a
         , R.ReprFor b ~ 'R.Ptr pr
