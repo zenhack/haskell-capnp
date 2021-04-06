@@ -23,10 +23,8 @@ import qualified Language.Haskell.TH as TH
 -- * @t@ is the capnproto type.
 -- * @p@ is the type of the parsed value.
 class Parse t p | t -> p, p -> t where
-    parseConst :: U.ReadCtx m 'Const => R.Raw 'Const t -> m p
+    parse :: U.ReadCtx m 'Const => R.Raw 'Const t -> m p
     -- ^ Parse a value from a constant message
-    parseMut :: U.RWCtx m s => R.Raw ('Mut s) t -> m p
-    -- ^ Parse a value from a mutable message
     encode :: U.RWCtx m s => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
     -- ^ Encode a value into 'R.Raw' form, using the message as storage.
 
@@ -45,14 +43,12 @@ parseInt = pure . fromIntegral . R.fromRaw
 do
     let mkParseId ty =
             [d| instance Parse $ty $ty where
-                    parseConst = parseId
-                    parseMut = parseId
+                    parse = parseId
                     encode _ = pure . R.Raw
             |]
         mkParseInt ty =
             [d| instance Parse $ty $ty where
-                    parseConst = parseInt
-                    parseMut = parseInt
+                    parse = parseInt
                     encode _ = pure . R.Raw . fromIntegral
             |]
         nameTy name = pure (TH.ConT name)
@@ -68,25 +64,15 @@ do
         ]
 
 instance Parse Float Float where
-    parseConst = pure . F.castWord32ToFloat . R.fromRaw
-    parseMut = pure . F.castWord32ToFloat . R.fromRaw
+    parse = pure . F.castWord32ToFloat . R.fromRaw
     encode _ = pure . R.Raw . F.castFloatToWord32
 
 instance Parse Double Double where
-    parseConst = pure . F.castWord64ToDouble . R.fromRaw
-    parseMut = pure . F.castWord64ToDouble . R.fromRaw
+    parse = pure . F.castWord64ToDouble . R.fromRaw
     encode _ = pure . R.Raw . F.castDoubleToWord64
 
 instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector ap) where
-    parseConst = parseList parseConst
-    parseMut = parseList parseMut
     encode _ = undefined
-
-parseList ::
-    ( U.ReadCtx m mut
-    , R.FromElement (R.ReprFor a)
-    , Parse a ap
-    ) => (R.Raw mut a -> m ap) -> R.Raw mut (R.List a) -> m (V.Vector ap)
-parseList parseElt rawV =
-    V.generateM (R.length rawV) $ \i ->
-        R.index i rawV >>= parseElt
+    parse rawV =
+        V.generateM (R.length rawV) $ \i ->
+            R.index i rawV >>= parse

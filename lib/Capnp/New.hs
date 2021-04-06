@@ -72,7 +72,7 @@ getField
     -> bp
 getField field struct =
     fromJust $ evalLimitT maxBound $
-        readField field struct >>= C.parseConst
+        readField field struct >>= C.parse
 
 {-# INLINE setField #-}
 setField ::
@@ -117,7 +117,7 @@ parseField ::
     , U.ReadCtx m 'Const
     ) => F.Field k a b -> R.Raw 'Const a -> m bp
 parseField field raw =
-    readField field raw >>= C.parseConst
+    readField field raw >>= C.parse
 
 setVariant
     :: forall a b m s.
