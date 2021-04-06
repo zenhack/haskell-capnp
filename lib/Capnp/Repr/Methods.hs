@@ -83,19 +83,19 @@ callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
             client
 
 callP
-    :: forall c p r f m.
+    :: forall c p r f m pp.
         ( AsClient f
         , R.IsCap c
         , R.IsStruct p
-        , NC.Parse p
+        , NC.Parse p pp
         , MonadSTM m
         , MonadThrow m
         )
-    => Method c p r -> NC.Parsed p -> f c -> m (Pipeline r)
+    => Method c p r -> pp -> f c -> m (Pipeline r)
 callP method parsed client = do
     struct <- createPure maxBound $ do
         msg <- newMessage Nothing
-        R.Raw r <- NC.encode @p msg parsed
+        R.Raw r <- NC.encode msg parsed
         pure r
     callR method (R.Raw struct) client
 

@@ -1,8 +1,9 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TemplateHaskell        #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 module Capnp.New.Classes
     ( Parse(..)
     ) where
@@ -18,14 +19,15 @@ import qualified GHC.Float           as F
 import qualified Language.Haskell.TH as TH
 
 -- | Capnp types that can be parsed into a more "natural" Haskell form.
-class Parse a where
-    type Parsed a
-    -- ^ The type of a parsed value
-    parseConst :: U.ReadCtx m 'Const => R.Raw 'Const a -> m (Parsed a)
+--
+-- * @t@ is the capnproto type.
+-- * @p@ is the type of the parsed value.
+class Parse t p | t -> p, p -> t where
+    parseConst :: U.ReadCtx m 'Const => R.Raw 'Const t -> m p
     -- ^ Parse a value from a constant message
-    parseMut :: U.RWCtx m s => R.Raw ('Mut s) a -> m (Parsed a)
+    parseMut :: U.RWCtx m s => R.Raw ('Mut s) t -> m p
     -- ^ Parse a value from a mutable message
-    encode :: U.RWCtx m s => M.Message ('Mut s) -> Parsed a -> m (R.Raw ('Mut s) a)
+    encode :: U.RWCtx m s => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
     -- ^ Encode a value into 'R.Raw' form, using the message as storage.
 
 ------ Parse instances for basic types -------
@@ -42,15 +44,13 @@ parseInt = pure . fromIntegral . R.fromRaw
 
 do
     let mkParseId ty =
-            [d| instance Parse $ty where
-                    type Parsed $ty = $ty
+            [d| instance Parse $ty $ty where
                     parseConst = parseId
                     parseMut = parseId
                     encode _ = pure . R.Raw
             |]
         mkParseInt ty =
-            [d| instance Parse $ty where
-                    type Parsed $ty = $ty
+            [d| instance Parse $ty $ty where
                     parseConst = parseInt
                     parseMut = parseInt
                     encode _ = pure . R.Raw . fromIntegral
@@ -67,20 +67,17 @@ do
         , mkParseId [t| () |]
         ]
 
-instance Parse Float where
-    type Parsed Float = Float
+instance Parse Float Float where
     parseConst = pure . F.castWord32ToFloat . R.fromRaw
     parseMut = pure . F.castWord32ToFloat . R.fromRaw
     encode _ = pure . R.Raw . F.castFloatToWord32
 
-instance Parse Double where
-    type Parsed Double = Double
+instance Parse Double Double where
     parseConst = pure . F.castWord64ToDouble . R.fromRaw
     parseMut = pure . F.castWord64ToDouble . R.fromRaw
     encode _ = pure . R.Raw . F.castDoubleToWord64
 
-instance (R.FromElement (R.ReprFor a), Parse a) => Parse (R.List a) where
-    type Parsed (R.List a) = V.Vector (Parsed a)
+instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector ap) where
     parseConst = parseList parseConst
     parseMut = parseList parseMut
     encode _ = undefined
@@ -88,7 +85,8 @@ instance (R.FromElement (R.ReprFor a), Parse a) => Parse (R.List a) where
 parseList ::
     ( U.ReadCtx m mut
     , R.FromElement (R.ReprFor a)
-    ) => (R.Raw mut a -> m (Parsed a)) -> R.Raw mut (R.List a) -> m (Parsed (R.List a))
+    , Parse a ap
+    ) => (R.Raw mut a -> m ap) -> R.Raw mut (R.List a) -> m (V.Vector ap)
 parseList parseElt rawV =
     V.generateM (R.length rawV) $ \i ->
         R.index i rawV >>= parseElt

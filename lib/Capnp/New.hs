@@ -65,11 +65,11 @@ readField (F.Field field) (R.Raw struct) =
 getField
     ::  ( R.IsStruct a
         , R.ReprFor b ~ 'R.Data sz
-        , C.Parse b
+        , C.Parse b bp
         )
     => F.Field 'F.Slot a b
     -> R.Raw 'Const a
-    -> C.Parsed b
+    -> bp
 getField field struct =
     fromJust $ evalLimitT maxBound $
         readField field struct >>= C.parseConst
@@ -102,20 +102,20 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         U.setPtr (R.rToPtr @pr (U.message struct) value) (fromIntegral index) struct
 
 encodeField ::
-    forall a b m s.
+    forall a b m s bp.
     ( R.IsStruct a
-    , C.Parse b
+    , C.Parse b bp
     , U.RWCtx m s
-    ) => F.Field 'F.Slot a b -> C.Parsed b -> R.Raw ('Mut s) a -> m ()
+    ) => F.Field 'F.Slot a b -> bp -> R.Raw ('Mut s) a -> m ()
 encodeField field parsed struct = do
     encoded <- C.encode (U.message struct) parsed
     setField field encoded struct
 
 parseField ::
     ( R.IsStruct a
-    , C.Parse b
+    , C.Parse b bp
     , U.ReadCtx m 'Const
-    ) => F.Field k a b -> R.Raw 'Const a -> m (C.Parsed b)
+    ) => F.Field k a b -> R.Raw 'Const a -> m bp
 parseField field raw =
     readField field raw >>= C.parseConst
 
@@ -129,11 +129,11 @@ setVariant F.Variant{field, tagValue} struct value = do
     setField field value struct
 
 encodeVariant
-    :: forall a b m s.
+    :: forall a b m s bp.
     ( F.HasUnion a
-    , C.Parse b
+    , C.Parse b bp
     , U.RWCtx m s
-    ) => F.Variant 'F.Slot a b -> C.Parsed b -> R.Raw ('Mut s) a -> m ()
+    ) => F.Variant 'F.Slot a b -> bp -> R.Raw ('Mut s) a -> m ()
 encodeVariant F.Variant{field, tagValue} value struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     encodeField field value struct
