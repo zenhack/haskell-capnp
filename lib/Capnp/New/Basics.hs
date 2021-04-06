@@ -1,6 +1,7 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module Capnp.New.Basics
     ( Text
     , Data
@@ -10,7 +11,10 @@ module Capnp.New.Basics
     , Capability
     ) where
 
-import qualified Capnp.Repr as R
+import qualified Capnp.New.Classes as C
+import qualified Capnp.Repr        as R
+import qualified Capnp.Untyped     as U
+import qualified Data.ByteString   as BS
 import           Data.Word
 
 data Text
@@ -26,3 +30,7 @@ type instance R.ReprFor AnyPointer = 'R.Ptr 'Nothing
 type instance R.ReprFor AnyList = 'R.Ptr ('Just ('R.List 'Nothing))
 type instance R.ReprFor AnyStruct = 'R.Ptr ('Just 'R.Struct)
 type instance R.ReprFor Capability = 'R.Ptr ('Just 'R.Cap)
+
+instance C.Parse Data BS.ByteString where
+    parse = U.rawBytes . R.fromRaw
+    encode _msg _bytes = error "TODO"
