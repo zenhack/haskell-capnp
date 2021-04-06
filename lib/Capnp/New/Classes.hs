@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TemplateHaskell        #-}
@@ -6,6 +7,8 @@
 {-# LANGUAGE UndecidableInstances   #-}
 module Capnp.New.Classes
     ( Parse(..)
+    , Marshal(..)
+    , Allocate(..)
     ) where
 
 import           Capnp.Message       (Mutability(..))
@@ -27,6 +30,32 @@ class Parse t p | t -> p, p -> t where
     -- ^ Parse a value from a constant message
     encode :: U.RWCtx m s => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
     -- ^ Encode a value into 'R.Raw' form, using the message as storage.
+
+    default encode
+        :: (U.RWCtx m s, Allocate t, AllocHint t ~ (), Marshal t p)
+        => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
+    encode msg value = do
+        raw <- new () msg
+        marshalInto raw value
+        pure raw
+
+-- | Types which may be allocated directly inside a message.
+class Allocate a where
+    type AllocHint a
+    -- ^ Extra information needed to allocate a value of this type, e.g. the
+    -- length for a list. May be () if no extra info is needed.
+
+    new :: U.RWCtx m s => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+    -- ^ @'new' hint msg@ allocates a new value of type @a@ inside @msg@.
+
+class Parse t p => Marshal t p where
+    marshalInto :: U.RWCtx m s => R.Raw ('Mut s) t -> p -> m ()
+    -- ^ Marshal a value into the pre-allocated object inside the message.
+    --
+    -- Note that caller must arrange for the object to be of the correct size.
+    -- This is is not necessarily guaranteed; for example, list types must
+    -- coordinate the length of the list.
+
 
 ------ Parse instances for basic types -------
 
