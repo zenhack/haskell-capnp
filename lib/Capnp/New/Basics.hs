@@ -32,6 +32,11 @@ type instance R.ReprFor AnyList = 'R.Ptr ('Just ('R.List 'Nothing))
 type instance R.ReprFor AnyStruct = 'R.Ptr ('Just 'R.Struct)
 type instance R.ReprFor Capability = 'R.Ptr ('Just 'R.Cap)
 
+instance C.Allocate Text where
+    type AllocHint Text = Int
+    new len msg = R.Raw <$> U.allocList8 msg (len + 1)
+
+-- Instances for Data
 instance C.Parse Data BS.ByteString where
     parse = U.rawBytes . R.fromRaw
     encode msg value = do
