@@ -2082,7 +2082,7 @@ addBumpExport exportId client =
         | otherwise =
             Just EntryE { client, refCount = refCount + 1 }
 
--- | Generate a CapDescriptor', which we can sent to the connection's remote
+-- | Generate a CapDescriptor', which we can send to the connection's remote
 -- vat to identify client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
 emitCap :: Conn -> Client -> STM R.CapDescriptor'
