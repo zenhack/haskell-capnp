@@ -18,12 +18,19 @@ import qualified Capnp.Fields as F
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
+import qualified Capnp.New.Classes as C
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Value) where
+    numStructWords  = 2
+    numStructPtrs  = 1
+instance (C.Allocate Value) where
+    type AllocHint Value = ()
+    new  = GH.newStruct
 instance (F.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
@@ -75,6 +82,12 @@ instance (OL.IsLabel "call" (F.Variant F.Slot Value Value'Call)) where
 instance (F.HasVariant "call" F.Slot Value Value'Call)
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Value'Field) where
+    numStructWords  = 0
+    numStructPtrs  = 2
+instance (C.Allocate Value'Field) where
+    type AllocHint Value'Field = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "name" (F.Field F.Slot Value'Field Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot Value'Field Basics.Text)
@@ -83,6 +96,12 @@ instance (OL.IsLabel "value" (F.Field F.Slot Value'Field Value)) where
 instance (F.HasField "value" F.Slot Value'Field Value)
 data Value'Call 
 type instance (R.ReprFor Value'Call) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Value'Call) where
+    numStructWords  = 0
+    numStructPtrs  = 2
+instance (C.Allocate Value'Call) where
+    type AllocHint Value'Call = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "function" (F.Field F.Slot Value'Call Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "function" F.Slot Value'Call Basics.Text)
@@ -91,11 +110,23 @@ instance (OL.IsLabel "params" (F.Field F.Slot Value'Call (R.List Value))) where
 instance (F.HasField "params" F.Slot Value'Call (R.List Value))
 data FlattenOptions 
 type instance (R.ReprFor FlattenOptions) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct FlattenOptions) where
+    numStructWords  = 0
+    numStructPtrs  = 1
+instance (C.Allocate FlattenOptions) where
+    type AllocHint FlattenOptions = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "prefix" (F.Field F.Slot FlattenOptions Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "prefix" F.Slot FlattenOptions Basics.Text)
 data DiscriminatorOptions 
 type instance (R.ReprFor DiscriminatorOptions) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct DiscriminatorOptions) where
+    numStructWords  = 0
+    numStructPtrs  = 2
+instance (C.Allocate DiscriminatorOptions) where
+    type AllocHint DiscriminatorOptions = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "name" (F.Field F.Slot DiscriminatorOptions Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot DiscriminatorOptions Basics.Text)

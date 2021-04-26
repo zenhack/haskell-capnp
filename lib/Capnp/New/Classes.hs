@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
@@ -9,6 +10,7 @@ module Capnp.New.Classes
     ( Parse(..)
     , Marshal(..)
     , Allocate(..)
+    , TypedStruct(..)
     , Parsed
     , Which
     ) where
@@ -57,6 +59,13 @@ class Parse t p => Marshal t p where
     -- Note that caller must arrange for the object to be of the correct size.
     -- This is is not necessarily guaranteed; for example, list types must
     -- coordinate the length of the list.
+
+
+-- | Operations on typed structs.
+class (R.IsStruct a, Allocate a, AllocHint a ~ ()) => TypedStruct a where
+    -- Get the size of  the struct's word and pointer sections, respectively.
+    numStructWords :: Word16
+    numStructPtrs  :: Word16
 
 
 ------ Parse instances for basic types -------

@@ -13,14 +13,19 @@ module Capnp.GenHelpers.New
     , voidField
     , readVariant
     , TypeParam
+    , newStruct
     ) where
 
 import           Capnp.Bits
-import qualified Capnp.Classes as C
-import qualified Capnp.Fields  as F
-import           Capnp.New     (readField)
-import qualified Capnp.Repr    as R
-import qualified Capnp.Untyped as U
+import qualified Capnp.Classes     as C
+import qualified Capnp.Fields      as F
+import           Capnp.Message     (Mutability(..))
+import qualified Capnp.Message     as M
+import           Capnp.New         (readField)
+import qualified Capnp.New.Basics  as NB
+import qualified Capnp.New.Classes as NC
+import qualified Capnp.Repr        as R
+import qualified Capnp.Untyped     as U
 import           Data.Bits
 import           Data.Word
 
@@ -60,3 +65,7 @@ readVariant
         )
     => F.Variant k a b -> R.Raw mut a -> m (R.Raw mut b)
 readVariant F.Variant{field} = readField field
+
+
+newStruct :: forall a m s. (U.RWCtx m s, NC.TypedStruct a) => () -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+newStruct () msg = R.Raw . R.fromRaw <$> NC.new @NB.AnyStruct (NC.numStructWords @a, NC.numStructPtrs @a) msg

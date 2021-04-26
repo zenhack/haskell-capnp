@@ -18,6 +18,7 @@ import qualified Capnp.Fields as F
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
+import qualified Capnp.New.Classes as C
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

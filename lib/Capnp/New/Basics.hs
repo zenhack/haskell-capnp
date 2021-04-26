@@ -52,3 +52,8 @@ instance C.Marshal Data BS.ByteString where
     marshalInto (R.Raw list) bytes =
         for_ [0..BS.length bytes - 1] $ \i ->
             U.setIndex (BS.index bytes i) i list
+
+-- Instances for AnyStruct
+instance C.Allocate AnyStruct where
+    type AllocHint AnyStruct = (Word16, Word16)
+    new (nWords, nPtrs) msg = R.Raw <$> U.allocStruct msg nWords nPtrs

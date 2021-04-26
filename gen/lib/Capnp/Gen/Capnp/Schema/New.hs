@@ -18,12 +18,19 @@ import qualified Capnp.Fields as F
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
+import qualified Capnp.New.Classes as C
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Node 
 type instance (R.ReprFor Node) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node) where
+    numStructWords  = 5
+    numStructPtrs  = 6
+instance (C.Allocate Node) where
+    type AllocHint Node = ()
+    new  = GH.newStruct
 instance (F.HasUnion Node) where
     unionField  = (GH.dataField 2 1 16 0)
     data RawWhich mut_ Node
@@ -93,6 +100,12 @@ instance (OL.IsLabel "isGeneric" (F.Field F.Slot Node Std_.Bool)) where
 instance (F.HasField "isGeneric" F.Slot Node Std_.Bool)
 data Node'struct 
 type instance (R.ReprFor Node'struct) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'struct) where
+    numStructWords  = 5
+    numStructPtrs  = 6
+instance (C.Allocate Node'struct) where
+    type AllocHint Node'struct = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "dataWordCount" (F.Field F.Slot Node'struct Std_.Word16)) where
     fromLabel  = (GH.dataField 48 1 16 0)
 instance (F.HasField "dataWordCount" F.Slot Node'struct Std_.Word16)
@@ -116,11 +129,23 @@ instance (OL.IsLabel "fields" (F.Field F.Slot Node'struct (R.List Field))) where
 instance (F.HasField "fields" F.Slot Node'struct (R.List Field))
 data Node'enum 
 type instance (R.ReprFor Node'enum) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'enum) where
+    numStructWords  = 5
+    numStructPtrs  = 6
+instance (C.Allocate Node'enum) where
+    type AllocHint Node'enum = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "enumerants" (F.Field F.Slot Node'enum (R.List Enumerant))) where
     fromLabel  = (GH.ptrField 3)
 instance (F.HasField "enumerants" F.Slot Node'enum (R.List Enumerant))
 data Node'interface 
 type instance (R.ReprFor Node'interface) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'interface) where
+    numStructWords  = 5
+    numStructPtrs  = 6
+instance (C.Allocate Node'interface) where
+    type AllocHint Node'interface = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "methods" (F.Field F.Slot Node'interface (R.List Method))) where
     fromLabel  = (GH.ptrField 3)
 instance (F.HasField "methods" F.Slot Node'interface (R.List Method))
@@ -129,6 +154,12 @@ instance (OL.IsLabel "superclasses" (F.Field F.Slot Node'interface (R.List Super
 instance (F.HasField "superclasses" F.Slot Node'interface (R.List Superclass))
 data Node'const 
 type instance (R.ReprFor Node'const) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'const) where
+    numStructWords  = 5
+    numStructPtrs  = 6
+instance (C.Allocate Node'const) where
+    type AllocHint Node'const = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "type_" (F.Field F.Slot Node'const Type)) where
     fromLabel  = (GH.ptrField 3)
 instance (F.HasField "type_" F.Slot Node'const Type)
@@ -137,6 +168,12 @@ instance (OL.IsLabel "value" (F.Field F.Slot Node'const Value)) where
 instance (F.HasField "value" F.Slot Node'const Value)
 data Node'annotation 
 type instance (R.ReprFor Node'annotation) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'annotation) where
+    numStructWords  = 5
+    numStructPtrs  = 6
+instance (C.Allocate Node'annotation) where
+    type AllocHint Node'annotation = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "type_" (F.Field F.Slot Node'annotation Type)) where
     fromLabel  = (GH.ptrField 3)
 instance (F.HasField "type_" F.Slot Node'annotation Type)
@@ -178,11 +215,23 @@ instance (OL.IsLabel "targetsAnnotation" (F.Field F.Slot Node'annotation Std_.Bo
 instance (F.HasField "targetsAnnotation" F.Slot Node'annotation Std_.Bool)
 data Node'Parameter 
 type instance (R.ReprFor Node'Parameter) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'Parameter) where
+    numStructWords  = 0
+    numStructPtrs  = 1
+instance (C.Allocate Node'Parameter) where
+    type AllocHint Node'Parameter = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "name" (F.Field F.Slot Node'Parameter Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot Node'Parameter Basics.Text)
 data Node'NestedNode 
 type instance (R.ReprFor Node'NestedNode) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'NestedNode) where
+    numStructWords  = 1
+    numStructPtrs  = 1
+instance (C.Allocate Node'NestedNode) where
+    type AllocHint Node'NestedNode = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "name" (F.Field F.Slot Node'NestedNode Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot Node'NestedNode Basics.Text)
@@ -191,6 +240,12 @@ instance (OL.IsLabel "id" (F.Field F.Slot Node'NestedNode Std_.Word64)) where
 instance (F.HasField "id" F.Slot Node'NestedNode Std_.Word64)
 data Node'SourceInfo 
 type instance (R.ReprFor Node'SourceInfo) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'SourceInfo) where
+    numStructWords  = 1
+    numStructPtrs  = 2
+instance (C.Allocate Node'SourceInfo) where
+    type AllocHint Node'SourceInfo = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "id" (F.Field F.Slot Node'SourceInfo Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "id" F.Slot Node'SourceInfo Std_.Word64)
@@ -202,11 +257,23 @@ instance (OL.IsLabel "members" (F.Field F.Slot Node'SourceInfo (R.List Node'Sour
 instance (F.HasField "members" F.Slot Node'SourceInfo (R.List Node'SourceInfo'Member))
 data Node'SourceInfo'Member 
 type instance (R.ReprFor Node'SourceInfo'Member) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Node'SourceInfo'Member) where
+    numStructWords  = 0
+    numStructPtrs  = 1
+instance (C.Allocate Node'SourceInfo'Member) where
+    type AllocHint Node'SourceInfo'Member = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "docComment" (F.Field F.Slot Node'SourceInfo'Member Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "docComment" F.Slot Node'SourceInfo'Member Basics.Text)
 data Field 
 type instance (R.ReprFor Field) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Field) where
+    numStructWords  = 3
+    numStructPtrs  = 4
+instance (C.Allocate Field) where
+    type AllocHint Field = ()
+    new  = GH.newStruct
 instance (F.HasUnion Field) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ Field
@@ -243,6 +310,12 @@ instance (OL.IsLabel "ordinal" (F.Field F.Group Field Field'ordinal)) where
 instance (F.HasField "ordinal" F.Group Field Field'ordinal)
 data Field'slot 
 type instance (R.ReprFor Field'slot) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Field'slot) where
+    numStructWords  = 3
+    numStructPtrs  = 4
+instance (C.Allocate Field'slot) where
+    type AllocHint Field'slot = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "offset" (F.Field F.Slot Field'slot Std_.Word32)) where
     fromLabel  = (GH.dataField 32 0 32 0)
 instance (F.HasField "offset" F.Slot Field'slot Std_.Word32)
@@ -257,11 +330,23 @@ instance (OL.IsLabel "hadExplicitDefault" (F.Field F.Slot Field'slot Std_.Bool))
 instance (F.HasField "hadExplicitDefault" F.Slot Field'slot Std_.Bool)
 data Field'group 
 type instance (R.ReprFor Field'group) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Field'group) where
+    numStructWords  = 3
+    numStructPtrs  = 4
+instance (C.Allocate Field'group) where
+    type AllocHint Field'group = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "typeId" (F.Field F.Slot Field'group Std_.Word64)) where
     fromLabel  = (GH.dataField 0 2 64 0)
 instance (F.HasField "typeId" F.Slot Field'group Std_.Word64)
 data Field'ordinal 
 type instance (R.ReprFor Field'ordinal) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Field'ordinal) where
+    numStructWords  = 3
+    numStructPtrs  = 4
+instance (C.Allocate Field'ordinal) where
+    type AllocHint Field'ordinal = ()
+    new  = GH.newStruct
 instance (F.HasUnion Field'ordinal) where
     unionField  = (GH.dataField 1 1 16 0)
     data RawWhich mut_ Field'ordinal
@@ -283,6 +368,12 @@ instance (OL.IsLabel "explicit" (F.Variant F.Slot Field'ordinal Std_.Word16)) wh
 instance (F.HasVariant "explicit" F.Slot Field'ordinal Std_.Word16)
 data Enumerant 
 type instance (R.ReprFor Enumerant) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Enumerant) where
+    numStructWords  = 1
+    numStructPtrs  = 2
+instance (C.Allocate Enumerant) where
+    type AllocHint Enumerant = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "name" (F.Field F.Slot Enumerant Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot Enumerant Basics.Text)
@@ -294,6 +385,12 @@ instance (OL.IsLabel "annotations" (F.Field F.Slot Enumerant (R.List Annotation)
 instance (F.HasField "annotations" F.Slot Enumerant (R.List Annotation))
 data Superclass 
 type instance (R.ReprFor Superclass) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Superclass) where
+    numStructWords  = 1
+    numStructPtrs  = 1
+instance (C.Allocate Superclass) where
+    type AllocHint Superclass = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "id" (F.Field F.Slot Superclass Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "id" F.Slot Superclass Std_.Word64)
@@ -302,6 +399,12 @@ instance (OL.IsLabel "brand" (F.Field F.Slot Superclass Brand)) where
 instance (F.HasField "brand" F.Slot Superclass Brand)
 data Method 
 type instance (R.ReprFor Method) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Method) where
+    numStructWords  = 3
+    numStructPtrs  = 5
+instance (C.Allocate Method) where
+    type AllocHint Method = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "name" (F.Field F.Slot Method Basics.Text)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "name" F.Slot Method Basics.Text)
@@ -328,6 +431,12 @@ instance (OL.IsLabel "implicitParameters" (F.Field F.Slot Method (R.List Node'Pa
 instance (F.HasField "implicitParameters" F.Slot Method (R.List Node'Parameter))
 data Type 
 type instance (R.ReprFor Type) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type) where
+    type AllocHint Type = ()
+    new  = GH.newStruct
 instance (F.HasUnion Type) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Type
@@ -451,11 +560,23 @@ instance (OL.IsLabel "anyPointer" (F.Variant F.Group Type Type'anyPointer)) wher
 instance (F.HasVariant "anyPointer" F.Group Type Type'anyPointer)
 data Type'list 
 type instance (R.ReprFor Type'list) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'list) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'list) where
+    type AllocHint Type'list = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "elementType" (F.Field F.Slot Type'list Type)) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "elementType" F.Slot Type'list Type)
 data Type'enum 
 type instance (R.ReprFor Type'enum) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'enum) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'enum) where
+    type AllocHint Type'enum = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "typeId" (F.Field F.Slot Type'enum Std_.Word64)) where
     fromLabel  = (GH.dataField 0 1 64 0)
 instance (F.HasField "typeId" F.Slot Type'enum Std_.Word64)
@@ -464,6 +585,12 @@ instance (OL.IsLabel "brand" (F.Field F.Slot Type'enum Brand)) where
 instance (F.HasField "brand" F.Slot Type'enum Brand)
 data Type'struct 
 type instance (R.ReprFor Type'struct) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'struct) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'struct) where
+    type AllocHint Type'struct = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "typeId" (F.Field F.Slot Type'struct Std_.Word64)) where
     fromLabel  = (GH.dataField 0 1 64 0)
 instance (F.HasField "typeId" F.Slot Type'struct Std_.Word64)
@@ -472,6 +599,12 @@ instance (OL.IsLabel "brand" (F.Field F.Slot Type'struct Brand)) where
 instance (F.HasField "brand" F.Slot Type'struct Brand)
 data Type'interface 
 type instance (R.ReprFor Type'interface) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'interface) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'interface) where
+    type AllocHint Type'interface = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "typeId" (F.Field F.Slot Type'interface Std_.Word64)) where
     fromLabel  = (GH.dataField 0 1 64 0)
 instance (F.HasField "typeId" F.Slot Type'interface Std_.Word64)
@@ -480,6 +613,12 @@ instance (OL.IsLabel "brand" (F.Field F.Slot Type'interface Brand)) where
 instance (F.HasField "brand" F.Slot Type'interface Brand)
 data Type'anyPointer 
 type instance (R.ReprFor Type'anyPointer) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'anyPointer) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'anyPointer) where
+    type AllocHint Type'anyPointer = ()
+    new  = GH.newStruct
 instance (F.HasUnion Type'anyPointer) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ Type'anyPointer
@@ -507,6 +646,12 @@ instance (OL.IsLabel "implicitMethodParameter" (F.Variant F.Group Type'anyPointe
 instance (F.HasVariant "implicitMethodParameter" F.Group Type'anyPointer Type'anyPointer'implicitMethodParameter)
 data Type'anyPointer'unconstrained 
 type instance (R.ReprFor Type'anyPointer'unconstrained) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'anyPointer'unconstrained) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'anyPointer'unconstrained) where
+    type AllocHint Type'anyPointer'unconstrained = ()
+    new  = GH.newStruct
 instance (F.HasUnion Type'anyPointer'unconstrained) where
     unionField  = (GH.dataField 1 1 16 0)
     data RawWhich mut_ Type'anyPointer'unconstrained
@@ -540,6 +685,12 @@ instance (OL.IsLabel "capability" (F.Variant F.Slot Type'anyPointer'unconstraine
 instance (F.HasVariant "capability" F.Slot Type'anyPointer'unconstrained ())
 data Type'anyPointer'parameter 
 type instance (R.ReprFor Type'anyPointer'parameter) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'anyPointer'parameter) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'anyPointer'parameter) where
+    type AllocHint Type'anyPointer'parameter = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "scopeId" (F.Field F.Slot Type'anyPointer'parameter Std_.Word64)) where
     fromLabel  = (GH.dataField 0 2 64 0)
 instance (F.HasField "scopeId" F.Slot Type'anyPointer'parameter Std_.Word64)
@@ -548,16 +699,34 @@ instance (OL.IsLabel "parameterIndex" (F.Field F.Slot Type'anyPointer'parameter 
 instance (F.HasField "parameterIndex" F.Slot Type'anyPointer'parameter Std_.Word16)
 data Type'anyPointer'implicitMethodParameter 
 type instance (R.ReprFor Type'anyPointer'implicitMethodParameter) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Type'anyPointer'implicitMethodParameter) where
+    numStructWords  = 3
+    numStructPtrs  = 1
+instance (C.Allocate Type'anyPointer'implicitMethodParameter) where
+    type AllocHint Type'anyPointer'implicitMethodParameter = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "parameterIndex" (F.Field F.Slot Type'anyPointer'implicitMethodParameter Std_.Word16)) where
     fromLabel  = (GH.dataField 16 1 16 0)
 instance (F.HasField "parameterIndex" F.Slot Type'anyPointer'implicitMethodParameter Std_.Word16)
 data Brand 
 type instance (R.ReprFor Brand) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Brand) where
+    numStructWords  = 0
+    numStructPtrs  = 1
+instance (C.Allocate Brand) where
+    type AllocHint Brand = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "scopes" (F.Field F.Slot Brand (R.List Brand'Scope))) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "scopes" F.Slot Brand (R.List Brand'Scope))
 data Brand'Scope 
 type instance (R.ReprFor Brand'Scope) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Brand'Scope) where
+    numStructWords  = 2
+    numStructPtrs  = 1
+instance (C.Allocate Brand'Scope) where
+    type AllocHint Brand'Scope = ()
+    new  = GH.newStruct
 instance (F.HasUnion Brand'Scope) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ Brand'Scope
@@ -582,6 +751,12 @@ instance (OL.IsLabel "scopeId" (F.Field F.Slot Brand'Scope Std_.Word64)) where
 instance (F.HasField "scopeId" F.Slot Brand'Scope Std_.Word64)
 data Brand'Binding 
 type instance (R.ReprFor Brand'Binding) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Brand'Binding) where
+    numStructWords  = 1
+    numStructPtrs  = 1
+instance (C.Allocate Brand'Binding) where
+    type AllocHint Brand'Binding = ()
+    new  = GH.newStruct
 instance (F.HasUnion Brand'Binding) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Brand'Binding
@@ -603,6 +778,12 @@ instance (OL.IsLabel "type_" (F.Variant F.Slot Brand'Binding Type)) where
 instance (F.HasVariant "type_" F.Slot Brand'Binding Type)
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Value) where
+    numStructWords  = 2
+    numStructPtrs  = 1
+instance (C.Allocate Value) where
+    type AllocHint Value = ()
+    new  = GH.newStruct
 instance (F.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
@@ -726,6 +907,12 @@ instance (OL.IsLabel "anyPointer" (F.Variant F.Slot Value Basics.AnyPointer)) wh
 instance (F.HasVariant "anyPointer" F.Slot Value Basics.AnyPointer)
 data Annotation 
 type instance (R.ReprFor Annotation) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct Annotation) where
+    numStructWords  = 1
+    numStructPtrs  = 2
+instance (C.Allocate Annotation) where
+    type AllocHint Annotation = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "id" (F.Field F.Slot Annotation Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "id" F.Slot Annotation Std_.Word64)
@@ -739,6 +926,12 @@ data ElementSize
 type instance (R.ReprFor ElementSize) = (R.Data R.Sz16)
 data CapnpVersion 
 type instance (R.ReprFor CapnpVersion) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct CapnpVersion) where
+    numStructWords  = 1
+    numStructPtrs  = 0
+instance (C.Allocate CapnpVersion) where
+    type AllocHint CapnpVersion = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "major" (F.Field F.Slot CapnpVersion Std_.Word16)) where
     fromLabel  = (GH.dataField 0 0 16 0)
 instance (F.HasField "major" F.Slot CapnpVersion Std_.Word16)
@@ -750,6 +943,12 @@ instance (OL.IsLabel "micro" (F.Field F.Slot CapnpVersion Std_.Word8)) where
 instance (F.HasField "micro" F.Slot CapnpVersion Std_.Word8)
 data CodeGeneratorRequest 
 type instance (R.ReprFor CodeGeneratorRequest) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct CodeGeneratorRequest) where
+    numStructWords  = 0
+    numStructPtrs  = 4
+instance (C.Allocate CodeGeneratorRequest) where
+    type AllocHint CodeGeneratorRequest = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "nodes" (F.Field F.Slot CodeGeneratorRequest (R.List Node))) where
     fromLabel  = (GH.ptrField 0)
 instance (F.HasField "nodes" F.Slot CodeGeneratorRequest (R.List Node))
@@ -764,6 +963,12 @@ instance (OL.IsLabel "sourceInfo" (F.Field F.Slot CodeGeneratorRequest (R.List N
 instance (F.HasField "sourceInfo" F.Slot CodeGeneratorRequest (R.List Node'SourceInfo))
 data CodeGeneratorRequest'RequestedFile 
 type instance (R.ReprFor CodeGeneratorRequest'RequestedFile) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct CodeGeneratorRequest'RequestedFile) where
+    numStructWords  = 1
+    numStructPtrs  = 2
+instance (C.Allocate CodeGeneratorRequest'RequestedFile) where
+    type AllocHint CodeGeneratorRequest'RequestedFile = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "id" (F.Field F.Slot CodeGeneratorRequest'RequestedFile Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "id" F.Slot CodeGeneratorRequest'RequestedFile Std_.Word64)
@@ -775,6 +980,12 @@ instance (OL.IsLabel "imports" (F.Field F.Slot CodeGeneratorRequest'RequestedFil
 instance (F.HasField "imports" F.Slot CodeGeneratorRequest'RequestedFile (R.List CodeGeneratorRequest'RequestedFile'Import))
 data CodeGeneratorRequest'RequestedFile'Import 
 type instance (R.ReprFor CodeGeneratorRequest'RequestedFile'Import) = (R.Ptr (Std_.Just R.Struct))
+instance (C.TypedStruct CodeGeneratorRequest'RequestedFile'Import) where
+    numStructWords  = 1
+    numStructPtrs  = 1
+instance (C.Allocate CodeGeneratorRequest'RequestedFile'Import) where
+    type AllocHint CodeGeneratorRequest'RequestedFile'Import = ()
+    new  = GH.newStruct
 instance (OL.IsLabel "id" (F.Field F.Slot CodeGeneratorRequest'RequestedFile'Import Std_.Word64)) where
     fromLabel  = (GH.dataField 0 0 64 0)
 instance (F.HasField "id" F.Slot CodeGeneratorRequest'RequestedFile'Import Std_.Word64)

@@ -21,12 +21,13 @@ fileToFile Flat.File{fileId, fileName, nodes} =
 
 nodeToDecls :: Flat.Node -> [New.Decl]
 nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
-    let mkType repr =
+    let mkType repr extraTypeInfo =
             New.TypeDecl
                 { name = local
                 , nodeId
                 , params = map C.paramName typeParams
                 , repr
+                , extraTypeInfo
                 }
         mkField field =
             fieldToDecl local typeParams field
@@ -48,10 +49,10 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
     case union_ of
         Flat.Other       -> []
         Flat.Constant _  -> []
-        Flat.Enum _      -> [ mkType (R.Data R.Sz16) ]
-        Flat.Interface{} -> [ mkType (R.Ptr (Just R.Cap)) ]
-        Flat.Struct{fields, union} ->
-            mkType (R.Ptr (Just R.Struct))
+        Flat.Enum _      -> [ mkType (R.Data R.Sz16) Nothing ]
+        Flat.Interface{} -> [ mkType (R.Ptr (Just R.Cap)) Nothing ]
+        Flat.Struct{fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
+            mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
             : (structUnionNodes union ++ map mkField fields)
 
 fieldToDecl :: Name.LocalQ -> [C.TypeParamRef Flat.Node] -> Flat.Field -> New.Decl

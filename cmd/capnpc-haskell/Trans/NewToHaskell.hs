@@ -22,6 +22,7 @@ imports =
     , Hs.ImportAs { importAs = "Basics", parts = ["Capnp", "New", "Basics"] }
     , Hs.ImportAs { importAs = "OL", parts = ["GHC", "OverloadedLabels"] }
     , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
+    , Hs.ImportAs { importAs = "C", parts = ["Capnp", "New", "Classes"] }
     ]
 
 fileToModules :: New.File -> [Hs.Module]
@@ -51,9 +52,12 @@ fileToDecls New.File{fileId, decls} =
 declToDecls :: Word64 -> New.Decl -> [Hs.Decl]
 declToDecls thisMod decl =
     case decl of
-        New.TypeDecl {name, params, repr} ->
+        New.TypeDecl {name, params, repr, extraTypeInfo} ->
             let dataName = Name.localToUnQ name
                 typeArgs = toTVars params
+                typ = case typeArgs of
+                    [] -> tuName dataName
+                    _  -> Hs.TApp (tuName dataName) typeArgs
             in
             [ Hs.DcData Hs.Data
                 { dataName
@@ -63,15 +67,43 @@ declToDecls thisMod decl =
                 , dataNewtype = False
                 }
             , Hs.DcTypeInstance
-                (Hs.TApp
-                    (tgName ["R"] "ReprFor")
-                    [ case typeArgs of
-                        [] -> tuName dataName
-                        _  -> Hs.TApp (tuName dataName) typeArgs
-                    ]
-                )
+                (Hs.TApp (tgName ["R"] "ReprFor") [typ])
                 (toType repr)
-            ]
+            ] ++
+            case extraTypeInfo of
+                Nothing -> []
+                Just New.StructTypeInfo{nWords, nPtrs} ->
+                    let ctx = paramsContext typeArgs in
+                    [ Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tgName ["C"] "TypedStruct") [typ]
+                        , defs =
+                            [ Hs.IdValue Hs.DfValue
+                                { name = "numStructWords"
+                                , params = []
+                                , value = Hs.EInt $ fromIntegral nWords
+                                }
+                            , Hs.IdValue Hs.DfValue
+                                { name = "numStructPtrs"
+                                , params = []
+                                , value = Hs.EInt $ fromIntegral nPtrs
+                                }
+                            ]
+                        }
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tgName ["C"] "Allocate") [typ]
+                        , defs =
+                            [ Hs.IdType $
+                                Hs.TypeAlias "AllocHint" [typ] Hs.TUnit
+                            , Hs.IdValue Hs.DfValue
+                                { name = "new"
+                                , params = []
+                                , value = egName ["GH"] "newStruct"
+                                }
+                            ]
+                        }
+                    ]
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
                 ctx = paramsContext tVars

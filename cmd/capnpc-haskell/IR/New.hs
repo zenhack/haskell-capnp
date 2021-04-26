@@ -4,6 +4,7 @@ module IR.New
     , Decl(..)
     , UnionVariant(..)
     , Brand
+    , ExtraTypeInfo(..)
     ) where
 
 import qualified Capnp.Repr as R
@@ -22,10 +23,11 @@ data File
 
 data Decl
     = TypeDecl
-        { name   :: Name.LocalQ
-        , nodeId :: !Word64
-        , params :: [Name.UnQ]
-        , repr   :: R.Repr
+        { name          :: Name.LocalQ
+        , nodeId        :: !Word64
+        , params        :: [Name.UnQ]
+        , repr          :: R.Repr
+        , extraTypeInfo :: Maybe ExtraTypeInfo
         }
     | FieldDecl
         { containerType :: Name.LocalQ
@@ -38,6 +40,12 @@ data Decl
         , typeParams :: [Name.UnQ]
         , tagLoc     :: C.DataLoc
         , variants   :: [UnionVariant]
+        }
+
+data ExtraTypeInfo
+    = StructTypeInfo
+        { nWords :: !Word16
+        , nPtrs  :: !Word16
         }
 
 data UnionVariant = UnionVariant
