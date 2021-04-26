@@ -9,6 +9,8 @@ module Capnp.New.Classes
     ( Parse(..)
     , Marshal(..)
     , Allocate(..)
+    , Parsed
+    , Which
     ) where
 
 import           Capnp.Message       (Mutability(..))
@@ -105,3 +107,6 @@ instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector
     parse rawV =
         V.generateM (R.length rawV) $ \i ->
             R.index i rawV >>= parse
+
+data family Parsed a
+data family Which a
