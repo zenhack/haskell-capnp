@@ -99,8 +99,7 @@ callP
 callP method parsed client = do
     struct <- createPure maxBound $ do
         msg <- newMessage Nothing
-        R.Raw r <- NC.encode msg parsed
-        pure r
+        R.fromRaw <$> NC.encode msg parsed
     callR method (R.Raw struct) client
 
 pipe :: ( R.IsStruct a
