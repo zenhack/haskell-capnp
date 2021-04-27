@@ -118,7 +118,7 @@ declToDecls thisMod decl =
                     [labelType, fieldKind, parentType, childType]
                 , defs =
                     [ Hs.IdValue Hs.DfValue
-                        { name = "theField"
+                        { name = "fieldByLabel"
                         , value = fieldLocTypeToField fieldLocType
                         , params = []
                         }
@@ -228,7 +228,7 @@ variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, varia
             [labelType, fieldKind, parentType, childType]
         , defs =
             [ Hs.IdValue Hs.DfValue
-                { name = "theVariant"
+                { name = "variantByLabel"
                 , params = []
                 , value = Hs.EApp
                     (egName ["F"] "Variant")

@@ -35,7 +35,7 @@ instance ((GH.TypeParam sturdyRef pr_1)
     new  = GH.newStruct
 instance ((GH.TypeParam sturdyRef pr_1)
          ,(GH.TypeParam owner pr_2)) => (F.HasField "sealFor" F.Slot (Persistent'SaveParams sturdyRef owner) owner) where
-    theField  = (GH.ptrField 0)
+    fieldByLabel  = (GH.ptrField 0)
 data Persistent'SaveResults sturdyRef owner
 type instance (R.ReprFor (Persistent'SaveResults sturdyRef owner)) = (R.Ptr (Std_.Just R.Struct))
 instance ((GH.TypeParam sturdyRef pr_1)
@@ -48,7 +48,7 @@ instance ((GH.TypeParam sturdyRef pr_1)
     new  = GH.newStruct
 instance ((GH.TypeParam sturdyRef pr_1)
          ,(GH.TypeParam owner pr_2)) => (F.HasField "sturdyRef" F.Slot (Persistent'SaveResults sturdyRef owner) sturdyRef) where
-    theField  = (GH.ptrField 0)
+    fieldByLabel  = (GH.ptrField 0)
 data RealmGateway internalRef externalRef internalOwner externalOwner
 type instance (R.ReprFor (RealmGateway internalRef externalRef internalOwner externalOwner)) = (R.Ptr (Std_.Just R.Cap))
 data RealmGateway'import'params internalRef externalRef internalOwner externalOwner
@@ -69,12 +69,12 @@ instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam externalRef pr_2)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (F.HasField "cap" F.Slot (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (Persistent externalRef externalOwner)) where
-    theField  = (GH.ptrField 0)
+    fieldByLabel  = (GH.ptrField 0)
 instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam externalRef pr_2)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (F.HasField "params" F.Slot (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveParams internalRef internalOwner)) where
-    theField  = (GH.ptrField 1)
+    fieldByLabel  = (GH.ptrField 1)
 data RealmGateway'export'params internalRef externalRef internalOwner externalOwner
 type instance (R.ReprFor (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)) = (R.Ptr (Std_.Just R.Struct))
 instance ((GH.TypeParam internalRef pr_1)
@@ -93,9 +93,9 @@ instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam externalRef pr_2)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (F.HasField "cap" F.Slot (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (Persistent internalRef internalOwner)) where
-    theField  = (GH.ptrField 0)
+    fieldByLabel  = (GH.ptrField 0)
 instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam externalRef pr_2)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (F.HasField "params" F.Slot (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveParams externalRef externalOwner)) where
-    theField  = (GH.ptrField 1)
+    fieldByLabel  = (GH.ptrField 1)

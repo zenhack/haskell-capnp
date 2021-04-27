@@ -69,13 +69,13 @@ data Variant (k :: FieldKind) a b = Variant
 -- the field). The generated code includes instances of this for each field
 -- in the schema.
 class R.IsStruct a => HasField (name :: Symbol) k a b | a name -> k b where
-    theField :: Field k a b
+    fieldByLabel :: Field k a b
 
 instance HasField name k a b => IsLabel name (Field k a b) where
-    fromLabel = theField @name @k @a @b
+    fromLabel = fieldByLabel @name @k @a @b
 
 class HasUnion a => HasVariant (name :: Symbol) k a b | a name -> k b where
-    theVariant :: Variant k a b
+    variantByLabel :: Variant k a b
 
 instance HasVariant name k a b => IsLabel name (Variant k a b) where
-    fromLabel = theVariant @name @k @a @b
+    fromLabel = variantByLabel @name @k @a @b

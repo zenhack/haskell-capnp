@@ -32,7 +32,7 @@ instance (C.Allocate VatId) where
     type AllocHint VatId = ()
     new  = GH.newStruct
 instance (F.HasField "side" F.Slot VatId Side) where
-    theField  = (GH.dataField 0 0 16 0)
+    fieldByLabel  = (GH.dataField 0 0 16 0)
 data ProvisionId 
 type instance (R.ReprFor ProvisionId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct ProvisionId) where
@@ -42,7 +42,7 @@ instance (C.Allocate ProvisionId) where
     type AllocHint ProvisionId = ()
     new  = GH.newStruct
 instance (F.HasField "joinId" F.Slot ProvisionId Std_.Word32) where
-    theField  = (GH.dataField 0 0 32 0)
+    fieldByLabel  = (GH.dataField 0 0 32 0)
 data RecipientId 
 type instance (R.ReprFor RecipientId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct RecipientId) where
@@ -68,11 +68,11 @@ instance (C.Allocate JoinKeyPart) where
     type AllocHint JoinKeyPart = ()
     new  = GH.newStruct
 instance (F.HasField "joinId" F.Slot JoinKeyPart Std_.Word32) where
-    theField  = (GH.dataField 0 0 32 0)
+    fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (F.HasField "partCount" F.Slot JoinKeyPart Std_.Word16) where
-    theField  = (GH.dataField 32 0 16 0)
+    fieldByLabel  = (GH.dataField 32 0 16 0)
 instance (F.HasField "partNum" F.Slot JoinKeyPart Std_.Word16) where
-    theField  = (GH.dataField 48 0 16 0)
+    fieldByLabel  = (GH.dataField 48 0 16 0)
 data JoinResult 
 type instance (R.ReprFor JoinResult) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct JoinResult) where
@@ -82,8 +82,8 @@ instance (C.Allocate JoinResult) where
     type AllocHint JoinResult = ()
     new  = GH.newStruct
 instance (F.HasField "joinId" F.Slot JoinResult Std_.Word32) where
-    theField  = (GH.dataField 0 0 32 0)
+    fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (F.HasField "succeeded" F.Slot JoinResult Std_.Bool) where
-    theField  = (GH.dataField 32 0 1 0)
+    fieldByLabel  = (GH.dataField 32 0 1 0)
 instance (F.HasField "cap" F.Slot JoinResult Basics.AnyPointer) where
-    theField  = (GH.ptrField 0)
+    fieldByLabel  = (GH.ptrField 0)
