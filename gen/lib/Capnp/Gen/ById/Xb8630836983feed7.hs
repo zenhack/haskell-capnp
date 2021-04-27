@@ -4,7 +4,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.ById.Xb8630836983feed7(module Capnp.Gen.Capnp.Persistent) where
 import Capnp.Gen.Capnp.Persistent
 import qualified Prelude as Std_

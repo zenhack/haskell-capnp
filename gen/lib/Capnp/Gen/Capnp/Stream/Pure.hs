@@ -14,7 +14,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.Capnp.Stream.Pure(StreamResult(..)) where
 import qualified Capnp.GenHelpers.ReExports.Data.Vector as V
 import qualified Capnp.GenHelpers.ReExports.Data.Text as T

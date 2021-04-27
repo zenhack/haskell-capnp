@@ -4,14 +4,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE PartialTypeSignatures #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.Capnp.Schema.New where
 import qualified Capnp.Repr as R
 import qualified Capnp.Fields as F
@@ -43,17 +41,17 @@ instance (F.HasUnion Node) where
         | Node'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Node'file <$> (GH.readVariant (#file :: (F.Variant F.Slot _ _)) struct_))
+            (Node'file <$> (GH.readVariant #file struct_))
         1 ->
-            (Node'struct <$> (GH.readVariant (#struct :: (F.Variant F.Group _ _)) struct_))
+            (Node'struct <$> (GH.readVariant #struct struct_))
         2 ->
-            (Node'enum <$> (GH.readVariant (#enum :: (F.Variant F.Group _ _)) struct_))
+            (Node'enum <$> (GH.readVariant #enum struct_))
         3 ->
-            (Node'interface <$> (GH.readVariant (#interface :: (F.Variant F.Group _ _)) struct_))
+            (Node'interface <$> (GH.readVariant #interface struct_))
         4 ->
-            (Node'const <$> (GH.readVariant (#const :: (F.Variant F.Group _ _)) struct_))
+            (Node'const <$> (GH.readVariant #const struct_))
         5 ->
-            (Node'annotation <$> (GH.readVariant (#annotation :: (F.Variant F.Group _ _)) struct_))
+            (Node'annotation <$> (GH.readVariant #annotation struct_))
         _ ->
             (Std_.pure (Node'unknown' tag_))
 instance (F.HasVariant "file" F.Slot Node ()) where
@@ -236,9 +234,9 @@ instance (F.HasUnion Field) where
         | Field'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Field'slot <$> (GH.readVariant (#slot :: (F.Variant F.Group _ _)) struct_))
+            (Field'slot <$> (GH.readVariant #slot struct_))
         1 ->
-            (Field'group <$> (GH.readVariant (#group :: (F.Variant F.Group _ _)) struct_))
+            (Field'group <$> (GH.readVariant #group struct_))
         _ ->
             (Std_.pure (Field'unknown' tag_))
 instance (F.HasVariant "slot" F.Group Field Field'slot) where
@@ -297,9 +295,9 @@ instance (F.HasUnion Field'ordinal) where
         | Field'ordinal'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Field'ordinal'implicit <$> (GH.readVariant (#implicit :: (F.Variant F.Slot _ _)) struct_))
+            (Field'ordinal'implicit <$> (GH.readVariant #implicit struct_))
         1 ->
-            (Field'ordinal'explicit <$> (GH.readVariant (#explicit :: (F.Variant F.Slot _ _)) struct_))
+            (Field'ordinal'explicit <$> (GH.readVariant #explicit struct_))
         _ ->
             (Std_.pure (Field'ordinal'unknown' tag_))
 instance (F.HasVariant "implicit" F.Slot Field'ordinal ()) where
@@ -389,43 +387,43 @@ instance (F.HasUnion Type) where
         | Type'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Type'void <$> (GH.readVariant (#void :: (F.Variant F.Slot _ _)) struct_))
+            (Type'void <$> (GH.readVariant #void struct_))
         1 ->
-            (Type'bool <$> (GH.readVariant (#bool :: (F.Variant F.Slot _ _)) struct_))
+            (Type'bool <$> (GH.readVariant #bool struct_))
         2 ->
-            (Type'int8 <$> (GH.readVariant (#int8 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'int8 <$> (GH.readVariant #int8 struct_))
         3 ->
-            (Type'int16 <$> (GH.readVariant (#int16 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'int16 <$> (GH.readVariant #int16 struct_))
         4 ->
-            (Type'int32 <$> (GH.readVariant (#int32 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'int32 <$> (GH.readVariant #int32 struct_))
         5 ->
-            (Type'int64 <$> (GH.readVariant (#int64 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'int64 <$> (GH.readVariant #int64 struct_))
         6 ->
-            (Type'uint8 <$> (GH.readVariant (#uint8 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'uint8 <$> (GH.readVariant #uint8 struct_))
         7 ->
-            (Type'uint16 <$> (GH.readVariant (#uint16 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'uint16 <$> (GH.readVariant #uint16 struct_))
         8 ->
-            (Type'uint32 <$> (GH.readVariant (#uint32 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'uint32 <$> (GH.readVariant #uint32 struct_))
         9 ->
-            (Type'uint64 <$> (GH.readVariant (#uint64 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'uint64 <$> (GH.readVariant #uint64 struct_))
         10 ->
-            (Type'float32 <$> (GH.readVariant (#float32 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'float32 <$> (GH.readVariant #float32 struct_))
         11 ->
-            (Type'float64 <$> (GH.readVariant (#float64 :: (F.Variant F.Slot _ _)) struct_))
+            (Type'float64 <$> (GH.readVariant #float64 struct_))
         12 ->
-            (Type'text <$> (GH.readVariant (#text :: (F.Variant F.Slot _ _)) struct_))
+            (Type'text <$> (GH.readVariant #text struct_))
         13 ->
-            (Type'data_ <$> (GH.readVariant (#data_ :: (F.Variant F.Slot _ _)) struct_))
+            (Type'data_ <$> (GH.readVariant #data_ struct_))
         14 ->
-            (Type'list <$> (GH.readVariant (#list :: (F.Variant F.Group _ _)) struct_))
+            (Type'list <$> (GH.readVariant #list struct_))
         15 ->
-            (Type'enum <$> (GH.readVariant (#enum :: (F.Variant F.Group _ _)) struct_))
+            (Type'enum <$> (GH.readVariant #enum struct_))
         16 ->
-            (Type'struct <$> (GH.readVariant (#struct :: (F.Variant F.Group _ _)) struct_))
+            (Type'struct <$> (GH.readVariant #struct struct_))
         17 ->
-            (Type'interface <$> (GH.readVariant (#interface :: (F.Variant F.Group _ _)) struct_))
+            (Type'interface <$> (GH.readVariant #interface struct_))
         18 ->
-            (Type'anyPointer <$> (GH.readVariant (#anyPointer :: (F.Variant F.Group _ _)) struct_))
+            (Type'anyPointer <$> (GH.readVariant #anyPointer struct_))
         _ ->
             (Std_.pure (Type'unknown' tag_))
 instance (F.HasVariant "void" F.Slot Type ()) where
@@ -529,11 +527,11 @@ instance (F.HasUnion Type'anyPointer) where
         | Type'anyPointer'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Type'anyPointer'unconstrained <$> (GH.readVariant (#unconstrained :: (F.Variant F.Group _ _)) struct_))
+            (Type'anyPointer'unconstrained <$> (GH.readVariant #unconstrained struct_))
         1 ->
-            (Type'anyPointer'parameter <$> (GH.readVariant (#parameter :: (F.Variant F.Group _ _)) struct_))
+            (Type'anyPointer'parameter <$> (GH.readVariant #parameter struct_))
         2 ->
-            (Type'anyPointer'implicitMethodParameter <$> (GH.readVariant (#implicitMethodParameter :: (F.Variant F.Group _ _)) struct_))
+            (Type'anyPointer'implicitMethodParameter <$> (GH.readVariant #implicitMethodParameter struct_))
         _ ->
             (Std_.pure (Type'anyPointer'unknown' tag_))
 instance (F.HasVariant "unconstrained" F.Group Type'anyPointer Type'anyPointer'unconstrained) where
@@ -560,13 +558,13 @@ instance (F.HasUnion Type'anyPointer'unconstrained) where
         | Type'anyPointer'unconstrained'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Type'anyPointer'unconstrained'anyKind <$> (GH.readVariant (#anyKind :: (F.Variant F.Slot _ _)) struct_))
+            (Type'anyPointer'unconstrained'anyKind <$> (GH.readVariant #anyKind struct_))
         1 ->
-            (Type'anyPointer'unconstrained'struct <$> (GH.readVariant (#struct :: (F.Variant F.Slot _ _)) struct_))
+            (Type'anyPointer'unconstrained'struct <$> (GH.readVariant #struct struct_))
         2 ->
-            (Type'anyPointer'unconstrained'list <$> (GH.readVariant (#list :: (F.Variant F.Slot _ _)) struct_))
+            (Type'anyPointer'unconstrained'list <$> (GH.readVariant #list struct_))
         3 ->
-            (Type'anyPointer'unconstrained'capability <$> (GH.readVariant (#capability :: (F.Variant F.Slot _ _)) struct_))
+            (Type'anyPointer'unconstrained'capability <$> (GH.readVariant #capability struct_))
         _ ->
             (Std_.pure (Type'anyPointer'unconstrained'unknown' tag_))
 instance (F.HasVariant "anyKind" F.Slot Type'anyPointer'unconstrained ()) where
@@ -625,9 +623,9 @@ instance (F.HasUnion Brand'Scope) where
         | Brand'Scope'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Brand'Scope'bind <$> (GH.readVariant (#bind :: (F.Variant F.Slot _ _)) struct_))
+            (Brand'Scope'bind <$> (GH.readVariant #bind struct_))
         1 ->
-            (Brand'Scope'inherit <$> (GH.readVariant (#inherit :: (F.Variant F.Slot _ _)) struct_))
+            (Brand'Scope'inherit <$> (GH.readVariant #inherit struct_))
         _ ->
             (Std_.pure (Brand'Scope'unknown' tag_))
 instance (F.HasVariant "bind" F.Slot Brand'Scope (R.List Brand'Binding)) where
@@ -652,9 +650,9 @@ instance (F.HasUnion Brand'Binding) where
         | Brand'Binding'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Brand'Binding'unbound <$> (GH.readVariant (#unbound :: (F.Variant F.Slot _ _)) struct_))
+            (Brand'Binding'unbound <$> (GH.readVariant #unbound struct_))
         1 ->
-            (Brand'Binding'type_ <$> (GH.readVariant (#type_ :: (F.Variant F.Slot _ _)) struct_))
+            (Brand'Binding'type_ <$> (GH.readVariant #type_ struct_))
         _ ->
             (Std_.pure (Brand'Binding'unknown' tag_))
 instance (F.HasVariant "unbound" F.Slot Brand'Binding ()) where
@@ -694,43 +692,43 @@ instance (F.HasUnion Value) where
         | Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Value'void <$> (GH.readVariant (#void :: (F.Variant F.Slot _ _)) struct_))
+            (Value'void <$> (GH.readVariant #void struct_))
         1 ->
-            (Value'bool <$> (GH.readVariant (#bool :: (F.Variant F.Slot _ _)) struct_))
+            (Value'bool <$> (GH.readVariant #bool struct_))
         2 ->
-            (Value'int8 <$> (GH.readVariant (#int8 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'int8 <$> (GH.readVariant #int8 struct_))
         3 ->
-            (Value'int16 <$> (GH.readVariant (#int16 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'int16 <$> (GH.readVariant #int16 struct_))
         4 ->
-            (Value'int32 <$> (GH.readVariant (#int32 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'int32 <$> (GH.readVariant #int32 struct_))
         5 ->
-            (Value'int64 <$> (GH.readVariant (#int64 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'int64 <$> (GH.readVariant #int64 struct_))
         6 ->
-            (Value'uint8 <$> (GH.readVariant (#uint8 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'uint8 <$> (GH.readVariant #uint8 struct_))
         7 ->
-            (Value'uint16 <$> (GH.readVariant (#uint16 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'uint16 <$> (GH.readVariant #uint16 struct_))
         8 ->
-            (Value'uint32 <$> (GH.readVariant (#uint32 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'uint32 <$> (GH.readVariant #uint32 struct_))
         9 ->
-            (Value'uint64 <$> (GH.readVariant (#uint64 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'uint64 <$> (GH.readVariant #uint64 struct_))
         10 ->
-            (Value'float32 <$> (GH.readVariant (#float32 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'float32 <$> (GH.readVariant #float32 struct_))
         11 ->
-            (Value'float64 <$> (GH.readVariant (#float64 :: (F.Variant F.Slot _ _)) struct_))
+            (Value'float64 <$> (GH.readVariant #float64 struct_))
         12 ->
-            (Value'text <$> (GH.readVariant (#text :: (F.Variant F.Slot _ _)) struct_))
+            (Value'text <$> (GH.readVariant #text struct_))
         13 ->
-            (Value'data_ <$> (GH.readVariant (#data_ :: (F.Variant F.Slot _ _)) struct_))
+            (Value'data_ <$> (GH.readVariant #data_ struct_))
         14 ->
-            (Value'list <$> (GH.readVariant (#list :: (F.Variant F.Slot _ _)) struct_))
+            (Value'list <$> (GH.readVariant #list struct_))
         15 ->
-            (Value'enum <$> (GH.readVariant (#enum :: (F.Variant F.Slot _ _)) struct_))
+            (Value'enum <$> (GH.readVariant #enum struct_))
         16 ->
-            (Value'struct <$> (GH.readVariant (#struct :: (F.Variant F.Slot _ _)) struct_))
+            (Value'struct <$> (GH.readVariant #struct struct_))
         17 ->
-            (Value'interface <$> (GH.readVariant (#interface :: (F.Variant F.Slot _ _)) struct_))
+            (Value'interface <$> (GH.readVariant #interface struct_))
         18 ->
-            (Value'anyPointer <$> (GH.readVariant (#anyPointer :: (F.Variant F.Slot _ _)) struct_))
+            (Value'anyPointer <$> (GH.readVariant #anyPointer struct_))
         _ ->
             (Std_.pure (Value'unknown' tag_))
 instance (F.HasVariant "void" F.Slot Value ()) where

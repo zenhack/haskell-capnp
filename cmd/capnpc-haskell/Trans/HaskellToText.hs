@@ -47,7 +47,6 @@ instance Format Module where
         , "{-# OPTIONS_GHC -Wno-orphans #-}"
         , "{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}"
         , "{-# OPTIONS_GHC -Wno-name-shadowing #-}"
-        , "{-# OPTIONS_GHC -Wno-partial-type-signatures #-}"
         , hcat
             [ "module "
             , PP.textStrict $ mconcat $ intersperse "." $ map Name.renderUnQ modName

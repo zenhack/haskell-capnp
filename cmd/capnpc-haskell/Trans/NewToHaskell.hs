@@ -36,7 +36,6 @@ fileToModules file@New.File{fileName} =
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
             , "OverloadedLabels"
-            , "PartialTypeSignatures"
             ]
         , modExports = Nothing
         , modImports = imports
@@ -196,20 +195,12 @@ defineInternalWhich structName variants =
                         (Hs.ELName $ Name.mkSub structName variantName)
                         [ Hs.EApp
                             (egName ["GH"] "readVariant")
-                            [ Hs.ETypeAnno
-                                (Hs.ELabel variantName)
-                                (Hs.TApp
-                                    (tgName ["F"] "Variant")
-                                    [ Hs.TGName $ fieldLocTypeToFieldKind fieldLocType
-                                    , Hs.TVar "_"
-                                    , Hs.TVar "_"
-                                    ]
-                                )
+                            [ Hs.ELabel variantName
                             , euName "struct_"
                             ]
                         ]
                   )
-                | New.UnionVariant{tagValue, variantName, fieldLocType} <- variants
+                | New.UnionVariant{tagValue, variantName} <- variants
                 ]
                 ++
                 [ ( Hs.PVar "_"

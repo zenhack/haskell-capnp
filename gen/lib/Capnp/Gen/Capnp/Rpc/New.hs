@@ -4,14 +4,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE PartialTypeSignatures #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 module Capnp.Gen.Capnp.Rpc.New where
 import qualified Capnp.Repr as R
 import qualified Capnp.Fields as F
@@ -51,33 +49,33 @@ instance (F.HasUnion Message) where
         | Message'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Message'unimplemented <$> (GH.readVariant (#unimplemented :: (F.Variant F.Slot _ _)) struct_))
+            (Message'unimplemented <$> (GH.readVariant #unimplemented struct_))
         1 ->
-            (Message'abort <$> (GH.readVariant (#abort :: (F.Variant F.Slot _ _)) struct_))
+            (Message'abort <$> (GH.readVariant #abort struct_))
         2 ->
-            (Message'call <$> (GH.readVariant (#call :: (F.Variant F.Slot _ _)) struct_))
+            (Message'call <$> (GH.readVariant #call struct_))
         3 ->
-            (Message'return <$> (GH.readVariant (#return :: (F.Variant F.Slot _ _)) struct_))
+            (Message'return <$> (GH.readVariant #return struct_))
         4 ->
-            (Message'finish <$> (GH.readVariant (#finish :: (F.Variant F.Slot _ _)) struct_))
+            (Message'finish <$> (GH.readVariant #finish struct_))
         5 ->
-            (Message'resolve <$> (GH.readVariant (#resolve :: (F.Variant F.Slot _ _)) struct_))
+            (Message'resolve <$> (GH.readVariant #resolve struct_))
         6 ->
-            (Message'release <$> (GH.readVariant (#release :: (F.Variant F.Slot _ _)) struct_))
+            (Message'release <$> (GH.readVariant #release struct_))
         7 ->
-            (Message'obsoleteSave <$> (GH.readVariant (#obsoleteSave :: (F.Variant F.Slot _ _)) struct_))
+            (Message'obsoleteSave <$> (GH.readVariant #obsoleteSave struct_))
         8 ->
-            (Message'bootstrap <$> (GH.readVariant (#bootstrap :: (F.Variant F.Slot _ _)) struct_))
+            (Message'bootstrap <$> (GH.readVariant #bootstrap struct_))
         9 ->
-            (Message'obsoleteDelete <$> (GH.readVariant (#obsoleteDelete :: (F.Variant F.Slot _ _)) struct_))
+            (Message'obsoleteDelete <$> (GH.readVariant #obsoleteDelete struct_))
         10 ->
-            (Message'provide <$> (GH.readVariant (#provide :: (F.Variant F.Slot _ _)) struct_))
+            (Message'provide <$> (GH.readVariant #provide struct_))
         11 ->
-            (Message'accept <$> (GH.readVariant (#accept :: (F.Variant F.Slot _ _)) struct_))
+            (Message'accept <$> (GH.readVariant #accept struct_))
         12 ->
-            (Message'join <$> (GH.readVariant (#join :: (F.Variant F.Slot _ _)) struct_))
+            (Message'join <$> (GH.readVariant #join struct_))
         13 ->
-            (Message'disembargo <$> (GH.readVariant (#disembargo :: (F.Variant F.Slot _ _)) struct_))
+            (Message'disembargo <$> (GH.readVariant #disembargo struct_))
         _ ->
             (Std_.pure (Message'unknown' tag_))
 instance (F.HasVariant "unimplemented" F.Slot Message Message) where
@@ -159,11 +157,11 @@ instance (F.HasUnion Call'sendResultsTo) where
         | Call'sendResultsTo'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Call'sendResultsTo'caller <$> (GH.readVariant (#caller :: (F.Variant F.Slot _ _)) struct_))
+            (Call'sendResultsTo'caller <$> (GH.readVariant #caller struct_))
         1 ->
-            (Call'sendResultsTo'yourself <$> (GH.readVariant (#yourself :: (F.Variant F.Slot _ _)) struct_))
+            (Call'sendResultsTo'yourself <$> (GH.readVariant #yourself struct_))
         2 ->
-            (Call'sendResultsTo'thirdParty <$> (GH.readVariant (#thirdParty :: (F.Variant F.Slot _ _)) struct_))
+            (Call'sendResultsTo'thirdParty <$> (GH.readVariant #thirdParty struct_))
         _ ->
             (Std_.pure (Call'sendResultsTo'unknown' tag_))
 instance (F.HasVariant "caller" F.Slot Call'sendResultsTo ()) where
@@ -192,17 +190,17 @@ instance (F.HasUnion Return) where
         | Return'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Return'results <$> (GH.readVariant (#results :: (F.Variant F.Slot _ _)) struct_))
+            (Return'results <$> (GH.readVariant #results struct_))
         1 ->
-            (Return'exception <$> (GH.readVariant (#exception :: (F.Variant F.Slot _ _)) struct_))
+            (Return'exception <$> (GH.readVariant #exception struct_))
         2 ->
-            (Return'canceled <$> (GH.readVariant (#canceled :: (F.Variant F.Slot _ _)) struct_))
+            (Return'canceled <$> (GH.readVariant #canceled struct_))
         3 ->
-            (Return'resultsSentElsewhere <$> (GH.readVariant (#resultsSentElsewhere :: (F.Variant F.Slot _ _)) struct_))
+            (Return'resultsSentElsewhere <$> (GH.readVariant #resultsSentElsewhere struct_))
         4 ->
-            (Return'takeFromOtherQuestion <$> (GH.readVariant (#takeFromOtherQuestion :: (F.Variant F.Slot _ _)) struct_))
+            (Return'takeFromOtherQuestion <$> (GH.readVariant #takeFromOtherQuestion struct_))
         5 ->
-            (Return'acceptFromThirdParty <$> (GH.readVariant (#acceptFromThirdParty :: (F.Variant F.Slot _ _)) struct_))
+            (Return'acceptFromThirdParty <$> (GH.readVariant #acceptFromThirdParty struct_))
         _ ->
             (Std_.pure (Return'unknown' tag_))
 instance (F.HasVariant "results" F.Slot Return Payload) where
@@ -249,9 +247,9 @@ instance (F.HasUnion Resolve) where
         | Resolve'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Resolve'cap <$> (GH.readVariant (#cap :: (F.Variant F.Slot _ _)) struct_))
+            (Resolve'cap <$> (GH.readVariant #cap struct_))
         1 ->
-            (Resolve'exception <$> (GH.readVariant (#exception :: (F.Variant F.Slot _ _)) struct_))
+            (Resolve'exception <$> (GH.readVariant #exception struct_))
         _ ->
             (Std_.pure (Resolve'unknown' tag_))
 instance (F.HasVariant "cap" F.Slot Resolve CapDescriptor) where
@@ -302,13 +300,13 @@ instance (F.HasUnion Disembargo'context) where
         | Disembargo'context'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Disembargo'context'senderLoopback <$> (GH.readVariant (#senderLoopback :: (F.Variant F.Slot _ _)) struct_))
+            (Disembargo'context'senderLoopback <$> (GH.readVariant #senderLoopback struct_))
         1 ->
-            (Disembargo'context'receiverLoopback <$> (GH.readVariant (#receiverLoopback :: (F.Variant F.Slot _ _)) struct_))
+            (Disembargo'context'receiverLoopback <$> (GH.readVariant #receiverLoopback struct_))
         2 ->
-            (Disembargo'context'accept <$> (GH.readVariant (#accept :: (F.Variant F.Slot _ _)) struct_))
+            (Disembargo'context'accept <$> (GH.readVariant #accept struct_))
         3 ->
-            (Disembargo'context'provide <$> (GH.readVariant (#provide :: (F.Variant F.Slot _ _)) struct_))
+            (Disembargo'context'provide <$> (GH.readVariant #provide struct_))
         _ ->
             (Std_.pure (Disembargo'context'unknown' tag_))
 instance (F.HasVariant "senderLoopback" F.Slot Disembargo'context Std_.Word32) where
@@ -377,9 +375,9 @@ instance (F.HasUnion MessageTarget) where
         | MessageTarget'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (MessageTarget'importedCap <$> (GH.readVariant (#importedCap :: (F.Variant F.Slot _ _)) struct_))
+            (MessageTarget'importedCap <$> (GH.readVariant #importedCap struct_))
         1 ->
-            (MessageTarget'promisedAnswer <$> (GH.readVariant (#promisedAnswer :: (F.Variant F.Slot _ _)) struct_))
+            (MessageTarget'promisedAnswer <$> (GH.readVariant #promisedAnswer struct_))
         _ ->
             (Std_.pure (MessageTarget'unknown' tag_))
 instance (F.HasVariant "importedCap" F.Slot MessageTarget Std_.Word32) where
@@ -418,17 +416,17 @@ instance (F.HasUnion CapDescriptor) where
         | CapDescriptor'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (CapDescriptor'none <$> (GH.readVariant (#none :: (F.Variant F.Slot _ _)) struct_))
+            (CapDescriptor'none <$> (GH.readVariant #none struct_))
         1 ->
-            (CapDescriptor'senderHosted <$> (GH.readVariant (#senderHosted :: (F.Variant F.Slot _ _)) struct_))
+            (CapDescriptor'senderHosted <$> (GH.readVariant #senderHosted struct_))
         2 ->
-            (CapDescriptor'senderPromise <$> (GH.readVariant (#senderPromise :: (F.Variant F.Slot _ _)) struct_))
+            (CapDescriptor'senderPromise <$> (GH.readVariant #senderPromise struct_))
         3 ->
-            (CapDescriptor'receiverHosted <$> (GH.readVariant (#receiverHosted :: (F.Variant F.Slot _ _)) struct_))
+            (CapDescriptor'receiverHosted <$> (GH.readVariant #receiverHosted struct_))
         4 ->
-            (CapDescriptor'receiverAnswer <$> (GH.readVariant (#receiverAnswer :: (F.Variant F.Slot _ _)) struct_))
+            (CapDescriptor'receiverAnswer <$> (GH.readVariant #receiverAnswer struct_))
         5 ->
-            (CapDescriptor'thirdPartyHosted <$> (GH.readVariant (#thirdPartyHosted :: (F.Variant F.Slot _ _)) struct_))
+            (CapDescriptor'thirdPartyHosted <$> (GH.readVariant #thirdPartyHosted struct_))
         _ ->
             (Std_.pure (CapDescriptor'unknown' tag_))
 instance (F.HasVariant "none" F.Slot CapDescriptor ()) where
@@ -473,9 +471,9 @@ instance (F.HasUnion PromisedAnswer'Op) where
         | PromisedAnswer'Op'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (PromisedAnswer'Op'noop <$> (GH.readVariant (#noop :: (F.Variant F.Slot _ _)) struct_))
+            (PromisedAnswer'Op'noop <$> (GH.readVariant #noop struct_))
         1 ->
-            (PromisedAnswer'Op'getPointerField <$> (GH.readVariant (#getPointerField :: (F.Variant F.Slot _ _)) struct_))
+            (PromisedAnswer'Op'getPointerField <$> (GH.readVariant #getPointerField struct_))
         _ ->
             (Std_.pure (PromisedAnswer'Op'unknown' tag_))
 instance (F.HasVariant "noop" F.Slot PromisedAnswer'Op ()) where
