@@ -1,9 +1,12 @@
+{-# LANGUAGE AllowAmbiguousTypes    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DuplicateRecordFields  #-}
 {-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE NamedFieldPuns         #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Module: Capnp.Repr.Methods
 -- Description: Support for working with methods
@@ -34,7 +37,8 @@ import           Control.Concurrent.STM
 import           Control.Monad.Catch     (MonadThrow)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
-import           GHC.OverloadedLabels    (IsLabel)
+import           GHC.OverloadedLabels    (IsLabel(..))
+import           GHC.TypeLits            (Symbol)
 import           Internal.BuildPure      (createPure)
 
 -- | Represents a method on the interface type @c@ with parameter
@@ -48,10 +52,11 @@ data Method c p r = Method
 -- type @c@ has a method named @name@ with parameter type @p@ and
 -- return type @r@. The generated code includes instances of this
 -- for each method in the schema.
-class
-    ( R.ReprFor c ~ 'R.Ptr ('Just 'R.Cap)
-    , IsLabel name (Method c p r)
-    ) => HasMethod name c p r | name c -> p r
+class (R.IsCap c, R.IsStruct p, R.IsStruct r) => HasMethod (name :: Symbol) c p r | name c -> p r where
+    methodByLabel :: Method c p r
+
+instance HasMethod name c p r => IsLabel name (Method c p r) where
+    fromLabel = methodByLabel @name @c @p @r
 
 newtype Pipeline a = Pipeline Rpc.Pipeline
 
