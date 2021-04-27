@@ -82,18 +82,15 @@ setField ::
     ) => F.Field 'F.Slot a b -> R.Raw ('Mut s) b -> R.Raw ('Mut s) a -> m ()
 setField (F.Field field) (R.Raw value) (R.Raw struct) =
     case field of
-        F.DataField F.DataFieldLoc{ shift, index, mask, defaultValue } -> do
-            oldWord <- U.getData (fromIntegral index) struct
-            let valueWord = (C.toWord value `xor` defaultValue) `shiftL` fromIntegral shift
-                shiftedMask = mask `shiftL` fromIntegral shift
-            let newWord = (oldWord .&. complement shiftedMask) .|. valueWord
-            U.setData newWord (fromIntegral index) struct
+        F.DataField fieldLoc ->
+            setDataField fieldLoc
         F.PtrField index ->
             setPtrField index value struct
         F.VoidField ->
             pure ()
   where
-    -- This is broken out because the type checker needs some extra help:
+    -- This was originally broken out because the type checker needs some extra
+    -- help, but it's probably more readable this way anyway.
     setPtrField
         :: forall pr.
         ( R.ReprFor b ~ 'R.Ptr pr
@@ -101,6 +98,18 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         ) => Word16 -> R.UntypedPtr ('Mut s) pr -> U.Struct ('Mut s) -> m ()
     setPtrField index value struct =
         U.setPtr (R.rToPtr @pr (U.message struct) value) (fromIntegral index) struct
+
+    setDataField
+        :: forall sz.
+        ( R.ReprFor b ~ 'R.Data sz
+        , C.IsWord (R.UntypedData sz)
+        ) => F.DataFieldLoc sz -> m ()
+    setDataField F.DataFieldLoc{ shift, index, mask, defaultValue } = do
+        oldWord <- U.getData (fromIntegral index) struct
+        let valueWord = (C.toWord value `xor` defaultValue) `shiftL` fromIntegral shift
+            shiftedMask = mask `shiftL` fromIntegral shift
+            newWord = (oldWord .&. complement shiftedMask) .|. valueWord
+        U.setData newWord (fromIntegral index) struct
 
 encodeField ::
     forall a b m s bp.
