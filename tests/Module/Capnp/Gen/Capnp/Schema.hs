@@ -13,7 +13,7 @@ import           Capnp.Gen.Capnp.Schema
 import qualified Capnp.Gen.Capnp.Schema.New as N
 
 import Capnp                (newRoot)
-import Capnp.New            (initVariant, setField, setVariant)
+import Capnp.New            (encodeField, encodeVariant, initVariant, readField)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
 import Data.Mutable         (Thaw(..))
 import Util                 (decodeValue, schemaSchemaSrc)
@@ -55,13 +55,13 @@ schemaTests = describe "tests for typed setters" $ traverse_ testCase
             , "  ordinal = (explicit = 22) )\n"
             ]
         , builder = \msg -> do
-            field <- NC.new @N.Field () msg
-            setField #codeOrder 4 field
-            setField #discriminantValue 6 field
+            field <- NC.newRoot @N.Field () msg
+            encodeField #codeOrder 4 field
+            encodeField #discriminantValue 6 field
             group <- initVariant #group field
-            setField #typeId 322 group
-            ordinal <- initVariant #ordinal field
-            setVariant #explicit 22 ordinal
+            encodeField #typeId 322 group
+            ordinal <- readField #ordinal field
+            encodeVariant #explicit 22 ordinal
         }
     ]
   where

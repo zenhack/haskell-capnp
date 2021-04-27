@@ -114,24 +114,16 @@ declToDecls thisMod decl =
             in
             [ Hs.DcInstance
                 { ctx
-                , typ = Hs.TApp (tgName ["OL"] "IsLabel")
-                    [ labelType
-                    , Hs.TApp (tgName ["F"] "Field") [fieldKind, parentType, childType]
-                    ]
+                , typ = Hs.TApp
+                    (tgName ["F"] "HasField")
+                    [labelType, fieldKind, parentType, childType]
                 , defs =
                     [ Hs.IdValue Hs.DfValue
-                        { name = "fromLabel"
+                        { name = "theField"
                         , value = fieldLocTypeToField fieldLocType
                         , params = []
                         }
                     ]
-                }
-            , Hs.DcInstance
-                { ctx
-                , typ = Hs.TApp
-                    (tgName ["F"] "HasField")
-                    [labelType, fieldKind, parentType, childType]
-                , defs = []
                 }
             ]
         New.UnionDecl{name, typeParams, tagLoc, variants} ->
@@ -240,14 +232,12 @@ variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, varia
     in
     [ Hs.DcInstance
         { ctx
-        , typ = Hs.TApp (tgName ["OL"] "IsLabel")
-            [ labelType
-            , Hs.TApp (tgName ["F"] "Variant")
-                [fieldKind, parentType, childType]
-            ]
+        , typ = Hs.TApp
+            (tgName ["F"] "HasVariant")
+            [labelType, fieldKind, parentType, childType]
         , defs =
             [ Hs.IdValue Hs.DfValue
-                { name = "fromLabel"
+                { name = "theVariant"
                 , params = []
                 , value = Hs.EApp
                     (egName ["F"] "Variant")
@@ -256,13 +246,6 @@ variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, varia
                     ]
                 }
             ]
-        }
-    , Hs.DcInstance
-        { ctx
-        , typ = Hs.TApp
-            (tgName ["F"] "HasVariant")
-            [labelType, fieldKind, parentType, childType]
-        , defs = []
         }
     ]
 

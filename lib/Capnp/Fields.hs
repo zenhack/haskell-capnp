@@ -1,24 +1,31 @@
+{-# LANGUAGE AllowAmbiguousTypes    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Module: Capnp.Fields
 -- Description: Support for working with struct fields
 module Capnp.Fields
-    ( HasField
+    ( HasField(..)
     , Field(..)
     , FieldLoc(..)
     , DataFieldLoc(..)
     , FieldKind(..)
     , HasUnion(..)
     , Variant(..)
-    , HasVariant
+    , HasVariant(..)
     ) where
+
 
 import Capnp.Bits
 import Data.Word
-import GHC.OverloadedLabels (IsLabel)
+
+import GHC.OverloadedLabels (IsLabel(..))
+import GHC.TypeLits         (Symbol)
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
@@ -61,13 +68,14 @@ data Variant (k :: FieldKind) a b = Variant
 -- has a field named @name@ with type @b@ (with @k@ being the 'FieldKind' for
 -- the field). The generated code includes instances of this for each field
 -- in the schema.
-class
-    ( R.IsStruct a
-    , IsLabel name (Field k a b)
-    ) => HasField name k a b | a name -> k b
+class R.IsStruct a => HasField (name :: Symbol) k a b | a name -> k b where
+    theField :: Field k a b
 
+instance HasField name k a b => IsLabel name (Field k a b) where
+    fromLabel = theField @name @k @a @b
 
-class
-    ( HasUnion a
-    , IsLabel name (Variant k a b)
-    ) => HasVariant name k a b | a name -> k b
+class HasUnion a => HasVariant (name :: Symbol) k a b | a name -> k b where
+    theVariant :: Variant k a b
+
+instance HasVariant name k a b => IsLabel name (Variant k a b) where
+    fromLabel = theVariant @name @k @a @b

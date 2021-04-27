@@ -3,7 +3,9 @@
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TemplateHaskell        #-}
+{-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 module Capnp.New.Classes
@@ -11,6 +13,7 @@ module Capnp.New.Classes
     , Marshal(..)
     , Allocate(..)
     , TypedStruct(..)
+    , newRoot
     , Parsed
     , Which
     ) where
@@ -66,6 +69,15 @@ class (R.IsStruct a, Allocate a, AllocHint a ~ ()) => TypedStruct a where
     -- Get the size of  the struct's word and pointer sections, respectively.
     numStructWords :: Word16
     numStructPtrs  :: Word16
+
+
+newRoot
+    :: forall a m s. (U.RWCtx m s, R.IsStruct a, Allocate a)
+    => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+newRoot hint msg = do
+    raw@(R.Raw struct) <- new @a hint msg
+    U.setRoot struct
+    pure raw
 
 
 ------ Parse instances for basic types -------

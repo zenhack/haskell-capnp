@@ -33,9 +33,8 @@ instance (C.TypedStruct VatId) where
 instance (C.Allocate VatId) where
     type AllocHint VatId = ()
     new  = GH.newStruct
-instance (OL.IsLabel "side" (F.Field F.Slot VatId Side)) where
-    fromLabel  = (GH.dataField 0 0 16 0)
-instance (F.HasField "side" F.Slot VatId Side)
+instance (F.HasField "side" F.Slot VatId Side) where
+    theField  = (GH.dataField 0 0 16 0)
 data ProvisionId 
 type instance (R.ReprFor ProvisionId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct ProvisionId) where
@@ -44,9 +43,8 @@ instance (C.TypedStruct ProvisionId) where
 instance (C.Allocate ProvisionId) where
     type AllocHint ProvisionId = ()
     new  = GH.newStruct
-instance (OL.IsLabel "joinId" (F.Field F.Slot ProvisionId Std_.Word32)) where
-    fromLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "joinId" F.Slot ProvisionId Std_.Word32)
+instance (F.HasField "joinId" F.Slot ProvisionId Std_.Word32) where
+    theField  = (GH.dataField 0 0 32 0)
 data RecipientId 
 type instance (R.ReprFor RecipientId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct RecipientId) where
@@ -71,15 +69,12 @@ instance (C.TypedStruct JoinKeyPart) where
 instance (C.Allocate JoinKeyPart) where
     type AllocHint JoinKeyPart = ()
     new  = GH.newStruct
-instance (OL.IsLabel "joinId" (F.Field F.Slot JoinKeyPart Std_.Word32)) where
-    fromLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "joinId" F.Slot JoinKeyPart Std_.Word32)
-instance (OL.IsLabel "partCount" (F.Field F.Slot JoinKeyPart Std_.Word16)) where
-    fromLabel  = (GH.dataField 32 0 16 0)
-instance (F.HasField "partCount" F.Slot JoinKeyPart Std_.Word16)
-instance (OL.IsLabel "partNum" (F.Field F.Slot JoinKeyPart Std_.Word16)) where
-    fromLabel  = (GH.dataField 48 0 16 0)
-instance (F.HasField "partNum" F.Slot JoinKeyPart Std_.Word16)
+instance (F.HasField "joinId" F.Slot JoinKeyPart Std_.Word32) where
+    theField  = (GH.dataField 0 0 32 0)
+instance (F.HasField "partCount" F.Slot JoinKeyPart Std_.Word16) where
+    theField  = (GH.dataField 32 0 16 0)
+instance (F.HasField "partNum" F.Slot JoinKeyPart Std_.Word16) where
+    theField  = (GH.dataField 48 0 16 0)
 data JoinResult 
 type instance (R.ReprFor JoinResult) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct JoinResult) where
@@ -88,12 +83,9 @@ instance (C.TypedStruct JoinResult) where
 instance (C.Allocate JoinResult) where
     type AllocHint JoinResult = ()
     new  = GH.newStruct
-instance (OL.IsLabel "joinId" (F.Field F.Slot JoinResult Std_.Word32)) where
-    fromLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "joinId" F.Slot JoinResult Std_.Word32)
-instance (OL.IsLabel "succeeded" (F.Field F.Slot JoinResult Std_.Bool)) where
-    fromLabel  = (GH.dataField 32 0 1 0)
-instance (F.HasField "succeeded" F.Slot JoinResult Std_.Bool)
-instance (OL.IsLabel "cap" (F.Field F.Slot JoinResult Basics.AnyPointer)) where
-    fromLabel  = (GH.ptrField 0)
-instance (F.HasField "cap" F.Slot JoinResult Basics.AnyPointer)
+instance (F.HasField "joinId" F.Slot JoinResult Std_.Word32) where
+    theField  = (GH.dataField 0 0 32 0)
+instance (F.HasField "succeeded" F.Slot JoinResult Std_.Bool) where
+    theField  = (GH.dataField 32 0 1 0)
+instance (F.HasField "cap" F.Slot JoinResult Basics.AnyPointer) where
+    theField  = (GH.ptrField 0)
