@@ -8,6 +8,7 @@ import Test.Hspec
 
 import Control.Monad.Primitive (RealWorld)
 import Data.Foldable           (traverse_)
+import Data.Function           ((&))
 
 import           Capnp.Gen.Capnp.Schema
 import qualified Capnp.Gen.Capnp.Schema.New as N
@@ -56,12 +57,14 @@ schemaTests = describe "tests for typed setters" $ traverse_ testCase
             ]
         , builder = \msg -> do
             field <- NC.newRoot @N.Field () msg
-            encodeField #codeOrder 4 field
-            encodeField #discriminantValue 6 field
-            group <- initVariant #group field
-            encodeField #typeId 322 group
-            ordinal <- readField #ordinal field
-            encodeVariant #explicit 22 ordinal
+            field & encodeField #codeOrder 4
+            field & encodeField #discriminantValue 6
+            field
+                & initVariant #group
+                >>= encodeField #typeId 322
+            field
+                & readField #ordinal
+                >>= encodeVariant #explicit 22
         }
     ]
   where
