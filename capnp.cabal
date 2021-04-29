@@ -274,12 +274,14 @@ test-suite tests
       -- Generated code for examples/echo.capnp
       , Capnp.Gen.Echo
       , Capnp.Gen.Echo.Pure
+      , Capnp.Gen.Echo.New
       , Capnp.Gen.ById.Xd0a87f36fa0182f5
       , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
 
       -- generated from tests/data/aircraft.capnp
       , Capnp.Gen.Aircraft
       , Capnp.Gen.Aircraft.Pure
+      , Capnp.Gen.Aircraft.New
       , Capnp.Gen.ById.X832bcc6686a26d56
       , Capnp.Gen.ById.X832bcc6686a26d56.Pure
 
