@@ -32,6 +32,17 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         mkField field =
             fieldToDecl local typeParams field
 
+        mkMethod methodId Flat.Method{name, paramType, resultType} =
+            New.MethodDecl
+                { interfaceName = local
+                , interfaceId = nodeId
+                , typeParams = map C.paramName typeParams
+                , methodName = name
+                , methodId
+                , paramType = C.bothMap (\Flat.Node{name} -> name) paramType
+                , resultType = C.bothMap (\Flat.Node{name} -> name) resultType
+                }
+
         structUnionNodes Nothing = []
         structUnionNodes (Just Flat.Union{tagOffset, variants}) =
             [ New.UnionDecl
@@ -50,7 +61,9 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         Flat.Other       -> []
         Flat.Constant _  -> []
         Flat.Enum _      -> [ mkType (R.Data R.Sz16) Nothing ]
-        Flat.Interface{} -> [ mkType (R.Ptr (Just R.Cap)) Nothing ]
+        Flat.Interface{methods} ->
+            mkType (R.Ptr (Just R.Cap)) Nothing
+            : zipWith mkMethod [0..] methods
         Flat.Struct{fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
             : (structUnionNodes union ++ map mkField fields)

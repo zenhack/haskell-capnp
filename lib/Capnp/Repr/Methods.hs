@@ -12,7 +12,7 @@
 -- Description: Support for working with methods
 module Capnp.Repr.Methods
     ( Method(..)
-    , HasMethod
+    , HasMethod(..)
 
     , Pipeline(..)
     , Client(..)

@@ -144,6 +144,38 @@ declToDecls thisMod decl =
                     ]
                 }
             : concatMap (variantToDecls thisMod name typeParams) variants
+        New.MethodDecl
+                { interfaceName
+                , typeParams
+                , interfaceId
+                , methodName
+                , methodId
+                , paramType
+                , resultType
+                } ->
+            let tVars = toTVars typeParams in
+            [ Hs.DcInstance
+                { ctx = paramsContext tVars
+                , typ = Hs.TApp
+                    (tgName ["GH"] "HasMethod")
+                    [ Hs.TString (Name.renderUnQ methodName)
+                    , Hs.TApp (Hs.TLName interfaceName) tVars
+                    , compositeTypeToType thisMod paramType
+                    , compositeTypeToType thisMod resultType
+                    ]
+                , defs =
+                    [ Hs.IdValue Hs.DfValue
+                        { name = "methodByLabel"
+                        , params = []
+                        , value = Hs.EApp
+                            (egName ["GH"] "Method")
+                            [ Hs.EInt $ fromIntegral interfaceId
+                            , Hs.EInt $ fromIntegral methodId
+                            ]
+                        }
+                    ]
+                }
+            ]
 
 
 defineRawData thisMod name tVars variants =

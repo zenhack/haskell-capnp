@@ -41,6 +41,15 @@ data Decl
         , tagLoc     :: C.DataLoc
         , variants   :: [UnionVariant]
         }
+    | MethodDecl
+        { interfaceName :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
+        , interfaceId   :: !Word64
+        , methodName    :: Name.UnQ
+        , methodId      :: !Word16
+        , paramType     :: C.CompositeType Brand Name.CapnpQ
+        , resultType    :: C.CompositeType Brand Name.CapnpQ
+        }
 
 data ExtraTypeInfo
     = StructTypeInfo
