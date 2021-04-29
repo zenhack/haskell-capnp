@@ -12,7 +12,6 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Compat.Json.New where
 import qualified Capnp.Repr as R
-import qualified Capnp.Fields as F
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
@@ -29,7 +28,7 @@ instance (C.TypedStruct Value) where
 instance (C.Allocate Value) where
     type AllocHint Value = ()
     new  = GH.newStruct
-instance (F.HasUnion Value) where
+instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
         = Value'null (R.Raw mut_ ())
@@ -57,20 +56,20 @@ instance (F.HasUnion Value) where
             (Value'call <$> (GH.readVariant #call struct_))
         _ ->
             (Std_.pure (Value'unknown' tag_))
-instance (F.HasVariant "null" F.Slot Value ()) where
-    variantByLabel  = (F.Variant GH.voidField 0)
-instance (F.HasVariant "boolean" F.Slot Value Std_.Bool) where
-    variantByLabel  = (F.Variant (GH.dataField 16 0 1 0) 1)
-instance (F.HasVariant "number" F.Slot Value Std_.Double) where
-    variantByLabel  = (F.Variant (GH.dataField 0 1 64 0) 2)
-instance (F.HasVariant "string" F.Slot Value Basics.Text) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 3)
-instance (F.HasVariant "array" F.Slot Value (R.List Value)) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 4)
-instance (F.HasVariant "object" F.Slot Value (R.List Value'Field)) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 5)
-instance (F.HasVariant "call" F.Slot Value Value'Call) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 6)
+instance (GH.HasVariant "null" GH.Slot Value ()) where
+    variantByLabel  = (GH.Variant GH.voidField 0)
+instance (GH.HasVariant "boolean" GH.Slot Value Std_.Bool) where
+    variantByLabel  = (GH.Variant (GH.dataField 16 0 1 0) 1)
+instance (GH.HasVariant "number" GH.Slot Value Std_.Double) where
+    variantByLabel  = (GH.Variant (GH.dataField 0 1 64 0) 2)
+instance (GH.HasVariant "string" GH.Slot Value Basics.Text) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 3)
+instance (GH.HasVariant "array" GH.Slot Value (R.List Value)) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 4)
+instance (GH.HasVariant "object" GH.Slot Value (R.List Value'Field)) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
+instance (GH.HasVariant "call" GH.Slot Value Value'Call) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Value'Field) where
@@ -79,9 +78,9 @@ instance (C.TypedStruct Value'Field) where
 instance (C.Allocate Value'Field) where
     type AllocHint Value'Field = ()
     new  = GH.newStruct
-instance (F.HasField "name" F.Slot Value'Field Basics.Text) where
+instance (GH.HasField "name" GH.Slot Value'Field Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "value" F.Slot Value'Field Value) where
+instance (GH.HasField "value" GH.Slot Value'Field Value) where
     fieldByLabel  = (GH.ptrField 1)
 data Value'Call 
 type instance (R.ReprFor Value'Call) = (R.Ptr (Std_.Just R.Struct))
@@ -91,9 +90,9 @@ instance (C.TypedStruct Value'Call) where
 instance (C.Allocate Value'Call) where
     type AllocHint Value'Call = ()
     new  = GH.newStruct
-instance (F.HasField "function" F.Slot Value'Call Basics.Text) where
+instance (GH.HasField "function" GH.Slot Value'Call Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "params" F.Slot Value'Call (R.List Value)) where
+instance (GH.HasField "params" GH.Slot Value'Call (R.List Value)) where
     fieldByLabel  = (GH.ptrField 1)
 data FlattenOptions 
 type instance (R.ReprFor FlattenOptions) = (R.Ptr (Std_.Just R.Struct))
@@ -103,7 +102,7 @@ instance (C.TypedStruct FlattenOptions) where
 instance (C.Allocate FlattenOptions) where
     type AllocHint FlattenOptions = ()
     new  = GH.newStruct
-instance (F.HasField "prefix" F.Slot FlattenOptions Basics.Text) where
+instance (GH.HasField "prefix" GH.Slot FlattenOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 data DiscriminatorOptions 
 type instance (R.ReprFor DiscriminatorOptions) = (R.Ptr (Std_.Just R.Struct))
@@ -113,7 +112,7 @@ instance (C.TypedStruct DiscriminatorOptions) where
 instance (C.Allocate DiscriminatorOptions) where
     type AllocHint DiscriminatorOptions = ()
     new  = GH.newStruct
-instance (F.HasField "name" F.Slot DiscriminatorOptions Basics.Text) where
+instance (GH.HasField "name" GH.Slot DiscriminatorOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "valueName" F.Slot DiscriminatorOptions Basics.Text) where
+instance (GH.HasField "valueName" GH.Slot DiscriminatorOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 1)

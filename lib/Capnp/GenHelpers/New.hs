@@ -14,11 +14,12 @@ module Capnp.GenHelpers.New
     , readVariant
     , TypeParam
     , newStruct
+    , module F
     ) where
 
 import           Capnp.Bits
 import qualified Capnp.Classes     as C
-import qualified Capnp.Fields      as F
+import           Capnp.Fields      as F
 import           Capnp.Message     (Mutability(..))
 import qualified Capnp.Message     as M
 import           Capnp.New         (readField)

@@ -18,7 +18,6 @@ import           Trans.ToHaskellCommon
 imports :: [Hs.Import]
 imports =
     [ Hs.ImportAs { importAs = "R", parts = ["Capnp", "Repr"] }
-    , Hs.ImportAs { importAs = "F", parts = ["Capnp", "Fields"] }
     , Hs.ImportAs { importAs = "Basics", parts = ["Capnp", "New", "Basics"] }
     , Hs.ImportAs { importAs = "OL", parts = ["GHC", "OverloadedLabels"] }
     , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
@@ -114,7 +113,7 @@ declToDecls thisMod decl =
             [ Hs.DcInstance
                 { ctx
                 , typ = Hs.TApp
-                    (tgName ["F"] "HasField")
+                    (tgName ["GH"] "HasField")
                     [labelType, fieldKind, parentType, childType]
                 , defs =
                     [ Hs.IdValue Hs.DfValue
@@ -130,7 +129,7 @@ declToDecls thisMod decl =
             Hs.DcInstance
                 { ctx = paramsContext tVars
                 , typ = Hs.TApp
-                    (tgName ["F"] "HasUnion")
+                    (tgName ["GH"] "HasUnion")
                     [Hs.TApp (Hs.TLName name) tVars]
                 , defs =
                     [ Hs.IdValue Hs.DfValue
@@ -224,14 +223,14 @@ variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, varia
     [ Hs.DcInstance
         { ctx
         , typ = Hs.TApp
-            (tgName ["F"] "HasVariant")
+            (tgName ["GH"] "HasVariant")
             [labelType, fieldKind, parentType, childType]
         , defs =
             [ Hs.IdValue Hs.DfValue
                 { name = "variantByLabel"
                 , params = []
                 , value = Hs.EApp
-                    (egName ["F"] "Variant")
+                    (egName ["GH"] "Variant")
                     [ fieldLocTypeToField fieldLocType
                     , Hs.EInt (fromIntegral tagValue)
                     ]
@@ -266,8 +265,8 @@ fieldLocTypeToType thisMod = \case
 
 fieldLocTypeToFieldKind :: C.FieldLocType b n -> Name.GlobalQ
 fieldLocTypeToFieldKind = \case
-    C.HereField _ -> gName ["F"] "Group"
-    _             -> gName ["F"] "Slot"
+    C.HereField _ -> gName ["GH"] "Group"
+    _             -> gName ["GH"] "Slot"
 
 wordTypeToType thisMod = \case
     C.EnumType t -> tCapnp thisMod t

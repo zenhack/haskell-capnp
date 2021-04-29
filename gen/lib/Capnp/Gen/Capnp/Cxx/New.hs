@@ -12,7 +12,6 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Cxx.New where
 import qualified Capnp.Repr as R
-import qualified Capnp.Fields as F
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH

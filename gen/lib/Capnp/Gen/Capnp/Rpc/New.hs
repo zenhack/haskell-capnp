@@ -12,7 +12,6 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Rpc.New where
 import qualified Capnp.Repr as R
-import qualified Capnp.Fields as F
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
@@ -29,7 +28,7 @@ instance (C.TypedStruct Message) where
 instance (C.Allocate Message) where
     type AllocHint Message = ()
     new  = GH.newStruct
-instance (F.HasUnion Message) where
+instance (GH.HasUnion Message) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Message
         = Message'unimplemented (R.Raw mut_ Message)
@@ -78,34 +77,34 @@ instance (F.HasUnion Message) where
             (Message'disembargo <$> (GH.readVariant #disembargo struct_))
         _ ->
             (Std_.pure (Message'unknown' tag_))
-instance (F.HasVariant "unimplemented" F.Slot Message Message) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 0)
-instance (F.HasVariant "abort" F.Slot Message Exception) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 1)
-instance (F.HasVariant "call" F.Slot Message Call) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 2)
-instance (F.HasVariant "return" F.Slot Message Return) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 3)
-instance (F.HasVariant "finish" F.Slot Message Finish) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 4)
-instance (F.HasVariant "resolve" F.Slot Message Resolve) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 5)
-instance (F.HasVariant "release" F.Slot Message Release) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 6)
-instance (F.HasVariant "obsoleteSave" F.Slot Message Basics.AnyPointer) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 7)
-instance (F.HasVariant "bootstrap" F.Slot Message Bootstrap) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 8)
-instance (F.HasVariant "obsoleteDelete" F.Slot Message Basics.AnyPointer) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 9)
-instance (F.HasVariant "provide" F.Slot Message Provide) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 10)
-instance (F.HasVariant "accept" F.Slot Message Accept) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 11)
-instance (F.HasVariant "join" F.Slot Message Join) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 12)
-instance (F.HasVariant "disembargo" F.Slot Message Disembargo) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 13)
+instance (GH.HasVariant "unimplemented" GH.Slot Message Message) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
+instance (GH.HasVariant "abort" GH.Slot Message Exception) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
+instance (GH.HasVariant "call" GH.Slot Message Call) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 2)
+instance (GH.HasVariant "return" GH.Slot Message Return) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 3)
+instance (GH.HasVariant "finish" GH.Slot Message Finish) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 4)
+instance (GH.HasVariant "resolve" GH.Slot Message Resolve) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
+instance (GH.HasVariant "release" GH.Slot Message Release) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
+instance (GH.HasVariant "obsoleteSave" GH.Slot Message Basics.AnyPointer) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 7)
+instance (GH.HasVariant "bootstrap" GH.Slot Message Bootstrap) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 8)
+instance (GH.HasVariant "obsoleteDelete" GH.Slot Message Basics.AnyPointer) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 9)
+instance (GH.HasVariant "provide" GH.Slot Message Provide) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 10)
+instance (GH.HasVariant "accept" GH.Slot Message Accept) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 11)
+instance (GH.HasVariant "join" GH.Slot Message Join) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 12)
+instance (GH.HasVariant "disembargo" GH.Slot Message Disembargo) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 13)
 data Bootstrap 
 type instance (R.ReprFor Bootstrap) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Bootstrap) where
@@ -114,9 +113,9 @@ instance (C.TypedStruct Bootstrap) where
 instance (C.Allocate Bootstrap) where
     type AllocHint Bootstrap = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot Bootstrap Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot Bootstrap Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "deprecatedObjectId" F.Slot Bootstrap Basics.AnyPointer) where
+instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 0)
 data Call 
 type instance (R.ReprFor Call) = (R.Ptr (Std_.Just R.Struct))
@@ -126,19 +125,19 @@ instance (C.TypedStruct Call) where
 instance (C.Allocate Call) where
     type AllocHint Call = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot Call Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot Call Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "target" F.Slot Call MessageTarget) where
+instance (GH.HasField "target" GH.Slot Call MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "interfaceId" F.Slot Call Std_.Word64) where
+instance (GH.HasField "interfaceId" GH.Slot Call Std_.Word64) where
     fieldByLabel  = (GH.dataField 0 1 64 0)
-instance (F.HasField "methodId" F.Slot Call Std_.Word16) where
+instance (GH.HasField "methodId" GH.Slot Call Std_.Word16) where
     fieldByLabel  = (GH.dataField 32 0 16 0)
-instance (F.HasField "params" F.Slot Call Payload) where
+instance (GH.HasField "params" GH.Slot Call Payload) where
     fieldByLabel  = (GH.ptrField 1)
-instance (F.HasField "sendResultsTo" F.Group Call Call'sendResultsTo) where
+instance (GH.HasField "sendResultsTo" GH.Group Call Call'sendResultsTo) where
     fieldByLabel  = GH.groupField
-instance (F.HasField "allowThirdPartyTailCall" F.Slot Call Std_.Bool) where
+instance (GH.HasField "allowThirdPartyTailCall" GH.Slot Call Std_.Bool) where
     fieldByLabel  = (GH.dataField 0 2 1 0)
 data Call'sendResultsTo 
 type instance (R.ReprFor Call'sendResultsTo) = (R.Ptr (Std_.Just R.Struct))
@@ -148,7 +147,7 @@ instance (C.TypedStruct Call'sendResultsTo) where
 instance (C.Allocate Call'sendResultsTo) where
     type AllocHint Call'sendResultsTo = ()
     new  = GH.newStruct
-instance (F.HasUnion Call'sendResultsTo) where
+instance (GH.HasUnion Call'sendResultsTo) where
     unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Call'sendResultsTo
         = Call'sendResultsTo'caller (R.Raw mut_ ())
@@ -164,12 +163,12 @@ instance (F.HasUnion Call'sendResultsTo) where
             (Call'sendResultsTo'thirdParty <$> (GH.readVariant #thirdParty struct_))
         _ ->
             (Std_.pure (Call'sendResultsTo'unknown' tag_))
-instance (F.HasVariant "caller" F.Slot Call'sendResultsTo ()) where
-    variantByLabel  = (F.Variant GH.voidField 0)
-instance (F.HasVariant "yourself" F.Slot Call'sendResultsTo ()) where
-    variantByLabel  = (F.Variant GH.voidField 1)
-instance (F.HasVariant "thirdParty" F.Slot Call'sendResultsTo Basics.AnyPointer) where
-    variantByLabel  = (F.Variant (GH.ptrField 2) 2)
+instance (GH.HasVariant "caller" GH.Slot Call'sendResultsTo ()) where
+    variantByLabel  = (GH.Variant GH.voidField 0)
+instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
+    variantByLabel  = (GH.Variant GH.voidField 1)
+instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo Basics.AnyPointer) where
+    variantByLabel  = (GH.Variant (GH.ptrField 2) 2)
 data Return 
 type instance (R.ReprFor Return) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Return) where
@@ -178,7 +177,7 @@ instance (C.TypedStruct Return) where
 instance (C.Allocate Return) where
     type AllocHint Return = ()
     new  = GH.newStruct
-instance (F.HasUnion Return) where
+instance (GH.HasUnion Return) where
     unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Return
         = Return'results (R.Raw mut_ Payload)
@@ -203,21 +202,21 @@ instance (F.HasUnion Return) where
             (Return'acceptFromThirdParty <$> (GH.readVariant #acceptFromThirdParty struct_))
         _ ->
             (Std_.pure (Return'unknown' tag_))
-instance (F.HasVariant "results" F.Slot Return Payload) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 0)
-instance (F.HasVariant "exception" F.Slot Return Exception) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 1)
-instance (F.HasVariant "canceled" F.Slot Return ()) where
-    variantByLabel  = (F.Variant GH.voidField 2)
-instance (F.HasVariant "resultsSentElsewhere" F.Slot Return ()) where
-    variantByLabel  = (F.Variant GH.voidField 3)
-instance (F.HasVariant "takeFromOtherQuestion" F.Slot Return Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 0 1 32 0) 4)
-instance (F.HasVariant "acceptFromThirdParty" F.Slot Return Basics.AnyPointer) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 5)
-instance (F.HasField "answerId" F.Slot Return Std_.Word32) where
+instance (GH.HasVariant "results" GH.Slot Return Payload) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
+instance (GH.HasVariant "exception" GH.Slot Return Exception) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
+instance (GH.HasVariant "canceled" GH.Slot Return ()) where
+    variantByLabel  = (GH.Variant GH.voidField 2)
+instance (GH.HasVariant "resultsSentElsewhere" GH.Slot Return ()) where
+    variantByLabel  = (GH.Variant GH.voidField 3)
+instance (GH.HasVariant "takeFromOtherQuestion" GH.Slot Return Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 0 1 32 0) 4)
+instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return Basics.AnyPointer) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
+instance (GH.HasField "answerId" GH.Slot Return Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "releaseParamCaps" F.Slot Return Std_.Bool) where
+instance (GH.HasField "releaseParamCaps" GH.Slot Return Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 1)
 data Finish 
 type instance (R.ReprFor Finish) = (R.Ptr (Std_.Just R.Struct))
@@ -227,9 +226,9 @@ instance (C.TypedStruct Finish) where
 instance (C.Allocate Finish) where
     type AllocHint Finish = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot Finish Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot Finish Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "releaseResultCaps" F.Slot Finish Std_.Bool) where
+instance (GH.HasField "releaseResultCaps" GH.Slot Finish Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 1)
 data Resolve 
 type instance (R.ReprFor Resolve) = (R.Ptr (Std_.Just R.Struct))
@@ -239,7 +238,7 @@ instance (C.TypedStruct Resolve) where
 instance (C.Allocate Resolve) where
     type AllocHint Resolve = ()
     new  = GH.newStruct
-instance (F.HasUnion Resolve) where
+instance (GH.HasUnion Resolve) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Resolve
         = Resolve'cap (R.Raw mut_ CapDescriptor)
@@ -252,11 +251,11 @@ instance (F.HasUnion Resolve) where
             (Resolve'exception <$> (GH.readVariant #exception struct_))
         _ ->
             (Std_.pure (Resolve'unknown' tag_))
-instance (F.HasVariant "cap" F.Slot Resolve CapDescriptor) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 0)
-instance (F.HasVariant "exception" F.Slot Resolve Exception) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 1)
-instance (F.HasField "promiseId" F.Slot Resolve Std_.Word32) where
+instance (GH.HasVariant "cap" GH.Slot Resolve CapDescriptor) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
+instance (GH.HasVariant "exception" GH.Slot Resolve Exception) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
+instance (GH.HasField "promiseId" GH.Slot Resolve Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Release 
 type instance (R.ReprFor Release) = (R.Ptr (Std_.Just R.Struct))
@@ -266,9 +265,9 @@ instance (C.TypedStruct Release) where
 instance (C.Allocate Release) where
     type AllocHint Release = ()
     new  = GH.newStruct
-instance (F.HasField "id" F.Slot Release Std_.Word32) where
+instance (GH.HasField "id" GH.Slot Release Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "referenceCount" F.Slot Release Std_.Word32) where
+instance (GH.HasField "referenceCount" GH.Slot Release Std_.Word32) where
     fieldByLabel  = (GH.dataField 32 0 32 0)
 data Disembargo 
 type instance (R.ReprFor Disembargo) = (R.Ptr (Std_.Just R.Struct))
@@ -278,9 +277,9 @@ instance (C.TypedStruct Disembargo) where
 instance (C.Allocate Disembargo) where
     type AllocHint Disembargo = ()
     new  = GH.newStruct
-instance (F.HasField "target" F.Slot Disembargo MessageTarget) where
+instance (GH.HasField "target" GH.Slot Disembargo MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "context" F.Group Disembargo Disembargo'context) where
+instance (GH.HasField "context" GH.Group Disembargo Disembargo'context) where
     fieldByLabel  = GH.groupField
 data Disembargo'context 
 type instance (R.ReprFor Disembargo'context) = (R.Ptr (Std_.Just R.Struct))
@@ -290,7 +289,7 @@ instance (C.TypedStruct Disembargo'context) where
 instance (C.Allocate Disembargo'context) where
     type AllocHint Disembargo'context = ()
     new  = GH.newStruct
-instance (F.HasUnion Disembargo'context) where
+instance (GH.HasUnion Disembargo'context) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Disembargo'context
         = Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
@@ -309,14 +308,14 @@ instance (F.HasUnion Disembargo'context) where
             (Disembargo'context'provide <$> (GH.readVariant #provide struct_))
         _ ->
             (Std_.pure (Disembargo'context'unknown' tag_))
-instance (F.HasVariant "senderLoopback" F.Slot Disembargo'context Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 0 0 32 0) 0)
-instance (F.HasVariant "receiverLoopback" F.Slot Disembargo'context Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 0 0 32 0) 1)
-instance (F.HasVariant "accept" F.Slot Disembargo'context ()) where
-    variantByLabel  = (F.Variant GH.voidField 2)
-instance (F.HasVariant "provide" F.Slot Disembargo'context Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 0 0 32 0) 3)
+instance (GH.HasVariant "senderLoopback" GH.Slot Disembargo'context Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
+instance (GH.HasVariant "receiverLoopback" GH.Slot Disembargo'context Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 1)
+instance (GH.HasVariant "accept" GH.Slot Disembargo'context ()) where
+    variantByLabel  = (GH.Variant GH.voidField 2)
+instance (GH.HasVariant "provide" GH.Slot Disembargo'context Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 3)
 data Provide 
 type instance (R.ReprFor Provide) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Provide) where
@@ -325,11 +324,11 @@ instance (C.TypedStruct Provide) where
 instance (C.Allocate Provide) where
     type AllocHint Provide = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot Provide Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot Provide Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "target" F.Slot Provide MessageTarget) where
+instance (GH.HasField "target" GH.Slot Provide MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "recipient" F.Slot Provide Basics.AnyPointer) where
+instance (GH.HasField "recipient" GH.Slot Provide Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 1)
 data Accept 
 type instance (R.ReprFor Accept) = (R.Ptr (Std_.Just R.Struct))
@@ -339,11 +338,11 @@ instance (C.TypedStruct Accept) where
 instance (C.Allocate Accept) where
     type AllocHint Accept = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot Accept Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot Accept Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "provision" F.Slot Accept Basics.AnyPointer) where
+instance (GH.HasField "provision" GH.Slot Accept Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "embargo" F.Slot Accept Std_.Bool) where
+instance (GH.HasField "embargo" GH.Slot Accept Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 0)
 data Join 
 type instance (R.ReprFor Join) = (R.Ptr (Std_.Just R.Struct))
@@ -353,11 +352,11 @@ instance (C.TypedStruct Join) where
 instance (C.Allocate Join) where
     type AllocHint Join = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot Join Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot Join Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "target" F.Slot Join MessageTarget) where
+instance (GH.HasField "target" GH.Slot Join MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "keyPart" F.Slot Join Basics.AnyPointer) where
+instance (GH.HasField "keyPart" GH.Slot Join Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 1)
 data MessageTarget 
 type instance (R.ReprFor MessageTarget) = (R.Ptr (Std_.Just R.Struct))
@@ -367,7 +366,7 @@ instance (C.TypedStruct MessageTarget) where
 instance (C.Allocate MessageTarget) where
     type AllocHint MessageTarget = ()
     new  = GH.newStruct
-instance (F.HasUnion MessageTarget) where
+instance (GH.HasUnion MessageTarget) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ MessageTarget
         = MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
@@ -380,10 +379,10 @@ instance (F.HasUnion MessageTarget) where
             (MessageTarget'promisedAnswer <$> (GH.readVariant #promisedAnswer struct_))
         _ ->
             (Std_.pure (MessageTarget'unknown' tag_))
-instance (F.HasVariant "importedCap" F.Slot MessageTarget Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 0 0 32 0) 0)
-instance (F.HasVariant "promisedAnswer" F.Slot MessageTarget PromisedAnswer) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 1)
+instance (GH.HasVariant "importedCap" GH.Slot MessageTarget Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
+instance (GH.HasVariant "promisedAnswer" GH.Slot MessageTarget PromisedAnswer) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
 data Payload 
 type instance (R.ReprFor Payload) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Payload) where
@@ -392,9 +391,9 @@ instance (C.TypedStruct Payload) where
 instance (C.Allocate Payload) where
     type AllocHint Payload = ()
     new  = GH.newStruct
-instance (F.HasField "content" F.Slot Payload Basics.AnyPointer) where
+instance (GH.HasField "content" GH.Slot Payload Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "capTable" F.Slot Payload (R.List CapDescriptor)) where
+instance (GH.HasField "capTable" GH.Slot Payload (R.List CapDescriptor)) where
     fieldByLabel  = (GH.ptrField 1)
 data CapDescriptor 
 type instance (R.ReprFor CapDescriptor) = (R.Ptr (Std_.Just R.Struct))
@@ -404,7 +403,7 @@ instance (C.TypedStruct CapDescriptor) where
 instance (C.Allocate CapDescriptor) where
     type AllocHint CapDescriptor = ()
     new  = GH.newStruct
-instance (F.HasUnion CapDescriptor) where
+instance (GH.HasUnion CapDescriptor) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ CapDescriptor
         = CapDescriptor'none (R.Raw mut_ ())
@@ -429,19 +428,19 @@ instance (F.HasUnion CapDescriptor) where
             (CapDescriptor'thirdPartyHosted <$> (GH.readVariant #thirdPartyHosted struct_))
         _ ->
             (Std_.pure (CapDescriptor'unknown' tag_))
-instance (F.HasVariant "none" F.Slot CapDescriptor ()) where
-    variantByLabel  = (F.Variant GH.voidField 0)
-instance (F.HasVariant "senderHosted" F.Slot CapDescriptor Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 32 0 32 0) 1)
-instance (F.HasVariant "senderPromise" F.Slot CapDescriptor Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 32 0 32 0) 2)
-instance (F.HasVariant "receiverHosted" F.Slot CapDescriptor Std_.Word32) where
-    variantByLabel  = (F.Variant (GH.dataField 32 0 32 0) 3)
-instance (F.HasVariant "receiverAnswer" F.Slot CapDescriptor PromisedAnswer) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 4)
-instance (F.HasVariant "thirdPartyHosted" F.Slot CapDescriptor ThirdPartyCapDescriptor) where
-    variantByLabel  = (F.Variant (GH.ptrField 0) 5)
-instance (F.HasField "attachedFd" F.Slot CapDescriptor Std_.Word8) where
+instance (GH.HasVariant "none" GH.Slot CapDescriptor ()) where
+    variantByLabel  = (GH.Variant GH.voidField 0)
+instance (GH.HasVariant "senderHosted" GH.Slot CapDescriptor Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 32 0 32 0) 1)
+instance (GH.HasVariant "senderPromise" GH.Slot CapDescriptor Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 32 0 32 0) 2)
+instance (GH.HasVariant "receiverHosted" GH.Slot CapDescriptor Std_.Word32) where
+    variantByLabel  = (GH.Variant (GH.dataField 32 0 32 0) 3)
+instance (GH.HasVariant "receiverAnswer" GH.Slot CapDescriptor PromisedAnswer) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 4)
+instance (GH.HasVariant "thirdPartyHosted" GH.Slot CapDescriptor ThirdPartyCapDescriptor) where
+    variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
+instance (GH.HasField "attachedFd" GH.Slot CapDescriptor Std_.Word8) where
     fieldByLabel  = (GH.dataField 16 0 8 255)
 data PromisedAnswer 
 type instance (R.ReprFor PromisedAnswer) = (R.Ptr (Std_.Just R.Struct))
@@ -451,9 +450,9 @@ instance (C.TypedStruct PromisedAnswer) where
 instance (C.Allocate PromisedAnswer) where
     type AllocHint PromisedAnswer = ()
     new  = GH.newStruct
-instance (F.HasField "questionId" F.Slot PromisedAnswer Std_.Word32) where
+instance (GH.HasField "questionId" GH.Slot PromisedAnswer Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (F.HasField "transform" F.Slot PromisedAnswer (R.List PromisedAnswer'Op)) where
+instance (GH.HasField "transform" GH.Slot PromisedAnswer (R.List PromisedAnswer'Op)) where
     fieldByLabel  = (GH.ptrField 0)
 data PromisedAnswer'Op 
 type instance (R.ReprFor PromisedAnswer'Op) = (R.Ptr (Std_.Just R.Struct))
@@ -463,7 +462,7 @@ instance (C.TypedStruct PromisedAnswer'Op) where
 instance (C.Allocate PromisedAnswer'Op) where
     type AllocHint PromisedAnswer'Op = ()
     new  = GH.newStruct
-instance (F.HasUnion PromisedAnswer'Op) where
+instance (GH.HasUnion PromisedAnswer'Op) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ PromisedAnswer'Op
         = PromisedAnswer'Op'noop (R.Raw mut_ ())
@@ -476,10 +475,10 @@ instance (F.HasUnion PromisedAnswer'Op) where
             (PromisedAnswer'Op'getPointerField <$> (GH.readVariant #getPointerField struct_))
         _ ->
             (Std_.pure (PromisedAnswer'Op'unknown' tag_))
-instance (F.HasVariant "noop" F.Slot PromisedAnswer'Op ()) where
-    variantByLabel  = (F.Variant GH.voidField 0)
-instance (F.HasVariant "getPointerField" F.Slot PromisedAnswer'Op Std_.Word16) where
-    variantByLabel  = (F.Variant (GH.dataField 16 0 16 0) 1)
+instance (GH.HasVariant "noop" GH.Slot PromisedAnswer'Op ()) where
+    variantByLabel  = (GH.Variant GH.voidField 0)
+instance (GH.HasVariant "getPointerField" GH.Slot PromisedAnswer'Op Std_.Word16) where
+    variantByLabel  = (GH.Variant (GH.dataField 16 0 16 0) 1)
 data ThirdPartyCapDescriptor 
 type instance (R.ReprFor ThirdPartyCapDescriptor) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct ThirdPartyCapDescriptor) where
@@ -488,9 +487,9 @@ instance (C.TypedStruct ThirdPartyCapDescriptor) where
 instance (C.Allocate ThirdPartyCapDescriptor) where
     type AllocHint ThirdPartyCapDescriptor = ()
     new  = GH.newStruct
-instance (F.HasField "id" F.Slot ThirdPartyCapDescriptor Basics.AnyPointer) where
+instance (GH.HasField "id" GH.Slot ThirdPartyCapDescriptor Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "vineId" F.Slot ThirdPartyCapDescriptor Std_.Word32) where
+instance (GH.HasField "vineId" GH.Slot ThirdPartyCapDescriptor Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Exception 
 type instance (R.ReprFor Exception) = (R.Ptr (Std_.Just R.Struct))
@@ -500,13 +499,13 @@ instance (C.TypedStruct Exception) where
 instance (C.Allocate Exception) where
     type AllocHint Exception = ()
     new  = GH.newStruct
-instance (F.HasField "reason" F.Slot Exception Basics.Text) where
+instance (GH.HasField "reason" GH.Slot Exception Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
-instance (F.HasField "obsoleteIsCallersFault" F.Slot Exception Std_.Bool) where
+instance (GH.HasField "obsoleteIsCallersFault" GH.Slot Exception Std_.Bool) where
     fieldByLabel  = (GH.dataField 0 0 1 0)
-instance (F.HasField "obsoleteDurability" F.Slot Exception Std_.Word16) where
+instance (GH.HasField "obsoleteDurability" GH.Slot Exception Std_.Word16) where
     fieldByLabel  = (GH.dataField 16 0 16 0)
-instance (F.HasField "type_" F.Slot Exception Exception'Type) where
+instance (GH.HasField "type_" GH.Slot Exception Exception'Type) where
     fieldByLabel  = (GH.dataField 32 0 16 0)
 data Exception'Type 
 type instance (R.ReprFor Exception'Type) = (R.Data R.Sz16)
