@@ -39,7 +39,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                 , typeParams = map C.paramName typeParams
                 , tagLoc = C.DataLoc
                     { dataIdx = fromIntegral $ tagOffset `div` 4
-                    , dataOff = fromIntegral $ tagOffset `mod` 4
+                    , dataOff = fromIntegral $ (tagOffset `mod` 4) * 16
                     , dataDef = 0
                     }
                 , variants = map variantToVariant variants

@@ -30,7 +30,7 @@ instance (C.Allocate Node) where
     type AllocHint Node = ()
     new  = GH.newStruct
 instance (F.HasUnion Node) where
-    unionField  = (GH.dataField 2 1 16 0)
+    unionField  = (GH.dataField 32 1 16 0)
     data RawWhich mut_ Node
         = Node'file (R.Raw mut_ ())
         | Node'struct (R.Raw mut_ Node'struct)
@@ -288,7 +288,7 @@ instance (C.Allocate Field'ordinal) where
     type AllocHint Field'ordinal = ()
     new  = GH.newStruct
 instance (F.HasUnion Field'ordinal) where
-    unionField  = (GH.dataField 1 1 16 0)
+    unionField  = (GH.dataField 16 1 16 0)
     data RawWhich mut_ Field'ordinal
         = Field'ordinal'implicit (R.Raw mut_ ())
         | Field'ordinal'explicit (R.Raw mut_ Std_.Word16)
@@ -549,7 +549,7 @@ instance (C.Allocate Type'anyPointer'unconstrained) where
     type AllocHint Type'anyPointer'unconstrained = ()
     new  = GH.newStruct
 instance (F.HasUnion Type'anyPointer'unconstrained) where
-    unionField  = (GH.dataField 1 1 16 0)
+    unionField  = (GH.dataField 16 1 16 0)
     data RawWhich mut_ Type'anyPointer'unconstrained
         = Type'anyPointer'unconstrained'anyKind (R.Raw mut_ ())
         | Type'anyPointer'unconstrained'struct (R.Raw mut_ ())

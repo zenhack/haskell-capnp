@@ -149,7 +149,7 @@ instance (C.Allocate Call'sendResultsTo) where
     type AllocHint Call'sendResultsTo = ()
     new  = GH.newStruct
 instance (F.HasUnion Call'sendResultsTo) where
-    unionField  = (GH.dataField 3 0 16 0)
+    unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Call'sendResultsTo
         = Call'sendResultsTo'caller (R.Raw mut_ ())
         | Call'sendResultsTo'yourself (R.Raw mut_ ())
@@ -179,7 +179,7 @@ instance (C.Allocate Return) where
     type AllocHint Return = ()
     new  = GH.newStruct
 instance (F.HasUnion Return) where
-    unionField  = (GH.dataField 3 0 16 0)
+    unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Return
         = Return'results (R.Raw mut_ Payload)
         | Return'exception (R.Raw mut_ Exception)
@@ -240,7 +240,7 @@ instance (C.Allocate Resolve) where
     type AllocHint Resolve = ()
     new  = GH.newStruct
 instance (F.HasUnion Resolve) where
-    unionField  = (GH.dataField 2 0 16 0)
+    unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Resolve
         = Resolve'cap (R.Raw mut_ CapDescriptor)
         | Resolve'exception (R.Raw mut_ Exception)
@@ -291,7 +291,7 @@ instance (C.Allocate Disembargo'context) where
     type AllocHint Disembargo'context = ()
     new  = GH.newStruct
 instance (F.HasUnion Disembargo'context) where
-    unionField  = (GH.dataField 2 0 16 0)
+    unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Disembargo'context
         = Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
         | Disembargo'context'receiverLoopback (R.Raw mut_ Std_.Word32)
@@ -368,7 +368,7 @@ instance (C.Allocate MessageTarget) where
     type AllocHint MessageTarget = ()
     new  = GH.newStruct
 instance (F.HasUnion MessageTarget) where
-    unionField  = (GH.dataField 2 0 16 0)
+    unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ MessageTarget
         = MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
         | MessageTarget'promisedAnswer (R.Raw mut_ PromisedAnswer)
