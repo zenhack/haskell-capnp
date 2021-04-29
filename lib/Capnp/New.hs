@@ -43,7 +43,7 @@ readField (F.Field field) (R.Raw struct) =
     case field of
         F.DataField F.DataFieldLoc{ shift, index, mask, defaultValue } -> do
             word <- U.getData (fromIntegral index) struct
-            pure $ R.Raw $ C.fromWord $ ((word `shiftR` fromIntegral shift) .&. mask) `xor` defaultValue
+            pure $ R.Raw $ C.fromWord $ ((word .&. mask) `shiftR` fromIntegral shift) `xor` defaultValue
         F.PtrField index ->
             U.getPtr (fromIntegral index) struct >>= readPtrField
         F.GroupField ->
@@ -106,9 +106,9 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         ) => F.DataFieldLoc sz -> m ()
     setDataField F.DataFieldLoc{ shift, index, mask, defaultValue } = do
         oldWord <- U.getData (fromIntegral index) struct
-        let valueWord = (C.toWord value `xor` defaultValue) `shiftL` fromIntegral shift
-            shiftedMask = mask `shiftL` fromIntegral shift
-            newWord = (oldWord .&. complement shiftedMask) .|. valueWord
+        let valueWord = (C.toWord value `xor` defaultValue)
+            newWord = (oldWord .&. complement mask)
+                  .|. (valueWord `shiftL` fromIntegral shift)
         U.setData newWord (fromIntegral index) struct
 
 encodeField ::

@@ -38,7 +38,7 @@ dataField
 dataField shift index nbits defaultValue = F.Field $ F.DataField @sz F.DataFieldLoc
     { shift
     , index
-    , mask = (1 `shiftL` fromIntegral nbits) - 1
+    , mask = ((1 `shiftL` fromIntegral nbits) - 1) `shiftL` fromIntegral shift
     , defaultValue
     }
 
