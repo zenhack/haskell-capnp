@@ -32,7 +32,7 @@ fileToModules file =
 
 fileToMainModule :: New.File -> Hs.Module
 fileToMainModule file@New.File{fileName} =
-    Hs.Module
+    fixImports $ Hs.Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
         , modLangPragmas =
             [ "TypeFamilies"
