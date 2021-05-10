@@ -33,7 +33,6 @@ import           Capnp.Rpc.Promise       (newPromise)
 import qualified Capnp.Rpc.Server        as Server
 import qualified Capnp.Rpc.Untyped       as Rpc
 import qualified Capnp.Untyped           as U
-import           Control.Concurrent.STM
 import           Control.Monad.Catch     (MonadThrow)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
@@ -63,13 +62,13 @@ newtype Pipeline a = Pipeline Rpc.Pipeline
 newtype Client a = Client Rpc.Client
 
 class AsClient f where
-    asClient :: R.IsCap c => f c -> STM (Client c)
+    asClient :: MonadSTM m => R.IsCap c => f c -> m (Client c)
 
 instance AsClient Pipeline where
     asClient = pipelineClient
 
 instance AsClient Client where
-    asClient = pure
+    asClient = liftSTM . pure
 
 callR
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
