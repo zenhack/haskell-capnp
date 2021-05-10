@@ -63,17 +63,20 @@ module Capnp.Repr
 
 import Prelude hiding (length)
 
-import qualified Capnp.Classes       as C
-import qualified Capnp.Errors        as E
-import           Capnp.Message       (Mutability(..))
-import qualified Capnp.Message       as M
-import qualified Capnp.Untyped       as U
-import           Control.Monad.Catch (MonadThrow(..))
+import qualified Capnp.Classes        as C
+import qualified Capnp.Errors         as E
+import           Capnp.Message        (Mutability(..))
+import qualified Capnp.Message        as M
+import           Capnp.TraversalLimit (evalLimitT)
+import qualified Capnp.Untyped        as U
+import           Control.Monad.Catch  (MonadThrow(..))
+import           Data.Default         (Default(..))
 import           Data.Int
-import           Data.Kind           (Type)
+import           Data.Kind            (Type)
+import           Data.Maybe           (fromJust)
 import           Data.Word
-import           GHC.Generics        (Generic)
-import qualified Language.Haskell.TH as TH
+import           GHC.Generics         (Generic)
+import qualified Language.Haskell.TH  as TH
 
 -- | A 'Repr' describes a wire representation for a value. This is
 -- mostly used at the type level (using DataKinds); types are
@@ -235,6 +238,9 @@ instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw mut a) 
     message (Raw r) = U.message r
 instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw mut a) mut where
     messageDefault msg = Raw <$> U.messageDefault msg
+
+instance U.MessageDefault (Raw 'Const a) 'Const => Default (Raw 'Const a) where
+    def = fromJust $ evalLimitT maxBound $ U.messageDefault M.empty
 
 -- | Operations on types with pointer representations.
 class IsPtrRepr (r :: Maybe PtrRepr) where
