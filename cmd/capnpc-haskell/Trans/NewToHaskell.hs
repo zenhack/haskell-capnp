@@ -25,8 +25,14 @@ imports =
     ]
 
 fileToModules :: New.File -> [Hs.Module]
-fileToModules file@New.File{fileName} =
-    [ Hs.Module
+fileToModules file =
+    [ fileToMainModule file
+    , fileToModuleAlias file
+    ]
+
+fileToMainModule :: New.File -> Hs.Module
+fileToMainModule file@New.File{fileName} =
+    Hs.Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
         , modLangPragmas =
             [ "TypeFamilies"
@@ -40,7 +46,17 @@ fileToModules file@New.File{fileName} =
         , modImports = imports
         , modDecls = fileToDecls file
         }
-    ]
+
+fileToModuleAlias :: New.File -> Hs.Module
+fileToModuleAlias New.File{fileId,fileName} =
+    let reExport = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
+    in Hs.Module
+        { modName = idToModule fileId ++ ["New"]
+        , modLangPragmas = []
+        , modExports = Just [Hs.ExportMod reExport]
+        , modImports = [ Hs.ImportAll { parts = reExport } ]
+        , modDecls = []
+        }
 
 fileToDecls :: New.File -> [Hs.Decl]
 fileToDecls New.File{fileId, decls} =
