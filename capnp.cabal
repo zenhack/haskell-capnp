@@ -273,12 +273,12 @@ test-suite tests
       , Examples.Rpc.CalculatorServer
 
       -- Generated code for examples/calculator.capnp
-      , Capnp.Gen.ById.X85150b117366d14b
-      , Capnp.Gen.ById.X85150b117366d14b.Pure
-      , Capnp.Gen.ById.X85150b117366d14b.New
       , Capnp.Gen.Calculator
       , Capnp.Gen.Calculator.Pure
       , Capnp.Gen.Calculator.New
+      , Capnp.Gen.ById.X85150b117366d14b
+      , Capnp.Gen.ById.X85150b117366d14b.Pure
+      , Capnp.Gen.ById.X85150b117366d14b.New
 
       -- Generated code for examples/echo.capnp
       , Capnp.Gen.Echo
