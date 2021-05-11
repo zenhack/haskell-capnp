@@ -106,7 +106,7 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         ) => F.DataFieldLoc sz -> m ()
     setDataField F.DataFieldLoc{ shift, index, mask, defaultValue } = do
         oldWord <- U.getData (fromIntegral index) struct
-        let valueWord = (C.toWord value `xor` defaultValue)
+        let valueWord = C.toWord value `xor` defaultValue
             newWord = (oldWord .&. complement mask)
                   .|. (valueWord `shiftL` fromIntegral shift)
         U.setData newWord (fromIntegral index) struct
