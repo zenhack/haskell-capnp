@@ -205,7 +205,8 @@ defineRawData thisMod name tVars variants =
         , dataNewtype = False
         , dataVariants =
             [ Hs.DataVariant
-                { dvCtorName = Name.localToUnQ $ Name.mkSub name variantName
+                { dvCtorName =
+                    "RW_" <> Name.localToUnQ (Name.mkSub name variantName)
                 , dvArgs = Hs.APos
                     [ Hs.TApp
                         (tReprName "Raw")
@@ -218,7 +219,7 @@ defineRawData thisMod name tVars variants =
             ]
             ++
             [ Hs.DataVariant
-                { dvCtorName = Name.localToUnQ $ unknownVariant name
+                { dvCtorName = "RW_" <> Name.localToUnQ (unknownVariant name)
                 , dvArgs = Hs.APos [tStd_ "Word16"]
                 }
             ]
@@ -239,7 +240,7 @@ defineInternalWhich structName variants =
             Hs.ECase (Hs.ELName "tag_") $
                 [ ( Hs.PInt $ fromIntegral tagValue
                   , Hs.EFApp
-                        (Hs.ELName $ Name.mkSub structName variantName)
+                        (Hs.EVar $ "RW_" <> Name.renderLocalQ (Name.mkSub structName variantName))
                         [ Hs.EApp
                             (egName ["GH"] "readVariant")
                             [ Hs.ELabel variantName
@@ -253,7 +254,7 @@ defineInternalWhich structName variants =
                 [ ( Hs.PVar "_"
                   , Hs.EApp (eStd_ "pure")
                         [ Hs.EApp
-                            (Hs.ELName $ unknownVariant structName)
+                            (Hs.EVar $ "RW_" <> Name.renderLocalQ (unknownVariant structName))
                             [Hs.ELName "tag_"]
                         ]
                   )

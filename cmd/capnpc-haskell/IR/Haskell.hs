@@ -163,7 +163,8 @@ data Type
     deriving(Show, Read, Eq)
 
 data Exp
-    = EApp Exp [Exp]
+    = EVar T.Text
+    | EApp Exp [Exp]
     | EFApp Exp [Exp]
     -- ^ "Functorial" application, i.e. f <$> x <*> y <*> z.
     | EGName Name.GlobalQ

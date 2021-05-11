@@ -31,28 +31,28 @@ instance (C.Allocate Node) where
 instance (GH.HasUnion Node) where
     unionField  = (GH.dataField 32 1 16 0)
     data RawWhich mut_ Node
-        = Node'file (R.Raw mut_ ())
-        | Node'struct (R.Raw mut_ Node'struct)
-        | Node'enum (R.Raw mut_ Node'enum)
-        | Node'interface (R.Raw mut_ Node'interface)
-        | Node'const (R.Raw mut_ Node'const)
-        | Node'annotation (R.Raw mut_ Node'annotation)
-        | Node'unknown' Std_.Word16
+        = RW_Node'file (R.Raw mut_ ())
+        | RW_Node'struct (R.Raw mut_ Node'struct)
+        | RW_Node'enum (R.Raw mut_ Node'enum)
+        | RW_Node'interface (R.Raw mut_ Node'interface)
+        | RW_Node'const (R.Raw mut_ Node'const)
+        | RW_Node'annotation (R.Raw mut_ Node'annotation)
+        | RW_Node'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Node'file <$> (GH.readVariant #file struct_))
+            (RW_Node'file <$> (GH.readVariant #file struct_))
         1 ->
-            (Node'struct <$> (GH.readVariant #struct struct_))
+            (RW_Node'struct <$> (GH.readVariant #struct struct_))
         2 ->
-            (Node'enum <$> (GH.readVariant #enum struct_))
+            (RW_Node'enum <$> (GH.readVariant #enum struct_))
         3 ->
-            (Node'interface <$> (GH.readVariant #interface struct_))
+            (RW_Node'interface <$> (GH.readVariant #interface struct_))
         4 ->
-            (Node'const <$> (GH.readVariant #const struct_))
+            (RW_Node'const <$> (GH.readVariant #const struct_))
         5 ->
-            (Node'annotation <$> (GH.readVariant #annotation struct_))
+            (RW_Node'annotation <$> (GH.readVariant #annotation struct_))
         _ ->
-            (Std_.pure (Node'unknown' tag_))
+            (Std_.pure (RW_Node'unknown' tag_))
 instance (GH.HasVariant "file" GH.Slot Node ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "struct" GH.Group Node Node'struct) where
@@ -228,16 +228,16 @@ instance (C.Allocate Field) where
 instance (GH.HasUnion Field) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ Field
-        = Field'slot (R.Raw mut_ Field'slot)
-        | Field'group (R.Raw mut_ Field'group)
-        | Field'unknown' Std_.Word16
+        = RW_Field'slot (R.Raw mut_ Field'slot)
+        | RW_Field'group (R.Raw mut_ Field'group)
+        | RW_Field'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Field'slot <$> (GH.readVariant #slot struct_))
+            (RW_Field'slot <$> (GH.readVariant #slot struct_))
         1 ->
-            (Field'group <$> (GH.readVariant #group struct_))
+            (RW_Field'group <$> (GH.readVariant #group struct_))
         _ ->
-            (Std_.pure (Field'unknown' tag_))
+            (Std_.pure (RW_Field'unknown' tag_))
 instance (GH.HasVariant "slot" GH.Group Field Field'slot) where
     variantByLabel  = (GH.Variant GH.groupField 0)
 instance (GH.HasVariant "group" GH.Group Field Field'group) where
@@ -289,16 +289,16 @@ instance (C.Allocate Field'ordinal) where
 instance (GH.HasUnion Field'ordinal) where
     unionField  = (GH.dataField 16 1 16 0)
     data RawWhich mut_ Field'ordinal
-        = Field'ordinal'implicit (R.Raw mut_ ())
-        | Field'ordinal'explicit (R.Raw mut_ Std_.Word16)
-        | Field'ordinal'unknown' Std_.Word16
+        = RW_Field'ordinal'implicit (R.Raw mut_ ())
+        | RW_Field'ordinal'explicit (R.Raw mut_ Std_.Word16)
+        | RW_Field'ordinal'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Field'ordinal'implicit <$> (GH.readVariant #implicit struct_))
+            (RW_Field'ordinal'implicit <$> (GH.readVariant #implicit struct_))
         1 ->
-            (Field'ordinal'explicit <$> (GH.readVariant #explicit struct_))
+            (RW_Field'ordinal'explicit <$> (GH.readVariant #explicit struct_))
         _ ->
-            (Std_.pure (Field'ordinal'unknown' tag_))
+            (Std_.pure (RW_Field'ordinal'unknown' tag_))
 instance (GH.HasVariant "implicit" GH.Slot Field'ordinal ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "explicit" GH.Slot Field'ordinal Std_.Word16) where
@@ -364,67 +364,67 @@ instance (C.Allocate Type) where
 instance (GH.HasUnion Type) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Type
-        = Type'void (R.Raw mut_ ())
-        | Type'bool (R.Raw mut_ ())
-        | Type'int8 (R.Raw mut_ ())
-        | Type'int16 (R.Raw mut_ ())
-        | Type'int32 (R.Raw mut_ ())
-        | Type'int64 (R.Raw mut_ ())
-        | Type'uint8 (R.Raw mut_ ())
-        | Type'uint16 (R.Raw mut_ ())
-        | Type'uint32 (R.Raw mut_ ())
-        | Type'uint64 (R.Raw mut_ ())
-        | Type'float32 (R.Raw mut_ ())
-        | Type'float64 (R.Raw mut_ ())
-        | Type'text (R.Raw mut_ ())
-        | Type'data_ (R.Raw mut_ ())
-        | Type'list (R.Raw mut_ Type'list)
-        | Type'enum (R.Raw mut_ Type'enum)
-        | Type'struct (R.Raw mut_ Type'struct)
-        | Type'interface (R.Raw mut_ Type'interface)
-        | Type'anyPointer (R.Raw mut_ Type'anyPointer)
-        | Type'unknown' Std_.Word16
+        = RW_Type'void (R.Raw mut_ ())
+        | RW_Type'bool (R.Raw mut_ ())
+        | RW_Type'int8 (R.Raw mut_ ())
+        | RW_Type'int16 (R.Raw mut_ ())
+        | RW_Type'int32 (R.Raw mut_ ())
+        | RW_Type'int64 (R.Raw mut_ ())
+        | RW_Type'uint8 (R.Raw mut_ ())
+        | RW_Type'uint16 (R.Raw mut_ ())
+        | RW_Type'uint32 (R.Raw mut_ ())
+        | RW_Type'uint64 (R.Raw mut_ ())
+        | RW_Type'float32 (R.Raw mut_ ())
+        | RW_Type'float64 (R.Raw mut_ ())
+        | RW_Type'text (R.Raw mut_ ())
+        | RW_Type'data_ (R.Raw mut_ ())
+        | RW_Type'list (R.Raw mut_ Type'list)
+        | RW_Type'enum (R.Raw mut_ Type'enum)
+        | RW_Type'struct (R.Raw mut_ Type'struct)
+        | RW_Type'interface (R.Raw mut_ Type'interface)
+        | RW_Type'anyPointer (R.Raw mut_ Type'anyPointer)
+        | RW_Type'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Type'void <$> (GH.readVariant #void struct_))
+            (RW_Type'void <$> (GH.readVariant #void struct_))
         1 ->
-            (Type'bool <$> (GH.readVariant #bool struct_))
+            (RW_Type'bool <$> (GH.readVariant #bool struct_))
         2 ->
-            (Type'int8 <$> (GH.readVariant #int8 struct_))
+            (RW_Type'int8 <$> (GH.readVariant #int8 struct_))
         3 ->
-            (Type'int16 <$> (GH.readVariant #int16 struct_))
+            (RW_Type'int16 <$> (GH.readVariant #int16 struct_))
         4 ->
-            (Type'int32 <$> (GH.readVariant #int32 struct_))
+            (RW_Type'int32 <$> (GH.readVariant #int32 struct_))
         5 ->
-            (Type'int64 <$> (GH.readVariant #int64 struct_))
+            (RW_Type'int64 <$> (GH.readVariant #int64 struct_))
         6 ->
-            (Type'uint8 <$> (GH.readVariant #uint8 struct_))
+            (RW_Type'uint8 <$> (GH.readVariant #uint8 struct_))
         7 ->
-            (Type'uint16 <$> (GH.readVariant #uint16 struct_))
+            (RW_Type'uint16 <$> (GH.readVariant #uint16 struct_))
         8 ->
-            (Type'uint32 <$> (GH.readVariant #uint32 struct_))
+            (RW_Type'uint32 <$> (GH.readVariant #uint32 struct_))
         9 ->
-            (Type'uint64 <$> (GH.readVariant #uint64 struct_))
+            (RW_Type'uint64 <$> (GH.readVariant #uint64 struct_))
         10 ->
-            (Type'float32 <$> (GH.readVariant #float32 struct_))
+            (RW_Type'float32 <$> (GH.readVariant #float32 struct_))
         11 ->
-            (Type'float64 <$> (GH.readVariant #float64 struct_))
+            (RW_Type'float64 <$> (GH.readVariant #float64 struct_))
         12 ->
-            (Type'text <$> (GH.readVariant #text struct_))
+            (RW_Type'text <$> (GH.readVariant #text struct_))
         13 ->
-            (Type'data_ <$> (GH.readVariant #data_ struct_))
+            (RW_Type'data_ <$> (GH.readVariant #data_ struct_))
         14 ->
-            (Type'list <$> (GH.readVariant #list struct_))
+            (RW_Type'list <$> (GH.readVariant #list struct_))
         15 ->
-            (Type'enum <$> (GH.readVariant #enum struct_))
+            (RW_Type'enum <$> (GH.readVariant #enum struct_))
         16 ->
-            (Type'struct <$> (GH.readVariant #struct struct_))
+            (RW_Type'struct <$> (GH.readVariant #struct struct_))
         17 ->
-            (Type'interface <$> (GH.readVariant #interface struct_))
+            (RW_Type'interface <$> (GH.readVariant #interface struct_))
         18 ->
-            (Type'anyPointer <$> (GH.readVariant #anyPointer struct_))
+            (RW_Type'anyPointer <$> (GH.readVariant #anyPointer struct_))
         _ ->
-            (Std_.pure (Type'unknown' tag_))
+            (Std_.pure (RW_Type'unknown' tag_))
 instance (GH.HasVariant "void" GH.Slot Type ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "bool" GH.Slot Type ()) where
@@ -520,19 +520,19 @@ instance (C.Allocate Type'anyPointer) where
 instance (GH.HasUnion Type'anyPointer) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ Type'anyPointer
-        = Type'anyPointer'unconstrained (R.Raw mut_ Type'anyPointer'unconstrained)
-        | Type'anyPointer'parameter (R.Raw mut_ Type'anyPointer'parameter)
-        | Type'anyPointer'implicitMethodParameter (R.Raw mut_ Type'anyPointer'implicitMethodParameter)
-        | Type'anyPointer'unknown' Std_.Word16
+        = RW_Type'anyPointer'unconstrained (R.Raw mut_ Type'anyPointer'unconstrained)
+        | RW_Type'anyPointer'parameter (R.Raw mut_ Type'anyPointer'parameter)
+        | RW_Type'anyPointer'implicitMethodParameter (R.Raw mut_ Type'anyPointer'implicitMethodParameter)
+        | RW_Type'anyPointer'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Type'anyPointer'unconstrained <$> (GH.readVariant #unconstrained struct_))
+            (RW_Type'anyPointer'unconstrained <$> (GH.readVariant #unconstrained struct_))
         1 ->
-            (Type'anyPointer'parameter <$> (GH.readVariant #parameter struct_))
+            (RW_Type'anyPointer'parameter <$> (GH.readVariant #parameter struct_))
         2 ->
-            (Type'anyPointer'implicitMethodParameter <$> (GH.readVariant #implicitMethodParameter struct_))
+            (RW_Type'anyPointer'implicitMethodParameter <$> (GH.readVariant #implicitMethodParameter struct_))
         _ ->
-            (Std_.pure (Type'anyPointer'unknown' tag_))
+            (Std_.pure (RW_Type'anyPointer'unknown' tag_))
 instance (GH.HasVariant "unconstrained" GH.Group Type'anyPointer Type'anyPointer'unconstrained) where
     variantByLabel  = (GH.Variant GH.groupField 0)
 instance (GH.HasVariant "parameter" GH.Group Type'anyPointer Type'anyPointer'parameter) where
@@ -550,22 +550,22 @@ instance (C.Allocate Type'anyPointer'unconstrained) where
 instance (GH.HasUnion Type'anyPointer'unconstrained) where
     unionField  = (GH.dataField 16 1 16 0)
     data RawWhich mut_ Type'anyPointer'unconstrained
-        = Type'anyPointer'unconstrained'anyKind (R.Raw mut_ ())
-        | Type'anyPointer'unconstrained'struct (R.Raw mut_ ())
-        | Type'anyPointer'unconstrained'list (R.Raw mut_ ())
-        | Type'anyPointer'unconstrained'capability (R.Raw mut_ ())
-        | Type'anyPointer'unconstrained'unknown' Std_.Word16
+        = RW_Type'anyPointer'unconstrained'anyKind (R.Raw mut_ ())
+        | RW_Type'anyPointer'unconstrained'struct (R.Raw mut_ ())
+        | RW_Type'anyPointer'unconstrained'list (R.Raw mut_ ())
+        | RW_Type'anyPointer'unconstrained'capability (R.Raw mut_ ())
+        | RW_Type'anyPointer'unconstrained'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Type'anyPointer'unconstrained'anyKind <$> (GH.readVariant #anyKind struct_))
+            (RW_Type'anyPointer'unconstrained'anyKind <$> (GH.readVariant #anyKind struct_))
         1 ->
-            (Type'anyPointer'unconstrained'struct <$> (GH.readVariant #struct struct_))
+            (RW_Type'anyPointer'unconstrained'struct <$> (GH.readVariant #struct struct_))
         2 ->
-            (Type'anyPointer'unconstrained'list <$> (GH.readVariant #list struct_))
+            (RW_Type'anyPointer'unconstrained'list <$> (GH.readVariant #list struct_))
         3 ->
-            (Type'anyPointer'unconstrained'capability <$> (GH.readVariant #capability struct_))
+            (RW_Type'anyPointer'unconstrained'capability <$> (GH.readVariant #capability struct_))
         _ ->
-            (Std_.pure (Type'anyPointer'unconstrained'unknown' tag_))
+            (Std_.pure (RW_Type'anyPointer'unconstrained'unknown' tag_))
 instance (GH.HasVariant "anyKind" GH.Slot Type'anyPointer'unconstrained ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "struct" GH.Slot Type'anyPointer'unconstrained ()) where
@@ -617,16 +617,16 @@ instance (C.Allocate Brand'Scope) where
 instance (GH.HasUnion Brand'Scope) where
     unionField  = (GH.dataField 0 1 16 0)
     data RawWhich mut_ Brand'Scope
-        = Brand'Scope'bind (R.Raw mut_ (R.List Brand'Binding))
-        | Brand'Scope'inherit (R.Raw mut_ ())
-        | Brand'Scope'unknown' Std_.Word16
+        = RW_Brand'Scope'bind (R.Raw mut_ (R.List Brand'Binding))
+        | RW_Brand'Scope'inherit (R.Raw mut_ ())
+        | RW_Brand'Scope'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Brand'Scope'bind <$> (GH.readVariant #bind struct_))
+            (RW_Brand'Scope'bind <$> (GH.readVariant #bind struct_))
         1 ->
-            (Brand'Scope'inherit <$> (GH.readVariant #inherit struct_))
+            (RW_Brand'Scope'inherit <$> (GH.readVariant #inherit struct_))
         _ ->
-            (Std_.pure (Brand'Scope'unknown' tag_))
+            (Std_.pure (RW_Brand'Scope'unknown' tag_))
 instance (GH.HasVariant "bind" GH.Slot Brand'Scope (R.List Brand'Binding)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "inherit" GH.Slot Brand'Scope ()) where
@@ -644,16 +644,16 @@ instance (C.Allocate Brand'Binding) where
 instance (GH.HasUnion Brand'Binding) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Brand'Binding
-        = Brand'Binding'unbound (R.Raw mut_ ())
-        | Brand'Binding'type_ (R.Raw mut_ Type)
-        | Brand'Binding'unknown' Std_.Word16
+        = RW_Brand'Binding'unbound (R.Raw mut_ ())
+        | RW_Brand'Binding'type_ (R.Raw mut_ Type)
+        | RW_Brand'Binding'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Brand'Binding'unbound <$> (GH.readVariant #unbound struct_))
+            (RW_Brand'Binding'unbound <$> (GH.readVariant #unbound struct_))
         1 ->
-            (Brand'Binding'type_ <$> (GH.readVariant #type_ struct_))
+            (RW_Brand'Binding'type_ <$> (GH.readVariant #type_ struct_))
         _ ->
-            (Std_.pure (Brand'Binding'unknown' tag_))
+            (Std_.pure (RW_Brand'Binding'unknown' tag_))
 instance (GH.HasVariant "unbound" GH.Slot Brand'Binding ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "type_" GH.Slot Brand'Binding Type) where
@@ -669,67 +669,67 @@ instance (C.Allocate Value) where
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
-        = Value'void (R.Raw mut_ ())
-        | Value'bool (R.Raw mut_ Std_.Bool)
-        | Value'int8 (R.Raw mut_ Std_.Int8)
-        | Value'int16 (R.Raw mut_ Std_.Int16)
-        | Value'int32 (R.Raw mut_ Std_.Int32)
-        | Value'int64 (R.Raw mut_ Std_.Int64)
-        | Value'uint8 (R.Raw mut_ Std_.Word8)
-        | Value'uint16 (R.Raw mut_ Std_.Word16)
-        | Value'uint32 (R.Raw mut_ Std_.Word32)
-        | Value'uint64 (R.Raw mut_ Std_.Word64)
-        | Value'float32 (R.Raw mut_ Std_.Float)
-        | Value'float64 (R.Raw mut_ Std_.Double)
-        | Value'text (R.Raw mut_ Basics.Text)
-        | Value'data_ (R.Raw mut_ Basics.Data)
-        | Value'list (R.Raw mut_ Basics.AnyPointer)
-        | Value'enum (R.Raw mut_ Std_.Word16)
-        | Value'struct (R.Raw mut_ Basics.AnyPointer)
-        | Value'interface (R.Raw mut_ ())
-        | Value'anyPointer (R.Raw mut_ Basics.AnyPointer)
-        | Value'unknown' Std_.Word16
+        = RW_Value'void (R.Raw mut_ ())
+        | RW_Value'bool (R.Raw mut_ Std_.Bool)
+        | RW_Value'int8 (R.Raw mut_ Std_.Int8)
+        | RW_Value'int16 (R.Raw mut_ Std_.Int16)
+        | RW_Value'int32 (R.Raw mut_ Std_.Int32)
+        | RW_Value'int64 (R.Raw mut_ Std_.Int64)
+        | RW_Value'uint8 (R.Raw mut_ Std_.Word8)
+        | RW_Value'uint16 (R.Raw mut_ Std_.Word16)
+        | RW_Value'uint32 (R.Raw mut_ Std_.Word32)
+        | RW_Value'uint64 (R.Raw mut_ Std_.Word64)
+        | RW_Value'float32 (R.Raw mut_ Std_.Float)
+        | RW_Value'float64 (R.Raw mut_ Std_.Double)
+        | RW_Value'text (R.Raw mut_ Basics.Text)
+        | RW_Value'data_ (R.Raw mut_ Basics.Data)
+        | RW_Value'list (R.Raw mut_ Basics.AnyPointer)
+        | RW_Value'enum (R.Raw mut_ Std_.Word16)
+        | RW_Value'struct (R.Raw mut_ Basics.AnyPointer)
+        | RW_Value'interface (R.Raw mut_ ())
+        | RW_Value'anyPointer (R.Raw mut_ Basics.AnyPointer)
+        | RW_Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Value'void <$> (GH.readVariant #void struct_))
+            (RW_Value'void <$> (GH.readVariant #void struct_))
         1 ->
-            (Value'bool <$> (GH.readVariant #bool struct_))
+            (RW_Value'bool <$> (GH.readVariant #bool struct_))
         2 ->
-            (Value'int8 <$> (GH.readVariant #int8 struct_))
+            (RW_Value'int8 <$> (GH.readVariant #int8 struct_))
         3 ->
-            (Value'int16 <$> (GH.readVariant #int16 struct_))
+            (RW_Value'int16 <$> (GH.readVariant #int16 struct_))
         4 ->
-            (Value'int32 <$> (GH.readVariant #int32 struct_))
+            (RW_Value'int32 <$> (GH.readVariant #int32 struct_))
         5 ->
-            (Value'int64 <$> (GH.readVariant #int64 struct_))
+            (RW_Value'int64 <$> (GH.readVariant #int64 struct_))
         6 ->
-            (Value'uint8 <$> (GH.readVariant #uint8 struct_))
+            (RW_Value'uint8 <$> (GH.readVariant #uint8 struct_))
         7 ->
-            (Value'uint16 <$> (GH.readVariant #uint16 struct_))
+            (RW_Value'uint16 <$> (GH.readVariant #uint16 struct_))
         8 ->
-            (Value'uint32 <$> (GH.readVariant #uint32 struct_))
+            (RW_Value'uint32 <$> (GH.readVariant #uint32 struct_))
         9 ->
-            (Value'uint64 <$> (GH.readVariant #uint64 struct_))
+            (RW_Value'uint64 <$> (GH.readVariant #uint64 struct_))
         10 ->
-            (Value'float32 <$> (GH.readVariant #float32 struct_))
+            (RW_Value'float32 <$> (GH.readVariant #float32 struct_))
         11 ->
-            (Value'float64 <$> (GH.readVariant #float64 struct_))
+            (RW_Value'float64 <$> (GH.readVariant #float64 struct_))
         12 ->
-            (Value'text <$> (GH.readVariant #text struct_))
+            (RW_Value'text <$> (GH.readVariant #text struct_))
         13 ->
-            (Value'data_ <$> (GH.readVariant #data_ struct_))
+            (RW_Value'data_ <$> (GH.readVariant #data_ struct_))
         14 ->
-            (Value'list <$> (GH.readVariant #list struct_))
+            (RW_Value'list <$> (GH.readVariant #list struct_))
         15 ->
-            (Value'enum <$> (GH.readVariant #enum struct_))
+            (RW_Value'enum <$> (GH.readVariant #enum struct_))
         16 ->
-            (Value'struct <$> (GH.readVariant #struct struct_))
+            (RW_Value'struct <$> (GH.readVariant #struct struct_))
         17 ->
-            (Value'interface <$> (GH.readVariant #interface struct_))
+            (RW_Value'interface <$> (GH.readVariant #interface struct_))
         18 ->
-            (Value'anyPointer <$> (GH.readVariant #anyPointer struct_))
+            (RW_Value'anyPointer <$> (GH.readVariant #anyPointer struct_))
         _ ->
-            (Std_.pure (Value'unknown' tag_))
+            (Std_.pure (RW_Value'unknown' tag_))
 instance (GH.HasVariant "void" GH.Slot Value ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "bool" GH.Slot Value Std_.Bool) where

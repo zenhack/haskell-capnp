@@ -31,31 +31,31 @@ instance (C.Allocate Value) where
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
-        = Value'null (R.Raw mut_ ())
-        | Value'boolean (R.Raw mut_ Std_.Bool)
-        | Value'number (R.Raw mut_ Std_.Double)
-        | Value'string (R.Raw mut_ Basics.Text)
-        | Value'array (R.Raw mut_ (R.List Value))
-        | Value'object (R.Raw mut_ (R.List Value'Field))
-        | Value'call (R.Raw mut_ Value'Call)
-        | Value'unknown' Std_.Word16
+        = RW_Value'null (R.Raw mut_ ())
+        | RW_Value'boolean (R.Raw mut_ Std_.Bool)
+        | RW_Value'number (R.Raw mut_ Std_.Double)
+        | RW_Value'string (R.Raw mut_ Basics.Text)
+        | RW_Value'array (R.Raw mut_ (R.List Value))
+        | RW_Value'object (R.Raw mut_ (R.List Value'Field))
+        | RW_Value'call (R.Raw mut_ Value'Call)
+        | RW_Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Value'null <$> (GH.readVariant #null struct_))
+            (RW_Value'null <$> (GH.readVariant #null struct_))
         1 ->
-            (Value'boolean <$> (GH.readVariant #boolean struct_))
+            (RW_Value'boolean <$> (GH.readVariant #boolean struct_))
         2 ->
-            (Value'number <$> (GH.readVariant #number struct_))
+            (RW_Value'number <$> (GH.readVariant #number struct_))
         3 ->
-            (Value'string <$> (GH.readVariant #string struct_))
+            (RW_Value'string <$> (GH.readVariant #string struct_))
         4 ->
-            (Value'array <$> (GH.readVariant #array struct_))
+            (RW_Value'array <$> (GH.readVariant #array struct_))
         5 ->
-            (Value'object <$> (GH.readVariant #object struct_))
+            (RW_Value'object <$> (GH.readVariant #object struct_))
         6 ->
-            (Value'call <$> (GH.readVariant #call struct_))
+            (RW_Value'call <$> (GH.readVariant #call struct_))
         _ ->
-            (Std_.pure (Value'unknown' tag_))
+            (Std_.pure (RW_Value'unknown' tag_))
 instance (GH.HasVariant "null" GH.Slot Value ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "boolean" GH.Slot Value Std_.Bool) where

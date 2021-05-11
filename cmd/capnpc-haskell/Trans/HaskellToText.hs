@@ -189,6 +189,7 @@ instance Format Exp where
         ]
     format (EGName e) = format e
     format (ELName e) = format e
+    format (EVar name) = PP.textStrict name
     format (EInt n) = fromString (show n)
     format (EDo ds ex) = vcat
         [ "(do"

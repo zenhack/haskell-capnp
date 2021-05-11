@@ -31,52 +31,52 @@ instance (C.Allocate Message) where
 instance (GH.HasUnion Message) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Message
-        = Message'unimplemented (R.Raw mut_ Message)
-        | Message'abort (R.Raw mut_ Exception)
-        | Message'call (R.Raw mut_ Call)
-        | Message'return (R.Raw mut_ Return)
-        | Message'finish (R.Raw mut_ Finish)
-        | Message'resolve (R.Raw mut_ Resolve)
-        | Message'release (R.Raw mut_ Release)
-        | Message'obsoleteSave (R.Raw mut_ Basics.AnyPointer)
-        | Message'bootstrap (R.Raw mut_ Bootstrap)
-        | Message'obsoleteDelete (R.Raw mut_ Basics.AnyPointer)
-        | Message'provide (R.Raw mut_ Provide)
-        | Message'accept (R.Raw mut_ Accept)
-        | Message'join (R.Raw mut_ Join)
-        | Message'disembargo (R.Raw mut_ Disembargo)
-        | Message'unknown' Std_.Word16
+        = RW_Message'unimplemented (R.Raw mut_ Message)
+        | RW_Message'abort (R.Raw mut_ Exception)
+        | RW_Message'call (R.Raw mut_ Call)
+        | RW_Message'return (R.Raw mut_ Return)
+        | RW_Message'finish (R.Raw mut_ Finish)
+        | RW_Message'resolve (R.Raw mut_ Resolve)
+        | RW_Message'release (R.Raw mut_ Release)
+        | RW_Message'obsoleteSave (R.Raw mut_ Basics.AnyPointer)
+        | RW_Message'bootstrap (R.Raw mut_ Bootstrap)
+        | RW_Message'obsoleteDelete (R.Raw mut_ Basics.AnyPointer)
+        | RW_Message'provide (R.Raw mut_ Provide)
+        | RW_Message'accept (R.Raw mut_ Accept)
+        | RW_Message'join (R.Raw mut_ Join)
+        | RW_Message'disembargo (R.Raw mut_ Disembargo)
+        | RW_Message'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Message'unimplemented <$> (GH.readVariant #unimplemented struct_))
+            (RW_Message'unimplemented <$> (GH.readVariant #unimplemented struct_))
         1 ->
-            (Message'abort <$> (GH.readVariant #abort struct_))
+            (RW_Message'abort <$> (GH.readVariant #abort struct_))
         2 ->
-            (Message'call <$> (GH.readVariant #call struct_))
+            (RW_Message'call <$> (GH.readVariant #call struct_))
         3 ->
-            (Message'return <$> (GH.readVariant #return struct_))
+            (RW_Message'return <$> (GH.readVariant #return struct_))
         4 ->
-            (Message'finish <$> (GH.readVariant #finish struct_))
+            (RW_Message'finish <$> (GH.readVariant #finish struct_))
         5 ->
-            (Message'resolve <$> (GH.readVariant #resolve struct_))
+            (RW_Message'resolve <$> (GH.readVariant #resolve struct_))
         6 ->
-            (Message'release <$> (GH.readVariant #release struct_))
+            (RW_Message'release <$> (GH.readVariant #release struct_))
         7 ->
-            (Message'obsoleteSave <$> (GH.readVariant #obsoleteSave struct_))
+            (RW_Message'obsoleteSave <$> (GH.readVariant #obsoleteSave struct_))
         8 ->
-            (Message'bootstrap <$> (GH.readVariant #bootstrap struct_))
+            (RW_Message'bootstrap <$> (GH.readVariant #bootstrap struct_))
         9 ->
-            (Message'obsoleteDelete <$> (GH.readVariant #obsoleteDelete struct_))
+            (RW_Message'obsoleteDelete <$> (GH.readVariant #obsoleteDelete struct_))
         10 ->
-            (Message'provide <$> (GH.readVariant #provide struct_))
+            (RW_Message'provide <$> (GH.readVariant #provide struct_))
         11 ->
-            (Message'accept <$> (GH.readVariant #accept struct_))
+            (RW_Message'accept <$> (GH.readVariant #accept struct_))
         12 ->
-            (Message'join <$> (GH.readVariant #join struct_))
+            (RW_Message'join <$> (GH.readVariant #join struct_))
         13 ->
-            (Message'disembargo <$> (GH.readVariant #disembargo struct_))
+            (RW_Message'disembargo <$> (GH.readVariant #disembargo struct_))
         _ ->
-            (Std_.pure (Message'unknown' tag_))
+            (Std_.pure (RW_Message'unknown' tag_))
 instance (GH.HasVariant "unimplemented" GH.Slot Message Message) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "abort" GH.Slot Message Exception) where
@@ -150,19 +150,19 @@ instance (C.Allocate Call'sendResultsTo) where
 instance (GH.HasUnion Call'sendResultsTo) where
     unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Call'sendResultsTo
-        = Call'sendResultsTo'caller (R.Raw mut_ ())
-        | Call'sendResultsTo'yourself (R.Raw mut_ ())
-        | Call'sendResultsTo'thirdParty (R.Raw mut_ Basics.AnyPointer)
-        | Call'sendResultsTo'unknown' Std_.Word16
+        = RW_Call'sendResultsTo'caller (R.Raw mut_ ())
+        | RW_Call'sendResultsTo'yourself (R.Raw mut_ ())
+        | RW_Call'sendResultsTo'thirdParty (R.Raw mut_ Basics.AnyPointer)
+        | RW_Call'sendResultsTo'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Call'sendResultsTo'caller <$> (GH.readVariant #caller struct_))
+            (RW_Call'sendResultsTo'caller <$> (GH.readVariant #caller struct_))
         1 ->
-            (Call'sendResultsTo'yourself <$> (GH.readVariant #yourself struct_))
+            (RW_Call'sendResultsTo'yourself <$> (GH.readVariant #yourself struct_))
         2 ->
-            (Call'sendResultsTo'thirdParty <$> (GH.readVariant #thirdParty struct_))
+            (RW_Call'sendResultsTo'thirdParty <$> (GH.readVariant #thirdParty struct_))
         _ ->
-            (Std_.pure (Call'sendResultsTo'unknown' tag_))
+            (Std_.pure (RW_Call'sendResultsTo'unknown' tag_))
 instance (GH.HasVariant "caller" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
@@ -180,28 +180,28 @@ instance (C.Allocate Return) where
 instance (GH.HasUnion Return) where
     unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Return
-        = Return'results (R.Raw mut_ Payload)
-        | Return'exception (R.Raw mut_ Exception)
-        | Return'canceled (R.Raw mut_ ())
-        | Return'resultsSentElsewhere (R.Raw mut_ ())
-        | Return'takeFromOtherQuestion (R.Raw mut_ Std_.Word32)
-        | Return'acceptFromThirdParty (R.Raw mut_ Basics.AnyPointer)
-        | Return'unknown' Std_.Word16
+        = RW_Return'results (R.Raw mut_ Payload)
+        | RW_Return'exception (R.Raw mut_ Exception)
+        | RW_Return'canceled (R.Raw mut_ ())
+        | RW_Return'resultsSentElsewhere (R.Raw mut_ ())
+        | RW_Return'takeFromOtherQuestion (R.Raw mut_ Std_.Word32)
+        | RW_Return'acceptFromThirdParty (R.Raw mut_ Basics.AnyPointer)
+        | RW_Return'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Return'results <$> (GH.readVariant #results struct_))
+            (RW_Return'results <$> (GH.readVariant #results struct_))
         1 ->
-            (Return'exception <$> (GH.readVariant #exception struct_))
+            (RW_Return'exception <$> (GH.readVariant #exception struct_))
         2 ->
-            (Return'canceled <$> (GH.readVariant #canceled struct_))
+            (RW_Return'canceled <$> (GH.readVariant #canceled struct_))
         3 ->
-            (Return'resultsSentElsewhere <$> (GH.readVariant #resultsSentElsewhere struct_))
+            (RW_Return'resultsSentElsewhere <$> (GH.readVariant #resultsSentElsewhere struct_))
         4 ->
-            (Return'takeFromOtherQuestion <$> (GH.readVariant #takeFromOtherQuestion struct_))
+            (RW_Return'takeFromOtherQuestion <$> (GH.readVariant #takeFromOtherQuestion struct_))
         5 ->
-            (Return'acceptFromThirdParty <$> (GH.readVariant #acceptFromThirdParty struct_))
+            (RW_Return'acceptFromThirdParty <$> (GH.readVariant #acceptFromThirdParty struct_))
         _ ->
-            (Std_.pure (Return'unknown' tag_))
+            (Std_.pure (RW_Return'unknown' tag_))
 instance (GH.HasVariant "results" GH.Slot Return Payload) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "exception" GH.Slot Return Exception) where
@@ -241,16 +241,16 @@ instance (C.Allocate Resolve) where
 instance (GH.HasUnion Resolve) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Resolve
-        = Resolve'cap (R.Raw mut_ CapDescriptor)
-        | Resolve'exception (R.Raw mut_ Exception)
-        | Resolve'unknown' Std_.Word16
+        = RW_Resolve'cap (R.Raw mut_ CapDescriptor)
+        | RW_Resolve'exception (R.Raw mut_ Exception)
+        | RW_Resolve'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Resolve'cap <$> (GH.readVariant #cap struct_))
+            (RW_Resolve'cap <$> (GH.readVariant #cap struct_))
         1 ->
-            (Resolve'exception <$> (GH.readVariant #exception struct_))
+            (RW_Resolve'exception <$> (GH.readVariant #exception struct_))
         _ ->
-            (Std_.pure (Resolve'unknown' tag_))
+            (Std_.pure (RW_Resolve'unknown' tag_))
 instance (GH.HasVariant "cap" GH.Slot Resolve CapDescriptor) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "exception" GH.Slot Resolve Exception) where
@@ -292,22 +292,22 @@ instance (C.Allocate Disembargo'context) where
 instance (GH.HasUnion Disembargo'context) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Disembargo'context
-        = Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
-        | Disembargo'context'receiverLoopback (R.Raw mut_ Std_.Word32)
-        | Disembargo'context'accept (R.Raw mut_ ())
-        | Disembargo'context'provide (R.Raw mut_ Std_.Word32)
-        | Disembargo'context'unknown' Std_.Word16
+        = RW_Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
+        | RW_Disembargo'context'receiverLoopback (R.Raw mut_ Std_.Word32)
+        | RW_Disembargo'context'accept (R.Raw mut_ ())
+        | RW_Disembargo'context'provide (R.Raw mut_ Std_.Word32)
+        | RW_Disembargo'context'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (Disembargo'context'senderLoopback <$> (GH.readVariant #senderLoopback struct_))
+            (RW_Disembargo'context'senderLoopback <$> (GH.readVariant #senderLoopback struct_))
         1 ->
-            (Disembargo'context'receiverLoopback <$> (GH.readVariant #receiverLoopback struct_))
+            (RW_Disembargo'context'receiverLoopback <$> (GH.readVariant #receiverLoopback struct_))
         2 ->
-            (Disembargo'context'accept <$> (GH.readVariant #accept struct_))
+            (RW_Disembargo'context'accept <$> (GH.readVariant #accept struct_))
         3 ->
-            (Disembargo'context'provide <$> (GH.readVariant #provide struct_))
+            (RW_Disembargo'context'provide <$> (GH.readVariant #provide struct_))
         _ ->
-            (Std_.pure (Disembargo'context'unknown' tag_))
+            (Std_.pure (RW_Disembargo'context'unknown' tag_))
 instance (GH.HasVariant "senderLoopback" GH.Slot Disembargo'context Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
 instance (GH.HasVariant "receiverLoopback" GH.Slot Disembargo'context Std_.Word32) where
@@ -369,16 +369,16 @@ instance (C.Allocate MessageTarget) where
 instance (GH.HasUnion MessageTarget) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ MessageTarget
-        = MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
-        | MessageTarget'promisedAnswer (R.Raw mut_ PromisedAnswer)
-        | MessageTarget'unknown' Std_.Word16
+        = RW_MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
+        | RW_MessageTarget'promisedAnswer (R.Raw mut_ PromisedAnswer)
+        | RW_MessageTarget'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (MessageTarget'importedCap <$> (GH.readVariant #importedCap struct_))
+            (RW_MessageTarget'importedCap <$> (GH.readVariant #importedCap struct_))
         1 ->
-            (MessageTarget'promisedAnswer <$> (GH.readVariant #promisedAnswer struct_))
+            (RW_MessageTarget'promisedAnswer <$> (GH.readVariant #promisedAnswer struct_))
         _ ->
-            (Std_.pure (MessageTarget'unknown' tag_))
+            (Std_.pure (RW_MessageTarget'unknown' tag_))
 instance (GH.HasVariant "importedCap" GH.Slot MessageTarget Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
 instance (GH.HasVariant "promisedAnswer" GH.Slot MessageTarget PromisedAnswer) where
@@ -406,28 +406,28 @@ instance (C.Allocate CapDescriptor) where
 instance (GH.HasUnion CapDescriptor) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ CapDescriptor
-        = CapDescriptor'none (R.Raw mut_ ())
-        | CapDescriptor'senderHosted (R.Raw mut_ Std_.Word32)
-        | CapDescriptor'senderPromise (R.Raw mut_ Std_.Word32)
-        | CapDescriptor'receiverHosted (R.Raw mut_ Std_.Word32)
-        | CapDescriptor'receiverAnswer (R.Raw mut_ PromisedAnswer)
-        | CapDescriptor'thirdPartyHosted (R.Raw mut_ ThirdPartyCapDescriptor)
-        | CapDescriptor'unknown' Std_.Word16
+        = RW_CapDescriptor'none (R.Raw mut_ ())
+        | RW_CapDescriptor'senderHosted (R.Raw mut_ Std_.Word32)
+        | RW_CapDescriptor'senderPromise (R.Raw mut_ Std_.Word32)
+        | RW_CapDescriptor'receiverHosted (R.Raw mut_ Std_.Word32)
+        | RW_CapDescriptor'receiverAnswer (R.Raw mut_ PromisedAnswer)
+        | RW_CapDescriptor'thirdPartyHosted (R.Raw mut_ ThirdPartyCapDescriptor)
+        | RW_CapDescriptor'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (CapDescriptor'none <$> (GH.readVariant #none struct_))
+            (RW_CapDescriptor'none <$> (GH.readVariant #none struct_))
         1 ->
-            (CapDescriptor'senderHosted <$> (GH.readVariant #senderHosted struct_))
+            (RW_CapDescriptor'senderHosted <$> (GH.readVariant #senderHosted struct_))
         2 ->
-            (CapDescriptor'senderPromise <$> (GH.readVariant #senderPromise struct_))
+            (RW_CapDescriptor'senderPromise <$> (GH.readVariant #senderPromise struct_))
         3 ->
-            (CapDescriptor'receiverHosted <$> (GH.readVariant #receiverHosted struct_))
+            (RW_CapDescriptor'receiverHosted <$> (GH.readVariant #receiverHosted struct_))
         4 ->
-            (CapDescriptor'receiverAnswer <$> (GH.readVariant #receiverAnswer struct_))
+            (RW_CapDescriptor'receiverAnswer <$> (GH.readVariant #receiverAnswer struct_))
         5 ->
-            (CapDescriptor'thirdPartyHosted <$> (GH.readVariant #thirdPartyHosted struct_))
+            (RW_CapDescriptor'thirdPartyHosted <$> (GH.readVariant #thirdPartyHosted struct_))
         _ ->
-            (Std_.pure (CapDescriptor'unknown' tag_))
+            (Std_.pure (RW_CapDescriptor'unknown' tag_))
 instance (GH.HasVariant "none" GH.Slot CapDescriptor ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "senderHosted" GH.Slot CapDescriptor Std_.Word32) where
@@ -465,16 +465,16 @@ instance (C.Allocate PromisedAnswer'Op) where
 instance (GH.HasUnion PromisedAnswer'Op) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ PromisedAnswer'Op
-        = PromisedAnswer'Op'noop (R.Raw mut_ ())
-        | PromisedAnswer'Op'getPointerField (R.Raw mut_ Std_.Word16)
-        | PromisedAnswer'Op'unknown' Std_.Word16
+        = RW_PromisedAnswer'Op'noop (R.Raw mut_ ())
+        | RW_PromisedAnswer'Op'getPointerField (R.Raw mut_ Std_.Word16)
+        | RW_PromisedAnswer'Op'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
-            (PromisedAnswer'Op'noop <$> (GH.readVariant #noop struct_))
+            (RW_PromisedAnswer'Op'noop <$> (GH.readVariant #noop struct_))
         1 ->
-            (PromisedAnswer'Op'getPointerField <$> (GH.readVariant #getPointerField struct_))
+            (RW_PromisedAnswer'Op'getPointerField <$> (GH.readVariant #getPointerField struct_))
         _ ->
-            (Std_.pure (PromisedAnswer'Op'unknown' tag_))
+            (Std_.pure (RW_PromisedAnswer'Op'unknown' tag_))
 instance (GH.HasVariant "noop" GH.Slot PromisedAnswer'Op ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "getPointerField" GH.Slot PromisedAnswer'Op Std_.Word16) where

@@ -28,7 +28,7 @@ instance HasUnQ GlobalQ where
     getUnQ GlobalQ{local} = getUnQ local
 
 newtype UnQ = UnQ T.Text
-    deriving(Show, Read, Eq, Ord, IsString)
+    deriving(Show, Read, Eq, Ord, IsString, Semigroup)
 
 newtype NS = NS [T.Text]
     deriving(Show, Read, Eq, Ord)
