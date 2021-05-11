@@ -278,6 +278,7 @@ test-suite tests
       , Capnp.Gen.ById.X85150b117366d14b.New
       , Capnp.Gen.Calculator
       , Capnp.Gen.Calculator.Pure
+      , Capnp.Gen.Calculator.New
 
       -- Generated code for examples/echo.capnp
       , Capnp.Gen.Echo
@@ -298,6 +299,7 @@ test-suite tests
       -- generated from tests/data/generics.capnp
       , Capnp.Gen.Generics
       , Capnp.Gen.Generics.Pure
+      , Capnp.Gen.Generics.New
       , Capnp.Gen.ById.Xb6421fb8e478d144
       , Capnp.Gen.ById.Xb6421fb8e478d144.Pure
       , Capnp.Gen.ById.Xb6421fb8e478d144.New
