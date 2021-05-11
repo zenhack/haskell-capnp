@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE NamedFieldPuns         #-}
+{-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -21,6 +22,7 @@ module Capnp.Repr.Methods
 
     , AsClient(..)
 
+    , callB
     , callR
     , callP
     ) where
@@ -38,7 +40,7 @@ import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
 import           GHC.OverloadedLabels    (IsLabel(..))
 import           GHC.TypeLits            (Symbol)
-import           Internal.BuildPure      (createPure)
+import           Internal.BuildPure      (PureBuilder, createPure)
 
 -- | Represents a method on the interface type @c@ with parameter
 -- type @p@ and return type @r@.
@@ -69,6 +71,16 @@ instance AsClient Pipeline where
 
 instance AsClient Client where
     asClient = liftSTM . pure
+
+callB
+    :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
+    => Method c p r
+    -> (forall s. PureBuilder s (R.Raw ('Mut s) p))
+    -> f c
+    -> m (Pipeline r)
+callB method buildRaw c = liftSTM $ do
+    (params :: R.Raw 'Const a) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
+    callR method params c
 
 callR
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
