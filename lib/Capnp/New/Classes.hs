@@ -129,5 +129,13 @@ instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector
         V.generateM (R.length rawV) $ \i ->
             R.index i rawV >>= parse
 
+-- | If @a@ is a capnproto type, then @Parsed a@ is an ADT representation of that
+-- type. If this is defined for a type @a@ then there should also be an instance
+-- @'Parse' a ('Parsed' a)@, but note that the converse is not true: if there is
+-- an instance @'Parse' a b@, then @'Parsed' a@ needn't be defined, and @b@ can
+-- be something else.
 data family Parsed a
+
+-- | If @a@ is a capnproto struct type, then @'Which' a@ is the type of its
+-- anonymous union, if any.
 data family Which a
