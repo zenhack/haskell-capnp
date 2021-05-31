@@ -109,6 +109,9 @@ data DataDecl = Data
     -- ^ A list of type classes to include in the deriving clause.
     , dataNewtype  :: !Bool
     -- ^ Whether the declarationis a "newtype" or "data" declaration.
+    , dataInstance :: !Bool
+    -- ^ If true, this is actually an instance of a data family, rather
+    -- than a stand-alone type.
     }
     deriving(Show, Read, Eq)
 

@@ -88,6 +88,7 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
+        , dataInstance = False
         , typeArgs = typeParamNames ++ [TKindAnnotated (TVar "mut") (tgName ["Message"] "Mutability")]
         , dataVariants =
             [ DataVariant
@@ -184,6 +185,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
+        , dataInstance = False
         , typeArgs = []
         , dataVariants =
             map enumerantToVariant dataCtors
@@ -241,6 +243,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 ]
             , derives = []
             , dataNewtype = True
+            , dataInstance = False
             }
         , iValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EFApp
             (egName ["Classes"] "fromWord")
@@ -417,6 +420,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
                 ]
             , derives = []
             , dataNewtype = True
+            , dataInstance = False
             }
         , iValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
             (ELName listCtor)
@@ -825,6 +829,7 @@ newtypeWrapper typeCtor typeArgs wrappedType =
     DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = True
+        , dataInstance = False
         , typeArgs = map TVar typeArgs
         , dataVariants =
             [ DataVariant

@@ -185,6 +185,7 @@ dataToDataDecl thisMod P.Data
         , derives =
             ["Std_.Show", "Std_.Eq", "Generics.Generic"]
         , dataNewtype = False
+        , dataInstance = False
         , dataVariants =
             case def of
                 P.Product fields ->
@@ -461,6 +462,7 @@ ifaceClientDecl _thisMod P.IFace{ name=Name.CapnpQ{local=name}, typeParams } =
     DcData Data
         { dataName = Name.localToUnQ name
         , dataNewtype = True
+        , dataInstance = False
         , dataVariants =
             [ DataVariant
                 { dvCtorName = Name.localToUnQ name

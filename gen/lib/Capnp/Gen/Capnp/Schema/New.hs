@@ -53,6 +53,7 @@ instance (GH.HasUnion Node) where
             (RW_Node'annotation <$> (GH.readVariant #annotation struct_))
         _ ->
             (Std_.pure (RW_Node'unknown' tag_))
+data instance C.Which Node
 instance (GH.HasVariant "file" GH.Slot Node ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "struct" GH.Group Node Node'struct) where
@@ -238,6 +239,7 @@ instance (GH.HasUnion Field) where
             (RW_Field'group <$> (GH.readVariant #group struct_))
         _ ->
             (Std_.pure (RW_Field'unknown' tag_))
+data instance C.Which Field
 instance (GH.HasVariant "slot" GH.Group Field Field'slot) where
     variantByLabel  = (GH.Variant GH.groupField 0)
 instance (GH.HasVariant "group" GH.Group Field Field'group) where
@@ -299,6 +301,7 @@ instance (GH.HasUnion Field'ordinal) where
             (RW_Field'ordinal'explicit <$> (GH.readVariant #explicit struct_))
         _ ->
             (Std_.pure (RW_Field'ordinal'unknown' tag_))
+data instance C.Which Field'ordinal
 instance (GH.HasVariant "implicit" GH.Slot Field'ordinal ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "explicit" GH.Slot Field'ordinal Std_.Word16) where
@@ -425,6 +428,7 @@ instance (GH.HasUnion Type) where
             (RW_Type'anyPointer <$> (GH.readVariant #anyPointer struct_))
         _ ->
             (Std_.pure (RW_Type'unknown' tag_))
+data instance C.Which Type
 instance (GH.HasVariant "void" GH.Slot Type ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "bool" GH.Slot Type ()) where
@@ -533,6 +537,7 @@ instance (GH.HasUnion Type'anyPointer) where
             (RW_Type'anyPointer'implicitMethodParameter <$> (GH.readVariant #implicitMethodParameter struct_))
         _ ->
             (Std_.pure (RW_Type'anyPointer'unknown' tag_))
+data instance C.Which Type'anyPointer
 instance (GH.HasVariant "unconstrained" GH.Group Type'anyPointer Type'anyPointer'unconstrained) where
     variantByLabel  = (GH.Variant GH.groupField 0)
 instance (GH.HasVariant "parameter" GH.Group Type'anyPointer Type'anyPointer'parameter) where
@@ -566,6 +571,7 @@ instance (GH.HasUnion Type'anyPointer'unconstrained) where
             (RW_Type'anyPointer'unconstrained'capability <$> (GH.readVariant #capability struct_))
         _ ->
             (Std_.pure (RW_Type'anyPointer'unconstrained'unknown' tag_))
+data instance C.Which Type'anyPointer'unconstrained
 instance (GH.HasVariant "anyKind" GH.Slot Type'anyPointer'unconstrained ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "struct" GH.Slot Type'anyPointer'unconstrained ()) where
@@ -627,6 +633,7 @@ instance (GH.HasUnion Brand'Scope) where
             (RW_Brand'Scope'inherit <$> (GH.readVariant #inherit struct_))
         _ ->
             (Std_.pure (RW_Brand'Scope'unknown' tag_))
+data instance C.Which Brand'Scope
 instance (GH.HasVariant "bind" GH.Slot Brand'Scope (R.List Brand'Binding)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "inherit" GH.Slot Brand'Scope ()) where
@@ -654,6 +661,7 @@ instance (GH.HasUnion Brand'Binding) where
             (RW_Brand'Binding'type_ <$> (GH.readVariant #type_ struct_))
         _ ->
             (Std_.pure (RW_Brand'Binding'unknown' tag_))
+data instance C.Which Brand'Binding
 instance (GH.HasVariant "unbound" GH.Slot Brand'Binding ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "type_" GH.Slot Brand'Binding Type) where
@@ -730,6 +738,7 @@ instance (GH.HasUnion Value) where
             (RW_Value'anyPointer <$> (GH.readVariant #anyPointer struct_))
         _ ->
             (Std_.pure (RW_Value'unknown' tag_))
+data instance C.Which Value
 instance (GH.HasVariant "void" GH.Slot Value ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "bool" GH.Slot Value Std_.Bool) where

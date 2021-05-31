@@ -148,11 +148,14 @@ instance Format TypeAlias where
         ]
 
 instance Format DataDecl where
-    format Data{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
+    format Data{dataName, typeArgs, dataVariants, dataInstance, dataNewtype, derives} = vcat
         [ hcat
             [ if dataNewtype
                 then "newtype "
                 else "data "
+            , if dataInstance
+                then "instance "
+                else ""
             , format dataName
             , " "
             , mconcat $ intersperse " " $ map format typeArgs

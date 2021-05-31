@@ -79,6 +79,7 @@ declToDecls thisMod decl =
                 , dataVariants = []
                 , derives = []
                 , dataNewtype = False
+                , dataInstance = False
                 }
             , Hs.DcTypeInstance
                 (Hs.TApp (tgName ["R"] "ReprFor") [typ])
@@ -159,6 +160,14 @@ declToDecls thisMod decl =
                     , defineInternalWhich name variants
                     ]
                 }
+            : Hs.DcData Hs.Data
+                { dataName = "C.Which"
+                , typeArgs = [Hs.TApp (Hs.TLName name) tVars]
+                , dataVariants = []
+                , derives = []
+                , dataNewtype = False
+                , dataInstance = True
+                }
             : concatMap (variantToDecls thisMod name typeParams) variants
         New.MethodDecl
                 { interfaceName
@@ -203,6 +212,7 @@ defineRawData thisMod name tVars variants =
             ]
 
         , dataNewtype = False
+        , dataInstance = False
         , dataVariants =
             [ Hs.DataVariant
                 { dvCtorName =

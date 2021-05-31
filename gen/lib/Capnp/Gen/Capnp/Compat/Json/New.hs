@@ -56,6 +56,7 @@ instance (GH.HasUnion Value) where
             (RW_Value'call <$> (GH.readVariant #call struct_))
         _ ->
             (Std_.pure (RW_Value'unknown' tag_))
+data instance C.Which Value
 instance (GH.HasVariant "null" GH.Slot Value ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "boolean" GH.Slot Value Std_.Bool) where
