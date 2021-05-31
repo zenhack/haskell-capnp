@@ -121,6 +121,7 @@ library
       , Capnp.Untyped.Pure
       , Capnp.Repr
       , Capnp.Repr.Methods
+      , Capnp.Repr.Parsed
       , Capnp.TraversalLimit
       , Capnp.Rpc
       , Capnp.Rpc.Promise
