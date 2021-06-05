@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE EmptyDataDeriving     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
@@ -16,6 +17,7 @@ import qualified Capnp.Repr        as R
 import qualified Capnp.Untyped     as U
 import qualified Data.ByteString   as BS
 import           Data.Foldable     (for_)
+import qualified Data.Vector       as V
 import           Data.Word
 
 data Text
@@ -31,6 +33,37 @@ type instance R.ReprFor AnyPointer = 'R.Ptr 'Nothing
 type instance R.ReprFor AnyList = 'R.Ptr ('Just ('R.List 'Nothing))
 type instance R.ReprFor AnyStruct = 'R.Ptr ('Just 'R.Struct)
 type instance R.ReprFor Capability = 'R.Ptr ('Just 'R.Cap)
+
+data instance C.Parsed AnyPointer
+    = PtrNull
+    | PtrStruct (C.Parsed AnyStruct)
+    | PtrList (C.Parsed AnyList)
+    | PtrCap (C.Parsed Capability)
+    deriving(Show, Eq)
+
+data instance C.Parsed AnyStruct = Struct
+    { structData :: V.Vector Word64
+    , structPtrs :: V.Vector (C.Parsed AnyPointer)
+    }
+    deriving(Show, Eq)
+
+-- TODO(cleanup): It would be nice if we could reuse Capnp.Repr.Parsed.Parsed
+-- here, but that would cause a circular import dependency.
+type ParsedList a = V.Vector a
+
+data instance C.Parsed AnyList
+    = ListPtr (ParsedList (C.Parsed AnyPointer))
+    | ListStruct (ParsedList (C.Parsed AnyStruct))
+    | List0 (ParsedList ())
+    | List1 (ParsedList Bool)
+    | List8 (ParsedList Word8)
+    | List16 (ParsedList Word16)
+    | List32 (ParsedList Word32)
+    | List64 (ParsedList Word64)
+    deriving(Show, Eq)
+
+data instance C.Parsed Capability -- TODO
+    deriving(Show, Eq)
 
 instance C.Allocate Text where
     type AllocHint Text = Int
