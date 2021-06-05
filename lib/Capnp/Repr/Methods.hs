@@ -62,6 +62,7 @@ instance HasMethod name c p r => IsLabel name (Method c p r) where
 newtype Pipeline a = Pipeline Rpc.Pipeline
 
 newtype Client a = Client Rpc.Client
+    deriving(Show, Eq)
 
 class AsClient f where
     asClient :: MonadSTM m => R.IsCap c => f c -> m (Client c)
