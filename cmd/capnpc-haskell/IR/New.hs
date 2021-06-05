@@ -2,6 +2,7 @@
 module IR.New
     ( File(..)
     , Decl(..)
+    , ParsedInstanceDef(..)
     , UnionVariant(..)
     , Brand
     , ExtraTypeInfo(..)
@@ -49,6 +50,21 @@ data Decl
         , methodId      :: !Word16
         , paramType     :: C.CompositeType Brand Name.CapnpQ
         , resultType    :: C.CompositeType Brand Name.CapnpQ
+        }
+    | ParsedInstanceDecl
+        { typeName   :: Name.LocalQ
+        , typeParams :: [Name.UnQ]
+        , parsedDef  :: ParsedInstanceDef
+        }
+
+data ParsedInstanceDef
+    = ParsedStruct
+        { fields   :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
+        , hasUnion :: !Bool
+        , isGroup  :: !Bool
+        }
+    | ParsedUnion
+        { variants :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
         }
 
 data ExtraTypeInfo

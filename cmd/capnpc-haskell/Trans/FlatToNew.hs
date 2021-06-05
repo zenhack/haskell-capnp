@@ -2,7 +2,10 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 module Trans.FlatToNew (cgrToFiles) where
 
+import Data.Bifunctor (Bifunctor(..))
+
 import qualified Capnp.Repr as R
+import           Data.Maybe (isNothing)
 import qualified IR.Common  as C
 import qualified IR.Flat    as Flat
 import qualified IR.Name    as Name
@@ -18,6 +21,9 @@ fileToFile Flat.File{fileId, fileName, nodes} =
         , fileName
         , decls = concatMap nodeToDecls nodes
         }
+
+mapTypes :: (Bifunctor p, Functor f) => p (f Flat.Node) Flat.Node -> p (f Name.CapnpQ) Name.CapnpQ
+mapTypes = C.bothMap (\Flat.Node{name} -> name)
 
 nodeToDecls :: Flat.Node -> [New.Decl]
 nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
@@ -39,12 +45,42 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                 , typeParams = map C.paramName typeParams
                 , methodName = name
                 , methodId
-                , paramType = C.bothMap (\Flat.Node{name} -> name) paramType
-                , resultType = C.bothMap (\Flat.Node{name} -> name) resultType
+                , paramType = mapTypes paramType
+                , resultType = mapTypes resultType
+                }
+
+        parsedStructNode fields hasUnion isGroup =
+            New.ParsedInstanceDecl
+                { typeName = local
+                , typeParams = map C.paramName typeParams
+                , parsedDef = New.ParsedStruct
+                    { fields =
+                        [ ( Name.getUnQ fieldName
+                          , mapTypes fieldLocType
+                          )
+                        | Flat.Field{fieldName, fieldLocType} <- fields
+                        ]
+                    , hasUnion
+                    , isGroup
+                    }
+                }
+
+        parsedUnionNode Flat.Union{variants} =
+            New.ParsedInstanceDecl
+                { typeName = local
+                , typeParams = map C.paramName typeParams
+                , parsedDef = New.ParsedUnion
+                    { variants =
+                        [ ( Name.getUnQ fieldName
+                          , mapTypes fieldLocType
+                          )
+                        | Flat.Variant{field=Flat.Field{fieldName, fieldLocType}} <- variants
+                        ]
+                    }
                 }
 
         structUnionNodes Nothing = []
-        structUnionNodes (Just Flat.Union{tagOffset, variants}) =
+        structUnionNodes (Just union@Flat.Union{tagOffset, variants}) =
             [ New.UnionDecl
                 { name = local
                 , typeParams = map C.paramName typeParams
@@ -55,6 +91,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                     }
                 , variants = map variantToVariant variants
                 }
+            , parsedUnionNode union
             ]
     in
     case union_ of
@@ -64,8 +101,9 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         Flat.Interface{methods} ->
             mkType (R.Ptr (Just R.Cap)) Nothing
             : zipWith mkMethod [0..] methods
-        Flat.Struct{fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
+        Flat.Struct{isGroup, fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
+            : parsedStructNode fields (not $ isNothing union) isGroup
             : (structUnionNodes union ++ map mkField fields)
 
 fieldToDecl :: Name.LocalQ -> [C.TypeParamRef Flat.Node] -> Flat.Field -> New.Decl
@@ -74,7 +112,7 @@ fieldToDecl containerType typeParams Flat.Field{fieldName, fieldLocType} =
         { containerType
         , typeParams = map C.paramName typeParams
         , fieldName = Name.getUnQ fieldName
-        , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
+        , fieldLocType = mapTypes fieldLocType
         }
 
 variantToVariant :: Flat.Variant -> New.UnionVariant
@@ -82,5 +120,5 @@ variantToVariant Flat.Variant{tagValue, field = Flat.Field{fieldName, fieldLocTy
     New.UnionVariant
         { variantName = Name.getUnQ fieldName
         , tagValue
-        , fieldLocType = C.bothMap (\Flat.Node{name} -> name) fieldLocType
+        , fieldLocType = mapTypes fieldLocType
         }

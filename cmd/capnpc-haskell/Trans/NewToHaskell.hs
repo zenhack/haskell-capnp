@@ -18,10 +18,12 @@ import           Trans.ToHaskellCommon
 imports :: [Hs.Import]
 imports =
     [ Hs.ImportAs { importAs = "R", parts = ["Capnp", "Repr"] }
+    , Hs.ImportAs { importAs = "RP", parts = ["Capnp", "Repr", "Parsed"] }
     , Hs.ImportAs { importAs = "Basics", parts = ["Capnp", "New", "Basics"] }
     , Hs.ImportAs { importAs = "OL", parts = ["GHC", "OverloadedLabels"] }
     , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
     , Hs.ImportAs { importAs = "C", parts = ["Capnp", "New", "Classes"] }
+    , Hs.ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
     ]
 
 fileToModules :: New.File -> [Hs.Module]
@@ -37,6 +39,8 @@ fileToMainModule file@New.File{fileName} =
         , modLangPragmas =
             [ "TypeFamilies"
             , "DataKinds"
+            , "DeriveGeneric"
+            , "DuplicateRecordFields"
             , "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
@@ -199,6 +203,61 @@ declToDecls thisMod decl =
                             ]
                         }
                     ]
+                }
+            ]
+        New.ParsedInstanceDecl{ typeName, typeParams, parsedDef } ->
+            let tVars = map (Hs.TVar . Name.typeVarName) typeParams
+                typ = Hs.TApp (Hs.TLName typeName) tVars
+            in
+            [ Hs.DcData Hs.Data
+                { dataName = "C.Parsed"
+                , typeArgs = case parsedDef of
+                    New.ParsedStruct{} -> [typ]
+                    New.ParsedUnion {} -> [Hs.TApp (tgName ["C"] "Which") [typ]]
+                , derives =
+                    ["Std_.Show", "Std_.Eq", "Generics.Generic"]
+                , dataNewtype = False
+                , dataInstance = True
+                , dataVariants =
+                    case parsedDef of
+                        New.ParsedStruct { fields, hasUnion, isGroup } ->
+                            [ Hs.DataVariant
+                                { dvCtorName = Name.localToUnQ $
+                                    if isGroup then
+                                        -- avoid name collisions with possible union variant
+                                        -- constructors.
+                                        Name.mkSub typeName ""
+                                    else
+                                        typeName
+                                , dvArgs = Hs.ARec $ concat
+                                    [ [ ( name
+                                        , Hs.TApp
+                                            (tgName ["RP"] "Parsed")
+                                            [fieldLocTypeToType thisMod typ]
+                                        )
+                                      | (name, typ) <- fields
+                                      ]
+                                    , [ ( "union'"
+                                        , Hs.TApp (tgName ["C"] "Parsed")
+                                            [Hs.TApp (tgName ["C"] "Which") [typ]]
+                                        )
+                                      | hasUnion
+                                      ]
+                                    ]
+                                }
+                            ]
+                        New.ParsedUnion { variants } ->
+                            [ Hs.DataVariant
+                                { dvCtorName = Name.localToUnQ $ Name.mkSub typeName name
+                                , dvArgs = Hs.APos
+                                    [ Hs.TApp
+                                        (tgName ["RP"] "Parsed")
+                                        [fieldLocTypeToType thisMod ftype]
+                                    ]
+                                }
+                            | (name, ftype) <- variants
+                            ]
+
                 }
             ]
 
