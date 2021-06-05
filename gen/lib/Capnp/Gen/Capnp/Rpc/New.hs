@@ -77,7 +77,7 @@ instance (GH.HasUnion Message) where
             (RW_Message'disembargo <$> (GH.readVariant #disembargo struct_))
         _ ->
             (Std_.pure (RW_Message'unknown' tag_))
-data instance C.Which Message
+    data Which Message
 instance (GH.HasVariant "unimplemented" GH.Slot Message Message) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "abort" GH.Slot Message Exception) where
@@ -164,7 +164,7 @@ instance (GH.HasUnion Call'sendResultsTo) where
             (RW_Call'sendResultsTo'thirdParty <$> (GH.readVariant #thirdParty struct_))
         _ ->
             (Std_.pure (RW_Call'sendResultsTo'unknown' tag_))
-data instance C.Which Call'sendResultsTo
+    data Which Call'sendResultsTo
 instance (GH.HasVariant "caller" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
@@ -204,7 +204,7 @@ instance (GH.HasUnion Return) where
             (RW_Return'acceptFromThirdParty <$> (GH.readVariant #acceptFromThirdParty struct_))
         _ ->
             (Std_.pure (RW_Return'unknown' tag_))
-data instance C.Which Return
+    data Which Return
 instance (GH.HasVariant "results" GH.Slot Return Payload) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "exception" GH.Slot Return Exception) where
@@ -254,7 +254,7 @@ instance (GH.HasUnion Resolve) where
             (RW_Resolve'exception <$> (GH.readVariant #exception struct_))
         _ ->
             (Std_.pure (RW_Resolve'unknown' tag_))
-data instance C.Which Resolve
+    data Which Resolve
 instance (GH.HasVariant "cap" GH.Slot Resolve CapDescriptor) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "exception" GH.Slot Resolve Exception) where
@@ -312,7 +312,7 @@ instance (GH.HasUnion Disembargo'context) where
             (RW_Disembargo'context'provide <$> (GH.readVariant #provide struct_))
         _ ->
             (Std_.pure (RW_Disembargo'context'unknown' tag_))
-data instance C.Which Disembargo'context
+    data Which Disembargo'context
 instance (GH.HasVariant "senderLoopback" GH.Slot Disembargo'context Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
 instance (GH.HasVariant "receiverLoopback" GH.Slot Disembargo'context Std_.Word32) where
@@ -384,7 +384,7 @@ instance (GH.HasUnion MessageTarget) where
             (RW_MessageTarget'promisedAnswer <$> (GH.readVariant #promisedAnswer struct_))
         _ ->
             (Std_.pure (RW_MessageTarget'unknown' tag_))
-data instance C.Which MessageTarget
+    data Which MessageTarget
 instance (GH.HasVariant "importedCap" GH.Slot MessageTarget Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
 instance (GH.HasVariant "promisedAnswer" GH.Slot MessageTarget PromisedAnswer) where
@@ -434,7 +434,7 @@ instance (GH.HasUnion CapDescriptor) where
             (RW_CapDescriptor'thirdPartyHosted <$> (GH.readVariant #thirdPartyHosted struct_))
         _ ->
             (Std_.pure (RW_CapDescriptor'unknown' tag_))
-data instance C.Which CapDescriptor
+    data Which CapDescriptor
 instance (GH.HasVariant "none" GH.Slot CapDescriptor ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "senderHosted" GH.Slot CapDescriptor Std_.Word32) where
@@ -482,7 +482,7 @@ instance (GH.HasUnion PromisedAnswer'Op) where
             (RW_PromisedAnswer'Op'getPointerField <$> (GH.readVariant #getPointerField struct_))
         _ ->
             (Std_.pure (RW_PromisedAnswer'Op'unknown' tag_))
-data instance C.Which PromisedAnswer'Op
+    data Which PromisedAnswer'Op
 instance (GH.HasVariant "noop" GH.Slot PromisedAnswer'Op ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "getPointerField" GH.Slot PromisedAnswer'Op Std_.Word16) where

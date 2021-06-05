@@ -54,9 +54,23 @@ data DataFieldLoc (sz :: R.DataSz) = DataFieldLoc
     , defaultValue :: !Word64
     }
 
+-- | An instance of 'HasUnion' indicates that the given type is a capnproto struct
+-- (or group) with an anonymous union.
 class R.IsStruct a => HasUnion a where
+    -- | 'unionField' is a field holding the union's tag.
     unionField :: Field 'Slot a Word16
+
+    -- | 'Which' is the abstract capnproto type of the union itself. Like
+    -- generated struct types (in this case @a@), this is typically
+    -- uninhabitied, and used to define instances and/or act as a phantom type.
+    data Which a
+
+    -- | Concrete view into a union embedded in a message. This will be a sum
+    -- type with other 'Raw' values as arguments.
     data RawWhich (mut :: M.Mutability) a
+
+    -- | Helper used in generated code to extract a 'RawWhich' from its
+    -- surrounding struct.
     internalWhich :: U.ReadCtx m mut => Word16 -> R.Raw mut a -> m (RawWhich mut a)
 
 data Variant (k :: FieldKind) a b = Variant

@@ -142,12 +142,12 @@ declToDecls thisMod decl =
                 }
             ]
         New.UnionDecl{name, typeParams, tagLoc, variants} ->
-            let tVars = toTVars typeParams in
+            let tVars = toTVars typeParams
+                typ = Hs.TApp (Hs.TLName name) tVars
+            in
             Hs.DcInstance
                 { ctx = paramsContext tVars
-                , typ = Hs.TApp
-                    (tgName ["GH"] "HasUnion")
-                    [Hs.TApp (Hs.TLName name) tVars]
+                , typ = Hs.TApp (tgName ["GH"] "HasUnion") [typ]
                 , defs =
                     [ Hs.IdValue Hs.DfValue
                         { name = "unionField"
@@ -158,15 +158,15 @@ declToDecls thisMod decl =
                         }
                     , defineRawData thisMod name tVars variants
                     , defineInternalWhich name variants
+                    , Hs.IdData Hs.Data
+                        { dataName = "Which"
+                        , typeArgs = [typ]
+                        , dataVariants = []
+                        , derives = []
+                        , dataNewtype = False
+                        , dataInstance = False
+                        }
                     ]
-                }
-            : Hs.DcData Hs.Data
-                { dataName = "C.Which"
-                , typeArgs = [Hs.TApp (Hs.TLName name) tVars]
-                , dataVariants = []
-                , derives = []
-                , dataNewtype = False
-                , dataInstance = True
                 }
             : concatMap (variantToDecls thisMod name typeParams) variants
         New.MethodDecl
