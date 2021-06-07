@@ -142,16 +142,6 @@ declToDecls thisMod decl =
                             ]
                         }
                     ]
-{-
-                Just New.EnumTypeInfo{} ->
-                    [ Hs.DcDeriveInstance
-                        [ Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["RP"] "Parsed") [v]]
-                        | v <- typeArgs
-                        ]
-                        (Hs.TApp (tStd_ cls) [typ])
-                    | cls <- [ "Eq", "Show" ]
-                    ]
--}
                 _ -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
