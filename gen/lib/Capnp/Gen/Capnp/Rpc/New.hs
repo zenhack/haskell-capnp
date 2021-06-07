@@ -227,8 +227,8 @@ instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
 instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo Basics.AnyPointer) where
     variantByLabel  = (GH.Variant (GH.ptrField 2) 2)
 data instance C.Parsed (C.Which Call'sendResultsTo)
-    = Call'sendResultsTo'caller (RP.Parsed ())
-    | Call'sendResultsTo'yourself (RP.Parsed ())
+    = Call'sendResultsTo'caller 
+    | Call'sendResultsTo'yourself 
     | Call'sendResultsTo'thirdParty (RP.Parsed Basics.AnyPointer)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Call'sendResultsTo)))
@@ -290,8 +290,8 @@ instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return Basics.AnyPointer)
 data instance C.Parsed (C.Which Return)
     = Return'results (RP.Parsed Payload)
     | Return'exception (RP.Parsed Exception)
-    | Return'canceled (RP.Parsed ())
-    | Return'resultsSentElsewhere (RP.Parsed ())
+    | Return'canceled 
+    | Return'resultsSentElsewhere 
     | Return'takeFromOtherQuestion (RP.Parsed Std_.Word32)
     | Return'acceptFromThirdParty (RP.Parsed Basics.AnyPointer)
     deriving(Generics.Generic)
@@ -444,7 +444,7 @@ instance (GH.HasVariant "provide" GH.Slot Disembargo'context Std_.Word32) where
 data instance C.Parsed (C.Which Disembargo'context)
     = Disembargo'context'senderLoopback (RP.Parsed Std_.Word32)
     | Disembargo'context'receiverLoopback (RP.Parsed Std_.Word32)
-    | Disembargo'context'accept (RP.Parsed ())
+    | Disembargo'context'accept 
     | Disembargo'context'provide (RP.Parsed Std_.Word32)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Disembargo'context)))
@@ -626,7 +626,7 @@ instance (GH.HasVariant "receiverAnswer" GH.Slot CapDescriptor PromisedAnswer) w
 instance (GH.HasVariant "thirdPartyHosted" GH.Slot CapDescriptor ThirdPartyCapDescriptor) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 data instance C.Parsed (C.Which CapDescriptor)
-    = CapDescriptor'none (RP.Parsed ())
+    = CapDescriptor'none 
     | CapDescriptor'senderHosted (RP.Parsed Std_.Word32)
     | CapDescriptor'senderPromise (RP.Parsed Std_.Word32)
     | CapDescriptor'receiverHosted (RP.Parsed Std_.Word32)
@@ -689,7 +689,7 @@ instance (GH.HasVariant "noop" GH.Slot PromisedAnswer'Op ()) where
 instance (GH.HasVariant "getPointerField" GH.Slot PromisedAnswer'Op Std_.Word16) where
     variantByLabel  = (GH.Variant (GH.dataField 16 0 16 0) 1)
 data instance C.Parsed (C.Which PromisedAnswer'Op)
-    = PromisedAnswer'Op'noop (RP.Parsed ())
+    = PromisedAnswer'Op'noop 
     | PromisedAnswer'Op'getPointerField (RP.Parsed Std_.Word16)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which PromisedAnswer'Op)))

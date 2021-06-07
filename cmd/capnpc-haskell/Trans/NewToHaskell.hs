@@ -280,11 +280,13 @@ declToDecls thisMod decl =
                         New.ParsedUnion { variants } ->
                             [ Hs.DataVariant
                                 { dvCtorName = Name.localToUnQ $ Name.mkSub typeName name
-                                , dvArgs = Hs.APos
-                                    [ Hs.TApp
-                                        (tgName ["RP"] "Parsed")
-                                        [fieldLocTypeToType thisMod ftype]
-                                    ]
+                                , dvArgs = case ftype of
+                                    C.VoidField -> Hs.APos []
+                                    _ -> Hs.APos
+                                        [ Hs.TApp
+                                            (tgName ["RP"] "Parsed")
+                                            [fieldLocTypeToType thisMod ftype]
+                                        ]
                                 }
                             | (name, ftype) <- variants
                             ]

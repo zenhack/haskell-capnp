@@ -87,7 +87,7 @@ instance (GH.HasVariant "const" GH.Group Node Node'const) where
 instance (GH.HasVariant "annotation" GH.Group Node Node'annotation) where
     variantByLabel  = (GH.Variant GH.groupField 5)
 data instance C.Parsed (C.Which Node)
-    = Node'file (RP.Parsed ())
+    = Node'file 
     | Node'struct (RP.Parsed Node'struct)
     | Node'enum (RP.Parsed Node'enum)
     | Node'interface (RP.Parsed Node'interface)
@@ -452,7 +452,7 @@ instance (GH.HasVariant "implicit" GH.Slot Field'ordinal ()) where
 instance (GH.HasVariant "explicit" GH.Slot Field'ordinal Std_.Word16) where
     variantByLabel  = (GH.Variant (GH.dataField 32 1 16 0) 1)
 data instance C.Parsed (C.Which Field'ordinal)
-    = Field'ordinal'implicit (RP.Parsed ())
+    = Field'ordinal'implicit 
     | Field'ordinal'explicit (RP.Parsed Std_.Word16)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Field'ordinal)))
@@ -653,20 +653,20 @@ instance (GH.HasVariant "interface" GH.Group Type Type'interface) where
 instance (GH.HasVariant "anyPointer" GH.Group Type Type'anyPointer) where
     variantByLabel  = (GH.Variant GH.groupField 18)
 data instance C.Parsed (C.Which Type)
-    = Type'void (RP.Parsed ())
-    | Type'bool (RP.Parsed ())
-    | Type'int8 (RP.Parsed ())
-    | Type'int16 (RP.Parsed ())
-    | Type'int32 (RP.Parsed ())
-    | Type'int64 (RP.Parsed ())
-    | Type'uint8 (RP.Parsed ())
-    | Type'uint16 (RP.Parsed ())
-    | Type'uint32 (RP.Parsed ())
-    | Type'uint64 (RP.Parsed ())
-    | Type'float32 (RP.Parsed ())
-    | Type'float64 (RP.Parsed ())
-    | Type'text (RP.Parsed ())
-    | Type'data_ (RP.Parsed ())
+    = Type'void 
+    | Type'bool 
+    | Type'int8 
+    | Type'int16 
+    | Type'int32 
+    | Type'int64 
+    | Type'uint8 
+    | Type'uint16 
+    | Type'uint32 
+    | Type'uint64 
+    | Type'float32 
+    | Type'float64 
+    | Type'text 
+    | Type'data_ 
     | Type'list (RP.Parsed Type'list)
     | Type'enum (RP.Parsed Type'enum)
     | Type'struct (RP.Parsed Type'struct)
@@ -835,10 +835,10 @@ instance (GH.HasVariant "list" GH.Slot Type'anyPointer'unconstrained ()) where
 instance (GH.HasVariant "capability" GH.Slot Type'anyPointer'unconstrained ()) where
     variantByLabel  = (GH.Variant GH.voidField 3)
 data instance C.Parsed (C.Which Type'anyPointer'unconstrained)
-    = Type'anyPointer'unconstrained'anyKind (RP.Parsed ())
-    | Type'anyPointer'unconstrained'struct (RP.Parsed ())
-    | Type'anyPointer'unconstrained'list (RP.Parsed ())
-    | Type'anyPointer'unconstrained'capability (RP.Parsed ())
+    = Type'anyPointer'unconstrained'anyKind 
+    | Type'anyPointer'unconstrained'struct 
+    | Type'anyPointer'unconstrained'list 
+    | Type'anyPointer'unconstrained'capability 
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Type'anyPointer'unconstrained)))
 deriving instance (Std_.Eq (C.Parsed (C.Which Type'anyPointer'unconstrained)))
@@ -928,7 +928,7 @@ instance (GH.HasVariant "inherit" GH.Slot Brand'Scope ()) where
     variantByLabel  = (GH.Variant GH.voidField 1)
 data instance C.Parsed (C.Which Brand'Scope)
     = Brand'Scope'bind (RP.Parsed (R.List Brand'Binding))
-    | Brand'Scope'inherit (RP.Parsed ())
+    | Brand'Scope'inherit 
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Brand'Scope)))
 deriving instance (Std_.Eq (C.Parsed (C.Which Brand'Scope)))
@@ -967,7 +967,7 @@ instance (GH.HasVariant "unbound" GH.Slot Brand'Binding ()) where
 instance (GH.HasVariant "type_" GH.Slot Brand'Binding Type) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
 data instance C.Parsed (C.Which Brand'Binding)
-    = Brand'Binding'unbound (RP.Parsed ())
+    = Brand'Binding'unbound 
     | Brand'Binding'type_ (RP.Parsed Type)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Brand'Binding)))
@@ -1090,7 +1090,7 @@ instance (GH.HasVariant "interface" GH.Slot Value ()) where
 instance (GH.HasVariant "anyPointer" GH.Slot Value Basics.AnyPointer) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 18)
 data instance C.Parsed (C.Which Value)
-    = Value'void (RP.Parsed ())
+    = Value'void 
     | Value'bool (RP.Parsed Std_.Bool)
     | Value'int8 (RP.Parsed Std_.Int8)
     | Value'int16 (RP.Parsed Std_.Int16)
@@ -1107,7 +1107,7 @@ data instance C.Parsed (C.Which Value)
     | Value'list (RP.Parsed Basics.AnyPointer)
     | Value'enum (RP.Parsed Std_.Word16)
     | Value'struct (RP.Parsed Basics.AnyPointer)
-    | Value'interface (RP.Parsed ())
+    | Value'interface 
     | Value'anyPointer (RP.Parsed Basics.AnyPointer)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (C.Which Value)))

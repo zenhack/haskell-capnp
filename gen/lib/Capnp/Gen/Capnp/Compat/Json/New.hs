@@ -84,7 +84,7 @@ instance (GH.HasVariant "object" GH.Slot Value (R.List Value'Field)) where
 instance (GH.HasVariant "call" GH.Slot Value Value'Call) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
 data instance C.Parsed (C.Which Value)
-    = Value'null (RP.Parsed ())
+    = Value'null 
     | Value'boolean (RP.Parsed Std_.Bool)
     | Value'number (RP.Parsed Std_.Double)
     | Value'string (RP.Parsed Basics.Text)
