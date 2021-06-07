@@ -16,6 +16,8 @@ module Capnp.New
     , initVariant
     , encodeVariant
     , which
+    , getWhich
+    , getWrapper
     ) where
 
 
@@ -29,6 +31,7 @@ import qualified Capnp.Untyped        as U
 import           Data.Bits
 import           Data.Maybe           (fromJust)
 import           Data.Word
+import           GHC.Prim             (coerce)
 
 {-# INLINE readField #-}
 readField
@@ -154,6 +157,12 @@ initVariant
 initVariant F.Variant{field, tagValue} struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     readField field struct
+
+getWhich :: F.HasUnion a => R.Raw mut a -> R.Raw mut (F.Which a)
+getWhich = coerce
+
+getWrapper :: F.HasUnion a => R.Raw mut (F.Which a) -> R.Raw mut a
+getWrapper = coerce
 
 which :: forall a mut m. U.ReadCtx m mut => F.HasUnion a => R.Raw mut a -> m (F.RawWhich mut a)
 which struct = do

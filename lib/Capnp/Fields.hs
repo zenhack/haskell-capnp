@@ -73,6 +73,8 @@ class R.IsStruct a => HasUnion a where
     -- surrounding struct.
     internalWhich :: U.ReadCtx m mut => Word16 -> R.Raw mut a -> m (RawWhich mut a)
 
+type instance R.ReprFor (Which a) = 'R.Ptr ('Just 'R.Struct)
+
 data Variant (k :: FieldKind) a b = Variant
     { field    :: !(Field k a b)
     , tagValue :: !Word16
