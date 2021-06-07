@@ -92,11 +92,7 @@ declToDecls thisMod decl =
                             | variantName <- variants
                             ]
                             ++
-                            [ Hs.DataVariant
-                                { dvCtorName = Name.localToUnQ $ Name.mkSub name "unknown'"
-                                , dvArgs = Hs.APos [tStd_ "Word16"]
-                                }
-                            ]
+                            [ declareUnknownVariant name ]
                         _ -> []
                 , derives =
                     case extraTypeInfo of
@@ -280,6 +276,8 @@ declToDecls thisMod decl =
                                 }
                             | (name, ftype) <- variants
                             ]
+                            ++
+                            [ declareUnknownVariant typeName ]
 
                 }
             ] ++
@@ -532,3 +530,9 @@ rApp n = Hs.TApp (tReprName n)
 
 tReprName :: Name.LocalQ -> Hs.Type
 tReprName = tgName ["R"]
+
+declareUnknownVariant :: Name.LocalQ -> Hs.DataVariant
+declareUnknownVariant name = Hs.DataVariant
+    { dvCtorName = Name.localToUnQ $ Name.mkSub name "unknown'"
+    , dvArgs = Hs.APos [tStd_ "Word16"]
+    }

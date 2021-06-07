@@ -133,6 +133,7 @@ data instance C.Parsed (GH.Which Message)
     | Message'accept (RP.Parsed Accept)
     | Message'join (RP.Parsed Join)
     | Message'disembargo (RP.Parsed Disembargo)
+    | Message'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Message)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Message)))
@@ -230,6 +231,7 @@ data instance C.Parsed (GH.Which Call'sendResultsTo)
     = Call'sendResultsTo'caller 
     | Call'sendResultsTo'yourself 
     | Call'sendResultsTo'thirdParty (RP.Parsed Basics.AnyPointer)
+    | Call'sendResultsTo'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Call'sendResultsTo)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Call'sendResultsTo)))
@@ -294,6 +296,7 @@ data instance C.Parsed (GH.Which Return)
     | Return'resultsSentElsewhere 
     | Return'takeFromOtherQuestion (RP.Parsed Std_.Word32)
     | Return'acceptFromThirdParty (RP.Parsed Basics.AnyPointer)
+    | Return'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Return)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Return)))
@@ -356,6 +359,7 @@ instance (GH.HasVariant "exception" GH.Slot Resolve Exception) where
 data instance C.Parsed (GH.Which Resolve)
     = Resolve'cap (RP.Parsed CapDescriptor)
     | Resolve'exception (RP.Parsed Exception)
+    | Resolve'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Resolve)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Resolve)))
@@ -446,6 +450,7 @@ data instance C.Parsed (GH.Which Disembargo'context)
     | Disembargo'context'receiverLoopback (RP.Parsed Std_.Word32)
     | Disembargo'context'accept 
     | Disembargo'context'provide (RP.Parsed Std_.Word32)
+    | Disembargo'context'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Disembargo'context)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Disembargo'context)))
@@ -550,6 +555,7 @@ instance (GH.HasVariant "promisedAnswer" GH.Slot MessageTarget PromisedAnswer) w
 data instance C.Parsed (GH.Which MessageTarget)
     = MessageTarget'importedCap (RP.Parsed Std_.Word32)
     | MessageTarget'promisedAnswer (RP.Parsed PromisedAnswer)
+    | MessageTarget'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which MessageTarget)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which MessageTarget)))
@@ -632,6 +638,7 @@ data instance C.Parsed (GH.Which CapDescriptor)
     | CapDescriptor'receiverHosted (RP.Parsed Std_.Word32)
     | CapDescriptor'receiverAnswer (RP.Parsed PromisedAnswer)
     | CapDescriptor'thirdPartyHosted (RP.Parsed ThirdPartyCapDescriptor)
+    | CapDescriptor'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which CapDescriptor)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which CapDescriptor)))
@@ -691,6 +698,7 @@ instance (GH.HasVariant "getPointerField" GH.Slot PromisedAnswer'Op Std_.Word16)
 data instance C.Parsed (GH.Which PromisedAnswer'Op)
     = PromisedAnswer'Op'noop 
     | PromisedAnswer'Op'getPointerField (RP.Parsed Std_.Word16)
+    | PromisedAnswer'Op'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which PromisedAnswer'Op)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which PromisedAnswer'Op)))

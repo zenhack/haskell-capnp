@@ -93,6 +93,7 @@ data instance C.Parsed (GH.Which Node)
     | Node'interface (RP.Parsed Node'interface)
     | Node'const (RP.Parsed Node'const)
     | Node'annotation (RP.Parsed Node'annotation)
+    | Node'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Node)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Node)))
@@ -365,6 +366,7 @@ instance (GH.HasVariant "group" GH.Group Field Field'group) where
 data instance C.Parsed (GH.Which Field)
     = Field'slot (RP.Parsed Field'slot)
     | Field'group (RP.Parsed Field'group)
+    | Field'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Field)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Field)))
@@ -454,6 +456,7 @@ instance (GH.HasVariant "explicit" GH.Slot Field'ordinal Std_.Word16) where
 data instance C.Parsed (GH.Which Field'ordinal)
     = Field'ordinal'implicit 
     | Field'ordinal'explicit (RP.Parsed Std_.Word16)
+    | Field'ordinal'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Field'ordinal)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Field'ordinal)))
@@ -672,6 +675,7 @@ data instance C.Parsed (GH.Which Type)
     | Type'struct (RP.Parsed Type'struct)
     | Type'interface (RP.Parsed Type'interface)
     | Type'anyPointer (RP.Parsed Type'anyPointer)
+    | Type'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Type)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Type)))
@@ -789,6 +793,7 @@ data instance C.Parsed (GH.Which Type'anyPointer)
     = Type'anyPointer'unconstrained (RP.Parsed Type'anyPointer'unconstrained)
     | Type'anyPointer'parameter (RP.Parsed Type'anyPointer'parameter)
     | Type'anyPointer'implicitMethodParameter (RP.Parsed Type'anyPointer'implicitMethodParameter)
+    | Type'anyPointer'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Type'anyPointer)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Type'anyPointer)))
@@ -839,6 +844,7 @@ data instance C.Parsed (GH.Which Type'anyPointer'unconstrained)
     | Type'anyPointer'unconstrained'struct 
     | Type'anyPointer'unconstrained'list 
     | Type'anyPointer'unconstrained'capability 
+    | Type'anyPointer'unconstrained'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Type'anyPointer'unconstrained)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Type'anyPointer'unconstrained)))
@@ -929,6 +935,7 @@ instance (GH.HasVariant "inherit" GH.Slot Brand'Scope ()) where
 data instance C.Parsed (GH.Which Brand'Scope)
     = Brand'Scope'bind (RP.Parsed (R.List Brand'Binding))
     | Brand'Scope'inherit 
+    | Brand'Scope'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Brand'Scope)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Brand'Scope)))
@@ -969,6 +976,7 @@ instance (GH.HasVariant "type_" GH.Slot Brand'Binding Type) where
 data instance C.Parsed (GH.Which Brand'Binding)
     = Brand'Binding'unbound 
     | Brand'Binding'type_ (RP.Parsed Type)
+    | Brand'Binding'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Brand'Binding)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Brand'Binding)))
@@ -1109,6 +1117,7 @@ data instance C.Parsed (GH.Which Value)
     | Value'struct (RP.Parsed Basics.AnyPointer)
     | Value'interface 
     | Value'anyPointer (RP.Parsed Basics.AnyPointer)
+    | Value'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Value)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Value)))

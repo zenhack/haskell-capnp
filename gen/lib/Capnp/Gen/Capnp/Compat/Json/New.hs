@@ -91,6 +91,7 @@ data instance C.Parsed (GH.Which Value)
     | Value'array (RP.Parsed (R.List Value))
     | Value'object (RP.Parsed (R.List Value'Field))
     | Value'call (RP.Parsed Value'Call)
+    | Value'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Value)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Value)))
