@@ -56,6 +56,9 @@ module Capnp.Repr
     , IsPtrRepr(..)
     , IsListPtrRepr(..)
 
+    -- * Allocating values
+    , Allocate(..)
+
     -- * Shorthands for types
     , IsStruct
     , IsCap
@@ -142,6 +145,21 @@ type family UntypedList (mut :: Mutability) (r :: Maybe ListRepr) :: Type where
 
 type family UntypedSomeList (mut :: Mutability) (r :: ListRepr) :: Type where
     UntypedSomeList mut r = U.ListOf mut (Untyped mut (ElemRepr r))
+
+
+-- | An instace of @'Allocate'@ specifies how to allocate a value with a given representation.
+-- This only makes sense for pointers of course, so it is defined on PtrRepr. Of the well-kinded
+-- types, only @'List 'Nothing@ is missing an instance.
+class Allocate (r :: PtrRepr) where
+    -- | Extra information needed to allocate a value:
+    --
+    -- * For structs, the sizes of the sections.
+    -- * For capabilities, the client to attach to the messages.
+    -- * For lists, the length, and for composite lists, the struct sizes as well.
+    type AllocHint r
+
+    -- | Allocate a value of the given type.
+    alloc :: U.RWCtx m s => M.Message ('Mut s) -> AllocHint r -> m (UntypedSomePtr ('Mut s) r)
 
 type family ReprFor (a :: Type) :: Repr
 
@@ -337,6 +355,29 @@ instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
     toPtr msg (Raw p) = pure $ rToPtr @r msg p
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
     fromPtr msg p = Raw <$> rFromPtr @r msg p
+
+instance Allocate 'Struct where
+    type AllocHint 'Struct = (Word16, Word16)
+    alloc msg = uncurry (U.allocStruct msg)
+instance Allocate 'Cap where
+    type AllocHint 'Cap = M.Client
+    alloc = U.appendCap
+instance Allocate ('List ('Just 'ListComposite)) where
+    type AllocHint ('List ('Just 'ListComposite)) = (Int, AllocHint 'Struct)
+    alloc msg (len, (nWords, nPtrs)) = U.allocCompositeList msg nWords nPtrs len
+instance AllocateNormalList r => Allocate ('List ('Just ('ListNormal r))) where
+    type AllocHint ('List ('Just ('ListNormal r))) = Int
+    alloc = allocNormalList @r
+
+class AllocateNormalList (r :: NormalListRepr) where
+    allocNormalList :: U.RWCtx m s => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('Mut s) ('ListNormal r))
+instance AllocateNormalList ('ListData 'Sz0) where allocNormalList = U.allocList0
+instance AllocateNormalList ('ListData 'Sz1) where allocNormalList = U.allocList1
+instance AllocateNormalList ('ListData 'Sz8) where allocNormalList = U.allocList8
+instance AllocateNormalList ('ListData 'Sz16) where allocNormalList = U.allocList16
+instance AllocateNormalList ('ListData 'Sz32) where allocNormalList = U.allocList32
+instance AllocateNormalList ('ListData 'Sz64) where allocNormalList = U.allocList64
+instance AllocateNormalList 'ListPtr where allocNormalList = U.allocListPtr
 
 
 -- | Constraint that a is a struct type.
