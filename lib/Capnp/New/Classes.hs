@@ -15,7 +15,6 @@ module Capnp.New.Classes
     , TypedStruct(..)
     , newRoot
     , Parsed
-    , Which
     ) where
 
 import           Capnp.Message       (Mutability(..))
@@ -135,7 +134,3 @@ instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector
 -- an instance @'Parse' a b@, then @'Parsed' a@ needn't be defined, and @b@ can
 -- be something else.
 data family Parsed a
-
--- | If @a@ is a capnproto struct type, then @'Which' a@ is the type of its
--- anonymous union, if any.
-data family Which a

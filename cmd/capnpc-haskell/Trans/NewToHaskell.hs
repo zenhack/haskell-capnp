@@ -230,7 +230,7 @@ declToDecls thisMod decl =
                 typ = Hs.TApp (Hs.TLName typeName) tVars
                 parsedTy = case parsedDef of
                             New.ParsedStruct{} -> typ
-                            New.ParsedUnion{}  -> Hs.TApp (tgName ["C"] "Which") [typ]
+                            New.ParsedUnion{}  -> Hs.TApp (tgName ["GH"] "Which") [typ]
             in
             (
             [ Hs.DcData Hs.Data
@@ -260,7 +260,7 @@ declToDecls thisMod decl =
                                       ]
                                     , [ ( "union'"
                                         , Hs.TApp (tgName ["C"] "Parsed")
-                                            [Hs.TApp (tgName ["C"] "Which") [typ]]
+                                            [Hs.TApp (tgName ["GH"] "Which") [typ]]
                                         )
                                       | hasUnion
                                       ]

@@ -44,7 +44,7 @@ data instance C.Parsed Node
         ,annotations :: (RP.Parsed (R.List Annotation))
         ,parameters :: (RP.Parsed (R.List Node'Parameter))
         ,isGeneric :: (RP.Parsed Std_.Bool)
-        ,union' :: (C.Parsed (C.Which Node))}
+        ,union' :: (C.Parsed (GH.Which Node))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Node))
 deriving instance (Std_.Eq (C.Parsed Node))
@@ -86,7 +86,7 @@ instance (GH.HasVariant "const" GH.Group Node Node'const) where
     variantByLabel  = (GH.Variant GH.groupField 4)
 instance (GH.HasVariant "annotation" GH.Group Node Node'annotation) where
     variantByLabel  = (GH.Variant GH.groupField 5)
-data instance C.Parsed (C.Which Node)
+data instance C.Parsed (GH.Which Node)
     = Node'file 
     | Node'struct (RP.Parsed Node'struct)
     | Node'enum (RP.Parsed Node'enum)
@@ -94,8 +94,8 @@ data instance C.Parsed (C.Which Node)
     | Node'const (RP.Parsed Node'const)
     | Node'annotation (RP.Parsed Node'annotation)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Node)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Node)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Node)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Node)))
 instance (GH.HasField "id" GH.Slot Node Std_.Word64) where
     fieldByLabel  = (GH.dataField 0 0 64 0)
 instance (GH.HasField "displayName" GH.Slot Node Basics.Text) where
@@ -340,7 +340,7 @@ data instance C.Parsed Field
         ,annotations :: (RP.Parsed (R.List Annotation))
         ,discriminantValue :: (RP.Parsed Std_.Word16)
         ,ordinal :: (RP.Parsed Field'ordinal)
-        ,union' :: (C.Parsed (C.Which Field))}
+        ,union' :: (C.Parsed (GH.Which Field))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Field))
 deriving instance (Std_.Eq (C.Parsed Field))
@@ -362,12 +362,12 @@ instance (GH.HasVariant "slot" GH.Group Field Field'slot) where
     variantByLabel  = (GH.Variant GH.groupField 0)
 instance (GH.HasVariant "group" GH.Group Field Field'group) where
     variantByLabel  = (GH.Variant GH.groupField 1)
-data instance C.Parsed (C.Which Field)
+data instance C.Parsed (GH.Which Field)
     = Field'slot (RP.Parsed Field'slot)
     | Field'group (RP.Parsed Field'group)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Field)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Field)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Field)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Field)))
 instance (GH.HasField "name" GH.Slot Field Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "codeOrder" GH.Slot Field Std_.Word16) where
@@ -429,7 +429,7 @@ instance (C.Allocate Field'ordinal) where
     new  = GH.newStruct
 data instance C.Parsed Field'ordinal
     = Field'ordinal' 
-        {union' :: (C.Parsed (C.Which Field'ordinal))}
+        {union' :: (C.Parsed (GH.Which Field'ordinal))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Field'ordinal))
 deriving instance (Std_.Eq (C.Parsed Field'ordinal))
@@ -451,12 +451,12 @@ instance (GH.HasVariant "implicit" GH.Slot Field'ordinal ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "explicit" GH.Slot Field'ordinal Std_.Word16) where
     variantByLabel  = (GH.Variant (GH.dataField 32 1 16 0) 1)
-data instance C.Parsed (C.Which Field'ordinal)
+data instance C.Parsed (GH.Which Field'ordinal)
     = Field'ordinal'implicit 
     | Field'ordinal'explicit (RP.Parsed Std_.Word16)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Field'ordinal)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Field'ordinal)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Field'ordinal)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Field'ordinal)))
 data Enumerant 
 type instance (R.ReprFor Enumerant) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Enumerant) where
@@ -545,7 +545,7 @@ instance (C.Allocate Type) where
     new  = GH.newStruct
 data instance C.Parsed Type
     = Type 
-        {union' :: (C.Parsed (C.Which Type))}
+        {union' :: (C.Parsed (GH.Which Type))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Type))
 deriving instance (Std_.Eq (C.Parsed Type))
@@ -652,7 +652,7 @@ instance (GH.HasVariant "interface" GH.Group Type Type'interface) where
     variantByLabel  = (GH.Variant GH.groupField 17)
 instance (GH.HasVariant "anyPointer" GH.Group Type Type'anyPointer) where
     variantByLabel  = (GH.Variant GH.groupField 18)
-data instance C.Parsed (C.Which Type)
+data instance C.Parsed (GH.Which Type)
     = Type'void 
     | Type'bool 
     | Type'int8 
@@ -673,8 +673,8 @@ data instance C.Parsed (C.Which Type)
     | Type'interface (RP.Parsed Type'interface)
     | Type'anyPointer (RP.Parsed Type'anyPointer)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Type)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Type)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Type)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Type)))
 data Type'list 
 type instance (R.ReprFor Type'list) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Type'list) where
@@ -758,7 +758,7 @@ instance (C.Allocate Type'anyPointer) where
     new  = GH.newStruct
 data instance C.Parsed Type'anyPointer
     = Type'anyPointer' 
-        {union' :: (C.Parsed (C.Which Type'anyPointer))}
+        {union' :: (C.Parsed (GH.Which Type'anyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Type'anyPointer))
 deriving instance (Std_.Eq (C.Parsed Type'anyPointer))
@@ -785,13 +785,13 @@ instance (GH.HasVariant "parameter" GH.Group Type'anyPointer Type'anyPointer'par
     variantByLabel  = (GH.Variant GH.groupField 1)
 instance (GH.HasVariant "implicitMethodParameter" GH.Group Type'anyPointer Type'anyPointer'implicitMethodParameter) where
     variantByLabel  = (GH.Variant GH.groupField 2)
-data instance C.Parsed (C.Which Type'anyPointer)
+data instance C.Parsed (GH.Which Type'anyPointer)
     = Type'anyPointer'unconstrained (RP.Parsed Type'anyPointer'unconstrained)
     | Type'anyPointer'parameter (RP.Parsed Type'anyPointer'parameter)
     | Type'anyPointer'implicitMethodParameter (RP.Parsed Type'anyPointer'implicitMethodParameter)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Type'anyPointer)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Type'anyPointer)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Type'anyPointer)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Type'anyPointer)))
 data Type'anyPointer'unconstrained 
 type instance (R.ReprFor Type'anyPointer'unconstrained) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Type'anyPointer'unconstrained) where
@@ -802,7 +802,7 @@ instance (C.Allocate Type'anyPointer'unconstrained) where
     new  = GH.newStruct
 data instance C.Parsed Type'anyPointer'unconstrained
     = Type'anyPointer'unconstrained' 
-        {union' :: (C.Parsed (C.Which Type'anyPointer'unconstrained))}
+        {union' :: (C.Parsed (GH.Which Type'anyPointer'unconstrained))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Type'anyPointer'unconstrained))
 deriving instance (Std_.Eq (C.Parsed Type'anyPointer'unconstrained))
@@ -834,14 +834,14 @@ instance (GH.HasVariant "list" GH.Slot Type'anyPointer'unconstrained ()) where
     variantByLabel  = (GH.Variant GH.voidField 2)
 instance (GH.HasVariant "capability" GH.Slot Type'anyPointer'unconstrained ()) where
     variantByLabel  = (GH.Variant GH.voidField 3)
-data instance C.Parsed (C.Which Type'anyPointer'unconstrained)
+data instance C.Parsed (GH.Which Type'anyPointer'unconstrained)
     = Type'anyPointer'unconstrained'anyKind 
     | Type'anyPointer'unconstrained'struct 
     | Type'anyPointer'unconstrained'list 
     | Type'anyPointer'unconstrained'capability 
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Type'anyPointer'unconstrained)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Type'anyPointer'unconstrained)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Type'anyPointer'unconstrained)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Type'anyPointer'unconstrained)))
 data Type'anyPointer'parameter 
 type instance (R.ReprFor Type'anyPointer'parameter) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Type'anyPointer'parameter) where
@@ -904,7 +904,7 @@ instance (C.Allocate Brand'Scope) where
 data instance C.Parsed Brand'Scope
     = Brand'Scope 
         {scopeId :: (RP.Parsed Std_.Word64)
-        ,union' :: (C.Parsed (C.Which Brand'Scope))}
+        ,union' :: (C.Parsed (GH.Which Brand'Scope))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Brand'Scope))
 deriving instance (Std_.Eq (C.Parsed Brand'Scope))
@@ -926,12 +926,12 @@ instance (GH.HasVariant "bind" GH.Slot Brand'Scope (R.List Brand'Binding)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "inherit" GH.Slot Brand'Scope ()) where
     variantByLabel  = (GH.Variant GH.voidField 1)
-data instance C.Parsed (C.Which Brand'Scope)
+data instance C.Parsed (GH.Which Brand'Scope)
     = Brand'Scope'bind (RP.Parsed (R.List Brand'Binding))
     | Brand'Scope'inherit 
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Brand'Scope)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Brand'Scope)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Brand'Scope)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Brand'Scope)))
 instance (GH.HasField "scopeId" GH.Slot Brand'Scope Std_.Word64) where
     fieldByLabel  = (GH.dataField 0 0 64 0)
 data Brand'Binding 
@@ -944,7 +944,7 @@ instance (C.Allocate Brand'Binding) where
     new  = GH.newStruct
 data instance C.Parsed Brand'Binding
     = Brand'Binding 
-        {union' :: (C.Parsed (C.Which Brand'Binding))}
+        {union' :: (C.Parsed (GH.Which Brand'Binding))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Brand'Binding))
 deriving instance (Std_.Eq (C.Parsed Brand'Binding))
@@ -966,12 +966,12 @@ instance (GH.HasVariant "unbound" GH.Slot Brand'Binding ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "type_" GH.Slot Brand'Binding Type) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
-data instance C.Parsed (C.Which Brand'Binding)
+data instance C.Parsed (GH.Which Brand'Binding)
     = Brand'Binding'unbound 
     | Brand'Binding'type_ (RP.Parsed Type)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Brand'Binding)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Brand'Binding)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Brand'Binding)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Brand'Binding)))
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Value) where
@@ -982,7 +982,7 @@ instance (C.Allocate Value) where
     new  = GH.newStruct
 data instance C.Parsed Value
     = Value 
-        {union' :: (C.Parsed (C.Which Value))}
+        {union' :: (C.Parsed (GH.Which Value))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Value))
 deriving instance (Std_.Eq (C.Parsed Value))
@@ -1089,7 +1089,7 @@ instance (GH.HasVariant "interface" GH.Slot Value ()) where
     variantByLabel  = (GH.Variant GH.voidField 17)
 instance (GH.HasVariant "anyPointer" GH.Slot Value Basics.AnyPointer) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 18)
-data instance C.Parsed (C.Which Value)
+data instance C.Parsed (GH.Which Value)
     = Value'void 
     | Value'bool (RP.Parsed Std_.Bool)
     | Value'int8 (RP.Parsed Std_.Int8)
@@ -1110,8 +1110,8 @@ data instance C.Parsed (C.Which Value)
     | Value'interface 
     | Value'anyPointer (RP.Parsed Basics.AnyPointer)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Value)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Value)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Value)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Value)))
 data Annotation 
 type instance (R.ReprFor Annotation) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Annotation) where

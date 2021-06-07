@@ -36,7 +36,7 @@ instance (C.Allocate Value) where
     new  = GH.newStruct
 data instance C.Parsed Value
     = Value 
-        {union' :: (C.Parsed (C.Which Value))}
+        {union' :: (C.Parsed (GH.Which Value))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Value))
 deriving instance (Std_.Eq (C.Parsed Value))
@@ -83,7 +83,7 @@ instance (GH.HasVariant "object" GH.Slot Value (R.List Value'Field)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 instance (GH.HasVariant "call" GH.Slot Value Value'Call) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
-data instance C.Parsed (C.Which Value)
+data instance C.Parsed (GH.Which Value)
     = Value'null 
     | Value'boolean (RP.Parsed Std_.Bool)
     | Value'number (RP.Parsed Std_.Double)
@@ -92,8 +92,8 @@ data instance C.Parsed (C.Which Value)
     | Value'object (RP.Parsed (R.List Value'Field))
     | Value'call (RP.Parsed Value'Call)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Value)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Value)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Value)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Value)))
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Value'Field) where

@@ -36,7 +36,7 @@ instance (C.Allocate Message) where
     new  = GH.newStruct
 data instance C.Parsed Message
     = Message 
-        {union' :: (C.Parsed (C.Which Message))}
+        {union' :: (C.Parsed (GH.Which Message))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Message))
 deriving instance (Std_.Eq (C.Parsed Message))
@@ -118,7 +118,7 @@ instance (GH.HasVariant "join" GH.Slot Message Join) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 12)
 instance (GH.HasVariant "disembargo" GH.Slot Message Disembargo) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 13)
-data instance C.Parsed (C.Which Message)
+data instance C.Parsed (GH.Which Message)
     = Message'unimplemented (RP.Parsed Message)
     | Message'abort (RP.Parsed Exception)
     | Message'call (RP.Parsed Call)
@@ -134,8 +134,8 @@ data instance C.Parsed (C.Which Message)
     | Message'join (RP.Parsed Join)
     | Message'disembargo (RP.Parsed Disembargo)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Message)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Message)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Message)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Message)))
 data Bootstrap 
 type instance (R.ReprFor Bootstrap) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Bootstrap) where
@@ -199,7 +199,7 @@ instance (C.Allocate Call'sendResultsTo) where
     new  = GH.newStruct
 data instance C.Parsed Call'sendResultsTo
     = Call'sendResultsTo' 
-        {union' :: (C.Parsed (C.Which Call'sendResultsTo))}
+        {union' :: (C.Parsed (GH.Which Call'sendResultsTo))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Call'sendResultsTo))
 deriving instance (Std_.Eq (C.Parsed Call'sendResultsTo))
@@ -226,13 +226,13 @@ instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 1)
 instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo Basics.AnyPointer) where
     variantByLabel  = (GH.Variant (GH.ptrField 2) 2)
-data instance C.Parsed (C.Which Call'sendResultsTo)
+data instance C.Parsed (GH.Which Call'sendResultsTo)
     = Call'sendResultsTo'caller 
     | Call'sendResultsTo'yourself 
     | Call'sendResultsTo'thirdParty (RP.Parsed Basics.AnyPointer)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Call'sendResultsTo)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Call'sendResultsTo)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Call'sendResultsTo)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Call'sendResultsTo)))
 data Return 
 type instance (R.ReprFor Return) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Return) where
@@ -245,7 +245,7 @@ data instance C.Parsed Return
     = Return 
         {answerId :: (RP.Parsed Std_.Word32)
         ,releaseParamCaps :: (RP.Parsed Std_.Bool)
-        ,union' :: (C.Parsed (C.Which Return))}
+        ,union' :: (C.Parsed (GH.Which Return))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Return))
 deriving instance (Std_.Eq (C.Parsed Return))
@@ -287,7 +287,7 @@ instance (GH.HasVariant "takeFromOtherQuestion" GH.Slot Return Std_.Word32) wher
     variantByLabel  = (GH.Variant (GH.dataField 0 1 32 0) 4)
 instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return Basics.AnyPointer) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
-data instance C.Parsed (C.Which Return)
+data instance C.Parsed (GH.Which Return)
     = Return'results (RP.Parsed Payload)
     | Return'exception (RP.Parsed Exception)
     | Return'canceled 
@@ -295,8 +295,8 @@ data instance C.Parsed (C.Which Return)
     | Return'takeFromOtherQuestion (RP.Parsed Std_.Word32)
     | Return'acceptFromThirdParty (RP.Parsed Basics.AnyPointer)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Return)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Return)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Return)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Return)))
 instance (GH.HasField "answerId" GH.Slot Return Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "releaseParamCaps" GH.Slot Return Std_.Bool) where
@@ -331,7 +331,7 @@ instance (C.Allocate Resolve) where
 data instance C.Parsed Resolve
     = Resolve 
         {promiseId :: (RP.Parsed Std_.Word32)
-        ,union' :: (C.Parsed (C.Which Resolve))}
+        ,union' :: (C.Parsed (GH.Which Resolve))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Resolve))
 deriving instance (Std_.Eq (C.Parsed Resolve))
@@ -353,12 +353,12 @@ instance (GH.HasVariant "cap" GH.Slot Resolve CapDescriptor) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 0)
 instance (GH.HasVariant "exception" GH.Slot Resolve Exception) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
-data instance C.Parsed (C.Which Resolve)
+data instance C.Parsed (GH.Which Resolve)
     = Resolve'cap (RP.Parsed CapDescriptor)
     | Resolve'exception (RP.Parsed Exception)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Resolve)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Resolve)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Resolve)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Resolve)))
 instance (GH.HasField "promiseId" GH.Slot Resolve Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Release 
@@ -409,7 +409,7 @@ instance (C.Allocate Disembargo'context) where
     new  = GH.newStruct
 data instance C.Parsed Disembargo'context
     = Disembargo'context' 
-        {union' :: (C.Parsed (C.Which Disembargo'context))}
+        {union' :: (C.Parsed (GH.Which Disembargo'context))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Disembargo'context))
 deriving instance (Std_.Eq (C.Parsed Disembargo'context))
@@ -441,14 +441,14 @@ instance (GH.HasVariant "accept" GH.Slot Disembargo'context ()) where
     variantByLabel  = (GH.Variant GH.voidField 2)
 instance (GH.HasVariant "provide" GH.Slot Disembargo'context Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 3)
-data instance C.Parsed (C.Which Disembargo'context)
+data instance C.Parsed (GH.Which Disembargo'context)
     = Disembargo'context'senderLoopback (RP.Parsed Std_.Word32)
     | Disembargo'context'receiverLoopback (RP.Parsed Std_.Word32)
     | Disembargo'context'accept 
     | Disembargo'context'provide (RP.Parsed Std_.Word32)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which Disembargo'context)))
-deriving instance (Std_.Eq (C.Parsed (C.Which Disembargo'context)))
+deriving instance (Std_.Show (C.Parsed (GH.Which Disembargo'context)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which Disembargo'context)))
 data Provide 
 type instance (R.ReprFor Provide) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Provide) where
@@ -525,7 +525,7 @@ instance (C.Allocate MessageTarget) where
     new  = GH.newStruct
 data instance C.Parsed MessageTarget
     = MessageTarget 
-        {union' :: (C.Parsed (C.Which MessageTarget))}
+        {union' :: (C.Parsed (GH.Which MessageTarget))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed MessageTarget))
 deriving instance (Std_.Eq (C.Parsed MessageTarget))
@@ -547,12 +547,12 @@ instance (GH.HasVariant "importedCap" GH.Slot MessageTarget Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 0 32 0) 0)
 instance (GH.HasVariant "promisedAnswer" GH.Slot MessageTarget PromisedAnswer) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 1)
-data instance C.Parsed (C.Which MessageTarget)
+data instance C.Parsed (GH.Which MessageTarget)
     = MessageTarget'importedCap (RP.Parsed Std_.Word32)
     | MessageTarget'promisedAnswer (RP.Parsed PromisedAnswer)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which MessageTarget)))
-deriving instance (Std_.Eq (C.Parsed (C.Which MessageTarget)))
+deriving instance (Std_.Show (C.Parsed (GH.Which MessageTarget)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which MessageTarget)))
 data Payload 
 type instance (R.ReprFor Payload) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Payload) where
@@ -583,7 +583,7 @@ instance (C.Allocate CapDescriptor) where
 data instance C.Parsed CapDescriptor
     = CapDescriptor 
         {attachedFd :: (RP.Parsed Std_.Word8)
-        ,union' :: (C.Parsed (C.Which CapDescriptor))}
+        ,union' :: (C.Parsed (GH.Which CapDescriptor))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed CapDescriptor))
 deriving instance (Std_.Eq (C.Parsed CapDescriptor))
@@ -625,7 +625,7 @@ instance (GH.HasVariant "receiverAnswer" GH.Slot CapDescriptor PromisedAnswer) w
     variantByLabel  = (GH.Variant (GH.ptrField 0) 4)
 instance (GH.HasVariant "thirdPartyHosted" GH.Slot CapDescriptor ThirdPartyCapDescriptor) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
-data instance C.Parsed (C.Which CapDescriptor)
+data instance C.Parsed (GH.Which CapDescriptor)
     = CapDescriptor'none 
     | CapDescriptor'senderHosted (RP.Parsed Std_.Word32)
     | CapDescriptor'senderPromise (RP.Parsed Std_.Word32)
@@ -633,8 +633,8 @@ data instance C.Parsed (C.Which CapDescriptor)
     | CapDescriptor'receiverAnswer (RP.Parsed PromisedAnswer)
     | CapDescriptor'thirdPartyHosted (RP.Parsed ThirdPartyCapDescriptor)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which CapDescriptor)))
-deriving instance (Std_.Eq (C.Parsed (C.Which CapDescriptor)))
+deriving instance (Std_.Show (C.Parsed (GH.Which CapDescriptor)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which CapDescriptor)))
 instance (GH.HasField "attachedFd" GH.Slot CapDescriptor Std_.Word8) where
     fieldByLabel  = (GH.dataField 16 0 8 255)
 data PromisedAnswer 
@@ -666,7 +666,7 @@ instance (C.Allocate PromisedAnswer'Op) where
     new  = GH.newStruct
 data instance C.Parsed PromisedAnswer'Op
     = PromisedAnswer'Op 
-        {union' :: (C.Parsed (C.Which PromisedAnswer'Op))}
+        {union' :: (C.Parsed (GH.Which PromisedAnswer'Op))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed PromisedAnswer'Op))
 deriving instance (Std_.Eq (C.Parsed PromisedAnswer'Op))
@@ -688,12 +688,12 @@ instance (GH.HasVariant "noop" GH.Slot PromisedAnswer'Op ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "getPointerField" GH.Slot PromisedAnswer'Op Std_.Word16) where
     variantByLabel  = (GH.Variant (GH.dataField 16 0 16 0) 1)
-data instance C.Parsed (C.Which PromisedAnswer'Op)
+data instance C.Parsed (GH.Which PromisedAnswer'Op)
     = PromisedAnswer'Op'noop 
     | PromisedAnswer'Op'getPointerField (RP.Parsed Std_.Word16)
     deriving(Generics.Generic)
-deriving instance (Std_.Show (C.Parsed (C.Which PromisedAnswer'Op)))
-deriving instance (Std_.Eq (C.Parsed (C.Which PromisedAnswer'Op)))
+deriving instance (Std_.Show (C.Parsed (GH.Which PromisedAnswer'Op)))
+deriving instance (Std_.Eq (C.Parsed (GH.Which PromisedAnswer'Op)))
 data ThirdPartyCapDescriptor 
 type instance (R.ReprFor ThirdPartyCapDescriptor) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct ThirdPartyCapDescriptor) where
