@@ -90,6 +90,10 @@ data Decl
         , defs :: [InstanceDef]
         }
     | DcTypeInstance Type Type
+    | DcDeriveInstance
+        { ctx :: [Type]
+        , typ :: Type
+        }
     | DcClass
         { ctx     :: [Type]
         , name    :: Name.LocalQ

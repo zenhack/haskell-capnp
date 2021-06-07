@@ -97,7 +97,8 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
     case union_ of
         Flat.Other       -> []
         Flat.Constant _  -> []
-        Flat.Enum _      -> [ mkType (R.Data R.Sz16) Nothing ]
+        Flat.Enum enumerants ->
+            [ mkType (R.Data R.Sz16) $ Just $ New.EnumTypeInfo enumerants ]
         Flat.Interface{methods} ->
             mkType (R.Ptr (Just R.Cap)) Nothing
             : zipWith mkMethod [0..] methods

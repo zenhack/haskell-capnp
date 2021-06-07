@@ -95,6 +95,10 @@ instance Format Decl where
         , " = "
         , format orig
         ]
+    format (DcDeriveInstance ctx typ) = hcat
+        [ "deriving instance "
+        , format $ TCtx ctx typ
+        ]
     format DcClass{ctx, name, params, funDeps, decls} = hcat
         [ "class "
         , format $

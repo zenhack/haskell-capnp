@@ -41,10 +41,12 @@ fileToMainModule file@New.File{fileName} =
             , "DataKinds"
             , "DeriveGeneric"
             , "DuplicateRecordFields"
+            , "EmptyDataDeriving"
             , "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
             , "OverloadedLabels"
+            , "StandaloneDeriving"
             ]
         , modExports = Nothing
         , modImports = imports
@@ -80,8 +82,26 @@ declToDecls thisMod decl =
             [ Hs.DcData Hs.Data
                 { dataName
                 , typeArgs
-                , dataVariants = []
-                , derives = []
+                , dataVariants =
+                    case extraTypeInfo of
+                        Just (New.EnumTypeInfo variants) ->
+                            [ Hs.DataVariant
+                                { dvCtorName = Name.localToUnQ $ Name.mkSub name variantName
+                                , dvArgs = Hs.APos []
+                                }
+                            | variantName <- variants
+                            ]
+                            ++
+                            [ Hs.DataVariant
+                                { dvCtorName = Name.localToUnQ $ Name.mkSub name "unknown'"
+                                , dvArgs = Hs.APos [tStd_ "Word16"]
+                                }
+                            ]
+                        _ -> []
+                , derives =
+                    case extraTypeInfo of
+                        Just New.EnumTypeInfo {} -> [ "Std_.Eq", "Std_.Show" ]
+                        _                        -> []
                 , dataNewtype = False
                 , dataInstance = False
                 }
@@ -90,7 +110,6 @@ declToDecls thisMod decl =
                 (toType repr)
             ] ++
             case extraTypeInfo of
-                Nothing -> []
                 Just New.StructTypeInfo{nWords, nPtrs} ->
                     let ctx = paramsContext typeArgs in
                     [ Hs.DcInstance
@@ -123,6 +142,17 @@ declToDecls thisMod decl =
                             ]
                         }
                     ]
+{-
+                Just New.EnumTypeInfo{} ->
+                    [ Hs.DcDeriveInstance
+                        [ Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["RP"] "Parsed") [v]]
+                        | v <- typeArgs
+                        ]
+                        (Hs.TApp (tStd_ cls) [typ])
+                    | cls <- [ "Eq", "Show" ]
+                    ]
+-}
+                _ -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
                 ctx = paramsContext tVars
@@ -208,14 +238,15 @@ declToDecls thisMod decl =
         New.ParsedInstanceDecl{ typeName, typeParams, parsedDef } ->
             let tVars = map (Hs.TVar . Name.typeVarName) typeParams
                 typ = Hs.TApp (Hs.TLName typeName) tVars
+                parsedTy = case parsedDef of
+                            New.ParsedStruct{} -> typ
+                            New.ParsedUnion{}  -> Hs.TApp (tgName ["C"] "Which") [typ]
             in
+            (
             [ Hs.DcData Hs.Data
                 { dataName = "C.Parsed"
-                , typeArgs = case parsedDef of
-                    New.ParsedStruct{} -> [typ]
-                    New.ParsedUnion {} -> [Hs.TApp (tgName ["C"] "Which") [typ]]
-                , derives =
-                    ["Std_.Show", "Std_.Eq", "Generics.Generic"]
+                , typeArgs = [parsedTy]
+                , derives = [ "Generics.Generic" ]
                 , dataNewtype = False
                 , dataInstance = True
                 , dataVariants =
@@ -259,7 +290,14 @@ declToDecls thisMod decl =
                             ]
 
                 }
-            ]
+            ] ++
+            [ Hs.DcDeriveInstance
+                [ Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["RP"] "Parsed") [v]]
+                | v <- tVars
+                ]
+                (Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["C"] "Parsed") [parsedTy]])
+            | cls <- ["Show", "Eq"]
+            ])
 
 
 defineRawData thisMod name tVars variants =

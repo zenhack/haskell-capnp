@@ -72,6 +72,7 @@ data ExtraTypeInfo
         { nWords :: !Word16
         , nPtrs  :: !Word16
         }
+    | EnumTypeInfo [Name.UnQ]
 
 data UnionVariant = UnionVariant
     { variantName  :: Name.UnQ

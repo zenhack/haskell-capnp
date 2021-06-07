@@ -1,9 +1,13 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE EmptyDataDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -12,10 +16,12 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Capnp.Gen.Capnp.Compat.Json.New where
 import qualified Capnp.Repr as R
+import qualified Capnp.Repr.Parsed as RP
 import qualified Capnp.New.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
+import qualified GHC.Generics as Generics
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
@@ -28,6 +34,12 @@ instance (C.TypedStruct Value) where
 instance (C.Allocate Value) where
     type AllocHint Value = ()
     new  = GH.newStruct
+data instance C.Parsed Value
+    = Value 
+        {union' :: (C.Parsed (C.Which Value))}
+    deriving(Generics.Generic)
+deriving instance (Std_.Show (C.Parsed Value))
+deriving instance (Std_.Eq (C.Parsed Value))
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
@@ -71,6 +83,17 @@ instance (GH.HasVariant "object" GH.Slot Value (R.List Value'Field)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 instance (GH.HasVariant "call" GH.Slot Value Value'Call) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
+data instance C.Parsed (C.Which Value)
+    = Value'null (RP.Parsed ())
+    | Value'boolean (RP.Parsed Std_.Bool)
+    | Value'number (RP.Parsed Std_.Double)
+    | Value'string (RP.Parsed Basics.Text)
+    | Value'array (RP.Parsed (R.List Value))
+    | Value'object (RP.Parsed (R.List Value'Field))
+    | Value'call (RP.Parsed Value'Call)
+    deriving(Generics.Generic)
+deriving instance (Std_.Show (C.Parsed (C.Which Value)))
+deriving instance (Std_.Eq (C.Parsed (C.Which Value)))
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Value'Field) where
@@ -79,6 +102,13 @@ instance (C.TypedStruct Value'Field) where
 instance (C.Allocate Value'Field) where
     type AllocHint Value'Field = ()
     new  = GH.newStruct
+data instance C.Parsed Value'Field
+    = Value'Field 
+        {name :: (RP.Parsed Basics.Text)
+        ,value :: (RP.Parsed Value)}
+    deriving(Generics.Generic)
+deriving instance (Std_.Show (C.Parsed Value'Field))
+deriving instance (Std_.Eq (C.Parsed Value'Field))
 instance (GH.HasField "name" GH.Slot Value'Field Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "value" GH.Slot Value'Field Value) where
@@ -91,6 +121,13 @@ instance (C.TypedStruct Value'Call) where
 instance (C.Allocate Value'Call) where
     type AllocHint Value'Call = ()
     new  = GH.newStruct
+data instance C.Parsed Value'Call
+    = Value'Call 
+        {function :: (RP.Parsed Basics.Text)
+        ,params :: (RP.Parsed (R.List Value))}
+    deriving(Generics.Generic)
+deriving instance (Std_.Show (C.Parsed Value'Call))
+deriving instance (Std_.Eq (C.Parsed Value'Call))
 instance (GH.HasField "function" GH.Slot Value'Call Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "params" GH.Slot Value'Call (R.List Value)) where
@@ -103,6 +140,12 @@ instance (C.TypedStruct FlattenOptions) where
 instance (C.Allocate FlattenOptions) where
     type AllocHint FlattenOptions = ()
     new  = GH.newStruct
+data instance C.Parsed FlattenOptions
+    = FlattenOptions 
+        {prefix :: (RP.Parsed Basics.Text)}
+    deriving(Generics.Generic)
+deriving instance (Std_.Show (C.Parsed FlattenOptions))
+deriving instance (Std_.Eq (C.Parsed FlattenOptions))
 instance (GH.HasField "prefix" GH.Slot FlattenOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 data DiscriminatorOptions 
@@ -113,6 +156,13 @@ instance (C.TypedStruct DiscriminatorOptions) where
 instance (C.Allocate DiscriminatorOptions) where
     type AllocHint DiscriminatorOptions = ()
     new  = GH.newStruct
+data instance C.Parsed DiscriminatorOptions
+    = DiscriminatorOptions 
+        {name :: (RP.Parsed Basics.Text)
+        ,valueName :: (RP.Parsed Basics.Text)}
+    deriving(Generics.Generic)
+deriving instance (Std_.Show (C.Parsed DiscriminatorOptions))
+deriving instance (Std_.Eq (C.Parsed DiscriminatorOptions))
 instance (GH.HasField "name" GH.Slot DiscriminatorOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "valueName" GH.Slot DiscriminatorOptions Basics.Text) where
