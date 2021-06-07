@@ -39,7 +39,7 @@ instance (C.TypedStruct VatId) where
     numStructPtrs  = 0
 instance (C.Allocate VatId) where
     type AllocHint VatId = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed VatId
     = VatId 
         {side :: (RP.Parsed Side)}
@@ -55,7 +55,7 @@ instance (C.TypedStruct ProvisionId) where
     numStructPtrs  = 0
 instance (C.Allocate ProvisionId) where
     type AllocHint ProvisionId = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed ProvisionId
     = ProvisionId 
         {joinId :: (RP.Parsed Std_.Word32)}
@@ -71,7 +71,7 @@ instance (C.TypedStruct RecipientId) where
     numStructPtrs  = 0
 instance (C.Allocate RecipientId) where
     type AllocHint RecipientId = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed RecipientId
     = RecipientId 
         {}
@@ -85,7 +85,7 @@ instance (C.TypedStruct ThirdPartyCapId) where
     numStructPtrs  = 0
 instance (C.Allocate ThirdPartyCapId) where
     type AllocHint ThirdPartyCapId = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed ThirdPartyCapId
     = ThirdPartyCapId 
         {}
@@ -99,7 +99,7 @@ instance (C.TypedStruct JoinKeyPart) where
     numStructPtrs  = 0
 instance (C.Allocate JoinKeyPart) where
     type AllocHint JoinKeyPart = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed JoinKeyPart
     = JoinKeyPart 
         {joinId :: (RP.Parsed Std_.Word32)
@@ -121,7 +121,7 @@ instance (C.TypedStruct JoinResult) where
     numStructPtrs  = 1
 instance (C.Allocate JoinResult) where
     type AllocHint JoinResult = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed JoinResult
     = JoinResult 
         {joinId :: (RP.Parsed Std_.Word32)

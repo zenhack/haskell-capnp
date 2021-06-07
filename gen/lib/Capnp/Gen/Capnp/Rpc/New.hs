@@ -33,7 +33,7 @@ instance (C.TypedStruct Message) where
     numStructPtrs  = 1
 instance (C.Allocate Message) where
     type AllocHint Message = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Message
     = Message 
         {union' :: (C.Parsed (GH.Which Message))}
@@ -144,7 +144,7 @@ instance (C.TypedStruct Bootstrap) where
     numStructPtrs  = 1
 instance (C.Allocate Bootstrap) where
     type AllocHint Bootstrap = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Bootstrap
     = Bootstrap 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -163,7 +163,7 @@ instance (C.TypedStruct Call) where
     numStructPtrs  = 3
 instance (C.Allocate Call) where
     type AllocHint Call = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Call
     = Call 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -197,7 +197,7 @@ instance (C.TypedStruct Call'sendResultsTo) where
     numStructPtrs  = 3
 instance (C.Allocate Call'sendResultsTo) where
     type AllocHint Call'sendResultsTo = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Call'sendResultsTo
     = Call'sendResultsTo' 
         {union' :: (C.Parsed (GH.Which Call'sendResultsTo))}
@@ -242,7 +242,7 @@ instance (C.TypedStruct Return) where
     numStructPtrs  = 1
 instance (C.Allocate Return) where
     type AllocHint Return = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Return
     = Return 
         {answerId :: (RP.Parsed Std_.Word32)
@@ -311,7 +311,7 @@ instance (C.TypedStruct Finish) where
     numStructPtrs  = 0
 instance (C.Allocate Finish) where
     type AllocHint Finish = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Finish
     = Finish 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -330,7 +330,7 @@ instance (C.TypedStruct Resolve) where
     numStructPtrs  = 1
 instance (C.Allocate Resolve) where
     type AllocHint Resolve = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Resolve
     = Resolve 
         {promiseId :: (RP.Parsed Std_.Word32)
@@ -372,7 +372,7 @@ instance (C.TypedStruct Release) where
     numStructPtrs  = 0
 instance (C.Allocate Release) where
     type AllocHint Release = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Release
     = Release 
         {id :: (RP.Parsed Std_.Word32)
@@ -391,7 +391,7 @@ instance (C.TypedStruct Disembargo) where
     numStructPtrs  = 1
 instance (C.Allocate Disembargo) where
     type AllocHint Disembargo = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Disembargo
     = Disembargo 
         {target :: (RP.Parsed MessageTarget)
@@ -410,7 +410,7 @@ instance (C.TypedStruct Disembargo'context) where
     numStructPtrs  = 1
 instance (C.Allocate Disembargo'context) where
     type AllocHint Disembargo'context = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Disembargo'context
     = Disembargo'context' 
         {union' :: (C.Parsed (GH.Which Disembargo'context))}
@@ -461,7 +461,7 @@ instance (C.TypedStruct Provide) where
     numStructPtrs  = 2
 instance (C.Allocate Provide) where
     type AllocHint Provide = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Provide
     = Provide 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -483,7 +483,7 @@ instance (C.TypedStruct Accept) where
     numStructPtrs  = 1
 instance (C.Allocate Accept) where
     type AllocHint Accept = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Accept
     = Accept 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -505,7 +505,7 @@ instance (C.TypedStruct Join) where
     numStructPtrs  = 2
 instance (C.Allocate Join) where
     type AllocHint Join = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Join
     = Join 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -527,7 +527,7 @@ instance (C.TypedStruct MessageTarget) where
     numStructPtrs  = 1
 instance (C.Allocate MessageTarget) where
     type AllocHint MessageTarget = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed MessageTarget
     = MessageTarget 
         {union' :: (C.Parsed (GH.Which MessageTarget))}
@@ -566,7 +566,7 @@ instance (C.TypedStruct Payload) where
     numStructPtrs  = 2
 instance (C.Allocate Payload) where
     type AllocHint Payload = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Payload
     = Payload 
         {content :: (RP.Parsed Basics.AnyPointer)
@@ -585,7 +585,7 @@ instance (C.TypedStruct CapDescriptor) where
     numStructPtrs  = 1
 instance (C.Allocate CapDescriptor) where
     type AllocHint CapDescriptor = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed CapDescriptor
     = CapDescriptor 
         {attachedFd :: (RP.Parsed Std_.Word8)
@@ -651,7 +651,7 @@ instance (C.TypedStruct PromisedAnswer) where
     numStructPtrs  = 1
 instance (C.Allocate PromisedAnswer) where
     type AllocHint PromisedAnswer = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed PromisedAnswer
     = PromisedAnswer 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -670,7 +670,7 @@ instance (C.TypedStruct PromisedAnswer'Op) where
     numStructPtrs  = 0
 instance (C.Allocate PromisedAnswer'Op) where
     type AllocHint PromisedAnswer'Op = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed PromisedAnswer'Op
     = PromisedAnswer'Op 
         {union' :: (C.Parsed (GH.Which PromisedAnswer'Op))}
@@ -709,7 +709,7 @@ instance (C.TypedStruct ThirdPartyCapDescriptor) where
     numStructPtrs  = 1
 instance (C.Allocate ThirdPartyCapDescriptor) where
     type AllocHint ThirdPartyCapDescriptor = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor 
         {id :: (RP.Parsed Basics.AnyPointer)
@@ -728,7 +728,7 @@ instance (C.TypedStruct Exception) where
     numStructPtrs  = 1
 instance (C.Allocate Exception) where
     type AllocHint Exception = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Exception
     = Exception 
         {reason :: (RP.Parsed Basics.Text)

@@ -33,7 +33,7 @@ instance (C.TypedStruct Node) where
     numStructPtrs  = 6
 instance (C.Allocate Node) where
     type AllocHint Node = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node
     = Node 
         {id :: (RP.Parsed Std_.Word64)
@@ -120,7 +120,7 @@ instance (C.TypedStruct Node'struct) where
     numStructPtrs  = 6
 instance (C.Allocate Node'struct) where
     type AllocHint Node'struct = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'struct
     = Node'struct' 
         {dataWordCount :: (RP.Parsed Std_.Word16)
@@ -154,7 +154,7 @@ instance (C.TypedStruct Node'enum) where
     numStructPtrs  = 6
 instance (C.Allocate Node'enum) where
     type AllocHint Node'enum = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'enum
     = Node'enum' 
         {enumerants :: (RP.Parsed (R.List Enumerant))}
@@ -170,7 +170,7 @@ instance (C.TypedStruct Node'interface) where
     numStructPtrs  = 6
 instance (C.Allocate Node'interface) where
     type AllocHint Node'interface = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'interface
     = Node'interface' 
         {methods :: (RP.Parsed (R.List Method))
@@ -189,7 +189,7 @@ instance (C.TypedStruct Node'const) where
     numStructPtrs  = 6
 instance (C.Allocate Node'const) where
     type AllocHint Node'const = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'const
     = Node'const' 
         {type_ :: (RP.Parsed Type)
@@ -208,7 +208,7 @@ instance (C.TypedStruct Node'annotation) where
     numStructPtrs  = 6
 instance (C.Allocate Node'annotation) where
     type AllocHint Node'annotation = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'annotation
     = Node'annotation' 
         {type_ :: (RP.Parsed Type)
@@ -260,7 +260,7 @@ instance (C.TypedStruct Node'Parameter) where
     numStructPtrs  = 1
 instance (C.Allocate Node'Parameter) where
     type AllocHint Node'Parameter = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'Parameter
     = Node'Parameter 
         {name :: (RP.Parsed Basics.Text)}
@@ -276,7 +276,7 @@ instance (C.TypedStruct Node'NestedNode) where
     numStructPtrs  = 1
 instance (C.Allocate Node'NestedNode) where
     type AllocHint Node'NestedNode = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'NestedNode
     = Node'NestedNode 
         {name :: (RP.Parsed Basics.Text)
@@ -295,7 +295,7 @@ instance (C.TypedStruct Node'SourceInfo) where
     numStructPtrs  = 2
 instance (C.Allocate Node'SourceInfo) where
     type AllocHint Node'SourceInfo = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'SourceInfo
     = Node'SourceInfo 
         {id :: (RP.Parsed Std_.Word64)
@@ -317,7 +317,7 @@ instance (C.TypedStruct Node'SourceInfo'Member) where
     numStructPtrs  = 1
 instance (C.Allocate Node'SourceInfo'Member) where
     type AllocHint Node'SourceInfo'Member = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Node'SourceInfo'Member
     = Node'SourceInfo'Member 
         {docComment :: (RP.Parsed Basics.Text)}
@@ -333,7 +333,7 @@ instance (C.TypedStruct Field) where
     numStructPtrs  = 4
 instance (C.Allocate Field) where
     type AllocHint Field = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Field
     = Field 
         {name :: (RP.Parsed Basics.Text)
@@ -387,7 +387,7 @@ instance (C.TypedStruct Field'slot) where
     numStructPtrs  = 4
 instance (C.Allocate Field'slot) where
     type AllocHint Field'slot = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Field'slot
     = Field'slot' 
         {offset :: (RP.Parsed Std_.Word32)
@@ -412,7 +412,7 @@ instance (C.TypedStruct Field'group) where
     numStructPtrs  = 4
 instance (C.Allocate Field'group) where
     type AllocHint Field'group = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Field'group
     = Field'group' 
         {typeId :: (RP.Parsed Std_.Word64)}
@@ -428,7 +428,7 @@ instance (C.TypedStruct Field'ordinal) where
     numStructPtrs  = 4
 instance (C.Allocate Field'ordinal) where
     type AllocHint Field'ordinal = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Field'ordinal
     = Field'ordinal' 
         {union' :: (C.Parsed (GH.Which Field'ordinal))}
@@ -467,7 +467,7 @@ instance (C.TypedStruct Enumerant) where
     numStructPtrs  = 2
 instance (C.Allocate Enumerant) where
     type AllocHint Enumerant = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Enumerant
     = Enumerant 
         {name :: (RP.Parsed Basics.Text)
@@ -489,7 +489,7 @@ instance (C.TypedStruct Superclass) where
     numStructPtrs  = 1
 instance (C.Allocate Superclass) where
     type AllocHint Superclass = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Superclass
     = Superclass 
         {id :: (RP.Parsed Std_.Word64)
@@ -508,7 +508,7 @@ instance (C.TypedStruct Method) where
     numStructPtrs  = 5
 instance (C.Allocate Method) where
     type AllocHint Method = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Method
     = Method 
         {name :: (RP.Parsed Basics.Text)
@@ -545,7 +545,7 @@ instance (C.TypedStruct Type) where
     numStructPtrs  = 1
 instance (C.Allocate Type) where
     type AllocHint Type = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type
     = Type 
         {union' :: (C.Parsed (GH.Which Type))}
@@ -686,7 +686,7 @@ instance (C.TypedStruct Type'list) where
     numStructPtrs  = 1
 instance (C.Allocate Type'list) where
     type AllocHint Type'list = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'list
     = Type'list' 
         {elementType :: (RP.Parsed Type)}
@@ -702,7 +702,7 @@ instance (C.TypedStruct Type'enum) where
     numStructPtrs  = 1
 instance (C.Allocate Type'enum) where
     type AllocHint Type'enum = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'enum
     = Type'enum' 
         {typeId :: (RP.Parsed Std_.Word64)
@@ -721,7 +721,7 @@ instance (C.TypedStruct Type'struct) where
     numStructPtrs  = 1
 instance (C.Allocate Type'struct) where
     type AllocHint Type'struct = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'struct
     = Type'struct' 
         {typeId :: (RP.Parsed Std_.Word64)
@@ -740,7 +740,7 @@ instance (C.TypedStruct Type'interface) where
     numStructPtrs  = 1
 instance (C.Allocate Type'interface) where
     type AllocHint Type'interface = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'interface
     = Type'interface' 
         {typeId :: (RP.Parsed Std_.Word64)
@@ -759,7 +759,7 @@ instance (C.TypedStruct Type'anyPointer) where
     numStructPtrs  = 1
 instance (C.Allocate Type'anyPointer) where
     type AllocHint Type'anyPointer = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'anyPointer
     = Type'anyPointer' 
         {union' :: (C.Parsed (GH.Which Type'anyPointer))}
@@ -804,7 +804,7 @@ instance (C.TypedStruct Type'anyPointer'unconstrained) where
     numStructPtrs  = 1
 instance (C.Allocate Type'anyPointer'unconstrained) where
     type AllocHint Type'anyPointer'unconstrained = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'anyPointer'unconstrained
     = Type'anyPointer'unconstrained' 
         {union' :: (C.Parsed (GH.Which Type'anyPointer'unconstrained))}
@@ -855,7 +855,7 @@ instance (C.TypedStruct Type'anyPointer'parameter) where
     numStructPtrs  = 1
 instance (C.Allocate Type'anyPointer'parameter) where
     type AllocHint Type'anyPointer'parameter = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'anyPointer'parameter
     = Type'anyPointer'parameter' 
         {scopeId :: (RP.Parsed Std_.Word64)
@@ -874,7 +874,7 @@ instance (C.TypedStruct Type'anyPointer'implicitMethodParameter) where
     numStructPtrs  = 1
 instance (C.Allocate Type'anyPointer'implicitMethodParameter) where
     type AllocHint Type'anyPointer'implicitMethodParameter = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Type'anyPointer'implicitMethodParameter
     = Type'anyPointer'implicitMethodParameter' 
         {parameterIndex :: (RP.Parsed Std_.Word16)}
@@ -890,7 +890,7 @@ instance (C.TypedStruct Brand) where
     numStructPtrs  = 1
 instance (C.Allocate Brand) where
     type AllocHint Brand = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Brand
     = Brand 
         {scopes :: (RP.Parsed (R.List Brand'Scope))}
@@ -906,7 +906,7 @@ instance (C.TypedStruct Brand'Scope) where
     numStructPtrs  = 1
 instance (C.Allocate Brand'Scope) where
     type AllocHint Brand'Scope = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Brand'Scope
     = Brand'Scope 
         {scopeId :: (RP.Parsed Std_.Word64)
@@ -948,7 +948,7 @@ instance (C.TypedStruct Brand'Binding) where
     numStructPtrs  = 1
 instance (C.Allocate Brand'Binding) where
     type AllocHint Brand'Binding = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Brand'Binding
     = Brand'Binding 
         {union' :: (C.Parsed (GH.Which Brand'Binding))}
@@ -987,7 +987,7 @@ instance (C.TypedStruct Value) where
     numStructPtrs  = 1
 instance (C.Allocate Value) where
     type AllocHint Value = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Value
     = Value 
         {union' :: (C.Parsed (GH.Which Value))}
@@ -1128,7 +1128,7 @@ instance (C.TypedStruct Annotation) where
     numStructPtrs  = 2
 instance (C.Allocate Annotation) where
     type AllocHint Annotation = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Annotation
     = Annotation 
         {id :: (RP.Parsed Std_.Word64)
@@ -1162,7 +1162,7 @@ instance (C.TypedStruct CapnpVersion) where
     numStructPtrs  = 0
 instance (C.Allocate CapnpVersion) where
     type AllocHint CapnpVersion = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed CapnpVersion
     = CapnpVersion 
         {major :: (RP.Parsed Std_.Word16)
@@ -1184,7 +1184,7 @@ instance (C.TypedStruct CodeGeneratorRequest) where
     numStructPtrs  = 4
 instance (C.Allocate CodeGeneratorRequest) where
     type AllocHint CodeGeneratorRequest = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed CodeGeneratorRequest
     = CodeGeneratorRequest 
         {nodes :: (RP.Parsed (R.List Node))
@@ -1209,7 +1209,7 @@ instance (C.TypedStruct CodeGeneratorRequest'RequestedFile) where
     numStructPtrs  = 2
 instance (C.Allocate CodeGeneratorRequest'RequestedFile) where
     type AllocHint CodeGeneratorRequest'RequestedFile = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile 
         {id :: (RP.Parsed Std_.Word64)
@@ -1231,7 +1231,7 @@ instance (C.TypedStruct CodeGeneratorRequest'RequestedFile'Import) where
     numStructPtrs  = 1
 instance (C.Allocate CodeGeneratorRequest'RequestedFile'Import) where
     type AllocHint CodeGeneratorRequest'RequestedFile'Import = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import 
         {id :: (RP.Parsed Std_.Word64)

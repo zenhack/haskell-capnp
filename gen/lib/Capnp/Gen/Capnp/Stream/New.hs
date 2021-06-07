@@ -33,7 +33,7 @@ instance (C.TypedStruct StreamResult) where
     numStructPtrs  = 0
 instance (C.Allocate StreamResult) where
     type AllocHint StreamResult = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed StreamResult
     = StreamResult 
         {}

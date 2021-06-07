@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TemplateHaskell        #-}
@@ -12,9 +13,13 @@ module Capnp.New.Classes
     ( Parse(..)
     , Marshal(..)
     , Allocate(..)
+    , EstimateAlloc(..)
     , TypedStruct(..)
     , newRoot
     , Parsed
+    , structSizes
+    , newFromRepr
+    , newTypedStruct
     ) where
 
 import           Capnp.Message       (Mutability(..))
@@ -38,12 +43,31 @@ class Parse t p | t -> p, p -> t where
     -- ^ Encode a value into 'R.Raw' form, using the message as storage.
 
     default encode
-        :: (U.RWCtx m s, Allocate t, AllocHint t ~ (), Marshal t p)
+        :: (U.RWCtx m s, EstimateAlloc t p, Marshal t p)
         => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
     encode msg value = do
-        raw <- new () msg
+        raw <- new (estimateAlloc value) msg
         marshalInto raw value
         pure raw
+
+-- | Types where the necessary allocation is inferrable from the parsed form.
+--
+-- ...this is most types.
+class (Parse t p, Allocate t) => EstimateAlloc t p where
+    estimateAlloc :: p -> AllocHint t
+
+    default estimateAlloc :: AllocHint t ~ () => p -> AllocHint t
+    estimateAlloc _ = ()
+
+newFromRepr
+    :: forall a r m s.
+    ( R.Allocate r
+    , 'R.Ptr ('Just r) ~ R.ReprFor a
+    , U.RWCtx m s
+    )
+    => R.AllocHint r -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+newFromRepr hint msg = R.Raw <$> (R.alloc @r msg hint)
+
 
 -- | Types which may be allocated directly inside a message.
 class Allocate a where
@@ -54,6 +78,10 @@ class Allocate a where
     new :: U.RWCtx m s => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
     -- ^ @'new' hint msg@ allocates a new value of type @a@ inside @msg@.
 
+
+newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+newTypedStruct = newFromRepr (structSizes @a)
+
 class Parse t p => Marshal t p where
     marshalInto :: U.RWCtx m s => R.Raw ('Mut s) t -> p -> m ()
     -- ^ Marshal a value into the pre-allocated object inside the message.
@@ -62,6 +90,9 @@ class Parse t p => Marshal t p where
     -- This is is not necessarily guaranteed; for example, list types must
     -- coordinate the length of the list.
 
+
+structSizes :: forall a. TypedStruct a => (Word16, Word16)
+structSizes = (numStructWords @a, numStructPtrs @a)
 
 -- | Operations on typed structs.
 class (R.IsStruct a, Allocate a, AllocHint a ~ ()) => TypedStruct a where
@@ -127,6 +158,9 @@ instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector
     parse rawV =
         V.generateM (R.length rawV) $ \i ->
             R.index i rawV >>= parse
+
+instance (Allocate l, AllocHint l ~ Int, Parse l (V.Vector a)) => EstimateAlloc l (V.Vector a) where
+    estimateAlloc = V.length
 
 -- | If @a@ is a capnproto type, then @Parsed a@ is an ADT representation of that
 -- type. If this is defined for a type @a@ then there should also be an instance

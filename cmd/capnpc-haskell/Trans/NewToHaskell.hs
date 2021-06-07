@@ -132,11 +132,20 @@ declToDecls thisMod decl =
                                 Hs.TypeAlias "AllocHint" [typ] Hs.TUnit
                             , Hs.IdValue Hs.DfValue
                                 { name = "new"
-                                , params = []
-                                , value = egName ["GH"] "newStruct"
+                                , params = [Hs.PVar "_"]
+                                , value = egName ["C"] "newTypedStruct"
                                 }
                             ]
                         }
+{- -- TODO: impelment Parsed and then uncomment the below:
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp
+                            (tgName ["C"] "EstimateAlloc")
+                            [ typ, Hs.TApp (tgName ["C"] "Parsed") [typ] ]
+                        , defs = []
+                        }
+-}
                     ]
                 _ -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->

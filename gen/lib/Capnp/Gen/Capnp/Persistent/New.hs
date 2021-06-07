@@ -40,7 +40,7 @@ instance ((GH.TypeParam sturdyRef pr_1)
 instance ((GH.TypeParam sturdyRef pr_1)
          ,(GH.TypeParam owner pr_2)) => (C.Allocate (Persistent'SaveParams sturdyRef owner)) where
     type AllocHint (Persistent'SaveParams sturdyRef owner) = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed (Persistent'SaveParams sturdyRef owner)
     = Persistent'SaveParams 
         {sealFor :: (RP.Parsed owner)}
@@ -61,7 +61,7 @@ instance ((GH.TypeParam sturdyRef pr_1)
 instance ((GH.TypeParam sturdyRef pr_1)
          ,(GH.TypeParam owner pr_2)) => (C.Allocate (Persistent'SaveResults sturdyRef owner)) where
     type AllocHint (Persistent'SaveResults sturdyRef owner) = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed (Persistent'SaveResults sturdyRef owner)
     = Persistent'SaveResults 
         {sturdyRef :: (RP.Parsed sturdyRef)}
@@ -98,7 +98,7 @@ instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (C.Allocate (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)) where
     type AllocHint (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)
     = RealmGateway'import'params 
         {cap :: (RP.Parsed (Persistent externalRef externalOwner))
@@ -135,7 +135,7 @@ instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (C.Allocate (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)) where
     type AllocHint (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)
     = RealmGateway'export'params 
         {cap :: (RP.Parsed (Persistent internalRef internalOwner))

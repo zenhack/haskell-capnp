@@ -33,7 +33,7 @@ instance (C.TypedStruct Value) where
     numStructPtrs  = 1
 instance (C.Allocate Value) where
     type AllocHint Value = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Value
     = Value 
         {union' :: (C.Parsed (GH.Which Value))}
@@ -102,7 +102,7 @@ instance (C.TypedStruct Value'Field) where
     numStructPtrs  = 2
 instance (C.Allocate Value'Field) where
     type AllocHint Value'Field = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Value'Field
     = Value'Field 
         {name :: (RP.Parsed Basics.Text)
@@ -121,7 +121,7 @@ instance (C.TypedStruct Value'Call) where
     numStructPtrs  = 2
 instance (C.Allocate Value'Call) where
     type AllocHint Value'Call = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed Value'Call
     = Value'Call 
         {function :: (RP.Parsed Basics.Text)
@@ -140,7 +140,7 @@ instance (C.TypedStruct FlattenOptions) where
     numStructPtrs  = 1
 instance (C.Allocate FlattenOptions) where
     type AllocHint FlattenOptions = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed FlattenOptions
     = FlattenOptions 
         {prefix :: (RP.Parsed Basics.Text)}
@@ -156,7 +156,7 @@ instance (C.TypedStruct DiscriminatorOptions) where
     numStructPtrs  = 2
 instance (C.Allocate DiscriminatorOptions) where
     type AllocHint DiscriminatorOptions = ()
-    new  = GH.newStruct
+    new _ = C.newTypedStruct
 data instance C.Parsed DiscriminatorOptions
     = DiscriminatorOptions 
         {name :: (RP.Parsed Basics.Text)
