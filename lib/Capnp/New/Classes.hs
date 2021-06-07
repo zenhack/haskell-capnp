@@ -66,7 +66,7 @@ newFromRepr
     , U.RWCtx m s
     )
     => R.AllocHint r -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
-newFromRepr hint msg = R.Raw <$> (R.alloc @r msg hint)
+newFromRepr hint msg = R.Raw <$> R.alloc @r msg hint
 
 
 -- | Types which may be allocated directly inside a message.

@@ -5,7 +5,7 @@ module Trans.FlatToNew (cgrToFiles) where
 import Data.Bifunctor (Bifunctor(..))
 
 import qualified Capnp.Repr as R
-import           Data.Maybe (isNothing)
+import           Data.Maybe (isJust)
 import qualified IR.Common  as C
 import qualified IR.Flat    as Flat
 import qualified IR.Name    as Name
@@ -104,7 +104,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
             : zipWith mkMethod [0..] methods
         Flat.Struct{isGroup, fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
-            : parsedStructNode fields (not $ isNothing union) isGroup
+            : parsedStructNode fields (isJust union) isGroup
             : (structUnionNodes union ++ map mkField fields)
 
 fieldToDecl :: Name.LocalQ -> [C.TypeParamRef Flat.Node] -> Flat.Field -> New.Decl

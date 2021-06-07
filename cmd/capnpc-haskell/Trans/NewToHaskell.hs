@@ -237,8 +237,7 @@ declToDecls thisMod decl =
                             New.ParsedStruct{} -> typ
                             New.ParsedUnion{}  -> Hs.TApp (tgName ["GH"] "Which") [typ]
             in
-            (
-            [ Hs.DcData Hs.Data
+            Hs.DcData Hs.Data
                 { dataName = "C.Parsed"
                 , typeArgs = [parsedTy]
                 , derives = [ "Generics.Generic" ]
@@ -255,20 +254,19 @@ declToDecls thisMod decl =
                                         Name.mkSub typeName ""
                                     else
                                         typeName
-                                , dvArgs = Hs.ARec $ concat
-                                    [ [ ( name
-                                        , Hs.TApp
-                                            (tgName ["RP"] "Parsed")
-                                            [fieldLocTypeToType thisMod typ]
-                                        )
-                                      | (name, typ) <- fields
-                                      ]
-                                    , [ ( "union'"
-                                        , Hs.TApp (tgName ["C"] "Parsed")
-                                            [Hs.TApp (tgName ["GH"] "Which") [typ]]
-                                        )
-                                      | hasUnion
-                                      ]
+                                , dvArgs = Hs.ARec $
+                                    [ ( name
+                                      , Hs.TApp
+                                          (tgName ["RP"] "Parsed")
+                                          [fieldLocTypeToType thisMod typ]
+                                      )
+                                    | (name, typ) <- fields
+                                    ] ++
+                                    [ ( "union'"
+                                      , Hs.TApp (tgName ["C"] "Parsed")
+                                          [Hs.TApp (tgName ["GH"] "Which") [typ]]
+                                      )
+                                    | hasUnion
                                     ]
                                 }
                             ]
@@ -289,14 +287,14 @@ declToDecls thisMod decl =
                             [ declareUnknownVariant typeName ]
 
                 }
-            ] ++
+            :
             [ Hs.DcDeriveInstance
                 [ Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["RP"] "Parsed") [v]]
                 | v <- tVars
                 ]
                 (Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["C"] "Parsed") [parsedTy]])
             | cls <- ["Show", "Eq"]
-            ])
+            ]
 
 
 defineRawData thisMod name tVars variants =
