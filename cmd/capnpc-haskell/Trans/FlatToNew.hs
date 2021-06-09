@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Trans.FlatToNew (cgrToFiles) where
 
 import Data.Bifunctor (Bifunctor(..))
@@ -61,7 +62,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                         | Flat.Field{fieldName, fieldLocType} <- fields
                         ]
                     , hasUnion
-                    , isGroup
+                    , dataCtorName = dataCtorName isGroup
                     }
                 }
 
@@ -79,6 +80,10 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                     }
                 }
 
+        dataCtorName isGroup
+            | isGroup = Name.mkSub local ""
+            | otherwise = local
+
         structParseInstance fields hasUnion isGroup =
             New.ParseInstanceDecl
                 { typeName = local
@@ -86,7 +91,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                 , parseInstance = New.StructParseInstance
                     { fields = [ Name.getUnQ fieldName | Flat.Field{fieldName} <- fields ]
                     , hasUnion
-                    , isGroup
+                    , dataCtorName = dataCtorName isGroup
                     }
                 }
 

@@ -57,16 +57,16 @@ data Decl
 
 data ParseInstance
     = StructParseInstance
-        { fields   :: [Name.UnQ]
-        , hasUnion :: !Bool
-        , isGroup  :: !Bool
+        { fields       :: [Name.UnQ]
+        , hasUnion     :: !Bool
+        , dataCtorName :: Name.LocalQ
         }
 
 data ParsedInstanceDef
     = ParsedStruct
-        { fields   :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
-        , hasUnion :: !Bool
-        , isGroup  :: !Bool
+        { fields       :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
+        , hasUnion     :: !Bool
+        , dataCtorName :: Name.LocalQ
         }
     | ParsedUnion
         { variants :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]

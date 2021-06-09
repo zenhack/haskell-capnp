@@ -243,15 +243,9 @@ declToDecls thisMod decl =
                 , dataInstance = True
                 , dataVariants =
                     case parsedDef of
-                        New.ParsedStruct { fields, hasUnion, isGroup } ->
+                        New.ParsedStruct { fields, hasUnion, dataCtorName } ->
                             [ Hs.DataVariant
-                                { dvCtorName = Name.localToUnQ $
-                                    if isGroup then
-                                        -- avoid name collisions with possible union variant
-                                        -- constructors.
-                                        Name.mkSub typeName ""
-                                    else
-                                        typeName
+                                { dvCtorName = Name.localToUnQ dataCtorName
                                 , dvArgs = Hs.ARec $
                                     [ ( name
                                       , Hs.TApp
@@ -293,7 +287,7 @@ declToDecls thisMod decl =
                 (Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["C"] "Parsed") [parsedTy]])
             | cls <- ["Show", "Eq"]
             ]
-        New.ParseInstanceDecl{typeName, typeParams, parseInstance = New.StructParseInstance{fields, isGroup, hasUnion}} ->
+        New.ParseInstanceDecl{typeName, typeParams, parseInstance = New.StructParseInstance{fields, hasUnion, dataCtorName}} ->
             let tVars = toTVars typeParams
                 typ = Hs.TApp (Hs.TLName typeName) tVars
             in
@@ -304,28 +298,17 @@ declToDecls thisMod decl =
                     [ Hs.IdValue Hs.DfValue
                         { name = "parse"
                         , params = [Hs.PVar "raw_"]
-                        , value =
-                            -- TODO: factor out constructor logic. Really, rather
-                            -- than checking isGroup, we should compute this earlier in the
-                            -- pipeline and store it?
-                            let ctorName = if isGroup then
-                                        -- avoid name collisions with possible union variant
-                                        -- constructors.
-                                        Name.mkSub typeName ""
-                                    else
-                                        typeName
-                            in
-                            Hs.EFApp (Hs.ELName ctorName) $
-                                [ Hs.EApp
-                                    (egName ["GH"] "parseField")
-                                    [Hs.ELabel field, euName "raw_"]
-                                | field <- fields
-                                ]
-                                ++
-                                if hasUnion then
-                                    [ eStd_ "undefined" ]
-                                else
-                                    []
+                        , value = Hs.EFApp (Hs.ELName dataCtorName) $
+                            [ Hs.EApp
+                                (egName ["GH"] "parseField")
+                                [Hs.ELabel field, euName "raw_"]
+                            | field <- fields
+                            ]
+                            ++
+                            if hasUnion then
+                                [ eStd_ "undefined" ]
+                            else
+                                []
                         }
                     ]
                 }
