@@ -1,12 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-module IR.New
-    ( File(..)
-    , Decl(..)
-    , ParsedInstanceDef(..)
-    , UnionVariant(..)
-    , Brand
-    , ExtraTypeInfo(..)
-    ) where
+module IR.New where
 
 import qualified Capnp.Repr as R
 import           Data.Word
@@ -55,6 +48,18 @@ data Decl
         { typeName   :: Name.LocalQ
         , typeParams :: [Name.UnQ]
         , parsedDef  :: ParsedInstanceDef
+        }
+    | ParseInstanceDecl
+        { typeName      :: Name.LocalQ
+        , typeParams    :: [Name.UnQ]
+        , parseInstance :: ParseInstance
+        }
+
+data ParseInstance
+    = StructParseInstance
+        { fields   :: [Name.UnQ]
+        , hasUnion :: !Bool
+        , isGroup  :: !Bool
         }
 
 data ParsedInstanceDef

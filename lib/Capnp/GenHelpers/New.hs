@@ -14,6 +14,7 @@ module Capnp.GenHelpers.New
     , readVariant
     , TypeParam
     , newStruct
+    , parseField
     , module F
     , module Capnp.Repr.Methods
     ) where
@@ -23,7 +24,7 @@ import qualified Capnp.Classes      as C
 import           Capnp.Fields       as F
 import           Capnp.Message      (Mutability(..))
 import qualified Capnp.Message      as M
-import           Capnp.New          (readField)
+import           Capnp.New          (parseField, readField)
 import qualified Capnp.New.Basics   as NB
 import qualified Capnp.New.Classes  as NC
 import qualified Capnp.Repr         as R

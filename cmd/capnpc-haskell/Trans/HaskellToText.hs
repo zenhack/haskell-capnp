@@ -6,6 +6,7 @@ module Trans.HaskellToText (moduleToText) where
 import Data.List                    (intersperse)
 import Data.String                  (fromString)
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
+import Trans.ToHaskellCommon        (eStd_)
 
 import qualified Data.Text                    as T
 import qualified Data.Text.Lazy               as LT
@@ -188,7 +189,7 @@ instance Format Exp where
         , hcat $ intersperse " " $ map format (e:es)
         , ")"
         ]
-    format (EFApp e []) = format e
+    format (EFApp e []) = format (EApp (eStd_ "pure") [e])
     format (EFApp e es) = hcat
         [ "("
         , format e
