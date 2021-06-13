@@ -268,7 +268,11 @@ defineRawData thisMod name tVars variants =
         , derives = []
         }
 
+unknownVariant :: Name.LocalQ -> Name.LocalQ
 unknownVariant name = Name.mkSub name "unknown'"
+
+rawCtorName :: Name.LocalQ -> Name.UnQ
+rawCtorName local = "RW_" <> Name.localToUnQ local
 
 
 defineInternalWhich structName variants =
@@ -279,7 +283,7 @@ defineInternalWhich structName variants =
             Hs.ECase (Hs.ELName "tag_") $
                 [ ( Hs.PInt $ fromIntegral tagValue
                   , Hs.EFApp
-                        (Hs.EVar $ "RW_" <> Name.renderLocalQ (Name.mkSub structName variantName))
+                        (euName $ rawCtorName (Name.mkSub structName variantName))
                         [ Hs.EApp
                             (egName ["GH"] "readVariant")
                             [ Hs.ELabel variantName
@@ -293,8 +297,8 @@ defineInternalWhich structName variants =
                 [ ( Hs.PVar "_"
                   , Hs.EApp (eStd_ "pure")
                         [ Hs.EApp
-                            (Hs.EVar $ "RW_" <> Name.renderLocalQ (unknownVariant structName))
-                            [Hs.ELName "tag_"]
+                            (euName $ rawCtorName (unknownVariant structName))
+                            [euName "tag_"]
                         ]
                   )
                 ]
@@ -592,13 +596,28 @@ defineParse typeName typeParams New.ParsedUnion{ variants } =
                 , value = Hs.EDo
                     [ Hs.DoBind "rawWhich_" $ Hs.EApp (egName ["GH"] "unionWhich") [euName "raw_"]
                     ]
-                    (Hs.ECase (euName "rawWhich_")
-                        [ let ctorName = "RW_" <> Name.localToUnQ (Name.mkSub typeName variantName)
-                          in
-                          ( puName ctorName [Hs.PVar "rawArg_"]
-                          , eStd_ "undefined"
+                    (Hs.ECase (euName "rawWhich_") $
+                        [ let ctorName = Name.mkSub typeName variantName in
+                          case fieldLocType of
+                            C.VoidField ->
+                                ( puName (rawCtorName ctorName) [Hs.PVar "_"]
+                                , Hs.EApp (eStd_ "pure") [Hs.ELName ctorName]
+                                )
+                            _ ->
+                                ( puName (rawCtorName ctorName) [Hs.PVar "rawArg_"]
+                                , Hs.EFApp
+                                    (Hs.ELName ctorName)
+                                    [Hs.EApp (egName ["C"] "parse") [euName "rawArg_"]]
+                                )
+                        | (variantName, fieldLocType) <- variants
+                        ]
+                        ++
+                        [ let ctorName = unknownVariant typeName in
+                          ( puName (rawCtorName ctorName) [Hs.PVar "tag_"]
+                          , Hs.EApp
+                                (eStd_ "pure")
+                                [Hs.EApp (Hs.ELName ctorName) [euName "tag_"]]
                           )
-                        | (variantName, _) <- variants
                         ]
                     )
                 }
