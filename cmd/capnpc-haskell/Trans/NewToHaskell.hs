@@ -228,91 +228,8 @@ declToDecls thisMod decl =
                     ]
                 }
             ]
-        New.ParsedInstanceDecl{ typeName, typeParams, parsedDef } ->
-            let tVars = map (Hs.TVar . Name.typeVarName) typeParams
-                typ = Hs.TApp (Hs.TLName typeName) tVars
-                parsedTy = case parsedDef of
-                            New.ParsedStruct{} -> typ
-                            New.ParsedUnion{}  -> Hs.TApp (tgName ["GH"] "Which") [typ]
-            in
-            Hs.DcData Hs.Data
-                { dataName = "C.Parsed"
-                , typeArgs = [parsedTy]
-                , derives = [ "Generics.Generic" ]
-                , dataNewtype = False
-                , dataInstance = True
-                , dataVariants =
-                    case parsedDef of
-                        New.ParsedStruct { fields, hasUnion, dataCtorName } ->
-                            [ Hs.DataVariant
-                                { dvCtorName = Name.localToUnQ dataCtorName
-                                , dvArgs = Hs.ARec $
-                                    [ ( name
-                                      , Hs.TApp
-                                          (tgName ["RP"] "Parsed")
-                                          [fieldLocTypeToType thisMod typ]
-                                      )
-                                    | (name, typ) <- fields
-                                    ] ++
-                                    [ ( "union'"
-                                      , Hs.TApp (tgName ["C"] "Parsed")
-                                          [Hs.TApp (tgName ["GH"] "Which") [typ]]
-                                      )
-                                    | hasUnion
-                                    ]
-                                }
-                            ]
-                        New.ParsedUnion { variants } ->
-                            [ Hs.DataVariant
-                                { dvCtorName = Name.localToUnQ $ Name.mkSub typeName name
-                                , dvArgs = case ftype of
-                                    C.VoidField -> Hs.APos []
-                                    _ -> Hs.APos
-                                        [ Hs.TApp
-                                            (tgName ["RP"] "Parsed")
-                                            [fieldLocTypeToType thisMod ftype]
-                                        ]
-                                }
-                            | (name, ftype) <- variants
-                            ]
-                            ++
-                            [ declareUnknownVariant typeName ]
-
-                }
-            :
-            [ Hs.DcDeriveInstance
-                [ Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["RP"] "Parsed") [v]]
-                | v <- tVars
-                ]
-                (Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["C"] "Parsed") [parsedTy]])
-            | cls <- ["Show", "Eq"]
-            ]
-        New.ParseInstanceDecl{typeName, typeParams, parseInstance = New.StructParseInstance{fields, hasUnion, dataCtorName}} ->
-            let tVars = toTVars typeParams
-                typ = Hs.TApp (Hs.TLName typeName) tVars
-            in
-            [ Hs.DcInstance
-                { ctx = paramsContext tVars
-                , typ = Hs.TApp (tgName ["C"] "Parse") [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
-                , defs =
-                    [ Hs.IdValue Hs.DfValue
-                        { name = "parse"
-                        , params = [Hs.PVar "raw_"]
-                        , value = Hs.EFApp (Hs.ELName dataCtorName) $
-                            [ Hs.EApp
-                                (egName ["GH"] "parseField")
-                                [Hs.ELabel field, euName "raw_"]
-                            | field <- fields
-                            ]
-                            ++
-                            if hasUnion then
-                                [ eStd_ "undefined" ]
-                            else
-                                []
-                        }
-                    ]
-                }
-            ]
+        New.ParsedInstanceDecl{ typeName, typeParams, parsedInstances } ->
+            defineParsedInstances thisMod typeName typeParams parsedInstances
 
 
 defineRawData thisMod name tVars variants =
@@ -561,3 +478,101 @@ declareUnknownVariant name = Hs.DataVariant
     { dvCtorName = Name.localToUnQ $ Name.mkSub name "unknown'"
     , dvArgs = Hs.APos [tStd_ "Word16"]
     }
+
+
+defineParsedInstances :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
+defineParsedInstances thisMod typeName typeParams instanceInfo =
+    concat
+        [ defineParsed thisMod typeName typeParams instanceInfo
+        , defineParse typeName typeParams instanceInfo
+        ]
+
+defineParsed :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
+defineParsed thisMod typeName typeParams instanceInfo =
+    let tVars = map (Hs.TVar . Name.typeVarName) typeParams
+        typ = Hs.TApp (Hs.TLName typeName) tVars
+        parsedTy = case instanceInfo of
+                    New.ParsedStruct{} -> typ
+                    New.ParsedUnion{}  -> Hs.TApp (tgName ["GH"] "Which") [typ]
+    in
+    Hs.DcData Hs.Data
+        { dataName = "C.Parsed"
+        , typeArgs = [parsedTy]
+        , derives = [ "Generics.Generic" ]
+        , dataNewtype = False
+        , dataInstance = True
+        , dataVariants =
+            case instanceInfo of
+                New.ParsedStruct { fields, hasUnion, dataCtorName } ->
+                    [ Hs.DataVariant
+                        { dvCtorName = Name.localToUnQ dataCtorName
+                        , dvArgs = Hs.ARec $
+                            [ ( name
+                              , Hs.TApp
+                                  (tgName ["RP"] "Parsed")
+                                  [fieldLocTypeToType thisMod typ]
+                              )
+                            | (name, typ) <- fields
+                            ] ++
+                            [ ( "union'"
+                              , Hs.TApp (tgName ["C"] "Parsed")
+                                  [Hs.TApp (tgName ["GH"] "Which") [typ]]
+                              )
+                            | hasUnion
+                            ]
+                        }
+                    ]
+                New.ParsedUnion { variants } ->
+                    [ Hs.DataVariant
+                        { dvCtorName = Name.localToUnQ $ Name.mkSub typeName name
+                        , dvArgs = case ftype of
+                            C.VoidField -> Hs.APos []
+                            _ -> Hs.APos
+                                [ Hs.TApp
+                                    (tgName ["RP"] "Parsed")
+                                    [fieldLocTypeToType thisMod ftype]
+                                ]
+                        }
+                    | (name, ftype) <- variants
+                    ]
+                    ++
+                    [ declareUnknownVariant typeName ]
+
+        }
+    :
+    [ Hs.DcDeriveInstance
+        [ Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["RP"] "Parsed") [v]]
+        | v <- tVars
+        ]
+        (Hs.TApp (tStd_ cls) [Hs.TApp (tgName ["C"] "Parsed") [parsedTy]])
+    | cls <- ["Show", "Eq"]
+    ]
+
+defineParse :: Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
+defineParse typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorName } =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (Hs.TLName typeName) tVars
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp (tgName ["C"] "Parse") [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
+        , defs =
+            [ Hs.IdValue Hs.DfValue
+                { name = "parse"
+                , params = [Hs.PVar "raw_"]
+                , value = Hs.EFApp (Hs.ELName dataCtorName) $
+                    [ Hs.EApp
+                        (egName ["GH"] "parseField")
+                        [Hs.ELabel field, euName "raw_"]
+                    | field <- map fst fields
+                    ]
+                    ++
+                    if hasUnion then
+                        [ eStd_ "undefined" ]
+                    else
+                        []
+                }
+            ]
+        }
+    ]
+defineParse _ _ New.ParsedUnion{} = [] -- TODO

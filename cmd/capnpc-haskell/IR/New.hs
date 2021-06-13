@@ -45,24 +45,14 @@ data Decl
         , resultType    :: C.CompositeType Brand Name.CapnpQ
         }
     | ParsedInstanceDecl
-        { typeName   :: Name.LocalQ
-        , typeParams :: [Name.UnQ]
-        , parsedDef  :: ParsedInstanceDef
-        }
-    | ParseInstanceDecl
-        { typeName      :: Name.LocalQ
-        , typeParams    :: [Name.UnQ]
-        , parseInstance :: ParseInstance
+        { typeName        :: Name.LocalQ
+        , typeParams      :: [Name.UnQ]
+        , parsedInstances :: ParsedInstances
         }
 
-data ParseInstance
-    = StructParseInstance
-        { fields       :: [Name.UnQ]
-        , hasUnion     :: !Bool
-        , dataCtorName :: Name.LocalQ
-        }
-
-data ParsedInstanceDef
+-- | Data needed for declaring a Parsed instance, and instances
+-- of related classes.
+data ParsedInstances
     = ParsedStruct
         { fields       :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
         , hasUnion     :: !Bool

@@ -54,7 +54,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
             New.ParsedInstanceDecl
                 { typeName = local
                 , typeParams = map C.paramName typeParams
-                , parsedDef = New.ParsedStruct
+                , parsedInstances = New.ParsedStruct
                     { fields =
                         [ ( Name.getUnQ fieldName
                           , mapTypes fieldLocType
@@ -70,7 +70,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
             New.ParsedInstanceDecl
                 { typeName = local
                 , typeParams = map C.paramName typeParams
-                , parsedDef = New.ParsedUnion
+                , parsedInstances = New.ParsedUnion
                     { variants =
                         [ ( Name.getUnQ fieldName
                           , mapTypes fieldLocType
@@ -83,18 +83,6 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         dataCtorName isGroup
             | isGroup = Name.mkSub local ""
             | otherwise = local
-
-        structParseInstance fields hasUnion isGroup =
-            New.ParseInstanceDecl
-                { typeName = local
-                , typeParams = map C.paramName typeParams
-                , parseInstance = New.StructParseInstance
-                    { fields = [ Name.getUnQ fieldName | Flat.Field{fieldName} <- fields ]
-                    , hasUnion
-                    , dataCtorName = dataCtorName isGroup
-                    }
-                }
-
 
         structUnionNodes Nothing = []
         structUnionNodes (Just union@Flat.Union{tagOffset, variants}) =
@@ -122,7 +110,6 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         Flat.Struct{isGroup, fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
             : parsedStructNode fields (isJust union) isGroup
-            : structParseInstance fields (isJust union) isGroup
             : (structUnionNodes union ++ map mkField fields)
 
 fieldToDecl :: Name.LocalQ -> [C.TypeParamRef Flat.Node] -> Flat.Field -> New.Decl
