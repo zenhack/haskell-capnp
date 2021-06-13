@@ -15,9 +15,10 @@ module Capnp.New
     , setVariant
     , initVariant
     , encodeVariant
-    , which
-    , getWhich
-    , getWrapper
+    , structWhich
+    , unionWhich
+    , structUnion
+    , unionStruct
     ) where
 
 
@@ -158,13 +159,16 @@ initVariant F.Variant{field, tagValue} struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     readField field struct
 
-getWhich :: F.HasUnion a => R.Raw mut a -> R.Raw mut (F.Which a)
-getWhich = coerce
+structUnion :: F.HasUnion a => R.Raw mut a -> R.Raw mut (F.Which a)
+structUnion = coerce
 
-getWrapper :: F.HasUnion a => R.Raw mut (F.Which a) -> R.Raw mut a
-getWrapper = coerce
+unionStruct :: F.HasUnion a => R.Raw mut (F.Which a) -> R.Raw mut a
+unionStruct = coerce
 
-which :: forall a mut m. U.ReadCtx m mut => F.HasUnion a => R.Raw mut a -> m (F.RawWhich mut a)
-which struct = do
+structWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw mut a -> m (F.RawWhich mut a)
+structWhich struct = do
     R.Raw tagValue <- readField (F.unionField @a) struct
     F.internalWhich tagValue struct
+
+unionWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw mut (F.Which a) -> m (F.RawWhich mut a)
+unionWhich = structWhich . unionStruct

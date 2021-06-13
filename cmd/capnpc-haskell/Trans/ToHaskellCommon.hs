@@ -51,6 +51,9 @@ tgName parts local = TGName $ gName parts local
 pgName :: [T.Text] -> Name.LocalQ -> [Pattern] -> Pattern
 pgName parts local = PGCtor (gName parts local)
 
+puName :: Name.UnQ -> [Pattern] -> Pattern
+puName = PLCtor . Name.unQToLocal
+
 tuName :: Name.UnQ -> Type
 tuName = TLName . Name.unQToLocal
 

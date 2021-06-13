@@ -568,14 +568,17 @@ defineParse typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorNam
                     ]
                     ++
                     if hasUnion then
-                        [ eStd_ "undefined" ]
+                        [ Hs.EApp
+                            (egName ["C"] "parse")
+                            [Hs.EApp (egName ["GH"] "structUnion") [euName "raw_"]]
+                        ]
                     else
                         []
                 }
             ]
         }
     ]
-defineParse typeName typeParams New.ParsedUnion{} =
+defineParse typeName typeParams New.ParsedUnion{ variants } =
     let tVars = toTVars typeParams
         typ = Hs.TApp (tgName ["C"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
     in
@@ -585,8 +588,19 @@ defineParse typeName typeParams New.ParsedUnion{} =
         , defs =
             [ Hs.IdValue Hs.DfValue
                 { name = "parse"
-                , params = []
-                , value = eStd_ "undefined"
+                , params = [Hs.PVar "raw_"]
+                , value = Hs.EDo
+                    [ Hs.DoBind "rawWhich_" $ Hs.EApp (egName ["GH"] "unionWhich") [euName "raw_"]
+                    ]
+                    (Hs.ECase (euName "rawWhich_")
+                        [ let ctorName = "RW_" <> Name.localToUnQ (Name.mkSub typeName variantName)
+                          in
+                          ( puName ctorName [Hs.PVar "rawArg_"]
+                          , eStd_ "undefined"
+                          )
+                        | (variantName, _) <- variants
+                        ]
+                    )
                 }
             ]
         }
