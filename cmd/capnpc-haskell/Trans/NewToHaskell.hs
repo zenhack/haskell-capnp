@@ -575,4 +575,19 @@ defineParse typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorNam
             ]
         }
     ]
-defineParse _ _ New.ParsedUnion{} = [] -- TODO
+defineParse typeName typeParams New.ParsedUnion{} =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (tgName ["C"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp (tgName ["C"] "Parse") [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
+        , defs =
+            [ Hs.IdValue Hs.DfValue
+                { name = "parse"
+                , params = []
+                , value = eStd_ "undefined"
+                }
+            ]
+        }
+    ]
