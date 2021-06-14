@@ -98,10 +98,10 @@ instance C.Parse Text T.Text where
 -- Instances for Data
 instance C.Parse Data BS.ByteString where
     parse = U.rawBytes . R.fromRaw
-    encode msg value = do
-        raw <- C.new (BS.length value) msg
-        C.marshalInto raw value
-        pure raw
+
+instance C.EstimateAlloc Data BS.ByteString where
+    estimateAlloc = BS.length
+
 
 instance C.Allocate Data where
     type AllocHint Data = Int
