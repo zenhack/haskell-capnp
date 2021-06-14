@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE EmptyDataDeriving     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 module Capnp.New.Basics
@@ -12,12 +13,17 @@ module Capnp.New.Basics
     , Capability
     ) where
 
-import qualified Capnp.New.Classes as C
-import qualified Capnp.Repr        as R
-import qualified Capnp.Untyped     as U
-import qualified Data.ByteString   as BS
-import           Data.Foldable     (for_)
-import qualified Data.Vector       as V
+import qualified Capnp.Errors        as E
+import qualified Capnp.New.Classes   as C
+import qualified Capnp.Repr          as R
+import qualified Capnp.Untyped       as U
+import           Control.Monad       (when)
+import           Control.Monad.Catch (throwM)
+import qualified Data.ByteString     as BS
+import           Data.Foldable       (for_)
+import qualified Data.Text           as T
+import qualified Data.Text.Encoding  as TE
+import qualified Data.Vector         as V
 import           Data.Word
 
 data Text
@@ -68,6 +74,26 @@ data instance C.Parsed Capability -- TODO
 instance C.Allocate Text where
     type AllocHint Text = Int
     new len msg = R.Raw <$> U.allocList8 msg (len + 1)
+
+instance C.Parse Text T.Text where
+    parse (R.Raw list) = do
+        let len = U.length list
+        when (len == 0) $ throwM $ E.SchemaViolationError
+            "Text is not NUL-terminated (list of bytes has length 0)"
+        lastByte <- U.index (len - 1) list
+        when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
+            "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
+        bytes <- BS.take (len - 1) <$> U.rawBytes list
+        case TE.decodeUtf8' bytes of
+            Left e  -> throwM $ E.InvalidUtf8Error e
+            Right v -> pure v
+    encode msg value = do
+        let bytes = TE.encodeUtf8 value
+        raw@(R.Raw untyped)  <- C.new @Text (BS.length bytes) msg
+        C.marshalInto @Data (R.Raw untyped) bytes
+        pure raw
+
+
 
 -- Instances for Data
 instance C.Parse Data BS.ByteString where
