@@ -47,6 +47,7 @@ fileToMainModule file@New.File{fileName} =
             , "UndecidableInstances"
             , "OverloadedLabels"
             , "StandaloneDeriving"
+            , "RecordWildCards"
             ]
         , modExports = Nothing
         , modImports = imports
@@ -486,9 +487,10 @@ declareUnknownVariant name = Hs.DataVariant
 
 defineParsedInstances :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
 defineParsedInstances thisMod typeName typeParams instanceInfo =
-    concat
-        [ defineParsed thisMod typeName typeParams instanceInfo
-        , defineParse typeName typeParams instanceInfo
+    concatMap (\f -> f typeName typeParams instanceInfo)
+        [ (defineParsed thisMod)
+        , defineParse
+        , defineMarshal
         ]
 
 defineParsed :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
@@ -584,7 +586,7 @@ defineParse typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorNam
     ]
 defineParse typeName typeParams New.ParsedUnion{ variants } =
     let tVars = toTVars typeParams
-        typ = Hs.TApp (tgName ["C"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
+        typ = Hs.TApp (tgName ["GH"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
     in
     [ Hs.DcInstance
         { ctx = paramsContext tVars
@@ -624,3 +626,58 @@ defineParse typeName typeParams New.ParsedUnion{ variants } =
             ]
         }
     ]
+
+defineMarshal :: Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
+defineMarshal typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorName } =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (Hs.TLName typeName) tVars
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp
+                    (tgName ["C"] "Marshal")
+                    [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
+        , defs =
+            [ if fields == [] && not hasUnion then
+                -- We need to special case this, since otherwise GHC will complain about
+                -- the record wildcard pattern on a ctor with no arguments.
+                Hs.IdValue Hs.DfValue
+                    { name = "marshalInto"
+                    , params = [ Hs.PVar "_raw", Hs.PLCtor dataCtorName [] ]
+                    , value = Hs.EApp (eStd_ "pure") [Hs.ETup []]
+                    }
+              else
+                Hs.IdValue Hs.DfValue
+                    { name = "marshalInto"
+                    , params =
+                        [ Hs.PVar "raw_", Hs.PLRecordWildCard dataCtorName]
+                    , value = Hs.EDo
+                        (map (Hs.DoE . uncurry emitMarshalField) fields)
+                        (if hasUnion then
+                            Hs.EApp (egName ["C"] "marshalInto")
+                              [ Hs.EApp (egName ["GH"] "structUnion") [euName "raw_"]
+                              , euName "union'"
+                              ]
+                        else
+                            Hs.EApp (eStd_ "pure") [Hs.ETup []]
+                        )
+                    }
+            ]
+        }
+    ]
+defineMarshal _ _ _ = [] -- TODO
+
+emitMarshalField :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
+emitMarshalField name (C.HereField _) =
+    Hs.EDo
+        [ Hs.DoBind "group_" $ Hs.EApp
+            (egName ["GH"] "readField")
+            [Hs.ELabel name, Hs.EVar "raw_"]
+        ]
+        (Hs.EApp (egName ["C"] "marshalInto") [Hs.EVar "group_", euName name])
+emitMarshalField name _ =
+    Hs.EApp (egName ["GH"] "encodeField")
+        [ Hs.ELabel name
+        , euName name
+        , euName "raw_"
+        ]
