@@ -72,7 +72,7 @@ instance C.Parse AnyStruct (C.Parsed AnyStruct) where
     parse (R.Raw s) = Struct
         <$> V.generateM
                 (fromIntegral $ U.structWordCount s)
-                (\i -> U.getData i s)
+                (`U.getData` s)
         <*> V.generateM
                 (fromIntegral $ U.structPtrCount s)
                 (\i -> U.getPtr i s >>= C.parse . R.Raw)
