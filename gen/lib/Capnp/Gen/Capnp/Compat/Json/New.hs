@@ -8,6 +8,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -34,12 +35,19 @@ instance (C.TypedStruct Value) where
 instance (C.Allocate Value) where
     type AllocHint Value = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Value (C.Parsed Value))
 data instance C.Parsed Value
     = Value 
         {union' :: (C.Parsed (GH.Which Value))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Value))
 deriving instance (Std_.Eq (C.Parsed Value))
+instance (C.Parse Value (C.Parsed Value)) where
+    parse raw_ = (Value <$> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal Value (C.Parsed Value)) where
+    marshalInto raw_ Value{..} = (do
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Value
@@ -95,6 +103,45 @@ data instance C.Parsed (GH.Which Value)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Value)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Value)))
+instance (C.Parse (GH.Which Value) (C.Parsed (GH.Which Value))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_Value'null _) ->
+                (Std_.pure Value'null)
+            (RW_Value'boolean rawArg_) ->
+                (Value'boolean <$> (C.parse rawArg_))
+            (RW_Value'number rawArg_) ->
+                (Value'number <$> (C.parse rawArg_))
+            (RW_Value'string rawArg_) ->
+                (Value'string <$> (C.parse rawArg_))
+            (RW_Value'array rawArg_) ->
+                (Value'array <$> (C.parse rawArg_))
+            (RW_Value'object rawArg_) ->
+                (Value'object <$> (C.parse rawArg_))
+            (RW_Value'call rawArg_) ->
+                (Value'call <$> (C.parse rawArg_))
+            (RW_Value'unknown' tag_) ->
+                (Std_.pure (Value'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which Value) (C.Parsed (GH.Which Value))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (Value'null) ->
+            (GH.encodeVariant #null () (GH.unionStruct raw_))
+        (Value'boolean arg_) ->
+            (GH.encodeVariant #boolean arg_ (GH.unionStruct raw_))
+        (Value'number arg_) ->
+            (GH.encodeVariant #number arg_ (GH.unionStruct raw_))
+        (Value'string arg_) ->
+            (GH.encodeVariant #string arg_ (GH.unionStruct raw_))
+        (Value'array arg_) ->
+            (GH.encodeVariant #array arg_ (GH.unionStruct raw_))
+        (Value'object arg_) ->
+            (GH.encodeVariant #object arg_ (GH.unionStruct raw_))
+        (Value'call arg_) ->
+            (GH.encodeVariant #call arg_ (GH.unionStruct raw_))
+        (Value'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Value'Field) where
@@ -103,6 +150,7 @@ instance (C.TypedStruct Value'Field) where
 instance (C.Allocate Value'Field) where
     type AllocHint Value'Field = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Value'Field (C.Parsed Value'Field))
 data instance C.Parsed Value'Field
     = Value'Field 
         {name :: (RP.Parsed Basics.Text)
@@ -110,6 +158,15 @@ data instance C.Parsed Value'Field
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Value'Field))
 deriving instance (Std_.Eq (C.Parsed Value'Field))
+instance (C.Parse Value'Field (C.Parsed Value'Field)) where
+    parse raw_ = (Value'Field <$> (GH.parseField #name raw_)
+                              <*> (GH.parseField #value raw_))
+instance (C.Marshal Value'Field (C.Parsed Value'Field)) where
+    marshalInto raw_ Value'Field{..} = (do
+        (GH.encodeField #name name raw_)
+        (GH.encodeField #value value raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "name" GH.Slot Value'Field Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "value" GH.Slot Value'Field Value) where
@@ -122,6 +179,7 @@ instance (C.TypedStruct Value'Call) where
 instance (C.Allocate Value'Call) where
     type AllocHint Value'Call = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Value'Call (C.Parsed Value'Call))
 data instance C.Parsed Value'Call
     = Value'Call 
         {function :: (RP.Parsed Basics.Text)
@@ -129,6 +187,15 @@ data instance C.Parsed Value'Call
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Value'Call))
 deriving instance (Std_.Eq (C.Parsed Value'Call))
+instance (C.Parse Value'Call (C.Parsed Value'Call)) where
+    parse raw_ = (Value'Call <$> (GH.parseField #function raw_)
+                             <*> (GH.parseField #params raw_))
+instance (C.Marshal Value'Call (C.Parsed Value'Call)) where
+    marshalInto raw_ Value'Call{..} = (do
+        (GH.encodeField #function function raw_)
+        (GH.encodeField #params params raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "function" GH.Slot Value'Call Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "params" GH.Slot Value'Call (R.List Value)) where
@@ -141,12 +208,20 @@ instance (C.TypedStruct FlattenOptions) where
 instance (C.Allocate FlattenOptions) where
     type AllocHint FlattenOptions = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc FlattenOptions (C.Parsed FlattenOptions))
 data instance C.Parsed FlattenOptions
     = FlattenOptions 
         {prefix :: (RP.Parsed Basics.Text)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed FlattenOptions))
 deriving instance (Std_.Eq (C.Parsed FlattenOptions))
+instance (C.Parse FlattenOptions (C.Parsed FlattenOptions)) where
+    parse raw_ = (FlattenOptions <$> (GH.parseField #prefix raw_))
+instance (C.Marshal FlattenOptions (C.Parsed FlattenOptions)) where
+    marshalInto raw_ FlattenOptions{..} = (do
+        (GH.encodeField #prefix prefix raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "prefix" GH.Slot FlattenOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 data DiscriminatorOptions 
@@ -157,6 +232,7 @@ instance (C.TypedStruct DiscriminatorOptions) where
 instance (C.Allocate DiscriminatorOptions) where
     type AllocHint DiscriminatorOptions = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc DiscriminatorOptions (C.Parsed DiscriminatorOptions))
 data instance C.Parsed DiscriminatorOptions
     = DiscriminatorOptions 
         {name :: (RP.Parsed Basics.Text)
@@ -164,6 +240,15 @@ data instance C.Parsed DiscriminatorOptions
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed DiscriminatorOptions))
 deriving instance (Std_.Eq (C.Parsed DiscriminatorOptions))
+instance (C.Parse DiscriminatorOptions (C.Parsed DiscriminatorOptions)) where
+    parse raw_ = (DiscriminatorOptions <$> (GH.parseField #name raw_)
+                                       <*> (GH.parseField #valueName raw_))
+instance (C.Marshal DiscriminatorOptions (C.Parsed DiscriminatorOptions)) where
+    marshalInto raw_ DiscriminatorOptions{..} = (do
+        (GH.encodeField #name name raw_)
+        (GH.encodeField #valueName valueName raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "name" GH.Slot DiscriminatorOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "valueName" GH.Slot DiscriminatorOptions Basics.Text) where

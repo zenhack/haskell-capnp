@@ -105,7 +105,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         Flat.Enum enumerants ->
             [ mkType (R.Data R.Sz16) $ Just $ New.EnumTypeInfo enumerants ]
         Flat.Interface{methods} ->
-            mkType (R.Ptr (Just R.Cap)) Nothing
+            mkType (R.Ptr (Just R.Cap)) (Just New.InterfaceTypeInfo)
             : zipWith mkMethod [0..] methods
         Flat.Struct{isGroup, fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })

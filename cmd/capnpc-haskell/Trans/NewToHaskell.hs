@@ -203,7 +203,9 @@ declToDecls thisMod decl =
                             ]
                         }
                     ]
-                _ -> []
+                Just New.InterfaceTypeInfo ->
+                    defineInterfaceParse name params
+                Nothing -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
                 ctx = paramsContext tVars
@@ -679,6 +681,28 @@ defineParse typeName typeParams New.ParsedUnion{ variants } =
                           )
                         ]
                     )
+                }
+            ]
+        }
+    ]
+
+defineInterfaceParse typeName typeParams =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (Hs.TLName typeName) tVars
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp (tgName ["C"] "Parse") [typ, Hs.TApp (tgName ["GH"] "Client") [typ]]
+        , defs =
+            [ Hs.IdValue Hs.DfValue
+                { name = "parse"
+                , params = []
+                , value = egName ["GH"] "parseCap"
+                }
+            , Hs.IdValue Hs.DfValue
+                { name = "encode"
+                , params = []
+                , value = egName ["GH"] "encodeCap"
                 }
             ]
         }

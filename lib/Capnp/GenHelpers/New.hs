@@ -24,6 +24,8 @@ module Capnp.GenHelpers.New
     , unionStruct
     , parseEnum
     , encodeEnum
+    , parseCap
+    , encodeCap
     , module F
     , module Capnp.Repr.Methods
     ) where
@@ -47,6 +49,7 @@ import qualified Capnp.New.Basics   as NB
 import qualified Capnp.New.Classes  as NC
 import qualified Capnp.Repr         as R
 import           Capnp.Repr.Methods
+import qualified Capnp.Repr.Parsed  as RP
 import qualified Capnp.Untyped      as U
 import           Data.Bits
 import           Data.Word
@@ -76,6 +79,7 @@ voidField = F.Field F.VoidField
 type TypeParam a pr =
     ( R.ReprFor a ~ 'R.Ptr pr
     , R.IsPtrRepr pr
+    , NC.Parse a (RP.Parsed a)
     )
 
 -- | Like 'readField', but accepts a variant. Warning: *DOES NOT CHECK* that the
@@ -99,3 +103,9 @@ parseEnum (R.Raw n) = pure $ toEnum $ fromIntegral n
 encodeEnum :: forall a m s. (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, U.RWCtx m s)
     => M.Message ('Mut s) -> a -> m (R.Raw ('Mut s) a)
 encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
+
+parseCap :: (R.IsCap a, U.ReadCtx m 'Const) => R.Raw 'Const a -> m (Client a)
+parseCap (R.Raw cap) = Client <$> U.getClient cap
+
+encodeCap :: (R.IsCap a, U.RWCtx m s) => M.Message ('Mut s) -> Client a -> m (R.Raw ('Mut s) a)
+encodeCap msg (Client c) = R.Raw <$> U.appendCap msg c

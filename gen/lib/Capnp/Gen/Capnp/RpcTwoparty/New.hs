@@ -8,6 +8,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -32,6 +33,24 @@ data Side
     | Side'unknown' Std_.Word16
     deriving(Std_.Eq,Std_.Show)
 type instance (R.ReprFor Side) = (R.Data R.Sz16)
+instance (Std_.Enum Side) where
+    toEnum n_ = case n_ of
+        0 ->
+            Side'server
+        1 ->
+            Side'client
+        tag_ ->
+            (Side'unknown' (Std_.fromIntegral tag_))
+    fromEnum value_ = case value_ of
+        (Side'server) ->
+            0
+        (Side'client) ->
+            1
+        (Side'unknown' tag_) ->
+            (Std_.fromIntegral tag_)
+instance (C.Parse Side Side) where
+    parse  = GH.parseEnum
+    encode  = GH.encodeEnum
 data VatId 
 type instance (R.ReprFor VatId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct VatId) where
@@ -40,12 +59,20 @@ instance (C.TypedStruct VatId) where
 instance (C.Allocate VatId) where
     type AllocHint VatId = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc VatId (C.Parsed VatId))
 data instance C.Parsed VatId
     = VatId 
         {side :: (RP.Parsed Side)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed VatId))
 deriving instance (Std_.Eq (C.Parsed VatId))
+instance (C.Parse VatId (C.Parsed VatId)) where
+    parse raw_ = (VatId <$> (GH.parseField #side raw_))
+instance (C.Marshal VatId (C.Parsed VatId)) where
+    marshalInto raw_ VatId{..} = (do
+        (GH.encodeField #side side raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "side" GH.Slot VatId Side) where
     fieldByLabel  = (GH.dataField 0 0 16 0)
 data ProvisionId 
@@ -56,12 +83,20 @@ instance (C.TypedStruct ProvisionId) where
 instance (C.Allocate ProvisionId) where
     type AllocHint ProvisionId = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc ProvisionId (C.Parsed ProvisionId))
 data instance C.Parsed ProvisionId
     = ProvisionId 
         {joinId :: (RP.Parsed Std_.Word32)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed ProvisionId))
 deriving instance (Std_.Eq (C.Parsed ProvisionId))
+instance (C.Parse ProvisionId (C.Parsed ProvisionId)) where
+    parse raw_ = (ProvisionId <$> (GH.parseField #joinId raw_))
+instance (C.Marshal ProvisionId (C.Parsed ProvisionId)) where
+    marshalInto raw_ ProvisionId{..} = (do
+        (GH.encodeField #joinId joinId raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "joinId" GH.Slot ProvisionId Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data RecipientId 
@@ -72,12 +107,17 @@ instance (C.TypedStruct RecipientId) where
 instance (C.Allocate RecipientId) where
     type AllocHint RecipientId = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc RecipientId (C.Parsed RecipientId))
 data instance C.Parsed RecipientId
     = RecipientId 
         {}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed RecipientId))
 deriving instance (Std_.Eq (C.Parsed RecipientId))
+instance (C.Parse RecipientId (C.Parsed RecipientId)) where
+    parse raw_ = (Std_.pure RecipientId)
+instance (C.Marshal RecipientId (C.Parsed RecipientId)) where
+    marshalInto _raw (RecipientId) = (Std_.pure ())
 data ThirdPartyCapId 
 type instance (R.ReprFor ThirdPartyCapId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct ThirdPartyCapId) where
@@ -86,12 +126,17 @@ instance (C.TypedStruct ThirdPartyCapId) where
 instance (C.Allocate ThirdPartyCapId) where
     type AllocHint ThirdPartyCapId = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc ThirdPartyCapId (C.Parsed ThirdPartyCapId))
 data instance C.Parsed ThirdPartyCapId
     = ThirdPartyCapId 
         {}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed ThirdPartyCapId))
 deriving instance (Std_.Eq (C.Parsed ThirdPartyCapId))
+instance (C.Parse ThirdPartyCapId (C.Parsed ThirdPartyCapId)) where
+    parse raw_ = (Std_.pure ThirdPartyCapId)
+instance (C.Marshal ThirdPartyCapId (C.Parsed ThirdPartyCapId)) where
+    marshalInto _raw (ThirdPartyCapId) = (Std_.pure ())
 data JoinKeyPart 
 type instance (R.ReprFor JoinKeyPart) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct JoinKeyPart) where
@@ -100,6 +145,7 @@ instance (C.TypedStruct JoinKeyPart) where
 instance (C.Allocate JoinKeyPart) where
     type AllocHint JoinKeyPart = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc JoinKeyPart (C.Parsed JoinKeyPart))
 data instance C.Parsed JoinKeyPart
     = JoinKeyPart 
         {joinId :: (RP.Parsed Std_.Word32)
@@ -108,6 +154,17 @@ data instance C.Parsed JoinKeyPart
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed JoinKeyPart))
 deriving instance (Std_.Eq (C.Parsed JoinKeyPart))
+instance (C.Parse JoinKeyPart (C.Parsed JoinKeyPart)) where
+    parse raw_ = (JoinKeyPart <$> (GH.parseField #joinId raw_)
+                              <*> (GH.parseField #partCount raw_)
+                              <*> (GH.parseField #partNum raw_))
+instance (C.Marshal JoinKeyPart (C.Parsed JoinKeyPart)) where
+    marshalInto raw_ JoinKeyPart{..} = (do
+        (GH.encodeField #joinId joinId raw_)
+        (GH.encodeField #partCount partCount raw_)
+        (GH.encodeField #partNum partNum raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "joinId" GH.Slot JoinKeyPart Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "partCount" GH.Slot JoinKeyPart Std_.Word16) where
@@ -122,6 +179,7 @@ instance (C.TypedStruct JoinResult) where
 instance (C.Allocate JoinResult) where
     type AllocHint JoinResult = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc JoinResult (C.Parsed JoinResult))
 data instance C.Parsed JoinResult
     = JoinResult 
         {joinId :: (RP.Parsed Std_.Word32)
@@ -130,6 +188,17 @@ data instance C.Parsed JoinResult
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed JoinResult))
 deriving instance (Std_.Eq (C.Parsed JoinResult))
+instance (C.Parse JoinResult (C.Parsed JoinResult)) where
+    parse raw_ = (JoinResult <$> (GH.parseField #joinId raw_)
+                             <*> (GH.parseField #succeeded raw_)
+                             <*> (GH.parseField #cap raw_))
+instance (C.Marshal JoinResult (C.Parsed JoinResult)) where
+    marshalInto raw_ JoinResult{..} = (do
+        (GH.encodeField #joinId joinId raw_)
+        (GH.encodeField #succeeded succeeded raw_)
+        (GH.encodeField #cap cap raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "joinId" GH.Slot JoinResult Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "succeeded" GH.Slot JoinResult Std_.Bool) where

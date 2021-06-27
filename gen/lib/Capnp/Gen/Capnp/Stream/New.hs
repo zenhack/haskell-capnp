@@ -8,6 +8,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -34,9 +35,14 @@ instance (C.TypedStruct StreamResult) where
 instance (C.Allocate StreamResult) where
     type AllocHint StreamResult = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc StreamResult (C.Parsed StreamResult))
 data instance C.Parsed StreamResult
     = StreamResult 
         {}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed StreamResult))
 deriving instance (Std_.Eq (C.Parsed StreamResult))
+instance (C.Parse StreamResult (C.Parsed StreamResult)) where
+    parse raw_ = (Std_.pure StreamResult)
+instance (C.Marshal StreamResult (C.Parsed StreamResult)) where
+    marshalInto _raw (StreamResult) = (Std_.pure ())

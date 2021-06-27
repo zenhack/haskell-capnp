@@ -8,6 +8,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -34,12 +35,19 @@ instance (C.TypedStruct Message) where
 instance (C.Allocate Message) where
     type AllocHint Message = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Message (C.Parsed Message))
 data instance C.Parsed Message
     = Message 
         {union' :: (C.Parsed (GH.Which Message))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Message))
 deriving instance (Std_.Eq (C.Parsed Message))
+instance (C.Parse Message (C.Parsed Message)) where
+    parse raw_ = (Message <$> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal Message (C.Parsed Message)) where
+    marshalInto raw_ Message{..} = (do
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion Message) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ Message
@@ -137,6 +145,73 @@ data instance C.Parsed (GH.Which Message)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Message)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Message)))
+instance (C.Parse (GH.Which Message) (C.Parsed (GH.Which Message))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_Message'unimplemented rawArg_) ->
+                (Message'unimplemented <$> (C.parse rawArg_))
+            (RW_Message'abort rawArg_) ->
+                (Message'abort <$> (C.parse rawArg_))
+            (RW_Message'call rawArg_) ->
+                (Message'call <$> (C.parse rawArg_))
+            (RW_Message'return rawArg_) ->
+                (Message'return <$> (C.parse rawArg_))
+            (RW_Message'finish rawArg_) ->
+                (Message'finish <$> (C.parse rawArg_))
+            (RW_Message'resolve rawArg_) ->
+                (Message'resolve <$> (C.parse rawArg_))
+            (RW_Message'release rawArg_) ->
+                (Message'release <$> (C.parse rawArg_))
+            (RW_Message'obsoleteSave rawArg_) ->
+                (Message'obsoleteSave <$> (C.parse rawArg_))
+            (RW_Message'bootstrap rawArg_) ->
+                (Message'bootstrap <$> (C.parse rawArg_))
+            (RW_Message'obsoleteDelete rawArg_) ->
+                (Message'obsoleteDelete <$> (C.parse rawArg_))
+            (RW_Message'provide rawArg_) ->
+                (Message'provide <$> (C.parse rawArg_))
+            (RW_Message'accept rawArg_) ->
+                (Message'accept <$> (C.parse rawArg_))
+            (RW_Message'join rawArg_) ->
+                (Message'join <$> (C.parse rawArg_))
+            (RW_Message'disembargo rawArg_) ->
+                (Message'disembargo <$> (C.parse rawArg_))
+            (RW_Message'unknown' tag_) ->
+                (Std_.pure (Message'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which Message) (C.Parsed (GH.Which Message))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (Message'unimplemented arg_) ->
+            (GH.encodeVariant #unimplemented arg_ (GH.unionStruct raw_))
+        (Message'abort arg_) ->
+            (GH.encodeVariant #abort arg_ (GH.unionStruct raw_))
+        (Message'call arg_) ->
+            (GH.encodeVariant #call arg_ (GH.unionStruct raw_))
+        (Message'return arg_) ->
+            (GH.encodeVariant #return arg_ (GH.unionStruct raw_))
+        (Message'finish arg_) ->
+            (GH.encodeVariant #finish arg_ (GH.unionStruct raw_))
+        (Message'resolve arg_) ->
+            (GH.encodeVariant #resolve arg_ (GH.unionStruct raw_))
+        (Message'release arg_) ->
+            (GH.encodeVariant #release arg_ (GH.unionStruct raw_))
+        (Message'obsoleteSave arg_) ->
+            (GH.encodeVariant #obsoleteSave arg_ (GH.unionStruct raw_))
+        (Message'bootstrap arg_) ->
+            (GH.encodeVariant #bootstrap arg_ (GH.unionStruct raw_))
+        (Message'obsoleteDelete arg_) ->
+            (GH.encodeVariant #obsoleteDelete arg_ (GH.unionStruct raw_))
+        (Message'provide arg_) ->
+            (GH.encodeVariant #provide arg_ (GH.unionStruct raw_))
+        (Message'accept arg_) ->
+            (GH.encodeVariant #accept arg_ (GH.unionStruct raw_))
+        (Message'join arg_) ->
+            (GH.encodeVariant #join arg_ (GH.unionStruct raw_))
+        (Message'disembargo arg_) ->
+            (GH.encodeVariant #disembargo arg_ (GH.unionStruct raw_))
+        (Message'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Bootstrap 
 type instance (R.ReprFor Bootstrap) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Bootstrap) where
@@ -145,6 +220,7 @@ instance (C.TypedStruct Bootstrap) where
 instance (C.Allocate Bootstrap) where
     type AllocHint Bootstrap = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Bootstrap (C.Parsed Bootstrap))
 data instance C.Parsed Bootstrap
     = Bootstrap 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -152,6 +228,15 @@ data instance C.Parsed Bootstrap
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Bootstrap))
 deriving instance (Std_.Eq (C.Parsed Bootstrap))
+instance (C.Parse Bootstrap (C.Parsed Bootstrap)) where
+    parse raw_ = (Bootstrap <$> (GH.parseField #questionId raw_)
+                            <*> (GH.parseField #deprecatedObjectId raw_))
+instance (C.Marshal Bootstrap (C.Parsed Bootstrap)) where
+    marshalInto raw_ Bootstrap{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #deprecatedObjectId deprecatedObjectId raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot Bootstrap Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap Basics.AnyPointer) where
@@ -164,6 +249,7 @@ instance (C.TypedStruct Call) where
 instance (C.Allocate Call) where
     type AllocHint Call = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Call (C.Parsed Call))
 data instance C.Parsed Call
     = Call 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -176,6 +262,28 @@ data instance C.Parsed Call
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Call))
 deriving instance (Std_.Eq (C.Parsed Call))
+instance (C.Parse Call (C.Parsed Call)) where
+    parse raw_ = (Call <$> (GH.parseField #questionId raw_)
+                       <*> (GH.parseField #target raw_)
+                       <*> (GH.parseField #interfaceId raw_)
+                       <*> (GH.parseField #methodId raw_)
+                       <*> (GH.parseField #params raw_)
+                       <*> (GH.parseField #sendResultsTo raw_)
+                       <*> (GH.parseField #allowThirdPartyTailCall raw_))
+instance (C.Marshal Call (C.Parsed Call)) where
+    marshalInto raw_ Call{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #target target raw_)
+        (GH.encodeField #interfaceId interfaceId raw_)
+        (GH.encodeField #methodId methodId raw_)
+        (GH.encodeField #params params raw_)
+        (do
+            group_ <- (GH.readField #sendResultsTo raw_)
+            (C.marshalInto group_ sendResultsTo)
+            )
+        (GH.encodeField #allowThirdPartyTailCall allowThirdPartyTailCall raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot Call Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Call MessageTarget) where
@@ -198,12 +306,19 @@ instance (C.TypedStruct Call'sendResultsTo) where
 instance (C.Allocate Call'sendResultsTo) where
     type AllocHint Call'sendResultsTo = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Call'sendResultsTo (C.Parsed Call'sendResultsTo))
 data instance C.Parsed Call'sendResultsTo
     = Call'sendResultsTo' 
         {union' :: (C.Parsed (GH.Which Call'sendResultsTo))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Call'sendResultsTo))
 deriving instance (Std_.Eq (C.Parsed Call'sendResultsTo))
+instance (C.Parse Call'sendResultsTo (C.Parsed Call'sendResultsTo)) where
+    parse raw_ = (Call'sendResultsTo' <$> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal Call'sendResultsTo (C.Parsed Call'sendResultsTo)) where
+    marshalInto raw_ Call'sendResultsTo'{..} = (do
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion Call'sendResultsTo) where
     unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Call'sendResultsTo
@@ -235,6 +350,29 @@ data instance C.Parsed (GH.Which Call'sendResultsTo)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Call'sendResultsTo)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Call'sendResultsTo)))
+instance (C.Parse (GH.Which Call'sendResultsTo) (C.Parsed (GH.Which Call'sendResultsTo))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_Call'sendResultsTo'caller _) ->
+                (Std_.pure Call'sendResultsTo'caller)
+            (RW_Call'sendResultsTo'yourself _) ->
+                (Std_.pure Call'sendResultsTo'yourself)
+            (RW_Call'sendResultsTo'thirdParty rawArg_) ->
+                (Call'sendResultsTo'thirdParty <$> (C.parse rawArg_))
+            (RW_Call'sendResultsTo'unknown' tag_) ->
+                (Std_.pure (Call'sendResultsTo'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which Call'sendResultsTo) (C.Parsed (GH.Which Call'sendResultsTo))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (Call'sendResultsTo'caller) ->
+            (GH.encodeVariant #caller () (GH.unionStruct raw_))
+        (Call'sendResultsTo'yourself) ->
+            (GH.encodeVariant #yourself () (GH.unionStruct raw_))
+        (Call'sendResultsTo'thirdParty arg_) ->
+            (GH.encodeVariant #thirdParty arg_ (GH.unionStruct raw_))
+        (Call'sendResultsTo'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Return 
 type instance (R.ReprFor Return) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Return) where
@@ -243,6 +381,7 @@ instance (C.TypedStruct Return) where
 instance (C.Allocate Return) where
     type AllocHint Return = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Return (C.Parsed Return))
 data instance C.Parsed Return
     = Return 
         {answerId :: (RP.Parsed Std_.Word32)
@@ -251,6 +390,16 @@ data instance C.Parsed Return
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Return))
 deriving instance (Std_.Eq (C.Parsed Return))
+instance (C.Parse Return (C.Parsed Return)) where
+    parse raw_ = (Return <$> (GH.parseField #answerId raw_)
+                         <*> (GH.parseField #releaseParamCaps raw_)
+                         <*> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal Return (C.Parsed Return)) where
+    marshalInto raw_ Return{..} = (do
+        (GH.encodeField #answerId answerId raw_)
+        (GH.encodeField #releaseParamCaps releaseParamCaps raw_)
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion Return) where
     unionField  = (GH.dataField 48 0 16 0)
     data RawWhich mut_ Return
@@ -300,6 +449,41 @@ data instance C.Parsed (GH.Which Return)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Return)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Return)))
+instance (C.Parse (GH.Which Return) (C.Parsed (GH.Which Return))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_Return'results rawArg_) ->
+                (Return'results <$> (C.parse rawArg_))
+            (RW_Return'exception rawArg_) ->
+                (Return'exception <$> (C.parse rawArg_))
+            (RW_Return'canceled _) ->
+                (Std_.pure Return'canceled)
+            (RW_Return'resultsSentElsewhere _) ->
+                (Std_.pure Return'resultsSentElsewhere)
+            (RW_Return'takeFromOtherQuestion rawArg_) ->
+                (Return'takeFromOtherQuestion <$> (C.parse rawArg_))
+            (RW_Return'acceptFromThirdParty rawArg_) ->
+                (Return'acceptFromThirdParty <$> (C.parse rawArg_))
+            (RW_Return'unknown' tag_) ->
+                (Std_.pure (Return'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which Return) (C.Parsed (GH.Which Return))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (Return'results arg_) ->
+            (GH.encodeVariant #results arg_ (GH.unionStruct raw_))
+        (Return'exception arg_) ->
+            (GH.encodeVariant #exception arg_ (GH.unionStruct raw_))
+        (Return'canceled) ->
+            (GH.encodeVariant #canceled () (GH.unionStruct raw_))
+        (Return'resultsSentElsewhere) ->
+            (GH.encodeVariant #resultsSentElsewhere () (GH.unionStruct raw_))
+        (Return'takeFromOtherQuestion arg_) ->
+            (GH.encodeVariant #takeFromOtherQuestion arg_ (GH.unionStruct raw_))
+        (Return'acceptFromThirdParty arg_) ->
+            (GH.encodeVariant #acceptFromThirdParty arg_ (GH.unionStruct raw_))
+        (Return'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 instance (GH.HasField "answerId" GH.Slot Return Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "releaseParamCaps" GH.Slot Return Std_.Bool) where
@@ -312,6 +496,7 @@ instance (C.TypedStruct Finish) where
 instance (C.Allocate Finish) where
     type AllocHint Finish = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Finish (C.Parsed Finish))
 data instance C.Parsed Finish
     = Finish 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -319,6 +504,15 @@ data instance C.Parsed Finish
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Finish))
 deriving instance (Std_.Eq (C.Parsed Finish))
+instance (C.Parse Finish (C.Parsed Finish)) where
+    parse raw_ = (Finish <$> (GH.parseField #questionId raw_)
+                         <*> (GH.parseField #releaseResultCaps raw_))
+instance (C.Marshal Finish (C.Parsed Finish)) where
+    marshalInto raw_ Finish{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #releaseResultCaps releaseResultCaps raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot Finish Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "releaseResultCaps" GH.Slot Finish Std_.Bool) where
@@ -331,6 +525,7 @@ instance (C.TypedStruct Resolve) where
 instance (C.Allocate Resolve) where
     type AllocHint Resolve = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Resolve (C.Parsed Resolve))
 data instance C.Parsed Resolve
     = Resolve 
         {promiseId :: (RP.Parsed Std_.Word32)
@@ -338,6 +533,14 @@ data instance C.Parsed Resolve
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Resolve))
 deriving instance (Std_.Eq (C.Parsed Resolve))
+instance (C.Parse Resolve (C.Parsed Resolve)) where
+    parse raw_ = (Resolve <$> (GH.parseField #promiseId raw_)
+                          <*> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal Resolve (C.Parsed Resolve)) where
+    marshalInto raw_ Resolve{..} = (do
+        (GH.encodeField #promiseId promiseId raw_)
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion Resolve) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Resolve
@@ -363,6 +566,25 @@ data instance C.Parsed (GH.Which Resolve)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Resolve)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Resolve)))
+instance (C.Parse (GH.Which Resolve) (C.Parsed (GH.Which Resolve))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_Resolve'cap rawArg_) ->
+                (Resolve'cap <$> (C.parse rawArg_))
+            (RW_Resolve'exception rawArg_) ->
+                (Resolve'exception <$> (C.parse rawArg_))
+            (RW_Resolve'unknown' tag_) ->
+                (Std_.pure (Resolve'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which Resolve) (C.Parsed (GH.Which Resolve))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (Resolve'cap arg_) ->
+            (GH.encodeVariant #cap arg_ (GH.unionStruct raw_))
+        (Resolve'exception arg_) ->
+            (GH.encodeVariant #exception arg_ (GH.unionStruct raw_))
+        (Resolve'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 instance (GH.HasField "promiseId" GH.Slot Resolve Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Release 
@@ -373,6 +595,7 @@ instance (C.TypedStruct Release) where
 instance (C.Allocate Release) where
     type AllocHint Release = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Release (C.Parsed Release))
 data instance C.Parsed Release
     = Release 
         {id :: (RP.Parsed Std_.Word32)
@@ -380,6 +603,15 @@ data instance C.Parsed Release
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Release))
 deriving instance (Std_.Eq (C.Parsed Release))
+instance (C.Parse Release (C.Parsed Release)) where
+    parse raw_ = (Release <$> (GH.parseField #id raw_)
+                          <*> (GH.parseField #referenceCount raw_))
+instance (C.Marshal Release (C.Parsed Release)) where
+    marshalInto raw_ Release{..} = (do
+        (GH.encodeField #id id raw_)
+        (GH.encodeField #referenceCount referenceCount raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "id" GH.Slot Release Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "referenceCount" GH.Slot Release Std_.Word32) where
@@ -392,6 +624,7 @@ instance (C.TypedStruct Disembargo) where
 instance (C.Allocate Disembargo) where
     type AllocHint Disembargo = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Disembargo (C.Parsed Disembargo))
 data instance C.Parsed Disembargo
     = Disembargo 
         {target :: (RP.Parsed MessageTarget)
@@ -399,6 +632,18 @@ data instance C.Parsed Disembargo
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Disembargo))
 deriving instance (Std_.Eq (C.Parsed Disembargo))
+instance (C.Parse Disembargo (C.Parsed Disembargo)) where
+    parse raw_ = (Disembargo <$> (GH.parseField #target raw_)
+                             <*> (GH.parseField #context raw_))
+instance (C.Marshal Disembargo (C.Parsed Disembargo)) where
+    marshalInto raw_ Disembargo{..} = (do
+        (GH.encodeField #target target raw_)
+        (do
+            group_ <- (GH.readField #context raw_)
+            (C.marshalInto group_ context)
+            )
+        (Std_.pure ())
+        )
 instance (GH.HasField "target" GH.Slot Disembargo MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "context" GH.Group Disembargo Disembargo'context) where
@@ -411,12 +656,19 @@ instance (C.TypedStruct Disembargo'context) where
 instance (C.Allocate Disembargo'context) where
     type AllocHint Disembargo'context = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Disembargo'context (C.Parsed Disembargo'context))
 data instance C.Parsed Disembargo'context
     = Disembargo'context' 
         {union' :: (C.Parsed (GH.Which Disembargo'context))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Disembargo'context))
 deriving instance (Std_.Eq (C.Parsed Disembargo'context))
+instance (C.Parse Disembargo'context (C.Parsed Disembargo'context)) where
+    parse raw_ = (Disembargo'context' <$> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal Disembargo'context (C.Parsed Disembargo'context)) where
+    marshalInto raw_ Disembargo'context'{..} = (do
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion Disembargo'context) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ Disembargo'context
@@ -454,6 +706,33 @@ data instance C.Parsed (GH.Which Disembargo'context)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Disembargo'context)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which Disembargo'context)))
+instance (C.Parse (GH.Which Disembargo'context) (C.Parsed (GH.Which Disembargo'context))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_Disembargo'context'senderLoopback rawArg_) ->
+                (Disembargo'context'senderLoopback <$> (C.parse rawArg_))
+            (RW_Disembargo'context'receiverLoopback rawArg_) ->
+                (Disembargo'context'receiverLoopback <$> (C.parse rawArg_))
+            (RW_Disembargo'context'accept _) ->
+                (Std_.pure Disembargo'context'accept)
+            (RW_Disembargo'context'provide rawArg_) ->
+                (Disembargo'context'provide <$> (C.parse rawArg_))
+            (RW_Disembargo'context'unknown' tag_) ->
+                (Std_.pure (Disembargo'context'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which Disembargo'context) (C.Parsed (GH.Which Disembargo'context))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (Disembargo'context'senderLoopback arg_) ->
+            (GH.encodeVariant #senderLoopback arg_ (GH.unionStruct raw_))
+        (Disembargo'context'receiverLoopback arg_) ->
+            (GH.encodeVariant #receiverLoopback arg_ (GH.unionStruct raw_))
+        (Disembargo'context'accept) ->
+            (GH.encodeVariant #accept () (GH.unionStruct raw_))
+        (Disembargo'context'provide arg_) ->
+            (GH.encodeVariant #provide arg_ (GH.unionStruct raw_))
+        (Disembargo'context'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Provide 
 type instance (R.ReprFor Provide) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Provide) where
@@ -462,6 +741,7 @@ instance (C.TypedStruct Provide) where
 instance (C.Allocate Provide) where
     type AllocHint Provide = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Provide (C.Parsed Provide))
 data instance C.Parsed Provide
     = Provide 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -470,6 +750,17 @@ data instance C.Parsed Provide
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Provide))
 deriving instance (Std_.Eq (C.Parsed Provide))
+instance (C.Parse Provide (C.Parsed Provide)) where
+    parse raw_ = (Provide <$> (GH.parseField #questionId raw_)
+                          <*> (GH.parseField #target raw_)
+                          <*> (GH.parseField #recipient raw_))
+instance (C.Marshal Provide (C.Parsed Provide)) where
+    marshalInto raw_ Provide{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #target target raw_)
+        (GH.encodeField #recipient recipient raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot Provide Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Provide MessageTarget) where
@@ -484,6 +775,7 @@ instance (C.TypedStruct Accept) where
 instance (C.Allocate Accept) where
     type AllocHint Accept = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Accept (C.Parsed Accept))
 data instance C.Parsed Accept
     = Accept 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -492,6 +784,17 @@ data instance C.Parsed Accept
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Accept))
 deriving instance (Std_.Eq (C.Parsed Accept))
+instance (C.Parse Accept (C.Parsed Accept)) where
+    parse raw_ = (Accept <$> (GH.parseField #questionId raw_)
+                         <*> (GH.parseField #provision raw_)
+                         <*> (GH.parseField #embargo raw_))
+instance (C.Marshal Accept (C.Parsed Accept)) where
+    marshalInto raw_ Accept{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #provision provision raw_)
+        (GH.encodeField #embargo embargo raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot Accept Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "provision" GH.Slot Accept Basics.AnyPointer) where
@@ -506,6 +809,7 @@ instance (C.TypedStruct Join) where
 instance (C.Allocate Join) where
     type AllocHint Join = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Join (C.Parsed Join))
 data instance C.Parsed Join
     = Join 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -514,6 +818,17 @@ data instance C.Parsed Join
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Join))
 deriving instance (Std_.Eq (C.Parsed Join))
+instance (C.Parse Join (C.Parsed Join)) where
+    parse raw_ = (Join <$> (GH.parseField #questionId raw_)
+                       <*> (GH.parseField #target raw_)
+                       <*> (GH.parseField #keyPart raw_))
+instance (C.Marshal Join (C.Parsed Join)) where
+    marshalInto raw_ Join{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #target target raw_)
+        (GH.encodeField #keyPart keyPart raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot Join Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Join MessageTarget) where
@@ -528,12 +843,19 @@ instance (C.TypedStruct MessageTarget) where
 instance (C.Allocate MessageTarget) where
     type AllocHint MessageTarget = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc MessageTarget (C.Parsed MessageTarget))
 data instance C.Parsed MessageTarget
     = MessageTarget 
         {union' :: (C.Parsed (GH.Which MessageTarget))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed MessageTarget))
 deriving instance (Std_.Eq (C.Parsed MessageTarget))
+instance (C.Parse MessageTarget (C.Parsed MessageTarget)) where
+    parse raw_ = (MessageTarget <$> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal MessageTarget (C.Parsed MessageTarget)) where
+    marshalInto raw_ MessageTarget{..} = (do
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion MessageTarget) where
     unionField  = (GH.dataField 32 0 16 0)
     data RawWhich mut_ MessageTarget
@@ -559,6 +881,25 @@ data instance C.Parsed (GH.Which MessageTarget)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which MessageTarget)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which MessageTarget)))
+instance (C.Parse (GH.Which MessageTarget) (C.Parsed (GH.Which MessageTarget))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_MessageTarget'importedCap rawArg_) ->
+                (MessageTarget'importedCap <$> (C.parse rawArg_))
+            (RW_MessageTarget'promisedAnswer rawArg_) ->
+                (MessageTarget'promisedAnswer <$> (C.parse rawArg_))
+            (RW_MessageTarget'unknown' tag_) ->
+                (Std_.pure (MessageTarget'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which MessageTarget) (C.Parsed (GH.Which MessageTarget))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (MessageTarget'importedCap arg_) ->
+            (GH.encodeVariant #importedCap arg_ (GH.unionStruct raw_))
+        (MessageTarget'promisedAnswer arg_) ->
+            (GH.encodeVariant #promisedAnswer arg_ (GH.unionStruct raw_))
+        (MessageTarget'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Payload 
 type instance (R.ReprFor Payload) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Payload) where
@@ -567,6 +908,7 @@ instance (C.TypedStruct Payload) where
 instance (C.Allocate Payload) where
     type AllocHint Payload = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Payload (C.Parsed Payload))
 data instance C.Parsed Payload
     = Payload 
         {content :: (RP.Parsed Basics.AnyPointer)
@@ -574,6 +916,15 @@ data instance C.Parsed Payload
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Payload))
 deriving instance (Std_.Eq (C.Parsed Payload))
+instance (C.Parse Payload (C.Parsed Payload)) where
+    parse raw_ = (Payload <$> (GH.parseField #content raw_)
+                          <*> (GH.parseField #capTable raw_))
+instance (C.Marshal Payload (C.Parsed Payload)) where
+    marshalInto raw_ Payload{..} = (do
+        (GH.encodeField #content content raw_)
+        (GH.encodeField #capTable capTable raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "content" GH.Slot Payload Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "capTable" GH.Slot Payload (R.List CapDescriptor)) where
@@ -586,6 +937,7 @@ instance (C.TypedStruct CapDescriptor) where
 instance (C.Allocate CapDescriptor) where
     type AllocHint CapDescriptor = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc CapDescriptor (C.Parsed CapDescriptor))
 data instance C.Parsed CapDescriptor
     = CapDescriptor 
         {attachedFd :: (RP.Parsed Std_.Word8)
@@ -593,6 +945,14 @@ data instance C.Parsed CapDescriptor
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed CapDescriptor))
 deriving instance (Std_.Eq (C.Parsed CapDescriptor))
+instance (C.Parse CapDescriptor (C.Parsed CapDescriptor)) where
+    parse raw_ = (CapDescriptor <$> (GH.parseField #attachedFd raw_)
+                                <*> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal CapDescriptor (C.Parsed CapDescriptor)) where
+    marshalInto raw_ CapDescriptor{..} = (do
+        (GH.encodeField #attachedFd attachedFd raw_)
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion CapDescriptor) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ CapDescriptor
@@ -642,6 +1002,41 @@ data instance C.Parsed (GH.Which CapDescriptor)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which CapDescriptor)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which CapDescriptor)))
+instance (C.Parse (GH.Which CapDescriptor) (C.Parsed (GH.Which CapDescriptor))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_CapDescriptor'none _) ->
+                (Std_.pure CapDescriptor'none)
+            (RW_CapDescriptor'senderHosted rawArg_) ->
+                (CapDescriptor'senderHosted <$> (C.parse rawArg_))
+            (RW_CapDescriptor'senderPromise rawArg_) ->
+                (CapDescriptor'senderPromise <$> (C.parse rawArg_))
+            (RW_CapDescriptor'receiverHosted rawArg_) ->
+                (CapDescriptor'receiverHosted <$> (C.parse rawArg_))
+            (RW_CapDescriptor'receiverAnswer rawArg_) ->
+                (CapDescriptor'receiverAnswer <$> (C.parse rawArg_))
+            (RW_CapDescriptor'thirdPartyHosted rawArg_) ->
+                (CapDescriptor'thirdPartyHosted <$> (C.parse rawArg_))
+            (RW_CapDescriptor'unknown' tag_) ->
+                (Std_.pure (CapDescriptor'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which CapDescriptor) (C.Parsed (GH.Which CapDescriptor))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (CapDescriptor'none) ->
+            (GH.encodeVariant #none () (GH.unionStruct raw_))
+        (CapDescriptor'senderHosted arg_) ->
+            (GH.encodeVariant #senderHosted arg_ (GH.unionStruct raw_))
+        (CapDescriptor'senderPromise arg_) ->
+            (GH.encodeVariant #senderPromise arg_ (GH.unionStruct raw_))
+        (CapDescriptor'receiverHosted arg_) ->
+            (GH.encodeVariant #receiverHosted arg_ (GH.unionStruct raw_))
+        (CapDescriptor'receiverAnswer arg_) ->
+            (GH.encodeVariant #receiverAnswer arg_ (GH.unionStruct raw_))
+        (CapDescriptor'thirdPartyHosted arg_) ->
+            (GH.encodeVariant #thirdPartyHosted arg_ (GH.unionStruct raw_))
+        (CapDescriptor'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 instance (GH.HasField "attachedFd" GH.Slot CapDescriptor Std_.Word8) where
     fieldByLabel  = (GH.dataField 16 0 8 255)
 data PromisedAnswer 
@@ -652,6 +1047,7 @@ instance (C.TypedStruct PromisedAnswer) where
 instance (C.Allocate PromisedAnswer) where
     type AllocHint PromisedAnswer = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc PromisedAnswer (C.Parsed PromisedAnswer))
 data instance C.Parsed PromisedAnswer
     = PromisedAnswer 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -659,6 +1055,15 @@ data instance C.Parsed PromisedAnswer
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed PromisedAnswer))
 deriving instance (Std_.Eq (C.Parsed PromisedAnswer))
+instance (C.Parse PromisedAnswer (C.Parsed PromisedAnswer)) where
+    parse raw_ = (PromisedAnswer <$> (GH.parseField #questionId raw_)
+                                 <*> (GH.parseField #transform raw_))
+instance (C.Marshal PromisedAnswer (C.Parsed PromisedAnswer)) where
+    marshalInto raw_ PromisedAnswer{..} = (do
+        (GH.encodeField #questionId questionId raw_)
+        (GH.encodeField #transform transform raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "questionId" GH.Slot PromisedAnswer Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "transform" GH.Slot PromisedAnswer (R.List PromisedAnswer'Op)) where
@@ -671,12 +1076,19 @@ instance (C.TypedStruct PromisedAnswer'Op) where
 instance (C.Allocate PromisedAnswer'Op) where
     type AllocHint PromisedAnswer'Op = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc PromisedAnswer'Op (C.Parsed PromisedAnswer'Op))
 data instance C.Parsed PromisedAnswer'Op
     = PromisedAnswer'Op 
         {union' :: (C.Parsed (GH.Which PromisedAnswer'Op))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed PromisedAnswer'Op))
 deriving instance (Std_.Eq (C.Parsed PromisedAnswer'Op))
+instance (C.Parse PromisedAnswer'Op (C.Parsed PromisedAnswer'Op)) where
+    parse raw_ = (PromisedAnswer'Op <$> (C.parse (GH.structUnion raw_)))
+instance (C.Marshal PromisedAnswer'Op (C.Parsed PromisedAnswer'Op)) where
+    marshalInto raw_ PromisedAnswer'Op{..} = (do
+        (C.marshalInto (GH.structUnion raw_) union')
+        )
 instance (GH.HasUnion PromisedAnswer'Op) where
     unionField  = (GH.dataField 0 0 16 0)
     data RawWhich mut_ PromisedAnswer'Op
@@ -702,6 +1114,25 @@ data instance C.Parsed (GH.Which PromisedAnswer'Op)
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which PromisedAnswer'Op)))
 deriving instance (Std_.Eq (C.Parsed (GH.Which PromisedAnswer'Op)))
+instance (C.Parse (GH.Which PromisedAnswer'Op) (C.Parsed (GH.Which PromisedAnswer'Op))) where
+    parse raw_ = (do
+        rawWhich_ <- (GH.unionWhich raw_)
+        case rawWhich_ of
+            (RW_PromisedAnswer'Op'noop _) ->
+                (Std_.pure PromisedAnswer'Op'noop)
+            (RW_PromisedAnswer'Op'getPointerField rawArg_) ->
+                (PromisedAnswer'Op'getPointerField <$> (C.parse rawArg_))
+            (RW_PromisedAnswer'Op'unknown' tag_) ->
+                (Std_.pure (PromisedAnswer'Op'unknown' tag_))
+        )
+instance (C.Marshal (GH.Which PromisedAnswer'Op) (C.Parsed (GH.Which PromisedAnswer'Op))) where
+    marshalInto raw_ parsed_ = case parsed_ of
+        (PromisedAnswer'Op'noop) ->
+            (GH.encodeVariant #noop () (GH.unionStruct raw_))
+        (PromisedAnswer'Op'getPointerField arg_) ->
+            (GH.encodeVariant #getPointerField arg_ (GH.unionStruct raw_))
+        (PromisedAnswer'Op'unknown' tag_) ->
+            (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data ThirdPartyCapDescriptor 
 type instance (R.ReprFor ThirdPartyCapDescriptor) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct ThirdPartyCapDescriptor) where
@@ -710,6 +1141,7 @@ instance (C.TypedStruct ThirdPartyCapDescriptor) where
 instance (C.Allocate ThirdPartyCapDescriptor) where
     type AllocHint ThirdPartyCapDescriptor = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor))
 data instance C.Parsed ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor 
         {id :: (RP.Parsed Basics.AnyPointer)
@@ -717,6 +1149,15 @@ data instance C.Parsed ThirdPartyCapDescriptor
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed ThirdPartyCapDescriptor))
 deriving instance (Std_.Eq (C.Parsed ThirdPartyCapDescriptor))
+instance (C.Parse ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor)) where
+    parse raw_ = (ThirdPartyCapDescriptor <$> (GH.parseField #id raw_)
+                                          <*> (GH.parseField #vineId raw_))
+instance (C.Marshal ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor)) where
+    marshalInto raw_ ThirdPartyCapDescriptor{..} = (do
+        (GH.encodeField #id id raw_)
+        (GH.encodeField #vineId vineId raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "id" GH.Slot ThirdPartyCapDescriptor Basics.AnyPointer) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "vineId" GH.Slot ThirdPartyCapDescriptor Std_.Word32) where
@@ -729,6 +1170,7 @@ instance (C.TypedStruct Exception) where
 instance (C.Allocate Exception) where
     type AllocHint Exception = ()
     new _ = C.newTypedStruct
+instance (C.EstimateAlloc Exception (C.Parsed Exception))
 data instance C.Parsed Exception
     = Exception 
         {reason :: (RP.Parsed Basics.Text)
@@ -738,6 +1180,19 @@ data instance C.Parsed Exception
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Exception))
 deriving instance (Std_.Eq (C.Parsed Exception))
+instance (C.Parse Exception (C.Parsed Exception)) where
+    parse raw_ = (Exception <$> (GH.parseField #reason raw_)
+                            <*> (GH.parseField #obsoleteIsCallersFault raw_)
+                            <*> (GH.parseField #obsoleteDurability raw_)
+                            <*> (GH.parseField #type_ raw_))
+instance (C.Marshal Exception (C.Parsed Exception)) where
+    marshalInto raw_ Exception{..} = (do
+        (GH.encodeField #reason reason raw_)
+        (GH.encodeField #obsoleteIsCallersFault obsoleteIsCallersFault raw_)
+        (GH.encodeField #obsoleteDurability obsoleteDurability raw_)
+        (GH.encodeField #type_ type_ raw_)
+        (Std_.pure ())
+        )
 instance (GH.HasField "reason" GH.Slot Exception Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "obsoleteIsCallersFault" GH.Slot Exception Std_.Bool) where
@@ -754,3 +1209,29 @@ data Exception'Type
     | Exception'Type'unknown' Std_.Word16
     deriving(Std_.Eq,Std_.Show)
 type instance (R.ReprFor Exception'Type) = (R.Data R.Sz16)
+instance (Std_.Enum Exception'Type) where
+    toEnum n_ = case n_ of
+        0 ->
+            Exception'Type'failed
+        1 ->
+            Exception'Type'overloaded
+        2 ->
+            Exception'Type'disconnected
+        3 ->
+            Exception'Type'unimplemented
+        tag_ ->
+            (Exception'Type'unknown' (Std_.fromIntegral tag_))
+    fromEnum value_ = case value_ of
+        (Exception'Type'failed) ->
+            0
+        (Exception'Type'overloaded) ->
+            1
+        (Exception'Type'disconnected) ->
+            2
+        (Exception'Type'unimplemented) ->
+            3
+        (Exception'Type'unknown' tag_) ->
+            (Std_.fromIntegral tag_)
+instance (C.Parse Exception'Type Exception'Type) where
+    parse  = GH.parseEnum
+    encode  = GH.encodeEnum
