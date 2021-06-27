@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE EmptyDataDeriving     #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -14,6 +15,7 @@ module Capnp.New.Basics
     ) where
 
 import qualified Capnp.Errors        as E
+import qualified Capnp.Message       as M
 import qualified Capnp.New.Classes   as C
 import qualified Capnp.Repr          as R
 import qualified Capnp.Untyped       as U
@@ -44,14 +46,50 @@ data instance C.Parsed AnyPointer
     = PtrNull
     | PtrStruct (C.Parsed AnyStruct)
     | PtrList (C.Parsed AnyList)
-    | PtrCap (C.Parsed Capability)
+    | PtrCap M.Client
     deriving(Show, Eq)
+
+instance C.Parse AnyPointer (C.Parsed AnyPointer) where
+    parse (R.Raw ptr) = case ptr of
+        Nothing                   -> pure PtrNull
+        Just (U.PtrCap cap)       -> PtrCap <$> C.parse (R.Raw cap)
+        Just (U.PtrList list)     -> PtrList <$> C.parse (R.Raw list)
+        Just (U.PtrStruct struct) -> PtrStruct <$> C.parse (R.Raw struct)
+
+    encode msg value = R.Raw <$> case value of
+        PtrNull       -> pure Nothing
+        PtrCap cap    -> Just . U.PtrCap . R.fromRaw <$> C.encode msg cap
+        PtrList list -> Just . U.PtrList . R.fromRaw <$> C.encode msg list
+        PtrStruct struct -> Just . U.PtrStruct . R.fromRaw <$> C.encode msg struct
 
 data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
     , structPtrs :: V.Vector (C.Parsed AnyPointer)
     }
     deriving(Show, Eq)
+
+instance C.Parse AnyStruct (C.Parsed AnyStruct) where
+    parse (R.Raw s) = Struct
+        <$> V.generateM
+                (fromIntegral $ U.structWordCount s)
+                (\i -> U.getData i s)
+        <*> V.generateM
+                (fromIntegral $ U.structPtrCount s)
+                (\i -> U.getPtr i s >>= C.parse . R.Raw)
+
+instance C.EstimateAlloc AnyStruct (C.Parsed AnyStruct) where
+    estimateAlloc s =
+        ( fromIntegral $ V.length $ structData s
+        , fromIntegral $ V.length $ structPtrs s
+        )
+
+instance C.Marshal AnyStruct (C.Parsed AnyStruct) where
+    marshalInto (R.Raw raw) s = do
+        V.iforM_ (structData s) $ \i value -> do
+            U.setData value i raw
+        V.iforM_ (structPtrs s) $ \i value -> do
+            R.Raw ptr <- C.encode (U.message raw) value
+            U.setPtr ptr i raw
 
 -- TODO(cleanup): It would be nice if we could reuse Capnp.Repr.Parsed.Parsed
 -- here, but that would cause a circular import dependency.
@@ -68,8 +106,30 @@ data instance C.Parsed AnyList
     | List64 (ParsedList Word64)
     deriving(Show, Eq)
 
-data instance C.Parsed Capability -- TODO
-    deriving(Show, Eq)
+instance C.Parse AnyList (C.Parsed AnyList) where
+    parse (R.Raw list) = case list of
+        U.List0 l      -> List0 <$> C.parse (R.Raw l)
+        U.List1 l      -> List1 <$> C.parse (R.Raw l)
+        U.List8 l      -> List8 <$> C.parse (R.Raw l)
+        U.List16 l     -> List16 <$> C.parse (R.Raw l)
+        U.List32 l     -> List32 <$> C.parse (R.Raw l)
+        U.List64 l     -> List64 <$> C.parse (R.Raw l)
+        U.ListPtr l    -> ListPtr <$> C.parse (R.Raw l)
+        U.ListStruct l -> ListStruct <$> C.parse (R.Raw l)
+
+    encode msg list = R.Raw <$> case list of
+        List0 l      -> U.List0 . R.fromRaw <$> C.encode msg l
+        List1 l      -> U.List1 . R.fromRaw <$> C.encode msg l
+        List8 l      -> U.List8 . R.fromRaw <$> C.encode msg l
+        List16 l     -> U.List16 . R.fromRaw <$> C.encode msg l
+        List32 l     -> U.List32 . R.fromRaw <$> C.encode msg l
+        List64 l     -> U.List64 . R.fromRaw <$> C.encode msg l
+        ListPtr l    -> U.ListPtr . R.fromRaw <$> C.encode msg l
+        ListStruct l -> U.ListStruct . R.fromRaw <$> C.encode msg l
+
+instance C.Parse Capability M.Client where
+    parse (R.Raw cap) = U.getClient cap
+    encode msg client = R.Raw <$> U.appendCap msg client
 
 instance C.Allocate Text where
     type AllocHint Text = Int
