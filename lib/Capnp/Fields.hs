@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 -- | Module: Capnp.Fields
 -- Description: Support for working with struct fields
 module Capnp.Fields
@@ -27,10 +28,11 @@ import Data.Word
 import GHC.OverloadedLabels (IsLabel(..))
 import GHC.TypeLits         (Symbol)
 
-import qualified Capnp.Classes as C
-import qualified Capnp.Message as M
-import qualified Capnp.Repr    as R
-import qualified Capnp.Untyped as U
+import qualified Capnp.Classes     as C
+import qualified Capnp.Message     as M
+import qualified Capnp.New.Classes as NC
+import qualified Capnp.Repr        as R
+import qualified Capnp.Untyped     as U
 
 data FieldKind = Slot | Group
     deriving(Show, Read, Eq)
@@ -74,6 +76,18 @@ class R.IsStruct a => HasUnion a where
     internalWhich :: U.ReadCtx m mut => Word16 -> R.Raw mut a -> m (RawWhich mut a)
 
 type instance R.ReprFor (Which a) = 'R.Ptr ('Just 'R.Struct)
+
+instance (NC.Allocate a, HasUnion a, R.IsStruct (Which a)) => NC.Allocate (Which a) where
+    type AllocHint (Which a) = NC.AllocHint a
+    new hint msg = do
+        R.Raw struct <- NC.new @a hint msg
+        pure (R.Raw struct)
+
+instance
+    ( NC.Allocate (Which a)
+    , NC.AllocHint (Which a) ~ ()
+    , NC.Parse (Which a) p
+    ) => NC.EstimateAlloc (Which a) p
 
 data Variant (k :: FieldKind) a b = Variant
     { field    :: !(Field k a b)
