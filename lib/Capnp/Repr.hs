@@ -221,6 +221,8 @@ instance FromElement ('Ptr 'Nothing) where
     fromElement _ = pure
 instance FromElement ('Ptr ('Just 'Cap)) where
     fromElement = rFromPtr @('Just 'Cap)
+instance IsPtrRepr ('Just ('List a)) => FromElement ('Ptr ('Just ('List a))) where
+    fromElement = rFromPtr @('Just ('List a))
 
 -- | A @'Raw' mut a@ is an @a@ embedded in a capnproto message with mutability
 -- @mut@.
