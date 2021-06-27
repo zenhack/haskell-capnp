@@ -106,9 +106,9 @@ declToDecls thisMod decl =
                 (Hs.TApp (tgName ["R"] "ReprFor") [typ])
                 (toType repr)
             ] ++
+            let ctx = paramsContext typeArgs in
             case extraTypeInfo of
                 Just New.StructTypeInfo{nWords, nPtrs} ->
-                    let ctx = paramsContext typeArgs in
                     [ Hs.DcInstance
                         { ctx
                         , typ = Hs.TApp (tgName ["C"] "TypedStruct") [typ]
@@ -144,6 +144,47 @@ declToDecls thisMod decl =
                             (tgName ["C"] "EstimateAlloc")
                             [ typ, Hs.TApp (tgName ["C"] "Parsed") [typ] ]
                         , defs = []
+                        }
+                    ]
+                Just (New.EnumTypeInfo variants) ->
+                    [ Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tStd_ "Enum") [typ]
+                        , defs =
+                            [ Hs.IdValue Hs.DfValue
+                                { name = "toEnum"
+                                , params = [Hs.PVar "n_"]
+                                , value =
+                                    Hs.ECase (euName "n_") $
+                                        [ ( Hs.PInt i
+                                          , Hs.ELName (Name.mkSub name variantName)
+                                          )
+                                        | (i, variantName) <- zip [0..] variants
+                                        ] ++
+                                        [ ( Hs.PVar "tag_"
+                                          , Hs.EApp
+                                                (Hs.ELName (unknownVariant name))
+                                                [Hs.EApp (eStd_ "fromIntegral") [euName "tag_"]]
+                                          )
+                                        ]
+
+                                }
+                            , Hs.IdValue Hs.DfValue
+                                { name = "fromEnum"
+                                , params = [Hs.PVar "value_"]
+                                , value =
+                                    Hs.ECase (euName "value_") $
+                                        [ ( Hs.PLCtor (Name.mkSub name variantName) []
+                                          , Hs.EInt i
+                                          )
+                                        | (i, variantName) <- zip [0..] variants
+                                        ] ++
+                                        [ ( Hs.PLCtor (unknownVariant name) [Hs.PVar "tag_"]
+                                          , Hs.EApp (eStd_ "fromIntegral") [euName "tag_"]
+                                          )
+                                        ]
+                                }
+                            ]
                         }
                     ]
                 _ -> []
