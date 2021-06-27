@@ -488,7 +488,7 @@ declareUnknownVariant name = Hs.DataVariant
 defineParsedInstances :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
 defineParsedInstances thisMod typeName typeParams instanceInfo =
     concatMap (\f -> f typeName typeParams instanceInfo)
-        [ (defineParsed thisMod)
+        [ defineParsed thisMod
         , defineParse
         , defineMarshal
         ]
@@ -638,7 +638,7 @@ defineMarshal typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorN
                     (tgName ["C"] "Marshal")
                     [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
         , defs =
-            [ if fields == [] && not hasUnion then
+            [ if null fields && not hasUnion then
                 -- We need to special case this, since otherwise GHC will complain about
                 -- the record wildcard pattern on a ctor with no arguments.
                 Hs.IdValue Hs.DfValue
