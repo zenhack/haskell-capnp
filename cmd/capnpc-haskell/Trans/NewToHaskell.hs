@@ -186,6 +186,22 @@ declToDecls thisMod decl =
                                 }
                             ]
                         }
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tgName ["C"] "Parse") [typ, typ]
+                        , defs =
+                            [ Hs.IdValue Hs.DfValue
+                                { name = "parse"
+                                , params = []
+                                , value = egName ["GH"] "parseEnum"
+                                }
+                            , Hs.IdValue Hs.DfValue
+                                { name = "encode"
+                                , params = []
+                                , value = egName ["GH"] "encodeEnum"
+                                }
+                            ]
+                        }
                     ]
                 _ -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->

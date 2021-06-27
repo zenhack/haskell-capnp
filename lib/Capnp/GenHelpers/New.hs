@@ -22,6 +22,8 @@ module Capnp.GenHelpers.New
     , readField
     , structUnion
     , unionStruct
+    , parseEnum
+    , encodeEnum
     , module F
     , module Capnp.Repr.Methods
     ) where
@@ -88,3 +90,12 @@ readVariant F.Variant{field} = readField field
 
 newStruct :: forall a m s. (U.RWCtx m s, NC.TypedStruct a) => () -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newStruct () msg = R.Raw . R.fromRaw <$> NC.new @NB.AnyStruct (NC.numStructWords @a, NC.numStructPtrs @a) msg
+
+
+parseEnum :: (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, Applicative m)
+    => R.Raw 'Const a -> m a
+parseEnum (R.Raw n) = pure $ toEnum $ fromIntegral n
+
+encodeEnum :: forall a m s. (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, U.RWCtx m s)
+    => M.Message ('Mut s) -> a -> m (R.Raw ('Mut s) a)
+encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
