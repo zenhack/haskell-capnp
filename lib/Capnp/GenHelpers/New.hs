@@ -16,9 +16,12 @@ module Capnp.GenHelpers.New
     , newStruct
     , parseField
     , encodeField
+    , encodeVariant
+    , initVariant
     , unionWhich
     , readField
     , structUnion
+    , unionStruct
     , module F
     , module Capnp.Repr.Methods
     ) where
@@ -29,7 +32,15 @@ import           Capnp.Fields       as F
 import           Capnp.Message      (Mutability(..))
 import qualified Capnp.Message      as M
 import           Capnp.New
-    (encodeField, parseField, readField, structUnion, unionWhich)
+    ( encodeField
+    , encodeVariant
+    , initVariant
+    , parseField
+    , readField
+    , structUnion
+    , unionStruct
+    , unionWhich
+    )
 import qualified Capnp.New.Basics   as NB
 import qualified Capnp.New.Classes  as NC
 import qualified Capnp.Repr         as R
@@ -74,7 +85,6 @@ readVariant
         )
     => F.Variant k a b -> R.Raw mut a -> m (R.Raw mut b)
 readVariant F.Variant{field} = readField field
-
 
 newStruct :: forall a m s. (U.RWCtx m s, NC.TypedStruct a) => () -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newStruct () msg = R.Raw . R.fromRaw <$> NC.new @NB.AnyStruct (NC.numStructWords @a, NC.numStructPtrs @a) msg

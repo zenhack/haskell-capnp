@@ -665,7 +665,41 @@ defineMarshal typeName typeParams New.ParsedStruct { fields, hasUnion, dataCtorN
             ]
         }
     ]
-defineMarshal _ _ _ = [] -- TODO
+defineMarshal typeName typeParams New.ParsedUnion { variants } =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (tgName ["GH"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp
+            (tgName ["C"] "Marshal")
+            [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
+        , defs =
+            [ Hs.IdValue Hs.DfValue
+                { name = "marshalInto"
+                , params = [ Hs.PVar "raw_", Hs.PVar "parsed_" ]
+                , value = Hs.ECase (Hs.EVar "parsed_") $
+                    [ ( Hs.PLCtor (Name.mkSub typeName name) $
+                            case fieldLocType of
+                                C.VoidField -> []
+                                _           -> [Hs.PVar "arg_"]
+                      , emitMarshalVariant name fieldLocType
+                      )
+                    | (name, fieldLocType) <- variants
+                    ] ++
+                    [ ( Hs.PLCtor (unknownVariant typeName) [Hs.PVar "tag_"]
+                      , Hs.EApp
+                            (egName ["GH"] "encodeField")
+                            [ egName ["GH"] "unionField"
+                            , Hs.EVar "tag_"
+                            , unionStruct (euName "raw_")
+                            ]
+                      )
+                    ]
+                }
+            ]
+        }
+    ]
 
 emitMarshalField :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
 emitMarshalField name (C.HereField _) =
@@ -681,3 +715,28 @@ emitMarshalField name _ =
         , euName name
         , euName "raw_"
         ]
+
+emitMarshalVariant :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
+emitMarshalVariant name (C.HereField _) = Hs.EDo
+    [ Hs.DoBind "rawGroup_" $
+        Hs.EApp (egName ["GH"] "initVariant")
+            [ Hs.ELabel name
+            , unionStruct (euName "raw_")
+            ]
+    ]
+    (Hs.EApp (egName ["C"] "marshalInto") [euName "rawGroup_", euName "arg_"])
+emitMarshalVariant name C.VoidField =
+    Hs.EApp (egName ["GH"] "encodeVariant")
+        [ Hs.ELabel name
+        , Hs.ETup []
+        , unionStruct (euName "raw_")
+        ]
+emitMarshalVariant name _ =
+    Hs.EApp (egName ["GH"] "encodeVariant")
+        [ Hs.ELabel name
+        , euName "arg_"
+        , unionStruct (euName "raw_")
+        ]
+
+unionStruct :: Hs.Exp -> Hs.Exp
+unionStruct e = Hs.EApp (egName ["GH"] "unionStruct") [e]
