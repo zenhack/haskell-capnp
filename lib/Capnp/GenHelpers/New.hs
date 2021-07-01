@@ -12,6 +12,7 @@ module Capnp.GenHelpers.New
     , groupField
     , voidField
     , readVariant
+    , Mutability(..)
     , TypeParam
     , newStruct
     , parseField
@@ -26,6 +27,7 @@ module Capnp.GenHelpers.New
     , encodeEnum
     , parseCap
     , encodeCap
+    , getPtrConst
     , module F
     , module Capnp.Repr.Methods
     ) where
@@ -35,6 +37,7 @@ import qualified Capnp.Classes      as C
 import           Capnp.Fields       as F
 import           Capnp.Message      (Mutability(..))
 import qualified Capnp.Message      as M
+import Capnp.GenHelpers (getPtrConst)
 import           Capnp.New
     ( encodeField
     , encodeVariant

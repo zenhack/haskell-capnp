@@ -28,6 +28,7 @@ imports =
     , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
     , Hs.ImportAs { importAs = "C", parts = ["Capnp", "New", "Classes"] }
     , Hs.ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
+    , Hs.ImportAs { importAs = "BS", parts = ["Capnp", "GenHelpers", "ReExports", "Data", "ByteString"] }
     ]
 
 fileToModules :: New.File -> [Hs.Module]
@@ -50,6 +51,7 @@ fileToMainModule file@New.File{fileName} =
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
             , "OverloadedLabels"
+            , "OverloadedStrings"
             , "StandaloneDeriving"
             , "RecordWildCards"
             ]
@@ -192,6 +194,22 @@ declToDecls thisMod decl =
                         }
                     , Hs.DcInstance
                         { ctx
+                        , typ = Hs.TApp (tgName ["C"] "IsWord") [typ]
+                        , defs =
+                            [ Hs.IdValue Hs.DfValue
+                                { name = "fromWord"
+                                , params = [Hs.PVar "w_"]
+                                , value = Hs.EApp (eStd_ "toEnum") [Hs.EApp (eStd_ "fromIntegral") [Hs.EVar "w_"]]
+                                }
+                            , Hs.IdValue Hs.DfValue
+                                { name = "toWord"
+                                , params = [Hs.PVar "v_"]
+                                , value = Hs.EApp (eStd_ "fromIntegral") [Hs.EApp (eStd_ "fromEnum") [Hs.EVar "v_"]]
+                                }
+                            ]
+                        }
+                    , Hs.DcInstance
+                        { ctx
                         , typ = Hs.TApp (tgName ["C"] "Parse") [typ, typ]
                         , defs =
                             [ Hs.IdValue Hs.DfValue
@@ -322,7 +340,7 @@ defineConstant thisMod localName value =
             ]
         C.PtrValue t v ->
             [ Hs.DcValue
-                { typ = Hs.TApp (tgName ["R"] "Raw") [tuName "Const", typeToType thisMod (C.PtrType t)]
+                { typ = Hs.TApp (tgName ["R"] "Raw") [tgName ["GH"] "Const", typeToType thisMod (C.PtrType t)]
                 , def = Hs.DfValue
                     { name
                     , params = []

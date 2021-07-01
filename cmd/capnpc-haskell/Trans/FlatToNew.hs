@@ -101,7 +101,8 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
     in
     case union_ of
         Flat.Other       -> []
-        Flat.Constant _  -> []
+        Flat.Constant { value } ->
+            [ New.ConstDecl { name = local, value = mapTypes value } ]
         Flat.Enum enumerants ->
             [ mkType (R.Data R.Sz16) $ Just $ New.EnumTypeInfo enumerants ]
         Flat.Interface{methods} ->

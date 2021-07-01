@@ -7,6 +7,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
@@ -23,6 +24,7 @@ import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
 import qualified GHC.Generics as Generics
+import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
@@ -745,6 +747,8 @@ instance (C.Marshal (GH.Which Field'ordinal) (C.Parsed (GH.Which Field'ordinal))
             (GH.encodeVariant #explicit arg_ (GH.unionStruct raw_))
         (Field'ordinal'unknown' tag_) ->
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
+field'noDiscriminant :: Std_.Word16
+field'noDiscriminant  = (C.fromWord 65535)
 data Enumerant 
 type instance (R.ReprFor Enumerant) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct Enumerant) where
@@ -1929,6 +1933,9 @@ instance (Std_.Enum ElementSize) where
             7
         (ElementSize'unknown' tag_) ->
             (Std_.fromIntegral tag_)
+instance (C.IsWord ElementSize) where
+    fromWord w_ = (Std_.toEnum (Std_.fromIntegral w_))
+    toWord v_ = (Std_.fromIntegral (Std_.fromEnum v_))
 instance (C.Parse ElementSize ElementSize) where
     parse  = GH.parseEnum
     encode  = GH.encodeEnum
