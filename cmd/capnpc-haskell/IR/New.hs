@@ -49,6 +49,10 @@ data Decl
         , typeParams      :: [Name.UnQ]
         , parsedInstances :: ParsedInstances
         }
+    | ConstDecl
+        { name  :: Name.LocalQ
+        , value :: C.Value Brand Name.CapnpQ
+        }
 
 -- | Data needed for declaring a Parsed instance, and instances
 -- of related classes.

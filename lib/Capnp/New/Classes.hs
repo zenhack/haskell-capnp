@@ -15,6 +15,7 @@ module Capnp.New.Classes
     , Allocate(..)
     , EstimateAlloc(..)
     , TypedStruct(..)
+    , IsWord(..)
     , newRoot
     , Parsed
     , structSizes
@@ -22,6 +23,7 @@ module Capnp.New.Classes
     , newTypedStruct
     ) where
 
+import           Capnp.Classes       (IsWord(..))
 import           Capnp.Message       (Mutability(..))
 import qualified Capnp.Message       as M
 import qualified Capnp.Repr          as R
