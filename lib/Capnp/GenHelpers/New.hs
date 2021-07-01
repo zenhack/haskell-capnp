@@ -35,9 +35,9 @@ module Capnp.GenHelpers.New
 import           Capnp.Bits
 import qualified Capnp.Classes      as C
 import           Capnp.Fields       as F
+import           Capnp.GenHelpers   (getPtrConst)
 import           Capnp.Message      (Mutability(..))
 import qualified Capnp.Message      as M
-import Capnp.GenHelpers (getPtrConst)
 import           Capnp.New
     ( encodeField
     , encodeVariant
