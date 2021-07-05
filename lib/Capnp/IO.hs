@@ -5,9 +5,12 @@ Description: Utilities for reading and writing values to handles.
 This module provides utilities for reading and writing values to and
 from file 'Handle's.
 -}
-{-# LANGUAGE BangPatterns     #-}
-{-# LANGUAGE DataKinds        #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
 module Capnp.IO
     ( hGetValue
     , getValue
@@ -21,6 +24,10 @@ module Capnp.IO
     , M.getMsg
     , M.hPutMsg
     , M.putMsg
+
+    , hGetParsed
+    , sGetParsed
+    , getParsed
     ) where
 
 import Data.Bits
@@ -36,14 +43,16 @@ import qualified Data.ByteString as BS
 
 import Capnp.Bits           (WordCount, wordsToBytes)
 import Capnp.Classes
-    (Cerialize (..), Decerialize (..), FromStruct (..), ToStruct (..))
-import Capnp.Convert        (msgToLBS, valueToLBS)
-import Capnp.Message        (Mutability (..))
+    (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
+import Capnp.Convert        (msgToLBS, msgToParsed, valueToLBS)
+import Capnp.Message        (Mutability(..))
+import Capnp.New.Classes    (Parse)
 import Capnp.TraversalLimit (evalLimitT)
 import Codec.Capnp          (getRoot, setRoot)
-import Data.Mutable         (Thaw (..))
+import Data.Mutable         (Thaw(..))
 
 import qualified Capnp.Message as M
+import qualified Capnp.Repr    as R
 
 -- | @'hGetValue' limit handle@ reads a message from @handle@, returning its root object.
 -- @limit@ is used as both a cap on the size of a message which may be read and, for types
@@ -123,3 +132,16 @@ sPutValue :: (Cerialize RealWorld a, ToStruct ('Mut RealWorld) (Cerial ('Mut Rea
 sPutValue socket value = do
     lbs <- evalLimitT maxBound $ valueToLBS value
     sendLazy socket lbs
+
+hGetParsed :: forall a pa. (R.IsStruct a, Parse a pa) => Handle -> WordCount -> IO pa
+hGetParsed handle limit = do
+    msg <- M.hGetMsg handle limit
+    evalLimitT limit $ msgToParsed @a msg
+
+sGetParsed :: forall a pa. (R.IsStruct a, Parse a pa) => Socket -> WordCount -> IO pa
+sGetParsed socket limit = do
+    msg <- sGetMsg socket limit
+    evalLimitT limit $ msgToParsed @a msg
+
+getParsed :: (R.IsStruct a, Parse a pa) => WordCount -> IO pa
+getParsed = hGetParsed stdin
