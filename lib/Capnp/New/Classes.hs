@@ -69,6 +69,7 @@ newFromRepr
     )
     => R.AllocHint r -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newFromRepr hint msg = R.Raw <$> R.alloc @r msg hint
+    -- TODO(cleanup): new and alloc really ought to have the same argument order...
 
 
 -- | Types which may be allocated directly inside a message.
@@ -80,6 +81,15 @@ class Allocate a where
     new :: U.RWCtx m s => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
     -- ^ @'new' hint msg@ allocates a new value of type @a@ inside @msg@.
 
+    default new ::
+        ( R.ReprFor a ~ 'R.Ptr ('Just pr)
+        , R.Allocate pr
+        , AllocHint a ~ R.AllocHint pr
+        , U.RWCtx m s
+        ) => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+    -- If the AllocHint is the same as that of the underlying Repr, then
+    -- we can just use that implementation.
+    new = newFromRepr @a
 
 newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newTypedStruct = newFromRepr (structSizes @a)
