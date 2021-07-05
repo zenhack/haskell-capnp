@@ -2,17 +2,11 @@
 {-# LANGUAGE EmptyDataDeriving     #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
-module Capnp.New.Basics
-    ( Text
-    , Data
-    , AnyPointer
-    , AnyList
-    , AnyStruct
-    , Capability
-    ) where
+module Capnp.New.Basics where
 
 import qualified Capnp.Errors        as E
 import qualified Capnp.Message       as M
@@ -136,17 +130,24 @@ instance C.Allocate Text where
     new len msg = R.Raw <$> U.allocList8 msg (len + 1)
 
 instance C.Parse Text T.Text where
-    parse (R.Raw list) = do
-        let len = U.length list
-        when (len == 0) $ throwM $ E.SchemaViolationError
-            "Text is not NUL-terminated (list of bytes has length 0)"
-        lastByte <- U.index (len - 1) list
-        when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
-            "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
-        bytes <- BS.take (len - 1) <$> U.rawBytes list
-        case TE.decodeUtf8' bytes of
-            Left e  -> throwM $ E.InvalidUtf8Error e
-            Right v -> pure v
+    parse (R.Raw list) =
+        let len = U.length list in
+        if (len == 0) then
+            -- We are somewhat lenient here; technically this is invalid, as there is
+            -- no null terminator (see logic below, which is dead code because of
+            -- this check. But to avoid this we really need to expose nullability
+            -- in the API, so for now we just fudge it.
+            pure ""
+        else (do
+            when (len == 0) $ throwM $ E.SchemaViolationError
+                "Text is not NUL-terminated (list of bytes has length 0)"
+            lastByte <- U.index (len - 1) list
+            when (lastByte /= 0) $ throwM $ E.SchemaViolationError $
+                "Text is not NUL-terminated (last byte is " ++ show lastByte ++ ")"
+            bytes <- BS.take (len - 1) <$> U.rawBytes list
+            case TE.decodeUtf8' bytes of
+                Left e  -> throwM $ E.InvalidUtf8Error e
+                Right v -> pure v)
     encode msg value = do
         let bytes = TE.encodeUtf8 value
         raw@(R.Raw untyped)  <- C.new @Text (BS.length bytes) msg
