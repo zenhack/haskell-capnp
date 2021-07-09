@@ -7,11 +7,12 @@ module IR.Common where
 
 import Data.Word
 
-import qualified Capnp.Untyped.Pure as U
-import           Data.Bifunctor     (Bifunctor (..))
-import qualified Data.Map.Strict    as M
-import qualified Data.Vector        as V
-import qualified IR.Name            as Name
+import qualified Capnp.New.Basics  as B
+import           Capnp.Repr.Parsed (Parsed)
+import           Data.Bifunctor    (Bifunctor(..))
+import qualified Data.Map.Strict   as M
+import qualified Data.Vector       as V
+import qualified IR.Name           as Name
 
 newtype TypeId = TypeId Word64
     deriving(Show, Read, Eq, Ord)
@@ -195,7 +196,7 @@ data DataLoc = DataLoc
 data Value b r
     = VoidValue
     | WordValue (WordType r) !Word64
-    | PtrValue (PtrType b r) (Maybe U.Ptr)
+    | PtrValue (PtrType b r) (Parsed B.AnyPointer)
     deriving(Show, Eq, Functor)
 
 instance Bifunctor Value where

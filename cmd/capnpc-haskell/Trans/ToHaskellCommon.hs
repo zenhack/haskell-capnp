@@ -8,14 +8,23 @@ module Trans.ToHaskellCommon where
 import Data.Word
 
 import Data.Char       (toUpper)
+import Data.Maybe      (fromJust)
+import GHC.Exts        (fromList)
 import System.FilePath (splitDirectories)
 import Text.Printf     (printf)
 
-import qualified Data.Set  as S
-import qualified Data.Text as T
 
-import qualified IR.Common as C
-import qualified IR.Name   as Name
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Set             as S
+import qualified Data.Text            as T
+
+import Capnp.New.Classes (encode)
+import Capnp.Repr.Parsed (Parsed)
+
+import qualified Capnp
+import qualified Capnp.New.Basics as B
+import qualified IR.Common        as C
+import qualified IR.Name          as Name
 
 import IR.Haskell
 
@@ -148,6 +157,16 @@ fixImports m@Module{modImports} =
 
 toTVars :: [Name.UnQ] -> [Type]
 toTVars = map (TVar . Name.typeVarName)
+
+makePtrBytes :: Parsed B.AnyPointer -> LBS.ByteString
+makePtrBytes ptr =
+    Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
+        msg <- Capnp.newMessage Nothing
+        rootPtr <- encode msg $ B.Struct
+            (fromList [])
+            (fromList [ptr])
+        Capnp.setRoot rootPtr
+        pure msg
 
 class HasGNames a where
     -- | Collect all of the 'Name.GlobalQ's used in the module.

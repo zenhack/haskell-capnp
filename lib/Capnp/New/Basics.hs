@@ -71,6 +71,17 @@ instance C.Parse AnyStruct (C.Parsed AnyStruct) where
                 (fromIntegral $ U.structPtrCount s)
                 (\i -> U.getPtr i s >>= C.parse . R.Raw)
 
+instance C.AllocateList AnyStruct where
+    type ListAllocHint AnyStruct = (Int, R.AllocHint 'R.Struct)
+
+instance C.EstimateListAlloc AnyStruct (C.Parsed AnyStruct) where
+    estimateListAlloc structs =
+        let len = V.length structs
+            nWords = maximum $ map (V.length . structData) $ V.toList structs
+            nPtrs = maximum $ map (V.length . structPtrs) $ V.toList structs
+        in
+        (len, (fromIntegral nWords, fromIntegral nPtrs))
+
 instance C.EstimateAlloc AnyStruct (C.Parsed AnyStruct) where
     estimateAlloc s =
         ( fromIntegral $ V.length $ structData s
@@ -153,8 +164,6 @@ instance C.Parse Text T.Text where
         raw@(R.Raw untyped)  <- C.new @Text (BS.length bytes) msg
         C.marshalInto @Data (R.Raw untyped) bytes
         pure raw
-
-
 
 -- Instances for Data
 instance C.Parse Data BS.ByteString where

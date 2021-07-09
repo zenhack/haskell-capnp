@@ -8,14 +8,14 @@ import System.IO     (hPutStrLn, stderr)
 
 import qualified Data.Vector as V
 
-import Capnp.Gen.Capnp.Schema.Pure
+import Capnp.Gen.Capnp.Schema.New
 
 -- | Scan the code generator request for certain issues, and warn the user
 -- if found.
 --
 -- We still assume the input is *valid*, so these are issues regarding things
 -- that our implementation can't handle.
-reportIssues :: CodeGeneratorRequest -> IO ()
+reportIssues :: Parsed CodeGeneratorRequest -> IO ()
 reportIssues CodeGeneratorRequest{nodes} =
     let problemFields =
             [ (displayName, name)
@@ -39,8 +39,8 @@ reportIssues CodeGeneratorRequest{nodes} =
             , "for more information.\n"
             ]
 
-isPtrValue :: Value -> Bool
-isPtrValue = \case
+isPtrValue :: Parsed Value -> Bool
+isPtrValue (Value v) = case v of
     Value'void      -> False
     Value'bool _    -> False
     Value'int8 _    -> False

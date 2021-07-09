@@ -42,7 +42,7 @@ module Capnp.Repr
     -- * Relating the representations of lists & their elements.
     , ElemRepr
     , ListReprFor
-    , FromElement(..)
+    , Element(..)
 
     -- * Working with wire-encoded values
     , Raw(..)
@@ -51,6 +51,7 @@ module Capnp.Repr
     , List
     , length
     , index
+    , setIndex
 
     -- * Working with pointers
     , IsPtrRepr(..)
@@ -198,31 +199,39 @@ type family ListReprFor (e :: Repr) :: ListRepr where
     ListReprFor ('Ptr ('Just 'Struct)) = 'ListComposite
     ListReprFor ('Ptr a) = 'ListNormal 'ListPtr
 
--- | 'FromElement' supports converting a value of representation
--- @'ElemRepr' ('ListReprFor' r)@ into a value of representation @r@.
+-- | 'Element' supports converting between values of representation
+-- @'ElemRepr' ('ListReprFor' r)@ and values of representation @r@.
 --
 -- At a glance, you might expect this to just be a no-op, but it is actually
 -- *not* always the case that @'ElemRepr' ('ListReprFor' r) ~ r@; in the
 -- case of pointer types, @'ListReprFor' r@ can contain arbitrary pointers,
 -- so information is lost, and it is possible for the list to contain pointers
 -- of the incorrect type. In this case, 'fromElement' will throw an error.
-class FromElement (r :: Repr) where
+--
+-- 'toElement' is more trivial.
+class Element (r :: Repr) where
     fromElement
         :: forall m mut. U.ReadCtx m mut
         => M.Message mut
         -> Untyped mut (ElemRepr (ListReprFor r))
         -> m (Untyped mut r)
+    toElement :: Untyped mut r -> Untyped mut (ElemRepr (ListReprFor r))
 
-instance FromElement ('Data sz) where
+instance Element ('Data sz) where
     fromElement _ = pure
-instance FromElement ('Ptr ('Just 'Struct)) where
+    toElement = id
+instance Element ('Ptr ('Just 'Struct)) where
     fromElement _ = pure
-instance FromElement ('Ptr 'Nothing) where
+    toElement = id
+instance Element ('Ptr 'Nothing) where
     fromElement _ = pure
-instance FromElement ('Ptr ('Just 'Cap)) where
+    toElement = id
+instance Element ('Ptr ('Just 'Cap)) where
     fromElement = rFromPtr @('Just 'Cap)
-instance IsPtrRepr ('Just ('List a)) => FromElement ('Ptr ('Just ('List a))) where
+    toElement = Just . U.PtrCap
+instance IsPtrRepr ('Just ('List a)) => Element ('Ptr ('Just ('List a))) where
     fromElement = rFromPtr @('Just ('List a))
+    toElement = rToPtr @('Just ('List a))
 
 -- | A @'Raw' mut a@ is an @a@ embedded in a capnproto message with mutability
 -- @mut@.
@@ -244,10 +253,16 @@ length (Raw l) = U.length l
 -- | @'index' i list@ gets the @i@th element of the list.
 index :: forall a m mut.
     ( U.ReadCtx m mut
-    , FromElement (ReprFor a)
+    , Element (ReprFor a)
     ) => Int -> Raw mut (List a) -> m (Raw mut a)
 index i (Raw l) =
     Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
+
+setIndex :: forall a m s.
+    ( U.RWCtx m s
+    , Element (ReprFor a)
+    ) => Raw ('Mut s) a -> Int -> Raw ('Mut s) (List a) -> m ()
+setIndex (Raw v) i (Raw l) = U.setIndex (toElement @(ReprFor a) @('Mut s) v) i l
 
 instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.ToStruct mut (Raw mut a) where
     toStruct = fromRaw
@@ -264,33 +279,33 @@ instance U.MessageDefault (Raw 'Const a) 'Const => Default (Raw 'Const a) where
 
 -- | Operations on types with pointer representations.
 class IsPtrRepr (r :: Maybe PtrRepr) where
-    rToPtr :: M.Message mut -> Untyped mut ('Ptr r) -> Maybe (U.Ptr mut)
+    rToPtr :: Untyped mut ('Ptr r) -> Maybe (U.Ptr mut)
     -- ^ Convert an untyped value of this representation to an AnyPointer.
     rFromPtr :: U.ReadCtx m mut => M.Message mut -> Maybe (U.Ptr mut) -> m (Untyped mut ('Ptr r))
     -- ^ Extract a value with this representation from an AnyPointer, failing
     -- if the pointer is the wrong type for this representation.
 
 instance IsPtrRepr 'Nothing where
-    rToPtr _ p = p
+    rToPtr p = p
     rFromPtr _ p = pure p
 
 instance IsPtrRepr ('Just 'Struct) where
-    rToPtr _ s = Just (U.PtrStruct s)
+    rToPtr s = Just (U.PtrStruct s)
     rFromPtr msg Nothing              = U.messageDefault msg
     rFromPtr _ (Just (U.PtrStruct s)) = pure s
     rFromPtr _ _                      = expected "pointer to struct"
 instance IsPtrRepr ('Just 'Cap) where
-    rToPtr _ c = Just (U.PtrCap c)
+    rToPtr c = Just (U.PtrCap c)
     rFromPtr _ Nothing             = expected "pointer to capability"
     rFromPtr _ (Just (U.PtrCap c)) = pure c
     rFromPtr _ _                   = expected "pointer to capability"
 instance IsPtrRepr ('Just ('List 'Nothing)) where
-    rToPtr _ l = Just (U.PtrList l)
+    rToPtr l = Just (U.PtrList l)
     rFromPtr _ Nothing              = expected "pointer to list"
     rFromPtr _ (Just (U.PtrList l)) = pure l
     rFromPtr _ (Just _)             = expected "pointer to list"
 instance IsListPtrRepr r => IsPtrRepr ('Just ('List ('Just r))) where
-    rToPtr _ l = Just (U.PtrList (rToList @r l))
+    rToPtr l = Just (U.PtrList (rToList @r l))
     rFromPtr msg Nothing            = rFromListMsg @r msg
     rFromPtr _ (Just (U.PtrList l)) = rFromList @r l
     rFromPtr _ (Just _)             = expected "pointer to list"
@@ -354,7 +369,7 @@ do
         ]
 
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
-    toPtr msg (Raw p) = pure $ rToPtr @r msg p
+    toPtr _msg (Raw p) = pure $ rToPtr @r p
 instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
     fromPtr msg p = Raw <$> rFromPtr @r msg p
 

@@ -6,17 +6,12 @@ module Trans.RawToHaskell (fileToModules) where
 
 import Data.Word
 
-import Data.Maybe  (fromJust)
 import Data.String (fromString)
-import GHC.Exts    (fromList)
 
 import qualified Data.Text as T
 
 import IR.Haskell
 import Trans.ToHaskellCommon
-
-import qualified Capnp
-import qualified Capnp.Untyped.Pure as Untyped
 
 import qualified IR.Common as C
 import qualified IR.Name   as Name
@@ -713,15 +708,6 @@ declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
             }
         }
     ]
-  where
-    makePtrBytes ptr =
-        Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
-            msg <- Capnp.newMessage Nothing
-            rootPtr <- Capnp.cerialize msg $ Untyped.Struct
-                (fromList [])
-                (fromList [ptr])
-            Capnp.setRoot rootPtr
-            pure msg
 
 containerTypeToType :: Name.LocalQ -> [Name.UnQ] -> Type -> Type
 containerTypeToType name params msgTy =

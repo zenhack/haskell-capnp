@@ -10,8 +10,9 @@ import System.IO        (IOMode(WriteMode), withFile)
 import qualified Data.Text.Lazy    as LT
 import qualified Data.Text.Lazy.IO as TIO
 
-import Capnp                       (defaultLimit, getValue)
-import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
+import Capnp                      (defaultLimit, getParsed)
+import Capnp.Gen.Capnp.Schema.New (CodeGeneratorRequest)
+import Capnp.Repr.Parsed          (Parsed)
 
 import qualified Check
 import qualified IR.Flat             as Flat
@@ -28,7 +29,7 @@ import qualified Trans.Stage1ToFlat
 
 main :: IO ()
 main = do
-    cgr <- getValue defaultLimit
+    cgr <- getParsed defaultLimit
     Check.reportIssues cgr
     for_ (handleCGR cgr) $ \(path, contents) -> do
         createDirectoryIfMissing True (takeDirectory path)
@@ -36,7 +37,7 @@ main = do
             TIO.hPutStr h contents
 
 -- | Convert a 'CodeGeneratorRequest' to a list of files to create.
-handleCGR :: CodeGeneratorRequest -> [(FilePath, LT.Text)]
+handleCGR :: Parsed CodeGeneratorRequest -> [(FilePath, LT.Text)]
 handleCGR cgr =
     let flat =
             Trans.Stage1ToFlat.cgrToCgr $

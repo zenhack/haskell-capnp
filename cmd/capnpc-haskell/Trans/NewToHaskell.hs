@@ -6,13 +6,9 @@ module Trans.NewToHaskell
     ( fileToModules
     ) where
 
-import qualified Capnp
 import qualified Capnp.Repr            as R
-import qualified Capnp.Untyped.Pure    as U
-import           Data.Maybe            (fromJust)
 import           Data.String           (IsString(fromString))
 import           Data.Word
-import           GHC.Exts              (fromList)
 import qualified IR.Common             as C
 import qualified IR.Haskell            as Hs
 import qualified IR.Name               as Name
@@ -350,15 +346,6 @@ defineConstant thisMod localName value =
                     }
                 }
             ]
-  where
-    makePtrBytes ptr =
-        Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
-            msg <- Capnp.newMessage Nothing
-            rootPtr <- Capnp.cerialize msg $ U.Struct
-                (fromList [])
-                (fromList [ptr])
-            Capnp.setRoot rootPtr
-            pure msg
 
 defineRawData thisMod name tVars variants =
     Hs.IdData Hs.Data

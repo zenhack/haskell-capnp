@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes    #-}
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FlexibleContexts       #-}
@@ -14,6 +15,8 @@ module Capnp.New.Classes
     , Marshal(..)
     , Allocate(..)
     , EstimateAlloc(..)
+    , EstimateListAlloc(..)
+    , MarshalElement
     , TypedStruct(..)
     , IsWord(..)
     , newRoot
@@ -28,6 +31,7 @@ import           Capnp.Message       (Mutability(..))
 import qualified Capnp.Message       as M
 import qualified Capnp.Repr          as R
 import qualified Capnp.Untyped       as U
+import           Data.Foldable       (for_)
 import           Data.Int
 import qualified Data.Vector         as V
 import           Data.Word
@@ -90,6 +94,15 @@ class Allocate a where
     -- If the AllocHint is the same as that of the underlying Repr, then
     -- we can just use that implementation.
     new = newFromRepr @a
+
+class AllocateList a where
+    type ListAllocHint a
+
+    newList :: U.RWCtx m s => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+
+instance AllocateList a => Allocate (R.List a) where
+    type AllocHint (R.List a) = ListAllocHint a
+    new = newList @a
 
 newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newTypedStruct = newFromRepr (structSizes @a)
@@ -165,14 +178,68 @@ instance Parse Double Double where
     parse = pure . F.castWord64ToDouble . R.fromRaw
     encode _ = pure . R.Raw . F.castDoubleToWord64
 
-instance (R.FromElement (R.ReprFor a), Parse a ap) => Parse (R.List a) (V.Vector ap) where
-    encode _ = undefined
+instance MarshalElement a ap => Marshal (R.List a) (V.Vector ap) where
+    marshalInto raw value =
+        for_ [0..V.length value - 1] $ \i ->
+            marshalElement raw i (value V.! i)
+
+instance MarshalElement a ap => Parse (R.List a) (V.Vector ap) where
     parse rawV =
         V.generateM (R.length rawV) $ \i ->
             R.index i rawV >>= parse
 
-instance (Allocate l, AllocHint l ~ Int, Parse l (V.Vector a)) => EstimateAlloc l (V.Vector a) where
-    estimateAlloc = V.length
+type MarshalElement a ap =
+    ( Parse a ap
+    , EstimateListAlloc a ap
+    , MarshalElement'' (R.ReprFor a) a ap
+    )
+
+type MarshalElement'' r a ap =
+    ( R.Element r
+    , MarshalElement''' (R.ListReprFor r) a ap
+    )
+
+type MarshalElement''' lr a ap =
+    ( MarshalElement' lr
+    , MarshalElementConstraints lr a ap
+    )
+
+type family MarshalElementConstraints (lr :: R.ListRepr) a ap where
+    MarshalElementConstraints 'R.ListComposite  a ap = Marshal a ap
+    MarshalElementConstraints ('R.ListNormal r) a ap = Allocate a
+
+class MarshalElement' (lr :: R.ListRepr) where
+    marshalElement' ::
+        ( U.RWCtx m s
+        , R.ListReprFor (R.ReprFor a) ~ lr
+        , MarshalElement a ap
+        ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
+
+instance MarshalElement' 'R.ListComposite where
+    marshalElement' rawList i parsed = do
+        rawElt <- R.index i rawList
+        marshalInto rawElt parsed
+
+instance MarshalElement' ('R.ListNormal l) where
+    marshalElement' rawList i parsed = do
+        rawElt <- encode (U.message rawList) parsed
+        R.setIndex rawElt i rawList
+
+marshalElement ::
+  forall a ap m s.
+  ( U.RWCtx m s
+  , MarshalElement a ap
+  ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
+marshalElement = marshalElement' @(R.ListReprFor (R.ReprFor a))
+
+class (Parse a ap, Allocate (R.List a)) => EstimateListAlloc a ap where
+    estimateListAlloc :: V.Vector ap -> AllocHint (R.List a)
+
+    default estimateListAlloc :: (AllocHint (R.List a) ~ Int) => V.Vector ap -> AllocHint (R.List a)
+    estimateListAlloc = V.length
+
+instance MarshalElement a ap => EstimateAlloc (R.List a) (V.Vector ap) where
+    estimateAlloc = estimateListAlloc @a
 
 -- | If @a@ is a capnproto type, then @Parsed a@ is an ADT representation of that
 -- type. If this is defined for a type @a@ then there should also be an instance
