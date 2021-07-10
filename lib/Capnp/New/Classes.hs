@@ -25,6 +25,7 @@ module Capnp.New.Classes
     , structSizes
     , newFromRepr
     , newTypedStruct
+    , newTypedStructList
     ) where
 
 import           Capnp.Classes       (IsWord(..))
@@ -116,6 +117,14 @@ instance AllocateList a => Allocate (R.List a) where
 
 newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newTypedStruct = newFromRepr (structSizes @a)
+
+newTypedStructList
+    :: forall a m s. (TypedStruct a, U.RWCtx m s)
+    => Int -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+newTypedStructList i msg = R.Raw <$> R.alloc
+    @('R.List ('Just 'R.ListComposite))
+    msg
+    (i, structSizes @a)
 
 class Parse t p => Marshal t p where
     marshalInto :: U.RWCtx m s => R.Raw ('Mut s) t -> p -> m ()
