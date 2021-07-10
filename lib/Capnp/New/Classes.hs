@@ -100,6 +100,15 @@ class AllocateList a where
     type ListAllocHint a
 
     newList :: U.RWCtx m s => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+    default newList ::
+        forall m s lr r.
+        ( U.RWCtx m s
+        , lr ~ R.ListReprFor (R.ReprFor a)
+        , r ~ 'R.List ('Just lr)
+        , R.Allocate r
+        , R.AllocHint r ~ ListAllocHint a
+        ) => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+    newList hint msg = R.Raw <$> R.alloc @r msg hint
 
 instance AllocateList a => Allocate (R.List a) where
     type AllocHint (R.List a) = ListAllocHint a
