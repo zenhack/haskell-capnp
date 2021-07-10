@@ -178,13 +178,16 @@ instance C.Parse Text T.Text where
 instance C.Parse Data BS.ByteString where
     parse = U.rawBytes . R.fromRaw
 
-instance C.EstimateAlloc Data BS.ByteString where
-    estimateAlloc = BS.length
-
-
 instance C.Allocate Data where
     type AllocHint Data = Int
     new len msg = R.Raw <$> U.allocList8 msg len
+
+instance C.EstimateAlloc Data BS.ByteString where
+    estimateAlloc = BS.length
+
+instance C.AllocateList Data where
+    type ListAllocHint Data = Int
+instance C.EstimateListAlloc Data BS.ByteString
 
 instance C.Marshal Data BS.ByteString where
     marshalInto (R.Raw list) bytes =
