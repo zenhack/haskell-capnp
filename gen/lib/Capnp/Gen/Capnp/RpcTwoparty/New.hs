@@ -56,6 +56,9 @@ instance (C.IsWord Side) where
 instance (C.Parse Side Side) where
     parse  = GH.parseEnum
     encode  = GH.encodeEnum
+instance (C.AllocateList Side) where
+    type ListAllocHint Side = Std_.Int
+instance (C.EstimateListAlloc Side Side)
 data VatId 
 type instance (R.ReprFor VatId) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct VatId) where

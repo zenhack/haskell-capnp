@@ -2063,6 +2063,9 @@ instance (C.IsWord ElementSize) where
 instance (C.Parse ElementSize ElementSize) where
     parse  = GH.parseEnum
     encode  = GH.encodeEnum
+instance (C.AllocateList ElementSize) where
+    type ListAllocHint ElementSize = Std_.Int
+instance (C.EstimateListAlloc ElementSize ElementSize)
 data CapnpVersion 
 type instance (R.ReprFor CapnpVersion) = (R.Ptr (Std_.Just R.Struct))
 instance (C.TypedStruct CapnpVersion) where

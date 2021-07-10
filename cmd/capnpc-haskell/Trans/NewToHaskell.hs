@@ -239,6 +239,18 @@ declToDecls thisMod decl =
                                 }
                             ]
                         }
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tgName ["C"] "AllocateList") [typ]
+                        , defs =
+                            [ Hs.IdType $ Hs.TypeAlias "ListAllocHint" [typ] (tStd_ "Int")
+                            ]
+                        }
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tgName ["C"] "EstimateListAlloc") [typ, typ]
+                        , defs = []
+                        }
                     ]
                 Just New.InterfaceTypeInfo ->
                     defineInterfaceParse name params

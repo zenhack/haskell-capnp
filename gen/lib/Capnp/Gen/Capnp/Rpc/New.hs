@@ -1320,3 +1320,6 @@ instance (C.IsWord Exception'Type) where
 instance (C.Parse Exception'Type Exception'Type) where
     parse  = GH.parseEnum
     encode  = GH.encodeEnum
+instance (C.AllocateList Exception'Type) where
+    type ListAllocHint Exception'Type = Std_.Int
+instance (C.EstimateListAlloc Exception'Type Exception'Type)
