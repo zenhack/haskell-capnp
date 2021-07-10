@@ -270,11 +270,13 @@ do
 
         ids      = [t| () |] : map nameTy [''Bool, ''Word8, ''Word16, ''Word32, ''Word64]
         ints     = map nameTy [''Int8, ''Int16, ''Int32, ''Int64]
+        floats   = map nameTy [''Float, ''Double]
+        allTys   = ids ++ ints ++ floats
 
         merge :: [TH.Q [a]] -> TH.Q [a]
         merge xs = concat <$> sequenceA xs
     merge
         [ merge $ map mkId ids
         , merge $ map mkInt ints
-        , merge $ map mkAll (ids ++ ints)
+        , merge $ map mkAll allTys
         ]
