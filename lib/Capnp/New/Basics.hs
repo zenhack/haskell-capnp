@@ -145,6 +145,10 @@ instance C.Allocate Text where
     type AllocHint Text = Int
     new len msg = R.Raw <$> U.allocList8 msg (len + 1)
 
+instance C.AllocateList Text where
+    type ListAllocHint Text = Int
+instance C.EstimateListAlloc Text T.Text
+
 instance C.Parse Text T.Text where
     parse (R.Raw list) =
         let len = U.length list in
