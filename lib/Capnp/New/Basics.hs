@@ -152,7 +152,7 @@ instance C.EstimateListAlloc Text T.Text
 instance C.Parse Text T.Text where
     parse (R.Raw list) =
         let len = U.length list in
-        if (len == 0) then
+        if len == 0 then
             -- We are somewhat lenient here; technically this is invalid, as there is
             -- no null terminator (see logic below, which is dead code because of
             -- this check. But to avoid this we really need to expose nullability
