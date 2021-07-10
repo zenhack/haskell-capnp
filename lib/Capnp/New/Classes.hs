@@ -145,7 +145,7 @@ newRoot hint msg = do
     pure raw
 
 
------- Parse instances for basic types -------
+------ Instances for basic types -------
 
 parseId :: (R.Untyped mut (R.ReprFor a) ~ a, U.ReadCtx m mut) => R.Raw mut a -> m a
 parseId = pure . R.fromRaw
@@ -156,29 +156,6 @@ parseInt ::
     , U.ReadCtx m mut
     ) => R.Raw mut a -> m a
 parseInt = pure . fromIntegral . R.fromRaw
-
-do
-    let mkParseId ty =
-            [d| instance Parse $ty $ty where
-                    parse = parseId
-                    encode _ = pure . R.Raw
-            |]
-        mkParseInt ty =
-            [d| instance Parse $ty $ty where
-                    parse = parseInt
-                    encode _ = pure . R.Raw . fromIntegral
-            |]
-        nameTy name = pure (TH.ConT name)
-        ids  = map nameTy [''Bool, ''Word8, ''Word16, ''Word32, ''Word64]
-        ints = map nameTy [''Int8, ''Int16, ''Int32, ''Int64]
-
-        merge :: [TH.Q [a]] -> TH.Q [a]
-        merge xs = concat <$> sequenceA xs
-    merge
-        [ merge $ map mkParseId ids
-        , merge $ map mkParseInt ints
-        , mkParseId [t| () |]
-        ]
 
 instance Parse Float Float where
     parse = pure . F.castWord32ToFloat . R.fromRaw
@@ -257,3 +234,35 @@ instance MarshalElement a ap => EstimateAlloc (R.List a) (V.Vector ap) where
 -- an instance @'Parse' a b@, then @'Parsed' a@ needn't be defined, and @b@ can
 -- be something else.
 data family Parsed a
+
+do
+    let mkId ty =
+            [d| instance Parse $ty $ty where
+                    parse = parseId
+                    encode _ = pure . R.Raw
+            |]
+        mkInt ty =
+            [d| instance Parse $ty $ty where
+                    parse = parseInt
+                    encode _ = pure . R.Raw . fromIntegral
+            |]
+        mkAll ty =
+            [d| instance AllocateList $ty where
+                    type ListAllocHint $ty = Int
+
+                instance EstimateListAlloc $ty $ty where
+                    estimateListAlloc = V.length
+            |]
+
+        nameTy name = pure (TH.ConT name)
+
+        ids      = [t| () |] : map nameTy [''Bool, ''Word8, ''Word16, ''Word32, ''Word64]
+        ints     = map nameTy [''Int8, ''Int16, ''Int32, ''Int64]
+
+        merge :: [TH.Q [a]] -> TH.Q [a]
+        merge xs = concat <$> sequenceA xs
+    merge
+        [ merge $ map mkId ids
+        , merge $ map mkInt ints
+        , merge $ map mkAll (ids ++ ints)
+        ]
