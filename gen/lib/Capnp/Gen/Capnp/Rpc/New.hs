@@ -38,6 +38,10 @@ instance (C.Allocate Message) where
     type AllocHint Message = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Message (C.Parsed Message))
+instance (C.AllocateList Message) where
+    type ListAllocHint Message = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Message (C.Parsed Message))
 data instance C.Parsed Message
     = Message 
         {union' :: (C.Parsed (GH.Which Message))}
@@ -223,6 +227,10 @@ instance (C.Allocate Bootstrap) where
     type AllocHint Bootstrap = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Bootstrap (C.Parsed Bootstrap))
+instance (C.AllocateList Bootstrap) where
+    type ListAllocHint Bootstrap = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Bootstrap (C.Parsed Bootstrap))
 data instance C.Parsed Bootstrap
     = Bootstrap 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -252,6 +260,10 @@ instance (C.Allocate Call) where
     type AllocHint Call = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Call (C.Parsed Call))
+instance (C.AllocateList Call) where
+    type ListAllocHint Call = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Call (C.Parsed Call))
 data instance C.Parsed Call
     = Call 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -309,6 +321,10 @@ instance (C.Allocate Call'sendResultsTo) where
     type AllocHint Call'sendResultsTo = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Call'sendResultsTo (C.Parsed Call'sendResultsTo))
+instance (C.AllocateList Call'sendResultsTo) where
+    type ListAllocHint Call'sendResultsTo = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Call'sendResultsTo (C.Parsed Call'sendResultsTo))
 data instance C.Parsed Call'sendResultsTo
     = Call'sendResultsTo' 
         {union' :: (C.Parsed (GH.Which Call'sendResultsTo))}
@@ -384,6 +400,10 @@ instance (C.Allocate Return) where
     type AllocHint Return = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Return (C.Parsed Return))
+instance (C.AllocateList Return) where
+    type ListAllocHint Return = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Return (C.Parsed Return))
 data instance C.Parsed Return
     = Return 
         {answerId :: (RP.Parsed Std_.Word32)
@@ -499,6 +519,10 @@ instance (C.Allocate Finish) where
     type AllocHint Finish = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Finish (C.Parsed Finish))
+instance (C.AllocateList Finish) where
+    type ListAllocHint Finish = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Finish (C.Parsed Finish))
 data instance C.Parsed Finish
     = Finish 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -528,6 +552,10 @@ instance (C.Allocate Resolve) where
     type AllocHint Resolve = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Resolve (C.Parsed Resolve))
+instance (C.AllocateList Resolve) where
+    type ListAllocHint Resolve = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Resolve (C.Parsed Resolve))
 data instance C.Parsed Resolve
     = Resolve 
         {promiseId :: (RP.Parsed Std_.Word32)
@@ -598,6 +626,10 @@ instance (C.Allocate Release) where
     type AllocHint Release = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Release (C.Parsed Release))
+instance (C.AllocateList Release) where
+    type ListAllocHint Release = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Release (C.Parsed Release))
 data instance C.Parsed Release
     = Release 
         {id :: (RP.Parsed Std_.Word32)
@@ -627,6 +659,10 @@ instance (C.Allocate Disembargo) where
     type AllocHint Disembargo = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Disembargo (C.Parsed Disembargo))
+instance (C.AllocateList Disembargo) where
+    type ListAllocHint Disembargo = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Disembargo (C.Parsed Disembargo))
 data instance C.Parsed Disembargo
     = Disembargo 
         {target :: (RP.Parsed MessageTarget)
@@ -659,6 +695,10 @@ instance (C.Allocate Disembargo'context) where
     type AllocHint Disembargo'context = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Disembargo'context (C.Parsed Disembargo'context))
+instance (C.AllocateList Disembargo'context) where
+    type ListAllocHint Disembargo'context = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Disembargo'context (C.Parsed Disembargo'context))
 data instance C.Parsed Disembargo'context
     = Disembargo'context' 
         {union' :: (C.Parsed (GH.Which Disembargo'context))}
@@ -744,6 +784,10 @@ instance (C.Allocate Provide) where
     type AllocHint Provide = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Provide (C.Parsed Provide))
+instance (C.AllocateList Provide) where
+    type ListAllocHint Provide = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Provide (C.Parsed Provide))
 data instance C.Parsed Provide
     = Provide 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -778,6 +822,10 @@ instance (C.Allocate Accept) where
     type AllocHint Accept = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Accept (C.Parsed Accept))
+instance (C.AllocateList Accept) where
+    type ListAllocHint Accept = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Accept (C.Parsed Accept))
 data instance C.Parsed Accept
     = Accept 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -812,6 +860,10 @@ instance (C.Allocate Join) where
     type AllocHint Join = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Join (C.Parsed Join))
+instance (C.AllocateList Join) where
+    type ListAllocHint Join = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Join (C.Parsed Join))
 data instance C.Parsed Join
     = Join 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -846,6 +898,10 @@ instance (C.Allocate MessageTarget) where
     type AllocHint MessageTarget = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc MessageTarget (C.Parsed MessageTarget))
+instance (C.AllocateList MessageTarget) where
+    type ListAllocHint MessageTarget = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc MessageTarget (C.Parsed MessageTarget))
 data instance C.Parsed MessageTarget
     = MessageTarget 
         {union' :: (C.Parsed (GH.Which MessageTarget))}
@@ -911,6 +967,10 @@ instance (C.Allocate Payload) where
     type AllocHint Payload = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Payload (C.Parsed Payload))
+instance (C.AllocateList Payload) where
+    type ListAllocHint Payload = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Payload (C.Parsed Payload))
 data instance C.Parsed Payload
     = Payload 
         {content :: (RP.Parsed Basics.AnyPointer)
@@ -940,6 +1000,10 @@ instance (C.Allocate CapDescriptor) where
     type AllocHint CapDescriptor = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc CapDescriptor (C.Parsed CapDescriptor))
+instance (C.AllocateList CapDescriptor) where
+    type ListAllocHint CapDescriptor = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc CapDescriptor (C.Parsed CapDescriptor))
 data instance C.Parsed CapDescriptor
     = CapDescriptor 
         {attachedFd :: (RP.Parsed Std_.Word8)
@@ -1050,6 +1114,10 @@ instance (C.Allocate PromisedAnswer) where
     type AllocHint PromisedAnswer = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc PromisedAnswer (C.Parsed PromisedAnswer))
+instance (C.AllocateList PromisedAnswer) where
+    type ListAllocHint PromisedAnswer = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc PromisedAnswer (C.Parsed PromisedAnswer))
 data instance C.Parsed PromisedAnswer
     = PromisedAnswer 
         {questionId :: (RP.Parsed Std_.Word32)
@@ -1079,6 +1147,10 @@ instance (C.Allocate PromisedAnswer'Op) where
     type AllocHint PromisedAnswer'Op = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc PromisedAnswer'Op (C.Parsed PromisedAnswer'Op))
+instance (C.AllocateList PromisedAnswer'Op) where
+    type ListAllocHint PromisedAnswer'Op = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc PromisedAnswer'Op (C.Parsed PromisedAnswer'Op))
 data instance C.Parsed PromisedAnswer'Op
     = PromisedAnswer'Op 
         {union' :: (C.Parsed (GH.Which PromisedAnswer'Op))}
@@ -1144,6 +1216,10 @@ instance (C.Allocate ThirdPartyCapDescriptor) where
     type AllocHint ThirdPartyCapDescriptor = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor))
+instance (C.AllocateList ThirdPartyCapDescriptor) where
+    type ListAllocHint ThirdPartyCapDescriptor = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor))
 data instance C.Parsed ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor 
         {id :: (RP.Parsed Basics.AnyPointer)
@@ -1173,6 +1249,10 @@ instance (C.Allocate Exception) where
     type AllocHint Exception = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Exception (C.Parsed Exception))
+instance (C.AllocateList Exception) where
+    type ListAllocHint Exception = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Exception (C.Parsed Exception))
 data instance C.Parsed Exception
     = Exception 
         {reason :: (RP.Parsed Basics.Text)

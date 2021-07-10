@@ -38,6 +38,10 @@ instance (C.Allocate Value) where
     type AllocHint Value = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Value (C.Parsed Value))
+instance (C.AllocateList Value) where
+    type ListAllocHint Value = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Value (C.Parsed Value))
 data instance C.Parsed Value
     = Value 
         {union' :: (C.Parsed (GH.Which Value))}
@@ -153,6 +157,10 @@ instance (C.Allocate Value'Field) where
     type AllocHint Value'Field = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Value'Field (C.Parsed Value'Field))
+instance (C.AllocateList Value'Field) where
+    type ListAllocHint Value'Field = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Value'Field (C.Parsed Value'Field))
 data instance C.Parsed Value'Field
     = Value'Field 
         {name :: (RP.Parsed Basics.Text)
@@ -182,6 +190,10 @@ instance (C.Allocate Value'Call) where
     type AllocHint Value'Call = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Value'Call (C.Parsed Value'Call))
+instance (C.AllocateList Value'Call) where
+    type ListAllocHint Value'Call = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Value'Call (C.Parsed Value'Call))
 data instance C.Parsed Value'Call
     = Value'Call 
         {function :: (RP.Parsed Basics.Text)
@@ -211,6 +223,10 @@ instance (C.Allocate FlattenOptions) where
     type AllocHint FlattenOptions = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc FlattenOptions (C.Parsed FlattenOptions))
+instance (C.AllocateList FlattenOptions) where
+    type ListAllocHint FlattenOptions = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc FlattenOptions (C.Parsed FlattenOptions))
 data instance C.Parsed FlattenOptions
     = FlattenOptions 
         {prefix :: (RP.Parsed Basics.Text)}
@@ -235,6 +251,10 @@ instance (C.Allocate DiscriminatorOptions) where
     type AllocHint DiscriminatorOptions = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc DiscriminatorOptions (C.Parsed DiscriminatorOptions))
+instance (C.AllocateList DiscriminatorOptions) where
+    type ListAllocHint DiscriminatorOptions = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc DiscriminatorOptions (C.Parsed DiscriminatorOptions))
 data instance C.Parsed DiscriminatorOptions
     = DiscriminatorOptions 
         {name :: (RP.Parsed Basics.Text)

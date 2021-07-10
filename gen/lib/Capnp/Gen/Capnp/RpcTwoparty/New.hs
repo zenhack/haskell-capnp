@@ -65,6 +65,10 @@ instance (C.Allocate VatId) where
     type AllocHint VatId = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc VatId (C.Parsed VatId))
+instance (C.AllocateList VatId) where
+    type ListAllocHint VatId = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc VatId (C.Parsed VatId))
 data instance C.Parsed VatId
     = VatId 
         {side :: (RP.Parsed Side)}
@@ -89,6 +93,10 @@ instance (C.Allocate ProvisionId) where
     type AllocHint ProvisionId = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc ProvisionId (C.Parsed ProvisionId))
+instance (C.AllocateList ProvisionId) where
+    type ListAllocHint ProvisionId = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc ProvisionId (C.Parsed ProvisionId))
 data instance C.Parsed ProvisionId
     = ProvisionId 
         {joinId :: (RP.Parsed Std_.Word32)}
@@ -113,6 +121,10 @@ instance (C.Allocate RecipientId) where
     type AllocHint RecipientId = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc RecipientId (C.Parsed RecipientId))
+instance (C.AllocateList RecipientId) where
+    type ListAllocHint RecipientId = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc RecipientId (C.Parsed RecipientId))
 data instance C.Parsed RecipientId
     = RecipientId 
         {}
@@ -132,6 +144,10 @@ instance (C.Allocate ThirdPartyCapId) where
     type AllocHint ThirdPartyCapId = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc ThirdPartyCapId (C.Parsed ThirdPartyCapId))
+instance (C.AllocateList ThirdPartyCapId) where
+    type ListAllocHint ThirdPartyCapId = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc ThirdPartyCapId (C.Parsed ThirdPartyCapId))
 data instance C.Parsed ThirdPartyCapId
     = ThirdPartyCapId 
         {}
@@ -151,6 +167,10 @@ instance (C.Allocate JoinKeyPart) where
     type AllocHint JoinKeyPart = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc JoinKeyPart (C.Parsed JoinKeyPart))
+instance (C.AllocateList JoinKeyPart) where
+    type ListAllocHint JoinKeyPart = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc JoinKeyPart (C.Parsed JoinKeyPart))
 data instance C.Parsed JoinKeyPart
     = JoinKeyPart 
         {joinId :: (RP.Parsed Std_.Word32)
@@ -185,6 +205,10 @@ instance (C.Allocate JoinResult) where
     type AllocHint JoinResult = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc JoinResult (C.Parsed JoinResult))
+instance (C.AllocateList JoinResult) where
+    type ListAllocHint JoinResult = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc JoinResult (C.Parsed JoinResult))
 data instance C.Parsed JoinResult
     = JoinResult 
         {joinId :: (RP.Parsed Std_.Word32)

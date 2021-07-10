@@ -38,6 +38,10 @@ instance (C.Allocate Node) where
     type AllocHint Node = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node (C.Parsed Node))
+instance (C.AllocateList Node) where
+    type ListAllocHint Node = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node (C.Parsed Node))
 data instance C.Parsed Node
     = Node 
         {id :: (RP.Parsed Std_.Word64)
@@ -198,6 +202,10 @@ instance (C.Allocate Node'struct) where
     type AllocHint Node'struct = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'struct (C.Parsed Node'struct))
+instance (C.AllocateList Node'struct) where
+    type ListAllocHint Node'struct = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'struct (C.Parsed Node'struct))
 data instance C.Parsed Node'struct
     = Node'struct' 
         {dataWordCount :: (RP.Parsed Std_.Word16)
@@ -252,6 +260,10 @@ instance (C.Allocate Node'enum) where
     type AllocHint Node'enum = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'enum (C.Parsed Node'enum))
+instance (C.AllocateList Node'enum) where
+    type ListAllocHint Node'enum = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'enum (C.Parsed Node'enum))
 data instance C.Parsed Node'enum
     = Node'enum' 
         {enumerants :: (RP.Parsed (R.List Enumerant))}
@@ -276,6 +288,10 @@ instance (C.Allocate Node'interface) where
     type AllocHint Node'interface = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'interface (C.Parsed Node'interface))
+instance (C.AllocateList Node'interface) where
+    type ListAllocHint Node'interface = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'interface (C.Parsed Node'interface))
 data instance C.Parsed Node'interface
     = Node'interface' 
         {methods :: (RP.Parsed (R.List Method))
@@ -305,6 +321,10 @@ instance (C.Allocate Node'const) where
     type AllocHint Node'const = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'const (C.Parsed Node'const))
+instance (C.AllocateList Node'const) where
+    type ListAllocHint Node'const = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'const (C.Parsed Node'const))
 data instance C.Parsed Node'const
     = Node'const' 
         {type_ :: (RP.Parsed Type)
@@ -334,6 +354,10 @@ instance (C.Allocate Node'annotation) where
     type AllocHint Node'annotation = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'annotation (C.Parsed Node'annotation))
+instance (C.AllocateList Node'annotation) where
+    type ListAllocHint Node'annotation = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'annotation (C.Parsed Node'annotation))
 data instance C.Parsed Node'annotation
     = Node'annotation' 
         {type_ :: (RP.Parsed Type)
@@ -418,6 +442,10 @@ instance (C.Allocate Node'Parameter) where
     type AllocHint Node'Parameter = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'Parameter (C.Parsed Node'Parameter))
+instance (C.AllocateList Node'Parameter) where
+    type ListAllocHint Node'Parameter = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'Parameter (C.Parsed Node'Parameter))
 data instance C.Parsed Node'Parameter
     = Node'Parameter 
         {name :: (RP.Parsed Basics.Text)}
@@ -442,6 +470,10 @@ instance (C.Allocate Node'NestedNode) where
     type AllocHint Node'NestedNode = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'NestedNode (C.Parsed Node'NestedNode))
+instance (C.AllocateList Node'NestedNode) where
+    type ListAllocHint Node'NestedNode = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'NestedNode (C.Parsed Node'NestedNode))
 data instance C.Parsed Node'NestedNode
     = Node'NestedNode 
         {name :: (RP.Parsed Basics.Text)
@@ -471,6 +503,10 @@ instance (C.Allocate Node'SourceInfo) where
     type AllocHint Node'SourceInfo = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'SourceInfo (C.Parsed Node'SourceInfo))
+instance (C.AllocateList Node'SourceInfo) where
+    type ListAllocHint Node'SourceInfo = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'SourceInfo (C.Parsed Node'SourceInfo))
 data instance C.Parsed Node'SourceInfo
     = Node'SourceInfo 
         {id :: (RP.Parsed Std_.Word64)
@@ -505,6 +541,10 @@ instance (C.Allocate Node'SourceInfo'Member) where
     type AllocHint Node'SourceInfo'Member = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Node'SourceInfo'Member (C.Parsed Node'SourceInfo'Member))
+instance (C.AllocateList Node'SourceInfo'Member) where
+    type ListAllocHint Node'SourceInfo'Member = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Node'SourceInfo'Member (C.Parsed Node'SourceInfo'Member))
 data instance C.Parsed Node'SourceInfo'Member
     = Node'SourceInfo'Member 
         {docComment :: (RP.Parsed Basics.Text)}
@@ -529,6 +569,10 @@ instance (C.Allocate Field) where
     type AllocHint Field = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Field (C.Parsed Field))
+instance (C.AllocateList Field) where
+    type ListAllocHint Field = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Field (C.Parsed Field))
 data instance C.Parsed Field
     = Field 
         {name :: (RP.Parsed Basics.Text)
@@ -628,6 +672,10 @@ instance (C.Allocate Field'slot) where
     type AllocHint Field'slot = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Field'slot (C.Parsed Field'slot))
+instance (C.AllocateList Field'slot) where
+    type ListAllocHint Field'slot = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Field'slot (C.Parsed Field'slot))
 data instance C.Parsed Field'slot
     = Field'slot' 
         {offset :: (RP.Parsed Std_.Word32)
@@ -667,6 +715,10 @@ instance (C.Allocate Field'group) where
     type AllocHint Field'group = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Field'group (C.Parsed Field'group))
+instance (C.AllocateList Field'group) where
+    type ListAllocHint Field'group = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Field'group (C.Parsed Field'group))
 data instance C.Parsed Field'group
     = Field'group' 
         {typeId :: (RP.Parsed Std_.Word64)}
@@ -691,6 +743,10 @@ instance (C.Allocate Field'ordinal) where
     type AllocHint Field'ordinal = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Field'ordinal (C.Parsed Field'ordinal))
+instance (C.AllocateList Field'ordinal) where
+    type ListAllocHint Field'ordinal = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Field'ordinal (C.Parsed Field'ordinal))
 data instance C.Parsed Field'ordinal
     = Field'ordinal' 
         {union' :: (C.Parsed (GH.Which Field'ordinal))}
@@ -758,6 +814,10 @@ instance (C.Allocate Enumerant) where
     type AllocHint Enumerant = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Enumerant (C.Parsed Enumerant))
+instance (C.AllocateList Enumerant) where
+    type ListAllocHint Enumerant = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Enumerant (C.Parsed Enumerant))
 data instance C.Parsed Enumerant
     = Enumerant 
         {name :: (RP.Parsed Basics.Text)
@@ -792,6 +852,10 @@ instance (C.Allocate Superclass) where
     type AllocHint Superclass = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Superclass (C.Parsed Superclass))
+instance (C.AllocateList Superclass) where
+    type ListAllocHint Superclass = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Superclass (C.Parsed Superclass))
 data instance C.Parsed Superclass
     = Superclass 
         {id :: (RP.Parsed Std_.Word64)
@@ -821,6 +885,10 @@ instance (C.Allocate Method) where
     type AllocHint Method = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Method (C.Parsed Method))
+instance (C.AllocateList Method) where
+    type ListAllocHint Method = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Method (C.Parsed Method))
 data instance C.Parsed Method
     = Method 
         {name :: (RP.Parsed Basics.Text)
@@ -880,6 +948,10 @@ instance (C.Allocate Type) where
     type AllocHint Type = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type (C.Parsed Type))
+instance (C.AllocateList Type) where
+    type ListAllocHint Type = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type (C.Parsed Type))
 data instance C.Parsed Type
     = Type 
         {union' :: (C.Parsed (GH.Which Type))}
@@ -1130,6 +1202,10 @@ instance (C.Allocate Type'list) where
     type AllocHint Type'list = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'list (C.Parsed Type'list))
+instance (C.AllocateList Type'list) where
+    type ListAllocHint Type'list = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'list (C.Parsed Type'list))
 data instance C.Parsed Type'list
     = Type'list' 
         {elementType :: (RP.Parsed Type)}
@@ -1154,6 +1230,10 @@ instance (C.Allocate Type'enum) where
     type AllocHint Type'enum = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'enum (C.Parsed Type'enum))
+instance (C.AllocateList Type'enum) where
+    type ListAllocHint Type'enum = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'enum (C.Parsed Type'enum))
 data instance C.Parsed Type'enum
     = Type'enum' 
         {typeId :: (RP.Parsed Std_.Word64)
@@ -1183,6 +1263,10 @@ instance (C.Allocate Type'struct) where
     type AllocHint Type'struct = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'struct (C.Parsed Type'struct))
+instance (C.AllocateList Type'struct) where
+    type ListAllocHint Type'struct = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'struct (C.Parsed Type'struct))
 data instance C.Parsed Type'struct
     = Type'struct' 
         {typeId :: (RP.Parsed Std_.Word64)
@@ -1212,6 +1296,10 @@ instance (C.Allocate Type'interface) where
     type AllocHint Type'interface = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'interface (C.Parsed Type'interface))
+instance (C.AllocateList Type'interface) where
+    type ListAllocHint Type'interface = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'interface (C.Parsed Type'interface))
 data instance C.Parsed Type'interface
     = Type'interface' 
         {typeId :: (RP.Parsed Std_.Word64)
@@ -1241,6 +1329,10 @@ instance (C.Allocate Type'anyPointer) where
     type AllocHint Type'anyPointer = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'anyPointer (C.Parsed Type'anyPointer))
+instance (C.AllocateList Type'anyPointer) where
+    type ListAllocHint Type'anyPointer = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'anyPointer (C.Parsed Type'anyPointer))
 data instance C.Parsed Type'anyPointer
     = Type'anyPointer' 
         {union' :: (C.Parsed (GH.Which Type'anyPointer))}
@@ -1325,6 +1417,10 @@ instance (C.Allocate Type'anyPointer'unconstrained) where
     type AllocHint Type'anyPointer'unconstrained = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'anyPointer'unconstrained (C.Parsed Type'anyPointer'unconstrained))
+instance (C.AllocateList Type'anyPointer'unconstrained) where
+    type ListAllocHint Type'anyPointer'unconstrained = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'anyPointer'unconstrained (C.Parsed Type'anyPointer'unconstrained))
 data instance C.Parsed Type'anyPointer'unconstrained
     = Type'anyPointer'unconstrained' 
         {union' :: (C.Parsed (GH.Which Type'anyPointer'unconstrained))}
@@ -1410,6 +1506,10 @@ instance (C.Allocate Type'anyPointer'parameter) where
     type AllocHint Type'anyPointer'parameter = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'anyPointer'parameter (C.Parsed Type'anyPointer'parameter))
+instance (C.AllocateList Type'anyPointer'parameter) where
+    type ListAllocHint Type'anyPointer'parameter = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'anyPointer'parameter (C.Parsed Type'anyPointer'parameter))
 data instance C.Parsed Type'anyPointer'parameter
     = Type'anyPointer'parameter' 
         {scopeId :: (RP.Parsed Std_.Word64)
@@ -1439,6 +1539,10 @@ instance (C.Allocate Type'anyPointer'implicitMethodParameter) where
     type AllocHint Type'anyPointer'implicitMethodParameter = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Type'anyPointer'implicitMethodParameter (C.Parsed Type'anyPointer'implicitMethodParameter))
+instance (C.AllocateList Type'anyPointer'implicitMethodParameter) where
+    type ListAllocHint Type'anyPointer'implicitMethodParameter = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Type'anyPointer'implicitMethodParameter (C.Parsed Type'anyPointer'implicitMethodParameter))
 data instance C.Parsed Type'anyPointer'implicitMethodParameter
     = Type'anyPointer'implicitMethodParameter' 
         {parameterIndex :: (RP.Parsed Std_.Word16)}
@@ -1463,6 +1567,10 @@ instance (C.Allocate Brand) where
     type AllocHint Brand = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Brand (C.Parsed Brand))
+instance (C.AllocateList Brand) where
+    type ListAllocHint Brand = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Brand (C.Parsed Brand))
 data instance C.Parsed Brand
     = Brand 
         {scopes :: (RP.Parsed (R.List Brand'Scope))}
@@ -1487,6 +1595,10 @@ instance (C.Allocate Brand'Scope) where
     type AllocHint Brand'Scope = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Brand'Scope (C.Parsed Brand'Scope))
+instance (C.AllocateList Brand'Scope) where
+    type ListAllocHint Brand'Scope = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Brand'Scope (C.Parsed Brand'Scope))
 data instance C.Parsed Brand'Scope
     = Brand'Scope 
         {scopeId :: (RP.Parsed Std_.Word64)
@@ -1557,6 +1669,10 @@ instance (C.Allocate Brand'Binding) where
     type AllocHint Brand'Binding = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Brand'Binding (C.Parsed Brand'Binding))
+instance (C.AllocateList Brand'Binding) where
+    type ListAllocHint Brand'Binding = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Brand'Binding (C.Parsed Brand'Binding))
 data instance C.Parsed Brand'Binding
     = Brand'Binding 
         {union' :: (C.Parsed (GH.Which Brand'Binding))}
@@ -1622,6 +1738,10 @@ instance (C.Allocate Value) where
     type AllocHint Value = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Value (C.Parsed Value))
+instance (C.AllocateList Value) where
+    type ListAllocHint Value = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Value (C.Parsed Value))
 data instance C.Parsed Value
     = Value 
         {union' :: (C.Parsed (GH.Which Value))}
@@ -1857,6 +1977,10 @@ instance (C.Allocate Annotation) where
     type AllocHint Annotation = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc Annotation (C.Parsed Annotation))
+instance (C.AllocateList Annotation) where
+    type ListAllocHint Annotation = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc Annotation (C.Parsed Annotation))
 data instance C.Parsed Annotation
     = Annotation 
         {id :: (RP.Parsed Std_.Word64)
@@ -1948,6 +2072,10 @@ instance (C.Allocate CapnpVersion) where
     type AllocHint CapnpVersion = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc CapnpVersion (C.Parsed CapnpVersion))
+instance (C.AllocateList CapnpVersion) where
+    type ListAllocHint CapnpVersion = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc CapnpVersion (C.Parsed CapnpVersion))
 data instance C.Parsed CapnpVersion
     = CapnpVersion 
         {major :: (RP.Parsed Std_.Word16)
@@ -1982,6 +2110,10 @@ instance (C.Allocate CodeGeneratorRequest) where
     type AllocHint CodeGeneratorRequest = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc CodeGeneratorRequest (C.Parsed CodeGeneratorRequest))
+instance (C.AllocateList CodeGeneratorRequest) where
+    type ListAllocHint CodeGeneratorRequest = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc CodeGeneratorRequest (C.Parsed CodeGeneratorRequest))
 data instance C.Parsed CodeGeneratorRequest
     = CodeGeneratorRequest 
         {nodes :: (RP.Parsed (R.List Node))
@@ -2021,6 +2153,10 @@ instance (C.Allocate CodeGeneratorRequest'RequestedFile) where
     type AllocHint CodeGeneratorRequest'RequestedFile = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc CodeGeneratorRequest'RequestedFile (C.Parsed CodeGeneratorRequest'RequestedFile))
+instance (C.AllocateList CodeGeneratorRequest'RequestedFile) where
+    type ListAllocHint CodeGeneratorRequest'RequestedFile = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc CodeGeneratorRequest'RequestedFile (C.Parsed CodeGeneratorRequest'RequestedFile))
 data instance C.Parsed CodeGeneratorRequest'RequestedFile
     = CodeGeneratorRequest'RequestedFile 
         {id :: (RP.Parsed Std_.Word64)
@@ -2055,6 +2191,10 @@ instance (C.Allocate CodeGeneratorRequest'RequestedFile'Import) where
     type AllocHint CodeGeneratorRequest'RequestedFile'Import = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc CodeGeneratorRequest'RequestedFile'Import (C.Parsed CodeGeneratorRequest'RequestedFile'Import))
+instance (C.AllocateList CodeGeneratorRequest'RequestedFile'Import) where
+    type ListAllocHint CodeGeneratorRequest'RequestedFile'Import = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc CodeGeneratorRequest'RequestedFile'Import (C.Parsed CodeGeneratorRequest'RequestedFile'Import))
 data instance C.Parsed CodeGeneratorRequest'RequestedFile'Import
     = CodeGeneratorRequest'RequestedFile'Import 
         {id :: (RP.Parsed Std_.Word64)

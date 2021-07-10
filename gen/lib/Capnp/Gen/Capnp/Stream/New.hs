@@ -38,6 +38,10 @@ instance (C.Allocate StreamResult) where
     type AllocHint StreamResult = ()
     new _ = C.newTypedStruct
 instance (C.EstimateAlloc StreamResult (C.Parsed StreamResult))
+instance (C.AllocateList StreamResult) where
+    type ListAllocHint StreamResult = Std_.Int
+    newList  = C.newTypedStructList
+instance (C.EstimateListAlloc StreamResult (C.Parsed StreamResult))
 data instance C.Parsed StreamResult
     = StreamResult 
         {}

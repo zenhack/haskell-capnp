@@ -50,6 +50,12 @@ instance ((GH.TypeParam sturdyRef pr_1)
     new _ = C.newTypedStruct
 instance ((GH.TypeParam sturdyRef pr_1)
          ,(GH.TypeParam owner pr_2)) => (C.EstimateAlloc (Persistent'SaveParams sturdyRef owner) (C.Parsed (Persistent'SaveParams sturdyRef owner)))
+instance ((GH.TypeParam sturdyRef pr_1)
+         ,(GH.TypeParam owner pr_2)) => (C.AllocateList (Persistent'SaveParams sturdyRef owner)) where
+    type ListAllocHint (Persistent'SaveParams sturdyRef owner) = Std_.Int
+    newList  = C.newTypedStructList
+instance ((GH.TypeParam sturdyRef pr_1)
+         ,(GH.TypeParam owner pr_2)) => (C.EstimateListAlloc (Persistent'SaveParams sturdyRef owner) (C.Parsed (Persistent'SaveParams sturdyRef owner)))
 data instance C.Parsed (Persistent'SaveParams sturdyRef owner)
     = Persistent'SaveParams 
         {sealFor :: (RP.Parsed owner)}
@@ -82,6 +88,12 @@ instance ((GH.TypeParam sturdyRef pr_1)
     new _ = C.newTypedStruct
 instance ((GH.TypeParam sturdyRef pr_1)
          ,(GH.TypeParam owner pr_2)) => (C.EstimateAlloc (Persistent'SaveResults sturdyRef owner) (C.Parsed (Persistent'SaveResults sturdyRef owner)))
+instance ((GH.TypeParam sturdyRef pr_1)
+         ,(GH.TypeParam owner pr_2)) => (C.AllocateList (Persistent'SaveResults sturdyRef owner)) where
+    type ListAllocHint (Persistent'SaveResults sturdyRef owner) = Std_.Int
+    newList  = C.newTypedStructList
+instance ((GH.TypeParam sturdyRef pr_1)
+         ,(GH.TypeParam owner pr_2)) => (C.EstimateListAlloc (Persistent'SaveResults sturdyRef owner) (C.Parsed (Persistent'SaveResults sturdyRef owner)))
 data instance C.Parsed (Persistent'SaveResults sturdyRef owner)
     = Persistent'SaveResults 
         {sturdyRef :: (RP.Parsed sturdyRef)}
@@ -138,6 +150,16 @@ instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam externalRef pr_2)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (C.EstimateAlloc (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (C.Parsed (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)))
+instance ((GH.TypeParam internalRef pr_1)
+         ,(GH.TypeParam externalRef pr_2)
+         ,(GH.TypeParam internalOwner pr_3)
+         ,(GH.TypeParam externalOwner pr_4)) => (C.AllocateList (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)) where
+    type ListAllocHint (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) = Std_.Int
+    newList  = C.newTypedStructList
+instance ((GH.TypeParam internalRef pr_1)
+         ,(GH.TypeParam externalRef pr_2)
+         ,(GH.TypeParam internalOwner pr_3)
+         ,(GH.TypeParam externalOwner pr_4)) => (C.EstimateListAlloc (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (C.Parsed (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)))
 data instance C.Parsed (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)
     = RealmGateway'import'params 
         {cap :: (RP.Parsed (Persistent externalRef externalOwner))
@@ -194,6 +216,16 @@ instance ((GH.TypeParam internalRef pr_1)
          ,(GH.TypeParam externalRef pr_2)
          ,(GH.TypeParam internalOwner pr_3)
          ,(GH.TypeParam externalOwner pr_4)) => (C.EstimateAlloc (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (C.Parsed (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)))
+instance ((GH.TypeParam internalRef pr_1)
+         ,(GH.TypeParam externalRef pr_2)
+         ,(GH.TypeParam internalOwner pr_3)
+         ,(GH.TypeParam externalOwner pr_4)) => (C.AllocateList (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)) where
+    type ListAllocHint (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) = Std_.Int
+    newList  = C.newTypedStructList
+instance ((GH.TypeParam internalRef pr_1)
+         ,(GH.TypeParam externalRef pr_2)
+         ,(GH.TypeParam internalOwner pr_3)
+         ,(GH.TypeParam externalOwner pr_4)) => (C.EstimateListAlloc (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (C.Parsed (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)))
 data instance C.Parsed (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)
     = RealmGateway'export'params 
         {cap :: (RP.Parsed (Persistent internalRef internalOwner))

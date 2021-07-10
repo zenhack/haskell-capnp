@@ -147,6 +147,25 @@ declToDecls thisMod decl =
                             [ typ, Hs.TApp (tgName ["C"] "Parsed") [typ] ]
                         , defs = []
                         }
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp (tgName ["C"] "AllocateList") [typ]
+                        , defs =
+                            [ Hs.IdType $ Hs.TypeAlias "ListAllocHint" [typ] (tStd_ "Int")
+                            , Hs.IdValue Hs.DfValue
+                                { name = "newList"
+                                , params = []
+                                , value = egName ["C"] "newTypedStructList"
+                                }
+                            ]
+                        }
+                    , Hs.DcInstance
+                        { ctx
+                        , typ = Hs.TApp
+                            (tgName ["C"] "EstimateListAlloc")
+                            [typ, Hs.TApp (tgName ["C"] "Parsed") [typ]]
+                        , defs = []
+                        }
                     ]
                 Just (New.EnumTypeInfo variants) ->
                     [ Hs.DcInstance
