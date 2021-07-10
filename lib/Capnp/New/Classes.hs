@@ -115,6 +115,14 @@ instance AllocateList a => Allocate (R.List a) where
     type AllocHint (R.List a) = ListAllocHint a
     new = newList @a
 
+instance AllocateList (R.List a) where
+    type ListAllocHint (R.List a) = Int
+
+instance
+    ( Parse (R.List a) (V.Vector ap)
+    , Allocate (R.List a)
+    ) => EstimateListAlloc (R.List a) (V.Vector ap)
+
 newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newTypedStruct = newFromRepr (structSizes @a)
 
