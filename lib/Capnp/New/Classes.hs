@@ -192,40 +192,35 @@ instance MarshalElement a ap => Parse (R.List a) (V.Vector ap) where
         V.generateM (R.length rawV) $ \i ->
             R.index i rawV >>= parse
 
+-- | Type alias capturing the constraints on a type needed by
+-- 'marshalElement'
 type MarshalElement a ap =
     ( Parse a ap
     , EstimateListAlloc a ap
-    , MarshalElement'' (R.ReprFor a) a ap
+    , R.Element (R.ReprFor a)
+    , MarshalElementByRepr (R.ListReprFor (R.ReprFor a))
+    , MarshalElementReprConstraints (R.ListReprFor (R.ReprFor a)) a ap
     )
 
-type MarshalElement'' r a ap =
-    ( R.Element r
-    , MarshalElement''' (R.ListReprFor r) a ap
-    )
+-- | Constraints needed by marshalElement that are specific to a list repr.
+type family MarshalElementReprConstraints (lr :: R.ListRepr) a ap where
+    MarshalElementReprConstraints 'R.ListComposite  a ap = Marshal a ap
+    MarshalElementReprConstraints ('R.ListNormal r) a ap = Parse a ap
 
-type MarshalElement''' lr a ap =
-    ( MarshalElement' lr
-    , MarshalElementConstraints lr a ap
-    )
-
-type family MarshalElementConstraints (lr :: R.ListRepr) a ap where
-    MarshalElementConstraints 'R.ListComposite  a ap = Marshal a ap
-    MarshalElementConstraints ('R.ListNormal r) a ap = Parse a ap
-
-class MarshalElement' (lr :: R.ListRepr) where
-    marshalElement' ::
+class MarshalElementByRepr (lr :: R.ListRepr) where
+    marshalElementByRepr ::
         ( U.RWCtx m s
         , R.ListReprFor (R.ReprFor a) ~ lr
         , MarshalElement a ap
         ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
 
-instance MarshalElement' 'R.ListComposite where
-    marshalElement' rawList i parsed = do
+instance MarshalElementByRepr 'R.ListComposite where
+    marshalElementByRepr rawList i parsed = do
         rawElt <- R.index i rawList
         marshalInto rawElt parsed
 
-instance MarshalElement' ('R.ListNormal l) where
-    marshalElement' rawList i parsed = do
+instance MarshalElementByRepr ('R.ListNormal l) where
+    marshalElementByRepr rawList i parsed = do
         rawElt <- encode (U.message rawList) parsed
         R.setIndex rawElt i rawList
 
@@ -234,7 +229,7 @@ marshalElement ::
   ( U.RWCtx m s
   , MarshalElement a ap
   ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
-marshalElement = marshalElement' @(R.ListReprFor (R.ReprFor a))
+marshalElement = marshalElementByRepr @(R.ListReprFor (R.ReprFor a))
 
 class (Parse a ap, Allocate (R.List a)) => EstimateListAlloc a ap where
     estimateListAlloc :: V.Vector ap -> AllocHint (R.List a)
