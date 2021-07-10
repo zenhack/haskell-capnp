@@ -101,7 +101,7 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         , R.IsPtrRepr pr
         ) => Word16 -> R.UntypedPtr ('Mut s) pr -> U.Struct ('Mut s) -> m ()
     setPtrField index value struct =
-        U.setPtr (R.rToPtr @pr (U.message struct) value) (fromIntegral index) struct
+        U.setPtr (R.rToPtr @pr value) (fromIntegral index) struct
 
     setDataField
         :: forall sz.

@@ -193,7 +193,7 @@ type MarshalElement''' lr a ap =
 
 type family MarshalElementConstraints (lr :: R.ListRepr) a ap where
     MarshalElementConstraints 'R.ListComposite  a ap = Marshal a ap
-    MarshalElementConstraints ('R.ListNormal r) a ap = Allocate a
+    MarshalElementConstraints ('R.ListNormal r) a ap = Parse a ap
 
 class MarshalElement' (lr :: R.ListRepr) where
     marshalElement' ::
