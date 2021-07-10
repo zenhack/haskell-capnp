@@ -14,6 +14,7 @@ module Capnp.New.Classes
     ( Parse(..)
     , Marshal(..)
     , Allocate(..)
+    , AllocateList(..)
     , EstimateAlloc(..)
     , EstimateListAlloc(..)
     , MarshalElement
