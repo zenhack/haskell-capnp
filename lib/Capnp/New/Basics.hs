@@ -56,6 +56,11 @@ instance C.Parse AnyPointer (C.Parsed AnyPointer) where
         PtrList list -> Just . U.PtrList . R.fromRaw <$> C.encode msg list
         PtrStruct struct -> Just . U.PtrStruct . R.fromRaw <$> C.encode msg struct
 
+instance C.AllocateList AnyPointer where
+    type ListAllocHint AnyPointer = Int
+
+instance C.EstimateListAlloc AnyPointer (C.Parsed AnyPointer)
+
 data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
     , structPtrs :: V.Vector (C.Parsed AnyPointer)
