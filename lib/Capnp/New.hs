@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
@@ -19,6 +20,7 @@ module Capnp.New
     , unionWhich
     , structUnion
     , unionStruct
+    , TypeParam
     ) where
 
 
@@ -27,12 +29,19 @@ import qualified Capnp.Fields         as F
 import           Capnp.Message        (Mutability(..))
 import qualified Capnp.New.Classes    as C
 import qualified Capnp.Repr           as R
+import qualified Capnp.Repr.Parsed    as RP
 import           Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped        as U
 import           Data.Bits
 import           Data.Maybe           (fromJust)
 import           Data.Word
 import           GHC.Prim             (coerce)
+
+type TypeParam a pr =
+    ( R.ReprFor a ~ 'R.Ptr pr
+    , R.IsPtrRepr pr
+    , C.Parse a (RP.Parsed a)
+    )
 
 {-# INLINE readField #-}
 readField
