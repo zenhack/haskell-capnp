@@ -19,6 +19,7 @@ module Capnp.Repr.Methods
     , Client(..)
     , pipe
     , pipelineClient
+    , waitPipeline
 
     , AsClient(..)
 
@@ -29,11 +30,13 @@ module Capnp.Repr.Methods
 
 import qualified Capnp.Fields            as F
 import           Capnp.Message           (Mutability(..), newMessage)
+import qualified Capnp.Message           as M
 import qualified Capnp.New.Classes       as NC
 import qualified Capnp.Repr              as R
 import           Capnp.Rpc.Promise       (newPromise)
 import qualified Capnp.Rpc.Server        as Server
 import qualified Capnp.Rpc.Untyped       as Rpc
+import           Capnp.TraversalLimit    (evalLimitT)
 import qualified Capnp.Untyped           as U
 import           Control.Monad.Catch     (MonadThrow)
 import           Control.Monad.STM.Class (MonadSTM(..))
@@ -125,6 +128,20 @@ pipe (F.Field field) (Pipeline p) =
 pipelineClient :: (R.IsCap a, MonadSTM m) => Pipeline a -> m (Client a)
 pipelineClient (Pipeline p) =
     liftSTM $ Client <$> Rpc.pipelineClient p
+
+waitPipeline ::
+    forall a m pr.
+    ( 'R.Ptr pr ~ R.ReprFor a
+    , R.IsPtrRepr pr
+    , MonadSTM m
+    ) => Pipeline a -> m (R.Raw 'Const a)
+waitPipeline (Pipeline p) =
+    -- We need an instance of MonadLimit for IsPtrRepr's ReadCtx requirement,
+    -- but none of the relevant instances do a lot of reading, so we just
+    -- supply a low-ish arbitrary bound.
+    liftSTM $ evalLimitT 100 $ do
+        ptr <- Rpc.waitPipeline p
+        R.Raw <$> R.rFromPtr @pr M.empty ptr
 
 instance R.ReprFor a ~ 'R.Ptr ('Just 'R.Cap) => Rpc.IsClient (Client a) where
     toClient (Client c) = c
