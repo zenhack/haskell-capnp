@@ -28,6 +28,8 @@
   Most users of the library will not be affected, as this function is
   mostly a low-level implementation detail that is called by higher
   level functionality.
+* In `Capnp.Message` some uses of the type `Int` in the API have been
+  strengthened to type `WordCount`.
 
 # 0.10.0.1
 

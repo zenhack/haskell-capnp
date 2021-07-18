@@ -111,8 +111,8 @@ import qualified Internal.AppendVec as AppendVec
 
 
 -- | The maximum size of a segment supported by this libarary, in words.
-maxSegmentSize :: Int
-maxSegmentSize = 1 `shiftL` 28 -- 2 GiB.
+maxSegmentSize :: WordCount
+maxSegmentSize = WordCount $ 1 `shiftL` 28 -- 2 GiB.
 
 -- | The maximum number of segments allowed in a message by this library.
 maxSegments :: Int
@@ -455,9 +455,9 @@ write (SegMut MutSegment{vec}) (WordCount i) val = do
     SMV.write vec i (toLE64 val)
 
 -- | @'newSegment' msg sizeHint@ allocates a new, initially empty segment in
--- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
--- number and the segment itself. Amortized O(1).
-newSegment :: WriteCtx m s => Message ('Mut s) -> Int -> m (Int, Segment ('Mut s))
+-- @msg@ with a capacity of @sizeHint@ words. It returns the a pair of the
+-- segment number and the segment itself. Amortized O(1).
+newSegment :: WriteCtx m s => Message ('Mut s) -> WordCount -> m (Int, Segment ('Mut s))
 newSegment msg@(MsgMut MutMsg{mutSegs}) sizeHint = do
     when (sizeHint > maxSegmentSize) $ throwM E.SizeError
     -- the next segment number will be equal to the *current* number of
@@ -469,7 +469,7 @@ newSegment msg@(MsgMut MutMsg{mutSegs}) sizeHint = do
     segs <- AppendVec.grow segs 1 maxSegments
     writeMutVar mutSegs segs
 
-    vec <- SMV.new sizeHint
+    vec <- SMV.new (fromIntegral sizeHint)
     used <- newMutVar 0
     let newSeg = SegMut MutSegment{vec, used}
     setSegment msg segIndex newSeg
@@ -505,8 +505,8 @@ allocInSeg msg segIndex size = do
 -- to the segment. The latter is redundant information, but this is used
 -- in low-level code where this can improve performance.
 alloc :: WriteCtx m s => Message ('Mut s) -> WordCount -> m (WordPtr ('Mut s))
-alloc msg size@(WordCount sizeInt) = do
-    when (sizeInt > maxSegmentSize) $
+alloc msg size = do
+    when (size > maxSegmentSize) $
         throwM E.SizeError
     segIndex <- pred <$> numSegs msg
     existing <- allocInSeg msg segIndex size
@@ -516,9 +516,9 @@ alloc msg size@(WordCount sizeInt) = do
             -- Not enough space in the current segment; allocate a new one.
             -- the new segment's size should match the total size of existing segments
             -- but `maxSegmentSize` bounds how large it can get.
-            WordCount totalAllocation <- sum <$>
+            totalAllocation <- sum <$>
                 traverse (getSegment msg >=> numWords) [0..segIndex]
-            ( newSegIndex, _ ) <- newSegment msg (min (max totalAllocation sizeInt) maxSegmentSize)
+            ( newSegIndex, _ ) <- newSegment msg (min (max totalAllocation size) maxSegmentSize)
             -- This is guaranteed to succeed, since we just made a segment with
             -- at least size available space:
             fromJust <$> allocInSeg msg newSegIndex size
@@ -538,7 +538,7 @@ newMessage :: WriteCtx m s => Maybe WordCount -> m (Message ('Mut s))
 newMessage Nothing = newMessage (Just 32)
     -- The default value above is somewhat arbitrary, and just a guess -- we
     -- should do some profiling to figure out what a good value is here.
-newMessage (Just (WordCount sizeHint)) = do
+newMessage (Just sizeHint) = do
     mutSegs <- MV.new 1 >>= newMutVar . AppendVec.makeEmpty
     mutCaps <- MV.new 0 >>= newMutVar . AppendVec.makeEmpty
     let msg = MsgMut MutMsg{mutSegs,mutCaps}
