@@ -34,7 +34,7 @@ import qualified Data.Vector     as V
 import Capnp.Classes
 
 import Capnp.Errors  (Error(InvalidUtf8Error))
-import Capnp.Message (Mutability (..))
+import Capnp.Message (Mutability(..))
 import Capnp.Untyped (rawBytes)
 
 import qualified Capnp.Basics  as Basics

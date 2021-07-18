@@ -27,7 +27,7 @@ module Capnp.GenHelpers.Pure
 import Data.Maybe (fromJust)
 
 import Capnp.Classes        (cerializeBasicVec, cerializeCompositeVec)
-import Capnp.Message        (Mutability (..))
+import Capnp.Message        (Mutability(..))
 import Capnp.TraversalLimit (evalLimitT)
 import Codec.Capnp          (getRoot)
 

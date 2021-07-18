@@ -78,12 +78,12 @@ import Prelude hiding (read)
 import Data.Bits (shiftL)
 
 import Control.Monad             (void, when, (>=>))
-import Control.Monad.Catch       (MonadThrow (..))
+import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.Primitive   (PrimMonad, PrimState, stToPrim)
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
-import Data.ByteString.Internal  (ByteString (..))
+import Data.ByteString.Internal  (ByteString(..))
 import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.Kind                 (Type)
 import Data.Maybe                (fromJust)
@@ -100,10 +100,10 @@ import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
 
-import Capnp.Address        (WordAddr (..))
-import Capnp.Bits           (WordCount (..), hi, lo)
+import Capnp.Address        (WordAddr(..))
+import Capnp.Bits           (WordCount(..), hi, lo)
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
-import Data.Mutable         (Mutable (..))
+import Data.Mutable         (Mutable(..))
 import Internal.AppendVec   (AppendVec)
 
 import qualified Capnp.Errors       as E
