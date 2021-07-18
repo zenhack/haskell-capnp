@@ -141,7 +141,7 @@ waitPipeline (Pipeline p) =
     -- supply a low-ish arbitrary bound.
     liftSTM $ evalLimitT 100 $ do
         ptr <- Rpc.waitPipeline p
-        R.Raw <$> R.rFromPtr @pr M.empty ptr
+        R.Raw <$> R.fromPtr @pr M.empty ptr
 
 instance R.ReprFor a ~ 'R.Ptr ('Just 'R.Cap) => Rpc.IsClient (Client a) where
     toClient (Client c) = c

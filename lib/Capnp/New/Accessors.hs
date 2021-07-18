@@ -64,7 +64,7 @@ readField (F.Field field) (R.Raw struct) =
         , R.IsPtrRepr pr
         ) => Maybe (U.Ptr mut) -> m (R.Raw mut b)
     readPtrField ptr =
-        R.Raw <$> R.rFromPtr @pr (U.message struct) ptr
+        R.Raw <$> R.fromPtr @pr (U.message struct) ptr
 
 
 {-# INLINE getField #-}
@@ -103,7 +103,7 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         , R.IsPtrRepr pr
         ) => Word16 -> R.UntypedPtr ('Mut s) pr -> U.Struct ('Mut s) -> m ()
     setPtrField index value struct =
-        U.setPtr (R.rToPtr @pr value) (fromIntegral index) struct
+        U.setPtr (R.toPtr @pr value) (fromIntegral index) struct
 
     setDataField
         :: forall sz.
