@@ -1,6 +1,10 @@
 
 # 0.11.0.0
 
+* This release introduces some experimental new APIs; see the blog post
+  for details (TODO: write blog post and link to it).
+  * The new APIs include support for RPC pipelining, which is not
+    possible with the old APIs.
 * The traversal limit is tracked at a coarser granularity. This results
   in a modest performance improvement, and may result in slightly
   different (but similar) amounts of the limit being used for a given
