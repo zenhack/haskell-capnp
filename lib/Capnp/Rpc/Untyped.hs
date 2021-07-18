@@ -1725,7 +1725,6 @@ updateQAReturn :: Conn' -> M.Map QAId EntryQA -> Text -> Return -> STM ()
 updateQAReturn conn table tableName ret@Return{answerId} =
     lookupAbort tableName conn table answerId $ \case
         NewQA{onFinish, onReturn} -> do
-            mapQueueSTM conn onReturn ret
             M.insert
                 HaveReturn
                     { returnMsg = ret
@@ -1733,9 +1732,10 @@ updateQAReturn conn table tableName ret@Return{answerId} =
                     }
                 answerId
                 table
+            traverse_ ($ ret) onReturn
         HaveFinish{onReturn} -> do
-            mapQueueSTM conn onReturn ret
             M.delete answerId table
+            traverse_ ($ ret) onReturn
         HaveReturn{} ->
             abortConn conn $ eFailed $
                 "Duplicate return message for " <> tableName <> " #"
@@ -1745,7 +1745,7 @@ updateQAFinish :: Conn' -> M.Map QAId EntryQA -> Text -> R.Finish -> STM ()
 updateQAFinish conn table tableName finish@R.Finish{questionId} =
     lookupAbort tableName conn table (QAId questionId) $ \case
         NewQA{onFinish, onReturn} -> do
-            mapQueueSTM conn onFinish finish
+            traverse_ ($ finish) onFinish
             M.insert
                 HaveFinish
                     { finishMsg = finish
@@ -1754,7 +1754,7 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
                 (QAId questionId)
                 table
         HaveReturn{onFinish} -> do
-            mapQueueSTM conn onFinish finish
+            traverse_ ($ finish) onFinish
             M.delete (QAId questionId) table
         HaveFinish{} ->
             abortConn conn $ eFailed $
