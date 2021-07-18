@@ -21,7 +21,6 @@ module Capnp.New.Accessors
     , unionWhich
     , structUnion
     , unionStruct
-    , TypeParam
     ) where
 
 
@@ -30,20 +29,12 @@ import qualified Capnp.Fields         as F
 import           Capnp.Message        (Mutability(..))
 import qualified Capnp.New.Classes    as C
 import qualified Capnp.Repr           as R
-import qualified Capnp.Repr.Parsed    as RP
 import           Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped        as U
 import           Data.Bits
 import           Data.Maybe           (fromJust)
 import           Data.Word
 import           GHC.Prim             (coerce)
-
--- TODO: this feels like the wrong place for this; move it.
--- | Constraints needed for @a@ to be a capnproto type parameter.
-type TypeParam a =
-    ( R.IsPtr a
-    , C.Parse a (RP.Parsed a)
-    )
 
 {-# INLINE readField #-}
 readField

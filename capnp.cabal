@@ -109,6 +109,7 @@ library
       , Capnp.New.Accessors
       , Capnp.New.Basics
       , Capnp.New.Classes
+      , Capnp.New.Constraints
       , Capnp.Convert
       , Capnp.Errors
       , Capnp.Fields
