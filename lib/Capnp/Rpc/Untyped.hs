@@ -1829,8 +1829,13 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
             R.Message'bootstrap def { R.questionId = qaWord qid }
         M.insert
             NewQA
-                { onReturn = SnocList.singleton $
-                    resolveClientReturn tmpDest (writeTVar pState) conn' []
+                { onReturn = SnocList.fromList
+                    [ resolveClientReturn tmpDest (writeTVar pState) conn' []
+                    , \_ -> finishQuestion conn' R.Finish
+                        { questionId = qaWord qid
+                        , releaseResultCaps = False
+                        }
+                    ]
                 , onFinish = SnocList.empty
                 }
             qid
@@ -1929,13 +1934,13 @@ resolveClientClient tmpDest resolve (Client client) =
             newConn <- destConn newDest
             oldConn <- destConn oldDest
             if newConn == oldConn
-                then releaseAndResolve
+                then resolveNow
                 else disembargoAndResolve oldDest
         ( Just (ImportClient cell), RemoteDest oldDest ) -> do
             ImportRef { conn=newConn } <- Fin.readCell cell
             oldConn <- destConn oldDest
             if newConn == oldConn
-                then releaseAndResolve
+                then resolveNow
                 else disembargoAndResolve oldDest
   where
     destConn AnswerDest { conn } = pure conn
@@ -1947,8 +1952,7 @@ resolveClientClient tmpDest resolve (Client client) =
         ImportRef { importId } <- Fin.readCell cell
         pure $ ImportTgt importId
 
-    releaseAndResolve = do
-        releaseTmpDest tmpDest
+    resolveNow = do
         resolve $ Ready (Client client)
 
     -- Flush the call buffer into the client's queue, and then pass the client
@@ -1989,18 +1993,6 @@ disembargo conn@Conn'{embargos} tgt onEcho = do
         { target = marshalMsgTarget tgt
         , context = R.Disembargo'context'senderLoopback (embargoWord eid)
         }
-
--- Do any cleanup of a TmpDest; this should be called after resolving a
--- pending promise.
-releaseTmpDest :: TmpDest -> STM ()
-releaseTmpDest (LocalDest LocalBuffer{}) = pure ()
-releaseTmpDest (RemoteDest AnswerDest { conn, answer=PromisedAnswer{ answerId } }) =
-    whenLive conn $ \conn' ->
-        finishQuestion conn' def
-            { R.questionId = qaWord answerId
-            , R.releaseResultCaps = False
-            }
-releaseTmpDest (RemoteDest (ImportDest _)) = pure ()
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
