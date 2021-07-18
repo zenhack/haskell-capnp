@@ -39,9 +39,9 @@ import           Data.Word
 import           GHC.Prim             (coerce)
 
 -- TODO: this feels like the wrong place for this; move it.
-type TypeParam a pr =
-    ( R.ReprFor a ~ 'R.Ptr pr
-    , R.IsPtrRepr pr
+-- | Constraints needed for @a@ to be a capnproto type parameter.
+type TypeParam a =
+    ( R.IsPtr a
     , C.Parse a (RP.Parsed a)
     )
 

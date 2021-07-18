@@ -70,8 +70,8 @@ dataField shift index nbits defaultValue = F.Field $ F.DataField @sz F.DataField
     , defaultValue
     }
 
-ptrField :: (R.IsPtrRepr p, R.ReprFor b ~ 'R.Ptr p) => Word16 -> F.Field 'F.Slot a b
-ptrField = F.Field . F.PtrField
+ptrField :: forall a b. R.IsPtr b => Word16 -> F.Field 'F.Slot a b
+ptrField = F.Field . F.PtrField @(R.PtrReprFor (R.ReprFor b))
 
 groupField :: (R.ReprFor b ~ 'R.Ptr ('Just 'R.Struct)) => F.Field 'F.Group a b
 groupField = F.Field F.GroupField

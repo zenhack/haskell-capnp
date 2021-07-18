@@ -478,16 +478,13 @@ variantToDecls thisMod containerType typeParams New.UnionVariant{tagValue, varia
     ]
 
 paramsContext :: [Hs.Type] -> [Hs.Type]
-paramsContext tVars =
-    zipWith paramConstraints tVars (map (("pr_" ++) . show) [1..])
+paramsContext = map paramConstraints
 
 -- | Constraints required for a capnproto type parameter. The returned
 -- expression has kind 'Constraint'.
---
--- The second argument is a unique type variable name within this scope.
-paramConstraints :: Hs.Type -> String -> Hs.Type
-paramConstraints t s =
-    Hs.TApp (tgName ["GH"] "TypeParam") [t, Hs.TVar $ fromString s]
+paramConstraints :: Hs.Type -> Hs.Type
+paramConstraints t =
+    Hs.TApp (tgName ["GH"] "TypeParam") [t]
 
 tCapnp :: Word64 -> Name.CapnpQ -> Hs.Type
 tCapnp thisMod Name.CapnpQ{local, fileId}

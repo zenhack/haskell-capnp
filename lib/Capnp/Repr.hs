@@ -19,6 +19,8 @@
 -- This module provides facilities for working with the wire
 -- representations of capnproto objects at the type level. The most
 -- central part of this module is the 'Repr' type.
+--
+-- Recommended reading: https://capnproto.org/encoding.html
 module Capnp.Repr
     (
     -- * Type-level descriptions of wire representations.
@@ -38,6 +40,7 @@ module Capnp.Repr
 
     -- * Mapping types to their wire representations.
     , ReprFor
+    , PtrReprFor
 
     -- * Relating the representations of lists & their elements.
     , ElemRepr
@@ -63,6 +66,7 @@ module Capnp.Repr
     -- * Shorthands for types
     , IsStruct
     , IsCap
+    , IsPtr
     ) where
 
 import Prelude hiding (length)
@@ -93,6 +97,7 @@ data Repr
     -- ^ Non-pointer type.
     deriving(Show)
 
+-- | Information about the representation of a pointer type
 data PtrRepr
     = Cap
     -- ^ Capability pointer.
@@ -103,8 +108,10 @@ data PtrRepr
     -- ^ A struct (or group).
     deriving(Show)
 
+-- | Information about the representation of a list type.
 data ListRepr where
     ListNormal :: NormalListRepr -> ListRepr
+    -- ^ A "normal" list
     ListComposite :: ListRepr
     deriving(Show)
 
@@ -184,6 +191,11 @@ type instance ReprFor (U.Ptr mut) = 'Ptr 'Nothing
 type instance ReprFor (U.List mut) = 'Ptr ('Just ('List 'Nothing))
 
 type instance ReprFor (List a) = 'Ptr ('Just ('List ('Just (ListReprFor (ReprFor a)))))
+
+-- | @PtrReprFor r@ extracts the pointer represnetation in r; undefined if
+-- r is not a pointer representation.
+type family PtrReprFor (r :: Repr) :: Maybe PtrRepr where
+    PtrReprFor ('Ptr pr) = pr
 
 -- | @ElemRepr r@ is the representation of elements of lists with
 -- representation @r@.
@@ -397,8 +409,14 @@ instance AllocateNormalList ('ListData 'Sz64) where allocNormalList = U.allocLis
 instance AllocateNormalList 'ListPtr where allocNormalList = U.allocListPtr
 
 
--- | Constraint that a is a struct type.
+-- | Constraint that @a@ is a struct type.
 type IsStruct a = ReprFor a ~ 'Ptr ('Just 'Struct)
 
--- | Constraint that a is a capability type.
+-- | Constraint that @a@ is a capability type.
 type IsCap a = ReprFor a ~ 'Ptr ('Just 'Cap)
+
+-- | Constraint that @a@ is a pointer type.
+type IsPtr a =
+    ( ReprFor a ~ 'Ptr (PtrReprFor (ReprFor a))
+    , IsPtrRepr (PtrReprFor (ReprFor a))
+    )
