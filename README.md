@@ -40,7 +40,7 @@ accommodate more features as we add them.
 [issue27]: https://github.com/zenhack/haskell-capnp/issues/27
 [issue28]: https://github.com/zenhack/haskell-capnp/issues/28
 
-[ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
+[ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/pipeline.svg
 [ci]: https://gitlab.com/isd/haskell-capnp/pipelines
 
 [hackage-img]: https://img.shields.io/hackage/v/capnp.svg
