@@ -996,7 +996,7 @@ cbCallReturn
             abortConn conn' $ eUnimplemented
                 "This vat does not support level 3."
     -- Defer this until after any other callbacks run, in case disembargos
-    -- need to be send due to promise resolutions that we triggered:
+    -- need to be sent due to promise resolutions that we triggered:
     queueSTM conn' $ finishQuestion conn' def
         { R.questionId = qaWord answerId
         , R.releaseResultCaps = False
