@@ -71,27 +71,27 @@ import Control.Exception.Safe    (impureThrow)
 import Control.Monad             (forM_, unless)
 import Control.Monad.Catch       (MonadCatch, MonadThrow(throwM))
 import Control.Monad.Catch.Pure  (CatchT(runCatchT))
-import Control.Monad.Primitive   (PrimMonad (..))
+import Control.Monad.Primitive   (PrimMonad(..))
 import Control.Monad.Trans.Class (MonadTrans(lift))
 
 import qualified Data.ByteString     as BS
 import qualified Language.Haskell.TH as TH
 
-import Capnp.Address        (OffsetError (..), WordAddr (..), pointerFrom)
+import Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
 import Capnp.Bits
-    ( BitCount (..)
-    , ByteCount (..)
-    , Word1 (..)
-    , WordCount (..)
+    ( BitCount(..)
+    , ByteCount(..)
+    , Word1(..)
+    , WordCount(..)
     , bitsToBytesCeil
     , bytesToWordsCeil
     , replaceBits
     , wordsToBytes
     )
-import Capnp.Message        (Mutability (..))
-import Capnp.Pointer        (ElementSize (..))
+import Capnp.Message        (Mutability(..))
+import Capnp.Pointer        (ElementSize(..))
 import Capnp.TraversalLimit (MonadLimit(invoice))
-import Data.Mutable         (Thaw (..))
+import Data.Mutable         (Thaw(..))
 
 import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M
