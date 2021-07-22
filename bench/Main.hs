@@ -5,6 +5,7 @@ module Main (main) where
 
 import qualified Capnp                     as C
 import qualified Capnp.Untyped             as U
+import           Control.DeepSeq           (NFData(..))
 import           Control.Monad             (unless)
 import           Criterion.Main
 import qualified Data.ByteString           as BS
@@ -31,12 +32,26 @@ getCGRBytes = do
     unless (exit == ExitSuccess) $ error "capnp compile failed"
     pure cgrBytes
 
+instance NFData (C.Message mut) where
+    rnf = (`seq` ())
+
 main :: IO ()
 main = do
     cgrBytes <- getCGRBytes
     msg <- C.bsToMsg cgrBytes
+    let whnfLTIO = whnfIO . C.evalLimitT maxBound
     defaultMain
-        [ bench "canonicalize" $ whnfIO $ C.evalLimitT maxBound $ do
+        [ bench "canonicalize" $ whnfLTIO $ do
             root <- U.rootPtr msg
             C.canonicalize root
+        , env
+            (C.evalLimitT maxBound $ do
+                mutMsg <- C.thaw msg
+                newMsg <- C.newMessage Nothing
+                pure (mutMsg, newMsg)
+            )
+            (\ ~(mutMsg, newMsg) -> bench "copy" $ whnfLTIO $ do
+                root <- U.rootPtr mutMsg
+                U.copyPtr newMsg (Just (U.PtrStruct root))
+            )
         ]

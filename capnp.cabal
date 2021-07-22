@@ -351,4 +351,5 @@ benchmark bench
   build-depends:
       capnp
     , criterion ^>=1.5.9
+    , deepseq
     , process-extras

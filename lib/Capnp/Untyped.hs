@@ -33,6 +33,10 @@ module Capnp.Untyped
     , getData, getPtr
     , setData, setPtr
     , copyStruct
+    , copyPtr
+    , copyList
+    , copyCap
+    , copyListOf
     , getClient
     , get, index, length
     , setIndex
