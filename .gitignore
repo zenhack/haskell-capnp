@@ -30,3 +30,6 @@ result*
 
 # I sometimes leave notes for myself in my working directory:
 /NOTES
+
+# Benchmark outputs:
+*.html
