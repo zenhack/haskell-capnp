@@ -618,13 +618,13 @@ setIndex value i list = case list of
         dest <- index i list
         copyStruct dest value
   where
-    setNIndex :: (ReadCtx m ('Mut s), M.WriteCtx m s, Bounded a, Integral a) => NormalList ('Mut s) -> Int -> a -> m ()
+    setNIndex :: (RWCtx m s, Bounded a, Integral a) => NormalList ('Mut s) -> Int -> a -> m ()
     setNIndex NormalList{nPtr=M.WordPtr{pSegment, pAddr=WordAt{wordIndex}}} eltsPerWord value = do
         let eltWordIndex = wordIndex + WordCount (i `div` eltsPerWord)
         word <- M.read pSegment eltWordIndex
         let shift = (i `mod` eltsPerWord) * (64 `div` eltsPerWord)
         M.write pSegment eltWordIndex $ replaceBits value word shift
-    setPtrIndex :: (ReadCtx m ('Mut s), M.WriteCtx m s) => NormalList ('Mut s) -> Ptr ('Mut s) -> P.Ptr -> m ()
+    setPtrIndex :: RWCtx m s => NormalList ('Mut s) -> Ptr ('Mut s) -> P.Ptr -> m ()
     setPtrIndex NormalList{nPtr=nPtr@M.WordPtr{pAddr=addr@WordAt{wordIndex}}} absPtr relPtr =
         let srcPtr = nPtr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
         in setPointerTo srcPtr (ptrAddr absPtr) relPtr
