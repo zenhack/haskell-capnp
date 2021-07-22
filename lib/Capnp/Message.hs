@@ -88,8 +88,8 @@ import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.Kind                 (Type)
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
-import Data.Word                 (Word32, Word64)
-import System.Endian             (fromLE64, toLE64)
+import Data.Word                 (Word32, Word64, byteSwap64)
+import GHC.ByteOrder             (ByteOrder(..), targetByteOrder)
 import System.IO                 (Handle, stdin, stdout)
 
 import qualified Data.ByteString              as BS
@@ -108,6 +108,13 @@ import Internal.AppendVec   (AppendVec)
 
 import qualified Capnp.Errors       as E
 import qualified Internal.AppendVec as AppendVec
+
+swapIfBE64, fromLE64, toLE64 :: Word64 -> Word64
+swapIfBE64 = case targetByteOrder of
+    LittleEndian -> id
+    BigEndian    -> byteSwap64
+fromLE64 = swapIfBE64
+toLE64 = swapIfBE64
 
 
 -- | The maximum size of a segment supported by this libarary, in words.
