@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds        #-}
+{-# LANGUAGE ExplicitForAll   #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-|
@@ -28,6 +29,9 @@ module Capnp.Convert
     , valueToBS
     , valueToLBS
     , valueToMsg
+
+    , msgToRaw
+    , msgToParsed
     ) where
 
 import Control.Monad       ((>=>))
@@ -41,12 +45,15 @@ import qualified Data.ByteString.Lazy    as LBS
 import Capnp.Classes
 
 import Capnp.Bits           (WordCount)
-import Capnp.Message        (Mutability (..))
+import Capnp.Message        (Mutability(..))
+import Capnp.New.Classes    (Parse(parse))
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
 import Codec.Capnp          (getRoot, setRoot)
 import Data.Mutable         (freeze)
 
 import qualified Capnp.Message as M
+import qualified Capnp.Repr    as R
+import qualified Capnp.Untyped as U
 
 -- | Compute a reasonable limit based on the size of a message. The limit
 -- is the total number of words in all of the message's segments, multiplied
@@ -122,3 +129,9 @@ valueToMsg val = do
     ret <- cerialize msg val
     setRoot ret
     pure msg
+
+msgToRaw :: (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw mut a)
+msgToRaw = fmap R.Raw . U.rootPtr
+
+msgToParsed :: forall a m pa. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => M.Message 'Const -> m pa
+msgToParsed msg = msgToRaw msg >>= parse

@@ -29,11 +29,6 @@ things to be aware of:
 * The implementation is *not* robust against resource exhaustion
   attacks; for now users are strongly discouraged from using it to do
   RPC with untrusted peers.
-* While most of the machinery for it is in place, the API does not
-  currently expose a way to do field projection on remote promises.
-  As a consequence, actually pipelining method calls is not currently
-  possible, so the library is currently best suited to environments
-  which are already low-latency.
 
 The API is considered unstable. It will likely see changes, for the
 sake of polish, consistency, etc. as well as to improve performance and
@@ -45,7 +40,7 @@ accommodate more features as we add them.
 [issue27]: https://github.com/zenhack/haskell-capnp/issues/27
 [issue28]: https://github.com/zenhack/haskell-capnp/issues/28
 
-[ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/build.svg
+[ci-img]: https://gitlab.com/isd/haskell-capnp/badges/master/pipeline.svg
 [ci]: https://gitlab.com/isd/haskell-capnp/pipelines
 
 [hackage-img]: https://img.shields.io/hackage/v/capnp.svg

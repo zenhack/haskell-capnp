@@ -1,6 +1,10 @@
 
 # 0.11.0.0
 
+* This release introduces some experimental new APIs; see the blog post
+  for details (TODO: write blog post and link to it).
+  * The new APIs include support for RPC pipelining, which is not
+    possible with the old APIs.
 * The traversal limit is tracked at a coarser granularity. This results
   in a modest performance improvement, and may result in slightly
   different (but similar) amounts of the limit being used for a given
@@ -10,6 +14,8 @@
   malformed messages may trigger bounds check errors which did not
   previously, because the offending portion of the message was not
   read.
+* The limit on how many capabilities can be attached to a single message
+  has been increased.
 * `LimitT m` now has an instance of `MonadCatch` if `m` has an instance.
 * Some harmless warnings triggered by the generated code are now
   silenced.
@@ -22,6 +28,13 @@
   Most users of the library will not be affected, as this function is
   mostly a low-level implementation detail that is called by higher
   level functionality.
+* In `Capnp.Message` some uses of the type `Int` in the API have been
+  strengthened to type `WordCount`.
+
+# 0.10.0.1
+
+* Fix a bug causing spurious exceptions when creating very large
+  messages.
 
 # 0.10.0.0
 

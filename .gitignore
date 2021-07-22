@@ -27,3 +27,9 @@ result*
 # dependencies between it and the rest of the library.
 /examples/Capnp
 /tests/Capnp
+
+# I sometimes leave notes for myself in my working directory:
+/NOTES
+
+# Benchmark outputs:
+*.html

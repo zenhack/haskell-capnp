@@ -10,23 +10,26 @@ import System.IO        (IOMode(WriteMode), withFile)
 import qualified Data.Text.Lazy    as LT
 import qualified Data.Text.Lazy.IO as TIO
 
-import Capnp                       (defaultLimit, getValue)
-import Capnp.Gen.Capnp.Schema.Pure (CodeGeneratorRequest)
+import Capnp                      (defaultLimit, getParsed)
+import Capnp.Gen.Capnp.Schema.New (CodeGeneratorRequest)
+import Capnp.Repr.Parsed          (Parsed)
 
 import qualified Check
 import qualified IR.Flat             as Flat
 import qualified IR.Haskell          as Haskell
 import qualified Trans.CgrToStage1
+import qualified Trans.FlatToNew
 import qualified Trans.FlatToPure
 import qualified Trans.FlatToRaw
 import qualified Trans.HaskellToText
+import qualified Trans.NewToHaskell
 import qualified Trans.PureToHaskell
 import qualified Trans.RawToHaskell
 import qualified Trans.Stage1ToFlat
 
 main :: IO ()
 main = do
-    cgr <- getValue defaultLimit
+    cgr <- getParsed defaultLimit
     Check.reportIssues cgr
     for_ (handleCGR cgr) $ \(path, contents) -> do
         createDirectoryIfMissing True (takeDirectory path)
@@ -34,13 +37,17 @@ main = do
             TIO.hPutStr h contents
 
 -- | Convert a 'CodeGeneratorRequest' to a list of files to create.
-handleCGR :: CodeGeneratorRequest -> [(FilePath, LT.Text)]
+handleCGR :: Parsed CodeGeneratorRequest -> [(FilePath, LT.Text)]
 handleCGR cgr =
     let flat =
             Trans.Stage1ToFlat.cgrToCgr $
             Trans.CgrToStage1.cgrToCgr cgr
         modules =
-            handleFlatRaw flat ++ handleFlatPure flat
+            concatMap ($ flat)
+                [ handleFlatRaw
+                , handleFlatPure
+                , handleFlatNew
+                ]
     in
     map
         (\mod ->
@@ -50,7 +57,7 @@ handleCGR cgr =
         )
         modules
 
-handleFlatPure, handleFlatRaw :: Flat.CodeGenReq -> [Haskell.Module]
+handleFlatPure, handleFlatRaw, handleFlatNew :: Flat.CodeGenReq -> [Haskell.Module]
 
 handleFlatPure =
     concatMap Trans.PureToHaskell.fileToModules
@@ -59,3 +66,7 @@ handleFlatPure =
 handleFlatRaw =
     concatMap Trans.RawToHaskell.fileToModules
     . Trans.FlatToRaw.cgrToFiles
+
+handleFlatNew =
+    concatMap Trans.NewToHaskell.fileToModules
+    . Trans.FlatToNew.cgrToFiles

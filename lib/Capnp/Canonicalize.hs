@@ -32,7 +32,7 @@ import Data.Maybe       (isNothing)
 import Data.Traversable (for)
 
 import           Capnp.Bits    (WordCount)
-import           Capnp.Message (Mutability (..))
+import           Capnp.Message (Mutability(..))
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
 

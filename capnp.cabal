@@ -1,6 +1,6 @@
 cabal-version:            2.2
 name:                     capnp
-version:                  0.10.0.0
+version:                  0.11.0.0
 category:                 Data, Serialization, Network, Rpc
 copyright:                2016-2020 haskell-capnp contributors (see CONTRIBUTORS file).
 author:                   Ian Denhardt
@@ -65,6 +65,7 @@ common shared-opts
       , containers                        >= 0.5.9 && <0.7
       , data-default                      ^>= 0.7.1
       , exceptions                        ^>= 0.10.0
+      , ghc-prim                          ^>= 0.6.1
       , mtl                               ^>= 2.2.2
       , primitive                         >= 0.6.3 && <0.8
       , safe-exceptions                   ^>= 0.1.7
@@ -104,16 +105,26 @@ library
       , Capnp.Bits
       , Capnp.Canonicalize
       , Capnp.Classes
+      , Capnp.New
+      , Capnp.New.Accessors
+      , Capnp.New.Basics
+      , Capnp.New.Classes
+      , Capnp.New.Constraints
       , Capnp.Convert
       , Capnp.Errors
+      , Capnp.Fields
       , Capnp.GenHelpers
       , Capnp.GenHelpers.Pure
       , Capnp.GenHelpers.Rpc
+      , Capnp.GenHelpers.New
       , Capnp.IO
       , Capnp.Message
       , Capnp.Pointer
       , Capnp.Untyped
       , Capnp.Untyped.Pure
+      , Capnp.Repr
+      , Capnp.Repr.Methods
+      , Capnp.Repr.Parsed
       , Capnp.TraversalLimit
       , Capnp.Rpc
       , Capnp.Rpc.Promise
@@ -153,6 +164,15 @@ library
       , Capnp.Gen.Capnp.RpcTwoparty
       , Capnp.Gen.Capnp.Schema
       , Capnp.Gen.Capnp.Stream
+
+      , Capnp.Gen.Capnp.Cxx.New
+      , Capnp.Gen.Capnp.Compat.Json.New
+      , Capnp.Gen.Capnp.Persistent.New
+      , Capnp.Gen.Capnp.Rpc.New
+      , Capnp.Gen.Capnp.RpcTwoparty.New
+      , Capnp.Gen.Capnp.Schema.New
+      , Capnp.Gen.Capnp.Stream.New
+
       , Capnp.Gen.ById.Xbdf87d7bb8304e81.Pure
       , Capnp.Gen.ById.X8ef99297a43a5e34.Pure
       , Capnp.Gen.ById.Xb8630836983feed7.Pure
@@ -160,6 +180,13 @@ library
       , Capnp.Gen.ById.Xa184c7885cdaf2a1.Pure
       , Capnp.Gen.ById.Xa93fc509624c72d9.Pure
       , Capnp.Gen.ById.X86c366a91393f3f8.Pure
+      , Capnp.Gen.ById.Xbdf87d7bb8304e81.New
+      , Capnp.Gen.ById.X8ef99297a43a5e34.New
+      , Capnp.Gen.ById.Xb8630836983feed7.New
+      , Capnp.Gen.ById.Xb312981b2552a250.New
+      , Capnp.Gen.ById.Xa184c7885cdaf2a1.New
+      , Capnp.Gen.ById.Xa93fc509624c72d9.New
+      , Capnp.Gen.ById.X86c366a91393f3f8.New
       , Capnp.Gen.ById.Xbdf87d7bb8304e81
       , Capnp.Gen.ById.X8ef99297a43a5e34
       , Capnp.Gen.ById.Xb8630836983feed7
@@ -178,8 +205,7 @@ library
       , Codec.Capnp
     -- other-extensions:
     build-depends:
-        cpu                               ^>= 0.1.2
-      , hashable                          >= 1.2.7 && <1.4
+        hashable                          >= 1.2.7 && <1.4
       , data-default-instances-vector     ^>= 0.0.1
       , stm                               ^>= 2.5.0
       , stm-containers                    >= 1.1.0 && <1.3
@@ -202,6 +228,7 @@ executable capnpc-haskell
   main-is: Main.hs
   other-modules:
       IR.Name
+      IR.New
     , IR.Common
     , IR.Stage1
     , IR.Flat
@@ -212,9 +239,11 @@ executable capnpc-haskell
     , Trans.Stage1ToFlat
     , Trans.FlatToRaw
     , Trans.FlatToPure
+    , Trans.FlatToNew
     , Trans.ToHaskellCommon
     , Trans.PureToHaskell
     , Trans.RawToHaskell
+    , Trans.NewToHaskell
     , Trans.HaskellToText
     , Check
   build-depends:
@@ -247,28 +276,36 @@ test-suite tests
       , Examples.Rpc.CalculatorServer
 
       -- Generated code for examples/calculator.capnp
-      , Capnp.Gen.ById.X85150b117366d14b
-      , Capnp.Gen.ById.X85150b117366d14b.Pure
       , Capnp.Gen.Calculator
       , Capnp.Gen.Calculator.Pure
+      , Capnp.Gen.Calculator.New
+      , Capnp.Gen.ById.X85150b117366d14b
+      , Capnp.Gen.ById.X85150b117366d14b.Pure
+      , Capnp.Gen.ById.X85150b117366d14b.New
 
       -- Generated code for examples/echo.capnp
       , Capnp.Gen.Echo
       , Capnp.Gen.Echo.Pure
+      , Capnp.Gen.Echo.New
       , Capnp.Gen.ById.Xd0a87f36fa0182f5
       , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
+      , Capnp.Gen.ById.Xd0a87f36fa0182f5.New
 
       -- generated from tests/data/aircraft.capnp
       , Capnp.Gen.Aircraft
       , Capnp.Gen.Aircraft.Pure
+      , Capnp.Gen.Aircraft.New
       , Capnp.Gen.ById.X832bcc6686a26d56
       , Capnp.Gen.ById.X832bcc6686a26d56.Pure
+      , Capnp.Gen.ById.X832bcc6686a26d56.New
 
       -- generated from tests/data/generics.capnp
       , Capnp.Gen.Generics
       , Capnp.Gen.Generics.Pure
+      , Capnp.Gen.Generics.New
       , Capnp.Gen.ById.Xb6421fb8e478d144
       , Capnp.Gen.ById.Xb6421fb8e478d144.Pure
+      , Capnp.Gen.ById.Xb6421fb8e478d144.New
 
       -- Actual tests:
       , Module.Capnp.Gen.Capnp.Schema
@@ -304,3 +341,14 @@ test-suite tests
       , deepseq
       , pretty-show
       , supervisors
+
+
+benchmark bench
+  import: shared-opts
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: bench
+  build-depends:
+      capnp
+    , criterion ^>=1.5.9
+    , process-extras

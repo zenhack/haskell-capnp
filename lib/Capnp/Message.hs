@@ -80,20 +80,20 @@ import {-# SOURCE #-} Capnp.Rpc.Untyped (Client, nullClient)
 import Prelude hiding (read)
 
 import Control.Monad             (void, when, (>=>))
-import Control.Monad.Catch       (MonadThrow (..))
+import Control.Monad.Catch       (MonadThrow(..))
 import Control.Monad.Primitive   (PrimMonad, PrimState, stToPrim)
 import Control.Monad.State       (evalStateT, get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
 import Data.Bits                 (shiftL)
-import Data.ByteString.Internal  (ByteString (..))
+import Data.ByteString.Internal  (ByteString(..))
 import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.Function             ((&))
 import Data.Kind                 (Type)
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
-import Data.Word                 (Word32, Word64)
-import System.Endian             (fromLE64, toLE64)
+import Data.Word                 (Word32, Word64, byteSwap64)
+import GHC.ByteOrder             (ByteOrder(..), targetByteOrder)
 import System.IO                 (Handle, stdin, stdout)
 
 import qualified Data.ByteString              as BS
@@ -106,19 +106,26 @@ import qualified Data.Vector.Storable.Mutable as SMV
 import qualified Foreign.ForeignPtr           as FP
 import qualified Foreign.Ptr                  as F
 
-import Capnp.Address        (WordAddr (..))
-import Capnp.Bits           (WordCount (..), hi, lo)
+import Capnp.Address        (WordAddr(..))
+import Capnp.Bits           (WordCount(..), hi, lo)
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
-import Data.Mutable         (Mutable (..))
+import Data.Mutable         (Mutable(..))
 import Internal.AppendVec   (AppendVec)
 
 import qualified Capnp.Errors       as E
 import qualified Internal.AppendVec as AppendVec
 
+swapIfBE64, fromLE64, toLE64 :: Word64 -> Word64
+swapIfBE64 = case targetByteOrder of
+    LittleEndian -> id
+    BigEndian    -> byteSwap64
+fromLE64 = swapIfBE64
+toLE64 = swapIfBE64
+
 
 -- | The maximum size of a segment supported by this libarary, in words.
-maxSegmentSize :: Int
-maxSegmentSize = 1 `shiftL` 28 -- 2 GiB.
+maxSegmentSize :: WordCount
+maxSegmentSize = WordCount $ 1 `shiftL` 28 -- 2 GiB.
 
 -- | The maximum number of segments allowed in a message by this library.
 maxSegments :: Int
@@ -126,7 +133,7 @@ maxSegments = 1024
 
 -- | The maximum number of capabilities allowed in a message by this library.
 maxCaps :: Int
-maxCaps = 512
+maxCaps = 16 * 1024
 
 
 data Mutability = Const | Mut Type
@@ -482,9 +489,9 @@ write (SegMut MutSegment{vec}) (WordCount i) val = do
     SMV.write vec i (toLE64 val)
 
 -- | @'newSegment' msg sizeHint@ allocates a new, initially empty segment in
--- @msg@ with a capacity of @sizeHint@. It returns the a pair of the segment
--- number and the segment itself. Amortized O(1).
-newSegment :: WriteCtx m s => Message ('Mut s) -> Int -> m (Int, Segment ('Mut s))
+-- @msg@ with a capacity of @sizeHint@ words. It returns the a pair of the
+-- segment number and the segment itself. Amortized O(1).
+newSegment :: WriteCtx m s => Message ('Mut s) -> WordCount -> m (Int, Segment ('Mut s))
 newSegment msg@(MsgMut MutMsg{mutSegs}) sizeHint = do
     when (sizeHint > maxSegmentSize) $ throwM E.SizeError
     -- the next segment number will be equal to the *current* number of
@@ -496,7 +503,7 @@ newSegment msg@(MsgMut MutMsg{mutSegs}) sizeHint = do
     segs <- AppendVec.grow segs 1 maxSegments
     writeMutVar mutSegs segs
 
-    vec <- SMV.new sizeHint
+    vec <- SMV.new (fromIntegral sizeHint)
     used <- newMutVar 0
     let newSeg = SegMut MutSegment{vec, used}
     setSegment msg segIndex newSeg
@@ -532,8 +539,8 @@ allocInSeg msg segIndex size = do
 -- to the segment. The latter is redundant information, but this is used
 -- in low-level code where this can improve performance.
 alloc :: WriteCtx m s => Message ('Mut s) -> WordCount -> m (WordPtr ('Mut s))
-alloc msg size@(WordCount sizeInt) = do
-    when (sizeInt > maxSegmentSize) $
+alloc msg size = do
+    when (size > maxSegmentSize) $
         throwM E.SizeError
     segIndex <- pred <$> numSegs msg
     existing <- allocInSeg msg segIndex size
@@ -542,9 +549,10 @@ alloc msg size@(WordCount sizeInt) = do
         Nothing -> do
             -- Not enough space in the current segment; allocate a new one.
             -- the new segment's size should match the total size of existing segments
-            WordCount totalAllocation <- sum <$>
+            -- but `maxSegmentSize` bounds how large it can get.
+            totalAllocation <- sum <$>
                 traverse (getSegment msg >=> numWords) [0..segIndex]
-            ( newSegIndex, _ ) <- newSegment msg (max totalAllocation sizeInt)
+            ( newSegIndex, _ ) <- newSegment msg (min (max totalAllocation size) maxSegmentSize)
             -- This is guaranteed to succeed, since we just made a segment with
             -- at least size available space:
             fromJust <$> allocInSeg msg newSegIndex size
@@ -564,7 +572,7 @@ newMessage :: WriteCtx m s => Maybe WordCount -> m (Message ('Mut s))
 newMessage Nothing = newMessage (Just 32)
     -- The default value above is somewhat arbitrary, and just a guess -- we
     -- should do some profiling to figure out what a good value is here.
-newMessage (Just (WordCount sizeHint)) = do
+newMessage (Just sizeHint) = do
     mutSegs <- MV.new 1 >>= newMutVar . AppendVec.makeEmpty
     mutCaps <- MV.new 0 >>= newMutVar . AppendVec.makeEmpty
     let msg = MsgMut MutMsg{mutSegs,mutCaps}

@@ -36,6 +36,7 @@ module Capnp.Rpc.Untyped
     , Pipeline
     , walkPipelinePtr
     , pipelineClient
+    , waitPipeline
 
     -- * Exporting local objects
     , export
@@ -682,6 +683,19 @@ pipelineClient Pipeline{state, steps} = liftSTM $ do
                         breakPromise f (wrapException False e)
                         pure p)
 
+-- | Wait for the pipeline's target to resolve, and return the corresponding
+-- pointer.
+waitPipeline :: MonadSTM m => Pipeline -> m RawMPtr
+waitPipeline Pipeline{state, steps} = liftSTM $ do
+    s <- readTVar state
+    case s of
+        ReadyPipeline (Left e) ->
+            throwM e
+        ReadyPipeline (Right v) ->
+            evalLimitT defaultLimit $ followPtrs (toList steps) v
+        _ ->
+            retry
+
 promisedAnswerClient :: Conn -> PromisedAnswer -> STM Client
 promisedAnswerClient conn answer@PromisedAnswer{answerId, transform} = do
     let tmpDest = RemoteDest AnswerDest { conn, answer }
@@ -982,7 +996,7 @@ cbCallReturn
             abortConn conn' $ eUnimplemented
                 "This vat does not support level 3."
     -- Defer this until after any other callbacks run, in case disembargos
-    -- need to be send due to promise resolutions that we triggered:
+    -- need to be sent due to promise resolutions that we triggered:
     queueSTM conn' $ finishQuestion conn' def
         { R.questionId = qaWord answerId
         , R.releaseResultCaps = False
@@ -1711,7 +1725,6 @@ updateQAReturn :: Conn' -> M.Map QAId EntryQA -> Text -> Return -> STM ()
 updateQAReturn conn table tableName ret@Return{answerId} =
     lookupAbort tableName conn table answerId $ \case
         NewQA{onFinish, onReturn} -> do
-            mapQueueSTM conn onReturn ret
             M.insert
                 HaveReturn
                     { returnMsg = ret
@@ -1719,9 +1732,10 @@ updateQAReturn conn table tableName ret@Return{answerId} =
                     }
                 answerId
                 table
+            traverse_ ($ ret) onReturn
         HaveFinish{onReturn} -> do
-            mapQueueSTM conn onReturn ret
             M.delete answerId table
+            traverse_ ($ ret) onReturn
         HaveReturn{} ->
             abortConn conn $ eFailed $
                 "Duplicate return message for " <> tableName <> " #"
@@ -1731,7 +1745,7 @@ updateQAFinish :: Conn' -> M.Map QAId EntryQA -> Text -> R.Finish -> STM ()
 updateQAFinish conn table tableName finish@R.Finish{questionId} =
     lookupAbort tableName conn table (QAId questionId) $ \case
         NewQA{onFinish, onReturn} -> do
-            mapQueueSTM conn onFinish finish
+            traverse_ ($ finish) onFinish
             M.insert
                 HaveFinish
                     { finishMsg = finish
@@ -1740,7 +1754,7 @@ updateQAFinish conn table tableName finish@R.Finish{questionId} =
                 (QAId questionId)
                 table
         HaveReturn{onFinish} -> do
-            mapQueueSTM conn onFinish finish
+            traverse_ ($ finish) onFinish
             M.delete (QAId questionId) table
         HaveFinish{} ->
             abortConn conn $ eFailed $
@@ -1815,8 +1829,13 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
             R.Message'bootstrap def { R.questionId = qaWord qid }
         M.insert
             NewQA
-                { onReturn = SnocList.singleton $
-                    resolveClientReturn tmpDest (writeTVar pState) conn' []
+                { onReturn = SnocList.fromList
+                    [ resolveClientReturn tmpDest (writeTVar pState) conn' []
+                    , \_ -> finishQuestion conn' R.Finish
+                        { questionId = qaWord qid
+                        , releaseResultCaps = False
+                        }
+                    ]
                 , onFinish = SnocList.empty
                 }
             qid
@@ -1915,13 +1934,13 @@ resolveClientClient tmpDest resolve (Client client) =
             newConn <- destConn newDest
             oldConn <- destConn oldDest
             if newConn == oldConn
-                then releaseAndResolve
+                then resolveNow
                 else disembargoAndResolve oldDest
         ( Just (ImportClient cell), RemoteDest oldDest ) -> do
             ImportRef { conn=newConn } <- Fin.readCell cell
             oldConn <- destConn oldDest
             if newConn == oldConn
-                then releaseAndResolve
+                then resolveNow
                 else disembargoAndResolve oldDest
   where
     destConn AnswerDest { conn } = pure conn
@@ -1933,8 +1952,7 @@ resolveClientClient tmpDest resolve (Client client) =
         ImportRef { importId } <- Fin.readCell cell
         pure $ ImportTgt importId
 
-    releaseAndResolve = do
-        releaseTmpDest tmpDest
+    resolveNow = do
         resolve $ Ready (Client client)
 
     -- Flush the call buffer into the client's queue, and then pass the client
@@ -1975,18 +1993,6 @@ disembargo conn@Conn'{embargos} tgt onEcho = do
         { target = marshalMsgTarget tgt
         , context = R.Disembargo'context'senderLoopback (embargoWord eid)
         }
-
--- Do any cleanup of a TmpDest; this should be called after resolving a
--- pending promise.
-releaseTmpDest :: TmpDest -> STM ()
-releaseTmpDest (LocalDest LocalBuffer{}) = pure ()
-releaseTmpDest (RemoteDest AnswerDest { conn, answer=PromisedAnswer{ answerId } }) =
-    whenLive conn $ \conn' ->
-        finishQuestion conn' def
-            { R.questionId = qaWord answerId
-            , R.releaseResultCaps = False
-            }
-releaseTmpDest (RemoteDest (ImportDest _)) = pure ()
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
@@ -2082,7 +2088,7 @@ addBumpExport exportId client =
         | otherwise =
             Just EntryE { client, refCount = refCount + 1 }
 
--- | Generate a CapDescriptor', which we can sent to the connection's remote
+-- | Generate a CapDescriptor', which we can send to the connection's remote
 -- vat to identify client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
 emitCap :: Conn -> Client -> STM R.CapDescriptor'

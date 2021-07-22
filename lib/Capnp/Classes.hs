@@ -54,10 +54,10 @@ import GHC.Float
     , castWord64ToDouble
     )
 
-import Capnp.Bits    (Word1 (..))
+import Capnp.Bits    (Word1(..))
 import Capnp.Errors  (Error(SchemaViolationError))
-import Capnp.Message (Mutability (..))
-import Capnp.Untyped (Cap, ListOf, Ptr (..), ReadCtx, Struct, messageDefault)
+import Capnp.Message (Mutability(..))
+import Capnp.Untyped (Cap, ListOf, Ptr(..), ReadCtx, Struct, messageDefault)
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U

@@ -17,17 +17,19 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
-import Capnp.Classes (toWord)
+import Capnp.Classes     (toWord)
+import Capnp.Fields      (HasUnion(..))
+import Capnp.Repr.Parsed (Parsed)
 
-import qualified Capnp.Gen.Capnp.Schema.Pure as Schema
-import qualified Capnp.Untyped.Pure          as U
-import qualified IR.Common                   as C
-import qualified IR.Name                     as Name
-import qualified IR.Stage1                   as Stage1
+import qualified Capnp.Gen.Capnp.Schema.New as Schema
+import qualified Capnp.New.Basics           as B
+import qualified IR.Common                  as C
+import qualified IR.Name                    as Name
+import qualified IR.Stage1                  as Stage1
 
 type NodeMap v = M.Map Word64 v
 
-nodesToNodes :: NodeMap Schema.Node -> NodeMap Stage1.Node
+nodesToNodes :: NodeMap (Parsed Schema.Node) -> NodeMap Stage1.Node
 nodesToNodes inMap = outMap
   where
     outMap = M.map translate inMap
@@ -75,7 +77,8 @@ nodesToNodes inMap = outMap
                         | Schema.Superclass{id, brand} <- V.toList superclasses
                         ]
                     }
-            Schema.Node'const Schema.Node'const'{ type_, value } -> Stage1.NodeConstant $
+            Schema.Node'const Schema.Node'const'{ type_ = Schema.Type type_, value = Schema.Value value } ->
+              Stage1.NodeConstant $
                 let mismatch = error "ERROR: Constant's type and value do not agree"
                 in case value of
                     Schema.Value'void ->
@@ -108,19 +111,19 @@ nodesToNodes inMap = outMap
                         C.WordValue (C.PrimWord C.PrimFloat64) (toWord v)
 
                     Schema.Value'text v ->
-                        C.PtrValue (C.PrimPtr C.PrimText) $ Just $ U.PtrList $ U.List8 $
+                        C.PtrValue (C.PrimPtr C.PrimText) $ B.PtrList $ B.List8 $
                             encodeUtf8 v
                             & BS.unpack
                             & (++ [0])
                             & V.fromList
                     Schema.Value'data_ v ->
-                        C.PtrValue (C.PrimPtr C.PrimText) $ Just $ U.PtrList $ U.List8 $
+                        C.PtrValue (C.PrimPtr C.PrimText) $ B.PtrList $ B.List8 $
                             BS.unpack v
                             & V.fromList
 
                     Schema.Value'list v ->
                         case type_ of
-                            Schema.Type'list Schema.Type'list'{ elementType } ->
+                            Schema.Type'list (Schema.Type'list' (Schema.Type elementType)) ->
                                 C.PtrValue
                                     (C.ListOf (typeToType outMap elementType))
                                     v
@@ -152,7 +155,7 @@ nodesToNodes inMap = outMap
                             Schema.Type'interface Schema.Type'interface'{ typeId, brand } ->
                                 C.PtrValue
                                     (C.PtrInterface (C.InterfaceType (outMap M.! typeId) (brandToBrand outMap brand)))
-                                    Nothing
+                                    B.PtrNull
                             _ ->
                                 mismatch
 
@@ -165,7 +168,7 @@ nodesToNodes inMap = outMap
                 Stage1.NodeOther
         }
 
-brandToBrand :: NodeMap Stage1.Node -> Schema.Brand -> Stage1.Brand
+brandToBrand :: NodeMap Stage1.Node -> Parsed Schema.Brand -> Stage1.Brand
 brandToBrand nodeMap Schema.Brand{scopes} =
     C.MapBrand $ M.fromList $ mapMaybe scopeToScope (V.toList scopes)
   where
@@ -175,21 +178,22 @@ brandToBrand nodeMap Schema.Brand{scopes} =
         Schema.Brand'Scope'bind bindings -> Just
             ( scopeId
             , C.Bind $ bindings
-                & V.map (\case
-                    Schema.Brand'Binding'type_ typ -> case typeToType nodeMap typ of
-                        C.PtrType t ->
-                            C.BoundType t
-                        C.CompositeType t ->
-                            C.BoundType (C.PtrComposite t)
-                        _ -> error
-                            "Invalid schema: a type parameter was set to a non-pointer type."
+                & V.map (\(Schema.Brand'Binding b) -> case b of
+                    Schema.Brand'Binding'type_ (Schema.Type typ) ->
+                        case typeToType nodeMap typ of
+                            C.PtrType t ->
+                                C.BoundType t
+                            C.CompositeType t ->
+                                C.BoundType (C.PtrComposite t)
+                            _ -> error
+                                "Invalid schema: a type parameter was set to a non-pointer type."
 
                     Schema.Brand'Binding'unbound -> C.Unbound
                     Schema.Brand'Binding'unknown' _ -> C.Unbound
                 )
             )
 
-methodToMethod :: NodeMap Stage1.Node -> Schema.Method -> Stage1.Method
+methodToMethod :: NodeMap Stage1.Node -> Parsed Schema.Method -> Stage1.Method
 methodToMethod nodeMap Schema.Method
     { name
     , paramStructType, paramBrand
@@ -201,10 +205,10 @@ methodToMethod nodeMap Schema.Method
         , resultType = structTypeToType nodeMap resultStructType resultBrand
         }
 
-enumerantToName :: Schema.Enumerant -> Name.UnQ
+enumerantToName :: Parsed Schema.Enumerant -> Name.UnQ
 enumerantToName Schema.Enumerant{name} = Name.UnQ name
 
-fieldToField :: NodeMap Stage1.Node -> Schema.Field -> Stage1.Field
+fieldToField :: NodeMap Stage1.Node -> Parsed Schema.Field -> Stage1.Field
 fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
     Stage1.Field
         { name = Name.UnQ name
@@ -216,9 +220,13 @@ fieldToField nodeMap Schema.Field{name, discriminantValue, union'} =
         , locType = getFieldLocType nodeMap union'
         }
 
-getFieldLocType :: NodeMap Stage1.Node -> Schema.Field' -> C.FieldLocType Stage1.Brand Stage1.Node
+getFieldLocType :: NodeMap Stage1.Node -> Parsed (Which Schema.Field) -> C.FieldLocType Stage1.Brand Stage1.Node
 getFieldLocType nodeMap = \case
-    Schema.Field'slot Schema.Field'slot'{type_, defaultValue, offset} ->
+    Schema.Field'slot Schema.Field'slot'
+      { type_ = Schema.Type type_
+      , defaultValue = Schema.Value defaultValue
+      , offset
+      } ->
         case typeToType nodeMap type_ of
             C.VoidType ->
                 C.VoidField
@@ -259,7 +267,7 @@ dataLoc offset ty defaultVal =
 -- in a struct's data section.
 --
 -- returns Nothing if the value is a non-word type.
-valueBits :: Schema.Value -> Maybe Word64
+valueBits :: Parsed (Which Schema.Value) -> Maybe Word64
 valueBits = \case
     Schema.Value'bool b    -> Just $ fromIntegral $ fromEnum b
     Schema.Value'int8 n    -> Just $ fromIntegral n
@@ -275,7 +283,7 @@ valueBits = \case
     Schema.Value'enum n    -> Just $ fromIntegral n
     _                      -> Nothing -- some non-word type.
 
-reqFileToReqFile :: NodeMap Stage1.Node -> Schema.CodeGeneratorRequest'RequestedFile -> Stage1.ReqFile
+reqFileToReqFile :: NodeMap Stage1.Node -> Parsed Schema.CodeGeneratorRequest'RequestedFile -> Stage1.ReqFile
 reqFileToReqFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename} =
     let Stage1.Node{nodeCommon=Stage1.NodeCommon{nodeNested}} = nodeMap M.! id
     in Stage1.ReqFile
@@ -286,7 +294,7 @@ reqFileToReqFile nodeMap Schema.CodeGeneratorRequest'RequestedFile{id, filename}
             }
         }
 
-cgrToCgr :: Schema.CodeGeneratorRequest -> Stage1.CodeGenReq
+cgrToCgr :: Parsed Schema.CodeGeneratorRequest -> Stage1.CodeGenReq
 cgrToCgr Schema.CodeGeneratorRequest{nodes, requestedFiles} =
     Stage1.CodeGenReq{allFiles, reqFiles}
   where
@@ -311,12 +319,12 @@ cgrToCgr Schema.CodeGeneratorRequest{nodes, requestedFiles} =
 structTypeToType
     :: NodeMap Stage1.Node
     -> Word64
-    -> Schema.Brand
+    -> Parsed Schema.Brand
     -> C.CompositeType Stage1.Brand Stage1.Node
 structTypeToType nodeMap typeId brand =
     C.StructType (nodeMap M.! typeId) (brandToBrand nodeMap brand)
 
-typeToType :: NodeMap Stage1.Node -> Schema.Type -> C.Type Stage1.Brand Stage1.Node
+typeToType :: NodeMap Stage1.Node -> Parsed (Which Schema.Type) -> C.Type Stage1.Brand Stage1.Node
 typeToType nodeMap = \case
     Schema.Type'void       -> C.VoidType
     Schema.Type'bool       -> C.WordType $ C.PrimWord C.PrimBool
@@ -332,8 +340,8 @@ typeToType nodeMap = \case
     Schema.Type'float64    -> C.WordType $ C.PrimWord C.PrimFloat64
     Schema.Type'text       -> C.PtrType $ C.PrimPtr C.PrimText
     Schema.Type'data_      -> C.PtrType $ C.PrimPtr C.PrimData
-    Schema.Type'list Schema.Type'list'{elementType} ->
-        C.PtrType $ C.ListOf (typeToType nodeMap elementType)
+    Schema.Type'list Schema.Type'list'{elementType = Schema.Type t} ->
+        C.PtrType $ C.ListOf (typeToType nodeMap t)
     -- nb. enum has a brand field, but it's not actually use for anything.
     Schema.Type'enum Schema.Type'enum'{typeId, brand = _ } ->
         C.WordType $ C.EnumType $ nodeMap M.! typeId
@@ -342,7 +350,7 @@ typeToType nodeMap = \case
         C.CompositeType $ structTypeToType nodeMap typeId brand
     Schema.Type'interface Schema.Type'interface'{typeId, brand} ->
         C.PtrType $ C.PtrInterface (C.InterfaceType (nodeMap M.! typeId) (brandToBrand nodeMap brand))
-    Schema.Type'anyPointer p ->
+    Schema.Type'anyPointer (Schema.Type'anyPointer' p) ->
         case p of
             Schema.Type'anyPointer'parameter Schema.Type'anyPointer'parameter'{scopeId, parameterIndex} ->
                 let paramScope = nodeMap M.! scopeId in
@@ -351,7 +359,8 @@ typeToType nodeMap = \case
                     , paramIndex = fromIntegral parameterIndex
                     , paramName = Stage1.nodeParams (Stage1.nodeCommon paramScope) V.! fromIntegral parameterIndex
                     }
-            Schema.Type'anyPointer'unconstrained unconstrained  ->
+            Schema.Type'anyPointer'unconstrained
+              (Schema.Type'anyPointer'unconstrained' unconstrained) ->
                 C.PtrType $ C.PrimPtr $ C.PrimAnyPtr $ case unconstrained of
                     Schema.Type'anyPointer'unconstrained'anyKind    -> C.Ptr
                     Schema.Type'anyPointer'unconstrained'struct     -> C.Struct

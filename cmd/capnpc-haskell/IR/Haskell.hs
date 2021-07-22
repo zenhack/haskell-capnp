@@ -89,6 +89,11 @@ data Decl
         , typ  :: Type
         , defs :: [InstanceDef]
         }
+    | DcTypeInstance Type Type
+    | DcDeriveInstance
+        { ctx :: [Type]
+        , typ :: Type
+        }
     | DcClass
         { ctx     :: [Type]
         , name    :: Name.LocalQ
@@ -108,6 +113,9 @@ data DataDecl = Data
     -- ^ A list of type classes to include in the deriving clause.
     , dataNewtype  :: !Bool
     -- ^ Whether the declarationis a "newtype" or "data" declaration.
+    , dataInstance :: !Bool
+    -- ^ If true, this is actually an instance of a data family, rather
+    -- than a stand-alone type.
     }
     deriving(Show, Read, Eq)
 
@@ -158,10 +166,12 @@ data Type
     | TPrim Common.PrimWord
     | TUnit
     | TKindAnnotated Type Type
+    | TString T.Text -- type-level string literal
     deriving(Show, Read, Eq)
 
 data Exp
-    = EApp Exp [Exp]
+    = EVar T.Text
+    | EApp Exp [Exp]
     | EFApp Exp [Exp]
     -- ^ "Functorial" application, i.e. f <$> x <*> y <*> z.
     | EGName Name.GlobalQ
@@ -176,6 +186,7 @@ data Exp
     | ETypeAnno Exp Type
     | ELambda [Pattern] Exp
     | ERecord Exp [(Name.UnQ, Exp)]
+    | ELabel Name.UnQ
     deriving(Show, Read, Eq)
 
 data Do

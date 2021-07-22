@@ -12,11 +12,11 @@
 module Capnp.GenHelpers.Rpc where
 
 import Control.Exception.Safe (fromException, tryAny)
-import Control.Monad.Catch    (MonadThrow (..))
+import Control.Monad.Catch    (MonadThrow(..))
 import Data.Default           (def)
 
-import Capnp.Classes        (Decerialize (..), FromPtr (..))
-import Capnp.Message        (Mutability (..))
+import Capnp.Classes        (Decerialize(..), FromPtr(..))
+import Capnp.Message        (Mutability(..))
 import Capnp.TraversalLimit (evalLimitT)
 
 import qualified Capnp.Errors          as E

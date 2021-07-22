@@ -6,17 +6,12 @@ module Trans.RawToHaskell (fileToModules) where
 
 import Data.Word
 
-import Data.Maybe  (fromJust)
 import Data.String (fromString)
-import GHC.Exts    (fromList)
 
 import qualified Data.Text as T
 
 import IR.Haskell
 import Trans.ToHaskellCommon
-
-import qualified Capnp
-import qualified Capnp.Untyped.Pure as Untyped
 
 import qualified IR.Common as C
 import qualified IR.Name   as Name
@@ -88,6 +83,7 @@ declToDecls thisMod Raw.UnionVariant{parentTypeCtor, typeParams, tagOffset, unio
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
+        , dataInstance = False
         , typeArgs = typeParamNames ++ [TKindAnnotated (TVar "mut") (tgName ["Message"] "Mutability")]
         , dataVariants =
             [ DataVariant
@@ -184,6 +180,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
     [ DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = False
+        , dataInstance = False
         , typeArgs = []
         , dataVariants =
             map enumerantToVariant dataCtors
@@ -241,6 +238,7 @@ declToDecls _thisMod Raw.Enum{typeCtor, dataCtors} =
                 ]
             , derives = []
             , dataNewtype = True
+            , dataInstance = False
             }
         , iValue "index" [PVar "i", PLCtor listCtor [PVar "l"]] $ EFApp
             (egName ["Classes"] "fromWord")
@@ -417,6 +415,7 @@ declToDecls _thisMod Raw.StructInstances{typeCtor, typeParams, dataWordCount, po
                 ]
             , derives = []
             , dataNewtype = True
+            , dataInstance = False
             }
         , iValue "listFromPtr" [PVar "msg", PVar "ptr"] $ EFApp
             (ELName listCtor)
@@ -709,15 +708,6 @@ declToDecls thisMod Raw.Constant{ name, value=C.PtrValue ty val } =
             }
         }
     ]
-  where
-    makePtrBytes ptr =
-        Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
-            msg <- Capnp.newMessage Nothing
-            rootPtr <- Capnp.cerialize msg $ Untyped.Struct
-                (fromList [])
-                (fromList [ptr])
-            Capnp.setRoot rootPtr
-            pure msg
 
 containerTypeToType :: Name.LocalQ -> [Name.UnQ] -> Type -> Type
 containerTypeToType name params msgTy =
@@ -825,6 +815,7 @@ newtypeWrapper typeCtor typeArgs wrappedType =
     DcData Data
         { dataName = Name.localToUnQ typeCtor
         , dataNewtype = True
+        , dataInstance = False
         , typeArgs = map TVar typeArgs
         , dataVariants =
             [ DataVariant

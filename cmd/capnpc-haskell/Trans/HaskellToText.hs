@@ -6,6 +6,7 @@ module Trans.HaskellToText (moduleToText) where
 import Data.List                    (intersperse)
 import Data.String                  (fromString)
 import Text.PrettyPrint.Leijen.Text (hcat, vcat)
+import Trans.ToHaskellCommon        (eStd_)
 
 import qualified Data.Text                    as T
 import qualified Data.Text.Lazy               as LT
@@ -89,6 +90,16 @@ instance Format Decl where
         , format (TCtx ctx typ)
         , whereBlock defs
         ]
+    format (DcTypeInstance alias orig) = hcat
+        [ "type instance "
+        , format alias
+        , " = "
+        , format orig
+        ]
+    format (DcDeriveInstance ctx typ) = hcat
+        [ "deriving instance "
+        , format $ TCtx ctx typ
+        ]
     format DcClass{ctx, name, params, funDeps, decls} = hcat
         [ "class "
         , format $
@@ -142,11 +153,14 @@ instance Format TypeAlias where
         ]
 
 instance Format DataDecl where
-    format Data{dataName, typeArgs, dataVariants, dataNewtype, derives} = vcat
+    format Data{dataName, typeArgs, dataVariants, dataInstance, dataNewtype, derives} = vcat
         [ hcat
             [ if dataNewtype
                 then "newtype "
                 else "data "
+            , if dataInstance
+                then "instance "
+                else ""
             , format dataName
             , " "
             , mconcat $ intersperse " " $ map format typeArgs
@@ -169,12 +183,13 @@ instance Format ValueDef where
         ]
 
 instance Format Exp where
+    format (EApp e []) = format e
     format (EApp e es) = hcat
         [ "("
         , hcat $ intersperse " " $ map format (e:es)
         , ")"
         ]
-    format (EFApp e []) = format e
+    format (EFApp e []) = format (EApp (eStd_ "pure") [e])
     format (EFApp e es) = hcat
         [ "("
         , format e
@@ -182,6 +197,7 @@ instance Format Exp where
         ]
     format (EGName e) = format e
     format (ELName e) = format e
+    format (EVar name) = PP.textStrict name
     format (EInt n) = fromString (show n)
     format (EDo ds ex) = vcat
         [ "(do"
@@ -216,6 +232,7 @@ instance Format Exp where
             [ hcat [ format name, " = ", format value ]
             | (name, value) <- updates
             ]
+    format (ELabel name) = "#" <> format name
 
 instance Format Do where
     format (DoBind var ex) = format var <> " <- " <> format ex
@@ -257,6 +274,7 @@ instance Format Type where
     format (TGName ty) = format ty
     format (TLName ty) = format ty
     format (TVar txt)  = PP.textStrict txt
+    format (TApp t []) = format t
     format (TApp f xs) =
         "(" <> mconcat (intersperse " " $ map format (f:xs)) <> ")"
     format (TFn types) =
@@ -268,6 +286,7 @@ instance Format Type where
     format TUnit = "()"
     format (TKindAnnotated ty kind) =
         "(" <> format ty <> " :: " <> format kind <> ")"
+    format (TString str) = fromString $ show str
 
 instance Format Name.GlobalQ where
     format Name.GlobalQ{local, globalNS=Name.NS parts} =
