@@ -72,6 +72,7 @@ import Control.Monad             (forM_, unless)
 import Control.Monad.Catch       (MonadCatch, MonadThrow(throwM))
 import Control.Monad.Catch.Pure  (CatchT(runCatchT))
 import Control.Monad.Primitive   (PrimMonad(..))
+import Control.Monad.ST          (RealWorld)
 import Control.Monad.Trans.Class (MonadTrans(lift))
 
 import qualified Data.ByteString     as BS
@@ -90,7 +91,7 @@ import Capnp.Bits
     )
 import Capnp.Message        (Mutability(..))
 import Capnp.Pointer        (ElementSize(..))
-import Capnp.TraversalLimit (MonadLimit(invoice))
+import Capnp.TraversalLimit (LimitT, MonadLimit(invoice))
 import Data.Mutable         (Thaw(..))
 
 import qualified Capnp.Errors  as E
@@ -465,6 +466,7 @@ getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
 -- Deducts 1 from the quota for each word read (which may be multiple in the
 -- case of far pointers).
 get :: ReadCtx m mut => M.WordPtr mut -> m (Maybe (Ptr mut))
+{-# SPECIALIZE get :: M.WordPtr ('Mut RealWorld) -> LimitT IO (Maybe (Ptr ('Mut RealWorld))) #-}
 get ptr@M.WordPtr{pMessage, pAddr} = do
     word <- getWord ptr
     case P.parsePtr word of
@@ -595,6 +597,7 @@ ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
 setIndex :: RWCtx m s => a -> Int -> ListOf ('Mut s) a -> m ()
+{-# SPECIALIZE setIndex :: a -> Int -> ListOf ('Mut RealWorld) a -> LimitT IO () #-}
 setIndex _ i list | i < 0 || length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = case list of
@@ -634,6 +637,7 @@ setIndex value i list = case list of
 -- If the two addresses are in different segments, a landing pad will be allocated and
 -- @srcLoc@ will contain a far pointer.
 setPointerTo :: M.WriteCtx m s => M.WordPtr ('Mut s) -> WordAddr -> P.Ptr -> m ()
+{-# SPECIALIZE setPointerTo :: M.WordPtr ('Mut RealWorld) -> WordAddr -> P.Ptr -> LimitT IO () #-}
 setPointerTo
         M.WordPtr
             { pMessage = msg
@@ -709,6 +713,7 @@ copyCap :: RWCtx m s => M.Message ('Mut s) -> Cap ('Mut s) -> m (Cap ('Mut s))
 copyCap dest cap = getClient cap >>= appendCap dest
 
 copyPtr :: RWCtx m s => M.Message ('Mut s) -> Maybe (Ptr ('Mut s)) -> m (Maybe (Ptr ('Mut s)))
+{-# SPECIALIZE copyPtr :: M.Message ('Mut RealWorld) -> Maybe (Ptr ('Mut RealWorld)) -> LimitT IO (Maybe (Ptr ('Mut RealWorld))) #-}
 copyPtr _ Nothing                = pure Nothing
 copyPtr dest (Just (PtrCap cap))    = Just . PtrCap <$> copyCap dest cap
 copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
@@ -721,6 +726,7 @@ copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
     pure destStruct
 
 copyList :: RWCtx m s => M.Message ('Mut s) -> List ('Mut s) -> m (List ('Mut s))
+{-# SPECIALIZE copyList :: M.Message ('Mut RealWorld) -> List ('Mut RealWorld) -> LimitT IO (List ('Mut RealWorld)) #-}
 copyList dest src = case src of
     List0 src      -> List0 <$> allocList0 dest (length src)
     List1 src      -> List1 <$> copyNewListOf dest src allocList1
@@ -744,6 +750,7 @@ copyNewListOf
     -> ListOf ('Mut s) a
     -> (M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) a))
     -> m (ListOf ('Mut s) a)
+{-# INLINE copyNewListOf #-}
 copyNewListOf destMsg src new = do
     dest <- new destMsg (length src)
     copyListOf dest src
@@ -751,6 +758,7 @@ copyNewListOf destMsg src new = do
 
 
 copyListOf :: RWCtx m s => ListOf ('Mut s) a -> ListOf ('Mut s) a -> m ()
+{-# SPECIALIZE copyListOf :: ListOf ('Mut RealWorld) a -> ListOf ('Mut RealWorld) a -> LimitT IO () #-}
 copyListOf dest src =
     forM_ [0..length src - 1] $ \i -> do
         value <- index i src
@@ -758,6 +766,7 @@ copyListOf dest src =
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.
 copyStruct :: RWCtx m s => Struct ('Mut s) -> Struct ('Mut s) -> m ()
+{-# SPECIALIZE copyStruct :: Struct ('Mut RealWorld) -> Struct ('Mut RealWorld) -> LimitT IO () #-}
 copyStruct dest src = do
     -- We copy both the data and pointer sections from src to dest,
     -- padding the tail of the destination section with zeros/null
@@ -780,6 +789,8 @@ copyStruct dest src = do
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: ReadCtx m mut => Int -> ListOf mut a -> m a
+{-# SPECIALIZE index :: Int -> ListOf 'Const a -> LimitT IO a #-}
+{-# SPECIALIZE index :: Int -> ListOf ('Mut RealWorld) a -> LimitT IO a #-}
 index i list
     | i < 0 || i >= length list =
         throwM E.BoundsError { E.index = i, E.maxIndex = length list - 1 }
@@ -840,11 +851,13 @@ take count list
 
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct msg -> ListOf msg Word64
+{-# INLINE dataSection #-}
 dataSection (Struct ptr dataSz _) =
     ListOfWord64 $ NormalList ptr (fromIntegral dataSz)
 
 -- | The pointer section of a struct, as a list of Ptr
 ptrSection :: Struct msg -> ListOf msg (Maybe (Ptr msg))
+{-# INLINE ptrSection #-}
 ptrSection (Struct ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} dataSz ptrSz) =
     ListOfPtr $ NormalList
         { nPtr = ptr { M.pAddr = addr { wordIndex = wordIndex + fromIntegral dataSz } }
@@ -878,6 +891,7 @@ structListPtrCount  (ListOfStruct s _) = structPtrCount s
 -- | @'getData' i struct@ gets the @i@th word from the struct's data section,
 -- returning 0 if it is absent.
 getData :: ReadCtx m msg => Int -> Struct msg -> m Word64
+{-# INLINE getData #-}
 getData i struct
     | fromIntegral (structWordCount struct) <= i = pure 0
     | otherwise = index i (dataSection struct)
@@ -885,6 +899,7 @@ getData i struct
 -- | @'getPtr' i struct@ gets the @i@th word from the struct's pointer section,
 -- returning Nothing if it is absent.
 getPtr :: ReadCtx m msg => Int -> Struct msg -> m (Maybe (Ptr msg))
+{-# INLINE getPtr #-}
 getPtr i struct
     | fromIntegral (structPtrCount struct) <= i = do
         invoice 1
@@ -959,6 +974,7 @@ structSize s = structWordCount s + fromIntegral (structPtrCount s)
 -- The minimum possible cost is 1, and for lists will always be proportional
 -- to the length of the list, even if the size of the elements is zero.
 invoicePtr :: MonadLimit m => Maybe (Ptr mut) -> m ()
+{-# SPECIALIZE invoicePtr :: Maybe (Ptr ('Mut RealWorld)) -> LimitT IO () #-}
 invoicePtr p = invoice $! ptrInvoiceSize p
 
 ptrInvoiceSize :: Maybe (Ptr mut) -> WordCount
@@ -984,6 +1000,7 @@ structInvoiceSize (Struct _ dataSz ptrSz) =
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
 -- to @value@.
+{-# INLINE setData #-}
 setData :: (ReadCtx m ('Mut s), M.WriteCtx m s)
     => Word64 -> Int -> Struct ('Mut s) -> m ()
 setData value i = setIndex value i . dataSection
@@ -991,6 +1008,7 @@ setData value i = setIndex value i . dataSection
 -- | @'setData' value i struct@ sets the @i@th pointer in the struct's pointer
 -- section to @value@.
 setPtr :: (ReadCtx m ('Mut s), M.WriteCtx m s) => Maybe (Ptr ('Mut s)) -> Int -> Struct ('Mut s) -> m ()
+{-# INLINE setPtr #-}
 setPtr value i = setIndex value i . ptrSection
 
 -- | 'rawBytes' returns the raw bytes corresponding to the list.
