@@ -23,6 +23,7 @@ module Capnp.Repr.Methods
 
     , AsClient(..)
 
+    -- * Calling methods.
     , callB
     , callR
     , callP
@@ -62,11 +63,16 @@ class (R.IsCap c, R.IsStruct p, R.IsStruct r) => HasMethod (name :: Symbol) c p 
 instance HasMethod name c p r => IsLabel name (Method c p r) where
     fromLabel = methodByLabel @name @c @p @r
 
+-- | A @'Pipeline' a@ is a reference to possibly-not-resolved result from
+-- a method call.
 newtype Pipeline a = Pipeline Rpc.Pipeline
 
 newtype Client a = Client Rpc.Client
     deriving(Show, Eq)
 
+-- | The 'AsClient' class allows callers of rpc methods to abstract over 'Client's
+-- and 'Pipeline's. @'asClient'@ converts either of those to a client so that
+-- methods can be invoked on it.
 class AsClient f where
     asClient :: MonadSTM m => R.IsCap c => f c -> m (Client c)
 
@@ -76,6 +82,7 @@ instance AsClient Pipeline where
 instance AsClient Client where
     asClient = liftSTM . pure
 
+-- | Call a method. Use the provided 'PureBuilder' to construct the parameters.
 callB
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
     => Method c p r
@@ -86,6 +93,7 @@ callB method buildRaw c = liftSTM $ do
     (params :: R.Raw 'Const a) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
     callR method params c
 
+-- | Call a method, supplying the parameters as a 'Raw' struct.
 callR
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
     => Method c p r -> R.Raw 'Const p -> f c -> m (Pipeline r)
@@ -101,6 +109,7 @@ callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
             }
             client
 
+-- | Call a method, supplying the parmaeters in parsed form.
 callP
     :: forall c p r f m pp.
         ( AsClient f
@@ -117,6 +126,7 @@ callP method parsed client = do
         R.fromRaw <$> NC.encode msg parsed
     callR method (R.Raw struct) client
 
+-- | Project a pipeline to a struct onto one of its pointer fields.
 pipe :: ( R.IsStruct a
         , R.ReprFor b ~ 'R.Ptr pr
         ) => F.Field k a b -> Pipeline a -> Pipeline b
@@ -125,10 +135,12 @@ pipe (F.Field field) (Pipeline p) =
         F.GroupField   -> Pipeline p
         F.PtrField idx -> Pipeline (Rpc.walkPipelinePtr p idx)
 
+-- | Convert a 'Pipeline' for a capability into a 'Client'.
 pipelineClient :: (R.IsCap a, MonadSTM m) => Pipeline a -> m (Client a)
 pipelineClient (Pipeline p) =
     liftSTM $ Client <$> Rpc.pipelineClient p
 
+-- | Wait for the result of a pipeline, and return its value.
 waitPipeline ::
     forall a m pr.
     ( 'R.Ptr pr ~ R.ReprFor a

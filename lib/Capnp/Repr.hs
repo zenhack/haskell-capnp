@@ -110,8 +110,8 @@ data PtrRepr
 
 -- | Information about the representation of a list type.
 data ListRepr where
+    -- | A "normal" list
     ListNormal :: NormalListRepr -> ListRepr
-    -- ^ A "normal" list
     ListComposite :: ListRepr
     deriving(Show)
 
