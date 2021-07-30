@@ -130,6 +130,10 @@ maxCaps :: Int
 maxCaps = 16 * 1024
 
 
+-- | 'Mutability' is used as a type parameter (with the DataKinds extension)
+-- to indicate the mutability of some values in this library; 'Const' denotes
+-- an immutable value, while @'Mut' s@ denotes a value that can be mutated
+-- in the scope of the state token @s@.
 data Mutability = Const | Mut Type
 
 -- | A pointer to a location in a message. This encodes the same
@@ -146,6 +150,7 @@ data WordPtr mut = WordPtr
     , pAddr    :: !WordAddr
     }
 
+-- | A Cap'n Proto message, parametrized over its mutability.
 data Message (mut :: Mutability) where
     MsgConst :: !ConstMsg -> Message 'Const
     MsgMut :: !(MutMsg s) -> Message ('Mut s)
@@ -154,6 +159,7 @@ instance Eq (Message mut) where
     (MsgConst x) == (MsgConst y) = x == y
     (MsgMut x) == (MsgMut y)     = x == y
 
+-- | A segment in a Cap'n Proto message.
 data Segment (mut :: Mutability) where
     SegConst :: !ConstSegment -> Segment 'Const
     SegMut :: !(MutSegment s) -> Segment ('Mut s)

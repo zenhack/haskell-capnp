@@ -459,6 +459,7 @@ instance MessageDefault (NormalList mut) mut where
             , nLen = 0
             }
 
+-- | Extract a client (indepedent of the messsage) from the capability.
 getClient :: ReadCtx m mut => Cap mut -> m M.Client
 getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
 
@@ -717,9 +718,11 @@ setPointerTo
                             P.ListPtr _ eltSpec -> P.ListPtr 0 eltSpec
                             _ -> relPtr
 
+-- | Make a copy of a capability inside the target message.
 copyCap :: RWCtx m s => M.Message ('Mut s) -> Cap ('Mut s) -> m (Cap ('Mut s))
 copyCap dest cap = getClient cap >>= appendCap dest
 
+-- | Make a copy of the value at the pointer, in the target message.
 copyPtr :: RWCtx m s => M.Message ('Mut s) -> Maybe (Ptr ('Mut s)) -> m (Maybe (Ptr ('Mut s)))
 {-# SPECIALIZE copyPtr :: M.Message ('Mut RealWorld) -> Maybe (Ptr ('Mut RealWorld)) -> LimitT IO (Maybe (Ptr ('Mut RealWorld))) #-}
 copyPtr _ Nothing                = pure Nothing
@@ -733,6 +736,7 @@ copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
     copyStruct destStruct src
     pure destStruct
 
+-- | Make a copy of the list, in the target message.
 copyList :: RWCtx m s => M.Message ('Mut s) -> List ('Mut s) -> m (List ('Mut s))
 {-# SPECIALIZE copyList :: M.Message ('Mut RealWorld) -> List ('Mut RealWorld) -> LimitT IO (List ('Mut RealWorld)) #-}
 copyList dest src = case src of
@@ -765,6 +769,7 @@ copyNewListOf destMsg src new = do
     pure dest
 
 
+-- | Make a copy of the list, in the target message.
 copyListOf :: RWCtx m s => ListOf ('Mut s) a -> ListOf ('Mut s) a -> m ()
 {-# SPECIALIZE copyListOf :: ListOf ('Mut RealWorld) a -> ListOf ('Mut RealWorld) a -> LimitT IO () #-}
 copyListOf dest src =
