@@ -53,7 +53,7 @@ walkSchemaCodeGenRequestTest =
             bytes <- BS.readFile "tests/data/schema-codegenreq"
             msg <- M.decode bytes
             endQuota <- execLimitT 4096 (rootPtr msg >>= reader)
-            endQuota `shouldBe` 3407
+            endQuota `shouldBe` 3372
   where
     reader :: Struct 'M.Const -> LimitT IO ()
     reader root = do

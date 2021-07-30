@@ -488,7 +488,15 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                         , pAddr = addr'
                         }
                 if not twoWords
-                    then get landingPtr
+                    then do
+                        -- XXX: invoice so we don't open ourselves up to DoS
+                        -- in the case of a chain of far pointers -- but a
+                        -- better solution would be to just reject after the
+                        -- first chain since this isn't actually legal. TODO
+                        -- refactor (and then get rid of the MonadLimit
+                        -- constraint).
+                        invoice 1
+                        get landingPtr
                     else do
                         landingPad <- getWord landingPtr
                         case P.parsePtr landingPad of
