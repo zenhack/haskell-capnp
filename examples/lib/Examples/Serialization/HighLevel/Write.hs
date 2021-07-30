@@ -40,7 +40,7 @@ main = putParsed AddressBook
                     , type_ = Person'PhoneNumber'Type'work
                     }
                 ]
-            , employment = Person'employment' $ Person'employment'selfEmployed
+            , employment = Person'employment' Person'employment'selfEmployed
             }
         ]
     }
