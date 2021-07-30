@@ -1,19 +1,29 @@
+{-# LANGUAGE OverloadedLabels  #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Examples.Rpc.EchoClient (main) where
 
+import Data.Function      ((&))
+import Data.Functor       ((<&>))
 import Network.Simple.TCP (connect)
 
-import Capnp     (def, defaultLimit)
-import Capnp.Rpc (ConnConfig (..), handleConn, socketTransport, wait, (?))
+import qualified Capnp.New as C
+import           Capnp.Rpc
+    (ConnConfig(..), fromClient, handleConn, socketTransport)
 
-import Capnp.Gen.Echo.Pure
+import Capnp.Gen.Echo.New
 
 main :: IO ()
 main = connect "localhost" "4000" $ \(sock, _addr) ->
-    handleConn (socketTransport sock defaultLimit) def
+    handleConn (socketTransport sock C.defaultLimit) C.def
         { debugMode = True
         , withBootstrap = Just $ \_sup client ->
-            echo'echo (Echo client) ? def { query = "Hello, World!" }
-                >>= wait
+            let echoClient :: C.Client Echo
+                echoClient = fromClient client
+            in
+            echoClient
+                & C.callP #echo C.def { query = "Hello, World!" }
+                <&> C.pipe #reply
+                >>= C.waitPipeline
+                >>= C.evalLimitT C.defaultLimit . C.parse
                 >>= print
         }
