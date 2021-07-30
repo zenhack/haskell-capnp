@@ -54,7 +54,7 @@ buildMsg = do
     mobilePhone <- C.index 0 phones
     -- It is sometimes more ergonomic to use (&) from Data.Function. You might
     -- ask why not just make the container the first argument, but it works
-    -- out better this way for the RPC examples.
+    -- out better this way for the read examples.
     mobilePhone & C.encodeField #number (T.pack "555-1212")
     mobilePhone & C.encodeField #type_ Person'PhoneNumber'Type'mobile
 

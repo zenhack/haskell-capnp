@@ -136,7 +136,7 @@ valueToMsg val = do
     setRoot ret
     pure msg
 
-msgToRaw :: (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw mut a)
+msgToRaw :: forall a m mut. (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw mut a)
 msgToRaw = fmap R.Raw . U.rootPtr
 
 msgToParsed :: forall a m pa. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => M.Message 'Const -> m pa

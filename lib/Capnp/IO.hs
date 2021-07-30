@@ -31,6 +31,9 @@ module Capnp.IO
     , hPutParsed
     , sPutParsed
     , putParsed
+    , hGetRaw
+    , getRaw
+    , sGetRaw
     ) where
 
 import Data.Bits
@@ -49,7 +52,7 @@ import Capnp.Bits           (WordCount, wordsToBytes)
 import Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
 import Capnp.Convert
-    (msgToLBS, msgToParsed, parsedToBuilder, parsedToLBS, valueToLBS)
+    (msgToLBS, msgToParsed, msgToRaw, parsedToBuilder, parsedToLBS, valueToLBS)
 import Capnp.Message        (Mutability(..))
 import Capnp.New.Classes    (Parse)
 import Capnp.TraversalLimit (evalLimitT)
@@ -163,3 +166,16 @@ sPutParsed :: (R.IsStruct a, Parse a pa) => Socket -> pa -> IO ()
 sPutParsed socket value  = do
     lbs <- evalLimitT maxBound $ parsedToLBS value
     sendLazy socket lbs
+
+hGetRaw :: R.IsStruct a => Handle -> WordCount -> IO (R.Raw 'Const a)
+hGetRaw h limit = do
+    msg <- M.hGetMsg h limit
+    evalLimitT limit $ msgToRaw msg
+
+getRaw :: R.IsStruct a => WordCount -> IO (R.Raw 'Const a)
+getRaw = hGetRaw stdin
+
+sGetRaw :: R.IsStruct a => Socket -> WordCount -> IO (R.Raw 'Const a)
+sGetRaw socket limit = do
+    msg <- sGetMsg socket limit
+    evalLimitT limit $ msgToRaw msg
