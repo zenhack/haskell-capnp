@@ -4,15 +4,15 @@
 -- names:
 {-# LANGUAGE DuplicateRecordFields #-}
 module Examples.Serialization.HighLevel.Write (main) where
-import Capnp.Gen.Addressbook.Pure
+import Capnp.Gen.Addressbook.New
 
--- Note that Capnp re-exports `def`, as a convienence
-import Capnp (def, putValue)
+-- Note that Capnp.New re-exports `def`, as a convienence
+import Capnp.New (def, putParsed)
 
 import qualified Data.Vector as V
 
 main :: IO ()
-main = putValue AddressBook
+main = putParsed AddressBook
     { people = V.fromList
         [ Person
             { id = 123
@@ -24,7 +24,7 @@ main = putValue AddressBook
                     , type_ =  Person'PhoneNumber'Type'mobile
                     }
                 ]
-            , employment = Person'employment'school "MIT"
+            , employment = Person'employment' $ Person'employment'school "MIT"
             }
         , Person
             { id = 456
@@ -40,7 +40,7 @@ main = putValue AddressBook
                     , type_ = Person'PhoneNumber'Type'work
                     }
                 ]
-            , employment = Person'employment'selfEmployed
+            , employment = Person'employment' $ Person'employment'selfEmployed
             }
         ]
     }
