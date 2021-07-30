@@ -63,7 +63,7 @@ import Capnp.Classes (FromStruct)
 -- <https://capnproto.org/install.html>. The latter is included with this
 -- library; to install it you can run the command:
 --
--- > cabal v2-install capnp --installdir=$DIR
+-- > cabal install capnp --installdir=$DIR
 --
 -- which will compile the package and create the @capnpc-haskell@ executable
 -- at @$DIR/capnpc-haskell@.
