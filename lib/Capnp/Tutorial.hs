@@ -16,28 +16,35 @@ module Capnp.Tutorial (
     -- * Setup
     -- $setup
 
-    -- * Serialization
+    -- * API Transition
+    -- $api_transition
+
+    -- * New API
+    -- ** Serialization
+
+    -- * Old API
+    -- ** Serialization
     -- $serialization
 
-    -- ** High Level API
+    -- *** High Level API
     -- $highlevel
 
-    -- *** Example
+    -- **** Example
     -- $highlevel-example
 
-    -- *** Code Generation Rules
+    -- **** Code Generation Rules
     -- $highlevel-codegen-rules
 
-    -- ** Low Level API
+    -- *** Low Level API
     -- $lowlevel
 
-    -- *** Example
+    -- **** Example
     -- $lowlevel-example
 
-    -- *** Write Support
+    -- **** Write Support
     -- $lowlevel-write
 
-    -- * RPC
+    -- ** RPC
     -- $rpc
     ) where
 
@@ -68,6 +75,25 @@ import Capnp.Classes (FromStruct)
 -- which will compile the package and create the @capnpc-haskell@ executable
 -- at @$DIR/capnpc-haskell@.
 
+-- $api_transition
+--
+-- This package is in them midst of transitioning many existing APIs over
+-- to a new design. As such, in this tuotrial we refer to the new api and the
+-- old API.
+--
+-- The old API will eventually be removed, but not before there is at least
+-- one release where both APIs are present and the new API has reached feature
+-- pairty. Right now, the primary missing functionality is in implementing
+-- RPC servers (clients work fine, better even).
+--
+-- This tutorial only covers the new API, but the tutorial for the old APIs
+-- is still available (and still correct) in the documentation for version
+-- 0.10 of this package: https://hackage.haskell.org/package/capnp-0.10.0.1
+--
+-- For more information about the reasons behind the new API, see:
+-- <http://zenhack.net/TODO>. TODO: link to blog post.
+
+
 -- $serialization
 --
 -- The serialization API is roughly divided into two parts: a low level API
@@ -93,8 +119,8 @@ import Capnp.Classes (FromStruct)
 -- The downside is that you can't take advantage of some of the novel
 -- properties of the wire format. In particular:
 --
--- * It is theoretically slower, as there is a marshalling step involved
---   (actual performance has not been measured).
+-- * It is slower, as there is a marshalling step involved, and it uses more
+--   memory.
 -- * You can't mmap a file and read in only part of it.
 -- * You can't modify a message in-place.
 
@@ -146,72 +172,132 @@ import Capnp.Classes (FromStruct)
 --
 -- * Capnp\/Gen\/Addressbook.hs
 -- * Capnp\/Gen\/Addressbook\/Pure.hs
+-- * Capnp\/Gen\/Addressbook\/New.hs
 -- * Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c/Pure.hs
+-- * Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c/New.hs
 -- * Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c.hs
 --
 -- The modules under @ById@ are an implementation detail.
--- @Capnp\/Gen\/Addressbook.hs@ is generated code for use with the low level API.
--- @Capnp\/Gen\/Addressbook\/Pure.hs@ is generated code for use with the high
--- level API. The latter will export the following data declarations (cleaned up
--- for readability).
+-- @Capnp\/Gen\/Addressbook\.New.hs@ is generated code for use with the new API.
+-- Other files are for use with the old API, and not covered here.
 --
--- > module Capnp.Gen.Addressbook.Pure where
+-- The generated moule will export declarations like the following (cleaned up
+-- and abbreviated for readability):
+--
+-- > import qualified Capnp.Repr as R
+-- > import qualified Capnp.Classes.New as C
+-- > import qualified Capnp.Repr.Parsed as RP
+-- > import GHC.Generics (Generic)
 -- >
--- > import Data.Int
--- > import Data.Text   (Text)
--- > import Data.Vector (Vector)
--- > import Data.Word
+-- > data Person
 -- >
--- > data AddressBook = AddressBook
--- >     { people :: Vector Person
--- >     }
+-- > type instance (R.ReprFor Person) = R.Ptr (Just R.Struct)
 -- >
--- > data Person = Person
--- >     { id         :: Word32
--- >     , name       :: Text
--- >     , email      :: Text
--- >     , phones     :: Vector Person'PhoneNumber
--- >     , employment :: Person'employment
--- >     }
+-- > instance (C.TypedStruct Person) where { ... }
+-- > instance (C.Allocate Person) where { ... }
 -- >
--- > data Person'PhoneNumber = Person'PhoneNumber
--- >     { number :: Text
--- >     , type_  :: Person'PhoneNumber'Type
--- >     }
+-- > data instance C.Parsed Person
+-- >     = Person
+-- >         { id :: Word32
+-- >         , name :: RP.Parsed Basics.Text
+-- >         , email :: RP.Parsed Basics.Text
+-- >         , phones :: RP.Parsed (R.List Person'PhoneNumber)
+-- >         , employment :: RP.Parsed Person'employment
+-- >         }
+-- >     deriving(Generic, Show, EQ)
 -- >
+-- > instance HasField "id" Slot Person Std_.Word32 where { ... }
+-- > instance HasField "name" Slot Person Basics.Text where { ... }
+-- > instance HasField "email" Slot Person Basics.Text where { ... }
+-- > instance HasField "phones" Slot Person (R.List Person'PhoneNumber) where { ... }
+-- > instance HasField "employment" Group Person Person'employment where { ... }
+--
 -- > data Person'employment
+-- >
+-- > type instance R.ReprFor Person'employment = R.Ptr (Std_.Just R.Struct)
+-- > instance C.TypedStruct Person'employment where { ... }
+-- > instance C.Allocate Person'employment where { ... }
+--
+-- > data instance C.Parsed Person'employment
+-- >     = Person'employment'
+-- >         { union' :: C.Parsed (GH.Which Person'employment)
+-- >         }
+-- >     deriving(Generic, Show, Eq)
+-- >
+-- > instance (GH.HasUnion Person'employment) where
+-- >     unionField = ...
+-- >     data RawWhich mut_ Person'employment
+-- >         = RW_Person'employment'unemployed (R.Raw mut_ ())
+-- >         | RW_Person'employment'employer (R.Raw mut_ Basics.Text)
+-- >         | RW_Person'employment'school (R.Raw mut_ Basics.Text)
+-- >         | RW_Person'employment'selfEmployed (R.Raw mut_ ())
+-- >         | RW_Person'employment'unknown' Word16
+-- >     data Which Person'employment
+-- >
+-- > instance GH.HasVariant "unemployed" GH.Slot Person'employment () where { ... }
+-- > instance GH.HasVariant "employer" GH.Slot Person'employment Basics.Text where { ... }
+-- > instance GH.HasVariant "school" GH.Slot Person'employment Basics.Text where { ... }
+-- > instance GH.HasVariant "selfEmployed" GH.Slot Person'employment () where { ... }
+-- >
+-- > data instance C.Parsed (Which Person'employment)
 -- >     = Person'employment'unemployed
--- >     | Person'employment'employer Text
--- >     | Person'employment'school Text
+-- >     | Person'employment'employer (RP.Parsed Basics.Text)
+-- >     | Person'employment'school (RP.Parsed Basics.Text)
 -- >     | Person'employment'selfEmployed
--- >     | Person'employment'unknown' Word16
+-- >     | Person'employment'unknown' Std_.Word16
+-- >     deriving(Generic, Show, Eq)
+-- >
+-- > instance C.Parse (GH.Which Person'employment) (C.Parsed (GH.Which Person'employment)) where
+-- >     ...
+-- >
+-- > data Person'PhoneNumber
+-- >
+-- > type instance R.ReprFor Person'PhoneNumber = R.Ptr (Std_.Just R.Struct)
+-- >
+-- > ...
 -- >
 -- > data Person'PhoneNumber'Type
 -- >     = Person'PhoneNumber'Type'mobile
 -- >     | Person'PhoneNumber'Type'home
 -- >     | Person'PhoneNumber'Type'work
--- >     | Person'PhoneNumber'Type'unknown' Word16
+-- >     | Person'PhoneNumber'Type'unknown' Std_.Word16
+-- >     deriving(Generic, Eq, Show)
+-- >
+-- > type instance R.ReprFor Person'PhoneNumber'Type = R.Data R.Sz16
+-- >
+-- > instance Enum Person'PhoneNumber'Type where { ... }
+-- >
+-- > ...
 --
 -- Note that we use the single quote character as a namespace separator for
 -- namespaces within a single capnproto schema.
 --
--- The module also exports instances of several type classes:
+-- So, we see that capnpc-haskell generates:
 --
--- * 'Show'
--- * 'Read'
--- * 'Eq'
--- * 'Generic' from "GHC.Generics"
--- * 'Default' from the @data-default@ package.
--- * A number of type classes defined by the @capnp@ package.
--- * Capnproto enums additionally implement the 'Enum' type class.
+-- * For each struct type or group:
+--   * An uninhabited type corresponding to that type
+--   * An instance of the 'R.ReprFor' type family, marking the type as having
+--     a struct as its representation.
+--   * An instance of 'HasField' for each field in the struct.
+--   * An instance of the 'C.Parsed' data family, which is an idiomatic Haskell
+--     ADT corresponding to the structure of the capnproto type.
+--     * If the struct has an anonymous union, some instances related to this,
+--       including a data family instance for @'Parsed' ('Which' a)@, which
+--       is an ADT representation of the union. Note that there is an @unknown'@
+--       variant, which is used for variants found on the wire that are not known
+--       to the schema (usually because the value was constructed using a newer
+--       version of the schema).
+-- * For each enum:
+--   * An ADT corresponding to that enum. There is no uninhabited type, and no
+--     'C.Parsed' data family instance; the type itself serves as both. As with
+--     unions, there is an @unknown'@ variant for unrecognized variants.
+--   * An instance of 'R.ReprFor', recording the wire representation of the enum
+--     (always 16-bit).
 --
--- Using the @Default@ instance to construct values means that your
--- existing code will continue to work if new fields are added in the
--- schema, but it also makes it easier to forget to set a field if you had
--- intended to. The instance maps @'def'@ to the default value as defined by
--- capnproto, so leaving out newly-added fields will do The Right Thing.
+-- Some additional things are generated for interfaces, but we cover those
+-- in the RPC section below.
 --
--- The module "Capnp" exposes the most frequently used
+-- The module "Capnp.New" exposes the most frequently used
 -- functionality from the capnp package. We can write an address book
 -- message to standard output using the high-level API like so:
 --
@@ -220,10 +306,10 @@ import Capnp.Classes (FromStruct)
 -- > -- code relys on it to resolve collisions in capnproto struct field
 -- > -- names:
 -- > {-# LANGUAGE DuplicateRecordFields #-}
--- > import Capnp.Gen.Addressbook.Pure
+-- > import Capnp.Gen.Addressbook.New
 -- >
--- > -- Note that Capnp re-exports `def`, as a convienence
--- > import Capnp (putValue, def)
+-- > -- Note that Capnp.New re-exports `def`, as a convienence
+-- > import Capnp.New (putValue, def)
 -- >
 -- > import qualified Data.Vector as V
 -- >
@@ -239,7 +325,7 @@ import Capnp.Classes (FromStruct)
 -- >                     , type_ =  Person'PhoneNumber'Type'mobile
 -- >                     }
 -- >                 ]
--- >             , employment = Person'employment'school "MIT"
+-- >             , employment = Person'employment $ Person'employment'school "MIT"
 -- >             }
 -- >         , Person
 -- >             { id = 456
@@ -255,7 +341,7 @@ import Capnp.Classes (FromStruct)
 -- >                     , type_ = Person'PhoneNumber'Type'work
 -- >                     }
 -- >                 ]
--- >             , employment = Person'employment'selfEmployed
+-- >             , employment = Person'employment $ Person'employment'selfEmployed
 -- >             }
 -- >         ]
 -- >     }
@@ -263,24 +349,26 @@ import Capnp.Classes (FromStruct)
 -- 'putValue' is equivalent to @'hPutValue' 'stdout'@; 'hPutValue' may be used
 -- to write to an arbitrary handle.
 --
--- We can use 'getValue' (or alternately 'hGetValue') to read in a message:
+-- We can use 'getParsed' (or alternately 'hGetParsed') to read in a message:
 --
 -- > -- ...
 -- >
--- > import Capnp (getValue, defaultLimit)
+-- > {-# LANGUAGE TypeApplications #-}
+-- > import Capnp.New (getValue, defaultLimit)
 -- >
 -- > -- ...
 -- >
 -- > main = do
--- >     value <- getValue defaultLimit
--- >     print (value :: AddressBook)
+-- >     value <- getParsed @AddressBook defaultLimit
+-- >     print value
 --
--- Note the type annotation; there are a number of interfaces in the
+-- Note the use of @TypeApplications@; there are a number of interfaces in the
 -- library which dispatch on return types, and depending on how they are
 -- used you may have to give GHC a hint for type inference to succeed.
--- The type of 'getValue' is:
 --
--- @'getValue' :: 'FromStruct' 'ConstMsg' a => 'Int' -> 'IO' a@
+-- The type of 'getParsed' is:
+--
+-- @'getParsed' :: (R.IsStruct a, Parse a pa) => WordCount -> IO pa
 --
 -- ...and so it may be used to read in any struct type.
 --
@@ -293,59 +381,6 @@ import Capnp.Classes (FromStruct)
 --
 -- If an error occurs, an exception will be thrown of type 'Error' from the
 -- "Capnp.Errors" module.
-
--- $highlevel-codegen-rules
---
--- The complete rules for how capnproto types map to Haskell are as follows:
---
--- * Integer types and booleans map to the obvious corresponding Haskell
---   types.
--- * @Float32@ and @Float64@ map to 'Float' and 'Double', respectively.
--- * @Void@ maps to the unit type, @()@.
--- * Lists map to 'Vector's from the Haskell vector package. Note that
---   right now we use boxed vectors for everything; at some point this will
---   likely change for performance reasons. Using the functions from
---   "Data.Vector.Generic" will probably decrease the amount of code you
---   will need to modify when upgrading.
--- * @Text@ maps to (strict) 'T.Text' from the Haskell `text` package.
--- * @Data@ maps to (strict) 'BS.ByteString's
--- * Type constructor names are the fully qualified (within the schema file)
---   capnproto name, using the single quote character as a namespace
---   separator.
--- * Structs map to record types. The name of the data constructor is the
---   same as the name of the type constructor.
--- * Groups are treated mostly like structs, except that the data constructor
---   (but not the type constructor) has an extra trailing single-quote. This
---   is to avoid name collisions that would otherwise be possible.
--- * Field names map to record fields with the same names. Names that are
---   Haskell keywords have an underscore appended to them, e.g. @type_@ in
---   the above example. These names are not qualified; we use the
---   @DuplicateRecordFields@ extension to disambiguate them.
--- * Union fields result in an auxiliary type definition named
---   @\<containing type's name>'\<union field name>@. For an example, see the
---   mapping of the `employment` field above.
--- * Unions and enums map to sum types, each of which has a special
---   `unknown'` variant (note the trailing single quote). This variant will
---   be returned when parsing a message which contains a union tag greater
---   than what was defined in the schema. This is most likely to happen
---   when dealing with data generated by software using a newer version
---   of the same schema. The argument to the data constructor is the value
---   of the tag.
--- * Union variants with arguments of type `Void` map to data constructors
---   with no arguments.
--- * The type for an anonymous union has the same name as its containing
---   struct with an extra single quote on the end. You can think of this as
---   being like a field with the empty string as its name. The Haskell
---   record accessor for this field is named `union'` (note the trailing
---   single quote).
--- * As a special case, if a struct consists entirely of one anonymous
---   union, the type for the struct itself is omitted, and the name of the
---   type for the union does not have the trailing single quote (so its
---   name is what the name of the struct type would be).
--- * Fields of type `AnyPointer` map to the types defined in
---   @Capnp.Untyped.Pure@.
--- * Interfaces generate associated type classes and client types; see
---   the section on RPC.
 
 -- $lowlevel
 --
