@@ -28,6 +28,9 @@ module Capnp.IO
     , hGetParsed
     , sGetParsed
     , getParsed
+    , hPutParsed
+    , sPutParsed
+    , putParsed
     ) where
 
 import Data.Bits
@@ -39,12 +42,14 @@ import Network.Simple.TCP        (Socket, recv, sendLazy)
 import System.IO                 (Handle, stdin, stdout)
 import System.IO.Error           (eofErrorType, mkIOError)
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString         as BS
+import qualified Data.ByteString.Builder as BB
 
 import Capnp.Bits           (WordCount, wordsToBytes)
 import Capnp.Classes
     (Cerialize(..), Decerialize(..), FromStruct(..), ToStruct(..))
-import Capnp.Convert        (msgToLBS, msgToParsed, valueToLBS)
+import Capnp.Convert
+    (msgToLBS, msgToParsed, parsedToBuilder, parsedToLBS, valueToLBS)
 import Capnp.Message        (Mutability(..))
 import Capnp.New.Classes    (Parse)
 import Capnp.TraversalLimit (evalLimitT)
@@ -145,3 +150,16 @@ sGetParsed socket limit = do
 
 getParsed :: (R.IsStruct a, Parse a pa) => WordCount -> IO pa
 getParsed = hGetParsed stdin
+
+hPutParsed :: (R.IsStruct a, Parse a pa) => Handle -> pa -> IO ()
+hPutParsed h value = do
+    bb <- evalLimitT maxBound $ parsedToBuilder value
+    BB.hPutBuilder h bb
+
+putParsed :: (R.IsStruct a, Parse a pa) => pa -> IO ()
+putParsed = hPutParsed stdout
+
+sPutParsed :: (R.IsStruct a, Parse a pa) => Socket -> pa -> IO ()
+sPutParsed socket value  = do
+    lbs <- evalLimitT maxBound $ parsedToLBS value
+    sendLazy socket lbs

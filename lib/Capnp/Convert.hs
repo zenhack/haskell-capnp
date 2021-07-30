@@ -30,8 +30,14 @@ module Capnp.Convert
     , valueToLBS
     , valueToMsg
 
+    -- new API
     , msgToRaw
     , msgToParsed
+    , parsedToRaw
+    , parsedToMsg
+    , parsedToBuilder
+    , parsedToBS
+    , parsedToLBS
     ) where
 
 import Control.Monad       ((>=>))
@@ -46,7 +52,7 @@ import Capnp.Classes
 
 import Capnp.Bits           (WordCount)
 import Capnp.Message        (Mutability(..))
-import Capnp.New.Classes    (Parse(parse))
+import Capnp.New.Classes    (Parse(encode, parse))
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
 import Codec.Capnp          (getRoot, setRoot)
 import Data.Mutable         (freeze)
@@ -135,3 +141,24 @@ msgToRaw = fmap R.Raw . U.rootPtr
 
 msgToParsed :: forall a m pa. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => M.Message 'Const -> m pa
 msgToParsed msg = msgToRaw msg >>= parse
+
+parsedToRaw :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (R.Raw ('Mut s) a)
+parsedToRaw p = do
+    msg <- M.newMessage Nothing
+    value@(R.Raw struct) <- encode msg p
+    U.setRoot struct
+    pure value
+
+parsedToMsg :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (M.Message ('Mut s))
+parsedToMsg p = do
+    root <- parsedToRaw p
+    pure $ U.message root
+
+parsedToBuilder :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m BB.Builder
+parsedToBuilder p = msgToBuilder <$> (parsedToMsg p >>= freeze)
+
+parsedToLBS :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m LBS.ByteString
+parsedToLBS = fmap BB.toLazyByteString . parsedToBuilder
+
+parsedToBS :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m BS.ByteString
+parsedToBS = fmap LBS.toStrict . parsedToLBS
