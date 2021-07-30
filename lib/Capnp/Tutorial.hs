@@ -309,11 +309,11 @@ import Capnp.Classes (FromStruct)
 -- > import Capnp.Gen.Addressbook.New
 -- >
 -- > -- Note that Capnp.New re-exports `def`, as a convienence
--- > import Capnp.New (putValue, def)
+-- > import Capnp.New (putParsed, def)
 -- >
 -- > import qualified Data.Vector as V
 -- >
--- > main = putValue AddressBook
+-- > main = putParsed AddressBook
 -- >     { people = V.fromList
 -- >         [ Person
 -- >             { id = 123
@@ -354,7 +354,7 @@ import Capnp.Classes (FromStruct)
 -- > -- ...
 -- >
 -- > {-# LANGUAGE TypeApplications #-}
--- > import Capnp.New (getValue, defaultLimit)
+-- > import Capnp.New (getParsed, defaultLimit)
 -- >
 -- > -- ...
 -- >
