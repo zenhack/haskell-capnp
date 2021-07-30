@@ -12,6 +12,7 @@ module Capnp.New.Accessors
     ( readField
     , getField
     , setField
+    , newField
     , encodeField
     , parseField
     , setVariant
@@ -24,7 +25,6 @@ module Capnp.New.Accessors
     ) where
 
 
-import qualified Capnp.Classes        as C
 import qualified Capnp.Fields         as F
 import           Capnp.Message        (Mutability(..))
 import qualified Capnp.New.Classes    as C
@@ -116,6 +116,18 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
             newWord = (oldWord .&. complement mask)
                   .|. (valueWord `shiftL` fromIntegral shift)
         U.setData newWord (fromIntegral index) struct
+
+-- | Allocate space for the value of a field, and return it.
+newField ::
+    forall a b m s.
+    ( R.IsStruct a
+    , C.Allocate b
+    , U.RWCtx m s
+    ) => F.Field 'F.Slot a b -> C.AllocHint b -> R.Raw ('Mut s) a -> m (R.Raw ('Mut s) b)
+newField field hint parent = do
+    value <- C.new @b hint (U.message parent)
+    setField field value parent
+    pure value
 
 encodeField ::
     forall a b m s bp.
