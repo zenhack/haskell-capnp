@@ -28,17 +28,19 @@ module Capnp.New.Classes
     , newTypedStructList
     ) where
 
-import           Capnp.Classes       (IsWord(..))
-import           Capnp.Message       (Mutability(..))
-import qualified Capnp.Message       as M
-import qualified Capnp.Repr          as R
-import qualified Capnp.Untyped       as U
-import           Data.Foldable       (for_)
+import           Capnp.Classes        (IsWord(..))
+import           Capnp.Message        (Mutability(..))
+import qualified Capnp.Message        as M
+import qualified Capnp.Repr           as R
+import           Capnp.TraversalLimit (evalLimitT)
+import qualified Capnp.Untyped        as U
+import           Data.Default         (Default(..))
+import           Data.Foldable        (for_)
 import           Data.Int
-import qualified Data.Vector         as V
+import qualified Data.Vector          as V
 import           Data.Word
-import qualified GHC.Float           as F
-import qualified Language.Haskell.TH as TH
+import qualified GHC.Float            as F
+import qualified Language.Haskell.TH  as TH
 
 -- | Capnp types that can be parsed into a more "natural" Haskell form.
 --
@@ -246,6 +248,11 @@ instance MarshalElement a ap => EstimateAlloc (R.List a) (V.Vector ap) where
 -- an instance @'Parse' a b@, then @'Parsed' a@ needn't be defined, and @b@ can
 -- be something else.
 data family Parsed a
+
+instance (Default (R.Raw 'Const a), Parse a (Parsed a)) => Default (Parsed a) where
+    def = case evalLimitT maxBound (parse @a def) of
+        Just v  -> v
+        Nothing -> error "Parsing default value failed."
 
 do
     let mkId ty =
