@@ -13,6 +13,7 @@ module Capnp.New.Accessors
     , getField
     , setField
     , newField
+    , hasField
     , encodeField
     , parseField
     , setVariant
@@ -32,7 +33,7 @@ import qualified Capnp.Repr           as R
 import           Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped        as U
 import           Data.Bits
-import           Data.Maybe           (fromJust)
+import           Data.Maybe           (fromJust, isJust)
 import           Data.Word
 import           GHC.Prim             (coerce)
 
@@ -66,6 +67,15 @@ readField (F.Field field) (R.Raw struct) =
     readPtrField ptr =
         R.Raw <$> R.fromPtr @pr (U.message struct) ptr
 
+-- | Returns whether the specified field is present. Only applicable for pointer
+-- fields.
+hasField ::
+    ( U.ReadCtx m mut
+    , R.IsStruct a
+    , R.IsPtr b
+    ) => F.Field 'F.Slot a b -> R.Raw mut a -> m Bool
+hasField (F.Field (F.PtrField index)) (R.Raw struct) =
+    isJust <$> U.getPtr (fromIntegral index) struct
 
 {-# INLINE getField #-}
 getField
