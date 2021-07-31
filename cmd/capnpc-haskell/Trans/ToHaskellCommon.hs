@@ -158,7 +158,7 @@ fixImports m@Module{modImports} =
 toTVars :: [Name.UnQ] -> [Type]
 toTVars = map (TVar . Name.typeVarName)
 
-makePtrBytes :: Parsed B.AnyPointer -> LBS.ByteString
+makePtrBytes :: Maybe (Parsed B.AnyPointer) -> LBS.ByteString
 makePtrBytes ptr =
     Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
         msg <- Capnp.newMessage Nothing

@@ -111,13 +111,13 @@ nodesToNodes inMap = outMap
                         C.WordValue (C.PrimWord C.PrimFloat64) (toWord v)
 
                     Schema.Value'text v ->
-                        C.PtrValue (C.PrimPtr C.PrimText) $ B.PtrList $ B.List8 $
+                        C.PtrValue (C.PrimPtr C.PrimText) $ Just $ B.PtrList $ B.List8 $
                             encodeUtf8 v
                             & BS.unpack
                             & (++ [0])
                             & V.fromList
                     Schema.Value'data_ v ->
-                        C.PtrValue (C.PrimPtr C.PrimText) $ B.PtrList $ B.List8 $
+                        C.PtrValue (C.PrimPtr C.PrimText) $ Just $ B.PtrList $ B.List8 $
                             BS.unpack v
                             & V.fromList
 
@@ -155,7 +155,7 @@ nodesToNodes inMap = outMap
                             Schema.Type'interface Schema.Type'interface'{ typeId, brand } ->
                                 C.PtrValue
                                     (C.PtrInterface (C.InterfaceType (outMap M.! typeId) (brandToBrand outMap brand)))
-                                    B.PtrNull
+                                    Nothing
                             _ ->
                                 mismatch
 

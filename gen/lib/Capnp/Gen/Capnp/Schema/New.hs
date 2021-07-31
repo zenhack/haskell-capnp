@@ -1771,11 +1771,11 @@ instance (GH.HasUnion Value) where
         | RW_Value'float64 (R.Raw mut_ Std_.Double)
         | RW_Value'text (R.Raw mut_ Basics.Text)
         | RW_Value'data_ (R.Raw mut_ Basics.Data)
-        | RW_Value'list (R.Raw mut_ Basics.AnyPointer)
+        | RW_Value'list (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Value'enum (R.Raw mut_ Std_.Word16)
-        | RW_Value'struct (R.Raw mut_ Basics.AnyPointer)
+        | RW_Value'struct (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Value'interface (R.Raw mut_ ())
-        | RW_Value'anyPointer (R.Raw mut_ Basics.AnyPointer)
+        | RW_Value'anyPointer (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1847,15 +1847,15 @@ instance (GH.HasVariant "text" GH.Slot Value Basics.Text) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 12)
 instance (GH.HasVariant "data_" GH.Slot Value Basics.Data) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 13)
-instance (GH.HasVariant "list" GH.Slot Value Basics.AnyPointer) where
+instance (GH.HasVariant "list" GH.Slot Value (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 14)
 instance (GH.HasVariant "enum" GH.Slot Value Std_.Word16) where
     variantByLabel  = (GH.Variant (GH.dataField 16 0 16 0) 15)
-instance (GH.HasVariant "struct" GH.Slot Value Basics.AnyPointer) where
+instance (GH.HasVariant "struct" GH.Slot Value (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 16)
 instance (GH.HasVariant "interface" GH.Slot Value ()) where
     variantByLabel  = (GH.Variant GH.voidField 17)
-instance (GH.HasVariant "anyPointer" GH.Slot Value Basics.AnyPointer) where
+instance (GH.HasVariant "anyPointer" GH.Slot Value (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 18)
 data instance C.Parsed (GH.Which Value)
     = Value'void 
@@ -1872,11 +1872,11 @@ data instance C.Parsed (GH.Which Value)
     | Value'float64 (RP.Parsed Std_.Double)
     | Value'text (RP.Parsed Basics.Text)
     | Value'data_ (RP.Parsed Basics.Data)
-    | Value'list (RP.Parsed Basics.AnyPointer)
+    | Value'list (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Value'enum (RP.Parsed Std_.Word16)
-    | Value'struct (RP.Parsed Basics.AnyPointer)
+    | Value'struct (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Value'interface 
-    | Value'anyPointer (RP.Parsed Basics.AnyPointer)
+    | Value'anyPointer (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Value'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Value)))

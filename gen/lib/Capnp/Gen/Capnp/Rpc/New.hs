@@ -64,9 +64,9 @@ instance (GH.HasUnion Message) where
         | RW_Message'finish (R.Raw mut_ Finish)
         | RW_Message'resolve (R.Raw mut_ Resolve)
         | RW_Message'release (R.Raw mut_ Release)
-        | RW_Message'obsoleteSave (R.Raw mut_ Basics.AnyPointer)
+        | RW_Message'obsoleteSave (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Message'bootstrap (R.Raw mut_ Bootstrap)
-        | RW_Message'obsoleteDelete (R.Raw mut_ Basics.AnyPointer)
+        | RW_Message'obsoleteDelete (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Message'provide (R.Raw mut_ Provide)
         | RW_Message'accept (R.Raw mut_ Accept)
         | RW_Message'join (R.Raw mut_ Join)
@@ -118,11 +118,11 @@ instance (GH.HasVariant "resolve" GH.Slot Message Resolve) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 instance (GH.HasVariant "release" GH.Slot Message Release) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
-instance (GH.HasVariant "obsoleteSave" GH.Slot Message Basics.AnyPointer) where
+instance (GH.HasVariant "obsoleteSave" GH.Slot Message (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 7)
 instance (GH.HasVariant "bootstrap" GH.Slot Message Bootstrap) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 8)
-instance (GH.HasVariant "obsoleteDelete" GH.Slot Message Basics.AnyPointer) where
+instance (GH.HasVariant "obsoleteDelete" GH.Slot Message (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 9)
 instance (GH.HasVariant "provide" GH.Slot Message Provide) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 10)
@@ -140,9 +140,9 @@ data instance C.Parsed (GH.Which Message)
     | Message'finish (RP.Parsed Finish)
     | Message'resolve (RP.Parsed Resolve)
     | Message'release (RP.Parsed Release)
-    | Message'obsoleteSave (RP.Parsed Basics.AnyPointer)
+    | Message'obsoleteSave (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Message'bootstrap (RP.Parsed Bootstrap)
-    | Message'obsoleteDelete (RP.Parsed Basics.AnyPointer)
+    | Message'obsoleteDelete (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Message'provide (RP.Parsed Provide)
     | Message'accept (RP.Parsed Accept)
     | Message'join (RP.Parsed Join)
@@ -234,7 +234,7 @@ instance (C.EstimateListAlloc Bootstrap (C.Parsed Bootstrap))
 data instance C.Parsed Bootstrap
     = Bootstrap 
         {questionId :: (RP.Parsed Std_.Word32)
-        ,deprecatedObjectId :: (RP.Parsed Basics.AnyPointer)}
+        ,deprecatedObjectId :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Bootstrap))
 deriving instance (Std_.Eq (C.Parsed Bootstrap))
@@ -249,7 +249,7 @@ instance (C.Marshal Bootstrap (C.Parsed Bootstrap)) where
         )
 instance (GH.HasField "questionId" GH.Slot Bootstrap Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap Basics.AnyPointer) where
+instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 data Call 
 type instance (R.ReprFor Call) = (R.Ptr (Std_.Just R.Struct))
@@ -342,7 +342,7 @@ instance (GH.HasUnion Call'sendResultsTo) where
     data RawWhich mut_ Call'sendResultsTo
         = RW_Call'sendResultsTo'caller (R.Raw mut_ ())
         | RW_Call'sendResultsTo'yourself (R.Raw mut_ ())
-        | RW_Call'sendResultsTo'thirdParty (R.Raw mut_ Basics.AnyPointer)
+        | RW_Call'sendResultsTo'thirdParty (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Call'sendResultsTo'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -358,12 +358,12 @@ instance (GH.HasVariant "caller" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 1)
-instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo Basics.AnyPointer) where
+instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 2) 2)
 data instance C.Parsed (GH.Which Call'sendResultsTo)
     = Call'sendResultsTo'caller 
     | Call'sendResultsTo'yourself 
-    | Call'sendResultsTo'thirdParty (RP.Parsed Basics.AnyPointer)
+    | Call'sendResultsTo'thirdParty (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Call'sendResultsTo'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Call'sendResultsTo)))
@@ -430,7 +430,7 @@ instance (GH.HasUnion Return) where
         | RW_Return'canceled (R.Raw mut_ ())
         | RW_Return'resultsSentElsewhere (R.Raw mut_ ())
         | RW_Return'takeFromOtherQuestion (R.Raw mut_ Std_.Word32)
-        | RW_Return'acceptFromThirdParty (R.Raw mut_ Basics.AnyPointer)
+        | RW_Return'acceptFromThirdParty (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
         | RW_Return'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -458,7 +458,7 @@ instance (GH.HasVariant "resultsSentElsewhere" GH.Slot Return ()) where
     variantByLabel  = (GH.Variant GH.voidField 3)
 instance (GH.HasVariant "takeFromOtherQuestion" GH.Slot Return Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 1 32 0) 4)
-instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return Basics.AnyPointer) where
+instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 data instance C.Parsed (GH.Which Return)
     = Return'results (RP.Parsed Payload)
@@ -466,7 +466,7 @@ data instance C.Parsed (GH.Which Return)
     | Return'canceled 
     | Return'resultsSentElsewhere 
     | Return'takeFromOtherQuestion (RP.Parsed Std_.Word32)
-    | Return'acceptFromThirdParty (RP.Parsed Basics.AnyPointer)
+    | Return'acceptFromThirdParty (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Return'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Return)))
@@ -792,7 +792,7 @@ data instance C.Parsed Provide
     = Provide 
         {questionId :: (RP.Parsed Std_.Word32)
         ,target :: (RP.Parsed MessageTarget)
-        ,recipient :: (RP.Parsed Basics.AnyPointer)}
+        ,recipient :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Provide))
 deriving instance (Std_.Eq (C.Parsed Provide))
@@ -811,7 +811,7 @@ instance (GH.HasField "questionId" GH.Slot Provide Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Provide MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (GH.HasField "recipient" GH.Slot Provide Basics.AnyPointer) where
+instance (GH.HasField "recipient" GH.Slot Provide (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 1)
 data Accept 
 type instance (R.ReprFor Accept) = (R.Ptr (Std_.Just R.Struct))
@@ -829,7 +829,7 @@ instance (C.EstimateListAlloc Accept (C.Parsed Accept))
 data instance C.Parsed Accept
     = Accept 
         {questionId :: (RP.Parsed Std_.Word32)
-        ,provision :: (RP.Parsed Basics.AnyPointer)
+        ,provision :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))
         ,embargo :: (RP.Parsed Std_.Bool)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Accept))
@@ -847,7 +847,7 @@ instance (C.Marshal Accept (C.Parsed Accept)) where
         )
 instance (GH.HasField "questionId" GH.Slot Accept Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (GH.HasField "provision" GH.Slot Accept Basics.AnyPointer) where
+instance (GH.HasField "provision" GH.Slot Accept (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "embargo" GH.Slot Accept Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 0)
@@ -868,7 +868,7 @@ data instance C.Parsed Join
     = Join 
         {questionId :: (RP.Parsed Std_.Word32)
         ,target :: (RP.Parsed MessageTarget)
-        ,keyPart :: (RP.Parsed Basics.AnyPointer)}
+        ,keyPart :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Join))
 deriving instance (Std_.Eq (C.Parsed Join))
@@ -887,7 +887,7 @@ instance (GH.HasField "questionId" GH.Slot Join Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Join MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (GH.HasField "keyPart" GH.Slot Join Basics.AnyPointer) where
+instance (GH.HasField "keyPart" GH.Slot Join (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 1)
 data MessageTarget 
 type instance (R.ReprFor MessageTarget) = (R.Ptr (Std_.Just R.Struct))
@@ -973,7 +973,7 @@ instance (C.AllocateList Payload) where
 instance (C.EstimateListAlloc Payload (C.Parsed Payload))
 data instance C.Parsed Payload
     = Payload 
-        {content :: (RP.Parsed Basics.AnyPointer)
+        {content :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))
         ,capTable :: (RP.Parsed (R.List CapDescriptor))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Payload))
@@ -987,7 +987,7 @@ instance (C.Marshal Payload (C.Parsed Payload)) where
         (GH.encodeField #capTable capTable raw_)
         (Std_.pure ())
         )
-instance (GH.HasField "content" GH.Slot Payload Basics.AnyPointer) where
+instance (GH.HasField "content" GH.Slot Payload (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "capTable" GH.Slot Payload (R.List CapDescriptor)) where
     fieldByLabel  = (GH.ptrField 1)
@@ -1222,7 +1222,7 @@ instance (C.AllocateList ThirdPartyCapDescriptor) where
 instance (C.EstimateListAlloc ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor))
 data instance C.Parsed ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor 
-        {id :: (RP.Parsed Basics.AnyPointer)
+        {id :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))
         ,vineId :: (RP.Parsed Std_.Word32)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed ThirdPartyCapDescriptor))
@@ -1236,7 +1236,7 @@ instance (C.Marshal ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor)) 
         (GH.encodeField #vineId vineId raw_)
         (Std_.pure ())
         )
-instance (GH.HasField "id" GH.Slot ThirdPartyCapDescriptor Basics.AnyPointer) where
+instance (GH.HasField "id" GH.Slot ThirdPartyCapDescriptor (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "vineId" GH.Slot ThirdPartyCapDescriptor Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)

@@ -27,4 +27,5 @@ type family ParsedByRepr (r :: Repr) (a :: Type) where
     ParsedByRepr _ B.Data = BS.ByteString
     ParsedByRepr _ B.Text = T.Text
     ParsedByRepr _ (List a) = V.Vector (Parsed a)
+    ParsedByRepr _ (Maybe B.AnyPointer) = Maybe (C.Parsed B.AnyPointer)
     ParsedByRepr _ a = C.Parsed a

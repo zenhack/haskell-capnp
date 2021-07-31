@@ -216,7 +216,7 @@ data instance C.Parsed JoinResult
     = JoinResult 
         {joinId :: (RP.Parsed Std_.Word32)
         ,succeeded :: (RP.Parsed Std_.Bool)
-        ,cap :: (RP.Parsed Basics.AnyPointer)}
+        ,cap :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed JoinResult))
 deriving instance (Std_.Eq (C.Parsed JoinResult))
@@ -235,5 +235,5 @@ instance (GH.HasField "joinId" GH.Slot JoinResult Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "succeeded" GH.Slot JoinResult Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 0)
-instance (GH.HasField "cap" GH.Slot JoinResult Basics.AnyPointer) where
+instance (GH.HasField "cap" GH.Slot JoinResult (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)

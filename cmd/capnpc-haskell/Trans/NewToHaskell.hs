@@ -546,11 +546,13 @@ primPtrToType = \case
     C.PrimAnyPtr t -> anyPtrToType t
 
 anyPtrToType :: C.AnyPtr -> Hs.Type
-anyPtrToType t = tgName ["Basics"] $ case t of
-    C.Struct -> "AnyStruct"
-    C.List   -> "AnyList"
-    C.Cap    -> "Capability"
-    C.Ptr    -> "AnyPointer"
+anyPtrToType t = case t of
+    C.Struct -> basics "AnyStruct"
+    C.List   -> basics "AnyList"
+    C.Cap    -> basics "Capability"
+    C.Ptr    -> Hs.TApp (tStd_ "Maybe") [basics "AnyPointer"]
+  where
+    basics = tgName ["Basics"]
 
 compositeTypeToType thisMod (C.StructType    name brand) = namedType thisMod name brand
 interfaceTypeToType thisMod (C.InterfaceType name brand) = namedType thisMod name brand

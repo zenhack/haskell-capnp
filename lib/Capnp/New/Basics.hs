@@ -34,6 +34,7 @@ import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
 import qualified Data.Vector         as V
 import           Data.Word
+import           GHC.Prim            (coerce)
 
 -- | The Cap'n Proto @Text@ type.
 data Text
@@ -56,28 +57,37 @@ data Capability
 type instance R.ReprFor Data = R.ReprFor (R.List Word8)
 type instance R.ReprFor Text = R.ReprFor (R.List Word8)
 type instance R.ReprFor AnyPointer = 'R.Ptr 'Nothing
+type instance R.ReprFor (Maybe AnyPointer) = 'R.Ptr 'Nothing
 type instance R.ReprFor AnyList = 'R.Ptr ('Just ('R.List 'Nothing))
 type instance R.ReprFor AnyStruct = 'R.Ptr ('Just 'R.Struct)
 type instance R.ReprFor Capability = 'R.Ptr ('Just 'R.Cap)
 
 data instance C.Parsed AnyPointer
-    = PtrNull
-    | PtrStruct (C.Parsed AnyStruct)
+    = PtrStruct (C.Parsed AnyStruct)
     | PtrList (C.Parsed AnyList)
     | PtrCap M.Client
     deriving(Show, Eq)
 
+instance C.Parse (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer)) where
+    parse raw@(R.Raw ptr) = case ptr of
+        Nothing -> pure Nothing
+        Just _  -> C.parse raw
+
+    encode msg value = R.Raw <$> case value of
+        Nothing -> pure Nothing
+        Just v  -> coerce <$> C.encode msg v
+
 instance C.Parse AnyPointer (C.Parsed AnyPointer) where
     parse (R.Raw ptr) = case ptr of
-        Nothing                   -> pure PtrNull
         Just (U.PtrCap cap)       -> PtrCap <$> C.parse (R.Raw cap)
         Just (U.PtrList list)     -> PtrList <$> C.parse (R.Raw list)
         Just (U.PtrStruct struct) -> PtrStruct <$> C.parse (R.Raw struct)
+        Nothing                   ->
+            throwM $ E.SchemaViolationError "Non-nullable AnyPointer was null"
 
     encode msg value = R.Raw <$> case value of
-        PtrNull       -> pure Nothing
-        PtrCap cap    -> Just . U.PtrCap . R.fromRaw <$> C.encode msg cap
-        PtrList list -> Just . U.PtrList . R.fromRaw <$> C.encode msg list
+        PtrCap cap       -> Just . U.PtrCap . R.fromRaw <$> C.encode msg cap
+        PtrList list     -> Just . U.PtrList . R.fromRaw <$> C.encode msg list
         PtrStruct struct -> Just . U.PtrStruct . R.fromRaw <$> C.encode msg struct
 
 instance C.AllocateList AnyPointer where
@@ -87,7 +97,7 @@ instance C.EstimateListAlloc AnyPointer (C.Parsed AnyPointer)
 
 data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
-    , structPtrs :: V.Vector (C.Parsed AnyPointer)
+    , structPtrs :: V.Vector (Maybe (C.Parsed AnyPointer))
     }
     deriving(Show, Eq)
 
