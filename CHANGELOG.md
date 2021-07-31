@@ -2,7 +2,7 @@
 # 0.11.0.0
 
 * This release introduces some experimental new APIs; see the blog post
-  for details (TODO: write blog post and link to it).
+  for details: <https://zenhack.net/2021/07/30/new-haskell-capnp-release-reworked-apis.html>
   * The new APIs include support for RPC pipelining, which is not
     possible with the old APIs.
 * The traversal limit is tracked at a coarser granularity. This results
