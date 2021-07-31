@@ -115,6 +115,7 @@ data ListRepr where
     ListComposite :: ListRepr
     deriving(Show)
 
+-- | Information about the representation of a normal (non-composite) list.
 data NormalListRepr where
     ListData :: DataSz -> NormalListRepr
     ListPtr :: NormalListRepr
@@ -130,6 +131,7 @@ type family Untyped (mut :: Mutability) (r :: Repr) :: Type where
     Untyped mut ('Data sz) = UntypedData sz
     Untyped mut ('Ptr ptr) = UntypedPtr mut ptr
 
+-- | @UntypedData sz@ is an untyped value with size @sz@.
 type family UntypedData (sz :: DataSz) :: Type where
     UntypedData 'Sz0 = ()
     UntypedData 'Sz1 = Bool
@@ -138,19 +140,23 @@ type family UntypedData (sz :: DataSz) :: Type where
     UntypedData 'Sz32 = Word32
     UntypedData 'Sz64 = Word64
 
+-- | Like 'Untyped', but for pointers only.
 type family UntypedPtr (mut :: Mutability) (r :: Maybe PtrRepr) :: Type where
     UntypedPtr mut 'Nothing = Maybe (U.Ptr mut)
     UntypedPtr mut ('Just r) = UntypedSomePtr mut r
 
+-- | Like 'UntypedPtr', but doesn't allow AnyPointers.
 type family UntypedSomePtr (mut :: Mutability) (r :: PtrRepr) :: Type where
     UntypedSomePtr mut 'Struct = U.Struct mut
     UntypedSomePtr mut 'Cap = U.Cap mut
     UntypedSomePtr mut ('List r) = UntypedList mut r
 
+-- | Like 'Untyped', but for lists only.
 type family UntypedList (mut :: Mutability) (r :: Maybe ListRepr) :: Type where
     UntypedList mut 'Nothing = U.List mut
     UntypedList mut ('Just r) = UntypedSomeList mut r
 
+-- | Like 'UntypedList', but doesn't allow AnyLists.
 type family UntypedSomeList (mut :: Mutability) (r :: ListRepr) :: Type where
     UntypedSomeList mut r = U.ListOf mut (Untyped mut (ElemRepr r))
 
@@ -169,6 +175,7 @@ class Allocate (r :: PtrRepr) where
     -- | Allocate a value of the given type.
     alloc :: U.RWCtx m s => M.Message ('Mut s) -> AllocHint r -> m (UntypedSomePtr ('Mut s) r)
 
+-- | @'ReprFor' a@ denotes the Cap'n Proto wire represent of the type @a@.
 type family ReprFor (a :: Type) :: Repr
 
 type instance ReprFor () = 'Data 'Sz0
@@ -270,6 +277,7 @@ index :: forall a m mut.
 index i (Raw l) =
     Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
 
+-- | @'setIndex' value i list@ sets the @i@th element of @list@ to @value@.
 setIndex :: forall a m s.
     ( U.RWCtx m s
     , Element (ReprFor a)
