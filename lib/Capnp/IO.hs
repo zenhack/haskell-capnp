@@ -141,40 +141,55 @@ sPutValue socket value = do
     lbs <- evalLimitT maxBound $ valueToLBS value
     sendLazy socket lbs
 
+-- | Read a struct from the handle in its parsed form, using the supplied
+-- read limit.
 hGetParsed :: forall a pa. (R.IsStruct a, Parse a pa) => Handle -> WordCount -> IO pa
 hGetParsed handle limit = do
     msg <- M.hGetMsg handle limit
     evalLimitT limit $ msgToParsed @a msg
 
+-- | Read a struct from the socket in its parsed form, using the supplied
+-- read limit.
 sGetParsed :: forall a pa. (R.IsStruct a, Parse a pa) => Socket -> WordCount -> IO pa
 sGetParsed socket limit = do
     msg <- sGetMsg socket limit
     evalLimitT limit $ msgToParsed @a msg
 
+-- | Read a struct from stdin in its parsed form, using the supplied
+-- read limit.
 getParsed :: (R.IsStruct a, Parse a pa) => WordCount -> IO pa
 getParsed = hGetParsed stdin
 
+-- | Write the parsed form of a struct to the handle
 hPutParsed :: (R.IsStruct a, Parse a pa) => Handle -> pa -> IO ()
 hPutParsed h value = do
     bb <- evalLimitT maxBound $ parsedToBuilder value
     BB.hPutBuilder h bb
 
+-- | Write the parsed form of a struct to stdout
 putParsed :: (R.IsStruct a, Parse a pa) => pa -> IO ()
 putParsed = hPutParsed stdout
 
+-- | Write the parsed form of a struct to the socket.
 sPutParsed :: (R.IsStruct a, Parse a pa) => Socket -> pa -> IO ()
 sPutParsed socket value  = do
     lbs <- evalLimitT maxBound $ parsedToLBS value
     sendLazy socket lbs
 
+-- | Read a struct from the handle using the supplied read limit,
+-- and return its root pointer.
 hGetRaw :: R.IsStruct a => Handle -> WordCount -> IO (R.Raw 'Const a)
 hGetRaw h limit = do
     msg <- M.hGetMsg h limit
     evalLimitT limit $ msgToRaw msg
 
+-- | Read a struct from stdin using the supplied read limit,
+-- and return its root pointer.
 getRaw :: R.IsStruct a => WordCount -> IO (R.Raw 'Const a)
 getRaw = hGetRaw stdin
 
+-- | Read a struct from the socket using the supplied read limit,
+-- and return its root pointer.
 sGetRaw :: R.IsStruct a => Socket -> WordCount -> IO (R.Raw 'Const a)
 sGetRaw socket limit = do
     msg <- sGetMsg socket limit

@@ -6,7 +6,20 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
+-- |
+-- Module: Capnp.New.Basics
+-- Description: Handling of "basic" capnp datatypes.
+--
+-- This module contains phantom types for built-in Cap'n Proto
+-- types, analogous to the phantom types generated for structs
+-- by the code generator. It also defines applicable type class
+-- instances.
 module Capnp.New.Basics where
+
+-- XXX: I(zenhack) don't know how to supply an explicit
+-- export list here, since we have instances of data families
+-- and I don't know what to call the instances to get all of the
+-- constructors.
 
 import qualified Capnp.Errors        as E
 import qualified Capnp.Message       as M
@@ -22,11 +35,22 @@ import qualified Data.Text.Encoding  as TE
 import qualified Data.Vector         as V
 import           Data.Word
 
+-- | The Cap'n Proto @Text@ type.
 data Text
+
+-- | The Cap'n Proto @Data@ type.
 data Data
+
+-- | A Cap'n Proto @AnyPointer@, i.e. an arbitrary pointer with unknown schema.
 data AnyPointer
+
+-- | A Cap'n Proto @List@ with unknown element type.
 data AnyList
+
+-- | A Cap'n Proto struct of unknown type.
 data AnyStruct
+
+-- | A Cap'n Proto capability with unknown interfaces.
 data Capability
 
 type instance R.ReprFor Data = R.ReprFor (R.List Word8)

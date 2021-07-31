@@ -1,8 +1,13 @@
+-- | Module: Capnp.New
+-- Description: Re-export commonly used things from elsewhere in the library.
 module Capnp.New
     ( module X
     , Parsed
 
-    -- * Working with raw lists
+    -- * Working with raw values
+    , R.Raw
+
+    -- ** Working with raw lists
     , R.List
     , R.index
     , R.setIndex
@@ -31,6 +36,9 @@ module Capnp.New
     -- * Re-exported from "Data.Default", for convienence.
     , def
     ) where
+
+-- TODO: be more intentional about the ordering of the stuff we're
+-- currently exposing as X, so the haddocks are clearer.
 
 import           Capnp.Convert         as X
 import qualified Capnp.Fields          as F

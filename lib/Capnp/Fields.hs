@@ -34,10 +34,22 @@ import qualified Capnp.New.Classes as NC
 import qualified Capnp.Repr        as R
 import qualified Capnp.Untyped     as U
 
-data FieldKind = Slot | Group
+-- | What sort of field is this? This corresponds to the slot/group variants
+-- in the @Field@ type in schema.capnp. Mostly used at the type level with
+-- the @DataKinds@ extension.
+--
+-- (Note that this has nothing to do with kinds in the usual type system sense
+-- of the word).
+data FieldKind
+    = Slot
+    -- ^ The field is a normal slot; it can be read and written as an
+    -- individual value.
+    | Group
+    -- ^ The field is a group. Since this shares space with its parent struct
+    -- access patterns are a bit different.
     deriving(Show, Read, Eq)
 
--- | @'Field' a b@ is a first-class representation of a field of type @b@ within
+-- | @'Field' k a b@ is a first-class representation of a field of type @b@ within
 -- an @a@, where @a@ must be a struct type.
 newtype Field (k :: FieldKind) a b = Field (FieldLoc k (R.ReprFor b))
 
@@ -89,6 +101,8 @@ instance
     , NC.Parse (Which a) p
     ) => NC.EstimateAlloc (Which a) p
 
+-- | @'Variant' k a b@ is a first-class representation of a variant of @a@'s
+-- anonymous union, whose argument is of type @b@.
 data Variant (k :: FieldKind) a b = Variant
     { field    :: !(Field k a b)
     , tagValue :: !Word16
@@ -104,6 +118,9 @@ class R.IsStruct a => HasField (name :: Symbol) k a b | a name -> k b where
 instance HasField name k a b => IsLabel name (Field k a b) where
     fromLabel = fieldByLabel @name @k @a @b
 
+-- | An instance @'HasVariant name k a b@ indicates that the struct type @a@
+-- has an anonymous union with a variant named @name@, whose argument is of type
+-- @b@.
 class HasUnion a => HasVariant (name :: Symbol) k a b | a name -> k b where
     variantByLabel :: Variant k a b
 

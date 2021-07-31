@@ -10,22 +10,34 @@
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
+-- | Module: Capnp.New.Classes
+-- Description: Misc. type classes
+--
+-- This module contains several type classes (and related utilities)
+-- useful for operating over Cap'n Proto values.
 module Capnp.New.Classes
-    ( Parse(..)
+    ( -- * Encoding and decoding parsed forms of values
+      Parse(..)
+    , Parsed
     , Marshal(..)
+    , MarshalElement
+
+    -- * Allocating values in messages
     , Allocate(..)
+    , newRoot
     , AllocateList(..)
     , EstimateAlloc(..)
     , EstimateListAlloc(..)
-    , MarshalElement
-    , TypedStruct(..)
-    , IsWord(..)
-    , newRoot
-    , Parsed
-    , structSizes
     , newFromRepr
+
+    -- * Typed Structs
+    , TypedStruct(..)
     , newTypedStruct
     , newTypedStructList
+    , structSizes
+
+    -- * Values that go in a struct's data section
+    , IsWord(..)
     ) where
 
 import           Capnp.Classes        (IsWord(..))
@@ -64,11 +76,15 @@ class Parse t p | t -> p, p -> t where
 --
 -- ...this is most types.
 class (Parse t p, Allocate t) => EstimateAlloc t p where
+    -- | Determine the appropriate hint needed to allocate space
+    -- for the serialied form of the value.
     estimateAlloc :: p -> AllocHint t
 
     default estimateAlloc :: AllocHint t ~ () => p -> AllocHint t
     estimateAlloc _ = ()
 
+-- | Implementation of 'new' valid for types whose 'AllocHint' is
+-- the same as that of their underlying representation.
 newFromRepr
     :: forall a r m s.
     ( R.Allocate r
@@ -99,8 +115,10 @@ class Allocate a where
     -- we can just use that implementation.
     new = newFromRepr @a
 
+-- | Like 'Allocate', but for allocating *lists* of @a@.
 class AllocateList a where
     type ListAllocHint a
+    -- ^ Extra information needed to allocate a list of @a@s.
 
     newList :: U.RWCtx m s => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
     default newList ::
@@ -125,9 +143,12 @@ instance
     , Allocate (R.List a)
     ) => EstimateListAlloc (R.List a) (V.Vector ap)
 
+-- | Allocate a new typed struct. Mainly used as the value for 'new' for in generated
+-- instances of 'Allocate'.
 newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newTypedStruct = newFromRepr (structSizes @a)
 
+-- | Like 'newTypedStruct', but for lists.
 newTypedStructList
     :: forall a m s. (TypedStruct a, U.RWCtx m s)
     => Int -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
@@ -136,6 +157,8 @@ newTypedStructList i msg = R.Raw <$> R.alloc
     msg
     (i, structSizes @a)
 
+-- | An instance of marshal allows a parsed value to be inserted into
+-- pre-allocated space in a message.
 class Parse t p => Marshal t p where
     marshalInto :: U.RWCtx m s => R.Raw ('Mut s) t -> p -> m ()
     -- ^ Marshal a value into the pre-allocated object inside the message.
@@ -144,7 +167,7 @@ class Parse t p => Marshal t p where
     -- This is is not necessarily guaranteed; for example, list types must
     -- coordinate the length of the list.
 
-
+-- | Get the maximum word and pointer counts needed for a struct type's fields.
 structSizes :: forall a. TypedStruct a => (Word16, Word16)
 structSizes = (numStructWords @a, numStructPtrs @a)
 
@@ -155,6 +178,7 @@ class (R.IsStruct a, Allocate a, AllocHint a ~ ()) => TypedStruct a where
     numStructPtrs  :: Word16
 
 
+-- | Like 'new', but also sets the value as the root of the message.
 newRoot
     :: forall a m s. (U.RWCtx m s, R.IsStruct a, Allocate a)
     => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)

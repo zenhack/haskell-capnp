@@ -136,12 +136,16 @@ valueToMsg val = do
     setRoot ret
     pure msg
 
+-- | Get the root pointer of a message, wrapped as a 'R.Raw'.
 msgToRaw :: forall a m mut. (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw mut a)
 msgToRaw = fmap R.Raw . U.rootPtr
 
+-- | Get the root pointer of a message, as a parsed ADT.
 msgToParsed :: forall a m pa. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => M.Message 'Const -> m pa
 msgToParsed msg = msgToRaw msg >>= parse
 
+-- | Serialize the parsed form of a struct into its 'R.Raw' form, and make it the root
+-- of its message.
 parsedToRaw :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (R.Raw ('Mut s) a)
 parsedToRaw p = do
     msg <- M.newMessage Nothing
@@ -149,16 +153,21 @@ parsedToRaw p = do
     U.setRoot struct
     pure value
 
+-- | Serialize the parsed form of a struct into a message with that value as its
+-- root, returning the message.
 parsedToMsg :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (M.Message ('Mut s))
 parsedToMsg p = do
     root <- parsedToRaw p
     pure $ U.message root
 
+-- | Serialize the parsed form of a struct and return it as a 'BB.Builder'
 parsedToBuilder :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m BB.Builder
 parsedToBuilder p = msgToBuilder <$> (parsedToMsg p >>= freeze)
 
+-- | Serialize the parsed form of a struct and return it as a lazy 'LBS.ByteString'
 parsedToLBS :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m LBS.ByteString
 parsedToLBS = fmap BB.toLazyByteString . parsedToBuilder
 
+-- | Serialize the parsed form of a struct and return it as a strict 'BS.ByteString'
 parsedToBS :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m BS.ByteString
 parsedToBS = fmap LBS.toStrict . parsedToLBS

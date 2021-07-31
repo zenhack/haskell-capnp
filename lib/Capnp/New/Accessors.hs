@@ -7,7 +7,8 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
--- | Functions for accessing parts of messaages.
+-- | Module: Capnp.New.Accessors
+-- Description: Functions for accessing parts of messaages.
 module Capnp.New.Accessors
     ( readField
     , getField
@@ -38,6 +39,7 @@ import           Data.Word
 import           GHC.Prim             (coerce)
 
 {-# INLINE readField #-}
+-- | Read the value of a field of a struct.
 readField
     ::  forall k a b mut m.
         ( R.IsStruct a
@@ -67,7 +69,7 @@ readField (F.Field field) (R.Raw struct) =
     readPtrField ptr =
         R.Raw <$> R.fromPtr @pr (U.message struct) ptr
 
--- | Returns whether the specified field is present. Only applicable for pointer
+-- | Return whether the specified field is present. Only applicable for pointer
 -- fields.
 hasField ::
     ( U.ReadCtx m mut
@@ -78,6 +80,11 @@ hasField (F.Field (F.PtrField index)) (R.Raw struct) =
     isJust <$> U.getPtr (fromIntegral index) struct
 
 {-# INLINE getField #-}
+-- | Like 'readField', but:
+--
+-- * Doesn't need the monadic context; can be used in pure code.
+-- * Only works for immutable values.
+-- * Only works for fields in the struct's data section.
 getField
     ::  ( R.IsStruct a
         , R.ReprFor b ~ 'R.Data sz
@@ -91,6 +98,7 @@ getField field struct =
         readField field struct >>= C.parse
 
 {-# INLINE setField #-}
+-- | Set a struct field to a value. Not usable for group fields.
 setField ::
     forall a b m s.
     ( R.IsStruct a
@@ -139,6 +147,7 @@ newField field hint parent = do
     setField field value parent
     pure value
 
+-- | Marshal a parsed value into a struct's field.
 encodeField ::
     forall a b m s bp.
     ( R.IsStruct a
@@ -149,6 +158,7 @@ encodeField field parsed struct = do
     encoded <- C.encode (U.message struct) parsed
     setField field encoded struct
 
+-- | parse a struct's field and return its parsed form.
 parseField ::
     ( R.IsStruct a
     , C.Parse b bp
@@ -157,6 +167,9 @@ parseField ::
 parseField field raw =
     readField field raw >>= C.parse
 
+-- | Set the struct's anonymous union to the given variant, with the
+-- supplied value as its argument. Not applicable for variants whose
+-- argument is a group; use 'initVariant' instead.
 setVariant
     :: forall a b m s.
     ( F.HasUnion a
@@ -166,6 +179,9 @@ setVariant F.Variant{field, tagValue} struct value = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     setField field value struct
 
+-- | Set the struct's anonymous union to the given variant, marshalling
+-- the supplied value into the message to be its argument. Not applicable
+-- for variants whose argument is a group; use 'initVariant' instead.
 encodeVariant
     :: forall a b m s bp.
     ( F.HasUnion a
@@ -176,6 +192,9 @@ encodeVariant F.Variant{field, tagValue} value struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     encodeField field value struct
 
+-- | Set the struct's anonymous union to the given variant, returning
+-- the variant's argument, which must be a group (for non-group fields,
+-- use 'setVariant' or 'encodeVariant'.
 initVariant
     :: forall a b m s. (F.HasUnion a, U.RWCtx m s)
     => F.Variant 'F.Group a b -> R.Raw ('Mut s) a -> m (R.Raw ('Mut s) b)
@@ -183,16 +202,22 @@ initVariant F.Variant{field, tagValue} struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     readField field struct
 
+-- | Get the anonymous union for a struct.
 structUnion :: F.HasUnion a => R.Raw mut a -> R.Raw mut (F.Which a)
 structUnion = coerce
 
+-- | Get the struct enclosing an anonymous union.
 unionStruct :: F.HasUnion a => R.Raw mut (F.Which a) -> R.Raw mut a
 unionStruct = coerce
 
+-- | Get a non-opaque view on the struct's anonymous union, which
+-- can be used to pattern match on.
 structWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw mut a -> m (F.RawWhich mut a)
 structWhich struct = do
     R.Raw tagValue <- readField (F.unionField @a) struct
     F.internalWhich tagValue struct
 
+-- | Get a non-opaque view on the anonymous union, which can be
+-- used to pattern match on.
 unionWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw mut (F.Which a) -> m (F.RawWhich mut a)
 unionWhich = structWhich . unionStruct
