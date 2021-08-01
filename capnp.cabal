@@ -110,6 +110,7 @@ library
       , Capnp.New.Basics
       , Capnp.New.Classes
       , Capnp.New.Constraints
+      , Capnp.New.Rpc.Server
       , Capnp.Convert
       , Capnp.Errors
       , Capnp.Fields
