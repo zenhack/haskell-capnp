@@ -1,9 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE ExplicitForAll        #-}
-{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.New.Rpc.Server
     ( CallHandler
@@ -24,8 +21,10 @@ import qualified Capnp.Rpc.Server        as Legacy
 import qualified Capnp.Rpc.Untyped       as URpc
 import qualified Capnp.Untyped           as U
 import           Control.Monad.STM.Class (MonadSTM(..))
+import           Data.Function           ((&))
 import           Data.Kind               (Constraint)
 import qualified Data.Map.Strict         as M
+import           Data.Maybe              (fromMaybe)
 import           Data.Proxy              (Proxy(..))
 import qualified Data.Vector             as V
 import           Data.Word
@@ -83,9 +82,9 @@ toLegacyCallHandler
     -> Word16
     -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyCallHandler callHandler interfaceId methodId =
-    toLegacyMethodHandler $ case findMethod interfaceId methodId callHandler of
-        Nothing            -> unimplemented
-        Just methodHandler -> methodHandler
+    findMethod interfaceId methodId callHandler
+    & fromMaybe unimplemented
+    & toLegacyMethodHandler
 
 toLegacyMethodHandler :: UntypedMethodHandler m -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyMethodHandler handler =
