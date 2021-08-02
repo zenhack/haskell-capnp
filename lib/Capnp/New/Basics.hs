@@ -69,9 +69,9 @@ data instance C.Parsed AnyPointer
     deriving(Show, Eq)
 
 instance C.Parse (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer)) where
-    parse raw@(R.Raw ptr) = case ptr of
+    parse (R.Raw ptr) = case ptr of
         Nothing -> pure Nothing
-        Just _  -> C.parse raw
+        Just _  -> Just <$> C.parse (R.Raw ptr :: R.Raw 'M.Const AnyPointer)
 
     encode msg value = R.Raw <$> case value of
         Nothing -> pure Nothing
