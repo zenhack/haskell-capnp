@@ -34,13 +34,15 @@ import           Supervisors             (Supervisor)
 
 -- | A handler for RPC calls. Maps (interfaceId, methodId) pairs to
 -- 'MethodHandler's.
-type CallHandler m = M.Map Word64 (V.Vector (MethodHandler m))
+type CallHandler m = M.Map Word64 (V.Vector (UntypedMethodHandler m))
 
 -- | Type alias for a handler for a particular rpc method.
-type MethodHandler m
-    = R.Raw 'Const (Maybe B.AnyPointer)
-    -> Fulfiller (R.Raw 'Const (Maybe B.AnyPointer))
+type MethodHandler m p r
+    = R.Raw 'Const p
+    -> Fulfiller (R.Raw 'Const r)
     -> m ()
+
+type UntypedMethodHandler m = MethodHandler m (Maybe B.AnyPointer) (Maybe B.AnyPointer)
 
 -- | Generated interface types have instances of 'Export', which allows a server
 -- for that interface to be exported as a 'Client'.
@@ -65,11 +67,11 @@ export sup srv =
     liftSTM $ Client <$> URpc.export sup (toLegacyServerOps h)
 
 -- | 'MethodHandler' that always throws unimplemented.
-unimplemented :: MonadSTM m => MethodHandler m
+unimplemented :: MonadSTM m => MethodHandler m p r
 unimplemented _ f = breakPromise f eMethodUnimplemented
 
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.
-findMethod :: Word64 -> Word16 -> CallHandler m -> Maybe (MethodHandler m)
+findMethod :: Word64 -> Word16 -> CallHandler m -> Maybe (UntypedMethodHandler m)
 findMethod interfaceId methodId handler = do
     iface <- M.lookup interfaceId handler
     iface V.!? fromIntegral methodId
@@ -85,7 +87,7 @@ toLegacyCallHandler callHandler interfaceId methodId =
         Nothing            -> unimplemented
         Just methodHandler -> methodHandler
 
-toLegacyMethodHandler :: MethodHandler m -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
+toLegacyMethodHandler :: UntypedMethodHandler m -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyMethodHandler handler =
     Legacy.untypedHandler $ \args respond ->
         handler (coerce args) (coerce respond)
