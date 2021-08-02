@@ -36,6 +36,11 @@ instance ((GH.TypeParam sturdyRef)
     parse  = GH.parseCap
     encode  = GH.encodeCap
 instance ((GH.TypeParam sturdyRef)
+         ,(GH.TypeParam owner)) => (GH.Export (Persistent sturdyRef owner)) where
+    type Server (Persistent sturdyRef owner) = (Persistent'server_ sturdyRef owner)
+    serverToCallHandler _ _ = Std_.mempty
+class (Persistent'server_ sturdyRef owner s_)
+instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (GH.HasMethod "save" (Persistent sturdyRef owner) (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner)) where
     methodByLabel  = (GH.Method 14468694717054801553 0)
 data Persistent'SaveParams sturdyRef owner
@@ -122,6 +127,13 @@ instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalOwner)) => (C.Parse (RealmGateway internalRef externalRef internalOwner externalOwner) (GH.Client (RealmGateway internalRef externalRef internalOwner externalOwner))) where
     parse  = GH.parseCap
     encode  = GH.encodeCap
+instance ((GH.TypeParam internalRef)
+         ,(GH.TypeParam externalRef)
+         ,(GH.TypeParam internalOwner)
+         ,(GH.TypeParam externalOwner)) => (GH.Export (RealmGateway internalRef externalRef internalOwner externalOwner)) where
+    type Server (RealmGateway internalRef externalRef internalOwner externalOwner) = (RealmGateway'server_ internalRef externalRef internalOwner externalOwner)
+    serverToCallHandler _ _ = Std_.mempty
+class (RealmGateway'server_ internalRef externalRef internalOwner externalOwner s_)
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)

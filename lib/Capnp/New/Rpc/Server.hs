@@ -53,16 +53,16 @@ class R.IsCap i => Export i where
 
     -- | Convert the server to a 'CallHandler' populated with appropriate
     -- 'MethodHandler's for the interface.
-    serverToCallHandler :: Server i s => Proxy i -> s -> m (CallHandler m)
+    serverToCallHandler :: Server i s => Proxy i -> s -> CallHandler IO
     -- NB: the proxy helps disambiguate types; for some reason TypeApplications
     -- doesn't seem to be enough in the face of a type alias of kind 'Constraint'.
 
 -- | Export the server as a client for interface @i@. Spawns a server thread
 -- with its lifetime bound to the supervisor.
-export :: forall i s. (Export i, Server i s) => Supervisor -> s -> IO (Client i)
-export sup srv = do
-    h <- serverToCallHandler (Proxy :: Proxy i) srv
-    Client <$> URpc.export sup (toLegacyServerOps h)
+export :: forall i s m. (MonadSTM m, Export i, Server i s) => Supervisor -> s -> m (Client i)
+export sup srv =
+    let h = serverToCallHandler (Proxy :: Proxy i) srv in
+    liftSTM $ Client <$> URpc.export sup (toLegacyServerOps h)
 
 -- | 'MethodHandler' that always throws unimplemented.
 unimplemented :: MonadSTM m => MethodHandler m

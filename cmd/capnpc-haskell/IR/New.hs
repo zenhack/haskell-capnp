@@ -37,12 +37,8 @@ data Decl
         }
     | MethodDecl
         { interfaceName :: Name.LocalQ
-        , typeParams    :: [Name.UnQ]
         , interfaceId   :: !Word64
-        , methodName    :: Name.UnQ
-        , methodId      :: !Word16
-        , paramType     :: C.CompositeType Brand Name.CapnpQ
-        , resultType    :: C.CompositeType Brand Name.CapnpQ
+        , methodInfo    :: MethodInfo
         }
     | ParsedInstanceDecl
         { typeName        :: Name.LocalQ
@@ -66,6 +62,14 @@ data ParsedInstances
         { variants :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
         }
 
+data MethodInfo = MethodInfo
+    { typeParams :: [Name.UnQ]
+    , methodName :: Name.UnQ
+    , methodId   :: !Word16
+    , paramType  :: C.CompositeType Brand Name.CapnpQ
+    , resultType :: C.CompositeType Brand Name.CapnpQ
+    }
+
 data ExtraTypeInfo
     = StructTypeInfo
         { nWords :: !Word16
@@ -73,6 +77,8 @@ data ExtraTypeInfo
         }
     | EnumTypeInfo [Name.UnQ]
     | InterfaceTypeInfo
+        { methods :: [MethodInfo]
+        }
 
 data UnionVariant = UnionVariant
     { variantName  :: Name.UnQ

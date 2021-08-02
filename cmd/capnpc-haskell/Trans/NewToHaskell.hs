@@ -252,8 +252,9 @@ declToDecls thisMod decl =
                         , defs = []
                         }
                     ]
-                Just New.InterfaceTypeInfo ->
+                Just New.InterfaceTypeInfo {methods} ->
                     defineInterfaceParse name params
+                    ++ defineInterfaceServer name params methods
                 Nothing -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
@@ -307,12 +308,14 @@ declToDecls thisMod decl =
             : concatMap (variantToDecls thisMod name typeParams) variants
         New.MethodDecl
                 { interfaceName
-                , typeParams
                 , interfaceId
-                , methodName
-                , methodId
-                , paramType
-                , resultType
+                , methodInfo = New.MethodInfo
+                    { typeParams
+                    , methodName
+                    , methodId
+                    , paramType
+                    , resultType
+                    }
                 } ->
             let tVars = toTVars typeParams in
             [ Hs.DcInstance
@@ -864,6 +867,33 @@ defineMarshal typeName typeParams New.ParsedUnion { variants } =
                     ]
                 }
             ]
+        }
+    ]
+
+defineInterfaceServer typeName typeParams methods =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (Hs.TLName typeName) tVars
+        clsName = Name.mkSub typeName "server_"
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp (tgName ["GH"] "Export") [typ]
+        , defs =
+            [ Hs.IdType $ Hs.TypeAlias "Server" [typ] $ Hs.TApp (Hs.TLName clsName) tVars
+            , Hs.IdValue Hs.DfValue
+                { name = "serverToCallHandler"
+                -- TODO:
+                , params = [Hs.PVar "_", Hs.PVar "_"]
+                , value = eStd_ "mempty"
+                }
+            ]
+        }
+    , Hs.DcClass
+        { ctx = []
+        , name = clsName
+        , params = map (Name.UnQ . Name.typeVarName) typeParams ++ ["s_"]
+        , funDeps = []
+        , decls = [] -- TODO
         }
     ]
 
