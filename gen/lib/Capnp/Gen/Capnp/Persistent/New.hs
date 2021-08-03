@@ -39,7 +39,8 @@ instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (GH.Export (Persistent sturdyRef owner)) where
     type Server (Persistent sturdyRef owner) = (Persistent'server_ sturdyRef owner)
     serverToCallHandler _ _ = Std_.mempty
-class (Persistent'server_ sturdyRef owner s_)
+class (Persistent'server_ sturdyRef owner s_) where
+    persistent'save :: s_ -> (GH.MethodHandler Std_.IO (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner))
 instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (GH.HasMethod "save" (Persistent sturdyRef owner) (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner)) where
     methodByLabel  = (GH.Method 14468694717054801553 0)
@@ -133,7 +134,9 @@ instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalOwner)) => (GH.Export (RealmGateway internalRef externalRef internalOwner externalOwner)) where
     type Server (RealmGateway internalRef externalRef internalOwner externalOwner) = (RealmGateway'server_ internalRef externalRef internalOwner externalOwner)
     serverToCallHandler _ _ = Std_.mempty
-class (RealmGateway'server_ internalRef externalRef internalOwner externalOwner s_)
+class (RealmGateway'server_ internalRef externalRef internalOwner externalOwner s_) where
+    realmGateway'import_ :: s_ -> (GH.MethodHandler Std_.IO (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults internalRef internalOwner))
+    realmGateway'export :: s_ -> (GH.MethodHandler Std_.IO (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults externalRef externalOwner))
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)

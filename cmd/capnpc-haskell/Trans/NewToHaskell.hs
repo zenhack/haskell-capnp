@@ -254,7 +254,7 @@ declToDecls thisMod decl =
                     ]
                 Just New.InterfaceTypeInfo {methods} ->
                     defineInterfaceParse name params
-                    ++ defineInterfaceServer name params methods
+                    ++ defineInterfaceServer thisMod name params methods
                 Nothing -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
@@ -870,7 +870,7 @@ defineMarshal typeName typeParams New.ParsedUnion { variants } =
         }
     ]
 
-defineInterfaceServer typeName typeParams methods =
+defineInterfaceServer thisMod typeName typeParams methods =
     let tVars = toTVars typeParams
         typ = Hs.TApp (Hs.TLName typeName) tVars
         clsName = Name.mkSub typeName "server_"
@@ -893,9 +893,24 @@ defineInterfaceServer typeName typeParams methods =
         , name = clsName
         , params = map (Name.UnQ . Name.typeVarName) typeParams ++ ["s_"]
         , funDeps = []
-        , decls = [] -- TODO
+        , decls =
+            map (defineIfaceClassMethod thisMod typeName typeParams) methods
         }
     ]
+defineIfaceClassMethod thisMod typeName typeParams New.MethodInfo{methodName, paramType, resultType} =
+    let mkType t = typeToType thisMod (C.CompositeType t) in
+    Hs.CdValueDecl
+        (Name.valueName (Name.mkSub typeName methodName))
+        (Hs.TFn
+            [ Hs.TVar "s_"
+            , Hs.TApp
+                (tgName ["GH"] "MethodHandler")
+                [ tStd_ "IO"
+                , mkType paramType
+                , mkType resultType
+                ]
+            ]
+        )
 
 emitMarshalField :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
 emitMarshalField name (C.HereField _) =
