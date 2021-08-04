@@ -1,3 +1,8 @@
+# 0.12.0.0
+
+* For the new API, there is a new `HasTypeId` class, with instances
+  defined for all generated types.
+* The new API now supports implementing RPC servers.
 
 # 0.11.0.0
 
