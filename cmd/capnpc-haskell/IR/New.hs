@@ -38,6 +38,7 @@ data Decl
     | MethodDecl
         { interfaceName :: Name.LocalQ
         , interfaceId   :: !Word64
+        , methodId      :: !Word16
         , methodInfo    :: MethodInfo
         }
     | ParsedInstanceDecl
@@ -65,7 +66,6 @@ data ParsedInstances
 data MethodInfo = MethodInfo
     { typeParams :: [Name.UnQ]
     , methodName :: Name.UnQ
-    , methodId   :: !Word16
     , paramType  :: C.CompositeType Brand Name.CapnpQ
     , resultType :: C.CompositeType Brand Name.CapnpQ
     }

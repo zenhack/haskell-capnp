@@ -309,10 +309,10 @@ declToDecls thisMod decl =
         New.MethodDecl
                 { interfaceName
                 , interfaceId
+                , methodId
                 , methodInfo = New.MethodInfo
                     { typeParams
                     , methodName
-                    , methodId
                     , paramType
                     , resultType
                     }

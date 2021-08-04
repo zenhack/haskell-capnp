@@ -39,11 +39,10 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         mkField field =
             fieldToDecl local typeParams field
 
-        mkMethodInfo methodId Flat.Method{name, paramType, resultType} =
+        mkMethodInfo Flat.Method{name, paramType, resultType} =
             New.MethodInfo
                 { typeParams = map C.paramName typeParams
                 , methodName = name
-                , methodId
                 , paramType = mapTypes paramType
                 , resultType = mapTypes resultType
                 }
@@ -104,7 +103,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         Flat.Enum enumerants ->
             [ mkType (R.Data R.Sz16) $ Just $ New.EnumTypeInfo enumerants ]
         Flat.Interface{methods} ->
-            let methodInfos = zipWith mkMethodInfo [0..] methods in
+            let methodInfos = map mkMethodInfo methods in
             mkType
                 (R.Ptr (Just R.Cap))
                 (Just New.InterfaceTypeInfo
@@ -114,9 +113,10 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
             : [ New.MethodDecl
                     { interfaceName = local
                     , interfaceId = nodeId
+                    , methodId
                     , methodInfo
                     }
-              | methodInfo <- methodInfos
+              | (methodId, methodInfo) <- zip [0..] methodInfos
               ]
         Flat.Struct{isGroup, fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
