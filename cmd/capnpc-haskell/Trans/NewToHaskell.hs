@@ -50,6 +50,8 @@ fileToMainModule file@New.File{fileName} =
             , "OverloadedStrings"
             , "StandaloneDeriving"
             , "RecordWildCards"
+            , "TypeApplications"
+            , "ScopedTypeVariables"
             ]
         , modExports = Nothing
         , modImports = imports
@@ -75,7 +77,7 @@ fileToDecls New.File{fileId, decls} =
 declToDecls :: Word64 -> New.Decl -> [Hs.Decl]
 declToDecls thisMod decl =
     case decl of
-        New.TypeDecl {name, params, repr, extraTypeInfo} ->
+        New.TypeDecl {name, nodeId, params, repr, extraTypeInfo} ->
             let dataName = Name.localToUnQ name
                 typeArgs = toTVars params
                 typ = case typeArgs of
@@ -107,6 +109,17 @@ declToDecls thisMod decl =
             , Hs.DcTypeInstance
                 (Hs.TApp (tgName ["R"] "ReprFor") [typ])
                 (toType repr)
+            , Hs.DcInstance
+                { ctx = []
+                , typ = Hs.TApp (tgName ["C"] "HasTypeId") [typ]
+                , defs =
+                    [ Hs.IdValue Hs.DfValue
+                        { name = "typeId"
+                        , params = []
+                        , value = Hs.EInt (fromIntegral nodeId)
+                        }
+                    ]
+                }
             ] ++
             let ctx = paramsContext typeArgs in
             case extraTypeInfo of
@@ -888,7 +901,7 @@ defineInterfaceServer thisMod typeName typeParams methods =
                         (egName ["GH"] "buildCallHandler")
                         [ Hs.EList
                             [ Hs.ETup
-                                [ Hs.EInt 0 -- TODO
+                                [ Hs.ETypeApp (egName ["C"] "typeId") [typ]
                                 , Hs.EList
                                     [ Hs.EApp
                                         (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))

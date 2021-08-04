@@ -233,6 +233,8 @@ instance Format Exp where
             [ hcat [ format name, " = ", format value ]
             | (name, value) <- updates
             ]
+    format (ETypeApp e ts) =
+        hcat (format e : [ " @(" <> format t <> ")" | t <- ts ])
     format (ELabel name) = "#" <> format name
 
 instance Format Do where
