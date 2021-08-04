@@ -187,6 +187,7 @@ data Exp
     | ELambda [Pattern] Exp
     | ERecord Exp [(Name.UnQ, Exp)]
     | ELabel Name.UnQ
+    | EList [Exp]
     deriving(Show, Read, Eq)
 
 data Do

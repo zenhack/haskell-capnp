@@ -205,6 +205,7 @@ instance Format Exp where
         ]
     format (EBind x f) = PP.parens (format x <> " >>= " <> format f)
     format (ETup es) = PP.tupled (map format es)
+    format (EList es) = PP.list (map format es)
     format (ECase ex arms) = vcat
         [ hcat [ "case ", format ex, " of"]
         , indent $ vcat

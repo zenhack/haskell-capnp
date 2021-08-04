@@ -882,9 +882,22 @@ defineInterfaceServer thisMod typeName typeParams methods =
             [ Hs.IdType $ Hs.TypeAlias "Server" [typ] $ Hs.TApp (Hs.TLName clsName) tVars
             , Hs.IdValue Hs.DfValue
                 { name = "serverToCallHandler"
-                -- TODO:
-                , params = [Hs.PVar "_", Hs.PVar "_"]
-                , value = eStd_ "mempty"
+                , params = [Hs.PVar "_", Hs.PVar "s_"]
+                , value =
+                    Hs.EApp
+                        (egName ["GH"] "buildCallHandler")
+                        [ Hs.EList
+                            [ Hs.ETup
+                                [ Hs.EInt 0 -- TODO
+                                , Hs.EList
+                                    [ Hs.EApp
+                                        (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))
+                                        [Hs.EVar "s_"]
+                                    | New.MethodInfo{methodName} <- methods
+                                    ]
+                                ]
+                            ]
+                        ]
                 }
             ]
         }

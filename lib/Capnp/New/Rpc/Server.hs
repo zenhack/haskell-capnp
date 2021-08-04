@@ -5,6 +5,7 @@
 module Capnp.New.Rpc.Server
     ( CallHandler
     , MethodHandler
+    , UntypedMethodHandler
     , Export(..)
     , export
     , unimplemented

@@ -31,6 +31,7 @@ module Capnp.GenHelpers.New
     , module F
     , module Capnp.Repr.Methods
     , module Capnp.New.Rpc.Server
+    , buildCallHandler
     ) where
 
 import           Capnp.Bits
@@ -57,6 +58,8 @@ import qualified Capnp.Repr           as R
 import           Capnp.Repr.Methods
 import qualified Capnp.Untyped        as U
 import           Data.Bits
+import qualified Data.Map.Strict      as M
+import qualified Data.Vector          as V
 import           Data.Word
 
 dataField
@@ -108,3 +111,7 @@ parseCap (R.Raw cap) = Client <$> U.getClient cap
 
 encodeCap :: (R.IsCap a, U.RWCtx m s) => M.Message ('Mut s) -> Client a -> m (R.Raw ('Mut s) a)
 encodeCap msg (Client c) = R.Raw <$> U.appendCap msg c
+
+
+buildCallHandler :: [(Word64, [UntypedMethodHandler IO])] -> CallHandler IO
+buildCallHandler hs = M.fromList [ (k, V.fromList v) | (k, v) <- hs ]
