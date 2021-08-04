@@ -30,7 +30,10 @@ module Capnp.New.Classes
     , EstimateListAlloc(..)
     , newFromRepr
 
-    -- * Typed Structs
+    -- * Working with Cap'n Proto types
+    , HasTypeId(..)
+
+    -- ** Typed Structs
     , TypedStruct(..)
     , newTypedStruct
     , newTypedStructList
@@ -171,11 +174,19 @@ class Parse t p => Marshal t p where
 structSizes :: forall a. TypedStruct a => (Word16, Word16)
 structSizes = (numStructWords @a, numStructPtrs @a)
 
+-- | Types which have a numeric type-id defined in a capnp schema.
+class HasTypeId a where
+    -- | The node id for this type. You will generally want to use the
+    -- @TypeApplications@ extension to specify the type.
+    typeId :: Word64
+
 -- | Operations on typed structs.
 class (R.IsStruct a, Allocate a, AllocHint a ~ ()) => TypedStruct a where
     -- Get the size of  the struct's word and pointer sections, respectively.
     numStructWords :: Word16
     numStructPtrs  :: Word16
+-- TODO: Add a superclass constraint for HasTypeId. But that has to wait for code
+-- generator support.
 
 
 -- | Like 'new', but also sets the value as the root of the message.
