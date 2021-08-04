@@ -904,8 +904,14 @@ defineInterfaceServer thisMod typeName typeParams methods =
                                 [ Hs.ETypeApp (egName ["C"] "typeId") [typ]
                                 , Hs.EList
                                     [ Hs.EApp
-                                        (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))
-                                        [Hs.EVar "s_"]
+                                        (egName ["GH"] "toUntypedMethodHandler")
+                                        [ Hs.EApp
+                                            (Hs.ETypeApp
+                                                (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))
+                                                tVars
+                                            )
+                                            [Hs.EVar "s_"]
+                                        ]
                                     | New.MethodInfo{methodName} <- methods
                                     ]
                                 ]

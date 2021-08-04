@@ -10,6 +10,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -31,6 +33,8 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value) where
+    typeId  = 11815888814287216003
 instance (C.TypedStruct Value) where
     numStructWords  = 2
     numStructPtrs  = 1
@@ -150,6 +154,8 @@ instance (C.Marshal (GH.Which Value) (C.Parsed (GH.Which Value))) where
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value'Field) where
+    typeId  = 16361620220719570399
 instance (C.TypedStruct Value'Field) where
     numStructWords  = 0
     numStructPtrs  = 2
@@ -183,6 +189,8 @@ instance (GH.HasField "value" GH.Slot Value'Field Value) where
     fieldByLabel  = (GH.ptrField 1)
 data Value'Call 
 type instance (R.ReprFor Value'Call) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value'Call) where
+    typeId  = 11590566612201717064
 instance (C.TypedStruct Value'Call) where
     numStructWords  = 0
     numStructPtrs  = 2
@@ -216,6 +224,8 @@ instance (GH.HasField "params" GH.Slot Value'Call (R.List Value)) where
     fieldByLabel  = (GH.ptrField 1)
 data FlattenOptions 
 type instance (R.ReprFor FlattenOptions) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId FlattenOptions) where
+    typeId  = 14186078402951440993
 instance (C.TypedStruct FlattenOptions) where
     numStructWords  = 0
     numStructPtrs  = 1
@@ -244,6 +254,8 @@ instance (GH.HasField "prefix" GH.Slot FlattenOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 data DiscriminatorOptions 
 type instance (R.ReprFor DiscriminatorOptions) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId DiscriminatorOptions) where
+    typeId  = 14049192395069608729
 instance (C.TypedStruct DiscriminatorOptions) where
     numStructWords  = 0
     numStructPtrs  = 2

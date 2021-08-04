@@ -10,6 +10,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -35,6 +37,8 @@ data Side
     | Side'unknown' Std_.Word16
     deriving(Std_.Eq,Std_.Show)
 type instance (R.ReprFor Side) = (R.Data R.Sz16)
+instance (C.HasTypeId Side) where
+    typeId  = 11517567629614739868
 instance (Std_.Enum Side) where
     toEnum n_ = case n_ of
         0 ->
@@ -61,6 +65,8 @@ instance (C.AllocateList Side) where
 instance (C.EstimateListAlloc Side Side)
 data VatId 
 type instance (R.ReprFor VatId) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId VatId) where
+    typeId  = 15135349989283412622
 instance (C.TypedStruct VatId) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -89,6 +95,8 @@ instance (GH.HasField "side" GH.Slot VatId Side) where
     fieldByLabel  = (GH.dataField 0 0 16 0)
 data ProvisionId 
 type instance (R.ReprFor ProvisionId) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId ProvisionId) where
+    typeId  = 13298295899470141463
 instance (C.TypedStruct ProvisionId) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -117,6 +125,8 @@ instance (GH.HasField "joinId" GH.Slot ProvisionId Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data RecipientId 
 type instance (R.ReprFor RecipientId) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId RecipientId) where
+    typeId  = 9940440221562733249
 instance (C.TypedStruct RecipientId) where
     numStructWords  = 0
     numStructPtrs  = 0
@@ -140,6 +150,8 @@ instance (C.Marshal RecipientId (C.Parsed RecipientId)) where
     marshalInto _raw (RecipientId) = (Std_.pure ())
 data ThirdPartyCapId 
 type instance (R.ReprFor ThirdPartyCapId) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId ThirdPartyCapId) where
+    typeId  = 13006195034640135581
 instance (C.TypedStruct ThirdPartyCapId) where
     numStructWords  = 0
     numStructPtrs  = 0
@@ -163,6 +175,8 @@ instance (C.Marshal ThirdPartyCapId (C.Parsed ThirdPartyCapId)) where
     marshalInto _raw (ThirdPartyCapId) = (Std_.pure ())
 data JoinKeyPart 
 type instance (R.ReprFor JoinKeyPart) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId JoinKeyPart) where
+    typeId  = 10786842769591618179
 instance (C.TypedStruct JoinKeyPart) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -201,6 +215,8 @@ instance (GH.HasField "partNum" GH.Slot JoinKeyPart Std_.Word16) where
     fieldByLabel  = (GH.dataField 48 0 16 0)
 data JoinResult 
 type instance (R.ReprFor JoinResult) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId JoinResult) where
+    typeId  = 11323802317489695726
 instance (C.TypedStruct JoinResult) where
     numStructWords  = 1
     numStructPtrs  = 1

@@ -10,6 +10,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -31,6 +33,8 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data StreamResult 
 type instance (R.ReprFor StreamResult) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId StreamResult) where
+    typeId  = 11051721556433613166
 instance (C.TypedStruct StreamResult) where
     numStructWords  = 0
     numStructPtrs  = 0

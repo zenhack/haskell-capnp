@@ -10,6 +10,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -31,6 +33,8 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Message 
 type instance (R.ReprFor Message) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Message) where
+    typeId  = 10500036013887172658
 instance (C.TypedStruct Message) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -220,6 +224,8 @@ instance (C.Marshal (GH.Which Message) (C.Parsed (GH.Which Message))) where
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Bootstrap 
 type instance (R.ReprFor Bootstrap) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Bootstrap) where
+    typeId  = 16811039658553601732
 instance (C.TypedStruct Bootstrap) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -253,6 +259,8 @@ instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap (Std_.Maybe Basics.
     fieldByLabel  = (GH.ptrField 0)
 data Call 
 type instance (R.ReprFor Call) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Call) where
+    typeId  = 9469473312751832276
 instance (C.TypedStruct Call) where
     numStructWords  = 3
     numStructPtrs  = 3
@@ -314,6 +322,8 @@ instance (GH.HasField "allowThirdPartyTailCall" GH.Slot Call Std_.Bool) where
     fieldByLabel  = (GH.dataField 0 2 1 0)
 data Call'sendResultsTo 
 type instance (R.ReprFor Call'sendResultsTo) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Call'sendResultsTo) where
+    typeId  = 15774052265921044377
 instance (C.TypedStruct Call'sendResultsTo) where
     numStructWords  = 3
     numStructPtrs  = 3
@@ -393,6 +403,8 @@ instance (C.Marshal (GH.Which Call'sendResultsTo) (C.Parsed (GH.Which Call'sendR
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Return 
 type instance (R.ReprFor Return) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Return) where
+    typeId  = 11392333052105676602
 instance (C.TypedStruct Return) where
     numStructWords  = 2
     numStructPtrs  = 1
@@ -512,6 +524,8 @@ instance (GH.HasField "releaseParamCaps" GH.Slot Return Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 1)
 data Finish 
 type instance (R.ReprFor Finish) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Finish) where
+    typeId  = 15239388059401719395
 instance (C.TypedStruct Finish) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -545,6 +559,8 @@ instance (GH.HasField "releaseResultCaps" GH.Slot Finish Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 1)
 data Resolve 
 type instance (R.ReprFor Resolve) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Resolve) where
+    typeId  = 13529541526594062446
 instance (C.TypedStruct Resolve) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -619,6 +635,8 @@ instance (GH.HasField "promiseId" GH.Slot Resolve Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Release 
 type instance (R.ReprFor Release) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Release) where
+    typeId  = 12473400923157197975
 instance (C.TypedStruct Release) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -652,6 +670,8 @@ instance (GH.HasField "referenceCount" GH.Slot Release Std_.Word32) where
     fieldByLabel  = (GH.dataField 32 0 32 0)
 data Disembargo 
 type instance (R.ReprFor Disembargo) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Disembargo) where
+    typeId  = 17970548384007534353
 instance (C.TypedStruct Disembargo) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -688,6 +708,8 @@ instance (GH.HasField "context" GH.Group Disembargo Disembargo'context) where
     fieldByLabel  = GH.groupField
 data Disembargo'context 
 type instance (R.ReprFor Disembargo'context) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Disembargo'context) where
+    typeId  = 15376050949367520589
 instance (C.TypedStruct Disembargo'context) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -777,6 +799,8 @@ instance (C.Marshal (GH.Which Disembargo'context) (C.Parsed (GH.Which Disembargo
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Provide 
 type instance (R.ReprFor Provide) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Provide) where
+    typeId  = 11270825879279873114
 instance (C.TypedStruct Provide) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -815,6 +839,8 @@ instance (GH.HasField "recipient" GH.Slot Provide (Std_.Maybe Basics.AnyPointer)
     fieldByLabel  = (GH.ptrField 1)
 data Accept 
 type instance (R.ReprFor Accept) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Accept) where
+    typeId  = 15332985841292492822
 instance (C.TypedStruct Accept) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -853,6 +879,8 @@ instance (GH.HasField "embargo" GH.Slot Accept Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 0)
 data Join 
 type instance (R.ReprFor Join) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Join) where
+    typeId  = 18149955118657700271
 instance (C.TypedStruct Join) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -891,6 +919,8 @@ instance (GH.HasField "keyPart" GH.Slot Join (Std_.Maybe Basics.AnyPointer)) whe
     fieldByLabel  = (GH.ptrField 1)
 data MessageTarget 
 type instance (R.ReprFor MessageTarget) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId MessageTarget) where
+    typeId  = 10789521159760378817
 instance (C.TypedStruct MessageTarget) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -960,6 +990,8 @@ instance (C.Marshal (GH.Which MessageTarget) (C.Parsed (GH.Which MessageTarget))
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Payload 
 type instance (R.ReprFor Payload) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Payload) where
+    typeId  = 11100916931204903995
 instance (C.TypedStruct Payload) where
     numStructWords  = 0
     numStructPtrs  = 2
@@ -993,6 +1025,8 @@ instance (GH.HasField "capTable" GH.Slot Payload (R.List CapDescriptor)) where
     fieldByLabel  = (GH.ptrField 1)
 data CapDescriptor 
 type instance (R.ReprFor CapDescriptor) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId CapDescriptor) where
+    typeId  = 9593755465305995440
 instance (C.TypedStruct CapDescriptor) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1107,6 +1141,8 @@ instance (GH.HasField "attachedFd" GH.Slot CapDescriptor Std_.Word8) where
     fieldByLabel  = (GH.dataField 16 0 8 255)
 data PromisedAnswer 
 type instance (R.ReprFor PromisedAnswer) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId PromisedAnswer) where
+    typeId  = 15564635848320162976
 instance (C.TypedStruct PromisedAnswer) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1140,6 +1176,8 @@ instance (GH.HasField "transform" GH.Slot PromisedAnswer (R.List PromisedAnswer'
     fieldByLabel  = (GH.ptrField 0)
 data PromisedAnswer'Op 
 type instance (R.ReprFor PromisedAnswer'Op) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId PromisedAnswer'Op) where
+    typeId  = 17516350820840804481
 instance (C.TypedStruct PromisedAnswer'Op) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -1209,6 +1247,8 @@ instance (C.Marshal (GH.Which PromisedAnswer'Op) (C.Parsed (GH.Which PromisedAns
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data ThirdPartyCapDescriptor 
 type instance (R.ReprFor ThirdPartyCapDescriptor) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId ThirdPartyCapDescriptor) where
+    typeId  = 15235686326393111165
 instance (C.TypedStruct ThirdPartyCapDescriptor) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1242,6 +1282,8 @@ instance (GH.HasField "vineId" GH.Slot ThirdPartyCapDescriptor Std_.Word32) wher
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Exception 
 type instance (R.ReprFor Exception) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Exception) where
+    typeId  = 15430940935639230746
 instance (C.TypedStruct Exception) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1291,6 +1333,8 @@ data Exception'Type
     | Exception'Type'unknown' Std_.Word16
     deriving(Std_.Eq,Std_.Show)
 type instance (R.ReprFor Exception'Type) = (R.Data R.Sz16)
+instance (C.HasTypeId Exception'Type) where
+    typeId  = 12865824133959433560
 instance (Std_.Enum Exception'Type) where
     toEnum n_ = case n_ of
         0 ->

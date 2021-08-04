@@ -10,6 +10,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -31,6 +33,8 @@ import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Node 
 type instance (R.ReprFor Node) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node) where
+    typeId  = 16610026722781537303
 instance (C.TypedStruct Node) where
     numStructWords  = 5
     numStructPtrs  = 6
@@ -195,6 +199,8 @@ instance (GH.HasField "isGeneric" GH.Slot Node Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 4 1 0)
 data Node'struct 
 type instance (R.ReprFor Node'struct) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'struct) where
+    typeId  = 11430331134483579957
 instance (C.TypedStruct Node'struct) where
     numStructWords  = 5
     numStructPtrs  = 6
@@ -253,6 +259,8 @@ instance (GH.HasField "fields" GH.Slot Node'struct (R.List Field)) where
     fieldByLabel  = (GH.ptrField 3)
 data Node'enum 
 type instance (R.ReprFor Node'enum) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'enum) where
+    typeId  = 13063450714778629528
 instance (C.TypedStruct Node'enum) where
     numStructWords  = 5
     numStructPtrs  = 6
@@ -281,6 +289,8 @@ instance (GH.HasField "enumerants" GH.Slot Node'enum (R.List Enumerant)) where
     fieldByLabel  = (GH.ptrField 3)
 data Node'interface 
 type instance (R.ReprFor Node'interface) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'interface) where
+    typeId  = 16728431493453586831
 instance (C.TypedStruct Node'interface) where
     numStructWords  = 5
     numStructPtrs  = 6
@@ -314,6 +324,8 @@ instance (GH.HasField "superclasses" GH.Slot Node'interface (R.List Superclass))
     fieldByLabel  = (GH.ptrField 4)
 data Node'const 
 type instance (R.ReprFor Node'const) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'const) where
+    typeId  = 12793219851699983392
 instance (C.TypedStruct Node'const) where
     numStructWords  = 5
     numStructPtrs  = 6
@@ -347,6 +359,8 @@ instance (GH.HasField "value" GH.Slot Node'const Value) where
     fieldByLabel  = (GH.ptrField 4)
 data Node'annotation 
 type instance (R.ReprFor Node'annotation) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'annotation) where
+    typeId  = 17011813041836786320
 instance (C.TypedStruct Node'annotation) where
     numStructWords  = 5
     numStructPtrs  = 6
@@ -435,6 +449,8 @@ instance (GH.HasField "targetsAnnotation" GH.Slot Node'annotation Std_.Bool) whe
     fieldByLabel  = (GH.dataField 59 1 1 0)
 data Node'Parameter 
 type instance (R.ReprFor Node'Parameter) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'Parameter) where
+    typeId  = 13353766412138554289
 instance (C.TypedStruct Node'Parameter) where
     numStructWords  = 0
     numStructPtrs  = 1
@@ -463,6 +479,8 @@ instance (GH.HasField "name" GH.Slot Node'Parameter Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 data Node'NestedNode 
 type instance (R.ReprFor Node'NestedNode) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'NestedNode) where
+    typeId  = 16050641862814319170
 instance (C.TypedStruct Node'NestedNode) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -496,6 +514,8 @@ instance (GH.HasField "id" GH.Slot Node'NestedNode Std_.Word64) where
     fieldByLabel  = (GH.dataField 0 0 64 0)
 data Node'SourceInfo 
 type instance (R.ReprFor Node'SourceInfo) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'SourceInfo) where
+    typeId  = 17549997658772559790
 instance (C.TypedStruct Node'SourceInfo) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -534,6 +554,8 @@ instance (GH.HasField "members" GH.Slot Node'SourceInfo (R.List Node'SourceInfo'
     fieldByLabel  = (GH.ptrField 1)
 data Node'SourceInfo'Member 
 type instance (R.ReprFor Node'SourceInfo'Member) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Node'SourceInfo'Member) where
+    typeId  = 14031686161526562722
 instance (C.TypedStruct Node'SourceInfo'Member) where
     numStructWords  = 0
     numStructPtrs  = 1
@@ -562,6 +584,8 @@ instance (GH.HasField "docComment" GH.Slot Node'SourceInfo'Member Basics.Text) w
     fieldByLabel  = (GH.ptrField 0)
 data Field 
 type instance (R.ReprFor Field) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Field) where
+    typeId  = 11145653318641710175
 instance (C.TypedStruct Field) where
     numStructWords  = 3
     numStructPtrs  = 4
@@ -665,6 +689,8 @@ instance (GH.HasField "ordinal" GH.Group Field Field'ordinal) where
     fieldByLabel  = GH.groupField
 data Field'slot 
 type instance (R.ReprFor Field'slot) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Field'slot) where
+    typeId  = 14133145859926553711
 instance (C.TypedStruct Field'slot) where
     numStructWords  = 3
     numStructPtrs  = 4
@@ -708,6 +734,8 @@ instance (GH.HasField "hadExplicitDefault" GH.Slot Field'slot Std_.Bool) where
     fieldByLabel  = (GH.dataField 0 2 1 0)
 data Field'group 
 type instance (R.ReprFor Field'group) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Field'group) where
+    typeId  = 14626792032033250577
 instance (C.TypedStruct Field'group) where
     numStructWords  = 3
     numStructPtrs  = 4
@@ -736,6 +764,8 @@ instance (GH.HasField "typeId" GH.Slot Field'group Std_.Word64) where
     fieldByLabel  = (GH.dataField 0 2 64 0)
 data Field'ordinal 
 type instance (R.ReprFor Field'ordinal) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Field'ordinal) where
+    typeId  = 13515537513213004774
 instance (C.TypedStruct Field'ordinal) where
     numStructWords  = 3
     numStructPtrs  = 4
@@ -807,6 +837,8 @@ field'noDiscriminant :: Std_.Word16
 field'noDiscriminant  = (C.fromWord 65535)
 data Enumerant 
 type instance (R.ReprFor Enumerant) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Enumerant) where
+    typeId  = 10919677598968879693
 instance (C.TypedStruct Enumerant) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -845,6 +877,8 @@ instance (GH.HasField "annotations" GH.Slot Enumerant (R.List Annotation)) where
     fieldByLabel  = (GH.ptrField 1)
 data Superclass 
 type instance (R.ReprFor Superclass) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Superclass) where
+    typeId  = 12220001500510083064
 instance (C.TypedStruct Superclass) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -878,6 +912,8 @@ instance (GH.HasField "brand" GH.Slot Superclass Brand) where
     fieldByLabel  = (GH.ptrField 0)
 data Method 
 type instance (R.ReprFor Method) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Method) where
+    typeId  = 10736806783679155584
 instance (C.TypedStruct Method) where
     numStructWords  = 3
     numStructPtrs  = 5
@@ -941,6 +977,8 @@ instance (GH.HasField "implicitParameters" GH.Slot Method (R.List Node'Parameter
     fieldByLabel  = (GH.ptrField 4)
 data Type 
 type instance (R.ReprFor Type) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type) where
+    typeId  = 15020482145304562784
 instance (C.TypedStruct Type) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1195,6 +1233,8 @@ instance (C.Marshal (GH.Which Type) (C.Parsed (GH.Which Type))) where
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Type'list 
 type instance (R.ReprFor Type'list) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'list) where
+    typeId  = 9792858745991129751
 instance (C.TypedStruct Type'list) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1223,6 +1263,8 @@ instance (GH.HasField "elementType" GH.Slot Type'list Type) where
     fieldByLabel  = (GH.ptrField 0)
 data Type'enum 
 type instance (R.ReprFor Type'enum) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'enum) where
+    typeId  = 11389172934837766057
 instance (C.TypedStruct Type'enum) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1256,6 +1298,8 @@ instance (GH.HasField "brand" GH.Slot Type'enum Brand) where
     fieldByLabel  = (GH.ptrField 0)
 data Type'struct 
 type instance (R.ReprFor Type'struct) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'struct) where
+    typeId  = 12410354185295152851
 instance (C.TypedStruct Type'struct) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1289,6 +1333,8 @@ instance (GH.HasField "brand" GH.Slot Type'struct Brand) where
     fieldByLabel  = (GH.ptrField 0)
 data Type'interface 
 type instance (R.ReprFor Type'interface) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'interface) where
+    typeId  = 17116997365232503999
 instance (C.TypedStruct Type'interface) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1322,6 +1368,8 @@ instance (GH.HasField "brand" GH.Slot Type'interface Brand) where
     fieldByLabel  = (GH.ptrField 0)
 data Type'anyPointer 
 type instance (R.ReprFor Type'anyPointer) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'anyPointer) where
+    typeId  = 14003731834718800369
 instance (C.TypedStruct Type'anyPointer) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1410,6 +1458,8 @@ instance (C.Marshal (GH.Which Type'anyPointer) (C.Parsed (GH.Which Type'anyPoint
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Type'anyPointer'unconstrained 
 type instance (R.ReprFor Type'anyPointer'unconstrained) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'anyPointer'unconstrained) where
+    typeId  = 10248890354574636630
 instance (C.TypedStruct Type'anyPointer'unconstrained) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1499,6 +1549,8 @@ instance (C.Marshal (GH.Which Type'anyPointer'unconstrained) (C.Parsed (GH.Which
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Type'anyPointer'parameter 
 type instance (R.ReprFor Type'anyPointer'parameter) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'anyPointer'parameter) where
+    typeId  = 11372142272178113157
 instance (C.TypedStruct Type'anyPointer'parameter) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1532,6 +1584,8 @@ instance (GH.HasField "parameterIndex" GH.Slot Type'anyPointer'parameter Std_.Wo
     fieldByLabel  = (GH.dataField 16 1 16 0)
 data Type'anyPointer'implicitMethodParameter 
 type instance (R.ReprFor Type'anyPointer'implicitMethodParameter) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Type'anyPointer'implicitMethodParameter) where
+    typeId  = 13470206089842057844
 instance (C.TypedStruct Type'anyPointer'implicitMethodParameter) where
     numStructWords  = 3
     numStructPtrs  = 1
@@ -1560,6 +1614,8 @@ instance (GH.HasField "parameterIndex" GH.Slot Type'anyPointer'implicitMethodPar
     fieldByLabel  = (GH.dataField 16 1 16 0)
 data Brand 
 type instance (R.ReprFor Brand) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Brand) where
+    typeId  = 10391024731148337707
 instance (C.TypedStruct Brand) where
     numStructWords  = 0
     numStructPtrs  = 1
@@ -1588,6 +1644,8 @@ instance (GH.HasField "scopes" GH.Slot Brand (R.List Brand'Scope)) where
     fieldByLabel  = (GH.ptrField 0)
 data Brand'Scope 
 type instance (R.ReprFor Brand'Scope) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Brand'Scope) where
+    typeId  = 12382423449155627977
 instance (C.TypedStruct Brand'Scope) where
     numStructWords  = 2
     numStructPtrs  = 1
@@ -1662,6 +1720,8 @@ instance (GH.HasField "scopeId" GH.Slot Brand'Scope Std_.Word64) where
     fieldByLabel  = (GH.dataField 0 0 64 0)
 data Brand'Binding 
 type instance (R.ReprFor Brand'Binding) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Brand'Binding) where
+    typeId  = 14439610327179913212
 instance (C.TypedStruct Brand'Binding) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1731,6 +1791,8 @@ instance (C.Marshal (GH.Which Brand'Binding) (C.Parsed (GH.Which Brand'Binding))
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value) where
+    typeId  = 14853958794117909659
 instance (C.TypedStruct Value) where
     numStructWords  = 2
     numStructPtrs  = 1
@@ -1970,6 +2032,8 @@ instance (C.Marshal (GH.Which Value) (C.Parsed (GH.Which Value))) where
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Annotation 
 type instance (R.ReprFor Annotation) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Annotation) where
+    typeId  = 17422339044421236034
 instance (C.TypedStruct Annotation) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -2018,6 +2082,8 @@ data ElementSize
     | ElementSize'unknown' Std_.Word16
     deriving(Std_.Eq,Std_.Show)
 type instance (R.ReprFor ElementSize) = (R.Data R.Sz16)
+instance (C.HasTypeId ElementSize) where
+    typeId  = 15102134695616452902
 instance (Std_.Enum ElementSize) where
     toEnum n_ = case n_ of
         0 ->
@@ -2068,6 +2134,8 @@ instance (C.AllocateList ElementSize) where
 instance (C.EstimateListAlloc ElementSize ElementSize)
 data CapnpVersion 
 type instance (R.ReprFor CapnpVersion) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId CapnpVersion) where
+    typeId  = 15590670654532458851
 instance (C.TypedStruct CapnpVersion) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -2106,6 +2174,8 @@ instance (GH.HasField "micro" GH.Slot CapnpVersion Std_.Word8) where
     fieldByLabel  = (GH.dataField 24 0 8 0)
 data CodeGeneratorRequest 
 type instance (R.ReprFor CodeGeneratorRequest) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId CodeGeneratorRequest) where
+    typeId  = 13818529054586492878
 instance (C.TypedStruct CodeGeneratorRequest) where
     numStructWords  = 0
     numStructPtrs  = 4
@@ -2149,6 +2219,8 @@ instance (GH.HasField "sourceInfo" GH.Slot CodeGeneratorRequest (R.List Node'Sou
     fieldByLabel  = (GH.ptrField 3)
 data CodeGeneratorRequest'RequestedFile 
 type instance (R.ReprFor CodeGeneratorRequest'RequestedFile) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId CodeGeneratorRequest'RequestedFile) where
+    typeId  = 14981803260258615394
 instance (C.TypedStruct CodeGeneratorRequest'RequestedFile) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -2187,6 +2259,8 @@ instance (GH.HasField "imports" GH.Slot CodeGeneratorRequest'RequestedFile (R.Li
     fieldByLabel  = (GH.ptrField 1)
 data CodeGeneratorRequest'RequestedFile'Import 
 type instance (R.ReprFor CodeGeneratorRequest'RequestedFile'Import) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId CodeGeneratorRequest'RequestedFile'Import) where
+    typeId  = 12560611460656617445
 instance (C.TypedStruct CodeGeneratorRequest'RequestedFile'Import) where
     numStructWords  = 1
     numStructPtrs  = 1

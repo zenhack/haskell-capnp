@@ -1,6 +1,11 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.New.Rpc.Server
     ( CallHandler
@@ -10,14 +15,17 @@ module Capnp.New.Rpc.Server
     , export
     , unimplemented
     , findMethod
+
+    , toUntypedMethodHandler
     ) where
 
 import           Capnp.Message           (Mutability(..))
 import qualified Capnp.New.Basics        as B
 import qualified Capnp.Repr              as R
 import           Capnp.Repr.Methods      (Client(..))
-import           Capnp.Rpc.Errors        (eMethodUnimplemented)
-import           Capnp.Rpc.Promise       (Fulfiller, breakPromise)
+import           Capnp.Rpc.Errors        (eFailed, eMethodUnimplemented)
+import           Capnp.Rpc.Promise
+    (Fulfiller, breakPromise, fulfill, newCallback)
 import qualified Capnp.Rpc.Server        as Legacy
 import qualified Capnp.Rpc.Untyped       as URpc
 import qualified Capnp.Untyped           as U
@@ -42,7 +50,7 @@ type MethodHandler m p r
     -> Fulfiller (R.Raw 'Const r)
     -> m ()
 
-type UntypedMethodHandler m = MethodHandler m (Maybe B.AnyPointer) (Maybe B.AnyPointer)
+type UntypedMethodHandler m = MethodHandler m B.AnyStruct B.AnyStruct
 
 -- | Generated interface types have instances of 'Export', which allows a server
 -- for that interface to be exported as a 'Client'.
@@ -87,10 +95,26 @@ toLegacyCallHandler callHandler interfaceId methodId =
     & fromMaybe unimplemented
     & toLegacyMethodHandler
 
-toLegacyMethodHandler :: UntypedMethodHandler m -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
+
+toUntypedMethodHandler
+    :: forall p r m. (R.IsStruct p, R.IsStruct r)
+    => MethodHandler m p r
+    -> UntypedMethodHandler m
+toUntypedMethodHandler = coerce
+
+toLegacyMethodHandler :: (Monad m, MonadSTM m) => UntypedMethodHandler m -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyMethodHandler handler =
-    Legacy.untypedHandler $ \args respond ->
-        handler (coerce args) (coerce respond)
+    Legacy.untypedHandler $ \args respond -> do
+        respond' <- newCallback $ \case
+            Left e ->
+                breakPromise respond e
+            Right (R.Raw s) ->
+                fulfill respond (Just (U.PtrStruct s))
+        case args of
+            Just (U.PtrStruct argStruct) ->
+                handler (R.Raw argStruct) respond'
+            _ ->
+                breakPromise respond $ eFailed "Argument was not a struct"
 
 toLegacyServerOps :: (Monad m, MonadSTM m) => CallHandler m -> Legacy.ServerOps m
 toLegacyServerOps callHandler = Legacy.ServerOps
