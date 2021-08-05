@@ -937,8 +937,7 @@ defineIfaceClassMethod thisMod typeName typeParams New.MethodInfo{methodName, pa
             [ Hs.TVar "s_"
             , Hs.TApp
                 (tgName ["GH"] "MethodHandler")
-                [ tStd_ "IO"
-                , mkType paramType
+                [ mkType paramType
                 , mkType resultType
                 ]
             ]

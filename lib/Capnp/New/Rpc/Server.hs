@@ -49,16 +49,16 @@ import           Supervisors             (Supervisor)
 
 -- | A handler for arbitrary RPC calls. Maps (interfaceId, methodId) pairs to
 -- 'UntypedMethodHandler's.
-type CallHandler m = M.Map Word64 (V.Vector (UntypedMethodHandler m))
+type CallHandler = M.Map Word64 (V.Vector UntypedMethodHandler)
 
 -- | Type alias for a handler for a particular rpc method.
-type MethodHandler m p r
+type MethodHandler p r
     = R.Raw 'Const p
     -> Fulfiller (R.Raw 'Const r)
-    -> m ()
+    -> IO ()
 
 -- | Type alias for a handler for an untyped RPC method.
-type UntypedMethodHandler m = MethodHandler m B.AnyStruct B.AnyStruct
+type UntypedMethodHandler = MethodHandler B.AnyStruct B.AnyStruct
 
 -- | Generated interface types have instances of 'Export', which allows a server
 -- for that interface to be exported as a 'Client'.
@@ -71,7 +71,7 @@ class (R.IsCap i, C.HasTypeId i) => Export i where
 
     -- | Convert the server to a 'CallHandler' populated with appropriate
     -- 'MethodHandler's for the interface.
-    serverToCallHandler :: Server i s => Proxy i -> s -> CallHandler IO
+    serverToCallHandler :: Server i s => Proxy i -> s -> CallHandler
     -- NB: the proxy helps disambiguate types; for some reason TypeApplications
     -- doesn't seem to be enough in the face of a type alias of kind 'Constraint'.
     -- the inconsistency is a bit ugly, but this method isn't intended to called
@@ -85,17 +85,16 @@ export sup srv =
     liftSTM $ Client <$> URpc.export sup (toLegacyServerOps h)
 
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.
-findMethod :: Word64 -> Word16 -> CallHandler m -> Maybe (UntypedMethodHandler m)
+findMethod :: Word64 -> Word16 -> CallHandler -> Maybe UntypedMethodHandler
 findMethod interfaceId methodId handler = do
     iface <- M.lookup interfaceId handler
     iface V.!? fromIntegral methodId
 
 toLegacyCallHandler
-    :: (Monad m, MonadSTM m)
-    => CallHandler m
+    :: CallHandler
     -> Word64
     -> Word16
-    -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
+    -> Legacy.MethodHandler IO (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyCallHandler callHandler interfaceId methodId =
     findMethod interfaceId methodId callHandler
     & fromMaybe methodUnimplemented
@@ -105,12 +104,12 @@ toLegacyCallHandler callHandler interfaceId methodId =
 -- | Convert a typed method handler to an untyped one. Mostly intended for
 -- use by generated code.
 toUntypedMethodHandler
-    :: forall p r m. (R.IsStruct p, R.IsStruct r)
-    => MethodHandler m p r
-    -> UntypedMethodHandler m
+    :: forall p r. (R.IsStruct p, R.IsStruct r)
+    => MethodHandler p r
+    -> UntypedMethodHandler
 toUntypedMethodHandler = coerce
 
-toLegacyMethodHandler :: (Monad m, MonadSTM m) => UntypedMethodHandler m -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
+toLegacyMethodHandler :: UntypedMethodHandler -> Legacy.MethodHandler IO (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyMethodHandler handler =
     Legacy.untypedHandler $ \args respond -> do
         respond' <- newCallback $ \case
@@ -124,7 +123,7 @@ toLegacyMethodHandler handler =
             _ ->
                 breakPromise respond $ eFailed "Argument was not a struct"
 
-toLegacyServerOps :: (Monad m, MonadSTM m) => CallHandler m -> Legacy.ServerOps m
+toLegacyServerOps :: CallHandler -> Legacy.ServerOps IO
 toLegacyServerOps callHandler = Legacy.ServerOps
     { handleStop = liftSTM $ pure ()
     , handleCast = Nothing
@@ -138,7 +137,7 @@ toLegacyServerOps callHandler = Legacy.ServerOps
 handleParsed ::
     ( C.Parse p pp, R.IsStruct p
     , C.Parse r rr, R.IsStruct r
-    ) => (pp -> IO rr) -> MethodHandler IO p r
+    ) => (pp -> IO rr) -> MethodHandler p r
 handleParsed handler =
     handleRaw $ \param -> do
         p <- evalLimitT defaultLimit $ C.parse param
@@ -152,14 +151,14 @@ handleParsed handler =
 -- parameters and results.
 handleRaw
     :: (R.IsStruct p, R.IsStruct r)
-    => (R.Raw 'Const p -> IO (R.Raw 'Const r)) -> MethodHandler IO p r
+    => (R.Raw 'Const p -> IO (R.Raw 'Const r)) -> MethodHandler p r
 handleRaw handler param f = do
     res <- handler param `withException` breakPromise f
     fulfill f res
 
 
 -- | 'MethodHandler' that always throws unimplemented.
-methodUnimplemented :: MonadSTM m => MethodHandler m p r
+methodUnimplemented :: MethodHandler p r
 methodUnimplemented _ f = breakPromise f eMethodUnimplemented
 
 {-

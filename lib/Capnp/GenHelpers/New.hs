@@ -113,5 +113,5 @@ encodeCap :: (R.IsCap a, U.RWCtx m s) => M.Message ('Mut s) -> Client a -> m (R.
 encodeCap msg (Client c) = R.Raw <$> U.appendCap msg c
 
 
-buildCallHandler :: [(Word64, [UntypedMethodHandler IO])] -> CallHandler IO
+buildCallHandler :: [(Word64, [UntypedMethodHandler])] -> CallHandler
 buildCallHandler hs = M.fromList [ (k, V.fromList v) | (k, v) <- hs ]
