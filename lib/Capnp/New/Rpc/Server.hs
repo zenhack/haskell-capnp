@@ -11,14 +11,14 @@ module Capnp.New.Rpc.Server
     , UntypedMethodHandler
     , Export(..)
     , export
-    , unimplemented
     , findMethod
-
-    , toUntypedMethodHandler
 
     -- * Helpers for writing method handlers
     , handleParsed
     , handleRaw
+    , methodUnimplemented
+
+    , toUntypedMethodHandler
     ) where
 
 import           Capnp.Convert           (parsedToRaw)
@@ -47,8 +47,8 @@ import           GHC.Prim                (coerce)
 import           Internal.BuildPure      (createPure)
 import           Supervisors             (Supervisor)
 
--- | A handler for RPC calls. Maps (interfaceId, methodId) pairs to
--- 'MethodHandler's.
+-- | A handler for arbitrary RPC calls. Maps (interfaceId, methodId) pairs to
+-- 'UntypedMethodHandler's.
 type CallHandler m = M.Map Word64 (V.Vector (UntypedMethodHandler m))
 
 -- | Type alias for a handler for a particular rpc method.
@@ -57,6 +57,7 @@ type MethodHandler m p r
     -> Fulfiller (R.Raw 'Const r)
     -> m ()
 
+-- | Type alias for a handler for an untyped RPC method.
 type UntypedMethodHandler m = MethodHandler m B.AnyStruct B.AnyStruct
 
 -- | Generated interface types have instances of 'Export', which allows a server
@@ -73,6 +74,8 @@ class (R.IsCap i, C.HasTypeId i) => Export i where
     serverToCallHandler :: Server i s => Proxy i -> s -> CallHandler IO
     -- NB: the proxy helps disambiguate types; for some reason TypeApplications
     -- doesn't seem to be enough in the face of a type alias of kind 'Constraint'.
+    -- the inconsistency is a bit ugly, but this method isn't intended to called
+    -- by users directly, only by generated code, so it's less of a big deal.
 
 -- | Export the server as a client for interface @i@. Spawns a server thread
 -- with its lifetime bound to the supervisor.
@@ -80,10 +83,6 @@ export :: forall i s m. (MonadSTM m, Export i, Server i s) => Supervisor -> s ->
 export sup srv =
     let h = serverToCallHandler (Proxy :: Proxy i) srv in
     liftSTM $ Client <$> URpc.export sup (toLegacyServerOps h)
-
--- | 'MethodHandler' that always throws unimplemented.
-unimplemented :: MonadSTM m => MethodHandler m p r
-unimplemented _ f = breakPromise f eMethodUnimplemented
 
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.
 findMethod :: Word64 -> Word16 -> CallHandler m -> Maybe (UntypedMethodHandler m)
@@ -99,10 +98,12 @@ toLegacyCallHandler
     -> Legacy.MethodHandler m (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyCallHandler callHandler interfaceId methodId =
     findMethod interfaceId methodId callHandler
-    & fromMaybe unimplemented
+    & fromMaybe methodUnimplemented
     & toLegacyMethodHandler
 
 
+-- | Convert a typed method handler to an untyped one. Mostly intended for
+-- use by generated code.
 toUntypedMethodHandler
     :: forall p r m. (R.IsStruct p, R.IsStruct r)
     => MethodHandler m p r
@@ -132,6 +133,8 @@ toLegacyServerOps callHandler = Legacy.ServerOps
 
 -- Helpers for writing method handlers
 
+-- | Handle a method, working with the parsed form of parameters and
+-- results.
 handleParsed ::
     ( C.Parse p pp, R.IsStruct p
     , C.Parse r rr, R.IsStruct r
@@ -145,12 +148,19 @@ handleParsed handler =
         struct <- createPure maxBound $ R.fromRaw <$> parsedToRaw r
         pure (R.Raw struct)
 
+-- | Handle a method, working with the raw (unparsed) form of
+-- parameters and results.
 handleRaw
     :: (R.IsStruct p, R.IsStruct r)
     => (R.Raw 'Const p -> IO (R.Raw 'Const r)) -> MethodHandler IO p r
 handleRaw handler param f = do
     res <- handler param `withException` breakPromise f
     fulfill f res
+
+
+-- | 'MethodHandler' that always throws unimplemented.
+methodUnimplemented :: MonadSTM m => MethodHandler m p r
+methodUnimplemented _ f = breakPromise f eMethodUnimplemented
 
 {-
 Sketch of future Async API, might take a bit of internals work to make

@@ -39,6 +39,7 @@ module Capnp.New
     , export
     , handleParsed
     , handleRaw
+    , methodUnimplemented
 
     -- * Re-exported from "Data.Default", for convienence.
     , def
