@@ -13,6 +13,8 @@ module Capnp.New.Rpc.Server
     , export
     , findMethod
 
+    , SomeServer(..)
+
     -- * Helpers for writing method handlers
     , handleParsed
     , handleRaw
@@ -41,6 +43,7 @@ import           Data.Kind               (Constraint)
 import qualified Data.Map.Strict         as M
 import           Data.Maybe              (fromMaybe)
 import           Data.Proxy              (Proxy(..))
+import           Data.Typeable           (Typeable)
 import qualified Data.Vector             as V
 import           Data.Word
 import           GHC.Prim                (coerce)
@@ -59,6 +62,23 @@ type MethodHandler p r
 
 -- | Type alias for a handler for an untyped RPC method.
 type UntypedMethodHandler = MethodHandler B.AnyStruct B.AnyStruct
+
+-- | Base class for things that can act as capnproto servers.
+class SomeServer a where
+    -- | Called when the last live reference to a server is dropped.
+    shutdown :: a -> IO ()
+    shutdown _ = pure ()
+
+    -- | Try to extract a value of a given type. The default implementation
+    -- always fails (returns 'Nothing'). If an instance chooses to implement
+    -- this, it will be possible to use "reflection" on clients that point
+    -- at local servers to dynamically unwrap the server value. A typical
+    -- implementation will just call Typeable's @cast@ method, but this
+    -- needn't be the case -- a server may wish to allow local peers to
+    -- unwrap some value that is not exactly the data the server has access
+    -- to.
+    unwrap :: Typeable b => a -> Maybe b
+    unwrap _ = Nothing
 
 -- | Generated interface types have instances of 'Export', which allows a server
 -- for that interface to be exported as a 'Client'.
@@ -79,10 +99,10 @@ class (R.IsCap i, C.HasTypeId i) => Export i where
 
 -- | Export the server as a client for interface @i@. Spawns a server thread
 -- with its lifetime bound to the supervisor.
-export :: forall i s m. (MonadSTM m, Export i, Server i s) => Supervisor -> s -> m (Client i)
+export :: forall i s m. (MonadSTM m, Export i, Server i s, SomeServer s) => Supervisor -> s -> m (Client i)
 export sup srv =
     let h = serverToCallHandler (Proxy :: Proxy i) srv in
-    liftSTM $ Client <$> URpc.export sup (toLegacyServerOps h)
+    liftSTM $ Client <$> URpc.export sup (toLegacyServerOps srv h)
 
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.
 findMethod :: Word64 -> Word16 -> CallHandler -> Maybe UntypedMethodHandler
@@ -123,10 +143,10 @@ toLegacyMethodHandler handler =
             _ ->
                 breakPromise respond $ eFailed "Argument was not a struct"
 
-toLegacyServerOps :: CallHandler -> Legacy.ServerOps IO
-toLegacyServerOps callHandler = Legacy.ServerOps
-    { handleStop = liftSTM $ pure ()
-    , handleCast = Nothing
+toLegacyServerOps :: SomeServer a => a -> CallHandler -> Legacy.ServerOps IO
+toLegacyServerOps srv callHandler = Legacy.ServerOps
+    { handleStop = shutdown srv
+    , handleCast = unwrap srv
     , handleCall = toLegacyCallHandler callHandler
     }
 

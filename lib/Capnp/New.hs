@@ -35,6 +35,7 @@ module Capnp.New
 
     -- * Implementing RPC servers
     , MethodHandler
+    , SomeServer(..)
     , Export(Server)
     , export
     , handleParsed

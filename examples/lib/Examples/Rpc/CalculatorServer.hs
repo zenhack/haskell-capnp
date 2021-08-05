@@ -23,6 +23,7 @@ import qualified Data.Vector as V
 import Capnp.New
     ( Client
     , Pipeline
+    , SomeServer
     , callP
     , def
     , defaultLimit
@@ -32,17 +33,21 @@ import Capnp.New
     , waitPipeline
     )
 import Capnp.Rpc
-    (ConnConfig(..), Server, handleConn, socketTransport, throwFailed, toClient)
+    (ConnConfig(..), handleConn, socketTransport, throwFailed, toClient)
 
 import Capnp.Gen.Calculator.New
 
 newtype LitValue = LitValue Double
+
+instance SomeServer LitValue
 
 instance Value'server_ LitValue where
     value'read (LitValue val) = handleParsed $ \_ ->
         pure Value'read'results { value = val }
 
 newtype OpFunc = OpFunc (Double -> Double -> Double)
+
+instance SomeServer OpFunc
 
 instance Function'server_ OpFunc where
     function'call (OpFunc op) = handleParsed $ \Function'call'params{params} -> do
@@ -55,6 +60,8 @@ data ExprFunc = ExprFunc
     { paramCount :: !Int32
     , body       :: Parsed Expression
     }
+
+instance SomeServer ExprFunc
 
 instance Function'server_ ExprFunc where
     function'call ExprFunc{..} =
@@ -73,7 +80,7 @@ data MyCalc = MyCalc
     , sup      :: Supervisor
     }
 
-instance Server IO MyCalc
+instance SomeServer MyCalc
 
 instance Calculator'server_ MyCalc where
     calculator'evaluate MyCalc{sup} =
