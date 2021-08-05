@@ -15,10 +15,16 @@ module Capnp.New.Rpc.Server
     , findMethod
 
     , toUntypedMethodHandler
+
+    -- * Helpers for writing method handlers
+    , handleParsed
+    , handleRaw
     ) where
 
+import           Capnp.Convert           (parsedToRaw)
 import           Capnp.Message           (Mutability(..))
 import qualified Capnp.New.Basics        as B
+import qualified Capnp.New.Classes       as C
 import qualified Capnp.Repr              as R
 import           Capnp.Repr.Methods      (Client(..))
 import           Capnp.Rpc.Errors        (eFailed, eMethodUnimplemented)
@@ -26,7 +32,9 @@ import           Capnp.Rpc.Promise
     (Fulfiller, breakPromise, fulfill, newCallback)
 import qualified Capnp.Rpc.Server        as Legacy
 import qualified Capnp.Rpc.Untyped       as URpc
+import           Capnp.TraversalLimit    (defaultLimit, evalLimitT)
 import qualified Capnp.Untyped           as U
+import           Control.Exception.Safe  (withException)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Function           ((&))
 import           Data.Kind               (Constraint)
@@ -36,6 +44,7 @@ import           Data.Proxy              (Proxy(..))
 import qualified Data.Vector             as V
 import           Data.Word
 import           GHC.Prim                (coerce)
+import           Internal.BuildPure      (createPure)
 import           Supervisors             (Supervisor)
 
 -- | A handler for RPC calls. Maps (interfaceId, methodId) pairs to
@@ -120,3 +129,52 @@ toLegacyServerOps callHandler = Legacy.ServerOps
     , handleCast = Nothing
     , handleCall = toLegacyCallHandler callHandler
     }
+
+-- Helpers for writing method handlers
+
+handleParsed ::
+    ( C.Parse p pp, R.IsStruct p
+    , C.Parse r rr, R.IsStruct r
+    ) => (pp -> IO rr) -> MethodHandler IO p r
+handleParsed handler =
+    handleRaw $ \param -> do
+        p <- evalLimitT defaultLimit $ C.parse param
+        r <- handler p
+        -- TODO: Figure out how to add an instance of Thaw for
+        -- Raw so we can skip the (un)wrapping here.
+        struct <- createPure maxBound $ R.fromRaw <$> parsedToRaw r
+        pure (R.Raw struct)
+
+handleRaw
+    :: (R.IsStruct p, R.IsStruct r)
+    => (R.Raw 'Const p -> IO (R.Raw 'Const r)) -> MethodHandler IO p r
+handleRaw handler param f = do
+    res <- handler param `withException` breakPromise f
+    fulfill f res
+
+{-
+Sketch of future Async API, might take a bit of internals work to make
+this possible:
+
+-- | Handle a method call asynchronously.
+--
+-- When invoked, the handleer will be run synchronously, blocking further
+-- method calls until the 'IO' returns. The method call does not return
+-- until the 'Async' resolves, but further method calls can be serviced in
+-- the meantime.
+--
+-- If a Finish message is received before the Async resolves, it will be
+-- 'cancel'ed.
+handleRawAsync
+    :: (R.IsStruct p, R.IsStruct r)
+    => (R.Raw 'Const p -> IO (Async (R.Raw 'Const r)))
+    -> MethodHandler IO p r
+
+-- | Like 'handleRawAsync', but accepts and returns parsed values.
+handleParsedAsync  ::
+    ( C.Parse p pp, R.IsStruct p
+    , C.Parse r, rr, R.IsStruct r
+    )
+    => (pp -> IO (Async rr))
+    -> MethodHandler IO p r
+-}

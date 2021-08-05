@@ -33,6 +33,13 @@ module Capnp.New
     , PureBuilder
     , createPure
 
+    -- * Implementing RPC servers
+    , MethodHandler
+    , Export(Server)
+    , export
+    , handleParsed
+    , handleRaw
+
     -- * Re-exported from "Data.Default", for convienence.
     , def
     ) where
@@ -47,6 +54,7 @@ import qualified Capnp.Message         as Message
 import           Capnp.New.Accessors   as X
 import           Capnp.New.Classes     as X hiding (Parsed)
 import           Capnp.New.Constraints as X
+import           Capnp.New.Rpc.Server
 import qualified Capnp.Repr            as R
 import           Capnp.Repr.Methods    as X
 import           Capnp.Repr.Parsed     (Parsed)

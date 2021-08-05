@@ -1,31 +1,24 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeApplications      #-}
 module Examples.Rpc.EchoServer (main) where
 
 import Network.Simple.TCP (serve)
 
-import Capnp     (def, defaultLimit)
-import Capnp.Rpc
-    ( ConnConfig (..)
-    , Server
-    , handleConn
-    , pureHandler
-    , socketTransport
-    , toClient
-    )
+import Capnp.New (def, defaultLimit, export, handleParsed)
+import Capnp.Rpc (ConnConfig(..), handleConn, socketTransport, toClient)
 
-import Capnp.Gen.Echo.Pure
+import Capnp.Gen.Echo.New
 
 data MyEchoServer = MyEchoServer
 
-instance Server IO MyEchoServer
-instance Echo'server_ IO MyEchoServer where
-    echo'echo = pureHandler $ \MyEchoServer params ->
+instance Echo'server_ MyEchoServer where
+    echo'echo MyEchoServer = handleParsed $ \params ->
         pure def { reply = query params }
 
 main :: IO ()
 main = serve "localhost" "4000" $ \(sock, _addr) ->
     handleConn (socketTransport sock defaultLimit) def
         { debugMode = True
-        , getBootstrap = \sup -> Just . toClient <$> export_Echo sup MyEchoServer
+        , getBootstrap = \sup -> Just . toClient <$> export @Echo sup MyEchoServer
         }
