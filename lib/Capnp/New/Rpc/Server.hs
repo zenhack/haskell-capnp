@@ -61,7 +61,7 @@ type UntypedMethodHandler m = MethodHandler m B.AnyStruct B.AnyStruct
 
 -- | Generated interface types have instances of 'Export', which allows a server
 -- for that interface to be exported as a 'Client'.
-class R.IsCap i => Export i where
+class (R.IsCap i, C.HasTypeId i) => Export i where
     -- | The constraint needed for a server to implement an interface;
     -- if @'Server' i s@ is satisfied, @s@ is a server for interface @i@.
     -- The code generator generates a type class for each interface, and

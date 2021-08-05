@@ -181,12 +181,10 @@ class HasTypeId a where
     typeId :: Word64
 
 -- | Operations on typed structs.
-class (R.IsStruct a, Allocate a, AllocHint a ~ ()) => TypedStruct a where
+class (R.IsStruct a, Allocate a, HasTypeId a, AllocHint a ~ ()) => TypedStruct a where
     -- Get the size of  the struct's word and pointer sections, respectively.
     numStructWords :: Word16
     numStructPtrs  :: Word16
--- TODO: Add a superclass constraint for HasTypeId. But that has to wait for code
--- generator support.
 
 
 -- | Like 'new', but also sets the value as the root of the message.
