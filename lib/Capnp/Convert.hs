@@ -33,6 +33,10 @@ module Capnp.Convert
     -- new API
     , msgToRaw
     , msgToParsed
+    , bsToRaw
+    , bsToParsed
+    , lbsToRaw
+    , lbsToParsed
     , parsedToRaw
     , parsedToMsg
     , parsedToBuilder
@@ -143,6 +147,22 @@ msgToRaw = fmap R.Raw . U.rootPtr
 -- | Get the root pointer of a message, as a parsed ADT.
 msgToParsed :: forall a m pa. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => M.Message 'Const -> m pa
 msgToParsed msg = msgToRaw msg >>= parse
+
+-- | Like 'msgToRaw', but takes a (strict) bytestring.
+bsToRaw :: (U.ReadCtx m 'Const, R.IsStruct a) => BS.ByteString -> m (R.Raw 'Const a)
+bsToRaw bs = bsToMsg bs >>= msgToRaw
+
+-- | Like 'msgToParsed', but takes a (strict) bytestring.
+bsToParsed :: (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => BS.ByteString -> m pa
+bsToParsed bs = bsToRaw bs >>= parse
+
+-- | Like 'msgToRaw', but takes a (lazy) bytestring.
+lbsToRaw :: (U.ReadCtx m 'Const, R.IsStruct a) => LBS.ByteString -> m (R.Raw 'Const a)
+lbsToRaw = bsToRaw . LBS.toStrict
+
+-- | Like 'msgToParsed', but takes a (lazzy) bytestring.
+lbsToParsed :: (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => LBS.ByteString -> m pa
+lbsToParsed = bsToParsed . LBS.toStrict
 
 -- | Serialize the parsed form of a struct into its 'R.Raw' form, and make it the root
 -- of its message.
