@@ -95,6 +95,11 @@ instance C.AllocateList AnyPointer where
 
 instance C.EstimateListAlloc AnyPointer (C.Parsed AnyPointer)
 
+instance C.AllocateList (Maybe AnyPointer) where
+    type ListAllocHint (Maybe AnyPointer) = Int
+
+instance C.EstimateListAlloc (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer))
+
 data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
     , structPtrs :: V.Vector (Maybe (C.Parsed AnyPointer))
@@ -140,7 +145,7 @@ instance C.Marshal AnyStruct (C.Parsed AnyStruct) where
 type ParsedList a = V.Vector a
 
 data instance C.Parsed AnyList
-    = ListPtr (ParsedList (C.Parsed AnyPointer))
+    = ListPtr (ParsedList (Maybe (C.Parsed AnyPointer)))
     | ListStruct (ParsedList (C.Parsed AnyStruct))
     | List0 (ParsedList ())
     | List1 (ParsedList Bool)
