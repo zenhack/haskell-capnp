@@ -5,7 +5,7 @@ module Capnp.New
     , Parsed
 
     -- * Working with raw values
-    , R.Raw
+    , R.Raw(..)
 
     -- ** Working with raw lists
     , R.List
@@ -54,6 +54,7 @@ import qualified Capnp.Fields          as F
 import           Capnp.IO              as X
 import qualified Capnp.Message         as Message
 import           Capnp.New.Accessors   as X
+import           Capnp.New.Basics      as X hiding (Parsed)
 import           Capnp.New.Classes     as X hiding (Parsed)
 import           Capnp.New.Constraints as X
 import           Capnp.New.Rpc.Server
