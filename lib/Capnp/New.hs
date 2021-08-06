@@ -33,6 +33,9 @@ module Capnp.New
     , PureBuilder
     , createPure
 
+    -- * Canonicalizing messages
+    , canonicalize
+
     -- * Implementing RPC servers
     , MethodHandler
     , SomeServer(..)
@@ -49,6 +52,7 @@ module Capnp.New
 -- TODO: be more intentional about the ordering of the stuff we're
 -- currently exposing as X, so the haddocks are clearer.
 
+import           Capnp.Canonicalize    (canonicalize)
 import           Capnp.Convert         as X
 import qualified Capnp.Fields          as F
 import           Capnp.IO              as X
