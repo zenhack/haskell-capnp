@@ -319,6 +319,17 @@ declToDecls thisMod decl =
                     ]
                 }
             : concatMap (variantToDecls thisMod name typeParams) variants
+        New.SuperDecl { subName, typeParams, superType } ->
+            let tVars = toTVars typeParams in
+            [ Hs.DcInstance
+                { ctx = paramsContext tVars
+                , typ = Hs.TApp (tgName ["C"] "Super")
+                    [ typeToType thisMod $ C.PtrType $ C.PtrInterface superType
+                    , Hs.TApp (Hs.TLName subName) tVars
+                    ]
+                , defs = []
+                }
+            ]
         New.MethodDecl
                 { interfaceName
                 , interfaceId

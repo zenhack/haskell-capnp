@@ -41,6 +41,11 @@ data Decl
         , methodId      :: !Word16
         , methodInfo    :: MethodInfo
         }
+    | SuperDecl
+        { subName    :: Name.LocalQ
+        , typeParams :: [Name.UnQ]
+        , superType  :: C.InterfaceType Brand Name.CapnpQ
+        }
     | ParsedInstanceDecl
         { typeName        :: Name.LocalQ
         , typeParams      :: [Name.UnQ]

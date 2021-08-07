@@ -102,7 +102,7 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
             [ New.ConstDecl { name = local, value = mapTypes value } ]
         Flat.Enum enumerants ->
             [ mkType (R.Data R.Sz16) $ Just $ New.EnumTypeInfo enumerants ]
-        Flat.Interface{methods} ->
+        Flat.Interface{methods, supers} ->
             let methodInfos = map mkMethodInfo methods in
             mkType
                 (R.Ptr (Just R.Cap))
@@ -110,7 +110,14 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
                     { methods = methodInfos
                     }
                 )
-            : [ New.MethodDecl
+            : [ New.SuperDecl
+                    { subName = local
+                    , typeParams = map C.paramName typeParams
+                    , superType = mapTypes superType
+                    }
+              | superType <- supers
+              ] ++
+              [ New.MethodDecl
                     { interfaceName = local
                     , interfaceId = nodeId
                     , methodId
