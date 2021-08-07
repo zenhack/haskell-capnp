@@ -22,6 +22,7 @@ module Capnp.Repr.Methods
     , waitPipeline
 
     , AsClient(..)
+    , upcast
 
     -- * Calling methods.
     , callB
@@ -43,7 +44,9 @@ import           Control.Monad.Catch     (MonadThrow)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
 import           GHC.OverloadedLabels    (IsLabel(..))
+import           GHC.Prim                (coerce)
 import           GHC.TypeLits            (Symbol)
+import           GHC.Types               (Coercible)
 import           Internal.BuildPure      (PureBuilder, createPure)
 
 -- | Represents a method on the interface type @c@ with parameter
@@ -81,6 +84,10 @@ instance AsClient Pipeline where
 
 instance AsClient Client where
     asClient = liftSTM . pure
+
+-- | Upcast is a (safe) cast from an interface to one of its superclasses.
+upcast :: (AsClient f, Coercible (f p) (f c), NC.Super p c) => f c -> f p
+upcast = coerce
 
 -- | Call a method. Use the provided 'PureBuilder' to construct the parameters.
 callB

@@ -39,6 +39,9 @@ module Capnp.New.Classes
     , newTypedStructList
     , structSizes
 
+    -- ** Inheritance
+    , Super
+
     -- * Values that go in a struct's data section
     , IsWord(..)
     ) where
@@ -248,6 +251,10 @@ class MarshalElementByRepr (lr :: R.ListRepr) where
         , R.ListReprFor (R.ReprFor a) ~ lr
         , MarshalElement a ap
         ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
+
+-- | An instance @'Super' p c@ indicates that the interface @c@ extends
+-- the interface @p@.
+class (R.IsCap p, R.IsCap c) => Super p c
 
 instance MarshalElementByRepr 'R.ListComposite where
     marshalElementByRepr rawList i parsed = do
