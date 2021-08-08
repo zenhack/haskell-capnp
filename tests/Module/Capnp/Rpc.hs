@@ -4,6 +4,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# OPTIONS_GHC -Wno-error=missing-methods #-}
 module Module.Capnp.Rpc (rpcTests) where
 
 import Control.Concurrent.STM
