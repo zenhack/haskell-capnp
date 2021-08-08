@@ -43,8 +43,7 @@ instance ((GH.TypeParam sturdyRef)
 instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (GH.Export (Persistent sturdyRef owner)) where
     type Server (Persistent sturdyRef owner) = (Persistent'server_ sturdyRef owner)
-    serverToCallHandler _ s_ = (GH.buildCallHandler [(C.typeId @((Persistent sturdyRef owner))
-                                                     ,[(GH.toUntypedMethodHandler (persistent'save @(sturdyRef) @(owner) s_))])])
+    methodHandlerTree _ s_ = (GH.MethodHandlerTree (C.typeId @((Persistent sturdyRef owner))) [(GH.toUntypedMethodHandler ((persistent'save @(sturdyRef) @(owner)) s_))] [])
 class (Persistent'server_ sturdyRef owner s_) where
     persistent'save :: s_ -> (GH.MethodHandler (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner))
 instance ((GH.TypeParam sturdyRef)
@@ -145,9 +144,8 @@ instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam internalOwner)
          ,(GH.TypeParam externalOwner)) => (GH.Export (RealmGateway internalRef externalRef internalOwner externalOwner)) where
     type Server (RealmGateway internalRef externalRef internalOwner externalOwner) = (RealmGateway'server_ internalRef externalRef internalOwner externalOwner)
-    serverToCallHandler _ s_ = (GH.buildCallHandler [(C.typeId @((RealmGateway internalRef externalRef internalOwner externalOwner))
-                                                     ,[(GH.toUntypedMethodHandler (realmGateway'import_ @(internalRef) @(externalRef) @(internalOwner) @(externalOwner) s_))
-                                                      ,(GH.toUntypedMethodHandler (realmGateway'export @(internalRef) @(externalRef) @(internalOwner) @(externalOwner) s_))])])
+    methodHandlerTree _ s_ = (GH.MethodHandlerTree (C.typeId @((RealmGateway internalRef externalRef internalOwner externalOwner))) [(GH.toUntypedMethodHandler ((realmGateway'import_ @(internalRef) @(externalRef) @(internalOwner) @(externalOwner)) s_))
+                                                                                                                                    ,(GH.toUntypedMethodHandler ((realmGateway'export @(internalRef) @(externalRef) @(internalOwner) @(externalOwner)) s_))] [])
 class (RealmGateway'server_ internalRef externalRef internalOwner externalOwner s_) where
     realmGateway'import_ :: s_ -> (GH.MethodHandler (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults internalRef internalOwner))
     realmGateway'export :: s_ -> (GH.MethodHandler (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults externalRef externalOwner))

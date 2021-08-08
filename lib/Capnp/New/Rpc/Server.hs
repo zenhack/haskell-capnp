@@ -4,6 +4,7 @@
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Capnp.New.Rpc.Server
     ( CallHandler
@@ -21,6 +22,9 @@ module Capnp.New.Rpc.Server
     , methodUnimplemented
 
     , toUntypedMethodHandler
+
+    -- * Internals; exposed only for use by generated code.
+    , MethodHandlerTree(..)
     ) where
 
 import           Capnp.Convert           (parsedToRaw)
@@ -89,19 +93,42 @@ class (R.IsCap i, C.HasTypeId i) => Export i where
     -- this will aways be an alias for that type class.
     type Server i :: * -> Constraint
 
-    -- | Convert the server to a 'CallHandler' populated with appropriate
-    -- 'MethodHandler's for the interface.
-    serverToCallHandler :: Server i s => Proxy i -> s -> CallHandler
+    -- | Convert the server to a 'MethodHandlerTree' populated with appropriate
+    -- 'MethodHandler's for the interface. This is really only exported for use
+    -- by generated code; users of the library will generally prefer to use
+    -- 'export'.
+    methodHandlerTree :: Server i s => Proxy i -> s -> MethodHandlerTree
     -- NB: the proxy helps disambiguate types; for some reason TypeApplications
     -- doesn't seem to be enough in the face of a type alias of kind 'Constraint'.
     -- the inconsistency is a bit ugly, but this method isn't intended to called
-    -- by users directly, only by generated code, so it's less of a big deal.
+    -- by users directly, only by generated code and our helper in this module,
+    -- so it's less of a big deal.
+
+-- | Lazily computed tree of the method handlers exposed by an interface. Only
+-- of interest to generated code.
+data MethodHandlerTree = MethodHandlerTree
+    { mhtId       :: Word64
+    -- ^ type id for the primary interface
+    , mhtHandlers :: [UntypedMethodHandler]
+    -- ^ method handlers for methods of the primary interface.
+    , mhtParents  :: [MethodHandlerTree]
+    -- ^ Trees for parent interfaces. In the case of diamond dependencies,
+    -- there may be duplicates, which are eliminated by 'mhtToCallHandler'.
+    }
+
+mhtToCallHandler :: MethodHandlerTree -> CallHandler
+mhtToCallHandler = go M.empty . pure where
+    go accum [] = accum
+    go accum (t : ts)
+        | mhtId t `M.member` accum = go accum ts -- dedup diamond dependencies
+        | otherwise =
+            go (M.insert (mhtId t) (V.fromList (mhtHandlers t)) accum) (mhtParents t ++ ts)
 
 -- | Export the server as a client for interface @i@. Spawns a server thread
 -- with its lifetime bound to the supervisor.
 export :: forall i s m. (MonadSTM m, Export i, Server i s, SomeServer s) => Supervisor -> s -> m (Client i)
 export sup srv =
-    let h = serverToCallHandler (Proxy :: Proxy i) srv in
+    let h = mhtToCallHandler (methodHandlerTree (Proxy @i) srv) in
     liftSTM $ Client <$> URpc.export sup (toLegacyServerOps srv h)
 
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.

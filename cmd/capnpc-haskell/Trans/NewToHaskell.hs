@@ -906,27 +906,31 @@ defineInterfaceServer thisMod typeName typeParams methods supers =
         , defs =
             [ Hs.IdType $ Hs.TypeAlias "Server" [typ] $ Hs.TApp (Hs.TLName clsName) tVars
             , Hs.IdValue Hs.DfValue
-                { name = "serverToCallHandler"
+                { name = "methodHandlerTree"
                 , params = [Hs.PVar "_", Hs.PVar "s_"]
                 , value =
-                    Hs.EApp
-                        (egName ["GH"] "buildCallHandler")
-                        [ Hs.EList
-                            [ Hs.ETup
-                                [ Hs.ETypeApp (egName ["C"] "typeId") [typ]
-                                , Hs.EList
-                                    [ Hs.EApp
-                                        (egName ["GH"] "toUntypedMethodHandler")
-                                        [ Hs.EApp
-                                            (Hs.ETypeApp
-                                                (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))
-                                                tVars
-                                            )
-                                            [Hs.EVar "s_"]
-                                        ]
-                                    | New.MethodInfo{methodName} <- methods
-                                    ]
+                    Hs.EApp (egName ["GH"] "MethodHandlerTree")
+                        [ Hs.ETypeApp (egName ["C"] "typeId") [typ]
+                        , Hs.EList
+                            [ Hs.EApp
+                                (egName ["GH"] "toUntypedMethodHandler")
+                                [ Hs.EApp
+                                    (Hs.ETypeApp
+                                        (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))
+                                        tVars
+                                    )
+                                    [Hs.EVar "s_"]
                                 ]
+                            | New.MethodInfo{methodName} <- methods
+                            ]
+                        , Hs.EList
+                            [ Hs.EApp (egName ["GH"] "methodHandlerTree")
+                                [ Hs.ETypeApp
+                                    (egName ["GH"] "Proxy")
+                                    [typeToType thisMod $ C.PtrType $ C.PtrInterface super]
+                                , Hs.EVar "s_"
+                                ]
+                            | super <- supers
                             ]
                         ]
                 }

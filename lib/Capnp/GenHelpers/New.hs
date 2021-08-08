@@ -32,7 +32,12 @@ module Capnp.GenHelpers.New
     , module Capnp.Repr.Methods
     , module Capnp.New.Rpc.Server
     , buildCallHandler
+
+    -- * Re-exports from the standard library.
+    , Proxy(..)
     ) where
+
+
 
 import           Capnp.Bits
 import qualified Capnp.Classes        as C
@@ -59,6 +64,7 @@ import           Capnp.Repr.Methods
 import qualified Capnp.Untyped        as U
 import           Data.Bits
 import qualified Data.Map.Strict      as M
+import           Data.Proxy           (Proxy(..))
 import qualified Data.Vector          as V
 import           Data.Word
 
