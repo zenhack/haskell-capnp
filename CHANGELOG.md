@@ -1,5 +1,10 @@
 # 0.12.0.0
 
+* The 0.12.x series is the last major version that will support the old
+  API; the next release will not generate code for the old API, and some
+  low level interfaces will be removed. See
+  <https://zenhack.net/2021/07/30/new-haskell-capnp-release-reworked-apis.html>
+  for details.
 * For the new API, there is a new `HasTypeId` class, with instances
   defined for all generated types.
 * The new API now supports implementing RPC servers. `Capnp.Tutorial`
