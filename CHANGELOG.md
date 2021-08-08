@@ -2,7 +2,9 @@
 
 * For the new API, there is a new `HasTypeId` class, with instances
   defined for all generated types.
-* The new API now supports implementing RPC servers.
+* The new API now supports implementing RPC servers. `Capnp.Tutorial`
+  discusses this, and the examples have been updated to use the new
+  API.
 
 # 0.11.0.0
 
