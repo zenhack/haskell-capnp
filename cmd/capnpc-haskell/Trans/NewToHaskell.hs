@@ -937,10 +937,10 @@ defineInterfaceServer thisMod typeName typeParams methods =
         , params = map (Name.UnQ . Name.typeVarName) typeParams ++ ["s_"]
         , funDeps = []
         , decls =
-            map (defineIfaceClassMethod thisMod typeName typeParams) methods
+            map (defineIfaceClassMethod thisMod typeName) methods
         }
     ]
-defineIfaceClassMethod thisMod typeName typeParams New.MethodInfo{methodName, paramType, resultType} =
+defineIfaceClassMethod thisMod typeName New.MethodInfo{methodName, paramType, resultType} =
     let mkType t = typeToType thisMod (C.CompositeType t) in
     Hs.CdValueDecl
         (Name.valueName (Name.mkSub typeName methodName))
