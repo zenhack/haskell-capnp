@@ -22,9 +22,8 @@ Serialization support works, with some limitations:
   type List(T) (where T is any non-struct type) to a list of a struct
   type.
 
-Level 1 RPC support is implemented and usable, though there are a couple
-gaps in the API. It should be considered alpha quality for now. Specific
-things to be aware of:
+Level 1 RPC support is implemented and usable, though it should be
+considered alpha quality for now. Specific things to be aware of:
 
 * The implementation is *not* robust against resource exhaustion
   attacks; for now users are strongly discouraged from using it to do
