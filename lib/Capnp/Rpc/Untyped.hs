@@ -112,6 +112,10 @@ import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
 
+-- Soon this will replace the other generated imports. For now we include
+-- it just to test our efforts to avoid circular imports.
+import Capnp.Gen.Capnp.Rpc.New ()
+
 import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
 import qualified Capnp.Gen.Capnp.Rpc.Pure as R
 import qualified Capnp.Message            as Message

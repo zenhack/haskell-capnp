@@ -15,23 +15,11 @@ module Capnp.GenHelpers.New
     , Mutability(..)
     , TypeParam
     , newStruct
-    , parseField
-    , encodeField
-    , encodeVariant
-    , initVariant
-    , unionWhich
-    , readField
-    , structUnion
-    , unionStruct
     , parseEnum
     , encodeEnum
-    , parseCap
-    , encodeCap
     , getPtrConst
     , module F
-    , module Capnp.Repr.Methods
-    , module Capnp.New.Rpc.Server
-    , buildCallHandler
+    , module Capnp.New.Accessors
 
     -- * Re-exports from the standard library.
     , Proxy(..)
@@ -40,32 +28,19 @@ module Capnp.GenHelpers.New
 
 
 import           Capnp.Bits
-import qualified Capnp.Classes        as C
-import           Capnp.Fields         as F
-import           Capnp.GenHelpers     (getPtrConst)
-import           Capnp.Message        (Mutability(..))
-import qualified Capnp.Message        as M
-import           Capnp.New
-    ( TypeParam
-    , encodeField
-    , encodeVariant
-    , initVariant
-    , parseField
-    , readField
-    , structUnion
-    , unionStruct
-    , unionWhich
-    )
-import qualified Capnp.New.Basics     as NB
-import qualified Capnp.New.Classes    as NC
-import           Capnp.New.Rpc.Server
-import qualified Capnp.Repr           as R
-import           Capnp.Repr.Methods
-import qualified Capnp.Untyped        as U
+import qualified Capnp.Classes         as C
+import           Capnp.Fields          as F
+import           Capnp.GenHelpers      (getPtrConst)
+import           Capnp.Message         (Mutability(..))
+import qualified Capnp.Message         as M
+import           Capnp.New.Accessors
+import qualified Capnp.New.Basics      as NB
+import qualified Capnp.New.Classes     as NC
+import           Capnp.New.Constraints (TypeParam)
+import qualified Capnp.Repr            as R
+import qualified Capnp.Untyped         as U
 import           Data.Bits
-import qualified Data.Map.Strict      as M
-import           Data.Proxy           (Proxy(..))
-import qualified Data.Vector          as V
+import           Data.Proxy            (Proxy(..))
 import           Data.Word
 
 dataField
@@ -111,13 +86,3 @@ parseEnum (R.Raw n) = pure $ toEnum $ fromIntegral n
 encodeEnum :: forall a m s. (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, U.RWCtx m s)
     => M.Message ('Mut s) -> a -> m (R.Raw ('Mut s) a)
 encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
-
-parseCap :: (R.IsCap a, U.ReadCtx m 'Const) => R.Raw 'Const a -> m (Client a)
-parseCap (R.Raw cap) = Client <$> U.getClient cap
-
-encodeCap :: (R.IsCap a, U.RWCtx m s) => M.Message ('Mut s) -> Client a -> m (R.Raw ('Mut s) a)
-encodeCap msg (Client c) = R.Raw <$> U.appendCap msg c
-
-
-buildCallHandler :: [(Word64, [UntypedMethodHandler])] -> CallHandler
-buildCallHandler hs = M.fromList [ (k, V.fromList v) | (k, v) <- hs ]

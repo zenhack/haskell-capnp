@@ -105,6 +105,7 @@ library
       , Capnp.New.Basics
       , Capnp.New.Classes
       , Capnp.New.Constraints
+      , Capnp.New.Rpc.Common
       , Capnp.New.Rpc.Server
       , Capnp.Convert
       , Capnp.Errors
@@ -113,6 +114,7 @@ library
       , Capnp.GenHelpers.Pure
       , Capnp.GenHelpers.Rpc
       , Capnp.GenHelpers.New
+      , Capnp.GenHelpers.New.Rpc
       , Capnp.IO
       , Capnp.Message
       , Capnp.Pointer

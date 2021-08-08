@@ -11,8 +11,8 @@ import qualified Data.Vector     as V
 import qualified Capnp.New.Basics  as B
 import qualified Capnp.New.Classes as C
 
-import Capnp.Repr         (List, PtrRepr(..), Repr(..), ReprFor)
-import Capnp.Repr.Methods (Client)
+import Capnp.New.Rpc.Common (Client)
+import Capnp.Repr           (List, PtrRepr(..), Repr(..), ReprFor)
 
 -- | @'Parsed' a@ is the high-level/ADT representation of the capnproto
 -- type @a@. For struct types this is equivalent to @'C.Parsed' a@, but

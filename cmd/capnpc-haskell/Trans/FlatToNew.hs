@@ -21,6 +21,7 @@ fileToFile Flat.File{fileId, fileName, nodes} =
         { fileId
         , fileName
         , decls = concatMap nodeToDecls nodes
+        , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
         }
 
 mapTypes :: (Bifunctor p, Functor f) => p (f Flat.Node) Flat.Node -> p (f Name.CapnpQ) Name.CapnpQ

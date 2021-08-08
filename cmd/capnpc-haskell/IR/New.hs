@@ -13,6 +13,7 @@ data File
         { fileId   :: !Word64
         , decls    :: [Decl]
         , fileName :: FilePath
+        , usesRpc  :: !Bool
         }
 
 data Decl

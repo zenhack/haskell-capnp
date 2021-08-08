@@ -7,6 +7,7 @@ module Trans.NewToHaskell
     ) where
 
 import qualified Capnp.Repr            as R
+import           Control.Monad         (guard)
 import           Data.String           (IsString(fromString))
 import           Data.Word
 import qualified IR.Common             as C
@@ -15,6 +16,7 @@ import qualified IR.Name               as Name
 import qualified IR.New                as New
 import           Trans.ToHaskellCommon
 
+-- | Modules imported by all generated modules.
 imports :: [Hs.Import]
 imports =
     [ Hs.ImportAs { importAs = "R", parts = ["Capnp", "Repr"] }
@@ -27,6 +29,15 @@ imports =
     , Hs.ImportAs { importAs = "BS", parts = ["Capnp", "GenHelpers", "ReExports", "Data", "ByteString"] }
     ]
 
+-- | Modules imported by generated modules that use rpc. We separate these out to
+-- avoid a circular import when generating code for rpc.capnp -- which does not
+-- contain interfaces, so does not need to import the rpc system -- but which
+-- must be imported *by* the rpc system.
+rpcImports :: [Hs.Import]
+rpcImports =
+    [ Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New", "Rpc"] }
+    ]
+
 fileToModules :: New.File -> [Hs.Module]
 fileToModules file =
     [ fileToMainModule file
@@ -34,7 +45,7 @@ fileToModules file =
     ]
 
 fileToMainModule :: New.File -> Hs.Module
-fileToMainModule file@New.File{fileName} =
+fileToMainModule file@New.File{fileName, usesRpc} =
     fixImports $ Hs.Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
         , modLangPragmas =
@@ -55,7 +66,7 @@ fileToMainModule file@New.File{fileName} =
             , "ScopedTypeVariables"
             ]
         , modExports = Nothing
-        , modImports = imports
+        , modImports = imports ++ (guard usesRpc >> rpcImports)
         , modDecls = fileToDecls file
         }
 

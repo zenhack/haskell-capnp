@@ -34,6 +34,7 @@ import qualified Capnp.Fields            as F
 import           Capnp.Message           (Mutability(..), newMessage)
 import qualified Capnp.Message           as M
 import qualified Capnp.New.Classes       as NC
+import           Capnp.New.Rpc.Common    (Client(..), Pipeline(..))
 import qualified Capnp.Repr              as R
 import           Capnp.Rpc.Promise       (newPromise)
 import qualified Capnp.Rpc.Server        as Server
@@ -65,13 +66,6 @@ class (R.IsCap c, R.IsStruct p, R.IsStruct r) => HasMethod (name :: Symbol) c p 
 
 instance HasMethod name c p r => IsLabel name (Method c p r) where
     fromLabel = methodByLabel @name @c @p @r
-
--- | A @'Pipeline' a@ is a reference to possibly-not-resolved result from
--- a method call.
-newtype Pipeline a = Pipeline Rpc.Pipeline
-
-newtype Client a = Client Rpc.Client
-    deriving(Show, Eq)
 
 -- | The 'AsClient' class allows callers of rpc methods to abstract over 'Client's
 -- and 'Pipeline's. @'asClient'@ converts either of those to a client so that
