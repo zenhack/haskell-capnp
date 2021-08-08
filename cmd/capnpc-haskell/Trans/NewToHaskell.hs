@@ -46,6 +46,7 @@ fileToMainModule file@New.File{fileName} =
             , "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
+            , "UndecidableSuperClasses"
             , "OverloadedLabels"
             , "OverloadedStrings"
             , "StandaloneDeriving"
@@ -265,9 +266,9 @@ declToDecls thisMod decl =
                         , defs = []
                         }
                     ]
-                Just New.InterfaceTypeInfo {methods} ->
+                Just New.InterfaceTypeInfo {methods, supers} ->
                     defineInterfaceParse name params
-                    ++ defineInterfaceServer thisMod name params methods
+                    ++ defineInterfaceServer thisMod name params methods supers
                 Nothing -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
@@ -894,7 +895,7 @@ defineMarshal typeName typeParams New.ParsedUnion { variants } =
         }
     ]
 
-defineInterfaceServer thisMod typeName typeParams methods =
+defineInterfaceServer thisMod typeName typeParams methods supers =
     let tVars = toTVars typeParams
         typ = Hs.TApp (Hs.TLName typeName) tVars
         clsName = Name.mkSub typeName "server_"
@@ -932,7 +933,13 @@ defineInterfaceServer thisMod typeName typeParams methods =
             ]
         }
     , Hs.DcClass
-        { ctx = []
+        { ctx =
+            [ Hs.TApp (tgName ["GH"] "Server")
+                [ typeToType thisMod $ C.PtrType $ C.PtrInterface super
+                , Hs.TVar "s_"
+                ]
+            | super <- supers
+            ]
         , name = clsName
         , params = map (Name.UnQ . Name.typeVarName) typeParams ++ ["s_"]
         , funDeps = []

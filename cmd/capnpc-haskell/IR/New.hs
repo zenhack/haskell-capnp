@@ -83,6 +83,7 @@ data ExtraTypeInfo
     | EnumTypeInfo [Name.UnQ]
     | InterfaceTypeInfo
         { methods :: [MethodInfo]
+        , supers  :: [C.InterfaceType Brand Name.CapnpQ]
         }
 
 data UnionVariant = UnionVariant
