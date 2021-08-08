@@ -526,10 +526,6 @@ import Capnp.Classes (FromStruct)
 -- example which demos more of the protocol's capabilities, see the calculator example
 -- in the source repository's @examples/@ directory.
 --
--- Note: for now, we only show the client here, as the new API does not yet support
--- implementing rpc servers -- for that you can use the old API, see old docs for
--- more info.
---
 -- Note that capnproto does not have a notion of "clients" and "servers" in the
 -- traditional networking sense; the two sides of a connection are symmetric. In
 -- capnproto terminology, a "client" is a handle for calling methods, and a "server"
@@ -544,12 +540,65 @@ import Capnp.Classes (FromStruct)
 -- >   echo @0 (query :Text) -> (reply :Text);
 -- > }
 --
--- In the low level module, the code generator generates an unihabited type @Echo@,
--- with its @'R.ReprFor'@ instance indicating that it is a capability.
+-- The code generator generates a few things of interest:
 --
--- There is a 'Client' type exported by "Capnp.New", which is parametrized over
--- a phantom type indicating the type of the remote capability. So a @'Client'
--- Echo@ allows you to call methods on an @Echo@ interface.
+-- * An unihabited type @Echo@, with its @'R.ReprFor'@ instance indicating that it
+--   is a capability.
+-- * A type class for servers implementing the interface.
+--
+-- To provide an implementation of the @Echo@ interface, you need an instance of the
+-- @Echo'server_@ type class. Each type class method is a handler for one of the
+-- Cap'n Proto interface's rpc methods. The handler has this type:
+--
+-- > type MethodHandler p r
+-- >     = R.Raw 'Const p
+-- >     -> Fulfiller (R.Raw 'Const r)
+-- >     -> IO ()
+--
+-- ...where @p@ and @r@ are the phantom types for the parameter and return values.
+-- To break this down, it's a function which accepts the raw (unparsed) form of the
+-- parameters, and a 'Fulfiller' that can be used to respond to the request, either
+-- with a result or an exception.
+--
+-- Much of the time you will use higher level helpers such as 'handleParsed' or
+-- 'handleRaw' to construct these, which can be more ergonomic and less error
+-- prone. In particular, they prevent you from forgetting to use the 'Fulfiller'.
+--
+-- Once you have an instance of the server class, the 'Capnp.New.export' function
+-- is used to convert such an instance into a handle to the object that can be
+-- passed around.
+--
+-- Here is an an echo (networking) server using this interface:
+--
+-- > {-# LANGUAGE MultiParamTypeClasses #-}
+-- > {-# LANGUAGE OverloadedStrings     #-}
+-- > {-# LANGUAGE TypeApplications      #-}
+-- >
+-- > import Network.Simple.TCP (serve)
+-- >
+-- > import Capnp.New (SomeServer, def, defaultLimit, export, handleParsed)
+-- > import Capnp.Rpc (ConnConfig(..), handleConn, socketTransport, toClient)
+-- >
+-- > import Capnp.Gen.Echo.New
+-- >
+-- > data MyEchoServer = MyEchoServer
+-- >
+-- > instance SomeServer MyEchoServer
+-- >
+-- > instance Echo'server_ MyEchoServer where
+-- >     echo'echo MyEchoServer = handleParsed $ \params ->
+-- >         pure def { reply = query params }
+-- >
+-- > main :: IO ()
+-- > main = serve "localhost" "4000" $ \(sock, _addr) ->
+-- >     handleConn (socketTransport sock defaultLimit) def
+-- >         { debugMode = True
+-- >         , getBootstrap = \sup -> Just . toClient <$> export @Echo sup MyEchoServer
+-- >         }
+--
+-- For RPC clients, there is a 'Client' type exported by "Capnp.New", which is
+-- parametrized over a phantom type indicating the type of the remote capability.
+-- So a @'Client' Echo@ allows you to call methods on an @Echo@ interface.
 --
 -- Actually invoking methods uses the functions in "Capnp.Repr.Methods",
 -- re-exported by "Capnp.New". 'callP', 'callB', and 'callR' provide different
@@ -559,7 +608,7 @@ import Capnp.Classes (FromStruct)
 -- Pipelining onto a field can be done with the 'pipe' function.
 -- 'waitPipeline' blocks until the result is available.
 --
--- Here is an an echo (networking) client using this interface:
+-- Here is an an echo client using this interface:
 --
 -- > {-# LANGUAGE OverloadedLabels  #-}
 -- > {-# LANGUAGE OverloadedStrings #-}
