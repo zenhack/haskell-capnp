@@ -1,10 +1,12 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
 -- The tests have a number of cases where we do stuff like:
 --
 -- let 4 = ...
@@ -21,6 +23,7 @@ import Test.Hspec
 import Control.Monad           (forM_, when)
 import Control.Monad.Primitive (RealWorld)
 import Data.Foldable           (traverse_)
+import Data.Function           ((&))
 import Data.Text               (Text)
 import GHC.Float               (castDoubleToWord64, castWord64ToDouble)
 import Test.QuickCheck         (property)
@@ -33,18 +36,17 @@ import qualified Data.Vector     as V
 import Capnp.Untyped
 import Util
 
-import Capnp                (cerialize, createPure, def, getRoot, newRoot)
+import Capnp.New
+    (createPure, def, encode, msgToParsed, newRoot, setField)
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
-import Data.Mutable         (Thaw (..))
+import Data.Mutable         (Thaw(..))
 
 import Instances ()
 
-import Capnp.Gen.Capnp.Schema.Pure (Brand, Method (..), Node'Parameter)
+import Capnp.Gen.Capnp.Schema.New
 
 import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
-
-import qualified Capnp.Gen.Capnp.Schema as Schema
 
 untypedTests :: Spec
 untypedTests = describe "low-level untyped API tests" $ do
@@ -317,7 +319,7 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
 otherMessageTest :: Spec
 otherMessageTest = describe "Setting pointers in other messages" $
     it "Should copy them if needed." $
-        property $ \(name :: Text) (params :: V.Vector Node'Parameter) (brand :: Brand) ->
+        property $ \(name :: Text) (params :: V.Vector (Parsed Node'Parameter)) (brand :: Parsed Brand) ->
             propertyIO $ do
                 let expected = def
                         { name = name
@@ -330,19 +332,15 @@ otherMessageTest = describe "Setting pointers in other messages" $
                         paramsMsg <- M.newMessage Nothing
                         brandMsg <- M.newMessage Nothing
 
-                        methodCerial <- newRoot methodMsg
-                        nameCerial <- cerialize nameMsg name
-                        brandCerial <- cerialize brandMsg brand
+                        methodCerial <- newRoot @Method () methodMsg
+                        nameCerial <- encode nameMsg name
+                        brandCerial <- encode brandMsg brand
+                        paramsCerial <- encode paramsMsg params
 
-                        -- We don't implement Cerialize for Vector, so we can't just
-                        -- inject params directly. TODO: implement Cerialize for Vector.
-                        wrapper <- cerialize paramsMsg expected
-                        paramsCerial <- Schema.get_Method'implicitParameters wrapper
-
-                        Schema.set_Method'name methodCerial nameCerial
-                        Schema.set_Method'implicitParameters methodCerial paramsCerial
-                        Schema.set_Method'paramBrand methodCerial brandCerial
+                        methodCerial & setField #name nameCerial
+                        methodCerial & setField #implicitParameters paramsCerial
+                        methodCerial & setField #paramBrand brandCerial
 
                         pure methodMsg
-                actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
+                actual <- evalLimitT maxBound $ msgToParsed msg
                 actual `shouldBe` expected

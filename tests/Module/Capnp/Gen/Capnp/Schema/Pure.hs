@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
@@ -6,6 +7,8 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 
 import Data.Proxy
@@ -13,13 +16,12 @@ import Test.Hspec
 
 import Control.Exception.Safe    (bracket)
 import Control.Monad             (when)
-import Control.Monad.Primitive   (RealWorld)
-import Data.Default              (Default (..))
+import Data.Default              (Default(..))
 import Data.Foldable             (traverse_)
 import System.Directory          (removeFile)
 import System.IO
     (IOMode(ReadMode, WriteMode), hClose, openBinaryTempFile, withBinaryFile)
-import Test.QuickCheck           (Property, property)
+import Test.QuickCheck           (Arbitrary, Property, property)
 import Test.QuickCheck.IO        (propertyIO)
 import Test.QuickCheck.Instances ()
 import Text.Heredoc              (here)
@@ -28,22 +30,23 @@ import Text.Show.Pretty          (ppShow)
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 
-import Capnp.Gen.Capnp.Schema.Pure
+import Capnp.Gen.Capnp.Schema.New
 import Util
 
 import Instances ()
 
-import Capnp
-    (Mutability (..), getRoot, hGetValue, hPutValue, setRoot)
-import Capnp.Classes
-    ( Allocate (..)
-    , Cerialize (..)
-    , Decerialize (..)
-    , FromStruct (..)
-    , ToStruct (..)
+import Capnp.New
+    ( IsStruct
+    , Mutability(..)
+    , Parse(..)
+    , Raw(..)
+    , defaultLimit
+    , evalLimitT
+    , hGetParsed
+    , hPutParsed
+    , msgToParsed
     )
-import Capnp.TraversalLimit (defaultLimit, evalLimitT)
-import Data.Mutable         (Thaw (..))
+import Data.Mutable (Thaw(..))
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U
@@ -64,31 +67,25 @@ encodeTests = describe "schema encode tests" $
         )
   where
     testCase ::
-        -- TODO: the size of this context is *stupid*
-        ( Show a
-        , Eq a
-        , Cerialize RealWorld a
-        , FromStruct 'Const (Cerial 'Const a)
-        , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
-        , Allocate RealWorld (Cerial ('Mut RealWorld) a)
-        ) => (String, a, String) -> Spec
+        ( IsStruct a
+        , Parse a pa
+        , Show pa
+        , Eq pa
+        ) => (String, pa, String) -> Spec
     testCase (name, expectedValue, expectedText) = describe "cerialize" $
         it ("Should agree with capnp decode (with name = " ++ name ++ ")") $ do
             msg <- evalLimitT maxBound $ do
                 -- TODO: add some helpers for all this.
                 msg <- M.newMessage Nothing
-                cerialOut <- cerialize msg expectedValue
-                setRoot cerialOut
+                Raw cerialOut <- encode msg expectedValue
+                U.setRoot cerialOut
                 freeze msg
             let builder = M.encode msg
             actualText <- capnpDecode
                 (LBS.toStrict $ BB.toLazyByteString builder)
                 (MsgMetaData schemaSchemaSrc name)
             actualText `shouldBe` expectedText
-            actualValue <- evalLimitT maxBound $ do
-                root <- U.rootPtr msg
-                cerialIn <- fromStruct root
-                decerialize cerialIn
+            actualValue <- evalLimitT maxBound $ msgToParsed msg
             actualValue `shouldBe` expectedValue
 
 decodeTests :: Spec
@@ -139,7 +136,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                 4
                 2
                 [Node'NestedNode "theName" 321]
-                [Annotation 2 (Value'bool True) (Brand [])]
+                [Annotation 2 (Value $ Value'bool True) (Brand [])]
                 [Node'Parameter "theName" ]
                 True
                 unionVal
@@ -177,11 +174,11 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                             3
                             [ Annotation
                                 2
-                                (Value'bool True)
+                                (Value $ Value'bool True)
                                 (Brand [])
                             ]
                             7
-                            Field'ordinal'implicit
+                            (Field'ordinal' Field'ordinal'implicit)
                             (Field'group $ Field'group' 4)
                         ]
                     }
@@ -193,7 +190,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
               , Node'interface $ Node'interface' [] [Superclass 0 (Brand [])]
               )
             , ( "const = (type = (bool = void), value = (bool = false))"
-              , Node'const $ Node'const' Type'bool (Value'bool False)
+              , Node'const $ Node'const' (Type Type'bool) (Value $ Value'bool False)
               )
             , ( [here| annotation =
                     ( type = (bool = void)
@@ -212,7 +209,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                     )
                 |]
               , Node'annotation $ Node'annotation'
-                    Type'bool
+                    (Type Type'bool)
                     True
                     False
                     False
@@ -261,7 +258,7 @@ decodeTests = describe "schema decode tests" $ sequence_ $
         ]
     , decodeTests "Annotation"
         [ ( "(id = 323, brand = (scopes = []), value = (bool = true))"
-          , Annotation 323 (Value'bool True) (Brand [])
+          , Annotation 323 (Value $ Value'bool True) (Brand [])
           )
         ]
     , decodeTests "CapnpVersion"
@@ -281,9 +278,9 @@ decodeTests = describe "schema decode tests" $ sequence_ $
           , Field
                 "fieldName"
                 3
-                [Annotation 2 (Value'bool True) (Brand [])]
+                [Annotation 2 (Value $ Value'bool True) (Brand [])]
                 3
-                Field'ordinal'implicit
+                (Field'ordinal' Field'ordinal'implicit)
                 (Field'group $ Field'group' 4)
           )
         , ( [here|
@@ -303,13 +300,13 @@ decodeTests = describe "schema decode tests" $ sequence_ $
           , Field
                 "fieldName"
                 3
-                [Annotation 2 (Value'bool True) (Brand [])]
+                [Annotation 2 (Value $ Value'bool True) (Brand [])]
                 3
-                (Field'ordinal'explicit 7)
+                (Field'ordinal' $ Field'ordinal'explicit 7)
                 (Field'slot $ Field'slot'
                     3
-                    Type'bool
-                    (Value'bool False)
+                    (Type Type'bool)
+                    (Value $ Value'bool False)
                     True)
           )
         ]
@@ -322,55 +319,60 @@ decodeTests = describe "schema decode tests" $ sequence_ $
                     ]
                 )
             |]
-          , Enumerant "red" 4 [Annotation 23 (Value'uint8 3) (Brand [])]
+          , Enumerant "red" 4 [Annotation 23 (Value $ Value'uint8 3) (Brand [])]
           )
         ]
     , decodeTests "Superclass"
         [ ("(id = 34, brand = (scopes = []))", Superclass 34 (Brand []))
         ]
     , decodeTests "Type"
-        [ ("(bool = void)", Type'bool)
-        , ("(int8 = void)", Type'int8)
-        , ("(int16 = void)", Type'int16)
-        , ("(int32 = void)", Type'int32)
-        , ("(int64 = void)", Type'int64)
-        , ("(uint8 = void)", Type'uint8)
-        , ("(uint16 = void)", Type'uint16)
-        , ("(uint32 = void)", Type'uint32)
-        , ("(uint64 = void)", Type'uint64)
-        , ("(float32 = void)", Type'float32)
-        , ("(float64 = void)", Type'float64)
-        , ("(text = void)", Type'text)
-        , ("(data = void)", Type'data_)
+        [ ("(bool = void)", Type Type'bool)
+        , ("(int8 = void)", Type Type'int8)
+        , ("(int16 = void)", Type Type'int16)
+        , ("(int32 = void)", Type Type'int32)
+        , ("(int64 = void)", Type Type'int64)
+        , ("(uint8 = void)", Type Type'uint8)
+        , ("(uint16 = void)", Type Type'uint16)
+        , ("(uint32 = void)", Type Type'uint32)
+        , ("(uint64 = void)", Type Type'uint64)
+        , ("(float32 = void)", Type Type'float32)
+        , ("(float64 = void)", Type Type'float64)
+        , ("(text = void)", Type Type'text)
+        , ("(data = void)", Type Type'data_)
         , ( "(list = (elementType = (list = (elementType = (text = void)))))"
-          , Type'list $ Type'list' $ Type'list $ Type'list' Type'text
+          , Type $ Type'list $ Type'list' $ Type $ Type'list $ Type'list' $ Type Type'text
           )
         , ( "(enum = (typeId = 4, brand = (scopes = [])))"
-          , Type'enum $ Type'enum' 4 (Brand [])
+          , Type $ Type'enum $ Type'enum' 4 (Brand [])
           )
         , ( "(struct = (typeId = 7, brand = (scopes = [])))"
-          , Type'struct $ Type'struct' 7 (Brand [])
+          , Type $ Type'struct $ Type'struct' 7 (Brand [])
           )
         , ( "(interface = (typeId = 1, brand = (scopes = [])))"
-          , Type'interface $ Type'interface' 1 (Brand [])
+          , Type $ Type'interface $ Type'interface' 1 (Brand [])
           )
         , ( "(anyPointer = (unconstrained = (anyKind = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'anyKind
+          , Type $ Type'anyPointer $ Type'anyPointer' $ Type'anyPointer'unconstrained $
+                Type'anyPointer'unconstrained' Type'anyPointer'unconstrained'anyKind
           )
         , ( "(anyPointer = (unconstrained = (struct = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'struct
+          , Type $ Type'anyPointer $ Type'anyPointer' $ Type'anyPointer'unconstrained $
+                Type'anyPointer'unconstrained' Type'anyPointer'unconstrained'struct
           )
         , ( "(anyPointer = (unconstrained = (list = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'list
+          , Type $ Type'anyPointer $ Type'anyPointer' $ Type'anyPointer'unconstrained $
+                Type'anyPointer'unconstrained' Type'anyPointer'unconstrained'list
           )
         , ( "(anyPointer = (unconstrained = (capability = void)))"
-          , Type'anyPointer $ Type'anyPointer'unconstrained Type'anyPointer'unconstrained'capability
+          , Type $ Type'anyPointer $ Type'anyPointer' $ Type'anyPointer'unconstrained $
+                Type'anyPointer'unconstrained' Type'anyPointer'unconstrained'capability
           )
         , ( "(anyPointer = (parameter = (scopeId = 4, parameterIndex = 2)))"
-          , Type'anyPointer $ Type'anyPointer'parameter $ Type'anyPointer'parameter' 4 2
+          , Type $ Type'anyPointer $ Type'anyPointer' $
+                Type'anyPointer'parameter $ Type'anyPointer'parameter' 4 2
           )
         , ( "(anyPointer = (implicitMethodParameter = (parameterIndex = 7)))"
-          , Type'anyPointer $ Type'anyPointer'implicitMethodParameter $
+          , Type $ Type'anyPointer $ Type'anyPointer' $ Type'anyPointer'implicitMethodParameter $
                 Type'anyPointer'implicitMethodParameter' 7
           )
         ]
@@ -390,8 +392,8 @@ decodeTests = describe "schema decode tests" $ sequence_ $
           , Brand
                 [ Brand'Scope 32 Brand'Scope'inherit
                 , Brand'Scope 23 $ Brand'Scope'bind
-                    [ Brand'Binding'unbound
-                    , Brand'Binding'type_ Type'bool
+                    [ Brand'Binding Brand'Binding'unbound
+                    , Brand'Binding $ Brand'Binding'type_ $ Type Type'bool
                     ]
                 ]
           )
@@ -401,38 +403,38 @@ decodeTests = describe "schema decode tests" $ sequence_ $
     -- TODO: rename this: it's confusing to have both the top level and helper
     -- have the same name; not sure how that happened in the first place.
     decodeTests ::
-        ( Eq a
-        , Show a
-        , Decerialize a
-        , FromStruct 'Const a
-        ) => String -> [(String, a)] -> Spec
+        ( IsStruct a
+        , Parse a pa
+        , Eq pa
+        , Show pa
+        ) => String -> [(String, pa)] -> Spec
     decodeTests typename cases =
         describe ("Decode " ++ typename) $ traverse_ (testCase typename) cases
 
     testCase typename (capnpText, expected) =
         specify ("should agree with `capnp encode` on " ++ capnpText) $ do
             msg <- encodeValue schemaSchemaSrc typename capnpText
-            actual <- evalLimitT 128 $ getRoot msg
+            actual <- evalLimitT 128 $ msgToParsed msg
             ppAssertEqual actual expected
 
 decodeDefaultTests :: Spec
 decodeDefaultTests = describe "Decoding default values" $ do
-    decodeDefault "Type" (Proxy :: Proxy Type)
-    decodeDefault "Value" (Proxy :: Proxy Value)
-    decodeDefault "Node" (Proxy :: Proxy Node)
+    decodeDefault @Type "Type"
+    decodeDefault @Value "Value"
+    decodeDefault @Node "Node"
 
 decodeDefault ::
-    ( Show a
-    , Eq a
-    , Default a
-    , FromStruct 'Const a
-    , Cerialize RealWorld a
-    , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
-    ) => String -> Proxy a -> Spec
-decodeDefault typename proxy =
+    forall a pa.
+    ( IsStruct a
+    , Parse a pa
+    , Show pa
+    , Eq pa
+    , Default pa
+    ) => String -> Spec
+decodeDefault typename =
     specify ("The empty struct decodes to the default value for " ++ typename) $ do
-        actual <- evalLimitT defaultLimit (getRoot M.empty)
-        ppAssertEqual (actual `asProxyTypeOf` proxy) def
+        actual <- evalLimitT defaultLimit (msgToParsed @a M.empty)
+        ppAssertEqual actual def
 
 ppAssertEqual :: (Show a, Eq a) => a -> a -> IO ()
 ppAssertEqual actual expected =
@@ -461,19 +463,25 @@ propTests = describe "Various quickcheck properties" $ do
     propCase "CodeGeneratorRequest.RequestedFile.Import"
         (Proxy :: Proxy CodeGeneratorRequest'RequestedFile'Import)
 
+propCase ::
+    ( IsStruct a
+    , Parse a pa
+    , Arbitrary pa
+    , Show pa
+    , Eq pa
+    ) => String -> Proxy a -> Spec
 propCase name proxy = describe ("...for " ++ name) $ do
     specify "cerialize and decerialize are inverses." $
-        property (prop_cerializeDecerializeInverses proxy)
+        property (prop_encodeParseInverses proxy)
     specify "hPutValue and hGetValue are inverses." $
         property (prop_hGetPutInverses proxy)
 
 prop_hGetPutInverses ::
-    ( Show a
-    , Eq a
-    , FromStruct 'Const a
-    , Cerialize RealWorld a
-    , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
-    ) => Proxy a -> a -> Property
+    ( IsStruct a
+    , Parse a pa
+    , Show pa
+    , Eq pa
+    ) => Proxy a -> pa -> Property
 prop_hGetPutInverses _proxy expected = propertyIO $ do
     -- This is a little more complicated than I'd like due to resource
     -- management issues. We create a temporary file, then immediately
@@ -482,33 +490,29 @@ prop_hGetPutInverses _proxy expected = propertyIO $ do
     -- the handle.
     actual <- bracket
         (do
-            (filename, handle) <- openBinaryTempFile "/tmp" "hPutValue-output"
+            (filename, handle) <- openBinaryTempFile "/tmp" "hPutParsed-output"
             hClose handle
             pure filename)
         removeFile
         (\filename -> do
             withBinaryFile filename WriteMode
-                (`hPutValue` expected)
+                (`hPutParsed` expected)
             withBinaryFile filename ReadMode $ \h ->
-                hGetValue h defaultLimit)
+                hGetParsed h defaultLimit)
     ppAssertEqual actual expected
 
-prop_cerializeDecerializeInverses ::
-    ( Show a
-    , Eq a
-    , Cerialize RealWorld a
-    , FromStruct 'Const (Cerial 'Const a)
-    , ToStruct ('Mut RealWorld) (Cerial ('Mut RealWorld) a)
-    , Allocate RealWorld (Cerial ('M.Mut RealWorld) a)
-    ) => Proxy a -> a -> Property
-prop_cerializeDecerializeInverses _proxy expected = propertyIO $ do
+prop_encodeParseInverses ::
+    ( IsStruct a
+    , Parse a pa
+    , Eq pa
+    , Show pa
+    ) => Proxy a -> pa -> Property
+prop_encodeParseInverses _proxy expected = propertyIO $ do
     actual <- evalLimitT maxBound $ do
         -- TODO: add some helpers for all this.
         msg <- M.newMessage Nothing
-        cerialOut <- cerialize msg expected
-        setRoot cerialOut
+        Raw cerialOut <- encode msg expected
+        U.setRoot cerialOut
         constMsg :: M.Message 'Const <- freeze msg
-        root <- U.rootPtr constMsg
-        cerialIn <- fromStruct root
-        decerialize cerialIn
+        msgToParsed constMsg
     ppAssertEqual actual expected

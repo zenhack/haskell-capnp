@@ -45,6 +45,11 @@ module Capnp.New
     , handleRaw
     , methodUnimplemented
 
+    -- * Shorthands for types
+    , R.IsStruct
+    , R.IsCap
+    , R.IsPtr
+
     -- * Re-exported from "Data.Default", for convienence.
     , def
     ) where
