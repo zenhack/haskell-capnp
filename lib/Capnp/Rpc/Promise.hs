@@ -31,7 +31,7 @@ import Control.Monad.STM.Class
 
 import qualified Control.Exception.Safe as HsExn
 
-import Capnp.Gen.Capnp.Rpc.Pure
+import Capnp.Gen.Capnp.Rpc.New
 -- For exception instance:
 import Capnp.Rpc.Errors ()
 
@@ -42,7 +42,7 @@ instance HsExn.Exception ErrAlreadyResolved
 
 -- | A 'Fulfiller' is used to fulfill a promise.
 newtype Fulfiller a = Fulfiller
-    { callback :: Either Exception a -> STM ()
+    { callback :: Either (Parsed Exception) a -> STM ()
     }
 
 -- | Fulfill a promise by supplying the specified value. It is an error to
@@ -53,12 +53,12 @@ fulfill f val = breakOrFulfill f (Right val)
 -- | Break a promise. When the user of the promise executes 'wait', the
 -- specified exception will be raised. It is an error to call 'breakPromise'
 -- if the promise has already been fulfilled (or broken).
-breakPromise :: MonadSTM m => Fulfiller a -> Exception -> m ()
+breakPromise :: MonadSTM m => Fulfiller a -> Parsed Exception -> m ()
 breakPromise f exn = breakOrFulfill f (Left exn)
 
 -- | 'breakOrFulfill' calls either 'breakPromise' or 'fulfill', depending
 -- on the argument.
-breakOrFulfill :: MonadSTM m => Fulfiller a -> Either Exception a -> m ()
+breakOrFulfill :: MonadSTM m => Fulfiller a -> Either (Parsed Exception) a -> m ()
 breakOrFulfill Fulfiller{callback} result = liftSTM $ callback result
 
 -- | Wait for a promise to resolve, and return the result. If the promise
@@ -96,7 +96,7 @@ newPromise = liftSTM $ do
         )
 
 -- | Create a new promise which also excecutes an STM action when it is resolved.
-newPromiseWithCallback :: MonadSTM m => (Either Exception a -> STM ()) -> m (Promise a, Fulfiller a)
+newPromiseWithCallback :: MonadSTM m => (Either (Parsed Exception) a -> STM ()) -> m (Promise a, Fulfiller a)
 newPromiseWithCallback callback = liftSTM $ do
     (promise, Fulfiller{callback=oldCallback}) <- newPromise
     pure
@@ -107,11 +107,11 @@ newPromiseWithCallback callback = liftSTM $ do
         )
 
 -- | Like 'newPromiseWithCallback', but doesn't return the promise.
-newCallback :: MonadSTM m => (Either Exception a -> STM ()) -> m (Fulfiller a)
+newCallback :: MonadSTM m => (Either (Parsed Exception) a -> STM ()) -> m (Fulfiller a)
 newCallback = liftSTM . fmap snd . newPromiseWithCallback
 
 -- | A promise is a value that may not be ready yet.
 newtype Promise a = Promise
-    { var :: TVar (Maybe (Either Exception a))
+    { var :: TVar (Maybe (Either (Parsed Exception) a))
     }
     deriving(Eq)

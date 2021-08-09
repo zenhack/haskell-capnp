@@ -4,6 +4,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-# OPTIONS_GHC -Wno-error=missing-methods #-}
 module Module.Capnp.Rpc (rpcTests) where
 
@@ -25,20 +26,21 @@ import qualified Data.Text               as T
 import qualified Network.Socket          as Socket
 import qualified Supervisors
 
-import Capnp
-    ( createPure
+import Capnp.Bits       (WordCount)
+import Capnp.New
+    ( Which
+    , createPure
     , def
     , defaultLimit
     , evalLimitT
     , lbsToMsg
-    , msgToValue
-    , valueToMsg
+    , msgToParsed
+    , parsedToMsg
     )
-import Capnp.Bits       (WordCount)
 import Capnp.Rpc.Errors (eFailed)
 
-import Capnp.Gen.Aircraft.Pure  hiding (Left, Right)
-import Capnp.Gen.Capnp.Rpc.Pure
+import Capnp.Gen.Aircraft.Pure hiding (Left, Right)
+import Capnp.Gen.Capnp.Rpc.New
 import Capnp.Rpc
 import Capnp.Rpc.Untyped
 
@@ -301,23 +303,24 @@ unusualTests = describe "Tests for unusual message patterns" $ do
             ret <- try $ concurrently_
                 (handleConn (vatTrans defaultLimit) def { debugMode = True})
                 $ do
-                    msg <- createPure maxBound $ valueToMsg $ Message'abort exn
+                    msg <- createPure maxBound $ parsedToMsg $ Message $ Message'abort exn
                     sendMsg (probeTrans defaultLimit) msg
             ret `shouldBe` Left (ReceivedAbort exn)
-    triggerAbort (Message'unimplemented $ Message'abort def) $
+    triggerAbort (Message'unimplemented $ Message $ Message'abort def) $
         "Your vat sent an 'unimplemented' message for an abort message " <>
         "that its remote peer never sent. This is likely a bug in your " <>
         "capnproto library."
     triggerAbort
-        (Message'call def
-            { target = MessageTarget'importedCap 443
-            }
+        (Message'call (def
+            { target = MessageTarget $ MessageTarget'importedCap 443
+            } :: Parsed Call)
         )
         "No such export: 443"
     triggerAbort
-        (Message'call def
-            { target = MessageTarget'promisedAnswer def { questionId=300 }
-            }
+        (Message'call (def
+            { target = MessageTarget $
+                MessageTarget'promisedAnswer (def { questionId=300 } :: Parsed PromisedAnswer)
+            } :: Parsed Call)
         )
         "No such answer: 300"
     triggerAbort
@@ -347,8 +350,8 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                     msg <- lbsToMsg lbs
                     sendMsg (probeTrans defaultLimit) msg
                     msg' <- recvMsg (probeTrans defaultLimit)
-                    resp <- msgToValue msg'
-                    resp `shouldBe` Message'abort wantAbortExn
+                    resp <- evalLimitT maxBound $ msgToParsed msg'
+                    resp `shouldBe` Message (Message'abort wantAbortExn)
                 )
     it "Should respond with an abort if erroneously sent return = resultsSentElsewhere" $
 
@@ -369,9 +372,10 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                 )
                 (do
                     let send msg =
-                            evalLimitT maxBound (valueToMsg msg >>= freeze)
+                            evalLimitT maxBound (parsedToMsg msg >>= freeze)
                             >>= sendMsg (probeTrans defaultLimit)
-                        recv = recvMsg (probeTrans defaultLimit) >>= msgToValue
+                        recv = recvMsg (probeTrans defaultLimit)
+                                >>= evalLimitT maxBound . msgToParsed
                     Message'bootstrap Bootstrap{} <- recv
                     Message'call Call{questionId} <- recv
                     send $ Message'return def
@@ -386,15 +390,16 @@ unusualTests = describe "Tests for unusual message patterns" $ do
         race_
             (handleConn (vatTrans defaultLimit) def { debugMode = True })
             $ do
-                msg <- createPure maxBound $ valueToMsg $ Message'join def
+                msg <- createPure maxBound $ parsedToMsg $ Message'join def
                 sendMsg (probeTrans defaultLimit) msg
-                msg' <- recvMsg (probeTrans defaultLimit) >>= msgToValue
-                msg' `shouldBe` Message'unimplemented (Message'join def)
+                msg' <- recvMsg (probeTrans defaultLimit)
+                        >>= evalLimitT maxBound . msgToParsed
+                msg' `shouldBe` Message (Message'unimplemented (Message (Message'join def)))
 
 
 -- | Verify that the given message triggers an abort with the specified 'reason'
 -- field.
-triggerAbort :: Message -> T.Text -> Spec
+triggerAbort :: Parsed (Which Message) -> T.Text -> Spec
 triggerAbort msg reason =
     it ("Should abort when sent the message " ++ show msg ++ " on startup") $ do
         let wantAbortExn = def
@@ -408,7 +413,7 @@ triggerAbort msg reason =
                     ret `shouldBe` Left (SentAbort wantAbortExn)
                 )
                 (do
-                    rawMsg <- createPure maxBound $ valueToMsg msg
+                    rawMsg <- createPure maxBound $ parsedToMsg msg
                     sendMsg (probeTrans defaultLimit) rawMsg
                     -- 4 second timeout. The remote vat's timeout before killing the
                     -- connection is one second, so if this happens we're never going
@@ -419,8 +424,8 @@ triggerAbort msg reason =
                         Nothing ->
                             error "Test timed out waiting on abort message."
                         Just rawResp -> do
-                            resp <- msgToValue rawResp
-                            resp `shouldBe` Message'abort wantAbortExn
+                            resp <- evalLimitT maxBound $ msgToParsed rawResp
+                            resp `shouldBe` Message (Message'abort wantAbortExn)
                 )
 
 -------------------------------------------------------------------------------
@@ -456,11 +461,11 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
             }
     race_ runServer runClient
 
-expectException :: Show a => (cap -> IO (Promise a)) -> Exception -> cap -> IO ()
+expectException :: Show a => (cap -> IO (Promise a)) -> Parsed Exception -> cap -> IO ()
 expectException callFn wantExn cap = do
     ret <- try $ callFn cap >>= wait
     case ret of
-        Left (e :: Exception) ->
+        Left (e :: Parsed Exception) ->
             liftIO $ e `shouldBe` wantExn
         Right val ->
             error $ "Should have received exn, but got " ++ show val

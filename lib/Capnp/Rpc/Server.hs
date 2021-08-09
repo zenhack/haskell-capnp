@@ -63,10 +63,10 @@ import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import Capnp.Untyped        (Ptr)
 import Data.Mutable         (freeze)
 
-import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
-import qualified Capnp.Message            as Message
-import qualified Capnp.Untyped            as Untyped
-import qualified Internal.TCloseQ         as TCloseQ
+import qualified Capnp.Gen.Capnp.Rpc.New as RpcGen
+import qualified Capnp.Message           as Message
+import qualified Capnp.Untyped           as Untyped
+import qualified Internal.TCloseQ        as TCloseQ
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@.
@@ -202,7 +202,7 @@ untypedHandler
 untypedHandler = MethodHandler
 
 -- | @'methodThrow' exn@ is a 'MethodHandler' which always throws @exn@.
-methodThrow :: MonadIO m => RpcGen.Exception -> MethodHandler m p r
+methodThrow :: MonadIO m => RpcGen.Parsed RpcGen.Exception -> MethodHandler m p r
 methodThrow exn = MethodHandler
     { handleMethod = \_ fulfiller -> liftIO $ breakPromise fulfiller exn
     }

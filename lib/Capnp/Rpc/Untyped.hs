@@ -5,11 +5,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE OverloadedLabels           #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE RecursiveDo                #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 -- |
@@ -50,8 +52,6 @@ module Capnp.Rpc.Untyped
 
     -- * Errors
     , RpcError(..)
-    , R.Exception(..)
-    , R.Exception'Type(..)
 
     -- * Shutting down the connection
     ) where
@@ -61,6 +61,7 @@ import Control.Monad.STM.Class
 import Control.Monad.Trans.Class
 import Data.Word
 
+import Capnp.New.Accessors
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.MVar  (MVar, newEmptyMVar)
@@ -78,6 +79,7 @@ import Control.Exception.Safe
 import Control.Monad            (forever, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (for_, toList, traverse_)
+import Data.Function            ((&))
 import Data.Hashable            (Hashable, hash, hashWithSalt)
 import Data.Maybe               (catMaybes, fromMaybe)
 import Data.String              (fromString)
@@ -93,9 +95,11 @@ import qualified Focus
 import qualified ListT
 import qualified StmContainers.Map as M
 
-import Capnp.Classes        (cerialize, decerialize, fromStruct, new, toStruct)
-import Capnp.Convert        (valueToMsg)
+import Capnp.Convert        (msgToRaw, parsedToMsg)
+import Capnp.Fields         (Which)
 import Capnp.Message        (Message, Mutability(..))
+import Capnp.New.Classes    (new, newRoot, parse)
+import Capnp.Repr           (Raw(..))
 import Capnp.Rpc.Errors
     ( eDisconnected
     , eFailed
@@ -112,20 +116,15 @@ import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
 
--- Soon this will replace the other generated imports. For now we include
--- it just to test our efforts to avoid circular imports.
-import Capnp.Gen.Capnp.Rpc.New ()
-
-import qualified Capnp.Gen.Capnp.Rpc      as RawRpc
-import qualified Capnp.Gen.Capnp.Rpc.Pure as R
-import qualified Capnp.Message            as Message
-import qualified Capnp.Rpc.Server         as Server
-import qualified Capnp.Untyped            as UntypedRaw
-import qualified Capnp.Untyped.Pure       as Untyped
-import qualified Internal.Rc              as Rc
-import qualified Internal.SnocList        as SnocList
-import qualified Internal.TCloseQ         as TCloseQ
-import qualified Lifetimes.Gc             as Fin
+import qualified Capnp.Gen.Capnp.Rpc.New as R
+import qualified Capnp.Message           as Message
+import qualified Capnp.New.Basics        as B
+import qualified Capnp.Rpc.Server        as Server
+import qualified Capnp.Untyped           as UntypedRaw
+import qualified Internal.Rc             as Rc
+import qualified Internal.SnocList       as SnocList
+import qualified Internal.TCloseQ        as TCloseQ
+import qualified Lifetimes.Gc            as Fin
 
 -- Note [Organization]
 -- ===================
@@ -163,9 +162,9 @@ type RawMPtr = Maybe (UntypedRaw.Ptr 'Const)
 
 -- | Errors which can be thrown by the rpc system.
 data RpcError
-    = ReceivedAbort R.Exception
+    = ReceivedAbort (R.Parsed R.Exception)
     -- ^ The remote vat sent us an abort message.
-    | SentAbort R.Exception
+    | SentAbort (R.Parsed R.Exception)
     -- ^ We sent an abort to the remote vat.
     deriving(Show, Eq, Generic)
 
@@ -440,7 +439,7 @@ handleConn
         case result of
             Left (SentAbort e) -> do
                 -- We need to actually send it:
-                rawMsg <- createPure maxBound $ valueToMsg $ R.Message'abort e
+                rawMsg <- createPure maxBound $ parsedToMsg $ R.Message'abort e
                 void $ timeout 1000000 $ sendMsg transport rawMsg
                 throwIO $ SentAbort e
             Left e ->
@@ -516,7 +515,7 @@ data EntryQA
     -- a return. Contains two sets of callbacks, to invoke on each type
     -- of message.
     = NewQA
-        { onFinish :: SnocList (R.Finish -> STM ())
+        { onFinish :: SnocList (R.Parsed R.Finish -> STM ())
         , onReturn :: SnocList (Return -> STM ())
         }
     -- | An entry for which we've sent/received a return, but not a finish.
@@ -524,13 +523,13 @@ data EntryQA
     -- finish.
     | HaveReturn
         { returnMsg :: Return
-        , onFinish  :: SnocList (R.Finish -> STM ())
+        , onFinish  :: SnocList (R.Parsed R.Finish -> STM ())
         }
     -- | An entry for which we've sent/received a finish, but not a return.
     -- Contains the finish message, and a set of callbacks to invoke on the
     -- return.
     | HaveFinish
-        { finishMsg :: R.Finish
+        { finishMsg :: R.Parsed R.Finish
         , onReturn  :: SnocList (Return -> STM ())
         }
 
@@ -638,7 +637,7 @@ data PipelineState
         , conn      :: Conn
         }
     | PendingLocalPipeline (SnocList (Fulfiller RawMPtr))
-    | ReadyPipeline (Either R.Exception RawMPtr)
+    | ReadyPipeline (Either (R.Parsed R.Exception) RawMPtr)
 
 -- | 'walkPipleinePtr' follows a pointer starting from the object referred to by the
 -- 'Pipeline'. The 'Pipeline' must refer to a struct, and the pointer is referred to
@@ -739,7 +738,7 @@ data PromiseState
         -- promise to resolve.
         }
     -- | The promise resolved to an exception.
-    | Error R.Exception
+    | Error (R.Parsed R.Exception)
 
 -- | A temporary destination for calls on an unresolved promise.
 data TmpDest
@@ -831,14 +830,14 @@ data Return = Return
     }
 data Return'
     = Return'results Payload
-    | Return'exception R.Exception
+    | Return'exception (R.Parsed R.Exception)
     | Return'canceled
     | Return'resultsSentElsewhere
     | Return'takeFromOtherQuestion QAId
     | Return'acceptFromThirdParty RawMPtr
 data Payload = Payload
     { content  :: RawMPtr
-    , capTable :: V.Vector R.CapDescriptor
+    , capTable :: V.Vector (R.Parsed R.CapDescriptor)
     }
 
 -- Note [proxies]
@@ -1007,24 +1006,24 @@ cbCallReturn
         }
 
 
-marshalMsgTarget :: MsgTarget -> R.MessageTarget
+marshalMsgTarget :: MsgTarget -> R.Parsed R.MessageTarget
 marshalMsgTarget = \case
     ImportTgt importId ->
-        R.MessageTarget'importedCap (ieWord importId)
+        R.MessageTarget $ R.MessageTarget'importedCap (ieWord importId)
     AnswerTgt tgt ->
-        R.MessageTarget'promisedAnswer $ marshalPromisedAnswer tgt
+        R.MessageTarget $ R.MessageTarget'promisedAnswer $ marshalPromisedAnswer tgt
 
-marshalPromisedAnswer :: PromisedAnswer -> R.PromisedAnswer
+marshalPromisedAnswer :: PromisedAnswer -> R.Parsed R.PromisedAnswer
 marshalPromisedAnswer PromisedAnswer{ answerId, transform } =
     R.PromisedAnswer
         { R.questionId = qaWord answerId
         , R.transform =
-            V.fromList $
-                map R.PromisedAnswer'Op'getPointerField $
-                    toList transform
+            V.fromList $ map
+                (R.PromisedAnswer'Op . R.PromisedAnswer'Op'getPointerField)
+                (toList transform)
         }
 
-unmarshalPromisedAnswer :: MonadThrow m => R.PromisedAnswer -> m PromisedAnswer
+unmarshalPromisedAnswer :: MonadThrow m => R.Parsed R.PromisedAnswer -> m PromisedAnswer
 unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
     idxes <- unmarshalOps (toList transform)
     pure PromisedAnswer
@@ -1032,13 +1031,13 @@ unmarshalPromisedAnswer R.PromisedAnswer { questionId, transform } = do
         , transform = SnocList.fromList idxes
         }
 
-unmarshalOps :: MonadThrow m => [R.PromisedAnswer'Op] -> m [Word16]
+unmarshalOps :: MonadThrow m => [R.Parsed R.PromisedAnswer'Op] -> m [Word16]
 unmarshalOps [] = pure []
-unmarshalOps (R.PromisedAnswer'Op'noop:ops) =
+unmarshalOps (R.PromisedAnswer'Op { union' = R.PromisedAnswer'Op'noop }:ops) =
     unmarshalOps ops
-unmarshalOps (R.PromisedAnswer'Op'getPointerField i:ops) =
+unmarshalOps (R.PromisedAnswer'Op { union' = R.PromisedAnswer'Op'getPointerField i }:ops) =
     (i:) <$> unmarshalOps ops
-unmarshalOps (R.PromisedAnswer'Op'unknown' tag:_) =
+unmarshalOps (R.PromisedAnswer'Op { union' = R.PromisedAnswer'Op'unknown' tag }:_) =
     throwM $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
 
 
@@ -1165,41 +1164,41 @@ coordinator conn@Conn{debugMode} = forever $ atomically $ do
     flip catchSTM (throwSTM . makeAbortExn debugMode) $ do
         capnpMsg <- readTBQueue recvQ
         evalLimitT defaultLimit $ do
-            root <- UntypedRaw.rootPtr capnpMsg >>= fromStruct
-            msg' <- RawRpc.get_Message' root
-            case msg' of
-                RawRpc.Message'abort exn ->
-                    decerialize exn >>= lift . handleAbortMsg conn
-                RawRpc.Message'unimplemented oldMsg ->
-                    decerialize oldMsg >>= lift . handleUnimplementedMsg conn
-                RawRpc.Message'bootstrap bs ->
-                    decerialize bs >>= lift . handleBootstrapMsg conn
-                RawRpc.Message'call call ->
+            rpcMsg <- msgToRaw capnpMsg
+            which <- structWhich rpcMsg
+            case which of
+                R.RW_Message'abort exn ->
+                    parse exn >>= lift . handleAbortMsg conn
+                R.RW_Message'unimplemented oldMsg ->
+                    parse oldMsg >>= lift . handleUnimplementedMsg conn
+                R.RW_Message'bootstrap bs ->
+                    parse bs >>= lift . handleBootstrapMsg conn
+                R.RW_Message'call call ->
                     handleCallMsg conn call
-                RawRpc.Message'return ret -> do
+                R.RW_Message'return ret -> do
                     ret' <- acceptReturn conn ret
                     lift $ handleReturnMsg conn ret'
-                RawRpc.Message'finish finish ->
-                    decerialize finish >>= lift . handleFinishMsg conn
-                RawRpc.Message'resolve res ->
-                    decerialize res >>= lift . handleResolveMsg conn
-                RawRpc.Message'release release ->
-                    decerialize release >>= lift . handleReleaseMsg conn
-                RawRpc.Message'disembargo disembargo ->
-                    decerialize disembargo >>= lift . handleDisembargoMsg conn
+                R.RW_Message'finish finish ->
+                    parse finish >>= lift . handleFinishMsg conn
+                R.RW_Message'resolve res ->
+                    parse res >>= lift . handleResolveMsg conn
+                R.RW_Message'release release ->
+                    parse release >>= lift . handleReleaseMsg conn
+                R.RW_Message'disembargo disembargo ->
+                    parse disembargo >>= lift . handleDisembargoMsg conn
                 _ -> do
-                    msg <- decerialize root
+                    msg <- parse rpcMsg
                     lift $ sendPureMsg conn' $ R.Message'unimplemented msg
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
 
-handleAbortMsg :: Conn -> R.Exception -> STM ()
+handleAbortMsg :: Conn -> R.Parsed R.Exception -> STM ()
 handleAbortMsg _ exn =
     throwSTM (ReceivedAbort exn)
 
-handleUnimplementedMsg :: Conn -> R.Message -> STM ()
-handleUnimplementedMsg conn msg = getLive conn >>= \conn' -> case msg of
+handleUnimplementedMsg :: Conn -> R.Parsed R.Message -> STM ()
+handleUnimplementedMsg conn (R.Message msg) = getLive conn >>= \conn' -> case msg of
     R.Message'unimplemented _ ->
         -- If the client itself doesn't handle unimplemented messages, that's
         -- weird, but ultimately their problem.
@@ -1213,7 +1212,7 @@ handleUnimplementedMsg conn msg = getLive conn >>= \conn' -> case msg of
         abortConn conn' $
             eFailed "Received unimplemented response for required message."
 
-handleBootstrapMsg :: Conn -> R.Bootstrap -> STM ()
+handleBootstrapMsg :: Conn -> R.Parsed R.Bootstrap -> STM ()
 handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> do
     ret <- case bootstrap conn' of
         Nothing ->
@@ -1228,14 +1227,15 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
             capDesc <- emitCap conn client
             content <- createPure defaultLimit $ do
                 msg <- Message.newMessage Nothing
-                cerialize msg $ Just (Untyped.PtrCap client)
+                Just . UntypedRaw.PtrCap <$> UntypedRaw.appendCap msg client
             pure Return
                 { answerId = QAId questionId
                 , releaseParamCaps = True -- Not really meaningful for bootstrap, but...
                 , union' =
                     Return'results Payload
                         { content
-                        , capTable = V.singleton (def :: R.CapDescriptor) { R.union' = capDesc }
+                        , capTable = V.singleton
+                            (def { R.union' = capDesc } :: R.Parsed R.CapDescriptor)
                         }
                 }
     M.focus
@@ -1265,14 +1265,14 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
     insertBootstrap conn' _ (Just _) =
         abortConn conn' $ eFailed "Duplicate question ID"
 
-handleCallMsg :: Conn -> RawRpc.Call 'Const -> LimitT STM ()
+handleCallMsg :: Conn -> Raw 'Const R.Call -> LimitT STM ()
 handleCallMsg conn callMsg = do
     conn'@Conn'{exports, answers} <- lift $ getLive conn
-    questionId <- RawRpc.get_Call'questionId callMsg
-    target <- RawRpc.get_Call'target callMsg >>= decerialize
-    interfaceId <- RawRpc.get_Call'interfaceId callMsg
-    methodId <- RawRpc.get_Call'methodId callMsg
-    payload <- RawRpc.get_Call'params callMsg
+    questionId <- parseField #questionId callMsg
+    R.MessageTarget target <- parseField #target callMsg
+    interfaceId <- parseField #interfaceId callMsg
+    methodId <- parseField #methodId callMsg
+    payload <- readField #params callMsg
 
     Payload{content = callParams, capTable} <- acceptPayload conn payload
 
@@ -1358,7 +1358,7 @@ ptrPathClient :: MonadThrow m => [Word16] -> RawMPtr -> m Client
 ptrPathClient is ptr =
     evalLimitT defaultLimit $ followPtrs is ptr >>= ptrClient
 
-transformClient :: V.Vector R.PromisedAnswer'Op -> RawMPtr -> Conn' -> STM Client
+transformClient :: V.Vector (R.Parsed R.PromisedAnswer'Op) -> RawMPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
     (unmarshalOps (V.toList transform) >>= flip ptrPathClient ptr)
         `catchSTM` abortConn conn
@@ -1391,20 +1391,17 @@ sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{co
         msg <- case mcontent of
             Just v  -> pure $ UntypedRaw.message v
             Nothing -> Message.newMessage Nothing
-        mcapTable <- cerialize msg capTable
-        payload <- new msg
-        RawRpc.set_Payload'content payload mcontent
-        RawRpc.set_Payload'capTable payload mcapTable
-        call <- new msg
-        RawRpc.set_Call'params call payload
-        RawRpc.set_Call'questionId call (qaWord questionId)
-        RawRpc.set_Call'interfaceId call interfaceId
-        RawRpc.set_Call'methodId call methodId
-        tgt <- cerialize msg $ marshalMsgTarget target
-        RawRpc.set_Call'target call tgt
-        rpcMsg <- new msg
-        RawRpc.set_Message'call rpcMsg call
-        UntypedRaw.setRoot (toStruct rpcMsg)
+        payload <- new @R.Payload () msg
+        payload & setField #content (Raw mcontent)
+        payload & encodeField #capTable capTable
+        call <- new @R.Call () msg
+        setField #params payload call
+        call & encodeField #questionId (qaWord questionId)
+        call & encodeField #interfaceId interfaceId
+        call & encodeField #methodId methodId
+        call & encodeField #target (marshalMsgTarget target)
+        rpcMsg <- newRoot @R.Message () msg
+        setVariant #call rpcMsg call
         pure msg
     )
 
@@ -1416,17 +1413,15 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             msg <- case mcontent of
                 Just v  -> pure $ UntypedRaw.message v
                 Nothing -> Message.newMessage Nothing
-            mcapTable <- cerialize msg capTable
-            payload <- new msg
-            RawRpc.set_Payload'content payload mcontent
-            RawRpc.set_Payload'capTable payload mcapTable
-            ret <- new msg
-            RawRpc.set_Return'results ret payload
-            RawRpc.set_Return'answerId ret (qaWord answerId)
-            RawRpc.set_Return'releaseParamCaps ret releaseParamCaps
-            rpcMsg <- new msg
-            RawRpc.set_Message'return rpcMsg ret
-            UntypedRaw.setRoot (toStruct rpcMsg)
+            payload <- new @R.Payload () msg
+            payload & setField #content (Raw mcontent)
+            payload & encodeField #capTable capTable
+            ret <- new @R.Return () msg
+            setVariant #results ret payload
+            ret & encodeField #answerId (qaWord answerId)
+            ret & encodeField #releaseParamCaps releaseParamCaps
+            rpcMsg <- newRoot @R.Message () msg
+            setVariant #return rpcMsg ret
             pure msg
         )
     Return'exception exn ->
@@ -1459,35 +1454,34 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             msg <- case mptr of
                 Just v  -> pure $ UntypedRaw.message v
                 Nothing -> Message.newMessage Nothing
-            ret <- new msg
-            RawRpc.set_Return'answerId ret (qaWord answerId)
-            RawRpc.set_Return'releaseParamCaps ret releaseParamCaps
-            RawRpc.set_Return'acceptFromThirdParty ret mptr
-            rpcMsg <- new msg
-            RawRpc.set_Message'return rpcMsg ret
-            UntypedRaw.setRoot (toStruct rpcMsg)
+            ret <- new @R.Return () msg
+            ret & encodeField #answerId (qaWord answerId)
+            ret & encodeField #releaseParamCaps releaseParamCaps
+            setVariant #acceptFromThirdParty ret (Raw @_ @(Maybe B.AnyPointer) mptr)
+            rpcMsg <- newRoot @R.Message () msg
+            setVariant #return rpcMsg ret
             pure msg
         )
 
-acceptReturn :: Conn -> RawRpc.Return 'Const -> LimitT STM Return
+acceptReturn :: Conn -> Raw 'Const R.Return -> LimitT STM Return
 acceptReturn conn ret = do
-    answerId <- QAId <$> RawRpc.get_Return'answerId ret
-    releaseParamCaps <- RawRpc.get_Return'releaseParamCaps ret
-    ret' <- RawRpc.get_Return' ret
-    union' <- case ret' of
-        RawRpc.Return'results payload ->
+    let answerId = QAId (getField #answerId ret)
+        releaseParamCaps = getField #releaseParamCaps ret
+    which <- structWhich ret
+    union' <- case which of
+        R.RW_Return'results payload ->
             Return'results <$> acceptPayload conn payload
-        RawRpc.Return'exception exn ->
-            Return'exception <$> decerialize exn
-        RawRpc.Return'canceled ->
+        R.RW_Return'exception exn ->
+            Return'exception <$> parse exn
+        R.RW_Return'canceled _ ->
             pure Return'canceled
-        RawRpc.Return'resultsSentElsewhere ->
+        R.RW_Return'resultsSentElsewhere _ ->
             pure Return'resultsSentElsewhere
-        RawRpc.Return'takeFromOtherQuestion id ->
-            pure $ Return'takeFromOtherQuestion (QAId id)
-        RawRpc.Return'acceptFromThirdParty ptr ->
+        R.RW_Return'takeFromOtherQuestion id ->
+            Return'takeFromOtherQuestion . QAId <$> parse id
+        R.RW_Return'acceptFromThirdParty (Raw ptr) ->
             pure $ Return'acceptFromThirdParty ptr
-        RawRpc.Return'unknown' ordinal ->
+        R.RW_Return'unknown' ordinal ->
             lift $ throwSTM $ eFailed $ "Unknown return variant #" <> fromString (show ordinal)
     pure Return { answerId, releaseParamCaps, union' }
 
@@ -1495,11 +1489,11 @@ handleReturnMsg :: Conn -> Return -> STM ()
 handleReturnMsg conn ret = getLive conn >>= \conn'@Conn'{questions} ->
     updateQAReturn conn' questions "question" ret
 
-handleFinishMsg :: Conn -> R.Finish -> STM ()
+handleFinishMsg :: Conn -> R.Parsed R.Finish -> STM ()
 handleFinishMsg conn finish = getLive conn >>= \conn'@Conn'{answers} ->
     updateQAFinish conn' answers "answer" finish
 
-handleResolveMsg :: Conn -> R.Resolve -> STM ()
+handleResolveMsg :: Conn -> R.Parsed R.Resolve -> STM ()
 handleResolveMsg conn R.Resolve{promiseId, union'} =
     getLive conn >>= \conn'@Conn'{imports} -> do
         entry <- M.lookup (IEId promiseId) imports
@@ -1539,7 +1533,7 @@ handleResolveMsg conn R.Resolve{promiseId, union'} =
                             , " not understood"
                             ]
 
-handleReleaseMsg :: Conn -> R.Release -> STM ()
+handleReleaseMsg :: Conn -> R.Parsed R.Release -> STM ()
 handleReleaseMsg
         conn
         R.Release
@@ -1569,11 +1563,14 @@ releaseExport conn refCountDiff eid =
                             eid
                             exports
 
-handleDisembargoMsg :: Conn -> R.Disembargo -> STM ()
+handleDisembargoMsg :: Conn -> R.Parsed R.Disembargo -> STM ()
 handleDisembargoMsg conn d = getLive conn >>= go d
   where
     go
-        R.Disembargo { context=R.Disembargo'context'receiverLoopback (EmbargoId -> eid) }
+        R.Disembargo
+            { context = R.Disembargo'context'
+                (R.Disembargo'context'receiverLoopback (EmbargoId -> eid))
+            }
         conn'@Conn'{embargos}
         = do
             result <- M.lookup eid embargos
@@ -1586,7 +1583,10 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                     M.delete eid embargos
                     freeEmbargo conn' eid
     go
-        R.Disembargo{ target, context=R.Disembargo'context'senderLoopback embargoId }
+        R.Disembargo
+            { target = R.MessageTarget target
+            , context = R.Disembargo'context' (R.Disembargo'context'senderLoopback embargoId)
+            }
         conn'@Conn'{exports, answers}
         = case target of
             R.MessageTarget'importedCap exportId ->
@@ -1622,8 +1622,10 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                 ImportRef {conn=targetConn, importId}
                     | conn == targetConn ->
                         sendPureMsg conn' $ R.Message'disembargo R.Disembargo
-                            { context = R.Disembargo'context'receiverLoopback embargoId
-                            , target = R.MessageTarget'importedCap (ieWord importId)
+                            { context = R.Disembargo'context' $
+                                R.Disembargo'context'receiverLoopback embargoId
+                            , target = R.MessageTarget $
+                                R.MessageTarget'importedCap (ieWord importId)
                             }
                 _ ->
                     abortDisembargoClient
@@ -1643,7 +1645,7 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                 ]
 -- Note [Level 3]
     go d conn' =
-        sendPureMsg conn' $ R.Message'unimplemented $ R.Message'disembargo d
+        sendPureMsg conn' $ R.Message'unimplemented $ R.Message $ R.Message'disembargo d
 
 lookupAbort
     :: (Eq k, Hashable k, Show k)
@@ -1682,13 +1684,13 @@ insertNewAbort keyTypeName conn key value =
 genSendableCapTableRaw
     :: Conn
     -> Maybe (UntypedRaw.Ptr 'Const)
-    -> STM (V.Vector R.CapDescriptor)
+    -> STM (V.Vector (R.Parsed R.CapDescriptor))
 genSendableCapTableRaw _ Nothing = pure V.empty
 genSendableCapTableRaw conn (Just ptr) =
     traverse
         (\c -> do
             union' <- emitCap conn c
-            pure (def :: R.CapDescriptor) { R.union' = union' }
+            pure (def :: R.Parsed R.CapDescriptor) { R.union' = union' }
         )
         (Message.getCapTable (UntypedRaw.message ptr))
 
@@ -1699,13 +1701,13 @@ makeOutgoingPayload conn content = do
     capTable <- genSendableCapTableRaw conn content
     pure Payload { content, capTable }
 
-sendPureMsg :: Conn' -> R.Message -> STM ()
+sendPureMsg :: Conn' -> R.Parsed (Which R.Message) -> STM ()
 sendPureMsg Conn'{sendQ} msg =
-    createPure maxBound (valueToMsg msg) >>= writeTBQueue sendQ
+    createPure maxBound (parsedToMsg (R.Message msg)) >>= writeTBQueue sendQ
 
 -- | Send a finish message, updating connection state and triggering
 -- callbacks as necessary.
-finishQuestion :: Conn' -> R.Finish -> STM ()
+finishQuestion :: Conn' -> R.Parsed R.Finish -> STM ()
 finishQuestion conn@Conn'{questions} finish@R.Finish{questionId} = do
     -- arrange for the question ID to be returned to the pool once
     -- the return has also been received:
@@ -1745,7 +1747,7 @@ updateQAReturn conn table tableName ret@Return{answerId} =
                 "Duplicate return message for " <> tableName <> " #"
                 <> fromString (show answerId)
 
-updateQAFinish :: Conn' -> M.Map QAId EntryQA -> Text -> R.Finish -> STM ()
+updateQAFinish :: Conn' -> M.Map QAId EntryQA -> Text -> R.Parsed R.Finish -> STM ()
 updateQAFinish conn table tableName finish@R.Finish{questionId} =
     lookupAbort tableName conn table (QAId questionId) $ \case
         NewQA{onFinish, onReturn} -> do
@@ -1798,7 +1800,7 @@ subscribeReturn tableName conn table qaId onRet =
 
 -- | Abort the connection, sending an abort message. This is only safe to call
 -- from within either the thread running the coordinator or the callback loop.
-abortConn :: Conn' -> R.Exception -> STM a
+abortConn :: Conn' -> R.Parsed R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
 
 -- | Gets the live connection state, or throws disconnected if it is not live.
@@ -1830,7 +1832,7 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
                 }
         pState <- newTVar Pending { tmpDest }
         sendPureMsg conn' $
-            R.Message'bootstrap def { R.questionId = qaWord qid }
+            R.Message'bootstrap (def { R.questionId = qaWord qid } :: R.Parsed R.Bootstrap)
         M.insert
             NewQA
                 { onReturn = SnocList.fromList
@@ -1862,7 +1864,7 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
 -- to each function.
 
 -- | Resolve a promised client to an exception. See Note [resolveClient]
-resolveClientExn :: TmpDest -> (PromiseState -> STM ()) -> R.Exception -> STM ()
+resolveClientExn :: TmpDest -> (PromiseState -> STM ()) -> R.Parsed R.Exception -> STM ()
 resolveClientExn tmpDest resolve exn = do
     case tmpDest of
         LocalDest LocalBuffer { callBuffer } -> do
@@ -1988,14 +1990,15 @@ resolveClientClient tmpDest resolve (Client client) =
 --
 -- The callback may be handed a 'Left' with a disconnected exception if
 -- the connection is dropped before the disembargo is echoed.
-disembargo :: Conn' -> MsgTarget -> (Either R.Exception () -> STM ()) -> STM ()
+disembargo :: Conn' -> MsgTarget -> (Either (R.Parsed R.Exception) () -> STM ()) -> STM ()
 disembargo conn@Conn'{embargos} tgt onEcho = do
     callback <- newCallback onEcho
     eid <- newEmbargo conn
     M.insert callback eid embargos
     sendPureMsg conn $ R.Message'disembargo R.Disembargo
         { target = marshalMsgTarget tgt
-        , context = R.Disembargo'context'senderLoopback (embargoWord eid)
+        , context = R.Disembargo'context' $
+            R.Disembargo'context'senderLoopback (embargoWord eid)
         }
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
@@ -2095,7 +2098,7 @@ addBumpExport exportId client =
 -- | Generate a CapDescriptor', which we can send to the connection's remote
 -- vat to identify client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
-emitCap :: Conn -> Client -> STM R.CapDescriptor'
+emitCap :: Conn -> Client -> STM (R.Parsed (Which R.CapDescriptor))
 emitCap _targetConn (Client Nothing) =
     pure R.CapDescriptor'none
 emitCap targetConn (Client (Just client')) = case client' of
@@ -2120,17 +2123,17 @@ emitCap targetConn (Client (Just client')) = case client' of
   where
     newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
 
-acceptPayload :: Conn -> RawRpc.Payload 'Const -> LimitT STM Payload
+acceptPayload :: Conn -> Raw 'Const R.Payload -> LimitT STM Payload
 acceptPayload conn payload = do
-    capTable <- RawRpc.get_Payload'capTable payload >>= decerialize
+    capTable <- parseField #capTable payload
     clients <- lift $ traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capTable
-    content <- RawRpc.get_Payload'content payload >>=
-        traverse (UntypedRaw.tMsg (pure . Message.withCapTable clients))
+    Raw rawContent <- readField #content payload
+    content <- traverse (UntypedRaw.tMsg (pure . Message.withCapTable clients)) rawContent
     pure Payload {content, capTable}
 
 -- | 'acceptCap' is a dual of 'emitCap'; it derives a Client from a CapDescriptor'
 -- received via the connection. May update connection state as necessary.
-acceptCap :: Conn -> R.CapDescriptor' -> STM Client
+acceptCap :: Conn -> R.Parsed (Which R.CapDescriptor) -> STM Client
 acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
   where
     go _ R.CapDescriptor'none = pure (Client Nothing)

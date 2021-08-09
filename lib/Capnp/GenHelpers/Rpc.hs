@@ -26,6 +26,8 @@ import qualified Capnp.Rpc.Promise     as Promise
 import qualified Capnp.Rpc.Untyped     as Rpc
 import qualified Capnp.Untyped         as U
 
+import Capnp.Gen.Capnp.Rpc.New as Gen
+
 handleMethod server method paramContent fulfiller = do
     ret <- tryAny $ do
         content <- evalLimitT maxBound $
@@ -41,8 +43,8 @@ handleMethod server method paramContent fulfiller = do
                     Promise.breakPromise fulfiller exn
                 Nothing ->
                     Promise.breakPromise fulfiller def
-                        { Rpc.type_ = Rpc.Exception'Type'failed
-                        , Rpc.reason = "Method threw an unhandled exception."
+                        { type_ = Gen.Exception'Type'failed
+                        , reason = "Method threw an unhandled exception."
                         }
 
 -- | A valid implementation of 'fromPtr' for any type that implements 'IsClient'.
