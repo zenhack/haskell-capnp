@@ -30,7 +30,7 @@ import qualified Capnp.Untyped       as U
 import           Control.Monad       (when)
 import           Control.Monad.Catch (throwM)
 import qualified Data.ByteString     as BS
-import           Data.Foldable       (for_)
+import           Data.Foldable       (foldl', for_)
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
 import qualified Data.Vector         as V
@@ -123,8 +123,8 @@ instance C.AllocateList AnyStruct where
 instance C.EstimateListAlloc AnyStruct (C.Parsed AnyStruct) where
     estimateListAlloc structs =
         let len = V.length structs
-            nWords = maximum $ map (V.length . structData) $ V.toList structs
-            nPtrs = maximum $ map (V.length . structPtrs) $ V.toList structs
+            nWords = foldl' max 0 $ map (V.length . structData) $ V.toList structs
+            nPtrs  = foldl' max 0 $ map (V.length . structPtrs) $ V.toList structs
         in
         (len, (fromIntegral nWords, fromIntegral nPtrs))
 
