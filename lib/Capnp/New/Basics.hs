@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE EmptyDataDeriving     #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -34,6 +35,7 @@ import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
 import qualified Data.Vector         as V
 import           Data.Word
+import           GHC.Generics        (Generic)
 import           GHC.Prim            (coerce)
 
 -- | The Cap'n Proto @Text@ type.
@@ -66,7 +68,7 @@ data instance C.Parsed AnyPointer
     = PtrStruct (C.Parsed AnyStruct)
     | PtrList (C.Parsed AnyList)
     | PtrCap M.Client
-    deriving(Show, Eq)
+    deriving(Show, Eq, Generic)
 
 instance C.Parse (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer)) where
     parse (R.Raw ptr) = case ptr of
@@ -104,7 +106,7 @@ data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
     , structPtrs :: V.Vector (Maybe (C.Parsed AnyPointer))
     }
-    deriving(Show, Eq)
+    deriving(Show, Eq, Generic)
 
 instance C.Parse AnyStruct (C.Parsed AnyStruct) where
     parse (R.Raw s) = Struct
@@ -153,7 +155,7 @@ data instance C.Parsed AnyList
     | List16 (ParsedList Word16)
     | List32 (ParsedList Word32)
     | List64 (ParsedList Word64)
-    deriving(Show, Eq)
+    deriving(Show, Eq, Generic)
 
 instance C.Parse AnyList (C.Parsed AnyList) where
     parse (R.Raw list) = case list of
