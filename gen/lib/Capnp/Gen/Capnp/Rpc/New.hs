@@ -1332,7 +1332,9 @@ data Exception'Type
     | Exception'Type'disconnected 
     | Exception'Type'unimplemented 
     | Exception'Type'unknown' Std_.Word16
-    deriving(Std_.Eq,Std_.Show)
+    deriving(Std_.Eq
+            ,Std_.Show
+            ,Generics.Generic)
 type instance (R.ReprFor Exception'Type) = (R.Data R.Sz16)
 instance (C.HasTypeId Exception'Type) where
     typeId  = 12865824133959433560

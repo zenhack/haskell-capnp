@@ -2081,7 +2081,9 @@ data ElementSize
     | ElementSize'pointer 
     | ElementSize'inlineComposite 
     | ElementSize'unknown' Std_.Word16
-    deriving(Std_.Eq,Std_.Show)
+    deriving(Std_.Eq
+            ,Std_.Show
+            ,Generics.Generic)
 type instance (R.ReprFor ElementSize) = (R.Data R.Sz16)
 instance (C.HasTypeId ElementSize) where
     typeId  = 15102134695616452902

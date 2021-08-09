@@ -113,7 +113,7 @@ declToDecls thisMod decl =
                         _ -> []
                 , derives =
                     case extraTypeInfo of
-                        Just New.EnumTypeInfo {} -> [ "Std_.Eq", "Std_.Show" ]
+                        Just New.EnumTypeInfo {} -> [ "Std_.Eq", "Std_.Show", "Generics.Generic" ]
                         _                        -> []
                 , dataNewtype = False
                 , dataInstance = False
