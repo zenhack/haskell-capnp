@@ -4,8 +4,8 @@ Description: Instances of Arbitrary for various types.
 
 In particular, stuff from:
 
-* "Capnp.Untyped.Pure"
-* "Capnp.Gen.Capnp.Schema.Pure"
+* "Capnp.New.Basics"
+* "Capnp.Gen.Capnp.Schema.New"
 -}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances     #-}
