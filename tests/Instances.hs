@@ -388,8 +388,8 @@ arbitrarySmallerVec = sized $ \size -> do
 instance Arbitrary (Parsed B.AnyStruct) where
     shrink = genericShrink
     arbitrary = sized $ \_ -> B.Struct
-        <$> arbitrary
-        <*> arbitrary
+        <$> arbitrarySmallerVec
+        <*> arbitrarySmallerVec
 
 instance Arbitrary (Parsed B.AnyList) where
     shrink = genericShrink
