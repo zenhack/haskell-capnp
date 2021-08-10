@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE EmptyDataDeriving     #-}
@@ -123,8 +124,8 @@ instance C.AllocateList AnyStruct where
 instance C.EstimateListAlloc AnyStruct (C.Parsed AnyStruct) where
     estimateListAlloc structs =
         let len = V.length structs
-            nWords = foldl' max 0 $ map (V.length . structData) $ V.toList structs
-            nPtrs  = foldl' max 0 $ map (V.length . structPtrs) $ V.toList structs
+            !nWords = foldl' max 0 $ map (V.length . structData) $ V.toList structs
+            !nPtrs  = foldl' max 0 $ map (V.length . structPtrs) $ V.toList structs
         in
         (len, (fromIntegral nWords, fromIntegral nPtrs))
 
