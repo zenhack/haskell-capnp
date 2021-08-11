@@ -2,8 +2,10 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# OPTIONS_GHC -Wno-error=missing-methods #-}
 module Module.Capnp.Rpc (rpcTests) where
@@ -18,7 +20,9 @@ import Control.Monad            (replicateM, void, (>=>))
 import Control.Monad.Catch      (throwM)
 import Control.Monad.IO.Class   (liftIO)
 import Data.Foldable            (for_)
+import Data.Function            ((&))
 import Data.Mutable             (freeze)
+import Data.Traversable         (for)
 import System.Timeout           (timeout)
 
 import qualified Data.ByteString.Builder as BB
@@ -28,24 +32,35 @@ import qualified Supervisors
 
 import Capnp.Bits       (WordCount)
 import Capnp.New
-    ( Which
+    ( Client
+    , IsCap
+    , Parse(..)
+    , Pipeline
+    , SomeServer
+    , TypeParam
+    , Which
+    , callP
+    , callR
     , createPure
     , def
     , defaultLimit
     , evalLimitT
+    , export
+    , handleParsed
     , lbsToMsg
     , msgToParsed
     , parsedToMsg
+    , waitPipeline
     )
 import Capnp.Rpc.Errors (eFailed)
 
-import Capnp.Gen.Aircraft.Pure hiding (Left, Right)
+import Capnp.Gen.Aircraft.New  hiding (Left, Right)
 import Capnp.Gen.Capnp.Rpc.New
-import Capnp.Rpc
-import Capnp.Rpc.Untyped
+import Capnp.Rpc               hiding (Client)
+import Capnp.Rpc.Untyped       hiding (Client, Pipeline, export, waitPipeline)
 
-import qualified Capnp.Gen.Echo.Pure as E
-import qualified Capnp.Pointer       as P
+import qualified Capnp.Gen.Echo.New as E
+import qualified Capnp.Pointer      as P
 
 rpcTests :: Spec
 rpcTests = do
@@ -60,13 +75,16 @@ rpcTests = do
 echoTests :: Spec
 echoTests = describe "Echo server & client" $
     it "Should echo back the same message." $ runVatPair
-        (`E.export_Echo` TestEchoServer)
+        (\sup -> export @E.Echo sup TestEchoServer)
         (\_sup echoSrv -> do
                 let msgs =
                         [ def { E.query = "Hello #1" }
                         , def { E.query = "Hello #2" }
                         ]
-                rets <- traverse ((E.echo'echo echoSrv ?) >=> wait) msgs
+                rets <- for msgs $ \arg -> echoSrv
+                    & callP #echo arg
+                    >>= waitPipeline
+                    >>= evalLimitT defaultLimit . parse
                 liftIO $ rets `shouldBe`
                     [ def { E.reply = "Hello #1" }
                     , def { E.reply = "Hello #2" }
@@ -75,9 +93,9 @@ echoTests = describe "Echo server & client" $
 
 data TestEchoServer = TestEchoServer
 
-instance Server IO TestEchoServer
-instance E.Echo'server_ IO TestEchoServer where
-    echo'echo = pureHandler $ \_ params -> pure def { E.reply = E.query params }
+instance SomeServer TestEchoServer
+instance E.Echo'server_ TestEchoServer where
+    echo'echo _ = handleParsed $ \params -> pure def { E.reply = E.query params }
 
 -------------------------------------------------------------------------------
 -- Tests using aircraft.capnp.
@@ -86,12 +104,14 @@ instance E.Echo'server_ IO TestEchoServer where
 -------------------------------------------------------------------------------
 
 -- | Bump a counter n times, returning a list of the results.
-bumpN :: CallSequence -> Int -> IO [CallSequence'getNumber'results]
-bumpN ctr n = bumpNPromise ctr n >>= traverse wait
+bumpN :: Client CallSequence -> Int -> IO [Parsed CallSequence'getNumber'results]
+bumpN ctr n = bumpNPipeline ctr n
+    >>= traverse waitPipeline
+    >>= traverse (evalLimitT defaultLimit . parse)
 
--- | Like 'bumpN', but doesn't wait for the results -- returns a list of promises.
-bumpNPromise :: CallSequence -> Int -> IO [Promise CallSequence'getNumber'results]
-bumpNPromise ctr n = replicateM n (callSequence'getNumber ctr ? def)
+-- | Like 'bumpN', but doesn't wait for the results -- returns a list of pipelines.
+bumpNPipeline :: Client CallSequence -> Int -> IO [Pipeline CallSequence'getNumber'results]
+bumpNPipeline ctr n = replicateM n (ctr & callR #getNumber def)
 
 aircraftTests :: Spec
 aircraftTests = describe "aircraft.capnp rpc tests" $ do
@@ -99,12 +119,13 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         it "Should preserve E-order" $
             Supervisors.withSupervisor $ \sup -> do
                 (pc, f) <- newPromiseClient
-                firsts <- bumpNPromise pc 2
+                firsts <- bumpNPipeline pc 2
                 atomically (newTestCtr 0)
-                    >>= export_CallSequence sup
+                    >>= export @CallSequence sup
                     >>= fulfill f
                 nexts <- bumpN pc 2
-                firstsResolved <- traverse wait firsts
+                firstsResolved <- for firsts $
+                    waitPipeline >=> evalLimitT defaultLimit . parse
                 firstsResolved `shouldBe`
                     [ def { n = 1 }
                     , def { n = 2 }
@@ -114,43 +135,43 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                     , def { n = 4 }
                     ]
     it "Should propogate server-side exceptions to client method calls" $ runVatPair
-        (`export_CallSequence` ExnCtrServer)
+        (\sup -> export @CallSequence sup ExnCtrServer)
         (\_sup -> expectException
-            (\cap -> callSequence'getNumber cap ? def)
+            (callR #getNumber def)
             def
                 { type_ = Exception'Type'failed
                 , reason = "Something went sideways."
                 }
         )
     it "Should receive unimplemented when calling a method on a null cap." $ runVatPair
-        (\_sup -> pure $ CallSequence nullClient)
+        (\_sup -> pure (fromClient nullClient :: Client CallSequence))
         (\_sup -> expectException
-            (\cap -> callSequence'getNumber cap ? def)
+            (callR #getNumber def)
             def
                 { type_ = Exception'Type'unimplemented
                 , reason = "Method unimplemented"
                 }
         )
     it "Should throw an unimplemented exception if the server doesn't implement a method" $ runVatPair
-        (`export_CallSequence` NoImplServer)
+        (\sup -> export @CallSequence sup NoImplServer)
         (\_sup -> expectException
-            (\cap -> callSequence'getNumber cap ? def)
+            (callR #getNumber def)
             def
                 { type_ = Exception'Type'unimplemented
                 , reason = "Method unimplemented"
                 }
         )
     it "Should throw an opaque exception when the server throws a non-rpc exception" $ runVatPair
-        (`export_CallSequence` NonRpcExnServer)
+        (\sup -> export @CallSequence sup NonRpcExnServer)
         (\_sup -> expectException
-            (\cap -> callSequence'getNumber cap ? def)
+            (callR #getNumber def)
             def
                 { type_ = Exception'Type'failed
                 , reason = "Unhandled exception"
                 }
         )
     it "A counter should maintain state" $ runVatPair
-        (\sup -> newTestCtr 0 >>= export_CallSequence sup)
+        (\sup -> newTestCtr 0 >>= export @CallSequence sup)
         (\_sup ctr -> do
             results <- bumpN ctr 4
             liftIO $ results `shouldBe`
@@ -161,12 +182,13 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
                 ]
         )
     it "Methods returning interfaces work" $ runVatPair
-        (\sup -> export_CounterFactory sup (TestCtrFactory sup))
+        (\sup -> export @CounterFactory sup (TestCtrFactory sup))
         (\_sup factory -> do
             let newCounter start = do
                     CounterFactory'newCounter'results{counter} <-
-                        counterFactory'newCounter factory ? def { start }
-                        >>= wait
+                        factory & callP #newCounter def { start }
+                        >>= waitPipeline
+                        >>= evalLimitT defaultLimit . parse
                     pure counter
 
             ctrA <- newCounter 2
@@ -203,12 +225,13 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
         ctrB <- atomically $ newTestCtr 0
         ctrC <- atomically $ newTestCtr 30
         runVatPair
-            (`export_CounterAcceptor` TestCtrAcceptor)
+            (\sup -> export @CounterAcceptor sup TestCtrAcceptor)
             (\sup acceptor -> do
                 for_ [ctrA, ctrB, ctrC] $ \ctrSrv -> do
-                    ctr <- atomically $ export_CallSequence sup ctrSrv
-                    counterAcceptor'accept acceptor ? CounterAcceptor'accept'params { counter = ctr }
-                        >>= wait
+                    ctr <- atomically $ export @CallSequence sup ctrSrv
+                    acceptor
+                        & callP #accept CounterAcceptor'accept'params { counter = ctr }
+                        >>= waitPipeline @CounterAcceptor'accept'results
                 r <- traverse
                     (\(TestCtrServer var) -> liftIO $ readTVarIO var)
                     [ctrA, ctrB, ctrC]
@@ -217,10 +240,10 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
 
 data TestCtrAcceptor = TestCtrAcceptor
 
-instance Server IO TestCtrAcceptor
-instance CounterAcceptor'server_ IO TestCtrAcceptor where
-    counterAcceptor'accept =
-        pureHandler $ \_ CounterAcceptor'accept'params{counter} -> do
+instance SomeServer TestCtrAcceptor
+instance CounterAcceptor'server_ TestCtrAcceptor where
+    counterAcceptor'accept _ =
+        handleParsed $ \CounterAcceptor'accept'params{counter} -> do
             [start] <- map n <$> bumpN counter 1
             r <- bumpN counter 4
             liftIO $ r `shouldBe`
@@ -237,11 +260,11 @@ instance CounterAcceptor'server_ IO TestCtrAcceptor where
 
 newtype TestCtrFactory = TestCtrFactory { sup :: Supervisor }
 
-instance Server IO TestCtrFactory
-instance CounterFactory'server_ IO TestCtrFactory where
-    counterFactory'newCounter =
-        pureHandler $ \TestCtrFactory{sup} CounterFactory'newCounter'params{start} -> do
-            ctr <- atomically $ newTestCtr start >>= export_CallSequence sup
+instance SomeServer TestCtrFactory
+instance CounterFactory'server_ TestCtrFactory where
+    counterFactory'newCounter TestCtrFactory{sup} =
+        handleParsed $ \CounterFactory'newCounter'params{start} -> do
+            ctr <- atomically $ newTestCtr start >>= export @CallSequence sup
             pure CounterFactory'newCounter'results { counter = ctr }
 
 newTestCtr :: Word32 -> STM TestCtrServer
@@ -249,20 +272,21 @@ newTestCtr n = TestCtrServer <$> newTVar n
 
 newtype TestCtrServer = TestCtrServer (TVar Word32)
 
-instance Server IO TestCtrServer
-instance CallSequence'server_ IO TestCtrServer  where
-    callSequence'getNumber = pureHandler $ \(TestCtrServer tvar) _ -> do
-        ret <- liftIO $ atomically $ do
-            modifyTVar' tvar (+1)
-            readTVar tvar
-        pure def { n = ret }
+instance SomeServer TestCtrServer
+instance CallSequence'server_ TestCtrServer  where
+    callSequence'getNumber (TestCtrServer tvar) =
+        handleParsed $ \_ -> do
+            ret <- liftIO $ atomically $ do
+                modifyTVar' tvar (+1)
+                readTVar tvar
+            pure def { n = ret }
 
 -- a 'CallSequence' which always throws an exception.
 data ExnCtrServer = ExnCtrServer
 
-instance Server IO ExnCtrServer
-instance CallSequence'server_ IO ExnCtrServer where
-    callSequence'getNumber = pureHandler $ \_ _ ->
+instance SomeServer ExnCtrServer
+instance CallSequence'server_ ExnCtrServer where
+    callSequence'getNumber _ = handleParsed $ \_ ->
         throwM def
             { type_ = Exception'Type'failed
             , reason = "Something went sideways."
@@ -271,15 +295,15 @@ instance CallSequence'server_ IO ExnCtrServer where
 -- a 'CallSequence' which doesn't implement its methods.
 data NoImplServer = NoImplServer
 
-instance Server IO NoImplServer
-instance CallSequence'server_ IO NoImplServer -- TODO: can we silence the warning somehow?
+instance SomeServer NoImplServer
+instance CallSequence'server_ NoImplServer -- TODO: can we silence the warning somehow?
 
 -- Server that throws some non-rpc exception.
 data NonRpcExnServer = NonRpcExnServer
 
-instance Server IO NonRpcExnServer
-instance CallSequence'server_ IO NonRpcExnServer where
-    callSequence'getNumber = pureHandler $ \_ _ -> error "OOPS"
+instance SomeServer NonRpcExnServer
+instance CallSequence'server_ NonRpcExnServer where
+    callSequence'getNumber _ = handleParsed $ \_ -> error "OOPS"
 
 -------------------------------------------------------------------------------
 -- Tests for unusual patterns of messages .
@@ -365,8 +389,8 @@ unusualTests = describe "Tests for unusual message patterns" $ do
                         handleConn (vatTrans defaultLimit) def
                             { debugMode = True
                             , withBootstrap = Just $ \_sup client ->
-                                let ctr :: CallSequence = fromClient client
-                                in void $ (callSequence'getNumber ctr ? def) >>= wait
+                                let ctr :: Client CallSequence = fromClient client
+                                in void $ (ctr & callR #getNumber def) >>= waitPipeline
                             }
                     e `shouldBe` SentAbort wantExn
                 )
@@ -461,11 +485,14 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
             }
     race_ runServer runClient
 
-expectException :: Show a => (cap -> IO (Promise a)) -> Parsed Exception -> cap -> IO ()
+expectException
+    :: (IsCap c, TypeParam a, Parse a pa, Show pa)
+    => (Client c -> IO (Pipeline a)) -> Parsed Exception -> Client c -> IO ()
 expectException callFn wantExn cap = do
-    ret <- try $ callFn cap >>= wait
+    ret <- try $ callFn cap >>= waitPipeline
     case ret of
         Left (e :: Parsed Exception) ->
             liftIO $ e `shouldBe` wantExn
-        Right val ->
-            error $ "Should have received exn, but got " ++ show val
+        Right val -> do
+            parsed <- evalLimitT defaultLimit (parse val)
+            error $ "Should have received exn, but got " ++ show parsed
