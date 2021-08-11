@@ -10,10 +10,8 @@ import Control.Monad.Primitive (RealWorld)
 import Data.Foldable           (traverse_)
 import Data.Function           ((&))
 
-import           Capnp.Gen.Capnp.Schema
 import qualified Capnp.Gen.Capnp.Schema.New as N
 
-import Capnp                (newRoot)
 import Capnp.New            (encodeField, encodeVariant, initVariant, readField)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
 import Data.Mutable         (Thaw(..))
@@ -31,23 +29,6 @@ data BuildTest = BuildTest
 schemaTests :: Spec
 schemaTests = describe "tests for typed setters" $ traverse_ testCase
     [ BuildTest
-        { typeName = "Field"
-        , expected = concat
-            [ "( codeOrder = 4,\n"
-            , "  discriminantValue = 6,\n"
-            , "  group = (typeId = 322),\n"
-            , "  ordinal = (explicit = 22) )\n"
-            ]
-        , builder = \msg -> do
-            field <- newRoot msg
-            set_Field'codeOrder field 4
-            set_Field'discriminantValue field 6
-            group <- set_Field'group field
-            set_Field'group'typeId group 322
-            ordinal <- get_Field'ordinal field
-            set_Field'ordinal'explicit ordinal 22
-        }
-    , BuildTest -- same test, but with the repr API.
         { typeName = "Field"
         , expected = concat
             [ "( codeOrder = 4,\n"
