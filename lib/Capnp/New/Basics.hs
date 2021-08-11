@@ -31,6 +31,7 @@ import qualified Capnp.Untyped       as U
 import           Control.Monad       (when)
 import           Control.Monad.Catch (throwM)
 import qualified Data.ByteString     as BS
+import           Data.Default        (Default(..))
 import           Data.Foldable       (foldl', for_)
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
@@ -107,7 +108,23 @@ data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
     , structPtrs :: V.Vector (Maybe (C.Parsed AnyPointer))
     }
-    deriving(Show, Eq, Generic)
+    deriving(Show, Generic)
+
+instance Eq (C.Parsed AnyStruct) where
+    -- We define equality specially (rather than just deriving), such that
+    -- slices are padded out with the default values of their elements.
+    (Struct dl pl) == (Struct dr pr) = sectionEq dl dr && sectionEq pl pr
+      where
+        sectionEq :: (Eq a, Default a) => V.Vector a -> V.Vector a -> Bool
+        sectionEq l r = go 0
+          where
+            go i
+                | i >= length = True
+                | otherwise  = indexDef i l == indexDef i r && go (i+1)
+            length = max (V.length l) (V.length r)
+            indexDef i vec
+                | i < V.length vec = vec V.! i
+                | otherwise = def
 
 instance C.Parse AnyStruct (C.Parsed AnyStruct) where
     parse (R.Raw s) = Struct
