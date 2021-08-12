@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedLabels    #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 -- | This module defines a test that tries to walk over the
 -- CodeGeneratorRequest in `tests/data/schema-codegenreq`,
 -- failing if any of the data is not as expected.
@@ -15,18 +17,17 @@ import Test.Hspec
 
 import Control.Monad             (when)
 import Control.Monad.Trans.Class (lift)
+import Data.Function             ((&))
 
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
 
-import Capnp.Untyped hiding (index, length)
+import Capnp.New
+    (Raw, bsToRaw, hasField, index, length, parseField, readField, textBytes)
+import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 
-import Capnp.Basics         (index, length, textBytes)
-import Capnp.Classes        (fromStruct)
-import Capnp.TraversalLimit (LimitT, execLimitT)
-
-import qualified Capnp.Gen.Capnp.Schema as Schema
-import qualified Capnp.Message          as M
+import qualified Capnp.Gen.Capnp.Schema.New as Schema
+import qualified Capnp.Message              as M
 
 nodeNames :: V.Vector BS.ByteString
 nodeNames = V.fromList
@@ -51,40 +52,39 @@ walkSchemaCodeGenRequestTest =
             -- It would be nice if we could mark off individual checks for
             -- hspec's reporting somehow.
             bytes <- BS.readFile "tests/data/schema-codegenreq"
-            msg <- M.decode bytes
-            endQuota <- execLimitT 4096 (rootPtr msg >>= reader)
-            endQuota `shouldBe` 3372
+            root <- evalLimitT maxBound (bsToRaw bytes)
+            endQuota <- execLimitT 4096 (reader root)
+            endQuota `shouldBe` 3374
   where
-    reader :: Struct 'M.Const -> LimitT IO ()
-    reader root = do
-        req :: Schema.CodeGeneratorRequest 'M.Const <- fromStruct root
-        nodes <- Schema.get_CodeGeneratorRequest'nodes req
-        requestedFiles <- Schema.get_CodeGeneratorRequest'requestedFiles req
+    reader :: Raw 'M.Const Schema.CodeGeneratorRequest -> LimitT IO ()
+    reader req = do
+        nodes <- req & readField #nodes
+        requestedFiles <- req & readField #requestedFiles
         lift $ length nodes `shouldBe` 37
         lift $ length requestedFiles `shouldBe` 1
         mapM_ (walkNode nodes) [0,1..36]
     walkNode nodes i = do
         node <- index i nodes
         -- None of the nodes in the schema have parameters:
-        False <- Schema.has_Node'parameters node
+        False <- node & hasField #parameters
         -- And none of them are generic:
-        False <- Schema.get_Node'isGeneric node
+        False <- node & parseField #isGeneric
 
-        nameList <- Schema.get_Node'displayName node
+        nameList <- node & readField #displayName
         name <- textBytes nameList
-        prefixLen <- Schema.get_Node'displayNamePrefixLength node
+        prefixLen <- parseField #displayNamePrefixLength node
         let baseName = BS.drop (fromIntegral prefixLen) name
 
         when (i < V.length nodeNames && baseName /= (nodeNames V.! i)) $
             error "Incorrect name."
 
-        has <- Schema.has_Node'annotations node
+        has <- node & hasField #annotations
 
         -- there are two annotations in all of the nodes, at these indicies:
         case (has, i `elem` [4, 9]) of
             (False, False) -> return ()
             (True, True) -> do
-                1 <- length <$> Schema.get_Node'annotations node
+                1 <- length <$> readField #annotations node
                 return ()
             (False, True) ->
                 error $ "Node at index " ++ show i ++ " should have had" ++
