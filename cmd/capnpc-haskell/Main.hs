@@ -19,12 +19,8 @@ import qualified IR.Flat             as Flat
 import qualified IR.Haskell          as Haskell
 import qualified Trans.CgrToStage1
 import qualified Trans.FlatToNew
-import qualified Trans.FlatToPure
-import qualified Trans.FlatToRaw
 import qualified Trans.HaskellToText
 import qualified Trans.NewToHaskell
-import qualified Trans.PureToHaskell
-import qualified Trans.RawToHaskell
 import qualified Trans.Stage1ToFlat
 
 main :: IO ()
@@ -42,12 +38,7 @@ handleCGR cgr =
     let flat =
             Trans.Stage1ToFlat.cgrToCgr $
             Trans.CgrToStage1.cgrToCgr cgr
-        modules =
-            concatMap ($ flat)
-                [ handleFlatRaw
-                , handleFlatPure
-                , handleFlatNew
-                ]
+        modules = handleFlatNew flat
     in
     map
         (\mod ->
@@ -57,16 +48,7 @@ handleCGR cgr =
         )
         modules
 
-handleFlatPure, handleFlatRaw, handleFlatNew :: Flat.CodeGenReq -> [Haskell.Module]
-
-handleFlatPure =
-    concatMap Trans.PureToHaskell.fileToModules
-    . Trans.FlatToPure.cgrToFiles
-
-handleFlatRaw =
-    concatMap Trans.RawToHaskell.fileToModules
-    . Trans.FlatToRaw.cgrToFiles
-
+handleFlatNew :: Flat.CodeGenReq -> [Haskell.Module]
 handleFlatNew =
     concatMap Trans.NewToHaskell.fileToModules
     . Trans.FlatToNew.cgrToFiles
