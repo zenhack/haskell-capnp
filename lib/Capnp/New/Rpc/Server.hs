@@ -33,7 +33,8 @@ import qualified Capnp.New.Basics        as B
 import qualified Capnp.New.Classes       as C
 import qualified Capnp.Repr              as R
 import           Capnp.Repr.Methods      (Client(..))
-import           Capnp.Rpc.Errors        (eFailed, eMethodUnimplemented)
+import           Capnp.Rpc.Errors
+    (eFailed, eMethodUnimplemented, wrapException)
 import           Capnp.Rpc.Promise
     (Fulfiller, breakPromise, fulfill, newCallback)
 import qualified Capnp.Rpc.Server        as Legacy
@@ -185,24 +186,26 @@ handleParsed ::
     ( C.Parse p pp, R.IsStruct p
     , C.Parse r rr, R.IsStruct r
     ) => (pp -> IO rr) -> MethodHandler p r
-handleParsed handler =
-    handleRaw $ \param -> do
-        p <- evalLimitT defaultLimit $ C.parse param
-        r <- handler p
-        -- TODO: Figure out how to add an instance of Thaw for
-        -- Raw so we can skip the (un)wrapping here.
-        struct <- createPure maxBound $ R.fromRaw <$> parsedToRaw r
-        pure (R.Raw struct)
+handleParsed handler param = propagateExceptions $ \f -> do
+    p <- evalLimitT defaultLimit $ C.parse param
+    r <- handler p
+    -- TODO: Figure out how to add an instance of Thaw for
+    -- Raw so we can skip the (un)wrapping here.
+    struct <- createPure maxBound $ R.fromRaw <$> parsedToRaw r
+    fulfill f (R.Raw struct)
 
 -- | Handle a method, working with the raw (unparsed) form of
 -- parameters and results.
 handleRaw
     :: (R.IsStruct p, R.IsStruct r)
     => (R.Raw 'Const p -> IO (R.Raw 'Const r)) -> MethodHandler p r
-handleRaw handler param f = do
-    res <- handler param `withException` breakPromise f
-    fulfill f res
+handleRaw handler param = propagateExceptions $ \f ->
+    handler param >>= fulfill f
 
+-- Helper for handle*; breaks the promise if the handler throws.
+propagateExceptions :: (Fulfiller a -> IO b) -> Fulfiller a -> IO b
+propagateExceptions h f =
+    h f `withException` (breakPromise f . wrapException False)
 
 -- | 'MethodHandler' that always throws unimplemented.
 methodUnimplemented :: MethodHandler p r
