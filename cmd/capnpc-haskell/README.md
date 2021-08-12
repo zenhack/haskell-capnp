@@ -17,11 +17,7 @@ themselves, while each transition is defined in a module under `Trans/`.
 
 
 ```
-                               +---> Raw ---+
-                               |            |
-CGR ----> Stage1 ----> Flat ---+            +---> Haskell (IR) --> Haskell (source code)
-                               |            |
-                               +--> Pure ---+
+CGR ---> Stage1 ---> Flat ---> NEW ---> Haskell (IR) --> Haskell (source code)
 ```
 
 The flow is as follows:
@@ -54,21 +50,14 @@ The flow is as follows:
   * Interfaces now contain a full list of their ancestors, not just
     immediate superclasses. This is useful when genrating instance
     declarations later on.
-* Next, the pipeline splits in two; we translate the Flat IR into
-  the 'Raw' IR, which from which we derive the low-level API modules,
-  and the 'Pure' IR, from which we derive the high-level API modules.
-  Each of these forms encodes the Haskell structures to be generated,
-  rather than a declarative representation of the schema.
-  * The Raw IR contains things like:
-    * getter for this field on this type
-    * newtype wrapper for a struct with this name
-    * etc.
-  * The Pure IR contains things like:
-    * declaration for a product type with these fields
-    * an instance of 'Decerialize' for this type
-    * etc.
-* Then, we translate each of these forms into a Haskell AST, defined
-  in `IR.Haskell`. We use our own AST instead of an off-the-shelf
+* Next, we translate to the `New` IR (which should be renamed). This
+  form encodes the Haskell structures to be generated, rather than
+  a declarative representation of the schema. It contains things like:
+  * Type declaration for this capnp type
+  * An instance for 'Parse' for this type
+  * etc
+* Then, we translate this form into a Haskell AST, defined in
+  `IR.Haskell`. We use our own AST instead of an off-the-shelf
   library for a couple reasons:
   * We want to eventually insert comments from the schema into the
     code as Haddock comments, and the libraries I(zenhack) was able
@@ -92,10 +81,13 @@ The flow is as follows:
   and/or IR:
 
 * `IR.Name` and `IR.Common` are used by multiple of the IRs.
-* `Trans.ToHaskellCommon` is used by both `Trans.RawToHaskell`
-  and `Trans.PureToHaskell`.
+* `Trans.ToHaskellCommon` used to be used by multiple modules. It should
+   be folded into `Trans.NewToHaskell`.
 
-* It would make sense to rename `IR.Flat` and `IR.Stage1`; the latter is
-  not terribly descriptive, and the former reflects an out of date
-  notion of what the flat IR's purpose is (it does more than just
-  flatten the namespace).
+* The names of some of the IRs are not very good.
+  * `IR.Stage1` latter is not terribly descriptive.
+  * `IR.Flat` reflects an out of date notion of what the flat IR's
+    purpose is (it does more than just flatten the namespace).
+  * `IR.New` is an artifact of a transition from an old API that
+    was split into two generated modules. That API is gone now,
+    so we should give this a more presently useful name.
