@@ -959,13 +959,19 @@ defineInterfaceServer thisMod typeName typeParams methods supers =
         , params = map (Name.UnQ . Name.typeVarName) typeParams ++ ["s_"]
         , funDeps = []
         , decls =
-            map (defineIfaceClassMethod thisMod typeName) methods
+            Hs.CdMinimal
+                [ mkMethodName typeName methodName
+                | New.MethodInfo{methodName} <- methods
+                ]
+            : concatMap (defineIfaceClassMethod thisMod typeName) methods
         }
     ]
 defineIfaceClassMethod thisMod typeName New.MethodInfo{methodName, paramType, resultType} =
-    let mkType t = typeToType thisMod (C.CompositeType t) in
-    Hs.CdValueDecl
-        (Name.valueName (Name.mkSub typeName methodName))
+    let mkType t = typeToType thisMod (C.CompositeType t)
+        name = mkMethodName typeName methodName
+    in
+    [ Hs.CdValueDecl
+        name
         (Hs.TFn
             [ Hs.TVar "s_"
             , Hs.TApp
@@ -975,6 +981,15 @@ defineIfaceClassMethod thisMod typeName New.MethodInfo{methodName, paramType, re
                 ]
             ]
         )
+    , Hs.CdValueDef Hs.DfValue
+        { name
+        , params = [Hs.PVar "_"]
+        , value = egName ["GH"] "methodUnimplemented"
+        }
+    ]
+
+mkMethodName typeName methodName =
+    Name.valueName (Name.mkSub typeName methodName)
 
 emitMarshalField :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
 emitMarshalField name (C.HereField _) =

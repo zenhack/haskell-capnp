@@ -46,7 +46,9 @@ instance ((GH.TypeParam sturdyRef)
     type Server (Persistent sturdyRef owner) = (Persistent'server_ sturdyRef owner)
     methodHandlerTree _ s_ = (GH.MethodHandlerTree (C.typeId @((Persistent sturdyRef owner))) [(GH.toUntypedMethodHandler ((persistent'save @(sturdyRef) @(owner)) s_))] [])
 class (Persistent'server_ sturdyRef owner s_) where
+    {-# MINIMAL persistent'save #-}
     persistent'save :: s_ -> (GH.MethodHandler (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner))
+    persistent'save _ = GH.methodUnimplemented
 instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (GH.HasMethod "save" (Persistent sturdyRef owner) (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner)) where
     methodByLabel  = (GH.Method 14468694717054801553 0)
@@ -148,8 +150,11 @@ instance ((GH.TypeParam internalRef)
     methodHandlerTree _ s_ = (GH.MethodHandlerTree (C.typeId @((RealmGateway internalRef externalRef internalOwner externalOwner))) [(GH.toUntypedMethodHandler ((realmGateway'import_ @(internalRef) @(externalRef) @(internalOwner) @(externalOwner)) s_))
                                                                                                                                     ,(GH.toUntypedMethodHandler ((realmGateway'export @(internalRef) @(externalRef) @(internalOwner) @(externalOwner)) s_))] [])
 class (RealmGateway'server_ internalRef externalRef internalOwner externalOwner s_) where
+    {-# MINIMAL realmGateway'import_,realmGateway'export #-}
     realmGateway'import_ :: s_ -> (GH.MethodHandler (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults internalRef internalOwner))
+    realmGateway'import_ _ = GH.methodUnimplemented
     realmGateway'export :: s_ -> (GH.MethodHandler (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults externalRef externalOwner))
+    realmGateway'export _ = GH.methodUnimplemented
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)
