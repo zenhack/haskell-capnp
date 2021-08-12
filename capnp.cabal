@@ -130,8 +130,6 @@ library
       , Capnp.Rpc.Server
       , Capnp.Tutorial
 
-      , Capnp.GenHelpers.ReExports.Data.ByteString
-
       , Data.Mutable
 
       , Capnp.Gen

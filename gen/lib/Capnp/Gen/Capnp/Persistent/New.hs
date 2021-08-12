@@ -27,7 +27,6 @@ import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
 import qualified GHC.Generics as Generics
-import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
 import qualified Capnp.GenHelpers.New.Rpc as GH
 import qualified Prelude as Std_
 import qualified Data.Word as Std_

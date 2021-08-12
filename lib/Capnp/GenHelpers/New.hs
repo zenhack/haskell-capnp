@@ -18,6 +18,7 @@ module Capnp.GenHelpers.New
     , parseEnum
     , encodeEnum
     , getPtrConst
+    , BS.ByteString
     , module F
     , module Capnp.New.Accessors
 

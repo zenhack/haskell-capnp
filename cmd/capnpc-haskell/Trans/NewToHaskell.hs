@@ -26,7 +26,6 @@ imports =
     , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
     , Hs.ImportAs { importAs = "C", parts = ["Capnp", "New", "Classes"] }
     , Hs.ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
-    , Hs.ImportAs { importAs = "BS", parts = ["Capnp", "GenHelpers", "ReExports", "Data", "ByteString"] }
     ]
 
 -- | Modules imported by generated modules that use rpc. We separate these out to
@@ -412,7 +411,7 @@ defineConstant thisMod localName value =
                     , params = []
                     , value = Hs.EApp
                         (egName ["GH"] "getPtrConst")
-                        [Hs.ETypeAnno (Hs.EBytes (makePtrBytes v)) (tgName ["BS"] "ByteString")]
+                        [Hs.ETypeAnno (Hs.EBytes (makePtrBytes v)) (tgName ["GH"] "ByteString")]
                     }
                 }
             ]
