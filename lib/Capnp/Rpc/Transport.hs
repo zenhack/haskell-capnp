@@ -5,7 +5,8 @@ Description: Support for exchanging messages with remote vats.
 This module provides a 'Transport' type, which provides operations
 used to transmit messages between vats in the RPC protocol.
 -}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds        #-}
+{-# LANGUAGE TypeApplications #-}
 module Capnp.Rpc.Transport
     ( Transport(..)
     , handleTransport
@@ -16,13 +17,14 @@ module Capnp.Rpc.Transport
 import Network.Socket (Socket)
 import System.IO      (Handle)
 
-import Capnp.Bits       (WordCount)
-import Capnp.Convert    (msgToValue)
-import Capnp.IO         (hGetMsg, hPutMsg, sGetMsg, sPutMsg)
-import Capnp.Message    (Message, Mutability(Const))
-import Text.Show.Pretty (ppShow)
+import Capnp.Bits           (WordCount)
+import Capnp.Convert        (msgToParsed)
+import Capnp.IO             (hGetMsg, hPutMsg, sGetMsg, sPutMsg)
+import Capnp.Message        (Message, Mutability(Const))
+import Capnp.TraversalLimit (evalLimitT)
+import Text.Show.Pretty     (ppShow)
 
-import qualified Capnp.Gen.Capnp.Rpc.Pure as R
+import qualified Capnp.Gen.Capnp.Rpc.New as R
 
 -- | A @'Transport'@ handles transmitting RPC messages.
 data Transport = Transport
@@ -56,12 +58,12 @@ socketTransport socket limit = Transport
 tracingTransport :: (String -> IO ()) -> Transport -> Transport
 tracingTransport log trans = Transport
     { sendMsg = \msg -> do
-        rpcMsg <- msgToValue msg
-        log $ "sending message: " ++ ppShow (rpcMsg :: R.Message)
+        rpcMsg <- evalLimitT maxBound $ msgToParsed @R.Message msg
+        log $ "sending message: " ++ ppShow rpcMsg
         sendMsg trans msg
     , recvMsg = do
         msg <- recvMsg trans
-        rpcMsg <- msgToValue msg
-        log $ "received message: " ++ ppShow (rpcMsg :: R.Message)
+        rpcMsg <- evalLimitT maxBound $ msgToParsed @R.Message msg
+        log $ "received message: " ++ ppShow rpcMsg
         pure msg
     }
