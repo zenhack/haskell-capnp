@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE EmptyDataDeriving     #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -29,7 +30,7 @@ import qualified Capnp.New.Classes   as C
 import qualified Capnp.Repr          as R
 import qualified Capnp.Untyped       as U
 import           Control.Monad       (when)
-import           Control.Monad.Catch (throwM)
+import           Control.Monad.Catch (MonadThrow, throwM)
 import qualified Data.ByteString     as BS
 import           Data.Default        (Default(..))
 import           Data.Foldable       (foldl', for_)
@@ -257,3 +258,15 @@ instance C.Marshal Data BS.ByteString where
 instance C.Allocate AnyStruct where
     type AllocHint AnyStruct = (Word16, Word16)
     new (nWords, nPtrs) msg = R.Raw <$> U.allocStruct msg nWords nPtrs
+
+-- | Return the underlying buffer containing the text. This does not include the
+-- null terminator.
+textBuffer :: MonadThrow m => R.Raw mut Text -> m (R.Raw mut Data)
+textBuffer (R.Raw list) = R.Raw <$> U.take (U.length list - 1) list
+
+-- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
+-- (not counting the NUL terminator).
+textBytes :: U.ReadCtx m 'M.Const => R.Raw 'M.Const Text -> m BS.ByteString
+textBytes text = do
+    R.Raw raw <- textBuffer text
+    U.rawBytes raw
