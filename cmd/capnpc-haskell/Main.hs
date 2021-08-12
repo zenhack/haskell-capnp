@@ -10,9 +10,8 @@ import System.IO        (IOMode(WriteMode), withFile)
 import qualified Data.Text.Lazy    as LT
 import qualified Data.Text.Lazy.IO as TIO
 
-import Capnp                      (defaultLimit, getParsed)
 import Capnp.Gen.Capnp.Schema.New (CodeGeneratorRequest)
-import Capnp.Repr.Parsed          (Parsed)
+import Capnp.New                  (Parsed, defaultLimit, getParsed)
 
 import qualified Check
 import qualified IR.Flat             as Flat
