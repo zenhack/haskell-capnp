@@ -29,8 +29,8 @@ module Capnp.GenHelpers.New
 
 import           Capnp.Bits
 import qualified Capnp.Classes         as C
+import           Capnp.Convert         (bsToRaw)
 import           Capnp.Fields          as F
-import           Capnp.GenHelpers      (getPtrConst)
 import           Capnp.Message         (Mutability(..))
 import qualified Capnp.Message         as M
 import           Capnp.New.Accessors
@@ -38,8 +38,11 @@ import qualified Capnp.New.Basics      as NB
 import qualified Capnp.New.Classes     as NC
 import           Capnp.New.Constraints (TypeParam)
 import qualified Capnp.Repr            as R
+import           Capnp.TraversalLimit  (evalLimitT)
 import qualified Capnp.Untyped         as U
 import           Data.Bits
+import qualified Data.ByteString       as BS
+import           Data.Maybe            (fromJust)
 import           Data.Proxy            (Proxy(..))
 import           Data.Word
 
@@ -86,3 +89,15 @@ parseEnum (R.Raw n) = pure $ toEnum $ fromIntegral n
 encodeEnum :: forall a m s. (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, U.RWCtx m s)
     => M.Message ('Mut s) -> a -> m (R.Raw ('Mut s) a)
 encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
+
+-- | Get a pointer from a ByteString, where the root object is a struct with
+-- one pointer, which is the pointer we will retrieve. This is only safe for
+-- trusted inputs; it reads the message with a traversal limit of 'maxBound'
+-- (and so is suseptable to denial of service attacks), and it calls 'error'
+-- if decoding is not successful.
+--
+-- The purpose of this is for defining constants of pointer type from a schema.
+getPtrConst :: C.FromPtr 'Const a => BS.ByteString -> a
+getPtrConst bytes = fromJust $ evalLimitT maxBound $ do
+    R.Raw root <- bsToRaw @NB.AnyStruct bytes
+    U.getPtr 0 root >>= C.fromPtr (U.message root)
