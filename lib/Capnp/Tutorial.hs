@@ -177,7 +177,7 @@ import qualified Data.Text       as T
 -- and abbreviated for readability):
 --
 -- > import qualified Capnp.Repr as R
--- > import qualified Capnp.Classes.New as C
+-- > import qualified Capnp.New.Classes as C
 -- > import qualified Capnp.Repr.Parsed as RP
 -- > import GHC.Generics (Generic)
 -- >
