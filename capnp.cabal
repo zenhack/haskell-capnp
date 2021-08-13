@@ -95,7 +95,6 @@ library
         Capnp.Address
       , Capnp.Bits
       , Capnp.Canonicalize
-      , Capnp.Classes
       , Capnp.New
       , Capnp.New.Accessors
       , Capnp.New.Basics

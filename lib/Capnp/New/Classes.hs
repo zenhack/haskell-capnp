@@ -49,12 +49,13 @@ module Capnp.New.Classes
     , IsWord(..)
     ) where
 
-import           Capnp.Classes        (IsWord(..))
+import           Capnp.Bits
 import           Capnp.Message        (Mutability(..))
 import qualified Capnp.Message        as M
 import qualified Capnp.Repr           as R
 import           Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped        as U
+import           Data.Bits
 import           Data.Default         (Default(..))
 import           Data.Foldable        (for_)
 import           Data.Int
@@ -334,3 +335,59 @@ do
         , merge $ map mkInt ints
         , merge $ map mkAll allTys
         ]
+
+-- | Types that can be converted to and from a 64-bit word.
+--
+-- Anything that goes in the data section of a struct will have
+-- an instance of this.
+class IsWord a where
+    -- | Convert from a 64-bit words Truncates the word if the
+    -- type has less than 64 bits.
+    fromWord :: Word64 -> a
+
+    -- | Convert to a 64-bit word.
+    toWord :: a -> Word64
+
+------- IsWord instances. TODO: fold into TH above. -------
+
+instance IsWord Bool where
+    fromWord n = (n .&. 1) == 1
+    toWord True  = 1
+    toWord False = 0
+
+instance IsWord Word1 where
+    fromWord = Word1 . fromWord
+    toWord = toWord . word1ToBool
+
+-- IsWord instances for integral types; they're all the same.
+instance IsWord Int8 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Int16 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Int32 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Int64 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word8 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word16 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word32 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+instance IsWord Word64 where
+    fromWord = fromIntegral
+    toWord = fromIntegral
+
+instance IsWord Float where
+    fromWord = F.castWord32ToFloat . fromIntegral
+    toWord = fromIntegral . F.castFloatToWord32
+instance IsWord Double where
+    fromWord = F.castWord64ToDouble
+    toWord = F.castDoubleToWord64
