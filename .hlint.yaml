@@ -1,3 +1,6 @@
 - ignore: {name: Use list comprehension}
 - ignore: {name: Use <=<}
 - ignore: {name: Redundant <&>}
+# Temporarily disabled due to https://github.com/ndmitchell/hlint/issues/1276;
+# turn this back on when that issue is fixed:
+- ignore: {name: Unused LANGUAGE pragma}
