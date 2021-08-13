@@ -16,10 +16,6 @@ err() {
 repo_root="$(realpath $(dirname $0)/..)"
 cd "$repo_root"
 
-# First, make sure our non-schema generated modules are up to date.
-log "Generating Internal.Gen"
-runhaskell scripts/gen-basic-instances.hs
-
 # Make sure the compiler plugin is up to date.
 log "Rebuilding schema compiler plugin..."
 cabal new-build capnpc-haskell

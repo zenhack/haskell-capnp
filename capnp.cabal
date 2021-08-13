@@ -34,7 +34,6 @@ extra-source-files:
   , core-schema/capnp/compat/json.capnp
   , core-schema/capnp/c++.capnp
   , scripts/format.sh
-  , scripts/gen-basic-instances.hs
   , scripts/hlint.sh
   , scripts/README.md
   , scripts/regen.sh
@@ -152,7 +151,6 @@ library
       , Internal.SnocList
       , Internal.Rc
       , Internal.TCloseQ
-      , Internal.Gen.Instances
       , Internal.BuildPure
     -- other-extensions:
     build-depends:
