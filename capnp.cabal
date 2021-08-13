@@ -93,10 +93,7 @@ library
       -- generated code:
       gen/lib
     exposed-modules:
-        Capnp
-      , Capnp.Address
-      , Capnp.Basics
-      , Capnp.Basics.Pure
+        Capnp.Address
       , Capnp.Bits
       , Capnp.Canonicalize
       , Capnp.Classes

@@ -50,8 +50,6 @@ import System.IO (stdout)
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
-import Capnp
-
 import Capnp.Classes (FromStruct)
 
 -- $overview

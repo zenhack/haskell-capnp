@@ -30,6 +30,9 @@ module Capnp.New.Classes
     , EstimateListAlloc(..)
     , newFromRepr
 
+    -- * Setting the root of a message
+    , setRoot
+
     -- * Working with Cap'n Proto types
     , HasTypeId(..)
 
@@ -195,9 +198,13 @@ newRoot
     :: forall a m s. (U.RWCtx m s, R.IsStruct a, Allocate a)
     => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
 newRoot hint msg = do
-    raw@(R.Raw struct) <- new @a hint msg
-    U.setRoot struct
+    raw <- new @a hint msg
+    setRoot raw
     pure raw
+
+-- | Sets the struct to be the root of its containing message.
+setRoot :: (U.RWCtx m s, R.IsStruct a) => R.Raw ('Mut s) a -> m ()
+setRoot (R.Raw struct) = U.setRoot struct
 
 
 ------ Instances for basic types -------
