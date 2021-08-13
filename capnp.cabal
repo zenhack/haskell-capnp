@@ -113,7 +113,6 @@ library
       , Capnp.Message
       , Capnp.Pointer
       , Capnp.Untyped
-      , Capnp.Untyped.Pure
       , Capnp.Repr
       , Capnp.Repr.Methods
       , Capnp.Repr.Parsed
