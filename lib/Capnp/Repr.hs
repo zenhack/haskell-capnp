@@ -71,7 +71,6 @@ module Capnp.Repr
 
 import Prelude hiding (length)
 
-import qualified Capnp.Classes        as C
 import qualified Capnp.Errors         as E
 import           Capnp.Message        (Mutability(..))
 import qualified Capnp.Message        as M
@@ -284,11 +283,6 @@ setIndex :: forall a m s.
     ) => Raw ('Mut s) a -> Int -> Raw ('Mut s) (List a) -> m ()
 setIndex (Raw v) i (Raw l) = U.setIndex (toElement @(ReprFor a) @('Mut s) v) i l
 
-instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.ToStruct mut (Raw mut a) where
-    toStruct = fromRaw
-instance (ReprFor a ~ 'Ptr ('Just 'Struct)) => C.FromStruct mut (Raw mut a) where
-    fromStruct = pure . Raw
-
 instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw mut a) mut where
     message (Raw r) = U.message r
 instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw mut a) mut where
@@ -387,11 +381,6 @@ do
           , "composite list"
           )
         ]
-
-instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.ToPtr s (Raw ('Mut s) a) where
-    toPtr _msg (Raw p) = pure $ toPtr @r p
-instance (IsPtrRepr r, ReprFor a ~ 'Ptr r) => C.FromPtr mut (Raw mut a) where
-    fromPtr msg p = Raw <$> fromPtr @r msg p
 
 instance Allocate 'Struct where
     type AllocHint 'Struct = (Word16, Word16)

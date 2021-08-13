@@ -28,7 +28,6 @@ import Data.Word
 import GHC.OverloadedLabels (IsLabel(..))
 import GHC.TypeLits         (Symbol)
 
-import qualified Capnp.Classes     as C
 import qualified Capnp.Message     as M
 import qualified Capnp.New.Classes as NC
 import qualified Capnp.Repr        as R
@@ -57,7 +56,7 @@ newtype Field (k :: FieldKind) a b = Field (FieldLoc k (R.ReprFor b))
 data FieldLoc (k :: FieldKind) (r :: R.Repr) where
     GroupField :: FieldLoc 'Group ('R.Ptr ('Just 'R.Struct))
     PtrField :: R.IsPtrRepr a => Word16 -> FieldLoc 'Slot ('R.Ptr a)
-    DataField :: C.IsWord (R.UntypedData a) => DataFieldLoc a -> FieldLoc 'Slot ('R.Data a)
+    DataField :: NC.IsWord (R.UntypedData a) => DataFieldLoc a -> FieldLoc 'Slot ('R.Data a)
     VoidField :: FieldLoc 'Slot ('R.Data 'R.Sz0)
 
 -- | The location of a data (non-pointer) field.

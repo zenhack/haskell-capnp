@@ -29,7 +29,6 @@ module Capnp.GenHelpers.New
 
 
 import           Capnp.Bits
-import qualified Capnp.Classes         as C
 import           Capnp.Convert         (bsToRaw)
 import           Capnp.Fields          as F
 import           Capnp.Message         (Mutability(..))
@@ -43,6 +42,7 @@ import           Capnp.TraversalLimit  (evalLimitT)
 import qualified Capnp.Untyped         as U
 import           Data.Bits
 import qualified Data.ByteString       as BS
+import           Data.Functor          ((<&>))
 import           Data.Maybe            (fromJust)
 import           Data.Proxy            (Proxy(..))
 import           Data.Word
@@ -50,7 +50,7 @@ import           Data.Word
 dataField
     :: forall b a sz.
     ( R.ReprFor b ~ 'R.Data sz
-    , C.IsWord (R.UntypedData sz)
+    , NC.IsWord (R.UntypedData sz)
     )
     => BitCount -> Word16 -> BitCount -> Word64 -> F.Field 'F.Slot a b
 dataField shift index nbits defaultValue = F.Field $ F.DataField @sz F.DataFieldLoc
@@ -98,7 +98,9 @@ encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
 -- if decoding is not successful.
 --
 -- The purpose of this is for defining constants of pointer type from a schema.
-getPtrConst :: C.FromPtr 'Const a => BS.ByteString -> a
+getPtrConst :: forall a. R.IsPtr a => BS.ByteString -> R.Raw 'Const a
 getPtrConst bytes = fromJust $ evalLimitT maxBound $ do
     R.Raw root <- bsToRaw @NB.AnyStruct bytes
-    U.getPtr 0 root >>= C.fromPtr (U.message root)
+    U.getPtr 0 root
+        >>= R.fromPtr @(R.PtrReprFor (R.ReprFor a)) (U.message root)
+        <&> R.Raw
