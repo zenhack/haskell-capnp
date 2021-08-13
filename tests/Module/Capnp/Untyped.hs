@@ -45,8 +45,8 @@ import Instances ()
 
 import Capnp.Gen.Capnp.Schema.New
 
-import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
+import qualified Capnp.Repr    as R
 
 untypedTests :: Spec
 untypedTests = describe "low-level untyped API tests" $ do
@@ -313,7 +313,7 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
             srcStruct <- allocStruct msg 4 4
             (1, _) <- M.newSegment msg 10
             dstStruct <- allocStruct msg 2 2
-            ptr <- C.toPtr msg dstStruct
+            let ptr = R.toPtr @('Just 'R.Struct) dstStruct
             setPtr ptr 0 srcStruct
 
 otherMessageTest :: Spec

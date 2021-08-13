@@ -17,8 +17,8 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text       as T
 import qualified Data.Vector     as V
 
-import Capnp.Classes     (toWord)
 import Capnp.Fields      (HasUnion(..))
+import Capnp.New.Classes (toWord)
 import Capnp.Repr.Parsed (Parsed)
 
 import qualified Capnp.Gen.Capnp.Schema.New as Schema
