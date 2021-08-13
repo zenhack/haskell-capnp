@@ -9,15 +9,6 @@ module Capnp.Rpc
       handleConn
     , ConnConfig(..)
 
-    -- * Handling method calls
-    , Server(..)
-    , MethodHandler
-    , pureHandler
-    , rawHandler
-    , rawAsyncHandler
-    , methodUnimplemented
-    , methodThrow
-
     -- * throwing errors
     , throwFailed
 
@@ -47,17 +38,9 @@ module Capnp.Rpc
 
 import Supervisors
 
-import Capnp.Rpc.Errors    (throwFailed)
+import Capnp.Rpc.Errors  (throwFailed)
 import Capnp.Rpc.Promise
-import Capnp.Rpc.Server
-    ( MethodHandler
-    , Server(..)
-    , methodThrow
-    , methodUnimplemented
-    , pureHandler
-    , rawAsyncHandler
-    , rawHandler
-    )
+
 import Capnp.Rpc.Transport
     (Transport(..), handleTransport, socketTransport, tracingTransport)
 import Capnp.Rpc.Untyped
