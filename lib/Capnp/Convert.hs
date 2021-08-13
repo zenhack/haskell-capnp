@@ -20,15 +20,8 @@ module Capnp.Convert
     ( msgToBuilder
     , msgToLBS
     , msgToBS
-    , msgToValue
     , bsToMsg
-    , bsToValue
     , lbsToMsg
-    , lbsToValue
-    , valueToBuilder
-    , valueToBS
-    , valueToLBS
-    , valueToMsg
 
     -- new API
     , msgToRaw
@@ -44,26 +37,22 @@ module Capnp.Convert
     , parsedToLBS
     ) where
 
-import Control.Monad       ((>=>))
 import Control.Monad.Catch (MonadThrow)
-import Data.Foldable       (foldlM)
 
 import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 
-import Capnp.Classes
-
-import Capnp.Bits           (WordCount)
-import Capnp.Message        (Mutability(..))
-import Capnp.New.Classes    (Parse(encode, parse))
-import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
-import Codec.Capnp          (getRoot, setRoot)
-import Data.Mutable         (freeze)
+import Capnp.Message     (Mutability(..))
+import Capnp.New.Classes (Parse(encode, parse))
+import Data.Mutable      (freeze)
 
 import qualified Capnp.Message as M
 import qualified Capnp.Repr    as R
 import qualified Capnp.Untyped as U
+
+{- TODO: unused currently, but we should put it back into service for things like
+   msgToParsed.
 
 -- | Compute a reasonable limit based on the size of a message. The limit
 -- is the total number of words in all of the message's segments, multiplied
@@ -82,6 +71,7 @@ limitFromMsg msg = do
             )
             0
             [0..segCount - 1]
+-}
 
 -- | Convert an immutable message to a bytestring 'BB.Builder'.
 -- To convert a mutable message, 'freeze' it first.
@@ -98,47 +88,13 @@ msgToLBS = BB.toLazyByteString . msgToBuilder
 msgToBS :: M.Message 'Const -> BS.ByteString
 msgToBS = LBS.toStrict . msgToLBS
 
--- | Convert a message to a value.
-msgToValue :: (MonadThrow m, M.MonadReadMessage mut (LimitT m), M.MonadReadMessage mut m, FromStruct mut a) => M.Message mut -> m a
-msgToValue msg = do
-    limit <- limitFromMsg msg
-    evalLimitT limit (getRoot msg)
-
 -- | Convert a strict 'BS.ByteString' to a message.
 bsToMsg :: MonadThrow m => BS.ByteString -> m (M.Message 'Const)
 bsToMsg = M.decode
 
--- | Convert a strict 'BS.ByteString' to a value.
-bsToValue :: (MonadThrow m, FromStruct 'Const a) => BS.ByteString -> m a
-bsToValue = bsToMsg >=> msgToValue
-
 -- | Convert a lazy 'LBS.ByteString' to a message.
 lbsToMsg :: MonadThrow m => LBS.ByteString -> m (M.Message 'Const)
 lbsToMsg = bsToMsg . LBS.toStrict
-
--- | Convert a lazy 'LBS.ByteString' to a value.
-lbsToValue :: (MonadThrow m, FromStruct 'Const a) => LBS.ByteString -> m a
-lbsToValue = bsToValue . LBS.toStrict
-
--- | Convert a value to a 'BS.Builder'.
-valueToBuilder :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct ('Mut s) (Cerial ('Mut s) a)) => a -> m BB.Builder
-valueToBuilder val = msgToBuilder <$> (valueToMsg val >>= freeze)
-
--- | Convert a value to a strict 'BS.ByteString'.
-valueToBS :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct ('Mut s) (Cerial ('Mut s) a)) => a -> m BS.ByteString
-valueToBS = fmap LBS.toStrict . valueToLBS
-
--- | Convert a value to a lazy 'LBS.ByteString'.
-valueToLBS :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct ('Mut s) (Cerial ('Mut s) a)) => a -> m LBS.ByteString
-valueToLBS = fmap BB.toLazyByteString . valueToBuilder
-
--- | Convert a value to a message.
-valueToMsg :: (MonadLimit m, M.WriteCtx m s, Cerialize s a, ToStruct ('Mut s) (Cerial ('Mut s) a)) => a -> m (M.Message ('Mut s))
-valueToMsg val = do
-    msg <- M.newMessage Nothing
-    ret <- cerialize msg val
-    setRoot ret
-    pure msg
 
 -- | Get the root pointer of a message, wrapped as a 'R.Raw'.
 msgToRaw :: forall a m mut. (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw mut a)
