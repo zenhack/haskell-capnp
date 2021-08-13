@@ -154,7 +154,6 @@ library
       , Internal.TCloseQ
       , Internal.Gen.Instances
       , Internal.BuildPure
-      , Codec.Capnp
     -- other-extensions:
     build-depends:
         hashable                          >= 1.2.7 && <1.4
