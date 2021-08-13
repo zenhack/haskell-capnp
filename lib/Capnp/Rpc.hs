@@ -9,9 +9,6 @@ module Capnp.Rpc
       handleConn
     , ConnConfig(..)
 
-    -- * Calling methods
-    , (?)
-
     -- * Handling method calls
     , Server(..)
     , MethodHandler
@@ -51,7 +48,6 @@ module Capnp.Rpc
 import Supervisors
 
 import Capnp.Rpc.Errors    (throwFailed)
-import Capnp.Rpc.Invoke    ((?))
 import Capnp.Rpc.Promise
 import Capnp.Rpc.Server
     ( MethodHandler

@@ -119,7 +119,6 @@ library
       , Capnp.TraversalLimit
       , Capnp.Rpc
       , Capnp.Rpc.Promise
-      , Capnp.Rpc.Invoke
       , Capnp.Rpc.Untyped
       , Capnp.Rpc.Errors
       , Capnp.Rpc.Transport
