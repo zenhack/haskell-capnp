@@ -1,22 +1,26 @@
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Module.Capnp.Basics (basicsTests) where
 
+import Prelude hiding (length)
+
+import Data.Word
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad.IO.Class    (liftIO)
+import GHC.Prim                  (coerce)
 import Test.QuickCheck.IO        (propertyIO)
 import Test.QuickCheck.Instances ()
 
 import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
-import Capnp.Basics
+import Capnp.New.Basics
 
-import Capnp        (cerialize, evalLimitT, newMessage)
+import Capnp.New
+    (List, Mutability(..), Raw(..), encode, evalLimitT, length, newMessage)
 import Data.Mutable (Thaw(freeze))
-
-import qualified Capnp.Untyped as U
 
 basicsTests :: Spec
 basicsTests =
@@ -24,7 +28,8 @@ basicsTests =
         it "Should return the same number of bytes" $
             property $ \(text :: T.Text) -> propertyIO $ evalLimitT maxBound $ do
                 msg <- newMessage Nothing
-                cerial <- cerialize msg text
-                buf <- textBuffer cerial
-                bytes <- freeze cerial >>= textBytes
-                liftIO $ BS.length bytes `shouldBe` U.length buf
+                Raw untyped <- encode msg text
+                raw :: Raw 'Const Text <- Raw <$> freeze untyped
+                buf <- textBuffer raw
+                bytes <- textBytes raw
+                liftIO $ BS.length bytes `shouldBe` length (coerce buf :: Raw 'Const (List Word8))
