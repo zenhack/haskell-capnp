@@ -54,6 +54,7 @@ module Capnp.Untyped
 
     -- * Allocating values
     , Allocate(..)
+    , AllocateNormalList(..)
 
     , Ptr(..), List(..), Struct, ListOf, Cap
     , structByteCount
@@ -1266,8 +1267,15 @@ instance AllocateNormalList r => Allocate ('List ('Just ('ListNormal r))) where
     type AllocHint ('List ('Just ('ListNormal r))) = Int
     alloc = allocNormalList @r
 
+-- | Like 'Allocate', but specialized to normal (non-composite) lists.
+--
+-- Instead of an 'AllocHint' type family, the hint is always an 'Int',
+-- which is the number of elements.
 class AllocateNormalList (r :: NormalListRepr) where
-    allocNormalList :: RWCtx m s => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('Mut s) ('ListNormal r))
+    allocNormalList
+        :: RWCtx m s
+        => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('Mut s) ('ListNormal r))
+
 instance AllocateNormalList ('NormalListData 'Sz0) where allocNormalList = allocList0
 instance AllocateNormalList ('NormalListData 'Sz1) where allocNormalList = allocList1
 instance AllocateNormalList ('NormalListData 'Sz8) where allocNormalList = allocList8
