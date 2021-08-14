@@ -109,6 +109,7 @@ library
       , Capnp.GenHelpers.New.Rpc
       , Capnp.IO
       , Capnp.Message
+      , Capnp.Mutability
       , Capnp.Pointer
       , Capnp.Untyped
       , Capnp.Repr

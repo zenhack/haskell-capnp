@@ -85,7 +85,6 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer      (execWriterT, tell)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Bytes.Get            (getWord32le, runGetS)
-import Data.Kind                 (Type)
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64, byteSwap64)
@@ -102,11 +101,13 @@ import qualified Data.Vector.Storable.Mutable as SMV
 
 import Capnp.Address        (WordAddr(..))
 import Capnp.Bits           (WordCount(..), hi, lo)
+import Capnp.Mutability     (Mutability(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
 import Data.Mutable         (Mutable(..))
 import Internal.AppendVec   (AppendVec)
 
 import qualified Capnp.Errors       as E
+import qualified Capnp.Mutability   as Mut
 import qualified Internal.AppendVec as AppendVec
 
 swapIfBE64, fromLE64, toLE64 :: Word64 -> Word64
@@ -128,13 +129,6 @@ maxSegments = 1024
 -- | The maximum number of capabilities allowed in a message by this library.
 maxCaps :: Int
 maxCaps = 16 * 1024
-
-
--- | 'Mutability' is used as a type parameter (with the DataKinds extension)
--- to indicate the mutability of some values in this library; 'Const' denotes
--- an immutable value, while @'Mut' s@ denotes a value that can be mutated
--- in the scope of the state token @s@.
-data Mutability = Const | Mut Type
 
 -- | A pointer to a location in a message. This encodes the same
 -- information as a 'WordAddr', but also includes direct references
@@ -567,6 +561,11 @@ singleSegment seg = MsgConst ConstMsg
     , constCaps = V.empty
     }
 
+instance Mut.MaybeMutable Segment where
+    thaw         = thawSeg   SV.thaw
+    unsafeThaw   = thawSeg   SV.unsafeThaw
+    freeze       = freezeSeg SV.freeze
+    unsafeFreeze = freezeSeg SV.unsafeFreeze
 
 instance Thaw (Segment 'Const) where
     type Mutable s (Segment 'Const) = Segment ('Mut s)
@@ -595,6 +594,12 @@ freezeSeg
 freezeSeg freeze (SegMut MutSegment{vec, used}) = do
     WordCount len <- readMutVar used
     SegConst .ConstSegment <$> freeze (SMV.take len vec)
+
+instance Mut.MaybeMutable Message where
+    thaw         = thawMsg   thaw         V.thaw
+    unsafeThaw   = thawMsg   unsafeThaw   V.unsafeThaw
+    freeze       = freezeMsg freeze       V.freeze
+    unsafeFreeze = freezeMsg unsafeFreeze V.unsafeFreeze
 
 instance Thaw (Message 'Const) where
     type Mutable s (Message 'Const) = Message ('Mut s)

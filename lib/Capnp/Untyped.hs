@@ -94,9 +94,10 @@ import Capnp.Pointer        (ElementSize(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice))
 import Data.Mutable         (Thaw(..))
 
-import qualified Capnp.Errors  as E
-import qualified Capnp.Message as M
-import qualified Capnp.Pointer as P
+import qualified Capnp.Errors     as E
+import qualified Capnp.Message    as M
+import qualified Capnp.Mutability as Mut
+import qualified Capnp.Pointer    as P
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
@@ -307,6 +308,12 @@ do
             [d|instance Thaw ($f 'Const) where
                 type Mutable s ($f 'Const) = $f ('Mut s)
 
+                thaw         = runCatchImpure . tMsg thaw
+                freeze       = runCatchImpure . tMsg freeze
+                unsafeThaw   = runCatchImpure . tMsg unsafeThaw
+                unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
+
+               instance Mut.MaybeMutable $f where
                 thaw         = runCatchImpure . tMsg thaw
                 freeze       = runCatchImpure . tMsg freeze
                 unsafeThaw   = runCatchImpure . tMsg unsafeThaw
