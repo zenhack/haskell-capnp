@@ -23,7 +23,15 @@ Each of the data types exported by this module is parametrized over the
 mutability of the message it contains (see "Capnp.Message").
 -}
 module Capnp.Untyped
-    ( Ptr(..), List(..), Struct, ListOf, Cap
+    (
+    -- * Type-level descriptions of wire representations.
+      Repr(..)
+    , PtrRepr(..)
+    , ListRepr(..)
+    , NormalListRepr(..)
+    , DataSz(..)
+
+    , Ptr(..), List(..), Struct, ListOf, Cap
     , structByteCount
     , structWordCount
     , structPtrCount
@@ -90,13 +98,52 @@ import Capnp.Bits
     , wordsToBytes
     )
 import Capnp.Message        (Mutability(..))
-import Capnp.Pointer        (ElementSize(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice))
 import Data.Mutable         (Thaw(..))
 
 import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M
 import qualified Capnp.Pointer as P
+
+
+-- | A 'Repr' describes a wire representation for a value. This is
+-- mostly used at the type level (using DataKinds); types are
+-- parametrized over representations.
+data Repr
+    = Ptr (Maybe PtrRepr)
+    -- ^ Pointer type. 'Nothing' indicates an AnyPointer, 'Just' describes
+    -- a more specific pointer type.
+    | Data DataSz
+    -- ^ Non-pointer type.
+    deriving(Show)
+
+-- | Information about the representation of a pointer type
+data PtrRepr
+    = Cap
+    -- ^ Capability pointer.
+    | List (Maybe ListRepr)
+    -- ^ List pointer. 'Nothing' describes an AnyList, 'Just' describes
+    -- more specific list types.
+    | Struct
+    -- ^ A struct (or group).
+    deriving(Show)
+
+-- | Information about the representation of a list type.
+data ListRepr where
+    -- | A "normal" list
+    ListNormal :: NormalListRepr -> ListRepr
+    ListComposite :: ListRepr
+    deriving(Show)
+
+-- | Information about the representation of a normal (non-composite) list.
+data NormalListRepr where
+    NormalListData :: DataSz -> NormalListRepr
+    NormalListPtr :: NormalListRepr
+    deriving(Show)
+
+-- | The size of a non-pointer type. @SzN@ represents an @N@-bit value.
+data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
+    deriving(Show)
 
 -- | Type (constraint) synonym for the constraints needed for most read
 -- operations.
@@ -146,11 +193,11 @@ data ListOf mut a where
     ListOfPtr    :: !(NormalList mut) -> ListOf mut (Maybe (Ptr mut))
 
 -- | A Capability in a message.
-data Cap mut = Cap (M.Message mut) !Word32
+data Cap mut = CapAt (M.Message mut) !Word32
 
 -- | A struct value in a message.
 data Struct mut
-    = Struct
+    = StructAt
         !(M.WordPtr mut) -- Start of struct
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
@@ -203,10 +250,10 @@ instance TraverseMsg Ptr where
             PtrStruct <$> tMsg f s
 
 instance TraverseMsg Cap where
-    tMsg f (Cap msg n) = Cap <$> f msg <*> pure n
+    tMsg f (CapAt msg n) = CapAt <$> f msg <*> pure n
 
 instance TraverseMsg Struct where
-    tMsg f (Struct ptr dataSz ptrSz) = Struct
+    tMsg f (StructAt ptr dataSz ptrSz) = StructAt
         <$> tMsg f ptr
         <*> pure dataSz
         <*> pure ptrSz
@@ -401,15 +448,15 @@ instance HasMessage (Ptr mut) mut where
     message (PtrStruct struct) = message struct
 
 instance HasMessage (Cap mut) mut where
-    message (Cap msg _) = msg
+    message (CapAt msg _) = msg
 
 instance HasMessage (Struct mut) mut where
-    message (Struct ptr _ _) = message ptr
+    message (StructAt ptr _ _) = message ptr
 
 instance MessageDefault (Struct mut) mut where
     messageDefault msg = do
         pSegment <- M.getSegment msg 0
-        pure $ Struct M.WordPtr{pMessage = msg, pSegment, pAddr = WordAt 0 0} 0 0
+        pure $ StructAt M.WordPtr{pMessage = msg, pSegment, pAddr = WordAt 0 0} 0 0
 
 instance HasMessage (List mut) mut where
     message (List0 list)      = message list
@@ -461,7 +508,7 @@ instance MessageDefault (NormalList mut) mut where
 
 -- | Extract a client (indepedent of the messsage) from the capability.
 getClient :: ReadCtx m mut => Cap mut -> m M.Client
-getClient (Cap msg idx) = M.getCap msg (fromIntegral idx)
+getClient (CapAt msg idx) = M.getCap msg (fromIntegral idx)
 
 -- | @get ptr@ returns the Ptr stored at @ptr@.
 -- Deducts 1 from the quota for each word read (which may be multiple in the
@@ -473,9 +520,9 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
-            P.CapPtr cap -> return $ Just $ PtrCap (Cap pMessage cap)
+            P.CapPtr cap -> return $ Just $ PtrCap (CapAt pMessage cap)
             P.StructPtr off dataSz ptrSz -> return $ Just $ PtrStruct $
-                Struct ptr { M.pAddr = resolveOffset pAddr off } dataSz ptrSz
+                StructAt ptr { M.pAddr = resolveOffset pAddr off } dataSz ptrSz
             P.ListPtr off eltSpec -> Just <$>
                 getList ptr { M.pAddr = resolveOffset pAddr off } eltSpec
             P.FarPtr twoWords offset segment -> do
@@ -520,7 +567,7 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                                 case P.parsePtr tagWord of
                                     Just (P.StructPtr 0 dataSz ptrSz) ->
                                         return $ Just $ PtrStruct $
-                                            Struct finalPtr dataSz ptrSz
+                                            StructAt finalPtr dataSz ptrSz
                                     Just (P.ListPtr 0 eltSpec) ->
                                         Just <$> getList finalPtr eltSpec
                                     -- TODO: I'm not sure whether far pointers to caps are
@@ -529,7 +576,7 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                                     -- how the reference implementation does this, copy
                                     -- that, and submit a patch to the spec.
                                     Just (P.CapPtr cap) ->
-                                        return $ Just $ PtrCap (Cap pMessage cap)
+                                        return $ Just $ PtrCap (CapAt pMessage cap)
                                     ptr -> throwM $ E.InvalidDataError $
                                         "The tag word of a far pointer's " ++
                                         "2-word landing pad should be an intra " ++
@@ -549,13 +596,13 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
     getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
         case eltSpec of
             P.EltNormal sz len -> pure $ case sz of
-                Sz0   -> List0  (ListOfVoid    nlist)
-                Sz1   -> List1  (ListOfBool    nlist)
-                Sz8   -> List8  (ListOfWord8   nlist)
-                Sz16  -> List16 (ListOfWord16  nlist)
-                Sz32  -> List32 (ListOfWord32  nlist)
-                Sz64  -> List64 (ListOfWord64  nlist)
-                SzPtr -> ListPtr (ListOfPtr nlist)
+                P.Sz0   -> List0  (ListOfVoid    nlist)
+                P.Sz1   -> List1  (ListOfBool    nlist)
+                P.Sz8   -> List8  (ListOfWord8   nlist)
+                P.Sz16  -> List16 (ListOfWord16  nlist)
+                P.Sz32  -> List32 (ListOfWord32  nlist)
+                P.Sz64  -> List64 (ListOfWord64  nlist)
+                P.SzPtr -> ListPtr (ListOfPtr nlist)
               where
                 nlist = NormalList ptr (fromIntegral len)
             P.EltComposite _ -> do
@@ -563,9 +610,10 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                 case P.parsePtr' tagWord of
                     P.StructPtr numElts dataSz ptrSz ->
                         pure $ ListStruct $ ListOfStruct
-                            (Struct ptr { M.pAddr = addr { wordIndex = wordIndex + 1 } }
-                                    dataSz
-                                    ptrSz)
+                            (StructAt
+                                ptr { M.pAddr = addr { wordIndex = wordIndex + 1 } }
+                                dataSz
+                                ptrSz)
                             (fromIntegral numElts)
                     tag -> throwM $ E.InvalidDataError $
                         "Composite list tag was not a struct-" ++
@@ -573,19 +621,19 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
 
 -- | Return the EltSpec needed for a pointer to the given list.
 listEltSpec :: List msg -> P.EltSpec
-listEltSpec (ListStruct list@(ListOfStruct (Struct _ dataSz ptrSz) _)) =
+listEltSpec (ListStruct list@(ListOfStruct (StructAt _ dataSz ptrSz) _)) =
     P.EltComposite $ fromIntegral (length list) * (fromIntegral dataSz + fromIntegral ptrSz)
-listEltSpec (List0 list)   = P.EltNormal Sz0 $ fromIntegral (length list)
-listEltSpec (List1 list)   = P.EltNormal Sz1 $ fromIntegral (length list)
-listEltSpec (List8 list)   = P.EltNormal Sz8 $ fromIntegral (length list)
-listEltSpec (List16 list)  = P.EltNormal Sz16 $ fromIntegral (length list)
-listEltSpec (List32 list)  = P.EltNormal Sz32 $ fromIntegral (length list)
-listEltSpec (List64 list)  = P.EltNormal Sz64 $ fromIntegral (length list)
-listEltSpec (ListPtr list) = P.EltNormal SzPtr $ fromIntegral (length list)
+listEltSpec (List0 list)   = P.EltNormal P.Sz0 $ fromIntegral (length list)
+listEltSpec (List1 list)   = P.EltNormal P.Sz1 $ fromIntegral (length list)
+listEltSpec (List8 list)   = P.EltNormal P.Sz8 $ fromIntegral (length list)
+listEltSpec (List16 list)  = P.EltNormal P.Sz16 $ fromIntegral (length list)
+listEltSpec (List32 list)  = P.EltNormal P.Sz32 $ fromIntegral (length list)
+listEltSpec (List64 list)  = P.EltNormal P.Sz64 $ fromIntegral (length list)
+listEltSpec (ListPtr list) = P.EltNormal P.SzPtr $ fromIntegral (length list)
 
 -- | Return the starting address of the list.
 listAddr :: List msg -> WordAddr
-listAddr (ListStruct (ListOfStruct (Struct M.WordPtr{pAddr} _ _) _)) =
+listAddr (ListStruct (ListOfStruct (StructAt M.WordPtr{pAddr} _ _) _)) =
     -- pAddr is the address of the first element of the list, but
     -- composite lists start with a tag word:
     pAddr { wordIndex = wordIndex pAddr - 1 }
@@ -601,7 +649,7 @@ listAddr (ListPtr (ListOfPtr NormalList{nPtr=M.WordPtr{pAddr}})) = pAddr
 -- a pointer which targets a capability.
 ptrAddr :: Ptr msg -> WordAddr
 ptrAddr (PtrCap _) = error "ptrAddr called on a capability pointer."
-ptrAddr (PtrStruct (Struct M.WordPtr{pAddr}_ _)) = pAddr
+ptrAddr (PtrStruct (StructAt M.WordPtr{pAddr}_ _)) = pAddr
 ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
@@ -621,10 +669,10 @@ setIndex value i list = case list of
             newPtr <- copyPtr (message list) value
             setIndex newPtr i list
         Nothing                -> setNIndex nlist 1 (P.serializePtr Nothing)
-        Just (PtrCap (Cap _ cap))    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
+        Just (PtrCap (CapAt _ cap))    -> setNIndex nlist 1 (P.serializePtr (Just (P.CapPtr cap)))
         Just p@(PtrList ptrList)     ->
             setPtrIndex nlist p $ P.ListPtr 0 (listEltSpec ptrList)
-        Just p@(PtrStruct (Struct _ dataSz ptrSz)) ->
+        Just p@(PtrStruct (StructAt _ dataSz ptrSz)) ->
             setPtrIndex nlist p $ P.StructPtr 0 dataSz ptrSz
     list@(ListOfStruct _ _) -> do
         dest <- index i list
@@ -811,10 +859,10 @@ index i list
   where
     index' :: ReadCtx m mut => ListOf mut a -> m a
     index' (ListOfVoid _) = pure ()
-    index' (ListOfStruct (Struct ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) _) = do
+    index' (ListOfStruct (StructAt ptr@M.WordPtr{pAddr=addr@WordAt{..}} dataSz ptrSz) _) = do
         let offset = WordCount $ i * (fromIntegral dataSz + fromIntegral ptrSz)
         let addr' = addr { wordIndex = wordIndex + offset }
-        return $ Struct ptr { M.pAddr = addr' } dataSz ptrSz
+        return $ StructAt ptr { M.pAddr = addr' } dataSz ptrSz
     index' (ListOfBool   nlist) = do
         Word1 val <- indexNList nlist 64
         pure val
@@ -865,13 +913,13 @@ take count list
 -- | The data section of a struct, as a list of Word64
 dataSection :: Struct msg -> ListOf msg Word64
 {-# INLINE dataSection #-}
-dataSection (Struct ptr dataSz _) =
+dataSection (StructAt ptr dataSz _) =
     ListOfWord64 $ NormalList ptr (fromIntegral dataSz)
 
 -- | The pointer section of a struct, as a list of Ptr
 ptrSection :: Struct msg -> ListOf msg (Maybe (Ptr msg))
 {-# INLINE ptrSection #-}
-ptrSection (Struct ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} dataSz ptrSz) =
+ptrSection (StructAt ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} dataSz ptrSz) =
     ListOfPtr $ NormalList
         { nPtr = ptr { M.pAddr = addr { wordIndex = wordIndex + fromIntegral dataSz } }
         , nLen = fromIntegral ptrSz
@@ -879,7 +927,7 @@ ptrSection (Struct ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} dataSz ptrSz) =
 
 -- | Get the size (in words) of a struct's data section.
 structWordCount :: Struct msg -> WordCount
-structWordCount (Struct _ptr dataSz _ptrSz) = fromIntegral dataSz
+structWordCount (StructAt _ptr dataSz _ptrSz) = fromIntegral dataSz
 
 -- | Get the size (in bytes) of a struct's data section.
 structByteCount :: Struct msg -> ByteCount
@@ -887,7 +935,7 @@ structByteCount = wordsToBytes . structWordCount
 
 -- | Get the size of a struct's pointer section.
 structPtrCount  :: Struct msg -> Word16
-structPtrCount (Struct _ptr _dataSz ptrSz) = ptrSz
+structPtrCount (StructAt _ptr _dataSz ptrSz) = ptrSz
 
 -- | Get the size (in words) of the data sections in a struct list.
 structListWordCount :: ListOf msg (Struct msg) -> WordCount
@@ -930,7 +978,7 @@ checkPtr (Just (PtrList l))   = checkList l
 checkPtr (Just (PtrStruct s)) = checkStruct s
 
 checkCap :: ReadCtx m mut => Cap mut -> m ()
-checkCap (Cap _ _ ) = pure ()
+checkCap (CapAt _ _ ) = pure ()
     -- No need to do anything here; an out of bounds index is just treated
     -- as null.
 
@@ -945,7 +993,7 @@ checkList (ListPtr l)    = checkListOf l
 checkList (ListStruct l) = checkListOf l
 
 checkListOf :: ReadCtx m mut => ListOf mut a -> m ()
-checkListOf (ListOfStruct s@(Struct ptr _ _) len) =
+checkListOf (ListOfStruct s@(StructAt ptr _ _) len) =
     checkPtrOffset ptr (fromIntegral len * structSize s)
 checkListOf (ListOfVoid _) = pure ()
 checkListOf (ListOfBool l) = checkNormalList l 1
@@ -963,7 +1011,7 @@ checkNormalList NormalList{nPtr, nLen} eltSize =
     checkPtrOffset nPtr nWords
 
 checkStruct :: ReadCtx m mut => Struct mut -> m ()
-checkStruct s@(Struct ptr _ _) =
+checkStruct s@(StructAt ptr _ _) =
     checkPtrOffset ptr (structSize s)
 
 checkPtrOffset :: ReadCtx m mut => M.WordPtr mut -> WordCount -> m ()
@@ -1008,7 +1056,7 @@ listInvoiceSize l = max 1 $! case l of
     ListStruct (ListOfStruct s len) ->
         structInvoiceSize s * fromIntegral len
 structInvoiceSize :: Struct mut -> WordCount
-structInvoiceSize (Struct _ dataSz ptrSz) =
+structInvoiceSize (StructAt _ dataSz ptrSz) =
     max 1 (fromIntegral dataSz + fromIntegral ptrSz)
 
 -- | @'setData' value i struct@ sets the @i@th word in the struct's data section
@@ -1054,7 +1102,7 @@ rootPtr msg = do
 
 -- | Make the given struct the root object of its message.
 setRoot :: M.WriteCtx m s => Struct ('Mut s) -> m ()
-setRoot (Struct M.WordPtr{pMessage, pAddr=addr} dataSz ptrSz) = do
+setRoot (StructAt M.WordPtr{pMessage, pAddr=addr} dataSz ptrSz) = do
     pSegment <- M.getSegment pMessage 0
     let rootPtr = M.WordPtr{pMessage, pSegment, pAddr = WordAt 0 0}
     setPointerTo rootPtr addr (P.StructPtr 0 dataSz ptrSz)
@@ -1064,7 +1112,7 @@ allocStruct :: M.WriteCtx m s => M.Message ('Mut s) -> Word16 -> Word16 -> m (St
 allocStruct msg dataSz ptrSz = do
     let totalSz = fromIntegral dataSz + fromIntegral ptrSz
     ptr <- M.alloc msg totalSz
-    pure $ Struct ptr dataSz ptrSz
+    pure $ StructAt ptr dataSz ptrSz
 
 -- | Allocate a composite list.
 allocCompositeList
@@ -1079,7 +1127,7 @@ allocCompositeList msg dataSz ptrSz len = do
     ptr@M.WordPtr{pSegment, pAddr=addr@WordAt{wordIndex}}
         <- M.alloc msg (WordCount $ len * eltSize + 1) -- + 1 for the tag word.
     M.write pSegment wordIndex $ P.serializePtr' $ P.StructPtr (fromIntegral len) dataSz ptrSz
-    let firstStruct = Struct
+    let firstStruct = StructAt
             ptr { M.pAddr = addr { wordIndex = wordIndex + 1 } }
             dataSz
             ptrSz
@@ -1131,4 +1179,4 @@ allocNormalList bitsPerElt msg len = do
 appendCap :: M.WriteCtx m s => M.Message ('Mut s) -> M.Client -> m (Cap ('Mut s))
 appendCap msg client = do
     i <- M.appendCap msg client
-    pure $ Cap msg (fromIntegral i)
+    pure $ CapAt msg (fromIntegral i)

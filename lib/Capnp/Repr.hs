@@ -75,6 +75,8 @@ import qualified Capnp.Errors         as E
 import           Capnp.Message        (Mutability(..))
 import qualified Capnp.Message        as M
 import           Capnp.TraversalLimit (evalLimitT)
+import           Capnp.Untyped
+    (DataSz(..), ListRepr(..), NormalListRepr(..), PtrRepr(..), Repr(..))
 import qualified Capnp.Untyped        as U
 import           Control.Monad.Catch  (MonadThrow(..))
 import           Data.Default         (Default(..))
@@ -84,45 +86,6 @@ import           Data.Maybe           (fromJust)
 import           Data.Word
 import           GHC.Generics         (Generic)
 import qualified Language.Haskell.TH  as TH
-
--- | A 'Repr' describes a wire representation for a value. This is
--- mostly used at the type level (using DataKinds); types are
--- parametrized over representations.
-data Repr
-    = Ptr (Maybe PtrRepr)
-    -- ^ Pointer type. 'Nothing' indicates an AnyPointer, 'Just' describes
-    -- a more specific pointer type.
-    | Data DataSz
-    -- ^ Non-pointer type.
-    deriving(Show)
-
--- | Information about the representation of a pointer type
-data PtrRepr
-    = Cap
-    -- ^ Capability pointer.
-    | List (Maybe ListRepr)
-    -- ^ List pointer. 'Nothing' describes an AnyList, 'Just' describes
-    -- more specific list types.
-    | Struct
-    -- ^ A struct (or group).
-    deriving(Show)
-
--- | Information about the representation of a list type.
-data ListRepr where
-    -- | A "normal" list
-    ListNormal :: NormalListRepr -> ListRepr
-    ListComposite :: ListRepr
-    deriving(Show)
-
--- | Information about the representation of a normal (non-composite) list.
-data NormalListRepr where
-    ListData :: DataSz -> NormalListRepr
-    ListPtr :: NormalListRepr
-    deriving(Show)
-
--- | The size of a non-pointer type. @SzN@ represents an @N@-bit value.
-data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
-    deriving(Show)
 
 -- | @Untyped mut r@ is an untyped value with representation @r@ stored in
 -- a message with mutability @mut@.
@@ -207,15 +170,15 @@ type family PtrReprFor (r :: Repr) :: Maybe PtrRepr where
 -- representation @r@.
 type family ElemRepr (rl :: ListRepr) :: Repr where
     ElemRepr 'ListComposite = 'Ptr ('Just 'Struct)
-    ElemRepr ('ListNormal 'ListPtr) = 'Ptr 'Nothing
-    ElemRepr ('ListNormal ('ListData sz)) = 'Data sz
+    ElemRepr ('ListNormal 'NormalListPtr) = 'Ptr 'Nothing
+    ElemRepr ('ListNormal ('NormalListData sz)) = 'Data sz
 
 -- | @ListReprFor e@ is the representation of lists with elements
 -- whose representation is @e@.
 type family ListReprFor (e :: Repr) :: ListRepr where
-    ListReprFor ('Data sz) = 'ListNormal ('ListData sz)
+    ListReprFor ('Data sz) = 'ListNormal ('NormalListData sz)
     ListReprFor ('Ptr ('Just 'Struct)) = 'ListComposite
-    ListReprFor ('Ptr a) = 'ListNormal 'ListPtr
+    ListReprFor ('Ptr a) = 'ListNormal 'NormalListPtr
 
 -- | 'Element' supports converting between values of representation
 -- @'ElemRepr' ('ListReprFor' r)@ and values of representation @r@.
@@ -348,31 +311,31 @@ do
                     rFromListMsg = U.messageDefault
             |]
     concat <$> traverse mkIsListPtrRepr
-        [ ( [t| 'ListNormal ('ListData 'Sz0) |]
+        [ ( [t| 'ListNormal ('NormalListData 'Sz0) |]
           , 'U.List0
           , "List(Void)"
           )
-        , ( [t| 'ListNormal ('ListData 'Sz1) |]
+        , ( [t| 'ListNormal ('NormalListData 'Sz1) |]
           , 'U.List1
           , "List(Bool)"
           )
-        , ( [t| 'ListNormal ('ListData 'Sz8) |]
+        , ( [t| 'ListNormal ('NormalListData 'Sz8) |]
           , 'U.List8
           , "List(UInt8)"
           )
-        , ( [t| 'ListNormal ('ListData 'Sz16) |]
+        , ( [t| 'ListNormal ('NormalListData 'Sz16) |]
           , 'U.List16
           , "List(UInt16)"
           )
-        , ( [t| 'ListNormal ('ListData 'Sz32) |]
+        , ( [t| 'ListNormal ('NormalListData 'Sz32) |]
           , 'U.List32
           , "List(UInt32)"
           )
-        , ( [t| 'ListNormal ('ListData 'Sz64) |]
+        , ( [t| 'ListNormal ('NormalListData 'Sz64) |]
           , 'U.List64
           , "List(UInt64)"
           )
-        , ( [t| 'ListNormal 'ListPtr |]
+        , ( [t| 'ListNormal 'NormalListPtr |]
           , 'U.ListPtr
           , "List(AnyPointer)"
           )
@@ -397,13 +360,13 @@ instance AllocateNormalList r => Allocate ('List ('Just ('ListNormal r))) where
 
 class AllocateNormalList (r :: NormalListRepr) where
     allocNormalList :: U.RWCtx m s => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('Mut s) ('ListNormal r))
-instance AllocateNormalList ('ListData 'Sz0) where allocNormalList = U.allocList0
-instance AllocateNormalList ('ListData 'Sz1) where allocNormalList = U.allocList1
-instance AllocateNormalList ('ListData 'Sz8) where allocNormalList = U.allocList8
-instance AllocateNormalList ('ListData 'Sz16) where allocNormalList = U.allocList16
-instance AllocateNormalList ('ListData 'Sz32) where allocNormalList = U.allocList32
-instance AllocateNormalList ('ListData 'Sz64) where allocNormalList = U.allocList64
-instance AllocateNormalList 'ListPtr where allocNormalList = U.allocListPtr
+instance AllocateNormalList ('NormalListData 'Sz0) where allocNormalList = U.allocList0
+instance AllocateNormalList ('NormalListData 'Sz1) where allocNormalList = U.allocList1
+instance AllocateNormalList ('NormalListData 'Sz8) where allocNormalList = U.allocList8
+instance AllocateNormalList ('NormalListData 'Sz16) where allocNormalList = U.allocList16
+instance AllocateNormalList ('NormalListData 'Sz32) where allocNormalList = U.allocList32
+instance AllocateNormalList ('NormalListData 'Sz64) where allocNormalList = U.allocList64
+instance AllocateNormalList 'NormalListPtr where allocNormalList = U.allocListPtr
 
 
 -- | Constraint that @a@ is a struct type.
