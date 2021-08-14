@@ -1,3 +1,7 @@
+# 0.12.1.0
+
+This release backports some fixes and minor features in the new API.
+
 # 0.12.0.0
 
 * The 0.12.x series is the last major version that will support the old
