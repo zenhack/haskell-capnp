@@ -52,6 +52,9 @@ module Capnp.Untyped
     , IsPtrRepr(..)
     , IsListPtrRepr(..)
 
+    -- * Allocating values
+    , Allocate(..)
+
     , Ptr(..), List(..), Struct, ListOf, Cap
     , structByteCount
     , structWordCount
@@ -1235,6 +1238,44 @@ setRoot (StructAt M.WordPtr{pMessage, pAddr=addr} dataSz ptrSz) = do
     let rootPtr = M.WordPtr{pMessage, pSegment, pAddr = WordAt 0 0}
     setPointerTo rootPtr addr (P.StructPtr 0 dataSz ptrSz)
 
+
+-- | An instace of @'Allocate'@ specifies how to allocate a value with a given representation.
+-- This only makes sense for pointers of course, so it is defined on PtrRepr. Of the well-kinded
+-- types, only @'List 'Nothing@ is missing an instance.
+class Allocate (r :: PtrRepr) where
+    -- | Extra information needed to allocate a value:
+    --
+    -- * For structs, the sizes of the sections.
+    -- * For capabilities, the client to attach to the messages.
+    -- * For lists, the length, and for composite lists, the struct sizes as well.
+    type AllocHint r
+
+    -- | Allocate a value of the given type.
+    alloc :: RWCtx m s => M.Message ('Mut s) -> AllocHint r -> m (UntypedSomePtr ('Mut s) r)
+
+instance Allocate 'Struct where
+    type AllocHint 'Struct = (Word16, Word16)
+    alloc msg = uncurry (allocStruct msg)
+instance Allocate 'Cap where
+    type AllocHint 'Cap = M.Client
+    alloc = appendCap
+instance Allocate ('List ('Just 'ListComposite)) where
+    type AllocHint ('List ('Just 'ListComposite)) = (Int, AllocHint 'Struct)
+    alloc msg (len, (nWords, nPtrs)) = allocCompositeList msg nWords nPtrs len
+instance AllocateNormalList r => Allocate ('List ('Just ('ListNormal r))) where
+    type AllocHint ('List ('Just ('ListNormal r))) = Int
+    alloc = allocNormalList @r
+
+class AllocateNormalList (r :: NormalListRepr) where
+    allocNormalList :: RWCtx m s => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('Mut s) ('ListNormal r))
+instance AllocateNormalList ('NormalListData 'Sz0) where allocNormalList = allocList0
+instance AllocateNormalList ('NormalListData 'Sz1) where allocNormalList = allocList1
+instance AllocateNormalList ('NormalListData 'Sz8) where allocNormalList = allocList8
+instance AllocateNormalList ('NormalListData 'Sz16) where allocNormalList = allocList16
+instance AllocateNormalList ('NormalListData 'Sz32) where allocNormalList = allocList32
+instance AllocateNormalList ('NormalListData 'Sz64) where allocNormalList = allocList64
+instance AllocateNormalList 'NormalListPtr where allocNormalList = allocListPtr
+
 -- | Allocate a struct in the message.
 allocStruct :: M.WriteCtx m s => M.Message ('Mut s) -> Word16 -> Word16 -> m (Struct ('Mut s))
 allocStruct msg dataSz ptrSz = do
@@ -1282,22 +1323,22 @@ allocList64  :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s
 -- | Allocate a list of pointers.
 allocListPtr :: M.WriteCtx m s => M.Message ('Mut s) -> Int -> m (ListOf ('Mut s) (Maybe (Ptr ('Mut s))))
 
-allocList0   msg len = ListOfVoid   <$> allocNormalList 0  msg len
-allocList1   msg len = ListOfBool   <$> allocNormalList 1  msg len
-allocList8   msg len = ListOfWord8  <$> allocNormalList 8  msg len
-allocList16  msg len = ListOfWord16 <$> allocNormalList 16 msg len
-allocList32  msg len = ListOfWord32 <$> allocNormalList 32 msg len
-allocList64  msg len = ListOfWord64 <$> allocNormalList 64 msg len
-allocListPtr msg len = ListOfPtr    <$> allocNormalList 64 msg len
+allocList0   msg len = ListOfVoid   <$> allocNormalList' 0  msg len
+allocList1   msg len = ListOfBool   <$> allocNormalList' 1  msg len
+allocList8   msg len = ListOfWord8  <$> allocNormalList' 8  msg len
+allocList16  msg len = ListOfWord16 <$> allocNormalList' 16 msg len
+allocList32  msg len = ListOfWord32 <$> allocNormalList' 32 msg len
+allocList64  msg len = ListOfWord64 <$> allocNormalList' 64 msg len
+allocListPtr msg len = ListOfPtr    <$> allocNormalList' 64 msg len
 
 -- | Allocate a NormalList
-allocNormalList
+allocNormalList'
     :: M.WriteCtx m s
     => Int                  -- ^ The number bits per element
     -> M.Message ('Mut s) -- ^ The message to allocate in
     -> Int                  -- ^ The number of elements in the list.
     -> m (NormalList ('Mut s))
-allocNormalList bitsPerElt msg len = do
+allocNormalList' bitsPerElt msg len = do
     -- round 'len' up to the nearest word boundary.
     let totalBits = BitCount (len * bitsPerElt)
         totalWords = bytesToWordsCeil $ bitsToBytesCeil totalBits
