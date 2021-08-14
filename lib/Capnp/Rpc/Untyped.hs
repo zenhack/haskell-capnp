@@ -1225,9 +1225,9 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
                 }
         Just client -> do
             capDesc <- emitCap conn client
-            content <- createPure defaultLimit $ do
+            content <- fmap Just $ createPure defaultLimit $ do
                 msg <- Message.newMessage Nothing
-                Just . UntypedRaw.PtrCap <$> UntypedRaw.appendCap msg client
+                UntypedRaw.PtrCap <$> UntypedRaw.appendCap msg client
             pure Return
                 { answerId = QAId questionId
                 , releaseParamCaps = True -- Not really meaningful for bootstrap, but...
