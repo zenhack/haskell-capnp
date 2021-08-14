@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes        #-}
 {-# LANGUAGE ApplicativeDo              #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DataKinds                  #-}
@@ -10,8 +11,11 @@
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-|
 Module: Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.
@@ -30,6 +34,23 @@ module Capnp.Untyped
     , ListRepr(..)
     , NormalListRepr(..)
     , DataSz(..)
+
+    -- * Mapping representations to value types.
+    , Untyped
+    , UntypedData
+    , UntypedPtr
+    , UntypedSomePtr
+    , UntypedList
+    , UntypedSomeList
+
+    -- * Relating the representations of lists & their elements.
+    , Element(..)
+    , ElemRepr
+    , ListReprFor
+
+    -- * Working with pointers
+    , IsPtrRepr(..)
+    , IsListPtrRepr(..)
 
     , Ptr(..), List(..), Struct, ListOf, Cap
     , structByteCount
@@ -82,6 +103,7 @@ import Control.Monad.Catch.Pure  (CatchT(runCatchT))
 import Control.Monad.Primitive   (PrimMonad(..))
 import Control.Monad.ST          (RealWorld)
 import Control.Monad.Trans.Class (MonadTrans(lift))
+import Data.Kind                 (Type)
 
 import qualified Data.ByteString     as BS
 import qualified Language.Haskell.TH as TH
@@ -105,52 +127,9 @@ import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M
 import qualified Capnp.Pointer as P
 
-
--- | A 'Repr' describes a wire representation for a value. This is
--- mostly used at the type level (using DataKinds); types are
--- parametrized over representations.
-data Repr
-    = Ptr (Maybe PtrRepr)
-    -- ^ Pointer type. 'Nothing' indicates an AnyPointer, 'Just' describes
-    -- a more specific pointer type.
-    | Data DataSz
-    -- ^ Non-pointer type.
-    deriving(Show)
-
--- | Information about the representation of a pointer type
-data PtrRepr
-    = Cap
-    -- ^ Capability pointer.
-    | List (Maybe ListRepr)
-    -- ^ List pointer. 'Nothing' describes an AnyList, 'Just' describes
-    -- more specific list types.
-    | Struct
-    -- ^ A struct (or group).
-    deriving(Show)
-
--- | Information about the representation of a list type.
-data ListRepr where
-    -- | A "normal" list
-    ListNormal :: NormalListRepr -> ListRepr
-    ListComposite :: ListRepr
-    deriving(Show)
-
--- | Information about the representation of a normal (non-composite) list.
-data NormalListRepr where
-    NormalListData :: DataSz -> NormalListRepr
-    NormalListPtr :: NormalListRepr
-    deriving(Show)
-
--- | The size of a non-pointer type. @SzN@ represents an @N@-bit value.
-data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
-    deriving(Show)
-
--- | Type (constraint) synonym for the constraints needed for most read
--- operations.
-type ReadCtx m mut = (M.MonadReadMessage mut m, MonadThrow m, MonadLimit m)
-
--- | Synonym for ReadCtx + WriteCtx
-type RWCtx m s = (ReadCtx m ('Mut s), M.WriteCtx m s)
+-------------------------------------------------------------------------------
+-- Untyped refernces to values in a message.
+-------------------------------------------------------------------------------
 
 -- | A an absolute pointer to a value (of arbitrary type) in a message.
 -- Note that there is no variant for far pointers, which don't make sense
@@ -201,6 +180,191 @@ data Struct mut
         !(M.WordPtr mut) -- Start of struct
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
+
+-- | Type (constraint) synonym for the constraints needed for most read
+-- operations.
+type ReadCtx m mut = (M.MonadReadMessage mut m, MonadThrow m, MonadLimit m)
+
+-- | Synonym for ReadCtx + WriteCtx
+type RWCtx m s = (ReadCtx m ('Mut s), M.WriteCtx m s)
+
+-- | A 'Repr' describes a wire representation for a value. This is
+-- mostly used at the type level (using DataKinds); types are
+-- parametrized over representations.
+data Repr
+    = Ptr (Maybe PtrRepr)
+    -- ^ Pointer type. 'Nothing' indicates an AnyPointer, 'Just' describes
+    -- a more specific pointer type.
+    | Data DataSz
+    -- ^ Non-pointer type.
+    deriving(Show)
+
+-- | Information about the representation of a pointer type
+data PtrRepr
+    = Cap
+    -- ^ Capability pointer.
+    | List (Maybe ListRepr)
+    -- ^ List pointer. 'Nothing' describes an AnyList, 'Just' describes
+    -- more specific list types.
+    | Struct
+    -- ^ A struct (or group).
+    deriving(Show)
+
+-- | Information about the representation of a list type.
+data ListRepr where
+    -- | A "normal" list
+    ListNormal :: NormalListRepr -> ListRepr
+    ListComposite :: ListRepr
+    deriving(Show)
+
+-- | Information about the representation of a normal (non-composite) list.
+data NormalListRepr where
+    NormalListData :: DataSz -> NormalListRepr
+    NormalListPtr :: NormalListRepr
+    deriving(Show)
+
+-- | The size of a non-pointer type. @SzN@ represents an @N@-bit value.
+data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
+    deriving(Show)
+
+-- | @Untyped mut r@ is an untyped value with representation @r@ stored in
+-- a message with mutability @mut@.
+type family Untyped (mut :: Mutability) (r :: Repr) :: Type where
+    Untyped mut ('Data sz) = UntypedData sz
+    Untyped mut ('Ptr ptr) = UntypedPtr mut ptr
+
+-- | @UntypedData sz@ is an untyped value with size @sz@.
+type family UntypedData (sz :: DataSz) :: Type where
+    UntypedData 'Sz0 = ()
+    UntypedData 'Sz1 = Bool
+    UntypedData 'Sz8 = Word8
+    UntypedData 'Sz16 = Word16
+    UntypedData 'Sz32 = Word32
+    UntypedData 'Sz64 = Word64
+
+-- | Like 'Untyped', but for pointers only.
+type family UntypedPtr (mut :: Mutability) (r :: Maybe PtrRepr) :: Type where
+    UntypedPtr mut 'Nothing = Maybe (Ptr mut)
+    UntypedPtr mut ('Just r) = UntypedSomePtr mut r
+
+-- | Like 'UntypedPtr', but doesn't allow AnyPointers.
+type family UntypedSomePtr (mut :: Mutability) (r :: PtrRepr) :: Type where
+    UntypedSomePtr mut 'Struct = Struct mut
+    UntypedSomePtr mut 'Cap = Cap mut
+    UntypedSomePtr mut ('List r) = UntypedList mut r
+
+-- | Like 'Untyped', but for lists only.
+type family UntypedList (mut :: Mutability) (r :: Maybe ListRepr) :: Type where
+    UntypedList mut 'Nothing = List mut
+    UntypedList mut ('Just r) = UntypedSomeList mut r
+
+-- | Like 'UntypedList', but doesn't allow AnyLists.
+type family UntypedSomeList (mut :: Mutability) (r :: ListRepr) :: Type where
+    UntypedSomeList mut r = ListOf mut (Untyped mut (ElemRepr r))
+
+-- | @ElemRepr r@ is the representation of elements of lists with
+-- representation @r@.
+type family ElemRepr (rl :: ListRepr) :: Repr where
+    ElemRepr 'ListComposite = 'Ptr ('Just 'Struct)
+    ElemRepr ('ListNormal 'NormalListPtr) = 'Ptr 'Nothing
+    ElemRepr ('ListNormal ('NormalListData sz)) = 'Data sz
+
+-- | @ListReprFor e@ is the representation of lists with elements
+-- whose representation is @e@.
+type family ListReprFor (e :: Repr) :: ListRepr where
+    ListReprFor ('Data sz) = 'ListNormal ('NormalListData sz)
+    ListReprFor ('Ptr ('Just 'Struct)) = 'ListComposite
+    ListReprFor ('Ptr a) = 'ListNormal 'NormalListPtr
+
+-- | 'Element' supports converting between values of representation
+-- @'ElemRepr' ('ListReprFor' r)@ and values of representation @r@.
+--
+-- At a glance, you might expect this to just be a no-op, but it is actually
+-- *not* always the case that @'ElemRepr' ('ListReprFor' r) ~ r@; in the
+-- case of pointer types, @'ListReprFor' r@ can contain arbitrary pointers,
+-- so information is lost, and it is possible for the list to contain pointers
+-- of the incorrect type. In this case, 'fromElement' will throw an error.
+--
+-- 'toElement' is more trivial.
+class Element (r :: Repr) where
+    fromElement
+        :: forall m mut. ReadCtx m mut
+        => M.Message mut
+        -> Untyped mut (ElemRepr (ListReprFor r))
+        -> m (Untyped mut r)
+    toElement :: Untyped mut r -> Untyped mut (ElemRepr (ListReprFor r))
+
+-- | Operations on types with pointer representations.
+class IsPtrRepr (r :: Maybe PtrRepr) where
+    toPtr :: Untyped mut ('Ptr r) -> Maybe (Ptr mut)
+    -- ^ Convert an untyped value of this representation to an AnyPointer.
+    fromPtr :: ReadCtx m mut => M.Message mut -> Maybe (Ptr mut) -> m (Untyped mut ('Ptr r))
+    -- ^ Extract a value with this representation from an AnyPointer, failing
+    -- if the pointer is the wrong type for this representation.
+
+-- | Operations on types with list representations.
+class IsListPtrRepr (r :: ListRepr) where
+    rToList :: UntypedSomeList mut r -> List mut
+    -- ^ Convert an untyped value of this representation to an AnyList.
+    rFromList :: ReadCtx m mut => List mut -> m (UntypedSomeList mut r)
+    -- ^ Extract a value with this representation from an AnyList, failing
+    -- if the list is the wrong type for this representation.
+    rFromListMsg :: ReadCtx m mut => M.Message mut -> m (UntypedSomeList mut r)
+    -- ^ Create a zero-length value with this representation, living in the
+    -- provided message.
+
+-- helper function for throwing SchemaViolationError "expected ..."
+expected :: MonadThrow m => String -> m a
+expected msg = throwM $ E.SchemaViolationError $ "expected " ++ msg
+
+
+-------------------------------------------------------------------------------
+-- 'Element' instances
+-------------------------------------------------------------------------------
+
+instance Element ('Data sz) where
+    fromElement _ = pure
+    toElement = id
+instance Element ('Ptr ('Just 'Struct)) where
+    fromElement _ = pure
+    toElement = id
+instance Element ('Ptr 'Nothing) where
+    fromElement _ = pure
+    toElement = id
+instance Element ('Ptr ('Just 'Cap)) where
+    fromElement = fromPtr @('Just 'Cap)
+    toElement = Just . PtrCap
+instance IsPtrRepr ('Just ('List a)) => Element ('Ptr ('Just ('List a))) where
+    fromElement = fromPtr @('Just ('List a))
+    toElement = toPtr @('Just ('List a))
+
+-------------------------------------------------------------------------------
+-- 'IsPtrRepr' instances
+-------------------------------------------------------------------------------
+
+instance IsPtrRepr 'Nothing where
+    toPtr p = p
+    fromPtr _ p = pure p
+instance IsPtrRepr ('Just 'Struct) where
+    toPtr s = Just (PtrStruct s)
+    fromPtr msg Nothing            = messageDefault msg
+    fromPtr _ (Just (PtrStruct s)) = pure s
+    fromPtr _ _                    = expected "pointer to struct"
+instance IsPtrRepr ('Just 'Cap) where
+    toPtr c = Just (PtrCap c)
+    fromPtr _ Nothing           = expected "pointer to capability"
+    fromPtr _ (Just (PtrCap c)) = pure c
+    fromPtr _ _                 = expected "pointer to capability"
+instance IsPtrRepr ('Just ('List 'Nothing)) where
+    toPtr l = Just (PtrList l)
+    fromPtr _ Nothing            = expected "pointer to list"
+    fromPtr _ (Just (PtrList l)) = pure l
+    fromPtr _ (Just _)           = expected "pointer to list"
+instance IsListPtrRepr r => IsPtrRepr ('Just ('List ('Just r))) where
+    toPtr l = Just (PtrList (rToList @r l))
+    fromPtr msg Nothing          = rFromListMsg @r msg
+    fromPtr _ (Just (PtrList l)) = rFromList @r l
+    fromPtr _ (Just _)           = expected "pointer to list"
 
 -- | N.B. this should mostly be considered an implementation detail, but
 -- it is exposed because it is used by generated code.
@@ -347,42 +511,6 @@ instance Thaw a => Thaw (Maybe a) where
     freeze       = traverse freeze
     unsafeThaw   = traverse unsafeThaw
     unsafeFreeze = traverse unsafeFreeze
-
-do
-    let mkWrappedInstance name =
-            let f = pure $ TH.ConT name in
-            [d|instance Thaw ($f 'Const) where
-                type Mutable s ($f 'Const) = $f ('Mut s)
-
-                thaw         = runCatchImpure . tMsg thaw
-                freeze       = runCatchImpure . tMsg freeze
-                unsafeThaw   = runCatchImpure . tMsg unsafeThaw
-                unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
-            |]
-        mkListOfInstance t =
-            [d|instance Thaw (ListOf 'Const $t) where
-                type Mutable s (ListOf 'Const $t) = ListOf ('Mut s) $t
-
-                thaw         = runCatchImpure . tFlip thaw
-                freeze       = runCatchImpure . tFlip freeze
-                unsafeThaw   = runCatchImpure . tFlip unsafeThaw
-                unsafeFreeze = runCatchImpure . tFlip unsafeFreeze
-            |]
-    xs <- traverse mkWrappedInstance
-        [ ''Ptr
-        , ''List
-        , ''NormalList
-        , ''Struct
-        ]
-    ys <- traverse mkListOfInstance
-        [ [t|()|]
-        , [t|Bool|]
-        , [t|Word8|]
-        , [t|Word16|]
-        , [t|Word32|]
-        , [t|Word64|]
-        ]
-    pure $ concat $ xs ++ ys
 
 instance Thaw (ListOf 'Const (Struct 'Const)) where
     type Mutable s (ListOf 'Const (Struct 'Const)) =
@@ -1180,3 +1308,82 @@ appendCap :: M.WriteCtx m s => M.Message ('Mut s) -> M.Client -> m (Cap ('Mut s)
 appendCap msg client = do
     i <- M.appendCap msg client
     pure $ CapAt msg (fromIntegral i)
+
+do
+    let mkWrappedInstance name =
+            let f = pure $ TH.ConT name in
+            [d|instance Thaw ($f 'Const) where
+                type Mutable s ($f 'Const) = $f ('Mut s)
+
+                thaw         = runCatchImpure . tMsg thaw
+                freeze       = runCatchImpure . tMsg freeze
+                unsafeThaw   = runCatchImpure . tMsg unsafeThaw
+                unsafeFreeze = runCatchImpure . tMsg unsafeFreeze
+            |]
+        mkListOfInstance t =
+            [d|instance Thaw (ListOf 'Const $t) where
+                type Mutable s (ListOf 'Const $t) = ListOf ('Mut s) $t
+
+                thaw         = runCatchImpure . tFlip thaw
+                freeze       = runCatchImpure . tFlip freeze
+                unsafeThaw   = runCatchImpure . tFlip unsafeThaw
+                unsafeFreeze = runCatchImpure . tFlip unsafeFreeze
+            |]
+    xs <- traverse mkWrappedInstance
+        [ ''Ptr
+        , ''List
+        , ''NormalList
+        , ''Struct
+        ]
+    ys <- traverse mkListOfInstance
+        [ [t|()|]
+        , [t|Bool|]
+        , [t|Word8|]
+        , [t|Word16|]
+        , [t|Word32|]
+        , [t|Word64|]
+        ]
+    pure $ concat $ xs ++ ys
+
+do
+    let mkIsListPtrRepr (r, listC, str) =
+            [d| instance IsListPtrRepr $r where
+                    rToList = $(pure $ TH.ConE listC)
+                    rFromList $(pure $ TH.ConP listC [TH.VarP (TH.mkName "l")]) = pure l
+                    rFromList _ = expected $(pure $ TH.LitE $ TH.StringL $ "pointer to " ++ str)
+                    rFromListMsg = messageDefault
+            |]
+    concat <$> traverse mkIsListPtrRepr
+        [ ( [t| 'ListNormal ('NormalListData 'Sz0) |]
+          , 'List0
+          , "List(Void)"
+          )
+        , ( [t| 'ListNormal ('NormalListData 'Sz1) |]
+          , 'List1
+          , "List(Bool)"
+          )
+        , ( [t| 'ListNormal ('NormalListData 'Sz8) |]
+          , 'List8
+          , "List(UInt8)"
+          )
+        , ( [t| 'ListNormal ('NormalListData 'Sz16) |]
+          , 'List16
+          , "List(UInt16)"
+          )
+        , ( [t| 'ListNormal ('NormalListData 'Sz32) |]
+          , 'List32
+          , "List(UInt32)"
+          )
+        , ( [t| 'ListNormal ('NormalListData 'Sz64) |]
+          , 'List64
+          , "List(UInt64)"
+          )
+        , ( [t| 'ListNormal 'NormalListPtr |]
+          , 'ListPtr
+          , "List(AnyPointer)"
+          )
+        , ( [t| 'ListComposite |]
+          , 'ListStruct
+          , "composite list"
+          )
+        ]

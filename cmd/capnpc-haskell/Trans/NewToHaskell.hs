@@ -647,8 +647,8 @@ instance ToType R.ListRepr where
     toType R.ListComposite   = tReprName "ListComposite"
 
 instance ToType R.NormalListRepr where
-    toType (R.ListData r) = rApp "ListData" [toType r]
-    toType R.ListPtr      = tReprName "ListPtr"
+    toType (R.NormalListData r) = rApp "ListData" [toType r]
+    toType R.NormalListPtr      = tReprName "ListPtr"
 
 instance ToType R.DataSz where
     toType = tReprName . fromString . show
