@@ -44,7 +44,6 @@ module Capnp.Untyped
     , UntypedSomePtr
     , UntypedList
     , UntypedSomeList
-    -- ** TODO
     , IgnoreMut(..)
     , MaybePtr(..)
     , Unwrapped
@@ -407,10 +406,14 @@ data NormalListRepr where
 data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
     deriving(Show)
 
+-- | Wrapper for use with 'Untyped'; see docs for 'Untyped'
 newtype IgnoreMut a (mut :: Mutability) = IgnoreMut a
     deriving(Show, Read, Eq, Ord, Enum, Bounded, Num, Real, Integral, Bits, FiniteBits)
+
+-- | Wrapper for use with 'Untyped'; see docs for 'Untyped'.
 newtype MaybePtr (mut :: Mutability) = MaybePtr (Maybe (Ptr mut))
 
+-- | Normalizes types returned by 'Untyped'; see docs for 'Untyped'.
 type family Unwrapped a where
     Unwrapped (IgnoreMut a mut) = a
     Unwrapped (MaybePtr mut) = Maybe (Ptr mut)
@@ -418,6 +421,25 @@ type family Unwrapped a where
 
 -- | @Untyped r mut@ is an untyped value with representation @r@ stored in
 -- a message with mutability @mut@.
+--
+-- Note that the return tyep of this type family has kind
+-- @'Mutability' -> 'Type'@. This is important, as it allows us
+-- to define instances on @'Untyped' r@, and use @'Untyped' r@
+-- in constraints.
+--
+-- This introduces some awkwardnesses though -- we really want
+-- this to be @(Maybe (Ptr mut))@ for @'Ptr 'Nothing@, and
+-- Int types/Bool/() for @'Data sz@. But we can't because these
+-- are the wrong kind.
+--
+-- So, we hack around this by introducing two newtypes, 'IgnoreMut'
+-- and 'MaybePtr', and a type family 'Unwrapped', which lets us
+-- use @'Unwrapped' ('Untyped' r mut)@ as the type we really want
+-- in some places, though we can't curry it then.
+--
+-- All this is super super awkward, but this is a low level
+-- mostly-internal API; most users will intract with this through
+-- the Raw type in "Capnp.Repr", which hides all of this...
 type family Untyped (r :: Repr) :: Mutability -> Type where
     Untyped ('Data sz) = IgnoreMut (UntypedData sz)
     Untyped ('Ptr ptr) = UntypedPtr ptr
