@@ -1,3 +1,9 @@
+# 0.13.0.0
+
+This release drops support for the old API. To upgrade to the new API,
+Users should first upgrade to the latest 0.12.x version, switch their
+code to use the new API, and then upgrade to this version.
+
 # 0.12.1.0
 
 This release backports some fixes and minor features in the new API.
