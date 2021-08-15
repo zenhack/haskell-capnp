@@ -58,7 +58,6 @@ module Capnp.Message (
 
     -- ** Modifying messages
     , setSegment
-    , setWord
     , write
     , setCap
     , appendCap
@@ -236,15 +235,6 @@ setSegment :: WriteCtx m s => Message ('Mut s) -> Int -> Segment ('Mut s) -> m (
 setSegment msg i seg = do
     checkIndex i =<< numSegs msg
     internalSetSeg msg i seg
-
--- | @'setWord' message address value@ sets the word at @address@ in the
--- message to @value@. If the address is not valid in the message, a
--- 'E.BoundsError' will be thrown.
-setWord :: WriteCtx m s => Message ('Mut s) -> WordAddr -> Word64 -> m ()
-setWord msg WordAt{wordIndex=i, segIndex} val = do
-    seg <- getSegment msg segIndex
-    checkIndex i =<< numWords seg
-    write seg i val
 
 -- | @'setCap' message index cap@ sets the sets the capability at @index@ in
 -- the message's capability table to @cap@. If the index is out of bounds, a
