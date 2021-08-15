@@ -47,6 +47,7 @@ module Capnp.Untyped
 
     -- * Relating the representations of lists & their elements.
     , Element(..)
+    , ListItem(..)
     , ElemRepr
     , ListReprFor
 
@@ -73,7 +74,7 @@ module Capnp.Untyped
     , copyCap
     , copyListOf
     , getClient
-    , get, index, length
+    , get, index
     , setIndex
     , take
     , rootPtr
@@ -169,14 +170,17 @@ data StructList mut = StructList
     -- ^ Number of elements
     }
 
+-- | A list of values with representation 'r' in a message.
 newtype ListOf r mut = ListOf (ListRepOf r mut)
 
 type family ListRepOf (r :: Repr) :: Mutability -> * where
     ListRepOf ('Ptr ('Just 'Struct)) = StructList
     ListRepOf r = NormalList
 
--- | A list of values with representation 'r' in a message.
-class ListItem (r :: Repr) where
+-- | @'ListItem' r@ indicates that @r@ is a representation for elements of some list
+-- type. Not every representation is covered; instances exist only for @r@ where
+-- @'ElemRepr' ('ListReprFor' r) ~ r@.
+class Element r => ListItem (r :: Repr) where
     -- | Returns the length of a list
     length :: ListOf r mut -> Int
 

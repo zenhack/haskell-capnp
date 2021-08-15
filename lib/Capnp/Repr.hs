@@ -143,14 +143,20 @@ deriving instance Generic (Untyped mut (ReprFor a)) => Generic (Raw a mut)
 -- | A phantom type denoting capnproto lists of type @a@.
 data List a
 
+type ListElem a =
+    ( U.Element (ReprFor a)
+    , U.ListItem (ElemRepr (ListReprFor (ReprFor a)))
+    )
+
 -- | Get the length of a capnproto list.
-length :: Raw (List a) mut -> Int
+length :: ListElem a => Raw (List a) mut -> Int
 length (Raw l) = U.length l
 
 -- | @'index' i list@ gets the @i@th element of the list.
 index :: forall a m mut.
     ( U.ReadCtx m mut
-    , Element (ReprFor a)
+    , U.HasMessage (U.ListOf (ElemRepr (ListReprFor (ReprFor a))) mut) mut
+    , ListElem a
     ) => Int -> Raw (List a) mut -> m (Raw a mut)
 index i (Raw l) =
     Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
@@ -158,7 +164,8 @@ index i (Raw l) =
 -- | @'setIndex' value i list@ sets the @i@th element of @list@ to @value@.
 setIndex :: forall a m s.
     ( U.RWCtx m s
-    , Element (ReprFor a)
+    , U.ListItem (ElemRepr (ListReprFor (ReprFor a)))
+    , U.Element (ReprFor a)
     ) => Raw a ('Mut s) -> Int -> Raw (List a) ('Mut s) -> m ()
 setIndex (Raw v) i (Raw l) = U.setIndex (toElement @(ReprFor a) @('Mut s) v) i l
 
