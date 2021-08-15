@@ -97,7 +97,8 @@ import qualified StmContainers.Map as M
 
 import Capnp.Convert        (msgToRaw, parsedToMsg)
 import Capnp.Fields         (Which)
-import Capnp.Message        (Message, Mutability(..))
+import Capnp.Message        (Message)
+import Capnp.Mutability     (Mutability(..), thaw)
 import Capnp.New.Classes    (new, newRoot, parse)
 import Capnp.Repr           (Raw(..))
 import Capnp.Rpc.Errors
@@ -111,7 +112,6 @@ import Capnp.Rpc.Promise
     (Fulfiller, breakOrFulfill, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
-import Data.Mutable         (thaw)
 import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
@@ -1387,7 +1387,7 @@ sendRawMsg conn' = writeTBQueue (sendQ conn')
 sendCall :: Conn' -> Call -> STM ()
 sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{content, capTable}} =
     sendRawMsg conn' =<< createPure defaultLimit (do
-        mcontent <- thaw content
+        mcontent <- traverse thaw content
         msg <- case mcontent of
             Just v  -> pure $ UntypedRaw.message v
             Nothing -> Message.newMessage Nothing
@@ -1409,7 +1409,7 @@ sendReturn :: Conn' -> Return -> STM ()
 sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
     Return'results Payload{content, capTable} ->
         sendRawMsg conn' =<< createPure defaultLimit (do
-            mcontent <- thaw content
+            mcontent <- traverse thaw content
             msg <- case mcontent of
                 Just v  -> pure $ UntypedRaw.message v
                 Nothing -> Message.newMessage Nothing
@@ -1450,7 +1450,7 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             }
     Return'acceptFromThirdParty ptr ->
         sendRawMsg conn' =<< createPure defaultLimit (do
-            mptr <- thaw ptr
+            mptr <- traverse thaw ptr
             msg <- case mptr of
                 Just v  -> pure $ UntypedRaw.message v
                 Nothing -> Message.newMessage Nothing
