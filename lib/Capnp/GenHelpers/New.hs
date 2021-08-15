@@ -76,19 +76,19 @@ readVariant
         ( R.IsStruct a
         , U.ReadCtx m mut
         )
-    => F.Variant k a b -> R.Raw mut a -> m (R.Raw mut b)
+    => F.Variant k a b -> R.Raw a mut -> m (R.Raw b mut)
 readVariant F.Variant{field} = readField field
 
-newStruct :: forall a m s. (U.RWCtx m s, NC.TypedStruct a) => () -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+newStruct :: forall a m s. (U.RWCtx m s, NC.TypedStruct a) => () -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
 newStruct () msg = R.Raw . R.fromRaw <$> NC.new @NB.AnyStruct (NC.numStructWords @a, NC.numStructPtrs @a) msg
 
 
 parseEnum :: (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, Applicative m)
-    => R.Raw 'Const a -> m a
+    => R.Raw a 'Const -> m a
 parseEnum (R.Raw n) = pure $ toEnum $ fromIntegral n
 
 encodeEnum :: forall a m s. (R.ReprFor a ~ 'R.Data 'R.Sz16, Enum a, U.RWCtx m s)
-    => M.Message ('Mut s) -> a -> m (R.Raw ('Mut s) a)
+    => M.Message ('Mut s) -> a -> m (R.Raw a ('Mut s))
 encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
 
 -- | Get a pointer from a ByteString, where the root object is a struct with
@@ -98,7 +98,7 @@ encodeEnum _msg value = pure $ R.Raw $ fromIntegral $ fromEnum @a value
 -- if decoding is not successful.
 --
 -- The purpose of this is for defining constants of pointer type from a schema.
-getPtrConst :: forall a. R.IsPtr a => BS.ByteString -> R.Raw 'Const a
+getPtrConst :: forall a. R.IsPtr a => BS.ByteString -> R.Raw a 'Const
 getPtrConst bytes = fromJust $ evalLimitT maxBound $ do
     R.Raw root <- bsToRaw @NB.AnyStruct bytes
     U.getPtr 0 root

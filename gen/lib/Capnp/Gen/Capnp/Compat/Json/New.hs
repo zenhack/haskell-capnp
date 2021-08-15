@@ -60,14 +60,14 @@ instance (C.Marshal Value (C.Parsed Value)) where
         )
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Value
-        = RW_Value'null (R.Raw mut_ ())
-        | RW_Value'boolean (R.Raw mut_ Std_.Bool)
-        | RW_Value'number (R.Raw mut_ Std_.Double)
-        | RW_Value'string (R.Raw mut_ Basics.Text)
-        | RW_Value'array (R.Raw mut_ (R.List Value))
-        | RW_Value'object (R.Raw mut_ (R.List Value'Field))
-        | RW_Value'call (R.Raw mut_ Value'Call)
+    data RawWhich Value mut_
+        = RW_Value'null (R.Raw () mut_)
+        | RW_Value'boolean (R.Raw Std_.Bool mut_)
+        | RW_Value'number (R.Raw Std_.Double mut_)
+        | RW_Value'string (R.Raw Basics.Text mut_)
+        | RW_Value'array (R.Raw (R.List Value) mut_)
+        | RW_Value'object (R.Raw (R.List Value'Field) mut_)
+        | RW_Value'call (R.Raw Value'Call mut_)
         | RW_Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->

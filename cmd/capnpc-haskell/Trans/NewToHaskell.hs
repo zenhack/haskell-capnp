@@ -405,7 +405,7 @@ defineConstant thisMod localName value =
             ]
         C.PtrValue t v ->
             [ Hs.DcValue
-                { typ = Hs.TApp (tgName ["R"] "Raw") [tgName ["GH"] "Const", typeToType thisMod (C.PtrType t)]
+                { typ = Hs.TApp (tgName ["R"] "Raw") [ typeToType thisMod (C.PtrType t), tgName ["GH"] "Const"]
                 , def = Hs.DfValue
                     { name
                     , params = []
@@ -420,8 +420,8 @@ defineRawData thisMod name tVars variants =
     Hs.IdData Hs.Data
         { dataName = "RawWhich"
         , typeArgs =
-            [ Hs.TVar "mut_"
-            , Hs.TApp (Hs.TVar $ Name.renderUnQ $ Name.localToUnQ name) tVars
+            [ Hs.TApp (Hs.TVar $ Name.renderUnQ $ Name.localToUnQ name) tVars
+            , Hs.TVar "mut_"
             ]
 
         , dataNewtype = False
@@ -433,8 +433,8 @@ defineRawData thisMod name tVars variants =
                 , dvArgs = Hs.APos
                     [ Hs.TApp
                         (tReprName "Raw")
-                        [ Hs.TVar "mut_"
-                        , fieldLocTypeToType thisMod fieldLocType
+                        [ fieldLocTypeToType thisMod fieldLocType
+                        , Hs.TVar "mut_"
                         ]
                     ]
                 }

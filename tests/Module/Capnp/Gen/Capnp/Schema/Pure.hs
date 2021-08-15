@@ -35,6 +35,7 @@ import Util
 
 import Instances ()
 
+import Capnp.Mutability (freeze)
 import Capnp.New
     ( IsStruct
     , Mutability(..)
@@ -46,7 +47,6 @@ import Capnp.New
     , hPutParsed
     , msgToParsed
     )
-import Data.Mutable (Thaw(..))
 
 import qualified Capnp.Message as M
 import qualified Capnp.Untyped as U

@@ -12,9 +12,9 @@ import Data.Function           ((&))
 
 import qualified Capnp.Gen.Capnp.Schema.New as N
 
+import Capnp.Mutability     (freeze)
 import Capnp.New            (encodeField, encodeVariant, initVariant, readField)
 import Capnp.TraversalLimit (LimitT, evalLimitT)
-import Data.Mutable         (Thaw(..))
 import Util                 (decodeValue, schemaSchemaSrc)
 
 import qualified Capnp.Message     as M

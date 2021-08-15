@@ -60,21 +60,21 @@ instance (C.Marshal Message (C.Parsed Message)) where
         )
 instance (GH.HasUnion Message) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Message
-        = RW_Message'unimplemented (R.Raw mut_ Message)
-        | RW_Message'abort (R.Raw mut_ Exception)
-        | RW_Message'call (R.Raw mut_ Call)
-        | RW_Message'return (R.Raw mut_ Return)
-        | RW_Message'finish (R.Raw mut_ Finish)
-        | RW_Message'resolve (R.Raw mut_ Resolve)
-        | RW_Message'release (R.Raw mut_ Release)
-        | RW_Message'obsoleteSave (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
-        | RW_Message'bootstrap (R.Raw mut_ Bootstrap)
-        | RW_Message'obsoleteDelete (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
-        | RW_Message'provide (R.Raw mut_ Provide)
-        | RW_Message'accept (R.Raw mut_ Accept)
-        | RW_Message'join (R.Raw mut_ Join)
-        | RW_Message'disembargo (R.Raw mut_ Disembargo)
+    data RawWhich Message mut_
+        = RW_Message'unimplemented (R.Raw Message mut_)
+        | RW_Message'abort (R.Raw Exception mut_)
+        | RW_Message'call (R.Raw Call mut_)
+        | RW_Message'return (R.Raw Return mut_)
+        | RW_Message'finish (R.Raw Finish mut_)
+        | RW_Message'resolve (R.Raw Resolve mut_)
+        | RW_Message'release (R.Raw Release mut_)
+        | RW_Message'obsoleteSave (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
+        | RW_Message'bootstrap (R.Raw Bootstrap mut_)
+        | RW_Message'obsoleteDelete (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
+        | RW_Message'provide (R.Raw Provide mut_)
+        | RW_Message'accept (R.Raw Accept mut_)
+        | RW_Message'join (R.Raw Join mut_)
+        | RW_Message'disembargo (R.Raw Disembargo mut_)
         | RW_Message'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -349,10 +349,10 @@ instance (C.Marshal Call'sendResultsTo (C.Parsed Call'sendResultsTo)) where
         )
 instance (GH.HasUnion Call'sendResultsTo) where
     unionField  = (GH.dataField 48 0 16 0)
-    data RawWhich mut_ Call'sendResultsTo
-        = RW_Call'sendResultsTo'caller (R.Raw mut_ ())
-        | RW_Call'sendResultsTo'yourself (R.Raw mut_ ())
-        | RW_Call'sendResultsTo'thirdParty (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
+    data RawWhich Call'sendResultsTo mut_
+        = RW_Call'sendResultsTo'caller (R.Raw () mut_)
+        | RW_Call'sendResultsTo'yourself (R.Raw () mut_)
+        | RW_Call'sendResultsTo'thirdParty (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
         | RW_Call'sendResultsTo'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -436,13 +436,13 @@ instance (C.Marshal Return (C.Parsed Return)) where
         )
 instance (GH.HasUnion Return) where
     unionField  = (GH.dataField 48 0 16 0)
-    data RawWhich mut_ Return
-        = RW_Return'results (R.Raw mut_ Payload)
-        | RW_Return'exception (R.Raw mut_ Exception)
-        | RW_Return'canceled (R.Raw mut_ ())
-        | RW_Return'resultsSentElsewhere (R.Raw mut_ ())
-        | RW_Return'takeFromOtherQuestion (R.Raw mut_ Std_.Word32)
-        | RW_Return'acceptFromThirdParty (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
+    data RawWhich Return mut_
+        = RW_Return'results (R.Raw Payload mut_)
+        | RW_Return'exception (R.Raw Exception mut_)
+        | RW_Return'canceled (R.Raw () mut_)
+        | RW_Return'resultsSentElsewhere (R.Raw () mut_)
+        | RW_Return'takeFromOtherQuestion (R.Raw Std_.Word32 mut_)
+        | RW_Return'acceptFromThirdParty (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
         | RW_Return'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -589,9 +589,9 @@ instance (C.Marshal Resolve (C.Parsed Resolve)) where
         )
 instance (GH.HasUnion Resolve) where
     unionField  = (GH.dataField 32 0 16 0)
-    data RawWhich mut_ Resolve
-        = RW_Resolve'cap (R.Raw mut_ CapDescriptor)
-        | RW_Resolve'exception (R.Raw mut_ Exception)
+    data RawWhich Resolve mut_
+        = RW_Resolve'cap (R.Raw CapDescriptor mut_)
+        | RW_Resolve'exception (R.Raw Exception mut_)
         | RW_Resolve'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -735,11 +735,11 @@ instance (C.Marshal Disembargo'context (C.Parsed Disembargo'context)) where
         )
 instance (GH.HasUnion Disembargo'context) where
     unionField  = (GH.dataField 32 0 16 0)
-    data RawWhich mut_ Disembargo'context
-        = RW_Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
-        | RW_Disembargo'context'receiverLoopback (R.Raw mut_ Std_.Word32)
-        | RW_Disembargo'context'accept (R.Raw mut_ ())
-        | RW_Disembargo'context'provide (R.Raw mut_ Std_.Word32)
+    data RawWhich Disembargo'context mut_
+        = RW_Disembargo'context'senderLoopback (R.Raw Std_.Word32 mut_)
+        | RW_Disembargo'context'receiverLoopback (R.Raw Std_.Word32 mut_)
+        | RW_Disembargo'context'accept (R.Raw () mut_)
+        | RW_Disembargo'context'provide (R.Raw Std_.Word32 mut_)
         | RW_Disembargo'context'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -946,9 +946,9 @@ instance (C.Marshal MessageTarget (C.Parsed MessageTarget)) where
         )
 instance (GH.HasUnion MessageTarget) where
     unionField  = (GH.dataField 32 0 16 0)
-    data RawWhich mut_ MessageTarget
-        = RW_MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
-        | RW_MessageTarget'promisedAnswer (R.Raw mut_ PromisedAnswer)
+    data RawWhich MessageTarget mut_
+        = RW_MessageTarget'importedCap (R.Raw Std_.Word32 mut_)
+        | RW_MessageTarget'promisedAnswer (R.Raw PromisedAnswer mut_)
         | RW_MessageTarget'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1055,13 +1055,13 @@ instance (C.Marshal CapDescriptor (C.Parsed CapDescriptor)) where
         )
 instance (GH.HasUnion CapDescriptor) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ CapDescriptor
-        = RW_CapDescriptor'none (R.Raw mut_ ())
-        | RW_CapDescriptor'senderHosted (R.Raw mut_ Std_.Word32)
-        | RW_CapDescriptor'senderPromise (R.Raw mut_ Std_.Word32)
-        | RW_CapDescriptor'receiverHosted (R.Raw mut_ Std_.Word32)
-        | RW_CapDescriptor'receiverAnswer (R.Raw mut_ PromisedAnswer)
-        | RW_CapDescriptor'thirdPartyHosted (R.Raw mut_ ThirdPartyCapDescriptor)
+    data RawWhich CapDescriptor mut_
+        = RW_CapDescriptor'none (R.Raw () mut_)
+        | RW_CapDescriptor'senderHosted (R.Raw Std_.Word32 mut_)
+        | RW_CapDescriptor'senderPromise (R.Raw Std_.Word32 mut_)
+        | RW_CapDescriptor'receiverHosted (R.Raw Std_.Word32 mut_)
+        | RW_CapDescriptor'receiverAnswer (R.Raw PromisedAnswer mut_)
+        | RW_CapDescriptor'thirdPartyHosted (R.Raw ThirdPartyCapDescriptor mut_)
         | RW_CapDescriptor'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1203,9 +1203,9 @@ instance (C.Marshal PromisedAnswer'Op (C.Parsed PromisedAnswer'Op)) where
         )
 instance (GH.HasUnion PromisedAnswer'Op) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ PromisedAnswer'Op
-        = RW_PromisedAnswer'Op'noop (R.Raw mut_ ())
-        | RW_PromisedAnswer'Op'getPointerField (R.Raw mut_ Std_.Word16)
+    data RawWhich PromisedAnswer'Op mut_
+        = RW_PromisedAnswer'Op'noop (R.Raw () mut_)
+        | RW_PromisedAnswer'Op'getPointerField (R.Raw Std_.Word16 mut_)
         | RW_PromisedAnswer'Op'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->

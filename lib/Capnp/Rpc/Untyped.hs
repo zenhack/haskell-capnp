@@ -97,7 +97,8 @@ import qualified StmContainers.Map as M
 
 import Capnp.Convert        (msgToRaw, parsedToMsg)
 import Capnp.Fields         (Which)
-import Capnp.Message        (Message, Mutability(..))
+import Capnp.Message        (Message)
+import Capnp.Mutability     (Mutability(..), thaw)
 import Capnp.New.Classes    (new, newRoot, parse)
 import Capnp.Repr           (Raw(..))
 import Capnp.Rpc.Errors
@@ -111,7 +112,6 @@ import Capnp.Rpc.Promise
     (Fulfiller, breakOrFulfill, breakPromise, fulfill, newCallback)
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
-import Data.Mutable         (thaw)
 import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
@@ -1225,9 +1225,9 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
                 }
         Just client -> do
             capDesc <- emitCap conn client
-            content <- createPure defaultLimit $ do
+            content <- fmap Just $ createPure defaultLimit $ do
                 msg <- Message.newMessage Nothing
-                Just . UntypedRaw.PtrCap <$> UntypedRaw.appendCap msg client
+                UntypedRaw.PtrCap <$> UntypedRaw.appendCap msg client
             pure Return
                 { answerId = QAId questionId
                 , releaseParamCaps = True -- Not really meaningful for bootstrap, but...
@@ -1265,7 +1265,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
     insertBootstrap conn' _ (Just _) =
         abortConn conn' $ eFailed "Duplicate question ID"
 
-handleCallMsg :: Conn -> Raw 'Const R.Call -> LimitT STM ()
+handleCallMsg :: Conn -> Raw R.Call 'Const -> LimitT STM ()
 handleCallMsg conn callMsg = do
     conn'@Conn'{exports, answers} <- lift $ getLive conn
     questionId <- parseField #questionId callMsg
@@ -1387,7 +1387,7 @@ sendRawMsg conn' = writeTBQueue (sendQ conn')
 sendCall :: Conn' -> Call -> STM ()
 sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{content, capTable}} =
     sendRawMsg conn' =<< createPure defaultLimit (do
-        mcontent <- thaw content
+        mcontent <- traverse thaw content
         msg <- case mcontent of
             Just v  -> pure $ UntypedRaw.message v
             Nothing -> Message.newMessage Nothing
@@ -1409,7 +1409,7 @@ sendReturn :: Conn' -> Return -> STM ()
 sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
     Return'results Payload{content, capTable} ->
         sendRawMsg conn' =<< createPure defaultLimit (do
-            mcontent <- thaw content
+            mcontent <- traverse thaw content
             msg <- case mcontent of
                 Just v  -> pure $ UntypedRaw.message v
                 Nothing -> Message.newMessage Nothing
@@ -1450,20 +1450,20 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             }
     Return'acceptFromThirdParty ptr ->
         sendRawMsg conn' =<< createPure defaultLimit (do
-            mptr <- thaw ptr
+            mptr <- traverse thaw ptr
             msg <- case mptr of
                 Just v  -> pure $ UntypedRaw.message v
                 Nothing -> Message.newMessage Nothing
             ret <- new @R.Return () msg
             ret & encodeField #answerId (qaWord answerId)
             ret & encodeField #releaseParamCaps releaseParamCaps
-            setVariant #acceptFromThirdParty ret (Raw @_ @(Maybe B.AnyPointer) mptr)
+            setVariant #acceptFromThirdParty ret (Raw @(Maybe B.AnyPointer) mptr)
             rpcMsg <- newRoot @R.Message () msg
             setVariant #return rpcMsg ret
             pure msg
         )
 
-acceptReturn :: Conn -> Raw 'Const R.Return -> LimitT STM Return
+acceptReturn :: Conn -> Raw R.Return 'Const -> LimitT STM Return
 acceptReturn conn ret = do
     let answerId = QAId (getField #answerId ret)
         releaseParamCaps = getField #releaseParamCaps ret
@@ -2123,7 +2123,7 @@ emitCap targetConn (Client (Just client')) = case client' of
   where
     newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
 
-acceptPayload :: Conn -> Raw 'Const R.Payload -> LimitT STM Payload
+acceptPayload :: Conn -> Raw R.Payload 'Const -> LimitT STM Payload
 acceptPayload conn payload = do
     capTable <- parseField #capTable payload
     clients <- lift $ traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capTable

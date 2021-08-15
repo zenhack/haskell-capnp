@@ -87,17 +87,17 @@ upcast = coerce
 callB
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
     => Method c p r
-    -> (forall s. PureBuilder s (R.Raw ('Mut s) p))
+    -> (forall s. PureBuilder s (R.Raw p ('Mut s)))
     -> f c
     -> m (Pipeline r)
 callB method buildRaw c = liftSTM $ do
-    (params :: R.Raw 'Const a) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
+    (params :: R.Raw a 'Const) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
     callR method params c
 
 -- | Call a method, supplying the parameters as a 'Raw' struct.
 callR
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
-    => Method c p r -> R.Raw 'Const p -> f c -> m (Pipeline r)
+    => Method c p r -> R.Raw p 'Const -> f c -> m (Pipeline r)
 callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
     Client client <- asClient c
     (_, f) <- newPromise
@@ -147,7 +147,7 @@ waitPipeline ::
     ( 'R.Ptr pr ~ R.ReprFor a
     , R.IsPtrRepr pr
     , MonadSTM m
-    ) => Pipeline a -> m (R.Raw 'Const a)
+    ) => Pipeline a -> m (R.Raw a 'Const)
 waitPipeline (Pipeline p) =
     -- We need an instance of MonadLimit for IsPtrRepr's ReadCtx requirement,
     -- but none of the relevant instances do a lot of reading, so we just

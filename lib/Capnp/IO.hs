@@ -122,19 +122,19 @@ sPutParsed socket value  = do
 
 -- | Read a struct from the handle using the supplied read limit,
 -- and return its root pointer.
-hGetRaw :: R.IsStruct a => Handle -> WordCount -> IO (R.Raw 'Const a)
+hGetRaw :: R.IsStruct a => Handle -> WordCount -> IO (R.Raw a 'Const)
 hGetRaw h limit = do
     msg <- M.hGetMsg h limit
     evalLimitT limit $ msgToRaw msg
 
 -- | Read a struct from stdin using the supplied read limit,
 -- and return its root pointer.
-getRaw :: R.IsStruct a => WordCount -> IO (R.Raw 'Const a)
+getRaw :: R.IsStruct a => WordCount -> IO (R.Raw a 'Const)
 getRaw = hGetRaw stdin
 
 -- | Read a struct from the socket using the supplied read limit,
 -- and return its root pointer.
-sGetRaw :: R.IsStruct a => Socket -> WordCount -> IO (R.Raw 'Const a)
+sGetRaw :: R.IsStruct a => Socket -> WordCount -> IO (R.Raw a 'Const)
 sGetRaw socket limit = do
     msg <- sGetMsg socket limit
     evalLimitT limit $ msgToRaw msg

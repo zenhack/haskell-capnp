@@ -46,8 +46,8 @@ readField
         , U.ReadCtx m mut
         )
     => F.Field k a b
-    -> R.Raw mut a
-    -> m (R.Raw mut b)
+    -> R.Raw a mut
+    -> m (R.Raw b mut)
 readField (F.Field field) (R.Raw struct) =
     case field of
         F.DataField F.DataFieldLoc{ shift, index, mask, defaultValue } -> do
@@ -65,7 +65,7 @@ readField (F.Field field) (R.Raw struct) =
         :: forall pr.
         ( R.ReprFor b ~ 'R.Ptr pr
         , R.IsPtrRepr pr
-        ) => Maybe (U.Ptr mut) -> m (R.Raw mut b)
+        ) => Maybe (U.Ptr mut) -> m (R.Raw b mut)
     readPtrField ptr =
         R.Raw <$> R.fromPtr @pr (U.message struct) ptr
 
@@ -75,7 +75,7 @@ hasField ::
     ( U.ReadCtx m mut
     , R.IsStruct a
     , R.IsPtr b
-    ) => F.Field 'F.Slot a b -> R.Raw mut a -> m Bool
+    ) => F.Field 'F.Slot a b -> R.Raw a mut -> m Bool
 hasField (F.Field (F.PtrField index)) (R.Raw struct) =
     isJust <$> U.getPtr (fromIntegral index) struct
 
@@ -91,7 +91,7 @@ getField
         , C.Parse b bp
         )
     => F.Field 'F.Slot a b
-    -> R.Raw 'Const a
+    -> R.Raw a 'Const
     -> bp
 getField field struct =
     fromJust $ evalLimitT maxBound $
@@ -103,7 +103,7 @@ setField ::
     forall a b m s.
     ( R.IsStruct a
     , U.RWCtx m s
-    ) => F.Field 'F.Slot a b -> R.Raw ('Mut s) b -> R.Raw ('Mut s) a -> m ()
+    ) => F.Field 'F.Slot a b -> R.Raw b ('Mut s) -> R.Raw a ('Mut s) -> m ()
 setField (F.Field field) (R.Raw value) (R.Raw struct) =
     case field of
         F.DataField fieldLoc ->
@@ -141,7 +141,7 @@ newField ::
     ( R.IsStruct a
     , C.Allocate b
     , U.RWCtx m s
-    ) => F.Field 'F.Slot a b -> C.AllocHint b -> R.Raw ('Mut s) a -> m (R.Raw ('Mut s) b)
+    ) => F.Field 'F.Slot a b -> C.AllocHint b -> R.Raw a ('Mut s) -> m (R.Raw b ('Mut s))
 newField field hint parent = do
     value <- C.new @b hint (U.message parent)
     setField field value parent
@@ -153,7 +153,7 @@ encodeField ::
     ( R.IsStruct a
     , C.Parse b bp
     , U.RWCtx m s
-    ) => F.Field 'F.Slot a b -> bp -> R.Raw ('Mut s) a -> m ()
+    ) => F.Field 'F.Slot a b -> bp -> R.Raw a ('Mut s) -> m ()
 encodeField field parsed struct = do
     encoded <- C.encode (U.message struct) parsed
     setField field encoded struct
@@ -163,7 +163,7 @@ parseField ::
     ( R.IsStruct a
     , C.Parse b bp
     , U.ReadCtx m 'Const
-    ) => F.Field k a b -> R.Raw 'Const a -> m bp
+    ) => F.Field k a b -> R.Raw a 'Const -> m bp
 parseField field raw =
     readField field raw >>= C.parse
 
@@ -174,7 +174,7 @@ setVariant
     :: forall a b m s.
     ( F.HasUnion a
     , U.RWCtx m s
-    ) => F.Variant 'F.Slot a b -> R.Raw ('Mut s) a -> R.Raw ('Mut s) b -> m ()
+    ) => F.Variant 'F.Slot a b -> R.Raw a ('Mut s) -> R.Raw b ('Mut s) -> m ()
 setVariant F.Variant{field, tagValue} struct value = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     setField field value struct
@@ -187,7 +187,7 @@ encodeVariant
     ( F.HasUnion a
     , C.Parse b bp
     , U.RWCtx m s
-    ) => F.Variant 'F.Slot a b -> bp -> R.Raw ('Mut s) a -> m ()
+    ) => F.Variant 'F.Slot a b -> bp -> R.Raw a ('Mut s) -> m ()
 encodeVariant F.Variant{field, tagValue} value struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     encodeField field value struct
@@ -197,27 +197,27 @@ encodeVariant F.Variant{field, tagValue} value struct = do
 -- use 'setVariant' or 'encodeVariant'.
 initVariant
     :: forall a b m s. (F.HasUnion a, U.RWCtx m s)
-    => F.Variant 'F.Group a b -> R.Raw ('Mut s) a -> m (R.Raw ('Mut s) b)
+    => F.Variant 'F.Group a b -> R.Raw a ('Mut s) -> m (R.Raw b ('Mut s))
 initVariant F.Variant{field, tagValue} struct = do
     setField (F.unionField @a) (R.Raw tagValue) struct
     readField field struct
 
 -- | Get the anonymous union for a struct.
-structUnion :: F.HasUnion a => R.Raw mut a -> R.Raw mut (F.Which a)
+structUnion :: F.HasUnion a => R.Raw a mut -> R.Raw (F.Which a) mut
 structUnion = coerce
 
 -- | Get the struct enclosing an anonymous union.
-unionStruct :: F.HasUnion a => R.Raw mut (F.Which a) -> R.Raw mut a
+unionStruct :: F.HasUnion a => R.Raw (F.Which a) mut -> R.Raw a mut
 unionStruct = coerce
 
 -- | Get a non-opaque view on the struct's anonymous union, which
 -- can be used to pattern match on.
-structWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw mut a -> m (F.RawWhich mut a)
+structWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw a mut -> m (F.RawWhich a mut)
 structWhich struct = do
     R.Raw tagValue <- readField (F.unionField @a) struct
     F.internalWhich tagValue struct
 
 -- | Get a non-opaque view on the anonymous union, which can be
 -- used to pattern match on.
-unionWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw mut (F.Which a) -> m (F.RawWhich mut a)
+unionWhich :: forall a mut m. (U.ReadCtx m mut, F.HasUnion a) => R.Raw (F.Which a) mut -> m (F.RawWhich a mut)
 unionWhich = structWhich . unionStruct

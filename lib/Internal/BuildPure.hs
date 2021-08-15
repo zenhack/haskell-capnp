@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -13,15 +14,16 @@ module Internal.BuildPure
     , createPure
     ) where
 
-import Control.Monad.Catch      (Exception, MonadThrow (..), SomeException)
+import Control.Monad.Catch      (Exception, MonadThrow(..), SomeException)
 import Control.Monad.Catch.Pure (CatchT, runCatchT)
-import Control.Monad.Primitive  (PrimMonad (..))
+import Control.Monad.Primitive  (PrimMonad(..))
 import Control.Monad.ST         (ST)
-import Control.Monad.Trans      (MonadTrans (..))
+import Control.Monad.Trans      (MonadTrans(..))
 
 import Capnp.Bits           (WordCount)
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
-import Data.Mutable         (Thaw (..), createT)
+
+import Capnp.Mutability
 
 -- | 'PureBuilder' is a monad transformer stack with the instnaces needed
 -- manipulate mutable messages. @'PureBuilder' s a@ is morally equivalent
@@ -39,7 +41,7 @@ runPureBuilder limit (PureBuilder m) = runPrimCatchT $ evalLimitT limit m
 -- | @'createPure' limit m@ creates a capnproto value in pure code according
 -- to @m@, then freezes it without copying. If @m@ calls 'throwM' then
 -- 'createPure' rethrows the exception in the specified monad.
-createPure :: (MonadThrow m, Thaw a) => WordCount -> (forall s. PureBuilder s (Mutable s a)) -> m a
+createPure :: (MonadThrow m, MaybeMutable f) => WordCount -> (forall s. PureBuilder s (f ('Mut s))) -> m (f 'Const)
 createPure limit m = throwLeft $ createT (runPureBuilder limit m)
   where
     -- I(zenhack) am surprised not to have found this in one of the various

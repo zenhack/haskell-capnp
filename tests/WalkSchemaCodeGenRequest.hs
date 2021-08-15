@@ -56,7 +56,7 @@ walkSchemaCodeGenRequestTest =
             endQuota <- execLimitT 4096 (reader root)
             endQuota `shouldBe` 3374
   where
-    reader :: Raw 'M.Const Schema.CodeGeneratorRequest -> LimitT IO ()
+    reader :: Raw Schema.CodeGeneratorRequest 'M.Const -> LimitT IO ()
     reader req = do
         nodes <- req & readField #nodes
         requestedFiles <- req & readField #requestedFiles

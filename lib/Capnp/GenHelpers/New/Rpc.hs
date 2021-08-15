@@ -15,8 +15,8 @@ import qualified Capnp.Repr           as R
 import           Capnp.Repr.Methods
 import qualified Capnp.Untyped        as U
 
-parseCap :: (R.IsCap a, U.ReadCtx m 'Const) => R.Raw 'Const a -> m (Client a)
+parseCap :: (R.IsCap a, U.ReadCtx m 'Const) => R.Raw a 'Const -> m (Client a)
 parseCap (R.Raw cap) = Client <$> U.getClient cap
 
-encodeCap :: (R.IsCap a, U.RWCtx m s) => M.Message ('Mut s) -> Client a -> m (R.Raw ('Mut s) a)
+encodeCap :: (R.IsCap a, U.RWCtx m s) => M.Message ('Mut s) -> Client a -> m (R.Raw a ('Mut s))
 encodeCap msg (Client c) = R.Raw <$> U.appendCap msg c

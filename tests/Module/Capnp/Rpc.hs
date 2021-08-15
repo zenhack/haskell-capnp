@@ -14,6 +14,7 @@ import Control.Concurrent.STM
 import Data.Word
 import Test.Hspec
 
+import Capnp.Mutability         (freeze)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Exception.Safe   (bracket, try)
 import Control.Monad            (replicateM, void, (>=>))
@@ -21,7 +22,6 @@ import Control.Monad.Catch      (throwM)
 import Control.Monad.IO.Class   (liftIO)
 import Data.Foldable            (for_)
 import Data.Function            ((&))
-import Data.Mutable             (freeze)
 import Data.Traversable         (for)
 import System.Timeout           (timeout)
 
