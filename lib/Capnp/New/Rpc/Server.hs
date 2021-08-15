@@ -61,8 +61,8 @@ type CallHandler = M.Map Word64 (V.Vector UntypedMethodHandler)
 
 -- | Type alias for a handler for a particular rpc method.
 type MethodHandler p r
-    = R.Raw 'Const p
-    -> Fulfiller (R.Raw 'Const r)
+    = R.Raw p 'Const
+    -> Fulfiller (R.Raw r 'Const)
     -> IO ()
 
 -- | Type alias for a handler for an untyped RPC method.
@@ -198,7 +198,7 @@ handleParsed handler param = propagateExceptions $ \f -> do
 -- parameters and results.
 handleRaw
     :: (R.IsStruct p, R.IsStruct r)
-    => (R.Raw 'Const p -> IO (R.Raw 'Const r)) -> MethodHandler p r
+    => (R.Raw p 'Const -> IO (R.Raw r 'Const)) -> MethodHandler p r
 handleRaw handler param = propagateExceptions $ \f ->
     handler param >>= fulfill f
 

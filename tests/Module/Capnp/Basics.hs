@@ -30,7 +30,7 @@ basicsTests =
             property $ \(text :: T.Text) -> propertyIO $ evalLimitT maxBound $ do
                 msg <- newMessage Nothing
                 Raw untyped <- encode msg text
-                raw :: Raw 'Const Text <- Raw <$> freeze untyped
+                raw :: Raw Text 'Const <- Raw <$> freeze untyped
                 buf <- textBuffer raw
                 bytes <- textBytes raw
-                liftIO $ BS.length bytes `shouldBe` length (coerce buf :: Raw 'Const (List Word8))
+                liftIO $ BS.length bytes `shouldBe` length (coerce buf :: Raw (List Word8) 'Const)

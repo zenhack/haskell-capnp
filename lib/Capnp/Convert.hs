@@ -96,7 +96,7 @@ lbsToMsg :: MonadThrow m => LBS.ByteString -> m (M.Message 'Const)
 lbsToMsg = bsToMsg . LBS.toStrict
 
 -- | Get the root pointer of a message, wrapped as a 'R.Raw'.
-msgToRaw :: forall a m mut. (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw mut a)
+msgToRaw :: forall a m mut. (U.ReadCtx m mut, R.IsStruct a) => M.Message mut -> m (R.Raw a mut)
 msgToRaw = fmap R.Raw . U.rootPtr
 
 -- | Get the root pointer of a message, as a parsed ADT.
@@ -104,7 +104,7 @@ msgToParsed :: forall a m pa. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => 
 msgToParsed msg = msgToRaw msg >>= parse
 
 -- | Like 'msgToRaw', but takes a (strict) bytestring.
-bsToRaw :: forall a m. (U.ReadCtx m 'Const, R.IsStruct a) => BS.ByteString -> m (R.Raw 'Const a)
+bsToRaw :: forall a m. (U.ReadCtx m 'Const, R.IsStruct a) => BS.ByteString -> m (R.Raw a 'Const)
 bsToRaw bs = bsToMsg bs >>= msgToRaw
 
 -- | Like 'msgToParsed', but takes a (strict) bytestring.
@@ -112,7 +112,7 @@ bsToParsed :: forall a pa m. (U.ReadCtx m 'Const, R.IsStruct a, Parse a pa) => B
 bsToParsed bs = bsToRaw bs >>= parse
 
 -- | Like 'msgToRaw', but takes a (lazy) bytestring.
-lbsToRaw :: forall a m. (U.ReadCtx m 'Const, R.IsStruct a) => LBS.ByteString -> m (R.Raw 'Const a)
+lbsToRaw :: forall a m. (U.ReadCtx m 'Const, R.IsStruct a) => LBS.ByteString -> m (R.Raw a 'Const)
 lbsToRaw = bsToRaw . LBS.toStrict
 
 -- | Like 'msgToParsed', but takes a (lazzy) bytestring.
@@ -121,7 +121,7 @@ lbsToParsed = bsToParsed . LBS.toStrict
 
 -- | Serialize the parsed form of a struct into its 'R.Raw' form, and make it the root
 -- of its message.
-parsedToRaw :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (R.Raw ('Mut s) a)
+parsedToRaw :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (R.Raw a ('Mut s))
 parsedToRaw p = do
     msg <- M.newMessage Nothing
     value@(R.Raw struct) <- encode msg p

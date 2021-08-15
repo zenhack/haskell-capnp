@@ -76,7 +76,7 @@ data instance C.Parsed AnyPointer
 instance C.Parse (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer)) where
     parse (R.Raw ptr) = case ptr of
         Nothing -> pure Nothing
-        Just _  -> Just <$> C.parse (R.Raw ptr :: R.Raw 'M.Const AnyPointer)
+        Just _  -> Just <$> C.parse (R.Raw ptr :: R.Raw AnyPointer 'M.Const)
 
     encode msg value = R.Raw <$> case value of
         Nothing -> pure Nothing
@@ -261,12 +261,12 @@ instance C.Allocate AnyStruct where
 
 -- | Return the underlying buffer containing the text. This does not include the
 -- null terminator.
-textBuffer :: MonadThrow m => R.Raw mut Text -> m (R.Raw mut Data)
+textBuffer :: MonadThrow m => R.Raw Text mut -> m (R.Raw Data mut)
 textBuffer (R.Raw list) = R.Raw <$> U.take (U.length list - 1) list
 
 -- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
 -- (not counting the NUL terminator).
-textBytes :: U.ReadCtx m 'M.Const => R.Raw 'M.Const Text -> m BS.ByteString
+textBytes :: U.ReadCtx m 'M.Const => R.Raw Text 'M.Const -> m BS.ByteString
 textBytes text = do
     R.Raw raw <- textBuffer text
     U.rawBytes raw

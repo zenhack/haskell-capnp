@@ -253,26 +253,26 @@ instance IsPtrRepr ('Just ('List a)) => Element ('Ptr ('Just ('List a))) where
 
 -- | A @'Raw' mut a@ is an @a@ embedded in a capnproto message with mutability
 -- @mut@.
-newtype Raw (mut :: Mutability) (a :: Type)
+newtype Raw (a :: Type ) (mut :: Mutability)
     = Raw { fromRaw :: Untyped mut (ReprFor a) }
 
-deriving instance Show (Untyped mut (ReprFor a)) => Show (Raw mut a)
-deriving instance Read (Untyped mut (ReprFor a)) => Read (Raw mut a)
-deriving instance Eq (Untyped mut (ReprFor a)) => Eq (Raw mut a)
-deriving instance Generic (Untyped mut (ReprFor a)) => Generic (Raw mut a)
+deriving instance Show (Untyped mut (ReprFor a)) => Show (Raw a mut)
+deriving instance Read (Untyped mut (ReprFor a)) => Read (Raw a mut)
+deriving instance Eq (Untyped mut (ReprFor a)) => Eq (Raw a mut)
+deriving instance Generic (Untyped mut (ReprFor a)) => Generic (Raw a mut)
 
 -- | A phantom type denoting capnproto lists of type @a@.
 data List a
 
 -- | Get the length of a capnproto list.
-length :: Raw mut (List a) -> Int
+length :: Raw (List a) mut -> Int
 length (Raw l) = U.length l
 
 -- | @'index' i list@ gets the @i@th element of the list.
 index :: forall a m mut.
     ( U.ReadCtx m mut
     , Element (ReprFor a)
-    ) => Int -> Raw mut (List a) -> m (Raw mut a)
+    ) => Int -> Raw (List a) mut -> m (Raw a mut)
 index i (Raw l) =
     Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
 
@@ -280,15 +280,15 @@ index i (Raw l) =
 setIndex :: forall a m s.
     ( U.RWCtx m s
     , Element (ReprFor a)
-    ) => Raw ('Mut s) a -> Int -> Raw ('Mut s) (List a) -> m ()
+    ) => Raw a ('Mut s) -> Int -> Raw (List a) ('Mut s) -> m ()
 setIndex (Raw v) i (Raw l) = U.setIndex (toElement @(ReprFor a) @('Mut s) v) i l
 
-instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw mut a) mut where
+instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw a mut) mut where
     message (Raw r) = U.message r
-instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw mut a) mut where
+instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw a mut) mut where
     messageDefault msg = Raw <$> U.messageDefault msg
 
-instance U.MessageDefault (Raw 'Const a) 'Const => Default (Raw 'Const a) where
+instance U.MessageDefault (Raw a 'Const) 'Const => Default (Raw a 'Const) where
     def = fromJust $ evalLimitT maxBound $ U.messageDefault M.empty
 
 -- | Operations on types with pointer representations.

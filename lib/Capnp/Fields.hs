@@ -80,11 +80,11 @@ class R.IsStruct a => HasUnion a where
 
     -- | Concrete view into a union embedded in a message. This will be a sum
     -- type with other 'Raw' values as arguments.
-    data RawWhich (mut :: M.Mutability) a
+    data RawWhich a (mut :: M.Mutability)
 
     -- | Helper used in generated code to extract a 'RawWhich' from its
     -- surrounding struct.
-    internalWhich :: U.ReadCtx m mut => Word16 -> R.Raw mut a -> m (RawWhich mut a)
+    internalWhich :: U.ReadCtx m mut => Word16 -> R.Raw a mut -> m (RawWhich a mut)
 
 type instance R.ReprFor (Which a) = 'R.Ptr ('Just 'R.Struct)
 

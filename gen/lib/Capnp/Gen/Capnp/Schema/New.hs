@@ -84,13 +84,13 @@ instance (C.Marshal Node (C.Parsed Node)) where
         )
 instance (GH.HasUnion Node) where
     unionField  = (GH.dataField 32 1 16 0)
-    data RawWhich mut_ Node
-        = RW_Node'file (R.Raw mut_ ())
-        | RW_Node'struct (R.Raw mut_ Node'struct)
-        | RW_Node'enum (R.Raw mut_ Node'enum)
-        | RW_Node'interface (R.Raw mut_ Node'interface)
-        | RW_Node'const (R.Raw mut_ Node'const)
-        | RW_Node'annotation (R.Raw mut_ Node'annotation)
+    data RawWhich Node mut_
+        = RW_Node'file (R.Raw () mut_)
+        | RW_Node'struct (R.Raw Node'struct mut_)
+        | RW_Node'enum (R.Raw Node'enum mut_)
+        | RW_Node'interface (R.Raw Node'interface mut_)
+        | RW_Node'const (R.Raw Node'const mut_)
+        | RW_Node'annotation (R.Raw Node'annotation mut_)
         | RW_Node'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -629,9 +629,9 @@ instance (C.Marshal Field (C.Parsed Field)) where
         )
 instance (GH.HasUnion Field) where
     unionField  = (GH.dataField 0 1 16 0)
-    data RawWhich mut_ Field
-        = RW_Field'slot (R.Raw mut_ Field'slot)
-        | RW_Field'group (R.Raw mut_ Field'group)
+    data RawWhich Field mut_
+        = RW_Field'slot (R.Raw Field'slot mut_)
+        | RW_Field'group (R.Raw Field'group mut_)
         | RW_Field'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -791,9 +791,9 @@ instance (C.Marshal Field'ordinal (C.Parsed Field'ordinal)) where
         )
 instance (GH.HasUnion Field'ordinal) where
     unionField  = (GH.dataField 16 1 16 0)
-    data RawWhich mut_ Field'ordinal
-        = RW_Field'ordinal'implicit (R.Raw mut_ ())
-        | RW_Field'ordinal'explicit (R.Raw mut_ Std_.Word16)
+    data RawWhich Field'ordinal mut_
+        = RW_Field'ordinal'implicit (R.Raw () mut_)
+        | RW_Field'ordinal'explicit (R.Raw Std_.Word16 mut_)
         | RW_Field'ordinal'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1004,26 +1004,26 @@ instance (C.Marshal Type (C.Parsed Type)) where
         )
 instance (GH.HasUnion Type) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Type
-        = RW_Type'void (R.Raw mut_ ())
-        | RW_Type'bool (R.Raw mut_ ())
-        | RW_Type'int8 (R.Raw mut_ ())
-        | RW_Type'int16 (R.Raw mut_ ())
-        | RW_Type'int32 (R.Raw mut_ ())
-        | RW_Type'int64 (R.Raw mut_ ())
-        | RW_Type'uint8 (R.Raw mut_ ())
-        | RW_Type'uint16 (R.Raw mut_ ())
-        | RW_Type'uint32 (R.Raw mut_ ())
-        | RW_Type'uint64 (R.Raw mut_ ())
-        | RW_Type'float32 (R.Raw mut_ ())
-        | RW_Type'float64 (R.Raw mut_ ())
-        | RW_Type'text (R.Raw mut_ ())
-        | RW_Type'data_ (R.Raw mut_ ())
-        | RW_Type'list (R.Raw mut_ Type'list)
-        | RW_Type'enum (R.Raw mut_ Type'enum)
-        | RW_Type'struct (R.Raw mut_ Type'struct)
-        | RW_Type'interface (R.Raw mut_ Type'interface)
-        | RW_Type'anyPointer (R.Raw mut_ Type'anyPointer)
+    data RawWhich Type mut_
+        = RW_Type'void (R.Raw () mut_)
+        | RW_Type'bool (R.Raw () mut_)
+        | RW_Type'int8 (R.Raw () mut_)
+        | RW_Type'int16 (R.Raw () mut_)
+        | RW_Type'int32 (R.Raw () mut_)
+        | RW_Type'int64 (R.Raw () mut_)
+        | RW_Type'uint8 (R.Raw () mut_)
+        | RW_Type'uint16 (R.Raw () mut_)
+        | RW_Type'uint32 (R.Raw () mut_)
+        | RW_Type'uint64 (R.Raw () mut_)
+        | RW_Type'float32 (R.Raw () mut_)
+        | RW_Type'float64 (R.Raw () mut_)
+        | RW_Type'text (R.Raw () mut_)
+        | RW_Type'data_ (R.Raw () mut_)
+        | RW_Type'list (R.Raw Type'list mut_)
+        | RW_Type'enum (R.Raw Type'enum mut_)
+        | RW_Type'struct (R.Raw Type'struct mut_)
+        | RW_Type'interface (R.Raw Type'interface mut_)
+        | RW_Type'anyPointer (R.Raw Type'anyPointer mut_)
         | RW_Type'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1395,10 +1395,10 @@ instance (C.Marshal Type'anyPointer (C.Parsed Type'anyPointer)) where
         )
 instance (GH.HasUnion Type'anyPointer) where
     unionField  = (GH.dataField 0 1 16 0)
-    data RawWhich mut_ Type'anyPointer
-        = RW_Type'anyPointer'unconstrained (R.Raw mut_ Type'anyPointer'unconstrained)
-        | RW_Type'anyPointer'parameter (R.Raw mut_ Type'anyPointer'parameter)
-        | RW_Type'anyPointer'implicitMethodParameter (R.Raw mut_ Type'anyPointer'implicitMethodParameter)
+    data RawWhich Type'anyPointer mut_
+        = RW_Type'anyPointer'unconstrained (R.Raw Type'anyPointer'unconstrained mut_)
+        | RW_Type'anyPointer'parameter (R.Raw Type'anyPointer'parameter mut_)
+        | RW_Type'anyPointer'implicitMethodParameter (R.Raw Type'anyPointer'implicitMethodParameter mut_)
         | RW_Type'anyPointer'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1485,11 +1485,11 @@ instance (C.Marshal Type'anyPointer'unconstrained (C.Parsed Type'anyPointer'unco
         )
 instance (GH.HasUnion Type'anyPointer'unconstrained) where
     unionField  = (GH.dataField 16 1 16 0)
-    data RawWhich mut_ Type'anyPointer'unconstrained
-        = RW_Type'anyPointer'unconstrained'anyKind (R.Raw mut_ ())
-        | RW_Type'anyPointer'unconstrained'struct (R.Raw mut_ ())
-        | RW_Type'anyPointer'unconstrained'list (R.Raw mut_ ())
-        | RW_Type'anyPointer'unconstrained'capability (R.Raw mut_ ())
+    data RawWhich Type'anyPointer'unconstrained mut_
+        = RW_Type'anyPointer'unconstrained'anyKind (R.Raw () mut_)
+        | RW_Type'anyPointer'unconstrained'struct (R.Raw () mut_)
+        | RW_Type'anyPointer'unconstrained'list (R.Raw () mut_)
+        | RW_Type'anyPointer'unconstrained'capability (R.Raw () mut_)
         | RW_Type'anyPointer'unconstrained'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1674,9 +1674,9 @@ instance (C.Marshal Brand'Scope (C.Parsed Brand'Scope)) where
         )
 instance (GH.HasUnion Brand'Scope) where
     unionField  = (GH.dataField 0 1 16 0)
-    data RawWhich mut_ Brand'Scope
-        = RW_Brand'Scope'bind (R.Raw mut_ (R.List Brand'Binding))
-        | RW_Brand'Scope'inherit (R.Raw mut_ ())
+    data RawWhich Brand'Scope mut_
+        = RW_Brand'Scope'bind (R.Raw (R.List Brand'Binding) mut_)
+        | RW_Brand'Scope'inherit (R.Raw () mut_)
         | RW_Brand'Scope'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1747,9 +1747,9 @@ instance (C.Marshal Brand'Binding (C.Parsed Brand'Binding)) where
         )
 instance (GH.HasUnion Brand'Binding) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Brand'Binding
-        = RW_Brand'Binding'unbound (R.Raw mut_ ())
-        | RW_Brand'Binding'type_ (R.Raw mut_ Type)
+    data RawWhich Brand'Binding mut_
+        = RW_Brand'Binding'unbound (R.Raw () mut_)
+        | RW_Brand'Binding'type_ (R.Raw Type mut_)
         | RW_Brand'Binding'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1818,26 +1818,26 @@ instance (C.Marshal Value (C.Parsed Value)) where
         )
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Value
-        = RW_Value'void (R.Raw mut_ ())
-        | RW_Value'bool (R.Raw mut_ Std_.Bool)
-        | RW_Value'int8 (R.Raw mut_ Std_.Int8)
-        | RW_Value'int16 (R.Raw mut_ Std_.Int16)
-        | RW_Value'int32 (R.Raw mut_ Std_.Int32)
-        | RW_Value'int64 (R.Raw mut_ Std_.Int64)
-        | RW_Value'uint8 (R.Raw mut_ Std_.Word8)
-        | RW_Value'uint16 (R.Raw mut_ Std_.Word16)
-        | RW_Value'uint32 (R.Raw mut_ Std_.Word32)
-        | RW_Value'uint64 (R.Raw mut_ Std_.Word64)
-        | RW_Value'float32 (R.Raw mut_ Std_.Float)
-        | RW_Value'float64 (R.Raw mut_ Std_.Double)
-        | RW_Value'text (R.Raw mut_ Basics.Text)
-        | RW_Value'data_ (R.Raw mut_ Basics.Data)
-        | RW_Value'list (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
-        | RW_Value'enum (R.Raw mut_ Std_.Word16)
-        | RW_Value'struct (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
-        | RW_Value'interface (R.Raw mut_ ())
-        | RW_Value'anyPointer (R.Raw mut_ (Std_.Maybe Basics.AnyPointer))
+    data RawWhich Value mut_
+        = RW_Value'void (R.Raw () mut_)
+        | RW_Value'bool (R.Raw Std_.Bool mut_)
+        | RW_Value'int8 (R.Raw Std_.Int8 mut_)
+        | RW_Value'int16 (R.Raw Std_.Int16 mut_)
+        | RW_Value'int32 (R.Raw Std_.Int32 mut_)
+        | RW_Value'int64 (R.Raw Std_.Int64 mut_)
+        | RW_Value'uint8 (R.Raw Std_.Word8 mut_)
+        | RW_Value'uint16 (R.Raw Std_.Word16 mut_)
+        | RW_Value'uint32 (R.Raw Std_.Word32 mut_)
+        | RW_Value'uint64 (R.Raw Std_.Word64 mut_)
+        | RW_Value'float32 (R.Raw Std_.Float mut_)
+        | RW_Value'float64 (R.Raw Std_.Double mut_)
+        | RW_Value'text (R.Raw Basics.Text mut_)
+        | RW_Value'data_ (R.Raw Basics.Data mut_)
+        | RW_Value'list (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
+        | RW_Value'enum (R.Raw Std_.Word16 mut_)
+        | RW_Value'struct (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
+        | RW_Value'interface (R.Raw () mut_)
+        | RW_Value'anyPointer (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
         | RW_Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->

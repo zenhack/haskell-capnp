@@ -2,10 +2,13 @@
 
 - The `Data.Mutable` module and its `Thaw` class have been replaced
   by `Capnp.Mutability` and a class `MaybeMutable`, which serves the
-  same function but is easier to work with.
+  same function but is easier to work with. Notably, `thaw` and `freeze
+  can now be used on `Raw` values directly.
 - `Mutability` is now defined in `Capnp.Mutability` instead of
   `Capnp.Message`, though the latter still re-exports it for
   compatibility (for now).
+- The parameters to the `Raw` type constructor have been flipped; the
+  new ordering makes it possible to implement thaw/freeze on `Raw a`
 
 # 0.13.0.0
 

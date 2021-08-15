@@ -69,14 +69,14 @@ import qualified Language.Haskell.TH  as TH
 -- * @t@ is the capnproto type.
 -- * @p@ is the type of the parsed value.
 class Parse t p | t -> p, p -> t where
-    parse :: U.ReadCtx m 'Const => R.Raw 'Const t -> m p
+    parse :: U.ReadCtx m 'Const => R.Raw t 'Const -> m p
     -- ^ Parse a value from a constant message
-    encode :: U.RWCtx m s => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
+    encode :: U.RWCtx m s => M.Message ('Mut s) -> p -> m (R.Raw t ('Mut s))
     -- ^ Encode a value into 'R.Raw' form, using the message as storage.
 
     default encode
         :: (U.RWCtx m s, EstimateAlloc t p, Marshal t p)
-        => M.Message ('Mut s) -> p -> m (R.Raw ('Mut s) t)
+        => M.Message ('Mut s) -> p -> m (R.Raw t ('Mut s))
     encode msg value = do
         raw <- new (estimateAlloc value) msg
         marshalInto raw value
@@ -101,7 +101,7 @@ newFromRepr
     , 'R.Ptr ('Just r) ~ R.ReprFor a
     , U.RWCtx m s
     )
-    => R.AllocHint r -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+    => R.AllocHint r -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
 newFromRepr hint msg = R.Raw <$> R.alloc @r msg hint
     -- TODO(cleanup): new and alloc really ought to have the same argument order...
 
@@ -112,7 +112,7 @@ class Allocate a where
     -- ^ Extra information needed to allocate a value of this type, e.g. the
     -- length for a list. May be () if no extra info is needed.
 
-    new :: U.RWCtx m s => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+    new :: U.RWCtx m s => AllocHint a -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
     -- ^ @'new' hint msg@ allocates a new value of type @a@ inside @msg@.
 
     default new ::
@@ -120,7 +120,7 @@ class Allocate a where
         , R.Allocate pr
         , AllocHint a ~ R.AllocHint pr
         , U.RWCtx m s
-        ) => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+        ) => AllocHint a -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
     -- If the AllocHint is the same as that of the underlying Repr, then
     -- we can just use that implementation.
     new = newFromRepr @a
@@ -130,7 +130,7 @@ class AllocateList a where
     type ListAllocHint a
     -- ^ Extra information needed to allocate a list of @a@s.
 
-    newList :: U.RWCtx m s => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+    newList :: U.RWCtx m s => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw (R.List a) ('Mut s))
     default newList ::
         forall m s lr r.
         ( U.RWCtx m s
@@ -138,7 +138,7 @@ class AllocateList a where
         , r ~ 'R.List ('Just lr)
         , R.Allocate r
         , R.AllocHint r ~ ListAllocHint a
-        ) => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+        ) => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw (R.List a) ('Mut s))
     newList hint msg = R.Raw <$> R.alloc @r msg hint
 
 instance AllocateList a => Allocate (R.List a) where
@@ -155,13 +155,13 @@ instance
 
 -- | Allocate a new typed struct. Mainly used as the value for 'new' for in generated
 -- instances of 'Allocate'.
-newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw a ('Mut s))
 newTypedStruct = newFromRepr (structSizes @a)
 
 -- | Like 'newTypedStruct', but for lists.
 newTypedStructList
     :: forall a m s. (TypedStruct a, U.RWCtx m s)
-    => Int -> M.Message ('Mut s) -> m (R.Raw ('Mut s) (R.List a))
+    => Int -> M.Message ('Mut s) -> m (R.Raw (R.List a) ('Mut s))
 newTypedStructList i msg = R.Raw <$> R.alloc
     @('R.List ('Just 'R.ListComposite))
     msg
@@ -170,7 +170,7 @@ newTypedStructList i msg = R.Raw <$> R.alloc
 -- | An instance of marshal allows a parsed value to be inserted into
 -- pre-allocated space in a message.
 class Parse t p => Marshal t p where
-    marshalInto :: U.RWCtx m s => R.Raw ('Mut s) t -> p -> m ()
+    marshalInto :: U.RWCtx m s => R.Raw t ('Mut s) -> p -> m ()
     -- ^ Marshal a value into the pre-allocated object inside the message.
     --
     -- Note that caller must arrange for the object to be of the correct size.
@@ -197,27 +197,27 @@ class (R.IsStruct a, Allocate a, HasTypeId a, AllocHint a ~ ()) => TypedStruct a
 -- | Like 'new', but also sets the value as the root of the message.
 newRoot
     :: forall a m s. (U.RWCtx m s, R.IsStruct a, Allocate a)
-    => AllocHint a -> M.Message ('Mut s) -> m (R.Raw ('Mut s) a)
+    => AllocHint a -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
 newRoot hint msg = do
     raw <- new @a hint msg
     setRoot raw
     pure raw
 
 -- | Sets the struct to be the root of its containing message.
-setRoot :: (U.RWCtx m s, R.IsStruct a) => R.Raw ('Mut s) a -> m ()
+setRoot :: (U.RWCtx m s, R.IsStruct a) => R.Raw a ('Mut s) -> m ()
 setRoot (R.Raw struct) = U.setRoot struct
 
 
 ------ Instances for basic types -------
 
-parseId :: (R.Untyped mut (R.ReprFor a) ~ a, U.ReadCtx m mut) => R.Raw mut a -> m a
+parseId :: (R.Untyped mut (R.ReprFor a) ~ a, U.ReadCtx m mut) => R.Raw a mut -> m a
 parseId = pure . R.fromRaw
 
 parseInt ::
     ( Integral a
     , Integral (R.Untyped mut (R.ReprFor a))
     , U.ReadCtx m mut
-    ) => R.Raw mut a -> m a
+    ) => R.Raw a mut -> m a
 parseInt = pure . fromIntegral . R.fromRaw
 
 instance Parse Float Float where
@@ -258,7 +258,7 @@ class MarshalElementByRepr (lr :: R.ListRepr) where
         ( U.RWCtx m s
         , R.ListReprFor (R.ReprFor a) ~ lr
         , MarshalElement a ap
-        ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
+        ) => R.Raw (R.List a) ('Mut s) -> Int -> ap -> m ()
 
 -- | An instance @'Super' p c@ indicates that the interface @c@ extends
 -- the interface @p@.
@@ -278,7 +278,7 @@ marshalElement ::
   forall a ap m s.
   ( U.RWCtx m s
   , MarshalElement a ap
-  ) => R.Raw ('Mut s) (R.List a) -> Int -> ap -> m ()
+  ) => R.Raw (R.List a) ('Mut s) -> Int -> ap -> m ()
 marshalElement = marshalElementByRepr @(R.ListReprFor (R.ReprFor a))
 
 class (Parse a ap, Allocate (R.List a)) => EstimateListAlloc a ap where
@@ -297,7 +297,7 @@ instance MarshalElement a ap => EstimateAlloc (R.List a) (V.Vector ap) where
 -- be something else.
 data family Parsed a
 
-instance (Default (R.Raw 'Const a), Parse a (Parsed a)) => Default (Parsed a) where
+instance (Default (R.Raw a 'Const), Parse a (Parsed a)) => Default (Parsed a) where
     def = case evalLimitT maxBound (parse @a def) of
         Just v  -> v
         Nothing -> error "Parsing default value failed."

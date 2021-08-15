@@ -1265,7 +1265,7 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
     insertBootstrap conn' _ (Just _) =
         abortConn conn' $ eFailed "Duplicate question ID"
 
-handleCallMsg :: Conn -> Raw 'Const R.Call -> LimitT STM ()
+handleCallMsg :: Conn -> Raw R.Call 'Const -> LimitT STM ()
 handleCallMsg conn callMsg = do
     conn'@Conn'{exports, answers} <- lift $ getLive conn
     questionId <- parseField #questionId callMsg
@@ -1457,13 +1457,13 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
             ret <- new @R.Return () msg
             ret & encodeField #answerId (qaWord answerId)
             ret & encodeField #releaseParamCaps releaseParamCaps
-            setVariant #acceptFromThirdParty ret (Raw @_ @(Maybe B.AnyPointer) mptr)
+            setVariant #acceptFromThirdParty ret (Raw @(Maybe B.AnyPointer) mptr)
             rpcMsg <- newRoot @R.Message () msg
             setVariant #return rpcMsg ret
             pure msg
         )
 
-acceptReturn :: Conn -> Raw 'Const R.Return -> LimitT STM Return
+acceptReturn :: Conn -> Raw R.Return 'Const -> LimitT STM Return
 acceptReturn conn ret = do
     let answerId = QAId (getField #answerId ret)
         releaseParamCaps = getField #releaseParamCaps ret
@@ -2123,7 +2123,7 @@ emitCap targetConn (Client (Just client')) = case client' of
   where
     newSenderPromise = R.CapDescriptor'senderPromise . ieWord <$> getConnExport targetConn client'
 
-acceptPayload :: Conn -> Raw 'Const R.Payload -> LimitT STM Payload
+acceptPayload :: Conn -> Raw R.Payload 'Const -> LimitT STM Payload
 acceptPayload conn payload = do
     capTable <- parseField #capTable payload
     clients <- lift $ traverse (\R.CapDescriptor{union'} -> acceptCap conn union') capTable
