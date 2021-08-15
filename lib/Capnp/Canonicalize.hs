@@ -226,7 +226,7 @@ cloneCanonicalStructList
     -> M.Message ('Mut s)
     -> m (U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut s))
 {-# SPECIALIZE cloneCanonicalStructList
-    :: U.ListOf ('U.Ptr ('Just ('U.Struct))) 'Const
+    :: U.ListOf ('U.Ptr ('Just 'U.Struct)) 'Const
     -> M.Message ('Mut RealWorld)
     -> LimitT IO (U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld))
     #-}
