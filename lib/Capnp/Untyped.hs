@@ -1059,7 +1059,7 @@ copyStruct dest src = do
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
 index :: (ReadCtx m mut, ListItem r) => Int -> ListOf r mut -> m (Unwrapped (Untyped r mut))
-{-# INLINABLE index #-}
+{-# INLINE index #-}
 {-# SPECIALIZE index :: ListItem r => Int -> ListOf r 'Const -> LimitT IO (Unwrapped (Untyped r 'Const)) #-}
 {-# SPECIALIZE index :: ListItem r => Int -> ListOf r ('Mut RealWorld) -> LimitT IO (Unwrapped (Untyped r ('Mut RealWorld))) #-}
 index i list
