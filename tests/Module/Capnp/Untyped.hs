@@ -36,10 +36,10 @@ import qualified Data.Vector     as V
 import Capnp.Untyped
 import Util
 
+import Capnp.Mutability     (freeze, thaw)
 import Capnp.New
     (createPure, def, encode, msgToParsed, newRoot, setField)
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
-import Data.Mutable         (Thaw(..))
 
 import Instances ()
 

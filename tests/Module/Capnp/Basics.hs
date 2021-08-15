@@ -20,7 +20,7 @@ import Capnp.New.Basics
 
 import Capnp.New
     (List, Mutability(..), Raw(..), encode, evalLimitT, length, newMessage)
-import Data.Mutable (Thaw(freeze))
+import Data.Mutable (freeze)
 
 basicsTests :: Spec
 basicsTests =

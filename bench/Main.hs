@@ -3,13 +3,13 @@
 module Main (main) where
 
 
+import           Capnp.Mutability          (thaw)
 import qualified Capnp.New                 as C
 import qualified Capnp.Untyped             as U
 import           Control.DeepSeq           (NFData(..))
 import           Control.Monad             (unless)
 import           Criterion.Main
 import qualified Data.ByteString           as BS
-import           Data.Mutable              (thaw)
 import           System.Exit               (ExitCode(..))
 import qualified System.Process.ByteString as PB
 
