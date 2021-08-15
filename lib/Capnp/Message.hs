@@ -435,6 +435,7 @@ internalSetSeg (MsgMut MutMsg{mutSegs}) segIndex seg = do
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
 write :: WriteCtx m s => Segment ('Mut s) -> WordCount -> Word64 -> m ()
+{-# INLINE write #-}
 write (SegMut MutSegment{vec}) (WordCount i) val = do
     SMV.write vec i (toLE64 val)
 
