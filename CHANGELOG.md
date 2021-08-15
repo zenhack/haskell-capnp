@@ -1,5 +1,6 @@
 # 0.14.0.0
 
+- Significant performance improvements.
 - The `Data.Mutable` module and its `Thaw` class have been replaced
   by `Capnp.Mutability` and a class `MaybeMutable`, which serves the
   same function but is easier to work with. Notably, `thaw` and `freeze
@@ -9,6 +10,9 @@
   compatibility (for now).
 - The parameters to the `Raw` type constructor have been flipped; the
   new ordering makes it possible to implement thaw/freeze on `Raw a`
+  - The `Untyped` type family has seen similar treatment.
+- HasMessage and MessageDefault are now defined on a type of kind
+  `* -> Mutability`, which keeps the mutability out of constraints.
 
 # 0.13.0.0
 
