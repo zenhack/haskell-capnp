@@ -43,9 +43,8 @@ import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as LBS
 
-import Capnp.Message     (Mutability(..))
+import Capnp.Mutability  (Mutability(..), freeze)
 import Capnp.New.Classes (Parse(encode, parse))
-import Data.Mutable      (freeze)
 
 import qualified Capnp.Message as M
 import qualified Capnp.Repr    as R
