@@ -133,12 +133,12 @@ type family PtrReprFor (r :: Repr) :: Maybe PtrRepr where
 -- | A @'Raw' mut a@ is an @a@ embedded in a capnproto message with mutability
 -- @mut@.
 newtype Raw (a :: Type ) (mut :: Mutability)
-    = Raw { fromRaw :: Untyped mut (ReprFor a) }
+    = Raw { fromRaw :: U.Unwrapped (Untyped (ReprFor a) mut) }
 
-deriving instance Show (Untyped mut (ReprFor a)) => Show (Raw a mut)
-deriving instance Read (Untyped mut (ReprFor a)) => Read (Raw a mut)
-deriving instance Eq (Untyped mut (ReprFor a)) => Eq (Raw a mut)
-deriving instance Generic (Untyped mut (ReprFor a)) => Generic (Raw a mut)
+deriving instance Show (U.Unwrapped (Untyped (ReprFor a) mut)) => Show (Raw a mut)
+deriving instance Read (U.Unwrapped (Untyped (ReprFor a) mut)) => Read (Raw a mut)
+deriving instance Eq (U.Unwrapped (Untyped (ReprFor a) mut)) => Eq (Raw a mut)
+deriving instance Generic (U.Unwrapped (Untyped (ReprFor a) mut)) => Generic (Raw a mut)
 
 -- | A phantom type denoting capnproto lists of type @a@.
 data List a
@@ -155,11 +155,17 @@ length (Raw l) = U.length l
 -- | @'index' i list@ gets the @i@th element of the list.
 index :: forall a m mut.
     ( U.ReadCtx m mut
-    , U.HasMessage (U.ListOf (ElemRepr (ListReprFor (ReprFor a))) mut) mut
+    , U.HasMessage (U.ListOf (ElemRepr (ListReprFor (ReprFor a))))
     , ListElem a
     ) => Int -> Raw (List a) mut -> m (Raw a mut)
-index i (Raw l) =
-    Raw <$> (U.index i l >>= fromElement @(ReprFor a) @m @mut (U.message l))
+index i (Raw l) = Raw <$> do
+    elt <- U.index i l
+    fromElement
+        @(ReprFor a)
+        @m
+        @mut
+        (U.message @(U.ListOf (ElemRepr (ListReprFor (ReprFor a)))) l)
+        elt
 
 -- | @'setIndex' value i list@ sets the @i@th element of @list@ to @value@.
 setIndex :: forall a m s.
@@ -169,13 +175,13 @@ setIndex :: forall a m s.
     ) => Raw a ('Mut s) -> Int -> Raw (List a) ('Mut s) -> m ()
 setIndex (Raw v) i (Raw l) = U.setIndex (toElement @(ReprFor a) @('Mut s) v) i l
 
-instance U.HasMessage (Untyped mut (ReprFor a)) mut => U.HasMessage (Raw a mut) mut where
-    message (Raw r) = U.message r
-instance U.MessageDefault (Untyped mut (ReprFor a)) mut => U.MessageDefault (Raw a mut) mut where
-    messageDefault msg = Raw <$> U.messageDefault msg
+instance U.HasMessage (Untyped (ReprFor a)) => U.HasMessage (Raw a) where
+    message (Raw r) = U.message @(Untyped (ReprFor a)) r
+instance U.MessageDefault (Untyped (ReprFor a)) => U.MessageDefault (Raw a) where
+    messageDefault msg = Raw <$> U.messageDefault @(Untyped (ReprFor a)) msg
 
-instance U.MessageDefault (Raw a 'Const) 'Const => Default (Raw a 'Const) where
-    def = fromJust $ evalLimitT maxBound $ U.messageDefault M.empty
+instance U.MessageDefault (Raw a) => Default (Raw a 'Const) where
+    def = fromJust $ evalLimitT maxBound $ U.messageDefault @(Raw a) M.empty
 
 
 -- | Constraint that @a@ is a struct type.

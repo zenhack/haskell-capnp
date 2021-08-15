@@ -67,7 +67,7 @@ readField (F.Field field) (R.Raw struct) =
         , R.IsPtrRepr pr
         ) => Maybe (U.Ptr mut) -> m (R.Raw b mut)
     readPtrField ptr =
-        R.Raw <$> R.fromPtr @pr (U.message struct) ptr
+        R.Raw <$> R.fromPtr @pr (U.message @U.Struct struct) ptr
 
 -- | Return whether the specified field is present. Only applicable for pointer
 -- fields.
@@ -119,7 +119,7 @@ setField (F.Field field) (R.Raw value) (R.Raw struct) =
         :: forall pr.
         ( R.ReprFor b ~ 'R.Ptr pr
         , R.IsPtrRepr pr
-        ) => Word16 -> R.UntypedPtr ('Mut s) pr -> U.Struct ('Mut s) -> m ()
+        ) => Word16 -> U.Unwrapped (R.UntypedPtr pr ('Mut s)) -> U.Struct ('Mut s) -> m ()
     setPtrField index value struct =
         U.setPtr (R.toPtr @pr value) (fromIntegral index) struct
 
@@ -143,7 +143,7 @@ newField ::
     , U.RWCtx m s
     ) => F.Field 'F.Slot a b -> C.AllocHint b -> R.Raw a ('Mut s) -> m (R.Raw b ('Mut s))
 newField field hint parent = do
-    value <- C.new @b hint (U.message parent)
+    value <- C.new @b hint (U.message @(R.Raw a) parent)
     setField field value parent
     pure value
 
@@ -155,7 +155,7 @@ encodeField ::
     , U.RWCtx m s
     ) => F.Field 'F.Slot a b -> bp -> R.Raw a ('Mut s) -> m ()
 encodeField field parsed struct = do
-    encoded <- C.encode (U.message struct) parsed
+    encoded <- C.encode (U.message @(R.Raw a) struct) parsed
     setField field encoded struct
 
 -- | parse a struct's field and return its parsed form.

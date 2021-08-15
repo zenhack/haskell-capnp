@@ -1,7 +1,9 @@
-{-# LANGUAGE DataKinds        #-}
-{-# LANGUAGE ExplicitForAll   #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies     #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE ExplicitForAll      #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-|
 Module: Capnp.Convert
 Description: Convert between messages, typed capnproto values, and (lazy)bytestring(builders).
@@ -133,7 +135,7 @@ parsedToRaw p = do
 parsedToMsg :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (M.Message ('Mut s))
 parsedToMsg p = do
     root <- parsedToRaw p
-    pure $ U.message root
+    pure $ U.message @(R.Raw a) root
 
 -- | Serialize the parsed form of a struct and return it as a 'BB.Builder'
 parsedToBuilder :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m BB.Builder

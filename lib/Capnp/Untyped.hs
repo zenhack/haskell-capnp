@@ -44,6 +44,10 @@ module Capnp.Untyped
     , UntypedSomePtr
     , UntypedList
     , UntypedSomeList
+    -- ** TODO
+    , IgnoreMut(..)
+    , MaybePtr(..)
+    , Unwrapped
 
     -- * Relating the representations of lists & their elements.
     , Element(..)
@@ -186,8 +190,10 @@ class Element r => ListItem (r :: Repr) where
 
     -- underlying implementations of index, setIndex and take, but
     -- without bounds checking. Don't call these directly.
-    unsafeIndex :: ReadCtx m mut => Int -> ListOf r mut -> m (Untyped mut r)
-    unsafeSetIndex :: RWCtx m s => Untyped ('Mut s) r -> Int -> ListOf r ('Mut s) -> m ()
+    unsafeIndex :: ReadCtx m mut => Int -> ListOf r mut -> m (Unwrapped (Untyped r mut))
+    unsafeSetIndex
+        :: (RWCtx m s, a ~ Unwrapped (Untyped r ('Mut s)))
+        => a -> Int -> ListOf r ('Mut s) -> m ()
     unsafeTake :: Int -> ListOf r mut -> ListOf r mut
 
     checkListOf :: ReadCtx m mut => ListOf r mut -> m ()
@@ -198,23 +204,24 @@ class Element r => ListItem (r :: Repr) where
     default unsafeIndex ::
         forall m mut.
         ( ReadCtx m mut
-        , Integral (Untyped mut r)
+        , Integral (Unwrapped (Untyped r mut))
         , ListRepOf r ~ NormalList
-        , FiniteBits (Untyped mut r)
-        ) => Int -> ListOf r mut -> m (Untyped mut r)
+        , FiniteBits (Unwrapped (Untyped r mut))
+        ) => Int -> ListOf r mut -> m (Unwrapped (Untyped r mut))
     unsafeIndex i (ListOf nlist) =
-        unsafeIndexBits @(Untyped mut r) i nlist
+        unsafeIndexBits @(Unwrapped (Untyped r mut)) i nlist
 
     default unsafeSetIndex ::
-        forall m s.
+        forall m s a.
         ( RWCtx m s
+        , a ~ Unwrapped (Untyped r ('Mut s))
         , ListRepOf r ~ NormalList
-        , Integral (Untyped ('Mut s) r)
-        , Bounded (Untyped ('Mut s) r)
-        , FiniteBits (Untyped ('Mut s) r)
-        ) => Untyped ('Mut s) r -> Int -> ListOf r ('Mut s) -> m ()
+        , Integral a
+        , Bounded a
+        , FiniteBits a
+        ) => a -> Int -> ListOf r ('Mut s) -> m ()
     unsafeSetIndex value i (ListOf nlist) =
-        unsafeSetIndexBits @(Untyped ('Mut s) r) value i nlist
+        unsafeSetIndexBits @(Unwrapped (Untyped r ('Mut s))) value i nlist
 
     default unsafeTake :: ListRepOf r ~ NormalList => Int -> ListOf r mut -> ListOf r mut
     unsafeTake count (ListOf NormalList{..}) = ListOf NormalList{ nLen = count, .. }
@@ -223,11 +230,11 @@ class Element r => ListItem (r :: Repr) where
         forall m mut.
         ( ReadCtx m mut
         , ListRepOf r ~ NormalList
-        , FiniteBits (Untyped mut r)
+        , FiniteBits (Untyped r mut)
         ) => ListOf r mut -> m ()
     checkListOf (ListOf l) = checkNormalList
         l
-        (fromIntegral $ finiteBitSize (undefined :: Untyped mut r))
+        (fromIntegral $ finiteBitSize (undefined :: Untyped r mut))
 
 unsafeIndexBits
     :: forall a m mut.
@@ -308,8 +315,8 @@ instance ListItem ('Ptr 'Nothing) where
     unsafeIndex i (ListOf (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} _)) =
         get ptr { M.pAddr = addr { wordIndex = wordIndex + WordCount i } }
     unsafeSetIndex value i list@(ListOf nlist) = case value of
-        Just p | message p /= message list -> do
-            newPtr <- copyPtr (message list) value
+        Just p | message @Ptr p /= message @(ListOf ('Ptr 'Nothing)) list -> do
+            newPtr <- copyPtr (message @(ListOf ('Ptr 'Nothing)) list) value
             unsafeSetIndex newPtr i list
         Nothing ->
             setNIndex i nlist 1 (P.serializePtr Nothing)
@@ -378,11 +385,20 @@ data NormalListRepr where
 data DataSz = Sz0 | Sz1 | Sz8 | Sz16 | Sz32 | Sz64
     deriving(Show)
 
--- | @Untyped mut r@ is an untyped value with representation @r@ stored in
+newtype IgnoreMut a (mut :: Mutability) = IgnoreMut a
+    deriving(Show, Read, Eq, Ord, Enum, Bounded, Num, Real, Integral, Bits, FiniteBits)
+newtype MaybePtr (mut :: Mutability) = MaybePtr (Maybe (Ptr mut))
+
+type family Unwrapped a where
+    Unwrapped (IgnoreMut a mut) = a
+    Unwrapped (MaybePtr mut) = Maybe (Ptr mut)
+    Unwrapped a = a
+
+-- | @Untyped r mut@ is an untyped value with representation @r@ stored in
 -- a message with mutability @mut@.
-type family Untyped (mut :: Mutability) (r :: Repr) :: Type where
-    Untyped mut ('Data sz) = UntypedData sz
-    Untyped mut ('Ptr ptr) = UntypedPtr mut ptr
+type family Untyped (r :: Repr) :: Mutability -> Type where
+    Untyped ('Data sz) = IgnoreMut (UntypedData sz)
+    Untyped ('Ptr ptr) = UntypedPtr ptr
 
 -- | @UntypedData sz@ is an untyped value with size @sz@.
 type family UntypedData (sz :: DataSz) :: Type where
@@ -394,24 +410,24 @@ type family UntypedData (sz :: DataSz) :: Type where
     UntypedData 'Sz64 = Word64
 
 -- | Like 'Untyped', but for pointers only.
-type family UntypedPtr (mut :: Mutability) (r :: Maybe PtrRepr) :: Type where
-    UntypedPtr mut 'Nothing = Maybe (Ptr mut)
-    UntypedPtr mut ('Just r) = UntypedSomePtr mut r
+type family UntypedPtr (r :: Maybe PtrRepr) :: Mutability -> Type where
+    UntypedPtr 'Nothing = MaybePtr
+    UntypedPtr ('Just r) = UntypedSomePtr r
 
 -- | Like 'UntypedPtr', but doesn't allow AnyPointers.
-type family UntypedSomePtr (mut :: Mutability) (r :: PtrRepr) :: Type where
-    UntypedSomePtr mut 'Struct = Struct mut
-    UntypedSomePtr mut 'Cap = Cap mut
-    UntypedSomePtr mut ('List r) = UntypedList mut r
+type family UntypedSomePtr (r :: PtrRepr) :: Mutability -> Type where
+    UntypedSomePtr 'Struct = Struct
+    UntypedSomePtr 'Cap = Cap
+    UntypedSomePtr ('List r) = UntypedList r
 
 -- | Like 'Untyped', but for lists only.
-type family UntypedList (mut :: Mutability) (r :: Maybe ListRepr) :: Type where
-    UntypedList mut 'Nothing = List mut
-    UntypedList mut ('Just r) = UntypedSomeList mut r
+type family UntypedList (r :: Maybe ListRepr) :: Mutability ->  Type where
+    UntypedList 'Nothing = List
+    UntypedList ('Just r) = UntypedSomeList r
 
 -- | Like 'UntypedList', but doesn't allow AnyLists.
-type family UntypedSomeList (mut :: Mutability) (r :: ListRepr) :: Type where
-    UntypedSomeList mut r = ListOf (ElemRepr r) mut
+type family UntypedSomeList (r :: ListRepr) :: Mutability -> Type where
+    UntypedSomeList r = ListOf (ElemRepr r)
 
 -- | @ElemRepr r@ is the representation of elements of lists with
 -- representation @r@.
@@ -441,26 +457,26 @@ class Element (r :: Repr) where
     fromElement
         :: forall m mut. ReadCtx m mut
         => M.Message mut
-        -> Untyped mut (ElemRepr (ListReprFor r))
-        -> m (Untyped mut r)
-    toElement :: Untyped mut r -> Untyped mut (ElemRepr (ListReprFor r))
+        -> Unwrapped (Untyped (ElemRepr (ListReprFor r)) mut)
+        -> m (Unwrapped (Untyped r mut))
+    toElement :: Unwrapped (Untyped r mut) -> Unwrapped (Untyped (ElemRepr (ListReprFor r)) mut)
 
 -- | Operations on types with pointer representations.
 class IsPtrRepr (r :: Maybe PtrRepr) where
-    toPtr :: Untyped mut ('Ptr r) -> Maybe (Ptr mut)
+    toPtr :: Unwrapped (Untyped ('Ptr r) mut) -> Maybe (Ptr mut)
     -- ^ Convert an untyped value of this representation to an AnyPointer.
-    fromPtr :: ReadCtx m mut => M.Message mut -> Maybe (Ptr mut) -> m (Untyped mut ('Ptr r))
+    fromPtr :: ReadCtx m mut => M.Message mut -> Maybe (Ptr mut) -> m (Unwrapped (Untyped ('Ptr r) mut))
     -- ^ Extract a value with this representation from an AnyPointer, failing
     -- if the pointer is the wrong type for this representation.
 
 -- | Operations on types with list representations.
 class IsListPtrRepr (r :: ListRepr) where
-    rToList :: UntypedSomeList mut r -> List mut
+    rToList :: UntypedSomeList r mut -> List mut
     -- ^ Convert an untyped value of this representation to an AnyList.
-    rFromList :: ReadCtx m mut => List mut -> m (UntypedSomeList mut r)
+    rFromList :: ReadCtx m mut => List mut -> m (UntypedSomeList r mut)
     -- ^ Extract a value with this representation from an AnyList, failing
     -- if the list is the wrong type for this representation.
-    rFromListMsg :: ReadCtx m mut => M.Message mut -> m (UntypedSomeList mut r)
+    rFromListMsg :: ReadCtx m mut => M.Message mut -> m (UntypedSomeList r mut)
     -- ^ Create a zero-length value with this representation, living in the
     -- provided message.
 
@@ -495,10 +511,10 @@ instance IsPtrRepr ('Just ('List a)) => Element ('Ptr ('Just ('List a))) where
 
 instance IsPtrRepr 'Nothing where
     toPtr p = p
-    fromPtr _ p = pure p
+    fromPtr _ = pure
 instance IsPtrRepr ('Just 'Struct) where
     toPtr s = Just (PtrStruct s)
-    fromPtr msg Nothing            = messageDefault msg
+    fromPtr msg Nothing            = messageDefault @Struct msg
     fromPtr _ (Just (PtrStruct s)) = pure s
     fromPtr _ _                    = expected "pointer to struct"
 instance IsPtrRepr ('Just 'Cap) where
@@ -599,10 +615,10 @@ instance TraverseMsg StructList where
 
 -------------------------------------------------------------------------------
 
--- | Types @a@ whose storage is owned by a message..
-class HasMessage a mut | a -> mut where
-    -- | Get the message in which the @a@ is stored.
-    message :: a -> M.Message mut
+-- | Types whose storage is owned by a message..
+class HasMessage (f :: Mutability -> *) where
+    -- | Get the message in which the value is stored.
+    message :: Unwrapped (f mut) -> M.Message mut
 
 -- | Types which have a "default" value, but require a message
 -- to construct it.
@@ -610,48 +626,54 @@ class HasMessage a mut | a -> mut where
 -- The default is usually conceptually zero-size. This is mostly useful
 -- for generated code, so that it can use standard decoding techniques
 -- on default values.
-class HasMessage a mut => MessageDefault a mut where
-    messageDefault :: ReadCtx m mut => M.Message mut -> m a
+class HasMessage f => MessageDefault f where
+    messageDefault :: ReadCtx m mut => M.Message mut -> m (Unwrapped (f mut))
 
-instance HasMessage (M.WordPtr mut) mut where
+instance HasMessage M.WordPtr where
     message M.WordPtr{pMessage} = pMessage
 
-instance HasMessage (Ptr mut) mut where
-    message (PtrCap cap)       = message cap
-    message (PtrList list)     = message list
-    message (PtrStruct struct) = message struct
+instance HasMessage Ptr where
+    message (PtrCap cap)       = message @Cap cap
+    message (PtrList list)     = message @List list
+    message (PtrStruct struct) = message @Struct struct
 
-instance HasMessage (Cap mut) mut where
+instance HasMessage Cap where
     message (CapAt msg _) = msg
 
-instance HasMessage (Struct mut) mut where
-    message (StructAt ptr _ _) = message ptr
+instance HasMessage Struct where
+    message (StructAt ptr _ _) = message @M.WordPtr ptr
 
-instance MessageDefault (Struct mut) mut where
+instance MessageDefault Struct where
     messageDefault msg = do
         pSegment <- M.getSegment msg 0
         pure $ StructAt M.WordPtr{pMessage = msg, pSegment, pAddr = WordAt 0 0} 0 0
 
-instance HasMessage (List mut) mut where
-    message (List0 list)      = message list
-    message (List1 list)      = message list
-    message (List8 list)      = message list
-    message (List16 list)     = message list
-    message (List32 list)     = message list
-    message (List64 list)     = message list
-    message (ListPtr list)    = message list
-    message (ListStruct list) = message list
+instance HasMessage List where
+    message (List0 list)      = message @(ListOf ('Data 'Sz0)) list
+    message (List1 list)      = message @(ListOf ('Data 'Sz1)) list
+    message (List8 list)      = message @(ListOf ('Data 'Sz8)) list
+    message (List16 list)     = message @(ListOf ('Data 'Sz16)) list
+    message (List32 list)     = message @(ListOf ('Data 'Sz32)) list
+    message (List64 list)     = message @(ListOf ('Data 'Sz64)) list
+    message (ListPtr list)    = message @(ListOf ('Ptr 'Nothing)) list
+    message (ListStruct list) = message @(ListOf ('Ptr ('Just 'Struct))) list
 
-instance HasMessage (ListRepOf r mut) mut => HasMessage (ListOf r mut) mut where
-    message (ListOf list)    = message list
+instance HasMessage (ListOf ('Ptr ('Just 'Struct))) where
+    message (ListOf list)    = message @StructList list
 
-instance MessageDefault (ListRepOf r mut) mut => MessageDefault (ListOf r mut) mut where
-    messageDefault msg = ListOf <$> messageDefault msg
+instance MessageDefault (ListOf ('Ptr ('Just 'Struct))) where
+    messageDefault msg = ListOf <$> messageDefault @StructList msg
 
-instance HasMessage (NormalList mut) mut where
+instance {-# OVERLAPS #-} ListRepOf r ~ NormalList => HasMessage (ListOf r) where
+    message (ListOf list)    = message @NormalList list
+
+instance {-# OVERLAPS #-} ListRepOf r ~ NormalList => MessageDefault (ListOf r) where
+    messageDefault msg = ListOf <$> messageDefault @NormalList msg
+
+instance HasMessage NormalList where
     message = M.pMessage . nPtr
 
-instance MessageDefault (NormalList mut) mut where
+instance MessageDefault NormalList where
     messageDefault msg = do
         pSegment <- M.getSegment msg 0
         pure NormalList
@@ -659,11 +681,13 @@ instance MessageDefault (NormalList mut) mut where
             , nLen = 0
             }
 
-instance HasMessage (StructList mut) mut where
-    message (StructList s _) = message s
+instance HasMessage StructList where
+    message (StructList s _) = message @Struct s
 
-instance MessageDefault (StructList mut) mut where
-    messageDefault msg = StructList <$> messageDefault msg <*> pure 0
+instance MessageDefault StructList where
+    messageDefault msg = StructList
+        <$> messageDefault @Struct msg
+        <*> pure 0
 
 -- | Extract a client (indepedent of the messsage) from the capability.
 getClient :: ReadCtx m mut => Cap mut -> m M.Client
@@ -812,8 +836,12 @@ ptrAddr (PtrStruct (StructAt M.WordPtr{pAddr}_ _)) = pAddr
 ptrAddr (PtrList list) = listAddr list
 
 -- | @'setIndex value i list@ Set the @i@th element of @list@ to @value@.
-setIndex :: (RWCtx m s, ListItem r) => Untyped ('Mut s) r -> Int -> ListOf r ('Mut s) -> m ()
-{-# SPECIALIZE setIndex :: ListItem r => Untyped ('Mut RealWorld) r -> Int -> ListOf r ('Mut RealWorld) -> LimitT IO () #-}
+setIndex
+    :: (RWCtx m s, ListItem r)
+    => Unwrapped (Untyped r ('Mut s)) -> Int -> ListOf r ('Mut s) -> m ()
+{-# SPECIALIZE setIndex
+    :: ListItem r
+    => Unwrapped (Untyped r ('Mut RealWorld)) -> Int -> ListOf r ('Mut RealWorld) -> LimitT IO () #-}
 setIndex _ i list | i < 0 || length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = unsafeSetIndex value i list
@@ -980,9 +1008,9 @@ copyStruct dest src = do
 
 
 -- | @index i list@ returns the ith element in @list@. Deducts 1 from the quota
-index :: (ReadCtx m mut, ListItem r) => Int -> ListOf r mut -> m (Untyped mut r)
-{-# SPECIALIZE index :: ListItem r => Int -> ListOf r 'Const -> LimitT IO (Untyped 'Const r) #-}
-{-# SPECIALIZE index :: ListItem r => Int -> ListOf r ('Mut RealWorld) -> LimitT IO (Untyped ('Mut RealWorld) r) #-}
+index :: (ReadCtx m mut, ListItem r) => Int -> ListOf r mut -> m (Unwrapped (Untyped r mut))
+{-# SPECIALIZE index :: ListItem r => Int -> ListOf r 'Const -> LimitT IO (Unwrapped (Untyped r 'Const)) #-}
+{-# SPECIALIZE index :: ListItem r => Int -> ListOf r ('Mut RealWorld) -> LimitT IO (Unwrapped (Untyped r ('Mut RealWorld))) #-}
 index i list
     | i < 0 || i >= length list =
         throwM E.BoundsError { E.index = i, E.maxIndex = length list - 1 }
@@ -1168,7 +1196,7 @@ rootPtr msg = do
     invoicePtr root
     case root of
         Just (PtrStruct struct) -> pure struct
-        Nothing -> messageDefault msg
+        Nothing -> messageDefault @Struct msg
         _ -> throwM $ E.SchemaViolationError
                 "Unexpected root type; expected struct."
 
@@ -1193,7 +1221,7 @@ class Allocate (r :: PtrRepr) where
     type AllocHint r
 
     -- | Allocate a value of the given type.
-    alloc :: RWCtx m s => M.Message ('Mut s) -> AllocHint r -> m (UntypedSomePtr ('Mut s) r)
+    alloc :: RWCtx m s => M.Message ('Mut s) -> AllocHint r -> m (Unwrapped (UntypedSomePtr r ('Mut s)))
 
 instance Allocate 'Struct where
     type AllocHint 'Struct = (Word16, Word16)
@@ -1215,7 +1243,7 @@ instance AllocateNormalList r => Allocate ('List ('Just ('ListNormal r))) where
 class AllocateNormalList (r :: NormalListRepr) where
     allocNormalList
         :: RWCtx m s
-        => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('Mut s) ('ListNormal r))
+        => M.Message ('Mut s) -> Int -> m (UntypedSomeList ('ListNormal r) ('Mut s))
 
 instance AllocateNormalList ('NormalListData 'Sz0) where allocNormalList = allocList0
 instance AllocateNormalList ('NormalListData 'Sz1) where allocNormalList = allocList1
@@ -1353,7 +1381,7 @@ do
                     rToList = $(pure $ TH.ConE listC)
                     rFromList $(pure $ TH.ConP listC [TH.VarP (TH.mkName "l")]) = pure l
                     rFromList _ = expected $(pure $ TH.LitE $ TH.StringL $ "pointer to " ++ str)
-                    rFromListMsg = messageDefault
+                    rFromListMsg = messageDefault @(Untyped ('Ptr ('Just ('List ('Just $r)))))
             |]
     concat <$> traverse mkIsListPtrRepr
         [ ( [t| 'ListNormal ('NormalListData 'Sz0) |]

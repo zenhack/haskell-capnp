@@ -210,12 +210,12 @@ setRoot (R.Raw struct) = U.setRoot struct
 
 ------ Instances for basic types -------
 
-parseId :: (R.Untyped mut (R.ReprFor a) ~ a, U.ReadCtx m mut) => R.Raw a mut -> m a
-parseId = pure . R.fromRaw
+parseId :: (R.Untyped (R.ReprFor a) mut ~ U.IgnoreMut a mut, U.ReadCtx m mut) => R.Raw a mut -> m a
+parseId (R.Raw v) = pure v
 
 parseInt ::
     ( Integral a
-    , Integral (R.Untyped mut (R.ReprFor a))
+    , Integral (U.Unwrapped (R.Untyped (R.ReprFor a) mut))
     , U.ReadCtx m mut
     ) => R.Raw a mut -> m a
 parseInt = pure . fromIntegral . R.fromRaw
@@ -244,6 +244,8 @@ type MarshalElement a ap =
     ( Parse a ap
     , EstimateListAlloc a ap
     , R.Element (R.ReprFor a)
+    , U.ListItem (R.ElemRepr (R.ListReprFor (R.ReprFor a)))
+    , U.HasMessage (U.ListOf (R.ElemRepr (R.ListReprFor (R.ReprFor a))))
     , MarshalElementByRepr (R.ListReprFor (R.ReprFor a))
     , MarshalElementReprConstraints (R.ListReprFor (R.ReprFor a)) a ap
     )
@@ -253,7 +255,10 @@ type family MarshalElementReprConstraints (lr :: R.ListRepr) a ap where
     MarshalElementReprConstraints 'R.ListComposite  a ap = Marshal a ap
     MarshalElementReprConstraints ('R.ListNormal r) a ap = Parse a ap
 
-class MarshalElementByRepr (lr :: R.ListRepr) where
+class
+    U.HasMessage (U.ListOf ('R.Ptr ('Just ('R.List ('Just lr)))))
+    => MarshalElementByRepr (lr :: R.ListRepr)
+  where
     marshalElementByRepr ::
         ( U.RWCtx m s
         , R.ListReprFor (R.ReprFor a) ~ lr
@@ -269,9 +274,15 @@ instance MarshalElementByRepr 'R.ListComposite where
         rawElt <- R.index i rawList
         marshalInto rawElt parsed
 
-instance MarshalElementByRepr ('R.ListNormal l) where
-    marshalElementByRepr rawList i parsed = do
-        rawElt <- encode (U.message rawList) parsed
+instance
+    ( U.HasMessage (U.ListOf (R.ElemRepr ('R.ListNormal l)))
+    , U.ListItem (R.ElemRepr ('R.ListNormal l))
+    ) => MarshalElementByRepr ('R.ListNormal l)
+  where
+    marshalElementByRepr rawList@(R.Raw ulist) i parsed = do
+        rawElt <- encode
+            (U.message @(U.Untyped ('R.Ptr ('Just ('R.List ('Just ('R.ListNormal l)))))) ulist)
+            parsed
         R.setIndex rawElt i rawList
 
 marshalElement ::

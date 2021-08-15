@@ -102,5 +102,5 @@ getPtrConst :: forall a. R.IsPtr a => BS.ByteString -> R.Raw a 'Const
 getPtrConst bytes = fromJust $ evalLimitT maxBound $ do
     R.Raw root <- bsToRaw @NB.AnyStruct bytes
     U.getPtr 0 root
-        >>= R.fromPtr @(R.PtrReprFor (R.ReprFor a)) (U.message root)
+        >>= R.fromPtr @(R.PtrReprFor (R.ReprFor a)) (U.message @U.Struct root)
         <&> R.Raw

@@ -19,9 +19,10 @@ import qualified Data.Text       as T
 
 import Capnp.New.Basics
 
+import Capnp.Mutability (freeze)
 import Capnp.New
     (List, Mutability(..), Raw(..), encode, evalLimitT, length, newMessage)
-import Data.Mutable (freeze)
+-- import Data.Mutable (freeze)
 
 basicsTests :: Spec
 basicsTests =

@@ -4,6 +4,7 @@
 {-# LANGUAGE BangPatterns     #-}
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies     #-}
 module Capnp.Canonicalize
     ( canonicalize
@@ -53,7 +54,7 @@ canonicalize
 {-# SPECIALIZE canonicalize :: U.Struct 'Const -> LimitT IO (M.Message ('Mut RealWorld), M.Segment ('Mut RealWorld)) #-}
 {-# SPECIALIZE canonicalize :: U.Struct ('Mut RealWorld) -> LimitT IO (M.Message ('Mut RealWorld), M.Segment ('Mut RealWorld)) #-}
 canonicalize rootStructIn = do
-    let msgIn = U.message rootStructIn
+    let msgIn = U.message @U.Struct rootStructIn
     -- Note [Allocation strategy]
     words <- totalWords msgIn
     msgOut <- M.newMessage $ Just words
@@ -95,7 +96,7 @@ copyCanonicalStruct structIn structOut = do
         U.setData word i structOut
     for_ [0..nPtrs - 1] $ \i -> do
         ptrIn <- U.getPtr i structIn
-        ptrOut <- cloneCanonicalPtr ptrIn (U.message structOut)
+        ptrOut <- cloneCanonicalPtr ptrIn (U.message @U.Struct structOut)
         U.setPtr ptrOut i structOut
 
 findCanonicalSectionCounts :: U.ReadCtx m mut => U.Struct mut -> m (Word16, Word16)
@@ -147,18 +148,29 @@ cloneCanonicalList listIn msgOut =
         U.ListPtr l -> U.ListPtr <$> (U.allocListPtr msgOut (U.length l) >>= copyCanonicalPtrList l)
         U.ListStruct l -> U.ListStruct <$> cloneCanonicalStructList l msgOut
 
-copyCanonicalDataList
-    :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
-    => U.ListOf mutIn a -> U.ListOf ('Mut s) a -> m (U.ListOf ('Mut s) a)
-{-# SPECIALIZE copyCanonicalDataList
-    :: U.ListOf 'Const a
-    -> U.ListOf ('Mut RealWorld) a
-    -> LimitT IO (U.ListOf ('Mut RealWorld) a)
+copyCanonicalDataList ::
+    ( U.RWCtx m s
+    , M.MonadReadMessage mutIn m
+    , U.ListItem r
+    , U.Unwrapped (U.Untyped r mutIn) ~ U.Unwrapped (U.Untyped r ('Mut s))
+    )
+    => U.ListOf r mutIn -> U.ListOf r ('Mut s) -> m (U.ListOf r ('Mut s))
+{-
+{-# SPECIALIZE copyCanonicalDataList ::
+    ( U.ListItem r
+    , U.Unwrapped (U.Untyped r 'Const) ~ U.Unwrapped (U.Untyped r ('Mut RealWorld))
+    )
+    => U.ListOf r 'Const
+    -> U.ListOf r ('Mut RealWorld)
+    -> LimitT IO (U.ListOf r ('Mut RealWorld))
     #-}
-{-# SPECIALIZE copyCanonicalDataList
-    :: U.ListOf ('Mut RealWorld) a
-    -> U.ListOf ('Mut RealWorld) a
-    -> LimitT IO (U.ListOf ('Mut RealWorld) a)
+-}
+{-# SPECIALIZE copyCanonicalDataList ::
+    ( U.ListItem r
+    )
+    => U.ListOf r ('Mut RealWorld)
+    -> U.ListOf r ('Mut RealWorld)
+    -> LimitT IO (U.ListOf r ('Mut RealWorld))
     #-}
 copyCanonicalDataList listIn listOut = do
     for_ [0..U.length listIn - 1] $ \i -> do
@@ -168,40 +180,40 @@ copyCanonicalDataList listIn listOut = do
 
 copyCanonicalPtrList
     :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
-    => U.ListOf mutIn (Maybe (U.Ptr mutIn))
-    -> U.ListOf ('Mut s) (Maybe (U.Ptr ('Mut s)))
-    -> m (U.ListOf ('Mut s) (Maybe (U.Ptr ('Mut s))))
+    => U.ListOf ('U.Ptr 'Nothing) mutIn
+    -> U.ListOf ('U.Ptr 'Nothing) ('Mut s)
+    -> m (U.ListOf ('U.Ptr 'Nothing) ('Mut s))
 {-# SPECIALIZE copyCanonicalPtrList
-    :: U.ListOf 'Const (Maybe (U.Ptr 'Const))
-    -> U.ListOf ('Mut RealWorld) (Maybe (U.Ptr ('Mut RealWorld)))
-    -> LimitT IO (U.ListOf ('Mut RealWorld) (Maybe (U.Ptr ('Mut RealWorld))))
+    :: U.ListOf ('U.Ptr 'Nothing) 'Const
+    -> U.ListOf ('U.Ptr 'Nothing) ('Mut RealWorld)
+    -> LimitT IO (U.ListOf ('U.Ptr 'Nothing) ('Mut RealWorld))
     #-}
 {-# SPECIALIZE copyCanonicalPtrList
-    :: U.ListOf ('Mut RealWorld) (Maybe (U.Ptr ('Mut RealWorld)))
-    -> U.ListOf ('Mut RealWorld) (Maybe (U.Ptr ('Mut RealWorld)))
-    -> LimitT IO (U.ListOf ('Mut RealWorld) (Maybe (U.Ptr ('Mut RealWorld))))
+    :: U.ListOf ('U.Ptr 'Nothing) ('Mut RealWorld)
+    -> U.ListOf ('U.Ptr 'Nothing) ('Mut RealWorld)
+    -> LimitT IO (U.ListOf ('U.Ptr 'Nothing) ('Mut RealWorld))
     #-}
 copyCanonicalPtrList listIn listOut = do
     for_ [0..U.length listIn - 1] $ \i -> do
         ptrIn <- U.index i listIn
-        ptrOut <- cloneCanonicalPtr ptrIn (U.message listOut)
+        ptrOut <- cloneCanonicalPtr ptrIn (U.message @(U.ListOf ('U.Ptr 'Nothing)) listOut)
         U.setIndex ptrOut i listOut
     pure listOut
 
 cloneCanonicalStructList
     :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
-    => U.ListOf mutIn (U.Struct mutIn)
+    => U.ListOf ('U.Ptr ('Just 'U.Struct)) mutIn
     -> M.Message ('Mut s)
-    -> m (U.ListOf ('Mut s) (U.Struct ('Mut s)))
+    -> m (U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut s))
 {-# SPECIALIZE cloneCanonicalStructList
-    :: U.ListOf 'Const (U.Struct 'Const)
+    :: U.ListOf ('U.Ptr ('Just ('U.Struct))) 'Const
     -> M.Message ('Mut RealWorld)
-    -> LimitT IO (U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld)))
+    -> LimitT IO (U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld))
     #-}
 {-# SPECIALIZE cloneCanonicalStructList
-    :: U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld))
+    :: U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld)
     -> M.Message ('Mut RealWorld)
-    -> LimitT IO (U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld)))
+    -> LimitT IO (U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld))
     #-}
 cloneCanonicalStructList listIn msgOut = do
     (nWords, nPtrs) <- findCanonicalListSectionCounts listIn
@@ -211,17 +223,17 @@ cloneCanonicalStructList listIn msgOut = do
 
 copyCanonicalStructList
     :: (U.RWCtx m s, M.MonadReadMessage mutIn m)
-    => U.ListOf mutIn (U.Struct mutIn)
-    -> U.ListOf ('Mut s) (U.Struct ('Mut s))
+    => U.ListOf ('U.Ptr ('Just 'U.Struct)) mutIn
+    -> U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut s)
     -> m ()
 {-# SPECIALIZE copyCanonicalStructList
-    :: U.ListOf 'Const (U.Struct 'Const)
-    -> U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld))
+    :: U.ListOf ('U.Ptr ('Just 'U.Struct)) 'Const
+    -> U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld)
     -> LimitT IO ()
     #-}
 {-# SPECIALIZE copyCanonicalStructList
-    :: U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld))
-    -> U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld))
+    :: U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld)
+    -> U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld)
     -> LimitT IO ()
     #-}
 copyCanonicalStructList listIn listOut =
@@ -232,12 +244,12 @@ copyCanonicalStructList listIn listOut =
 
 findCanonicalListSectionCounts
     :: U.ReadCtx m mut
-    => U.ListOf mut (U.Struct mut) -> m (Word16, Word16)
+    => U.ListOf ('U.Ptr ('Just 'U.Struct)) mut -> m (Word16, Word16)
 {-# SPECIALIZE findCanonicalListSectionCounts
-    :: U.ListOf 'Const (U.Struct 'Const) -> LimitT IO (Word16, Word16)
+    :: U.ListOf ('U.Ptr ('Just 'U.Struct)) 'Const -> LimitT IO (Word16, Word16)
     #-}
 {-# SPECIALIZE findCanonicalListSectionCounts
-    :: U.ListOf ('Mut RealWorld) (U.Struct ('Mut RealWorld)) -> LimitT IO (Word16, Word16)
+    :: U.ListOf ('U.Ptr ('Just 'U.Struct)) ('Mut RealWorld) -> LimitT IO (Word16, Word16)
     #-}
 findCanonicalListSectionCounts list = go 0 0 0 where
     go i !nWords !nPtrs

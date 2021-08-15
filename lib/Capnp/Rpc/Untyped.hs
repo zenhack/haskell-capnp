@@ -1389,7 +1389,7 @@ sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{co
     sendRawMsg conn' =<< createPure defaultLimit (do
         mcontent <- traverse thaw content
         msg <- case mcontent of
-            Just v  -> pure $ UntypedRaw.message v
+            Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr v
             Nothing -> Message.newMessage Nothing
         payload <- new @R.Payload () msg
         payload & setField #content (Raw mcontent)
@@ -1411,7 +1411,7 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
         sendRawMsg conn' =<< createPure defaultLimit (do
             mcontent <- traverse thaw content
             msg <- case mcontent of
-                Just v  -> pure $ UntypedRaw.message v
+                Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr  v
                 Nothing -> Message.newMessage Nothing
             payload <- new @R.Payload () msg
             payload & setField #content (Raw mcontent)
@@ -1452,7 +1452,7 @@ sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
         sendRawMsg conn' =<< createPure defaultLimit (do
             mptr <- traverse thaw ptr
             msg <- case mptr of
-                Just v  -> pure $ UntypedRaw.message v
+                Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr v
                 Nothing -> Message.newMessage Nothing
             ret <- new @R.Return () msg
             ret & encodeField #answerId (qaWord answerId)
@@ -1692,7 +1692,7 @@ genSendableCapTableRaw conn (Just ptr) =
             union' <- emitCap conn c
             pure (def :: R.Parsed R.CapDescriptor) { R.union' = union' }
         )
-        (Message.getCapTable (UntypedRaw.message ptr))
+        (Message.getCapTable (UntypedRaw.message @UntypedRaw.Ptr ptr))
 
 -- | Convert the pointer into a Payload, including a capability table for
 -- the clients in the pointer's cap table.

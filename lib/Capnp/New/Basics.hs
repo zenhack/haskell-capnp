@@ -158,7 +158,7 @@ instance C.Marshal AnyStruct (C.Parsed AnyStruct) where
         V.iforM_ (structData s) $ \i value -> do
             U.setData value i raw
         V.iforM_ (structPtrs s) $ \i value -> do
-            R.Raw ptr <- C.encode (U.message raw) value
+            R.Raw ptr <- C.encode (U.message @U.Struct raw) value
             U.setPtr ptr i raw
 
 -- TODO(cleanup): It would be nice if we could reuse Capnp.Repr.Parsed.Parsed
