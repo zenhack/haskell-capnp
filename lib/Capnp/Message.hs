@@ -143,22 +143,20 @@ data WordPtr mut = WordPtr
     }
 
 -- | A Cap'n Proto message, parametrized over its mutability.
-data Message (mut :: Mutability) where
-    MsgConst :: !ConstMsg -> Message 'Const
-    MsgMut :: !(MutMsg s) -> Message ('Mut s)
+data family Message (mut :: Mutability)
 
-instance Eq (Message mut) where
-    (MsgConst x) == (MsgConst y) = x == y
-    (MsgMut x) == (MsgMut y)     = x == y
+newtype instance Message 'Const = MsgConst ConstMsg
+    deriving(Eq)
+newtype instance Message ('Mut s) = MsgMut (MutMsg s)
+    deriving(Eq)
 
 -- | A segment in a Cap'n Proto message.
-data Segment (mut :: Mutability) where
-    SegConst :: !ConstSegment -> Segment 'Const
-    SegMut :: !(MutSegment s) -> Segment ('Mut s)
+data family Segment (mut :: Mutability)
 
-instance Eq (Segment mut)  where
-    (SegConst x) == (SegConst y) = x == y
-    (SegMut x) == (SegMut y)     = x == y
+newtype instance Segment 'Const = SegConst ConstSegment
+    deriving(Eq)
+newtype instance Segment ('Mut s) = SegMut (MutSegment s)
+    deriving(Eq)
 
 data MutSegment s = MutSegment
     { vec  :: SMV.MVector s Word64
