@@ -13,6 +13,9 @@
   - The `Untyped` type family has seen similar treatment.
 - HasMessage and MessageDefault are now defined on a type of kind
   `* -> Mutability`, which keeps the mutability out of constraints.
+  - This has the unfortunate side-effect of making type inference
+    for these classes not work very well :(. Hopefully a better
+    solution will be found in the future.
 
 # 0.13.0.0
 
