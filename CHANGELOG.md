@@ -1,3 +1,12 @@
+# 0.14.0.0
+
+- The `Data.Mutable` module and its `Thaw` class have been replaced
+  by `Capnp.Mutability` and a class `MaybeMutable`, which serves the
+  same function but is easier to work with.
+- `Mutability` is now defined in `Capnp.Mutability` instead of
+  `Capnp.Message`, though the latter still re-exports it for
+  compatibility (for now).
+
 # 0.13.0.0
 
 This release drops support for the old API. To upgrade to the new API,
