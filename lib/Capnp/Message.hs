@@ -44,7 +44,6 @@ module Capnp.Message (
     -- * Reading data from messages
     , MonadReadMessage(..)
     , getSegment
-    , getWord
     , getCap
     , getCapTable
 
@@ -230,14 +229,6 @@ getCap msg i = do
     if i >= ncaps || i < 0
         then pure nullClient
         else msg `internalGetCap` i
-
--- | @'getWord' msg addr@ returns the word at @addr@ within @msg@. It throws a
--- 'E.BoundsError' if the address is out of bounds.
-getWord :: (MonadThrow m, MonadReadMessage mut m) => Message mut -> WordAddr -> m Word64
-getWord msg WordAt{wordIndex=i, segIndex} = do
-    seg <- getSegment msg segIndex
-    checkIndex i =<< numWords seg
-    seg `read` i
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
 -- in the message. It throws a 'E.BoundsError' if the address is out of bounds.
