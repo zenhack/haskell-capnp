@@ -166,6 +166,26 @@ copyCanonicalDataList ::
     #-}
 -}
 {-# SPECIALIZE copyCanonicalDataList ::
+    U.ListOf ('U.Data 'U.Sz8) 'Const
+    -> U.ListOf ('U.Data 'U.Sz8) ('Mut RealWorld)
+    -> LimitT IO (U.ListOf ('U.Data 'U.Sz8) ('Mut RealWorld))
+    #-}
+{-# SPECIALIZE copyCanonicalDataList ::
+    U.ListOf ('U.Data 'U.Sz16) 'Const
+    -> U.ListOf ('U.Data 'U.Sz16) ('Mut RealWorld)
+    -> LimitT IO (U.ListOf ('U.Data 'U.Sz16) ('Mut RealWorld))
+    #-}
+{-# SPECIALIZE copyCanonicalDataList ::
+    U.ListOf ('U.Data 'U.Sz32) 'Const
+    -> U.ListOf ('U.Data 'U.Sz32) ('Mut RealWorld)
+    -> LimitT IO (U.ListOf ('U.Data 'U.Sz32) ('Mut RealWorld))
+    #-}
+{-# SPECIALIZE copyCanonicalDataList ::
+    U.ListOf ('U.Data 'U.Sz64) 'Const
+    -> U.ListOf ('U.Data 'U.Sz64) ('Mut RealWorld)
+    -> LimitT IO (U.ListOf ('U.Data 'U.Sz64) ('Mut RealWorld))
+    #-}
+{-# SPECIALIZE copyCanonicalDataList ::
     ( U.ListItem r
     )
     => U.ListOf r ('Mut RealWorld)

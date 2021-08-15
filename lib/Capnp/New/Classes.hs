@@ -81,6 +81,7 @@ class Parse t p | t -> p, p -> t where
         raw <- new (estimateAlloc value) msg
         marshalInto raw value
         pure raw
+    {-# INLINABLE encode #-}
 
 -- | Types where the necessary allocation is inferrable from the parsed form.
 --
@@ -92,6 +93,7 @@ class (Parse t p, Allocate t) => EstimateAlloc t p where
 
     default estimateAlloc :: AllocHint t ~ () => p -> AllocHint t
     estimateAlloc _ = ()
+    {-# INLINABLE estimateAlloc #-}
 
 -- | Implementation of 'new' valid for types whose 'AllocHint' is
 -- the same as that of their underlying representation.
@@ -102,6 +104,7 @@ newFromRepr
     , U.RWCtx m s
     )
     => R.AllocHint r -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
+{-# INLINABLE newFromRepr #-}
 newFromRepr hint msg = R.Raw <$> R.alloc @r msg hint
     -- TODO(cleanup): new and alloc really ought to have the same argument order...
 
@@ -124,6 +127,7 @@ class Allocate a where
     -- If the AllocHint is the same as that of the underlying Repr, then
     -- we can just use that implementation.
     new = newFromRepr @a
+    {-# INLINABLE new #-}
 
 -- | Like 'Allocate', but for allocating *lists* of @a@.
 class AllocateList a where
@@ -140,10 +144,12 @@ class AllocateList a where
         , R.AllocHint r ~ ListAllocHint a
         ) => ListAllocHint a -> M.Message ('Mut s) -> m (R.Raw (R.List a) ('Mut s))
     newList hint msg = R.Raw <$> R.alloc @r msg hint
+    {-# INLINABLE newList #-}
 
 instance AllocateList a => Allocate (R.List a) where
     type AllocHint (R.List a) = ListAllocHint a
     new = newList @a
+    {-# INLINABLE new #-}
 
 instance AllocateList (R.List a) where
     type ListAllocHint (R.List a) = Int
@@ -156,12 +162,14 @@ instance
 -- | Allocate a new typed struct. Mainly used as the value for 'new' for in generated
 -- instances of 'Allocate'.
 newTypedStruct :: forall a m s. (TypedStruct a, U.RWCtx m s) => M.Message ('Mut s) -> m (R.Raw a ('Mut s))
+{-# INLINABLE newTypedStruct #-}
 newTypedStruct = newFromRepr (structSizes @a)
 
 -- | Like 'newTypedStruct', but for lists.
 newTypedStructList
     :: forall a m s. (TypedStruct a, U.RWCtx m s)
     => Int -> M.Message ('Mut s) -> m (R.Raw (R.List a) ('Mut s))
+{-# INLINABLE newTypedStructList #-}
 newTypedStructList i msg = R.Raw <$> R.alloc
     @('R.List ('Just 'R.ListComposite))
     msg
@@ -179,6 +187,7 @@ class Parse t p => Marshal t p where
 
 -- | Get the maximum word and pointer counts needed for a struct type's fields.
 structSizes :: forall a. TypedStruct a => (Word16, Word16)
+{-# INLINABLE structSizes #-}
 structSizes = (numStructWords @a, numStructPtrs @a)
 
 -- | Types which have a numeric type-id defined in a capnp schema.
@@ -198,6 +207,7 @@ class (R.IsStruct a, Allocate a, HasTypeId a, AllocHint a ~ ()) => TypedStruct a
 newRoot
     :: forall a m s. (U.RWCtx m s, R.IsStruct a, Allocate a)
     => AllocHint a -> M.Message ('Mut s) -> m (R.Raw a ('Mut s))
+{-# INLINABLE newRoot #-}
 newRoot hint msg = do
     raw <- new @a hint msg
     setRoot raw
@@ -205,12 +215,14 @@ newRoot hint msg = do
 
 -- | Sets the struct to be the root of its containing message.
 setRoot :: (U.RWCtx m s, R.IsStruct a) => R.Raw a ('Mut s) -> m ()
+{-# INLINABLE setRoot #-}
 setRoot (R.Raw struct) = U.setRoot struct
 
 
 ------ Instances for basic types -------
 
 parseId :: (R.Untyped (R.ReprFor a) mut ~ U.IgnoreMut a mut, U.ReadCtx m mut) => R.Raw a mut -> m a
+{-# INLINABLE parseId #-}
 parseId (R.Raw v) = pure v
 
 parseInt ::
@@ -218,6 +230,7 @@ parseInt ::
     , Integral (U.Unwrapped (R.Untyped (R.ReprFor a) mut))
     , U.ReadCtx m mut
     ) => R.Raw a mut -> m a
+{-# INLINABLE parseInt #-}
 parseInt = pure . fromIntegral . R.fromRaw
 
 instance Parse Float Float where
@@ -273,6 +286,7 @@ instance MarshalElementByRepr 'R.ListComposite where
     marshalElementByRepr rawList i parsed = do
         rawElt <- R.index i rawList
         marshalInto rawElt parsed
+    {-# INLINABLE marshalElementByRepr #-}
 
 instance
     ( U.HasMessage (U.ListOf (R.ElemRepr ('R.ListNormal l)))
@@ -284,12 +298,14 @@ instance
             (U.message @(U.Untyped ('R.Ptr ('Just ('R.List ('Just ('R.ListNormal l)))))) ulist)
             parsed
         R.setIndex rawElt i rawList
+    {-# INLINABLE marshalElementByRepr #-}
 
 marshalElement ::
   forall a ap m s.
   ( U.RWCtx m s
   , MarshalElement a ap
   ) => R.Raw (R.List a) ('Mut s) -> Int -> ap -> m ()
+{-# INLINABLE marshalElement #-}
 marshalElement = marshalElementByRepr @(R.ListReprFor (R.ReprFor a))
 
 class (Parse a ap, Allocate (R.List a)) => EstimateListAlloc a ap where
@@ -297,9 +313,11 @@ class (Parse a ap, Allocate (R.List a)) => EstimateListAlloc a ap where
 
     default estimateListAlloc :: (AllocHint (R.List a) ~ Int) => V.Vector ap -> AllocHint (R.List a)
     estimateListAlloc = V.length
+    {-# INLINABLE estimateListAlloc #-}
 
 instance MarshalElement a ap => EstimateAlloc (R.List a) (V.Vector ap) where
     estimateAlloc = estimateListAlloc @a
+    {-# INLINABLE estimateAlloc #-}
 
 -- | If @a@ is a capnproto type, then @Parsed a@ is an ADT representation of that
 -- type. If this is defined for a type @a@ then there should also be an instance
@@ -312,17 +330,22 @@ instance (Default (R.Raw a 'Const), Parse a (Parsed a)) => Default (Parsed a) wh
     def = case evalLimitT maxBound (parse @a def) of
         Just v  -> v
         Nothing -> error "Parsing default value failed."
+    {-# INLINABLE def #-}
 
 do
     let mkId ty =
             [d| instance Parse $ty $ty where
                     parse = parseId
+                    {-# INLINABLE parse #-}
                     encode _ = pure . R.Raw
+                    {-# INLINABLE encode #-}
             |]
         mkInt ty =
             [d| instance Parse $ty $ty where
                     parse = parseInt
+                    {-# INLINABLE parse #-}
                     encode _ = pure . R.Raw . fromIntegral
+                    {-# INLINABLE encode #-}
             |]
         mkAll ty =
             [d| instance AllocateList $ty where
@@ -330,6 +353,7 @@ do
 
                 instance EstimateListAlloc $ty $ty where
                     estimateListAlloc = V.length
+                    {-# INLINABLE estimateListAlloc #-}
             |]
 
         nameTy name = pure (TH.ConT name)
@@ -363,42 +387,44 @@ class IsWord a where
 
 instance IsWord Bool where
     fromWord n = (n .&. 1) == 1
+    {-# INLINABLE fromWord #-}
     toWord True  = 1
     toWord False = 0
+    {-# INLINABLE toWord #-}
 
 instance IsWord Word1 where
     fromWord = Word1 . fromWord
+    {-# INLINABLE fromWord #-}
     toWord = toWord . word1ToBool
+    {-# INLINABLE toWord #-}
 
 -- IsWord instances for integral types; they're all the same.
-instance IsWord Int8 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Int16 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Int32 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Int64 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word8 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word16 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word32 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
-instance IsWord Word64 where
-    fromWord = fromIntegral
-    toWord = fromIntegral
+do
+    let mkInstance t =
+            [d|instance IsWord $t where
+                fromWord = fromIntegral
+                {-# INLINABLE fromWord #-}
+                toWord = fromIntegral
+                {-# INLINABLE toWord #-}
+            |]
+    concat <$> traverse mkInstance
+        [ [t|Int8|]
+        , [t|Int16|]
+        , [t|Int32|]
+        , [t|Int64|]
+        , [t|Word8|]
+        , [t|Word16|]
+        , [t|Word32|]
+        , [t|Word64|]
+        ]
 
 instance IsWord Float where
     fromWord = F.castWord32ToFloat . fromIntegral
+    {-# INLINABLE fromWord #-}
     toWord = fromIntegral . F.castFloatToWord32
+    {-# INLINABLE toWord #-}
 instance IsWord Double where
     fromWord = F.castWord64ToDouble
+    {-# INLINABLE fromWord #-}
     toWord = F.castDoubleToWord64
+    {-# INLINABLE toWord #-}

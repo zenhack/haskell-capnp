@@ -150,6 +150,7 @@ type ListElem a =
 
 -- | Get the length of a capnproto list.
 length :: ListElem a => Raw (List a) mut -> Int
+{-# INLINE length #-}
 length (Raw l) = U.length l
 
 -- | @'index' i list@ gets the @i@th element of the list.
@@ -158,6 +159,7 @@ index :: forall a m mut.
     , U.HasMessage (U.ListOf (ElemRepr (ListReprFor (ReprFor a))))
     , ListElem a
     ) => Int -> Raw (List a) mut -> m (Raw a mut)
+{-# INLINE index #-}
 index i (Raw l) = Raw <$> do
     elt <- U.index i l
     fromElement
@@ -173,6 +175,7 @@ setIndex :: forall a m s.
     , U.ListItem (ElemRepr (ListReprFor (ReprFor a)))
     , U.Element (ReprFor a)
     ) => Raw a ('Mut s) -> Int -> Raw (List a) ('Mut s) -> m ()
+{-# INLINE setIndex #-}
 setIndex (Raw v) i (Raw l) = U.setIndex (toElement @(ReprFor a) @('Mut s) v) i l
 
 instance U.HasMessage (Untyped (ReprFor a)) => U.HasMessage (Raw a) where
