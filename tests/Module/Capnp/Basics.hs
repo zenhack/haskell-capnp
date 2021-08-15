@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-error=deprecations #-}
 module Module.Capnp.Basics (basicsTests) where
 
 import Prelude hiding (length)

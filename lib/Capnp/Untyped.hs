@@ -12,6 +12,7 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# OPTIONS_GHC -Wno-error=deprecations #-}
 {-|
 Module: Capnp.Untyped
 Description: Utilities for reading capnproto messages with no schema.

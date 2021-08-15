@@ -18,7 +18,7 @@ primitives.
 Note that there's nothing terribly Cap'N Proto specific about this module; we
 may even factor it out into a separate package at some point.
 -}
-module Data.Mutable where
+module Data.Mutable {-# DEPRECATED "use Capnp.Mutability instead" #-} where
 
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import Control.Monad.ST        (ST, runST)
