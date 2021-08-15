@@ -137,7 +137,7 @@ data WordPtr mut = WordPtr
     -- - pSegment is in pMessage.
     { pMessage :: !(Message mut)
     , pSegment :: !(Segment mut)
-    , pAddr    :: !WordAddr
+    , pAddr    :: {-# UNPACK #-} !WordAddr
     }
 
 -- | A Cap'n Proto message, parametrized over its mutability.
@@ -463,6 +463,7 @@ newSegment msg@(MsgMut MutMsg{mutSegs}) sizeHint = do
 -- index of the segment in which to allocate the data. Returns 'Nothing' if there is
 -- insufficient space in that segment..
 allocInSeg :: WriteCtx m s => Message ('Mut s) -> Int -> WordCount -> m (Maybe (WordPtr ('Mut s)))
+{-# INLINE allocInSeg #-}
 allocInSeg msg segIndex size = do
     -- GHC's type inference aparently isn't smart enough to figure
     -- out that the pattern irrefutable if we do seg@(SegMut ...) <- ...
@@ -489,6 +490,7 @@ allocInSeg msg segIndex size = do
 -- to the segment. The latter is redundant information, but this is used
 -- in low-level code where this can improve performance.
 alloc :: WriteCtx m s => Message ('Mut s) -> WordCount -> m (WordPtr ('Mut s))
+{-# INLINABLE alloc #-}
 alloc msg size = do
     when (size > maxSegmentSize) $
         throwM E.SizeError

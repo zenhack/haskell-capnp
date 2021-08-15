@@ -162,7 +162,7 @@ data List mut
 
 -- | A "normal" (non-composite) list.
 data NormalList mut = NormalList
-    { nPtr :: !(M.WordPtr mut)
+    { nPtr :: {-# UNPACK #-} !(M.WordPtr mut)
     , nLen :: !Int
     }
 
@@ -357,7 +357,7 @@ data Cap mut = CapAt (M.Message mut) !Word32
 -- | A struct value in a message.
 data Struct mut
     = StructAt
-        !(M.WordPtr mut) -- Start of struct
+        {-# UNPACK #-} !(M.WordPtr mut) -- Start of struct
         !Word16 -- Data section size.
         !Word16 -- Pointer section size.
 
