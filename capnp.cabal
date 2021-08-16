@@ -152,6 +152,7 @@ library
       , Internal.Rc
       , Internal.TCloseQ
       , Internal.BuildPure
+      , Internal.STE
     -- other-extensions:
     build-depends:
         hashable                          >= 1.2.7 && <1.4

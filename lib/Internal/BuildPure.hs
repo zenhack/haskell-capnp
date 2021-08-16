@@ -14,21 +14,20 @@ module Internal.BuildPure
     , createPure
     ) where
 
-import Control.Monad.Catch      (Exception, MonadThrow(..), SomeException)
-import Control.Monad.Catch.Pure (CatchT, runCatchT)
-import Control.Monad.Primitive  (PrimMonad(..))
-import Control.Monad.ST         (ST)
-import Control.Monad.Trans      (MonadTrans(..))
+import Control.Monad.Catch     (Exception, MonadThrow(..), SomeException)
+import Control.Monad.Primitive (PrimMonad(..))
+import Control.Monad.ST        (ST)
 
 import Capnp.Bits           (WordCount)
 import Capnp.TraversalLimit (LimitT, MonadLimit, evalLimitT)
 
 import Capnp.Mutability
+import Internal.STE
 
 -- | 'PureBuilder' is a monad transformer stack with the instnaces needed
 -- manipulate mutable messages. @'PureBuilder' s a@ is morally equivalent
 -- to @'LimitT' ('CatchT' ('ST' s)) a@
-newtype PureBuilder s a = PureBuilder (LimitT (PrimCatchT (ST s)) a)
+newtype PureBuilder s a = PureBuilder (LimitT (STE SomeException s) a)
     deriving(Functor, Applicative, Monad, MonadThrow, MonadLimit)
 
 instance PrimMonad (PureBuilder s) where
@@ -36,7 +35,7 @@ instance PrimMonad (PureBuilder s) where
     primitive = PureBuilder . primitive
 
 runPureBuilder :: WordCount -> PureBuilder s a -> ST s (Either SomeException a)
-runPureBuilder limit (PureBuilder m) = runPrimCatchT $ evalLimitT limit m
+runPureBuilder limit (PureBuilder m) = steToST $ evalLimitT limit m
 
 -- | @'createPure' limit m@ creates a capnproto value in pure code according
 -- to @m@, then freezes it without copying. If @m@ calls 'throwM' then
@@ -49,23 +48,3 @@ createPure limit m = throwLeft $ createT (runPureBuilder limit m)
     throwLeft :: (Exception e, MonadThrow m) => Either e a -> m a
     throwLeft (Left e)  = throwM e
     throwLeft (Right a) = pure a
-
--- | 'PrimCatchT' is a trivial wrapper around 'CatchT', which implements
--- 'PrimMonad'. This is a temporary workaround for:
---
--- https://github.com/ekmett/exceptions/issues/65
---
--- If we can get that issue fixed, we can delete this and just bump the
--- min bound on the exceptions package.
-newtype PrimCatchT m a = PrimCatchT (CatchT m a)
-    deriving(Functor, Applicative, Monad, MonadThrow)
-
-runPrimCatchT :: Monad m => PrimCatchT m a -> m (Either SomeException a)
-runPrimCatchT (PrimCatchT m) = runCatchT m
-
-instance MonadTrans PrimCatchT where
-    lift = PrimCatchT . lift
-
-instance PrimMonad m => PrimMonad (PrimCatchT m) where
-    type PrimState (PrimCatchT m) = PrimState m
-    primitive = lift . primitive
