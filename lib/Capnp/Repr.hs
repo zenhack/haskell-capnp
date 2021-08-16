@@ -71,9 +71,9 @@ module Capnp.Repr
 
 import Prelude hiding (length)
 
-import           Capnp.Message        (Mutability(..))
-import qualified Capnp.Message        as M
-import           Capnp.TraversalLimit (evalLimitT)
+import qualified Capnp.Message           as M
+import           Capnp.Mutability        (MaybeMutable(..), Mutability(..))
+import           Capnp.TraversalLimit    (evalLimitT)
 import           Capnp.Untyped
     ( Allocate(..)
     , DataSz(..)
@@ -83,6 +83,7 @@ import           Capnp.Untyped
     , IsPtrRepr(..)
     , ListRepr(..)
     , ListReprFor
+    , MaybePtr(..)
     , NormalListRepr(..)
     , PtrRepr(..)
     , Repr(..)
@@ -92,14 +93,17 @@ import           Capnp.Untyped
     , UntypedPtr
     , UntypedSomeList
     , UntypedSomePtr
+    , Unwrapped
     )
-import qualified Capnp.Untyped        as U
-import           Data.Default         (Default(..))
+import qualified Capnp.Untyped           as U
+import           Control.Monad.Primitive (PrimMonad, PrimState)
+import           Data.Default            (Default(..))
 import           Data.Int
-import           Data.Kind            (Type)
-import           Data.Maybe           (fromJust)
+import           Data.Kind               (Type)
+import           Data.Maybe              (fromJust)
+import           Data.Traversable        (for)
 import           Data.Word
-import           GHC.Generics         (Generic)
+import           GHC.Generics            (Generic)
 
 -- | @'ReprFor' a@ denotes the Cap'n Proto wire represent of the type @a@.
 type family ReprFor (a :: Type) :: Repr
@@ -186,6 +190,65 @@ instance U.MessageDefault (Untyped (ReprFor a)) => U.MessageDefault (Raw a) wher
 instance U.MessageDefault (Raw a) => Default (Raw a 'Const) where
     def = fromJust $ evalLimitT maxBound $ U.messageDefault @(Raw a) M.empty
 
+instance ReprMaybeMutable (ReprFor a) => MaybeMutable (Raw a) where
+    thaw (Raw v) = Raw <$> rThaw @(ReprFor a) v
+    freeze (Raw v) = Raw <$> rFreeze @(ReprFor a) v
+    unsafeThaw (Raw v) = Raw <$> rUnsafeThaw @(ReprFor a) v
+    unsafeFreeze (Raw v) = Raw <$> rUnsafeFreeze @(ReprFor a) v
+    {-# INLINE thaw #-}
+    {-# INLINE freeze #-}
+    {-# INLINE unsafeThaw #-}
+    {-# INLINE unsafeFreeze #-}
+
+-- | Like MaybeMutable, but defined on the repr. Helper for implementing
+-- MaybeMutable (Raw a)
+class ReprMaybeMutable (r :: Repr) where
+    rThaw         :: (PrimMonad m, PrimState m ~ s) => Unwrapped (Untyped r 'Const) -> m (Unwrapped (Untyped r ('Mut s)))
+    rUnsafeThaw   :: (PrimMonad m, PrimState m ~ s) => Unwrapped (Untyped r 'Const) -> m (Unwrapped (Untyped r ('Mut s)))
+    rFreeze       :: (PrimMonad m, PrimState m ~ s) => Unwrapped (Untyped r ('Mut s)) -> m (Unwrapped (Untyped r 'Const))
+    rUnsafeFreeze :: (PrimMonad m, PrimState m ~ s) => Unwrapped (Untyped r ('Mut s)) -> m (Unwrapped (Untyped r 'Const))
+
+instance ReprMaybeMutable ('Ptr 'Nothing) where
+    rThaw p = do
+        MaybePtr p' <- thaw (MaybePtr p)
+        pure p'
+    rFreeze p = do
+        MaybePtr p' <- freeze (MaybePtr p)
+        pure p'
+    rUnsafeThaw p = do
+        MaybePtr p' <- unsafeThaw (MaybePtr p)
+        pure p'
+    rUnsafeFreeze p = do
+        MaybePtr p' <- unsafeFreeze (MaybePtr p)
+        pure p'
+
+do
+    let types =
+            [ [t|'Just 'Struct|]
+            , [t|'Just 'Cap|]
+            , [t|'Just ('List 'Nothing)|]
+            , [t|'Just ('List ('Just 'ListComposite))|]
+            , [t|'Just ('List ('Just ('ListNormal 'NormalListPtr)))|]
+            ]
+    concat <$> for types (\t -> do
+        [d|instance ReprMaybeMutable ('Ptr $t) where
+            rThaw = thaw
+            rFreeze = freeze
+            rUnsafeThaw = thaw
+            rUnsafeFreeze = freeze
+            |])
+
+instance ReprMaybeMutable ('Ptr ('Just ('List ('Just ('ListNormal ('NormalListData sz)))))) where
+    rThaw = thaw
+    rFreeze = freeze
+    rUnsafeThaw = thaw
+    rUnsafeFreeze = freeze
+
+instance ReprMaybeMutable ('Data sz) where
+    rThaw = pure
+    rFreeze = pure
+    rUnsafeThaw = pure
+    rUnsafeFreeze = pure
 
 -- | Constraint that @a@ is a struct type.
 type IsStruct a = ReprFor a ~ 'Ptr ('Just 'Struct)

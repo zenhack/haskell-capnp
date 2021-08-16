@@ -113,6 +113,7 @@ import Control.Monad.Catch.Pure  (CatchT(runCatchT))
 import Control.Monad.Primitive   (PrimMonad(..))
 import Control.Monad.ST          (RealWorld)
 import Control.Monad.Trans.Class (MonadTrans(lift))
+import Data.Coerce               (coerce)
 import Data.Kind                 (Type)
 
 import qualified Data.ByteString     as BS
@@ -412,6 +413,16 @@ newtype IgnoreMut a (mut :: Mutability) = IgnoreMut a
 
 -- | Wrapper for use with 'Untyped'; see docs for 'Untyped'.
 newtype MaybePtr (mut :: Mutability) = MaybePtr (Maybe (Ptr mut))
+
+instance MaybeMutable MaybePtr where
+    thaw         (MaybePtr p) = MaybePtr <$> traverse thaw p
+    freeze       (MaybePtr p) = MaybePtr <$> traverse freeze p
+    unsafeThaw   (MaybePtr p) = MaybePtr <$> traverse unsafeThaw p
+    unsafeFreeze (MaybePtr p) = MaybePtr <$> traverse unsafeFreeze p
+
+instance MaybeMutable (IgnoreMut a) where
+    thaw = pure . coerce
+    freeze = pure . coerce
 
 -- | Normalizes types returned by 'Untyped'; see docs for 'Untyped'.
 type family Unwrapped a where
@@ -1470,8 +1481,10 @@ do
     concat <$> traverse mkWrappedInstance
         [ ''Ptr
         , ''List
-        , ''NormalList
+        , ''Cap
         , ''Struct
+        , ''NormalList
+        , ''StructList
         ]
 
 do
