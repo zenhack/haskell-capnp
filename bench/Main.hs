@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE TypeApplications  #-}
 module Main (main) where
 
 
@@ -42,9 +43,14 @@ main = do
     msg <- C.bsToMsg cgrBytes
     let whnfLTIO = whnfIO . C.evalLimitT maxBound
     defaultMain
-        [ bench "canonicalize" $ whnfLTIO $ do
+        [ bench "canonicalize/IO" $ whnfLTIO $ do
             root <- U.rootPtr msg
             C.canonicalize root
+        , bench "canonicalize/PureBuilder" $ whnfLTIO $ do
+            C.createPure maxBound $ do
+                root <- U.rootPtr msg
+                (msg, _seg) <- C.canonicalize root
+                pure msg
         , env
             (C.evalLimitT maxBound $ do
                 mutMsg <- thaw msg
