@@ -132,6 +132,7 @@ import Capnp.Bits
     )
 import Capnp.Mutability     (MaybeMutable(..), Mutability(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice))
+import Internal.BuildPure   (PureBuilder)
 
 import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M
@@ -775,6 +776,7 @@ getClient (CapAt msg idx) = M.getCap msg (fromIntegral idx)
 get :: ReadCtx m mut => M.WordPtr mut -> m (Maybe (Ptr mut))
 {-# INLINABLE get #-}
 {-# SPECIALIZE get :: M.WordPtr ('Mut RealWorld) -> LimitT IO (Maybe (Ptr ('Mut RealWorld))) #-}
+{-# SPECIALIZE get :: M.WordPtr ('Mut s) -> PureBuilder s (Maybe (Ptr ('Mut s))) #-}
 get ptr@M.WordPtr{pMessage, pAddr} = do
     word <- getWord ptr
     case P.parsePtr word of
@@ -920,6 +922,9 @@ setIndex
 {-# SPECIALIZE setIndex
     :: ListItem r
     => Unwrapped (Untyped r ('Mut RealWorld)) -> Int -> ListOf r ('Mut RealWorld) -> LimitT IO () #-}
+{-# SPECIALIZE setIndex
+    :: ListItem r
+    => Unwrapped (Untyped r ('Mut s)) -> Int -> ListOf r ('Mut s) -> PureBuilder s () #-}
 setIndex _ i list | i < 0 || length list <= i =
     throwM E.BoundsError { E.index = i, E.maxIndex = length list }
 setIndex value i list = unsafeSetIndex value i list
@@ -931,6 +936,7 @@ setIndex value i list = unsafeSetIndex value i list
 setPointerTo :: M.WriteCtx m s => M.WordPtr ('Mut s) -> WordAddr -> P.Ptr -> m ()
 {-# INLINABLE setPointerTo #-}
 {-# SPECIALIZE setPointerTo :: M.WordPtr ('Mut RealWorld) -> WordAddr -> P.Ptr -> LimitT IO () #-}
+{-# SPECIALIZE setPointerTo :: M.WordPtr ('Mut s) -> WordAddr -> P.Ptr -> PureBuilder s () #-}
 setPointerTo
         M.WordPtr
             { pMessage = msg
@@ -1011,6 +1017,7 @@ copyCap dest cap = getClient cap >>= appendCap dest
 copyPtr :: RWCtx m s => M.Message ('Mut s) -> Maybe (Ptr ('Mut s)) -> m (Maybe (Ptr ('Mut s)))
 {-# INLINABLE copyPtr #-}
 {-# SPECIALIZE copyPtr :: M.Message ('Mut RealWorld) -> Maybe (Ptr ('Mut RealWorld)) -> LimitT IO (Maybe (Ptr ('Mut RealWorld))) #-}
+{-# SPECIALIZE copyPtr :: M.Message ('Mut s) -> Maybe (Ptr ('Mut s)) -> PureBuilder s (Maybe (Ptr ('Mut s))) #-}
 copyPtr _ Nothing                = pure Nothing
 copyPtr dest (Just (PtrCap cap))    = Just . PtrCap <$> copyCap dest cap
 copyPtr dest (Just (PtrList src))   = Just . PtrList <$> copyList dest src
@@ -1026,6 +1033,7 @@ copyPtr dest (Just (PtrStruct src)) = Just . PtrStruct <$> do
 copyList :: RWCtx m s => M.Message ('Mut s) -> List ('Mut s) -> m (List ('Mut s))
 {-# INLINABLE copyList #-}
 {-# SPECIALIZE copyList :: M.Message ('Mut RealWorld) -> List ('Mut RealWorld) -> LimitT IO (List ('Mut RealWorld)) #-}
+{-# SPECIALIZE copyList :: M.Message ('Mut s) -> List ('Mut s) -> PureBuilder s (List ('Mut s)) #-}
 copyList dest src = case src of
     List0 src      -> List0 <$> allocList0 dest (length src)
     List1 src      -> List1 <$> copyNewListOf dest src allocList1
@@ -1070,6 +1078,7 @@ copyListOf dest src =
 copyStruct :: RWCtx m s => Struct ('Mut s) -> Struct ('Mut s) -> m ()
 {-# INLINABLE copyStruct #-}
 {-# SPECIALIZE copyStruct :: Struct ('Mut RealWorld) -> Struct ('Mut RealWorld) -> LimitT IO () #-}
+{-# SPECIALIZE copyStruct :: Struct ('Mut s) -> Struct ('Mut s) -> PureBuilder s () #-}
 copyStruct dest src = do
     -- We copy both the data and pointer sections from src to dest,
     -- padding the tail of the destination section with zeros/null
@@ -1095,6 +1104,8 @@ index :: (ReadCtx m mut, ListItem r) => Int -> ListOf r mut -> m (Unwrapped (Unt
 {-# INLINE index #-}
 {-# SPECIALIZE index :: ListItem r => Int -> ListOf r 'Const -> LimitT IO (Unwrapped (Untyped r 'Const)) #-}
 {-# SPECIALIZE index :: ListItem r => Int -> ListOf r ('Mut RealWorld) -> LimitT IO (Unwrapped (Untyped r ('Mut RealWorld))) #-}
+{-# SPECIALIZE index :: ListItem r => Int -> ListOf r 'Const -> PureBuilder s (Unwrapped (Untyped r 'Const)) #-}
+{-# SPECIALIZE index :: ListItem r => Int -> ListOf r ('Mut s) -> PureBuilder s (Unwrapped (Untyped r ('Mut s))) #-}
 index i list
     | i < 0 || i >= length list =
         throwM E.BoundsError { E.index = i, E.maxIndex = length list - 1 }
@@ -1229,6 +1240,7 @@ structSize s = structWordCount s + fromIntegral (structPtrCount s)
 invoicePtr :: MonadLimit m => Maybe (Ptr mut) -> m ()
 {-# INLINABLE invoicePtr #-}
 {-# SPECIALIZE invoicePtr :: Maybe (Ptr ('Mut RealWorld)) -> LimitT IO () #-}
+{-# SPECIALIZE invoicePtr :: Maybe (Ptr ('Mut s)) -> PureBuilder s () #-}
 invoicePtr p = invoice $! ptrInvoiceSize p
 
 ptrInvoiceSize :: Maybe (Ptr mut) -> WordCount
