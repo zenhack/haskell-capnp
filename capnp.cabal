@@ -111,6 +111,7 @@ library
       , Capnp.Message
       , Capnp.Mutability
       , Capnp.Pointer
+      , Capnp.Pointer2
       , Capnp.Untyped
       , Capnp.Repr
       , Capnp.Repr.Methods

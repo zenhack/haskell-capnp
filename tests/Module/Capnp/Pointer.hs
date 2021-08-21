@@ -6,12 +6,10 @@ import Data.Word
 import Test.Hspec
 import Test.QuickCheck
 
-import Capnp.Pointer
+import Capnp.Pointer2
 
 instance Arbitrary EltSpec where
-    arbitrary = oneof [ EltNormal <$> arbitrary <*> arbitraryU29
-                      , EltComposite <$> arbitraryI29
-                      ]
+    arbitrary = EltSpec <$> arbitrary <*> arbitraryU29
 
 instance Arbitrary ElementSize where
     arbitrary = oneof $ map return [ Sz0
@@ -21,14 +19,14 @@ instance Arbitrary ElementSize where
                                    , Sz32
                                    , Sz64
                                    , SzPtr
+                                   , SzComposite
                                    ]
 
 
 -- | arbitraryIN is an arbitrary N bit signed integer as an Int32.
-arbitraryI32, arbitraryI30, arbitraryI29 :: Gen Int32
+arbitraryI32, arbitraryI30 :: Gen Int32
 arbitraryI32 = arbitrary
 arbitraryI30 = (`shiftR` 2) <$> arbitraryI32
-arbitraryI29 = (`shiftR` 3) <$> arbitraryI32
 -- | arbitraryUN is an arbitrary N bit unsigned integer as a Word32.
 arbitraryU32, arbitraryU29 :: Gen Word32
 arbitraryU32 = arbitrary
@@ -54,6 +52,23 @@ ptrTests = do
 
 ptrProps :: Spec
 ptrProps = describe "Pointer Properties" $ do
+    it "unpackEltSpec and packEltSpec are inverses" $
+        property $ \spec ->
+            let (sz, len) = unpackEltSpec spec in
+            packEltSpec sz len == spec
+    it "B" $
+        property $ \ptr -> case ptr of
+            StructPtr o nw np ->
+                case (o, nw, np) of
+                    (-1, 0, 0) -> structPtr (packStruct o nw np) == ptr
+                    (_, 0, 0) -> structPtr (packStruct o nw np) == StructPtr (-1) 0 0
+                    _ -> structPtr (packStruct o nw np) == ptr
+            ListPtr o (EltSpec sz len) ->
+                listPtr (packList o (packEltSpec sz len)) == ptr
+            FarPtr tw o i ->
+                farPtr (packFar tw o i) == ptr
+            CapPtr i ->
+                capPtr (packCap i) == ptr
     it "Should satisfy: parseEltSpec . serializeEltSpec == id" $
         property $ \spec -> parseEltSpec (serializeEltSpec spec) == spec
     it "Should satisfy: parsePtr . serializePtr == id" $

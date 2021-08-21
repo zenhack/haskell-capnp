@@ -60,7 +60,7 @@ import Capnp.Rpc               hiding (Client)
 import Capnp.Rpc.Untyped       hiding (Client, Pipeline, export, waitPipeline)
 
 import qualified Capnp.Gen.Echo.New as E
-import qualified Capnp.Pointer      as P
+import qualified Capnp.Pointer2     as P
 
 rpcTests :: Spec
 rpcTests = do

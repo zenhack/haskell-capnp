@@ -134,9 +134,9 @@ import Capnp.Mutability     (MaybeMutable(..), Mutability(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice))
 import Internal.BuildPure   (PureBuilder)
 
-import qualified Capnp.Errors  as E
-import qualified Capnp.Message as M
-import qualified Capnp.Pointer as P
+import qualified Capnp.Errors   as E
+import qualified Capnp.Message  as M
+import qualified Capnp.Pointer2 as P
 
 -------------------------------------------------------------------------------
 -- Untyped refernces to values in a message.
@@ -855,19 +855,18 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
         M.read pSegment wordIndex
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
-    getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
-        case eltSpec of
-            P.EltNormal sz len -> pure $ case sz of
-                P.Sz0   -> List0   (ListOf nlist)
-                P.Sz1   -> List1   (ListOf nlist)
-                P.Sz8   -> List8   (ListOf nlist)
-                P.Sz16  -> List16  (ListOf nlist)
-                P.Sz32  -> List32  (ListOf nlist)
-                P.Sz64  -> List64  (ListOf nlist)
-                P.SzPtr -> ListPtr (ListOf nlist)
-              where
-                nlist = NormalList ptr (fromIntegral len)
-            P.EltComposite _ -> do
+    getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} (P.EltSpec sz len) = PtrList <$>
+        let nlist = NormalList ptr (fromIntegral len) in
+        case sz of
+            P.Sz0   -> pure $ List0   (ListOf nlist)
+            P.Sz1   -> pure $ List1   (ListOf nlist)
+            P.Sz8   -> pure $ List8   (ListOf nlist)
+            P.Sz16  -> pure $ List16  (ListOf nlist)
+            P.Sz32  -> pure $ List32  (ListOf nlist)
+            P.Sz64  -> pure $ List64  (ListOf nlist)
+            P.SzPtr -> pure $ ListPtr (ListOf nlist)
+
+            P.SzComposite -> do
                 tagWord <- getWord ptr
                 case P.parsePtr' tagWord of
                     P.StructPtr numElts dataSz ptrSz ->
@@ -881,17 +880,18 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                         "Composite list tag was not a struct-" ++
                         "formatted word: " ++ show tag
 
+
 -- | Return the EltSpec needed for a pointer to the given list.
 listEltSpec :: List msg -> P.EltSpec
 listEltSpec (ListStruct list@(ListOf (StructList (StructAt _ dataSz ptrSz) _))) =
-    P.EltComposite $ fromIntegral (length list) * (fromIntegral dataSz + fromIntegral ptrSz)
-listEltSpec (List0 list)   = P.EltNormal P.Sz0 $ fromIntegral (length list)
-listEltSpec (List1 list)   = P.EltNormal P.Sz1 $ fromIntegral (length list)
-listEltSpec (List8 list)   = P.EltNormal P.Sz8 $ fromIntegral (length list)
-listEltSpec (List16 list)  = P.EltNormal P.Sz16 $ fromIntegral (length list)
-listEltSpec (List32 list)  = P.EltNormal P.Sz32 $ fromIntegral (length list)
-listEltSpec (List64 list)  = P.EltNormal P.Sz64 $ fromIntegral (length list)
-listEltSpec (ListPtr list) = P.EltNormal P.SzPtr $ fromIntegral (length list)
+    P.EltSpec P.SzComposite $ fromIntegral (length list) * (fromIntegral dataSz + fromIntegral ptrSz)
+listEltSpec (List0 list)   = P.EltSpec P.Sz0 $ fromIntegral (length list)
+listEltSpec (List1 list)   = P.EltSpec P.Sz1 $ fromIntegral (length list)
+listEltSpec (List8 list)   = P.EltSpec P.Sz8 $ fromIntegral (length list)
+listEltSpec (List16 list)  = P.EltSpec P.Sz16 $ fromIntegral (length list)
+listEltSpec (List32 list)  = P.EltSpec P.Sz32 $ fromIntegral (length list)
+listEltSpec (List64 list)  = P.EltSpec P.Sz64 $ fromIntegral (length list)
+listEltSpec (ListPtr list) = P.EltSpec P.SzPtr $ fromIntegral (length list)
 
 -- | Return the starting address of the list.
 listAddr :: List msg -> WordAddr

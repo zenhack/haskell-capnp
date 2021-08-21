@@ -23,7 +23,7 @@ import Data.Word
 
 import Capnp.Bits (WordCount)
 
-import qualified Capnp.Pointer as P
+import qualified Capnp.Pointer2 as P
 
 -- | The address of a word within a message
 data WordAddr = WordAt
