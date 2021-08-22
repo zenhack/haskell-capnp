@@ -46,6 +46,7 @@ module Capnp.Message (
     , getSegment
     , getCap
     , getCapTable
+    , getWord
 
     -- * Mutable Messages
     , newMessage
@@ -218,6 +219,10 @@ withCapTable newCaps (MsgConst msg) = MsgConst $ msg { constCaps = newCaps }
 -- | 'getCapTable' gets the capability table from a 'ConstMsg'.
 getCapTable :: Message 'Const -> V.Vector Client
 getCapTable (MsgConst ConstMsg{constCaps}) = constCaps
+
+-- | 'getWord' gets the word referred to by the 'WordPtr'
+getWord :: MonadReadMessage mut m => WordPtr mut -> m Word64
+getWord WordPtr{pSegment, pAddr=WordAt{wordIndex}} = read pSegment wordIndex
 
 -- | @'getCap' message index@ gets the capability with the given index from
 -- the message. throws 'E.BoundsError' if the index is out

@@ -778,7 +778,7 @@ get :: ReadCtx m mut => M.WordPtr mut -> m (Maybe (Ptr mut))
 {-# SPECIALIZE get :: M.WordPtr ('Mut RealWorld) -> LimitT IO (Maybe (Ptr ('Mut RealWorld))) #-}
 {-# SPECIALIZE get :: M.WordPtr ('Mut s) -> PureBuilder s (Maybe (Ptr ('Mut s))) #-}
 get ptr@M.WordPtr{pMessage, pAddr} = do
-    word <- getWord ptr
+    word <- M.getWord ptr
     case P.parsePtr word of
         Nothing -> return Nothing
         Just p -> case p of
@@ -808,12 +808,12 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                         invoice 1
                         get landingPtr
                     else do
-                        landingPad <- getWord landingPtr
+                        landingPad <- M.getWord landingPtr
                         case P.parsePtr landingPad of
                             Just (P.FarPtr False off seg) -> do
                                 let segIndex = fromIntegral seg
                                 finalSegment <- M.getSegment pMessage segIndex
-                                tagWord <- getWord M.WordPtr
+                                tagWord <- M.getWord M.WordPtr
                                     { pMessage
                                     , pSegment = landingSegment
                                     , M.pAddr = addr' { wordIndex = wordIndex addr' + 1 }
@@ -851,8 +851,6 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                                 show ptr
 
   where
-    getWord M.WordPtr{pSegment, pAddr=WordAt{wordIndex}} =
-        M.read pSegment wordIndex
     resolveOffset addr@WordAt{..} off =
         addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
@@ -868,7 +866,7 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
               where
                 nlist = NormalList ptr (fromIntegral len)
             P.EltComposite _ -> do
-                tagWord <- getWord ptr
+                tagWord <- M.getWord ptr
                 case P.parsePtr' tagWord of
                     P.StructPtr numElts dataSz ptrSz ->
                         pure $ ListStruct $ ListOf $ StructList
