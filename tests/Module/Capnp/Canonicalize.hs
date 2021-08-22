@@ -58,7 +58,7 @@ ourImplCanonicalize :: Parsed B.AnyStruct -> Maybe (M.Message 'M.Const)
 ourImplCanonicalize struct = createPure maxBound $ do
     msg <- M.newMessage Nothing
     Raw rawStruct <- encode msg struct
-    (msg, _) <- canonicalize rawStruct
+    (msg, _) <- canonicalizeMut rawStruct
     pure msg
 
 refImplCanonicalize :: Parsed B.AnyStruct -> IO (M.Message 'M.Const)
