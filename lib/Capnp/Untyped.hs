@@ -849,7 +849,7 @@ getNear ptr@M.WordPtr{pMessage, pAddr} = \case
             StructAt ptr { M.pAddr = resolveOffset pAddr off } dataSz ptrSz
         P.ListPtr off eltSpec -> Just . PtrList <$>
             getList ptr { M.pAddr = resolveOffset pAddr off } eltSpec
-        P.FarPtr _ _ _ -> throwM $ E.InvalidDataError $
+        P.FarPtr{} -> throwM $ E.InvalidDataError
             "Unexpected far pointer where only near pointers were expected."
 
 getList :: (M.MonadReadMessage mut m, MonadThrow m) => M.WordPtr mut -> P.EltSpec -> m (List mut)
