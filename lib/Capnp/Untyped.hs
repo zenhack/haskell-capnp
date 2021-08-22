@@ -109,17 +109,14 @@ import Control.Exception.Safe    (impureThrow)
 import Control.Monad             (forM_, unless)
 import Control.Monad.Catch       (MonadCatch, MonadThrow(throwM))
 import Control.Monad.Catch.Pure  (CatchT(runCatchT))
-import Control.Monad.Primitive   (PrimMonad(..), stToPrim)
+import Control.Monad.Primitive   (PrimMonad(..))
 import Control.Monad.ST          (RealWorld)
-import Control.Monad.ST.Unsafe   (unsafeIOToST)
 import Control.Monad.Trans.Class (MonadTrans(lift))
-import Data.ByteString.Internal  (memcpy)
 import Data.Coerce               (coerce)
 import Data.Function             ((&))
 import Data.Kind                 (Type)
 
 import qualified Data.ByteString     as BS
-import qualified Foreign.Ptr         as F
 import qualified Language.Haskell.TH as TH
 
 import Capnp.Address
@@ -138,9 +135,10 @@ import Capnp.Mutability     (MaybeMutable(..), Mutability(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice))
 import Internal.BuildPure   (PureBuilder)
 
-import qualified Capnp.Errors  as E
-import qualified Capnp.Message as M
-import qualified Capnp.Pointer as P
+import qualified Capnp.Errors                 as E
+import qualified Capnp.Message                as M
+import qualified Capnp.Pointer                as P
+import qualified Data.Vector.Storable.Mutable as SMV
 
 -------------------------------------------------------------------------------
 -- Untyped refernces to values in a message.
@@ -340,22 +338,20 @@ instance ListItem ('Data 'Sz1) where
     {-# INLINE unsafeSetIndex #-}
     checkListOf (ListOf l) = checkNormalList l 1
     {-# INLINE copyListOf #-}
-    copyListOf (ListOf dest) (ListOf src) = unsafeCopyDataList dest src 1
+    copyListOf (ListOf dest) (ListOf src) = copyDataList dest src 1
 
-instance ListItem ('Data 'Sz8){- where
+instance ListItem ('Data 'Sz8) where
     {-# INLINE copyListOf #-}
-    copyListOf (ListOf dest) (ListOf src) = unsafeCopyDataList dest src 8
--}
+    copyListOf (ListOf dest) (ListOf src) = copyDataList dest src 8
 instance ListItem ('Data 'Sz16) where
     {-# INLINE copyListOf #-}
-    copyListOf (ListOf dest) (ListOf src) = unsafeCopyDataList dest src 16
+    copyListOf (ListOf dest) (ListOf src) = copyDataList dest src 16
 instance ListItem ('Data 'Sz32) where
     {-# INLINE copyListOf #-}
-    copyListOf (ListOf dest) (ListOf src) = unsafeCopyDataList dest src 32
-instance ListItem ('Data 'Sz64) {-where
+    copyListOf (ListOf dest) (ListOf src) = copyDataList dest src 32
+instance ListItem ('Data 'Sz64) where
     {-# INLINE copyListOf #-}
-    copyListOf (ListOf dest) (ListOf src) = unsafeCopyDataList dest src 64
--}
+    copyListOf (ListOf dest) (ListOf src) = copyDataList dest src 64
 
 instance ListItem ('Ptr 'Nothing) where
     unsafeIndex i (ListOf (NormalList ptr@M.WordPtr{pAddr=addr@WordAt{..}} _)) =
@@ -1086,32 +1082,36 @@ copyNewListOf destMsg src new = do
     copyListOf dest src
     pure dest
 
--- | @unsafeCopyDataList dest src bits@ copies n elements of @src@ to @dest@, where n
+-- | @copyDataList dest src bits@ copies n elements of @src@ to @dest@, where n
 -- is the length of the smaller list. @bits@ is the number of bits per element
 -- in the two lists.
 --
 -- This should only used for non-pointer types, as it does not do a deep copy and
 -- just copies the raw bytes.
 --
--- WARNING: if you get the @bits@ argument wrong, or if the lists point outside their
--- segments, this can cause memory safety violations.
-unsafeCopyDataList :: RWCtx m s => NormalList ('Mut s) -> NormalList ('Mut s) -> BitCount -> m ()
-unsafeCopyDataList
-    NormalList{nLen = destLen, nPtr = destPtr}
-    NormalList{nLen = srcLen, nPtr = srcPtr}
-    bits =
-        let len = min destLen srcLen
-            lenBytes =
-                fromIntegral len * bits
-                & bitsToBytesCeil
-                & bytesToWordsCeil
-                & wordsToBytes
-        in
-        stToPrim $ unsafeIOToST $
-            M.unsafeWithRawWordPtr destPtr $ \dest ->
-                M.unsafeWithRawWordPtr srcPtr $ \src -> do
-                    memcpy (F.castPtr dest) (F.castPtr src) (fromIntegral lenBytes)
+-- Warning: if you get the @bits@ argument wrong, you may trample over data outside
+-- the intended bounds.
+copyDataList :: RWCtx m s => NormalList ('Mut s) -> NormalList ('Mut s) -> BitCount -> m ()
+copyDataList dest src bits = do
+    let unpack NormalList{nLen, nPtr = M.WordPtr{pSegment, pAddr=WordAt{wordIndex}}} =
+            (nLen, wordIndex, pSegment)
 
+        (srcLen, srcOff, srcSeg) = unpack src
+        (destLen, destOff, destSeg) = unpack dest
+
+        len = min destLen srcLen
+        lenWords =
+            fromIntegral len * bits
+            & bitsToBytesCeil
+            & bytesToWordsCeil
+
+        sliceVec off =
+            SMV.slice (fromIntegral off) (fromIntegral lenWords)
+    srcVec <- M.segToVecMut srcSeg
+    destVec <- M.segToVecMut destSeg
+    SMV.copy
+        (sliceVec destOff destVec)
+        (sliceVec srcOff srcVec)
 
 -- | @'copyStruct' dest src@ copies the source struct to the destination struct.
 copyStruct :: RWCtx m s => Struct ('Mut s) -> Struct ('Mut s) -> m ()

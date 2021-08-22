@@ -37,6 +37,9 @@ module Capnp.Message (
     , toByteString
     , fromByteString
 
+    -- * Accessing underlying storage
+    , segToVecMut
+
     -- * Immutable messages
     , empty
     , singleSegment
@@ -68,10 +71,6 @@ module Capnp.Message (
     , Client
     , nullClient
     , withCapTable
-
-
-    -- ** Unsafe
-    , unsafeWithRawWordPtr
     ) where
 
 import {-# SOURCE #-} Capnp.Rpc.Untyped (Client, nullClient)
@@ -87,7 +86,6 @@ import Control.Monad.Writer      (execWriterT, tell)
 import Data.Bits                 (shiftL)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Bytes.Get            (getWord32le, runGetS)
-import Data.Function             ((&))
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64, byteSwap64)
@@ -101,8 +99,6 @@ import qualified Data.Vector.Generic.Mutable  as GMV
 import qualified Data.Vector.Mutable          as MV
 import qualified Data.Vector.Storable         as SV
 import qualified Data.Vector.Storable.Mutable as SMV
-import qualified Foreign.ForeignPtr           as FP
-import qualified Foreign.Ptr                  as F
 
 import Capnp.Address        (WordAddr(..))
 import Capnp.Bits           (WordCount(..), hi, lo)
@@ -147,30 +143,6 @@ data WordPtr mut = WordPtr
     , pAddr    :: {-# UNPACK #-} !WordAddr
     }
 
-class UnsafeWithRawWordPtr (mut :: Mutability) where
-    -- | Do something with the raw memory address referred to by the WordPtr.
-    --
-    -- Most users will not need this.
-    --
-    -- This is unsafe. In particular:
-    --
-    -- * The pointer is not guaranteed to live past the execution of the IO action,
-    --   so callers must make sure not to retain references to it.
-    -- * This allows modifying constant messages in place, as well as retaining
-    --   references to mutable messages which may become frozen later.
-    unsafeWithRawWordPtr :: WordPtr mut -> (F.Ptr Word64 -> IO a) -> IO a
-
-instance UnsafeWithRawWordPtr 'Const where
-    unsafeWithRawWordPtr WordPtr{pSegment=SegConst (ConstSegment sv), pAddr=WordAt{wordIndex}} f =
-        SV.unsafeWith (SV.drop (fromIntegral wordIndex) sv) f
-
-instance UnsafeWithRawWordPtr ('Mut s) where
-    unsafeWithRawWordPtr WordPtr{pSegment=SegMut MutSegment{vec}, pAddr=WordAt{wordIndex}} f =
-        SMV.take (fromIntegral wordIndex) vec
-        & SMV.unsafeToForeignPtr0
-        & \(fptr, _) ->
-            FP.withForeignPtr fptr f
-
 -- | A Cap'n Proto message, parametrized over its mutability.
 data family Message (mut :: Mutability)
 
@@ -191,6 +163,15 @@ data MutSegment s = MutSegment
     { vec  :: SMV.MVector s Word64
     , used :: MutVar s WordCount
     }
+
+-- | Return the underlying storage of a mutable segment, as a vector.
+--
+-- Note that the elements of the vector will be stored in little-endian form, regardless of
+-- CPU endianness. This is a low level function that you should probably not use.
+segToVecMut :: (PrimMonad m, PrimState m ~ s) => Segment ('Mut s) -> m (SMV.MVector s Word64)
+segToVecMut (SegMut MutSegment{vec, used}) = do
+    count <- readMutVar used
+    pure $ SMV.take (fromIntegral count) vec
 
 instance Eq (MutSegment s) where
     MutSegment{used=x} == MutSegment{used=y} = x == y
