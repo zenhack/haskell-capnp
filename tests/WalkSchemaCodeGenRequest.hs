@@ -54,7 +54,7 @@ walkSchemaCodeGenRequestTest =
             bytes <- BS.readFile "tests/data/schema-codegenreq"
             root <- evalLimitT maxBound (bsToRaw bytes)
             endQuota <- execLimitT 4096 (reader root)
-            endQuota `shouldBe` 3374
+            endQuota `shouldBe` 3409
   where
     reader :: Raw Schema.CodeGeneratorRequest 'M.Const -> LimitT IO ()
     reader req = do
