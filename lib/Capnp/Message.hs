@@ -46,7 +46,6 @@ module Capnp.Message (
 
     -- * Reading data from messages
     , MonadReadMessage(..)
-    , getSegment
     , getCap
     , getCapTable
     , getWord
@@ -189,10 +188,9 @@ class Monad m => MonadReadMessage mut m where
     -- | 'numCaps' gets the number of capabilities in a message's capability
     -- table.
     numCaps :: Message mut -> m Int
-    -- | @'internalGetSeg' message index@ gets the segment at index 'index'
-    -- in 'message'. Most callers should use the 'getSegment' wrapper, instead
-    -- of calling this directly.
-    internalGetSeg :: Message mut -> Int -> m (Segment mut)
+    -- | @'getSegment' message index@ gets the segment at index 'index'
+    -- in 'message'.
+    getSegment :: Message mut -> Int -> m (Segment mut)
     -- | @'internalGetCap' cap index@ reads a capability from the message's
     -- capability table, returning the client. does not check bounds. Callers
     -- should use getCap instead.
@@ -215,13 +213,6 @@ fromByteString (PS fptr offset len) =
 toByteString :: Segment 'Const -> ByteString
 toByteString (SegConst (ConstSegment vec)) = PS fptr offset len where
     (fptr, offset, len) = SV.unsafeToForeignPtr (SV.unsafeCast vec)
-
--- | @'getSegment' message index@ fetches the given segment in the message.
--- It throws a 'E.BoundsError' if the address is out of bounds.
-getSegment :: (MonadThrow m, MonadReadMessage mut m) => Message mut -> Int -> m (Segment mut)
-getSegment msg i = do
-    checkIndex i =<< numSegs msg
-    internalGetSeg msg i
 
 -- | @'withCapTable'@ replaces the capability table in the message.
 withCapTable :: V.Vector Client -> Message 'Const -> Message 'Const
@@ -246,11 +237,11 @@ getCap msg i = do
         else msg `internalGetCap` i
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
--- in the message. It throws a 'E.BoundsError' if the address is out of bounds.
+-- in the message.
 setSegment :: WriteCtx m s => Message ('Mut s) -> Int -> Segment ('Mut s) -> m ()
-setSegment msg i seg = do
-    checkIndex i =<< numSegs msg
-    internalSetSeg msg i seg
+setSegment (MsgMut MutMsg{mutSegs}) segIndex seg = do
+    segs <- AppendVec.getVector <$> readMutVar mutSegs
+    MV.write segs segIndex seg
 
 -- | @'setCap' message index cap@ sets the sets the capability at @index@ in
 -- the message's capability table to @cap@. If the index is out of bounds, a
@@ -284,7 +275,7 @@ data ConstMsg = ConstMsg
 instance Monad m => MonadReadMessage 'Const m where
     numSegs (MsgConst ConstMsg{constSegs}) = pure $ V.length constSegs
     numCaps (MsgConst ConstMsg{constCaps}) = pure $ V.length constCaps
-    internalGetSeg (MsgConst ConstMsg{constSegs}) i = constSegs `V.indexM` i
+    getSegment (MsgConst ConstMsg{constSegs}) i = constSegs `V.indexM` i
     internalGetCap (MsgConst ConstMsg{constCaps}) i = constCaps `V.indexM` i
 
     numWords (SegConst (ConstSegment vec)) = pure $ WordCount $ SV.length vec
@@ -431,21 +422,12 @@ instance (PrimMonad m, s ~ PrimState m) => MonadReadMessage ('Mut s) m where
         stToPrim $ GMV.length . AppendVec.getVector <$> readMutVar mutSegs
     numCaps (MsgMut MutMsg{mutCaps}) =
         stToPrim $ GMV.length . AppendVec.getVector <$> readMutVar mutCaps
-    internalGetSeg (MsgMut MutMsg{mutSegs}) i = stToPrim $ do
+    getSegment (MsgMut MutMsg{mutSegs}) i = stToPrim $ do
         segs <- AppendVec.getVector <$> readMutVar mutSegs
         MV.read segs i
     internalGetCap (MsgMut MutMsg{mutCaps}) i = stToPrim $ do
         caps <- AppendVec.getVector <$> readMutVar mutCaps
         MV.read caps i
-
-
--- | @'internalSetSeg' message index segment@ sets the segment at the given
--- index in the message. Most callers should use the 'setSegment' wrapper,
--- instead of calling this directly.
-internalSetSeg :: WriteCtx m s => Message ('Mut s) -> Int -> Segment ('Mut s) -> m ()
-internalSetSeg (MsgMut MutMsg{mutSegs}) segIndex seg = do
-    segs <- AppendVec.getVector <$> readMutVar mutSegs
-    MV.write segs segIndex seg
 
 -- | @'write' segment index value@ writes a value to the 64-bit word
 -- at the provided index. Consider using 'setWord' on the message,
@@ -606,7 +588,7 @@ freezeMsg :: (PrimMonad m, s ~ PrimState m)
     -> m (Message 'Const)
 freezeMsg freezeSeg freezeCaps msg@(MsgMut MutMsg{mutCaps}) = do
     len <- numSegs msg
-    constSegs <- V.generateM len (internalGetSeg msg >=> freezeSeg)
+    constSegs <- V.generateM len (getSegment msg >=> freezeSeg)
     constCaps <- freezeCaps . AppendVec.getVector =<< readMutVar mutCaps
     pure $ MsgConst ConstMsg{constSegs, constCaps}
 
