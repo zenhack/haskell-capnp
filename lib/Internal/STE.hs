@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 -- | Simplified implementation of the monad-ste package,
 -- with a few extras.
@@ -28,7 +29,7 @@ newtype InternalErr e = InternalErr e
 instance Show (InternalErr e) where
     show _ = "(InternalErr _)"
 
-instance Exception e => Exception (InternalErr e)
+instance Typeable e => Exception (InternalErr e)
 
 newtype STE e s a = STE (IO a)
     deriving newtype (Functor, Applicative, Monad)
@@ -46,19 +47,19 @@ throwSTE e = STE (throwIO (InternalErr e))
 runSTE :: Exception e => (forall s. STE e s a) -> Either e a
 runSTE ste = runST (steToST ste)
 
-steToST :: Exception e => STE e s a -> ST s (Either e a)
+steToST :: Typeable e => STE e s a -> ST s (Either e a)
 steToST (STE io) = unsafeIOToST $ do
     res <- try io
     case res of
         Left (InternalErr e) -> pure $ Left e
         Right v              -> pure $ Right v
 
-steToIO :: Exception e => STE e RealWorld a -> IO a
-steToIO ste = do
-    res <- stToIO $ steToST ste
+steToIO :: forall e a. Exception e => STE e RealWorld a -> IO a
+steToIO (STE io) = do
+    res <- try io
     case res of
-        Left e  -> throwIO e
-        Right v -> pure v
+        Left (InternalErr (e :: e)) -> throwIO e
+        Right v                     -> pure v
 
 instance MonadThrow (STE SomeException s) where
     throwM = throwSTE . toException
