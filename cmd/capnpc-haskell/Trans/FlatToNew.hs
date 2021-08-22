@@ -21,6 +21,7 @@ fileToFile Flat.File{fileId, fileName, nodes} =
         { fileId
         , fileName
         , decls = concatMap nodeToDecls nodes
+        , usesRpc = not $ null [ () | Flat.Node{ union_ = Flat.Interface{} } <- nodes ]
         }
 
 mapTypes :: (Bifunctor p, Functor f) => p (f Flat.Node) Flat.Node -> p (f Name.CapnpQ) Name.CapnpQ
@@ -39,13 +40,10 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
         mkField field =
             fieldToDecl local typeParams field
 
-        mkMethod methodId Flat.Method{name, paramType, resultType} =
-            New.MethodDecl
-                { interfaceName = local
-                , interfaceId = nodeId
-                , typeParams = map C.paramName typeParams
+        mkMethodInfo Flat.Method{name, paramType, resultType} =
+            New.MethodInfo
+                { typeParams = map C.paramName typeParams
                 , methodName = name
-                , methodId
                 , paramType = mapTypes paramType
                 , resultType = mapTypes resultType
                 }
@@ -105,9 +103,32 @@ nodeToDecls Flat.Node{nodeId, name=Name.CapnpQ{local}, typeParams, union_} =
             [ New.ConstDecl { name = local, value = mapTypes value } ]
         Flat.Enum enumerants ->
             [ mkType (R.Data R.Sz16) $ Just $ New.EnumTypeInfo enumerants ]
-        Flat.Interface{methods} ->
-            mkType (R.Ptr (Just R.Cap)) (Just New.InterfaceTypeInfo)
-            : zipWith mkMethod [0..] methods
+        Flat.Interface{methods, supers} ->
+            let methodInfos = map mkMethodInfo methods
+                superTypes = map mapTypes supers
+            in
+            mkType
+                (R.Ptr (Just R.Cap))
+                (Just New.InterfaceTypeInfo
+                    { methods = methodInfos
+                    , supers = superTypes
+                    }
+                )
+            : [ New.SuperDecl
+                    { subName = local
+                    , typeParams = map C.paramName typeParams
+                    , superType = superType
+                    }
+              | superType <- superTypes
+              ] ++
+              [ New.MethodDecl
+                    { interfaceName = local
+                    , interfaceId = nodeId
+                    , methodId
+                    , methodInfo
+                    }
+              | (methodId, methodInfo) <- zip [0..] methodInfos
+              ]
         Flat.Struct{isGroup, fields, union, dataWordCount = nWords, pointerCount = nPtrs} ->
             mkType (R.Ptr (Just R.Struct)) (Just New.StructTypeInfo { nWords, nPtrs })
             : parsedStructNode fields (isJust union) isGroup

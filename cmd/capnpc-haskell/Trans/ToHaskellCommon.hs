@@ -21,7 +21,7 @@ import qualified Data.Text            as T
 import Capnp.New.Classes (encode)
 import Capnp.Repr.Parsed (Parsed)
 
-import qualified Capnp
+import qualified Capnp.New        as Capnp
 import qualified Capnp.New.Basics as B
 import qualified IR.Common        as C
 import qualified IR.Name          as Name
@@ -158,7 +158,7 @@ fixImports m@Module{modImports} =
 toTVars :: [Name.UnQ] -> [Type]
 toTVars = map (TVar . Name.typeVarName)
 
-makePtrBytes :: Parsed B.AnyPointer -> LBS.ByteString
+makePtrBytes :: Maybe (Parsed B.AnyPointer) -> LBS.ByteString
 makePtrBytes ptr =
     Capnp.msgToLBS $ fromJust $ Capnp.createPure Capnp.defaultLimit $ do
         msg <- Capnp.newMessage Nothing

@@ -23,50 +23,22 @@ module Capnp.Rpc.Server
 
     -- * Handling methods
     , MethodHandler
-    -- ** Using high-level representations
-    , pureHandler
-    -- ** Using low-level representations
-    , rawHandler
-    , rawAsyncHandler
-    -- ** Always throwing exceptions
-    , methodThrow
-    , methodUnimplemented
     -- ** Working with untyped data
     , untypedHandler
     , toUntypedHandler
     , fromUntypedHandler
-
-    -- * Invoking methods
-    , invoke
     ) where
 
 import Control.Concurrent.STM
-import Control.Monad.STM.Class
 import Data.Word
 
-import Control.Exception.Safe  (MonadCatch, try)
-import Control.Monad.IO.Class  (MonadIO, liftIO)
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import Data.Typeable           (Typeable)
+import Data.Typeable (Typeable)
 
-import Capnp.Classes
-    ( Cerialize
-    , Decerialize(Cerial, decerialize)
-    , FromPtr(fromPtr)
-    , ToStruct(toStruct)
-    )
-import Capnp.Convert        (valueToMsg)
-import Capnp.Message        (Mutability(..))
-import Capnp.Rpc.Errors     (eMethodUnimplemented, wrapException)
-import Capnp.Rpc.Promise    (Fulfiller, breakPromise, fulfill, newCallback)
-import Capnp.TraversalLimit (defaultLimit, evalLimitT)
-import Capnp.Untyped        (Ptr)
-import Data.Mutable         (freeze)
+import Capnp.Message     (Mutability(..))
+import Capnp.Rpc.Promise (Fulfiller)
+import Capnp.Untyped     (Ptr)
 
-import qualified Capnp.Gen.Capnp.Rpc.Pure as RpcGen
-import qualified Capnp.Message            as Message
-import qualified Capnp.Untyped            as Untyped
-import qualified Internal.TCloseQ         as TCloseQ
+import qualified Internal.TCloseQ as TCloseQ
 
 -- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
 -- and return type @r@, in monad @m@.
@@ -89,97 +61,6 @@ newtype MethodHandler m p r = MethodHandler
         -> m ()
     }
 
-invoke
-    :: MonadSTM m
-    => MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
-    -> Maybe (Ptr 'Const)
-    -> Fulfiller (Maybe (Ptr 'Const))
-    -> m ()
-invoke = handleMethod
-
--- | @'pureHandler' f cap@ is a 'MethodHandler' which calls a function @f@
--- that accepts the receiver and the parameter type as exposed by the
--- high-level API, and returns the high-level API representation of the
--- return type.
-pureHandler ::
-    ( MonadCatch m
-    , MonadSTM m
-    , PrimMonad m
-    , s ~ PrimState m
-    , Decerialize p
-    , FromPtr 'Const (Cerial 'Const p)
-    , Cerialize s r
-    , ToStruct ('Mut s) (Cerial ('Mut s) r)
-    ) =>
-    (cap -> p -> m r)
-    -> cap
-    -> MethodHandler m p r
-pureHandler f cap = MethodHandler
-    { handleMethod = \ptr reply -> do
-        param <- evalLimitT defaultLimit $
-            fromPtr Message.empty ptr >>= decerialize
-        result <- try $ f cap param
-        case result of
-            Right val -> do
-                struct <- evalLimitT defaultLimit $
-                    valueToMsg val >>= freeze >>= Untyped.rootPtr
-                liftSTM $ fulfill reply (Just (Untyped.PtrStruct struct))
-            Left e ->
-                -- TODO: find a way to get the connection config's debugMode
-                -- option to be accessible from here, so we can use it.
-                liftSTM $ breakPromise reply (wrapException False e)
-    }
-
--- | Like 'pureHandler', except that the parameter and return value use the
--- low-level representation.
-rawHandler ::
-    ( MonadCatch m
-    , MonadSTM m
-    , PrimMonad m
-    , s ~ PrimState m
-    , Decerialize p
-    , FromPtr 'Const (Cerial 'Const p)
-    , Decerialize r
-    , ToStruct 'Const (Cerial 'Const r)
-    ) =>
-    (cap -> Cerial 'Const p -> m (Cerial 'Const r))
-    -> cap
-    -> MethodHandler m p r
-rawHandler f cap = MethodHandler
-    { handleMethod = \ptr reply -> do
-        cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
-        result <- try $ f cap cerial
-        case result of
-            Right val -> liftSTM $ fulfill reply (Just (Untyped.PtrStruct (toStruct val)))
-            Left e -> liftSTM $ breakPromise reply (wrapException False e)
-    }
-
--- | Like 'rawHandler', except that it takes a fulfiller for the result,
--- instead of returning it. This allows the result to be supplied some time
--- after the method returns, making it possible to service other method
--- calls before the result is available.
-rawAsyncHandler ::
-    ( MonadCatch m
-    , MonadSTM m
-    , PrimMonad m
-    , s ~ PrimState m
-    , Decerialize p
-    , FromPtr 'Const (Cerial 'Const p)
-    , Decerialize r
-    , ToStruct 'Const (Cerial 'Const r)
-    ) =>
-    (cap -> Cerial 'Const p -> Fulfiller (Cerial 'Const r) -> m ())
-    -> cap
-    -> MethodHandler m p r
-rawAsyncHandler f cap = MethodHandler
-    { handleMethod = \ptr reply -> do
-        fulfiller <- newCallback $ \case
-            Left e  -> breakPromise reply e
-            Right v -> fulfill reply $ Just (Untyped.PtrStruct (toStruct v))
-        cerial <- evalLimitT defaultLimit $ fromPtr Message.empty ptr
-        f cap cerial fulfiller
-    }
-
 -- | Convert a 'MethodHandler' for any parameter and return types into
 -- one that deals with untyped pointers.
 toUntypedHandler
@@ -200,16 +81,6 @@ untypedHandler
     :: (Maybe (Ptr 'Const) -> Fulfiller (Maybe (Ptr 'Const)) -> m ())
     -> MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
 untypedHandler = MethodHandler
-
--- | @'methodThrow' exn@ is a 'MethodHandler' which always throws @exn@.
-methodThrow :: MonadIO m => RpcGen.Exception -> MethodHandler m p r
-methodThrow exn = MethodHandler
-    { handleMethod = \_ fulfiller -> liftIO $ breakPromise fulfiller exn
-    }
-
--- | A 'MethodHandler' which always throws an @unimplemented@ exception.
-methodUnimplemented :: MonadIO m => MethodHandler m p r
-methodUnimplemented = methodThrow eMethodUnimplemented
 
 -- | Base class for things that can act as capnproto servers.
 class Monad m => Server m a | a -> m where

@@ -18,7 +18,7 @@ library
       base >=4.11 && <5.0
     , capnp
     , stm ^>= 2.5.0
-    , bytestring ^>=0.10
+    , bytestring >=0.10 && <0.12
     , data-default ^>=0.7
     , exceptions ^>=0.10
     , vector ^>=0.12
@@ -41,18 +41,12 @@ library
     , Examples.Serialization.LowLevel.Write
 
     -- Generated code
-    , Capnp.Gen.Addressbook
-    , Capnp.Gen.Addressbook.Pure
-    , Capnp.Gen.ById.X85150b117366d14b
-    , Capnp.Gen.ById.X85150b117366d14b.Pure
-    , Capnp.Gen.ById.Xcd6db6afb4a0cf5c
-    , Capnp.Gen.ById.Xcd6db6afb4a0cf5c.Pure
-    , Capnp.Gen.ById.Xd0a87f36fa0182f5
-    , Capnp.Gen.ById.Xd0a87f36fa0182f5.Pure
-    , Capnp.Gen.Calculator
-    , Capnp.Gen.Calculator.Pure
-    , Capnp.Gen.Echo
-    , Capnp.Gen.Echo.Pure
+    , Capnp.Gen.Addressbook.New
+    , Capnp.Gen.ById.X85150b117366d14b.New
+    , Capnp.Gen.ById.Xcd6db6afb4a0cf5c.New
+    , Capnp.Gen.ById.Xd0a87f36fa0182f5.New
+    , Capnp.Gen.Calculator.New
+    , Capnp.Gen.Echo.New
   ghc-options:
     -Wall
     -Wno-name-shadowing

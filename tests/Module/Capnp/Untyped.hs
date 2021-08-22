@@ -1,10 +1,13 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
 -- The tests have a number of cases where we do stuff like:
 --
 -- let 4 = ...
@@ -18,9 +21,12 @@ import Prelude hiding (length)
 
 import Test.Hspec
 
+import Data.Word
+
 import Control.Monad           (forM_, when)
 import Control.Monad.Primitive (RealWorld)
 import Data.Foldable           (traverse_)
+import Data.Function           ((&))
 import Data.Text               (Text)
 import GHC.Float               (castDoubleToWord64, castWord64ToDouble)
 import Test.QuickCheck         (property)
@@ -33,18 +39,17 @@ import qualified Data.Vector     as V
 import Capnp.Untyped
 import Util
 
-import Capnp                (cerialize, createPure, def, getRoot, newRoot)
+import Capnp.Mutability     (freeze, thaw)
+import Capnp.New
+    (createPure, def, encode, msgToParsed, newRoot, setField)
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
-import Data.Mutable         (Thaw (..))
 
 import Instances ()
 
-import Capnp.Gen.Capnp.Schema.Pure (Brand, Method (..), Node'Parameter)
+import Capnp.Gen.Capnp.Schema.New
 
-import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
-
-import qualified Capnp.Gen.Capnp.Schema as Schema
+import qualified Capnp.Repr    as R
 
 untypedTests :: Spec
 untypedTests = describe "low-level untyped API tests" $ do
@@ -109,7 +114,7 @@ readTests = describe "read tests" $
             return ()
         endQuota `shouldBe` 117
 
-data ModTest s = ModTest
+data ModTest = ModTest
     { testIn   :: String
     , testMod  :: Struct ('M.Mut RealWorld) -> LimitT IO ()
     , testOut  :: String
@@ -225,7 +230,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
             when (structPtrCount struct /= 2) $
                 error "struct's pointer section is unexpedly small"
 
-            let msg = message struct
+            let msg = message @Struct struct
             a <- allocStruct msg 1 1
             aWithDefault <- allocStruct msg 1 1
             b <- allocStruct msg 1 0
@@ -241,7 +246,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         , testType = "HoldsVerTwoTwoList"
         , testOut = "( mylist = [(val = 0, duo = 70), (val = 0, duo = 71), (val = 0, duo = 72), (val = 0, duo = 73)] )\n"
         , testMod = \struct -> do
-            mylist <- allocCompositeList (message struct) 2 2 4
+            mylist <- allocCompositeList (message @Struct struct) 2 2 4
             forM_ [0..3] $ \i ->
                 index i mylist >>= setData (70 + fromIntegral i) 1
             setPtr (Just $ PtrList $ ListStruct mylist) 0 struct
@@ -256,7 +261,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
         , testOut = "( boolvec = [true, false, true] )\n"
         , testMod = \struct -> do
             setData 39 0 struct -- Set the union tag.
-            boolvec <- allocList1 (message struct) 3
+            boolvec <- allocList1 (message @Struct struct) 3
             forM_ [0..2] $ \i ->
                 setIndex (even i) i boolvec
             setPtr (Just $ PtrList $ List1 boolvec) 0 struct
@@ -271,6 +276,14 @@ modifyTests = describe "modification tests" $ traverse_ testCase
     -- * tagvalue  - the numeric value of the tag for this variant
     -- * allocList - the allocation function
     -- * dataCon   - the data constructor for 'List' to use.
+    --
+    allocNormalListTest
+        :: (ListItem ('Data sz), Num (UntypedData sz))
+        => String
+        -> Word64
+        -> (M.Message ('M.Mut RealWorld) -> Int -> LimitT IO (ListOf ('Data sz) ('M.Mut RealWorld)))
+        -> (ListOf ('Data sz) ('M.Mut RealWorld) -> List ('M.Mut RealWorld))
+        -> ModTest
     allocNormalListTest tagname tagvalue allocList dataCon =
         ModTest
             { testIn = "()"
@@ -278,7 +291,7 @@ modifyTests = describe "modification tests" $ traverse_ testCase
             , testOut = "(" ++ tagname ++ " = [0, 1, 2, 3, 4])\n"
             , testMod = \struct -> do
                 setData tagvalue 0 struct
-                vec <- allocList (message struct) 5
+                vec <- allocList (message @Struct struct) 5
                 forM_ [0..4] $ \i -> setIndex (fromIntegral i) i vec
                 setPtr (Just $ PtrList $ dataCon vec) 0 struct
             }
@@ -311,13 +324,13 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
             srcStruct <- allocStruct msg 4 4
             (1, _) <- M.newSegment msg 10
             dstStruct <- allocStruct msg 2 2
-            ptr <- C.toPtr msg dstStruct
+            let ptr = R.toPtr @('Just 'R.Struct) dstStruct
             setPtr ptr 0 srcStruct
 
 otherMessageTest :: Spec
 otherMessageTest = describe "Setting pointers in other messages" $
     it "Should copy them if needed." $
-        property $ \(name :: Text) (params :: V.Vector Node'Parameter) (brand :: Brand) ->
+        property $ \(name :: Text) (params :: V.Vector (Parsed Node'Parameter)) (brand :: Parsed Brand) ->
             propertyIO $ do
                 let expected = def
                         { name = name
@@ -330,19 +343,15 @@ otherMessageTest = describe "Setting pointers in other messages" $
                         paramsMsg <- M.newMessage Nothing
                         brandMsg <- M.newMessage Nothing
 
-                        methodCerial <- newRoot methodMsg
-                        nameCerial <- cerialize nameMsg name
-                        brandCerial <- cerialize brandMsg brand
+                        methodCerial <- newRoot @Method () methodMsg
+                        nameCerial <- encode nameMsg name
+                        brandCerial <- encode brandMsg brand
+                        paramsCerial <- encode paramsMsg params
 
-                        -- We don't implement Cerialize for Vector, so we can't just
-                        -- inject params directly. TODO: implement Cerialize for Vector.
-                        wrapper <- cerialize paramsMsg expected
-                        paramsCerial <- Schema.get_Method'implicitParameters wrapper
-
-                        Schema.set_Method'name methodCerial nameCerial
-                        Schema.set_Method'implicitParameters methodCerial paramsCerial
-                        Schema.set_Method'paramBrand methodCerial brandCerial
+                        methodCerial & setField #name nameCerial
+                        methodCerial & setField #implicitParameters paramsCerial
+                        methodCerial & setField #paramBrand brandCerial
 
                         pure methodMsg
-                actual <- evalLimitT maxBound $ getRoot msg >>= C.decerialize
+                actual <- evalLimitT maxBound $ msgToParsed msg
                 actual `shouldBe` expected

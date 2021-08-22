@@ -6,10 +6,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -24,13 +27,14 @@ import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
 import qualified GHC.Generics as Generics
-import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Message 
 type instance (R.ReprFor Message) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Message) where
+    typeId  = 10500036013887172658
 instance (C.TypedStruct Message) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -56,21 +60,21 @@ instance (C.Marshal Message (C.Parsed Message)) where
         )
 instance (GH.HasUnion Message) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Message
-        = RW_Message'unimplemented (R.Raw mut_ Message)
-        | RW_Message'abort (R.Raw mut_ Exception)
-        | RW_Message'call (R.Raw mut_ Call)
-        | RW_Message'return (R.Raw mut_ Return)
-        | RW_Message'finish (R.Raw mut_ Finish)
-        | RW_Message'resolve (R.Raw mut_ Resolve)
-        | RW_Message'release (R.Raw mut_ Release)
-        | RW_Message'obsoleteSave (R.Raw mut_ Basics.AnyPointer)
-        | RW_Message'bootstrap (R.Raw mut_ Bootstrap)
-        | RW_Message'obsoleteDelete (R.Raw mut_ Basics.AnyPointer)
-        | RW_Message'provide (R.Raw mut_ Provide)
-        | RW_Message'accept (R.Raw mut_ Accept)
-        | RW_Message'join (R.Raw mut_ Join)
-        | RW_Message'disembargo (R.Raw mut_ Disembargo)
+    data RawWhich Message mut_
+        = RW_Message'unimplemented (R.Raw Message mut_)
+        | RW_Message'abort (R.Raw Exception mut_)
+        | RW_Message'call (R.Raw Call mut_)
+        | RW_Message'return (R.Raw Return mut_)
+        | RW_Message'finish (R.Raw Finish mut_)
+        | RW_Message'resolve (R.Raw Resolve mut_)
+        | RW_Message'release (R.Raw Release mut_)
+        | RW_Message'obsoleteSave (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
+        | RW_Message'bootstrap (R.Raw Bootstrap mut_)
+        | RW_Message'obsoleteDelete (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
+        | RW_Message'provide (R.Raw Provide mut_)
+        | RW_Message'accept (R.Raw Accept mut_)
+        | RW_Message'join (R.Raw Join mut_)
+        | RW_Message'disembargo (R.Raw Disembargo mut_)
         | RW_Message'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -118,11 +122,11 @@ instance (GH.HasVariant "resolve" GH.Slot Message Resolve) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 instance (GH.HasVariant "release" GH.Slot Message Release) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 6)
-instance (GH.HasVariant "obsoleteSave" GH.Slot Message Basics.AnyPointer) where
+instance (GH.HasVariant "obsoleteSave" GH.Slot Message (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 7)
 instance (GH.HasVariant "bootstrap" GH.Slot Message Bootstrap) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 8)
-instance (GH.HasVariant "obsoleteDelete" GH.Slot Message Basics.AnyPointer) where
+instance (GH.HasVariant "obsoleteDelete" GH.Slot Message (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 9)
 instance (GH.HasVariant "provide" GH.Slot Message Provide) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 10)
@@ -140,9 +144,9 @@ data instance C.Parsed (GH.Which Message)
     | Message'finish (RP.Parsed Finish)
     | Message'resolve (RP.Parsed Resolve)
     | Message'release (RP.Parsed Release)
-    | Message'obsoleteSave (RP.Parsed Basics.AnyPointer)
+    | Message'obsoleteSave (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Message'bootstrap (RP.Parsed Bootstrap)
-    | Message'obsoleteDelete (RP.Parsed Basics.AnyPointer)
+    | Message'obsoleteDelete (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Message'provide (RP.Parsed Provide)
     | Message'accept (RP.Parsed Accept)
     | Message'join (RP.Parsed Join)
@@ -220,6 +224,8 @@ instance (C.Marshal (GH.Which Message) (C.Parsed (GH.Which Message))) where
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Bootstrap 
 type instance (R.ReprFor Bootstrap) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Bootstrap) where
+    typeId  = 16811039658553601732
 instance (C.TypedStruct Bootstrap) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -234,7 +240,7 @@ instance (C.EstimateListAlloc Bootstrap (C.Parsed Bootstrap))
 data instance C.Parsed Bootstrap
     = Bootstrap 
         {questionId :: (RP.Parsed Std_.Word32)
-        ,deprecatedObjectId :: (RP.Parsed Basics.AnyPointer)}
+        ,deprecatedObjectId :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Bootstrap))
 deriving instance (Std_.Eq (C.Parsed Bootstrap))
@@ -249,10 +255,12 @@ instance (C.Marshal Bootstrap (C.Parsed Bootstrap)) where
         )
 instance (GH.HasField "questionId" GH.Slot Bootstrap Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap Basics.AnyPointer) where
+instance (GH.HasField "deprecatedObjectId" GH.Slot Bootstrap (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 data Call 
 type instance (R.ReprFor Call) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Call) where
+    typeId  = 9469473312751832276
 instance (C.TypedStruct Call) where
     numStructWords  = 3
     numStructPtrs  = 3
@@ -314,6 +322,8 @@ instance (GH.HasField "allowThirdPartyTailCall" GH.Slot Call Std_.Bool) where
     fieldByLabel  = (GH.dataField 0 2 1 0)
 data Call'sendResultsTo 
 type instance (R.ReprFor Call'sendResultsTo) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Call'sendResultsTo) where
+    typeId  = 15774052265921044377
 instance (C.TypedStruct Call'sendResultsTo) where
     numStructWords  = 3
     numStructPtrs  = 3
@@ -339,10 +349,10 @@ instance (C.Marshal Call'sendResultsTo (C.Parsed Call'sendResultsTo)) where
         )
 instance (GH.HasUnion Call'sendResultsTo) where
     unionField  = (GH.dataField 48 0 16 0)
-    data RawWhich mut_ Call'sendResultsTo
-        = RW_Call'sendResultsTo'caller (R.Raw mut_ ())
-        | RW_Call'sendResultsTo'yourself (R.Raw mut_ ())
-        | RW_Call'sendResultsTo'thirdParty (R.Raw mut_ Basics.AnyPointer)
+    data RawWhich Call'sendResultsTo mut_
+        = RW_Call'sendResultsTo'caller (R.Raw () mut_)
+        | RW_Call'sendResultsTo'yourself (R.Raw () mut_)
+        | RW_Call'sendResultsTo'thirdParty (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
         | RW_Call'sendResultsTo'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -358,12 +368,12 @@ instance (GH.HasVariant "caller" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 0)
 instance (GH.HasVariant "yourself" GH.Slot Call'sendResultsTo ()) where
     variantByLabel  = (GH.Variant GH.voidField 1)
-instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo Basics.AnyPointer) where
+instance (GH.HasVariant "thirdParty" GH.Slot Call'sendResultsTo (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 2) 2)
 data instance C.Parsed (GH.Which Call'sendResultsTo)
     = Call'sendResultsTo'caller 
     | Call'sendResultsTo'yourself 
-    | Call'sendResultsTo'thirdParty (RP.Parsed Basics.AnyPointer)
+    | Call'sendResultsTo'thirdParty (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Call'sendResultsTo'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Call'sendResultsTo)))
@@ -393,6 +403,8 @@ instance (C.Marshal (GH.Which Call'sendResultsTo) (C.Parsed (GH.Which Call'sendR
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Return 
 type instance (R.ReprFor Return) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Return) where
+    typeId  = 11392333052105676602
 instance (C.TypedStruct Return) where
     numStructWords  = 2
     numStructPtrs  = 1
@@ -424,13 +436,13 @@ instance (C.Marshal Return (C.Parsed Return)) where
         )
 instance (GH.HasUnion Return) where
     unionField  = (GH.dataField 48 0 16 0)
-    data RawWhich mut_ Return
-        = RW_Return'results (R.Raw mut_ Payload)
-        | RW_Return'exception (R.Raw mut_ Exception)
-        | RW_Return'canceled (R.Raw mut_ ())
-        | RW_Return'resultsSentElsewhere (R.Raw mut_ ())
-        | RW_Return'takeFromOtherQuestion (R.Raw mut_ Std_.Word32)
-        | RW_Return'acceptFromThirdParty (R.Raw mut_ Basics.AnyPointer)
+    data RawWhich Return mut_
+        = RW_Return'results (R.Raw Payload mut_)
+        | RW_Return'exception (R.Raw Exception mut_)
+        | RW_Return'canceled (R.Raw () mut_)
+        | RW_Return'resultsSentElsewhere (R.Raw () mut_)
+        | RW_Return'takeFromOtherQuestion (R.Raw Std_.Word32 mut_)
+        | RW_Return'acceptFromThirdParty (R.Raw (Std_.Maybe Basics.AnyPointer) mut_)
         | RW_Return'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -458,7 +470,7 @@ instance (GH.HasVariant "resultsSentElsewhere" GH.Slot Return ()) where
     variantByLabel  = (GH.Variant GH.voidField 3)
 instance (GH.HasVariant "takeFromOtherQuestion" GH.Slot Return Std_.Word32) where
     variantByLabel  = (GH.Variant (GH.dataField 0 1 32 0) 4)
-instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return Basics.AnyPointer) where
+instance (GH.HasVariant "acceptFromThirdParty" GH.Slot Return (Std_.Maybe Basics.AnyPointer)) where
     variantByLabel  = (GH.Variant (GH.ptrField 0) 5)
 data instance C.Parsed (GH.Which Return)
     = Return'results (RP.Parsed Payload)
@@ -466,7 +478,7 @@ data instance C.Parsed (GH.Which Return)
     | Return'canceled 
     | Return'resultsSentElsewhere 
     | Return'takeFromOtherQuestion (RP.Parsed Std_.Word32)
-    | Return'acceptFromThirdParty (RP.Parsed Basics.AnyPointer)
+    | Return'acceptFromThirdParty (RP.Parsed (Std_.Maybe Basics.AnyPointer))
     | Return'unknown' Std_.Word16
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed (GH.Which Return)))
@@ -512,6 +524,8 @@ instance (GH.HasField "releaseParamCaps" GH.Slot Return Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 1)
 data Finish 
 type instance (R.ReprFor Finish) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Finish) where
+    typeId  = 15239388059401719395
 instance (C.TypedStruct Finish) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -545,6 +559,8 @@ instance (GH.HasField "releaseResultCaps" GH.Slot Finish Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 1)
 data Resolve 
 type instance (R.ReprFor Resolve) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Resolve) where
+    typeId  = 13529541526594062446
 instance (C.TypedStruct Resolve) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -573,9 +589,9 @@ instance (C.Marshal Resolve (C.Parsed Resolve)) where
         )
 instance (GH.HasUnion Resolve) where
     unionField  = (GH.dataField 32 0 16 0)
-    data RawWhich mut_ Resolve
-        = RW_Resolve'cap (R.Raw mut_ CapDescriptor)
-        | RW_Resolve'exception (R.Raw mut_ Exception)
+    data RawWhich Resolve mut_
+        = RW_Resolve'cap (R.Raw CapDescriptor mut_)
+        | RW_Resolve'exception (R.Raw Exception mut_)
         | RW_Resolve'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -619,6 +635,8 @@ instance (GH.HasField "promiseId" GH.Slot Resolve Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Release 
 type instance (R.ReprFor Release) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Release) where
+    typeId  = 12473400923157197975
 instance (C.TypedStruct Release) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -652,6 +670,8 @@ instance (GH.HasField "referenceCount" GH.Slot Release Std_.Word32) where
     fieldByLabel  = (GH.dataField 32 0 32 0)
 data Disembargo 
 type instance (R.ReprFor Disembargo) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Disembargo) where
+    typeId  = 17970548384007534353
 instance (C.TypedStruct Disembargo) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -688,6 +708,8 @@ instance (GH.HasField "context" GH.Group Disembargo Disembargo'context) where
     fieldByLabel  = GH.groupField
 data Disembargo'context 
 type instance (R.ReprFor Disembargo'context) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Disembargo'context) where
+    typeId  = 15376050949367520589
 instance (C.TypedStruct Disembargo'context) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -713,11 +735,11 @@ instance (C.Marshal Disembargo'context (C.Parsed Disembargo'context)) where
         )
 instance (GH.HasUnion Disembargo'context) where
     unionField  = (GH.dataField 32 0 16 0)
-    data RawWhich mut_ Disembargo'context
-        = RW_Disembargo'context'senderLoopback (R.Raw mut_ Std_.Word32)
-        | RW_Disembargo'context'receiverLoopback (R.Raw mut_ Std_.Word32)
-        | RW_Disembargo'context'accept (R.Raw mut_ ())
-        | RW_Disembargo'context'provide (R.Raw mut_ Std_.Word32)
+    data RawWhich Disembargo'context mut_
+        = RW_Disembargo'context'senderLoopback (R.Raw Std_.Word32 mut_)
+        | RW_Disembargo'context'receiverLoopback (R.Raw Std_.Word32 mut_)
+        | RW_Disembargo'context'accept (R.Raw () mut_)
+        | RW_Disembargo'context'provide (R.Raw Std_.Word32 mut_)
         | RW_Disembargo'context'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -777,6 +799,8 @@ instance (C.Marshal (GH.Which Disembargo'context) (C.Parsed (GH.Which Disembargo
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Provide 
 type instance (R.ReprFor Provide) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Provide) where
+    typeId  = 11270825879279873114
 instance (C.TypedStruct Provide) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -792,7 +816,7 @@ data instance C.Parsed Provide
     = Provide 
         {questionId :: (RP.Parsed Std_.Word32)
         ,target :: (RP.Parsed MessageTarget)
-        ,recipient :: (RP.Parsed Basics.AnyPointer)}
+        ,recipient :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Provide))
 deriving instance (Std_.Eq (C.Parsed Provide))
@@ -811,10 +835,12 @@ instance (GH.HasField "questionId" GH.Slot Provide Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Provide MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (GH.HasField "recipient" GH.Slot Provide Basics.AnyPointer) where
+instance (GH.HasField "recipient" GH.Slot Provide (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 1)
 data Accept 
 type instance (R.ReprFor Accept) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Accept) where
+    typeId  = 15332985841292492822
 instance (C.TypedStruct Accept) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -829,7 +855,7 @@ instance (C.EstimateListAlloc Accept (C.Parsed Accept))
 data instance C.Parsed Accept
     = Accept 
         {questionId :: (RP.Parsed Std_.Word32)
-        ,provision :: (RP.Parsed Basics.AnyPointer)
+        ,provision :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))
         ,embargo :: (RP.Parsed Std_.Bool)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Accept))
@@ -847,12 +873,14 @@ instance (C.Marshal Accept (C.Parsed Accept)) where
         )
 instance (GH.HasField "questionId" GH.Slot Accept Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
-instance (GH.HasField "provision" GH.Slot Accept Basics.AnyPointer) where
+instance (GH.HasField "provision" GH.Slot Accept (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "embargo" GH.Slot Accept Std_.Bool) where
     fieldByLabel  = (GH.dataField 32 0 1 0)
 data Join 
 type instance (R.ReprFor Join) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Join) where
+    typeId  = 18149955118657700271
 instance (C.TypedStruct Join) where
     numStructWords  = 1
     numStructPtrs  = 2
@@ -868,7 +896,7 @@ data instance C.Parsed Join
     = Join 
         {questionId :: (RP.Parsed Std_.Word32)
         ,target :: (RP.Parsed MessageTarget)
-        ,keyPart :: (RP.Parsed Basics.AnyPointer)}
+        ,keyPart :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Join))
 deriving instance (Std_.Eq (C.Parsed Join))
@@ -887,10 +915,12 @@ instance (GH.HasField "questionId" GH.Slot Join Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 instance (GH.HasField "target" GH.Slot Join MessageTarget) where
     fieldByLabel  = (GH.ptrField 0)
-instance (GH.HasField "keyPart" GH.Slot Join Basics.AnyPointer) where
+instance (GH.HasField "keyPart" GH.Slot Join (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 1)
 data MessageTarget 
 type instance (R.ReprFor MessageTarget) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId MessageTarget) where
+    typeId  = 10789521159760378817
 instance (C.TypedStruct MessageTarget) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -916,9 +946,9 @@ instance (C.Marshal MessageTarget (C.Parsed MessageTarget)) where
         )
 instance (GH.HasUnion MessageTarget) where
     unionField  = (GH.dataField 32 0 16 0)
-    data RawWhich mut_ MessageTarget
-        = RW_MessageTarget'importedCap (R.Raw mut_ Std_.Word32)
-        | RW_MessageTarget'promisedAnswer (R.Raw mut_ PromisedAnswer)
+    data RawWhich MessageTarget mut_
+        = RW_MessageTarget'importedCap (R.Raw Std_.Word32 mut_)
+        | RW_MessageTarget'promisedAnswer (R.Raw PromisedAnswer mut_)
         | RW_MessageTarget'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -960,6 +990,8 @@ instance (C.Marshal (GH.Which MessageTarget) (C.Parsed (GH.Which MessageTarget))
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Payload 
 type instance (R.ReprFor Payload) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Payload) where
+    typeId  = 11100916931204903995
 instance (C.TypedStruct Payload) where
     numStructWords  = 0
     numStructPtrs  = 2
@@ -973,7 +1005,7 @@ instance (C.AllocateList Payload) where
 instance (C.EstimateListAlloc Payload (C.Parsed Payload))
 data instance C.Parsed Payload
     = Payload 
-        {content :: (RP.Parsed Basics.AnyPointer)
+        {content :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))
         ,capTable :: (RP.Parsed (R.List CapDescriptor))}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed Payload))
@@ -987,12 +1019,14 @@ instance (C.Marshal Payload (C.Parsed Payload)) where
         (GH.encodeField #capTable capTable raw_)
         (Std_.pure ())
         )
-instance (GH.HasField "content" GH.Slot Payload Basics.AnyPointer) where
+instance (GH.HasField "content" GH.Slot Payload (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "capTable" GH.Slot Payload (R.List CapDescriptor)) where
     fieldByLabel  = (GH.ptrField 1)
 data CapDescriptor 
 type instance (R.ReprFor CapDescriptor) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId CapDescriptor) where
+    typeId  = 9593755465305995440
 instance (C.TypedStruct CapDescriptor) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1021,13 +1055,13 @@ instance (C.Marshal CapDescriptor (C.Parsed CapDescriptor)) where
         )
 instance (GH.HasUnion CapDescriptor) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ CapDescriptor
-        = RW_CapDescriptor'none (R.Raw mut_ ())
-        | RW_CapDescriptor'senderHosted (R.Raw mut_ Std_.Word32)
-        | RW_CapDescriptor'senderPromise (R.Raw mut_ Std_.Word32)
-        | RW_CapDescriptor'receiverHosted (R.Raw mut_ Std_.Word32)
-        | RW_CapDescriptor'receiverAnswer (R.Raw mut_ PromisedAnswer)
-        | RW_CapDescriptor'thirdPartyHosted (R.Raw mut_ ThirdPartyCapDescriptor)
+    data RawWhich CapDescriptor mut_
+        = RW_CapDescriptor'none (R.Raw () mut_)
+        | RW_CapDescriptor'senderHosted (R.Raw Std_.Word32 mut_)
+        | RW_CapDescriptor'senderPromise (R.Raw Std_.Word32 mut_)
+        | RW_CapDescriptor'receiverHosted (R.Raw Std_.Word32 mut_)
+        | RW_CapDescriptor'receiverAnswer (R.Raw PromisedAnswer mut_)
+        | RW_CapDescriptor'thirdPartyHosted (R.Raw ThirdPartyCapDescriptor mut_)
         | RW_CapDescriptor'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1107,6 +1141,8 @@ instance (GH.HasField "attachedFd" GH.Slot CapDescriptor Std_.Word8) where
     fieldByLabel  = (GH.dataField 16 0 8 255)
 data PromisedAnswer 
 type instance (R.ReprFor PromisedAnswer) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId PromisedAnswer) where
+    typeId  = 15564635848320162976
 instance (C.TypedStruct PromisedAnswer) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1140,6 +1176,8 @@ instance (GH.HasField "transform" GH.Slot PromisedAnswer (R.List PromisedAnswer'
     fieldByLabel  = (GH.ptrField 0)
 data PromisedAnswer'Op 
 type instance (R.ReprFor PromisedAnswer'Op) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId PromisedAnswer'Op) where
+    typeId  = 17516350820840804481
 instance (C.TypedStruct PromisedAnswer'Op) where
     numStructWords  = 1
     numStructPtrs  = 0
@@ -1165,9 +1203,9 @@ instance (C.Marshal PromisedAnswer'Op (C.Parsed PromisedAnswer'Op)) where
         )
 instance (GH.HasUnion PromisedAnswer'Op) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ PromisedAnswer'Op
-        = RW_PromisedAnswer'Op'noop (R.Raw mut_ ())
-        | RW_PromisedAnswer'Op'getPointerField (R.Raw mut_ Std_.Word16)
+    data RawWhich PromisedAnswer'Op mut_
+        = RW_PromisedAnswer'Op'noop (R.Raw () mut_)
+        | RW_PromisedAnswer'Op'getPointerField (R.Raw Std_.Word16 mut_)
         | RW_PromisedAnswer'Op'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -1209,6 +1247,8 @@ instance (C.Marshal (GH.Which PromisedAnswer'Op) (C.Parsed (GH.Which PromisedAns
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data ThirdPartyCapDescriptor 
 type instance (R.ReprFor ThirdPartyCapDescriptor) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId ThirdPartyCapDescriptor) where
+    typeId  = 15235686326393111165
 instance (C.TypedStruct ThirdPartyCapDescriptor) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1222,7 +1262,7 @@ instance (C.AllocateList ThirdPartyCapDescriptor) where
 instance (C.EstimateListAlloc ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor))
 data instance C.Parsed ThirdPartyCapDescriptor
     = ThirdPartyCapDescriptor 
-        {id :: (RP.Parsed Basics.AnyPointer)
+        {id :: (RP.Parsed (Std_.Maybe Basics.AnyPointer))
         ,vineId :: (RP.Parsed Std_.Word32)}
     deriving(Generics.Generic)
 deriving instance (Std_.Show (C.Parsed ThirdPartyCapDescriptor))
@@ -1236,12 +1276,14 @@ instance (C.Marshal ThirdPartyCapDescriptor (C.Parsed ThirdPartyCapDescriptor)) 
         (GH.encodeField #vineId vineId raw_)
         (Std_.pure ())
         )
-instance (GH.HasField "id" GH.Slot ThirdPartyCapDescriptor Basics.AnyPointer) where
+instance (GH.HasField "id" GH.Slot ThirdPartyCapDescriptor (Std_.Maybe Basics.AnyPointer)) where
     fieldByLabel  = (GH.ptrField 0)
 instance (GH.HasField "vineId" GH.Slot ThirdPartyCapDescriptor Std_.Word32) where
     fieldByLabel  = (GH.dataField 0 0 32 0)
 data Exception 
 type instance (R.ReprFor Exception) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Exception) where
+    typeId  = 15430940935639230746
 instance (C.TypedStruct Exception) where
     numStructWords  = 1
     numStructPtrs  = 1
@@ -1289,8 +1331,12 @@ data Exception'Type
     | Exception'Type'disconnected 
     | Exception'Type'unimplemented 
     | Exception'Type'unknown' Std_.Word16
-    deriving(Std_.Eq,Std_.Show)
+    deriving(Std_.Eq
+            ,Std_.Show
+            ,Generics.Generic)
 type instance (R.ReprFor Exception'Type) = (R.Data R.Sz16)
+instance (C.HasTypeId Exception'Type) where
+    typeId  = 12865824133959433560
 instance (Std_.Enum Exception'Type) where
     toEnum n_ = case n_ of
         0 ->

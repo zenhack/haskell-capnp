@@ -1,53 +1,64 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedLabels      #-}
 module Examples.Rpc.CalculatorClient (main) where
 
-import Network.Simple.TCP (connect)
+import qualified Capnp.New          as C
+import           Capnp.Rpc
+    (ConnConfig(..), fromClient, handleConn, socketTransport)
+import           Control.Monad      (when)
+import           Data.Function      ((&))
+import           Data.Functor       ((<&>))
+import qualified Data.Vector        as V
+import           Network.Simple.TCP (connect)
 
-import qualified Data.Vector as V
-
-import Capnp         (def, defaultLimit)
-import Capnp.Rpc     (ConnConfig (..), handleConn, socketTransport, wait, (?))
-import Control.Monad (when)
-
-import Capnp.Gen.Calculator.Pure
+import Capnp.Gen.Calculator.New
 
 main :: IO ()
 main = connect "localhost" "4000" $ \(sock, _addr) ->
-    handleConn (socketTransport sock defaultLimit) def
+    handleConn (socketTransport sock C.defaultLimit) C.def
         { debugMode = True
         , withBootstrap = Just $ \_sup client -> do
-            let calc = Calculator client
+            let calc :: C.Client Calculator
+                calc = fromClient client
 
-            Calculator'evaluate'results{value} <-
-                calculator'evaluate calc ? def
-                    { expression = Expression'literal 123 }
-                    >>= wait
-            Value'read'results{value} <- value'read value ? def >>= wait
+            value <- calc
+                & C.callP #evaluate C.def { expression = Expression $ Expression'literal 123 }
+                <&> C.pipe #value
+                >>= C.callR #read C.def
+                >>= C.waitPipeline
+                >>= C.evalLimitT C.defaultLimit . C.parseField #value
             assertEq value 123
 
-            Calculator'getOperator'results{func=add} <-
-                calculator'getOperator calc ? def { op = Operator'add      } >>= wait
-            Calculator'getOperator'results{func=subtract} <-
-                calculator'getOperator calc ? def { op = Operator'subtract } >>= wait
-            Calculator'evaluate'results{value} <- calculator'evaluate calc ? def
-                { expression =
-                    Expression'call Expression'call'
-                        { function = subtract
-                        , params = V.fromList
-                            [ Expression'call Expression'call'
-                                { function = add
-                                , params = V.fromList
-                                    [ Expression'literal 123
-                                    , Expression'literal 45
-                                    ]
-                                }
-                            , Expression'literal 67
-                            ]
-                        }
-                }
-                >>= wait
-            Value'read'results{value} <- value'read value ? def >>= wait
+            let getOp op = calc
+                    & C.callP #getOperator C.def { op }
+                    <&> C.pipe #func
+                    >>= C.asClient
+
+            add <- getOp Operator'add
+            subtract <- getOp Operator'subtract
+
+            value <- calc
+                & C.callP #evaluate C.def
+                    { expression =
+                        Expression $ Expression'call Expression'call'
+                            { function = subtract
+                            , params = V.fromList
+                                [ Expression $ Expression'call Expression'call'
+                                    { function = add
+                                    , params = V.fromList
+                                        [ Expression $ Expression'literal 123
+                                        , Expression $ Expression'literal 45
+                                        ]
+                                    }
+                                , Expression $ Expression'literal 67
+                                ]
+                            }
+                    }
+                <&> C.pipe #value
+                >>= C.callR #read C.def
+                >>= C.waitPipeline
+                >>= C.evalLimitT C.defaultLimit . C.parseField #value
             assertEq value 101
 
             putStrLn "PASS"

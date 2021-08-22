@@ -6,10 +6,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -24,13 +27,14 @@ import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
 import qualified GHC.Generics as Generics
-import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data StreamResult 
 type instance (R.ReprFor StreamResult) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId StreamResult) where
+    typeId  = 11051721556433613166
 instance (C.TypedStruct StreamResult) where
     numStructWords  = 0
     numStructPtrs  = 0

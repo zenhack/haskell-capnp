@@ -105,7 +105,7 @@ replaceBits new orig shift =
 
 -- | 1 bit datatype, in the tradition of Word8, Word16 et al.
 newtype Word1 = Word1 { word1ToBool :: Bool }
-    deriving(Ord, Eq, Enum, Bounded, Bits)
+    deriving(Ord, Eq, Enum, Bounded, Bits, FiniteBits)
 
 instance Num Word1 where
     (+) = w1ThruEnum (+)

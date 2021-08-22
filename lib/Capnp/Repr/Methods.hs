@@ -22,7 +22,9 @@ module Capnp.Repr.Methods
     , waitPipeline
 
     , AsClient(..)
+    , upcast
 
+    -- * Calling methods.
     , callB
     , callR
     , callP
@@ -32,6 +34,7 @@ import qualified Capnp.Fields            as F
 import           Capnp.Message           (Mutability(..), newMessage)
 import qualified Capnp.Message           as M
 import qualified Capnp.New.Classes       as NC
+import           Capnp.New.Rpc.Common    (Client(..), Pipeline(..))
 import qualified Capnp.Repr              as R
 import           Capnp.Rpc.Promise       (newPromise)
 import qualified Capnp.Rpc.Server        as Server
@@ -42,7 +45,9 @@ import           Control.Monad.Catch     (MonadThrow)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
 import           GHC.OverloadedLabels    (IsLabel(..))
+import           GHC.Prim                (coerce)
 import           GHC.TypeLits            (Symbol)
+import           GHC.Types               (Coercible)
 import           Internal.BuildPure      (PureBuilder, createPure)
 
 -- | Represents a method on the interface type @c@ with parameter
@@ -62,11 +67,9 @@ class (R.IsCap c, R.IsStruct p, R.IsStruct r) => HasMethod (name :: Symbol) c p 
 instance HasMethod name c p r => IsLabel name (Method c p r) where
     fromLabel = methodByLabel @name @c @p @r
 
-newtype Pipeline a = Pipeline Rpc.Pipeline
-
-newtype Client a = Client Rpc.Client
-    deriving(Show, Eq)
-
+-- | The 'AsClient' class allows callers of rpc methods to abstract over 'Client's
+-- and 'Pipeline's. @'asClient'@ converts either of those to a client so that
+-- methods can be invoked on it.
 class AsClient f where
     asClient :: MonadSTM m => R.IsCap c => f c -> m (Client c)
 
@@ -76,19 +79,25 @@ instance AsClient Pipeline where
 instance AsClient Client where
     asClient = liftSTM . pure
 
+-- | Upcast is a (safe) cast from an interface to one of its superclasses.
+upcast :: (AsClient f, Coercible (f p) (f c), NC.Super p c) => f c -> f p
+upcast = coerce
+
+-- | Call a method. Use the provided 'PureBuilder' to construct the parameters.
 callB
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
     => Method c p r
-    -> (forall s. PureBuilder s (R.Raw ('Mut s) p))
+    -> (forall s. PureBuilder s (R.Raw p ('Mut s)))
     -> f c
     -> m (Pipeline r)
 callB method buildRaw c = liftSTM $ do
-    (params :: R.Raw 'Const a) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
+    (params :: R.Raw a 'Const) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
     callR method params c
 
+-- | Call a method, supplying the parameters as a 'Raw' struct.
 callR
     :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
-    => Method c p r -> R.Raw 'Const p -> f c -> m (Pipeline r)
+    => Method c p r -> R.Raw p 'Const -> f c -> m (Pipeline r)
 callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
     Client client <- asClient c
     (_, f) <- newPromise
@@ -101,6 +110,7 @@ callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
             }
             client
 
+-- | Call a method, supplying the parmaeters in parsed form.
 callP
     :: forall c p r f m pp.
         ( AsClient f
@@ -117,6 +127,7 @@ callP method parsed client = do
         R.fromRaw <$> NC.encode msg parsed
     callR method (R.Raw struct) client
 
+-- | Project a pipeline to a struct onto one of its pointer fields.
 pipe :: ( R.IsStruct a
         , R.ReprFor b ~ 'R.Ptr pr
         ) => F.Field k a b -> Pipeline a -> Pipeline b
@@ -125,16 +136,18 @@ pipe (F.Field field) (Pipeline p) =
         F.GroupField   -> Pipeline p
         F.PtrField idx -> Pipeline (Rpc.walkPipelinePtr p idx)
 
+-- | Convert a 'Pipeline' for a capability into a 'Client'.
 pipelineClient :: (R.IsCap a, MonadSTM m) => Pipeline a -> m (Client a)
 pipelineClient (Pipeline p) =
     liftSTM $ Client <$> Rpc.pipelineClient p
 
+-- | Wait for the result of a pipeline, and return its value.
 waitPipeline ::
     forall a m pr.
     ( 'R.Ptr pr ~ R.ReprFor a
     , R.IsPtrRepr pr
     , MonadSTM m
-    ) => Pipeline a -> m (R.Raw 'Const a)
+    ) => Pipeline a -> m (R.Raw a 'Const)
 waitPipeline (Pipeline p) =
     -- We need an instance of MonadLimit for IsPtrRepr's ReadCtx requirement,
     -- but none of the relevant instances do a lot of reading, so we just

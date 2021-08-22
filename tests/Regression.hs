@@ -5,10 +5,10 @@ module Regression (regressionTests) where
 
 import Test.Hspec
 
-import Capnp (bsToValue, def)
+import Capnp.New (bsToParsed, def, evalLimitT)
 
-import Capnp.Gen.Aircraft.Pure
-import Capnp.Gen.Capnp.Rpc.Pure
+import Capnp.Gen.Aircraft.New
+import Capnp.Gen.Capnp.Rpc.New
 
 regressionTests :: Spec
 regressionTests = describe "Regression tests" $ do
@@ -20,14 +20,14 @@ regressionTests = describe "Regression tests" $ do
                 "\NUL\NULz\EOT\NUL\NULYour vat sent an 'unimplemented' " <>
                 "message for an abort message that its remote peer never " <>
                 "sent. This is likely a bug in your capnproto library.\NUL\NUL"
-        msg <- bsToValue bytes
-        msg `shouldBe` Message'abort def
+        msg <- evalLimitT maxBound $ bsToParsed bytes
+        msg `shouldBe` Message (Message'abort def
             { reason =
                 "Your vat sent an 'unimplemented' message for an abort " <>
                 "message that its remote peer never sent. This is likely " <>
                 "a bug in your capnproto library."
             , type_ = Exception'Type'failed
-            }
+            })
     it "Should decode negative default values correctly (issue #55)" $ do
         -- Note that this was never actually broken, but we were getting
         -- a warning about a literal overflowing the bounds of its type.

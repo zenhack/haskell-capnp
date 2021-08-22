@@ -10,7 +10,6 @@ module Internal.AppendVec
     , makeEmpty
     , getVector
     , getCapacity
-    , FrozenAppendVec(..)
     , grow
     , canGrowWithoutCopy
     ) where
@@ -19,11 +18,9 @@ import Control.Monad           (when)
 import Control.Monad.Catch     (MonadThrow(throwM))
 import Control.Monad.Primitive (PrimMonad, PrimState)
 
-import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GMV
 
 import Capnp.Errors (Error(SizeError))
-import Data.Mutable (Thaw (..))
 
 -- | 'AppendVec' wraps a mutable vector, and affords amortized O(1) appending.
 data AppendVec v s a = AppendVec
@@ -53,27 +50,6 @@ getVector AppendVec{mutVec, mutVecLen} = GMV.slice 0 mutVecLen mutVec
 
 getCapacity :: GMV.MVector v a => AppendVec v s a -> Int
 getCapacity AppendVec{mutVec} = GMV.length mutVec
-
--- | immutable version of 'AppendVec'; this is defined for the purpose of
--- implementing 'Thaw'.
-newtype FrozenAppendVec v a = FrozenAppendVec { getFrozenVector :: v a }
-
-instance GV.Vector v a => Thaw (FrozenAppendVec v a) where
-    type Mutable s (FrozenAppendVec v a) = AppendVec (GV.Mutable v) s a
-
-    thaw         = thawAppend GV.thaw
-    unsafeThaw   = thawAppend GV.unsafeThaw
-    freeze       = freezeAppend GV.freeze
-    unsafeFreeze = freezeAppend GV.unsafeFreeze
-
--- Helpers for the thaw & freeze methods for the instance above.
-thawAppend thaw frozen = do
-    mvec <- thaw $ getFrozenVector frozen
-    pure AppendVec
-        { mutVec = mvec
-        , mutVecLen = GMV.length mvec
-        }
-freezeAppend freeze = fmap FrozenAppendVec . freeze . getVector
 
 -- | @'grow' vec amount maxSize@ grows the vector @vec@ by @amount@ elements,
 -- provided the result does not exceed @maxSize@. Amortized O(@amount@). Returns

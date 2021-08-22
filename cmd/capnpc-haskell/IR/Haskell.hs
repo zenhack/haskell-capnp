@@ -187,6 +187,8 @@ data Exp
     | ELambda [Pattern] Exp
     | ERecord Exp [(Name.UnQ, Exp)]
     | ELabel Name.UnQ
+    | EList [Exp]
+    | ETypeApp Exp [Type] -- TypeApplications; f @x @y @z
     deriving(Show, Read, Eq)
 
 data Do

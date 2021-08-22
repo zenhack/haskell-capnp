@@ -44,9 +44,9 @@ module Capnp.Message (
     -- * Reading data from messages
     , MonadReadMessage(..)
     , getSegment
-    , getWord
     , getCap
     , getCapTable
+    , getWord
 
     -- * Mutable Messages
     , newMessage
@@ -59,7 +59,6 @@ module Capnp.Message (
 
     -- ** Modifying messages
     , setSegment
-    , setWord
     , write
     , setCap
     , appendCap
@@ -89,7 +88,6 @@ import Data.Bits                 (shiftL)
 import Data.ByteString.Internal  (ByteString(..))
 import Data.Bytes.Get            (getWord32le, runGetS)
 import Data.Function             ((&))
-import Data.Kind                 (Type)
 import Data.Maybe                (fromJust)
 import Data.Primitive            (MutVar, newMutVar, readMutVar, writeMutVar)
 import Data.Word                 (Word32, Word64, byteSwap64)
@@ -108,8 +106,8 @@ import qualified Foreign.Ptr                  as F
 
 import Capnp.Address        (WordAddr(..))
 import Capnp.Bits           (WordCount(..), hi, lo)
+import Capnp.Mutability     (MaybeMutable(..), Mutability(..))
 import Capnp.TraversalLimit (LimitT, MonadLimit(invoice), evalLimitT)
-import Data.Mutable         (Mutable(..))
 import Internal.AppendVec   (AppendVec)
 
 import qualified Capnp.Errors       as E
@@ -135,9 +133,6 @@ maxSegments = 1024
 maxCaps :: Int
 maxCaps = 16 * 1024
 
-
-data Mutability = Const | Mut Type
-
 -- | A pointer to a location in a message. This encodes the same
 -- information as a 'WordAddr', but also includes direct references
 -- to the segment and message, which can improve performance in very
@@ -149,45 +144,48 @@ data WordPtr mut = WordPtr
     -- - pSegment is in pMessage.
     { pMessage :: !(Message mut)
     , pSegment :: !(Segment mut)
-    , pAddr    :: !WordAddr
+    , pAddr    :: {-# UNPACK #-} !WordAddr
     }
 
--- | Do something with the raw memory address referred to by the WordPtr.
---
--- Most users will not need this.
---
--- This is unsafe. In particular:
---
--- * The pointer is not guaranteed to live past the execution of the IO action,
---   so callers must make sure not to retain references to it.
--- * This allows modifying constant messages in place, as well as retaining
---   references to mutable messages which may become frozen later.
-unsafeWithRawWordPtr :: WordPtr mut -> (F.Ptr Word64 -> IO a) -> IO a
-unsafeWithRawWordPtr WordPtr{pSegment, pAddr=WordAt{wordIndex}} f =
-    case pSegment of
-        SegConst (ConstSegment sv) ->
-            SV.unsafeWith (SV.drop (fromIntegral wordIndex) sv) f
-        SegMut MutSegment{vec}     ->
-            SMV.take (fromIntegral wordIndex) vec
-            & SMV.unsafeToForeignPtr0
-            & \(fptr, _) ->
-                FP.withForeignPtr fptr f
+class UnsafeWithRawWordPtr (mut :: Mutability) where
+    -- | Do something with the raw memory address referred to by the WordPtr.
+    --
+    -- Most users will not need this.
+    --
+    -- This is unsafe. In particular:
+    --
+    -- * The pointer is not guaranteed to live past the execution of the IO action,
+    --   so callers must make sure not to retain references to it.
+    -- * This allows modifying constant messages in place, as well as retaining
+    --   references to mutable messages which may become frozen later.
+    unsafeWithRawWordPtr :: WordPtr mut -> (F.Ptr Word64 -> IO a) -> IO a
 
-data Message (mut :: Mutability) where
-    MsgConst :: !ConstMsg -> Message 'Const
-    MsgMut :: !(MutMsg s) -> Message ('Mut s)
+instance UnsafeWithRawWordPtr 'Const where
+    unsafeWithRawWordPtr WordPtr{pSegment=SegConst (ConstSegment sv), pAddr=WordAt{wordIndex}} f =
+        SV.unsafeWith (SV.drop (fromIntegral wordIndex) sv) f
 
-instance Eq (Message mut) where
-    (MsgConst x) == (MsgConst y) = x == y
-    (MsgMut x) == (MsgMut y)     = x == y
+instance UnsafeWithRawWordPtr ('Mut s) where
+    unsafeWithRawWordPtr WordPtr{pSegment=SegMut MutSegment{vec}, pAddr=WordAt{wordIndex}} f =
+        SMV.take (fromIntegral wordIndex) vec
+        & SMV.unsafeToForeignPtr0
+        & \(fptr, _) ->
+            FP.withForeignPtr fptr f
 
-data Segment (mut :: Mutability) where
-    SegConst :: !ConstSegment -> Segment 'Const
-    SegMut :: !(MutSegment s) -> Segment ('Mut s)
+-- | A Cap'n Proto message, parametrized over its mutability.
+data family Message (mut :: Mutability)
 
-instance Eq (Segment mut)  where
-    (SegConst x) == (SegConst y) = x == y
-    (SegMut x) == (SegMut y)     = x == y
+newtype instance Message 'Const = MsgConst ConstMsg
+    deriving(Eq)
+newtype instance Message ('Mut s) = MsgMut (MutMsg s)
+    deriving(Eq)
+
+-- | A segment in a Cap'n Proto message.
+data family Segment (mut :: Mutability)
+
+newtype instance Segment 'Const = SegConst ConstSegment
+    deriving(Eq)
+newtype instance Segment ('Mut s) = SegMut (MutSegment s)
+    deriving(Eq)
 
 data MutSegment s = MutSegment
     { vec  :: SMV.MVector s Word64
@@ -252,6 +250,10 @@ withCapTable newCaps (MsgConst msg) = MsgConst $ msg { constCaps = newCaps }
 getCapTable :: Message 'Const -> V.Vector Client
 getCapTable (MsgConst ConstMsg{constCaps}) = constCaps
 
+-- | 'getWord' gets the word referred to by the 'WordPtr'
+getWord :: MonadReadMessage mut m => WordPtr mut -> m Word64
+getWord WordPtr{pSegment, pAddr=WordAt{wordIndex}} = read pSegment wordIndex
+
 -- | @'getCap' message index@ gets the capability with the given index from
 -- the message. throws 'E.BoundsError' if the index is out
 -- of bounds.
@@ -262,29 +264,12 @@ getCap msg i = do
         then pure nullClient
         else msg `internalGetCap` i
 
--- | @'getWord' msg addr@ returns the word at @addr@ within @msg@. It throws a
--- 'E.BoundsError' if the address is out of bounds.
-getWord :: (MonadThrow m, MonadReadMessage mut m) => Message mut -> WordAddr -> m Word64
-getWord msg WordAt{wordIndex=i, segIndex} = do
-    seg <- getSegment msg segIndex
-    checkIndex i =<< numWords seg
-    seg `read` i
-
 -- | @'setSegment' message index segment@ sets the segment at the given index
 -- in the message. It throws a 'E.BoundsError' if the address is out of bounds.
 setSegment :: WriteCtx m s => Message ('Mut s) -> Int -> Segment ('Mut s) -> m ()
 setSegment msg i seg = do
     checkIndex i =<< numSegs msg
     internalSetSeg msg i seg
-
--- | @'setWord' message address value@ sets the word at @address@ in the
--- message to @value@. If the address is not valid in the message, a
--- 'E.BoundsError' will be thrown.
-setWord :: WriteCtx m s => Message ('Mut s) -> WordAddr -> Word64 -> m ()
-setWord msg WordAt{wordIndex=i, segIndex} val = do
-    seg <- getSegment msg segIndex
-    checkIndex i =<< numWords seg
-    write seg i val
 
 -- | @'setCap' message index cap@ sets the sets the capability at @index@ in
 -- the message's capability table to @cap@. If the index is out of bounds, a
@@ -485,6 +470,7 @@ internalSetSeg (MsgMut MutMsg{mutSegs}) segIndex seg = do
 -- at the provided index. Consider using 'setWord' on the message,
 -- instead of calling this directly.
 write :: WriteCtx m s => Segment ('Mut s) -> WordCount -> Word64 -> m ()
+{-# INLINE write #-}
 write (SegMut MutSegment{vec}) (WordCount i) val = do
     SMV.write vec i (toLE64 val)
 
@@ -513,6 +499,7 @@ newSegment msg@(MsgMut MutMsg{mutSegs}) sizeHint = do
 -- index of the segment in which to allocate the data. Returns 'Nothing' if there is
 -- insufficient space in that segment..
 allocInSeg :: WriteCtx m s => Message ('Mut s) -> Int -> WordCount -> m (Maybe (WordPtr ('Mut s)))
+{-# INLINE allocInSeg #-}
 allocInSeg msg segIndex size = do
     -- GHC's type inference aparently isn't smart enough to figure
     -- out that the pattern irrefutable if we do seg@(SegMut ...) <- ...
@@ -539,6 +526,7 @@ allocInSeg msg segIndex size = do
 -- to the segment. The latter is redundant information, but this is used
 -- in low-level code where this can improve performance.
 alloc :: WriteCtx m s => Message ('Mut s) -> WordCount -> m (WordPtr ('Mut s))
+{-# INLINABLE alloc #-}
 alloc msg size = do
     when (size > maxSegmentSize) $
         throwM E.SizeError
@@ -588,10 +576,7 @@ singleSegment seg = MsgConst ConstMsg
     , constCaps = V.empty
     }
 
-
-instance Thaw (Segment 'Const) where
-    type Mutable s (Segment 'Const) = Segment ('Mut s)
-
+instance MaybeMutable Segment where
     thaw         = thawSeg   SV.thaw
     unsafeThaw   = thawSeg   SV.unsafeThaw
     freeze       = freezeSeg SV.freeze
@@ -617,9 +602,7 @@ freezeSeg freeze (SegMut MutSegment{vec, used}) = do
     WordCount len <- readMutVar used
     SegConst .ConstSegment <$> freeze (SMV.take len vec)
 
-instance Thaw (Message 'Const) where
-    type Mutable s (Message 'Const) = Message ('Mut s)
-
+instance MaybeMutable Message where
     thaw         = thawMsg   thaw         V.thaw
     unsafeThaw   = thawMsg   unsafeThaw   V.unsafeThaw
     freeze       = freezeMsg freeze       V.freeze

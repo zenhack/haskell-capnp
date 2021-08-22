@@ -13,6 +13,7 @@ data File
         { fileId   :: !Word64
         , decls    :: [Decl]
         , fileName :: FilePath
+        , usesRpc  :: !Bool
         }
 
 data Decl
@@ -37,12 +38,14 @@ data Decl
         }
     | MethodDecl
         { interfaceName :: Name.LocalQ
-        , typeParams    :: [Name.UnQ]
         , interfaceId   :: !Word64
-        , methodName    :: Name.UnQ
         , methodId      :: !Word16
-        , paramType     :: C.CompositeType Brand Name.CapnpQ
-        , resultType    :: C.CompositeType Brand Name.CapnpQ
+        , methodInfo    :: MethodInfo
+        }
+    | SuperDecl
+        { subName    :: Name.LocalQ
+        , typeParams :: [Name.UnQ]
+        , superType  :: C.InterfaceType Brand Name.CapnpQ
         }
     | ParsedInstanceDecl
         { typeName        :: Name.LocalQ
@@ -66,6 +69,13 @@ data ParsedInstances
         { variants :: [(Name.UnQ, C.FieldLocType Brand Name.CapnpQ)]
         }
 
+data MethodInfo = MethodInfo
+    { typeParams :: [Name.UnQ]
+    , methodName :: Name.UnQ
+    , paramType  :: C.CompositeType Brand Name.CapnpQ
+    , resultType :: C.CompositeType Brand Name.CapnpQ
+    }
+
 data ExtraTypeInfo
     = StructTypeInfo
         { nWords :: !Word16
@@ -73,6 +83,9 @@ data ExtraTypeInfo
         }
     | EnumTypeInfo [Name.UnQ]
     | InterfaceTypeInfo
+        { methods :: [MethodInfo]
+        , supers  :: [C.InterfaceType Brand Name.CapnpQ]
+        }
 
 data UnionVariant = UnionVariant
     { variantName  :: Name.UnQ

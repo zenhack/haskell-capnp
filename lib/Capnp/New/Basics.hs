@@ -1,12 +1,28 @@
+{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE EmptyDataDeriving     #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
+-- |
+-- Module: Capnp.New.Basics
+-- Description: Handling of "basic" capnp datatypes.
+--
+-- This module contains phantom types for built-in Cap'n Proto
+-- types, analogous to the phantom types generated for structs
+-- by the code generator. It also defines applicable type class
+-- instances.
 module Capnp.New.Basics where
+
+-- XXX: I(zenhack) don't know how to supply an explicit
+-- export list here, since we have instances of data families
+-- and I don't know what to call the instances to get all of the
+-- constructors.
 
 import qualified Capnp.Errors        as E
 import qualified Capnp.Message       as M
@@ -14,46 +30,69 @@ import qualified Capnp.New.Classes   as C
 import qualified Capnp.Repr          as R
 import qualified Capnp.Untyped       as U
 import           Control.Monad       (when)
-import           Control.Monad.Catch (throwM)
+import           Control.Monad.Catch (MonadThrow, throwM)
 import qualified Data.ByteString     as BS
-import           Data.Foldable       (for_)
+import           Data.Default        (Default(..))
+import           Data.Foldable       (foldl', for_)
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as TE
 import qualified Data.Vector         as V
 import           Data.Word
+import           GHC.Generics        (Generic)
+import           GHC.Prim            (coerce)
 
+-- | The Cap'n Proto @Text@ type.
 data Text
+
+-- | The Cap'n Proto @Data@ type.
 data Data
+
+-- | A Cap'n Proto @AnyPointer@, i.e. an arbitrary pointer with unknown schema.
 data AnyPointer
+
+-- | A Cap'n Proto @List@ with unknown element type.
 data AnyList
+
+-- | A Cap'n Proto struct of unknown type.
 data AnyStruct
+
+-- | A Cap'n Proto capability with unknown interfaces.
 data Capability
 
 type instance R.ReprFor Data = R.ReprFor (R.List Word8)
 type instance R.ReprFor Text = R.ReprFor (R.List Word8)
 type instance R.ReprFor AnyPointer = 'R.Ptr 'Nothing
+type instance R.ReprFor (Maybe AnyPointer) = 'R.Ptr 'Nothing
 type instance R.ReprFor AnyList = 'R.Ptr ('Just ('R.List 'Nothing))
 type instance R.ReprFor AnyStruct = 'R.Ptr ('Just 'R.Struct)
 type instance R.ReprFor Capability = 'R.Ptr ('Just 'R.Cap)
 
 data instance C.Parsed AnyPointer
-    = PtrNull
-    | PtrStruct (C.Parsed AnyStruct)
+    = PtrStruct (C.Parsed AnyStruct)
     | PtrList (C.Parsed AnyList)
     | PtrCap M.Client
-    deriving(Show, Eq)
+    deriving(Show, Eq, Generic)
+
+instance C.Parse (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer)) where
+    parse (R.Raw ptr) = case ptr of
+        Nothing -> pure Nothing
+        Just _  -> Just <$> C.parse (R.Raw ptr :: R.Raw AnyPointer 'M.Const)
+
+    encode msg value = R.Raw <$> case value of
+        Nothing -> pure Nothing
+        Just v  -> coerce <$> C.encode msg v
 
 instance C.Parse AnyPointer (C.Parsed AnyPointer) where
     parse (R.Raw ptr) = case ptr of
-        Nothing                   -> pure PtrNull
         Just (U.PtrCap cap)       -> PtrCap <$> C.parse (R.Raw cap)
         Just (U.PtrList list)     -> PtrList <$> C.parse (R.Raw list)
         Just (U.PtrStruct struct) -> PtrStruct <$> C.parse (R.Raw struct)
+        Nothing                   ->
+            throwM $ E.SchemaViolationError "Non-nullable AnyPointer was null"
 
     encode msg value = R.Raw <$> case value of
-        PtrNull       -> pure Nothing
-        PtrCap cap    -> Just . U.PtrCap . R.fromRaw <$> C.encode msg cap
-        PtrList list -> Just . U.PtrList . R.fromRaw <$> C.encode msg list
+        PtrCap cap       -> Just . U.PtrCap . R.fromRaw <$> C.encode msg cap
+        PtrList list     -> Just . U.PtrList . R.fromRaw <$> C.encode msg list
         PtrStruct struct -> Just . U.PtrStruct . R.fromRaw <$> C.encode msg struct
 
 instance C.AllocateList AnyPointer where
@@ -61,11 +100,32 @@ instance C.AllocateList AnyPointer where
 
 instance C.EstimateListAlloc AnyPointer (C.Parsed AnyPointer)
 
+instance C.AllocateList (Maybe AnyPointer) where
+    type ListAllocHint (Maybe AnyPointer) = Int
+
+instance C.EstimateListAlloc (Maybe AnyPointer) (Maybe (C.Parsed AnyPointer))
+
 data instance C.Parsed AnyStruct = Struct
     { structData :: V.Vector Word64
-    , structPtrs :: V.Vector (C.Parsed AnyPointer)
+    , structPtrs :: V.Vector (Maybe (C.Parsed AnyPointer))
     }
-    deriving(Show, Eq)
+    deriving(Show, Generic)
+
+instance Eq (C.Parsed AnyStruct) where
+    -- We define equality specially (rather than just deriving), such that
+    -- slices are padded out with the default values of their elements.
+    (Struct dl pl) == (Struct dr pr) = sectionEq dl dr && sectionEq pl pr
+      where
+        sectionEq :: (Eq a, Default a) => V.Vector a -> V.Vector a -> Bool
+        sectionEq l r = go 0
+          where
+            go i
+                | i >= length = True
+                | otherwise  = indexDef i l == indexDef i r && go (i+1)
+            length = max (V.length l) (V.length r)
+            indexDef i vec
+                | i < V.length vec = vec V.! i
+                | otherwise = def
 
 instance C.Parse AnyStruct (C.Parsed AnyStruct) where
     parse (R.Raw s) = Struct
@@ -82,8 +142,8 @@ instance C.AllocateList AnyStruct where
 instance C.EstimateListAlloc AnyStruct (C.Parsed AnyStruct) where
     estimateListAlloc structs =
         let len = V.length structs
-            nWords = maximum $ map (V.length . structData) $ V.toList structs
-            nPtrs = maximum $ map (V.length . structPtrs) $ V.toList structs
+            !nWords = foldl' max 0 $ map (V.length . structData) $ V.toList structs
+            !nPtrs  = foldl' max 0 $ map (V.length . structPtrs) $ V.toList structs
         in
         (len, (fromIntegral nWords, fromIntegral nPtrs))
 
@@ -98,7 +158,7 @@ instance C.Marshal AnyStruct (C.Parsed AnyStruct) where
         V.iforM_ (structData s) $ \i value -> do
             U.setData value i raw
         V.iforM_ (structPtrs s) $ \i value -> do
-            R.Raw ptr <- C.encode (U.message raw) value
+            R.Raw ptr <- C.encode (U.message @U.Struct raw) value
             U.setPtr ptr i raw
 
 -- TODO(cleanup): It would be nice if we could reuse Capnp.Repr.Parsed.Parsed
@@ -106,7 +166,7 @@ instance C.Marshal AnyStruct (C.Parsed AnyStruct) where
 type ParsedList a = V.Vector a
 
 data instance C.Parsed AnyList
-    = ListPtr (ParsedList (C.Parsed AnyPointer))
+    = ListPtr (ParsedList (Maybe (C.Parsed AnyPointer)))
     | ListStruct (ParsedList (C.Parsed AnyStruct))
     | List0 (ParsedList ())
     | List1 (ParsedList Bool)
@@ -114,7 +174,7 @@ data instance C.Parsed AnyList
     | List16 (ParsedList Word16)
     | List32 (ParsedList Word32)
     | List64 (ParsedList Word64)
-    deriving(Show, Eq)
+    deriving(Show, Eq, Generic)
 
 instance C.Parse AnyList (C.Parsed AnyList) where
     parse (R.Raw list) = case list of
@@ -198,3 +258,15 @@ instance C.Marshal Data BS.ByteString where
 instance C.Allocate AnyStruct where
     type AllocHint AnyStruct = (Word16, Word16)
     new (nWords, nPtrs) msg = R.Raw <$> U.allocStruct msg nWords nPtrs
+
+-- | Return the underlying buffer containing the text. This does not include the
+-- null terminator.
+textBuffer :: MonadThrow m => R.Raw Text mut -> m (R.Raw Data mut)
+textBuffer (R.Raw list) = R.Raw <$> U.take (U.length list - 1) list
+
+-- | Convert a 'Text' to a 'BS.ByteString', comprising the raw bytes of the text
+-- (not counting the NUL terminator).
+textBytes :: U.ReadCtx m 'M.Const => R.Raw Text 'M.Const -> m BS.ByteString
+textBytes text = do
+    R.Raw raw <- textBuffer text
+    U.rawBytes raw

@@ -196,7 +196,7 @@ data DataLoc = DataLoc
 data Value b r
     = VoidValue
     | WordValue (WordType r) !Word64
-    | PtrValue (PtrType b r) (Parsed B.AnyPointer)
+    | PtrValue (PtrType b r) (Maybe (Parsed B.AnyPointer))
     deriving(Show, Eq, Functor)
 
 instance Bifunctor Value where

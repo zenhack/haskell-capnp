@@ -1,11 +1,12 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TypeApplications      #-}
 module Examples.Serialization.HighLevel.Read (main) where
 
-import Capnp.Gen.Addressbook.Pure
+import Capnp.Gen.Addressbook.New
 
-import Capnp (defaultLimit, getValue)
+import Capnp.New (defaultLimit, getParsed)
 
 main :: IO ()
 main = do
-    value <- getValue defaultLimit
-    print (value :: AddressBook)
+    value <- getParsed @AddressBook defaultLimit
+    print value

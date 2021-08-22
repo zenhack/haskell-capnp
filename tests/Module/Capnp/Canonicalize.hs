@@ -16,11 +16,11 @@ import Control.Monad (unless)
 
 import Capnp.Canonicalize
 
-import Capnp (cerialize, createPure, msgToLBS)
+import Capnp.New (Parsed, Raw(..), createPure, encode, msgToLBS)
 
-import qualified Capnp.Message      as M
-import qualified Capnp.Untyped      as U
-import qualified Capnp.Untyped.Pure as PU
+import qualified Capnp.Message    as M
+import qualified Capnp.New.Basics as B
+import qualified Capnp.Untyped    as U
 
 import Instances ()
 import Util      (capnpCanonicalize)
@@ -30,7 +30,7 @@ canonicalizeTests =
     describe "canonicalization tests" $ do
         it "agrees with reference implementation" $
             property $ \case
-                PU.Struct (PU.Slice (V.toList -> [])) (PU.Slice (V.toList -> [])) ->
+                B.Struct (V.toList -> []) (V.toList -> []) ->
                     -- skip this; it fails due to a bug in the reference implementation:
                     --
                     -- https://github.com/capnproto/capnproto/issues/1084
@@ -40,7 +40,7 @@ canonicalizeTests =
                 struct ->
                     propertyIO $ implsAgreeOn struct
 
-implsAgreeOn :: PU.Struct -> IO ()
+implsAgreeOn :: Parsed B.AnyStruct -> IO ()
 implsAgreeOn struct = do
     let Just ourMsg = ourImplCanonicalize struct
     refMsg <- refImplCanonicalize struct
@@ -54,18 +54,18 @@ implsAgreeOn struct = do
             , show $ LBS.unpack $ msgToLBS refMsg
             ]
 
-ourImplCanonicalize :: PU.Struct -> Maybe (M.Message 'M.Const)
+ourImplCanonicalize :: Parsed B.AnyStruct -> Maybe (M.Message 'M.Const)
 ourImplCanonicalize struct = createPure maxBound $ do
     msg <- M.newMessage Nothing
-    rawStruct <- cerialize msg struct
+    Raw rawStruct <- encode msg struct
     (msg, _) <- canonicalize rawStruct
     pure msg
 
-refImplCanonicalize :: PU.Struct -> IO (M.Message 'M.Const)
+refImplCanonicalize :: Parsed B.AnyStruct -> IO (M.Message 'M.Const)
 refImplCanonicalize struct = do
     msg <- createPure maxBound $ do
         msg <- M.newMessage Nothing
-        rawStruct <- cerialize msg struct
+        Raw rawStruct <- encode msg struct
         U.setRoot rawStruct
         pure msg
     lbs <- capnpCanonicalize (msgToLBS msg)

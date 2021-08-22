@@ -1,20 +1,17 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
 module SchemaQuickCheck
     (schemaCGRQuickCheck)
     where
 
 import qualified Data.ByteString as BS
 
-import Capnp.Bits           (WordCount)
-import Capnp.Classes        (fromStruct)
+import Capnp.Convert        (bsToParsed)
 import Capnp.Errors         (Error)
-import Capnp.Message        as M
-import Capnp.TraversalLimit (LimitT, runLimitT)
+import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 
-import qualified Capnp.Basics           as Basics
-import qualified Capnp.Gen.Capnp.Schema as Schema
-import qualified Capnp.Untyped          as Untyped
+import qualified Capnp.Gen.Capnp.Schema.New as Schema
 
 -- Testing framework imports
 import Test.Hspec
@@ -34,17 +31,10 @@ generateCGR schema = capnpCompile (show schema) "-"
 
 -- Functions to validate CGRs
 
-decodeCGR :: BS.ByteString -> IO (WordCount, Int)
+decodeCGR :: BS.ByteString -> IO ()
 decodeCGR bytes = do
-    let reader :: Untyped.Struct 'M.Const -> LimitT IO Int
-        reader struct = do
-            req :: Schema.CodeGeneratorRequest 'M.Const <- fromStruct struct
-            nodes <- Schema.get_CodeGeneratorRequest'nodes req
-            _ <- Schema.get_CodeGeneratorRequest'requestedFiles req
-            return (Basics.length nodes)
-    msg <- M.decode bytes
-    (numNodes, endQuota) <- runLimitT 1024 (Untyped.rootPtr msg >>= reader)
-    return (endQuota, numNodes)
+    _ <- evalLimitT defaultLimit (bsToParsed @Schema.CodeGeneratorRequest bytes)
+    pure ()
 
 -- QuickCheck properties
 
@@ -52,7 +42,7 @@ prop_schemaValid :: Schema -> Property
 prop_schemaValid schema = ioProperty $ do
     compiled <- generateCGR schema
     decoded <- try $ decodeCGR compiled
-    return $ case (decoded :: Either Error (WordCount, Int)) of
+    return $ case (decoded :: Either Error ()) of
         Left _  -> False
         Right _ -> True
 

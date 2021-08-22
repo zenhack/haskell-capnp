@@ -11,8 +11,8 @@ import qualified Data.Vector     as V
 import qualified Capnp.New.Basics  as B
 import qualified Capnp.New.Classes as C
 
-import Capnp.Repr         (List, PtrRepr(..), Repr(..), ReprFor)
-import Capnp.Repr.Methods (Client)
+import Capnp.New.Rpc.Common (Client)
+import Capnp.Repr           (List, PtrRepr(..), Repr(..), ReprFor)
 
 -- | @'Parsed' a@ is the high-level/ADT representation of the capnproto
 -- type @a@. For struct types this is equivalent to @'C.Parsed' a@, but
@@ -27,4 +27,5 @@ type family ParsedByRepr (r :: Repr) (a :: Type) where
     ParsedByRepr _ B.Data = BS.ByteString
     ParsedByRepr _ B.Text = T.Text
     ParsedByRepr _ (List a) = V.Vector (Parsed a)
+    ParsedByRepr _ (Maybe B.AnyPointer) = Maybe (C.Parsed B.AnyPointer)
     ParsedByRepr _ a = C.Parsed a

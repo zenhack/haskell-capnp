@@ -6,10 +6,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -24,22 +27,34 @@ import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
 import qualified GHC.Generics as Generics
-import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
+import qualified Capnp.GenHelpers.New.Rpc as GH
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Persistent sturdyRef owner
 type instance (R.ReprFor (Persistent sturdyRef owner)) = (R.Ptr (Std_.Just R.Cap))
+instance (C.HasTypeId (Persistent sturdyRef owner)) where
+    typeId  = 14468694717054801553
 instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (C.Parse (Persistent sturdyRef owner) (GH.Client (Persistent sturdyRef owner))) where
     parse  = GH.parseCap
     encode  = GH.encodeCap
 instance ((GH.TypeParam sturdyRef)
+         ,(GH.TypeParam owner)) => (GH.Export (Persistent sturdyRef owner)) where
+    type Server (Persistent sturdyRef owner) = (Persistent'server_ sturdyRef owner)
+    methodHandlerTree _ s_ = (GH.MethodHandlerTree (C.typeId @((Persistent sturdyRef owner))) [(GH.toUntypedMethodHandler ((persistent'save @(sturdyRef) @(owner)) s_))] [])
+class (Persistent'server_ sturdyRef owner s_) where
+    {-# MINIMAL persistent'save #-}
+    persistent'save :: s_ -> (GH.MethodHandler (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner))
+    persistent'save _ = GH.methodUnimplemented
+instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (GH.HasMethod "save" (Persistent sturdyRef owner) (Persistent'SaveParams sturdyRef owner) (Persistent'SaveResults sturdyRef owner)) where
     methodByLabel  = (GH.Method 14468694717054801553 0)
 data Persistent'SaveParams sturdyRef owner
 type instance (R.ReprFor (Persistent'SaveParams sturdyRef owner)) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId (Persistent'SaveParams sturdyRef owner)) where
+    typeId  = 17829674341603767205
 instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (C.TypedStruct (Persistent'SaveParams sturdyRef owner)) where
     numStructWords  = 0
@@ -78,6 +93,8 @@ instance ((GH.TypeParam sturdyRef)
     fieldByLabel  = (GH.ptrField 0)
 data Persistent'SaveResults sturdyRef owner
 type instance (R.ReprFor (Persistent'SaveResults sturdyRef owner)) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId (Persistent'SaveResults sturdyRef owner)) where
+    typeId  = 13215893102637674431
 instance ((GH.TypeParam sturdyRef)
          ,(GH.TypeParam owner)) => (C.TypedStruct (Persistent'SaveResults sturdyRef owner)) where
     numStructWords  = 0
@@ -116,12 +133,27 @@ instance ((GH.TypeParam sturdyRef)
     fieldByLabel  = (GH.ptrField 0)
 data RealmGateway internalRef externalRef internalOwner externalOwner
 type instance (R.ReprFor (RealmGateway internalRef externalRef internalOwner externalOwner)) = (R.Ptr (Std_.Just R.Cap))
+instance (C.HasTypeId (RealmGateway internalRef externalRef internalOwner externalOwner)) where
+    typeId  = 9583422979879616212
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)
          ,(GH.TypeParam externalOwner)) => (C.Parse (RealmGateway internalRef externalRef internalOwner externalOwner) (GH.Client (RealmGateway internalRef externalRef internalOwner externalOwner))) where
     parse  = GH.parseCap
     encode  = GH.encodeCap
+instance ((GH.TypeParam internalRef)
+         ,(GH.TypeParam externalRef)
+         ,(GH.TypeParam internalOwner)
+         ,(GH.TypeParam externalOwner)) => (GH.Export (RealmGateway internalRef externalRef internalOwner externalOwner)) where
+    type Server (RealmGateway internalRef externalRef internalOwner externalOwner) = (RealmGateway'server_ internalRef externalRef internalOwner externalOwner)
+    methodHandlerTree _ s_ = (GH.MethodHandlerTree (C.typeId @((RealmGateway internalRef externalRef internalOwner externalOwner))) [(GH.toUntypedMethodHandler ((realmGateway'import_ @(internalRef) @(externalRef) @(internalOwner) @(externalOwner)) s_))
+                                                                                                                                    ,(GH.toUntypedMethodHandler ((realmGateway'export @(internalRef) @(externalRef) @(internalOwner) @(externalOwner)) s_))] [])
+class (RealmGateway'server_ internalRef externalRef internalOwner externalOwner s_) where
+    {-# MINIMAL realmGateway'import_,realmGateway'export #-}
+    realmGateway'import_ :: s_ -> (GH.MethodHandler (RealmGateway'import'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults internalRef internalOwner))
+    realmGateway'import_ _ = GH.methodUnimplemented
+    realmGateway'export :: s_ -> (GH.MethodHandler (RealmGateway'export'params internalRef externalRef internalOwner externalOwner) (Persistent'SaveResults externalRef externalOwner))
+    realmGateway'export _ = GH.methodUnimplemented
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)
@@ -134,6 +166,8 @@ instance ((GH.TypeParam internalRef)
     methodByLabel  = (GH.Method 9583422979879616212 1)
 data RealmGateway'import'params internalRef externalRef internalOwner externalOwner
 type instance (R.ReprFor (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId (RealmGateway'import'params internalRef externalRef internalOwner externalOwner)) where
+    typeId  = 17348653140467603277
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)
@@ -200,6 +234,8 @@ instance ((GH.TypeParam internalRef)
     fieldByLabel  = (GH.ptrField 1)
 data RealmGateway'export'params internalRef externalRef internalOwner externalOwner
 type instance (R.ReprFor (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId (RealmGateway'export'params internalRef externalRef internalOwner externalOwner)) where
+    typeId  = 17055027933458834346
 instance ((GH.TypeParam internalRef)
          ,(GH.TypeParam externalRef)
          ,(GH.TypeParam internalOwner)

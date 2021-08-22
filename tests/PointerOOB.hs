@@ -9,9 +9,9 @@ import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Foldable          (for_)
 import Data.Function          ((&))
 
-import qualified Capnp
 import qualified Capnp.Errors  as E
 import qualified Capnp.Message as M
+import qualified Capnp.New     as Capnp
 import qualified Capnp.Pointer as P
 import qualified Capnp.Untyped as U
 

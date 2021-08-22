@@ -11,14 +11,11 @@ import Text.Heredoc (here)
 
 import qualified Data.Vector as V
 
-import Capnp.Untyped.Pure
+import Capnp.New.Basics
 import Util
 
-import Capnp.Classes        (decerialize)
-import Capnp.TraversalLimit (LimitT, runLimitT)
-
-import qualified Capnp.Message as M
-import qualified Capnp.Untyped as U
+import Capnp.New            (msgToRaw, parse)
+import Capnp.TraversalLimit (runLimitT)
 
 -- This is analogous to Tests.Module.Capnp.Untyped.untypedTests, but
 -- using the Pure module:
@@ -37,7 +34,7 @@ pureUntypedTests =
                            capacity = 5173,
                            maxSpeed = 12.0
                         )))|]
-            (actual, 117) <- runLimitT 128 $ U.rootPtr msg >>= readStruct
+            (actual, 117) <- runLimitT 128 $ msgToRaw msg >>= parse
             actual `shouldBe` Struct
                 [3]
                 [ Just $ PtrStruct $ Struct
@@ -53,6 +50,3 @@ pureUntypedTests =
                         ]
                     ]
                 ]
-  where
-    readStruct :: U.Struct 'M.Const -> LimitT IO Struct
-    readStruct = decerialize

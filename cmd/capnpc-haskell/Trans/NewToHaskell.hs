@@ -7,6 +7,7 @@ module Trans.NewToHaskell
     ) where
 
 import qualified Capnp.Repr            as R
+import           Control.Monad         (guard)
 import           Data.String           (IsString(fromString))
 import           Data.Word
 import qualified IR.Common             as C
@@ -15,6 +16,7 @@ import qualified IR.Name               as Name
 import qualified IR.New                as New
 import           Trans.ToHaskellCommon
 
+-- | Modules imported by all generated modules.
 imports :: [Hs.Import]
 imports =
     [ Hs.ImportAs { importAs = "R", parts = ["Capnp", "Repr"] }
@@ -24,7 +26,15 @@ imports =
     , Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New"] }
     , Hs.ImportAs { importAs = "C", parts = ["Capnp", "New", "Classes"] }
     , Hs.ImportAs { importAs = "Generics", parts = ["GHC", "Generics"] }
-    , Hs.ImportAs { importAs = "BS", parts = ["Capnp", "GenHelpers", "ReExports", "Data", "ByteString"] }
+    ]
+
+-- | Modules imported by generated modules that use rpc. We separate these out to
+-- avoid a circular import when generating code for rpc.capnp -- which does not
+-- contain interfaces, so does not need to import the rpc system -- but which
+-- must be imported *by* the rpc system.
+rpcImports :: [Hs.Import]
+rpcImports =
+    [ Hs.ImportAs { importAs = "GH", parts = ["Capnp", "GenHelpers", "New", "Rpc"] }
     ]
 
 fileToModules :: New.File -> [Hs.Module]
@@ -34,7 +44,7 @@ fileToModules file =
     ]
 
 fileToMainModule :: New.File -> Hs.Module
-fileToMainModule file@New.File{fileName} =
+fileToMainModule file@New.File{fileName, usesRpc} =
     fixImports $ Hs.Module
         { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
         , modLangPragmas =
@@ -46,13 +56,16 @@ fileToMainModule file@New.File{fileName} =
             , "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
+            , "UndecidableSuperClasses"
             , "OverloadedLabels"
             , "OverloadedStrings"
             , "StandaloneDeriving"
             , "RecordWildCards"
+            , "TypeApplications"
+            , "ScopedTypeVariables"
             ]
         , modExports = Nothing
-        , modImports = imports
+        , modImports = imports ++ (guard usesRpc >> rpcImports)
         , modDecls = fileToDecls file
         }
 
@@ -75,7 +88,7 @@ fileToDecls New.File{fileId, decls} =
 declToDecls :: Word64 -> New.Decl -> [Hs.Decl]
 declToDecls thisMod decl =
     case decl of
-        New.TypeDecl {name, params, repr, extraTypeInfo} ->
+        New.TypeDecl {name, nodeId, params, repr, extraTypeInfo} ->
             let dataName = Name.localToUnQ name
                 typeArgs = toTVars params
                 typ = case typeArgs of
@@ -99,7 +112,7 @@ declToDecls thisMod decl =
                         _ -> []
                 , derives =
                     case extraTypeInfo of
-                        Just New.EnumTypeInfo {} -> [ "Std_.Eq", "Std_.Show" ]
+                        Just New.EnumTypeInfo {} -> [ "Std_.Eq", "Std_.Show", "Generics.Generic" ]
                         _                        -> []
                 , dataNewtype = False
                 , dataInstance = False
@@ -107,6 +120,17 @@ declToDecls thisMod decl =
             , Hs.DcTypeInstance
                 (Hs.TApp (tgName ["R"] "ReprFor") [typ])
                 (toType repr)
+            , Hs.DcInstance
+                { ctx = []
+                , typ = Hs.TApp (tgName ["C"] "HasTypeId") [typ]
+                , defs =
+                    [ Hs.IdValue Hs.DfValue
+                        { name = "typeId"
+                        , params = []
+                        , value = Hs.EInt (fromIntegral nodeId)
+                        }
+                    ]
+                }
             ] ++
             let ctx = paramsContext typeArgs in
             case extraTypeInfo of
@@ -252,8 +276,9 @@ declToDecls thisMod decl =
                         , defs = []
                         }
                     ]
-                Just New.InterfaceTypeInfo ->
+                Just New.InterfaceTypeInfo {methods, supers} ->
                     defineInterfaceParse name params
+                    ++ defineInterfaceServer thisMod name params methods supers
                 Nothing -> []
         New.FieldDecl{containerType, typeParams, fieldName, fieldLocType} ->
             let tVars = toTVars typeParams
@@ -305,14 +330,27 @@ declToDecls thisMod decl =
                     ]
                 }
             : concatMap (variantToDecls thisMod name typeParams) variants
+        New.SuperDecl { subName, typeParams, superType } ->
+            let tVars = toTVars typeParams in
+            [ Hs.DcInstance
+                { ctx = paramsContext tVars
+                , typ = Hs.TApp (tgName ["C"] "Super")
+                    [ typeToType thisMod $ C.PtrType $ C.PtrInterface superType
+                    , Hs.TApp (Hs.TLName subName) tVars
+                    ]
+                , defs = []
+                }
+            ]
         New.MethodDecl
                 { interfaceName
-                , typeParams
                 , interfaceId
-                , methodName
                 , methodId
-                , paramType
-                , resultType
+                , methodInfo = New.MethodInfo
+                    { typeParams
+                    , methodName
+                    , paramType
+                    , resultType
+                    }
                 } ->
             let tVars = toTVars typeParams in
             [ Hs.DcInstance
@@ -367,13 +405,13 @@ defineConstant thisMod localName value =
             ]
         C.PtrValue t v ->
             [ Hs.DcValue
-                { typ = Hs.TApp (tgName ["R"] "Raw") [tgName ["GH"] "Const", typeToType thisMod (C.PtrType t)]
+                { typ = Hs.TApp (tgName ["R"] "Raw") [ typeToType thisMod (C.PtrType t), tgName ["GH"] "Const"]
                 , def = Hs.DfValue
                     { name
                     , params = []
                     , value = Hs.EApp
                         (egName ["GH"] "getPtrConst")
-                        [Hs.ETypeAnno (Hs.EBytes (makePtrBytes v)) (tgName ["BS"] "ByteString")]
+                        [Hs.ETypeAnno (Hs.EBytes (makePtrBytes v)) (tgName ["GH"] "ByteString")]
                     }
                 }
             ]
@@ -382,8 +420,8 @@ defineRawData thisMod name tVars variants =
     Hs.IdData Hs.Data
         { dataName = "RawWhich"
         , typeArgs =
-            [ Hs.TVar "mut_"
-            , Hs.TApp (Hs.TVar $ Name.renderUnQ $ Name.localToUnQ name) tVars
+            [ Hs.TApp (Hs.TVar $ Name.renderUnQ $ Name.localToUnQ name) tVars
+            , Hs.TVar "mut_"
             ]
 
         , dataNewtype = False
@@ -395,8 +433,8 @@ defineRawData thisMod name tVars variants =
                 , dvArgs = Hs.APos
                     [ Hs.TApp
                         (tReprName "Raw")
-                        [ Hs.TVar "mut_"
-                        , fieldLocTypeToType thisMod fieldLocType
+                        [ fieldLocTypeToType thisMod fieldLocType
+                        , Hs.TVar "mut_"
                         ]
                     ]
                 }
@@ -546,11 +584,13 @@ primPtrToType = \case
     C.PrimAnyPtr t -> anyPtrToType t
 
 anyPtrToType :: C.AnyPtr -> Hs.Type
-anyPtrToType t = tgName ["Basics"] $ case t of
-    C.Struct -> "AnyStruct"
-    C.List   -> "AnyList"
-    C.Cap    -> "Capability"
-    C.Ptr    -> "AnyPointer"
+anyPtrToType t = case t of
+    C.Struct -> basics "AnyStruct"
+    C.List   -> basics "AnyList"
+    C.Cap    -> basics "Capability"
+    C.Ptr    -> Hs.TApp (tStd_ "Maybe") [basics "AnyPointer"]
+  where
+    basics = tgName ["Basics"]
 
 compositeTypeToType thisMod (C.StructType    name brand) = namedType thisMod name brand
 interfaceTypeToType thisMod (C.InterfaceType name brand) = namedType thisMod name brand
@@ -607,8 +647,8 @@ instance ToType R.ListRepr where
     toType R.ListComposite   = tReprName "ListComposite"
 
 instance ToType R.NormalListRepr where
-    toType (R.ListData r) = rApp "ListData" [toType r]
-    toType R.ListPtr      = tReprName "ListPtr"
+    toType (R.NormalListData r) = rApp "ListData" [toType r]
+    toType R.NormalListPtr      = tReprName "ListPtr"
 
 instance ToType R.DataSz where
     toType = tReprName . fromString . show
@@ -864,6 +904,91 @@ defineMarshal typeName typeParams New.ParsedUnion { variants } =
             ]
         }
     ]
+
+defineInterfaceServer thisMod typeName typeParams methods supers =
+    let tVars = toTVars typeParams
+        typ = Hs.TApp (Hs.TLName typeName) tVars
+        clsName = Name.mkSub typeName "server_"
+    in
+    [ Hs.DcInstance
+        { ctx = paramsContext tVars
+        , typ = Hs.TApp (tgName ["GH"] "Export") [typ]
+        , defs =
+            [ Hs.IdType $ Hs.TypeAlias "Server" [typ] $ Hs.TApp (Hs.TLName clsName) tVars
+            , Hs.IdValue Hs.DfValue
+                { name = "methodHandlerTree"
+                , params = [Hs.PVar "_", Hs.PVar "s_"]
+                , value =
+                    Hs.EApp (egName ["GH"] "MethodHandlerTree")
+                        [ Hs.ETypeApp (egName ["C"] "typeId") [typ]
+                        , Hs.EList
+                            [ Hs.EApp
+                                (egName ["GH"] "toUntypedMethodHandler")
+                                [ Hs.EApp
+                                    (Hs.ETypeApp
+                                        (Hs.EVar (Name.renderUnQ (Name.valueName (Name.mkSub typeName methodName))))
+                                        tVars
+                                    )
+                                    [Hs.EVar "s_"]
+                                ]
+                            | New.MethodInfo{methodName} <- methods
+                            ]
+                        , Hs.EList
+                            [ Hs.EApp (egName ["GH"] "methodHandlerTree")
+                                [ Hs.ETypeApp
+                                    (egName ["GH"] "Proxy")
+                                    [typeToType thisMod $ C.PtrType $ C.PtrInterface super]
+                                , Hs.EVar "s_"
+                                ]
+                            | super <- supers
+                            ]
+                        ]
+                }
+            ]
+        }
+    , Hs.DcClass
+        { ctx =
+            [ Hs.TApp (tgName ["GH"] "Server")
+                [ typeToType thisMod $ C.PtrType $ C.PtrInterface super
+                , Hs.TVar "s_"
+                ]
+            | super <- supers
+            ]
+        , name = clsName
+        , params = map (Name.UnQ . Name.typeVarName) typeParams ++ ["s_"]
+        , funDeps = []
+        , decls =
+            Hs.CdMinimal
+                [ mkMethodName typeName methodName
+                | New.MethodInfo{methodName} <- methods
+                ]
+            : concatMap (defineIfaceClassMethod thisMod typeName) methods
+        }
+    ]
+defineIfaceClassMethod thisMod typeName New.MethodInfo{methodName, paramType, resultType} =
+    let mkType t = typeToType thisMod (C.CompositeType t)
+        name = mkMethodName typeName methodName
+    in
+    [ Hs.CdValueDecl
+        name
+        (Hs.TFn
+            [ Hs.TVar "s_"
+            , Hs.TApp
+                (tgName ["GH"] "MethodHandler")
+                [ mkType paramType
+                , mkType resultType
+                ]
+            ]
+        )
+    , Hs.CdValueDef Hs.DfValue
+        { name
+        , params = [Hs.PVar "_"]
+        , value = egName ["GH"] "methodUnimplemented"
+        }
+    ]
+
+mkMethodName typeName methodName =
+    Name.valueName (Name.mkSub typeName methodName)
 
 emitMarshalField :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
 emitMarshalField name (C.HereField _) =

@@ -1,8 +1,49 @@
+# 0.14.0.0
+
+- Significant performance improvements.
+- The `Data.Mutable` module and its `Thaw` class have been replaced
+  by `Capnp.Mutability` and a class `MaybeMutable`, which serves the
+  same function but is easier to work with. Notably, `thaw` and `freeze
+  can now be used on `Raw` values directly.
+- `Mutability` is now defined in `Capnp.Mutability` instead of
+  `Capnp.Message`, though the latter still re-exports it for
+  compatibility (for now).
+- The parameters to the `Raw` type constructor have been flipped; the
+  new ordering makes it possible to implement thaw/freeze on `Raw a`
+  - The `Untyped` type family has seen similar treatment.
+- HasMessage and MessageDefault are now defined on a type of kind
+  `* -> Mutability`, which keeps the mutability out of constraints.
+  - This has the unfortunate side-effect of making type inference
+    for these classes not work very well :(. Hopefully a better
+    solution will be found in the future.
+
+# 0.13.0.0
+
+This release drops support for the old API. To upgrade to the new API,
+Users should first upgrade to the latest 0.12.x version, switch their
+code to use the new API, and then upgrade to this version.
+
+# 0.12.1.0
+
+This release backports some fixes and minor features in the new API.
+
+# 0.12.0.0
+
+* The 0.12.x series is the last major version that will support the old
+  API; the next release will not generate code for the old API, and some
+  low level interfaces will be removed. See
+  <https://zenhack.net/2021/07/30/new-haskell-capnp-release-reworked-apis.html>
+  for details.
+* For the new API, there is a new `HasTypeId` class, with instances
+  defined for all generated types.
+* The new API now supports implementing RPC servers. `Capnp.Tutorial`
+  discusses this, and the examples have been updated to use the new
+  API.
 
 # 0.11.0.0
 
 * This release introduces some experimental new APIs; see the blog post
-  for details (TODO: write blog post and link to it).
+  for details: <https://zenhack.net/2021/07/30/new-haskell-capnp-release-reworked-apis.html>
   * The new APIs include support for RPC pipelining, which is not
     possible with the old APIs.
 * The traversal limit is tracked at a coarser granularity. This results

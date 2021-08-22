@@ -205,6 +205,7 @@ instance Format Exp where
         ]
     format (EBind x f) = PP.parens (format x <> " >>= " <> format f)
     format (ETup es) = PP.tupled (map format es)
+    format (EList es) = PP.list (map format es)
     format (ECase ex arms) = vcat
         [ hcat [ "case ", format ex, " of"]
         , indent $ vcat
@@ -232,6 +233,8 @@ instance Format Exp where
             [ hcat [ format name, " = ", format value ]
             | (name, value) <- updates
             ]
+    format (ETypeApp e ts) =
+        hcat ("(": format e : [ " @(" <> format t <> ")" | t <- ts ] ++ [")"])
     format (ELabel name) = "#" <> format name
 
 instance Format Do where

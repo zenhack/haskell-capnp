@@ -4,10 +4,11 @@ Description: Instances of Arbitrary for various types.
 
 In particular, stuff from:
 
-* "Capnp.Untyped.Pure"
-* "Capnp.Gen.Capnp.Schema.Pure"
+* "Capnp.New.Basics"
+* "Capnp.Gen.Capnp.Schema.New"
 -}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE RecordWildCards       #-}
 module Instances () where
 
@@ -18,16 +19,18 @@ import Test.QuickCheck.Instances ()
 
 import qualified Data.Vector as V
 
-import Capnp.Gen.Capnp.Schema.Pure
+import Capnp.New (Which)
 
-import qualified Capnp.Untyped.Pure as PU
+import Capnp.Gen.Capnp.Schema.New
+
+import qualified Capnp.New.Basics as B
 
 -- Generate an arbitrary "unknown" tag, i.e. one with a value unassigned
 -- by the schema. The parameter is the number of tags assigned by the schema.
 arbitraryTag :: Word16 -> Gen Word16
 arbitraryTag numTags = max numTags <$> arbitrary
 
-instance Arbitrary Node where
+instance Arbitrary (Parsed Node) where
     shrink = genericShrink
     arbitrary = do
         id <- arbitrary
@@ -41,7 +44,7 @@ instance Arbitrary Node where
         union' <- arbitrary
         pure Node{..}
 
-instance Arbitrary Node'SourceInfo where
+instance Arbitrary (Parsed Node'SourceInfo) where
     shrink = genericShrink
     arbitrary = do
         id <- arbitrary
@@ -49,11 +52,11 @@ instance Arbitrary Node'SourceInfo where
         members <- arbitrarySmallerVec
         pure Node'SourceInfo{..}
 
-instance Arbitrary Node'SourceInfo'Member where
+instance Arbitrary (Parsed Node'SourceInfo'Member) where
     shrink = genericShrink
     arbitrary = Node'SourceInfo'Member <$> arbitrary
 
-instance Arbitrary Node' where
+instance Arbitrary (Parsed (Which Node)) where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Node'file
@@ -65,11 +68,11 @@ instance Arbitrary Node' where
         , Node'unknown' <$> arbitraryTag 6
         ]
 
-instance Arbitrary Node'enum where
+instance Arbitrary (Parsed Node'enum) where
     shrink = genericShrink
     arbitrary = Node'enum' <$> arbitrarySmallerVec
 
-instance Arbitrary Node'struct where
+instance Arbitrary (Parsed Node'struct) where
     shrink = genericShrink
     arbitrary = do
         dataWordCount <- arbitrary
@@ -81,15 +84,15 @@ instance Arbitrary Node'struct where
         fields <- arbitrarySmallerVec
         pure Node'struct'{..}
 
-instance Arbitrary Node'interface where
+instance Arbitrary (Parsed Node'interface) where
     shrink = genericShrink
     arbitrary = Node'interface' <$> arbitrarySmallerVec <*> arbitrarySmallerVec
 
-instance Arbitrary Node'const where
+instance Arbitrary (Parsed Node'const) where
     shrink = genericShrink
     arbitrary = Node'const' <$> arbitrary <*> arbitrary
 
-instance Arbitrary Node'annotation where
+instance Arbitrary (Parsed Node'annotation) where
     shrink = genericShrink
     arbitrary = do
         type_ <- arbitrary
@@ -107,13 +110,13 @@ instance Arbitrary Node'annotation where
         targetsAnnotation <- arbitrary
         pure Node'annotation'{..}
 
-instance Arbitrary Node'NestedNode where
+instance Arbitrary (Parsed Node'NestedNode) where
     shrink = genericShrink
     arbitrary = Node'NestedNode
         <$> arbitrary
         <*> arbitrary
 
-instance Arbitrary Field where
+instance Arbitrary (Parsed Field) where
     shrink = genericShrink
     arbitrary = do
         name <- arbitrary
@@ -124,14 +127,14 @@ instance Arbitrary Field where
         ordinal <- arbitrary
         pure Field{..}
 
-instance Arbitrary Field' where
+instance Arbitrary (Parsed (Which Field)) where
     shrink = genericShrink
     arbitrary = oneof
         [ Field'slot <$> arbitrary
         , Field'group <$> arbitrary
         ]
 
-instance Arbitrary Field'slot where
+instance Arbitrary (Parsed Field'slot) where
     shrink = genericShrink
     arbitrary = do
         offset <- arbitrary
@@ -140,31 +143,35 @@ instance Arbitrary Field'slot where
         hadExplicitDefault <- arbitrary
         pure Field'slot'{..}
 
-instance Arbitrary Field'group where
+instance Arbitrary (Parsed Field'group) where
     shrink = genericShrink
     arbitrary = Field'group' <$> arbitrary
 
-instance Arbitrary Field'ordinal where
+instance Arbitrary (Parsed Field'ordinal) where
+    shrink = genericShrink
+    arbitrary = Field'ordinal' <$> arbitrary
+
+instance Arbitrary (Parsed (Which Field'ordinal)) where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Field'ordinal'implicit
         , Field'ordinal'explicit <$> arbitrary
         ]
 
-instance Arbitrary Enumerant where
+instance Arbitrary (Parsed Enumerant) where
     shrink = genericShrink
     arbitrary = Enumerant
         <$> arbitrary
         <*> arbitrary
         <*> arbitrarySmallerVec
 
-instance Arbitrary Superclass where
+instance Arbitrary (Parsed Superclass) where
     shrink = genericShrink
     arbitrary = Superclass
         <$> arbitrary
         <*> arbitrary
 
-instance Arbitrary Method where
+instance Arbitrary (Parsed Method) where
     shrink = genericShrink
     arbitrary = do
         name <- arbitrary
@@ -177,28 +184,28 @@ instance Arbitrary Method where
         annotations <- arbitrary
         pure Method{..}
 
-instance Arbitrary CapnpVersion where
+instance Arbitrary (Parsed CapnpVersion) where
     shrink = genericShrink
     arbitrary = CapnpVersion
         <$> arbitrary
         <*> arbitrary
         <*> arbitrary
 
-instance Arbitrary Node'Parameter where
+instance Arbitrary (Parsed Node'Parameter) where
     shrink = genericShrink
     arbitrary = Node'Parameter <$> arbitrary
 
-instance Arbitrary Brand where
+instance Arbitrary (Parsed Brand) where
     shrink = genericShrink
     arbitrary = Brand <$> arbitrarySmallerVec
 
-instance Arbitrary Brand'Scope where
+instance Arbitrary (Parsed Brand'Scope) where
     shrink = genericShrink
     arbitrary = Brand'Scope
         <$> arbitrary
         <*> arbitrary
 
-instance Arbitrary Brand'Scope' where
+instance Arbitrary (Parsed (Which Brand'Scope)) where
     shrink = genericShrink
     arbitrary = oneof
         [ Brand'Scope'bind <$> arbitrarySmallerVec
@@ -206,7 +213,11 @@ instance Arbitrary Brand'Scope' where
         , Brand'Scope'unknown' <$> arbitraryTag 2
         ]
 
-instance Arbitrary Brand'Binding where
+instance Arbitrary (Parsed Brand'Binding) where
+    shrink = genericShrink
+    arbitrary = Brand'Binding <$> arbitrary
+
+instance Arbitrary (Parsed (Which Brand'Binding)) where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Brand'Binding'unbound
@@ -214,7 +225,11 @@ instance Arbitrary Brand'Binding where
         , Brand'Binding'unknown' <$> arbitraryTag 2
         ]
 
-instance Arbitrary Value where
+instance Arbitrary (Parsed Value) where
+    shrink = genericShrink
+    arbitrary = Value <$> arbitrary
+
+instance Arbitrary (Parsed (Which Value)) where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Value'void
@@ -239,7 +254,7 @@ instance Arbitrary Value where
         , Value'unknown' <$> arbitraryTag 19
         ]
 
-instance Arbitrary Annotation where
+instance Arbitrary (Parsed Annotation) where
     shrink = genericShrink
     arbitrary = Annotation
         <$> arbitrary
@@ -260,7 +275,11 @@ instance Arbitrary ElementSize where
         , ElementSize'unknown' <$> arbitraryTag 8
         ]
 
-instance Arbitrary Type'anyPointer where
+instance Arbitrary (Parsed Type'anyPointer) where
+    shrink = genericShrink
+    arbitrary = Type'anyPointer' <$> arbitrary
+
+instance Arbitrary (Parsed (Which Type'anyPointer)) where
     shrink = genericShrink
     arbitrary = oneof
         [ Type'anyPointer'unconstrained <$> arbitrary
@@ -268,7 +287,11 @@ instance Arbitrary Type'anyPointer where
         , Type'anyPointer'implicitMethodParameter <$> arbitrary
         ]
 
-instance Arbitrary Type'anyPointer'unconstrained where
+instance Arbitrary (Parsed Type'anyPointer'unconstrained) where
+    shrink = genericShrink
+    arbitrary = Type'anyPointer'unconstrained' <$> arbitrary
+
+instance Arbitrary (Parsed (Which Type'anyPointer'unconstrained)) where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Type'anyPointer'unconstrained'anyKind
@@ -277,17 +300,21 @@ instance Arbitrary Type'anyPointer'unconstrained where
         , pure Type'anyPointer'unconstrained'capability
         ]
 
-instance Arbitrary Type'anyPointer'parameter where
+instance Arbitrary (Parsed Type'anyPointer'parameter) where
     shrink = genericShrink
     arbitrary =
         Type'anyPointer'parameter' <$> arbitrary <*> arbitrary
 
-instance Arbitrary Type'anyPointer'implicitMethodParameter where
+instance Arbitrary (Parsed Type'anyPointer'implicitMethodParameter) where
     shrink = genericShrink
     arbitrary =
         Type'anyPointer'implicitMethodParameter' <$> arbitrary
 
-instance Arbitrary Type where
+instance Arbitrary (Parsed Type) where
+    shrink = genericShrink
+    arbitrary = Type <$> arbitrary
+
+instance Arbitrary (Parsed (Which Type)) where
     shrink = genericShrink
     arbitrary = oneof
         [ pure Type'void
@@ -312,23 +339,23 @@ instance Arbitrary Type where
         , Type'unknown' <$> arbitraryTag 21
         ]
 
-instance Arbitrary Type'list where
+instance Arbitrary (Parsed Type'list) where
     shrink = genericShrink
     arbitrary = Type'list' <$> arbitrary
 
-instance Arbitrary Type'enum where
+instance Arbitrary (Parsed Type'enum) where
     shrink = genericShrink
     arbitrary = Type'enum' <$> arbitrary <*> arbitrary
 
-instance Arbitrary Type'struct where
+instance Arbitrary (Parsed Type'struct) where
     shrink = genericShrink
     arbitrary = Type'struct' <$> arbitrary <*> arbitrary
 
-instance Arbitrary Type'interface where
+instance Arbitrary (Parsed Type'interface) where
     shrink = genericShrink
     arbitrary = Type'interface' <$> arbitrary <*> arbitrary
 
-instance Arbitrary CodeGeneratorRequest where
+instance Arbitrary (Parsed CodeGeneratorRequest) where
     shrink = genericShrink
     arbitrary = do
         capnpVersion <- arbitrary
@@ -337,22 +364,18 @@ instance Arbitrary CodeGeneratorRequest where
         sourceInfo <- arbitrarySmallerVec
         pure CodeGeneratorRequest{..}
 
-instance Arbitrary CodeGeneratorRequest'RequestedFile where
+instance Arbitrary (Parsed CodeGeneratorRequest'RequestedFile) where
     shrink = genericShrink
     arbitrary = CodeGeneratorRequest'RequestedFile
         <$> arbitrary
         <*> arbitrary
         <*> arbitrary
 
-instance Arbitrary CodeGeneratorRequest'RequestedFile'Import where
+instance Arbitrary (Parsed CodeGeneratorRequest'RequestedFile'Import) where
     shrink = genericShrink
     arbitrary = CodeGeneratorRequest'RequestedFile'Import
         <$> arbitrary
         <*> arbitrary
-
-instance Arbitrary a => Arbitrary (PU.Slice a) where
-    shrink = genericShrink
-    arbitrary = PU.Slice <$> arbitrarySmallerVec
 
 arbitrarySmallerVec :: Arbitrary a => Gen (V.Vector a)
 arbitrarySmallerVec = sized $ \size -> do
@@ -362,32 +385,32 @@ arbitrarySmallerVec = sized $ \size -> do
     let gen = resize (size `div` V.length vec) arbitrary
     traverse (const gen) vec
 
-instance Arbitrary PU.Struct where
+instance Arbitrary (Parsed B.AnyStruct) where
     shrink = genericShrink
-    arbitrary = sized $ \_ -> PU.Struct
-        <$> arbitrary
-        <*> arbitrary
+    arbitrary = sized $ \_ -> B.Struct
+        <$> arbitrarySmallerVec
+        <*> arbitrarySmallerVec
 
-instance Arbitrary PU.List where
+instance Arbitrary (Parsed B.AnyList) where
     shrink = genericShrink
     arbitrary = oneof
-        [ PU.List0 <$> arbitrarySmallerVec
-        , PU.List1 <$> arbitrarySmallerVec
-        , PU.List8 <$> arbitrarySmallerVec
-        , PU.List16 <$> arbitrarySmallerVec
-        , PU.List32 <$> arbitrarySmallerVec
-        , PU.List64 <$> arbitrarySmallerVec
-        , PU.ListPtr <$> arbitrarySmallerVec
-        , PU.ListStruct <$> arbitrarySmallerVec
+        [ B.List0 <$> arbitrarySmallerVec
+        , B.List1 <$> arbitrarySmallerVec
+        , B.List8 <$> arbitrarySmallerVec
+        , B.List16 <$> arbitrarySmallerVec
+        , B.List32 <$> arbitrarySmallerVec
+        , B.List64 <$> arbitrarySmallerVec
+        , B.ListPtr <$> arbitrarySmallerVec
+        , B.ListStruct <$> arbitrarySmallerVec
         ]
 
-instance Arbitrary PU.Ptr where
-    shrink (PU.PtrStruct s) = PU.PtrStruct <$> shrink s
-    shrink (PU.PtrList   l) = PU.PtrList   <$> shrink l
-    shrink (PU.PtrCap    _) = []
+instance Arbitrary (Parsed B.AnyPointer) where
+    shrink (B.PtrStruct s) = B.PtrStruct <$> shrink s
+    shrink (B.PtrList   l) = B.PtrList   <$> shrink l
+    shrink (B.PtrCap    _) = []
     arbitrary = oneof
-        [ PU.PtrStruct <$> arbitrary
-        , PU.PtrList <$> arbitrary
+        [ B.PtrStruct <$> arbitrary
+        , B.PtrList <$> arbitrary
         -- We never generate capabilites, as we can't marshal Clients back in,
         -- so many of the invariants we check don't hold for caps.
         ]

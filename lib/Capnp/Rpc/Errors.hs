@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-|
 Module: Capnp.Rpc.Errors
@@ -26,42 +27,42 @@ import Data.Text    (Text)
 
 import qualified Control.Exception.Safe as E
 
-import Capnp.Gen.Capnp.Rpc.Pure (Exception(..), Exception'Type(..))
+import Capnp.Gen.Capnp.Rpc.New
 
 -- | Construct an exception with a type field of failed and the
 -- given text as its reason.
-eFailed :: Text -> Exception
+eFailed :: Text -> Parsed Exception
 eFailed reason = def
     { type_ = Exception'Type'failed
     , reason = reason
     }
 
 -- | An exception with type = disconnected
-eDisconnected :: Exception
+eDisconnected :: Parsed Exception
 eDisconnected = def
     { type_ = Exception'Type'disconnected
     , reason = "Disconnected"
     }
 
 -- | An exception indicating an unimplemented method.
-eMethodUnimplemented :: Exception
+eMethodUnimplemented :: Parsed Exception
 eMethodUnimplemented =
     eUnimplemented "Method unimplemented"
 
 -- | An @unimplemented@ exception with a custom reason message.
-eUnimplemented :: Text -> Exception
+eUnimplemented :: Text -> Parsed Exception
 eUnimplemented reason = def
     { type_ = Exception'Type'unimplemented
     , reason = reason
     }
 
-instance E.Exception Exception
+instance E.Exception (Parsed Exception)
 
 -- | @'wrapException' debugMode e@ converts an arbitrary haskell exception
 -- @e@ into an rpc exception, which can be communicated to a remote vat.
 -- If @debugMode@ is true, the returned exception's reason field will include
 -- the text of @show e@.
-wrapException :: Bool -> E.SomeException -> Exception
+wrapException :: Bool -> E.SomeException -> Parsed Exception
 wrapException debugMode e = fromMaybe
     def { type_ = Exception'Type'failed
         , reason =

@@ -6,10 +6,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-dodgy-exports #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
@@ -24,13 +27,14 @@ import qualified GHC.OverloadedLabels as OL
 import qualified Capnp.GenHelpers.New as GH
 import qualified Capnp.New.Classes as C
 import qualified GHC.Generics as Generics
-import qualified Capnp.GenHelpers.ReExports.Data.ByteString as BS
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_
 import Prelude ((<$>), (<*>), (>>=))
 data Value 
 type instance (R.ReprFor Value) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value) where
+    typeId  = 11815888814287216003
 instance (C.TypedStruct Value) where
     numStructWords  = 2
     numStructPtrs  = 1
@@ -56,14 +60,14 @@ instance (C.Marshal Value (C.Parsed Value)) where
         )
 instance (GH.HasUnion Value) where
     unionField  = (GH.dataField 0 0 16 0)
-    data RawWhich mut_ Value
-        = RW_Value'null (R.Raw mut_ ())
-        | RW_Value'boolean (R.Raw mut_ Std_.Bool)
-        | RW_Value'number (R.Raw mut_ Std_.Double)
-        | RW_Value'string (R.Raw mut_ Basics.Text)
-        | RW_Value'array (R.Raw mut_ (R.List Value))
-        | RW_Value'object (R.Raw mut_ (R.List Value'Field))
-        | RW_Value'call (R.Raw mut_ Value'Call)
+    data RawWhich Value mut_
+        = RW_Value'null (R.Raw () mut_)
+        | RW_Value'boolean (R.Raw Std_.Bool mut_)
+        | RW_Value'number (R.Raw Std_.Double mut_)
+        | RW_Value'string (R.Raw Basics.Text mut_)
+        | RW_Value'array (R.Raw (R.List Value) mut_)
+        | RW_Value'object (R.Raw (R.List Value'Field) mut_)
+        | RW_Value'call (R.Raw Value'Call mut_)
         | RW_Value'unknown' Std_.Word16
     internalWhich tag_ struct_ = case tag_ of
         0 ->
@@ -150,6 +154,8 @@ instance (C.Marshal (GH.Which Value) (C.Parsed (GH.Which Value))) where
             (GH.encodeField GH.unionField tag_ (GH.unionStruct raw_))
 data Value'Field 
 type instance (R.ReprFor Value'Field) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value'Field) where
+    typeId  = 16361620220719570399
 instance (C.TypedStruct Value'Field) where
     numStructWords  = 0
     numStructPtrs  = 2
@@ -183,6 +189,8 @@ instance (GH.HasField "value" GH.Slot Value'Field Value) where
     fieldByLabel  = (GH.ptrField 1)
 data Value'Call 
 type instance (R.ReprFor Value'Call) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId Value'Call) where
+    typeId  = 11590566612201717064
 instance (C.TypedStruct Value'Call) where
     numStructWords  = 0
     numStructPtrs  = 2
@@ -216,6 +224,8 @@ instance (GH.HasField "params" GH.Slot Value'Call (R.List Value)) where
     fieldByLabel  = (GH.ptrField 1)
 data FlattenOptions 
 type instance (R.ReprFor FlattenOptions) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId FlattenOptions) where
+    typeId  = 14186078402951440993
 instance (C.TypedStruct FlattenOptions) where
     numStructWords  = 0
     numStructPtrs  = 1
@@ -244,6 +254,8 @@ instance (GH.HasField "prefix" GH.Slot FlattenOptions Basics.Text) where
     fieldByLabel  = (GH.ptrField 0)
 data DiscriminatorOptions 
 type instance (R.ReprFor DiscriminatorOptions) = (R.Ptr (Std_.Just R.Struct))
+instance (C.HasTypeId DiscriminatorOptions) where
+    typeId  = 14049192395069608729
 instance (C.TypedStruct DiscriminatorOptions) where
     numStructWords  = 0
     numStructPtrs  = 2
