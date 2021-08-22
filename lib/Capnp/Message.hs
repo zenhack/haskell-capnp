@@ -612,10 +612,10 @@ freezeMsg freezeSeg freezeCaps msg@(MsgMut MutMsg{mutCaps}) = do
 
 -- | @'checkIndex' index length@ checkes that 'index' is in the range
 -- [0, length), throwing a 'BoundsError' if not.
-checkIndex :: (Integral a, MonadThrow m) => a -> a -> m ()
+checkIndex :: MonadThrow m => Int -> Int -> m ()
 checkIndex i len =
     when (i < 0 || i >= len) $
         throwM E.BoundsError
-            { E.index = fromIntegral i
-            , E.maxIndex = fromIntegral len
+            { E.index = i
+            , E.maxIndex = len
             }
