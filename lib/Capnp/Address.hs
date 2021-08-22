@@ -15,10 +15,12 @@ module Capnp.Address
     , OffsetError(..)
     , computeOffset
     , pointerFrom
+    , resolveOffset
     )
   where
 
 import Data.Bits
+import Data.Int
 import Data.Word
 
 import Capnp.Bits (WordCount)
@@ -85,3 +87,8 @@ pointerFrom ptrAddr targetAddr (P.StructPtr _ dataSz ptrSz) =
 pointerFrom ptrAddr targetAddr (P.ListPtr _ eltSpec) =
     flip fmap (computeOffset ptrAddr targetAddr) $
         \off -> P.ListPtr (fromIntegral off) eltSpec
+
+-- | Add an offset to a WordAddr.
+resolveOffset :: WordAddr -> Int32 -> WordAddr
+resolveOffset addr@WordAt{..} off =
+    addr { wordIndex = wordIndex + fromIntegral off + 1 }

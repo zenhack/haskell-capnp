@@ -119,7 +119,8 @@ import Data.Kind                 (Type)
 import qualified Data.ByteString     as BS
 import qualified Language.Haskell.TH as TH
 
-import Capnp.Address        (OffsetError(..), WordAddr(..), pointerFrom)
+import Capnp.Address
+    (OffsetError(..), WordAddr(..), pointerFrom, resolveOffset)
 import Capnp.Bits
     ( BitCount(..)
     , ByteCount(..)
@@ -851,8 +852,6 @@ get ptr@M.WordPtr{pMessage, pAddr} = do
                                 show ptr
 
   where
-    resolveOffset addr@WordAt{..} off =
-        addr { wordIndex = wordIndex + fromIntegral off + 1 }
     getList ptr@M.WordPtr{pAddr=addr@WordAt{wordIndex}} eltSpec = PtrList <$>
         case eltSpec of
             P.EltNormal sz len -> pure $ case sz of
