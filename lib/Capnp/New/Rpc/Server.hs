@@ -44,7 +44,7 @@ import qualified Capnp.Untyped           as U
 import           Control.Exception.Safe  (withException)
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Function           ((&))
-import           Data.Kind               (Constraint)
+import           Data.Kind               (Constraint, Type)
 import qualified Data.Map.Strict         as M
 import           Data.Maybe              (fromMaybe)
 import           Data.Proxy              (Proxy(..))
@@ -92,7 +92,7 @@ class (R.IsCap i, C.HasTypeId i) => Export i where
     -- if @'Server' i s@ is satisfied, @s@ is a server for interface @i@.
     -- The code generator generates a type class for each interface, and
     -- this will aways be an alias for that type class.
-    type Server i :: * -> Constraint
+    type Server i :: Type -> Constraint
 
     -- | Convert the server to a 'MethodHandlerTree' populated with appropriate
     -- 'MethodHandler's for the interface. This is really only exported for use

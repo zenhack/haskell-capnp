@@ -180,7 +180,7 @@ data StructList mut = StructList
 -- | A list of values with representation 'r' in a message.
 newtype ListOf r mut = ListOf (ListRepOf r mut)
 
-type family ListRepOf (r :: Repr) :: Mutability -> * where
+type family ListRepOf (r :: Repr) :: Mutability -> Type where
     ListRepOf ('Ptr ('Just 'Struct)) = StructList
     ListRepOf r = NormalList
 
@@ -436,16 +436,6 @@ newtype IgnoreMut a (mut :: Mutability) = IgnoreMut a
 
 -- | Wrapper for use with 'Untyped'; see docs for 'Untyped'.
 newtype MaybePtr (mut :: Mutability) = MaybePtr (Maybe (Ptr mut))
-
-instance MaybeMutable MaybePtr where
-    thaw         (MaybePtr p) = MaybePtr <$> traverse thaw p
-    freeze       (MaybePtr p) = MaybePtr <$> traverse freeze p
-    unsafeThaw   (MaybePtr p) = MaybePtr <$> traverse unsafeThaw p
-    unsafeFreeze (MaybePtr p) = MaybePtr <$> traverse unsafeFreeze p
-
-instance MaybeMutable (IgnoreMut a) where
-    thaw = pure . coerce
-    freeze = pure . coerce
 
 -- | Normalizes types returned by 'Untyped'; see docs for 'Untyped'.
 type family Unwrapped a where
@@ -714,7 +704,7 @@ instance TraverseMsg StructList where
 -------------------------------------------------------------------------------
 
 -- | Types whose storage is owned by a message..
-class HasMessage (f :: Mutability -> *) where
+class HasMessage (f :: Mutability -> Type) where
     -- | Get the message in which the value is stored.
     message :: Unwrapped (f mut) -> M.Message mut
 
@@ -1580,3 +1570,13 @@ do
           , "composite list"
           )
         ]
+
+instance MaybeMutable (IgnoreMut a) where
+    thaw = pure . coerce
+    freeze = pure . coerce
+
+instance MaybeMutable MaybePtr where
+    thaw         (MaybePtr p) = MaybePtr <$> traverse thaw p
+    freeze       (MaybePtr p) = MaybePtr <$> traverse freeze p
+    unsafeThaw   (MaybePtr p) = MaybePtr <$> traverse unsafeThaw p
+    unsafeFreeze (MaybePtr p) = MaybePtr <$> traverse unsafeFreeze p

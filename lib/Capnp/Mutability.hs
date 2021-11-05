@@ -20,7 +20,7 @@ import Data.Kind               (Type)
 data Mutability = Const | Mut Type
 
 -- | 'MaybeMutable' relates mutable and immutable versions of a type.
-class MaybeMutable (f :: Mutability -> *) where
+class MaybeMutable (f :: Mutability -> Type) where
     -- | Convert an immutable value to a mutable one.
     thaw :: (PrimMonad m, PrimState m ~ s) => f 'Const -> m (f ('Mut s))
 
