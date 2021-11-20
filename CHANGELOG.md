@@ -1,3 +1,10 @@
+# 0.15.0.0
+
+- There is now a per-connection limit on the total size of incoming
+  `Call` messages that are being serviced, which can be used to
+  limit memory usage and provide backpressure. `ConnConfig` has
+  a new `maxCallWords` field to configure this.
+
 # 0.14.0.0
 
 - Significant performance improvements.

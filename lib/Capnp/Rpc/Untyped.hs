@@ -61,6 +61,7 @@ import Control.Monad.STM.Class
 import Control.Monad.Trans.Class
 import Data.Word
 
+import Capnp.Bits               (WordCount, bytesToWordsFloor)
 import Capnp.New.Accessors
 import Control.Concurrent       (threadDelay)
 import Control.Concurrent.Async (concurrently_, race_)
@@ -207,32 +208,38 @@ data LiveState
     | Dead
 
 data Conn' = Conn'
-    { sendQ            :: TBQueue (Message 'Const)
-    , recvQ            :: TBQueue (Message 'Const)
+    { sendQ              :: TBQueue (Message 'Const)
+    , recvQ              :: TBQueue (Message 'Const)
     -- queues of messages to send and receive; each of these has a dedicated
     -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
 
-    , supervisor       :: Supervisor
+    , availableCallWords :: TVar WordCount
+    -- Semaphore used to limit the memory that can be used by in-progress
+    -- calls originating from this connection. We don't just use a TSem
+    -- because waitTSem doesn't let us wait for more than one token with a
+    -- single call.
+
+    , supervisor         :: Supervisor
     -- Supervisor managing the lifetimes of threads bound to this connection.
 
-    , questionIdPool   :: IdPool
-    , exportIdPool     :: IdPool
+    , questionIdPool     :: IdPool
+    , exportIdPool       :: IdPool
     -- Pools of identifiers for new questions and exports
 
-    , questions        :: M.Map QAId EntryQA
-    , answers          :: M.Map QAId EntryQA
-    , exports          :: M.Map IEId EntryE
-    , imports          :: M.Map IEId EntryI
+    , questions          :: M.Map QAId EntryQA
+    , answers            :: M.Map QAId EntryQA
+    , exports            :: M.Map IEId EntryE
+    , imports            :: M.Map IEId EntryI
 
-    , embargos         :: M.Map EmbargoId (Fulfiller ())
+    , embargos           :: M.Map EmbargoId (Fulfiller ())
     -- Outstanding embargos. When we receive a 'Disembargo' message with its
     -- context field set to receiverLoopback, we look up the embargo id in
     -- this table, and fulfill the promise.
 
-    , pendingCallbacks :: TQueue (IO ())
+    , pendingCallbacks   :: TQueue (IO ())
     -- See Note [callbacks]
 
-    , bootstrap        :: Maybe Client
+    , bootstrap          :: Maybe Client
     -- The capability which should be served as this connection's bootstrap
     -- interface (if any).
     }
@@ -257,6 +264,14 @@ data ConnConfig = ConnConfig
     -- ^ The maximum number of objects which may be exported on this connection.
     --
     -- Defaults to 8192.
+
+    , maxCallWords  :: !WordCount
+    -- ^ The maximum total size of outstanding call messages that will be
+    -- accepted; if this limit is reached, the implementation will not read
+    -- more messages from the connection until some calls have completed
+    -- and freed up enough space.
+    --
+    -- Defaults to 32MiB in words.
 
     , debugMode     :: !Bool
     -- ^ In debug mode, errors reported by the RPC system to its peers will
@@ -289,6 +304,7 @@ instance Default ConnConfig where
     def = ConnConfig
         { maxQuestions   = 128
         , maxExports     = 8192
+        , maxCallWords   = bytesToWordsFloor $ 32 * 1024 * 1024
         , debugMode      = False
         , getBootstrap   = \_ -> pure Nothing
         , withBootstrap  = Nothing
@@ -380,6 +396,7 @@ handleConn
     cfg@ConnConfig
         { maxQuestions
         , maxExports
+        , maxCallWords
         , withBootstrap
         , debugMode
         }
@@ -399,6 +416,8 @@ handleConn
             sendQ <- newTBQueue $ fromIntegral maxQuestions
             recvQ <- newTBQueue $ fromIntegral maxQuestions
 
+            availableCallWords <- newTVar maxCallWords
+
             questions <- M.new
             answers <- M.new
             exports <- M.new
@@ -413,6 +432,7 @@ handleConn
                     , exportIdPool
                     , recvQ
                     , sendQ
+                    , availableCallWords
                     , questions
                     , answers
                     , exports
@@ -512,8 +532,8 @@ freeId (IdPool pool) id = modifyTVar' pool (id:)
 -- | An entry in our questions or answers table.
 data EntryQA
     -- | An entry for which we have neither sent/received a finish, nor
-    -- a return. Contains two sets of callbacks, to invoke on each type
-    -- of message.
+    -- a return. Contains two sets of callbacks, one to invoke on each
+    -- type of message.
     = NewQA
         { onFinish :: SnocList (R.Parsed R.Finish -> STM ())
         , onReturn :: SnocList (Return -> STM ())
@@ -1173,7 +1193,7 @@ coordinator conn@Conn{debugMode} = forever $ atomically $ do
                     parse oldMsg >>= lift . handleUnimplementedMsg conn
                 R.RW_Message'bootstrap bs ->
                     parse bs >>= lift . handleBootstrapMsg conn
-                R.RW_Message'call call ->
+                R.RW_Message'call call -> do
                     handleCallMsg conn call
                 R.RW_Message'return ret -> do
                     ret' <- acceptReturn conn ret
@@ -1267,7 +1287,18 @@ handleBootstrapMsg conn R.Bootstrap{ questionId } = getLive conn >>= \conn' -> d
 
 handleCallMsg :: Conn -> Raw R.Call 'Const -> LimitT STM ()
 handleCallMsg conn callMsg = do
-    conn'@Conn'{exports, answers} <- lift $ getLive conn
+    conn'@Conn'{exports, answers, availableCallWords} <- lift $ getLive conn
+    let capnpMsg = UntypedRaw.message @(Raw R.Call) callMsg
+
+    -- Apply backpressure, by limiting the memory usage of outstanding call
+    -- messages.
+    msgWords <- Message.totalNumWords capnpMsg
+    lift $ do
+        available <- readTVar availableCallWords
+        when (msgWords > available)
+            retry
+        writeTVar availableCallWords $! available - msgWords
+
     questionId <- parseField #questionId callMsg
     R.MessageTarget target <- parseField #target callMsg
     interfaceId <- parseField #interfaceId callMsg
@@ -1283,7 +1314,10 @@ handleCallMsg conn callMsg = do
             conn'
             (QAId questionId)
             NewQA
-                { onReturn = SnocList.empty
+                { onReturn = SnocList.fromList
+                    [ \_ ->
+                        modifyTVar' availableCallWords (msgWords +)
+                    ]
                 , onFinish = SnocList.fromList
                     [ \R.Finish{releaseResultCaps} ->
                         when releaseResultCaps $

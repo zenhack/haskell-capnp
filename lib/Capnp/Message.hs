@@ -49,6 +49,7 @@ module Capnp.Message (
     , getCap
     , getCapTable
     , getWord
+    , totalNumWords
 
     -- * Mutable Messages
     , newMessage
@@ -501,12 +502,18 @@ alloc msg size = do
             -- Not enough space in the current segment; allocate a new one.
             -- the new segment's size should match the total size of existing segments
             -- but `maxSegmentSize` bounds how large it can get.
-            totalAllocation <- sum <$>
-                traverse (getSegment msg >=> numWords) [0..segIndex]
+            totalAllocation <- totalNumWords msg
             ( newSegIndex, _ ) <- newSegment msg (min (max totalAllocation size) maxSegmentSize)
             -- This is guaranteed to succeed, since we just made a segment with
             -- at least size available space:
             fromJust <$> allocInSeg msg newSegIndex size
+
+-- | Return the total number of words in the message, i.e. the sum of
+-- the results of `numWords` on all segments.
+totalNumWords :: MonadReadMessage mut m => Message mut -> m WordCount
+totalNumWords msg = do
+    lastSegIndex <- pred <$> numSegs msg
+    sum <$> traverse (getSegment msg >=> numWords) [0..lastSegIndex]
 
 -- | 'empty' is an empty message, i.e. a minimal message with a null pointer as
 -- its root object.
