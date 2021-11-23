@@ -36,12 +36,13 @@ import qualified Capnp.Message           as M
 import qualified Capnp.New.Classes       as NC
 import           Capnp.New.Rpc.Common    (Client(..), Pipeline(..))
 import qualified Capnp.Repr              as R
-import           Capnp.Rpc.Promise       (newPromise)
+import           Capnp.Rpc.Promise       (Promise, newPromise, wait)
 import qualified Capnp.Rpc.Server        as Server
 import qualified Capnp.Rpc.Untyped       as Rpc
 import           Capnp.TraversalLimit    (evalLimitT)
 import qualified Capnp.Untyped           as U
-import           Control.Monad.Catch     (MonadThrow)
+import           Control.Concurrent.STM  (STM, atomically)
+import           Control.Monad.IO.Class  (MonadIO(..))
 import           Control.Monad.STM.Class (MonadSTM(..))
 import           Data.Word
 import           GHC.OverloadedLabels    (IsLabel(..))
@@ -85,30 +86,37 @@ upcast = coerce
 
 -- | Call a method. Use the provided 'PureBuilder' to construct the parameters.
 callB
-    :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
+    :: (AsClient f, R.IsCap c, R.IsStruct p, MonadIO m)
     => Method c p r
     -> (forall s. PureBuilder s (R.Raw p ('Mut s)))
     -> f c
     -> m (Pipeline r)
-callB method buildRaw c = liftSTM $ do
+callB method buildRaw c = liftIO $ do
     (params :: R.Raw a 'Const) <- R.Raw <$> createPure maxBound (R.fromRaw <$> buildRaw)
     callR method params c
 
 -- | Call a method, supplying the parameters as a 'Raw' struct.
 callR
-    :: (AsClient f, R.IsCap c, R.IsStruct p, MonadSTM m)
+    :: (AsClient f, R.IsCap c, R.IsStruct p, MonadIO m)
     => Method c p r -> R.Raw p 'Const -> f c -> m (Pipeline r)
-callR Method{interfaceId, methodId} (R.Raw arg) c = liftSTM $ do
+callR method arg c = liftIO $ do
+    p <- atomically (startCallR method arg c)
+    Pipeline <$> wait p
+
+startCallR
+    :: (AsClient f, R.IsCap c, R.IsStruct p)
+    => Method c p r -> R.Raw p 'Const -> f c -> STM (Promise Rpc.Pipeline)
+startCallR Method{interfaceId, methodId} (R.Raw arg) c = do
     Client client <- asClient c
     (_, f) <- newPromise
-    Pipeline <$> Rpc.call
+    Rpc.call
         Server.CallInfo
             { interfaceId
             , methodId
             , arguments = Just (U.PtrStruct arg)
             , response = f
             }
-            client
+        client
 
 -- | Call a method, supplying the parmaeters in parsed form.
 callP
@@ -117,11 +125,10 @@ callP
         , R.IsCap c
         , R.IsStruct p
         , NC.Parse p pp
-        , MonadSTM m
-        , MonadThrow m
+        , MonadIO m
         )
     => Method c p r -> pp -> f c -> m (Pipeline r)
-callP method parsed client = do
+callP method parsed client = liftIO $ do
     struct <- createPure maxBound $ do
         msg <- newMessage Nothing
         R.fromRaw <$> NC.encode msg parsed

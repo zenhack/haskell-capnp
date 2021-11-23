@@ -110,7 +110,15 @@ import Capnp.Rpc.Errors
     , wrapException
     )
 import Capnp.Rpc.Promise
-    (Fulfiller, breakOrFulfill, breakPromise, fulfill, newCallback)
+    ( Fulfiller
+    , Promise
+    , breakOrFulfill
+    , breakPromise
+    , fulfill
+    , newCallback
+    , newPromise
+    , newReadyPromise
+    )
 import Capnp.Rpc.Transport  (Transport(recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
@@ -208,10 +216,13 @@ data LiveState
     | Dead
 
 data Conn' = Conn'
-    { sendQ              :: TBQueue (Message 'Const)
+    { sendQ              :: TBQueue (Message 'Const, Fulfiller ())
     , recvQ              :: TBQueue (Message 'Const)
     -- queues of messages to send and receive; each of these has a dedicated
-    -- thread doing the IO (see 'sendLoop' and 'recvLoop'):
+    -- thread doing the IO (see 'sendLoop' and 'recvLoop').
+    --
+    -- The send queue also carries fulfillers, which are fulfilled after the
+    -- message actually hits the transport.
 
     , availableCallWords :: TVar WordCount
     -- Semaphore used to limit the memory that can be used by in-progress
@@ -872,11 +883,11 @@ data Payload = Payload
 -- connection.
 
 -- | Queue a call on a client.
-call :: MonadSTM m => Server.CallInfo -> Client -> m Pipeline
+call :: MonadSTM m => Server.CallInfo -> Client -> m (Promise Pipeline)
 call Server.CallInfo { response } (Client Nothing) = liftSTM $ do
     breakPromise response eMethodUnimplemented
     state <- newTVar $ ReadyPipeline (Left eMethodUnimplemented)
-    pure Pipeline{state, steps = mempty}
+    newReadyPromise Pipeline{state, steps = mempty}
 call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
     (localPipeline, response') <- makeLocalPipeline response
     let info' = info { Server.response = response' }
@@ -887,7 +898,7 @@ call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
                     q info'
                 Nothing ->
                     breakPromise response' eDisconnected
-            pure localPipeline
+            newReadyPromise localPipeline
 
         PromiseClient { pState } -> readTVar pState >>= \case
             Ready { target }  ->
@@ -895,12 +906,12 @@ call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
 
             Embargo { callBuffer } -> do
                 writeTQueue callBuffer info'
-                pure localPipeline
+                newReadyPromise localPipeline
 
             Pending { tmpDest } -> case tmpDest of
                 LocalDest LocalBuffer { callBuffer } -> do
                     writeTQueue callBuffer info'
-                    pure localPipeline
+                    newReadyPromise localPipeline
 
                 RemoteDest AnswerDest { conn, answer } ->
                     callRemote conn info $ AnswerTgt answer
@@ -911,7 +922,7 @@ call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
 
             Error exn -> do
                 breakPromise response' exn
-                pure localPipeline
+                newReadyPromise localPipeline
 
         ImportClient cell -> do
             ImportRef { conn, importId } <- Fin.readCell cell
@@ -933,7 +944,7 @@ makeLocalPipeline f = do
     pure (Pipeline{state, steps = mempty}, f')
 
 -- | Send a call to a remote capability.
-callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM Pipeline
+callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM (Promise Pipeline)
 callRemote
         conn
         Server.CallInfo{ interfaceId, methodId, arguments, response }
@@ -941,13 +952,6 @@ callRemote
     conn'@Conn'{questions} <- getLive conn
     qid <- newQuestion conn'
     payload@Payload{capTable} <- makeOutgoingPayload conn arguments
-    sendCall conn' Call
-        { questionId = qid
-        , target = target
-        , params = payload
-        , interfaceId
-        , methodId
-        }
     -- save these in case the callee sends back releaseParamCaps = True in the return
     -- message:
     let paramCaps = catMaybes $ flip map (V.toList capTable) $ \R.CapDescriptor{union'} -> case union' of
@@ -976,7 +980,18 @@ callRemote
             }
         qid
         questions
-    pure Pipeline { state = rp, steps = mempty }
+    (p, f) <- newPromise
+    f <- newCallback $ \r ->
+        breakOrFulfill f (Pipeline { state = rp, steps = mempty } <$ r)
+    sendCall conn' Call
+        { questionId = qid
+        , target = target
+        , params = payload
+        , interfaceId
+        , methodId
+        }
+        f
+    pure p
 
 -- | Callback to run when a return comes in that corresponds to a call
 -- we sent. Registered in callRemote. The first argument is a list of
@@ -1168,7 +1183,10 @@ flushCallbacks Conn'{pendingCallbacks} =
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn' -> IO ()
 sendLoop transport Conn'{sendQ} =
-    forever $ atomically (readTBQueue sendQ) >>= sendMsg transport
+    forever $ do
+        (msg, f) <- atomically $ readTBQueue sendQ
+        sendMsg transport msg
+        atomically $ fulfill f ()
 
 -- | 'recvLoop' shunts messages from the transport into the receive queue.
 recvLoop :: Transport -> Conn' -> IO ()
@@ -1208,7 +1226,9 @@ coordinator conn@Conn{debugMode} = forever $ atomically $ do
                     parse disembargo >>= lift . handleDisembargoMsg conn
                 _ -> do
                     msg <- parse rpcMsg
-                    lift $ sendPureMsg conn' $ R.Message'unimplemented msg
+                    lift $ do
+                        (_, onSent) <- newPromise
+                        sendPureMsg conn' (R.Message'unimplemented msg) onSent
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
@@ -1415,12 +1435,15 @@ followPtrs (i:is) (Just (UntypedRaw.PtrStruct struct)) =
 followPtrs (_:_) (Just _) =
     throwM $ eFailed "Tried to access pointer field of non-struct."
 
-sendRawMsg :: Conn' -> Message 'Const -> STM ()
-sendRawMsg conn' = writeTBQueue (sendQ conn')
+sendRawMsg :: Conn' -> Message 'Const -> Fulfiller () -> STM ()
+sendRawMsg conn' msg onSent = writeTBQueue (sendQ conn') (msg, onSent)
 
-sendCall :: Conn' -> Call -> STM ()
-sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{content, capTable}} =
-    sendRawMsg conn' =<< createPure defaultLimit (do
+sendCall :: Conn' -> Call -> Fulfiller () -> STM ()
+sendCall
+        conn'
+        Call{questionId, target, interfaceId, methodId, params=Payload{content, capTable}}
+        onSent = do
+    msg <- createPure defaultLimit $ do
         mcontent <- traverse thaw content
         msg <- case mcontent of
             Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr v
@@ -1437,65 +1460,71 @@ sendCall conn' Call{questionId, target, interfaceId, methodId, params=Payload{co
         rpcMsg <- newRoot @R.Message () msg
         setVariant #call rpcMsg call
         pure msg
-    )
+    sendRawMsg conn' msg onSent
 
 sendReturn :: Conn' -> Return -> STM ()
-sendReturn conn' Return{answerId, releaseParamCaps, union'} = case union' of
-    Return'results Payload{content, capTable} ->
-        sendRawMsg conn' =<< createPure defaultLimit (do
-            mcontent <- traverse thaw content
-            msg <- case mcontent of
-                Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr  v
-                Nothing -> Message.newMessage Nothing
-            payload <- new @R.Payload () msg
-            payload & setField #content (Raw mcontent)
-            payload & encodeField #capTable capTable
-            ret <- new @R.Return () msg
-            setVariant #results ret payload
-            ret & encodeField #answerId (qaWord answerId)
-            ret & encodeField #releaseParamCaps releaseParamCaps
-            rpcMsg <- newRoot @R.Message () msg
-            setVariant #return rpcMsg ret
-            pure msg
-        )
-    Return'exception exn ->
-        sendPureMsg conn' $ R.Message'return R.Return
-            { answerId = qaWord answerId
-            , releaseParamCaps
-            , union' = R.Return'exception exn
-            }
-    Return'canceled ->
-        sendPureMsg conn' $ R.Message'return R.Return
-            { answerId = qaWord answerId
-            , releaseParamCaps
-            , union' = R.Return'canceled
-            }
-    Return'resultsSentElsewhere ->
-        sendPureMsg conn' $ R.Message'return R.Return
-            { answerId = qaWord answerId
-            , releaseParamCaps
-            , union' = R.Return'resultsSentElsewhere
-            }
-    Return'takeFromOtherQuestion (QAId qid) ->
-        sendPureMsg conn' $ R.Message'return R.Return
-            { answerId = qaWord answerId
-            , releaseParamCaps
-            , union' = R.Return'takeFromOtherQuestion qid
-            }
-    Return'acceptFromThirdParty ptr ->
-        sendRawMsg conn' =<< createPure defaultLimit (do
-            mptr <- traverse thaw ptr
-            msg <- case mptr of
-                Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr v
-                Nothing -> Message.newMessage Nothing
-            ret <- new @R.Return () msg
-            ret & encodeField #answerId (qaWord answerId)
-            ret & encodeField #releaseParamCaps releaseParamCaps
-            setVariant #acceptFromThirdParty ret (Raw @(Maybe B.AnyPointer) mptr)
-            rpcMsg <- newRoot @R.Message () msg
-            setVariant #return rpcMsg ret
-            pure msg
-        )
+sendReturn conn' Return{answerId, releaseParamCaps, union'} = do
+    (_, onSent) <- newPromise
+    case union' of
+        Return'results Payload{content, capTable} -> do
+            msg <- createPure defaultLimit $ do
+                mcontent <- traverse thaw content
+                msg <- case mcontent of
+                    Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr  v
+                    Nothing -> Message.newMessage Nothing
+                payload <- new @R.Payload () msg
+                payload & setField #content (Raw mcontent)
+                payload & encodeField #capTable capTable
+                ret <- new @R.Return () msg
+                setVariant #results ret payload
+                ret & encodeField #answerId (qaWord answerId)
+                ret & encodeField #releaseParamCaps releaseParamCaps
+                rpcMsg <- newRoot @R.Message () msg
+                setVariant #return rpcMsg ret
+                pure msg
+            sendRawMsg conn' msg onSent
+        Return'exception exn ->
+            sendPureMsg conn' (R.Message'return R.Return
+                { answerId = qaWord answerId
+                , releaseParamCaps
+                , union' = R.Return'exception exn
+                })
+                onSent
+        Return'canceled ->
+            sendPureMsg conn' (R.Message'return R.Return
+                { answerId = qaWord answerId
+                , releaseParamCaps
+                , union' = R.Return'canceled
+                })
+                onSent
+        Return'resultsSentElsewhere ->
+            sendPureMsg conn' (R.Message'return R.Return
+                { answerId = qaWord answerId
+                , releaseParamCaps
+                , union' = R.Return'resultsSentElsewhere
+                })
+                onSent
+        Return'takeFromOtherQuestion (QAId qid) ->
+            sendPureMsg conn' (R.Message'return R.Return
+                { answerId = qaWord answerId
+                , releaseParamCaps
+                , union' = R.Return'takeFromOtherQuestion qid
+                })
+                onSent
+        Return'acceptFromThirdParty ptr -> do
+            msg <- createPure defaultLimit $ do
+                mptr <- traverse thaw ptr
+                msg <- case mptr of
+                    Just v  -> pure $ UntypedRaw.message @UntypedRaw.Ptr v
+                    Nothing -> Message.newMessage Nothing
+                ret <- new @R.Return () msg
+                ret & encodeField #answerId (qaWord answerId)
+                ret & encodeField #releaseParamCaps releaseParamCaps
+                setVariant #acceptFromThirdParty ret (Raw @(Maybe B.AnyPointer) mptr)
+                rpcMsg <- newRoot @R.Message () msg
+                setVariant #return rpcMsg ret
+                pure msg
+            sendRawMsg conn' msg onSent
 
 acceptReturn :: Conn -> Raw R.Return 'Const -> LimitT STM Return
 acceptReturn conn ret = do
@@ -1536,13 +1565,15 @@ handleResolveMsg conn R.Resolve{promiseId, union'} =
                 -- This can happen if we dropped the promise, but the release
                 -- message is still in flight when the resolve message is sent.
                 case union' of
-                    R.Resolve'cap R.CapDescriptor{union' = R.CapDescriptor'receiverHosted importId} ->
+                    R.Resolve'cap R.CapDescriptor{union' = R.CapDescriptor'receiverHosted importId} -> do
+                        (_, onSent) <- newPromise
                         -- Send a release message for the resolved cap, since
                         -- we're not going to use it:
-                        sendPureMsg conn' $ R.Message'release def
+                        sendPureMsg conn' (R.Message'release def
                             { R.id = importId
                             , R.referenceCount = 1
-                            }
+                            })
+                            onSent
                     -- Note [Level 3]: do we need to do something with
                     -- thirdPartyHosted here?
                     _ -> pure ()
@@ -1654,13 +1685,15 @@ handleDisembargoMsg conn d = getLive conn >>= go d
             client <- Fin.readCell cell
             case client of
                 ImportRef {conn=targetConn, importId}
-                    | conn == targetConn ->
-                        sendPureMsg conn' $ R.Message'disembargo R.Disembargo
+                    | conn == targetConn -> do
+                        (_, onSent) <- newPromise
+                        sendPureMsg conn' (R.Message'disembargo R.Disembargo
                             { context = R.Disembargo'context' $
                                 R.Disembargo'context'receiverLoopback embargoId
                             , target = R.MessageTarget $
                                 R.MessageTarget'importedCap (ieWord importId)
-                            }
+                            })
+                            onSent
                 _ ->
                     abortDisembargoClient
         disembargoClient _ = abortDisembargoClient
@@ -1678,8 +1711,11 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                 , info
                 ]
 -- Note [Level 3]
-    go d conn' =
-        sendPureMsg conn' $ R.Message'unimplemented $ R.Message $ R.Message'disembargo d
+    go d conn' = do
+        (_, onSent) <- newPromise
+        sendPureMsg conn'
+            (R.Message'unimplemented $ R.Message $ R.Message'disembargo d)
+            onSent
 
 lookupAbort
     :: (Eq k, Hashable k, Show k)
@@ -1735,9 +1771,10 @@ makeOutgoingPayload conn content = do
     capTable <- genSendableCapTableRaw conn content
     pure Payload { content, capTable }
 
-sendPureMsg :: Conn' -> R.Parsed (Which R.Message) -> STM ()
-sendPureMsg Conn'{sendQ} msg =
-    createPure maxBound (parsedToMsg (R.Message msg)) >>= writeTBQueue sendQ
+sendPureMsg :: Conn' -> R.Parsed (Which R.Message) -> Fulfiller () -> STM ()
+sendPureMsg Conn'{sendQ} msg onSent = do
+    msg <- createPure maxBound (parsedToMsg (R.Message msg))
+    writeTBQueue sendQ (msg, onSent)
 
 -- | Send a finish message, updating connection state and triggering
 -- callbacks as necessary.
@@ -1747,7 +1784,8 @@ finishQuestion conn@Conn'{questions} finish@R.Finish{questionId} = do
     -- the return has also been received:
     subscribeReturn "question" conn questions (QAId questionId) $ \_ ->
         freeQuestion conn (QAId questionId)
-    sendPureMsg conn $ R.Message'finish finish
+    (_, onSent) <- newPromise
+    sendPureMsg conn (R.Message'finish finish) onSent
     updateQAFinish conn questions "question" finish
 
 -- | Send a return message, update the corresponding entry in our
@@ -1865,8 +1903,15 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
                     }
                 }
         pState <- newTVar Pending { tmpDest }
-        sendPureMsg conn' $
-            R.Message'bootstrap (def { R.questionId = qaWord qid } :: R.Parsed R.Bootstrap)
+
+        -- Arguably, we should wait for this promise, since it's analagous
+        -- to a call in terms of operation, but we only send one of these
+        -- per connection, so whatever.
+        (_, onSent) <- newPromise
+        sendPureMsg conn'
+            (R.Message'bootstrap (def { R.questionId = qaWord qid } :: R.Parsed R.Bootstrap))
+            onSent
+
         M.insert
             NewQA
                 { onReturn = SnocList.fromList
@@ -2029,11 +2074,13 @@ disembargo conn@Conn'{embargos} tgt onEcho = do
     callback <- newCallback onEcho
     eid <- newEmbargo conn
     M.insert callback eid embargos
-    sendPureMsg conn $ R.Message'disembargo R.Disembargo
+    (_, onSent) <- newPromise
+    sendPureMsg conn (R.Message'disembargo R.Disembargo
         { target = marshalMsgTarget tgt
         , context = R.Disembargo'context' $
             R.Disembargo'context'senderLoopback (embargoWord eid)
-        }
+        })
+        onSent
 
 -- | Resolve a promised client to the result of a return. See Note [resolveClient]
 --
@@ -2260,12 +2307,14 @@ newImport importId conn promiseState = getLive conn >>= \conn'@Conn'{imports} ->
 -- message with the correct count.
 releaseImport :: IEId -> Conn' -> STM ()
 releaseImport importId conn'@Conn'{imports} = do
+    (_, onSent) <- newPromise
     lookupAbort "imports" conn' imports importId $ \EntryI { remoteRc } ->
-        sendPureMsg conn' $ R.Message'release
+        sendPureMsg conn' (R.Message'release
             R.Release
                 { id = ieWord importId
                 , referenceCount = remoteRc
-                }
+                })
+            onSent
     M.delete importId imports
 
 -- | Create a new client targeting an object in our answers table.
