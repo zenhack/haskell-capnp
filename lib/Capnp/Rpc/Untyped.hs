@@ -217,12 +217,21 @@ data LiveState
 
 data Conn' = Conn'
     { sendQ              :: TBQueue (Message 'Const, Fulfiller ())
-    , recvQ              :: TBQueue (Message 'Const)
-    -- queues of messages to send and receive; each of these has a dedicated
-    -- thread doing the IO (see 'sendLoop' and 'recvLoop').
+    -- queues of messages to send sent to the remote vat; these are actually
+    -- sent by a dedicated thread (see 'sendLoop').
     --
-    -- The send queue also carries fulfillers, which are fulfilled after the
-    -- message actually hits the transport.
+    -- The fulfiller is fulfilled after the message actually hits the transport.
+    --
+    -- The queue mainly exists for the sake of messages that are sent *while
+    -- processing incomming messages*, since we cannot block in those cases,
+    -- but it is used for all message sends to enforce ordering. The fulfiller
+    -- is used by parts of the code (basically just calls) that want to block
+    -- until their message is actually written to the socket.
+    --
+    -- TODO: Don't ever block when inserting into this queue; instead, if it's
+    -- full, throw an exception, aborting the connection if the call was from
+    -- inside the receive loop. We should figure out how to size the queue
+    -- correctly (as a function of maxCallWords?)
 
     , availableCallWords :: TVar WordCount
     -- Semaphore used to limit the memory that can be used by in-progress
@@ -425,7 +434,6 @@ handleConn
             exportIdPool <- newIdPool maxExports
 
             sendQ <- newTBQueue $ fromIntegral maxQuestions
-            recvQ <- newTBQueue $ fromIntegral maxQuestions
 
             availableCallWords <- newTVar maxCallWords
 
@@ -441,7 +449,6 @@ handleConn
                     { supervisor = sup
                     , questionIdPool
                     , exportIdPool
-                    , recvQ
                     , sendQ
                     , availableCallWords
                     , questions
@@ -461,9 +468,8 @@ handleConn
             pure (conn, conn')
     runConn (conn, conn') = do
         result <- try $
-            ( coordinator conn
+            ( coordinator transport conn
                 `concurrently_` sendLoop transport conn'
-                `concurrently_` recvLoop transport conn'
                 `concurrently_` callbacksLoop conn'
             ) `race_`
                 useBootstrap conn conn'
@@ -1188,47 +1194,43 @@ sendLoop transport Conn'{sendQ} =
         sendMsg transport msg
         atomically $ fulfill f ()
 
--- | 'recvLoop' shunts messages from the transport into the receive queue.
-recvLoop :: Transport -> Conn' -> IO ()
-recvLoop transport Conn'{recvQ} =
-    forever $ recvMsg transport >>= atomically . writeTBQueue recvQ
-
 -- | The coordinator processes incoming messages.
-coordinator :: Conn -> IO ()
+coordinator :: Transport -> Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator conn@Conn{debugMode} = forever $ atomically $ do
-    conn'@Conn'{recvQ} <- getLive conn
-    flip catchSTM (throwSTM . makeAbortExn debugMode) $ do
-        capnpMsg <- readTBQueue recvQ
-        evalLimitT defaultLimit $ do
-            rpcMsg <- msgToRaw capnpMsg
-            which <- structWhich rpcMsg
-            case which of
-                R.RW_Message'abort exn ->
-                    parse exn >>= lift . handleAbortMsg conn
-                R.RW_Message'unimplemented oldMsg ->
-                    parse oldMsg >>= lift . handleUnimplementedMsg conn
-                R.RW_Message'bootstrap bs ->
-                    parse bs >>= lift . handleBootstrapMsg conn
-                R.RW_Message'call call -> do
-                    handleCallMsg conn call
-                R.RW_Message'return ret -> do
-                    ret' <- acceptReturn conn ret
-                    lift $ handleReturnMsg conn ret'
-                R.RW_Message'finish finish ->
-                    parse finish >>= lift . handleFinishMsg conn
-                R.RW_Message'resolve res ->
-                    parse res >>= lift . handleResolveMsg conn
-                R.RW_Message'release release ->
-                    parse release >>= lift . handleReleaseMsg conn
-                R.RW_Message'disembargo disembargo ->
-                    parse disembargo >>= lift . handleDisembargoMsg conn
-                _ -> do
-                    msg <- parse rpcMsg
-                    lift $ do
-                        (_, onSent) <- newPromise
-                        sendPureMsg conn' (R.Message'unimplemented msg) onSent
+coordinator transport conn@Conn{debugMode} = forever $ do
+    capnpMsg <- recvMsg transport
+    atomically $ do
+        flip catchSTM (throwSTM . makeAbortExn debugMode) $ do
+            evalLimitT defaultLimit $ do
+                rpcMsg <- msgToRaw capnpMsg
+                which <- structWhich rpcMsg
+                case which of
+                    R.RW_Message'abort exn ->
+                        parse exn >>= lift . handleAbortMsg conn
+                    R.RW_Message'unimplemented oldMsg ->
+                        parse oldMsg >>= lift . handleUnimplementedMsg conn
+                    R.RW_Message'bootstrap bs ->
+                        parse bs >>= lift . handleBootstrapMsg conn
+                    R.RW_Message'call call -> do
+                        handleCallMsg conn call
+                    R.RW_Message'return ret -> do
+                        ret' <- acceptReturn conn ret
+                        lift $ handleReturnMsg conn ret'
+                    R.RW_Message'finish finish ->
+                        parse finish >>= lift . handleFinishMsg conn
+                    R.RW_Message'resolve res ->
+                        parse res >>= lift . handleResolveMsg conn
+                    R.RW_Message'release release ->
+                        parse release >>= lift . handleReleaseMsg conn
+                    R.RW_Message'disembargo disembargo ->
+                        parse disembargo >>= lift . handleDisembargoMsg conn
+                    _ -> do
+                        msg <- parse rpcMsg
+                        lift $ do
+                            (_, onSent) <- newPromise
+                            conn' <- getLive conn
+                            sendPureMsg conn' (R.Message'unimplemented msg) onSent
 
 -- Each function handle*Msg handles a message of a particular type;
 -- 'coordinator' dispatches to these.
