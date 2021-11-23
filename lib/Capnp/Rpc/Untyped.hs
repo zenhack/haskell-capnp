@@ -144,7 +144,7 @@ import qualified Lifetimes.Gc            as Fin
 -- As an example, consider how we handle embargos: The 'Conn' type's 'embargos'
 -- table has values that are just 'Fulfiller's. This allows the code which triggers
 -- sending embargoes to have full control over what happens when they return,
--- while the code that routes incoming messages (in 'coordinator') doesn't need
+-- while the code that routes incoming messages (in 'recvLoop') doesn't need
 -- to concern itself with the details of embargos -- it just needs to route them
 -- to the right place.
 --
@@ -468,7 +468,7 @@ handleConn
             pure (conn, conn')
     runConn (conn, conn') = do
         result <- try $
-            ( coordinator transport conn
+            ( recvLoop transport conn
                 `concurrently_` sendLoop transport conn'
                 `concurrently_` callbacksLoop conn'
             ) `race_`
@@ -1194,11 +1194,11 @@ sendLoop transport Conn'{sendQ} =
         sendMsg transport msg
         atomically $ fulfill f ()
 
--- | The coordinator processes incoming messages.
-coordinator :: Transport -> Conn -> IO ()
+-- | 'recvLoop' processes incoming messages.
+recvLoop :: Transport -> Conn -> IO ()
 -- The logic here mostly routes messages to other parts of the code that know
 -- more about the objects in question; See Note [Organization] for more info.
-coordinator transport conn@Conn{debugMode} = forever $ do
+recvLoop transport conn@Conn{debugMode} = forever $ do
     capnpMsg <- recvMsg transport
     atomically $ do
         flip catchSTM (throwSTM . makeAbortExn debugMode) $ do
@@ -1233,7 +1233,7 @@ coordinator transport conn@Conn{debugMode} = forever $ do
                             sendPureMsg conn' (R.Message'unimplemented msg) onSent
 
 -- Each function handle*Msg handles a message of a particular type;
--- 'coordinator' dispatches to these.
+-- 'recvLoop' dispatches to these.
 
 handleAbortMsg :: Conn -> R.Parsed R.Exception -> STM ()
 handleAbortMsg _ exn =
@@ -1873,7 +1873,7 @@ subscribeReturn tableName conn table qaId onRet =
             pure val
 
 -- | Abort the connection, sending an abort message. This is only safe to call
--- from within either the thread running the coordinator or the callback loop.
+-- from within either the thread running the receieve loop or the callback loop.
 abortConn :: Conn' -> R.Parsed R.Exception -> STM a
 abortConn _ e = throwSTM (SentAbort e)
 
