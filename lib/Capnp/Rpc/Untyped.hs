@@ -216,8 +216,8 @@ data LiveState
     | Dead
 
 data Conn' = Conn'
-    { sendQ              :: TBQueue (Message 'Const, Fulfiller ())
-    -- queues of messages to send sent to the remote vat; these are actually
+    { sendQ              :: TChan (Message 'Const, Fulfiller ())
+    -- queue of messages to send sent to the remote vat; these are actually
     -- sent by a dedicated thread (see 'sendLoop').
     --
     -- The fulfiller is fulfilled after the message actually hits the transport.
@@ -227,11 +227,6 @@ data Conn' = Conn'
     -- but it is used for all message sends to enforce ordering. The fulfiller
     -- is used by parts of the code (basically just calls) that want to block
     -- until their message is actually written to the socket.
-    --
-    -- TODO: Don't ever block when inserting into this queue; instead, if it's
-    -- full, throw an exception, aborting the connection if the call was from
-    -- inside the receive loop. We should figure out how to size the queue
-    -- correctly (as a function of maxCallWords?)
 
     , availableCallWords :: TVar WordCount
     -- Semaphore used to limit the memory that can be used by in-progress
@@ -433,7 +428,7 @@ handleConn
             questionIdPool <- newIdPool maxQuestions
             exportIdPool <- newIdPool maxExports
 
-            sendQ <- newTBQueue $ fromIntegral maxQuestions
+            sendQ <- newTChan
 
             availableCallWords <- newTVar maxCallWords
 
@@ -1190,7 +1185,7 @@ flushCallbacks Conn'{pendingCallbacks} =
 sendLoop :: Transport -> Conn' -> IO ()
 sendLoop transport Conn'{sendQ} =
     forever $ do
-        (msg, f) <- atomically $ readTBQueue sendQ
+        (msg, f) <- atomically $ readTChan sendQ
         sendMsg transport msg
         atomically $ fulfill f ()
 
@@ -1438,7 +1433,7 @@ followPtrs (_:_) (Just _) =
     throwM $ eFailed "Tried to access pointer field of non-struct."
 
 sendRawMsg :: Conn' -> Message 'Const -> Fulfiller () -> STM ()
-sendRawMsg conn' msg onSent = writeTBQueue (sendQ conn') (msg, onSent)
+sendRawMsg conn' msg onSent = writeTChan (sendQ conn') (msg, onSent)
 
 sendCall :: Conn' -> Call -> Fulfiller () -> STM ()
 sendCall
@@ -1776,7 +1771,7 @@ makeOutgoingPayload conn content = do
 sendPureMsg :: Conn' -> R.Parsed (Which R.Message) -> Fulfiller () -> STM ()
 sendPureMsg Conn'{sendQ} msg onSent = do
     msg <- createPure maxBound (parsedToMsg (R.Message msg))
-    writeTBQueue sendQ (msg, onSent)
+    writeTChan sendQ (msg, onSent)
 
 -- | Send a finish message, updating connection state and triggering
 -- callbacks as necessary.
