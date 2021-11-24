@@ -1962,27 +1962,13 @@ resolveClientClient tmpDest resolve (Client client) =
             disembargoAndResolve dest
         ( Just PromiseClient { origTarget=LocalDest _ }, RemoteDest dest) ->
             disembargoAndResolve dest
-        ( Nothing, RemoteDest dest ) ->
-            -- It's not clear to me what we should actually do if the promise
-            -- resolves to nullClient, but this can be encoded at the protocol
-            -- level, so we have to deal with it. Possible options:
-            --
-            -- 1. Perhaps this is simply illegal, and we should send an abort?
-            -- 2. Treat it as resolving to a local promise, in which case we
-            --    need to send a disembargo as above.
-            -- 3. Treat is as resolving to a remote promise, in which case we
-            --    can't send an embargo.
-            --
-            -- (3) doesn't seem possible to implement quite correctly, since
-            -- if we just resolve to nullClient right away, further calls will
-            -- start returning exceptions before outstanding calls return -- we
-            -- really do want to send a disembargo, but we can't because the
-            -- protocol insists that we don't if the promise resolves to a
-            -- remote cap.
-            --
-            -- What we currently do is (2); I(zenhack) intend to ask for
-            -- clarification on the mailing list.
-            disembargoAndResolve dest
+
+        ( Nothing, RemoteDest _ ) ->
+            -- If it resolves to a null client, then we can't send a disembargo.
+            -- Note that this may result in futrther calls throwing exceptions
+            -- *before* the outstanding calls, which is a bit weird. But all
+            -- calls with throw at some point, so it's probably fine.
+            resolveNow
 
         -- Local promises never need embargos; we can just forward:
         ( _, LocalDest LocalBuffer { callBuffer } ) ->
