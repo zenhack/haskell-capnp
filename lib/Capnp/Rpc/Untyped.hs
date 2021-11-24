@@ -268,19 +268,7 @@ instance Hashable Conn where
 
 -- | Configuration information for a connection.
 data ConnConfig = ConnConfig
-    { maxQuestions  :: !Word32
-    -- ^ The maximum number of simultanious outstanding requests to the peer
-    -- vat. Once this limit is reached, further questsions will block until
-    -- some of the existing questions have been answered.
-    --
-    -- Defaults to 128.
-
-    , maxExports    :: !Word32
-    -- ^ The maximum number of objects which may be exported on this connection.
-    --
-    -- Defaults to 8192.
-
-    , maxCallWords  :: !WordCount
+    { maxCallWords  :: !WordCount
     -- ^ The maximum total size of outstanding call messages that will be
     -- accepted; if this limit is reached, the implementation will not read
     -- more messages from the connection until some calls have completed
@@ -317,9 +305,7 @@ data ConnConfig = ConnConfig
 
 instance Default ConnConfig where
     def = ConnConfig
-        { maxQuestions   = 128
-        , maxExports     = 8192
-        , maxCallWords   = bytesToWordsFloor $ 32 * 1024 * 1024
+        { maxCallWords   = bytesToWordsFloor $ 32 * 1024 * 1024
         , debugMode      = False
         , getBootstrap   = \_ -> pure Nothing
         , withBootstrap  = Nothing
@@ -409,9 +395,7 @@ handleConn :: Transport -> ConnConfig -> IO ()
 handleConn
     transport
     cfg@ConnConfig
-        { maxQuestions
-        , maxExports
-        , maxCallWords
+        { maxCallWords
         , withBootstrap
         , debugMode
         }
@@ -425,8 +409,8 @@ handleConn
         stableName <- makeStableName =<< newEmptyMVar
         atomically $ do
             bootstrap <- getBootstrap cfg sup
-            questionIdPool <- newIdPool maxQuestions
-            exportIdPool <- newIdPool maxExports
+            questionIdPool <- newIdPool
+            exportIdPool <- newIdPool
 
             sendQ <- newTChan
 
@@ -526,8 +510,8 @@ handleConn
 newtype IdPool = IdPool (TVar [Word32])
 
 -- | @'newIdPool' size@ creates a new pool of ids, with @size@ available ids.
-newIdPool :: Word32 -> STM IdPool
-newIdPool size = IdPool <$> newTVar [0..size-1]
+newIdPool :: STM IdPool
+newIdPool = IdPool <$> newTVar [0..maxBound]
 
 -- | Get a new id from the pool. Retries if the pool is empty.
 newId :: IdPool -> STM Word32
