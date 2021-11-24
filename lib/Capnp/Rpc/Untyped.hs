@@ -492,13 +492,6 @@ handleConn
                 breakPromise fulfiller eDisconnected
             -- mark the connection as dead, making the live state inaccessible:
             writeTVar liveState Dead
-        -- Make sure any pending callbacks get run. This is important, since
-        -- some of these do things like raise disconnected exceptions.
-        --
-        -- FIXME: there's a race condition that we're not dealing with:
-        -- if the callbacks loop is killed between dequeuing an action and
-        -- performing it that action will be lost.
-        flushCallbacks conn'
     useBootstrap conn conn' = case withBootstrap of
         Nothing ->
             forever $ threadDelay maxBound
@@ -1152,18 +1145,26 @@ clientMethodHandler interfaceId methodId client =
 
 -- | See Note [callbacks]
 callbacksLoop :: Conn' -> IO ()
-callbacksLoop Conn'{pendingCallbacks} = forever $ do
-    cbs <- atomically $ flushTQueue pendingCallbacks >>= \case
-        -- We need to make sure to block if there weren't any jobs, since
-        -- otherwise we'll busy loop, pegging the CPU.
-        []  -> retry
-        cbs -> pure cbs
-    sequence_ cbs
-
--- Run the one iteration of the callbacks loop, without blocking.
-flushCallbacks :: Conn' -> IO ()
-flushCallbacks Conn'{pendingCallbacks} =
-    atomically (flushTQueue pendingCallbacks) >>= sequence_
+callbacksLoop Conn'{pendingCallbacks} =
+    loop `finally` cleanup
+  where
+    loop = forever $ doCallbacks $
+        atomically $ flushTQueue pendingCallbacks >>= \case
+            -- We need to make sure to block if there weren't any jobs, since
+            -- otherwise we'll busy loop, pegging the CPU.
+            []  -> retry
+            cbs -> pure cbs
+    cleanup =
+        -- Make sure any pending callbacks get run. This is important, since
+        -- some of these do things like raise disconnected exceptions.
+        doCallbacks $ atomically $ flushTQueue pendingCallbacks
+    doCallbacks getCbs =
+        -- We need to be careful not to lose any callbacks in the event
+        -- of an exception (even an async one):
+        bracket
+            getCbs
+            (foldr finally (pure ()))
+            (\_ -> pure ())
 
 -- | 'sendLoop' shunts messages from the send queue into the transport.
 sendLoop :: Transport -> Conn' -> IO ()
