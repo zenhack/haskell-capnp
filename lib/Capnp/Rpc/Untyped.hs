@@ -1849,7 +1849,7 @@ subscribeReturn tableName conn table qaId onRet =
                 }
 
         val@HaveReturn{returnMsg} -> do
-            queueSTM conn (onRet returnMsg)
+            onRet returnMsg
             pure val
 
 -- | Abort the connection, sending an abort message. This is only safe to call
