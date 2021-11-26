@@ -4,6 +4,9 @@
   `Call` messages that are being serviced, which can be used to
   limit memory usage and provide backpressure. `ConnConfig` has
   a new `maxCallWords` field to configure this.
+- Some bugs in the RPC layer have been fixed.
+- `tracingTransport` now provides an option to omit call & return
+  bodies from the logged messages.
 
 # 0.14.0.0
 
