@@ -1983,7 +1983,7 @@ resolveClientClient tmpDest resolve (Client client) =
             -- If it resolves to a null client, then we can't send a disembargo.
             -- Note that this may result in futrther calls throwing exceptions
             -- *before* the outstanding calls, which is a bit weird. But all
-            -- calls with throw at some point, so it's probably fine.
+            -- calls will throw at some point, so it's probably fine.
             resolveNow
 
         -- Local promises never need embargos; we can just forward:
