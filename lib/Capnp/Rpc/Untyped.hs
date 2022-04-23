@@ -1982,7 +1982,7 @@ resolveClientClient tmpDest resolve (Client client) =
         ( Nothing, RemoteDest _ ) ->
             -- If it resolves to a null client, then we can't send a disembargo.
             -- Note that this may result in futrther calls throwing exceptions
-            -- *before* the outstanding calls, which is a bit weird. But all
+            -- /before/ the outstanding calls, which is a bit weird. But all
             -- calls will throw at some point, so it's probably fine.
             resolveNow
 
