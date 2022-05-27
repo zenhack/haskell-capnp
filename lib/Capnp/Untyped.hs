@@ -1532,7 +1532,7 @@ do
     let mkIsListPtrRepr (r, listC, str) =
             [d| instance IsListPtrRepr $r where
                     rToList = $(pure $ TH.ConE listC)
-                    rFromList $(pure $ TH.ConP listC [TH.VarP (TH.mkName "l")]) = pure l
+                    rFromList $(pure $ TH.ConP listC [] [TH.VarP (TH.mkName "l")]) = pure l
                     rFromList _ = expected $(pure $ TH.LitE $ TH.StringL $ "pointer to " ++ str)
                     rFromListMsg = messageDefault @(Untyped ('Ptr ('Just ('List ('Just $r)))))
             |]

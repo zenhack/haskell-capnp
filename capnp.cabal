@@ -59,7 +59,7 @@ common shared-opts
       , containers                        >= 0.5.9 && <0.7
       , data-default                      ^>= 0.7.1
       , exceptions                        ^>= 0.10.0
-      , ghc-prim                          >= 0.6.1 && <0.8
+      , ghc-prim                          >= 0.6.1 && <0.9
       , mtl                               ^>= 2.2.2
       , primitive                         >= 0.6.3 && <0.8
       , safe-exceptions                   ^>= 0.1.7
@@ -167,7 +167,7 @@ library
       , supervisors                       ^>= 0.2.1
       , lifetimes                         ^>= 0.1
       , pretty-show                       >= 1.9.5 && <1.11
-      , template-haskell                  >=2.16.0 && <2.18
+      , template-haskell                  ^>=2.18
 
 --------------------------------------------------------------------------------
 
