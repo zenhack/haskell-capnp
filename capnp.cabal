@@ -117,6 +117,7 @@ library
       , Capnp.Repr.Parsed
       , Capnp.TraversalLimit
       , Capnp.Rpc
+      , Capnp.Rpc.Breaker
       , Capnp.Rpc.Promise
       , Capnp.Rpc.Untyped
       , Capnp.Rpc.Errors
