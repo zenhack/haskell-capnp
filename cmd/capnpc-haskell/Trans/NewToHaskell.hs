@@ -53,6 +53,7 @@ fileToMainModule file@New.File{fileName, usesRpc} =
             , "DeriveGeneric"
             , "DuplicateRecordFields"
             , "EmptyDataDeriving"
+            , "FlexibleContexts"
             , "FlexibleInstances"
             , "MultiParamTypeClasses"
             , "UndecidableInstances"
