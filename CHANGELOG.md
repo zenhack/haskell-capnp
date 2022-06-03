@@ -1,3 +1,14 @@
+# 0.16.0.0
+
+- Updated to work with GHC 9.2.x. In particular:
+  - The generated code now enables the `FlexibleContexts` extension
+    since it is no longer implied by `UndecidableInstances`
+  - The `IsPtr` type alias now includes an additional constraint,
+    which GHC seems to no longer be able to derive from the others.
+  - Internals have been updated to deal with a breaking change to
+    `template-haskell`.
+- Fixed an error building the documentation.
+
 # 0.15.0.0
 
 - There is now a per-connection limit on the total size of incoming
