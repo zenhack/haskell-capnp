@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -52,6 +53,7 @@ import Capnp.New
     , parsedToMsg
     , waitPipeline
     )
+import qualified Capnp.Repr as R
 import Capnp.Rpc.Errors (eFailed)
 
 import Capnp.Gen.Aircraft.New  hiding (Left, Right)
@@ -486,7 +488,9 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
     race_ runServer runClient
 
 expectException
-    :: (IsCap c, TypeParam a, Parse a pa, Show pa)
+    :: ( IsCap c, TypeParam a, Parse a pa, Show pa
+       , R.ReprFor a ~ 'R.Ptr pr
+       )
     => (Client c -> IO (Pipeline a)) -> Parsed Exception -> Client c -> IO ()
 expectException callFn wantExn cap = do
     ret <- try $ callFn cap >>= waitPipeline

@@ -256,6 +256,7 @@ type IsStruct a = ReprFor a ~ 'Ptr ('Just 'Struct)
 -- | Constraint that @a@ is a capability type.
 type IsCap a = ReprFor a ~ 'Ptr ('Just 'Cap)
 
+
 -- | Constraint that @a@ is a pointer type.
 type IsPtr a =
     ( ReprFor a ~ 'Ptr (PtrReprFor (ReprFor a))
