@@ -259,5 +259,10 @@ type IsCap a = ReprFor a ~ 'Ptr ('Just 'Cap)
 -- | Constraint that @a@ is a pointer type.
 type IsPtr a =
     ( ReprFor a ~ 'Ptr (PtrReprFor (ReprFor a))
+    -- N.B. prior to ghc 9.2.x, this next constraint wasn't necessary,
+    -- because it could be inferred from the first. I(zenhack) don't
+    -- fully understand what changed, but some call sites need this
+    -- extra help now...
+    , Untyped (ReprFor a) ~ UntypedPtr (PtrReprFor (ReprFor a))
     , IsPtrRepr (PtrReprFor (ReprFor a))
     )
