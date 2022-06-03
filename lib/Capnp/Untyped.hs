@@ -1142,6 +1142,7 @@ index i list
 
 -- | Return a prefix of the list, of the given length.
 {-# INLINABLE take #-}
+take :: (ListItem r, MonadThrow m) => Int -> ListOf r mut -> m (ListOf r mut)
 take count list
     | length list < count =
         throwM E.BoundsError { E.index = count, E.maxIndex = length list - 1 }
