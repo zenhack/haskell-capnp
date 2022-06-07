@@ -77,7 +77,7 @@ import Control.Exception.Safe
     , throwM
     , try
     )
-import Control.Monad            (forever, void, when)
+import Control.Monad            (forever, join, void, when)
 import Data.Default             (Default(def))
 import Data.Foldable            (for_, toList, traverse_)
 import Data.Function            ((&))
@@ -86,6 +86,7 @@ import Data.Maybe               (catMaybes, fromMaybe)
 import Data.String              (fromString)
 import Data.Text                (Text)
 import Data.Typeable            (Typeable)
+import Data.Dynamic             (fromDynamic)
 import GHC.Generics             (Generic)
 import Supervisors              (Supervisor, superviseSTM, withSupervisor)
 import System.Mem.StableName    (StableName, hashStableName, makeStableName)
@@ -124,6 +125,7 @@ import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
+import Capnp.Rpc.Breaker
 
 import qualified Capnp.Gen.Capnp.Rpc.New as R
 import qualified Capnp.Message           as Message
@@ -486,8 +488,8 @@ handleConn
             let walk table = flip ListT.traverse_ (M.listT table)
             -- drop the bootstrap interface:
             case bootstrap conn' of
-                Just (Client (Just client')) -> dropConnExport conn client'
-                _                            -> pure ()
+                Just (unwrapClient -> Just client') -> dropConnExport conn client'
+                _                                     -> pure ()
             -- Remove everything from the exports table:
             walk exports $ \(_, EntryE{client}) ->
                 dropConnExport conn client
@@ -603,18 +605,12 @@ instance IsClient Client where
     toClient = id
     fromClient = id
 
-instance Show Client where
-    show (Client Nothing) = "nullClient"
-    show _                = "({- capability; not statically representable -})"
+unwrapClient :: Client -> Maybe Client'
+unwrapClient (Client o) =
+    join $ fromDynamic $ reflectOpaque o
 
--- | A reference to a capability, which may be live either in the current vat
--- or elsewhere. Holding a client affords making method calls on a capability
--- or modifying the local vat's reference count to it.
-newtype Client =
-    -- We wrap the real client in a Maybe, with Nothing representing a 'null'
-    -- capability.
-    Client (Maybe Client')
-    deriving(Eq)
+wrapClient :: Maybe Client' -> Client
+wrapClient = Client . makeOpaque
 
 -- | A non-null client.
 data Client'
@@ -649,11 +645,20 @@ data Client'
     -- | A client which points to a (resolved) capability in a remote vat.
     | ImportClient (Fin.Cell ImportRef)
 
--- | A 'Pipeline' is a reference to a value within a message that has not yet arrived.
-data Pipeline = Pipeline
+data Pipeline' = Pipeline'
     { state :: TVar PipelineState
     , steps :: SnocList Word16
     }
+    deriving(Eq)
+
+wrapPipeline :: Pipeline' -> Pipeline
+wrapPipeline = Pipeline . makeOpaque
+
+unwrapPipeline :: Pipeline -> Pipeline'
+unwrapPipeline (Pipeline o) =
+    case fromDynamic (reflectOpaque o) of
+        Nothing -> error "invalid pipeline; dynamic unwrap failed"
+        Just p -> p
 
 data PipelineState
     = PendingRemotePipeline
@@ -668,13 +673,13 @@ data PipelineState
 -- 'Pipeline'. The 'Pipeline' must refer to a struct, and the pointer is referred to
 -- by its index into the struct's pointer section.
 walkPipelinePtr :: Pipeline -> Word16 -> Pipeline
-walkPipelinePtr p@Pipeline{steps} step =
-    p { steps = SnocList.snoc steps step }
+walkPipelinePtr (unwrapPipeline -> p@Pipeline'{steps}) step =
+    wrapPipeline $ p { steps = SnocList.snoc steps step }
 
 -- | Convert a 'Pipeline' into a 'Client', which can be used to send messages to the
 -- referant of the 'Pipeline', using promise pipelining.
 pipelineClient :: MonadSTM m => Pipeline -> m Client
-pipelineClient Pipeline{state, steps} = liftSTM $ do
+pipelineClient (unwrapPipeline -> Pipeline'{state, steps}) = liftSTM $ do
     readTVar state >>= \case
         PendingRemotePipeline{answerId, clientMap, conn} -> do
             maybeClient <- M.lookup steps clientMap
@@ -714,7 +719,7 @@ pipelineClient Pipeline{state, steps} = liftSTM $ do
 -- | Wait for the pipeline's target to resolve, and return the corresponding
 -- pointer.
 waitPipeline :: MonadSTM m => Pipeline -> m RawMPtr
-waitPipeline Pipeline{state, steps} = liftSTM $ do
+waitPipeline (unwrapPipeline -> Pipeline'{state, steps}) = liftSTM $ do
     s <- readTVar state
     case s of
         ReadyPipeline (Left e) ->
@@ -729,7 +734,7 @@ promisedAnswerClient conn answer@PromisedAnswer{answerId, transform} = do
     let tmpDest = RemoteDest AnswerDest { conn, answer }
     pState <- newTVar Pending { tmpDest }
     exportMap <- ExportMap <$> M.new
-    let client = Client $ Just PromiseClient
+    let client = wrapClient $ Just PromiseClient
             { pState
             , exportMap
             , origTarget = tmpDest
@@ -878,11 +883,11 @@ data Payload = Payload
 
 -- | Queue a call on a client.
 call :: MonadSTM m => Server.CallInfo -> Client -> m (Promise Pipeline)
-call Server.CallInfo { response } (Client Nothing) = liftSTM $ do
+call Server.CallInfo { response } (unwrapClient -> Nothing) = liftSTM $ do
     breakPromise response eMethodUnimplemented
     state <- newTVar $ ReadyPipeline (Left eMethodUnimplemented)
-    newReadyPromise Pipeline{state, steps = mempty}
-call info@Server.CallInfo { response } (Client (Just client')) = liftSTM $ do
+    newReadyPromise $ wrapPipeline Pipeline'{state, steps = mempty}
+call info@Server.CallInfo { response } (unwrapClient -> Just client') = liftSTM $ do
     (localPipeline, response') <- makeLocalPipeline response
     let info' = info { Server.response = response' }
     case client' of
@@ -935,7 +940,7 @@ makeLocalPipeline f = do
             _ ->
                 -- TODO(cleanup): refactor so we don't need this case.
                 error "impossible"
-    pure (Pipeline{state, steps = mempty}, f')
+    pure (wrapPipeline Pipeline'{state, steps = mempty}, f')
 
 -- | Send a call to a remote capability.
 callRemote :: Conn -> Server.CallInfo -> MsgTarget -> STM (Promise Pipeline)
@@ -976,7 +981,7 @@ callRemote
         questions
     (p, f) <- newPromise
     f <- newCallback $ \r ->
-        breakOrFulfill f (Pipeline { state = rp, steps = mempty } <$ r)
+        breakOrFulfill f (wrapPipeline Pipeline' { state = rp, steps = mempty } <$ r)
     sendCall conn' Call
         { questionId = qid
         , target = target
@@ -1070,11 +1075,6 @@ unmarshalOps (R.PromisedAnswer'Op { union' = R.PromisedAnswer'Op'unknown' tag }:
     throwM $ eFailed $ "Unknown PromisedAnswer.Op: " <> fromString (show tag)
 
 
--- | A null client. This is the only client value that can be represented
--- statically. Throws exceptions in response to all method calls.
-nullClient :: Client
-nullClient = Client Nothing
-
 -- | Create a new client based on a promise. The fulfiller can be used to
 -- supply the final client.
 newPromiseClient :: (MonadSTM m, IsClient c) => m (c, Fulfiller c)
@@ -1086,7 +1086,7 @@ newPromiseClient = liftSTM $ do
     f <- newCallback $ \case
         Left e  -> resolveClientExn tmpDest (writeTVar pState) e
         Right v -> resolveClientClient tmpDest (writeTVar pState) (toClient v)
-    let p = Client $ Just $ PromiseClient
+    let p = wrapClient $ Just $ PromiseClient
             { pState
             , exportMap
             , origTarget = tmpDest
@@ -1104,9 +1104,9 @@ newPromiseClient = liftSTM $ do
 -- * The client points to an object in a remote vat.
 -- * The underlying Server's 'unwrap' method returns 'Nothing' for type 'a'.
 unwrapServer :: (IsClient c, Typeable a) => c -> Maybe a
-unwrapServer c = case toClient c of
-    Client (Just LocalClient { unwrapper }) -> unwrapper
-    _                                       -> Nothing
+unwrapServer c = case unwrapClient (toClient c) of
+    Just LocalClient { unwrapper } -> unwrapper
+    _                              -> Nothing
 
 
 -- | Wait for the client to be fully resolved, and then return a client
@@ -1120,11 +1120,11 @@ unwrapServer c = case toClient c of
 --
 -- If the promise is rejected, then this throws the corresponding exception.
 waitClient :: (IsClient c, MonadSTM m) => c -> m c
-waitClient client = liftSTM $ case toClient client of
-    Client Nothing -> pure client
-    Client (Just LocalClient{}) -> pure client
-    Client (Just ImportClient{}) -> pure client
-    Client (Just PromiseClient{pState}) -> do
+waitClient client = liftSTM $ case unwrapClient (toClient client) of
+    Nothing -> pure client
+    Just LocalClient{} -> pure client
+    Just ImportClient{} -> pure client
+    Just PromiseClient{pState} -> do
         state <- readTVar pState
         case state of
             Ready{target} -> fromClient <$> waitClient target
@@ -1152,7 +1152,7 @@ export sup ops = liftSTM $ do
         Fin.addFinalizer finalizerKey $ atomically $ Rc.release qCall
         Server.runServer q ops)
       `finally` Server.handleStop ops)
-    pure $ Client (Just client')
+    pure $ wrapClient (Just client')
 
 clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
 clientMethodHandler interfaceId methodId client =
@@ -1378,7 +1378,7 @@ handleCallMsg conn callMsg = do
         case target of
             R.MessageTarget'importedCap exportId ->
                 lookupAbort "export" conn' exports (IEId exportId) $
-                    \EntryE{client} -> void $ call callInfo $ Client $ Just client
+                    \EntryE{client} -> void $ call callInfo $ wrapClient $ Just client
             R.MessageTarget'promisedAnswer R.PromisedAnswer { questionId = targetQid, transform } ->
                 let onReturn ret@Return{union'} =
                         case union' of
@@ -1659,8 +1659,8 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                 lookupAbort "answer" conn' answers (QAId questionId) $ \case
                     HaveReturn { returnMsg=Return{union'=Return'results Payload{content} } } ->
                         transformClient transform content conn' >>= \case
-                            Client (Just client') -> disembargoClient client'
-                            Client Nothing -> abortDisembargo "targets a null capability"
+                            (unwrapClient -> Just client') -> disembargoClient client'
+                            (unwrapClient -> Nothing) -> abortDisembargo "targets a null capability"
                     _ ->
                         abortDisembargo $
                             "does not target an answer which has resolved to a value hosted by"
@@ -1670,9 +1670,9 @@ handleDisembargoMsg conn d = getLive conn >>= go d
                     "Unknown MessageTarget ordinal #" <> fromString (show ordinal)
       where
         disembargoPromise PromiseClient{ pState } = readTVar pState >>= \case
-            Ready (Client (Just client)) ->
+            Ready (unwrapClient -> Just client) ->
                 disembargoClient client
-            Ready (Client Nothing) ->
+            Ready (unwrapClient -> Nothing) ->
                 abortDisembargo "targets a promise which resolved to null."
             _ ->
                 abortDisembargo "targets a promise which has not resolved."
@@ -1924,7 +1924,7 @@ requestBootstrap conn@Conn{liveState} = readTVar liveState >>= \case
             qid
             questions
         exportMap <- ExportMap <$> M.new
-        pure $ Client $ Just PromiseClient
+        pure $ wrapClient $ Just PromiseClient
             { pState
             , exportMap
             , origTarget = tmpDest
@@ -1971,7 +1971,7 @@ resolveClientPtr tmpDest resolve ptr = case ptr of
 
 -- | Resolve a promised client to another client. See Note [resolveClient]
 resolveClientClient :: TmpDest -> (PromiseState -> STM ()) -> Client -> STM ()
-resolveClientClient tmpDest resolve (Client client) =
+resolveClientClient tmpDest resolve (unwrapClient -> client) =
     case (client, tmpDest) of
         -- Remote resolved to local; we need to embargo:
         ( Just LocalClient{}, RemoteDest dest ) ->
@@ -2022,13 +2022,13 @@ resolveClientClient tmpDest resolve (Client client) =
         pure $ ImportTgt importId
 
     resolveNow = do
-        resolve $ Ready (Client client)
+        resolve $ Ready (wrapClient client)
 
     -- Flush the call buffer into the client's queue, and then pass the client
     -- to resolve.
     flushAndResolve callBuffer = do
-        flushTQueue callBuffer >>= traverse_ (`call` Client client)
-        resolve $ Ready (Client client)
+        flushTQueue callBuffer >>= traverse_ (`call` wrapClient client)
+        resolve $ Ready (wrapClient client)
     flushAndRaise callBuffer e =
         flushTQueue callBuffer >>=
             traverse_ (\Server.CallInfo{response} -> breakPromise response e)
@@ -2164,9 +2164,9 @@ addBumpExport exportId client =
 -- vat to identify client. In the process, this may allocate export ids, update
 -- reference counts, and so forth.
 emitCap :: Conn -> Client -> STM (R.Parsed (Which R.CapDescriptor))
-emitCap _targetConn (Client Nothing) =
+emitCap _targetConn (unwrapClient -> Nothing) =
     pure R.CapDescriptor'none
-emitCap targetConn (Client (Just client')) = case client' of
+emitCap targetConn (unwrapClient -> Just client') = case client' of
     LocalClient{} ->
         R.CapDescriptor'senderHosted . ieWord <$> getConnExport targetConn client'
     PromiseClient{ pState } -> readTVar pState >>= \case
@@ -2201,7 +2201,7 @@ acceptPayload conn payload = do
 acceptCap :: Conn -> R.Parsed (Which R.CapDescriptor) -> STM Client
 acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
   where
-    go _ R.CapDescriptor'none = pure (Client Nothing)
+    go _ R.CapDescriptor'none = pure (wrapClient Nothing)
     go conn'@Conn'{imports} (R.CapDescriptor'senderHosted (IEId -> importId)) = do
         entry <- M.lookup importId imports
         case entry of
@@ -2219,10 +2219,10 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     , proxies
                     }
                 queueIO conn' $ Fin.addFinalizer cell $ atomically $ Rc.decr localRc
-                pure $ Client $ Just $ ImportClient cell
+                pure $ wrapClient $ Just $ ImportClient cell
 
             Nothing ->
-                Client . Just . ImportClient <$> newImport importId conn Nothing
+                wrapClient . Just . ImportClient <$> newImport importId conn Nothing
     go conn'@Conn'{imports} (R.CapDescriptor'senderPromise (IEId -> importId)) = do
         entry <- M.lookup importId imports
         case entry of
@@ -2233,7 +2233,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     ", but the imports table says #" <> imp <> " is senderHosted."
             Just ent@EntryI { remoteRc, proxies, promiseState=Just (pState, origTarget) } -> do
                 M.insert ent { remoteRc = remoteRc + 1 } importId imports
-                pure $ Client $ Just PromiseClient
+                pure $ wrapClient $ Just PromiseClient
                     { pState
                     , exportMap = proxies
                     , origTarget
@@ -2243,7 +2243,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
                     ImportRef{proxies} <- Fin.readCell imp
                     let tmpDest = RemoteDest (ImportDest imp)
                     pState <- newTVar Pending { tmpDest }
-                pure $ Client $ Just PromiseClient
+                pure $ wrapClient $ Just PromiseClient
                     { pState
                     , exportMap = proxies
                     , origTarget = tmpDest
@@ -2251,7 +2251,7 @@ acceptCap conn cap = getLive conn >>= \conn' -> go conn' cap
     go conn'@Conn'{exports} (R.CapDescriptor'receiverHosted exportId) =
         lookupAbort "export" conn' exports (IEId exportId) $
             \EntryE{client} ->
-                pure $ Client $ Just client
+                pure $ wrapClient $ Just client
     go conn' (R.CapDescriptor'receiverAnswer pa) = do
         pa <- unmarshalPromisedAnswer pa `catchSTM` abortConn conn'
         newLocalAnswerClient conn' pa
@@ -2316,7 +2316,7 @@ newLocalAnswerClient conn@Conn'{answers} PromisedAnswer{ answerId, transform } =
             conn
             (toList transform)
     exportMap <- ExportMap <$> M.new
-    pure $ Client $ Just PromiseClient
+    pure $ wrapClient $ Just PromiseClient
         { pState
         , exportMap
         , origTarget = tmpDest

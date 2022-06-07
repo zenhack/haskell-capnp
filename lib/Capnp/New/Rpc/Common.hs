@@ -3,7 +3,7 @@ module Capnp.New.Rpc.Common
     , Pipeline(..)
     ) where
 
-import {-# SOURCE #-} qualified Capnp.Rpc.Untyped as Rpc
+import qualified Capnp.Rpc.Breaker as Rpc
 
 -- | A @'Pipeline' a@ is a reference to possibly-not-resolved result from
 -- a method call.

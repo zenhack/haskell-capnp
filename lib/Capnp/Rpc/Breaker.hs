@@ -10,6 +10,9 @@ module Capnp.Rpc.Breaker
 
 import Data.Dynamic (Typeable, Dynamic, toDyn, fromDynamic)
 
+-- | A reference to a capability, which may be live either in the current vat
+-- or elsewhere. Holding a client affords making method calls on a capability
+-- or modifying the local vat's reference count to it.
 newtype Client = Client Opaque
     deriving(Eq)
 
@@ -20,8 +23,11 @@ instance Show Client where
         else
             "({- capability; not statically representable -})"
 
+-- | A 'Pipeline' is a reference to a value within a message that has not yet arrived.
 newtype Pipeline = Pipeline Opaque
 
+-- | A null client. This is the only client value that can be represented
+-- statically. Throws exceptions in response to all method calls.
 nullClient :: Client
 nullClient = Client $ makeOpaque ()
 
