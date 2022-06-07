@@ -125,7 +125,7 @@ import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import Internal.BuildPure   (createPure)
 import Internal.Rc          (Rc)
 import Internal.SnocList    (SnocList)
-import Capnp.Rpc.Breaker
+import Internal.Rpc.Breaker
 
 import qualified Capnp.Gen.Capnp.Rpc.New as R
 import qualified Capnp.Message           as Message
@@ -167,9 +167,43 @@ import qualified Lifetimes.Gc            as Fin
 --   immediately call the target), which is unsafe in a level 3
 --   implementation. See the protocol documentation for more info.
 
+-- Note [Breaker]
+-- ==============
+--
+-- Since capabilities can be stored in messages, it is somewhat challenging
+-- to design a module structure that avoids low-level capnp serialization code
+-- depending on the rpc system, simply because it needs to pass the 'Client'
+-- type around, even if it doesn't do much else with it.
+--
+-- Earlier versions of this library capitulated and introduced a cyclic
+-- dependency; there was a .hs-boot file for this module exposing 'Client'
+-- and a couple other things, and "Capnp.Message" and a few other
+-- serialization modules imported it.
+--
+-- This was a problem for a couple reasons:
+--
+-- * Not only was there a cyclic dependency, the path it took went through
+--   a large fraction of the library, meaning whenever any of those modules
+--   changes most of the library had to be rebuilt.
+-- * It precluded doing things like splitting rpc support into a separate
+--   package, for consumers who only want serialization and want a more
+--   minimal dependency footprint.
+--
+-- Instead, the current solution is the "Internal.Rpc.Breaker" module; it
+-- defines the few things needed by serialization code, but it does so
+-- in a way that avoids depending on this module, sacrificing a small
+-- amount of type safety by using "Data.Dynamic" instead of referencing
+-- the types in this module directly. While in principle a caller could
+-- supply some other type, we expect that:
+--
+-- * 'Client' will always wrap a @Maybe Client'@.
+-- * 'Pipeline' will always wrap a @Pipeline'@.
+--
+-- we provide wrap/unwrap helper functions for each of these, to keep
+-- the type-unsafety that comes with this as localized as possible.
+
 -- | We use this type often enough that the types get noisy without a shorthand:
 type RawMPtr = Maybe (UntypedRaw.Ptr 'Const)
-
 
 -- | Errors which can be thrown by the rpc system.
 data RpcError
@@ -605,14 +639,15 @@ instance IsClient Client where
     toClient = id
     fromClient = id
 
+-- | See Note [Breaker]
+wrapClient :: Maybe Client' -> Client
+wrapClient = Client . makeOpaque
+
+-- | See Note [Breaker]
 unwrapClient :: Client -> Maybe Client'
 unwrapClient (Client o) =
     join $ fromDynamic $ reflectOpaque o
 
-wrapClient :: Maybe Client' -> Client
-wrapClient = Client . makeOpaque
-
--- | A non-null client.
 data Client'
     -- | A client pointing at a capability local to our own vat.
     = LocalClient
@@ -651,9 +686,11 @@ data Pipeline' = Pipeline'
     }
     deriving(Eq)
 
+-- | See Note [Breaker]
 wrapPipeline :: Pipeline' -> Pipeline
 wrapPipeline = Pipeline . makeOpaque
 
+-- | See Note [Breaker]
 unwrapPipeline :: Pipeline -> Pipeline'
 unwrapPipeline (Pipeline o) =
     case fromDynamic (reflectOpaque o) of

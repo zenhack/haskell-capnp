@@ -1,4 +1,9 @@
-module Capnp.Rpc.Breaker
+-- | Module: Internal.Rpc.Breaker
+--
+-- This module serves to break a dependency cycle between the rpc
+-- system and the serialization code; see Note [Breaker] in
+-- "Capnp.Rpc.Untyped" for details.
+module Internal.Rpc.Breaker
     ( Client(..)
     , Pipeline(..)
     , nullClient

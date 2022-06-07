@@ -117,7 +117,6 @@ library
       , Capnp.Repr.Parsed
       , Capnp.TraversalLimit
       , Capnp.Rpc
-      , Capnp.Rpc.Breaker
       , Capnp.Rpc.Promise
       , Capnp.Rpc.Untyped
       , Capnp.Rpc.Errors
@@ -154,6 +153,7 @@ library
       , Internal.TCloseQ
       , Internal.BuildPure
       , Internal.STE
+      , Internal.Rpc.Breaker
     -- other-extensions:
     build-depends:
         hashable                          >= 1.2.7 && <1.4

@@ -73,7 +73,7 @@ module Capnp.Message (
     , withCapTable
     ) where
 
-import Capnp.Rpc.Breaker (Client, nullClient)
+import Internal.Rpc.Breaker (Client, nullClient)
 
 import Prelude hiding (read)
 
