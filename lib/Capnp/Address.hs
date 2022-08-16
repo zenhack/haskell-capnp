@@ -1,59 +1,60 @@
-{-|
-Module: Capnp.Address
-Description: Utilities for manipulating addresses within capnproto messages.
-
-This module provides facilities for manipulating raw addresses within
-Cap'N Proto messages.
-
-This is a low level module that very few users will need to use directly.
--}
 {-# LANGUAGE RecordWildCards #-}
-module Capnp.Address
-    ( WordAddr(..)
-    , CapAddr(..)
-    , Addr(..)
-    , OffsetError(..)
-    , computeOffset
-    , pointerFrom
-    , resolveOffset
-    )
-  where
 
+-- |
+-- Module: Capnp.Address
+-- Description: Utilities for manipulating addresses within capnproto messages.
+--
+-- This module provides facilities for manipulating raw addresses within
+-- Cap'N Proto messages.
+--
+-- This is a low level module that very few users will need to use directly.
+module Capnp.Address
+  ( WordAddr (..),
+    CapAddr (..),
+    Addr (..),
+    OffsetError (..),
+    computeOffset,
+    pointerFrom,
+    resolveOffset,
+  )
+where
+
+import Capnp.Bits (WordCount)
+import qualified Capnp.Pointer as P
 import Data.Bits
 import Data.Int
 import Data.Word
 
-import Capnp.Bits (WordCount)
-
-import qualified Capnp.Pointer as P
-
 -- | The address of a word within a message
 data WordAddr = WordAt
-    { segIndex  :: !Int -- ^ Segment number
-    , wordIndex :: !WordCount -- ^ offset in words from the start of the segment.
-    } deriving(Show, Eq)
+  { -- | Segment number
+    segIndex :: !Int,
+    -- | offset in words from the start of the segment.
+    wordIndex :: !WordCount
+  }
+  deriving (Show, Eq)
 
 -- | The "address" of a capability
-newtype CapAddr = Cap Word32 deriving(Show, Eq)
+newtype CapAddr = Cap Word32 deriving (Show, Eq)
 
 -- | An address, i.e. a location that a pointer may point at.
 data Addr
-    -- | The address of some data in the message.
-    = WordAddr !WordAddr
-    -- | The "address" of a capability.
-    | CapAddr !CapAddr
-    deriving(Show, Eq)
+  = -- | The address of some data in the message.
+    WordAddr !WordAddr
+  | -- | The "address" of a capability.
+    CapAddr !CapAddr
+  deriving (Show, Eq)
 
 -- | An error returned by 'computeOffset'; this describes the reason why a
 -- value cannot be directly addressed from a given location.
 data OffsetError
-    -- | The pointer and the value are in different segments.
-    = DifferentSegments
-    -- | The pointer is in the correct segment, but too far away to encode the
+  = -- | The pointer and the value are in different segments.
+    DifferentSegments
+  | -- | The pointer is in the correct segment, but too far away to encode the
     -- offset. (more than 30 bits would be required). This can only happen with
     -- segments that are > 8 GiB, which this library refuses to either decode
     -- or generate, so this should not come up in practice.
-    | OutOfRange
+    OutOfRange
 
 -- | @'computeOffset' ptrAddr valueAddr@ computes the offset that should be
 -- stored in a struct or list pointer located at @ptrAddr@, in order to point
@@ -62,10 +63,10 @@ data OffsetError
 -- describing the problem.
 computeOffset :: WordAddr -> WordAddr -> Either OffsetError WordCount
 computeOffset ptrAddr valueAddr
-    | segIndex ptrAddr /= segIndex valueAddr = Left DifferentSegments
-    | otherwise =
-        let offset = wordIndex valueAddr - (wordIndex ptrAddr + 1)
-        in if offset >= 1 `shiftL` 30
+  | segIndex ptrAddr /= segIndex valueAddr = Left DifferentSegments
+  | otherwise =
+      let offset = wordIndex valueAddr - (wordIndex ptrAddr + 1)
+       in if offset >= 1 `shiftL` 30
             then Left OutOfRange
             else Right offset
 
@@ -79,16 +80,16 @@ computeOffset ptrAddr valueAddr
 -- rather than the final value.
 pointerFrom :: WordAddr -> WordAddr -> P.Ptr -> Either OffsetError P.Ptr
 pointerFrom _ _ (P.CapPtr _) = error "pointerFrom called on a capability pointer."
-pointerFrom _ WordAt{..} (P.FarPtr twoWords _ _) =
-    Right $ P.FarPtr twoWords (fromIntegral wordIndex) (fromIntegral segIndex)
+pointerFrom _ WordAt {..} (P.FarPtr twoWords _ _) =
+  Right $ P.FarPtr twoWords (fromIntegral wordIndex) (fromIntegral segIndex)
 pointerFrom ptrAddr targetAddr (P.StructPtr _ dataSz ptrSz) =
-    flip fmap (computeOffset ptrAddr targetAddr) $
-        \off -> P.StructPtr (fromIntegral off) dataSz ptrSz
+  flip fmap (computeOffset ptrAddr targetAddr) $
+    \off -> P.StructPtr (fromIntegral off) dataSz ptrSz
 pointerFrom ptrAddr targetAddr (P.ListPtr _ eltSpec) =
-    flip fmap (computeOffset ptrAddr targetAddr) $
-        \off -> P.ListPtr (fromIntegral off) eltSpec
+  flip fmap (computeOffset ptrAddr targetAddr) $
+    \off -> P.ListPtr (fromIntegral off) eltSpec
 
 -- | Add an offset to a WordAddr.
 resolveOffset :: WordAddr -> Int32 -> WordAddr
-resolveOffset addr@WordAt{..} off =
-    addr { wordIndex = wordIndex + fromIntegral off + 1 }
+resolveOffset addr@WordAt {..} off =
+  addr {wordIndex = wordIndex + fromIntegral off + 1}

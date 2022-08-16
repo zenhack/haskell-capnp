@@ -1,100 +1,131 @@
-{-# LANGUAGE DuplicateRecordFields      #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NamedFieldPuns             #-}
-{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module IR.Name where
 
+import Data.Char (toLower)
+import Data.List (intersperse)
+import qualified Data.Set as S
+import Data.String (IsString (fromString))
+import qualified Data.Text as T
 import Data.Word
 
-import Data.Char   (toLower)
-import Data.List   (intersperse)
-import Data.String (IsString(fromString))
-
-import qualified Data.Set  as S
-import qualified Data.Text as T
-
 class HasUnQ a where
-    getUnQ :: a -> UnQ
+  getUnQ :: a -> UnQ
+
 class MkSub a where
-    mkSub :: a -> UnQ -> a
+  mkSub :: a -> UnQ -> a
 
 instance HasUnQ UnQ where
-    getUnQ = id
+  getUnQ = id
+
 instance HasUnQ LocalQ where
-    getUnQ = localUnQ
+  getUnQ = localUnQ
+
 instance HasUnQ CapnpQ where
-    getUnQ CapnpQ{local} = getUnQ local
+  getUnQ CapnpQ {local} = getUnQ local
+
 instance HasUnQ GlobalQ where
-    getUnQ GlobalQ{local} = getUnQ local
+  getUnQ GlobalQ {local} = getUnQ local
 
 newtype UnQ = UnQ T.Text
-    deriving(Show, Read, Eq, Ord, IsString, Semigroup)
+  deriving (Show, Read, Eq, Ord, IsString, Semigroup)
 
 newtype NS = NS [T.Text]
-    deriving(Show, Read, Eq, Ord)
+  deriving (Show, Read, Eq, Ord)
 
 data LocalQ = LocalQ
-    { localUnQ :: UnQ
-    , localNS  :: NS
-    }
-    deriving(Show, Read, Eq, Ord)
+  { localUnQ :: UnQ,
+    localNS :: NS
+  }
+  deriving (Show, Read, Eq, Ord)
 
 instance IsString LocalQ where
-    fromString s = LocalQ
-        { localUnQ = fromString s
-        , localNS = emptyNS
-        }
+  fromString s =
+    LocalQ
+      { localUnQ = fromString s,
+        localNS = emptyNS
+      }
 
 -- | A fully qualified name for something defined in a capnproto schema.
 -- this includes a local name within a file, and the file's capnp id.
 data CapnpQ = CapnpQ
-    { local  :: LocalQ
-    , fileId :: !Word64
-    }
-    deriving(Show, Read, Eq, Ord)
+  { local :: LocalQ,
+    fileId :: !Word64
+  }
+  deriving (Show, Read, Eq, Ord)
 
 data GlobalQ = GlobalQ
-    { local    :: LocalQ
-    , globalNS :: NS
-    }
-    deriving(Show, Read, Eq, Ord)
+  { local :: LocalQ,
+    globalNS :: NS
+  }
+  deriving (Show, Read, Eq, Ord)
 
 emptyNS :: NS
 emptyNS = NS []
 
 mkLocal :: NS -> UnQ -> LocalQ
-mkLocal localNS localUnQ = LocalQ{localNS, localUnQ}
+mkLocal localNS localUnQ = LocalQ {localNS, localUnQ}
 
 unQToLocal :: UnQ -> LocalQ
 unQToLocal = mkLocal emptyNS
 
 instance MkSub LocalQ where
-    mkSub q = mkLocal (localQToNS q)
+  mkSub q = mkLocal (localQToNS q)
 
 instance MkSub GlobalQ where
-    mkSub q@GlobalQ{local} unQ = q { local = mkSub local unQ }
+  mkSub q@GlobalQ {local} unQ = q {local = mkSub local unQ}
 
 instance MkSub CapnpQ where
-    mkSub q@CapnpQ{local} unQ = q { local = mkSub local unQ }
+  mkSub q@CapnpQ {local} unQ = q {local = mkSub local unQ}
 
 localQToNS :: LocalQ -> NS
-localQToNS LocalQ{localUnQ=UnQ part, localNS=NS parts} = NS (part:parts)
+localQToNS LocalQ {localUnQ = UnQ part, localNS = NS parts} = NS (part : parts)
 
 localToUnQ :: LocalQ -> UnQ
-localToUnQ LocalQ{localUnQ, localNS}
-    | localNS == emptyNS = localUnQ
-    | otherwise = UnQ (renderLocalNS localNS <> "'" <> renderUnQ localUnQ)
+localToUnQ LocalQ {localUnQ, localNS}
+  | localNS == emptyNS = localUnQ
+  | otherwise = UnQ (renderLocalNS localNS <> "'" <> renderUnQ localUnQ)
 
 renderUnQ :: UnQ -> T.Text
 renderUnQ (UnQ name)
-    | name `S.member` keywords = name <> "_"
-    | otherwise = name
+  | name `S.member` keywords = name <> "_"
+  | otherwise = name
   where
-    keywords = S.fromList
-        [ "as", "case", "of", "class", "data", "family", "instance", "default"
-        , "deriving", "do", "forall", "foreign", "hiding", "if", "then", "else"
-        , "import", "infix", "infixl", "infixr", "let", "in", "mdo", "module"
-        , "newtype", "proc", "qualified", "rec", "type", "where"
+    keywords =
+      S.fromList
+        [ "as",
+          "case",
+          "of",
+          "class",
+          "data",
+          "family",
+          "instance",
+          "default",
+          "deriving",
+          "do",
+          "forall",
+          "foreign",
+          "hiding",
+          "if",
+          "then",
+          "else",
+          "import",
+          "infix",
+          "infixl",
+          "infixr",
+          "let",
+          "in",
+          "mdo",
+          "module",
+          "newtype",
+          "proc",
+          "qualified",
+          "rec",
+          "type",
+          "where"
         ]
 
 renderLocalQ :: LocalQ -> T.Text
@@ -126,5 +157,5 @@ lowerFstName name = UnQ $ lowerFst $ renderLocalQ name
 
 lowerFst :: T.Text -> T.Text
 lowerFst txt = case T.unpack txt of
-    []     -> ""
-    (c:cs) -> T.pack $ toLower c : cs
+  [] -> ""
+  (c : cs) -> T.pack $ toLower c : cs

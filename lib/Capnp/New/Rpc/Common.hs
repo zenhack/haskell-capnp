@@ -1,7 +1,8 @@
 module Capnp.New.Rpc.Common
-    ( Client(..)
-    , Pipeline(..)
-    ) where
+  ( Client (..),
+    Pipeline (..),
+  )
+where
 
 import qualified Internal.Rpc.Breaker as Rpc
 
@@ -10,4 +11,4 @@ import qualified Internal.Rpc.Breaker as Rpc
 newtype Pipeline a = Pipeline Rpc.Pipeline
 
 newtype Client a = Client Rpc.Client
-    deriving(Show, Eq)
+  deriving (Show, Eq)

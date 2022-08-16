@@ -1,11 +1,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Internal.SnocList
-    ( SnocList
-    , fromList
-    , empty
-    , snoc
-    , singleton
-    ) where
+  ( SnocList,
+    fromList,
+    empty,
+    snoc,
+    singleton,
+  )
+where
 
 import Data.Foldable
 import Data.Hashable (Hashable)
@@ -18,7 +20,7 @@ import Data.Hashable (Hashable)
 -- the list, and then reverse the list before processing. A SnocList
 -- just packages up this trick so you can't forget to do the reverse.
 newtype SnocList a = SnocList [a]
-    deriving(Eq, Hashable)
+  deriving (Eq, Hashable)
 
 -- | Convert a list to a 'SnocList'. O(n)
 fromList :: [a] -> SnocList a
@@ -35,14 +37,14 @@ empty = SnocList []
 -- | Append a value to the 'SnocList'. A note on the name: 'snoc' is @cons@
 -- backwards.
 snoc :: SnocList a -> a -> SnocList a
-snoc (SnocList xs) x = SnocList (x:xs)
+snoc (SnocList xs) x = SnocList (x : xs)
 
 instance Foldable SnocList where
-    foldMap f = foldMap f . toList
-    toList (SnocList xs) = reverse xs
+  foldMap f = foldMap f . toList
+  toList (SnocList xs) = reverse xs
 
 instance Semigroup (SnocList a) where
-    (SnocList l) <> (SnocList r) = SnocList (r <> l)
+  (SnocList l) <> (SnocList r) = SnocList (r <> l)
 
 instance Monoid (SnocList a) where
-    mempty = empty
+  mempty = empty

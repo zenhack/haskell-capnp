@@ -4,29 +4,29 @@
 -- system and the serialization code; see Note [Breaker] in
 -- "Capnp.Rpc.Untyped" for details.
 module Internal.Rpc.Breaker
-    ( Client(..)
-    , Pipeline(..)
-    , nullClient
+  ( Client (..),
+    Pipeline (..),
+    nullClient,
     -- | ** Internals
-    , Opaque
-    , makeOpaque
-    , reflectOpaque
-    ) where
+    Opaque,
+    makeOpaque,
+    reflectOpaque,
+  )
+where
 
-import Data.Dynamic (Typeable, Dynamic, toDyn, fromDynamic)
+import Data.Dynamic (Dynamic, Typeable, fromDynamic, toDyn)
 
 -- | A reference to a capability, which may be live either in the current vat
 -- or elsewhere. Holding a client affords making method calls on a capability
 -- or modifying the local vat's reference count to it.
 newtype Client = Client Opaque
-    deriving(Eq)
+  deriving (Eq)
 
 instance Show Client where
-    show client =
-        if client == nullClient then
-            "nullClient"
-        else
-            "({- capability; not statically representable -})"
+  show client =
+    if client == nullClient
+      then "nullClient"
+      else "({- capability; not statically representable -})"
 
 -- | A 'Pipeline' is a reference to a value within a message that has not yet arrived.
 newtype Pipeline = Pipeline Opaque
@@ -37,18 +37,19 @@ nullClient :: Client
 nullClient = Client $ makeOpaque ()
 
 data Opaque = Opaque
-    { opDyn :: Dynamic
-    , opEq :: Opaque -> Bool
-    }
+  { opDyn :: Dynamic,
+    opEq :: Opaque -> Bool
+  }
 
 makeOpaque :: (Typeable a, Eq a) => a -> Opaque
-makeOpaque v = Opaque
-    { opDyn = toDyn v
-    , opEq = \o -> fromDynamic (opDyn o) == Just v
+makeOpaque v =
+  Opaque
+    { opDyn = toDyn v,
+      opEq = \o -> fromDynamic (opDyn o) == Just v
     }
 
 reflectOpaque :: Opaque -> Dynamic
 reflectOpaque = opDyn
 
 instance Eq Opaque where
-    x == y = opEq x y
+  x == y = opEq x y

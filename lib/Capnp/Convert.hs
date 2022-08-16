@@ -1,56 +1,53 @@
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE ExplicitForAll      #-}
-{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-|
-Module: Capnp.Convert
-Description: Convert between messages, typed capnproto values, and (lazy)bytestring(builders).
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
-This module provides various helper functions to convert between messages, types defined
-in capnproto schema (called "values" in the rest of this module's documentation),
-bytestrings (both lazy and strict), and bytestring builders.
-
-Note that most of the functions which decode messages or raw bytes do *not* need to be
-run inside of an instance of 'MonadLimit'; they choose an appropriate limit based on the
-size of the input.
-
-Note that not all conversions exist or necessarily make sense.
--}
+-- |
+-- Module: Capnp.Convert
+-- Description: Convert between messages, typed capnproto values, and (lazy)bytestring(builders).
+--
+-- This module provides various helper functions to convert between messages, types defined
+-- in capnproto schema (called "values" in the rest of this module's documentation),
+-- bytestrings (both lazy and strict), and bytestring builders.
+--
+-- Note that most of the functions which decode messages or raw bytes do *not* need to be
+-- run inside of an instance of 'MonadLimit'; they choose an appropriate limit based on the
+-- size of the input.
+--
+-- Note that not all conversions exist or necessarily make sense.
 module Capnp.Convert
-    ( msgToBuilder
-    , msgToLBS
-    , msgToBS
-    , bsToMsg
-    , lbsToMsg
-
+  ( msgToBuilder,
+    msgToLBS,
+    msgToBS,
+    bsToMsg,
+    lbsToMsg,
     -- new API
-    , msgToRaw
-    , msgToParsed
-    , bsToRaw
-    , bsToParsed
-    , lbsToRaw
-    , lbsToParsed
-    , parsedToRaw
-    , parsedToMsg
-    , parsedToBuilder
-    , parsedToBS
-    , parsedToLBS
-    ) where
-
-import Control.Monad.Catch (MonadThrow)
-
-import qualified Data.ByteString         as BS
-import qualified Data.ByteString.Builder as BB
-import qualified Data.ByteString.Lazy    as LBS
-
-import Capnp.Mutability  (Mutability(..), freeze)
-import Capnp.New.Classes (Parse(encode, parse))
+    msgToRaw,
+    msgToParsed,
+    bsToRaw,
+    bsToParsed,
+    lbsToRaw,
+    lbsToParsed,
+    parsedToRaw,
+    parsedToMsg,
+    parsedToBuilder,
+    parsedToBS,
+    parsedToLBS,
+  )
+where
 
 import qualified Capnp.Message as M
-import qualified Capnp.Repr    as R
+import Capnp.Mutability (Mutability (..), freeze)
+import Capnp.New.Classes (Parse (encode, parse))
+import qualified Capnp.Repr as R
 import qualified Capnp.Untyped as U
+import Control.Monad.Catch (MonadThrow)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy as LBS
 
 {- TODO: unused currently, but we should put it back into service for things like
    msgToParsed.
@@ -125,17 +122,17 @@ lbsToParsed = bsToParsed . LBS.toStrict
 -- of its message.
 parsedToRaw :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (R.Raw a ('Mut s))
 parsedToRaw p = do
-    msg <- M.newMessage Nothing
-    value@(R.Raw struct) <- encode msg p
-    U.setRoot struct
-    pure value
+  msg <- M.newMessage Nothing
+  value@(R.Raw struct) <- encode msg p
+  U.setRoot struct
+  pure value
 
 -- | Serialize the parsed form of a struct into a message with that value as its
 -- root, returning the message.
 parsedToMsg :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m (M.Message ('Mut s))
 parsedToMsg p = do
-    root <- parsedToRaw p
-    pure $ U.message @(R.Raw a) root
+  root <- parsedToRaw p
+  pure $ U.message @(R.Raw a) root
 
 -- | Serialize the parsed form of a struct and return it as a 'BB.Builder'
 parsedToBuilder :: forall a m pa s. (U.RWCtx m s, R.IsStruct a, Parse a pa) => pa -> m BB.Builder

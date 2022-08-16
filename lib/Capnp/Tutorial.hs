@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 -- |
 -- Module: Capnp.Tutorial
 -- Description: Tutorial for the Haskell Cap'N Proto library.
@@ -8,9 +10,8 @@
 --
 -- Each of the example programs described here can also be found in the @examples/@
 -- subdirectory in the source repository.
-{-# OPTIONS_GHC -Wno-unused-imports #-}
-module Capnp.Tutorial (
-    -- * Overview
+module Capnp.Tutorial
+  ( -- * Overview
     -- $overview
 
     -- * Setup
@@ -42,13 +43,14 @@ module Capnp.Tutorial (
 
     -- * RPC
     -- $rpc
-    ) where
+  )
+where
 
 -- So haddock references work:
-import System.IO (stdout)
 
 import qualified Data.ByteString as BS
-import qualified Data.Text       as T
+import qualified Data.Text as T
+import System.IO (stdout)
 
 -- $overview
 --
@@ -84,7 +86,6 @@ import qualified Data.Text       as T
 --
 -- For more information about the reasons behind the new API, see:
 -- <http://zenhack.net/TODO>. TODO: link to blog post.
-
 
 -- $serialization
 --
