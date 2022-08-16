@@ -7,10 +7,10 @@ module Module.Capnp.Canonicalize
   )
 where
 
+import Capnp (Parsed, Raw (..), createPure, encode, msgToLBS)
+import qualified Capnp.Basics as B
 import Capnp.Canonicalize
 import qualified Capnp.Message as M
-import Capnp.New (Parsed, Raw (..), createPure, encode, msgToLBS)
-import qualified Capnp.New.Basics as B
 import qualified Capnp.Untyped as U
 import Control.Monad (unless)
 import qualified Data.ByteString.Lazy as LBS

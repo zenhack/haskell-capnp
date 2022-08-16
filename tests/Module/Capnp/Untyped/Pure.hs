@@ -3,10 +3,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
+-- TODO(cleanup): the raw/pure split no longer exists, so this module path doesn't
+-- make a lot of sense anymore; reorganize.
 module Module.Capnp.Untyped.Pure (pureUntypedTests) where
 
-import Capnp.New (msgToRaw, parse)
-import Capnp.New.Basics
+import Capnp (msgToRaw, parse)
+import Capnp.Basics
 import Capnp.TraversalLimit (runLimitT)
 import qualified Data.Vector as V
 import GHC.Float (castDoubleToWord64)

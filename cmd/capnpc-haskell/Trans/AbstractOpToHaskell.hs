@@ -23,10 +23,10 @@ imports :: [Hs.Import]
 imports =
   [ Hs.ImportAs {importAs = "R", parts = ["Capnp", "Repr"]},
     Hs.ImportAs {importAs = "RP", parts = ["Capnp", "Repr", "Parsed"]},
-    Hs.ImportAs {importAs = "Basics", parts = ["Capnp", "New", "Basics"]},
+    Hs.ImportAs {importAs = "Basics", parts = ["Capnp", "Basics"]},
     Hs.ImportAs {importAs = "OL", parts = ["GHC", "OverloadedLabels"]},
-    Hs.ImportAs {importAs = "GH", parts = ["Capnp", "GenHelpers", "New"]},
-    Hs.ImportAs {importAs = "C", parts = ["Capnp", "New", "Classes"]},
+    Hs.ImportAs {importAs = "GH", parts = ["Capnp", "GenHelpers"]},
+    Hs.ImportAs {importAs = "C", parts = ["Capnp", "Classes"]},
     Hs.ImportAs {importAs = "Generics", parts = ["GHC", "Generics"]}
   ]
 
@@ -36,7 +36,7 @@ imports =
 -- must be imported *by* the rpc system.
 rpcImports :: [Hs.Import]
 rpcImports =
-  [ Hs.ImportAs {importAs = "GH", parts = ["Capnp", "GenHelpers", "New", "Rpc"]}
+  [ Hs.ImportAs {importAs = "GH", parts = ["Capnp", "GenHelpers", "Rpc"]}
   ]
 
 fileToModules :: AO.File -> [Hs.Module]
@@ -49,7 +49,7 @@ fileToMainModule :: AO.File -> Hs.Module
 fileToMainModule file@AO.File {fileName, usesRpc} =
   fixImports $
     Hs.Module
-      { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"],
+      { modName = ["Capnp", "Gen"] ++ makeModName fileName,
         modLangPragmas =
           [ "TypeFamilies",
             "DataKinds",
@@ -75,9 +75,9 @@ fileToMainModule file@AO.File {fileName, usesRpc} =
 
 fileToModuleAlias :: AO.File -> Hs.Module
 fileToModuleAlias AO.File {fileId, fileName} =
-  let reExport = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
+  let reExport = ["Capnp", "Gen"] ++ makeModName fileName
    in Hs.Module
-        { modName = idToModule fileId ++ ["New"],
+        { modName = idToModule fileId,
           modLangPragmas = [],
           modExports = Just [Hs.ExportMod reExport],
           modImports = [Hs.ImportAll {parts = reExport}],
@@ -556,7 +556,7 @@ paramConstraints t =
 tCapnp :: Word64 -> Name.CapnpQ -> Hs.Type
 tCapnp thisMod Name.CapnpQ {local, fileId}
   | thisMod == fileId = Hs.TLName local
-  | otherwise = tgName (map Name.renderUnQ $ idToModule fileId ++ ["New"]) local
+  | otherwise = tgName (map Name.renderUnQ $ idToModule fileId) local
 
 fieldLocTypeToType :: Word64 -> C.FieldLocType AO.Brand Name.CapnpQ -> Hs.Type
 fieldLocTypeToType thisMod = \case

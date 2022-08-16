@@ -4,8 +4,8 @@
 
 module Examples.Rpc.EchoServer (main) where
 
-import Capnp.Gen.Echo.New
-import Capnp.New (SomeServer, def, defaultLimit, export, handleParsed)
+import Capnp.Gen.Echo
+import Capnp (SomeServer, def, defaultLimit, export, handleParsed)
 import Capnp.Rpc (ConnConfig (..), handleConn, socketTransport, toClient)
 import Network.Simple.TCP (serve)
 

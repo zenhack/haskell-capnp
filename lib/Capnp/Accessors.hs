@@ -8,9 +8,9 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
--- | Module: Capnp.New.Accessors
+-- | Module: Capnp.Accessors
 -- Description: Functions for accessing parts of messaages.
-module Capnp.New.Accessors
+module Capnp.Accessors
   ( readField,
     getField,
     setField,
@@ -28,9 +28,9 @@ module Capnp.New.Accessors
   )
 where
 
+import qualified Capnp.Classes as C
 import qualified Capnp.Fields as F
 import Capnp.Message (Mutability (..))
-import qualified Capnp.New.Classes as C
 import qualified Capnp.Repr as R
 import Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped as U

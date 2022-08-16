@@ -2,9 +2,9 @@
 
 module PointerOOB (tests) where
 
+import qualified Capnp as Capnp
 import qualified Capnp.Errors as E
 import qualified Capnp.Message as M
-import qualified Capnp.New as Capnp
 import qualified Capnp.Pointer as P
 import qualified Capnp.Untyped as U
 import Control.Category ((>>>))

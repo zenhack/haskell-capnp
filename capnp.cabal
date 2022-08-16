@@ -95,18 +95,19 @@ library
         Capnp.Address
       , Capnp.Bits
       , Capnp.Canonicalize
-      , Capnp.New
-      , Capnp.New.Accessors
-      , Capnp.New.Basics
-      , Capnp.New.Classes
-      , Capnp.New.Constraints
-      , Capnp.New.Rpc.Common
+      , Capnp
+      , Capnp.Accessors
+      , Capnp.Basics
+      , Capnp.Classes
+      , Capnp.Constraints
+      , Capnp.Rpc.Common
+      , Capnp.Rpc.Server
       , Capnp.New.Rpc.Server
       , Capnp.Convert
       , Capnp.Errors
       , Capnp.Fields
-      , Capnp.GenHelpers.New
-      , Capnp.GenHelpers.New.Rpc
+      , Capnp.GenHelpers
+      , Capnp.GenHelpers.Rpc
       , Capnp.IO
       , Capnp.Message
       , Capnp.Mutability
@@ -121,7 +122,6 @@ library
       , Capnp.Rpc.Untyped
       , Capnp.Rpc.Errors
       , Capnp.Rpc.Transport
-      , Capnp.Rpc.Server
       , Capnp.Tutorial
 
       , Data.Mutable
@@ -130,21 +130,21 @@ library
       , Capnp.Gen.Capnp
 
       -- BEGIN GENERATED SCHEMA MODULES
-      , Capnp.Gen.Capnp.Cxx.New
-      , Capnp.Gen.Capnp.Compat.Json.New
-      , Capnp.Gen.Capnp.Persistent.New
-      , Capnp.Gen.Capnp.Rpc.New
-      , Capnp.Gen.Capnp.RpcTwoparty.New
-      , Capnp.Gen.Capnp.Schema.New
-      , Capnp.Gen.Capnp.Stream.New
+      , Capnp.Gen.Capnp.Cxx
+      , Capnp.Gen.Capnp.Compat.Json
+      , Capnp.Gen.Capnp.Persistent
+      , Capnp.Gen.Capnp.Rpc
+      , Capnp.Gen.Capnp.RpcTwoparty
+      , Capnp.Gen.Capnp.Schema
+      , Capnp.Gen.Capnp.Stream
 
-      , Capnp.Gen.ById.Xbdf87d7bb8304e81.New
-      , Capnp.Gen.ById.X8ef99297a43a5e34.New
-      , Capnp.Gen.ById.Xb8630836983feed7.New
-      , Capnp.Gen.ById.Xb312981b2552a250.New
-      , Capnp.Gen.ById.Xa184c7885cdaf2a1.New
-      , Capnp.Gen.ById.Xa93fc509624c72d9.New
-      , Capnp.Gen.ById.X86c366a91393f3f8.New
+      , Capnp.Gen.ById.Xbdf87d7bb8304e81
+      , Capnp.Gen.ById.X8ef99297a43a5e34
+      , Capnp.Gen.ById.Xb8630836983feed7
+      , Capnp.Gen.ById.Xb312981b2552a250
+      , Capnp.Gen.ById.Xa184c7885cdaf2a1
+      , Capnp.Gen.ById.Xa93fc509624c72d9
+      , Capnp.Gen.ById.X86c366a91393f3f8
       -- END GENERATED SCHEMA MODULES
     other-modules:
         Internal.AppendVec
@@ -221,20 +221,20 @@ test-suite tests
       , Examples.Rpc.CalculatorServer
 
       -- Generated code for examples/calculator.capnp
-      , Capnp.Gen.Calculator.New
-      , Capnp.Gen.ById.X85150b117366d14b.New
+      , Capnp.Gen.Calculator
+      , Capnp.Gen.ById.X85150b117366d14b
 
       -- Generated code for examples/echo.capnp
-      , Capnp.Gen.Echo.New
-      , Capnp.Gen.ById.Xd0a87f36fa0182f5.New
+      , Capnp.Gen.Echo
+      , Capnp.Gen.ById.Xd0a87f36fa0182f5
 
       -- generated from tests/data/aircraft.capnp
-      , Capnp.Gen.Aircraft.New
-      , Capnp.Gen.ById.X832bcc6686a26d56.New
+      , Capnp.Gen.Aircraft
+      , Capnp.Gen.ById.X832bcc6686a26d56
 
       -- generated from tests/data/generics.capnp
-      , Capnp.Gen.Generics.New
-      , Capnp.Gen.ById.Xb6421fb8e478d144.New
+      , Capnp.Gen.Generics
+      , Capnp.Gen.ById.Xb6421fb8e478d144
 
       -- Actual tests:
       , Module.Capnp.Gen.Capnp.Schema

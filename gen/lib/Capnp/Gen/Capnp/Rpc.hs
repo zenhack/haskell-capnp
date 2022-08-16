@@ -20,13 +20,13 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-module Capnp.Gen.Capnp.Rpc.New where
+module Capnp.Gen.Capnp.Rpc where
 import qualified Capnp.Repr as R
 import qualified Capnp.Repr.Parsed as RP
-import qualified Capnp.New.Basics as Basics
+import qualified Capnp.Basics as Basics
 import qualified GHC.OverloadedLabels as OL
-import qualified Capnp.GenHelpers.New as GH
-import qualified Capnp.New.Classes as C
+import qualified Capnp.GenHelpers as GH
+import qualified Capnp.Classes as C
 import qualified GHC.Generics as Generics
 import qualified Prelude as Std_
 import qualified Data.Word as Std_

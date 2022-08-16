@@ -4,8 +4,7 @@
 
 module Module.Capnp.Basics (basicsTests) where
 
-import Capnp.Mutability (freeze)
-import Capnp.New
+import Capnp
   ( List,
     Mutability (..),
     Raw (..),
@@ -14,7 +13,8 @@ import Capnp.New
     length,
     newMessage,
   )
-import Capnp.New.Basics
+import Capnp.Basics
+import Capnp.Mutability (freeze)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString as BS
 import qualified Data.Text as T

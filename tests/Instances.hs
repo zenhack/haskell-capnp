@@ -8,13 +8,13 @@
 --
 -- In particular, stuff from:
 --
--- * "Capnp.New.Basics"
--- * "Capnp.Gen.Capnp.Schema.New"
+-- * "Capnp.Basics"
+-- * "Capnp.Gen.Capnp.Schema"
 module Instances () where
 
-import Capnp.Gen.Capnp.Schema.New
-import Capnp.New (Which)
-import qualified Capnp.New.Basics as B
+import Capnp (Which)
+import qualified Capnp.Basics as B
+import Capnp.Gen.Capnp.Schema
 import qualified Data.Vector as V
 import Data.Word
 import Test.QuickCheck

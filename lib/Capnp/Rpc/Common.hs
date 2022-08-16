@@ -1,4 +1,4 @@
-module Capnp.New.Rpc.Common
+module Capnp.Rpc.Common
   ( Client (..),
     Pipeline (..),
   )

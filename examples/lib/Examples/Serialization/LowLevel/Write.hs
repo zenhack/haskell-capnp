@@ -4,8 +4,8 @@
 
 module Examples.Serialization.LowLevel.Write (main) where
 
-import Capnp.Gen.Addressbook.New
-import qualified Capnp.New as C
+import Capnp.Gen.Addressbook
+import qualified Capnp as C
 import Data.Function ((&))
 import qualified Data.Text as T
 

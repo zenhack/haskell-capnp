@@ -6,10 +6,10 @@
 -- Description: Translate from schema.capnp's codegenerator request to IR.Stage1.
 module Trans.CgrToStage1 (cgrToCgr) where
 
+import qualified Capnp.Basics as B
+import Capnp.Classes (toWord)
 import Capnp.Fields (HasUnion (..))
-import qualified Capnp.Gen.Capnp.Schema.New as Schema
-import qualified Capnp.New.Basics as B
-import Capnp.New.Classes (toWord)
+import qualified Capnp.Gen.Capnp.Schema as Schema
 import Capnp.Repr.Parsed (Parsed)
 import qualified Data.ByteString as BS
 import Data.Function ((&))

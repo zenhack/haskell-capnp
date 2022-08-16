@@ -56,16 +56,16 @@ module Capnp.Rpc.Untyped
   )
 where
 
+import Capnp.Accessors
+import qualified Capnp.Basics as B
 import Capnp.Bits (WordCount, bytesToWordsFloor)
+import Capnp.Classes (new, newRoot, parse)
 import Capnp.Convert (msgToRaw, parsedToMsg)
 import Capnp.Fields (Which)
-import qualified Capnp.Gen.Capnp.Rpc.New as R
+import qualified Capnp.Gen.Capnp.Rpc as R
 import Capnp.Message (Message)
 import qualified Capnp.Message as Message
 import Capnp.Mutability (Mutability (..), thaw)
-import Capnp.New.Accessors
-import qualified Capnp.New.Basics as B
-import Capnp.New.Classes (new, newRoot, parse)
 import Capnp.Repr (Raw (..))
 import Capnp.Rpc.Errors
   ( eDisconnected,

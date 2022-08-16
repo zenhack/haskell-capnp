@@ -30,12 +30,12 @@ module Capnp.Repr.Methods
   )
 where
 
+import qualified Capnp.Classes as C
 import qualified Capnp.Fields as F
 import Capnp.Message (Mutability (..), newMessage)
 import qualified Capnp.Message as M
-import qualified Capnp.New.Classes as NC
-import Capnp.New.Rpc.Common (Client (..), Pipeline (..))
 import qualified Capnp.Repr as R
+import Capnp.Rpc.Common (Client (..), Pipeline (..))
 import Capnp.Rpc.Promise (Promise, newPromise, wait)
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.Rpc.Untyped as Rpc
@@ -81,7 +81,7 @@ instance AsClient Client where
   asClient = liftSTM . pure
 
 -- | Upcast is a (safe) cast from an interface to one of its superclasses.
-upcast :: (AsClient f, Coercible (f p) (f c), NC.Super p c) => f c -> f p
+upcast :: (AsClient f, Coercible (f p) (f c), C.Super p c) => f c -> f p
 upcast = coerce
 
 -- | Call a method. Use the provided 'PureBuilder' to construct the parameters.
@@ -130,7 +130,7 @@ callP ::
   ( AsClient f,
     R.IsCap c,
     R.IsStruct p,
-    NC.Parse p pp,
+    C.Parse p pp,
     MonadIO m
   ) =>
   Method c p r ->
@@ -140,7 +140,7 @@ callP ::
 callP method parsed client = liftIO $ do
   struct <- createPure maxBound $ do
     msg <- newMessage Nothing
-    R.fromRaw <$> NC.encode msg parsed
+    R.fromRaw <$> C.encode msg parsed
   callR method (R.Raw struct) client
 
 -- | Project a pipeline to a struct onto one of its pointer fields.

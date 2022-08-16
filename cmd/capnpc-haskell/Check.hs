@@ -3,7 +3,7 @@
 
 module Check (reportIssues) where
 
-import Capnp.Gen.Capnp.Schema.New
+import Capnp.Gen.Capnp.Schema
 import Data.Foldable (for_)
 import qualified Data.Vector as V
 import System.IO (hPutStrLn, stderr)

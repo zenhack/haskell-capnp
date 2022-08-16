@@ -31,6 +31,7 @@ module Capnp.IO
 where
 
 import Capnp.Bits (WordCount, wordsToBytes)
+import Capnp.Classes (Parse)
 import Capnp.Convert
   ( msgToLBS,
     msgToParsed,
@@ -40,7 +41,6 @@ import Capnp.Convert
   )
 import Capnp.Message (Mutability (..))
 import qualified Capnp.Message as M
-import Capnp.New.Classes (Parse)
 import qualified Capnp.Repr as R
 import Capnp.TraversalLimit (evalLimitT)
 import Control.Exception (throwIO)

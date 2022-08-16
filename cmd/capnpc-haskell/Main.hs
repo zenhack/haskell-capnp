@@ -2,8 +2,8 @@
 -- generator plugin.
 module Main (main) where
 
-import Capnp.Gen.Capnp.Schema.New (CodeGeneratorRequest)
-import Capnp.New (Parsed, defaultLimit, getParsed)
+import Capnp (Parsed, defaultLimit, getParsed)
+import Capnp.Gen.Capnp.Schema (CodeGeneratorRequest)
 import qualified Check
 import Data.Foldable (for_)
 import qualified Data.Text.Lazy as LT

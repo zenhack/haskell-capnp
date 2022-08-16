@@ -11,12 +11,12 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Module: Capnp.New.Classes
+-- | Module: Capnp.Classes
 -- Description: Misc. type classes
 --
 -- This module contains several type classes (and related utilities)
 -- useful for operating over Cap'n Proto values.
-module Capnp.New.Classes
+module Capnp.Classes
   ( -- * Encoding and decoding parsed forms of values
     Parse (..),
     Parsed,

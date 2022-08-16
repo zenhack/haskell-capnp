@@ -5,11 +5,11 @@
 
 module Module.Capnp.Gen.Capnp.Schema (schemaTests) where
 
-import qualified Capnp.Gen.Capnp.Schema.New as N
+import Capnp (encodeField, encodeVariant, initVariant, readField)
+import qualified Capnp.Classes as C
+import qualified Capnp.Gen.Capnp.Schema as S
 import qualified Capnp.Message as M
 import Capnp.Mutability (freeze)
-import Capnp.New (encodeField, encodeVariant, initVariant, readField)
-import qualified Capnp.New.Classes as NC
 import Capnp.TraversalLimit (LimitT, evalLimitT)
 import Control.Monad.Primitive (RealWorld)
 import Data.Foldable (traverse_)
@@ -38,7 +38,7 @@ schemaTests =
                   "  ordinal = (explicit = 22) )\n"
                 ],
             builder = \msg -> do
-              field <- NC.newRoot @N.Field () msg
+              field <- C.newRoot @S.Field () msg
               field & encodeField #codeOrder 4
               field & encodeField #discriminantValue 6
               field

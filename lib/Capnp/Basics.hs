@@ -11,23 +11,23 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |
--- Module: Capnp.New.Basics
+-- Module: Capnp.Basics
 -- Description: Handling of "basic" capnp datatypes.
 --
 -- This module contains phantom types for built-in Cap'n Proto
 -- types, analogous to the phantom types generated for structs
 -- by the code generator. It also defines applicable type class
 -- instances.
-module Capnp.New.Basics where
+module Capnp.Basics where
 
 -- XXX: I(zenhack) don't know how to supply an explicit
 -- export list here, since we have instances of data families
 -- and I don't know what to call the instances to get all of the
 -- constructors.
 
+import qualified Capnp.Classes as C
 import qualified Capnp.Errors as E
 import qualified Capnp.Message as M
-import qualified Capnp.New.Classes as C
 import qualified Capnp.Repr as R
 import qualified Capnp.Untyped as U
 import Control.Monad (when)

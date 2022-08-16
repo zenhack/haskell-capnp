@@ -19,11 +19,11 @@ module Capnp.Rpc.Transport
 where
 
 import Capnp.Bits (WordCount)
+import Capnp.Classes (Parsed)
 import Capnp.Convert (msgToParsed)
-import qualified Capnp.Gen.Capnp.Rpc.New as R
+import qualified Capnp.Gen.Capnp.Rpc as R
 import Capnp.IO (hGetMsg, hPutMsg, sGetMsg, sPutMsg)
 import Capnp.Message (Message, Mutability (Const))
-import Capnp.New.Classes (Parsed)
 import Capnp.TraversalLimit (evalLimitT)
 import Data.Default (def)
 import Network.Socket (Socket)

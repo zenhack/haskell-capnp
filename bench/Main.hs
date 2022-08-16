@@ -4,8 +4,8 @@
 
 module Main (main) where
 
+import qualified Capnp as C
 import Capnp.Mutability (thaw)
-import qualified Capnp.New as C
 import qualified Capnp.Untyped as U
 import Control.DeepSeq (NFData (..))
 import Control.Monad (unless)

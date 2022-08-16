@@ -3,8 +3,8 @@
 
 module Examples.Serialization.LowLevel.Read (main) where
 
-import Capnp.Gen.Addressbook.New
-import qualified Capnp.New as C
+import Capnp.Gen.Addressbook
+import qualified Capnp as C
 import Control.Monad (forM_)
 import Control.Monad.Trans (lift)
 import Data.Function ((&))

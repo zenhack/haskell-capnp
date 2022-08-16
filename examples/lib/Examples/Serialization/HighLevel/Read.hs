@@ -3,8 +3,8 @@
 
 module Examples.Serialization.HighLevel.Read (main) where
 
-import Capnp.Gen.Addressbook.New
-import Capnp.New (defaultLimit, getParsed)
+import Capnp.Gen.Addressbook
+import Capnp (defaultLimit, getParsed)
 
 main :: IO ()
 main = do

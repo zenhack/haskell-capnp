@@ -6,9 +6,9 @@
 -- Things used by both RawToHaskell and PureToHaskell.
 module Trans.ToHaskellCommon where
 
-import qualified Capnp.New as Capnp
-import qualified Capnp.New.Basics as B
-import Capnp.New.Classes (encode)
+import qualified Capnp as Capnp
+import qualified Capnp.Basics as B
+import Capnp.Classes (encode)
 import Capnp.Repr.Parsed (Parsed)
 import qualified Data.ByteString.Lazy as LBS
 import Data.Char (toUpper)

@@ -28,7 +28,7 @@ module Capnp.Rpc.Promise
   )
 where
 
-import Capnp.Gen.Capnp.Rpc.New
+import Capnp.Gen.Capnp.Rpc
 -- For exception instance:
 import Capnp.Rpc.Errors ()
 import Control.Concurrent.STM

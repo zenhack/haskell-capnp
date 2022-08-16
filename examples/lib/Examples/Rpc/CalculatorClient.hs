@@ -4,8 +4,8 @@
 
 module Examples.Rpc.CalculatorClient (main) where
 
-import Capnp.Gen.Calculator.New
-import qualified Capnp.New as C
+import Capnp.Gen.Calculator
+import qualified Capnp as C
 import Capnp.Rpc
   ( ConnConfig (..),
     fromClient,

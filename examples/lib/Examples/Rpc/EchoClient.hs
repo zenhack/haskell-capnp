@@ -3,8 +3,8 @@
 
 module Examples.Rpc.EchoClient (main) where
 
-import Capnp.Gen.Echo.New
-import qualified Capnp.New as C
+import Capnp.Gen.Echo
+import qualified Capnp as C
 import Capnp.Rpc
   ( ConnConfig (..),
     fromClient,

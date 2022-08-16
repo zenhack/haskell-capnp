@@ -2,11 +2,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 
--- | Module: Capnp.New.Constraints
+-- | Module: Capnp.Constraints
 -- Description: convenience shorthands for various constraints.
-module Capnp.New.Constraints where
+module Capnp.Constraints where
 
-import qualified Capnp.New.Classes as C
+import qualified Capnp.Classes as C
 import qualified Capnp.Repr as R
 import qualified Capnp.Repr.Parsed as RP
 

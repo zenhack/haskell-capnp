@@ -6,7 +6,7 @@
 
 module IR.Common where
 
-import qualified Capnp.New.Basics as B
+import qualified Capnp.Basics as B
 import Capnp.Repr.Parsed (Parsed)
 import Data.Bifunctor (Bifunctor (..))
 import qualified Data.Map.Strict as M

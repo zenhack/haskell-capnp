@@ -21,7 +21,7 @@ module Capnp.Rpc.Errors
   )
 where
 
-import Capnp.Gen.Capnp.Rpc.New
+import Capnp.Gen.Capnp.Rpc
 import qualified Control.Exception.Safe as E
 import Data.Default (Default (def))
 import Data.Maybe (fromMaybe)

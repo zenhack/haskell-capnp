@@ -4,9 +4,9 @@
 
 module Regression (regressionTests) where
 
-import Capnp.Gen.Aircraft.New
-import Capnp.Gen.Capnp.Rpc.New
-import Capnp.New (bsToParsed, def, evalLimitT)
+import Capnp (bsToParsed, def, evalLimitT)
+import Capnp.Gen.Aircraft
+import Capnp.Gen.Capnp.Rpc
 import Test.Hspec
 
 regressionTests :: Spec

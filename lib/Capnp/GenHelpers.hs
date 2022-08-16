@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Capnp.GenHelpers.New
+module Capnp.GenHelpers
   ( dataField,
     ptrField,
     groupField,
@@ -21,22 +21,22 @@ module Capnp.GenHelpers.New
     getPtrConst,
     BS.ByteString,
     module F,
-    module Capnp.New.Accessors,
+    module Capnp.Accessors,
 
     -- * Re-exports from the standard library.
     Proxy (..),
   )
 where
 
+import Capnp.Accessors
+import qualified Capnp.Basics as NB
 import Capnp.Bits
+import qualified Capnp.Classes as NC
+import Capnp.Constraints (TypeParam)
 import Capnp.Convert (bsToRaw)
 import Capnp.Fields as F
 import Capnp.Message (Mutability (..))
 import qualified Capnp.Message as M
-import Capnp.New.Accessors
-import qualified Capnp.New.Basics as NB
-import qualified Capnp.New.Classes as NC
-import Capnp.New.Constraints (TypeParam)
 import qualified Capnp.Repr as R
 import Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped as U

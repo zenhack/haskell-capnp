@@ -10,12 +10,11 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
+-- TODO(cleanup): the raw/pure split no longer exists, so this module path no longer
+-- makes sense; reorganize.
 module Module.Capnp.Gen.Capnp.Schema.Pure (pureSchemaTests) where
 
-import Capnp.Gen.Capnp.Schema.New
-import qualified Capnp.Message as M
-import Capnp.Mutability (freeze)
-import Capnp.New
+import Capnp
   ( IsStruct,
     Mutability (..),
     Parse (..),
@@ -26,6 +25,9 @@ import Capnp.New
     hPutParsed,
     msgToParsed,
   )
+import Capnp.Gen.Capnp.Schema
+import qualified Capnp.Message as M
+import Capnp.Mutability (freeze)
 import qualified Capnp.Untyped as U
 import Control.Exception.Safe (bracket)
 import Control.Monad (when)

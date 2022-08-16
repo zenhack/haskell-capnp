@@ -27,10 +27,10 @@ module Capnp.New.Rpc.Server
   )
 where
 
+import qualified Capnp.Basics as B
+import qualified Capnp.Classes as C
 import Capnp.Convert (parsedToRaw)
 import Capnp.Message (Mutability (..))
-import qualified Capnp.New.Basics as B
-import qualified Capnp.New.Classes as C
 import qualified Capnp.Repr as R
 import Capnp.Repr.Methods (Client (..))
 import Capnp.Rpc.Errors

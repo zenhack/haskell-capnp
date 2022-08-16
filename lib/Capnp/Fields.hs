@@ -24,8 +24,8 @@ module Capnp.Fields
 where
 
 import Capnp.Bits
+import qualified Capnp.Classes as C
 import qualified Capnp.Message as M
-import qualified Capnp.New.Classes as NC
 import qualified Capnp.Repr as R
 import qualified Capnp.Untyped as U
 import Data.Word
@@ -55,7 +55,7 @@ newtype Field (k :: FieldKind) a b = Field (FieldLoc k (R.ReprFor b))
 data FieldLoc (k :: FieldKind) (r :: R.Repr) where
   GroupField :: FieldLoc 'Group ('R.Ptr ('Just 'R.Struct))
   PtrField :: R.IsPtrRepr a => Word16 -> FieldLoc 'Slot ('R.Ptr a)
-  DataField :: NC.IsWord (R.UntypedData a) => DataFieldLoc a -> FieldLoc 'Slot ('R.Data a)
+  DataField :: C.IsWord (R.UntypedData a) => DataFieldLoc a -> FieldLoc 'Slot ('R.Data a)
   VoidField :: FieldLoc 'Slot ('R.Data 'R.Sz0)
 
 -- | The location of a data (non-pointer) field.
@@ -87,18 +87,18 @@ class R.IsStruct a => HasUnion a where
 
 type instance R.ReprFor (Which a) = 'R.Ptr ('Just 'R.Struct)
 
-instance (NC.Allocate a, HasUnion a, R.IsStruct (Which a)) => NC.Allocate (Which a) where
-  type AllocHint (Which a) = NC.AllocHint a
+instance (C.Allocate a, HasUnion a, R.IsStruct (Which a)) => C.Allocate (Which a) where
+  type AllocHint (Which a) = C.AllocHint a
   new hint msg = do
-    R.Raw struct <- NC.new @a hint msg
+    R.Raw struct <- C.new @a hint msg
     pure (R.Raw struct)
 
 instance
-  ( NC.Allocate (Which a),
-    NC.AllocHint (Which a) ~ (),
-    NC.Parse (Which a) p
+  ( C.Allocate (Which a),
+    C.AllocHint (Which a) ~ (),
+    C.Parse (Which a) p
   ) =>
-  NC.EstimateAlloc (Which a) p
+  C.EstimateAlloc (Which a) p
 
 -- | @'Variant' k a b@ is a first-class representation of a variant of @a@'s
 -- anonymous union, whose argument is of type @b@.

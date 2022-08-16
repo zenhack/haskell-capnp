@@ -5,12 +5,12 @@
 
 module Rpc.Unwrap (unwrapTests) where
 
-import qualified Capnp.Gen.Aircraft.New as Aircraft
-import Capnp.New
+import Capnp
   ( SomeServer (..),
     export,
     methodUnimplemented,
   )
+import qualified Capnp.Gen.Aircraft as Aircraft
 import qualified Capnp.Rpc as Rpc
 import Data.Typeable (Typeable)
 import qualified Data.Typeable as Typeable

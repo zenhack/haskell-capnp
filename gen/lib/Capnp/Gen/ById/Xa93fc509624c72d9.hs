@@ -4,8 +4,8 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-module Capnp.Gen.ById.X86c366a91393f3f8.New(module Capnp.Gen.Capnp.Stream.New) where
-import Capnp.Gen.Capnp.Stream.New
+module Capnp.Gen.ById.Xa93fc509624c72d9(module Capnp.Gen.Capnp.Schema) where
+import Capnp.Gen.Capnp.Schema
 import qualified Prelude as Std_
 import qualified Data.Word as Std_
 import qualified Data.Int as Std_

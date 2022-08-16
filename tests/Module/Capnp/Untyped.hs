@@ -18,10 +18,7 @@
 
 module Module.Capnp.Untyped (untypedTests) where
 
-import Capnp.Gen.Capnp.Schema.New
-import qualified Capnp.Message as M
-import Capnp.Mutability (freeze, thaw)
-import Capnp.New
+import Capnp
   ( createPure,
     def,
     encode,
@@ -29,6 +26,9 @@ import Capnp.New
     newRoot,
     setField,
   )
+import Capnp.Gen.Capnp.Schema
+import qualified Capnp.Message as M
+import Capnp.Mutability (freeze, thaw)
 import qualified Capnp.Repr as R
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 import Capnp.Untyped

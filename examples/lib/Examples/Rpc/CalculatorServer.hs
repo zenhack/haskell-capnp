@@ -8,8 +8,8 @@
 
 module Examples.Rpc.CalculatorServer (main) where
 
-import Capnp.Gen.Calculator.New
-import Capnp.New
+import Capnp.Gen.Calculator
+import Capnp
   ( Client,
     Pipeline,
     SomeServer,

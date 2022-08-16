@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Capnp.GenHelpers.New.Rpc
+module Capnp.GenHelpers.Rpc
   ( module Capnp.New.Rpc.Server,
     module Capnp.Repr.Methods,
     parseCap,

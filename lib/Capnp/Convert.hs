@@ -39,9 +39,9 @@ module Capnp.Convert
   )
 where
 
+import Capnp.Classes (Parse (encode, parse))
 import qualified Capnp.Message as M
 import Capnp.Mutability (Mutability (..), freeze)
-import Capnp.New.Classes (Parse (encode, parse))
 import qualified Capnp.Repr as R
 import qualified Capnp.Untyped as U
 import Control.Monad.Catch (MonadThrow)

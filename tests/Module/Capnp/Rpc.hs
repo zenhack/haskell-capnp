@@ -12,12 +12,7 @@
 
 module Module.Capnp.Rpc (rpcTests) where
 
-import Capnp.Bits (WordCount)
-import Capnp.Gen.Aircraft.New hiding (Left, Right)
-import Capnp.Gen.Capnp.Rpc.New
-import qualified Capnp.Gen.Echo.New as E
-import Capnp.Mutability (freeze)
-import Capnp.New
+import Capnp
   ( Client,
     IsCap,
     Parse (..),
@@ -38,6 +33,11 @@ import Capnp.New
     parsedToMsg,
     waitPipeline,
   )
+import Capnp.Bits (WordCount)
+import Capnp.Gen.Aircraft hiding (Left, Right)
+import Capnp.Gen.Capnp.Rpc
+import qualified Capnp.Gen.Echo as E
+import Capnp.Mutability (freeze)
 import qualified Capnp.Pointer as P
 import qualified Capnp.Repr as R
 import Capnp.Rpc hiding (Client)

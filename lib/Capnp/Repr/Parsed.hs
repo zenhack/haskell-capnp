@@ -4,10 +4,10 @@
 
 module Capnp.Repr.Parsed (Parsed) where
 
-import qualified Capnp.New.Basics as B
-import qualified Capnp.New.Classes as C
-import Capnp.New.Rpc.Common (Client)
+import qualified Capnp.Basics as B
+import qualified Capnp.Classes as C
 import Capnp.Repr (List, PtrRepr (..), Repr (..), ReprFor)
+import Capnp.Rpc.Common (Client)
 import qualified Data.ByteString as BS
 import Data.Kind (Type)
 import qualified Data.Text as T

@@ -10,9 +10,7 @@
 -- failing if any of the data is not as expected.
 module WalkSchemaCodeGenRequest (walkSchemaCodeGenRequestTest) where
 
-import qualified Capnp.Gen.Capnp.Schema.New as Schema
-import qualified Capnp.Message as M
-import Capnp.New
+import Capnp
   ( Raw,
     bsToRaw,
     hasField,
@@ -22,6 +20,8 @@ import Capnp.New
     readField,
     textBytes,
   )
+import qualified Capnp.Gen.Capnp.Schema as Schema
+import qualified Capnp.Message as M
 import Capnp.TraversalLimit (LimitT, evalLimitT, execLimitT)
 import Control.Monad (when)
 import Control.Monad.Trans.Class (lift)
