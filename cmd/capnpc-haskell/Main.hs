@@ -13,10 +13,10 @@ import qualified IR.Haskell as Haskell
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import System.IO (IOMode (WriteMode), withFile)
+import qualified Trans.AbstractOpToHaskell
 import qualified Trans.CgrToStage1
-import qualified Trans.FlatToNew
+import qualified Trans.FlatToAbstractOp
 import qualified Trans.HaskellToText
-import qualified Trans.NewToHaskell
 import qualified Trans.Stage1ToFlat
 
 main :: IO ()
@@ -45,5 +45,5 @@ handleCGR cgr =
 
 handleFlatNew :: Flat.CodeGenReq -> [Haskell.Module]
 handleFlatNew =
-  concatMap Trans.NewToHaskell.fileToModules
-    . Trans.FlatToNew.cgrToFiles
+  concatMap Trans.AbstractOpToHaskell.fileToModules
+    . Trans.FlatToAbstractOp.cgrToFiles

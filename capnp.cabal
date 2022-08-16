@@ -179,16 +179,16 @@ executable capnpc-haskell
   main-is: Main.hs
   other-modules:
       IR.Name
-      IR.New
+    , IR.AbstractOp
     , IR.Common
     , IR.Stage1
     , IR.Flat
     , IR.Haskell
     , Trans.CgrToStage1
     , Trans.Stage1ToFlat
-    , Trans.FlatToNew
+    , Trans.FlatToAbstractOp
     , Trans.ToHaskellCommon
-    , Trans.NewToHaskell
+    , Trans.AbstractOpToHaskell
     , Trans.HaskellToText
     , Check
   build-depends:

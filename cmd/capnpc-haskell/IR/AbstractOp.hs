@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module IR.New where
+module IR.AbstractOp where
 
 import qualified Capnp.Repr as R
 import Data.Word

@@ -3,7 +3,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Trans.NewToHaskell
+module Trans.AbstractOpToHaskell
   ( fileToModules,
   )
 where
@@ -12,10 +12,10 @@ import qualified Capnp.Repr as R
 import Control.Monad (guard)
 import Data.String (IsString (fromString))
 import Data.Word
+import qualified IR.AbstractOp as AO
 import qualified IR.Common as C
 import qualified IR.Haskell as Hs
 import qualified IR.Name as Name
-import qualified IR.New as New
 import Trans.ToHaskellCommon
 
 -- | Modules imported by all generated modules.
@@ -39,14 +39,14 @@ rpcImports =
   [ Hs.ImportAs {importAs = "GH", parts = ["Capnp", "GenHelpers", "New", "Rpc"]}
   ]
 
-fileToModules :: New.File -> [Hs.Module]
+fileToModules :: AO.File -> [Hs.Module]
 fileToModules file =
   [ fileToMainModule file,
     fileToModuleAlias file
   ]
 
-fileToMainModule :: New.File -> Hs.Module
-fileToMainModule file@New.File {fileName, usesRpc} =
+fileToMainModule :: AO.File -> Hs.Module
+fileToMainModule file@AO.File {fileName, usesRpc} =
   fixImports $
     Hs.Module
       { modName = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"],
@@ -73,8 +73,8 @@ fileToMainModule file@New.File {fileName, usesRpc} =
         modDecls = fileToDecls file
       }
 
-fileToModuleAlias :: New.File -> Hs.Module
-fileToModuleAlias New.File {fileId, fileName} =
+fileToModuleAlias :: AO.File -> Hs.Module
+fileToModuleAlias AO.File {fileId, fileName} =
   let reExport = ["Capnp", "Gen"] ++ makeModName fileName ++ ["New"]
    in Hs.Module
         { modName = idToModule fileId ++ ["New"],
@@ -84,14 +84,14 @@ fileToModuleAlias New.File {fileId, fileName} =
           modDecls = []
         }
 
-fileToDecls :: New.File -> [Hs.Decl]
-fileToDecls New.File {fileId, decls} =
+fileToDecls :: AO.File -> [Hs.Decl]
+fileToDecls AO.File {fileId, decls} =
   concatMap (declToDecls fileId) decls
 
-declToDecls :: Word64 -> New.Decl -> [Hs.Decl]
+declToDecls :: Word64 -> AO.Decl -> [Hs.Decl]
 declToDecls thisMod decl =
   case decl of
-    New.TypeDecl {name, nodeId, params, repr, extraTypeInfo} ->
+    AO.TypeDecl {name, nodeId, params, repr, extraTypeInfo} ->
       let dataName = Name.localToUnQ name
           typeArgs = toTVars params
           typ = case typeArgs of
@@ -103,7 +103,7 @@ declToDecls thisMod decl =
                   typeArgs,
                   dataVariants =
                     case extraTypeInfo of
-                      Just (New.EnumTypeInfo variants) ->
+                      Just (AO.EnumTypeInfo variants) ->
                         [ Hs.DataVariant
                             { dvCtorName = Name.localToUnQ $ Name.mkSub name variantName,
                               dvArgs = Hs.APos []
@@ -114,7 +114,7 @@ declToDecls thisMod decl =
                       _ -> [],
                   derives =
                     case extraTypeInfo of
-                      Just New.EnumTypeInfo {} -> ["Std_.Eq", "Std_.Show", "Generics.Generic"]
+                      Just AO.EnumTypeInfo {} -> ["Std_.Eq", "Std_.Show", "Generics.Generic"]
                       _ -> [],
                   dataNewtype = False,
                   dataInstance = False
@@ -137,7 +137,7 @@ declToDecls thisMod decl =
           ]
             ++ let ctx = paramsContext typeArgs
                 in case extraTypeInfo of
-                     Just New.StructTypeInfo {nWords, nPtrs} ->
+                     Just AO.StructTypeInfo {nWords, nPtrs} ->
                        [ Hs.DcInstance
                            { ctx,
                              typ = Hs.TApp (tgName ["C"] "TypedStruct") [typ],
@@ -200,7 +200,7 @@ declToDecls thisMod decl =
                              defs = []
                            }
                        ]
-                     Just (New.EnumTypeInfo variants) ->
+                     Just (AO.EnumTypeInfo variants) ->
                        [ Hs.DcInstance
                            { ctx,
                              typ = Hs.TApp (tStd_ "Enum") [typ],
@@ -290,11 +290,11 @@ declToDecls thisMod decl =
                              defs = []
                            }
                        ]
-                     Just New.InterfaceTypeInfo {methods, supers} ->
+                     Just AO.InterfaceTypeInfo {methods, supers} ->
                        defineInterfaceParse name params
                          ++ defineInterfaceServer thisMod name params methods supers
                      Nothing -> []
-    New.FieldDecl {containerType, typeParams, fieldName, fieldLocType} ->
+    AO.FieldDecl {containerType, typeParams, fieldName, fieldLocType} ->
       let tVars = toTVars typeParams
           ctx = paramsContext tVars
           labelType = Hs.TString (Name.renderUnQ fieldName)
@@ -317,7 +317,7 @@ declToDecls thisMod decl =
                   ]
               }
           ]
-    New.UnionDecl {name, typeParams, tagLoc, variants} ->
+    AO.UnionDecl {name, typeParams, tagLoc, variants} ->
       let tVars = toTVars typeParams
           typ = Hs.TApp (Hs.TLName name) tVars
        in Hs.DcInstance
@@ -348,7 +348,7 @@ declToDecls thisMod decl =
                 ]
             }
             : concatMap (variantToDecls thisMod name typeParams) variants
-    New.SuperDecl {subName, typeParams, superType} ->
+    AO.SuperDecl {subName, typeParams, superType} ->
       let tVars = toTVars typeParams
        in [ Hs.DcInstance
               { ctx = paramsContext tVars,
@@ -361,12 +361,12 @@ declToDecls thisMod decl =
                 defs = []
               }
           ]
-    New.MethodDecl
+    AO.MethodDecl
       { interfaceName,
         interfaceId,
         methodId,
         methodInfo =
-          New.MethodInfo
+          AO.MethodInfo
             { typeParams,
               methodName,
               paramType,
@@ -399,9 +399,9 @@ declToDecls thisMod decl =
                     ]
                 }
             ]
-    New.ParsedInstanceDecl {typeName, typeParams, parsedInstances} ->
+    AO.ParsedInstanceDecl {typeName, typeParams, parsedInstances} ->
       defineParsedInstances thisMod typeName typeParams parsedInstances
-    New.ConstDecl {name, value} ->
+    AO.ConstDecl {name, value} ->
       defineConstant thisMod name value
 
 defineConstant thisMod localName value =
@@ -467,7 +467,7 @@ defineRawData thisMod name tVars variants =
                         ]
                     ]
               }
-            | New.UnionVariant {variantName, fieldLocType} <- variants
+            | AO.UnionVariant {variantName, fieldLocType} <- variants
           ]
             ++ [ Hs.DataVariant
                    { dvCtorName = "RW_" <> Name.localToUnQ (unknownVariant name),
@@ -502,7 +502,7 @@ defineInternalWhich structName variants =
                       ]
                   ]
               )
-              | New.UnionVariant {tagValue, variantName} <- variants
+              | AO.UnionVariant {tagValue, variantName} <- variants
             ]
               ++ [ ( Hs.PVar "_",
                      Hs.EApp
@@ -515,7 +515,7 @@ defineInternalWhich structName variants =
                  ]
       }
 
-variantToDecls thisMod containerType typeParams New.UnionVariant {tagValue, variantName, fieldLocType} =
+variantToDecls thisMod containerType typeParams AO.UnionVariant {tagValue, variantName, fieldLocType} =
   let tVars = toTVars typeParams
       ctx = paramsContext tVars
       labelType = Hs.TString (Name.renderUnQ variantName)
@@ -558,7 +558,7 @@ tCapnp thisMod Name.CapnpQ {local, fileId}
   | thisMod == fileId = Hs.TLName local
   | otherwise = tgName (map Name.renderUnQ $ idToModule fileId ++ ["New"]) local
 
-fieldLocTypeToType :: Word64 -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Type
+fieldLocTypeToType :: Word64 -> C.FieldLocType AO.Brand Name.CapnpQ -> Hs.Type
 fieldLocTypeToType thisMod = \case
   C.VoidField -> Hs.TUnit
   C.DataField _ t -> wordTypeToType thisMod t
@@ -693,7 +693,7 @@ declareUnknownVariant name =
       dvArgs = Hs.APos [tStd_ "Word16"]
     }
 
-defineParsedInstances :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
+defineParsedInstances :: Word64 -> Name.LocalQ -> [Name.UnQ] -> AO.ParsedInstances -> [Hs.Decl]
 defineParsedInstances thisMod typeName typeParams instanceInfo =
   concatMap
     (\f -> f typeName typeParams instanceInfo)
@@ -702,13 +702,13 @@ defineParsedInstances thisMod typeName typeParams instanceInfo =
       defineMarshal
     ]
 
-defineParsed :: Word64 -> Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
+defineParsed :: Word64 -> Name.LocalQ -> [Name.UnQ] -> AO.ParsedInstances -> [Hs.Decl]
 defineParsed thisMod typeName typeParams instanceInfo =
   let tVars = map (Hs.TVar . Name.typeVarName) typeParams
       typ = Hs.TApp (Hs.TLName typeName) tVars
       parsedTy = case instanceInfo of
-        New.ParsedStruct {} -> typ
-        New.ParsedUnion {} -> Hs.TApp (tgName ["GH"] "Which") [typ]
+        AO.ParsedStruct {} -> typ
+        AO.ParsedUnion {} -> Hs.TApp (tgName ["GH"] "Which") [typ]
    in Hs.DcData
         Hs.Data
           { dataName = "C.Parsed",
@@ -718,7 +718,7 @@ defineParsed thisMod typeName typeParams instanceInfo =
             dataInstance = True,
             dataVariants =
               case instanceInfo of
-                New.ParsedStruct {fields, hasUnion, dataCtorName} ->
+                AO.ParsedStruct {fields, hasUnion, dataCtorName} ->
                   [ Hs.DataVariant
                       { dvCtorName = Name.localToUnQ dataCtorName,
                         dvArgs =
@@ -739,7 +739,7 @@ defineParsed thisMod typeName typeParams instanceInfo =
                                  ]
                       }
                   ]
-                New.ParsedUnion {variants} ->
+                AO.ParsedUnion {variants} ->
                   [ Hs.DataVariant
                       { dvCtorName = Name.localToUnQ $ Name.mkSub typeName name,
                         dvArgs = case ftype of
@@ -763,8 +763,8 @@ defineParsed thisMod typeName typeParams instanceInfo =
             | cls <- ["Show", "Eq"]
           ]
 
-defineParse :: Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
-defineParse typeName typeParams New.ParsedStruct {fields, hasUnion, dataCtorName} =
+defineParse :: Name.LocalQ -> [Name.UnQ] -> AO.ParsedInstances -> [Hs.Decl]
+defineParse typeName typeParams AO.ParsedStruct {fields, hasUnion, dataCtorName} =
   let tVars = toTVars typeParams
       typ = Hs.TApp (Hs.TLName typeName) tVars
    in [ Hs.DcInstance
@@ -793,7 +793,7 @@ defineParse typeName typeParams New.ParsedStruct {fields, hasUnion, dataCtorName
               ]
           }
       ]
-defineParse typeName typeParams New.ParsedUnion {variants} =
+defineParse typeName typeParams AO.ParsedUnion {variants} =
   let tVars = toTVars typeParams
       typ = Hs.TApp (tgName ["GH"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
    in [ Hs.DcInstance
@@ -859,8 +859,8 @@ defineInterfaceParse typeName typeParams =
           }
       ]
 
-defineMarshal :: Name.LocalQ -> [Name.UnQ] -> New.ParsedInstances -> [Hs.Decl]
-defineMarshal typeName typeParams New.ParsedStruct {fields, hasUnion, dataCtorName} =
+defineMarshal :: Name.LocalQ -> [Name.UnQ] -> AO.ParsedInstances -> [Hs.Decl]
+defineMarshal typeName typeParams AO.ParsedStruct {fields, hasUnion, dataCtorName} =
   let tVars = toTVars typeParams
       typ = Hs.TApp (Hs.TLName typeName) tVars
    in [ Hs.DcInstance
@@ -902,7 +902,7 @@ defineMarshal typeName typeParams New.ParsedStruct {fields, hasUnion, dataCtorNa
               ]
           }
       ]
-defineMarshal typeName typeParams New.ParsedUnion {variants} =
+defineMarshal typeName typeParams AO.ParsedUnion {variants} =
   let tVars = toTVars typeParams
       typ = Hs.TApp (tgName ["GH"] "Which") [Hs.TApp (Hs.TLName typeName) tVars]
    in [ Hs.DcInstance
@@ -967,7 +967,7 @@ defineInterfaceServer thisMod typeName typeParams methods supers =
                                       )
                                       [Hs.EVar "s_"]
                                   ]
-                                | New.MethodInfo {methodName} <- methods
+                                | AO.MethodInfo {methodName} <- methods
                               ],
                             Hs.EList
                               [ Hs.EApp
@@ -998,13 +998,13 @@ defineInterfaceServer thisMod typeName typeParams methods supers =
             decls =
               Hs.CdMinimal
                 [ mkMethodName typeName methodName
-                  | New.MethodInfo {methodName} <- methods
+                  | AO.MethodInfo {methodName} <- methods
                 ]
                 : concatMap (defineIfaceClassMethod thisMod typeName) methods
           }
       ]
 
-defineIfaceClassMethod thisMod typeName New.MethodInfo {methodName, paramType, resultType} =
+defineIfaceClassMethod thisMod typeName AO.MethodInfo {methodName, paramType, resultType} =
   let mkType t = typeToType thisMod (C.CompositeType t)
       name = mkMethodName typeName methodName
    in [ Hs.CdValueDecl
@@ -1029,7 +1029,7 @@ defineIfaceClassMethod thisMod typeName New.MethodInfo {methodName, paramType, r
 mkMethodName typeName methodName =
   Name.valueName (Name.mkSub typeName methodName)
 
-emitMarshalField :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
+emitMarshalField :: Name.UnQ -> C.FieldLocType AO.Brand Name.CapnpQ -> Hs.Exp
 emitMarshalField name (C.HereField _) =
   Hs.EDo
     [ Hs.DoBind "group_" $
@@ -1046,7 +1046,7 @@ emitMarshalField name _ =
       euName "raw_"
     ]
 
-emitMarshalVariant :: Name.UnQ -> C.FieldLocType New.Brand Name.CapnpQ -> Hs.Exp
+emitMarshalVariant :: Name.UnQ -> C.FieldLocType AO.Brand Name.CapnpQ -> Hs.Exp
 emitMarshalVariant name (C.HereField _) =
   Hs.EDo
     [ Hs.DoBind "rawGroup_" $

@@ -50,9 +50,11 @@ The flow is as follows:
   * Interfaces now contain a full list of their ancestors, not just
     immediate superclasses. This is useful when genrating instance
     declarations later on.
-* Next, we translate to the `New` IR (which should be renamed). This
-  form encodes the Haskell structures to be generated, rather than
-  a declarative representation of the schema. It contains things like:
+* Next, we translate to the `AbstractOp` IR. This form encodes the
+  Haskell structures to be generated, rather than what is declared in
+  the schema -- but the it is still abstract in the sense that it
+  only specifies what constructs should be generated. Thus, Abstract
+  and Operational. Examples:
   * Type declaration for this capnp type
   * An instance for 'Parse' for this type
   * etc
@@ -82,12 +84,9 @@ The flow is as follows:
 
 * `IR.Name` and `IR.Common` are used by multiple of the IRs.
 * `Trans.ToHaskellCommon` used to be used by multiple modules. It should
-   be folded into `Trans.NewToHaskell`.
+   be folded into `Trans.AbstractOpToHaskell`.
 
 * The names of some of the IRs are not very good.
   * `IR.Stage1` latter is not terribly descriptive.
   * `IR.Flat` reflects an out of date notion of what the flat IR's
     purpose is (it does more than just flatten the namespace).
-  * `IR.New` is an artifact of a transition from an old API that
-    was split into two generated modules. That API is gone now,
-    so we should give this a more presently useful name.
