@@ -1,3 +1,8 @@
+# 0.17.0.0
+
+- Get rid of the New qualifier in module paths, now that the old
+  API has been removed.
+
 # 0.16.0.0
 
 - Updated to work with GHC 9.2.x. In particular:
