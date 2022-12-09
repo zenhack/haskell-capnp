@@ -2,6 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module IR.Name where
 
@@ -76,10 +77,10 @@ instance MkSub LocalQ where
   mkSub q = mkLocal (localQToNS q)
 
 instance MkSub GlobalQ where
-  mkSub q@GlobalQ {local} unQ = q {local = mkSub local unQ}
+  mkSub GlobalQ {local, ..} unQ = GlobalQ {local = mkSub local unQ, ..}
 
 instance MkSub CapnpQ where
-  mkSub q@CapnpQ {local} unQ = q {local = mkSub local unQ}
+  mkSub CapnpQ {local, ..} unQ = CapnpQ {local = mkSub local unQ, ..}
 
 localQToNS :: LocalQ -> NS
 localQToNS LocalQ {localUnQ = UnQ part, localNS = NS parts} = NS (part : parts)
