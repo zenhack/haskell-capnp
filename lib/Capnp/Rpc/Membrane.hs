@@ -14,7 +14,6 @@ where
 
 import qualified Capnp.Message as M
 import Capnp.Mutability (Mutability (..))
-import qualified Capnp.Rpc.Common as Rpc
 import Capnp.Rpc.Promise (breakOrFulfill, newCallback)
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.Rpc.Untyped as URpc
@@ -27,9 +26,8 @@ import Data.Word
 import Supervisors (Supervisor)
 
 data Action
-  = Redirect URpc.Client
+  = Handle Server.UntypedMethodHandler
   | Forward
-  deriving (Eq)
 
 data Direction = In | Out
   deriving (Show, Read, Eq)
@@ -47,19 +45,19 @@ data Call = Call
     target :: URpc.Client
   }
 
-type Policy = Call -> Action
+type Policy = Call -> STM Action
 
-enclose :: MonadSTM m => Supervisor -> Rpc.Client a -> Policy -> m (Rpc.Client a)
+enclose :: (URpc.IsClient c, MonadSTM m) => Supervisor -> c -> Policy -> m c
 enclose = newMembrane In
 
-exclude :: MonadSTM m => Supervisor -> Rpc.Client a -> Policy -> m (Rpc.Client a)
+exclude :: (URpc.IsClient c, MonadSTM m) => Supervisor -> c -> Policy -> m c
 exclude = newMembrane Out
 
-newMembrane :: MonadSTM m => Direction -> Supervisor -> Rpc.Client a -> Policy -> m (Rpc.Client a)
-newMembrane dir sup (Rpc.Client toWrap) policy = liftSTM $ do
+newMembrane :: (URpc.IsClient c, MonadSTM m) => Direction -> Supervisor -> c -> Policy -> m c
+newMembrane dir sup toWrap policy = liftSTM $ do
   identity <- newTVar ()
   let mem = Membrane {policy, identity}
-  Rpc.Client <$> pass dir sup mem toWrap
+  URpc.fromClient <$> pass dir sup mem (URpc.toClient toWrap)
 
 data MembraneWrapped = MembraneWrapped
   { client :: URpc.Client,
@@ -115,11 +113,18 @@ pass dir sup mem inClient = liftSTM $
             -- This introduces latency unfortuantely, but nothing is broken.
             Server.handleStop = pure (),
             Server.handleCall = \interfaceId methodId ->
-              let handleWith client = Server.untypedHandler $
-                    \arguments response -> void $ URpc.call Server.CallInfo {..} client
-               in case policy mem Call {interfaceId, methodId, direction = dir, target = inClient} of
-                    Forward -> wrapHandler dir sup mem (handleWith inClient)
-                    Redirect target -> handleWith target
+              Server.untypedHandler $ \arguments response ->
+                do
+                  action <- atomically $ policy mem Call {interfaceId, methodId, direction = dir, target = inClient}
+                  case action of
+                    Handle h -> Server.handleUntypedMethod h arguments response
+                    Forward ->
+                      Server.handleUntypedMethod
+                        ( wrapHandler dir sup mem $ Server.untypedHandler $ \arguments response ->
+                            void $ URpc.call Server.CallInfo {..} inClient
+                        )
+                        arguments
+                        response
           }
 
 onSide :: Direction -> MembraneWrapped -> Membrane -> Bool
