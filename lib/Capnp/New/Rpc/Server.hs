@@ -195,10 +195,10 @@ toLegacyServerOps srv callHandler =
 handleParsed ::
   ( C.Parse p pp,
     R.IsStruct p,
-    C.Parse r rr,
+    C.Parse r pr,
     R.IsStruct r
   ) =>
-  (pp -> IO rr) ->
+  (pp -> IO pr) ->
   MethodHandler p r
 handleParsed handler param = propagateExceptions $ \f -> do
   p <- evalLimitT defaultLimit $ C.parse param
