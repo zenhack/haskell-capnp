@@ -40,8 +40,8 @@ import Data.Typeable (Typeable)
 import Data.Word
 import qualified Internal.TCloseQ as TCloseQ
 
--- | a @'MethodHandler' m p r@ handles a method call with parameters @p@
--- and return type @r@, in monad @m@.
+-- | a @'MethodHandler' p r@ handles a method call with parameters @p@
+-- and return type @r@.
 --
 -- The library represents method handlers via an abstract type
 -- 'MethodHandler', parametrized over parameter (@p@) and return (@r@)
@@ -54,38 +54,38 @@ import qualified Internal.TCloseQ as TCloseQ
 -- * Working directly with the low-level data types.
 -- * Replying to the method call asynchronously, allowing later method
 --   calls to be serviced before the current one is finished.
-newtype MethodHandler m p r = MethodHandler
+newtype MethodHandler p r = MethodHandler
   { handleMethod ::
       Maybe (Ptr 'Const) ->
       Fulfiller (Maybe (Ptr 'Const)) ->
-      m ()
+      IO ()
   }
 
 -- | Alias for a 'MethodHandler' whose parameter and return types are
 -- untyped pointers.
-type UntypedMethodHandler m = MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
+type UntypedMethodHandler = MethodHandler (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
 -- one that deals with untyped pointers.
-toUntypedHandler :: MethodHandler m p r -> UntypedMethodHandler m
+toUntypedHandler :: MethodHandler p r -> UntypedMethodHandler
 toUntypedHandler MethodHandler {..} = MethodHandler {..}
 
 -- | Inverse of 'toUntypedHandler'
-fromUntypedHandler :: UntypedMethodHandler m -> MethodHandler m p r
+fromUntypedHandler :: UntypedMethodHandler -> MethodHandler p r
 fromUntypedHandler MethodHandler {..} = MethodHandler {..}
 
 -- | Construct a method handler from a function accepting an untyped
 -- pointer for the method's parameter, and a 'Fulfiller' which accepts
 -- an untyped pointer for the method's return value.
 untypedHandler ::
-  (Maybe (Ptr 'Const) -> Fulfiller (Maybe (Ptr 'Const)) -> m ()) ->
-  MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
+  (Maybe (Ptr 'Const) -> Fulfiller (Maybe (Ptr 'Const)) -> IO ()) ->
+  MethodHandler (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
 untypedHandler = MethodHandler
 
 -- | Base class for things that can act as capnproto servers.
-class Monad m => Server m a | a -> m where
+class Server a where
   -- | Called when the last live reference to a server is dropped.
-  shutdown :: a -> m ()
+  shutdown :: a -> IO ()
   shutdown _ = pure ()
 
   -- | Try to extract a value of a given type. The default implementation
@@ -102,16 +102,16 @@ class Monad m => Server m a | a -> m where
 -- | The operations necessary to receive and handle method calls, i.e.
 -- to implement an object. It is parametrized over the monadic context
 -- in which methods are serviced.
-data ServerOps m = ServerOps
+data ServerOps = ServerOps
   { -- | Handle a method call; takes the interface and method id and returns
     -- a handler for the specific method.
     handleCall ::
       Word64 ->
       Word16 ->
-      MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const)),
+      MethodHandler (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const)),
     -- | Handle shutting-down the receiver; this is called when the last
     -- reference to the capability is dropped.
-    handleStop :: m (),
+    handleStop :: IO (),
     -- | used to unwrap the server when reflecting on a local client.
     handleCast :: forall a. Typeable a => Maybe a
   }
@@ -132,7 +132,7 @@ data CallInfo = CallInfo
 --
 -- Accepts a queue of messages to handle, and 'ServerOps' used to handle them.
 -- returns when it receives a 'Stop' message.
-runServer :: TCloseQ.Q CallInfo -> ServerOps IO -> IO ()
+runServer :: TCloseQ.Q CallInfo -> ServerOps -> IO ()
 runServer q ops = go
   where
     go =

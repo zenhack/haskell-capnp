@@ -1200,7 +1200,7 @@ waitClient client = liftSTM $ case unwrapClient (toClient client) of
 -- | Spawn a local server with its lifetime bound to the supervisor,
 -- and return a client for it. When the client is garbage collected,
 -- the server will be stopped (if it is still running).
-export :: MonadSTM m => Supervisor -> Server.ServerOps IO -> m Client
+export :: MonadSTM m => Supervisor -> Server.ServerOps -> m Client
 export sup ops = liftSTM $ do
   q <- TCloseQ.new
   qCall <- Rc.new (TCloseQ.write q) (TCloseQ.close q)
@@ -1223,7 +1223,7 @@ export sup ops = liftSTM $ do
     )
   pure $ wrapClient (Just client')
 
-clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler IO p r
+clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler p r
 clientMethodHandler interfaceId methodId client =
   Server.fromUntypedHandler $
     Server.untypedHandler $

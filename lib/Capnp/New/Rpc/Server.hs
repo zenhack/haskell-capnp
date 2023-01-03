@@ -151,7 +151,7 @@ toLegacyCallHandler ::
   CallHandler ->
   Word64 ->
   Word16 ->
-  Legacy.MethodHandler IO (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
+  Legacy.MethodHandler (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyCallHandler callHandler interfaceId methodId =
   findMethod interfaceId methodId callHandler
     & fromMaybe methodUnimplemented
@@ -166,7 +166,7 @@ toUntypedMethodHandler ::
   UntypedMethodHandler
 toUntypedMethodHandler = coerce
 
-toLegacyMethodHandler :: UntypedMethodHandler -> Legacy.MethodHandler IO (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
+toLegacyMethodHandler :: UntypedMethodHandler -> Legacy.MethodHandler (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
 toLegacyMethodHandler handler =
   Legacy.untypedHandler $ \args respond -> do
     respond' <- newCallback $ \case
@@ -180,7 +180,7 @@ toLegacyMethodHandler handler =
       _ ->
         breakPromise respond $ eFailed "Argument was not a struct"
 
-toLegacyServerOps :: SomeServer a => a -> CallHandler -> Legacy.ServerOps IO
+toLegacyServerOps :: SomeServer a => a -> CallHandler -> Legacy.ServerOps
 toLegacyServerOps srv callHandler =
   Legacy.ServerOps
     { handleStop = shutdown srv,
