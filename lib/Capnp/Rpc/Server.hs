@@ -23,6 +23,7 @@ module Capnp.Rpc.Server
 
     -- * Handling methods
     MethodHandler,
+    UntypedMethodHandler,
 
     -- ** Working with untyped data
     untypedHandler,
@@ -60,17 +61,17 @@ newtype MethodHandler m p r = MethodHandler
       m ()
   }
 
+-- | Alias for a 'MethodHandler' whose parameter and return types are
+-- untyped pointers.
+type UntypedMethodHandler m = MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
+
 -- | Convert a 'MethodHandler' for any parameter and return types into
 -- one that deals with untyped pointers.
-toUntypedHandler ::
-  MethodHandler m p r ->
-  MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
+toUntypedHandler :: MethodHandler m p r -> UntypedMethodHandler m
 toUntypedHandler MethodHandler {..} = MethodHandler {..}
 
 -- | Inverse of 'toUntypedHandler'
-fromUntypedHandler ::
-  MethodHandler m (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const)) ->
-  MethodHandler m p r
+fromUntypedHandler :: UntypedMethodHandler m -> MethodHandler m p r
 fromUntypedHandler MethodHandler {..} = MethodHandler {..}
 
 -- | Construct a method handler from a function accepting an untyped
