@@ -77,13 +77,15 @@ data Membrane = Membrane
 instance Eq Membrane where
   x == y = identity x == identity y
 
-wrapHandler :: MonadSTM m => Side -> Supervisor -> Membrane -> Server.UntypedMethodHandler m -> Server.UntypedMethodHandler m
-wrapHandler receiverSide sup mem handler = Server.untypedHandler $ \arguments response -> liftSTM $ do
-  args' <- passPtr receiverSide sup mem arguments
-  resp' <- newCallback $ \result ->
-    traverse (passPtr (flipDir receiverSide) sup mem) result
-      >>= breakOrFulfill response
-  handleRaw handler args' resp'
+wrapHandler :: Side -> Supervisor -> Membrane -> Server.UntypedMethodHandler -> Server.UntypedMethodHandler
+wrapHandler receiverSide sup mem handler = Server.untypedHandler $ \arguments response -> do
+  (args, resp) <- atomically $ do
+    args' <- passPtr receiverSide sup mem arguments
+    resp' <- newCallback $ \result ->
+      traverse (passPtr (flipDir receiverSide) sup mem) result
+        >>= breakOrFulfill response
+    pure (args', resp')
+  Server.handleUntypedMethod handler args resp
 
 passPtr :: MonadSTM m => Direction -> Supervisor -> Membrane -> Maybe (U.Ptr 'Const) -> m (Maybe (U.Ptr 'Const))
 passPtr dir sup mem = liftSTM . traverse (U.tMsg $ passMessage dir sup mem)
