@@ -31,6 +31,7 @@ import Capnp
     lbsToMsg,
     msgToParsed,
     parsedToMsg,
+    pipe,
     waitPipeline,
   )
 import Capnp.Bits (WordCount)
@@ -42,16 +43,18 @@ import qualified Capnp.Pointer as P
 import qualified Capnp.Repr as R
 import Capnp.Rpc hiding (Client)
 import Capnp.Rpc.Errors (eFailed)
+import Capnp.Rpc.Revoke (makeRevocable)
 import Capnp.Rpc.Untyped hiding (Client, Pipeline, export, waitPipeline)
 import Control.Concurrent.Async (concurrently_, race_)
 import Control.Concurrent.STM
-import Control.Exception.Safe (bracket, try)
+import Control.Exception.Safe (SomeException, bracket, try)
 import Control.Monad (replicateM, void, (>=>))
 import Control.Monad.Catch (throwM)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Builder as BB
 import Data.Foldable (for_)
 import Data.Function ((&))
+import Data.Functor ((<&>))
 import qualified Data.Text as T
 import Data.Traversable (for)
 import Data.Word
@@ -258,6 +261,54 @@ aircraftTests = describe "aircraft.capnp rpc tests" $ do
               [ctrA, ctrB, ctrC]
           liftIO $ r `shouldBe` [7, 5, 35]
       )
+  describe "revokers" $ revokerTests
+
+-- | Tests for revokers.
+revokerTests :: Spec
+revokerTests = do
+  it "should allow methods through before revocation" $ do
+    withSupervisor $ \sup -> do
+      factory <- export @CounterFactory sup (TestCtrFactory sup)
+      (mfactory, _revoke) <- makeRevocable sup factory
+      CallSequence'getNumber'results {n} <-
+        mfactory
+          & callP #newCounter def {start = 0}
+          <&> pipe #counter
+          >>= callP #getNumber def
+          >>= waitPipeline
+          >>= evalLimitT defaultLimit . parse
+      n `shouldBe` 1
+  it "should block methods after revocation" $ do
+    withSupervisor $ \sup -> do
+      factory <- export @CounterFactory sup (TestCtrFactory sup)
+      (mfactory, revoke) <- makeRevocable sup factory
+      atomically revoke
+      result <-
+        try $
+          mfactory
+            & callP #newCounter def {start = 0}
+            >>= waitPipeline
+      case result of
+        Left (_ :: SomeException) -> pure ()
+        Right _ -> error "Expected an error after revocation."
+  it "should block methods on returned objects after revocation" $ do
+    withSupervisor $ \sup -> do
+      factory <- export @CounterFactory sup (TestCtrFactory sup)
+      (mfactory, revoke) <- makeRevocable sup factory
+      CounterFactory'newCounter'results {counter = mctr} <-
+        mfactory
+          & callP #newCounter def {start = 0}
+          >>= waitPipeline
+          >>= evalLimitT defaultLimit . parse
+      atomically revoke
+      result <-
+        try $
+          mctr
+            & callP #getNumber def
+            >>= waitPipeline
+      case result of
+        Left (_ :: SomeException) -> pure ()
+        Right _ -> error "Expected an error after revocation."
 
 data TestCtrAcceptor = TestCtrAcceptor
 
