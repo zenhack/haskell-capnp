@@ -1,4 +1,6 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Capnp.Rpc.Membrane
   ( Action (..),
@@ -10,10 +12,15 @@ module Capnp.Rpc.Membrane
   )
 where
 
+import qualified Capnp.Message as M
+import Capnp.Mutability (Mutability (..))
 import qualified Capnp.Rpc.Common as Rpc
+import Capnp.Rpc.Promise (breakOrFulfill, newCallback)
 import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.Rpc.Untyped as URpc
+import qualified Capnp.Untyped as U
 import Control.Concurrent.STM
+import Control.Monad (void)
 import Control.Monad.STM.Class
 import Data.Typeable (Typeable, cast)
 import Data.Word
@@ -26,6 +33,12 @@ data Action
 
 data Direction = In | Out
   deriving (Show, Read, Eq)
+
+flipDir :: Direction -> Direction
+flipDir In = Out
+flipDir Out = In
+
+type Side = Direction
 
 data Call = Call
   { direction :: Direction,
@@ -64,6 +77,22 @@ data Membrane = Membrane
 instance Eq Membrane where
   x == y = identity x == identity y
 
+wrapHandler :: MonadSTM m => Side -> Supervisor -> Membrane -> Server.UntypedMethodHandler m -> Server.UntypedMethodHandler m
+wrapHandler receiverSide sup mem handler = Server.untypedHandler $ \arguments response -> liftSTM $ do
+  args' <- passPtr receiverSide sup mem arguments
+  resp' <- newCallback $ \result ->
+    traverse (passPtr (flipDir receiverSide) sup mem) result
+      >>= breakOrFulfill response
+  handleRaw handler args' resp'
+
+passPtr :: MonadSTM m => Direction -> Supervisor -> Membrane -> Maybe (U.Ptr 'Const) -> m (Maybe (U.Ptr 'Const))
+passPtr dir sup mem = liftSTM . traverse (U.tMsg $ passMessage dir sup mem)
+
+passMessage :: MonadSTM m => Direction -> Supervisor -> Membrane -> M.Message 'Const -> m (M.Message 'Const)
+passMessage dir sup mem msg = liftSTM $ do
+  caps' <- traverse (pass dir sup mem) (M.getCapTable msg)
+  pure $ M.withCapTable caps' msg
+
 pass :: MonadSTM m => Direction -> Supervisor -> Membrane -> URpc.Client -> m URpc.Client
 pass dir sup mem inClient = liftSTM $
   case URpc.unwrapServer inClient :: Maybe MembraneWrapped of
@@ -83,7 +112,12 @@ pass dir sup mem inClient = liftSTM $
             -- and then the relevant shutdown logic will still be called.
             -- This introduces latency unfortuantely, but nothing is broken.
             Server.handleStop = pure (),
-            Server.handleCall = \interfaceId methodId -> error "TODO"
+            Server.handleCall = \interfaceId methodId ->
+              let handleWith client = Server.untypedHandler $
+                    \arguments response -> void $ URpc.call Server.CallInfo {..} client
+               in case policy mem Call {interfaceId, methodId, direction = dir, target = inClient} of
+                    Forward -> wrapHandler dir sup mem (handleWith inClient)
+                    Redirect target -> handleWith target
           }
 
 onSide :: Direction -> MembraneWrapped -> Membrane -> Bool
