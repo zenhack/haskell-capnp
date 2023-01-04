@@ -101,7 +101,9 @@ library
       , Capnp.Classes
       , Capnp.Constraints
       , Capnp.Rpc.Common
+      , Capnp.Rpc.Membrane
       , Capnp.Rpc.Server
+      , Capnp.Rpc.Revoke
       , Capnp.New.Rpc.Server
       , Capnp.Convert
       , Capnp.Errors

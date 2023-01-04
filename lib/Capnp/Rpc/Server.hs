@@ -24,6 +24,7 @@ module Capnp.Rpc.Server
     -- * Handling methods
     MethodHandler,
     UntypedMethodHandler,
+    handleUntypedMethod,
 
     -- ** Working with untyped data
     untypedHandler,
@@ -64,6 +65,9 @@ newtype MethodHandler p r = MethodHandler
 -- | Alias for a 'MethodHandler' whose parameter and return types are
 -- untyped pointers.
 type UntypedMethodHandler = MethodHandler (Maybe (Ptr 'Const)) (Maybe (Ptr 'Const))
+
+handleUntypedMethod :: UntypedMethodHandler -> Maybe (Ptr 'Const) -> Fulfiller (Maybe (Ptr 'Const)) -> IO ()
+handleUntypedMethod = handleMethod
 
 -- | Convert a 'MethodHandler' for any parameter and return types into
 -- one that deals with untyped pointers.
