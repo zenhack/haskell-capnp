@@ -17,9 +17,6 @@ module Capnp.Tutorial
     -- * Setup
     -- $setup
 
-    -- * API Transition
-    -- $api-transition
-
     -- * Serialization
     -- $serialization
 
@@ -68,24 +65,6 @@ import System.IO (stdout)
 --
 -- which will compile the package and create the @capnpc-haskell@ executable
 -- at @$DIR/capnpc-haskell@.
-
--- $api-transition
---
--- This package is in them midst of transitioning many existing APIs over
--- to a new design. As such, in this tuotrial we refer to the new api and the
--- old API.
---
--- The old API will eventually be removed, but not before there is at least
--- one release where both APIs are present and the new API has reached feature
--- pairty. Right now, the primary missing functionality is in implementing
--- RPC servers (clients work fine, better even).
---
--- This tutorial only covers the new API, but the tutorial for the old APIs
--- is still available (and still correct) in the documentation for version
--- 0.10 of this package: https://hackage.haskell.org/package/capnp-0.10.0.1
---
--- For more information about the reasons behind the new API, see:
--- <http://zenhack.net/TODO>. TODO: link to blog post.
 
 -- $serialization
 --
@@ -164,15 +143,9 @@ import System.IO (stdout)
 -- This will create the following files relative to the current directory:
 --
 -- * Capnp\/Gen\/Addressbook.hs
--- * Capnp\/Gen\/Addressbook\/Pure.hs
--- * Capnp\/Gen\/Addressbook\/New.hs
--- * Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c/Pure.hs
--- * Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c/New.hs
 -- * Capnp\/Gen\/ById\/Xcd6db6afb4a0cf5c.hs
 --
--- The modules under @ById@ are an implementation detail.
--- @Capnp\/Gen\/Addressbook\.New.hs@ is generated code for use with the new API.
--- Other files are for use with the old API, and not covered here.
+-- The module under @ById@ is an implementation detail.
 --
 -- The generated moule will export declarations like the following (cleaned up
 -- and abbreviated for readability):
