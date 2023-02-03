@@ -482,7 +482,7 @@ type family Unwrapped a where
 -- | @Untyped r mut@ is an untyped value with representation @r@ stored in
 -- a message with mutability @mut@.
 --
--- Note that the return tyep of this type family has kind
+-- Note that the return type of this type family has kind
 -- @'Mutability' -> 'Type'@. This is important, as it allows us
 -- to define instances on @'Untyped' r@, and use @'Untyped' r@
 -- in constraints.
