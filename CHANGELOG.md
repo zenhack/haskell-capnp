@@ -2,6 +2,7 @@
 
 - Get rid of the New qualifier in module paths, now that the old
   API has been removed.
+- Remove references to the old API from the tutorial.
 - Add two new modules:
   - `Capnp.Rpc.Membrane`, which provides helpers for implementing
     membranes.
