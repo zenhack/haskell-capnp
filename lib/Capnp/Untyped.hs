@@ -453,6 +453,7 @@ data PtrRepr
 data ListRepr where
   -- | A "normal" list
   ListNormal :: NormalListRepr -> ListRepr
+  -- | A composite (struct) list
   ListComposite :: ListRepr
   deriving (Show)
 
