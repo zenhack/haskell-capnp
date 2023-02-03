@@ -40,7 +40,6 @@ extra-source-files:
   , .stylish-haskell.yaml
   , .gitattributes
   , .gitignore
-  , .gitlab-ci.yml
 
 --------------------------------------------------------------------------------
 
