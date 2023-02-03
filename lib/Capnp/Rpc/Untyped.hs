@@ -449,117 +449,120 @@ freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
-handleConn
-  transport
+handleConn transport cfg =
+  withSupervisor $ \sup ->
+    bracket
+      (newConn sup cfg)
+      stopConn
+      (runConn cfg transport)
+
+newConn
+  sup
   cfg@ConnConfig
     { maxQuestions,
       maxExports,
       maxCallWords,
       withBootstrap,
       debugMode
-    } =
-    withSupervisor $ \sup ->
-      bracket
-        (newConn sup)
-        stopConn
-        runConn
-    where
-      newConn sup = do
-        stableName <- makeStableName =<< newEmptyMVar
-        atomically $ do
-          bootstrap <- getBootstrap cfg sup
-          questionIdPool <- newIdPool maxQuestions
-          exportIdPool <- newIdPool maxExports
+    } = do
+    stableName <- makeStableName =<< newEmptyMVar
+    atomically $ do
+      bootstrap <- getBootstrap cfg sup
+      questionIdPool <- newIdPool maxQuestions
+      exportIdPool <- newIdPool maxExports
 
-          sendQ <- newTChan
+      sendQ <- newTChan
 
-          availableCallWords <- newTVar maxCallWords
+      availableCallWords <- newTVar maxCallWords
 
-          questions <- M.new
-          answers <- M.new
-          exports <- M.new
-          imports <- M.new
+      questions <- M.new
+      answers <- M.new
+      exports <- M.new
+      imports <- M.new
 
-          embargos <- M.new
-          pendingCallbacks <- newTQueue
+      embargos <- M.new
+      pendingCallbacks <- newTQueue
 
-          let conn' =
-                Conn'
-                  { supervisor = sup,
-                    questionIdPool,
-                    exportIdPool,
-                    sendQ,
-                    availableCallWords,
-                    questions,
-                    answers,
-                    exports,
-                    imports,
-                    embargos,
-                    pendingCallbacks,
-                    bootstrap
+      let conn' =
+            Conn'
+              { supervisor = sup,
+                questionIdPool,
+                exportIdPool,
+                sendQ,
+                availableCallWords,
+                questions,
+                answers,
+                exports,
+                imports,
+                embargos,
+                pendingCallbacks,
+                bootstrap
+              }
+      liveState <- newTVar (Live conn')
+      let conn =
+            Conn
+              { stableName,
+                debugMode,
+                liveState
+              }
+      pure (conn, conn')
+
+runConn cfg transport (conn, conn') = do
+  result <-
+    try $
+      ( recvLoop transport conn
+          `concurrently_` sendLoop transport conn'
+          `concurrently_` callbacksLoop conn'
+      )
+        `race_` useBootstrap conn conn' cfg
+  case result of
+    Left (SentAbort e) -> do
+      -- We need to actually send it:
+      rawMsg <- createPure maxBound $ parsedToMsg $ R.Message'abort e
+      void $ timeout 1000000 $ sendMsg transport rawMsg
+      throwIO $ SentAbort e
+    Left e ->
+      throwIO e
+    Right _ ->
+      pure ()
+
+stopConn
+  ( conn@Conn {liveState},
+    conn'@Conn' {questions, exports, embargos}
+    ) = do
+    atomically $ do
+      let walk table = flip ListT.traverse_ (M.listT table)
+      -- drop the bootstrap interface:
+      case bootstrap conn' of
+        Just (unwrapClient -> Just client') -> dropConnExport conn client'
+        _ -> pure ()
+      -- Remove everything from the exports table:
+      walk exports $ \(_, EntryE {client}) ->
+        dropConnExport conn client
+      -- Outstanding questions should all throw disconnected:
+      walk questions $ \(qid, entry) ->
+        let raiseDisconnected onReturn =
+              mapQueueSTM conn' onReturn $
+                Return
+                  { answerId = qid,
+                    releaseParamCaps = False,
+                    union' = Return'exception eDisconnected
                   }
-          liveState <- newTVar (Live conn')
-          let conn =
-                Conn
-                  { stableName,
-                    debugMode,
-                    liveState
-                  }
-          pure (conn, conn')
-      runConn (conn, conn') = do
-        result <-
-          try $
-            ( recvLoop transport conn
-                `concurrently_` sendLoop transport conn'
-                `concurrently_` callbacksLoop conn'
-            )
-              `race_` useBootstrap conn conn'
-        case result of
-          Left (SentAbort e) -> do
-            -- We need to actually send it:
-            rawMsg <- createPure maxBound $ parsedToMsg $ R.Message'abort e
-            void $ timeout 1000000 $ sendMsg transport rawMsg
-            throwIO $ SentAbort e
-          Left e ->
-            throwIO e
-          Right _ ->
-            pure ()
-      stopConn
-        ( conn@Conn {liveState},
-          conn'@Conn' {questions, exports, embargos}
-          ) = do
-          atomically $ do
-            let walk table = flip ListT.traverse_ (M.listT table)
-            -- drop the bootstrap interface:
-            case bootstrap conn' of
-              Just (unwrapClient -> Just client') -> dropConnExport conn client'
+         in case entry of
+              NewQA {onReturn} -> raiseDisconnected onReturn
+              HaveFinish {onReturn} -> raiseDisconnected onReturn
               _ -> pure ()
-            -- Remove everything from the exports table:
-            walk exports $ \(_, EntryE {client}) ->
-              dropConnExport conn client
-            -- Outstanding questions should all throw disconnected:
-            walk questions $ \(qid, entry) ->
-              let raiseDisconnected onReturn =
-                    mapQueueSTM conn' onReturn $
-                      Return
-                        { answerId = qid,
-                          releaseParamCaps = False,
-                          union' = Return'exception eDisconnected
-                        }
-               in case entry of
-                    NewQA {onReturn} -> raiseDisconnected onReturn
-                    HaveFinish {onReturn} -> raiseDisconnected onReturn
-                    _ -> pure ()
-            -- same thing with embargos:
-            walk embargos $ \(_, fulfiller) ->
-              breakPromise fulfiller eDisconnected
-            -- mark the connection as dead, making the live state inaccessible:
-            writeTVar liveState Dead
-      useBootstrap conn conn' = case withBootstrap of
-        Nothing ->
-          forever $ threadDelay maxBound
-        Just f ->
-          atomically (requestBootstrap conn) >>= f (supervisor conn')
+      -- same thing with embargos:
+      walk embargos $ \(_, fulfiller) ->
+        breakPromise fulfiller eDisconnected
+      -- mark the connection as dead, making the live state inaccessible:
+      writeTVar liveState Dead
+
+useBootstrap conn conn' cfg = case withBootstrap cfg of
+  Nothing ->
+    forever $ threadDelay maxBound
+  Just f ->
+    atomically (requestBootstrap conn) >>= f (supervisor conn')
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
 newtype IdPool = IdPool (TVar [Word32])
