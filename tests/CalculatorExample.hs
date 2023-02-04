@@ -92,7 +92,7 @@ runProxy serverPort clientPort =
               handleConn
                 (socketTransport clientSock defaultLimit)
                 def
-                  { getBootstrap = \_sup -> pure $ Just client,
+                  { bootstrap = Just client,
                     debugMode = True
                   }
         }

@@ -584,12 +584,14 @@ runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serve
               withBootstrap = Just $ \sup -> withBootstrap sup . fromClient
             }
       runServer =
-        handleConn
-          (serverTrans defaultLimit)
-          def
-            { debugMode = True,
-              getBootstrap = fmap (Just . toClient) . getBootstrap
-            }
+        withSupervisor $ \sup -> do
+          boot <- atomically (getBootstrap sup)
+          handleConn
+            (serverTrans defaultLimit)
+            def
+              { debugMode = True,
+                bootstrap = Just (toClient boot)
+              }
   race_ runServer runClient
 
 expectException ::

@@ -8,7 +8,6 @@
 
 module Examples.Rpc.CalculatorServer (main) where
 
-import Capnp.Gen.Calculator
 import Capnp
   ( Client,
     Pipeline,
@@ -21,6 +20,7 @@ import Capnp
     handleParsed,
     waitPipeline,
   )
+import Capnp.Gen.Calculator
 import Capnp.Rpc
   ( ConnConfig (..),
     handleConn,
@@ -28,14 +28,14 @@ import Capnp.Rpc
     throwFailed,
     toClient,
   )
-import Control.Concurrent.STM (STM, atomically)
+import Control.Concurrent.STM (atomically)
 import Control.Monad (when)
 import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.Int
 import qualified Data.Vector as V
 import Network.Simple.TCP (serve)
-import Supervisors (Supervisor)
+import Supervisors (Supervisor, withSupervisor)
 import Prelude hiding (subtract)
 
 newtype LitValue = LitValue Double
@@ -108,7 +108,7 @@ instance Calculator'server_ MyCalc where
       Calculator'defFunction'results
         <$> atomically (export @Function sup ExprFunc {..})
 
-newCalculator :: Supervisor -> STM (Client Calculator)
+newCalculator :: Supervisor -> IO (Client Calculator)
 newCalculator sup = do
   add <- export @Function sup $ OpFunc (+)
   subtract <- export @Function sup $ OpFunc (-)
@@ -150,10 +150,12 @@ eval outerParams (Expression exp) = go outerParams exp
       throwFailed "Unknown expression type"
 
 main :: IO ()
-main = serve "localhost" "4000" $ \(sock, _addr) ->
-  handleConn
-    (socketTransport sock defaultLimit)
-    def
-      { getBootstrap = fmap (Just . toClient) . newCalculator,
-        debugMode = True
-      }
+main = withSupervisor $ \sup -> do
+  boot <- newCalculator sup
+  serve "localhost" "4000" $ \(sock, _addr) ->
+    handleConn
+      (socketTransport sock defaultLimit)
+      def
+        { debugMode = True,
+          bootstrap = Just (toClient boot)
+        }

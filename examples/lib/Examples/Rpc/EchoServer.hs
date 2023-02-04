@@ -4,10 +4,11 @@
 
 module Examples.Rpc.EchoServer (main) where
 
-import Capnp.Gen.Echo
 import Capnp (SomeServer, def, defaultLimit, export, handleParsed)
+import Capnp.Gen.Echo
 import Capnp.Rpc (ConnConfig (..), handleConn, socketTransport, toClient)
 import Network.Simple.TCP (serve)
+import Supervisors (withSupervisor)
 
 data MyEchoServer = MyEchoServer
 
@@ -18,10 +19,13 @@ instance Echo'server_ MyEchoServer where
     pure def {reply = query params}
 
 main :: IO ()
-main = serve "localhost" "4000" $ \(sock, _addr) ->
-  handleConn
-    (socketTransport sock defaultLimit)
-    def
-      { debugMode = True,
-        getBootstrap = \sup -> Just . toClient <$> export @Echo sup MyEchoServer
-      }
+main =
+  withSupervisor $ \sup -> do
+    boot <- export @Echo sup MyEchoServer
+    serve "localhost" "4000" $ \(sock, _addr) ->
+      handleConn
+        (socketTransport sock defaultLimit)
+        def
+          { debugMode = True,
+            bootstrap = Just (toClient boot)
+          }

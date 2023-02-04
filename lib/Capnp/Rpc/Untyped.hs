@@ -297,7 +297,7 @@ data Conn' = Conn'
     pendingCallbacks :: TQueue (IO ()),
     -- See Note [callbacks]
 
-    bootstrap :: Maybe Client
+    myBootstrap :: Maybe Client
     -- The capability which should be served as this connection's bootstrap
     -- interface (if any).
   }
@@ -335,17 +335,10 @@ data ConnConfig = ConnConfig
     --
     -- Defaults to 'False'.
     debugMode :: !Bool,
-    -- | Get the bootstrap interface we should serve for this connection.
-    -- the argument is a supervisor whose lifetime is bound to the
-    -- connection. If 'getBootstrap' returns 'Nothing', we will respond
-    -- to bootstrap messages with an exception.
-    --
-    -- The default always returns 'Nothing'.
-    --
-    -- 'getBootstrap' MUST NOT block; the connection will not be serviced
-    -- and 'withBootstrap' will not be run until this returns. If you need
-    -- to supply the bootstrap interface later, use 'newPromiseClient'.
-    getBootstrap :: Supervisor -> STM (Maybe Client),
+    -- | The bootstrap interface we should serve for this connection.
+    -- If 'bootstrap' is 'Nothing' (the default), we will respond to
+    -- bootstrap messages with an exception.
+    bootstrap :: Maybe Client,
     -- | An action to perform with access to the remote vat's bootstrap
     -- interface. The supervisor argument is bound to the lifetime of the
     -- connection. If this is 'Nothing' (the default), the bootstrap
@@ -360,7 +353,7 @@ instance Default ConnConfig where
         maxExports = 8192,
         maxCallWords = bytesToWordsFloor $ 32 * 1024 * 1024,
         debugMode = False,
-        getBootstrap = \_ -> pure Nothing,
+        bootstrap = Nothing,
         withBootstrap = Nothing
       }
 
@@ -450,14 +443,12 @@ freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
 handleConn transport cfg =
-  withSupervisor $ \sup ->
-    bracket
-      (newConn sup cfg)
-      stopConn
-      (runConn cfg transport)
+  bracket
+    (newConn cfg)
+    stopConn
+    (runConn cfg transport)
 
 newConn
-  sup
   cfg@ConnConfig
     { maxQuestions,
       maxExports,
@@ -467,7 +458,6 @@ newConn
     } = do
     stableName <- makeStableName =<< newEmptyMVar
     atomically $ do
-      bootstrap <- getBootstrap cfg sup
       questionIdPool <- newIdPool maxQuestions
       exportIdPool <- newIdPool maxExports
 
@@ -485,8 +475,7 @@ newConn
 
       let conn' =
             Conn'
-              { supervisor = sup,
-                questionIdPool,
+              { questionIdPool,
                 exportIdPool,
                 sendQ,
                 availableCallWords,
@@ -496,7 +485,7 @@ newConn
                 imports,
                 embargos,
                 pendingCallbacks,
-                bootstrap
+                myBootstrap = bootstrap cfg
               }
       liveState <- newTVar (Live conn')
       let conn =
@@ -533,7 +522,7 @@ stopConn
     atomically $ do
       let walk table = flip ListT.traverse_ (M.listT table)
       -- drop the bootstrap interface:
-      case bootstrap conn' of
+      case myBootstrap conn' of
         Just (unwrapClient -> Just client') -> dropConnExport conn client'
         _ -> pure ()
       -- Remove everything from the exports table:
@@ -561,8 +550,9 @@ stopConn
 useBootstrap conn conn' cfg = case withBootstrap cfg of
   Nothing ->
     forever $ threadDelay maxBound
-  Just f ->
-    atomically (requestBootstrap conn) >>= f (supervisor conn')
+  Just f -> do
+    boot <- atomically (requestBootstrap conn)
+    withSupervisor $ \sup -> f sup boot
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
 newtype IdPool = IdPool (TVar [Word32])
@@ -1331,7 +1321,7 @@ handleUnimplementedMsg conn (R.Message msg) =
 handleBootstrapMsg :: Conn -> R.Parsed R.Bootstrap -> STM ()
 handleBootstrapMsg conn R.Bootstrap {questionId} =
   getLive conn >>= \conn' -> do
-    ret <- case bootstrap conn' of
+    ret <- case myBootstrap conn' of
       Nothing ->
         pure
           Return
