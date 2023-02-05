@@ -1,8 +1,13 @@
 # 0.18.0.0
 
-- the `getBootstrap` field of `ConnConfig` has been replaced with a
-  `bootstrap` field that takes the capability itself, which must now
-  be constructed before spawning the connection.
+- The connection setup APIs have been slightly reworked.
+  - The `getBootstrap` field of `ConnConfig` has been replaced with a
+    `bootstrap` field that takes the capability itself, which must now
+    be constructed before spawning the connection.
+  - The `withBootstrarp` field in `ConnConfig` has been removed, Instead
+    use the new `requestBootstrap` function to get the bootstrap
+    interface, using a connection reference supplied by `withConn`
+    or `acquireConn`.
 
 # 0.17.0.0
 
