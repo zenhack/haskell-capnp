@@ -26,6 +26,8 @@ module Capnp.Rpc.Untyped
     Conn,
     ConnConfig (..),
     handleConn,
+    withConn,
+    acquireConn,
     requestBootstrap,
 
     -- * Clients for capabilities
@@ -450,8 +452,14 @@ freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
 handleConn transport cfg =
-  withAcquire (acquireConn transport cfg) $ \Conn {done} ->
+  withConn transport cfg $ \Conn {done} ->
     wait done
+
+-- | Run the function with access to a connection. Shut down the connection
+-- when it returns.
+withConn :: Transport -> ConnConfig -> (Conn -> IO ()) -> IO ()
+withConn transport cfg =
+  withAcquire (acquireConn transport cfg)
 
 acquireConn :: Transport -> ConnConfig -> Acquire Conn
 acquireConn transport cfg = do
