@@ -23,8 +23,10 @@
 -- methods etc. as used here are untyped.
 module Capnp.Rpc.Untyped
   ( -- * Connections to other vats
+    Conn,
     ConnConfig (..),
     handleConn,
+    requestBootstrap,
 
     -- * Clients for capabilities
     Client,
@@ -126,6 +128,8 @@ import Internal.Rpc.Breaker
 import Internal.SnocList (SnocList)
 import qualified Internal.SnocList as SnocList
 import qualified Internal.TCloseQ as TCloseQ
+import Lifetimes (Acquire, mkAcquire)
+import Lifetimes.Async (acquireAsync)
 import qualified Lifetimes.Gc as Fin
 import qualified ListT
 import qualified StmContainers.Map as M
@@ -447,6 +451,12 @@ handleConn transport cfg =
     (newConn cfg)
     stopConn
     (runConn cfg transport)
+
+acquireConn :: Transport -> ConnConfig -> Acquire Conn
+acquireConn transport cfg = do
+  (conn, conn') <- mkAcquire (newConn cfg) stopConn
+  _ <- acquireAsync $ runConn cfg transport (conn, conn')
+  pure conn
 
 newConn
   cfg@ConnConfig
@@ -2032,60 +2042,61 @@ whenLive Conn {liveState} f =
     Dead -> pure ()
 
 -- | Request the remote vat's bootstrap interface.
-requestBootstrap :: Conn -> STM Client
+requestBootstrap :: MonadSTM m => Conn -> m Client
 requestBootstrap conn@Conn {liveState} =
-  readTVar liveState >>= \case
-    Dead ->
-      pure nullClient
-    Live conn'@Conn' {questions} -> do
-      qid <- newQuestion conn'
-      let tmpDest =
-            RemoteDest
-              AnswerDest
-                { conn,
-                  answer =
-                    PromisedAnswer
-                      { answerId = qid,
-                        transform = SnocList.empty
-                      }
-                }
-      pState <- newTVar Pending {tmpDest}
-
-      -- Arguably, we should wait for this promise, since it's analagous
-      -- to a call in terms of operation, but we only send one of these
-      -- per connection, so whatever.
-      (_, onSent) <- newPromise
-      sendPureMsg
-        conn'
-        (R.Message'bootstrap (def {R.questionId = qaWord qid} :: R.Parsed R.Bootstrap))
-        onSent
-
-      M.insert
-        NewQA
-          { onReturn =
-              SnocList.fromList
-                [ resolveClientReturn tmpDest (writeTVar pState) conn' [],
-                  \_ ->
-                    finishQuestion
-                      conn'
-                      R.Finish
-                        { questionId = qaWord qid,
-                          releaseResultCaps = False
+  liftSTM $
+    readTVar liveState >>= \case
+      Dead ->
+        pure nullClient
+      Live conn'@Conn' {questions} -> do
+        qid <- newQuestion conn'
+        let tmpDest =
+              RemoteDest
+                AnswerDest
+                  { conn,
+                    answer =
+                      PromisedAnswer
+                        { answerId = qid,
+                          transform = SnocList.empty
                         }
-                ],
-            onFinish = SnocList.empty
-          }
-        qid
-        questions
-      exportMap <- ExportMap <$> M.new
-      pure $
-        wrapClient $
-          Just
-            PromiseClient
-              { pState,
-                exportMap,
-                origTarget = tmpDest
-              }
+                  }
+        pState <- newTVar Pending {tmpDest}
+
+        -- Arguably, we should wait for this promise, since it's analagous
+        -- to a call in terms of operation, but we only send one of these
+        -- per connection, so whatever.
+        (_, onSent) <- newPromise
+        sendPureMsg
+          conn'
+          (R.Message'bootstrap (def {R.questionId = qaWord qid} :: R.Parsed R.Bootstrap))
+          onSent
+
+        M.insert
+          NewQA
+            { onReturn =
+                SnocList.fromList
+                  [ resolveClientReturn tmpDest (writeTVar pState) conn' [],
+                    \_ ->
+                      finishQuestion
+                        conn'
+                        R.Finish
+                          { questionId = qaWord qid,
+                            releaseResultCaps = False
+                          }
+                  ],
+              onFinish = SnocList.empty
+            }
+          qid
+          questions
+        exportMap <- ExportMap <$> M.new
+        pure $
+          wrapClient $
+            Just
+              PromiseClient
+                { pState,
+                  exportMap,
+                  origTarget = tmpDest
+                }
 
 -- Note [resolveClient]
 -- ====================

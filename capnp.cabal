@@ -167,7 +167,7 @@ library
       , network-simple                    ^>= 0.4
       , network                           >= 3 && <3.2
       , supervisors                       ^>= 0.2.1
-      , lifetimes                         ^>= 0.1
+      , lifetimes                         ^>= 0.2
       , pretty-show                       >= 1.9.5 && <1.11
       , template-haskell                  >=2.18 && <2.20
 
