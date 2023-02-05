@@ -91,7 +91,7 @@ import Capnp.Rpc.Transport (Transport (recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import qualified Capnp.Untyped as UntypedRaw
 import Control.Concurrent (threadDelay)
-import Control.Concurrent.Async (concurrently_, race_)
+import Control.Concurrent.Async (Async, concurrently_, race_, wait)
 import Control.Concurrent.MVar (MVar, newEmptyMVar)
 import Control.Concurrent.STM
 import Control.Exception.Safe
@@ -128,7 +128,7 @@ import Internal.Rpc.Breaker
 import Internal.SnocList (SnocList)
 import qualified Internal.SnocList as SnocList
 import qualified Internal.TCloseQ as TCloseQ
-import Lifetimes (Acquire, mkAcquire)
+import Lifetimes (Acquire, mkAcquire, withAcquire)
 import Lifetimes.Async (acquireAsync)
 import qualified Lifetimes.Gc as Fin
 import qualified ListT
@@ -256,6 +256,9 @@ data Conn = Conn
     debugMode :: !Bool,
     -- whether to include extra (possibly sensitive) info in error messages.
 
+    done :: Async (),
+    -- finished when the connection is shut down. Note: this should not be used
+    -- by most of the code within this module; see the implementation of acquireConn.
     liveState :: TVar LiveState
   }
 
@@ -447,16 +450,14 @@ freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 -- | Handle a connection to another vat. Returns when the connection is closed.
 handleConn :: Transport -> ConnConfig -> IO ()
 handleConn transport cfg =
-  bracket
-    (newConn cfg)
-    stopConn
-    (runConn cfg transport)
+  withAcquire (acquireConn transport cfg) $ \Conn {done} ->
+    wait done
 
 acquireConn :: Transport -> ConnConfig -> Acquire Conn
 acquireConn transport cfg = do
   (conn, conn') <- mkAcquire (newConn cfg) stopConn
-  _ <- acquireAsync $ runConn cfg transport (conn, conn')
-  pure conn
+  done <- acquireAsync $ void $ runConn cfg transport (conn, conn')
+  pure conn {done = done}
 
 newConn
   cfg@ConnConfig
