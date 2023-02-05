@@ -478,15 +478,10 @@ unusualTests = describe "Tests for unusual message patterns" $ do
        in concurrently_
             ( do
                 Left (e :: RpcError) <-
-                  try $
-                    handleConn
-                      (vatTrans defaultLimit)
-                      def
-                        { debugMode = True,
-                          withBootstrap = Just $ \_sup client ->
-                            let ctr :: Client CallSequence = fromClient client
-                             in void $ (ctr & callR #getNumber def) >>= waitPipeline
-                        }
+                  try $ withConn (vatTrans defaultLimit) def {debugMode = True} $ \conn -> do
+                    client <- requestBootstrap conn
+                    let ctr :: Client CallSequence = fromClient client
+                    void $ (ctr & callR #getNumber def) >>= waitPipeline
                 e `shouldBe` SentAbort wantExn
             )
             ( do
@@ -577,12 +572,9 @@ withTransportPair f =
 runVatPair :: IsClient c => (Supervisor -> STM c) -> (Supervisor -> c -> IO ()) -> IO ()
 runVatPair getBootstrap withBootstrap = withTransportPair $ \(clientTrans, serverTrans) -> do
   let runClient =
-        handleConn
-          (clientTrans defaultLimit)
-          def
-            { debugMode = True,
-              withBootstrap = Just $ \sup -> withBootstrap sup . fromClient
-            }
+        withConn (clientTrans defaultLimit) def {debugMode = True} $ \conn -> do
+          boot <- requestBootstrap conn
+          withSupervisor $ \sup -> withBootstrap sup (fromClient boot)
       runServer =
         withSupervisor $ \sup -> do
           boot <- atomically (getBootstrap sup)

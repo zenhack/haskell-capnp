@@ -5,8 +5,12 @@
 -- This module exposes the most commonly used parts of the RPC subsystem.
 module Capnp.Rpc
   ( -- * Establishing connections
-    handleConn,
+    Conn,
     ConnConfig (..),
+    acquireConn,
+    handleConn,
+    withConn,
+    requestBootstrap,
 
     -- * throwing errors
     throwFailed,
@@ -46,11 +50,15 @@ import Capnp.Rpc.Transport
   )
 import Capnp.Rpc.Untyped
   ( Client,
+    Conn,
     ConnConfig (..),
     IsClient (..),
+    acquireConn,
     handleConn,
     newPromiseClient,
+    requestBootstrap,
     waitClient,
+    withConn,
   )
 import qualified Capnp.Rpc.Untyped as Untyped
 import Supervisors

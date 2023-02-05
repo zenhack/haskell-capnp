@@ -93,7 +93,7 @@ import Capnp.Rpc.Transport (Transport (recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import qualified Capnp.Untyped as UntypedRaw
 import Control.Concurrent (threadDelay)
-import Control.Concurrent.Async (Async, concurrently_, race_, wait)
+import Control.Concurrent.Async (Async, cancel, concurrently_, race, race_, wait, withAsync)
 import Control.Concurrent.MVar (MVar, newEmptyMVar)
 import Control.Concurrent.STM
 import Control.Exception.Safe
@@ -112,6 +112,7 @@ import Control.Monad.STM.Class
 import Control.Monad.Trans.Class
 import Data.Default (Default (def))
 import Data.Dynamic (fromDynamic)
+import Data.Either (fromLeft)
 import Data.Foldable (for_, toList, traverse_)
 import Data.Function ((&))
 import Data.Hashable (Hashable, hash, hashWithSalt)
@@ -347,12 +348,7 @@ data ConnConfig = ConnConfig
     -- | The bootstrap interface we should serve for this connection.
     -- If 'bootstrap' is 'Nothing' (the default), we will respond to
     -- bootstrap messages with an exception.
-    bootstrap :: Maybe Client,
-    -- | An action to perform with access to the remote vat's bootstrap
-    -- interface. The supervisor argument is bound to the lifetime of the
-    -- connection. If this is 'Nothing' (the default), the bootstrap
-    -- interface will not be requested.
-    withBootstrap :: Maybe (Supervisor -> Client -> IO ())
+    bootstrap :: Maybe Client
   }
 
 instance Default ConnConfig where
@@ -362,8 +358,7 @@ instance Default ConnConfig where
         maxExports = 8192,
         maxCallWords = bytesToWordsFloor $ 32 * 1024 * 1024,
         debugMode = False,
-        bootstrap = Nothing,
-        withBootstrap = Nothing
+        bootstrap = Nothing
       }
 
 -- | Queue an IO action to be run some time after this transaction commits.
@@ -449,22 +444,34 @@ newEmbargo = fmap EmbargoId . newId . questionIdPool
 freeEmbargo :: Conn' -> EmbargoId -> STM ()
 freeEmbargo conn = freeId (exportIdPool conn) . embargoWord
 
+-- | Wait until a connection has shut down, then re-throw the
+-- exception that killed it, if any.
+waitConn :: Conn -> IO ()
+waitConn Conn {done} = wait done
+
 -- | Handle a connection to another vat. Returns when the connection is closed.
-handleConn :: Transport -> ConnConfig -> IO ()
+handleConn ::
+  Transport ->
+  ConnConfig ->
+  IO ()
 handleConn transport cfg =
-  withConn transport cfg $ \Conn {done} ->
-    wait done
+  withAcquire (acquireConn transport cfg) waitConn
 
 -- | Run the function with access to a connection. Shut down the connection
 -- when it returns.
-withConn :: Transport -> ConnConfig -> (Conn -> IO ()) -> IO ()
-withConn transport cfg =
-  withAcquire (acquireConn transport cfg)
+withConn :: Transport -> ConnConfig -> (Conn -> IO a) -> IO a
+withConn transport cfg f =
+  withAcquire (acquireConn transport cfg) $ \conn -> do
+    result <- f conn `race` waitConn conn
+    case result of
+      Left v -> pure v
+      Right () ->
+        error "BUG: waitConn returned normally"
 
 acquireConn :: Transport -> ConnConfig -> Acquire Conn
 acquireConn transport cfg = do
   (conn, conn') <- mkAcquire (newConn cfg) stopConn
-  done <- acquireAsync $ void $ runConn cfg transport (conn, conn')
+  done <- acquireAsync $ runConn cfg transport (conn, conn')
   pure conn {done = done}
 
 newConn
@@ -472,7 +479,6 @@ newConn
     { maxQuestions,
       maxExports,
       maxCallWords,
-      withBootstrap,
       debugMode
     } = do
     stableName <- makeStableName =<< newEmptyMVar
@@ -518,11 +524,9 @@ newConn
 runConn cfg transport (conn, conn') = do
   result <-
     try $
-      ( recvLoop transport conn
-          `concurrently_` sendLoop transport conn'
-          `concurrently_` callbacksLoop conn'
-      )
-        `race_` useBootstrap conn conn' cfg
+      recvLoop transport conn
+        `concurrently_` sendLoop transport conn'
+        `concurrently_` callbacksLoop conn'
   case result of
     Left (SentAbort e) -> do
       -- We need to actually send it:
@@ -565,13 +569,6 @@ stopConn
         breakPromise fulfiller eDisconnected
       -- mark the connection as dead, making the live state inaccessible:
       writeTVar liveState Dead
-
-useBootstrap conn conn' cfg = case withBootstrap cfg of
-  Nothing ->
-    forever $ threadDelay maxBound
-  Just f -> do
-    boot <- atomically (requestBootstrap conn)
-    withSupervisor $ \sup -> f sup boot
 
 -- | A pool of ids; used when choosing identifiers for questions and exports.
 newtype IdPool = IdPool (TVar [Word32])

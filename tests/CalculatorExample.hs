@@ -4,8 +4,8 @@
 
 module CalculatorExample (tests) where
 
+import Capnp.Rpc (ConnConfig (..), handleConn, requestBootstrap, withConn)
 import Capnp.Rpc.Transport (socketTransport)
-import Capnp.Rpc.Untyped (ConnConfig (..), handleConn)
 import Capnp.TraversalLimit (defaultLimit)
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async (race_)
@@ -83,16 +83,12 @@ tests = describe "Check our example against the C++ implementation" $ do
 runProxy :: Word16 -> Word16 -> IO ()
 runProxy serverPort clientPort =
   connect "localhost" (fromString $ show serverPort) $ \(serverSock, _addr) ->
-    handleConn
-      (socketTransport serverSock defaultLimit)
-      def
-        { debugMode = True,
-          withBootstrap = Just $ \_sup client ->
-            serve "localhost" (fromString $ show clientPort) $ \(clientSock, _addr) ->
-              handleConn
-                (socketTransport clientSock defaultLimit)
-                def
-                  { bootstrap = Just client,
-                    debugMode = True
-                  }
-        }
+    withConn (socketTransport serverSock defaultLimit) def {debugMode = True} $ \conn -> do
+      client <- requestBootstrap conn
+      serve "localhost" (fromString $ show clientPort) $ \(clientSock, _addr) ->
+        handleConn
+          (socketTransport clientSock defaultLimit)
+          def
+            { bootstrap = Just client,
+              debugMode = True
+            }

@@ -541,30 +541,36 @@ import System.IO (stdout)
 -- Here is an an echo (networking) server using this interface:
 --
 -- > {-# LANGUAGE MultiParamTypeClasses #-}
--- > {-# LANGUAGE OverloadedStrings     #-}
--- > {-# LANGUAGE TypeApplications      #-}
+-- > {-# LANGUAGE OverloadedStrings #-}
+-- > {-# LANGUAGE TypeApplications #-}
 -- >
+-- > module Examples.Rpc.EchoServer (main) where
+-- >
+-- > import Capnp (SomeServer, def, defaultLimit, export, handleParsed)
+-- > import Capnp.Gen.Echo
+-- > import Capnp.Rpc (ConnConfig (..), handleConn, socketTransport, toClient)
 -- > import Network.Simple.TCP (serve)
--- >
--- > import Capnp.New (SomeServer, def, defaultLimit, export, handleParsed)
--- > import Capnp.Rpc (ConnConfig(..), handleConn, socketTransport, toClient)
--- >
--- > import Capnp.Gen.Echo.New
+-- > import Supervisors (withSupervisor)
 -- >
 -- > data MyEchoServer = MyEchoServer
 -- >
 -- > instance SomeServer MyEchoServer
 -- >
 -- > instance Echo'server_ MyEchoServer where
--- >     echo'echo MyEchoServer = handleParsed $ \params ->
--- >         pure def { reply = query params }
+-- >   echo'echo MyEchoServer = handleParsed $ \params ->
+-- >     pure def {reply = query params}
 -- >
 -- > main :: IO ()
--- > main = serve "localhost" "4000" $ \(sock, _addr) ->
--- >     handleConn (socketTransport sock defaultLimit) def
--- >         { debugMode = True
--- >         , getBootstrap = \sup -> Just . toClient <$> export @Echo sup MyEchoServer
--- >         }
+-- > main =
+-- >   withSupervisor $ \sup -> do
+-- >     boot <- export @Echo sup MyEchoServer
+-- >     serve "localhost" "4000" $ \(sock, _addr) ->
+-- >       handleConn
+-- >         (socketTransport sock defaultLimit)
+-- >         def
+-- >           { debugMode = True,
+-- >             bootstrap = Just (toClient boot)
+-- >           }
 --
 -- For RPC clients, there is a 'Client' type exported by "Capnp.New", which is
 -- parametrized over a phantom type indicating the type of the remote capability.
@@ -580,31 +586,36 @@ import System.IO (stdout)
 --
 -- Here is an an echo client using this interface:
 --
--- > {-# LANGUAGE OverloadedLabels  #-}
+-- > {-# LANGUAGE OverloadedLabels #-}
 -- > {-# LANGUAGE OverloadedStrings #-}
 -- >
--- > import Data.Function      ((&))
--- > import Data.Functor       ((<&>))
+-- > module Examples.Rpc.EchoClient (main) where
+-- >
+-- > import qualified Capnp as C
+-- > import Capnp.Gen.Echo
+-- > import Capnp.Rpc
+-- >   ( ConnConfig (..),
+-- >     fromClient,
+-- >     requestBootstrap,
+-- >     socketTransport,
+-- >     withConn,
+-- >   )
+-- > import Data.Function ((&))
+-- > import Data.Functor ((<&>))
 -- > import Network.Simple.TCP (connect)
--- >
--- > import qualified Capnp.New as C
--- > import           Capnp.Rpc
--- >     (ConnConfig(..), fromClient, handleConn, socketTransport)
--- >
--- > import Capnp.Gen.Echo.New
 -- >
 -- > main :: IO ()
 -- > main = connect "localhost" "4000" $ \(sock, _addr) ->
--- >     handleConn (socketTransport sock C.defaultLimit) C.def
--- >         { debugMode = True
--- >         , withBootstrap = Just $ \_sup client ->
--- >             let echoClient :: C.Client Echo
--- >                 echoClient = fromClient client
--- >             in
--- >             echoClient
--- >                 & C.callP #echo C.def { query = "Hello, World!" }
--- >                 <&> C.pipe #reply
--- >                 >>= C.waitPipeline
--- >                 >>= C.evalLimitT C.defaultLimit . C.parse
--- >                 >>= print
--- >         }
+-- >   withConn
+-- >     (socketTransport sock C.defaultLimit)
+-- >     (C.def {debugMode = True})
+-- >     $ \conn -> do
+-- >       client <- requestBootstrap conn
+-- >       let echoClient :: C.Client Echo
+-- >           echoClient = fromClient client
+-- >       echoClient
+-- >         & C.callP #echo C.def {query = "Hello, World!"}
+-- >         <&> C.pipe #reply
+-- >         >>= C.waitPipeline
+-- >         >>= C.evalLimitT C.defaultLimit . C.parse
+-- >         >>= print
