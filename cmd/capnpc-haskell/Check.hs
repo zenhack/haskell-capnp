@@ -37,7 +37,7 @@ reportIssues CodeGeneratorRequest {nodes} =
               " support this for pointer-valued fields. The custom\n",
               " default will be ignored; please be careful. See:\n",
               "\n",
-              "https://github.com/zenhack/haskell-capnp/issues/28\n",
+              "https://codeberg.org/zenhack/haskell-capnp/issues/28\n",
               "\n",
               "for more information.\n"
             ]

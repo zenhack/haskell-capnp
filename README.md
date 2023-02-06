@@ -35,8 +35,8 @@ accommodate more features as we add them.
 [1]: https://capnproto.org/
 [2]: https://capnproto.org/language.html#evolving-your-protocol
 
-[issue27]: https://github.com/zenhack/haskell-capnp/issues/27
-[issue28]: https://github.com/zenhack/haskell-capnp/issues/28
+[issue27]: https://codeberg.org/zenhack/haskell-capnp/issues/27
+[issue28]: https://codeberg.org/zenhack/haskell-capnp/issues/28
 
 [hackage-img]: https://img.shields.io/hackage/v/capnp.svg
 [hackage]: https://hackage.haskell.org/package/capnp

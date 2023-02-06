@@ -7,8 +7,8 @@ author:                   Ian Denhardt
 maintainer:               ian@zenhack.net
 license:                  MIT
 license-file:             LICENSE.md
-homepage:                 https://github.com/zenhack/haskell-capnp
-bug-reports:              https://github.com/zenhack/haskell-capnp/issues
+homepage:                 https://codeberg.org/zenhack/haskell-capnp
+bug-reports:              https://codeberg.org/zenhack/haskell-capnp/issues
 synopsis:                 Cap'n Proto for Haskell
 description:
   A native Haskell implementation of the Cap'N Proto cerialization format and
@@ -46,7 +46,7 @@ extra-source-files:
 source-repository head
     type:                 git
     branch:               master
-    location:             https://github.com/zenhack/haskell-capnp.git
+    location:             https://codeberg.org/zenhack/haskell-capnp.git
 
 --------------------------------------------------------------------------------
 
