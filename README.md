@@ -3,10 +3,11 @@
 A Haskell library for the [Cap'N Proto][1] Cerialization and RPC
 protocol.
 
-Note, if you're viewing this on github, this is a mirror; this project
-[has moved to codeberg](https://codeberg.org/zenhack/haskell-capnp).
-For trivial changes we'll still accept PRs here, but please file issues
-and submit more substantial changes via codeberg.
+Note, this project's official home is [on
+codeberg](https://codeberg.org/zenhack/haskell-capnp); if you're viewing
+this elsewhere, this is a mirror. For trivial changes we'll still accept
+patches here, but please file issues and submit more substantial changes
+via codeberg.
 
 # Getting Started
 
