@@ -33,7 +33,6 @@ import Control.Monad (when)
 import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.Int
-import qualified Data.Vector as V
 import Network.Simple.TCP (serve)
 import Supervisors (Supervisor, withSupervisor)
 import Prelude hiding (subtract)
@@ -51,13 +50,12 @@ newtype OpFunc = OpFunc (Double -> Double -> Double)
 instance SomeServer OpFunc
 
 instance Function'server_ OpFunc where
-  function'call (OpFunc op) = handleParsed $ \Function'call'params {params} -> do
-    when (V.length params /= 2) $
-      throwFailed "Wrong number of parameters."
-    pure
-      Function'call'results
-        { value = (params V.! 0) `op` (params V.! 1)
-        }
+  function'call (OpFunc op) = handleParsed $ \Function'call'params {params} ->
+    case params of
+      [l, r] ->
+        pure Function'call'results {value = l `op` r}
+      _ ->
+        throwFailed "Wrong number of parameters."
 
 data ExprFunc = ExprFunc
   { paramCount :: !Int32,
@@ -69,7 +67,7 @@ instance SomeServer ExprFunc
 instance Function'server_ ExprFunc where
   function'call ExprFunc {..} =
     handleParsed $ \Function'call'params {params} -> do
-      when (fromIntegral (V.length params) /= paramCount) $
+      when (fromIntegral (length params) /= paramCount) $
         throwFailed "Wrong number of parameters."
       eval params body
         >>= waitResult
@@ -88,7 +86,7 @@ instance SomeServer MyCalc
 instance Calculator'server_ MyCalc where
   calculator'evaluate MyCalc {sup} =
     handleParsed $ \Calculator'evaluate'params {expression} -> do
-      eval V.empty expression
+      eval [] expression
         >>= waitResult
         >>= export @Value sup . LitValue
         <&> Calculator'evaluate'results
@@ -126,7 +124,7 @@ waitResult (Immediate v) = pure v
 waitResult (CallResult p) = getField #value <$> waitPipeline p
 waitResult (ReadResult p) = getField #value <$> waitPipeline p
 
-eval :: V.Vector Double -> Parsed Expression -> IO EvalResult
+eval :: [Double] -> Parsed Expression -> IO EvalResult
 eval outerParams (Expression exp) = go outerParams exp
   where
     go _ (Expression'literal lit) =
@@ -136,10 +134,10 @@ eval outerParams (Expression exp) = go outerParams exp
         & callP #read def
         <&> ReadResult
     go args (Expression'parameter idx)
-      | fromIntegral idx >= V.length args =
+      | fromIntegral idx >= length args =
           throwFailed "Parameter index out of bounds"
       | otherwise =
-          pure $ Immediate $ args V.! fromIntegral idx
+          pure $ Immediate $ args !! fromIntegral idx
     go outerParams (Expression'call Expression'call' {function, params = innerParams}) = do
       argPipelines <- traverse (eval outerParams) innerParams
       argValues <- traverse waitResult argPipelines

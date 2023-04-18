@@ -16,7 +16,6 @@ import Capnp.Rpc
 import Control.Monad (when)
 import Data.Function ((&))
 import Data.Functor ((<&>))
-import qualified Data.Vector as V
 import Network.Simple.TCP (connect)
 
 main :: IO ()
@@ -55,19 +54,17 @@ main = connect "localhost" "4000" $ \(sock, _addr) ->
                     Expression'call'
                       { function = subtract,
                         params =
-                          V.fromList
-                            [ Expression $
-                                Expression'call
-                                  Expression'call'
-                                    { function = add,
-                                      params =
-                                        V.fromList
-                                          [ Expression $ Expression'literal 123,
-                                            Expression $ Expression'literal 45
-                                          ]
-                                    },
-                              Expression $ Expression'literal 67
-                            ]
+                          [ Expression $
+                              Expression'call
+                                Expression'call'
+                                  { function = add,
+                                    params =
+                                      [ Expression $ Expression'literal 123,
+                                        Expression $ Expression'literal 45
+                                      ]
+                                  },
+                            Expression $ Expression'literal 67
+                          ]
                       }
             }
         <&> C.pipe #value

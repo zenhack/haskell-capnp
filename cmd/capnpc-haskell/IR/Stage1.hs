@@ -23,7 +23,6 @@ module IR.Stage1
   )
 where
 
-import qualified Data.Vector as V
 import Data.Word
 import qualified IR.Common as Common
 import qualified IR.Name as Name
@@ -56,7 +55,7 @@ data NodeCommon = NodeCommon
   { nodeNested :: [(Name.UnQ, Node)],
     nodeParent :: Maybe Node,
     nodeId :: !Word64,
-    nodeParams :: V.Vector Name.UnQ
+    nodeParams :: [Name.UnQ]
   }
   deriving (Show, Eq)
 

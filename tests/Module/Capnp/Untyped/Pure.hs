@@ -10,7 +10,6 @@ module Module.Capnp.Untyped.Pure (pureUntypedTests) where
 import Capnp (msgToRaw, parse)
 import Capnp.Basics
 import Capnp.TraversalLimit (runLimitT)
-import qualified Data.Vector as V
 import GHC.Float (castDoubleToWord64)
 import Test.Hspec
 import Text.Heredoc (here)
@@ -50,7 +49,7 @@ pureUntypedTests =
                             5173,
                             castDoubleToWord64 12.0
                           ]
-                          [ Just $ PtrList $ List8 $ V.fromList $ map (fromIntegral . fromEnum) "bob\0",
+                          [ Just $ PtrList $ List8 $ map (fromIntegral . fromEnum) "bob\0",
                             Just $ PtrList $ List16 []
                           ]
                   ]

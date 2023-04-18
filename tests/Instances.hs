@@ -32,10 +32,10 @@ instance Arbitrary (Parsed Node) where
     displayName <- arbitrary
     displayNamePrefixLength <- arbitrary
     scopeId <- arbitrary
-    parameters <- arbitrarySmallerVec
+    parameters <- arbitrarySmallerList
     isGeneric <- arbitrary
-    nestedNodes <- arbitrarySmallerVec
-    annotations <- arbitrarySmallerVec
+    nestedNodes <- arbitrarySmallerList
+    annotations <- arbitrarySmallerList
     union' <- arbitrary
     pure Node {..}
 
@@ -44,7 +44,7 @@ instance Arbitrary (Parsed Node'SourceInfo) where
   arbitrary = do
     id <- arbitrary
     docComment <- arbitrary
-    members <- arbitrarySmallerVec
+    members <- arbitrarySmallerList
     pure Node'SourceInfo {..}
 
 instance Arbitrary (Parsed Node'SourceInfo'Member) where
@@ -66,7 +66,7 @@ instance Arbitrary (Parsed (Which Node)) where
 
 instance Arbitrary (Parsed Node'enum) where
   shrink = genericShrink
-  arbitrary = Node'enum' <$> arbitrarySmallerVec
+  arbitrary = Node'enum' <$> arbitrarySmallerList
 
 instance Arbitrary (Parsed Node'struct) where
   shrink = genericShrink
@@ -77,12 +77,12 @@ instance Arbitrary (Parsed Node'struct) where
     isGroup <- arbitrary
     discriminantCount <- arbitrary
     discriminantOffset <- arbitrary
-    fields <- arbitrarySmallerVec
+    fields <- arbitrarySmallerList
     pure Node'struct' {..}
 
 instance Arbitrary (Parsed Node'interface) where
   shrink = genericShrink
-  arbitrary = Node'interface' <$> arbitrarySmallerVec <*> arbitrarySmallerVec
+  arbitrary = Node'interface' <$> arbitrarySmallerList <*> arbitrarySmallerList
 
 instance Arbitrary (Parsed Node'const) where
   shrink = genericShrink
@@ -163,7 +163,7 @@ instance Arbitrary (Parsed Enumerant) where
     Enumerant
       <$> arbitrary
       <*> arbitrary
-      <*> arbitrarySmallerVec
+      <*> arbitrarySmallerList
 
 instance Arbitrary (Parsed Superclass) where
   shrink = genericShrink
@@ -199,7 +199,7 @@ instance Arbitrary (Parsed Node'Parameter) where
 
 instance Arbitrary (Parsed Brand) where
   shrink = genericShrink
-  arbitrary = Brand <$> arbitrarySmallerVec
+  arbitrary = Brand <$> arbitrarySmallerList
 
 instance Arbitrary (Parsed Brand'Scope) where
   shrink = genericShrink
@@ -212,7 +212,7 @@ instance Arbitrary (Parsed (Which Brand'Scope)) where
   shrink = genericShrink
   arbitrary =
     oneof
-      [ Brand'Scope'bind <$> arbitrarySmallerVec,
+      [ Brand'Scope'bind <$> arbitrarySmallerList,
         pure Brand'Scope'inherit,
         Brand'Scope'unknown' <$> arbitraryTag 2
       ]
@@ -370,9 +370,9 @@ instance Arbitrary (Parsed CodeGeneratorRequest) where
   shrink = genericShrink
   arbitrary = do
     capnpVersion <- arbitrary
-    nodes <- arbitrarySmallerVec
-    requestedFiles <- arbitrarySmallerVec
-    sourceInfo <- arbitrarySmallerVec
+    nodes <- arbitrarySmallerList
+    requestedFiles <- arbitrarySmallerList
+    sourceInfo <- arbitrarySmallerList
     pure CodeGeneratorRequest {..}
 
 instance Arbitrary (Parsed CodeGeneratorRequest'RequestedFile) where
@@ -390,33 +390,33 @@ instance Arbitrary (Parsed CodeGeneratorRequest'RequestedFile'Import) where
       <$> arbitrary
       <*> arbitrary
 
-arbitrarySmallerVec :: Arbitrary a => Gen (V.Vector a)
-arbitrarySmallerVec = sized $ \size -> do
+arbitrarySmallerList :: Arbitrary a => Gen [a]
+arbitrarySmallerList = sized $ \size -> do
   -- Make sure the elements are scaled down relative to
-  -- the size of the vector:
-  vec <- arbitrary :: Gen (V.Vector ())
-  let gen = resize (size `div` V.length vec) arbitrary
+  -- the size of the list:
+  vec <- arbitrary :: Gen [()]
+  let gen = resize (size `div` length vec) arbitrary
   traverse (const gen) vec
 
 instance Arbitrary (Parsed B.AnyStruct) where
   shrink = genericShrink
   arbitrary = sized $ \_ ->
     B.Struct
-      <$> arbitrarySmallerVec
-      <*> arbitrarySmallerVec
+      <$> (V.fromList <$> arbitrarySmallerList)
+      <*> (V.fromList <$> arbitrarySmallerList)
 
 instance Arbitrary (Parsed B.AnyList) where
   shrink = genericShrink
   arbitrary =
     oneof
-      [ B.List0 <$> arbitrarySmallerVec,
-        B.List1 <$> arbitrarySmallerVec,
-        B.List8 <$> arbitrarySmallerVec,
-        B.List16 <$> arbitrarySmallerVec,
-        B.List32 <$> arbitrarySmallerVec,
-        B.List64 <$> arbitrarySmallerVec,
-        B.ListPtr <$> arbitrarySmallerVec,
-        B.ListStruct <$> arbitrarySmallerVec
+      [ B.List0 <$> arbitrarySmallerList,
+        B.List1 <$> arbitrarySmallerList,
+        B.List8 <$> arbitrarySmallerList,
+        B.List16 <$> arbitrarySmallerList,
+        B.List32 <$> arbitrarySmallerList,
+        B.List64 <$> arbitrarySmallerList,
+        B.ListPtr <$> arbitrarySmallerList,
+        B.ListStruct <$> arbitrarySmallerList
       ]
 
 instance Arbitrary (Parsed B.AnyPointer) where

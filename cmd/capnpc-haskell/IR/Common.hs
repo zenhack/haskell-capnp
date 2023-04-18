@@ -10,7 +10,6 @@ import qualified Capnp.Basics as B
 import Capnp.Repr.Parsed (Parsed)
 import Data.Bifunctor (Bifunctor (..))
 import qualified Data.Map.Strict as M
-import qualified Data.Vector as V
 import Data.Word
 import qualified IR.Name as Name
 
@@ -66,7 +65,7 @@ newtype MapBrand r = MapBrand (M.Map Word64 (BrandScope r))
 instance Functor MapBrand where
   fmap f (MapBrand m) = MapBrand $ fmap (fmap f) m
 
-newtype BrandScope r = Bind (V.Vector (Binding r))
+newtype BrandScope r = Bind [Binding r]
   deriving (Show, Eq)
 
 instance Functor BrandScope where

@@ -939,7 +939,7 @@ data Return'
 
 data Payload = Payload
   { content :: RawMPtr,
-    capTable :: V.Vector (R.Parsed R.CapDescriptor)
+    capTable :: [R.Parsed R.CapDescriptor]
   }
 
 -- Note [proxies]
@@ -1019,7 +1019,7 @@ callRemote
     payload@Payload {capTable} <- makeOutgoingPayload conn arguments
     -- save these in case the callee sends back releaseParamCaps = True in the return
     -- message:
-    let paramCaps = catMaybes $ flip map (V.toList capTable) $ \R.CapDescriptor {union'} -> case union' of
+    let paramCaps = catMaybes $ flip map capTable $ \R.CapDescriptor {union'} -> case union' of
           R.CapDescriptor'senderHosted eid -> Just (IEId eid)
           R.CapDescriptor'senderPromise eid -> Just (IEId eid)
           _ -> Nothing
@@ -1124,10 +1124,9 @@ marshalPromisedAnswer PromisedAnswer {answerId, transform} =
   R.PromisedAnswer
     { R.questionId = qaWord answerId,
       R.transform =
-        V.fromList $
-          map
-            (R.PromisedAnswer'Op . R.PromisedAnswer'Op'getPointerField)
-            (toList transform)
+        map
+          (R.PromisedAnswer'Op . R.PromisedAnswer'Op'getPointerField)
+          (toList transform)
     }
 
 unmarshalPromisedAnswer :: MonadThrow m => R.Parsed R.PromisedAnswer -> m PromisedAnswer
@@ -1361,8 +1360,7 @@ handleBootstrapMsg conn R.Bootstrap {questionId} =
                   Payload
                     { content,
                       capTable =
-                        V.singleton
-                          (def {R.union' = capDesc} :: R.Parsed R.CapDescriptor)
+                        [def {R.union' = capDesc} :: R.Parsed R.CapDescriptor]
                     }
             }
     M.focus
@@ -1384,7 +1382,7 @@ handleBootstrapMsg conn R.Bootstrap {questionId} =
                           { union' =
                               Return'results
                                 Payload
-                                  { capTable = (V.toList -> [R.CapDescriptor {union' = R.CapDescriptor'receiverHosted (IEId -> eid)}])
+                                  { capTable = [R.CapDescriptor {union' = R.CapDescriptor'receiverHosted (IEId -> eid)}]
                                   }
                           } ->
                             when releaseResultCaps $
@@ -1514,9 +1512,9 @@ ptrPathClient :: MonadThrow m => [Word16] -> RawMPtr -> m Client
 ptrPathClient is ptr =
   evalLimitT defaultLimit $ followPtrs is ptr >>= ptrClient
 
-transformClient :: V.Vector (R.Parsed R.PromisedAnswer'Op) -> RawMPtr -> Conn' -> STM Client
+transformClient :: [R.Parsed R.PromisedAnswer'Op] -> RawMPtr -> Conn' -> STM Client
 transformClient transform ptr conn =
-  (unmarshalOps (V.toList transform) >>= flip ptrPathClient ptr)
+  (unmarshalOps transform >>= flip ptrPathClient ptr)
     `catchSTM` abortConn conn
 
 ptrClient :: UntypedRaw.ReadCtx m 'Const => RawMPtr -> m Client
@@ -1905,15 +1903,15 @@ insertNewAbort keyTypeName conn key value =
 genSendableCapTableRaw ::
   Conn ->
   Maybe (UntypedRaw.Ptr 'Const) ->
-  STM (V.Vector (R.Parsed R.CapDescriptor))
-genSendableCapTableRaw _ Nothing = pure V.empty
+  STM [R.Parsed R.CapDescriptor]
+genSendableCapTableRaw _ Nothing = pure []
 genSendableCapTableRaw conn (Just ptr) =
   traverse
     ( \c -> do
         union' <- emitCap conn c
         pure (def :: R.Parsed R.CapDescriptor) {R.union' = union'}
     )
-    (Message.getCapTable (UntypedRaw.message @UntypedRaw.Ptr ptr))
+    (V.toList $ Message.getCapTable (UntypedRaw.message @UntypedRaw.Ptr ptr))
 
 -- | Convert the pointer into a Payload, including a capability table for
 -- the clients in the pointer's cap table.
@@ -2368,7 +2366,7 @@ emitCap targetConn (unwrapClient -> Just client') = case client' of
 acceptPayload :: Conn -> Raw R.Payload 'Const -> LimitT STM Payload
 acceptPayload conn payload = do
   capTable <- parseField #capTable payload
-  clients <- lift $ traverse (\R.CapDescriptor {union'} -> acceptCap conn union') capTable
+  clients <- lift $ V.fromList <$> traverse (\R.CapDescriptor {union'} -> acceptCap conn union') capTable
   Raw rawContent <- readField #content payload
   content <- traverse (UntypedRaw.tMsg (pure . Message.withCapTable clients)) rawContent
   pure Payload {content, capTable}

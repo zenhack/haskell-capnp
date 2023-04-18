@@ -17,7 +17,6 @@ import qualified Data.Map.Strict as M
 import Data.Maybe (mapMaybe)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import qualified Data.Vector as V
 import Data.Word
 import GHC.Float (castDoubleToWord64, castFloatToWord32)
 import qualified IR.Common as C
@@ -38,7 +37,7 @@ nodesToNodes inMap = outMap
               { nodeId = id,
                 nodeNested =
                   [ (Name.UnQ name, node)
-                    | Schema.Node'NestedNode {name, id} <- V.toList nestedNodes,
+                    | Schema.Node'NestedNode {name, id} <- nestedNodes,
                       Just node <- [M.lookup id outMap]
                   ],
                 nodeParent =
@@ -46,14 +45,13 @@ nodesToNodes inMap = outMap
                     then Nothing
                     else Just (outMap M.! id),
                 nodeParams =
-                  V.fromList
-                    [ Name.UnQ name
-                      | Schema.Node'Parameter {name} <- V.toList parameters
-                    ]
+                  [ Name.UnQ name
+                    | Schema.Node'Parameter {name} <- parameters
+                  ]
               },
           nodeUnion = case union' of
             Schema.Node'enum Schema.Node'enum' {enumerants} ->
-              Stage1.NodeEnum $ map enumerantToName $ V.toList enumerants
+              Stage1.NodeEnum $ map enumerantToName enumerants
             Schema.Node'struct
               Schema.Node'struct'
                 { dataWordCount,
@@ -68,15 +66,15 @@ nodesToNodes inMap = outMap
                       pointerCount,
                       isGroup,
                       tagOffset = discriminantOffset,
-                      fields = map (fieldToField outMap) (V.toList fields)
+                      fields = map (fieldToField outMap) fields
                     }
             Schema.Node'interface Schema.Node'interface' {methods, superclasses} ->
               Stage1.NodeInterface
                 Stage1.Interface
-                  { methods = map (methodToMethod outMap) (V.toList methods),
+                  { methods = map (methodToMethod outMap) methods,
                     supers =
                       [ C.InterfaceType (outMap M.! id) (brandToBrand outMap brand)
-                        | Schema.Superclass {id, brand} <- V.toList superclasses
+                        | Schema.Superclass {id, brand} <- superclasses
                       ]
                   }
             Schema.Node'const Schema.Node'const' {type_ = Schema.Type type_, value = Schema.Value value} ->
@@ -115,14 +113,12 @@ nodesToNodes inMap = outMap
                                 encodeUtf8 v
                                   & BS.unpack
                                   & (++ [0])
-                                  & V.fromList
                       Schema.Value'data_ v ->
                         C.PtrValue (C.PrimPtr C.PrimText) $
                           Just $
                             B.PtrList $
                               B.List8 $
                                 BS.unpack v
-                                  & V.fromList
                       Schema.Value'list v ->
                         case type_ of
                           Schema.Type'list (Schema.Type'list' (Schema.Type elementType)) ->
@@ -169,7 +165,7 @@ nodesToNodes inMap = outMap
 
 brandToBrand :: NodeMap Stage1.Node -> Parsed Schema.Brand -> Stage1.Brand
 brandToBrand nodeMap Schema.Brand {scopes} =
-  C.MapBrand $ M.fromList $ mapMaybe scopeToScope (V.toList scopes)
+  C.MapBrand $ M.fromList $ mapMaybe scopeToScope scopes
   where
     scopeToScope Schema.Brand'Scope {scopeId, union'} = case union' of
       Schema.Brand'Scope'unknown' _ -> Nothing
@@ -179,7 +175,7 @@ brandToBrand nodeMap Schema.Brand {scopes} =
           ( scopeId,
             C.Bind $
               bindings
-                & V.map
+                & map
                   ( \(Schema.Brand'Binding b) -> case b of
                       Schema.Brand'Binding'type_ (Schema.Type typ) ->
                         case typeToType nodeMap typ of
@@ -307,12 +303,12 @@ cgrToCgr :: Parsed Schema.CodeGeneratorRequest -> Stage1.CodeGenReq
 cgrToCgr Schema.CodeGeneratorRequest {nodes, requestedFiles} =
   Stage1.CodeGenReq {allFiles, reqFiles}
   where
-    nodeMap = nodesToNodes $ M.fromList [(id, node) | node@Schema.Node {id} <- V.toList nodes]
-    reqFiles = map (reqFileToReqFile nodeMap) $ V.toList requestedFiles
+    nodeMap = nodesToNodes $ M.fromList [(id, node) | node@Schema.Node {id} <- nodes]
+    reqFiles = map (reqFileToReqFile nodeMap) requestedFiles
     allFiles =
       [ let fileNodes =
               [ (Name.UnQ name, nodeMap M.! id)
-                | Schema.Node'NestedNode {name, id} <- V.toList nestedNodes,
+                | Schema.Node'NestedNode {name, id} <- nestedNodes,
                   -- If the file is an import (i.e. not part of requestedFiles), then
                   -- the code generator will sometimes omit parts of it that are not
                   -- used. We need to check that the nestedNodes are actually included;
@@ -320,7 +316,7 @@ cgrToCgr Schema.CodeGeneratorRequest {nodes, requestedFiles} =
                   M.member id nodeMap
               ]
          in Stage1.File {fileId, fileNodes}
-        | Schema.Node {union' = Schema.Node'file, id = fileId, nestedNodes} <- V.toList nodes
+        | Schema.Node {union' = Schema.Node'file, id = fileId, nestedNodes} <- nodes
       ]
 
 structTypeToType ::
@@ -366,7 +362,7 @@ typeToType nodeMap = \case
                 C.TypeParamRef
                   { paramScope,
                     paramIndex = fromIntegral parameterIndex,
-                    paramName = Stage1.nodeParams (Stage1.nodeCommon paramScope) V.! fromIntegral parameterIndex
+                    paramName = Stage1.nodeParams (Stage1.nodeCommon paramScope) !! fromIntegral parameterIndex
                   }
       Schema.Type'anyPointer'unconstrained
         (Schema.Type'anyPointer'unconstrained' unconstrained) ->

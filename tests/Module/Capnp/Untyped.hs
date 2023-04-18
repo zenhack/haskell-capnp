@@ -334,7 +334,7 @@ farPtrTest = describe "Setting cross-segment pointers shouldn't crash" $ do
 otherMessageTest :: Spec
 otherMessageTest = describe "Setting pointers in other messages" $
   it "Should copy them if needed." $
-    property $ \(name :: Text) (params :: V.Vector (Parsed Node'Parameter)) (brand :: Parsed Brand) ->
+    property $ \(name :: Text) (params :: [Parsed Node'Parameter]) (brand :: Parsed Brand) ->
       propertyIO $ do
         let expected =
               def

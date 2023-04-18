@@ -61,7 +61,6 @@ import Data.Bits
 import Data.Default (Default (..))
 import Data.Foldable (for_)
 import Data.Int
-import qualified Data.Vector as V
 import Data.Word
 import qualified GHC.Float as F
 import qualified Language.Haskell.TH as TH
@@ -165,10 +164,10 @@ instance AllocateList (R.List a) where
   type ListAllocHint (R.List a) = Int
 
 instance
-  ( Parse (R.List a) (V.Vector ap),
+  ( Parse (R.List a) [ap],
     Allocate (R.List a)
   ) =>
-  EstimateListAlloc (R.List a) (V.Vector ap)
+  EstimateListAlloc (R.List a) [ap]
 
 -- | Allocate a new typed struct. Mainly used as the value for 'new' for in generated
 -- instances of 'Allocate'.
@@ -260,15 +259,19 @@ instance Parse Double Double where
   parse = pure . F.castWord64ToDouble . R.fromRaw
   encode _ = pure . R.Raw . F.castDoubleToWord64
 
-instance MarshalElement a ap => Marshal (R.List a) (V.Vector ap) where
+instance MarshalElement a ap => Marshal (R.List a) [ap] where
   marshalInto raw value =
-    for_ [0 .. V.length value - 1] $ \i ->
-      marshalElement raw i (value V.! i)
+    for_ (zip [0 ..] value) $ \(i, v) ->
+      marshalElement raw i v
 
-instance MarshalElement a ap => Parse (R.List a) (V.Vector ap) where
-  parse rawV =
-    V.generateM (R.length rawV) $ \i ->
-      R.index i rawV >>= parse
+instance MarshalElement a ap => Parse (R.List a) [ap] where
+  parse rawV = go [] (R.length rawV - 1)
+    where
+      go acc i
+        | i < 0 = pure acc
+        | otherwise = do
+            item <- R.index i rawV >>= parse
+            go (item : acc) (i - 1)
 
 -- | Type alias capturing the constraints on a type needed by
 -- 'marshalElement'
@@ -338,12 +341,12 @@ marshalElement ::
 marshalElement = marshalElementByRepr @(R.ListReprFor (R.ReprFor a))
 
 class (Parse a ap, Allocate (R.List a)) => EstimateListAlloc a ap where
-  estimateListAlloc :: V.Vector ap -> AllocHint (R.List a)
-  default estimateListAlloc :: (AllocHint (R.List a) ~ Int) => V.Vector ap -> AllocHint (R.List a)
-  estimateListAlloc = V.length
+  estimateListAlloc :: [ap] -> AllocHint (R.List a)
+  default estimateListAlloc :: (AllocHint (R.List a) ~ Int) => [ap] -> AllocHint (R.List a)
+  estimateListAlloc = length
   {-# INLINEABLE estimateListAlloc #-}
 
-instance MarshalElement a ap => EstimateAlloc (R.List a) (V.Vector ap) where
+instance MarshalElement a ap => EstimateAlloc (R.List a) [ap] where
   estimateAlloc = estimateListAlloc @a
   {-# INLINEABLE estimateAlloc #-}
 
@@ -383,7 +386,7 @@ do
             type ListAllocHint $ty = Int
 
           instance EstimateListAlloc $ty $ty where
-            estimateListAlloc = V.length
+            estimateListAlloc = length
             {-# INLINEABLE estimateListAlloc #-}
           |]
 

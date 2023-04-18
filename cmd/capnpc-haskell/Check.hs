@@ -5,7 +5,6 @@ module Check (reportIssues) where
 
 import Capnp.Gen.Capnp.Schema
 import Data.Foldable (for_)
-import qualified Data.Vector as V
 import System.IO (hPutStrLn, stderr)
 
 -- | Scan the code generator request for certain issues, and warn the user
@@ -17,12 +16,12 @@ reportIssues :: Parsed CodeGeneratorRequest -> IO ()
 reportIssues CodeGeneratorRequest {nodes} =
   let problemFields =
         [ (displayName, name)
-          | Node {displayName, union' = Node'struct Node'struct' {fields}} <- V.toList nodes,
+          | Node {displayName, union' = Node'struct Node'struct' {fields}} <- nodes,
             Field
               { name,
                 union' = Field'slot Field'slot' {hadExplicitDefault, defaultValue}
               } <-
-              V.toList fields,
+              fields,
             hadExplicitDefault && isPtrValue defaultValue
         ]
    in for_ problemFields $ \(displayName, name) ->

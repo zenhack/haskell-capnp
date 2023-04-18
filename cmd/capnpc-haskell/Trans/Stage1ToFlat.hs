@@ -9,7 +9,6 @@
 module Trans.Stage1ToFlat (cgrToCgr) where
 
 import qualified Data.Map as M
-import qualified Data.Vector as V
 import Data.Word
 import qualified IR.Common as C
 import qualified IR.Flat as Flat
@@ -74,7 +73,7 @@ applyBrandParam param@C.TypeParamRef {paramIndex, paramScope = Flat.Node {nodeId
   case M.lookup nodeId m of
     Nothing -> C.PtrParam param
     Just (C.Bind bindings) ->
-      let binding = bindings V.! paramIndex
+      let binding = bindings !! paramIndex
        in case binding of
             C.Unbound -> C.PtrParam param
             C.BoundType ty -> applyBrandPtrType ty
@@ -130,7 +129,7 @@ nestedToNodes
   typeParams =
     mine ++ kids
     where
-      myParams = typeParams ++ paramsToParams nodeMap nodeId (V.toList nodeParams)
+      myParams = typeParams ++ paramsToParams nodeMap nodeId nodeParams
       kidsNS = Name.localQToNS localName
       kids =
         concatMap

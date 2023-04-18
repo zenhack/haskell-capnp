@@ -1,6 +1,7 @@
 module Main (main) where
 
 import qualified CalculatorExample
+import qualified Constants
 import Module.Capnp.Basics (basicsTests)
 import Module.Capnp.Bits (bitsTests)
 import Module.Capnp.Canonicalize (canonicalizeTests)
@@ -18,7 +19,7 @@ import Test.Hspec
 import WalkSchemaCodeGenRequest (walkSchemaCodeGenRequestTest)
 
 main :: IO ()
-main = hspec $ parallel $ do
+main = hspec $ do
   describe "Tests for specific modules" $ do
     describe "Capnp.Basics" basicsTests
     describe "Capnp.Bits" bitsTests
@@ -36,4 +37,5 @@ main = hspec $ parallel $ do
   describe "Regression tests" regressionTests
   CalculatorExample.tests
   PointerOOB.tests
+  Constants.tests
   describe "Tests for client unwrapping" unwrapTests

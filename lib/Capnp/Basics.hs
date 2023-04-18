@@ -151,9 +151,9 @@ instance C.AllocateList AnyStruct where
 
 instance C.EstimateListAlloc AnyStruct (C.Parsed AnyStruct) where
   estimateListAlloc structs =
-    let len = V.length structs
-        !nWords = foldl' max 0 $ map (V.length . structData) $ V.toList structs
-        !nPtrs = foldl' max 0 $ map (V.length . structPtrs) $ V.toList structs
+    let len = length structs
+        !nWords = foldl' max 0 $ map (V.length . structData) structs
+        !nPtrs = foldl' max 0 $ map (V.length . structPtrs) structs
      in (len, (fromIntegral nWords, fromIntegral nPtrs))
 
 instance C.EstimateAlloc AnyStruct (C.Parsed AnyStruct) where
@@ -170,19 +170,15 @@ instance C.Marshal AnyStruct (C.Parsed AnyStruct) where
       R.Raw ptr <- C.encode (U.message @U.Struct raw) value
       U.setPtr ptr i raw
 
--- TODO(cleanup): It would be nice if we could reuse Capnp.Repr.Parsed.Parsed
--- here, but that would cause a circular import dependency.
-type ParsedList a = V.Vector a
-
 data instance C.Parsed AnyList
-  = ListPtr (ParsedList (Maybe (C.Parsed AnyPointer)))
-  | ListStruct (ParsedList (C.Parsed AnyStruct))
-  | List0 (ParsedList ())
-  | List1 (ParsedList Bool)
-  | List8 (ParsedList Word8)
-  | List16 (ParsedList Word16)
-  | List32 (ParsedList Word32)
-  | List64 (ParsedList Word64)
+  = ListPtr [Maybe (C.Parsed AnyPointer)]
+  | ListStruct [C.Parsed AnyStruct]
+  | List0 [()]
+  | List1 [Bool]
+  | List8 [Word8]
+  | List16 [Word16]
+  | List32 [Word32]
+  | List64 [Word64]
   deriving (Show, Eq, Generic)
 
 instance C.Parse AnyList (C.Parsed AnyList) where
