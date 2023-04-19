@@ -8,6 +8,8 @@
     use the new `requestBootstrap` function to get the bootstrap
     interface, using a connection reference supplied by `withConn`
     or `acquireConn`.
+- The high level API now maps Cap'n Proto lists to `[]`, rather than
+  `Vector`.
 
 # 0.17.0.0
 
