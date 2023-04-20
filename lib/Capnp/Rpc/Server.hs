@@ -104,8 +104,7 @@ class Server a where
   unwrap _ = Nothing
 
 -- | The operations necessary to receive and handle method calls, i.e.
--- to implement an object. It is parametrized over the monadic context
--- in which methods are serviced.
+-- to implement an object.
 data ServerOps = ServerOps
   { -- | Handle a method call; takes the interface and method id and returns
     -- a handler for the specific method.
