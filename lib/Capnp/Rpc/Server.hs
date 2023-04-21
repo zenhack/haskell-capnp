@@ -170,15 +170,6 @@ mhtToCallHandler = go M.empty . pure
       | otherwise =
           go (M.insert (mhtId t) (V.fromList (mhtHandlers t)) accum) (mhtParents t ++ ts)
 
-{-
--- | Export the server as a client for interface @i@. Spawns a server thread
--- with its lifetime bound to the supervisor.
-export :: forall i s m. (MonadSTM m, Export i, Server i s, SomeServer s) => Supervisor -> s -> m (Client i)
-export sup srv =
-  let h = mhtToCallHandler (methodHandlerTree (Proxy @i) srv)
-   in liftSTM $ Client <$> URpc.export sup (toLegacyServerOps srv h)
--}
-
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.
 findMethod :: Word64 -> Word16 -> CallHandler -> Maybe UntypedMethodHandler
 findMethod interfaceId methodId handler = do
