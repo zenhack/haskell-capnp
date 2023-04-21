@@ -74,3 +74,4 @@ import Capnp.Repr.Parsed (Parsed)
 import Capnp.TraversalLimit as X
 import Data.Default (def)
 import Internal.BuildPure (PureBuilder, createPure)
+import Internal.Rpc.Export (export)

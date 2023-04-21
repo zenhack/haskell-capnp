@@ -34,10 +34,10 @@ import qualified Capnp.Classes as C
 import qualified Capnp.Fields as F
 import Capnp.Message (Mutability (..), newMessage)
 import qualified Capnp.Message as M
+import qualified Capnp.New.Rpc.Server as Server
 import qualified Capnp.Repr as R
 import Capnp.Rpc.Common (Client (..), Pipeline (..))
 import Capnp.Rpc.Promise (Promise, newPromise, wait)
-import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.Rpc.Untyped as Rpc
 import Capnp.TraversalLimit (evalLimitT)
 import qualified Capnp.Untyped as U

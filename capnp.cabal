@@ -101,7 +101,6 @@ library
       , Capnp.Constraints
       , Capnp.Rpc.Common
       , Capnp.Rpc.Membrane
-      , Capnp.Rpc.Server
       , Capnp.Rpc.Revoke
       , Capnp.New.Rpc.Server
       , Capnp.Convert
@@ -155,6 +154,7 @@ library
       , Internal.BuildPure
       , Internal.STE
       , Internal.Rpc.Breaker
+      , Internal.Rpc.Export
     -- other-extensions:
     build-depends:
         hashable                          >= 1.2.7 && <1.5

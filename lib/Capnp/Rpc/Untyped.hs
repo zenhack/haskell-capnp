@@ -70,7 +70,8 @@ import qualified Capnp.Gen.Capnp.Rpc as R
 import Capnp.Message (Message)
 import qualified Capnp.Message as Message
 import Capnp.Mutability (Mutability (..), thaw)
-import Capnp.Repr (Raw (..))
+import qualified Capnp.New.Rpc.Server as Server
+import Capnp.Repr (Raw (..), ReprFor)
 import Capnp.Rpc.Errors
   ( eDisconnected,
     eFailed,
@@ -88,7 +89,6 @@ import Capnp.Rpc.Promise
     newPromise,
     newReadyPromise,
   )
-import qualified Capnp.Rpc.Server as Server
 import Capnp.Rpc.Transport (Transport (recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import qualified Capnp.Untyped as UntypedRaw
@@ -124,6 +124,7 @@ import qualified Data.Vector as V
 import Data.Word
 import qualified Focus
 import GHC.Generics (Generic)
+import GHC.Prim (coerce)
 import Internal.BuildPure (createPure)
 import Internal.Rc (Rc)
 import qualified Internal.Rc as Rc
@@ -1231,11 +1232,19 @@ export sup ops = liftSTM $ do
     )
   pure $ wrapClient (Just client')
 
-clientMethodHandler :: Word64 -> Word16 -> Client -> Server.MethodHandler p r
+clientMethodHandler ::
+  forall p r.
+  ( ReprFor p ~ ReprFor (Maybe B.AnyPointer),
+    ReprFor r ~ ReprFor (Maybe B.AnyPointer)
+  ) =>
+  Word64 ->
+  Word16 ->
+  Client ->
+  Server.MethodHandler p r
 clientMethodHandler interfaceId methodId client =
-  Server.fromUntypedHandler $
-    Server.untypedHandler $
-      \arguments response -> atomically $ void $ call Server.CallInfo {..} client
+  Server.castHandler @(Maybe B.AnyPointer) @p @(Maybe B.AnyPointer) @r $
+    \(Raw arguments) response ->
+      atomically $ void $ call Server.CallInfo {response = coerce response, ..} client
 
 -- | See Note [callbacks]
 callbacksLoop :: Conn' -> IO ()
@@ -1473,7 +1482,7 @@ handleCallMsg conn callMsg = do
             { interfaceId,
               methodId,
               arguments = callParams,
-              response = fulfiller
+              response = coerce fulfiller
             }
     -- Finally, figure out where to send it:
     case target of

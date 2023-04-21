@@ -2,7 +2,9 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -11,10 +13,14 @@ module Capnp.New.Rpc.Server
   ( CallHandler,
     MethodHandler,
     UntypedMethodHandler,
+    CallInfo (..),
+    ServerOps (..),
     Export (..),
-    export,
+    exportToServerOps,
     findMethod,
     SomeServer (..),
+    runServer,
+    castHandler,
 
     -- * Helpers for writing method handlers
     handleParsed,
@@ -32,7 +38,7 @@ import qualified Capnp.Classes as C
 import Capnp.Convert (parsedToRaw)
 import Capnp.Message (Mutability (..))
 import qualified Capnp.Repr as R
-import Capnp.Repr.Methods (Client (..))
+-- import Capnp.Repr.Methods (Client (..))
 import Capnp.Rpc.Errors
   ( eFailed,
     eMethodUnimplemented,
@@ -44,12 +50,10 @@ import Capnp.Rpc.Promise
     fulfill,
     newCallback,
   )
-import qualified Capnp.Rpc.Server as Legacy
-import qualified Capnp.Rpc.Untyped as URpc
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import qualified Capnp.Untyped as U
+import Control.Concurrent.STM (atomically)
 import Control.Exception.Safe (withException)
-import Control.Monad.STM.Class (MonadSTM (..))
 import Data.Function ((&))
 import Data.Kind (Constraint, Type)
 import qualified Data.Map.Strict as M
@@ -60,7 +64,32 @@ import qualified Data.Vector as V
 import Data.Word
 import GHC.Prim (coerce)
 import Internal.BuildPure (createPure)
-import Supervisors (Supervisor)
+import qualified Internal.TCloseQ as TCloseQ
+
+-- | A 'CallInfo' contains information about a method call.
+data CallInfo = CallInfo
+  { -- | The id of the interface whose method is being called.
+    interfaceId :: !Word64,
+    -- | The method id of the method being called.
+    methodId :: !Word16,
+    -- | The arguments to the method call.
+    arguments :: Maybe (U.Ptr 'Const),
+    -- | A 'Fulfiller' which accepts the method's return value.
+    response :: Fulfiller (Maybe (U.Ptr 'Const))
+  }
+
+-- | The operations necessary to receive and handle method calls, i.e.
+-- to implement an object.
+data ServerOps = ServerOps
+  { -- | Handle a method call; takes the interface and method id and returns
+    -- a handler for the specific method.
+    handleCall :: Word64 -> Word16 -> UntypedMethodHandler,
+    -- | Handle shutting-down the receiver; this is called when the last
+    -- reference to the capability is dropped.
+    handleStop :: IO (),
+    -- | used to unwrap the server when reflecting on a local client.
+    handleCast :: forall a. Typeable a => Maybe a
+  }
 
 -- | A handler for arbitrary RPC calls. Maps (interfaceId, methodId) pairs to
 -- 'UntypedMethodHandler's.
@@ -72,8 +101,15 @@ type MethodHandler p r =
   Fulfiller (R.Raw r 'Const) ->
   IO ()
 
+castHandler ::
+  forall p q r s.
+  (R.ReprFor p ~ R.ReprFor q, R.ReprFor r ~ R.ReprFor s) =>
+  MethodHandler p r ->
+  MethodHandler q s
+castHandler = coerce
+
 -- | Type alias for a handler for an untyped RPC method.
-type UntypedMethodHandler = MethodHandler B.AnyStruct B.AnyStruct
+type UntypedMethodHandler = MethodHandler (Maybe B.AnyPointer) (Maybe B.AnyPointer)
 
 -- | Base class for things that can act as capnproto servers.
 class SomeServer a where
@@ -134,28 +170,20 @@ mhtToCallHandler = go M.empty . pure
       | otherwise =
           go (M.insert (mhtId t) (V.fromList (mhtHandlers t)) accum) (mhtParents t ++ ts)
 
+{-
 -- | Export the server as a client for interface @i@. Spawns a server thread
 -- with its lifetime bound to the supervisor.
 export :: forall i s m. (MonadSTM m, Export i, Server i s, SomeServer s) => Supervisor -> s -> m (Client i)
 export sup srv =
   let h = mhtToCallHandler (methodHandlerTree (Proxy @i) srv)
    in liftSTM $ Client <$> URpc.export sup (toLegacyServerOps srv h)
+-}
 
 -- | Look up a particlar 'MethodHandler' in the 'CallHandler'.
 findMethod :: Word64 -> Word16 -> CallHandler -> Maybe UntypedMethodHandler
 findMethod interfaceId methodId handler = do
   iface <- M.lookup interfaceId handler
   iface V.!? fromIntegral methodId
-
-toLegacyCallHandler ::
-  CallHandler ->
-  Word64 ->
-  Word16 ->
-  Legacy.MethodHandler (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
-toLegacyCallHandler callHandler interfaceId methodId =
-  findMethod interfaceId methodId callHandler
-    & fromMaybe methodUnimplemented
-    & toLegacyMethodHandler
 
 -- | Convert a typed method handler to an untyped one. Mostly intended for
 -- use by generated code.
@@ -164,29 +192,32 @@ toUntypedMethodHandler ::
   (R.IsStruct p, R.IsStruct r) =>
   MethodHandler p r ->
   UntypedMethodHandler
-toUntypedMethodHandler = coerce
+toUntypedMethodHandler h =
+  \case
+    R.Raw (Just (U.PtrStruct param)) -> \ret -> do
+      f <- atomically $
+        newCallback $ \case
+          Left e -> breakPromise ret e
+          Right (R.Raw s) ->
+            fulfill ret (R.Raw (Just (U.PtrStruct s)))
+      h (R.Raw param) f
+    _ ->
+      \ret -> breakPromise ret (eFailed "Parameter was not a struct")
 
-toLegacyMethodHandler :: UntypedMethodHandler -> Legacy.MethodHandler (Maybe (U.Ptr 'Const)) (Maybe (U.Ptr 'Const))
-toLegacyMethodHandler handler =
-  Legacy.untypedHandler $ \args respond -> do
-    respond' <- newCallback $ \case
-      Left e ->
-        breakPromise respond e
-      Right (R.Raw s) ->
-        fulfill respond (Just (U.PtrStruct s))
-    case args of
-      Just (U.PtrStruct argStruct) ->
-        handler (R.Raw argStruct) respond'
-      _ ->
-        breakPromise respond $ eFailed "Argument was not a struct"
-
-toLegacyServerOps :: SomeServer a => a -> CallHandler -> Legacy.ServerOps
-toLegacyServerOps srv callHandler =
-  Legacy.ServerOps
+someServerToServerOps :: SomeServer a => a -> CallHandler -> ServerOps
+someServerToServerOps srv callHandler =
+  ServerOps
     { handleStop = shutdown srv,
       handleCast = unwrap srv,
-      handleCall = toLegacyCallHandler callHandler
+      handleCall = \interfaceId methodId ->
+        findMethod interfaceId methodId callHandler
+          & fromMaybe methodUnimplemented
     }
+
+exportToServerOps :: forall i s. (Export i, Server i s, SomeServer s) => Proxy i -> s -> ServerOps
+exportToServerOps proxy srv =
+  mhtToCallHandler (methodHandlerTree proxy srv)
+    & someServerToServerOps srv
 
 -- Helpers for writing method handlers
 
@@ -225,6 +256,22 @@ propagateExceptions h f =
 -- | 'MethodHandler' that always throws unimplemented.
 methodUnimplemented :: MethodHandler p r
 methodUnimplemented _ f = breakPromise f eMethodUnimplemented
+
+-- | Handle incoming messages for a given object.
+--
+-- Accepts a queue of messages to handle, and 'ServerOps' used to handle them.
+-- returns when it receives a 'Stop' message.
+runServer :: TCloseQ.Q CallInfo -> ServerOps -> IO ()
+runServer q ops = go
+  where
+    go =
+      atomically (TCloseQ.read q) >>= \case
+        Nothing ->
+          pure ()
+        Just CallInfo {interfaceId, methodId, arguments, response} ->
+          do
+            handleCall ops interfaceId methodId (R.Raw arguments) (coerce response)
+            go
 
 {-
 Sketch of future Async API, might take a bit of internals work to make
