@@ -10,6 +10,7 @@
     or `acquireConn`.
 - The high level API now maps Cap'n Proto lists to `[]`, rather than
   `Vector`.
+- `Fulfiller` now has an instance of `Contravariant`.
 
 # 0.17.0.0
 

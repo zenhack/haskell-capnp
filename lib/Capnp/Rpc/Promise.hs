@@ -34,6 +34,7 @@ import Capnp.Rpc.Errors ()
 import Control.Concurrent.STM
 import qualified Control.Exception.Safe as HsExn
 import Control.Monad.STM.Class
+import Data.Functor.Contravariant (Contravariant (..))
 
 -- | An exception thrown if 'breakPromise' or 'fulfill' is called on an
 -- already-resolved fulfiller.
@@ -45,6 +46,10 @@ instance HsExn.Exception ErrAlreadyResolved
 newtype Fulfiller a = Fulfiller
   { callback :: Either (Parsed Exception) a -> STM ()
   }
+
+instance Contravariant Fulfiller where
+  contramap f Fulfiller {callback} =
+    Fulfiller {callback = callback . fmap f}
 
 -- | Fulfill a promise by supplying the specified value. It is an error to
 -- call 'fulfill' if the promise has already been fulfilled (or broken).
