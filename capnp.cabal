@@ -102,7 +102,7 @@ library
       , Capnp.Rpc.Common
       , Capnp.Rpc.Membrane
       , Capnp.Rpc.Revoke
-      , Capnp.New.Rpc.Server
+      , Capnp.Rpc.Server
       , Capnp.Convert
       , Capnp.Errors
       , Capnp.Fields

@@ -67,10 +67,10 @@ import Capnp.Convert as X
 import qualified Capnp.Fields as F
 import Capnp.IO as X
 import qualified Capnp.Message as Message
-import Capnp.New.Rpc.Server
 import qualified Capnp.Repr as R
 import Capnp.Repr.Methods as X
 import Capnp.Repr.Parsed (Parsed)
+import Capnp.Rpc.Server
 import Capnp.TraversalLimit as X
 import Data.Default (def)
 import Internal.BuildPure (PureBuilder, createPure)

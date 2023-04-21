@@ -4,8 +4,8 @@
 
 module Internal.Rpc.Export (export) where
 
-import Capnp.New.Rpc.Server
 import Capnp.Rpc.Common (Client (..))
+import Capnp.Rpc.Server
 import qualified Capnp.Rpc.Untyped as URpc
 import Control.Monad.STM.Class (MonadSTM (liftSTM))
 import Data.Proxy (Proxy (..))

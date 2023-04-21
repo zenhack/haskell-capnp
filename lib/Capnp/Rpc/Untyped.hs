@@ -70,7 +70,6 @@ import qualified Capnp.Gen.Capnp.Rpc as R
 import Capnp.Message (Message)
 import qualified Capnp.Message as Message
 import Capnp.Mutability (Mutability (..), thaw)
-import qualified Capnp.New.Rpc.Server as Server
 import Capnp.Repr (Raw (..), ReprFor)
 import Capnp.Rpc.Errors
   ( eDisconnected,
@@ -89,6 +88,7 @@ import Capnp.Rpc.Promise
     newPromise,
     newReadyPromise,
   )
+import qualified Capnp.Rpc.Server as Server
 import Capnp.Rpc.Transport (Transport (recvMsg, sendMsg))
 import Capnp.TraversalLimit (LimitT, defaultLimit, evalLimitT)
 import qualified Capnp.Untyped as UntypedRaw

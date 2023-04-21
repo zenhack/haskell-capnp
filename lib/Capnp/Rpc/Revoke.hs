@@ -7,10 +7,10 @@ module Capnp.Rpc.Revoke
   )
 where
 
-import qualified Capnp.New.Rpc.Server as Server
 import Capnp.Rpc.Errors (eFailed)
 import qualified Capnp.Rpc.Membrane as Membrane
 import Capnp.Rpc.Promise (breakPromise)
+import qualified Capnp.Rpc.Server as Server
 import Capnp.Rpc.Untyped (IsClient)
 import Control.Concurrent.STM
 import Control.Monad.STM.Class (MonadSTM, liftSTM)

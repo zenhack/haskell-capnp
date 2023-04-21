@@ -23,9 +23,9 @@ where
 
 import qualified Capnp.Message as M
 import Capnp.Mutability (Mutability (..))
-import qualified Capnp.New.Rpc.Server as Server
 import qualified Capnp.Repr as R
 import Capnp.Rpc.Promise (breakOrFulfill, newCallback)
+import qualified Capnp.Rpc.Server as Server
 import qualified Capnp.Rpc.Untyped as URpc
 import qualified Capnp.Untyped as U
 import Control.Concurrent.STM

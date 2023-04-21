@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Capnp.New.Rpc.Server
+module Capnp.Rpc.Server
   ( CallHandler,
     MethodHandler,
     UntypedMethodHandler,
