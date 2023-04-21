@@ -263,30 +263,3 @@ runServer q ops = go
           do
             handleCall ops interfaceId methodId (R.Raw arguments) (coerce response)
             go
-
-{-
-Sketch of future Async API, might take a bit of internals work to make
-this possible:
-
--- | Handle a method call asynchronously.
---
--- When invoked, the handleer will be run synchronously, blocking further
--- method calls until the 'IO' returns. The method call does not return
--- until the 'Async' resolves, but further method calls can be serviced in
--- the meantime.
---
--- If a Finish message is received before the Async resolves, it will be
--- 'cancel'ed.
-handleRawAsync
-    :: (R.IsStruct p, R.IsStruct r)
-    => (R.Raw 'Const p -> IO (Async (R.Raw 'Const r)))
-    -> MethodHandler IO p r
-
--- | Like 'handleRawAsync', but accepts and returns parsed values.
-handleParsedAsync  ::
-    ( C.Parse p pp, R.IsStruct p
-    , C.Parse r, rr, R.IsStruct r
-    )
-    => (pp -> IO (Async rr))
-    -> MethodHandler IO p r
--}
