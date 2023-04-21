@@ -48,13 +48,13 @@ import Capnp.Rpc.Promise
   ( Fulfiller,
     breakPromise,
     fulfill,
-    newCallback,
   )
 import Capnp.TraversalLimit (defaultLimit, evalLimitT)
 import qualified Capnp.Untyped as U
 import Control.Concurrent.STM (atomically)
 import Control.Exception.Safe (withException)
 import Data.Function ((&))
+import Data.Functor.Contravariant (contramap)
 import Data.Kind (Constraint, Type)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromMaybe)
@@ -194,13 +194,13 @@ toUntypedMethodHandler ::
   UntypedMethodHandler
 toUntypedMethodHandler h =
   \case
-    R.Raw (Just (U.PtrStruct param)) -> \ret -> do
-      f <- atomically $
-        newCallback $ \case
-          Left e -> breakPromise ret e
-          Right (R.Raw s) ->
-            fulfill ret (R.Raw (Just (U.PtrStruct s)))
-      h (R.Raw param) f
+    R.Raw (Just (U.PtrStruct param)) -> \ret ->
+      h
+        (R.Raw param)
+        ( contramap
+            (\(R.Raw s) -> R.Raw $ Just $ U.PtrStruct s)
+            ret
+        )
     _ ->
       \ret -> breakPromise ret (eFailed "Parameter was not a struct")
 
