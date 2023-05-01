@@ -5,10 +5,10 @@ module Main (main) where
 import Capnp (Parsed, defaultLimit, getParsed)
 import Capnp.Gen.Capnp.Schema (CodeGeneratorRequest)
 import qualified Check
+import Control.Category ((>>>))
 import Data.Foldable (for_)
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.IO as TIO
-import qualified IR.Flat as Flat
 import qualified IR.Haskell as Haskell
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
@@ -30,20 +30,14 @@ main = do
 
 -- | Convert a 'CodeGeneratorRequest' to a list of files to create.
 handleCGR :: Parsed CodeGeneratorRequest -> [(FilePath, LT.Text)]
-handleCGR cgr =
-  let flat =
-        Trans.Stage1ToFlat.cgrToCgr $
-          Trans.CgrToStage1.cgrToCgr cgr
-      modules = handleFlatNew flat
-   in map
-        ( \mod ->
-            ( Haskell.modFilePath mod,
-              Trans.HaskellToText.moduleToText mod
-            )
-        )
-        modules
-
-handleFlatNew :: Flat.CodeGenReq -> [Haskell.Module]
-handleFlatNew =
-  concatMap Trans.AbstractOpToHaskell.fileToModules
-    . Trans.FlatToAbstractOp.cgrToFiles
+handleCGR =
+  Trans.CgrToStage1.cgrToCgr
+    >>> Trans.Stage1ToFlat.cgrToCgr
+    >>> Trans.FlatToAbstractOp.cgrToFiles
+    >>> concatMap Trans.AbstractOpToHaskell.fileToModules
+    >>> map
+      ( \mod ->
+          ( Haskell.modFilePath mod,
+            Trans.HaskellToText.moduleToText mod
+          )
+      )
