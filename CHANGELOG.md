@@ -11,6 +11,9 @@
 - The high level API now maps Cap'n Proto lists to `[]`, rather than
   `Vector`.
 - `Fulfiller` now has an instance of `Contravariant`.
+- The Client type's Show instance now distinguishes between a null
+  capability and a capability whose index was outside of a message's
+  cap table's bounds when it was read.
 
 # 0.17.0.0
 

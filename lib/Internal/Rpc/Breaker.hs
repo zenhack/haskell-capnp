@@ -7,6 +7,7 @@ module Internal.Rpc.Breaker
   ( Client (..),
     Pipeline (..),
     nullClient,
+    invalidClient,
     -- | ** Internals
     Opaque,
     makeOpaque,
@@ -23,10 +24,12 @@ newtype Client = Client Opaque
   deriving (Eq)
 
 instance Show Client where
-  show client =
+  show client@(Client opaque) =
     if client == nullClient
       then "nullClient"
-      else "({- capability; not statically representable -})"
+      else case fromDynamic (reflectOpaque opaque) of
+        Just (InvalidClient errMsg) -> "(invalidClient" ++ show errMsg ++ ")"
+        Nothing -> "({- capability; not statically representable -})"
 
 -- | A 'Pipeline' is a reference to a value within a message that has not yet arrived.
 newtype Pipeline = Pipeline Opaque
@@ -35,6 +38,12 @@ newtype Pipeline = Pipeline Opaque
 -- statically. Throws exceptions in response to all method calls.
 nullClient :: Client
 nullClient = Client $ makeOpaque ()
+
+newtype InvalidClient = InvalidClient String
+  deriving (Show, Read, Eq, Typeable)
+
+invalidClient :: String -> Client
+invalidClient = Client . makeOpaque . InvalidClient
 
 data Opaque = Opaque
   { opDyn :: Dynamic,

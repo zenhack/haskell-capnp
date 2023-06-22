@@ -67,6 +67,7 @@ module Capnp.Message
     WriteCtx,
     Client,
     nullClient,
+    invalidClient,
     withCapTable,
   )
 where
@@ -98,7 +99,7 @@ import Data.Word (Word32, Word64, byteSwap64)
 import GHC.ByteOrder (ByteOrder (..), targetByteOrder)
 import Internal.AppendVec (AppendVec)
 import qualified Internal.AppendVec as AppendVec
-import Internal.Rpc.Breaker (Client, nullClient)
+import Internal.Rpc.Breaker (Client, invalidClient, nullClient)
 import System.IO (Handle, stdin, stdout)
 import Prelude hiding (read)
 
@@ -235,7 +236,7 @@ getCap :: (MonadThrow m, MonadReadMessage mut m) => Message mut -> Int -> m Clie
 getCap msg i = do
   ncaps <- numCaps msg
   if i >= ncaps || i < 0
-    then pure nullClient
+    then pure (invalidClient $ "capability index out of bounds: " ++ show i)
     else msg `internalGetCap` i
 
 -- | @'setSegment' message index segment@ sets the segment at the given index
