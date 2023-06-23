@@ -42,6 +42,8 @@ nullClient = Client $ makeOpaque ()
 newtype InvalidClient = InvalidClient String
   deriving (Show, Read, Eq, Typeable)
 
+-- | Returns a client which is "invalid;" it behaves like 'nullClient',
+-- but can be given a custom error message that is displayed by 'show'.
 invalidClient :: String -> Client
 invalidClient = Client . makeOpaque . InvalidClient
 
