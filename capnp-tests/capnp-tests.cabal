@@ -1,0 +1,137 @@
+cabal-version:            2.2
+name:                     capnp-tests
+version:                  0.18.0.0
+category:                 Data, Serialization, Network, Rpc
+copyright:                2016-2023 haskell-capnp contributors (see CONTRIBUTORS file).
+author:                   Ian Denhardt
+maintainer:               ian@zenhack.net
+license:                  MIT
+license-file:             LICENSE.md
+homepage:                 https://codeberg.org/zenhack/haskell-capnp
+bug-reports:              https://codeberg.org/zenhack/haskell-capnp/issues
+synopsis:                 Cap'n Proto for Haskell
+description:
+  A native Haskell implementation of the Cap'N Proto cerialization format and
+  RPC protocol.
+  .
+  The library implements serialization and level 1 RPC.
+  .
+  The "Capnp.Tutorial" module is the best place to start reading; the
+  reference documentation can seem bewildering without that context.
+build-type:               Simple
+
+--------------------------------------------------------------------------------
+
+source-repository head
+    type:                 git
+    branch:               master
+    location:             https://codeberg.org/zenhack/haskell-capnp.git
+
+--------------------------------------------------------------------------------
+
+common shared-opts
+  build-depends:
+        base                              >= 4.14  && < 5
+      , bytes                             >= 0.15.4 && <0.18
+      , bytestring                        >= 0.10 && <0.12
+      , containers                        >= 0.5.9 && <0.7
+      , data-default                      ^>= 0.7.1
+      , exceptions                        ^>= 0.10.0
+      , ghc-prim                          >= 0.6.1 && <0.11
+      , mtl                               >= 2.2.2 && <2.4
+      , primitive                         >= 0.6.3 && <0.9
+      , safe-exceptions                   ^>= 0.1.7
+      , text                              >= 1.2 && < 2.1
+      , transformers                      >= 0.5.2 && <0.7
+      , vector                            >= 0.12.0 && <0.14
+      , monad-stm                         ^>= 0.1
+  ghc-options:
+    -Wall
+
+    -- This warning is triggered by normal use of NamedFieldPuns, so it's a no-go
+    -- for us:
+    -Wno-name-shadowing
+
+    -- I(zenhack) find it rather odd that orphan instances are flagged when the
+    -- class and the type are in different modules but, the same *package*. We do
+    -- this in a number of places in the capnp package, so we disable this
+    -- warning. It's not super easy to write a package-level orphan by accident,
+    -- so we're not losing much.
+    -Wno-orphans
+  default-language:     Haskell2010
+
+--------------------------------------------------------------------------------
+
+test-suite tests
+    import: shared-opts
+    type:                 exitcode-stdio-1.0
+    main-is:              Main.hs
+    hs-source-dirs:
+      tests
+      gen/tests
+      examples/lib
+      examples/gen/lib
+    ghc-options:
+      -threaded
+    other-modules:
+      -- Utilities
+        Util
+      , Instances
+      , SchemaGeneration
+
+      -- generated from tests/data/aircraft.capnp
+      , Capnp.Gen.Aircraft
+      , Capnp.Gen.ById.X832bcc6686a26d56
+
+      -- generated from tests/data/generics.capnp
+      , Capnp.Gen.Generics
+      , Capnp.Gen.ById.Xb6421fb8e478d144
+
+      -- Actual tests:
+      , Module.Capnp.Gen.Capnp.Schema
+      , Module.Capnp.Gen.Capnp.Schema.Pure
+      , Module.Capnp.Rpc
+      , Module.Capnp.Untyped
+      , Module.Capnp.Untyped.Pure
+      , Module.Capnp.Pointer
+      , Module.Capnp.Bits
+      , Module.Capnp.Basics
+      , Module.Capnp.Canonicalize
+      , PointerOOB
+      , Regression
+      , WalkSchemaCodeGenRequest
+      , SchemaQuickCheck
+      , CalculatorExample
+      , Constants
+      , Rpc.Unwrap
+    build-depends:
+        capnp
+      , capnp-examples
+      , network
+      , network-simple
+      , stm
+      , async
+      , process
+      , process-extras
+      , QuickCheck
+      , quickcheck-io
+      , quickcheck-instances
+      , hspec
+      , directory
+      , resourcet
+      , heredoc
+      , deepseq
+      , pretty-show
+      , supervisors
+
+
+benchmark bench
+  import: shared-opts
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: bench
+  build-depends:
+      capnp
+    , criterion >=1.5.9 && <0.7
+    , deepseq
+    , process-extras

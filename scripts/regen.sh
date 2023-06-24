@@ -22,7 +22,7 @@ cabal new-build capnpc-haskell
 
 # We run the code generator from inside gen/lib/, so that it outputs
 # modules to the right locations:
-cd "$repo_root/gen/lib/"
+cd "$repo_root/capnp/gen/lib/"
 
 # Find the compiler plugin executable. It would be nice to just
 # use new-run here, but doing so from a subdirectory is a bit fiddly
@@ -53,7 +53,7 @@ capnp compile \
 		$core_inc/capnp/compat/*.capnp
 
 log "Generating schema modules for test suite..."
-cd "$repo_root/gen/tests"
+cd "$repo_root/capnp-tests/gen/tests"
 capnp compile \
 		-I $core_inc \
 		--src-prefix=../../tests/data/ \
