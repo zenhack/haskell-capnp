@@ -62,7 +62,7 @@ capnp compile \
 		../../tests/data/generics.capnp
 
 log "Generating schema modules for examples..."
-cd "$repo_root/examples/gen/lib"
+cd "$repo_root/capnp-examples/gen/lib"
 capnp compile \
 		-I $core_inc \
 		--src-prefix=../../ \
